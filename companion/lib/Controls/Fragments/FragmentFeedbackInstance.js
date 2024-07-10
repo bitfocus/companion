@@ -455,6 +455,35 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
+	 * Reorder a feedback in the list
+	 * @param {number} oldIndex
+	 * @param {number} newIndex
+	 */
+	moveChild(oldIndex, newIndex) {
+		return this.#children.moveFeedback(oldIndex, newIndex)
+	}
+
+	/**
+	 * Pop a child feedback from the list
+	 * Note: this is used when moving a feedback to a different parent. Lifecycle is not managed
+	 * @param {number} index
+	 * @returns {FragmentFeedbackInstance | undefined}
+	 */
+	popChild(index) {
+		return this.#children.popFeedback(index)
+	}
+
+	/**
+	 * Push a child feedback to the list
+	 * Note: this is used when moving a feedback from a different parent. Lifecycle is not managed
+	 * @param {FragmentFeedbackInstance} feedback
+	 * @param {number} index
+	 */
+	pushChild(feedback, index) {
+		return this.#children.pushFeedback(feedback, index)
+	}
+
+	/**
 	 * Cleanup and forget any children belonging to the given connection
 	 * @param {string} connectionId
 	 * @returns {boolean}

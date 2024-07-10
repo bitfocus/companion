@@ -1,4 +1,5 @@
 import { FragmentFeedbackInstance } from './FragmentFeedbackInstance.js'
+import { clamp } from '../../Resources/Util.js'
 
 export class FragmentFeedbackList {
 	/**
@@ -180,6 +181,7 @@ export class FragmentFeedbackList {
 	// 	}
 	// 	return undefined
 	// }
+
 	/**
 	 * Add a child feedback to this feedback
 	 * @param {import('./FragmentFeedbackInstance.js').FeedbackInstance} feedback
@@ -224,6 +226,44 @@ export class FragmentFeedbackList {
 		}
 
 		return false
+	}
+
+	/**
+	 * Reorder a feedback in the list
+	 * @param {number} oldIndex
+	 * @param {number} newIndex
+	 */
+	moveFeedback(oldIndex, newIndex) {
+		oldIndex = clamp(oldIndex, 0, this.#feedbacks.length)
+		newIndex = clamp(newIndex, 0, this.#feedbacks.length)
+		this.#feedbacks.splice(newIndex, 0, ...this.#feedbacks.splice(oldIndex, 1))
+	}
+
+	/**
+	 * Pop a child feedback from the list
+	 * Note: this is used when moving a feedback to a different parent. Lifecycle is not managed
+	 * @param {number} index
+	 * @returns {FragmentFeedbackInstance | undefined}
+	 */
+	popFeedback(index) {
+		const feedback = this.#feedbacks[index]
+		if (!feedback) return undefined
+
+		this.#feedbacks.splice(index, 1)
+
+		return feedback
+	}
+
+	/**
+	 * Push a child feedback to the list
+	 * Note: this is used when moving a feedback from a different parent. Lifecycle is not managed
+	 * @param {FragmentFeedbackInstance} feedback
+	 * @param {number} index
+	 */
+	pushFeedback(feedback, index) {
+		index = clamp(index, 0, this.#feedbacks.length)
+
+		this.#feedbacks.splice(index, 0, feedback)
 	}
 
 	/**

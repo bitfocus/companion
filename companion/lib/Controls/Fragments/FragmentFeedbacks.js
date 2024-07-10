@@ -292,10 +292,30 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackReorder(oldParentId, oldIndex, newParentId, newIndex) {
-		// TODO building-blocks reimplement
-		// oldIndex = clamp(oldIndex, 0, this.#feedbacks.length)
-		// newIndex = clamp(newIndex, 0, this.#feedbacks.length)
-		// this.#feedbacks.splice(newIndex, 0, ...this.#feedbacks.splice(oldIndex, 1))
+		if (oldParentId === newParentId) {
+			if (oldParentId) {
+				const parentFeedback = this.#feedbacks.findById(oldParentId)
+				if (!parentFeedback) return false
+
+				parentFeedback.moveChild(oldIndex, newIndex)
+			} else {
+				this.#feedbacks.moveFeedback(oldIndex, newIndex)
+			}
+		} else {
+			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
+			if (newParentId && !newParent) return false
+
+			const poppedFeedback = oldParentId
+				? this.#feedbacks.findById(oldParentId)?.popChild(oldIndex)
+				: this.#feedbacks.popFeedback(oldIndex)
+			if (!poppedFeedback) return false
+
+			if (newParent) {
+				newParent.pushChild(poppedFeedback, newIndex)
+			} else {
+				this.#feedbacks.pushFeedback(poppedFeedback, newIndex)
+			}
+		}
 
 		this.#commitChange()
 
