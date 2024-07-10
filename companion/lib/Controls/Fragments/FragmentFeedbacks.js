@@ -1,5 +1,5 @@
 import { clamp } from '../../Resources/Util.js'
-import { cloneDeep, last } from 'lodash-es'
+import { cloneDeep } from 'lodash-es'
 import LogController from '../../Log/Controller.js'
 import { FragmentFeedbackInstance } from './FragmentFeedbackInstance.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
@@ -100,24 +100,6 @@ export default class FragmentFeedbacks {
 	#logger
 
 	/**
-	 * @type {import('../../Instance/Definitions.js').default}
-	 * @access private
-	 */
-	#instanceDefinitions
-
-	/**
-	 * @type {import('../../Internal/Controller.js').default}
-	 * @access private
-	 */
-	#internalModule
-
-	/**
-	 * @type {import('../../Instance/Host.js').default}
-	 * @access private
-	 */
-	#moduleHost
-
-	/**
 	 * @param {import('../../Instance/Definitions.js').default} instanceDefinitions
 	 * @param {import('../../Internal/Controller.js').default} internalModule
 	 * @param {import('../../Instance/Host.js').default} moduleHost
@@ -129,19 +111,15 @@ export default class FragmentFeedbacks {
 	constructor(instanceDefinitions, internalModule, moduleHost, controlId, commitChange, triggerRedraw, booleanOnly) {
 		this.#logger = LogController.createLogger(`Controls/Fragments/Feedbacks/${controlId}`)
 
-		this.#instanceDefinitions = instanceDefinitions
-		this.#internalModule = internalModule
-		this.#moduleHost = moduleHost
-
 		this.controlId = controlId
 		this.#commitChange = commitChange
 		this.#triggerRedraw = triggerRedraw
 		this.#booleanOnly = booleanOnly
 
 		this.#feedbacks = new FragmentFeedbackList(
-			this.#instanceDefinitions,
-			this.#internalModule,
-			this.#moduleHost,
+			instanceDefinitions,
+			internalModule,
+			moduleHost,
 			this.controlId,
 			this.#booleanOnly
 		)
@@ -195,11 +173,8 @@ export default class FragmentFeedbacks {
 
 		if (parentId) {
 			const parent = this.#feedbacks.findById(parentId)
-			if (!parent) {
-				throw new Error(`Failed to find parent feedback ${parentId} when adding child feedback`)
-			}
+			if (!parent) throw new Error(`Failed to find parent feedback ${parentId} when adding child feedback`)
 
-			// this.#feedbacks.push(newFeedback)
 			newFeedback = parent.addChild(feedbackItem)
 		} else {
 			newFeedback = this.#feedbacks.addFeedback(feedbackItem)
@@ -277,26 +252,18 @@ export default class FragmentFeedbacks {
 	 */
 	async feedbackLearn(id) {
 		const feedback = this.#feedbacks.findById(id)
-		if (feedback) {
-			const instance = this.#moduleHost.getChild(feedback.connectionId)
-			if (instance) {
-				const newOptions = await instance.feedbackLearnValues(feedback.asFeedbackInstance(), this.controlId)
-				if (newOptions) {
-					// Time has passed due to the `await`
-					// So the feedback may not still exist, meaning we should find it again to be sure
-					const feedbackAfter = this.#feedbacks.findById(id)
-					if (!feedbackAfter) return false
+		if (!feedback) return false
 
-					feedbackAfter.setOptions(newOptions)
+		const changed = await feedback.learnOptions()
+		if (!changed) return false
 
-					this.#commitChange(true)
+		// Time has passed due to the `await`
+		// So the feedback may not still exist, meaning we should find it again to be sure
+		const feedbackAfter = this.#feedbacks.findById(id)
+		if (!feedbackAfter) return false
 
-					return true
-				}
-			}
-		}
-
-		return false
+		this.#commitChange(true)
+		return true
 	}
 
 	/**
@@ -317,12 +284,14 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Reorder a feedback in the list
+	 * @param {string | null} oldParentId the parentId of the feedback to move
 	 * @param {number} oldIndex the index of the feedback to move
+	 * @param {string | null} newParentId the target parentId of the feedback
 	 * @param {number} newIndex the target index of the feedback
 	 * @returns {boolean}
 	 * @access public
 	 */
-	feedbackReorder(oldIndex, newIndex) {
+	feedbackReorder(oldParentId, oldIndex, newParentId, newIndex) {
 		// TODO building-blocks reimplement
 		// oldIndex = clamp(oldIndex, 0, this.#feedbacks.length)
 		// newIndex = clamp(newIndex, 0, this.#feedbacks.length)
@@ -382,13 +351,7 @@ export default class FragmentFeedbacks {
 	feedbackSetInverted(id, isInverted) {
 		const feedback = this.#feedbacks.findById(id)
 		if (feedback) {
-			// TODO - verify this is a boolean feedback
-
 			feedback.setInverted(!!isInverted)
-
-			// Inform relevant module
-			// Future: is this needed?
-			// this.#feedbackSubscribe(feedback)
 
 			this.#commitChange()
 
@@ -515,16 +478,7 @@ export default class FragmentFeedbacks {
 	 * @returns {void}
 	 */
 	resubscribeAllFeedbacks(onlyConnectionId) {
-		// Some feedbacks will need to redraw
 		this.#feedbacks.subscribe(true, onlyConnectionId)
-	}
-
-	/**
-	 * Perform an update of all internal feedbacks
-	 * @returns {void}
-	 */
-	updateAllInternal() {
-		this.resubscribeAllFeedbacks('internal')
 	}
 
 	/**

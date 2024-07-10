@@ -37,7 +37,6 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { InternalFeedbacksPicker } from './InternalFeedbacksPicker.js'
-import classNames from 'classnames'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -114,6 +113,7 @@ export function ControlFeedbacksEditor({
 							<FeedbackTableRow
 								key={a?.id ?? i}
 								controlId={controlId}
+								parentId={null}
 								entityType={entityType}
 								index={i}
 								feedback={a}
@@ -223,6 +223,7 @@ export function InlineFeedbacksEditor({
 							<FeedbackTableRow
 								key={a?.id ?? i}
 								controlId={controlId}
+								parentId={parentId}
 								entityType={entityType}
 								index={i}
 								feedback={a}
@@ -258,6 +259,7 @@ export function InlineFeedbacksEditor({
 interface FeedbackTableRowDragItem {
 	feedbackId: string
 	index: number
+	parentId: string | null
 	dragState: DragState | null
 }
 interface FeedbackTableRowDragStatus {
@@ -270,6 +272,7 @@ interface FeedbackTableRowProps {
 	feedback: FeedbackInstance
 	serviceFactory: IFeedbackEditorService
 	index: number
+	parentId: string | null
 	dragId: string
 	isCollapsed: boolean
 	setCollapsed: (feedbackId: string, collapsed: boolean) => void
@@ -283,6 +286,7 @@ function FeedbackTableRow({
 	feedback,
 	serviceFactory,
 	index,
+	parentId,
 	dragId,
 	isCollapsed,
 	setCollapsed,
@@ -300,24 +304,28 @@ function FeedbackTableRow({
 			// Ensure the hover targets this element, and not a child element
 			if (!monitor.isOver({ shallow: true })) return
 
+			const dragParentId = item.parentId
 			const dragIndex = item.index
+
+			const hoverParentId = parentId
 			const hoverIndex = index
 			const hoverId = feedback.id
 			// Don't replace items with themselves
-			if (item.feedbackId === hoverId || dragIndex === hoverIndex) {
+			if (item.feedbackId === hoverId || (dragIndex === hoverIndex && dragParentId === hoverParentId)) {
 				return
 			}
 
 			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
-			serviceFactory.moveCard(dragIndex, hoverIndex)
+			serviceFactory.moveCard(dragParentId, dragIndex, hoverParentId, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
 			// to avoid expensive index searches.
 			item.index = hoverIndex
+			item.parentId = hoverParentId
 		},
 		drop(item, _monitor) {
 			item.dragState = null
@@ -328,6 +336,7 @@ function FeedbackTableRow({
 		item: {
 			feedbackId: feedback.id,
 			index: index,
+			parentId: parentId,
 			dragState: null,
 		},
 		collect: (monitor) => ({

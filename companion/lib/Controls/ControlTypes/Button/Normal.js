@@ -648,7 +648,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
 	triggerLocationHasChanged() {
-		this.feedbacks.updateAllInternal()
+		this.feedbacks.resubscribeAllFeedbacks('internal')
 	}
 
 	/**

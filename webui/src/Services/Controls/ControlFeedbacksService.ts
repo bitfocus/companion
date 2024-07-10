@@ -4,11 +4,8 @@ import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 export interface IFeedbackEditorService {
-	// readonly collapseHelperKey: string
-	// readonly dragId: string
-
 	addFeedback: (feedbackType: string, parentId: string | null) => void
-	moveCard: (dragIndex: number, hoverIndex: number) => void
+	moveCard: (dragParentId: string | null, dragIndex: number, hoverParentId: string | null, hoverIndex: number) => void
 
 	setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, value: any) => void
 	setInverted: (feedbackId: string, inverted: boolean) => void
@@ -50,8 +47,14 @@ export function useControlFeedbacksEditorService(
 					}
 				)
 			},
-			moveCard: (dragIndex: number, hoverIndex: number) => {
-				socketEmitPromise(socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
+			moveCard: (dragParentId: string | null, dragIndex: number, hoverParentId: string | null, hoverIndex: number) => {
+				socketEmitPromise(socket, 'controls:feedback:reorder', [
+					controlId,
+					dragParentId,
+					dragIndex,
+					hoverParentId,
+					hoverIndex,
+				]).catch((e) => {
 					console.error(`Move failed: ${e}`)
 				})
 			},

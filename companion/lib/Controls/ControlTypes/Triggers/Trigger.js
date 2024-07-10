@@ -506,7 +506,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @returns {void}
 	 */
 	triggerLocationHasChanged() {
-		this.feedbacks.updateAllInternal()
+		this.feedbacks.resubscribeAllFeedbacks('internal')
 	}
 
 	/**

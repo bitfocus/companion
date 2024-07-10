@@ -244,6 +244,8 @@ export class FragmentFeedbackInstance {
 	 * @param {boolean} isInverted
 	 */
 	setInverted(isInverted) {
+		// TODO - verify this is a boolean feedback
+
 		this.#data.isInverted = isInverted
 
 		// Don't need to resubscribe
@@ -262,6 +264,24 @@ export class FragmentFeedbackInstance {
 
 		// Inform relevant module
 		this.subscribe(false)
+	}
+
+	/**
+	 * Learn the options for a feedback, by asking the instance for the current values
+	 * @returns {Promise<boolean>}
+	 */
+	async learnOptions() {
+		const instance = this.#moduleHost.getChild(this.connectionId)
+		if (!instance) return false
+
+		const newOptions = await instance.feedbackLearnValues(this.asFeedbackInstance(), this.#controlId)
+		if (newOptions) {
+			this.setOptions(newOptions)
+
+			return true
+		}
+
+		return false
 	}
 
 	/**
