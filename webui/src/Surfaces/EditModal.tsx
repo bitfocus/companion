@@ -279,7 +279,7 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 										<InternalPageDropdown
 											label={null}
 											disabled={!!groupConfig.use_last_page}
-											isOnControl={false}
+											isLocatedInGrid={false}
 											includeDirection={false}
 											includeStartup={false}
 											value={groupConfig.startup_page}
@@ -294,7 +294,7 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 										<InternalPageDropdown
 											label={null}
 											disabled={false}
-											isOnControl={false}
+											isLocatedInGrid={false}
 											includeDirection={false}
 											includeStartup={false}
 											value={groupConfig.last_page}

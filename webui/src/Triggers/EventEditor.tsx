@@ -297,7 +297,7 @@ const EventEditor = observer(function EventEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnControl={false}
+										isLocatedInGrid={false}
 										isAction={false}
 										connectionId={'internal'}
 										option={opt}

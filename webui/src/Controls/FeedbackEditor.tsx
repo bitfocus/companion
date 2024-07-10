@@ -59,7 +59,7 @@ export function ControlFeedbacksEditor({
 }: ControlFeedbacksEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
+	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType, null)
 
 	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
@@ -178,7 +178,12 @@ export function InlineFeedbacksEditor({
 			<GenericConfirmModal ref={confirmModal} />
 
 			<MyErrorBoundary>
-				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={feedbacksService.addFeedback} booleanOnly={booleanOnly} />
+				<AddFeedbacksModal
+					ref={addFeedbacksRef}
+					addFeedback={feedbacksService.addFeedback}
+					booleanOnly={booleanOnly}
+					entityType={entityType}
+				/>
 			</MyErrorBoundary>
 
 			<h4 className="mt-3">
@@ -478,7 +483,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnControl={!!location}
+										isLocatedInGrid={!!location}
 										isAction={false}
 										connectionId={feedback.instance_id}
 										option={opt}

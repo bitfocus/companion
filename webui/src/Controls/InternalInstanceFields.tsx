@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components/index.js'
-import { ConnectionsContext, useComputed } from '../util.js'
+import { ConnectionsContext, SocketContext, socketEmitPromise, useComputed } from '../util.js'
 import TimePicker from 'react-time-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
@@ -8,13 +8,15 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CFormLabel } from '@coreui/react'
 import { InlineFeedbacksEditor } from './FeedbackEditor.js'
-import { IFeedbackEditorService } from '../Services/Controls/ControlFeedbacksService.js'
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import {
+	IFeedbackEditorService,
+	useControlFeedbacksEditorService,
+} from '../Services/Controls/ControlFeedbacksService.js'
 
 export function InternalInstanceField(
 	label: React.ReactNode,
 	option: InternalInputField,
-	isOnControl: boolean,
+	isLocatedInGrid: boolean,
 	readonly: boolean,
 	value: any,
 	setValue: (value: any) => void
@@ -37,7 +39,7 @@ export function InternalInstanceField(
 				<InternalPageDropdown
 					label={label}
 					disabled={readonly}
-					isOnControl={isOnControl}
+					isLocatedInGrid={isLocatedInGrid}
 					includeDirection={option.includeDirection}
 					includeStartup={option.includeStartup}
 					value={value}
@@ -61,7 +63,7 @@ export function InternalInstanceField(
 				<InternalSurfaceBySerialDropdown
 					label={label}
 					disabled={readonly}
-					isOnControl={isOnControl}
+					isLocatedInGrid={isLocatedInGrid}
 					value={value}
 					setValue={setValue}
 					includeSelf={option.includeSelf}
@@ -73,7 +75,7 @@ export function InternalInstanceField(
 				<InternalTriggerDropdown
 					label={label}
 					disabled={readonly}
-					isOnControl={isOnControl}
+					isLocatedInGrid={isLocatedInGrid}
 					value={value}
 					setValue={setValue}
 					includeSelf={option.includeSelf}
@@ -138,7 +140,7 @@ function InternalInstanceIdDropdown({
 
 interface InternalPageDropdownProps {
 	label: React.ReactNode
-	isOnControl: boolean
+	isLocatedInGrid: boolean
 	includeStartup: boolean | undefined
 	includeDirection: boolean | undefined
 	value: any
@@ -148,7 +150,7 @@ interface InternalPageDropdownProps {
 
 export const InternalPageDropdown = observer(function InternalPageDropdown({
 	label,
-	isOnControl,
+	isLocatedInGrid,
 	includeStartup,
 	includeDirection,
 	value,
@@ -159,7 +161,7 @@ export const InternalPageDropdown = observer(function InternalPageDropdown({
 
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
-		if (isOnControl) {
+		if (isLocatedInGrid) {
 			choices.push({ id: 0, label: 'This page' })
 		}
 		if (includeStartup) {
@@ -174,7 +176,7 @@ export const InternalPageDropdown = observer(function InternalPageDropdown({
 			choices.push({ id: i, label: `${i} (${pageInfo.name || ''})` })
 		}
 		return choices
-	}, [pages, isOnControl, includeStartup, includeDirection])
+	}, [pages, isLocatedInGrid, includeStartup, includeDirection])
 
 	return (
 		<DropdownInputField
@@ -284,7 +286,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 
 interface InternalSurfaceBySerialDropdownProps {
 	label: React.ReactNode
-	isOnControl: boolean
+	isLocatedInGrid: boolean
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
@@ -294,7 +296,7 @@ interface InternalSurfaceBySerialDropdownProps {
 
 const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySerialDropdown({
 	label,
-	isOnControl,
+	isLocatedInGrid,
 	value,
 	setValue,
 	disabled,
@@ -305,7 +307,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
-		if (isOnControl && includeSelf) {
+		if (isLocatedInGrid && includeSelf) {
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
@@ -332,7 +334,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 		}
 
 		return choices
-	}, [surfaces, isOnControl, includeSelf, useRawSurfaces])
+	}, [surfaces, isLocatedInGrid, includeSelf, useRawSurfaces])
 
 	return (
 		<DropdownInputField
@@ -348,7 +350,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 
 interface InternalTriggerDropdownProps {
 	label: React.ReactNode
-	isOnControl: boolean
+	isLocatedInGrid: boolean
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
@@ -357,7 +359,7 @@ interface InternalTriggerDropdownProps {
 
 const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 	label,
-	isOnControl,
+	isLocatedInGrid,
 	value,
 	setValue,
 	disabled,
@@ -367,7 +369,7 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
-		if (!isOnControl && includeSelf) {
+		if (!isLocatedInGrid && includeSelf) {
 			choices.push({ id: 'self', label: 'Current trigger' })
 		}
 
@@ -378,7 +380,7 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 			})
 		}
 		return choices
-	}, [triggersList, isOnControl, includeSelf])
+	}, [triggersList, isLocatedInGrid, includeSelf])
 
 	return (
 		<DropdownInputField
@@ -424,7 +426,9 @@ interface InternalFeedbacksPickerProps {
 }
 
 function InternalFeedbacksPicker({ value, setValue, disabled }: InternalFeedbacksPickerProps) {
-	const service = useMemo(() => new InlineFeedbacksService(setValue), [setValue])
+	const feedbacksService = useControlFeedbacksEditorService('', null as any, 'test', null)
+
+	// const service = useMemo(() => new InlineFeedbacksService(setValue), [setValue])
 	return (
 		<InlineFeedbacksEditor
 			controlId=""
@@ -433,38 +437,128 @@ function InternalFeedbacksPicker({ value, setValue, disabled }: InternalFeedback
 			booleanOnly
 			location={undefined}
 			addPlaceholder="+ Add condition"
-			feedbacksService={{} as any}
+			feedbacksService={feedbacksService}
 		/>
 	)
 	// return <>{value}</>
 }
 
-class InlineFeedbacksService implements IFeedbackEditorService {
-	readonly #setValue: (feedbacks: FeedbackInstance[]) => void
+// class InlineFeedbacksService implements IFeedbackEditorService {
+// 	readonly #parentFeedbackIds: string[]
+// 	readonly #setValue: (feedbacks: FeedbackInstance[]) => void
 
-	constructor(setValue: (feedbacks: FeedbackInstance[]) => void) {
-		this.#setValue = setValue
+// 	constructor(parentFeedbackIds: string[], setValue: (feedbacks: FeedbackInstance[]) => void) {
+// 		this.#parentFeedbackIds = parentFeedbackIds
+// 		this.#setValue = setValue
 
-		// nocommit I don't like the feel of this approach
-		// The frontend is going to have to do this merging logic and emit the whole blob as changed
-		// Then the backend is going to have to be inefficient and either assume everything in the tree has changed,
-		// or will need to deep diff to figure out what did change.
+// 		// nocommit I don't like the feel of this approach
+// 		// The frontend is going to have to do this merging logic and emit the whole blob as changed
+// 		// Then the backend is going to have to be inefficient and either assume everything in the tree has changed,
+// 		// or will need to deep diff to figure out what did change.
 
-		// Perhaps is would be better if instead of this, the api allows for a better description of where the feedback is,
-		// as this would allow it to use the same socket.io api, and allow for the subportions.
-		// It wouldn't be unreasonable for the feedback definition to have a 'usesChildFeedbacks: true' property to enable this
-		// And the backend could use a static array/set of feedbackIds which support this, to help its logic
-	}
+// 		// Perhaps is would be better if instead of this, the api allows for a better description of where the feedback is,
+// 		// as this would allow it to use the same socket.io api, and allow for the subportions.
+// 		// It wouldn't be unreasonable for the feedback definition to have a 'usesChildFeedbacks: true' property to enable this
+// 		// And the backend could use a static array/set of feedbackIds which support this, to help its logic
+// 	}
 
-	addFeedback: (feedbackType: string) => void
-	moveCard: (dragIndex: number, hoverIndex: number) => void
-	setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, value: any) => void
-	setInverted: (feedbackId: string, inverted: boolean) => void
-	performDelete: (feedbackId: string) => void
-	performDuplicate: (feedbackId: string) => void
-	performLearn: (feedbackId: string) => void
-	setSelectedStyleProps: (feedbackId: string, keys: string[]) => void
-	setStylePropsValue: (feedbackId: string, key: string, value: any) => void
-	setEnabled: (feedbackId: string, enabled: boolean) => void
-	setHeadline: ((feedbackId: string, headline: string) => void) | undefined
-}
+// 	addFeedback: (feedbackType: string) => void
+// 	moveCard: (dragIndex: number, hoverIndex: number) => void
+// 	setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, value: any) => void
+// 	setInverted: (feedbackId: string, inverted: boolean) => void
+// 	performDelete: (feedbackId: string) => void
+// 	performDuplicate: (feedbackId: string) => void
+// 	performLearn: (feedbackId: string) => void
+// 	setSelectedStyleProps: (feedbackId: string, keys: string[]) => void
+// 	setStylePropsValue: (feedbackId: string, key: string, value: any) => void
+// 	setEnabled: (feedbackId: string, enabled: boolean) => void
+// 	setHeadline: ((feedbackId: string, headline: string) => void) | undefined
+// }
+
+// function useInlineFeedbacksService(
+// 	controlId: string,
+// 	confirmModal: React.RefObject<GenericConfirmModalRef>,
+// 	entityType: string,
+// 	parentFeedbackIds: string[]
+// ): IFeedbackEditorService {
+// 	const socket = useContext(SocketContext)
+
+// 	return useMemo(
+// 		() => ({
+// 			addFeedback: (feedbackType: string) => {
+// 				// const [connectionId, feedbackId] = feedbackType.split(':', 2)
+// 				// socketEmitPromise(socket, 'controls:feedback:add', [controlId, [], connectionId, feedbackId]).catch((e) => {
+// 				// 	console.error('Failed to add control feedback', e)
+// 				// })
+// 			},
+// 			moveCard: (dragIndex: number, hoverIndex: number) => {
+// 				// socketEmitPromise(socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
+// 				// 	console.error(`Move failed: ${e}`)
+// 				// })
+// 			},
+
+// 			setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, val: any) => {
+// 				// if (!feedback?.options || feedback.options[key] !== val) {
+// 				// 	socketEmitPromise(socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
+// 				// 		console.error(`Set-option failed: ${e}`)
+// 				// 	})
+// 				// }
+// 			},
+
+// 			setInverted: (feedbackId: string, isInverted: boolean) => {
+// 				// socketEmitPromise(socket, 'controls:feedback:set-inverted', [controlId, feedbackId, isInverted]).catch((e) => {
+// 				// 	console.error(`Set-inverted failed: ${e}`)
+// 				// })
+// 			},
+
+// 			performDelete: (feedbackId: string) => {
+// 				// confirmModal.current?.show(`Delete ${entityType}`, `Delete ${entityType}?`, 'Delete', () => {
+// 				// 	socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
+// 				// 		console.error(`Failed to delete feedback: ${e}`)
+// 				// 	})
+// 				// })
+// 			},
+
+// 			performDuplicate: (feedbackId: string) => {
+// 				// socketEmitPromise(socket, 'controls:feedback:duplicate', [controlId, feedbackId]).catch((e) => {
+// 				// 	console.error(`Failed to duplicate feedback: ${e}`)
+// 				// })
+// 			},
+
+// 			performLearn: (feedbackId: string) => {
+// 				// socketEmitPromise(socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
+// 				// 	console.error(`Failed to learn feedback values: ${e}`)
+// 				// })
+// 			},
+
+// 			setSelectedStyleProps: (feedbackId: string, selected: string[]) => {
+// 				// socketEmitPromise(socket, 'controls:feedback:set-style-selection', [controlId, feedbackId, selected]).catch(
+// 				// 	(e) => {
+// 				// 		console.error(`Failed: ${e}`)
+// 				// 	}
+// 				// )
+// 			},
+
+// 			setStylePropsValue: (feedbackId: string, key: string, value: any) => {
+// 				// socketEmitPromise(socket, 'controls:feedback:set-style-value', [controlId, feedbackId, key, value]).catch(
+// 				// 	(e) => {
+// 				// 		console.error(`Failed: ${e}`)
+// 				// 	}
+// 				// )
+// 			},
+
+// 			setEnabled: (feedbackId: string, enabled: boolean) => {
+// 				// socketEmitPromise(socket, 'controls:feedback:enabled', [controlId, feedbackId, enabled]).catch((e) => {
+// 				// 	console.error('Failed to enable/disable feedback', e)
+// 				// })
+// 			},
+
+// 			setHeadline: (feedbackId: string, headline: string) => {
+// 				// socketEmitPromise(socket, 'controls:feedback:set-headline', [controlId, feedbackId, headline]).catch((e) => {
+// 				// 	console.error('Failed to set feedback headline', e)
+// 				// })
+// 			},
+// 		}),
+// 		[socket, parentFeedbackIds, controlId, entityType]
+// 	)
+// }

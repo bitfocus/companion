@@ -27,6 +27,7 @@ export interface IActionEditorActionService {
 }
 
 export function useControlActionsEditorService(
+	isLocatedInGrid: boolean,
 	controlId: string,
 	stepId: string,
 	setId: string | number,
@@ -36,6 +37,8 @@ export function useControlActionsEditorService(
 
 	return useMemo(
 		() => ({
+			isLocatedInGrid,
+
 			addAction: (actionType: string) => {
 				const [connectionId, actionId] = actionType.split(':', 2)
 				socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId + '', connectionId, actionId]).catch(
@@ -122,7 +125,7 @@ export function useControlActionsEditorService(
 				})
 			},
 		}),
-		[socket, confirmModal, controlId, stepId, setId]
+		[socket, isLocatedInGrid, confirmModal, controlId, stepId, setId]
 	)
 }
 
@@ -131,6 +134,8 @@ export function useActionRecorderActionService(sessionId: string): IActionEditor
 
 	return useMemo(
 		() => ({
+			isLocatedInGrid: false,
+
 			addAction: (_actionType: string) => {
 				// Not supported
 			},

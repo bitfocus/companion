@@ -33,7 +33,8 @@ export interface IFeedbackEditorFeedbackService {
 export function useControlFeedbacksEditorService(
 	controlId: string,
 	confirmModal: React.RefObject<GenericConfirmModalRef>,
-	entityType: string
+	entityType: string,
+	parentFeedbackIds: string[] | null
 ): IFeedbackEditorService {
 	const socket = useContext(SocketContext)
 
@@ -41,7 +42,12 @@ export function useControlFeedbacksEditorService(
 		() => ({
 			addFeedback: (feedbackType: string) => {
 				const [connectionId, feedbackId] = feedbackType.split(':', 2)
-				socketEmitPromise(socket, 'controls:feedback:add', [controlId, connectionId, feedbackId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:feedback:add', [
+					controlId,
+					parentFeedbackIds ?? [],
+					connectionId,
+					feedbackId,
+				]).catch((e) => {
 					console.error('Failed to add control feedback', e)
 				})
 			},
@@ -113,7 +119,7 @@ export function useControlFeedbacksEditorService(
 				})
 			},
 		}),
-		[socket, confirmModal, controlId, entityType]
+		[socket, confirmModal, controlId, entityType, parentFeedbackIds]
 	)
 }
 

@@ -429,7 +429,7 @@ const ActionTableRow = observer(function ActionTableRow({
 									<MyErrorBoundary key={i}>
 										<OptionsInputField
 											key={i}
-											isOnControl={!!location}
+											isLocatedInGrid={!!location}
 											isAction={true}
 											connectionId={action.instance}
 											option={opt}
