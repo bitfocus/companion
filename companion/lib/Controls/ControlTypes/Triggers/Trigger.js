@@ -244,7 +244,7 @@ export default class ControlTrigger extends ControlBase {
 
 			this.options = storage.options || this.options
 			this.actions.action_sets = storage.action_sets || this.actions.action_sets
-			this.feedbacks.loadStorage(storage.condition || [], true)
+			this.feedbacks.loadStorage(storage.condition || [], true, isImport)
 			this.events = storage.events || this.events
 
 			if (isImport) this.postProcessImport()
@@ -479,7 +479,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @access public
 	 */
 	collectReferencedConnections(foundConnectionIds, foundConnectionLabels) {
-		const allFeedbacks = this.feedbacks.getAllFeedbackInstances()
+		const allFeedbacks = this.feedbacks.getFlattenedFeedbackInstances()
 		const allActions = this.actions.getAllActions()
 
 		for (const feedback of allFeedbacks) {
@@ -624,7 +624,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @access public
 	 */
 	renameVariables(labelFrom, labelTo) {
-		const allFeedbacks = this.feedbacks.getAllFeedbackInstances()
+		const allFeedbacks = this.feedbacks.getFlattenedFeedbackInstances()
 		const allActions = this.actions.getAllActions()
 
 		// Fix up references

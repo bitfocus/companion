@@ -209,7 +209,8 @@ class SocketEventsHandler {
 		// Find all the feedbacks on controls
 		const allControls = this.#registry.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
-			const controlFeedbacks = control.supportsFeedbacks && control.feedbacks.getAllFeedbackInstances(this.connectionId)
+			const controlFeedbacks =
+				control.supportsFeedbacks && control.feedbacks.getFlattenedFeedbackInstances(this.connectionId)
 			if (controlFeedbacks && controlFeedbacks.length > 0) {
 				const imageSize = control.getBitmapSize()
 				for (const feedback of controlFeedbacks) {

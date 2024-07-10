@@ -393,7 +393,7 @@ export default class ButtonControlBase extends ControlBase {
 	 * @access public
 	 */
 	renameVariables(labelFrom, labelTo) {
-		const allFeedbacks = this.feedbacks.getAllFeedbackInstances()
+		const allFeedbacks = this.feedbacks.getFlattenedFeedbackInstances()
 		const allActions = []
 		for (const step of Object.values(this.steps)) {
 			allActions.push(...step.getAllActions())
