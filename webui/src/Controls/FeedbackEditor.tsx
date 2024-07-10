@@ -67,7 +67,12 @@ export function ControlFeedbacksEditor({
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(feedbacksService.collapseHelperKey, feedbackIds)
+		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
+
+	const addFeedback = useCallback(
+		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, null),
+		[feedbacksService]
+	)
 
 	return (
 		<>
@@ -76,7 +81,7 @@ export function ControlFeedbacksEditor({
 			<MyErrorBoundary>
 				<AddFeedbacksModal
 					ref={addFeedbacksRef}
-					addFeedback={feedbacksService.addFeedback}
+					addFeedback={addFeedback}
 					booleanOnly={booleanOnly}
 					entityType={entityType}
 				/>
@@ -108,10 +113,11 @@ export function ControlFeedbacksEditor({
 						<MyErrorBoundary key={a?.id ?? i}>
 							<FeedbackTableRow
 								key={a?.id ?? i}
+								controlId={controlId}
 								entityType={entityType}
 								index={i}
 								feedback={a}
-								dragId={feedbacksService.dragId}
+								dragId={`feedbacks_${controlId}`}
 								serviceFactory={feedbacksService}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
@@ -124,11 +130,7 @@ export function ControlFeedbacksEditor({
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown
-					onSelect={feedbacksService.addFeedback}
-					booleanOnly={booleanOnly}
-					addPlaceholder={addPlaceholder}
-				/>
+				<AddFeedbackDropdown onSelect={addFeedback} booleanOnly={booleanOnly} addPlaceholder={addPlaceholder} />
 				<CButton
 					color="primary"
 					onClick={showAddModal}
@@ -145,22 +147,26 @@ export function ControlFeedbacksEditor({
 }
 
 interface InlineFeedbacksEditorProps {
+	controlId: string
 	feedbacks: FeedbackInstance[]
 	entityType: string
 	booleanOnly: boolean
 	location: ControlLocation | undefined
 	addPlaceholder: string
 	feedbacksService: IFeedbackEditorService
+	parentId: string
 }
 
 // TODO: can this be deduplicated a bit with the above?
 export function InlineFeedbacksEditor({
+	controlId,
 	feedbacks,
 	entityType,
 	booleanOnly,
 	location,
 	addPlaceholder,
 	feedbacksService,
+	parentId,
 }: InlineFeedbacksEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
@@ -171,7 +177,12 @@ export function InlineFeedbacksEditor({
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(feedbacksService.collapseHelperKey, feedbackIds)
+		usePanelCollapseHelper(`feedbacks_${controlId}_${parentId}`, feedbackIds)
+
+	const addFeedback = useCallback(
+		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, parentId),
+		[feedbacksService, parentId]
+	)
 
 	return (
 		<>
@@ -180,7 +191,7 @@ export function InlineFeedbacksEditor({
 			<MyErrorBoundary>
 				<AddFeedbacksModal
 					ref={addFeedbacksRef}
-					addFeedback={feedbacksService.addFeedback}
+					addFeedback={addFeedback}
 					booleanOnly={booleanOnly}
 					entityType={entityType}
 				/>
@@ -211,10 +222,11 @@ export function InlineFeedbacksEditor({
 						<MyErrorBoundary key={a?.id ?? i}>
 							<FeedbackTableRow
 								key={a?.id ?? i}
+								controlId={controlId}
 								entityType={entityType}
 								index={i}
 								feedback={a}
-								dragId={feedbacksService.dragId}
+								dragId={`feedbacks_${controlId}`}
 								serviceFactory={feedbacksService}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
@@ -227,11 +239,7 @@ export function InlineFeedbacksEditor({
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown
-					onSelect={feedbacksService.addFeedback}
-					booleanOnly={booleanOnly}
-					addPlaceholder={addPlaceholder}
-				/>
+				<AddFeedbackDropdown onSelect={addFeedback} booleanOnly={booleanOnly} addPlaceholder={addPlaceholder} />
 				<CButton
 					color="primary"
 					onClick={showAddModal}
@@ -257,6 +265,7 @@ interface FeedbackTableRowDragStatus {
 }
 
 interface FeedbackTableRowProps {
+	controlId: string
 	entityType: string
 	feedback: FeedbackInstance
 	serviceFactory: IFeedbackEditorService
@@ -269,6 +278,7 @@ interface FeedbackTableRowProps {
 }
 
 function FeedbackTableRow({
+	controlId,
 	entityType,
 	feedback,
 	serviceFactory,
@@ -341,6 +351,7 @@ function FeedbackTableRow({
 			</td>
 			<td>
 				<FeedbackEditor
+					controlId={controlId}
 					entityType={entityType}
 					location={location}
 					feedback={feedback}
@@ -356,6 +367,7 @@ function FeedbackTableRow({
 }
 
 interface FeedbackEditorProps {
+	controlId: string
 	entityType: string
 	feedback: FeedbackInstance
 	location: ControlLocation | undefined
@@ -367,6 +379,7 @@ interface FeedbackEditorProps {
 }
 
 const FeedbackEditor = observer(function FeedbackEditor({
+	controlId,
 	entityType,
 	feedback,
 	location,
@@ -509,6 +522,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						<div className="cell-children">
 							<CForm onSubmit={PreventDefaultHandler}>
 								<InternalFeedbacksPicker
+									controlId={controlId}
 									serviceFactory={serviceFactory}
 									parentId={feedback.id}
 									feedbacks={feedback.children}
