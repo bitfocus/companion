@@ -35,8 +35,8 @@ import {
 } from '../Services/Controls/ControlFeedbacksService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import classNames from 'classnames'
 import { InternalFeedbacksPicker } from './InternalFeedbacksPicker.js'
+import classNames from 'classnames'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string

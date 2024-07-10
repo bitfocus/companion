@@ -126,7 +126,7 @@ export class FragmentFeedbackInstance {
 	asFeedbackInstance() {
 		return {
 			...this.#data,
-			children: this.#children.asFeedbackInstances(),
+			children: this.connectionId === 'internal' ? this.#children.asFeedbackInstances() : undefined,
 		}
 	}
 
@@ -319,7 +319,7 @@ export class FragmentFeedbackInstance {
 
 		if (!this.#data.style) this.#data.style = {}
 		// @ts-ignore
-		feedback.style[key] = value
+		this.#data.style[key] = value
 
 		return true
 	}
