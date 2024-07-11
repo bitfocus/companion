@@ -21,6 +21,8 @@ export const ExpressionFunctions = {
 		max = Number(max)
 		return min + Math.round(Math.random() * (max - min))
 	},
+	log: (v) => Math.log(v),
+	log10: (v) => Math.log10(v),
 
 	// String operations
 	trim: (v) => (v + '').trim(),

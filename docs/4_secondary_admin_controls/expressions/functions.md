@@ -55,6 +55,14 @@ Finds the smallest of the provided values.
 
 Generate a random integer in the specified range (inclusive).
 
+**log(v)**
+
+Calculate the natural logarithm of a number.
+
+**log10(v)**
+
+Calculate the base 10 logarithm of a number.
+
 ##### String operations
 
 **trim(val)**
