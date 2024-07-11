@@ -268,6 +268,8 @@ export interface ClientToBackendEventsMap {
 	'connections:get-help': (id: string) => [err: string, result: null] | [err: null, result: HelpDescription]
 
 	'variables:instance-values': (label: string) => CompanionVariableValues | undefined
+	'variables:get-instances': (name: string) => { buttonName: string; usageType: string }[]
+
 
 	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
 	'presets:unsubscribe': () => void
