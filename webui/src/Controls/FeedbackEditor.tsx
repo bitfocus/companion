@@ -18,7 +18,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { CheckboxInputField, DropdownInputField, TextInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelper2, usePanelCollapseHelper2 } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
@@ -47,6 +47,18 @@ interface ControlFeedbacksEditorProps {
 	addPlaceholder: string
 }
 
+function findAllFeedbackIdsDeep(feedbacks: FeedbackInstance[]): string[] {
+	const result: string[] = feedbacks.map((f) => f.id)
+
+	for (const feedback of feedbacks) {
+		if (feedback.children) {
+			result.push(...findAllFeedbackIdsDeep(feedback.children))
+		}
+	}
+
+	return result
+}
+
 export function ControlFeedbacksEditor({
 	controlId,
 	feedbacks,
@@ -60,17 +72,62 @@ export function ControlFeedbacksEditor({
 
 	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
 
+	const feedbackIds = useMemo(() => findAllFeedbackIdsDeep(feedbacks), [feedbacks])
+
+	const panelCollapseHelper = usePanelCollapseHelper2(`feedbacks_${controlId}`, feedbackIds)
+
+	return (
+		<InlineFeedbacksEditor
+			controlId={controlId}
+			heading={heading}
+			feedbacks={feedbacks}
+			entityType={entityType}
+			booleanOnly={booleanOnly}
+			location={location}
+			addPlaceholder={addPlaceholder}
+			feedbacksService={feedbacksService}
+			parentId={null}
+			panelCollapseHelper={panelCollapseHelper}
+		/>
+	)
+}
+
+interface InlineFeedbacksEditorProps {
+	controlId: string
+	heading: JSX.Element | string | null
+	feedbacks: FeedbackInstance[]
+	entityType: string
+	booleanOnly: boolean
+	location: ControlLocation | undefined
+	addPlaceholder: string
+	feedbacksService: IFeedbackEditorService
+	parentId: string | null
+	panelCollapseHelper: PanelCollapseHelper2
+}
+
+const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
+	controlId,
+	heading,
+	feedbacks,
+	entityType,
+	booleanOnly,
+	location,
+	addPlaceholder,
+	feedbacksService,
+	parentId,
+	panelCollapseHelper,
+}: InlineFeedbacksEditorProps) {
+	const confirmModal = useRef<GenericConfirmModalRef>(null)
+
 	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
 
-	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
-	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
-
 	const addFeedback = useCallback(
-		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, null),
-		[feedbacksService]
+		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, parentId),
+		[feedbacksService, parentId]
 	)
+
+	const childFeedbackIds = feedbacks.map((f) => f.id)
 
 	return (
 		<>
@@ -87,124 +144,25 @@ export function ControlFeedbacksEditor({
 
 			<h4 className="mt-3">
 				{heading}
-				{feedbacks.length > 1 && (
+
+				{feedbacks.length >= 1 && (
 					<CButtonGroup className="right">
 						<CButtonGroup>
-							{canExpandAll && (
-								<CButton size="sm" onClick={setAllExpanded} title="Expand all feedbacks">
+							{panelCollapseHelper.canExpandAll(parentId, childFeedbackIds) && (
+								<CButton
+									size="sm"
+									onClick={() => panelCollapseHelper.setAllExpanded(parentId, childFeedbackIds)}
+									title="Expand all feedbacks"
+								>
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							)}
-							{canCollapseAll && (
-								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all feedbacks">
-									<FontAwesomeIcon icon={faCompressArrowsAlt} />
-								</CButton>
-							)}
-						</CButtonGroup>
-					</CButtonGroup>
-				)}
-			</h4>
-
-			<table className="table feedback-table">
-				<tbody>
-					{feedbacks.map((a, i) => (
-						<MyErrorBoundary key={a?.id ?? i}>
-							<FeedbackTableRow
-								key={a?.id ?? i}
-								controlId={controlId}
-								parentId={null}
-								entityType={entityType}
-								index={i}
-								feedback={a}
-								dragId={`feedbacks_${controlId}`}
-								serviceFactory={feedbacksService}
-								setCollapsed={setPanelCollapsed}
-								isCollapsed={isPanelCollapsed(a.id)}
-								booleanOnly={booleanOnly}
-								location={location}
-							/>
-						</MyErrorBoundary>
-					))}
-				</tbody>
-			</table>
-
-			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} booleanOnly={booleanOnly} addPlaceholder={addPlaceholder} />
-				<CButton
-					color="primary"
-					onClick={showAddModal}
-					style={{
-						borderTopLeftRadius: 0,
-						borderBottomLeftRadius: 0,
-					}}
-				>
-					<FontAwesomeIcon icon={faFolderOpen} />
-				</CButton>
-			</div>
-		</>
-	)
-}
-
-interface InlineFeedbacksEditorProps {
-	controlId: string
-	feedbacks: FeedbackInstance[]
-	entityType: string
-	booleanOnly: boolean
-	location: ControlLocation | undefined
-	addPlaceholder: string
-	feedbacksService: IFeedbackEditorService
-	parentId: string
-}
-
-// TODO: can this be deduplicated a bit with the above?
-export function InlineFeedbacksEditor({
-	controlId,
-	feedbacks,
-	entityType,
-	booleanOnly,
-	location,
-	addPlaceholder,
-	feedbacksService,
-	parentId,
-}: InlineFeedbacksEditorProps) {
-	const confirmModal = useRef<GenericConfirmModalRef>(null)
-
-	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
-	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
-
-	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
-	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`feedbacks_${controlId}_${parentId}`, feedbackIds) // TODO - use the same helper as the parent
-
-	const addFeedback = useCallback(
-		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, parentId),
-		[feedbacksService, parentId]
-	)
-
-	return (
-		<>
-			<GenericConfirmModal ref={confirmModal} />
-
-			<MyErrorBoundary>
-				<AddFeedbacksModal
-					ref={addFeedbacksRef}
-					addFeedback={addFeedback}
-					booleanOnly={booleanOnly}
-					entityType={entityType}
-				/>
-			</MyErrorBoundary>
-
-			<h4 className="mt-3">
-				{feedbacks.length > 1 && (
-					<CButtonGroup className="right">
-						<CButtonGroup>
-							{canExpandAll && (
-								<CButton size="sm" onClick={setAllExpanded} title="Expand all feedbacks">
-									<FontAwesomeIcon icon={faExpandArrowsAlt} />
-								</CButton>
-							)}
-							{canCollapseAll && (
-								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all feedbacks">
+							{panelCollapseHelper.canCollapseAll(parentId, childFeedbackIds) && (
+								<CButton
+									size="sm"
+									onClick={() => panelCollapseHelper.setAllCollapsed(parentId, childFeedbackIds)}
+									title="Collapse all feedbacks"
+								>
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
@@ -226,19 +184,20 @@ export function InlineFeedbacksEditor({
 								feedback={a}
 								dragId={`feedbacks_${controlId}`}
 								serviceFactory={feedbacksService}
-								setCollapsed={setPanelCollapsed}
-								isCollapsed={isPanelCollapsed(a.id)}
+								panelCollapseHelper={panelCollapseHelper}
 								booleanOnly={booleanOnly}
 								location={location}
 							/>
 						</MyErrorBoundary>
 					))}
-					<FeedbackRowDropPlaceholder
-						dragId={`feedbacks_${controlId}`}
-						parentId={parentId}
-						feedbackCount={feedbacks ? feedbacks.length : 0}
-						moveCard={feedbacksService.moveCard}
-					/>
+					{!!parentId && (
+						<FeedbackRowDropPlaceholder
+							dragId={`feedbacks_${controlId}`}
+							parentId={parentId}
+							feedbackCount={feedbacks ? feedbacks.length : 0}
+							moveCard={feedbacksService.moveCard}
+						/>
+					)}
 				</tbody>
 			</table>
 
@@ -257,7 +216,7 @@ export function InlineFeedbacksEditor({
 			</div>
 		</>
 	)
-}
+})
 
 interface FeedbackTableRowDragItem {
 	feedbackId: string
@@ -277,10 +236,9 @@ interface FeedbackTableRowProps {
 	index: number
 	parentId: string | null
 	dragId: string
-	isCollapsed: boolean
-	setCollapsed: (feedbackId: string, collapsed: boolean) => void
 	booleanOnly: boolean
 	location: ControlLocation | undefined
+	panelCollapseHelper: PanelCollapseHelper2
 }
 
 function FeedbackTableRow({
@@ -291,10 +249,9 @@ function FeedbackTableRow({
 	index,
 	parentId,
 	dragId,
-	isCollapsed,
-	setCollapsed,
 	booleanOnly,
 	location,
+	panelCollapseHelper,
 }: FeedbackTableRowProps) {
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<FeedbackTableRowDragItem>({
@@ -348,9 +305,6 @@ function FeedbackTableRow({
 	})
 	preview(drop(ref))
 
-	const doCollapse = useCallback(() => setCollapsed(feedback.id, true), [setCollapsed, feedback.id])
-	const doExpand = useCallback(() => setCollapsed(feedback.id, false), [setCollapsed, feedback.id])
-
 	if (!feedback) {
 		// Invalid feedback, so skip
 		return null
@@ -364,14 +318,13 @@ function FeedbackTableRow({
 			<td>
 				<FeedbackEditor
 					controlId={controlId}
+					parentId={parentId}
 					entityType={entityType}
 					location={location}
 					feedback={feedback}
 					serviceFactory={serviceFactory}
-					isCollapsed={isCollapsed}
-					doCollapse={doCollapse}
-					doExpand={doExpand}
 					booleanOnly={booleanOnly}
+					panelCollapseHelper={panelCollapseHelper}
 				/>
 			</td>
 		</tr>
@@ -380,26 +333,24 @@ function FeedbackTableRow({
 
 interface FeedbackEditorProps {
 	controlId: string
+	parentId: string | null
 	entityType: string
 	feedback: FeedbackInstance
 	location: ControlLocation | undefined
 	serviceFactory: IFeedbackEditorService
-	isCollapsed: boolean
-	doCollapse: () => void
-	doExpand: () => void
 	booleanOnly: boolean
+	panelCollapseHelper: PanelCollapseHelper2
 }
 
 const FeedbackEditor = observer(function FeedbackEditor({
 	controlId,
+	parentId,
 	entityType,
 	feedback,
 	location,
 	serviceFactory,
-	isCollapsed,
-	doCollapse,
-	doExpand,
 	booleanOnly,
+	panelCollapseHelper,
 }: FeedbackEditorProps) {
 	const service = useControlFeedbackService(serviceFactory, feedback)
 
@@ -428,6 +379,16 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	const headline = feedback.headline
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+
+	const doCollapse = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(feedback.id, true),
+		[panelCollapseHelper, feedback.id]
+	)
+	const doExpand = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(feedback.id, false),
+		[panelCollapseHelper, feedback.id]
+	)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(parentId, feedback.id)
 
 	return (
 		<>
@@ -526,6 +487,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 							<CForm onSubmit={PreventDefaultHandler}>
 								<InlineFeedbacksEditor
 									controlId={controlId}
+									heading={null}
 									feedbacks={feedback.children ?? []}
 									entityType="condition"
 									booleanOnly
@@ -533,6 +495,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 									addPlaceholder="+ Add condition"
 									feedbacksService={serviceFactory}
 									parentId={feedback.id}
+									panelCollapseHelper={panelCollapseHelper}
 								/>
 							</CForm>
 						</div>
@@ -660,7 +623,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 
 interface FeedbackRowDropPlaceholderProps {
 	dragId: string
-	parentId: string | null
+	parentId: string
 	feedbackCount: number
 	moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => void
 }
