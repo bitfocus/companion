@@ -430,12 +430,12 @@ class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:feedback:reorder', (controlId, moveFeedbackId, newParentId, newIndex) => {
+		client.onPromise('controls:feedback:move', (controlId, moveFeedbackId, newParentId, newIndex) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackReorder(moveFeedbackId, newParentId, newIndex)
+				return control.feedbacks.feedbackMoveTo(moveFeedbackId, newParentId, newIndex)
 			} else {
 				throw new Error(`Control "${controlId}" does not support feedbacks`)
 			}

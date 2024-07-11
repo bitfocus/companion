@@ -283,14 +283,14 @@ export default class FragmentFeedbacks {
 	}
 
 	/**
-	 * Reorder a feedback in the list
+	 * Move a feedback within the heirarchy
 	 * @param {string } moveFeedbackId the id of the feedback to move
 	 * @param {string | null} newParentId the target parentId of the feedback
 	 * @param {number} newIndex the target index of the feedback
 	 * @returns {boolean}
 	 * @access public
 	 */
-	feedbackReorder(moveFeedbackId, newParentId, newIndex) {
+	feedbackMoveTo(moveFeedbackId, newParentId, newIndex) {
 		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
 		if (!oldItem) return false
 
@@ -299,6 +299,9 @@ export default class FragmentFeedbacks {
 		} else {
 			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
 			if (newParentId && !newParent) return false
+
+			// Check if the new parent can hold the feedback being moved
+			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
 
 			const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
 			if (!poppedFeedback) return false

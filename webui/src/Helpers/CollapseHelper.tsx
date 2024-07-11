@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-interface PanelCollapseHelperResult {
+export interface PanelCollapseHelperResult {
 	setAllCollapsed: () => void
 	setAllExpanded: () => void
 	canExpandAll: boolean

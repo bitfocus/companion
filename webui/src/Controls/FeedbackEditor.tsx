@@ -174,7 +174,7 @@ export function InlineFeedbacksEditor({
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`feedbacks_${controlId}_${parentId}`, feedbackIds)
+		usePanelCollapseHelper(`feedbacks_${controlId}_${parentId}`, feedbackIds) // TODO - use the same helper as the parent
 
 	const addFeedback = useCallback(
 		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, parentId),

@@ -497,6 +497,15 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
+	 * Check if this list can accept a specified child
+	 * @param {FragmentFeedbackInstance} feedback
+	 * @returns {boolean}
+	 */
+	canAcceptChild(feedback) {
+		return this.#children.canAcceptFeedback(feedback)
+	}
+
+	/**
 	 * Recursively get all the feedbacks
 	 * @returns {FragmentFeedbackInstance[]}
 	 */

@@ -304,6 +304,20 @@ export class FragmentFeedbackList {
 	}
 
 	/**
+	 * Check if this list can accept a specified child
+	 * @param {FragmentFeedbackInstance} feedback
+	 * @returns {boolean}
+	 */
+	canAcceptFeedback(feedback) {
+		if (!this.#booleanOnly) return true
+
+		const definition = feedback.getDefinition()
+		if (!definition || definition.type !== 'boolean') return false
+
+		return true
+	}
+
+	/**
 	 * Duplicate a feedback
 	 * @param {string} id
 	 * @returns {FragmentFeedbackInstance | undefined}

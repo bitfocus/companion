@@ -106,7 +106,7 @@ export interface ClientToBackendEventsMap {
 	'controls:feedback:remove': (controlId: string, feedbackId: string) => boolean
 	'controls:feedback:set-inverted': (controlId: string, feedbackId: string, isInverted: boolean) => boolean
 	'controls:feedback:set-option': (controlId: string, feedbackId: string, key: string, val: any) => boolean
-	'controls:feedback:reorder': (
+	'controls:feedback:move': (
 		controlId: string,
 		dragFeedbackId: string,
 		hoverParentId: string | null,

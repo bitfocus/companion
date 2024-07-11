@@ -48,7 +48,7 @@ export function useControlFeedbacksEditorService(
 				)
 			},
 			moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => {
-				socketEmitPromise(socket, 'controls:feedback:reorder', [
+				socketEmitPromise(socket, 'controls:feedback:move', [
 					controlId,
 					dragFeedbackId,
 					hoverParentId,
