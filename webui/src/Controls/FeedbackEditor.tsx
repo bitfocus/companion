@@ -379,7 +379,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnControl={!!location}
+										isLocatedInGrid={!!location}
 										isAction={false}
 										connectionId={feedback.instance_id}
 										option={opt}

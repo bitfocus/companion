@@ -11,7 +11,7 @@ import { CFormLabel } from '@coreui/react'
 export function InternalInstanceField(
 	label: React.ReactNode,
 	option: InternalInputField,
-	isOnControl: boolean,
+	isLocatedInGrid: boolean,
 	readonly: boolean,
 	value: any,
 	setValue: (value: any) => void
@@ -34,7 +34,7 @@ export function InternalInstanceField(
 				<InternalPageDropdown
 					label={label}
 					disabled={readonly}
-					isOnControl={isOnControl}
+					isLocatedInGrid={isLocatedInGrid}
 					includeDirection={option.includeDirection}
 					includeStartup={option.includeStartup}
 					value={value}
@@ -58,7 +58,7 @@ export function InternalInstanceField(
 				<InternalSurfaceBySerialDropdown
 					label={label}
 					disabled={readonly}
-					isOnControl={isOnControl}
+					isLocatedInGrid={isLocatedInGrid}
 					value={value}
 					setValue={setValue}
 					includeSelf={option.includeSelf}
@@ -70,7 +70,7 @@ export function InternalInstanceField(
 				<InternalTriggerDropdown
 					label={label}
 					disabled={readonly}
-					isOnControl={isOnControl}
+					isLocatedInGrid={isLocatedInGrid}
 					value={value}
 					setValue={setValue}
 					includeSelf={option.includeSelf}
@@ -133,7 +133,7 @@ function InternalInstanceIdDropdown({
 
 interface InternalPageDropdownProps {
 	label: React.ReactNode
-	isOnControl: boolean
+	isLocatedInGrid: boolean
 	includeStartup: boolean | undefined
 	includeDirection: boolean | undefined
 	value: any
@@ -143,7 +143,7 @@ interface InternalPageDropdownProps {
 
 export const InternalPageDropdown = observer(function InternalPageDropdown({
 	label,
-	isOnControl,
+	isLocatedInGrid,
 	includeStartup,
 	includeDirection,
 	value,
@@ -154,7 +154,7 @@ export const InternalPageDropdown = observer(function InternalPageDropdown({
 
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
-		if (isOnControl) {
+		if (isLocatedInGrid) {
 			choices.push({ id: 0, label: 'This page' })
 		}
 		if (includeStartup) {
@@ -169,7 +169,7 @@ export const InternalPageDropdown = observer(function InternalPageDropdown({
 			choices.push({ id: i, label: `${i} (${pageInfo.name || ''})` })
 		}
 		return choices
-	}, [pages, isOnControl, includeStartup, includeDirection])
+	}, [pages, isLocatedInGrid, includeStartup, includeDirection])
 
 	return (
 		<DropdownInputField
@@ -279,7 +279,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 
 interface InternalSurfaceBySerialDropdownProps {
 	label: React.ReactNode
-	isOnControl: boolean
+	isLocatedInGrid: boolean
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
@@ -289,7 +289,7 @@ interface InternalSurfaceBySerialDropdownProps {
 
 const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySerialDropdown({
 	label,
-	isOnControl,
+	isLocatedInGrid,
 	value,
 	setValue,
 	disabled,
@@ -300,7 +300,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
-		if (isOnControl && includeSelf) {
+		if (isLocatedInGrid && includeSelf) {
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
@@ -327,7 +327,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 		}
 
 		return choices
-	}, [surfaces, isOnControl, includeSelf, useRawSurfaces])
+	}, [surfaces, isLocatedInGrid, includeSelf, useRawSurfaces])
 
 	return (
 		<DropdownInputField
@@ -343,7 +343,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 
 interface InternalTriggerDropdownProps {
 	label: React.ReactNode
-	isOnControl: boolean
+	isLocatedInGrid: boolean
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
@@ -352,7 +352,7 @@ interface InternalTriggerDropdownProps {
 
 const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 	label,
-	isOnControl,
+	isLocatedInGrid,
 	value,
 	setValue,
 	disabled,
@@ -362,7 +362,7 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
-		if (!isOnControl && includeSelf) {
+		if (!isLocatedInGrid && includeSelf) {
 			choices.push({ id: 'self', label: 'Current trigger' })
 		}
 
@@ -373,7 +373,7 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 			})
 		}
 		return choices
-	}, [triggersList, isOnControl, includeSelf])
+	}, [triggersList, isLocatedInGrid, includeSelf])
 
 	return (
 		<DropdownInputField
