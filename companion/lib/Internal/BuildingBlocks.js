@@ -15,27 +15,24 @@
  *
  */
 
-// TODO building-blocks
-// @ts-nocheck
-
 import { combineRgb } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 
 export default class BuildingBlocks {
 	#logger = LogController.createLogger('Internal/BuildingBlocks')
 
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
+	// /**
+	//  * @type {import('./Controller.js').default}
+	//  * @readonly
+	//  */
+	// #internalModule
 
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 */
-	constructor(internalModule) {
-		this.#internalModule = internalModule
-	}
+	// /**
+	//  * @param {import('./Controller.js').default} internalModule
+	//  */
+	// constructor(internalModule) {
+	// 	this.#internalModule = internalModule
+	// }
 
 	/**
 	 *
@@ -46,7 +43,21 @@ export default class BuildingBlocks {
 			logic_and: {
 				type: 'boolean',
 				label: 'Logic: AND',
-				description: ' Test if multiple conditions are true',
+				description: 'Test if multiple conditions are true',
+				style: {
+					color: combineRgb(255, 255, 255),
+					bgcolor: combineRgb(255, 0, 0),
+				},
+				showInvert: false,
+				options: [],
+				hasLearn: false,
+				learnTimeout: undefined,
+				supportsChildFeedbacks: true,
+			},
+			logic_or: {
+				type: 'boolean',
+				label: 'Logic: OR',
+				description: 'Test if one of multiple conditions is true',
 				style: {
 					color: combineRgb(255, 255, 255),
 					bgcolor: combineRgb(255, 0, 0),
@@ -71,40 +82,11 @@ export default class BuildingBlocks {
 			if (childValues.length === 0) return false
 
 			return childValues.reduce((acc, val) => acc && val, true)
+		} else if (feedback.type === 'logic_or') {
+			return childValues.reduce((acc, val) => acc || val, false)
 		} else {
 			this.#logger.warn(`Unexpected logic feedback type "${feedback.type}"`)
 			return false
 		}
 	}
-
-	/**
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @returns {void}
-	 */
-	forgetFeedback(feedback) {
-		// this.#variableSubscriptions.delete(feedback.id)
-	}
-
-	// /**
-	//  *
-	//  * @param {import('./Types.js').InternalVisitor} visitor
-	//  * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} _actions
-	//  * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
-	//  */
-	// visitReferences(visitor, _actions, feedbacks) {
-	// 	for (const feedback of feedbacks) {
-	// 		try {
-	// 			// check_expression.expression handled by generic options visitor
-
-	// 			if (feedback.type === 'variable_value') {
-	// 				visitor.visitVariableName(feedback.options, 'variable', feedback.id)
-	// 			} else if (feedback.type === 'variable_variable') {
-	// 				visitor.visitVariableName(feedback.options, 'variable', feedback.id)
-	// 				visitor.visitVariableName(feedback.options, 'variable2', feedback.id)
-	// 			}
-	// 		} catch (e) {
-	// 			//Ignore
-	// 		}
-	// 	}
-	// }
 }

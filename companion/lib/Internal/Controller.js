@@ -48,7 +48,7 @@ export default class InternalController extends CoreBase {
 	constructor(registry) {
 		super(registry, 'Internal/Controller')
 
-		this.#buildingBlocksFragment = new BuildingBlocks(this)
+		this.#buildingBlocksFragment = new BuildingBlocks()
 
 		this.fragments = [
 			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.instance.variable),
