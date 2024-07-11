@@ -250,15 +250,32 @@ export default class InternalController extends CoreBase {
 	 * Visit any references in some inactive internal actions and feedbacks
 	 * @param {import('./Types.js').InternalVisitor} visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} rawFeedbacks
+	 * @param {import('../Controls/Fragments/FragmentFeedbackInstance.js').FragmentFeedbackInstance[]} feedbacks
 	 */
-	visitReferences(visitor, actions, feedbacks) {
+	visitReferences(visitor, actions, rawFeedbacks, feedbacks) {
 		const internalActions = actions.filter((a) => a.instance === 'internal')
-		const internalFeedbacks = feedbacks.filter((a) => a.instance_id === 'internal')
+
+		/** @type {import('./Types.js').FeedbackForVisitor[]} */
+		const simpleInternalFeedbacks = []
+
+		for (const feedback of rawFeedbacks) {
+			if (feedback.instance_id !== 'internal') continue
+			simpleInternalFeedbacks.push(feedback)
+		}
+		for (const feedback of feedbacks) {
+			if (feedback.connectionId !== 'internal') continue
+			const feedbackInstance = feedback.asFeedbackInstance()
+			simpleInternalFeedbacks.push({
+				id: feedbackInstance.id,
+				type: feedbackInstance.type,
+				options: feedback.rawOptions, // Ensure the options is not a copy/clone
+			})
+		}
 
 		for (const fragment of this.fragments) {
 			if ('visitReferences' in fragment && typeof fragment.visitReferences === 'function') {
-				fragment.visitReferences(visitor, internalActions, internalFeedbacks)
+				fragment.visitReferences(visitor, internalActions, simpleInternalFeedbacks)
 			}
 		}
 	}

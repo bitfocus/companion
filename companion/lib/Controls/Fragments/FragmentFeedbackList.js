@@ -67,6 +67,14 @@ export class FragmentFeedbackList {
 	}
 
 	/**
+	 * Get all the feedbacks
+	 * @returns {FragmentFeedbackInstance[]}
+	 */
+	getAllFeedbacks() {
+		return [...this.#feedbacks, ...this.#feedbacks.flatMap((feedback) => feedback.getAllChildren())]
+	}
+
+	/**
 	 * Get the contained feedbacks as `FeedbackInstance`s
 	 * @returns {import('./FragmentFeedbackInstance.js').FeedbackInstance[]}
 	 */

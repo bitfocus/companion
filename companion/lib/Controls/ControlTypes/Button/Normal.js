@@ -618,7 +618,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	 * @access public
 	 */
 	collectReferencedConnections(foundConnectionIds, foundConnectionLabels) {
-		const allFeedbacks = this.feedbacks.getFlattenedFeedbackInstances()
+		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = []
 
 		for (const step of Object.values(this.steps)) {
@@ -626,7 +626,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 		}
 
 		for (const feedback of allFeedbacks) {
-			foundConnectionIds.add(feedback.instance_id)
+			foundConnectionIds.add(feedback.connectionId)
 		}
 		for (const action of allActions) {
 			foundConnectionIds.add(action.instance)
@@ -639,8 +639,9 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			visitor,
 			this.feedbacks.baseStyle,
 			allActions,
+			[],
 			allFeedbacks,
-			undefined
+			[]
 		)
 	}
 

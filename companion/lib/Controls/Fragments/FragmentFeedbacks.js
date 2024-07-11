@@ -435,6 +435,14 @@ export default class FragmentFeedbacks {
 	}
 
 	/**
+	 * Get all the feedbacks contained
+	 * @returns {FragmentFeedbackInstance[]}
+	 */
+	getAllFeedbacks() {
+		return this.#feedbacks.getAllFeedbacks()
+	}
+
+	/**
 	 * Get all the feedback instances
 	 * @param {string=} onlyConnectionId Optionally, only for a specific connection
 	 * @returns {Omit<FeedbackInstance, 'children'>[]}

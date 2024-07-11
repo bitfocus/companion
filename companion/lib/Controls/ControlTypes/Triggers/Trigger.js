@@ -479,11 +479,11 @@ export default class ControlTrigger extends ControlBase {
 	 * @access public
 	 */
 	collectReferencedConnections(foundConnectionIds, foundConnectionLabels) {
-		const allFeedbacks = this.feedbacks.getFlattenedFeedbackInstances()
+		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = this.actions.getAllActions()
 
 		for (const feedback of allFeedbacks) {
-			foundConnectionIds.add(feedback.instance_id)
+			foundConnectionIds.add(feedback.connectionId)
 		}
 		for (const action of allActions) {
 			foundConnectionIds.add(action.instance)
@@ -496,6 +496,7 @@ export default class ControlTrigger extends ControlBase {
 			visitor,
 			undefined,
 			allActions,
+			[],
 			allFeedbacks,
 			this.events
 		)
@@ -624,7 +625,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @access public
 	 */
 	renameVariables(labelFrom, labelTo) {
-		const allFeedbacks = this.feedbacks.getFlattenedFeedbackInstances()
+		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = this.actions.getAllActions()
 
 		// Fix up references
@@ -633,6 +634,7 @@ export default class ControlTrigger extends ControlBase {
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
 			allActions,
+			[],
 			allFeedbacks,
 			this.events,
 			true

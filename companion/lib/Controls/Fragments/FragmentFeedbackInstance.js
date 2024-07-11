@@ -2,6 +2,7 @@ import { isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import LogController from '../../Log/Controller.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
+import { visitFeedbackInstance } from '../../Util/Visitors/FeedbackInstanceVisitor.js'
 
 /**
  * @typedef {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
@@ -82,6 +83,14 @@ export class FragmentFeedbackInstance {
 	 */
 	get cachedValue() {
 		return this.#cachedValue
+	}
+
+	/**
+	 * Get a reference to the options for this feedback
+	 * Note: This must not be a copy, but the raw object
+	 */
+	get rawOptions() {
+		return this.#data.options
 	}
 
 	/**
@@ -488,6 +497,14 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
+	 * Recursively get all the feedbacks
+	 * @returns {FragmentFeedbackInstance[]}
+	 */
+	getAllChildren() {
+		return this.#children.getAllFeedbacks()
+	}
+
+	/**
 	 * Cleanup and forget any children belonging to the given connection
 	 * @param {string} connectionId
 	 * @returns {boolean}
@@ -554,5 +571,13 @@ export class FragmentFeedbackInstance {
 		if (!skipNotifyModule) {
 			this.subscribe(false)
 		}
+	}
+
+	/**
+	 * Visit any references in the current feedback
+	 * @param {import('../../Internal/Types.js').InternalVisitor} visitor Visitor to be used
+	 */
+	visitReferences(visitor) {
+		visitFeedbackInstance(visitor, this.#data)
 	}
 }

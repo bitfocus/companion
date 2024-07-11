@@ -1116,6 +1116,7 @@ class DataImportExport extends CoreBase {
 			undefined,
 			allActions,
 			result.condition || [],
+			[],
 			result.events || [],
 			false
 		)
@@ -1214,7 +1215,8 @@ class DataImportExport extends CoreBase {
 			result.style,
 			allActions,
 			result.feedbacks || [],
-			undefined,
+			[],
+			[],
 			false
 		)
 
