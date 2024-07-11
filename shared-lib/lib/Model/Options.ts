@@ -22,7 +22,6 @@ export type InternalInputFieldType =
 	| 'internal:instance_id'
 	| 'internal:surface_serial'
 	| 'internal:page'
-	| 'internal:feedbacks'
 // export type CompanionInputFieldTypeExtended = CompanionInputFieldBase['type']
 export interface CompanionInputFieldBaseExtended extends Omit<CompanionInputFieldBase, 'type'> {
 	type: InternalInputFieldType
@@ -63,9 +62,6 @@ export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended 
 	includeDirection: boolean
 	default: number
 }
-export interface InternalInputFieldFeedbacks extends CompanionInputFieldBaseExtended {
-	type: 'internal:feedbacks'
-}
 
 export type InternalInputField =
 	| EncodeIsVisible2<InternalInputFieldTime>
@@ -75,7 +71,6 @@ export type InternalInputField =
 	| EncodeIsVisible2<InternalInputFieldInstanceId>
 	| EncodeIsVisible2<InternalInputFieldSurfaceSerial>
 	| EncodeIsVisible2<InternalInputFieldPage>
-	| EncodeIsVisible2<InternalInputFieldFeedbacks>
 
 export interface CompanionInputFieldTextInputExtended extends CompanionInputFieldTextInput {
 	placeholder?: string

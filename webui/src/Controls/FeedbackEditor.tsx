@@ -509,14 +509,6 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						<CForm onSubmit={PreventDefaultHandler}>
 							{feedbackOptions.map((opt, i) => (
 								<MyErrorBoundary key={i}>
-									{/* {feedback.instance_id === 'internal' && opt.type === 'internal:feedbacks' ? (
-										// Handle the special case of nested feedbacks
-										<InternalFeedbacksPicker
-											serviceFactory={serviceFactory}
-											parentId={feedback.id}
-											feedbacks={(feedback.options || {})[opt.id]}
-										/>
-									) : ( */}
 									<OptionsInputField
 										key={i}
 										isLocatedInGrid={!!location}
@@ -527,7 +519,6 @@ const FeedbackEditor = observer(function FeedbackEditor({
 										setValue={service.setValue}
 										visibility={optionVisibility[opt.id] ?? true}
 									/>
-									{/* )} */}
 								</MyErrorBoundary>
 							))}
 						</CForm>
@@ -536,11 +527,15 @@ const FeedbackEditor = observer(function FeedbackEditor({
 					{feedback.instance_id === 'internal' && feedbackSpec?.supportsChildFeedbacks && (
 						<div className="cell-children">
 							<CForm onSubmit={PreventDefaultHandler}>
-								<InternalFeedbacksPicker
+								<InlineFeedbacksEditor
 									controlId={controlId}
-									serviceFactory={serviceFactory}
+									feedbacks={feedback.children ?? []}
+									entityType="condition"
+									booleanOnly
+									location={location}
+									addPlaceholder="+ Add condition"
+									feedbacksService={serviceFactory}
 									parentId={feedback.id}
-									feedbacks={feedback.children}
 								/>
 							</CForm>
 						</div>

@@ -78,8 +78,6 @@ export function InternalInstanceField(
 			)
 		case 'internal:time':
 			return <InternalTimePicker label={label} disabled={readonly} value={value} setValue={setValue} />
-		case 'internal:feedbacks':
-			throw new Error('`internal:feedbacks` is handled elsewhere')
 		default:
 			// Use fallback
 			return null
