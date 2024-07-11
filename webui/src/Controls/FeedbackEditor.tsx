@@ -18,7 +18,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { CheckboxInputField, DropdownInputField, TextInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
-import { PanelCollapseHelper2, usePanelCollapseHelper2 } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
@@ -74,7 +74,7 @@ export function ControlFeedbacksEditor({
 
 	const feedbackIds = useMemo(() => findAllFeedbackIdsDeep(feedbacks), [feedbacks])
 
-	const panelCollapseHelper = usePanelCollapseHelper2(`feedbacks_${controlId}`, feedbackIds)
+	const panelCollapseHelper = usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
 
 	return (
 		<InlineFeedbacksEditor
@@ -102,7 +102,7 @@ interface InlineFeedbacksEditorProps {
 	addPlaceholder: string
 	feedbacksService: IFeedbackEditorService
 	parentId: string | null
-	panelCollapseHelper: PanelCollapseHelper2
+	panelCollapseHelper: PanelCollapseHelper
 }
 
 const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
@@ -236,9 +236,9 @@ interface FeedbackTableRowProps {
 	index: number
 	parentId: string | null
 	dragId: string
+	panelCollapseHelper: PanelCollapseHelper
 	booleanOnly: boolean
 	location: ControlLocation | undefined
-	panelCollapseHelper: PanelCollapseHelper2
 }
 
 function FeedbackTableRow({
@@ -249,9 +249,9 @@ function FeedbackTableRow({
 	index,
 	parentId,
 	dragId,
+	panelCollapseHelper,
 	booleanOnly,
 	location,
-	panelCollapseHelper,
 }: FeedbackTableRowProps) {
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<FeedbackTableRowDragItem>({
@@ -323,8 +323,8 @@ function FeedbackTableRow({
 					location={location}
 					feedback={feedback}
 					serviceFactory={serviceFactory}
-					booleanOnly={booleanOnly}
 					panelCollapseHelper={panelCollapseHelper}
+					booleanOnly={booleanOnly}
 				/>
 			</td>
 		</tr>
@@ -338,8 +338,8 @@ interface FeedbackEditorProps {
 	feedback: FeedbackInstance
 	location: ControlLocation | undefined
 	serviceFactory: IFeedbackEditorService
+	panelCollapseHelper: PanelCollapseHelper
 	booleanOnly: boolean
-	panelCollapseHelper: PanelCollapseHelper2
 }
 
 const FeedbackEditor = observer(function FeedbackEditor({
@@ -349,8 +349,8 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	feedback,
 	location,
 	serviceFactory,
-	booleanOnly,
 	panelCollapseHelper,
+	booleanOnly,
 }: FeedbackEditorProps) {
 	const service = useControlFeedbackService(serviceFactory, feedback)
 
