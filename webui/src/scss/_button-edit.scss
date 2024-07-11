@@ -68,7 +68,8 @@ table.feedback-table {
 		opacity: 0.5;
 	}
 
-	.actionlist-dropzone {
+	.actionlist-dropzone,
+	.feedbacklist-dropzone {
 		p {
 			border: 2px dashed #bbb;
 			border-radius: 5px;

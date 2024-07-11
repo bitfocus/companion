@@ -169,8 +169,6 @@ export function InlineFeedbacksEditor({
 }: InlineFeedbacksEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	// const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
-
 	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
 
@@ -681,7 +679,7 @@ function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard 
 	if (!isDragging || feedbackCount > 0) return null
 
 	return (
-		<tr ref={drop} className={'actionlist-dropzone'}>
+		<tr ref={drop} className={'feedbacklist-dropzone'}>
 			<td colSpan={3}>
 				<p>Drop feedback here</p>
 			</td>
