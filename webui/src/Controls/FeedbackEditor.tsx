@@ -324,7 +324,7 @@ function FeedbackTableRow({
 			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
-			serviceFactory.moveCard(dragParentId, dragIndex, hoverParentId, hoverIndex)
+			serviceFactory.moveCard(item.feedbackId, hoverParentId, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -670,7 +670,7 @@ interface FeedbackRowDropPlaceholderProps {
 	dragId: string
 	parentId: string | null
 	feedbackCount: number
-	moveCard: (dragParentId: string | null, dragIndex: number, hoverParentId: string | null, hoverIndex: number) => void
+	moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => void
 }
 
 function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard }: FeedbackRowDropPlaceholderProps) {
@@ -680,7 +680,7 @@ function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard 
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
-			moveCard(item.parentId, item.index, parentId, 0)
+			moveCard(item.feedbackId, parentId, 0)
 		},
 	})
 

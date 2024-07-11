@@ -28,6 +28,12 @@ export class FragmentFeedbackList {
 	#controlId
 
 	/**
+	 * @type {string | null}
+	 * @readonly
+	 */
+	#id
+
+	/**
 	 * Whether this set of feedbacks can only use boolean feedbacks
 	 * @type {boolean}
 	 * @access private
@@ -39,18 +45,24 @@ export class FragmentFeedbackList {
 	 */
 	#feedbacks = []
 
+	get id() {
+		return this.#id
+	}
+
 	/**
 	 * @param {import('../../Instance/Definitions.js').default} instanceDefinitions
 	 * @param {import('../../Internal/Controller.js').default} internalModule
 	 * @param {import('../../Instance/Host.js').default} moduleHost
 	 * @param {string} controlId - id of the control
+	 * @param {string | null} id id of the parent
 	 * @param {boolean} booleanOnly
 	 */
-	constructor(instanceDefinitions, internalModule, moduleHost, controlId, booleanOnly) {
+	constructor(instanceDefinitions, internalModule, moduleHost, controlId, id, booleanOnly) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
+		this.#id = id
 		this.#booleanOnly = booleanOnly
 	}
 
@@ -166,21 +178,23 @@ export class FragmentFeedbackList {
 		return undefined
 	}
 
-	// /**
-	//  * Find the index of a child feedback, and the parent list
-	//  * @param {string} id
-	//  * @returns {{ parent: FragmentFeedbackList, index: number, item: FragmentFeedbackInstance } | undefined}
-	//  */
-	// findParentAndIndex(id) {
-	// 	const index = this.#feedbacks.findIndex((fb) => fb.id === id)
-	// 	if (index !== -1) {
-	// 		return { parent: this, index, item: this.#feedbacks[index] }
-	// 	}
-	// 	for (const feedback of this.#feedbacks) {
-	// 		return feedback.findParentAndIndex(id)
-	// 	}
-	// 	return undefined
-	// }
+	/**
+	 * Find the index of a child feedback, and the parent list
+	 * @param {string} id
+	 * @returns {{ parent: FragmentFeedbackList, index: number, item: FragmentFeedbackInstance } | undefined}
+	 */
+	findParentAndIndex(id) {
+		const index = this.#feedbacks.findIndex((fb) => fb.id === id)
+		if (index !== -1) {
+			return { parent: this, index, item: this.#feedbacks[index] }
+		}
+
+		for (const feedback of this.#feedbacks) {
+			return feedback.findParentAndIndex(id)
+		}
+
+		return undefined
+	}
 
 	/**
 	 * Add a child feedback to this feedback

@@ -120,6 +120,7 @@ export default class FragmentFeedbacks {
 			internalModule,
 			moduleHost,
 			this.controlId,
+			null,
 			this.#booleanOnly
 		)
 	}
@@ -283,30 +284,23 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Reorder a feedback in the list
-	 * @param {string | null} oldParentId the parentId of the feedback to move
-	 * @param {number} oldIndex the index of the feedback to move
+	 * @param {string } moveFeedbackId the id of the feedback to move
 	 * @param {string | null} newParentId the target parentId of the feedback
 	 * @param {number} newIndex the target index of the feedback
 	 * @returns {boolean}
 	 * @access public
 	 */
-	feedbackReorder(oldParentId, oldIndex, newParentId, newIndex) {
-		if (oldParentId === newParentId) {
-			if (oldParentId) {
-				const parentFeedback = this.#feedbacks.findById(oldParentId)
-				if (!parentFeedback) return false
+	feedbackReorder(moveFeedbackId, newParentId, newIndex) {
+		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
+		if (!oldItem) return false
 
-				parentFeedback.moveChild(oldIndex, newIndex)
-			} else {
-				this.#feedbacks.moveFeedback(oldIndex, newIndex)
-			}
+		if (oldItem.parent.id === newParentId) {
+			oldItem.parent.moveFeedback(oldItem.index, newIndex)
 		} else {
 			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
 			if (newParentId && !newParent) return false
 
-			const poppedFeedback = oldParentId
-				? this.#feedbacks.findById(oldParentId)?.popChild(oldIndex)
-				: this.#feedbacks.popFeedback(oldIndex)
+			const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
 			if (!poppedFeedback) return false
 
 			if (newParent) {

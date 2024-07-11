@@ -112,6 +112,7 @@ export class FragmentFeedbackInstance {
 			this.#internalModule,
 			this.#moduleHost,
 			this.#controlId,
+			this.id,
 			true
 		)
 		if (data.instance_id === 'internal' && data.children) {
@@ -414,14 +415,14 @@ export class FragmentFeedbackInstance {
 		return this.#children.findById(id)
 	}
 
-	// /**
-	//  * Find the index of a child feedback, and the parent list
-	//  * @param {string} id
-	//  * @returns {{ parent: FragmentFeedbackList, index: number, item: FragmentFeedbackInstance } | undefined}
-	//  */
-	// findParentAndIndex(id) {
-	// 	return this.#children.findParentAndIndex(id)
-	// }
+	/**
+	 * Find the index of a child feedback, and the parent list
+	 * @param {string} id
+	 * @returns {{ parent: FragmentFeedbackList, index: number, item: FragmentFeedbackInstance } | undefined}
+	 */
+	findParentAndIndex(id) {
+		return this.#children.findParentAndIndex(id)
+	}
 
 	/**
 	 * Add a child feedback to this feedback

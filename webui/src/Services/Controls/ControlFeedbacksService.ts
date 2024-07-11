@@ -5,7 +5,7 @@ import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 export interface IFeedbackEditorService {
 	addFeedback: (feedbackType: string, parentId: string | null) => void
-	moveCard: (dragParentId: string | null, dragIndex: number, hoverParentId: string | null, hoverIndex: number) => void
+	moveCard: (dragId: string, hoverParentId: string | null, hoverIndex: number) => void
 
 	setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, value: any) => void
 	setInverted: (feedbackId: string, inverted: boolean) => void
@@ -47,11 +47,10 @@ export function useControlFeedbacksEditorService(
 					}
 				)
 			},
-			moveCard: (dragParentId: string | null, dragIndex: number, hoverParentId: string | null, hoverIndex: number) => {
+			moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => {
 				socketEmitPromise(socket, 'controls:feedback:reorder', [
 					controlId,
-					dragParentId,
-					dragIndex,
+					dragFeedbackId,
 					hoverParentId,
 					hoverIndex,
 				]).catch((e) => {

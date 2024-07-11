@@ -108,8 +108,7 @@ export interface ClientToBackendEventsMap {
 	'controls:feedback:set-option': (controlId: string, feedbackId: string, key: string, val: any) => boolean
 	'controls:feedback:reorder': (
 		controlId: string,
-		dragParentId: string | null,
-		dragIndex: number,
+		dragFeedbackId: string,
 		hoverParentId: string | null,
 		hoverIndex: number
 	) => boolean
