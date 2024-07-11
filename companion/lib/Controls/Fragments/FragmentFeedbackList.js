@@ -92,6 +92,21 @@ export class FragmentFeedbackList {
 		return result
 	}
 
+	getChildBooleanValues() {
+		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
+
+		/** @type {boolean[]} */
+		const values = []
+
+		for (const feedback of this.#feedbacks) {
+			if (feedback.disabled) continue
+
+			values.push(feedback.getBooleanValue())
+		}
+
+		return values
+	}
+
 	/**
 	 * Initialise from storage
 	 * @param {import('./FragmentFeedbackInstance.js').FeedbackInstance[]} feedbacks

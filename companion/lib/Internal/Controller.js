@@ -37,14 +37,22 @@ export default class InternalController extends CoreBase {
 	#feedbacks = new Map()
 
 	/**
+	 * @type {BuildingBlocks}
+	 * @readonly
+	 */
+	#buildingBlocksFragment
+
+	/**
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
 		super(registry, 'Internal/Controller')
 
+		this.#buildingBlocksFragment = new BuildingBlocks(this)
+
 		this.fragments = [
 			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.instance.variable),
-			new BuildingBlocks(this),
+			this.#buildingBlocksFragment,
 			new Instance(this, registry.instance),
 			new Time(this),
 			new Controls(this, registry.graphics, registry.controls, registry.page, registry.instance.variable),
@@ -278,6 +286,16 @@ export default class InternalController extends CoreBase {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Execute a logic feedback
+	 * @param {import('../Controls/IControlFragments.js').FeedbackInstance} feedback
+	 * @param {boolean[]} childValues
+	 * @returns {boolean}
+	 */
+	executeLogicFeedback(feedback, childValues) {
+		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)
 	}
 
 	/**

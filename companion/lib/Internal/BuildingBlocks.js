@@ -61,20 +61,19 @@ export default class BuildingBlocks {
 	}
 
 	/**
-	 * Get an updated value for a feedback
-	 * @param {import('./Types.js').FeedbackInstanceExt} feedback
-	 * @returns {boolean | void}
+	 * Execute a logic feedback
+	 * @param {import('../Controls/IControlFragments.js').FeedbackInstance} feedback
+	 * @param {boolean[]} childValues
+	 * @returns {boolean}
 	 */
-	executeFeedback(feedback) {
-		if (feedback.type == 'check_expression') {
-			// try {
-			// 	const res = this.#variableController.parseExpression(feedback.options.expression, 'boolean')
-			// 	this.#variableSubscriptions.set(feedback.id, Array.from(res.variableIds))
-			// 	return !!res.value
-			// } catch (e) {
-			// 	this.#logger.warn(`Failed to execute expression "${feedback.options.expression}": ${e}`)
-			// 	return false
-			// }
+	executeLogicFeedback(feedback, childValues) {
+		if (feedback.type === 'logic_and') {
+			if (childValues.length === 0) return false
+
+			return childValues.reduce((acc, val) => acc && val, true)
+		} else {
+			this.#logger.warn(`Unexpected logic feedback type "${feedback.type}"`)
+			return false
 		}
 	}
 

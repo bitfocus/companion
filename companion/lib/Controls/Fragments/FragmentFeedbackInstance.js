@@ -149,9 +149,12 @@ export class FragmentFeedbackInstance {
 		const definition = this.getDefinition()
 		if (!definition || definition.type !== 'boolean') return false
 
-		// TODO building-blocks consider children
-		if (this.#data.type === 'logic_and') {
-			return this.#children.getBooleanValue()
+		// Special case to handle the internal 'logic' operators, which need to be executed live
+		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
+			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
+			const childValues = this.#children.getChildBooleanValues()
+
+			return this.#internalModule.executeLogicFeedback(this.asFeedbackInstance(), childValues)
 		}
 
 		if (typeof this.#cachedValue === 'boolean') {
