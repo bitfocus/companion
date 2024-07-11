@@ -236,6 +236,12 @@ export function InlineFeedbacksEditor({
 							/>
 						</MyErrorBoundary>
 					))}
+					<FeedbackRowDropPlaceholder
+						dragId={`feedbacks_${controlId}`}
+						parentId={parentId}
+						feedbackCount={feedbacks ? feedbacks.length : 0}
+						moveCard={feedbacksService.moveCard}
+					/>
 				</tbody>
 			</table>
 
@@ -658,4 +664,33 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 	} else {
 		return null
 	}
+}
+
+interface FeedbackRowDropPlaceholderProps {
+	dragId: string
+	parentId: string | null
+	feedbackCount: number
+	moveCard: (dragParentId: string | null, dragIndex: number, hoverParentId: string | null, hoverIndex: number) => void
+}
+
+function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard }: FeedbackRowDropPlaceholderProps) {
+	const [isDragging, drop] = useDrop<FeedbackTableRowDragItem, unknown, boolean>({
+		accept: dragId,
+		collect: (monitor) => {
+			return monitor.canDrop()
+		},
+		hover(item, _monitor) {
+			moveCard(item.parentId, item.index, parentId, 0)
+		},
+	})
+
+	if (!isDragging || feedbackCount > 0) return null
+
+	return (
+		<tr ref={drop} className={'actionlist-dropzone'}>
+			<td colSpan={3}>
+				<p>Drop feedback here</p>
+			</td>
+		</tr>
+	)
 }
