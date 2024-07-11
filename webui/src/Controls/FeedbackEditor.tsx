@@ -18,7 +18,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { CheckboxInputField, DropdownInputField, TextInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
@@ -48,7 +48,7 @@ interface ControlFeedbacksEditorProps {
 	addPlaceholder: string
 }
 
-export function ControlFeedbacksEditor({
+export const ControlFeedbacksEditor = observer(function ControlFeedbacksEditor({
 	controlId,
 	feedbacks,
 	heading,
@@ -65,8 +65,7 @@ export function ControlFeedbacksEditor({
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
-	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
+	const panelCollapseHelper = usePanelCollapseHelperLite(`feedbacks_${controlId}`, feedbackIds)
 
 	return (
 		<>
@@ -86,13 +85,13 @@ export function ControlFeedbacksEditor({
 				{feedbacks.length > 1 && (
 					<CButtonGroup className="right">
 						<CButtonGroup>
-							{canExpandAll && (
-								<CButton size="sm" onClick={setAllExpanded} title="Expand all feedbacks">
+							{panelCollapseHelper.canExpandAll() && (
+								<CButton size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all feedbacks">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							)}
-							{canCollapseAll && (
-								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all feedbacks">
+							{panelCollapseHelper.canCollapseAll() && (
+								<CButton size="sm" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all feedbacks">
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
@@ -112,8 +111,7 @@ export function ControlFeedbacksEditor({
 								feedback={a}
 								dragId={`feedback_${controlId}`}
 								serviceFactory={feedbacksService}
-								setCollapsed={setPanelCollapsed}
-								isCollapsed={isPanelCollapsed(a.id)}
+								panelCollapseHelper={panelCollapseHelper}
 								booleanOnly={booleanOnly}
 								location={location}
 							/>
@@ -141,7 +139,7 @@ export function ControlFeedbacksEditor({
 			</div>
 		</>
 	)
-}
+})
 
 interface FeedbackTableRowDragItem {
 	feedbackId: string
@@ -158,8 +156,7 @@ interface FeedbackTableRowProps {
 	serviceFactory: IFeedbackEditorService
 	index: number
 	dragId: string
-	isCollapsed: boolean
-	setCollapsed: (feedbackId: string, collapsed: boolean) => void
+	panelCollapseHelper: PanelCollapseHelperLite
 	booleanOnly: boolean
 	location: ControlLocation | undefined
 }
@@ -170,8 +167,7 @@ function FeedbackTableRow({
 	serviceFactory,
 	index,
 	dragId,
-	isCollapsed,
-	setCollapsed,
+	panelCollapseHelper,
 	booleanOnly,
 	location,
 }: FeedbackTableRowProps) {
@@ -224,9 +220,6 @@ function FeedbackTableRow({
 	})
 	preview(drop(ref))
 
-	const doCollapse = useCallback(() => setCollapsed(feedback.id, true), [setCollapsed, feedback.id])
-	const doExpand = useCallback(() => setCollapsed(feedback.id, false), [setCollapsed, feedback.id])
-
 	if (!feedback) {
 		// Invalid feedback, so skip
 		return null
@@ -243,9 +236,7 @@ function FeedbackTableRow({
 					location={location}
 					feedback={feedback}
 					service={service}
-					isCollapsed={isCollapsed}
-					doCollapse={doCollapse}
-					doExpand={doExpand}
+					panelCollapseHelper={panelCollapseHelper}
 					booleanOnly={booleanOnly}
 				/>
 			</td>
@@ -258,9 +249,7 @@ interface FeedbackEditorProps {
 	feedback: FeedbackInstance
 	location: ControlLocation | undefined
 	service: IFeedbackEditorFeedbackService
-	isCollapsed: boolean
-	doCollapse: () => void
-	doExpand: () => void
+	panelCollapseHelper: PanelCollapseHelperLite
 	booleanOnly: boolean
 }
 
@@ -269,9 +258,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	feedback,
 	location,
 	service,
-	isCollapsed,
-	doCollapse,
-	doExpand,
+	panelCollapseHelper,
 	booleanOnly,
 }: FeedbackEditorProps) {
 	const { feedbackDefinitions } = useContext(RootAppStoreContext)
@@ -299,6 +286,16 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	const headline = feedback.headline
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+
+	const doCollapse = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(feedback.id, true),
+		[panelCollapseHelper, feedback.id]
+	)
+	const doExpand = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(feedback.id, false),
+		[panelCollapseHelper, feedback.id]
+	)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(feedback.id)
 
 	return (
 		<>

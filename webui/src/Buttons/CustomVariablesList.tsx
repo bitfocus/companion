@@ -16,7 +16,7 @@ import { CheckboxInputField } from '../Components/CheckboxInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -154,8 +154,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 	)
 
 	const allVariableNames = useComputed(() => Array.from(customVariables.customVariables.keys()), [customVariables])
-	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`custom_variables`, allVariableNames)
+	const panelCollapseHelper = usePanelCollapseHelperLite(`custom_variables`, allVariableNames)
 
 	const [filter, setFilter] = useState('')
 	const clearFilter = useCallback(() => setFilter(''), [])
@@ -199,13 +198,13 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 			<h5>
 				Custom Variables
 				<CButtonGroup>
-					{!hasNoVariables && canExpandAll && (
-						<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
+					{!hasNoVariables && panelCollapseHelper.canExpandAll() && (
+						<CButton color="white" size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					)}
-					{!hasNoVariables && canCollapseAll && (
-						<CButton color="white" size="sm" onClick={setAllCollapsed} title="Collapse all">
+					{!hasNoVariables && panelCollapseHelper.canCollapseAll() && (
+						<CButton color="white" size="sm" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all">
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
@@ -262,8 +261,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 									setCurrentValue={setCurrentValue}
 									setPersistenceValue={setPersistenceValue}
 									moveRow={moveRow}
-									setCollapsed={setPanelCollapsed}
-									isCollapsed={isPanelCollapsed(info.name)}
+									panelCollapseHelper={panelCollapseHelper}
 								/>
 							)
 						})}
@@ -313,8 +311,7 @@ interface CustomVariableRowProps {
 	setCurrentValue: (name: string, value: any) => void
 	setPersistenceValue: (name: string, persisted: boolean) => void
 	moveRow: (itemName: string, targetName: string) => void
-	isCollapsed: boolean
-	setCollapsed: (name: string, collapsed: boolean) => void
+	panelCollapseHelper: PanelCollapseHelperLite
 }
 
 function CustomVariableRow({
@@ -329,13 +326,13 @@ function CustomVariableRow({
 	setCurrentValue,
 	setPersistenceValue,
 	moveRow,
-	isCollapsed,
-	setCollapsed,
+	panelCollapseHelper,
 }: CustomVariableRowProps) {
 	const fullname = `internal:${shortname}`
 
-	const doCollapse = useCallback(() => setCollapsed(name, true), [setCollapsed, name])
-	const doExpand = useCallback(() => setCollapsed(name, false), [setCollapsed, name])
+	const doCollapse = useCallback(() => panelCollapseHelper.setPanelCollapsed(name, true), [panelCollapseHelper, name])
+	const doExpand = useCallback(() => panelCollapseHelper.setPanelCollapsed(name, false), [panelCollapseHelper, name])
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(name)
 
 	const ref = useRef(null)
 	const [, drop] = useDrop<CustomVariableDragItem>({
