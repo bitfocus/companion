@@ -157,7 +157,7 @@ class SurfaceIPSatellite extends EventEmitter {
 			if (this.#streamColors) {
 				let bgcolor = 'rgb(0,0,0)'
 				let fgcolor = 'rgb(0,0,0)'
-				if (style && style.color && style.bgcolor) {
+				if (style && style.color !== undefined && style.bgcolor !== undefined) {
 					bgcolor = parseColor(style.bgcolor).replaceAll(' ', '')
 					fgcolor = parseColor(style.color).replaceAll(' ', '')
 				}
