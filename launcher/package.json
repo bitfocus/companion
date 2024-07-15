@@ -60,8 +60,9 @@
 		"nsis": {
 			"artifactName": "companion-win64.exe",
 			"createStartMenuShortcut": true,
-			"perMachine": true,
+			"perMachine": false,
 			"oneClick": false,
+			"selectPerMachineByDefault": true,
 			"allowElevation": true,
 			"allowToChangeInstallationDirectory": true,
 			"installerIcon": "icon.ico",
