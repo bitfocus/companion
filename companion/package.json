@@ -47,7 +47,7 @@
 	"dependencies": {
 		"@companion-app/shared": "*",
 		"@companion-module/base": "~1.10.0",
-		"@elgato-stream-deck/node": "^6.2.2",
+		"@elgato-stream-deck/node": "^7.0.0-0",
 		"@julusian/bonjour-service": "^1.3.0-2",
 		"@julusian/image-rs": "^1.1.1",
 		"@julusian/jpeg-turbo": "^2.1.0",
