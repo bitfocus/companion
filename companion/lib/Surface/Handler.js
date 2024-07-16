@@ -629,7 +629,7 @@ class SurfaceHandler extends EventEmitter {
 				if (controlId) {
 					this.#controls.rotateControl(controlId, direction, this.surfaceId)
 				}
-				this.#logger.debug(`Rotary ${thisPage}/${x2 + xOffset}/${y2 + yOffset} rotated ${direction ? 'right' : 'left'}`)
+				this.#logger.debug(`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${direction ? 'right' : 'left'}`)
 			} else {
 				// Ignore when locked out
 			}
