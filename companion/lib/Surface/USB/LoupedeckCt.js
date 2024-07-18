@@ -140,7 +140,7 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 			brightness: 100,
 		}
 
-		this.logger.debug(`Adding Loupedeck CT USB device ${devicePath}`)
+		this.logger.debug(`Adding Loupedeck CT device ${devicePath}`)
 
 		this.info = {
 			type: `Loupedeck CT`,
@@ -333,13 +333,6 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 		this.emit('click', x, y, state)
 	}
 
-	async #init() {
-		this.logger.debug(`${this.#loupedeck.modelName} detected`)
-
-		// Make sure the first clear happens properly
-		await this.#loupedeck.blankDevice(true, true)
-	}
-
 	/**
 	 * Open a loupedeck CT
 	 * @param {string} devicePath
@@ -411,7 +404,7 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 
 			const self = new SurfaceUSBLoupedeckCt(devicePath, loupedeck, info, serialNumber)
 
-			await self.#init()
+			self.clearDeck()
 
 			return self
 		} catch (e) {
@@ -484,8 +477,6 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 	}
 
 	clearDeck() {
-		this.logger.debug('loupedeck.clearDeck()')
-
 		this.#loupedeck.blankDevice(true, true).catch((e) => {
 			this.logger.debug(`blank failed: ${e}`)
 		})

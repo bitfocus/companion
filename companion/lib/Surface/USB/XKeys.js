@@ -94,6 +94,8 @@ class SurfaceUSBXKeys extends EventEmitter {
 
 		this.#logger = LogController.createLogger(`Surface/USB/XKeys/${devicePath}`)
 
+		this.#logger.debug(`Adding xkeys ${panel.info.name} USB device: ${devicePath}`)
+
 		this.#myXkeysPanel = panel
 		this.#useLegacyLayout = !!options.useLegacyLayout
 
@@ -254,9 +256,7 @@ class SurfaceUSBXKeys extends EventEmitter {
 		}
 	}
 
-	async #init() {
-		this.#logger.debug(`Xkeys ${this.#myXkeysPanel.info.name} detected`)
-
+	#init() {
 		if (this.#useLegacyLayout) {
 			setTimeout(() => {
 				const { colCount, rowCount } = this.#myXkeysPanel.info
@@ -281,7 +281,7 @@ class SurfaceUSBXKeys extends EventEmitter {
 
 			const self = new SurfaceUSBXKeys(devicePath, panel, deviceId, options || {})
 
-			await self.#init()
+			self.#init()
 
 			return self
 		} catch (e) {

@@ -310,13 +310,6 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 		}
 	}
 
-	async #init() {
-		this.logger.debug(`Elgato ${this.#loupedeck.modelName} detected`)
-
-		// Make sure the first clear happens properly
-		await this.#loupedeck.blankDevice(true, true)
-	}
-
 	/**
 	 * Open a loupedeck
 	 * @param {string} devicePath
@@ -346,7 +339,7 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 
 			const self = new SurfaceUSBLoupedeckLive(devicePath, loupedeck, info, serialNumber)
 
-			await self.#init()
+			self.clearDeck()
 
 			return self
 		} catch (e) {

@@ -114,7 +114,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 		}
 	}
 
-	async #init() {
+	#init() {
 		this.#logger.debug(`Infinitton iDisplay detected`)
 
 		// Make sure the first clear happens properly
@@ -129,7 +129,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 	static async create(devicePath) {
 		const self = new SurfaceUSBInfinitton(devicePath)
 
-		await self.#init()
+		self.#init()
 
 		return self
 	}

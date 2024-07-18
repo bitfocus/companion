@@ -204,10 +204,6 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 		})
 	}
 
-	async #init() {
-		this.#logger.debug(`Contour Shuttle ${this.deviceInfo.name} detected`)
-	}
-
 	/**
 	 * Open a countour shuttle
 	 * @param {string} devicePath
@@ -240,8 +236,6 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 			}
 
 			const self = new SurfaceUSBContourShuttle(devicePath, contourShuttle, info, deviceInfo)
-
-			await self.#init()
 
 			return self
 		} catch (e) {

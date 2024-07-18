@@ -62,7 +62,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			rotation: 0,
 		}
 
-		this.#logger.debug(`Adding elgato-streamdeck USB device: ${devicePath}`)
+		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} USB device: ${devicePath}`)
 
 		this.#streamDeck = streamDeck
 
@@ -248,8 +248,6 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 		const serialNumber = await this.#streamDeck.getSerialNumber()
 		this.info.deviceId = `streamdeck:${serialNumber}`
 
-		this.#logger.debug(`Elgato ${this.#streamDeck.PRODUCT_NAME} detected`)
-
 		// Make sure the first clear happens properly
 		await this.#streamDeck.clearPanel()
 	}
@@ -271,7 +269,19 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 		try {
 			const self = new SurfaceUSBElgatoStreamDeck(devicePath, streamDeck)
 
+			/** @type {any} */
+			let errorDuringInit = null
+			const tmpErrorHandler = (/** @type {any} */ error) => {
+				errorDuringInit = errorDuringInit || error
+			}
+
+			// Ensure that any hid error during the init call don't cause a crash
+			self.on('error', tmpErrorHandler)
+
 			await self.#init()
+
+			if (errorDuringInit) throw errorDuringInit
+			self.off('error', tmpErrorHandler)
 
 			return self
 		} catch (e) {

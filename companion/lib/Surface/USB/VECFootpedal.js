@@ -101,10 +101,6 @@ class SurfaceUSBVECFootpedal extends EventEmitter {
 		})
 	}
 
-	async #init() {
-		this.#logger.debug(`VEC Footpedal ${this.deviceInfo.name} detected`)
-	}
-
 	/**
 	 * Open a VEC Footpedal
 	 * @param {string} devicePath
@@ -131,8 +127,6 @@ class SurfaceUSBVECFootpedal extends EventEmitter {
 			}
 
 			const self = new SurfaceUSBVECFootpedal(devicePath, pedal, info, deviceInfo)
-
-			await self.#init()
 
 			return self
 		} catch (e) {
