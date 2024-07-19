@@ -1,4 +1,3 @@
-// @ts-check
 /*
  * This file is part of the Companion project
  * Copyright (c) 2018 Bitfocus AS
@@ -44,6 +43,7 @@ import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
+import { SurfaceLayoutRegistry } from './LayoutRegistry.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -52,6 +52,13 @@ HID.devices()
 const SurfacesRoom = 'surfaces'
 
 class SurfaceController extends CoreBase {
+	/**
+	 * @type {SurfaceLayoutRegistry}
+	 * @access private
+	 * @readonly
+	 */
+	#surfaceLayouts
+
 	/**
 	 * The last sent json object
 	 * @type {Record<string, ClientDevicesListItem> }
@@ -114,6 +121,8 @@ class SurfaceController extends CoreBase {
 	 */
 	constructor(registry) {
 		super(registry, 'Surface/Controller')
+
+		this.#surfaceLayouts = new SurfaceLayoutRegistry()
 
 		this.#surfacesAllLocked = !!this.userconfig.getKey('link_lockouts')
 
@@ -425,6 +434,11 @@ class SurfaceController extends CoreBase {
 			for (let surface of this.#surfaceHandlers.values()) {
 				if (surface && surface.surfaceId == id) {
 					surface.setPanelConfig(config)
+
+					setImmediate(() => {
+						this.updateDevicesList()
+					})
+
 					return surface.getPanelConfig()
 				}
 			}
@@ -533,6 +547,10 @@ class SurfaceController extends CoreBase {
 			if (err) return err
 
 			return group.groupConfig
+		})
+
+		client.onPromise('surfaces:get-layouts', () => {
+			return this.#surfaceLayouts.getLayouts()
 		})
 	}
 
@@ -654,6 +672,21 @@ class SurfaceController extends CoreBase {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+				xOffset: config.config?.xOffset ?? 0,
+				yOffset: config.config?.yOffset ?? 0,
+				layout: config.layout ?? null,
+			}
+
+			// If the surface has a cached grid size, a crude layout can be generated
+			if (config.gridSize && !surfaceInfo.layout) {
+				surfaceInfo.layout = {
+					id: '__auto__',
+					name: surfaceInfo.displayName,
+
+					type: 'grid',
+					rows: config.gridSize.rows,
+					columns: config.gridSize.columns,
+				}
 			}
 
 			if (surfaceHandler) {
@@ -662,6 +695,15 @@ class SurfaceController extends CoreBase {
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
+
+				surfaceInfo.layout = {
+					id: '__auto__',
+					name: surfaceInfo.displayName,
+
+					type: 'grid',
+					rows: surfaceHandler.panelGridSize.rows,
+					columns: surfaceHandler.panelGridSize.columns,
+				}
 			}
 
 			return surfaceInfo

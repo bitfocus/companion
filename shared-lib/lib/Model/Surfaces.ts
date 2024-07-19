@@ -9,6 +9,10 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
+
+	xOffset: number
+	yOffset: number
+	layout: SurfaceLayoutSchema | null
 }
 
 export interface ClientDevicesListItem {
@@ -45,4 +49,33 @@ export interface SurfacesUpdateUpdateOp {
 	itemId: string
 
 	patch: JsonPatchOperation[]
+}
+
+export type SurfaceLayoutSchema = SurfaceLayoutSchemaGrid | SurfaceLayoutSchemaComplex
+
+export interface SurfaceLayoutSchemaBase {
+	id: string
+	name: string
+}
+
+export interface SurfaceLayoutSchemaGrid {
+	id: string
+	name: string
+
+	type: 'grid'
+
+	rows: number
+	columns: number
+}
+
+export interface SurfaceLayoutSchemaComplex {
+	id: string
+	name: string
+
+	type: 'complex'
+
+	/**
+	 * Background image, recommended to be a svg when possible
+	 */
+	backgroundImage: string
 }

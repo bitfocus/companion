@@ -16,7 +16,13 @@ import type {
 	HelpDescription,
 	WrappedImage,
 } from './Model/Common.js'
-import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig, SurfacesUpdate } from './Model/Surfaces.js'
+import type {
+	ClientDevicesListItem,
+	SurfaceGroupConfig,
+	SurfaceLayoutSchema,
+	SurfacePanelConfig,
+	SurfacesUpdate,
+} from './Model/Surfaces.js'
 import type {
 	ClientImportObject,
 	ClientImportSelection,
@@ -223,6 +229,7 @@ export interface ClientToBackendEventsMap {
 	'surfaces:config-get': (surfaceId: string) => SurfacePanelConfig | null
 	'surfaces:config-set': (surfaceId: string, panelConfig: SurfacePanelConfig) => SurfacePanelConfig | string
 	'surfaces:group-config-get': (groupId: string) => SurfaceGroupConfig
+	'surfaces:get-layouts': () => SurfaceLayoutSchema[]
 
 	'emulator:startup': (emulatorId: string) => EmulatorConfig
 	'emulator:press': (emulatorId: string, column: number, row: number) => void

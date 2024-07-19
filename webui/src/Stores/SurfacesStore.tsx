@@ -1,4 +1,9 @@
-import { ClientDevicesListItem, SurfacesUpdate } from '@companion-app/shared/Model/Surfaces.js'
+import {
+	ClientDevicesListItem,
+	ClientSurfaceItem,
+	SurfaceLayoutSchema,
+	SurfacesUpdate,
+} from '@companion-app/shared/Model/Surfaces.js'
 import { action, observable } from 'mobx'
 import { assertNever } from '../util.js'
 import { applyPatch } from 'fast-json-patch'
@@ -6,6 +11,19 @@ import { cloneDeep } from 'lodash-es'
 
 export class SurfacesStore {
 	readonly store = observable.map<string, ClientDevicesListItem>()
+	readonly layouts = observable.array<SurfaceLayoutSchema>()
+
+	public getSurfaceItem(id: string): ClientSurfaceItem | undefined {
+		for (const surfaceGroup of this.store.values()) {
+			for (const surface of surfaceGroup.surfaces) {
+				if (surface.id === id) {
+					return surface
+				}
+			}
+		}
+
+		return undefined
+	}
 
 	public reset = action((newData: Record<string, ClientDevicesListItem | undefined> | null): void => {
 		this.store.clear()
@@ -16,6 +34,14 @@ export class SurfacesStore {
 					this.store.set(id, item)
 				}
 			}
+		}
+	})
+
+	public resetLayouts = action((newData: SurfaceLayoutSchema[] | null): void => {
+		this.layouts.clear()
+
+		if (newData) {
+			this.layouts.push(...newData)
 		}
 	})
 

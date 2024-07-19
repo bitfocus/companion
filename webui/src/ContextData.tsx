@@ -26,6 +26,7 @@ import { UserConfigStore } from './Stores/UserConfigStore.js'
 import { VariablesStore } from './Stores/VariablesStore.js'
 import { useCustomVariablesSubscription } from './Hooks/useCustomVariablesSubscription.js'
 import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
+import { useSurfaceLayoutsSubscription } from './Hooks/useSurfaceLayoutsSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -73,6 +74,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfigReady = useUserConfigSubscription(socket, rootStore.userConfig)
 	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
+	const surfaceLayoutsReady = useSurfaceLayoutsSubscription(socket, rootStore.surfaces)
 	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
 
@@ -140,6 +142,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		customVariablesReady,
 		userConfigReady,
 		surfacesReady,
+		surfaceLayoutsReady,
 		pagesReady,
 		triggersListReady,
 		activeLearnRequestsReady,

@@ -26,6 +26,8 @@ import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { GridZoomController } from './GridZoom.js'
 import { CModalExt } from '../Components/CModalExt.js'
+import { GridViewAsController, GridViewSelectedSurfaceInfo } from './GridViewAs.js'
+import { ButtonGridViewAsSurfaceControl } from './ButtonGridViewAsSurfaceControl.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -37,6 +39,7 @@ interface ButtonsGridPanelProps {
 	clearSelectedButton: () => void
 	gridZoomValue: number
 	gridZoomController: GridZoomController
+	gridViewAsController: GridViewAsController
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
@@ -49,8 +52,9 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	clearSelectedButton,
 	gridZoomValue,
 	gridZoomController,
+	gridViewAsController,
 }: ButtonsGridPanelProps) {
-	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
+	const { pages } = useContext(RootAppStoreContext)
 
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
@@ -112,6 +116,103 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		editRef.current?.show(Number(pageNumber), pageInfo)
 	}, [pageNumber, pageInfo])
 
+	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
+
+	return (
+		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
+			<div className="button-grid-panel-header" ref={isInViewRef}>
+				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
+				<EditPagePropertiesModal ref={editRef} />
+
+				<h4>Buttons</h4>
+				<p>
+					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
+					and what they should do when you press or click on them.
+				</p>
+
+				<CRow>
+					<CCol sm={12}>
+						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
+							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
+								<FontAwesomeIcon icon={faFileExport} />
+							</CButton>
+							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
+								<FontAwesomeIcon icon={faPencil} />
+							</CButton>
+							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
+								<FontAwesomeIcon icon={faHome} />
+							</CButton>
+							<ButtonGridZoomControl
+								useCompactButtons={true}
+								gridZoomValue={gridZoomValue}
+								gridZoomController={gridZoomController}
+							/>
+							<ButtonGridViewAsSurfaceControl gridViewAsController={gridViewAsController} />
+						</ButtonGridHeader>
+					</CCol>
+				</CRow>
+			</div>
+			<div className="button-grid-panel-content">
+				{hasBeenInView &&
+					(gridViewAsController.enabled ? (
+						<ButtonViewAsLayout
+							gridRef={gridRef}
+							isHot={isHot}
+							pageNumber={pageNumber}
+							buttonClick={buttonClick}
+							selectedButton={selectedButton}
+							gridZoomValue={gridZoomValue}
+							gridViewAsSurface={gridViewAsController.selectedSurface}
+						/>
+					) : (
+						<ButtonFullGridLayout
+							gridRef={gridRef}
+							isHot={isHot}
+							pageNumber={pageNumber}
+							buttonClick={buttonClick}
+							selectedButton={selectedButton}
+							gridZoomValue={gridZoomValue}
+						/>
+					))}
+			</div>
+			<div className="button-grid-panel-footer">
+				<CRow style={{ paddingTop: '15px' }}>
+					<ButtonGridActions
+						ref={actionsRef}
+						isHot={isHot}
+						pageNumber={pageNumber}
+						clearSelectedButton={clearSelectedButton}
+					/>
+				</CRow>
+
+				<CAlert color="info">
+					You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
+					such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
+					button highlighted to delete it.
+				</CAlert>
+			</div>
+		</KeyReceiver>
+	)
+})
+
+interface ButtonFullGridLayoutProps {
+	gridRef: React.RefObject<ButtonInfiniteGridRef>
+	isHot: boolean
+	pageNumber: number
+	buttonClick: (location: ControlLocation, isDown: boolean) => void
+	selectedButton: ControlLocation | null
+	gridZoomValue: number
+}
+function ButtonFullGridLayout({
+	gridRef,
+	isHot,
+	pageNumber,
+	buttonClick,
+	selectedButton,
+	gridZoomValue,
+}: ButtonFullGridLayoutProps) {
+	const { socket, userConfig } = useContext(RootAppStoreContext)
+
 	const gridSize = userConfig.properties?.gridSize
 
 	const doGrow = useCallback(
@@ -148,75 +249,72 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		[socket, gridSize]
 	)
 
-	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
-
 	return (
-		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
-			<div className="button-grid-panel-header" ref={isInViewRef}>
-				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
-				<EditPagePropertiesModal ref={editRef} />
-
-				<h4>Buttons</h4>
-				<p>
-					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
-					and what they should do when you press or click on them.
-				</p>
-
-				<CRow>
-					<CCol sm={12}>
-						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
-							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
-								<FontAwesomeIcon icon={faFileExport} />
-							</CButton>
-							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
-								<FontAwesomeIcon icon={faPencil} />
-							</CButton>
-							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
-								<FontAwesomeIcon icon={faHome} />
-							</CButton>
-							<ButtonGridZoomControl
-								useCompactButtons={true}
-								gridZoomValue={gridZoomValue}
-								gridZoomController={gridZoomController}
-							/>
-						</ButtonGridHeader>
-					</CCol>
-				</CRow>
-			</div>
-			<div className="button-grid-panel-content">
-				{hasBeenInView && gridSize && (
-					<ButtonInfiniteGrid
-						ref={gridRef}
-						isHot={isHot}
-						pageNumber={pageNumber}
-						buttonClick={buttonClick}
-						selectedButton={selectedButton}
-						gridSize={gridSize}
-						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
-						buttonIconFactory={PrimaryButtonGridIcon}
-						drawScale={gridZoomValue / 100}
-					/>
-				)}
-			</div>
-			<div className="button-grid-panel-footer">
-				<CRow style={{ paddingTop: '15px' }}>
-					<ButtonGridActions
-						ref={actionsRef}
-						isHot={isHot}
-						pageNumber={pageNumber}
-						clearSelectedButton={clearSelectedButton}
-					/>
-				</CRow>
-
-				<CAlert color="info">
-					You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
-					such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
-					button highlighted to delete it.
-				</CAlert>
-			</div>
-		</KeyReceiver>
+		gridSize && (
+			<ButtonInfiniteGrid
+				ref={gridRef}
+				isHot={isHot}
+				pageNumber={pageNumber}
+				buttonClick={buttonClick}
+				selectedButton={selectedButton}
+				gridSize={gridSize}
+				doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
+				buttonIconFactory={PrimaryButtonGridIcon}
+				drawScale={gridZoomValue / 100}
+			/>
+		)
 	)
-})
+}
+
+interface ButtonViewAsLayoutProps {
+	gridRef: React.RefObject<ButtonInfiniteGridRef>
+	isHot: boolean
+	pageNumber: number
+	buttonClick: (location: ControlLocation, isDown: boolean) => void
+	selectedButton: ControlLocation | null
+	gridZoomValue: number
+	gridViewAsSurface: GridViewSelectedSurfaceInfo
+}
+function ButtonViewAsLayout({
+	gridRef,
+	isHot,
+	pageNumber,
+	buttonClick,
+	selectedButton,
+	gridZoomValue,
+	gridViewAsSurface,
+}: ButtonViewAsLayoutProps) {
+	const { userConfig } = useContext(RootAppStoreContext)
+
+	if (gridViewAsSurface.layout?.type === 'complex') {
+		return <p>TODO</p>
+	} else {
+		// A custom view has been selected, limit what is shown
+		const gridSize = gridViewAsSurface.layout
+			? {
+					minRow: gridViewAsSurface.yOffset,
+					minColumn: gridViewAsSurface.xOffset,
+					maxRow: gridViewAsSurface.yOffset + gridViewAsSurface.layout.rows - 1,
+					maxColumn: gridViewAsSurface.xOffset + gridViewAsSurface.layout.columns - 1,
+				}
+			: userConfig.properties?.gridSize // fallback to the default grid size
+
+		return (
+			gridSize && (
+				<ButtonInfiniteGrid
+					ref={gridRef}
+					isHot={isHot}
+					pageNumber={pageNumber}
+					buttonClick={buttonClick}
+					selectedButton={selectedButton}
+					gridSize={gridSize}
+					buttonIconFactory={PrimaryButtonGridIcon}
+					drawScale={gridZoomValue / 100}
+				/>
+			)
+		)
+	}
+}
 
 interface EditPagePropertiesModalRef {
 	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void

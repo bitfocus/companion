@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
-import { faCalculator, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faEye, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets.js'
@@ -16,6 +16,8 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+import { GridViewAsPanel } from './GridViewAsPanel.js'
+import { useGridViewAs } from './GridViewAs.js'
 
 export const BUTTONS_PAGE_PREFIX = '/buttons'
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
@@ -54,6 +56,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
+	const gridViewAsController = useGridViewAs()
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('presets')
@@ -270,6 +273,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						clearSelectedButton={clearSelectedButton}
 						gridZoomController={gridZoomController}
 						gridZoomValue={gridZoomValue}
+						gridViewAsController={gridViewAsController}
 					/>
 				</MyErrorBoundary>
 			</CCol>
@@ -293,6 +297,11 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 							</CNavLink>
 						</CNavItem>
 						<CNavItem>
+							<CNavLink active={activeTab === 'view-as'} onClick={() => doChangeTab('view-as')}>
+								<FontAwesomeIcon icon={faEye} /> Grid View
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
 							<CNavLink active={activeTab === 'action-recorder'} onClick={() => doChangeTab('action-recorder')}>
 								<FontAwesomeIcon icon={faVideoCamera} /> Recorder
 							</CNavLink>
@@ -313,6 +322,11 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						<CTabPane visible={activeTab === 'presets'}>
 							<MyErrorBoundary>
 								<InstancePresets resetToken={tabResetToken} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'view-as'}>
+							<MyErrorBoundary>
+								<GridViewAsPanel gridViewAsController={gridViewAsController} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane visible={activeTab === 'action-recorder'}>
