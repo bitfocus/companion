@@ -46,3 +46,28 @@ export interface SurfacesUpdateUpdateOp {
 
 	patch: JsonPatchOperation[]
 }
+
+export interface ClientDiscoveredSurfaceInfo {
+	id: string
+
+	surfaceType: 'satellite'
+
+	name: string
+	addresses: string[]
+	port: number
+
+	apiEnabled: boolean
+}
+
+export type SurfacesDiscoveryUpdate = SurfaceDiscoveryUpdateRemoveOp | SurfaceDiscoveryUpdateUpdateOp
+
+export interface SurfaceDiscoveryUpdateRemoveOp {
+	type: 'remove'
+	itemId: string
+}
+export interface SurfaceDiscoveryUpdateUpdateOp {
+	type: 'update'
+	// itemId: string
+
+	info: ClientDiscoveredSurfaceInfo
+}

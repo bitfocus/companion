@@ -225,11 +225,7 @@ export default ServiceBonjourDiscovery
 /**
  * @typedef {{
  *   browser: Browser
- *   filter: {
- *     type: string
- *     protocol: 'tcp' | 'udp'
- *     txt: Record<string, string> | undefined
- *   }
+ *   filter: import('@julusian/bonjour-service').BrowserConfig
  *   clientIds: Set<string>
  * }} BonjourBrowserSession
  *

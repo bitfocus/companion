@@ -66,6 +66,9 @@ export interface UserConfigModel {
 	gridSizeInlineGrow: boolean
 
 	installName: string
+
+	/** Whether to run the mdns  */
+	discoveryEnabled: boolean
 }
 
 export interface UserConfigGridSize {
