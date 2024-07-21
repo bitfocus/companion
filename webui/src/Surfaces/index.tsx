@@ -1,6 +1,6 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
-import { SocketContext, assertNever, socketEmitPromise } from '../util.js'
+import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField.js'
@@ -8,15 +8,10 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
 import classNames from 'classnames'
-import {
-	ClientDevicesListItem,
-	ClientDiscoveredSurfaceInfo,
-	ClientSurfaceItem,
-	SurfacesDiscoveryUpdate,
-} from '@companion-app/shared/Model/Surfaces.js'
+import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
+import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
 
 export const SurfacesPage = observer(function SurfacesPage() {
 	const { surfaces, socket } = useContext(RootAppStoreContext)
@@ -331,135 +326,5 @@ function SurfaceRow({
 				)}
 			</td>
 		</tr>
-	)
-}
-
-function SurfaceDiscoveryTable() {
-	const socket = useContext(SocketContext)
-
-	const [services, setServices] = useState<Record<string, ClientDiscoveredSurfaceInfo | undefined>>({})
-
-	// // Listen for data
-	// useEffect(() => {
-	// 	const onUp = (svc: ClientBonjourService) => {
-
-	// 		// console.log('up', svc)
-
-	// 		setServices((svcs) => {
-	// 			return {
-	// 				...svcs,
-	// 				[svc.fqdn]: svc,
-	// 			}
-	// 		})
-	// 	}
-	// 	const onDown = (svc: ClientBonjourService) => {
-	// 		if (svc.subId !== subIdRef.current) return
-
-	// 		// console.log('down', svc)
-
-	// 		setServices((svcs) => {
-	// 			const res = { ...svcs }
-	// 			delete res[svc.fqdn]
-	// 			return res
-	// 		})
-	// 	}
-
-	// 	socket.on('bonjour:service:up', onUp)
-	// 	socket.on('bonjour:service:down', onDown)
-
-	// 	return () => {
-	// 		socket.off('bonjour:service:up', onUp)
-	// 		socket.off('bonjour:service:down', onDown)
-	// 	}
-	// }, [])
-
-	// Start/Stop the subscription
-	useEffect(() => {
-		let killed = false
-		socketEmitPromise(socket, 'surfaces:discovery:join', [])
-			.then((services) => {
-				// Make sure it hasnt been terminated
-				if (killed) {
-					socketEmitPromise(socket, 'surfaces:discovery:leave', []).catch(() => {
-						console.error('Failed to leave discovery')
-					})
-					return
-				}
-
-				setServices(services)
-			})
-			.catch((e) => {
-				console.error('Bonjour subscription failed: ', e)
-			})
-
-		const updateHandler = (update: SurfacesDiscoveryUpdate) => {
-			switch (update.type) {
-				case 'remove':
-					setServices((svcs) => {
-						const res = { ...svcs }
-						delete res[update.itemId]
-						return res
-					})
-					break
-				case 'update':
-					setServices((svcs) => {
-						return {
-							...svcs,
-							[update.info.id]: update.info,
-						}
-					})
-					break
-				default:
-					assertNever(update)
-					break
-			}
-		}
-
-		socket.on('surfaces:discovery:update', updateHandler)
-
-		return () => {
-			killed = true
-
-			socket.off('surfaces:discovery:update', updateHandler)
-
-			setServices({})
-
-			socketEmitPromise(socket, 'surfaces:discovery:leave', []).catch(() => {
-				console.error('Failed to leave discovery')
-			})
-		}
-	}, [socket])
-
-	console.log(services)
-
-	return (
-		<>
-			<h3>TEST Discovery</h3>
-
-			<table className="table table-responsive-sm table-margin-top">
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Address</th>
-						<th>&nbsp;</th>
-					</tr>
-				</thead>
-				<tbody>
-					{Object.entries(services).map(([id, svc]) =>
-						svc ? (
-							<tr key={id}>
-								<td>{svc.name}</td>
-								<tr>{svc.addresses}</tr>
-							</tr>
-						) : null
-					)}
-					{Object.values(services).length === 0 && (
-						<tr>
-							<td colSpan={7}>Searching for Satellite installations</td>
-						</tr>
-					)}
-				</tbody>
-			</table>
-		</>
 	)
 }

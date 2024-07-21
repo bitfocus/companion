@@ -36,7 +36,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	/**
 	 * @type {NodeJS.Timeout | undefined}
 	 */
-	#satelliteQueryPoll
+	#satelliteExpireInterval
 
 	/**
 	 * @param {import('../Registry.js').default} registry - the application core
@@ -52,8 +52,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			try {
 				this.#satelliteBrowser = this.#bonjour.find({ type: 'companion-satellite', protocol: 'tcp' })
 
-				this.#satelliteQueryPoll = setInterval(() => {
-					this.#satelliteBrowser?.update()
+				this.#satelliteExpireInterval = setInterval(() => {
 					this.#satelliteBrowser?.expire()
 				}, 30000)
 
@@ -137,10 +136,10 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			try {
 				this.currentState = false
 				this.#satelliteBrowser.stop()
-				clearTimeout(this.#satelliteQueryPoll)
+				clearTimeout(this.#satelliteExpireInterval)
 				this.logger.info(`Stopped searching for satellite devices`)
 				this.#satelliteBrowser = undefined
-				this.#satelliteQueryPoll = undefined
+				this.#satelliteExpireInterval = undefined
 			} catch (/** @type {any} */ e) {
 				this.logger.silly(`Could not stop searching for satellite devices: ${e.message}`)
 			}
