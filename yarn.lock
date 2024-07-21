@@ -6750,6 +6750,7 @@ asn1@evs-broadcast/node-asn1:
     socketcluster-client: "npm:^19.2.1"
     supertest: "npm:^7.0.0"
     supports-color: "npm:^9.4.0"
+    systeminformation: "npm:^5.22.11"
     type-fest: "npm:^4.21.0"
     typescript: "npm:~5.3.3"
     usb: "npm:2.13.0"

@@ -89,6 +89,7 @@
 		"socket.io": "^4.7.5",
 		"socketcluster-client": "^19.2.1",
 		"supports-color": "^9.4.0",
+		"systeminformation": "^5.22.11",
 		"type-fest": "^4.21.0",
 		"usb": "2.13.0",
 		"utf-8-validate": "^6.0.4",
