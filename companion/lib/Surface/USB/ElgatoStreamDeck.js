@@ -21,7 +21,7 @@ import util from 'util'
 import imageRs from '@julusian/image-rs'
 import LogController from '../../Log/Controller.js'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
-import { translateRotation } from '../../Resources/Util.js'
+import { transformButtonImage } from '../../Resources/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import { colorToRgb } from './Util.js'
 const setTimeoutPromise = util.promisify(setTimeout)
@@ -62,9 +62,9 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			rotation: 0,
 		}
 
-		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} USB device: ${devicePath}`)
-
 		this.#streamDeck = streamDeck
+
+		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} USB device: ${devicePath}`)
 
 		this.info = {
 			type: `Elgato ${this.#streamDeck.PRODUCT_NAME}`,
@@ -92,17 +92,13 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 					return
 				} else {
 					try {
-						let image = imageRs.ImageTransformer.fromBuffer(
-							render.buffer,
-							render.bufferWidth,
-							render.bufferHeight,
-							imageRs.PixelFormat.Rgba
-						).scale(targetSize, targetSize)
-
-						const rotation = translateRotation(this.config.rotation)
-						if (rotation !== null) image = image.rotate(rotation)
-
-						newbuffer = await image.toBuffer(imageRs.PixelFormat.Rgb)
+						newbuffer = await transformButtonImage(
+							render,
+							this.config.rotation,
+							targetSize,
+							targetSize,
+							imageRs.PixelFormat.Rgb
+						)
 					} catch (/** @type {any} */ e) {
 						this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
 						this.emit('remove')
@@ -174,17 +170,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 				) => {
 					let newbuffer
 					try {
-						let image = imageRs.ImageTransformer.fromBuffer(
-							render.buffer,
-							render.bufferWidth,
-							render.bufferHeight,
-							imageRs.PixelFormat.Rgba
-						).scale(100, 100)
-
-						const rotation = translateRotation(this.config.rotation)
-						if (rotation !== null) image = image.rotate(rotation)
-
-						newbuffer = await image.toBuffer(imageRs.PixelFormat.Rgb)
+						newbuffer = await transformButtonImage(render, this.config.rotation, 100, 100, imageRs.PixelFormat.Rgb)
 					} catch (e) {
 						this.#logger.debug(`scale image failed: ${e}`)
 						this.emit('remove')

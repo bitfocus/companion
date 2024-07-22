@@ -2474,10 +2474,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@julusian/image-rs@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "@julusian/image-rs@npm:0.4.0"
-  checksum: 10c0/bd11296489ec2fd4610fb37d7100d546787467839bf98b45b6dfe61efa9d0b19a42bab92fef343b0af952e2b6d1fc61f1394d8f78b4a64bc1f4778c018a0e339
+"@julusian/image-rs@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "@julusian/image-rs@npm:1.0.3"
+  checksum: 10c0/47849f60eb42f85ec7ac71e542ec0d38f94e44f070d1008a47af5462a7af97e5577daa8df5bc8b480e3b2eea1ff42bc8d5cfd0dd0de66232abe725197f7111f7
   languageName: node
   linkType: hard
 
@@ -6696,7 +6696,7 @@ asn1@evs-broadcast/node-asn1:
     "@companion-module/base": "npm:~1.9.0-2"
     "@elgato-stream-deck/node": "npm:^6.2.0"
     "@julusian/bonjour-service": "npm:^1.3.0-2"
-    "@julusian/image-rs": "npm:^0.4.0"
+    "@julusian/image-rs": "npm:^1.0.3"
     "@julusian/jpeg-turbo": "npm:^2.1.0"
     "@loupedeck/node": "npm:^1.1.2"
     "@napi-rs/canvas": "npm:^0.1.53"

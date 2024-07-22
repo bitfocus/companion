@@ -18,7 +18,7 @@
 import { EventEmitter } from 'events'
 import { LoupedeckBufferFormat, LoupedeckDisplayId, openLoupedeck } from '@loupedeck/node'
 import { convertPanelIndexToXY } from '../Util.js'
-import { translateRotation } from '../../Resources/Util.js'
+import { transformButtonImage } from '../../Resources/Util.js'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import LogController from '../../Log/Controller.js'
@@ -281,17 +281,7 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 
 				let newbuffer
 				try {
-					let image = imageRs.ImageTransformer.fromBuffer(
-						render.buffer,
-						render.bufferWidth,
-						render.bufferHeight,
-						imageRs.PixelFormat.Rgba
-					).scale(width, height)
-
-					const rotation = translateRotation(this.config.rotation)
-					if (rotation !== null) image = image.rotate(rotation)
-
-					newbuffer = await image.toBuffer(imageRs.PixelFormat.Rgb)
+					newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
 				} catch (e) {
 					this.logger.debug(`scale image failed: ${e}`)
 					this.emit('remove')
