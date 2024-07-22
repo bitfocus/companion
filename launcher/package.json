@@ -67,8 +67,7 @@
 			"allowToChangeInstallationDirectory": true,
 			"installerIcon": "icon.ico",
 			"installerSidebar": "compinst.bmp",
-			"uninstallerSidebar": "compinst.bmp",
-			"include": "windows/installer.nsi"
+			"uninstallerSidebar": "compinst.bmp"
 		},
 		"directories": {
 			"buildResources": "assets/",
