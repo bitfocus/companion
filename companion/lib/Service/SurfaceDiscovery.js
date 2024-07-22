@@ -2,6 +2,7 @@ import { isEqual } from 'lodash-es'
 import ServiceBase from './Base.js'
 import { Bonjour, Browser } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
+import got from 'got'
 
 const SurfaceDiscoveryRoom = 'surfaces:discovery'
 
@@ -218,11 +219,26 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		})
 
 		client.onPromise('surfaces:discovery:setup-satellite', async (info, address) => {
-			// TODO
+			// construct the remote url
+			const url = new URL('http://localhost:9999/api/config')
+			url.hostname = info.addresses[0] // TODO - choose correct address
+			url.port = info.port.toString()
 
-			console.log('do setup')
+			this.logger.info(`Setting up satellite ${info.name} at ${url.toString()} to ${address}:${16622}`)
 
-			return null
+			try {
+				await got(url, {
+					method: 'POST',
+					json: {
+						host: address,
+						port: 16622, // TODO - dynamic
+					},
+				})
+
+				return null
+			} catch (e) {
+				return 'request failed'
+			}
 		})
 	}
 }
