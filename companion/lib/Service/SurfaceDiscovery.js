@@ -1,6 +1,7 @@
 import { isEqual } from 'lodash-es'
 import ServiceBase from './Base.js'
 import { Bonjour, Browser } from '@julusian/bonjour-service'
+import systeminformation from 'systeminformation'
 
 const SurfaceDiscoveryRoom = 'surfaces:discovery'
 
@@ -12,7 +13,7 @@ const SurfaceDiscoveryRoom = 'surfaces:discovery'
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
- * @since 2.2.0
+ * @since 3.4.0
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.
@@ -57,9 +58,11 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				}, 30000)
 
 				this.#satelliteBrowser.on('up', (service) => {
+					console.log('up', service)
 					this.#updateSatelliteService(undefined, service)
 				})
 				this.#satelliteBrowser.on('down', (service) => {
+					console.log('down', service)
 					this.#forgetSatelliteService(service)
 				})
 				this.#satelliteBrowser.on('txt-update', (newService, oldService) => {
@@ -169,6 +172,57 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		})
 		client.onPromise('surfaces:discovery:leave', () => {
 			client.leave(SurfaceDiscoveryRoom)
+		})
+
+		client.onPromise('surfaces:discovery:get-external:addresses', async () => {
+			const rawInterfacesList = await systeminformation.networkInterfaces()
+
+			/** @type {import('@companion-module/base').DropdownChoice[]} */
+			const addresses = []
+
+			try {
+				const systemInfo = await systeminformation.osInfo()
+
+				addresses.push({
+					id: systemInfo.fqdn,
+					label: systemInfo.fqdn,
+				})
+
+				if (systemInfo.fqdn !== systemInfo.hostname) {
+					addresses.push({
+						id: systemInfo.hostname,
+						label: systemInfo.hostname,
+					})
+				}
+			} catch (e) {
+				// TODO
+			}
+
+			if (Array.isArray(rawInterfacesList)) {
+				for (const obj of rawInterfacesList) {
+					if (obj.ip4 && !obj.internal) {
+						let label = `${obj.iface}: ${obj.ip4}`
+						if (obj.type && obj.type !== 'unknown') label += ` (${obj.type})`
+
+						addresses.push({
+							id: obj.ip4,
+							label: label,
+						})
+					}
+				}
+			}
+
+			return {
+				addresses,
+			}
+		})
+
+		client.onPromise('surfaces:discovery:setup-satellite', async (info, address) => {
+			// TODO
+
+			console.log('do setup')
+
+			return null
 		})
 	}
 }

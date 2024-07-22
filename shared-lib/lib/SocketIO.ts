@@ -19,6 +19,7 @@ import type {
 import type {
 	ClientDevicesListItem,
 	ClientDiscoveredSurfaceInfo,
+	CompanionExternalAddresses,
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
 	SurfacesDiscoveryUpdate,
@@ -233,6 +234,11 @@ export interface ClientToBackendEventsMap {
 
 	'surfaces:discovery:join': () => Record<string, ClientDiscoveredSurfaceInfo>
 	'surfaces:discovery:leave': () => void
+	'surfaces:discovery:get-external:addresses': () => CompanionExternalAddresses
+	'surfaces:discovery:setup-satellite': (
+		satelliteInfo: ClientDiscoveredSurfaceInfo,
+		companionAddress: string
+	) => string | null
 
 	'emulator:startup': (emulatorId: string) => EmulatorConfig
 	'emulator:press': (emulatorId: string, column: number, row: number) => void

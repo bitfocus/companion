@@ -1,10 +1,10 @@
 import { ClientDiscoveredSurfaceInfo, SurfacesDiscoveryUpdate } from '@companion-app/shared/Model/Surfaces.js'
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { socketEmitPromise, assertNever, SocketContext } from '../util.js'
-import { CButton, CButtonGroup, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { CModalExt } from '../Components/CModalExt.js'
+import { SetupSatelliteModalRef, SetupSatelliteModal } from './SetupSatelliteModal.js'
 
 export function SurfaceDiscoveryTable() {
 	const discoveredSurfaces = useSurfaceDiscoverySubscription()
@@ -156,60 +156,3 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 		</tr>
 	)
 }
-
-export interface SetupSatelliteModalRef {
-	show(surfaceInfo: ClientDiscoveredSurfaceInfo): void
-}
-
-const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function SetupSatelliteModal(_props, ref) {
-	const [show, setShow] = useState(false)
-	const [data, setData] = useState<ClientDiscoveredSurfaceInfo | null>(null)
-
-	const buttonRef = useRef<HTMLButtonElement>(null)
-
-	const buttonFocus = () => {
-		if (buttonRef.current) {
-			buttonRef.current.focus()
-		}
-	}
-
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => setData(null), [])
-	const doAction = useCallback(() => {
-		setData(null)
-		setShow(false)
-
-		// TODO
-	}, [data])
-
-	useImperativeHandle(
-		ref,
-		() => ({
-			show(surfaceInfo) {
-				setData(surfaceInfo)
-				setShow(true)
-
-				// Focus the button asap. It also gets focused once the open is complete
-				setTimeout(buttonFocus, 50)
-			},
-		}),
-		[]
-	)
-
-	return (
-		<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
-			<CModalHeader closeButton>
-				<h5>Setup Companion Satellite</h5>
-			</CModalHeader>
-			<CModalBody>TODO</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={doClose}>
-					Cancel
-				</CButton>
-				<CButton ref={buttonRef} color="primary" onClick={doAction}>
-					Setup
-				</CButton>
-			</CModalFooter>
-		</CModalExt>
-	)
-})
