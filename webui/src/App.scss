@@ -21,6 +21,10 @@
 @import 'scss/settings';
 @import 'scss/wizard';
 
+
+body {
+	overflow: hidden;
+}
 @keyframes fadeIn {
 	from {
 		opacity: 0;
@@ -124,8 +128,8 @@
 	font-family: monospace;
 	padding: 1px 3px 0px 3px;
 	color: $primary;
-	font-weight: 500;
-	font-size: 14px;
+	font-weight: 600;
+	font-size: 16px;
 	letter-spacing: -0.15;
 	border-radius: 6;
 	display: inline-block;
@@ -150,9 +154,7 @@
 }
 
 .inline-help {
-	background-color: $primary;
 	color: white;
-	padding: 0.5rem 0.75rem;
 	font-size: 14px;
 	font-weight: normal;
 	border-radius: 3px;
@@ -171,6 +173,6 @@
 	margin-top: 10px;
 }
 
-.pane-baseclass {
-	// placeholder
+.no-break {
+	white-space: nowrap;
 }

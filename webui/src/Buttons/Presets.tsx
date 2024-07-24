@@ -265,26 +265,28 @@ function PresetsButtonList({
 					{selectedCategory}
 				</CButton>
 			</CButtonGroup>
-
-			<div style={{ margin: '10px 0px' }}>Drag and drop the preset buttons below into your buttons-configuration.</div>
-
-			{filteredPresets.map((preset) => {
-				if (preset.type === 'button') {
-					return (
-						<PresetIconPreview
-							key={preset.id}
-							connectionId={selectedConnectionId}
-							presetId={preset.id}
-							title={preset.label}
-						/>
-					)
-				} else if (preset.type === 'text') {
-					return <PresetText key={preset.id} preset={preset} />
-				}
-				return null
-			})}
+			<div style={{ backgroundColor: '#222', borderRadius:4, padding: 5, marginTop:10 }}>
+				{filteredPresets.map((preset) => {
+					if (preset.type === 'button') {
+						return (
+							<PresetIconPreview
+								key={preset.id}
+								connectionId={selectedConnectionId}
+								presetId={preset.id}
+								title={preset.label}
+							/>
+						)
+					} else if (preset.type === 'text') {
+						return <PresetText key={preset.id} preset={preset} />
+					}
+					return null
+				})}
+			</div>
 
 			<br style={{ clear: 'both' }} />
+			<CCallout color="info" style={{ margin: '10px 0px' }}>
+				<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
+			</CCallout>
 		</div>
 	)
 }

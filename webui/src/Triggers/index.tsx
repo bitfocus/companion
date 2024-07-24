@@ -19,6 +19,7 @@ import {
 	faAdd,
 	faCalculator,
 	faClone,
+	faCogs,
 	faDownload,
 	faFileExport,
 	faList,
@@ -106,7 +107,7 @@ export const Triggers = observer(function Triggers() {
 
 			<CCol xs={12} xl={6} className="primary-panel">
 				<h4>Triggers and schedules</h4>
-				<p>This allows you to run actions based on Companion, feedback or time events.</p>
+				<p style={{ marginBottom: '0.5rem' }}>This allows you to run actions based on Companion, feedback or time events.</p>
 
 				<CButtonGroup style={{ marginBottom: '1em' }}>
 					<CButton color="primary" onClick={doAddNew} size="sm">
@@ -150,7 +151,7 @@ export const Triggers = observer(function Triggers() {
 					<CTabContent>
 						{!editItemId && (
 							<CTabPane data-tab="placeholder" visible={activeTab === 'placeholder'}>
-								<p>Select a trigger...</p>
+								<NonIdealState text="Select a trigger to edit" icon={faCogs} />
 							</CTabPane>
 						)}
 						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>
@@ -198,15 +199,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 	)
 
 	return (
-		<table className="table-tight table-responsive-sm ">
-			<thead>
-				<tr>
-					<th>&nbsp;</th>
-					<th>Name</th>
-					<th>Trigger</th>
-					<th>&nbsp;</th>
-				</tr>
-			</thead>
+		<table className="table-tight table-responsive-sm" style={{ marginBottom: 10 }}>
 			<tbody>
 				{triggersList.triggers.size > 0 ? (
 					Array.from(triggersList.triggers.entries())

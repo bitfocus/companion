@@ -10,6 +10,7 @@ import {
 	faExpandArrowsAlt,
 	faLevelUp,
 	faSort,
+	faSquareRootVariable,
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
@@ -23,6 +24,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { NonIdealState } from '../Components/NonIdealState.js'
 
 const DRAG_ID = 'custom-variables'
 
@@ -198,7 +200,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 	return (
 		<div className="variables-panel">
 			<div>
-				<h4>Variables</h4>
+				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
 				<CButtonGroup size="sm">
 					<CButton color="primary" onClick={doBack}>
 						<FontAwesomeIcon icon={faArrowLeft} />
@@ -273,7 +275,9 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 						})}
 					{hasNoVariables && (
 						<tr>
-							<td colSpan={3}>No custom variables have been created</td>
+							<td colSpan={3}>
+								<NonIdealState icon={faSquareRootVariable} text="No custom variables defined" />
+							</td>
 						</tr>
 					)}
 				</tbody>

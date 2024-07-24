@@ -1,6 +1,8 @@
 import React from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
+import { CFormInput } from '@coreui/react'
+import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface SatelliteConfigProps {
 	config: UserConfigModel
@@ -17,9 +19,12 @@ export const SatelliteConfig = observer(function SatelliteConfig({}: SatelliteCo
 				</th>
 			</tr>
 			<tr>
-				<td>Satellite Listen Port</td>
-				<td>16622</td>
-				<td></td>
+				<td>
+					<InlineHelp help="You can't change this value.">Satellite Listen Port</InlineHelp>
+				</td>
+				<td colSpan={2} style={{ textAlign: 'center', fontSize: 17, color: '#555', padding: 13 }}>
+					16622
+				</td>
 			</tr>
 		</>
 	)

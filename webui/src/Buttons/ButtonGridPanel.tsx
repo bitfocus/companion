@@ -157,7 +157,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<EditPagePropertiesModal ref={editRef} />
 
 				<h4>Buttons</h4>
-				<p>
+				<p style={{ marginBottom: '0.5rem' }}>
 					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
 					and what they should do when you press or click on them.
 				</p>

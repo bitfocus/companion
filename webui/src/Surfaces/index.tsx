@@ -115,21 +115,21 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	return (
 		<div>
 			<h4>Surfaces</h4>
-			<p>
-				These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you might
-				need to close the Elgato Streamdeck application and click the Rescan button below.
+			<p style={{ marginBottom: '0.5rem' }}>
+				Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the Elgato
+				Streamdeck application and click the Rescan button below.
 			</p>
 
 			<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
 				{scanError}
 			</CAlert>
 
-			<CButtonGroup>
-				<CButton color="danger" onClick={refreshUSB}>
+			<CButtonGroup size="sm">
+				<CButton color="warning" onClick={refreshUSB}>
 					<FontAwesomeIcon icon={faSync} spin={scanning} />
 					{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
 				</CButton>
-				<CButton color="secondary" onClick={addEmulator}>
+				<CButton color="primary" onClick={addEmulator}>
 					<FontAwesomeIcon icon={faAdd} /> Add Emulator
 				</CButton>
 				<CButton color="secondary" onClick={addGroup}>

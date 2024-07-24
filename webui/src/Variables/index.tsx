@@ -107,7 +107,7 @@ function VariablesList({ selectedConnectionLabel, setConnectionId }: VariablesLi
 
 	return (
 		<div className="variables-panel">
-			<h4>Variables</h4>
+			<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
 			<CButtonGroup size="sm">
 				<CButton color="primary" onClick={doBack}>
 					<FontAwesomeIcon icon={faArrowLeft} />

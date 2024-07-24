@@ -6,7 +6,7 @@ import {
 	LoadingRetryOrError,
 	PreventDefaultHandler,
 } from '../../util.js'
-import { CButton, CAlert, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
+import { CButton, CAlert, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch, CCallout } from '@coreui/react'
 import { DropdownInputField } from '../../Components/index.js'
 import { ActionsList } from '../../Controls/ActionSetEditor.js'
 import { usePanelCollapseHelperLite } from '../../Helpers/CollapseHelper.js'
@@ -118,13 +118,13 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 				<CRow className="flex-form-row" style={{ clear: 'both' }}>
 					<div>
 						<CButtonGroup className={'margin-bottom'}>
-							<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>
+							<CButton onClick={doClearActions} color="secondary" disabled={!sessionInfo.actions?.length}>
 								Clear Actions
 							</CButton>
 							<CButton onClick={doAbort} color="danger">
 								Discard
 							</CButton>
-							<CButton onClick={doFinish2} color="danger" disabled={!sessionInfo.actions?.length}>
+							<CButton onClick={doFinish2} color="secondary" disabled={!sessionInfo.actions?.length}>
 								Finish
 							</CButton>
 						</CButtonGroup>
@@ -160,7 +160,7 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 				actionsService={actionsService}
 				panelCollapseHelper={panelCollapseHelper}
 			/>
-			{sessionInfo.actions.length === 0 ? <CAlert color="info">No actions have been recorded</CAlert> : ''}
+			{sessionInfo.actions.length === 0 ? <CCallout color="info">No actions have been recorded</CCallout> : ''}
 		</CCol>
 	)
 })

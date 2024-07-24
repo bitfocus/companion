@@ -160,8 +160,8 @@ code {
 }
 
 .btn-secondary {
-	background-color: $secondary;
-	color: black;
+	background-color: lighten($secondary, 15%);
+	
 }
 .btn-danger,
 .btn-success,

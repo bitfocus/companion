@@ -74,7 +74,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton ref={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction} autoFocus>
 						{data?.buttonLabel}
 					</CButton>
 				</CModalFooter>

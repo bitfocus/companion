@@ -12,7 +12,7 @@ import {
 	CModalHeader,
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCog, faUndo } from '@fortawesome/free-solid-svg-icons'
+import { faArrows, faCog, faUndo } from '@fortawesome/free-solid-svg-icons'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -42,50 +42,41 @@ export const GridConfig = observer(function GridConfig({ config, setValue, reset
 			{config.gridSize && (
 				<tr>
 					<td>Grid Size</td>
-					<td colSpan={2}>
-						{config.gridSize?.maxRow - config.gridSize?.minRow + 1} rows x{' '}
-						{config.gridSize?.maxColumn - config.gridSize?.minColumn + 1} columns
+					<td colSpan={2} style={{ textAlign: 'center' }}>
+						<div>
+							{config.gridSize?.maxRow - config.gridSize?.minRow + 1} rows x{' '}
+							{config.gridSize?.maxColumn - config.gridSize?.minColumn + 1} columns
+						</div>
+						<CButton onClick={editGridSize} color="secondary" size="sm" style={{ marginTop: 4 }}>
+							Edit size
+						</CButton>
 					</td>
 				</tr>
 			)}
 
 			<tr>
-				<td>Min Row</td>
 				<td>
-					<div className="form-check form-check-inline mr-1">{config.gridSize?.minRow}</div>
+					<em>Current minimum</em>
+				</td>
+				<td colSpan={2} style={{ textAlign: 'center' }}>
+					<div className="">
+						{config.gridSize?.minRow} rows x {config.gridSize?.minColumn} columns
+					</div>
 				</td>
 				<td></td>
 			</tr>
 			<tr>
-				<td>Max Row</td>
 				<td>
-					<div className="form-check form-check-inline mr-1">{config.gridSize?.maxRow}</div>
+					<em>Current maximums</em>
+				</td>
+				<td colSpan={2} style={{ textAlign: 'center' }}>
+					<div className="">
+						{config.gridSize?.maxRow} rows x {config.gridSize?.maxColumn} columns
+					</div>
 				</td>
 				<td></td>
 			</tr>
-			<tr>
-				<td>Min Column</td>
-				<td>
-					<div className="form-check form-check-inline mr-1">{config.gridSize?.minColumn}</div>
-				</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td>Max Column</td>
-				<td>
-					<div className="form-check form-check-inline mr-1">{config.gridSize?.maxColumn}</div>
-				</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td colSpan={2}>
-					<CButton onClick={editGridSize} color="success">
-						<FontAwesomeIcon icon={faCog} />
-						&nbsp;Edit Grid Size
-					</CButton>
-				</td>
-			</tr>
+
 			<tr>
 				<td>Allow expanding in grid view</td>
 				<td>

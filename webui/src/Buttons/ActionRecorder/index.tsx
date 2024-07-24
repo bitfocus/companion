@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
 import { socketEmitPromise, SocketContext, applyPatchOrReplaceObject } from '../../util.js'
-import { CAlert, CCol, CRow } from '@coreui/react'
+import { CAlert, CCallout, CCol, CRow } from '@coreui/react'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { RecordSessionInfo, RecordSessionListInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
@@ -107,22 +107,22 @@ export function ActionRecorder() {
 					You can use this panel to record actions as you make changes directly on a configured device. <br />
 					Not many modules support this, and they don't support it for every action.
 				</p>
-
-				{selectedSessionId && sessionInfo && (
-					<RecorderSessionHeading
-						confirmRef={confirmRef}
-						sessionId={selectedSessionId}
-						sessionInfo={sessionInfo}
-						doFinish={openFinishingModal}
-					/>
-				)}
-
-				<hr className="slim" />
+				<div style={{ margin: -12, marginTop: 10 }}>
+					{selectedSessionId && sessionInfo && (
+						<RecorderSessionHeading
+							confirmRef={confirmRef}
+							sessionId={selectedSessionId}
+							sessionInfo={sessionInfo}
+							doFinish={openFinishingModal}
+						/>
+					)}
+				</div>
 			</CCol>
+
 			{selectedSessionId ? (
 				<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionInfo} />
 			) : (
-				<CAlert color="danger">There is no session, this looks like a bug!</CAlert>
+				<CCallout color="danger">There is no session, this looks like a bug!</CCallout>
 			)}
 		</CRow>
 	)

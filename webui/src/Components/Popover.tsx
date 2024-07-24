@@ -6,13 +6,13 @@ export const Popover = ({
 	hoverWait = 500,
 	children,
 	style = {},
-  className = ''
+	className = '',
 }: {
 	content: string
 	hoverWait?: number
 	children: React.ReactNode
 	style?: React.CSSProperties
-  className?: string
+	className?: string
 }): JSX.Element => {
 	const timer = useRef<number | null>(null)
 	const [visible, setVisible] = useState(false)
@@ -36,14 +36,14 @@ export const Popover = ({
 			{children}
 			{visible && (
 				<div
-          className={className}
+					className={className}
 					style={{
 						position: 'absolute',
-						zIndex: 1000,
+            overflow: 'visible',
 						...style,
 					}}
 				>
-					{content}
+					<div style={{ position: 'absolute', zIndex: 1 }}>{content}</div>
 				</div>
 			)}
 		</div>
