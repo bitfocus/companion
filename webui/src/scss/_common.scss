@@ -121,6 +121,14 @@ code {
 	color: rgba(255, 255, 255, 0.8);
 }
 
+.btn-success:disabled {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-info:disabled {
+	color: rgba(255, 255, 255, 0.9);
+}
+
 @keyframes blinker {
 	50% {
 		opacity: 0.8;
