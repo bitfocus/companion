@@ -17,7 +17,8 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faCheckSquare, faLifeRing } from '@fortawesome/free-solid-svg-icons'
+import { NonIdealState } from '../Components/NonIdealState.js'
 
 interface InstancePresetsProps {
 	resetToken: string
@@ -153,7 +154,9 @@ const PresetsConnectionList = observer(function PresetsConnectionList({
 			</p>
 
 			{options.length === 0 ? (
-				<CAlert color="info">You have no connections that support presets at the moment.</CAlert>
+				<div style={{ border: '1px solid #e9e9e9', borderRadius: 5 }}>
+					<NonIdealState icon={faLifeRing} text="You have no connections that support presets at the moment." />
+				</div>
 			) : (
 				<div className="preset-category-grid">{options}</div>
 			)}
@@ -265,7 +268,7 @@ function PresetsButtonList({
 					{selectedCategory}
 				</CButton>
 			</CButtonGroup>
-			<div style={{ backgroundColor: '#222', borderRadius:4, padding: 5, marginTop:10 }}>
+			<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: 10 }}>
 				{filteredPresets.map((preset) => {
 					if (preset.type === 'button') {
 						return (

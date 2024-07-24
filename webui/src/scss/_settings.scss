@@ -1,7 +1,30 @@
 .settings-category {
 	font-weight: bold;
+	font-size: 18px;
+	padding-top: 30px !important;
+	background-color: #fff !important;
+	border-bottom: 1px solid #dddfe2 !important;
 }
 
 .remote-control-tabs .nav-link {
 	cursor: pointer;
+}
+
+.table {
+	border-width: 0;
+	padding: 0;
+	margin: 0;
+	box-shadow: none;
+}
+.table-settings td,
+.table-settings th {
+	padding: 0;
+	margin: 0;
+}
+
+.table-settings td {
+	border-width: 0;
+	border-bottom: 1px solid #dddfe2;
+	padding-top: 5px;
+	padding-bottom: 7px;
 }

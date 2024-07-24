@@ -32,8 +32,9 @@ export const UserConfig = memo(function UserConfig() {
 			<CCol xl={6} className="primary-panel">
 				<h4>Settings</h4>
 				<p>Settings apply instantaneously, don't worry about it!</p>
-
-				<UserConfigTable />
+				<div style={{ marginTop: -30 }}>
+					<UserConfigTable />
+				</div>
 			</CCol>
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-header">
@@ -70,7 +71,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 	if (!userConfig.properties) return null
 
 	return (
-		<table className="table table-responsive-sm">
+		<table className="table table-responsive-sm table-settings">
 			<tbody>
 				<CompanionConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
 				<ButtonsConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />

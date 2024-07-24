@@ -14,7 +14,7 @@ export const NonIdealState = ({
 }) => {
 	return (
 		<>
-			<div style={{ padding: '5vh', color: '#888', textAlign: 'center' }}>
+			<div style={{ padding: '5vh', color: '#000', textAlign: 'center' }}>
 				<div style={{ opacity: 0.6 }}>
 					<FontAwesomeIcon icon={icon} size="3x" />
 				</div>
