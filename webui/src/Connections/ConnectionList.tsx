@@ -455,12 +455,12 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>
-											<FontAwesomeIcon icon={faTerminal} />{' '}
+											<FontAwesomeIcon icon={faTerminal} />
 										</Tuck>
 										View logs
 									</CButton>
 
-									<CButton onClick={doDelete} title="Delete" color="danger" style={{ textAlign: 'left' }}>
+									<CButton onClick={doDelete} title="Delete" color="secondary" style={{ textAlign: 'left' }}>
 										<Tuck>
 											<FontAwesomeIcon icon={faTrash} />
 										</Tuck>
@@ -484,8 +484,13 @@ const Tuck = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<div
 			style={{
-				width: 20,
+				width: 25,
+				backgroundColor: '#444',
+				color: '#fff',
+				borderRadius: 3,
+        marginRight: 5,
 				display: 'inline-block',
+				textAlign: 'center',
 			}}
 		>
 			<div style={{ margin: '0 auto' }}>{children}</div>
