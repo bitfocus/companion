@@ -216,7 +216,7 @@ export function ConnectionsList({
 						<tr>
 							<td colSpan={4}>
 								<NonIdealState icon={faPlug}>
-									You haven't setup any connections yet. <br />
+									You haven't set up any connections yet. <br />
 									Try adding something from the list <span className="d-xl-none">below</span>
 									<span className="d-none d-xl-inline">to the right</span>.
 								</NonIdealState>
