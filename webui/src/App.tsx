@@ -23,6 +23,8 @@ import {
 	faCog,
 	faFileImport,
 	faDollarSign,
+  faThLarge,
+  faTh,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
@@ -451,7 +453,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				</CNavItem>
 				<CNavItem>
 					<CNavLink to={BUTTONS_PAGE_PREFIX} as={NavLink}>
-						<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
+						<FontAwesomeIcon icon={faTh} /> Buttons
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>

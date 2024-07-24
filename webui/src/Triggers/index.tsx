@@ -17,7 +17,7 @@ import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faAdd,
-	faCalculator,
+	faClock,
 	faClone,
 	faDownload,
 	faFileExport,
@@ -106,7 +106,9 @@ export const Triggers = observer(function Triggers() {
 
 			<CCol xs={12} xl={6} className="primary-panel">
 				<h4>Triggers and schedules</h4>
-				<p style={{ marginBottom: '0.5rem' }}>This allows you to run actions based on Companion, feedback or time events.</p>
+				<p style={{ marginBottom: '0.5rem' }}>
+					This allows you to run actions based on Companion, feedback or time events.
+				</p>
 
 				<CButtonGroup style={{ marginBottom: '1em' }}>
 					<CButton color="primary" onClick={doAddNew} size="sm">
@@ -143,14 +145,14 @@ export const Triggers = observer(function Triggers() {
 							})}
 						>
 							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
-								<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
+								<FontAwesomeIcon icon={faClock} /> Edit Trigger
 							</CNavLink>
 						</CNavItem>
 					</CNav>
 					<CTabContent>
 						{!editItemId && (
 							<CTabPane data-tab="placeholder" visible={activeTab === 'placeholder'}>
-								<NonIdealState text="Select a trigger to edit" icon={faCalculator} />
+								<NonIdealState text="Select a trigger to edit" icon={faClock} />
 							</CTabPane>
 						)}
 						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>

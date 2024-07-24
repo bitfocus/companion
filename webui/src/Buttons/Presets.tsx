@@ -17,7 +17,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faCheckSquare, faLifeRing } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '../Components/NonIdealState.js'
 
 interface InstancePresetsProps {

@@ -1,5 +1,4 @@
 import React from 'react'
-import { Popover } from './Popover.js'
 import { CPopover } from '@coreui/react'
 
 export const InlineHelp = ({ help, children }: { help: string; children: React.ReactNode }): JSX.Element => {

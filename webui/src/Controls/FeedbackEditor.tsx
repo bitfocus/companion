@@ -6,7 +6,6 @@ import {
 	faExpandArrowsAlt,
 	faCopy,
 	faFolderOpen,
-	faQuestionCircle,
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
