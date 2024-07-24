@@ -25,6 +25,7 @@ import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion-a
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
+import { Tuck } from '../Components/Tuck.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -418,7 +419,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 									>
 										<Tuck>
 											<FontAwesomeIcon icon={faQuestionCircle} />
-										</Tuck>{' '}
+										</Tuck>
 										Help
 									</CButton>
 
@@ -431,7 +432,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 									>
 										<Tuck>
 											<FontAwesomeIcon icon={faBug} />
-										</Tuck>{' '}
+										</Tuck>
 										Known issues
 									</CButton>
 
@@ -444,7 +445,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 									>
 										<Tuck>
 											<FontAwesomeIcon icon={faDollarSign} />
-										</Tuck>{' '}
+										</Tuck>
 										Variables
 									</CButton>
 
@@ -479,24 +480,6 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		</tr>
 	)
 })
-
-const Tuck = ({ children }: { children: React.ReactNode }) => {
-	return (
-		<div
-			style={{
-				width: 25,
-				backgroundColor: '#444',
-				color: '#fff',
-				borderRadius: 3,
-        marginRight: 5,
-				display: 'inline-block',
-				textAlign: 'center',
-			}}
-		>
-			<div style={{ margin: '0 auto' }}>{children}</div>
-		</div>
-	)
-}
 
 interface ModuleStatusCallProps {
 	isEnabled: boolean
