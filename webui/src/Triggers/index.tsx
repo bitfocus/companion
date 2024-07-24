@@ -21,6 +21,7 @@ import {
 	faClone,
 	faDownload,
 	faFileExport,
+	faList,
 	faSort,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
@@ -33,16 +34,14 @@ import classNames from 'classnames'
 import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { NonIdealState } from '../Components/NonIdealState.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
-
 export const TRIGGERS_PAGE_PREFIX = '/triggers'
 
 function useSelectedTriggerId(): string | null {
 	const routerLocation = useLocation()
 	if (!routerLocation.pathname.startsWith(TRIGGERS_PAGE_PREFIX)) return null
-
 	const fragments = routerLocation.pathname.slice(TRIGGERS_PAGE_PREFIX.length + 1).split('/')
-
 	const triggerId = fragments[0]
 	if (!triggerId) return null
 
@@ -109,8 +108,8 @@ export const Triggers = observer(function Triggers() {
 				<h4>Triggers and schedules</h4>
 				<p>This allows you to run actions based on Companion, feedback or time events.</p>
 
-				<CButtonGroup style={{ marginBottom: '0.3em' }}>
-					<CButton color="primary" onClick={doAddNew}>
+				<CButtonGroup style={{ marginBottom: '1em' }}>
+					<CButton color="primary" onClick={doAddNew} size="sm">
 						<FontAwesomeIcon icon={faAdd} /> Add Trigger
 					</CButton>
 				</CButtonGroup>
@@ -225,7 +224,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 				) : (
 					<tr>
 						<td colSpan={4} className="currentlyNone">
-							There currently are no triggers or scheduled tasks.
+							<NonIdealState icon={faList} text="There are currently no triggers or scheduled tasks." />
 						</td>
 					</tr>
 				)}

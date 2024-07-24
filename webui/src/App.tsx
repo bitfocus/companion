@@ -421,11 +421,14 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 	let hasMatchedPane = false
 	const getClassForPane = (prefix: string) => {
 		// Require the path to be the same, or to be a prefix with a sub-route
+
+		const paneBaseClass = 'pane-baseclass'
+
 		if (routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix) {
 			hasMatchedPane = true
-			return 'active show'
+			return paneBaseClass + ' active show'
 		} else {
-			return ''
+			return paneBaseClass
 		}
 	}
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { CAlert, CButton, CRow } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CCallout, CRow } from '@coreui/react'
 import {
 	ConnectionsContext,
 	LoadingRetryOrError,
@@ -16,6 +16,8 @@ import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
 interface InstancePresetsProps {
 	resetToken: string
@@ -94,6 +96,9 @@ export const InstancePresets = observer(function InstancePresets({ resetToken }:
 				<PresetsButtonList
 					presets={presets}
 					selectedConnectionId={connectionAndCategory[0]}
+					selectedConnectionLabel={
+						(moduleInfo?.name ?? '?') + ' (' + connectionInfo?.label || connectionAndCategory[0] + ')'
+					}
 					selectedCategory={connectionAndCategory[1]}
 					setConnectionAndCategory={setConnectionAndCategory}
 				/>
@@ -133,7 +138,7 @@ const PresetsConnectionList = observer(function PresetsConnectionList({
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 
 		return (
-			<CButton key={id} color="danger" onClick={() => setConnectionAndCategory([id, null])}>
+			<CButton key={id} color="primary" onClick={() => setConnectionAndCategory([id, null])}>
 				{moduleInfo?.name ?? '?'} ({connectionInfo?.label ?? id})
 			</CButton>
 		)
@@ -143,17 +148,20 @@ const PresetsConnectionList = observer(function PresetsConnectionList({
 		<div>
 			<h5>Presets</h5>
 			<p>
-				Here are some ready made buttons with text, actions and feedback which you can drop onto a button to help you
-				get started quickly.
-				<br />
-				Not every module provides presets, and you can do a lot more by editing the actions and feedbacks on a button
-				manually.
+				Ready made buttons with text, actions and feedback which you can drop onto a button to help you get started
+				quickly.
 			</p>
+
 			{options.length === 0 ? (
 				<CAlert color="info">You have no connections that support presets at the moment.</CAlert>
 			) : (
 				<div className="preset-category-grid">{options}</div>
 			)}
+
+			<CCallout color="warning">
+				Not every module provides presets, and you can do a lot more by editing the actions and feedbacks on a button
+				manually.
+			</CCallout>
 		</div>
 	)
 })
@@ -186,7 +194,7 @@ function PresetsCategoryList({
 			return (
 				<CButton
 					key={category}
-					color="danger"
+					color="primary"
 					onClick={() => setConnectionAndCategory([selectedConnectionId, category])}
 				>
 					{category}
@@ -196,13 +204,18 @@ function PresetsCategoryList({
 
 	return (
 		<div>
-			<h5>
-				<CButton color="primary" size="sm" onClick={doBack}>
-					Back
-				</CButton>
-				{moduleInfo?.name ?? '?'} ({connectionInfo?.label ?? selectedConnectionId})
-			</h5>
-
+			<h5>Presets</h5>
+			<div style={{ marginBottom: 10 }}>
+				<CButtonGroup size="sm">
+					<CButton color="primary" onClick={doBack}>
+						<FontAwesomeIcon icon={faArrowLeft} />
+						&nbsp; Go back
+					</CButton>
+					<CButton color="secondary" disabled>
+						{moduleInfo?.name || '?'} ({connectionInfo?.label || selectedConnectionId})
+					</CButton>
+				</CButtonGroup>
+			</div>
 			{buttons.length === 0 ? (
 				<CAlert color="primary">Connection has no presets.</CAlert>
 			) : (
@@ -215,6 +228,7 @@ function PresetsCategoryList({
 interface PresetsButtonListProps {
 	presets: Record<string, UIPresetDefinition>
 	selectedConnectionId: string
+	selectedConnectionLabel: string
 	selectedCategory: string
 	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
 }
@@ -222,6 +236,7 @@ interface PresetsButtonListProps {
 function PresetsButtonList({
 	presets,
 	selectedConnectionId,
+	selectedConnectionLabel,
 	selectedCategory,
 	setConnectionAndCategory,
 }: Readonly<PresetsButtonListProps>) {
@@ -236,13 +251,22 @@ function PresetsButtonList({
 
 	return (
 		<div>
-			<h5>
-				<CButton color="primary" size="sm" onClick={doBack}>
-					Back
+			<h5>Presets</h5>
+
+			<CButtonGroup size="sm">
+				<CButton color="primary" onClick={doBack}>
+					<FontAwesomeIcon icon={faArrowLeft} />
+					&nbsp; Go back
 				</CButton>
-				{selectedCategory}
-			</h5>
-			<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
+				<CButton color="secondary" disabled>
+					{selectedConnectionLabel}
+				</CButton>
+				<CButton color="secondary" disabled>
+					{selectedCategory}
+				</CButton>
+			</CButtonGroup>
+
+			<div style={{ margin: '10px 0px' }}>Drag and drop the preset buttons below into your buttons-configuration.</div>
 
 			{filteredPresets.map((preset) => {
 				if (preset.type === 'button') {
