@@ -5,7 +5,7 @@ import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { NonIdealState } from '../../Components/NonIdealState.js'
-import { faList, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faList } from '@fortawesome/free-solid-svg-icons'
 
 interface TriggerPickerRowProps {
 	id: string

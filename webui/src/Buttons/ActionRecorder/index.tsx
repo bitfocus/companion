@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
 import { socketEmitPromise, SocketContext, applyPatchOrReplaceObject } from '../../util.js'
-import { CAlert, CCallout, CCol, CRow } from '@coreui/react'
+import { CCallout, CCol, CRow } from '@coreui/react'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { RecordSessionInfo, RecordSessionListInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'

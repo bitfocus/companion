@@ -1,7 +1,6 @@
 import React from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
-import { CFormInput } from '@coreui/react'
 import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface SatelliteConfigProps {

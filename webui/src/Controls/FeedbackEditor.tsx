@@ -1,4 +1,4 @@
-import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch, CFormLabel } from '@coreui/react'
+import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
 import {
 	faSort,
 	faTrash,

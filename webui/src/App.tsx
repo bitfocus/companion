@@ -14,7 +14,6 @@ import {
 	CButton,
 } from '@coreui/react'
 import {
-	faCalendarAlt,
 	faClipboardList,
 	faClock,
 	faCloud,
@@ -23,7 +22,6 @@ import {
 	faCog,
 	faFileImport,
 	faDollarSign,
-  faThLarge,
   faTh,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

@@ -6,7 +6,7 @@ import { CustomVariablesList } from '../Buttons/CustomVariablesList.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faLevelUp } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
 export const ConnectionVariables = function ConnectionVariables() {
 	const connectionsContext = useContext(ConnectionsContext)
