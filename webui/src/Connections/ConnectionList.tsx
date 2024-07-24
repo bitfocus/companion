@@ -483,7 +483,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 interface ModuleStatusCallProps {
 	isEnabled: boolean
 	status: ConnectionStatusEntry | undefined
-  onClick?: () => void
+	onClick?: () => void
 }
 
 function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps) {

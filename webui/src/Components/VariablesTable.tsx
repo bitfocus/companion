@@ -185,7 +185,7 @@ const VariablesTableRow = memo(function VariablesTableRow({
 								color: 'rgba(0,0,200,1)',
 								fontWeight: 'normal',
 								padding: '1px 3px',
-                fontSize: 14,
+								fontSize: 14,
 							}}
 						>
 							{elms}

@@ -105,7 +105,7 @@ export function ButtonStyleConfig({
 				</CAlert>
 			)}
 
-			<CForm className="flex-form flex-form-row" style={{  }} onSubmit={PreventDefaultHandler}>
+			<CForm className="flex-form flex-form-row" style={{}} onSubmit={PreventDefaultHandler}>
 				{style && (
 					<ButtonStyleConfigFields
 						values={style}

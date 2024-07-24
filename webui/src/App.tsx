@@ -22,7 +22,7 @@ import {
 	faCog,
 	faFileImport,
 	faDollarSign,
-  faTh,
+	faTh,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'

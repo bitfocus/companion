@@ -39,7 +39,7 @@ export const Popover = ({
 					className={className}
 					style={{
 						position: 'absolute',
-            overflow: 'visible',
+						overflow: 'visible',
 						...style,
 					}}
 				>
