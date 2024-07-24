@@ -230,7 +230,7 @@ const AppMain = observer(function AppMain({
 			<MySidebar sidebarShow={showSidebar} showWizard={showWizard} />
 			<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
-				<div className="body flex-grow-1 px-3">
+				<div className="body flex-grow-1">
 					{connected && loadingComplete ? (
 						unlocked ? (
 							<AppContent buttonGridHotPress={buttonGridHotPress} />

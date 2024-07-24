@@ -19,7 +19,6 @@ import {
 	faAdd,
 	faCalculator,
 	faClone,
-	faCogs,
 	faDownload,
 	faFileExport,
 	faList,
@@ -118,7 +117,7 @@ export const Triggers = observer(function Triggers() {
 				<TriggersTable editItem={doEditItem} selectedControlId={editItemId} />
 
 				<CButton
-					color="light"
+					color="secondary"
 					style={{
 						marginTop: 10,
 					}}
@@ -151,7 +150,7 @@ export const Triggers = observer(function Triggers() {
 					<CTabContent>
 						{!editItemId && (
 							<CTabPane data-tab="placeholder" visible={activeTab === 'placeholder'}>
-								<NonIdealState text="Select a trigger to edit" icon={faCogs} />
+								<NonIdealState text="Select a trigger to edit" icon={faCalculator} />
 							</CTabPane>
 						)}
 						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>

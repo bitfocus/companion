@@ -159,8 +159,7 @@ export function ConnectionsList({
 						<th className="fit">&nbsp;</th>
 						<th>Label</th>
 						<th>Module</th>
-						<th colSpan={2} className="fit">
-							Status
+						<th colSpan={3} className="fit">
 							<CButtonGroup style={{ float: 'right', margin: 0 }}>
 								<CButton
 									size="sm"
@@ -389,7 +388,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					connection.instance_type
 				)}
 			</td>
-			<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} />
+			<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} onClick={doEdit} />
 			<td className="action-buttons">
 				<div style={{ display: 'flex' }}>
 					<div>
@@ -484,9 +483,10 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 interface ModuleStatusCallProps {
 	isEnabled: boolean
 	status: ConnectionStatusEntry | undefined
+  onClick?: () => void
 }
 
-function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
+function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps) {
 	if (isEnabled) {
 		const messageStr =
 			!!status &&
@@ -497,13 +497,13 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 		switch (status?.category) {
 			case 'good':
 				return (
-					<td className="hand">
+					<td className="hand" onClick={onClick}>
 						<FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" />
 					</td>
 				)
 			case 'warning':
 				return (
-					<td className="connection-status-warn">
+					<td className="connection-status-warn" onClick={onClick}>
 						{status.level || 'Warning'}
 						<br />
 						{messageStr}
@@ -511,7 +511,7 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 				)
 			case 'error':
 				return (
-					<td className="connection-status-error">
+					<td className="connection-status-error" onClick={onClick}>
 						{status.level || 'ERROR'}
 						<br />
 						{messageStr}
@@ -519,7 +519,7 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 				)
 			default:
 				return (
-					<td className="connection-status-error">
+					<td className="connection-status-error" onClick={onClick}>
 						Unknown
 						<br />
 						{messageStr}
@@ -528,7 +528,7 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 		}
 	} else {
 		return (
-			<td>
+			<td onClick={onClick}>
 				<p>Disabled</p>
 			</td>
 		)

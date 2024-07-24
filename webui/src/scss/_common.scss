@@ -116,6 +116,11 @@ code {
 	color: #eee;
 	animation: blinker 0.3s linear infinite;
 }
+
+.btn-danger:disabled {
+	color: rgba(255,255,255,0.8);
+}
+
   
 @keyframes blinker {
 	50% {
