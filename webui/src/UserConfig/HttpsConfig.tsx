@@ -50,8 +50,8 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 				<td colSpan={3}>
 					<p>An HTTPS server can be enabled for the Companion web interfaces should your deployment require it.</p>
 					<CAlert color="danger">
-						It is never recommended to expose the Companion interface to the Internet and HTTPS does not provide any
-						additional security for that configuration.
+						Never expose the Companion web interface directly to the Internet. Note that HTTPS alone does not provide
+						additional security for this configuration.
 					</CAlert>
 				</td>
 			</tr>

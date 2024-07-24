@@ -62,7 +62,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 
 	return (
 		<div className="action-category">
-			<h4>
+			<h5>
 				{heading}
 				<CButtonGroup className="right">
 					{actions && actions.length > 1 && canExpandAll && (
@@ -77,7 +77,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 					)}
 					{headingActions || ''}
 				</CButtonGroup>
-			</h4>
+			</h5>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
 				location={location}
