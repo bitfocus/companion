@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faCog, faFolderOpen, faSearch, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
@@ -12,6 +12,7 @@ import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
+import { NonIdealState } from '../Components/NonIdealState.js'
 
 export const SurfacesPage = observer(function SurfacesPage() {
 	const { surfaces, socket } = useContext(RootAppStoreContext)
@@ -115,32 +116,24 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	return (
 		<div>
 			<h4>Surfaces</h4>
-			<p>
-				These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you might
-				need to close the Elgato Streamdeck application and click the Rescan button below.
+			<p style={{ marginBottom: '0.5rem' }}>
+				Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the Elgato
+				Streamdeck application and click the Rescan button below.
 			</p>
-
-			<CAlert color="info">
-				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite">
-					Companion Satellite
-				</a>
-				?
-			</CAlert>
 
 			<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
 				{scanError}
 			</CAlert>
 
-			<CButtonGroup>
+			<CButtonGroup size="sm">
 				<CButton color="warning" onClick={refreshUSB}>
 					<FontAwesomeIcon icon={faSync} spin={scanning} />
 					{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
 				</CButton>
-				<CButton color="danger" onClick={addEmulator}>
+				<CButton color="primary" onClick={addEmulator}>
 					<FontAwesomeIcon icon={faAdd} /> Add Emulator
 				</CButton>
-				<CButton color="warning" onClick={addGroup}>
+				<CButton color="secondary" onClick={addGroup}>
 					<FontAwesomeIcon icon={faAdd} /> Add Group
 				</CButton>
 			</CButtonGroup>
@@ -195,11 +188,20 @@ export const SurfacesPage = observer(function SurfacesPage() {
 
 					{surfacesList.length === 0 && (
 						<tr>
-							<td colSpan={7}>No control surfaces have been detected</td>
+							<td colSpan={7}>
+								<NonIdealState icon={faSearch} text="No surfaces found" />
+							</td>
 						</tr>
 					)}
 				</tbody>
 			</table>
+			<CCallout color="info">
+				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite?companion-inapp-didyouknow">
+					Companion Satellite
+				</a>
+				?
+			</CCallout>
 		</div>
 	)
 })

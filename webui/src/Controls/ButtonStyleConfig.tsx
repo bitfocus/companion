@@ -10,10 +10,11 @@ import {
 } from '../Components/index.js'
 import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '../Constants.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faFont, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.js'
+import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -104,7 +105,7 @@ export function ButtonStyleConfig({
 				</CAlert>
 			)}
 
-			<CForm className="flex-form flex-form-row" style={{ clear: 'both' }} onSubmit={PreventDefaultHandler}>
+			<CForm className="flex-form flex-form-row" style={{}} onSubmit={PreventDefaultHandler}>
 				{style && (
 					<ButtonStyleConfigFields
 						values={style}
@@ -170,19 +171,15 @@ export function ButtonStyleConfigFields({
 				<div style={specialStyleForButtonEditor}>
 					<label>
 						{values.textExpression ? (
-							<>
+							<InlineHelp help="You can read more about expressions in the Getting Started pages">
 								Button text expression
 								<InputFeatureIcons {...textInputFeatures} />
-								<FontAwesomeIcon
-									icon={faQuestionCircle}
-									title="You can read more about expressions in the Getting Started pages"
-								/>
-							</>
+							</InlineHelp>
 						) : (
-							<>
+							<InlineHelp help="The text you see on the button you're working with. You can use variables, but not expressions.">
 								Button text string
 								<InputFeatureIcons {...textInputFeatures} />
-							</>
+							</InlineHelp>
 						)}
 					</label>
 					<CInputGroup>
@@ -228,7 +225,13 @@ export function ButtonStyleConfigFields({
 						<div className="flex gap-1rem">
 							{showField2('color') && (
 								<div>
-									<ColorInputField label={'Text'} setValue={setColorValue} value={values.color} returnType="number" />
+									<ColorInputField
+										label={'Text'}
+										setValue={setColorValue}
+										value={values.color}
+										returnType="number"
+										helpText="Font color"
+									/>
 								</div>
 							)}
 							{showField2('bgcolor') && (
@@ -238,6 +241,7 @@ export function ButtonStyleConfigFields({
 										setValue={setBackgroundColorValue}
 										value={values.bgcolor}
 										returnType="number"
+										helpText="Background color"
 									/>
 								</div>
 							)}
@@ -251,6 +255,7 @@ export function ButtonStyleConfigFields({
 								setValue={setShowTopBar}
 								value={values.show_topbar}
 								multiple={false}
+								helpText="By default, you have a top bar with the button name and the page number. With this option, you can manually override the default behavior."
 							/>
 						</div>
 					)}
@@ -258,7 +263,9 @@ export function ButtonStyleConfigFields({
 					{showField2('alignment') && (
 						<div>
 							<div>
-								<label>Text</label>
+								<label>
+									<InlineHelp help="Text alignment">Text</InlineHelp>
+								</label>
 								<div style={{ border: '1px solid #ccc' }}>
 									<AlignmentInputField setValue={setAlignmentValue} value={values.alignment} />
 								</div>
@@ -268,7 +275,9 @@ export function ButtonStyleConfigFields({
 					{showField2('pngalignment') && (
 						<div>
 							<div>
-								<label>PNG</label>
+								<label>
+									<InlineHelp help="PNG background image alignment">PNG</InlineHelp>
+								</label>
 								<div style={{ border: '1px solid #ccc' }}>
 									<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment} />
 								</div>
@@ -278,7 +287,7 @@ export function ButtonStyleConfigFields({
 					{showField2('png64') && (
 						<div>
 							<label>
-								PNG <FontAwesomeIcon icon={faQuestionCircle} title="Recommended minimum size is 72x72" />
+								<InlineHelp help="Recommended minimum size is 72x72">PNG</InlineHelp>
 							</label>
 							<CButtonGroup className="png-browse">
 								<PNGInputField

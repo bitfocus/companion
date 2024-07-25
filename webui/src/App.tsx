@@ -14,7 +14,6 @@ import {
 	CButton,
 } from '@coreui/react'
 import {
-	faCalendarAlt,
 	faClipboardList,
 	faClock,
 	faCloud,
@@ -23,6 +22,7 @@ import {
 	faCog,
 	faFileImport,
 	faDollarSign,
+	faTh,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
@@ -230,7 +230,7 @@ const AppMain = observer(function AppMain({
 			<MySidebar sidebarShow={showSidebar} showWizard={showWizard} />
 			<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
-				<div className="body flex-grow-1 px-3">
+				<div className="body flex-grow-1">
 					{connected && loadingComplete ? (
 						unlocked ? (
 							<AppContent buttonGridHotPress={buttonGridHotPress} />
@@ -421,11 +421,14 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 	let hasMatchedPane = false
 	const getClassForPane = (prefix: string) => {
 		// Require the path to be the same, or to be a prefix with a sub-route
+
+		const paneBaseClass = 'pane-baseclass'
+
 		if (routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix) {
 			hasMatchedPane = true
-			return 'active show'
+			return paneBaseClass + ' active show'
 		} else {
-			return ''
+			return paneBaseClass
 		}
 	}
 
@@ -448,7 +451,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				</CNavItem>
 				<CNavItem>
 					<CNavLink to={BUTTONS_PAGE_PREFIX} as={NavLink}>
-						<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
+						<FontAwesomeIcon icon={faTh} /> Buttons
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>

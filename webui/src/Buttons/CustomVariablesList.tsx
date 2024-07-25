@@ -1,13 +1,15 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup, CForm, CFormInput, CInputGroup, CInputGroupText } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
 import { socketEmitPromise, PreventDefaultHandler, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
+	faArrowLeft,
 	faCompressArrowsAlt,
 	faCopy,
 	faExpandArrowsAlt,
 	faSort,
+	faSquareRootVariable,
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
@@ -21,6 +23,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { NonIdealState } from '../Components/NonIdealState.js'
 
 const DRAG_ID = 'custom-variables'
 
@@ -195,24 +198,28 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 	return (
 		<div className="variables-panel">
-			<h5>
-				Custom Variables
-				<CButtonGroup>
+			<div>
+				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
+				<CButtonGroup size="sm">
+					<CButton color="primary" onClick={doBack}>
+						<FontAwesomeIcon icon={faArrowLeft} />
+						&nbsp; Go back
+					</CButton>
+					<CButton color="secondary" disabled>
+						Custom Variables
+					</CButton>
 					{!hasNoVariables && panelCollapseHelper.canExpandAll() && (
-						<CButton color="white" size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all">
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+						<CButton color="secondary" onClick={panelCollapseHelper.setAllExpanded} title="Expand all">
+							<FontAwesomeIcon icon={faExpandArrowsAlt} /> Expand
 						</CButton>
 					)}
 					{!hasNoVariables && panelCollapseHelper.canCollapseAll() && (
-						<CButton color="white" size="sm" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all">
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						<CButton color="secondary" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all">
+							<FontAwesomeIcon icon={faCompressArrowsAlt} /> Collapse
 						</CButton>
 					)}
-					<CButton color="primary" size="sm" onClick={doBack} className="gap-b">
-						Back
-					</CButton>
 				</CButtonGroup>
-			</h5>
+			</div>
 
 			<GenericConfirmModal ref={confirmRef} />
 
@@ -267,18 +274,24 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 						})}
 					{hasNoVariables && (
 						<tr>
-							<td colSpan={3}>No custom variables have been created</td>
+							<td colSpan={3}>
+								<NonIdealState icon={faSquareRootVariable} text="No custom variables defined" />
+							</td>
 						</tr>
 					)}
 				</tbody>
 			</table>
 
-			<hr />
+			<h5>Create custom variable</h5>
 			<div>
 				<CForm onSubmit={doCreateNew}>
 					<CInputGroup>
-						<CInputGroupText>Create custom variable:</CInputGroupText>
-						<CFormInput type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
+						<CFormInput
+							type="text"
+							value={newName}
+							onChange={(e) => setNewName(e.currentTarget.value)}
+							placeholder="variableName"
+						/>
 						<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
 							Add
 						</CButton>
@@ -380,23 +393,25 @@ function CustomVariableRow({
 			<td style={{ paddingRight: 0 }}>
 				<div className="editor-grid">
 					<div className="cell-header">
-						$({fullname})
-						<CButtonGroup className="right">
+						<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
+							<span className="variable-style">$({fullname})</span>
+						</CopyToClipboard>
+						<CButtonGroup className="right" size={isCollapsed ? 'sm' : undefined}>
 							{isCollapsed ? (
-								<CButton size="sm" onClick={doExpand} title="Expand variable view">
+								<CButton onClick={doExpand} title="Expand variable view">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							) : (
-								<CButton size="sm" onClick={doCollapse} title="Collapse variable view">
+								<CButton onClick={doCollapse} title="Collapse variable view">
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
 							<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
-								<CButton size="sm">
+								<CButton>
 									<FontAwesomeIcon icon={faCopy} />
 								</CButton>
 							</CopyToClipboard>
-							<CButton size="sm" onClick={() => doDelete(name)}>
+							<CButton onClick={() => doDelete(name)}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 						</CButtonGroup>
@@ -407,9 +422,10 @@ function CustomVariableRow({
 							<div className="cell-options">
 								<CForm onSubmit={PreventDefaultHandler}>
 									<CheckboxInputField
-										label="Persist value: "
+										label="Persist value"
 										value={info.persistCurrentValue}
 										setValue={(val) => setPersistenceValue(name, val)}
+										helpText="If enabled, the current value will be saved and restored when Companion restarts."
 									/>
 								</CForm>
 							</div>
