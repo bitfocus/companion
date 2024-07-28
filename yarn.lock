@@ -1540,9 +1540,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base@npm:~1.9.0-2":
-  version: 1.9.0-2
-  resolution: "@companion-module/base@npm:1.9.0-2"
+"@companion-module/base@npm:~1.9.0-3":
+  version: 1.9.0-3
+  resolution: "@companion-module/base@npm:1.9.0-3"
   dependencies:
     "@sentry/node": "npm:^8.13.0"
     ajv: "npm:^8.16.0"
@@ -1554,7 +1554,7 @@ __metadata:
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/6b21335630036f9a4f68e0dcc16a1ed5a5a585f15678b172f41716fae9d6667524c4aeb6876d983a5651fe727c29923f459f404a908d0f59bbc8dc12709517f9
+  checksum: 10c0/58de240da91491fce21b630be566156f37dc082e3e62ab1d1f3cd0de08815945de4e5539e120abdb0e7cfe4380432300ae4f87d8349001afe1e465674c0d4fd6
   languageName: node
   linkType: hard
 
@@ -6693,7 +6693,7 @@ asn1@evs-broadcast/node-asn1:
   resolution: "companion@workspace:companion"
   dependencies:
     "@companion-app/shared": "npm:*"
-    "@companion-module/base": "npm:~1.9.0-2"
+    "@companion-module/base": "npm:~1.9.0-3"
     "@elgato-stream-deck/node": "npm:^6.2.0"
     "@julusian/bonjour-service": "npm:^1.3.0-2"
     "@julusian/image-rs": "npm:^1.0.3"
