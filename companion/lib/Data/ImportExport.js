@@ -688,7 +688,7 @@ class DataImportExport extends CoreBase {
 				...controlObj.style,
 				style: controlObj.type,
 			})
-			return !!res?.style ? res?.asDataUrl ?? null : null
+			return !!res?.style ? (res?.asDataUrl ?? null) : null
 		})
 
 		client.onPromise('loadsave:reset-page-clear', (pageNumber) => {

@@ -15,7 +15,7 @@ export function ParseInternalControlReference(logger, variablesController, press
 	 * @returns {number | null}
 	 */
 	const sanitisePageNumber = (pageNumber) => {
-		return pageNumber == 0 ? pressLocation?.pageNumber ?? null : pageNumber
+		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
 	}
 	/**
 	 * @param {number} pageNumber

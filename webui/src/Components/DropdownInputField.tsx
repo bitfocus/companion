@@ -134,7 +134,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	const onChange = useCallback(
 		(e: DropdownChoiceInt | DropdownChoiceInt[]) => {
 			const isMultiple = !!multiple
-			const newValue = Array.isArray(e) ? e?.map((v) => v.value) ?? [] : e?.value
+			const newValue = Array.isArray(e) ? (e?.map((v) => v.value) ?? []) : e?.value
 
 			const isValid = isValueValid(newValue)
 
@@ -204,7 +204,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 			className={classNames({
 				'select-tooltip': true,
 				'select-invalid': !isValueValid(
-					isMultiple && currentValue ? currentValue.map((v) => v.value) ?? [] : currentValue[0]?.value
+					isMultiple && currentValue ? (currentValue.map((v) => v.value) ?? []) : currentValue[0]?.value
 				),
 			})}
 			title={tooltip}
