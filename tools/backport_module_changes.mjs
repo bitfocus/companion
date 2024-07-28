@@ -1,7 +1,7 @@
 #!/usr/bin/env zx
 
 import { Octokit, App } from 'octokit'
-import inquirer from 'inquirer'
+import { confirm } from '@inquirer/prompts'
 import open from 'open'
 import dotenv from 'dotenv'
 dotenv.config()
@@ -67,15 +67,12 @@ for (const item of newList.data) {
 			const compareUrl = `https://github.com/bitfocus/companion-module-${item.path}/compare/${oldRef}...${newRef}`
 			await open(compareUrl)
 
-			const action = await inquirer.prompt([
-				{
-					type: 'confirm',
-					name: 'action',
-					message: 'Merge it? ',
-					default: false,
-				},
-			])
-			if (action.action) {
+			const action = await confirm({
+				// name: 'action',
+				message: 'Merge it? ',
+				default: false,
+			})
+			if (action) {
 				console.log(`importing ${item.path}@${newRef} into ${oldRev}`)
 
 				await octokit.rest.actions.createWorkflowDispatch({
