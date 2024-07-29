@@ -7,6 +7,7 @@ import { MenuPortalContext } from './DropdownInputField.js'
 import { colord } from 'colord'
 import { CompanionColorPresetValue } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
+import { InlineHelp } from './InlineHelp.js'
 
 function splitColor(color: number | string) {
 	if (typeof color === 'number' || !isNaN(Number(color))) {
@@ -71,6 +72,7 @@ interface ColorInputFieldProps<T extends 'string' | 'number'> {
 	enableAlpha?: boolean
 	returnType: 'string' | 'number'
 	presetColors?: CompanionColorPresetValue[]
+	helpText?: string
 }
 
 export function ColorInputField<T extends 'string' | 'number'>({
@@ -82,6 +84,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	enableAlpha,
 	returnType,
 	presetColors,
+	helpText,
 }: ColorInputFieldProps<T>) {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -153,7 +156,11 @@ export function ColorInputField<T extends 'string' | 'number'>({
 
 	return (
 		<>
-			{label ? <CFormLabel>{label}</CFormLabel> : ''}
+			{helpText ? (
+				<InlineHelp help={helpText}>{label ? <CFormLabel>{label}</CFormLabel> : ''}</InlineHelp>
+			) : (
+				<>{label ? <CFormLabel>{label}</CFormLabel> : ''}</>
+			)}
 			<div style={{ lineHeight: 0 }}>
 				<div style={styles.swatch} onClick={handleClick} ref={setReferenceElement}>
 					<div style={styles.color} />

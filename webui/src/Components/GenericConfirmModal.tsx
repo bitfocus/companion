@@ -65,7 +65,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 		}
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus} transition={false}>
 				<CModalHeader closeButton>
 					<h5>{data?.title}</h5>
 				</CModalHeader>
@@ -74,7 +74,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton ref={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction} autoFocus>
 						{data?.buttonLabel}
 					</CButton>
 				</CModalFooter>

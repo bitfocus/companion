@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash-es'
 import ServiceBase from './Base.js'
-import { Bonjour, Browser } from 'bonjour-service'
+import { Bonjour, Browser } from '@julusian/bonjour-service'
 import { nanoid } from 'nanoid'
 
 /**

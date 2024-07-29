@@ -54,7 +54,7 @@ export const NotificationsManager = forwardRef<NotificationsManagerRef, Notifica
 				show(title, message, duration, stickyId) {
 					const id = stickyId ?? nanoid()
 
-					const autohide = duration === null ? undefined : duration ?? 10000
+					const autohide = duration === null ? undefined : (duration ?? 10000)
 					if (typeof autohide === 'number') {
 						doPruneToastId(id, autohide)
 					}

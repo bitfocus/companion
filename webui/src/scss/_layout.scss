@@ -103,7 +103,8 @@ body {
 	}
 
 	.tab-pane {
-		padding: 1rem;
+		padding: 1rem 1rem 1rem 1rem;
+
 		// Make absolute positioned child components be relative to this
 		position: relative;
 	}
@@ -249,6 +250,7 @@ body {
 
 .secondary-panel {
 	padding-left: 15px;
+	padding-right: 0px;
 	padding-top: 5px;
 	display: grid;
 	grid-template-rows: auto 1fr;

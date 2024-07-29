@@ -1,17 +1,19 @@
 import React, { RefObject, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
 import { ConnectionsContext, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-	faDollarSign,
 	faSort,
 	faExclamationTriangle,
-	faTrash,
-	faTerminal,
 	faCheckCircle,
+	faEyeSlash,
 	faQuestionCircle,
 	faBug,
-	faEyeSlash,
+	faDollarSign,
+	faTerminal,
+	faTrash,
+	faEllipsisV,
+	faPlug,
 } from '@fortawesome/free-solid-svg-icons'
 
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
@@ -22,6 +24,8 @@ import classNames from 'classnames'
 import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { NonIdealState } from '../Components/NonIdealState.js'
+import { Tuck } from '../Components/Tuck.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -155,13 +159,17 @@ export function ConnectionsList({
 						<th className="fit">&nbsp;</th>
 						<th>Label</th>
 						<th>Module</th>
-						<th colSpan={2} className="fit">
-							Status
+						<th colSpan={3} className="fit">
 							<CButtonGroup style={{ float: 'right', margin: 0 }}>
 								<CButton
-									color="secondary"
 									size="sm"
-									style={{ opacity: visibleConnections.disabled ? 1 : 0.4, padding: '1px 5px', color: 'black' }}
+									color="secondary"
+									style={{
+										backgroundColor: 'white',
+										opacity: visibleConnections.disabled ? 1 : 0.4,
+										padding: '1px 5px',
+										color: 'black',
+									}}
 									onClick={doToggleDisabled}
 								>
 									Disabled
@@ -207,9 +215,11 @@ export function ConnectionsList({
 					{Object.keys(connectionsContext).length === 0 && (
 						<tr>
 							<td colSpan={4}>
-								You haven't setup any connections yet. <br />
-								Try adding something from the list <span className="d-xl-none">below</span>
-								<span className="d-none d-xl-inline">to the right</span>.
+								<NonIdealState icon={faPlug}>
+									You haven't set up any connections yet. <br />
+									Try adding something from the list <span className="d-xl-none">below</span>
+									<span className="d-none d-xl-inline">to the right</span>.
+								</NonIdealState>
 							</td>
 						</tr>
 					)}
@@ -378,39 +388,9 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					connection.instance_type
 				)}
 			</td>
-			<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} />
+			<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} onClick={doEdit} />
 			<td className="action-buttons">
 				<div style={{ display: 'flex' }}>
-					<div>
-						<CButtonGroup>
-							<CButton onClick={doShowHelp} title="Help" disabled={!moduleInfo?.hasHelp}>
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</CButton>
-
-							<CButton onClick={openBugUrl} title="Issue Tracker" disabled={!moduleInfo?.bugUrl}>
-								<FontAwesomeIcon icon={faBug} />
-							</CButton>
-
-							<CButton
-								onClick={doShowVariables}
-								title="Variables"
-								disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
-							>
-								<FontAwesomeIcon icon={faDollarSign} />
-							</CButton>
-
-							<CButton
-								onClick={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
-								title="Logs"
-							>
-								<FontAwesomeIcon icon={faTerminal} />
-							</CButton>
-
-							<CButton onClick={doDelete} title="Delete" color="#ff00ff">
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>
-						</CButtonGroup>
-					</div>
 					<div>
 						<CFormSwitch
 							className="connection-enabled-switch"
@@ -422,6 +402,78 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 							title={isEnabled ? 'Disable connection' : 'Enable connection'}
 						/>
 					</div>
+					<CPopover
+						trigger="focus"
+						placement="right"
+						style={{ backgroundColor: 'white' }}
+						content={
+							<>
+								<CButtonGroup vertical>
+									<CButton
+										onClick={doShowHelp}
+										color="secondary"
+										title="Help"
+										disabled={!moduleInfo?.hasHelp}
+										style={{ textAlign: 'left' }}
+									>
+										<Tuck>
+											<FontAwesomeIcon icon={faQuestionCircle} />
+										</Tuck>
+										Help
+									</CButton>
+
+									<CButton
+										onClick={openBugUrl}
+										color="secondary"
+										title="Issue Tracker"
+										disabled={!moduleInfo?.bugUrl}
+										style={{ textAlign: 'left' }}
+									>
+										<Tuck>
+											<FontAwesomeIcon icon={faBug} />
+										</Tuck>
+										Known issues
+									</CButton>
+
+									<CButton
+										onClick={doShowVariables}
+										title="Variables"
+										color="secondary"
+										disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
+										style={{ textAlign: 'left' }}
+									>
+										<Tuck>
+											<FontAwesomeIcon icon={faDollarSign} />
+										</Tuck>
+										Variables
+									</CButton>
+
+									<CButton
+										onClick={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
+										title="Logs"
+										color="secondary"
+										style={{ textAlign: 'left' }}
+									>
+										<Tuck>
+											<FontAwesomeIcon icon={faTerminal} />
+										</Tuck>
+										View logs
+									</CButton>
+
+									<CButton onClick={doDelete} title="Delete" color="secondary" style={{ textAlign: 'left' }}>
+										<Tuck>
+											<FontAwesomeIcon icon={faTrash} />
+										</Tuck>
+										Delete
+									</CButton>
+								</CButtonGroup>
+							</>
+						}
+					>
+						<CButton color="secondary" style={{ padding: '3px 16px' }} onClick={(e) => e.currentTarget.focus()}>
+							<FontAwesomeIcon icon={faEllipsisV} />
+						</CButton>
+					</CPopover>
 				</div>
 			</td>
 		</tr>
@@ -431,9 +483,10 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 interface ModuleStatusCallProps {
 	isEnabled: boolean
 	status: ConnectionStatusEntry | undefined
+	onClick?: () => void
 }
 
-function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
+function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps) {
 	if (isEnabled) {
 		const messageStr =
 			!!status &&
@@ -444,13 +497,13 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 		switch (status?.category) {
 			case 'good':
 				return (
-					<td className="hand">
+					<td className="hand" onClick={onClick}>
 						<FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" />
 					</td>
 				)
 			case 'warning':
 				return (
-					<td className="connection-status-warn">
+					<td className="connection-status-warn" onClick={onClick}>
 						{status.level || 'Warning'}
 						<br />
 						{messageStr}
@@ -458,7 +511,7 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 				)
 			case 'error':
 				return (
-					<td className="connection-status-error">
+					<td className="connection-status-error" onClick={onClick}>
 						{status.level || 'ERROR'}
 						<br />
 						{messageStr}
@@ -466,7 +519,7 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 				)
 			default:
 				return (
-					<td className="connection-status-error">
+					<td className="connection-status-error" onClick={onClick}>
 						Unknown
 						<br />
 						{messageStr}
@@ -475,7 +528,7 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 		}
 	} else {
 		return (
-			<td>
+			<td onClick={onClick}>
 				<p>Disabled</p>
 			</td>
 		)

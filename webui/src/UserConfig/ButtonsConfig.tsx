@@ -15,11 +15,9 @@ export const ButtonsConfig = observer(function ButtonsConfig({ config, setValue,
 	return (
 		<>
 			<tr>
-				<th colSpan={0} className="settings-category">
+				<th colSpan={3} className="settings-category">
 					Buttons
 				</th>
-				<th className="fit"></th>
-				<th></th>
 			</tr>
 
 			<tr>

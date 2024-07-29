@@ -17,10 +17,11 @@ import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faAdd,
-	faCalculator,
+	faClock,
 	faClone,
 	faDownload,
 	faFileExport,
+	faList,
 	faSort,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
@@ -33,16 +34,14 @@ import classNames from 'classnames'
 import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { NonIdealState } from '../Components/NonIdealState.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
-
 export const TRIGGERS_PAGE_PREFIX = '/triggers'
 
 function useSelectedTriggerId(): string | null {
 	const routerLocation = useLocation()
 	if (!routerLocation.pathname.startsWith(TRIGGERS_PAGE_PREFIX)) return null
-
 	const fragments = routerLocation.pathname.slice(TRIGGERS_PAGE_PREFIX.length + 1).split('/')
-
 	const triggerId = fragments[0]
 	if (!triggerId) return null
 
@@ -107,10 +106,12 @@ export const Triggers = observer(function Triggers() {
 
 			<CCol xs={12} xl={6} className="primary-panel">
 				<h4>Triggers and schedules</h4>
-				<p>This allows you to run actions based on Companion, feedback or time events.</p>
+				<p style={{ marginBottom: '0.5rem' }}>
+					This allows you to run actions based on Companion, feedback or time events.
+				</p>
 
-				<CButtonGroup style={{ marginBottom: '0.3em' }}>
-					<CButton color="primary" onClick={doAddNew}>
+				<CButtonGroup style={{ marginBottom: '1em' }}>
+					<CButton color="primary" onClick={doAddNew} size="sm">
 						<FontAwesomeIcon icon={faAdd} /> Add Trigger
 					</CButton>
 				</CButtonGroup>
@@ -118,7 +119,7 @@ export const Triggers = observer(function Triggers() {
 				<TriggersTable editItem={doEditItem} selectedControlId={editItemId} />
 
 				<CButton
-					color="light"
+					color="secondary"
 					style={{
 						marginTop: 10,
 					}}
@@ -144,14 +145,14 @@ export const Triggers = observer(function Triggers() {
 							})}
 						>
 							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
-								<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
+								<FontAwesomeIcon icon={faClock} /> Edit Trigger
 							</CNavLink>
 						</CNavItem>
 					</CNav>
 					<CTabContent>
 						{!editItemId && (
 							<CTabPane data-tab="placeholder" visible={activeTab === 'placeholder'}>
-								<p>Select a trigger...</p>
+								<NonIdealState text="Select a trigger to edit" icon={faClock} />
 							</CTabPane>
 						)}
 						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>
@@ -199,15 +200,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 	)
 
 	return (
-		<table className="table-tight table-responsive-sm ">
-			<thead>
-				<tr>
-					<th>&nbsp;</th>
-					<th>Name</th>
-					<th>Trigger</th>
-					<th>&nbsp;</th>
-				</tr>
-			</thead>
+		<table className="table-tight table-responsive-sm" style={{ marginBottom: 10 }}>
 			<tbody>
 				{triggersList.triggers.size > 0 ? (
 					Array.from(triggersList.triggers.entries())
@@ -225,7 +218,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 				) : (
 					<tr>
 						<td colSpan={4} className="currentlyNone">
-							There currently are no triggers or scheduled tasks.
+							<NonIdealState icon={faList} text="There are currently no triggers or scheduled tasks." />
 						</td>
 					</tr>
 				)}

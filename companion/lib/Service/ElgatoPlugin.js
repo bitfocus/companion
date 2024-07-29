@@ -5,6 +5,7 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { EventEmitter } from 'events'
 import ImageWriteQueue from '../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
+import { transformButtonImage } from '../Resources/Util.js'
 
 /**
  * Class providing the Elgato Plugin service.
@@ -402,14 +403,7 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 			) => {
 				const targetSize = 72 // Compatibility
 				try {
-					let image = imageRs.ImageTransformer.fromBuffer(
-						render.buffer,
-						render.bufferWidth,
-						render.bufferHeight,
-						imageRs.PixelFormat.Rgba
-					).scale(targetSize, targetSize)
-
-					const newbuffer = await image.toBuffer(imageRs.PixelFormat.Rgb)
+					const newbuffer = await transformButtonImage(render, null, targetSize, targetSize, imageRs.PixelFormat.Rgb)
 
 					this.apicommand('fillImage', { ...partial, data: newbuffer })
 				} catch (/** @type {any} */ e) {

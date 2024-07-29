@@ -111,6 +111,30 @@ code {
 	background-color: $primary;
 }
 
+.btn-danger:hover {
+	background-color: darken($primary, 5%);
+	color: #eee;
+	animation: blinker 0.3s linear infinite;
+}
+
+.btn-danger:disabled {
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-success:disabled {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-info:disabled {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes blinker {
+	50% {
+		opacity: 0.8;
+	}
+}
+
 .c-app {
 	color: #222;
 }
@@ -147,12 +171,15 @@ code {
 }
 
 .btn-secondary {
-	background-color: $secondary;
-	color: black;
+	background-color: lighten($secondary, 15%);
 }
 .btn-danger,
 .btn-success,
 .btn-info {
+	color: #fff;
+}
+
+.btn-success:hover {
 	color: #fff;
 }
 
@@ -202,10 +229,6 @@ code {
 
 .option-field {
 	margin-bottom: 0.75rem;
-
-	.form-check {
-		padding-left: 0.25rem;
-	}
 }
 
 .noBorder td {

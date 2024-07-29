@@ -18,7 +18,7 @@ import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import { parseColor, parseColorToNumber, translateRotation } from '../../Resources/Util.js'
+import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 
 /**
@@ -120,17 +120,13 @@ class SurfaceIPSatellite extends EventEmitter {
 				if (!targetSize) return
 
 				try {
-					let image = imageRs.ImageTransformer.fromBuffer(
-						render.buffer,
-						render.bufferWidth,
-						render.bufferHeight,
-						imageRs.PixelFormat.Rgba
-					).scale(targetSize, targetSize)
-
-					const rotation = translateRotation(this.#config.rotation)
-					if (rotation !== null) image = image.rotate(rotation)
-
-					const newbuffer = await image.toBuffer(imageRs.PixelFormat.Rgb)
+					const newbuffer = await transformButtonImage(
+						render,
+						this.#config.rotation,
+						targetSize,
+						targetSize,
+						imageRs.PixelFormat.Rgb
+					)
 
 					this.#sendDraw(key, newbuffer, render.style)
 				} catch (/** @type {any} */ e) {
@@ -157,7 +153,7 @@ class SurfaceIPSatellite extends EventEmitter {
 			if (this.#streamColors) {
 				let bgcolor = 'rgb(0,0,0)'
 				let fgcolor = 'rgb(0,0,0)'
-				if (style && style.color && style.bgcolor) {
+				if (style && style.color !== undefined && style.bgcolor !== undefined) {
 					bgcolor = parseColor(style.bgcolor).replaceAll(' ', '')
 					fgcolor = parseColor(style.color).replaceAll(' ', '')
 				}
