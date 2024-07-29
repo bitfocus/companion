@@ -1,102 +1,102 @@
 {
-  "name": "@companion-app/launcher",
-  "description": "Companion",
-  "version": "3.4.0+7171-feat-node22-7be31e9d",
-  "main": "main.js",
-  "license": "MIT",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "start": "electron main.js",
-    "dev": "electron dev.cjs"
-  },
-  "dependencies": {
-    "@sentry/electron": "^5.2.0",
-    "chokidar": "^3.6.0",
-    "debounce-fn": "^6.0.0",
-    "electron-store": "^10.0.0",
-    "file-stream-rotator": "^1.0.0",
-    "fs-extra": "^11.2.0",
-    "nanoid": "^5.0.7",
-    "plist": "^3.1.0",
-    "respawn": "*",
-    "semver": "^7.6.3",
-    "strip-ansi": "^7.1.0",
-    "systeminformation": "^5.22.11"
-  },
-  "devDependencies": {
-    "@electron/notarize": "^2.3.2",
-    "@types/plist": "^3.0.5",
-    "electron": "31.3.0",
-    "electron-builder": "24.13.3",
-    "electron-reloader": "^1.2.3"
-  },
-  "build": {
-    "productName": "Companion",
-    "executableName": "Companion",
-    "appId": "test-companion.bitfocus.no",
-    "dmg": {
-      "artifactName": "companion-mac-${arch}.dmg",
-      "sign": true
-    },
-    "mac": {
-      "target": "dmg",
-      "category": "no.bitfocus.companion",
-      "extendInfo": {
-        "LSBackgroundOnly": 1,
-        "LSUIElement": 1,
-        "NSAppleEventsUsageDescription": "Companion uses AppleEvents to control local applications."
-      },
-      "hardenedRuntime": "true",
-      "gatekeeperAssess": "false",
-      "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.plist"
-    },
-    "afterPack": "fix-bundled-modules.cjs",
-    "afterSign": "notarize.cjs",
-    "win": {
-      "target": "nsis"
-    },
-    "nsis": {
-      "artifactName": "companion-win64.exe",
-      "createStartMenuShortcut": true,
-      "perMachine": false,
-      "oneClick": false,
-      "selectPerMachineByDefault": true,
-      "allowElevation": true,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "icon.ico",
-      "installerSidebar": "compinst.bmp",
-      "uninstallerSidebar": "compinst.bmp"
-    },
-    "directories": {
-      "buildResources": "assets/",
-      "output": "../electron-output/"
-    },
-    "linux": {
-      "target": "dir",
-      "executableName": "companion-launcher",
-      "artifactName": "companion-x64",
-      "extraFiles": [
-        {
-          "from": "../assets/linux",
-          "to": "."
-        }
-      ]
-    },
-    "files": [
-      "**/*",
-      "assets/*"
-    ],
-    "extraResources": [
-      {
-        "from": "../dist",
-        "to": "."
-      },
-      {
-        "from": "../module-legacy/manifests",
-        "to": "./module-legacy/manifests"
-      }
-    ]
-  }
+	"name": "@companion-app/launcher",
+	"description": "Companion",
+	"version": "3.4.0",
+	"main": "main.js",
+	"license": "MIT",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"start": "electron main.js",
+		"dev": "electron dev.cjs"
+	},
+	"dependencies": {
+		"@sentry/electron": "^5.2.0",
+		"chokidar": "^3.6.0",
+		"debounce-fn": "^6.0.0",
+		"electron-store": "^10.0.0",
+		"file-stream-rotator": "^1.0.0",
+		"fs-extra": "^11.2.0",
+		"nanoid": "^5.0.7",
+		"plist": "^3.1.0",
+		"respawn": "*",
+		"semver": "^7.6.3",
+		"strip-ansi": "^7.1.0",
+		"systeminformation": "^5.22.11"
+	},
+	"devDependencies": {
+		"@electron/notarize": "^2.3.2",
+		"@types/plist": "^3.0.5",
+		"electron": "31.3.0",
+		"electron-builder": "24.13.3",
+		"electron-reloader": "^1.2.3"
+	},
+	"build": {
+		"productName": "Companion",
+		"executableName": "Companion",
+		"appId": "test-companion.bitfocus.no",
+		"dmg": {
+			"artifactName": "companion-mac-${arch}.dmg",
+			"sign": true
+		},
+		"mac": {
+			"target": "dmg",
+			"category": "no.bitfocus.companion",
+			"extendInfo": {
+				"LSBackgroundOnly": 1,
+				"LSUIElement": 1,
+				"NSAppleEventsUsageDescription": "Companion uses AppleEvents to control local applications."
+			},
+			"hardenedRuntime": "true",
+			"gatekeeperAssess": "false",
+			"entitlements": "entitlements.mac.plist",
+			"entitlementsInherit": "entitlements.mac.plist"
+		},
+		"afterPack": "fix-bundled-modules.cjs",
+		"afterSign": "notarize.cjs",
+		"win": {
+			"target": "nsis"
+		},
+		"nsis": {
+			"artifactName": "companion-win64.exe",
+			"createStartMenuShortcut": true,
+			"perMachine": false,
+			"oneClick": false,
+			"selectPerMachineByDefault": true,
+			"allowElevation": true,
+			"allowToChangeInstallationDirectory": true,
+			"installerIcon": "icon.ico",
+			"installerSidebar": "compinst.bmp",
+			"uninstallerSidebar": "compinst.bmp"
+		},
+		"directories": {
+			"buildResources": "assets/",
+			"output": "../electron-output/"
+		},
+		"linux": {
+			"target": "dir",
+			"executableName": "companion-launcher",
+			"artifactName": "companion-x64",
+			"extraFiles": [
+				{
+					"from": "../assets/linux",
+					"to": "."
+				}
+			]
+		},
+		"files": [
+			"**/*",
+			"assets/*"
+		],
+		"extraResources": [
+			{
+				"from": "../dist",
+				"to": "."
+			},
+			{
+				"from": "../module-legacy/manifests",
+				"to": "./module-legacy/manifests"
+			}
+		]
+	}
 }
