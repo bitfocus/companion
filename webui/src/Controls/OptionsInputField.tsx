@@ -13,8 +13,6 @@ import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import sanitizeHtml from 'sanitize-html'
-// import { IActionEditorActionService } from '../Services/Controls/ControlActionsService.js'
-// import { IFeedbackEditorService } from '../Services/Controls/ControlFeedbacksService.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
