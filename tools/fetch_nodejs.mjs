@@ -4,7 +4,7 @@ import { fetch, fs, path, $ } from 'zx'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
-import { determinePlatformInfo, toPosix } from './build/util.mjs'
+import { toPosix } from './build/util.mjs'
 import { fileURLToPath } from 'node:url'
 const streamPipeline = promisify(pipeline)
 
@@ -16,18 +16,19 @@ const cacheRoot = fileURLToPath(new URL('../.cache', import.meta.url))
 const cacheDir = path.join(cacheRoot, 'node')
 const cacheRuntimeDir = path.join(cacheRoot, 'node-runtime')
 
-export async function fetchNodejs(targetName) {
+export async function fetchNodejs(platformInfo) {
 	await fs.mkdirp(cacheDir)
 	await fs.mkdirp(cacheRuntimeDir)
 
-	const platformInfo = determinePlatformInfo(targetName)
-
-	await Promise.all(
-		Object.entries(nodeVersionsJson).map(([name, version]) => fetchSingleVersion(platformInfo, name, version))
+	return Promise.all(
+		Object.entries(nodeVersionsJson).map(async ([name, version]) => {
+			const runtimeDir = await fetchSingleVersion(platformInfo, version)
+			return [name, runtimeDir]
+		})
 	)
 }
 
-async function fetchSingleVersion(platformInfo, name, nodeVersion) {
+async function fetchSingleVersion(platformInfo, nodeVersion) {
 	const isZip = platformInfo.runtimePlatform === 'win'
 
 	// Download and cache build of nodejs
@@ -69,4 +70,6 @@ async function fetchSingleVersion(platformInfo, name, nodeVersion) {
 		await fs.remove(path.join(runtimeDir, 'share'))
 		await fs.remove(path.join(runtimeDir, 'include'))
 	}
+
+	return runtimeDir
 }

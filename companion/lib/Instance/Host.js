@@ -407,18 +407,18 @@ class ModuleHost {
 							return
 						}
 
-						const nodePath = getNodeJsPath(moduleInfo.manifest.runtime.type)
+						const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
 						console.log(`spawn module ${moduleInfo.manifest.runtime.type} with ${nodePath}`)
 						if (!nodePath) {
 							this.#logger.error(
-								`Runtime "${moduleInfo.manifest.runtime.type}" is supported currently: "${connectionId}"`
+								`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${connectionId}"`
 							)
 							return
 						}
 
 						if (moduleInfo.isPackaged && !validApiRange.test(moduleInfo.manifest.runtime.apiVersion)) {
 							this.#logger.error(
-								`Module Api version is too new/old: "${connectionId}" ${moduleInfo.manifest.runtime.apiVersion} ${validApiRange}`
+								`Module Api version is too new/old: "${connectionId}" ${moduleInfo.manifest.runtime.apiVersion} ${validApiRange.format()}`
 							)
 							return
 						}

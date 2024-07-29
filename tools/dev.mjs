@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url'
 import concurrently from 'concurrently'
 import dotenv from 'dotenv'
 import { fetchNodejs } from './fetch_nodejs.mjs'
+import { determinePlatformInfo } from './build/util.mjs'
 
 await $`zx ../tools/build_writefile.mjs`
 
@@ -31,7 +32,8 @@ if (rawDevModulesPath) {
 
 console.log('Ensuring nodejs binaries are available')
 
-await fetchNodejs(undefined)
+const platformInfo = determinePlatformInfo(undefined)
+await fetchNodejs(platformInfo)
 
 console.log('Building shared-lib')
 

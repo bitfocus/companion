@@ -43,7 +43,7 @@ RUN apt update && apt install -y \
 RUN useradd -ms /bin/bash companion
 
 # setup path and corepack
-ENV PATH="$PATH:/app/node-runtime/bin"
+ENV PATH="$PATH:/app/node-runtimes/main/bin"
 RUN echo "PATH="${PATH}"" | tee -a /etc/environment
 RUN corepack enable
 
@@ -63,4 +63,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "cur
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
 
 # Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
-CMD ["sh", "-c", "./node-runtime/bin/node ./main.js --admin-address 0.0.0.0 --admin-port 8000 --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev"]
+CMD ["sh", "-c", "./node-runtimes/main/bin/node ./main.js --admin-address 0.0.0.0 --admin-port 8000 --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev"]

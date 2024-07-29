@@ -1,12 +1,9 @@
 #!/usr/bin/env zx
 
-import { fetch, fs, glob } from 'zx'
-import { createWriteStream } from 'node:fs'
-import { pipeline } from 'node:stream'
-import { promisify } from 'node:util'
-import { determinePlatformInfo, toPosix } from './util.mjs'
+import { fs, glob } from 'zx'
+import { determinePlatformInfo } from './util.mjs'
 import { generateVersionString } from '../lib.mjs'
-const streamPipeline = promisify(pipeline)
+import { fetchNodejs } from '../fetch_nodejs.mjs'
 
 // Determine some environment info
 const platformInfo = determinePlatformInfo(argv._[0])
@@ -16,48 +13,22 @@ if (platformInfo.nodeArch) {
 	process.env.npm_config_target_arch = platformInfo.nodeArch
 }
 
-const nodeVersion = (await fs.readFile('./dist/.node-version')).toString().trim()
-const isZip = platformInfo.runtimePlatform === 'win'
-
 // Download and cache build of nodejs
-const cacheDir = '.cache/node'
-await fs.mkdirp(cacheDir)
-const tarFilename = `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${platformInfo.runtimeArch}.${
-	isZip ? 'zip' : 'tar.gz'
-}`
-const tarPath = path.join(cacheDir, tarFilename)
-if (!(await fs.pathExists(tarPath))) {
-	const tarUrl = `https://nodejs.org/download/release/v${nodeVersion}/${tarFilename}`
+const nodeVersions = await fetchNodejs(platformInfo)
 
-	const response = await fetch(tarUrl)
-	if (!response.ok) throw new Error(`unexpected response ${response.statusText}`)
-	await streamPipeline(response.body, createWriteStream(tarPath))
+const runtimesDir = 'dist/node-runtimes/'
+await fs.remove(runtimesDir)
+await fs.mkdirp(runtimesDir)
+
+for (const [name, extractedPath] of nodeVersions) {
+	console.log(`packaging version ${name} from ${extractedPath}`)
+	await fs.copy(extractedPath, path.join(runtimesDir, name))
 }
 
-// Extract nodejs and discard 'junk'
-const runtimeDir = 'dist/node-runtime/'
-if (isZip) {
-	await $`unzip ${toPosix(tarPath)} -d dist`
-	await fs.remove(runtimeDir)
-	await fs.move(`dist/node-v${nodeVersion}-${platformInfo.runtimePlatform}-${platformInfo.runtimeArch}`, runtimeDir)
-	// TODO - can this be simplified and combined into the extract step?
-	await fs.remove(path.join(runtimeDir, 'node_modules/npm'))
-	await fs.remove(path.join(runtimeDir, 'npm'))
-	await fs.remove(path.join(runtimeDir, 'npx'))
-} else {
-	await fs.mkdirp(runtimeDir)
-	await $`tar -xzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
-	// We need to keep some portions of this to have corepack/yarn work, but npm is large and unnecessary
-	// TODO - can this be simplified and combined into the extract step?
-	await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
-	if (platformInfo.runtimePlatform === 'darwin') {
-		// macos doesn't like symlinks
-		await fs.remove(path.join(runtimeDir, 'bin/npm'))
-		await fs.remove(path.join(runtimeDir, 'bin/npx'))
-	}
+if (platformInfo.runtimePlatform === 'linux') {
+	// Create a symlink for the 'main' runtime, to make script maintainence easier
+	await fs.createSymlink(path.join(runtimesDir, 'node18'), path.join(runtimesDir, 'main'))
 }
-await fs.remove(path.join(runtimeDir, 'share'))
-await fs.remove(path.join(runtimeDir, 'include'))
 
 // Install dependencies
 $.cwd = 'dist'
