@@ -76,18 +76,22 @@ export function ControlFeedbacksEditor({
 	const panelCollapseHelper = usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
 
 	return (
-		<InlineFeedbacksEditor
-			controlId={controlId}
-			heading={heading}
-			feedbacks={feedbacks}
-			entityType={entityType}
-			booleanOnly={booleanOnly}
-			location={location}
-			addPlaceholder={addPlaceholder}
-			feedbacksService={feedbacksService}
-			parentId={null}
-			panelCollapseHelper={panelCollapseHelper}
-		/>
+		<>
+			<GenericConfirmModal ref={confirmModal} />
+
+			<InlineFeedbacksEditor
+				controlId={controlId}
+				heading={heading}
+				feedbacks={feedbacks}
+				entityType={entityType}
+				booleanOnly={booleanOnly}
+				location={location}
+				addPlaceholder={addPlaceholder}
+				feedbacksService={feedbacksService}
+				parentId={null}
+				panelCollapseHelper={panelCollapseHelper}
+			/>
+		</>
 	)
 }
 
@@ -116,8 +120,6 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 	parentId,
 	panelCollapseHelper,
 }: InlineFeedbacksEditorProps) {
-	const confirmModal = useRef<GenericConfirmModalRef>(null)
-
 	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
 
@@ -130,8 +132,6 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 
 	return (
 		<>
-			<GenericConfirmModal ref={confirmModal} />
-
 			<MyErrorBoundary>
 				<AddFeedbacksModal
 					ref={addFeedbacksRef}
@@ -486,7 +486,12 @@ const FeedbackEditor = observer(function FeedbackEditor({
 					</div>
 
 					{feedback.instance_id === 'internal' && feedbackSpec?.supportsChildFeedbacks && (
-						<div className="cell-children">
+						<div
+							className={classNames('cell-children', {
+								'hide-top-gap':
+									(feedbackSpec.showInvert || feedbackOptions.length > 0) && (feedback.children ?? []).length > 0,
+							})}
+						>
 							<CForm onSubmit={PreventDefaultHandler}>
 								<InlineFeedbacksEditor
 									controlId={controlId}
