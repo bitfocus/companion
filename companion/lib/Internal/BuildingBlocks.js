@@ -48,7 +48,7 @@ export default class BuildingBlocks {
 					color: combineRgb(255, 255, 255),
 					bgcolor: combineRgb(255, 0, 0),
 				},
-				showInvert: false,
+				showInvert: true,
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
@@ -79,9 +79,9 @@ export default class BuildingBlocks {
 	 */
 	executeLogicFeedback(feedback, childValues) {
 		if (feedback.type === 'logic_and') {
-			if (childValues.length === 0) return false
+			if (childValues.length === 0) return !!feedback.isInverted
 
-			return childValues.reduce((acc, val) => acc && val, true)
+			return childValues.reduce((acc, val) => acc && val, true) === !feedback.isInverted
 		} else if (feedback.type === 'logic_or') {
 			return childValues.reduce((acc, val) => acc || val, false)
 		} else {

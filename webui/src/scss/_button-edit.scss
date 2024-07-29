@@ -177,6 +177,15 @@ table.feedback-table {
 		.cell-children {
 			grid-row: 5;
 			grid-column: 1 / 4;
+
+			&.hide-top-gap {
+				// Avoid the large gap between expand/collapse buttons and the options/invert toggle
+				margin-top: -25px;
+			}
+
+			h4 {
+				margin-top: 0 !important;
+			}
 		}
 
 		.cell-actions {
