@@ -57,12 +57,26 @@ export default class BuildingBlocks {
 			logic_or: {
 				type: 'boolean',
 				label: 'Logic: OR',
-				description: 'Test if one of multiple conditions is true',
+				description: 'Test if one or more of multiple conditions is true',
 				style: {
 					color: combineRgb(255, 255, 255),
 					bgcolor: combineRgb(255, 0, 0),
 				},
-				showInvert: false,
+				showInvert: true,
+				options: [],
+				hasLearn: false,
+				learnTimeout: undefined,
+				supportsChildFeedbacks: true,
+			},
+			logic_xor: {
+				type: 'boolean',
+				label: 'Logic: XOR',
+				description: 'Test if only one of multiple conditions is true',
+				style: {
+					color: combineRgb(255, 255, 255),
+					bgcolor: combineRgb(255, 0, 0),
+				},
+				showInvert: true,
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
@@ -84,6 +98,9 @@ export default class BuildingBlocks {
 			return childValues.reduce((acc, val) => acc && val, true) === !feedback.isInverted
 		} else if (feedback.type === 'logic_or') {
 			return childValues.reduce((acc, val) => acc || val, false)
+		} else if (feedback.type === 'logic_xor') {
+			const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
+			return isSingleTrue === !feedback.isInverted
 		} else {
 			this.#logger.warn(`Unexpected logic feedback type "${feedback.type}"`)
 			return false
