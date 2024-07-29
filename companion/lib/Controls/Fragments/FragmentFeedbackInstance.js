@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import LogController from '../../Log/Controller.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
@@ -109,7 +109,7 @@ export class FragmentFeedbackInstance {
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
 
-		this.#data = { ...data } // TODO - cleanup unwanted properties
+		this.#data = cloneDeep(data) // TODO - cleanup unwanted properties
 		if (!this.#data.options) this.#data.options = {}
 
 		if (isCloned) {
