@@ -9,6 +9,7 @@ import SocketEventsHandler from './Wrapper.js'
 import fs from 'fs-extra'
 import ejson from 'ejson'
 import os from 'os'
+import { getNodeJsPath } from './NodePath.js'
 
 // This is a messy way to load a package.json, but createRequire, or path.resolve aren't webpack safe
 const moduleBasePkgStr = fs
@@ -406,8 +407,12 @@ class ModuleHost {
 							return
 						}
 
-						if (moduleInfo.manifest.runtime.type !== 'node18') {
-							this.#logger.error(`Only node18 runtime is supported currently: "${connectionId}"`)
+						const nodePath = getNodeJsPath(moduleInfo.manifest.runtime.type)
+						console.log(`spawn module ${moduleInfo.manifest.runtime.type} with ${nodePath}`)
+						if (!nodePath) {
+							this.#logger.error(
+								`Runtime "${moduleInfo.manifest.runtime.type}" is supported currently: "${connectionId}"`
+							)
 							return
 						}
 
@@ -447,12 +452,9 @@ class ModuleHost {
 							}
 						}
 
-						const cmd = [
-							// Future: vary depending on module version
-							// 'node', // For now we can use fork
-							inspectPort !== undefined ? `--inspect=${inspectPort}` : undefined,
-							jsPath,
-						].filter((v) => !!v)
+						const cmd = [nodePath, inspectPort !== undefined ? `--inspect=${inspectPort}` : undefined, jsPath].filter(
+							(v) => !!v
+						)
 						this.#logger.silly(`Connection "${config.label}" command: ${JSON.stringify(cmd)}`)
 
 						const monitor = Respawn(cmd, {
@@ -470,7 +472,7 @@ class ModuleHost {
 							maxRestarts: -1,
 							kill: 5000,
 							cwd: moduleInfo.basePath,
-							fork: true, // Future: temporary until we want multiple node/runtime versions
+							fork: false,
 							stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 						})
 

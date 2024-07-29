@@ -4,11 +4,9 @@ import { fetch, fs, glob } from 'zx'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
-import { determinePlatformInfo } from './util.mjs'
+import { determinePlatformInfo, toPosix } from './util.mjs'
 import { generateVersionString } from '../lib.mjs'
 const streamPipeline = promisify(pipeline)
-
-const toPosix = (str) => str.split(path.sep).join(path.posix.sep)
 
 // Determine some environment info
 const platformInfo = determinePlatformInfo(argv._[0])
