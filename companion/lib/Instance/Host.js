@@ -408,7 +408,6 @@ class ModuleHost {
 						}
 
 						const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
-						console.log(`spawn module ${moduleInfo.manifest.runtime.type} with ${nodePath}`)
 						if (!nodePath) {
 							this.#logger.error(
 								`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${connectionId}"`
