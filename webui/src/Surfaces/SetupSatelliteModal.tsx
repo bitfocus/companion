@@ -40,7 +40,7 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 		setIsExecuting(true)
 
 		socketEmitPromise(socket, 'surfaces:discovery:setup-satellite', [data, selectedAddress], 10000)
-			.then((failureReason) => {
+			.then((_failureReason) => {
 				// TODO
 
 				setShow(false)
