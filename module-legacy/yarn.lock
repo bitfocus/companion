@@ -1575,10 +1575,6 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-gefen-dvimatrix/tar.gz/dd4d006dc5c33c897355acf4f4ee170621abe94d"
 
-"companion-module-generic-swp08@github:bitfocus/companion-module-generic-swp08#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-swp08/tar.gz/6f8bd9aeea1d8ca50da24fa3d993e4d2ed822f0d"
-
 "companion-module-greenhippo-hippotizer@github:bitfocus/companion-module-greenhippo-hippotizer#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-greenhippo-hippotizer/tar.gz/d9bcdfaa8bbeef4001d83fe8685cf181471d89ad"
@@ -1606,12 +1602,6 @@ commist@^1.0.0:
 "companion-module-joy-playdeck@github:bitfocus/companion-module-joy-playdeck#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-joy-playdeck/tar.gz/f854d9662c452c2715c79bf142b257a3790fa14f"
-
-"companion-module-kiloview-ndi@github:bitfocus/companion-module-kiloview-ndi#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-kiloview-ndi/tar.gz/b5b8a2bd505fa17d66a675c2f8d7fa2313d750b0"
-  dependencies:
-    kiloview-ndi "^1.0.1"
 
 "companion-module-kramer-matrix@github:bitfocus/companion-module-kramer-matrix#v1.2.3":
   version "1.2.3"
@@ -1771,10 +1761,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-newtek-ndistudiomonitor/tar.gz/5b1cfe1504a9c07e2a81e2720a0eaf9e3a535cb1"
   dependencies:
     utility "1.16.3"
-
-"companion-module-nexo-nxamp@github:bitfocus/companion-module-nexo-nxamp#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-nexo-nxamp/tar.gz/533e20c4ebd17ae165bbfecf964a0e9dc28cce13"
 
 "companion-module-nobe-omniscope@github:bitfocus/companion-module-nobe-omniscope#v1.0.2":
   version "1.0.2"
@@ -1978,10 +1964,6 @@ commist@^1.0.0:
 "companion-module-sony-cled@github:bitfocus/companion-module-sony-cled#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-cled/tar.gz/d95479e67dd54a82415b8748f03fceeca82a9abe"
-
-"companion-module-symetrix-dsp@github:bitfocus/companion-module-symetrix-dsp#v1.5.1":
-  version "1.5.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-symetrix-dsp/tar.gz/be6b4731f6f940901d2f76eb7d3010c3ae8b4504"
 
 "companion-module-tallyma-wirelesstally@github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.5":
   version "1.0.5"
@@ -3543,13 +3525,6 @@ keyv@^4.0.0:
   dependencies:
     json-buffer "3.0.1"
 
-kiloview-ndi@^1.0.1:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/kiloview-ndi/-/kiloview-ndi-1.0.2.tgz#96dfb1763fefc007d393c067d3065c35de346eea"
-  integrity sha512-pAU8AAL8IpoB3SePKU8unPhgiTGQlTtr25HidVMz7eZqty3Bz4tXfBuQOdKRZyic6syi/3ZNEbLAH1fEcdZCbA==
-  dependencies:
-    axios "^0.21.1"
-
 kind-of@^6.0.2:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
@@ -4766,16 +4741,7 @@ stream-shift@^1.0.0:
   resolved "https://registry.yarnpkg.com/stream-shift/-/stream-shift-1.0.1.tgz#d7088281559ab2778424279b0877da3c392d5a3d"
   integrity sha512-AiisoFqQ0vbGcZgQPY1cdP2I76glaVA/RauYR4G4thNFgkTqr90yXTo4LYX60Jl+sIlPNHHdGSwo01AvbKUSVQ==
 
-"string-width-cjs@npm:string-width@^4.2.0":
-  version "4.2.3"
-  resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
-  integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
-  dependencies:
-    emoji-regex "^8.0.0"
-    is-fullwidth-code-point "^3.0.0"
-    strip-ansi "^6.0.1"
-
-string-width@^4.1.0:
+"string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -4800,14 +4766,7 @@ string_decoder@^1.1.1:
   dependencies:
     safe-buffer "~5.2.0"
 
-"strip-ansi-cjs@npm:strip-ansi@^6.0.1":
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
-  integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
-  dependencies:
-    ansi-regex "^5.0.1"
-
-strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+"strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==

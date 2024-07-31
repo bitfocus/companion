@@ -4,8 +4,8 @@ import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 export interface IFeedbackEditorService {
-	addFeedback: (feedbackType: string) => void
-	moveCard: (dragIndex: number, hoverIndex: number) => void
+	addFeedback: (feedbackType: string, parentId: string | null) => void
+	moveCard: (dragId: string, hoverParentId: string | null, hoverIndex: number) => void
 
 	setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, value: any) => void
 	setInverted: (feedbackId: string, inverted: boolean) => void
@@ -39,14 +39,21 @@ export function useControlFeedbacksEditorService(
 
 	return useMemo(
 		() => ({
-			addFeedback: (feedbackType: string) => {
+			addFeedback: (feedbackType: string, parentId: string | null) => {
 				const [connectionId, feedbackId] = feedbackType.split(':', 2)
-				socketEmitPromise(socket, 'controls:feedback:add', [controlId, connectionId, feedbackId]).catch((e) => {
-					console.error('Failed to add control feedback', e)
-				})
+				socketEmitPromise(socket, 'controls:feedback:add', [controlId, parentId, connectionId, feedbackId]).catch(
+					(e) => {
+						console.error('Failed to add control feedback', e)
+					}
+				)
 			},
-			moveCard: (dragIndex: number, hoverIndex: number) => {
-				socketEmitPromise(socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
+			moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => {
+				socketEmitPromise(socket, 'controls:feedback:move', [
+					controlId,
+					dragFeedbackId,
+					hoverParentId,
+					hoverIndex,
+				]).catch((e) => {
 					console.error(`Move failed: ${e}`)
 				})
 			},

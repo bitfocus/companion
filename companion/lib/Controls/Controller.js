@@ -307,7 +307,7 @@ class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:feedback:add', (controlId, connectionId, feedbackId) => {
+		client.onPromise('controls:feedback:add', (controlId, parentId, connectionId, feedbackId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
@@ -318,7 +318,7 @@ class ControlsController extends CoreBase {
 					control.feedbacks.isBooleanOnly
 				)
 				if (feedbackItem) {
-					return control.feedbacks.feedbackAdd(feedbackItem)
+					return control.feedbacks.feedbackAdd(feedbackItem, parentId)
 				} else {
 					return false
 				}
@@ -430,12 +430,12 @@ class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:feedback:reorder', (controlId, oldIndex, newIndex) => {
+		client.onPromise('controls:feedback:move', (controlId, moveFeedbackId, newParentId, newIndex) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackReorder(oldIndex, newIndex)
+				return control.feedbacks.feedbackMoveTo(moveFeedbackId, newParentId, newIndex)
 			} else {
 				throw new Error(`Control "${controlId}" does not support feedbacks`)
 			}

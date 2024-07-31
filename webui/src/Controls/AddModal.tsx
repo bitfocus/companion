@@ -231,11 +231,10 @@ function ConnectionCollapse({
 
 		return Array.from(items.entries())
 			.map(([id, info]) => {
-				if (!info || (booleanOnly && (!('type' in info) || info.type !== 'boolean'))) return null
+				if (!info || !info.label || (booleanOnly && (!('type' in info) || info.type !== 'boolean'))) return null
 
-				const fullId = `${connectionId}:${id}`
 				return {
-					fullId: fullId,
+					fullId: `${connectionId}:${id}`,
 					label: info.label,
 					description: info.description,
 				}

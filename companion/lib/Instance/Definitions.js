@@ -472,6 +472,8 @@ class InstanceDefinitions extends CoreBase {
 										}
 
 										for (const [setId, set] of Object.entries(step)) {
+											if (setId === 'name') continue
+
 											/** @type {import('@companion-module/base').CompanionPresetAction[]} */
 											const setActions = Array.isArray(set) ? set : set.actions
 											if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
@@ -484,6 +486,8 @@ class InstanceDefinitions extends CoreBase {
 												headline: act.headline,
 											}))
 										}
+
+										if (step.name) options.name = step.name
 
 										return {
 											options,

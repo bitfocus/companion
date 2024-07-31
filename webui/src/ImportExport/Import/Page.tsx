@@ -87,7 +87,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 					<>
 						<CCol sm={12}>
 							<ButtonGridHeader
-								pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
+								pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 								changePage={isSinglePage ? undefined : changeImportPage}
 								setPage={isSinglePage ? undefined : setImportPageNumber}
 							>
@@ -100,7 +100,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 							{hasBeenRendered && sourceGridSize && (
 								<ButtonInfiniteGrid
 									ref={sourceGridRef}
-									pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
+									pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 									gridSize={sourceGridSize}
 									buttonIconFactory={ButtonImportPreview}
 									drawScale={gridZoomValue / 100}

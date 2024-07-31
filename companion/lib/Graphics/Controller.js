@@ -149,7 +149,7 @@ class GraphicsController extends CoreBase {
 
 							// Update step
 							values[`b_step_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' ? buttonStyle.step_cycle ?? 1 : undefined
+								buttonStyle?.style === 'button' ? (buttonStyle.step_cycle ?? 1) : undefined
 
 							this.instance.variable.setVariableValues('internal', values)
 						})

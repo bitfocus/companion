@@ -1168,7 +1168,7 @@ export default class Controls {
 	 *
 	 * @param {import('./Types.js').InternalVisitor} visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} _feedbacks
+	 * @param {import('./Types.js').FeedbackForVisitor[]} _feedbacks
 	 */
 	visitReferences(visitor, actions, _feedbacks) {
 		for (const action of actions) {

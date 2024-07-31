@@ -470,7 +470,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 							</>
 						}
 					>
-						<CButton color="secondary" style={{ padding: '3px 16px' }}>
+						<CButton color="secondary" style={{ padding: '3px 16px' }} onClick={(e) => e.currentTarget.focus()}>
 							<FontAwesomeIcon icon={faEllipsisV} />
 						</CButton>
 					</CPopover>

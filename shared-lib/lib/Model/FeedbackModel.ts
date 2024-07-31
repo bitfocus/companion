@@ -10,4 +10,6 @@ export interface FeedbackInstance {
 	upgradeIndex?: number
 	isInverted?: boolean
 	style?: Partial<ButtonStyleProperties>
+
+	children?: FeedbackInstance[]
 }

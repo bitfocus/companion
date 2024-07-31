@@ -17,6 +17,7 @@
 
 import CoreBase from '../Core/Base.js'
 import ActionRecorder from './ActionRecorder.js'
+import BuildingBlocks from './BuildingBlocks.js'
 import Instance from './Instance.js'
 import Time from './Time.js'
 import Controls from './Controls.js'
@@ -36,13 +37,22 @@ export default class InternalController extends CoreBase {
 	#feedbacks = new Map()
 
 	/**
+	 * @type {BuildingBlocks}
+	 * @readonly
+	 */
+	#buildingBlocksFragment
+
+	/**
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
 		super(registry, 'Internal/Controller')
 
+		this.#buildingBlocksFragment = new BuildingBlocks()
+
 		this.fragments = [
 			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.instance.variable),
+			this.#buildingBlocksFragment,
 			new Instance(this, registry.instance),
 			new Time(this),
 			new Controls(this, registry.graphics, registry.controls, registry.page, registry.instance.variable),
@@ -65,19 +75,17 @@ export default class InternalController extends CoreBase {
 		const allControls = this.registry.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			// Discover feedbacks to process
-			if (control.supportsFeedbacks && control.feedbacks.feedbacks) {
-				for (let feedback of control.feedbacks.feedbacks) {
-					if (feedback.instance_id === 'internal') {
-						if (control.feedbacks.feedbackReplace) {
-							const newFeedback = this.feedbackUpgrade(feedback, controlId)
-							if (newFeedback) {
-								feedback = newFeedback
-								control.feedbacks.feedbackReplace(newFeedback)
-							}
+			if (control.supportsFeedbacks) {
+				for (let feedback of control.feedbacks.getFlattenedFeedbackInstances('internal')) {
+					if (control.feedbacks.feedbackReplace) {
+						const newFeedback = this.feedbackUpgrade(feedback, controlId)
+						if (newFeedback) {
+							feedback = newFeedback
+							control.feedbacks.feedbackReplace(newFeedback)
 						}
-
-						this.feedbackUpdate(feedback, controlId)
 					}
+
+					this.feedbackUpdate(feedback, controlId)
 				}
 			}
 
@@ -242,15 +250,32 @@ export default class InternalController extends CoreBase {
 	 * Visit any references in some inactive internal actions and feedbacks
 	 * @param {import('./Types.js').InternalVisitor} visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} rawFeedbacks
+	 * @param {import('../Controls/Fragments/FragmentFeedbackInstance.js').FragmentFeedbackInstance[]} feedbacks
 	 */
-	visitReferences(visitor, actions, feedbacks) {
+	visitReferences(visitor, actions, rawFeedbacks, feedbacks) {
 		const internalActions = actions.filter((a) => a.instance === 'internal')
-		const internalFeedbacks = feedbacks.filter((a) => a.instance_id === 'internal')
+
+		/** @type {import('./Types.js').FeedbackForVisitor[]} */
+		const simpleInternalFeedbacks = []
+
+		for (const feedback of rawFeedbacks) {
+			if (feedback.instance_id !== 'internal') continue
+			simpleInternalFeedbacks.push(feedback)
+		}
+		for (const feedback of feedbacks) {
+			if (feedback.connectionId !== 'internal') continue
+			const feedbackInstance = feedback.asFeedbackInstance()
+			simpleInternalFeedbacks.push({
+				id: feedbackInstance.id,
+				type: feedbackInstance.type,
+				options: feedback.rawOptions, // Ensure the options is not a copy/clone
+			})
+		}
 
 		for (const fragment of this.fragments) {
 			if ('visitReferences' in fragment && typeof fragment.visitReferences === 'function') {
-				fragment.visitReferences(visitor, internalActions, internalFeedbacks)
+				fragment.visitReferences(visitor, internalActions, simpleInternalFeedbacks)
 			}
 		}
 	}
@@ -278,6 +303,16 @@ export default class InternalController extends CoreBase {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Execute a logic feedback
+	 * @param {import('../Controls/IControlFragments.js').FeedbackInstance} feedback
+	 * @param {boolean[]} childValues
+	 * @returns {boolean}
+	 */
+	executeLogicFeedback(feedback, childValues) {
+		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)
 	}
 
 	/**
