@@ -242,7 +242,7 @@ export default class Variables {
 	 *
 	 * @param {import('./Types.js').InternalVisitor} visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} _actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('./Types.js').FeedbackForVisitor[]} feedbacks
 	 */
 	visitReferences(visitor, _actions, feedbacks) {
 		for (const feedback of feedbacks) {

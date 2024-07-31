@@ -209,23 +209,23 @@ class SocketEventsHandler {
 		// Find all the feedbacks on controls
 		const allControls = this.#registry.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
-			if (control.supportsFeedbacks && control.feedbacks.feedbacks.length > 0) {
+			const controlFeedbacks =
+				control.supportsFeedbacks && control.feedbacks.getFlattenedFeedbackInstances(this.connectionId)
+			if (controlFeedbacks && controlFeedbacks.length > 0) {
 				const imageSize = control.getBitmapSize()
-				for (const feedback of control.feedbacks.feedbacks) {
-					if (feedback.instance_id === this.connectionId) {
-						allFeedbacks[feedback.id] = {
-							id: feedback.id,
-							controlId: controlId,
-							feedbackId: feedback.type,
-							options: feedback.options,
+				for (const feedback of controlFeedbacks) {
+					allFeedbacks[feedback.id] = {
+						id: feedback.id,
+						controlId: controlId,
+						feedbackId: feedback.type,
+						options: feedback.options,
 
-							isInverted: !!feedback.isInverted,
+						isInverted: !!feedback.isInverted,
 
-							upgradeIndex: feedback.upgradeIndex ?? null,
-							disabled: !!feedback.disabled,
+						upgradeIndex: feedback.upgradeIndex ?? null,
+						disabled: !!feedback.disabled,
 
-							image: imageSize ?? undefined,
-						}
+						image: imageSize ?? undefined,
 					}
 				}
 			}

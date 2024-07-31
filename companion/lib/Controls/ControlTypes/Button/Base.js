@@ -393,7 +393,7 @@ export default class ButtonControlBase extends ControlBase {
 	 * @access public
 	 */
 	renameVariables(labelFrom, labelTo) {
-		const allFeedbacks = this.feedbacks.feedbacks
+		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = []
 		for (const step of Object.values(this.steps)) {
 			allActions.push(...step.getAllActions())
@@ -405,8 +405,9 @@ export default class ButtonControlBase extends ControlBase {
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			this.feedbacks.baseStyle,
 			allActions,
+			[],
 			allFeedbacks,
-			undefined,
+			[],
 			true
 		)
 

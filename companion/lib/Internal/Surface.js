@@ -667,7 +667,7 @@ export default class Surface {
 	 *
 	 * @param {import('./Types.js').InternalVisitor} _visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} _actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} _feedbacks
+	 * @param {import('./Types.js').FeedbackForVisitor[]} _feedbacks
 	 */
 	visitReferences(_visitor, _actions, _feedbacks) {
 		// actions page_variable handled by generic options visitor

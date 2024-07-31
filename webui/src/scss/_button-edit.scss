@@ -68,7 +68,8 @@ table.feedback-table {
 		opacity: 0.5;
 	}
 
-	.actionlist-dropzone {
+	.actionlist-dropzone,
+	.feedbacklist-dropzone {
 		p {
 			border: 2px dashed #bbb;
 			border-radius: 5px;
@@ -173,6 +174,20 @@ table.feedback-table {
 			}
 		}
 
+		.cell-children {
+			grid-row: 5;
+			grid-column: 1 / 4;
+
+			&.hide-top-gap {
+				// Avoid the large gap between expand/collapse buttons and the options/invert toggle
+				margin-top: -25px;
+			}
+
+			h4 {
+				margin-top: 0 !important;
+			}
+		}
+
 		.cell-actions {
 			grid-row: 4;
 			grid-column: 1;
@@ -184,7 +199,7 @@ table.feedback-table {
 		}
 
 		.cell-styles {
-			grid-row: 5;
+			grid-row: 6;
 			grid-column: 3;
 
 			.png-browse {
@@ -192,7 +207,7 @@ table.feedback-table {
 			}
 		}
 		.cell-styles-manage {
-			grid-row: 5;
+			grid-row: 6;
 			grid-column: 1 / 3;
 		}
 	}
