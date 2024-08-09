@@ -36,7 +36,7 @@ RUN corepack enable
 
 # Create config directory and set correct permissions to not run as root
 # Once docker mounts the volume, the directory will be owned by companion:companion
-ENV COMPANION_CONFIG_BASEDIR /companion
+ENV COMPANION_CONFIG_BASEDIR=/companion
 RUN useradd -ms /bin/bash companion \
     && mkdir $COMPANION_CONFIG_BASEDIR && chown companion:companion $COMPANION_CONFIG_BASEDIR
 
