@@ -30,6 +30,11 @@
     "build:writefile": "zx ./tools/build_writefile.mjs",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
+	"engines": {
+		"npm": "please-use-yarn",
+		"yarn": "^4",
+		"node": ">=18.16 <19"
+	},
   "devDependencies": {
     "@inquirer/prompts": "^5.3.2",
     "chokidar": "^3.6.0",

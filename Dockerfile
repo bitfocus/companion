@@ -49,7 +49,7 @@ RUN corepack enable
 
 # Create config directory and set correct permissions
 # Once docker mounts the volume, the directory will be owned by node:node
-ENV COMPANION_CONFIG_BASEDIR /companion
+ENV COMPANION_CONFIG_BASEDIR=/companion
 RUN mkdir $COMPANION_CONFIG_BASEDIR && chown companion:companion $COMPANION_CONFIG_BASEDIR
 
 USER companion
