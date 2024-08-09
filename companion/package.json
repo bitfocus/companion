@@ -20,7 +20,7 @@
 	],
 	"engines": {
 		"npm": "please-use-yarn",
-		"yarn": "^1.22",
+		"yarn": "^4",
 		"node": ">=18.16 <19"
 	},
 	"author": "Bitfocus AS",
