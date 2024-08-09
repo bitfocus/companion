@@ -20,8 +20,8 @@
 	],
 	"engines": {
 		"npm": "please-use-yarn",
-		"yarn": "^1.22",
-		"node": ">=18.16 <19"
+		"yarn": "^4.3",
+		"node": ">=22.5 <23"
 	},
 	"author": "Bitfocus AS",
 	"license": "MIT",
