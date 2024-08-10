@@ -1,15 +1,92 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
-import { socketEmitPromise } from '../util.js'
+import {
+	CAlert,
+	CButton,
+	CButtonGroup,
+	CCallout,
+	CCol,
+	CNav,
+	CNavItem,
+	CNavLink,
+	CRow,
+	CTabContent,
+	CTabPane,
+} from '@coreui/react'
+import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faSync } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faClock, faSync } from '@fortawesome/free-solid-svg-icons'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
 import { KnownSurfacesTable } from './KnownSurfacesTable.js'
+import { NavLink, NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+
+export const SURFACES_PAGE_PREFIX = '/surfaces'
+
+type SubPageType = 'known' | 'discovered'
+
+function useSurfacesSubPage(): SubPageType | null | false {
+	const routerLocation = useLocation()
+	if (!routerLocation.pathname.startsWith(SURFACES_PAGE_PREFIX)) return false
+	const fragments = routerLocation.pathname.slice(SURFACES_PAGE_PREFIX.length + 1).split('/')
+	const subPage = fragments[0]
+	if (!subPage) return null
+
+	if (subPage !== 'known' && subPage !== 'discovered') return null
+
+	return subPage
+}
+
+function navigateToSubPage(navigate: NavigateFunction, subPage: SubPageType | null): void {
+	if (!subPage) subPage = 'known'
+
+	navigate(`${SURFACES_PAGE_PREFIX}/${subPage}`)
+}
 
 export const SurfacesPage = observer(function SurfacesPage() {
+	const navigate = useNavigate()
+
+	const subPage = useSurfacesSubPage()
+	if (subPage === false) return null
+	if (!subPage) {
+		navigateToSubPage(navigate, null)
+		return null
+	}
+
+	return (
+		<div>
+			<h4>Surfaces</h4>
+
+			<CNav variant="tabs" role="tablist">
+				<CNavItem>
+					<CNavLink to={`${SURFACES_PAGE_PREFIX}/known`} as={NavLink}>
+						Known Surfaces
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to={`${SURFACES_PAGE_PREFIX}/discovered`} as={NavLink}>
+						Discovered Surfaces
+					</CNavLink>
+				</CNavItem>
+			</CNav>
+			<CTabContent>
+				<CTabPane data-tab="known" visible={subPage === 'known'} transition={false}>
+					<MyErrorBoundary>
+						<KnownSurfacesTab />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane data-tab="discover" visible={subPage === 'discovered'} transition={false}>
+					<MyErrorBoundary>
+						<DiscoveredSurfacesTab />
+					</MyErrorBoundary>
+				</CTabPane>
+			</CTabContent>
+		</div>
+	)
+})
+
+function KnownSurfacesTab() {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
@@ -43,8 +120,7 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	}, [socket])
 
 	return (
-		<div>
-			<h4>Surfaces</h4>
+		<>
 			<p style={{ marginBottom: '0.5rem' }}>
 				Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the Elgato
 				Streamdeck application and click the Rescan button below.
@@ -69,8 +145,6 @@ export const SurfacesPage = observer(function SurfacesPage() {
 
 			<AddSurfaceGroupModal ref={addGroupModalRef} />
 
-			<SurfaceDiscoveryTable />
-
 			<KnownSurfacesTable />
 
 			<CCallout color="info">
@@ -80,6 +154,19 @@ export const SurfacesPage = observer(function SurfacesPage() {
 				</a>
 				?
 			</CCallout>
-		</div>
+		</>
 	)
-})
+}
+
+function DiscoveredSurfacesTab() {
+	return (
+		<>
+			<p style={{ marginBottom: '0.5rem' }}>
+				Discovered Companion Satellite instances will be listed here. You can easily configure them to connect to
+				Companion from here.
+			</p>
+
+			<SurfaceDiscoveryTable />
+		</>
+	)
+}
