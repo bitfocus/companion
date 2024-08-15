@@ -890,7 +890,6 @@ class Image {
 		if (!scale) scale = 1
 
 		this.context2d.drawImage(imageCanvas, 0, 0, width, height, x, y, width * scale, height * scale)
-		console.log('draaw', format, scale, 0, 0, width, height, x, y, width * scale, height * scale)
 	}
 
 	/**
