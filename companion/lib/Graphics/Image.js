@@ -801,8 +801,10 @@ class Image {
 	 * @param {number} width integer information of the width of the buffer
 	 * @param {number} height integer information of the height of the buffer
 	 * @param {Buffer | Uint8Array | string} bufferRaw
+	 * @param {'RGB' | 'RGBA' | 'ARGB' =} format pixel format of the buffer, if known
+	 * @param {number=} scale scaling factor
 	 */
-	drawPixelBuffer(x, y, width, height, bufferRaw, type = undefined) {
+	drawPixelBuffer(x, y, width, height, bufferRaw, format, scale) {
 		/** @type {Buffer} */
 		let buffer
 		if (typeof bufferRaw == 'object') {
@@ -811,24 +813,37 @@ class Image {
 			} else if (bufferRaw instanceof Uint8Array) {
 				buffer = Buffer.from(bufferRaw.buffer, bufferRaw.byteOffset, bufferRaw.byteLength)
 			} else {
-				this.logger.error(`Pixelbuffer is of unknown type "${type}" (${typeof bufferRaw})`)
+				this.logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
 				return
 			}
 		} else if (typeof bufferRaw == 'string') {
 			buffer = Buffer.from(bufferRaw, 'base64')
 		} else {
-			this.logger.error(`Pixelbuffer is of unknown type "${type}" (${typeof bufferRaw})`)
+			this.logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
 			return
 		}
 
-		if (buffer.length < width * height * 3) {
+		const rgbByteCount = width * height * 3
+		const rgbaByteCount = width * height * 4
+
+		if (format == 'RGB' && buffer.length !== rgbByteCount) {
 			this.logger.error(
-				'Pixelbuffer of ' + buffer.length + ' bytes is less than expected ' + width * height * 3 + ' bytes'
+				`Pixelbuffer of format ${format} with ${buffer.length} bytes is not expected ${rgbByteCount} bytes`
 			)
 			return
+		} else if ((format == 'RGBA' || format == 'ARGB') && buffer.length !== rgbaByteCount) {
+			this.logger.error(
+				`Pixelbuffer of format ${format} with ${buffer.length} bytes is not expected ${rgbaByteCount} bytes`
+			)
+			return
+		} else if (!format && buffer.length < rgbByteCount) {
+			this.logger.error(`Pixelbuffer of ${buffer.length} bytes is not expected ${rgbByteCount} bytes`)
+			return
 		}
 
-		if (buffer.length == width * height * 4) {
+		if (buffer.length == rgbaByteCount && format === 'RGBA') {
+			// Buffer is packed ok
+		} else if (buffer.length == rgbaByteCount && (!format || format === 'ARGB')) {
 			// ARGB: swap order from ARGB to RGBA
 			for (let i = 0; i < buffer.length; i += 4) {
 				let a = buffer[i]
@@ -838,7 +853,7 @@ class Image {
 				buffer[i + 2] = buffer[i + 3]
 				buffer[i + 3] = a
 			}
-		} else if (buffer.length == width * height * 3) {
+		} else if (buffer.length == rgbByteCount) {
 			// RGB: add alpha channel
 			const rgb = Uint8Array.from(buffer)
 
@@ -851,9 +866,9 @@ class Image {
 			}
 		} else {
 			this.logger.error(
-				`Pixelbuffer for a ${width}x${height} image should be either ${width * height * 3} or ${
-					width * height * 4
-				} bytes big. Not ${buffer.length}`
+				`Pixelbuffer for a ${width}x${height} image should be either ${rgbByteCount} or ${
+					rgbaByteCount
+				} bytes big. Not ${buffer.length} (${format})`
 			)
 			return
 		}
@@ -872,7 +887,10 @@ class Image {
 		const imageContext2d = imageCanvas.getContext('2d')
 		imageContext2d.putImageData(imageData, 0, 0)
 
-		this.context2d.drawImage(imageCanvas, x, y)
+		if (!scale) scale = 1
+
+		this.context2d.drawImage(imageCanvas, 0, 0, width, height, x, y, width * scale, height * scale)
+		console.log('draaw', format, scale, 0, 0, width, height, x, y, width * scale, height * scale)
 	}
 
 	/**

@@ -259,7 +259,7 @@ export default class GraphicsRenderer {
 					const width = image.width || 72
 					const height = image.height || 72 - yOffset
 
-					img.drawPixelBuffer(x, y, width, height, image.buffer)
+					img.drawPixelBuffer(x, y, width, height, image.buffer, image.pixelFormat, image.drawScale)
 				}
 			}
 		} catch (e) {

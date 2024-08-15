@@ -446,6 +446,7 @@ export class FragmentFeedbackList {
 					if (rawValue.imageBuffer) {
 						style.imageBuffers.push({
 							...rawValue.imageBufferPosition,
+							...rawValue.imageBufferEncoding,
 							buffer: rawValue.imageBuffer,
 						})
 					}
