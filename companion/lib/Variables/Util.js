@@ -16,6 +16,9 @@
  */
 
 import LogController from '../Log/Controller.js'
+import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 
 export const VARIABLE_UNKNOWN_VALUE = '$NA'
 
@@ -123,4 +126,70 @@ export function replaceAllVariables(string, newLabel) {
 	}
 
 	return string
+}
+
+/**
+ * Parse and execute an expression in a string
+ * @param {string} str - String containing the expression to parse
+ * @param {VariableValueData} rawVariableValues
+ * @param {string=} requiredType - Fail if the result is not of specified type
+ * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
+ * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
+ */
+export function executeExpression(str, rawVariableValues, requiredType, injectedVariableValues) {
+	/** @type {Set<string>} */
+	const referencedVariableIds = new Set()
+
+	/**
+	 * @param {string} variableId
+	 * @returns {string}
+	 */
+	const getVariableValue = (variableId) => {
+		const result = parseVariablesInString(`$(${variableId})`, rawVariableValues, injectedVariableValues)
+
+		for (const id of result.variableIds) {
+			referencedVariableIds.add(id)
+		}
+
+		return result.text
+	}
+
+	const functions = {
+		...ExpressionFunctions,
+		/**
+		 * @param {string} str
+		 * @returns {string}
+		 */
+		parseVariables: (str) => {
+			const result = parseVariablesInString(str, rawVariableValues, injectedVariableValues)
+
+			// Track referenced variables
+			for (const varId of result.variableIds) {
+				referencedVariableIds.add(varId)
+			}
+
+			return result.text
+		},
+	}
+
+	let value = ResolveExpression(ParseExpression(str), getVariableValue, functions)
+
+	// Fix up the result for some types
+	switch (requiredType) {
+		case 'string':
+			value = `${value}`
+			break
+		case 'number':
+			value = Number(value)
+			break
+	}
+
+	if (requiredType && typeof value !== requiredType) {
+		throw new Error('Unexpected return type')
+	}
+
+	return {
+		value,
+		variableIds: referencedVariableIds,
+	}
 }

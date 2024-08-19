@@ -281,7 +281,7 @@ export default class ButtonControlBase extends ControlBase {
 
 			if (style.textExpression) {
 				try {
-					const parseResult = this.variablesController.values.parseExpression(
+					const parseResult = this.variablesController.values.executeExpression(
 						style.text,
 						location,
 						undefined,

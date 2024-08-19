@@ -111,7 +111,7 @@ export function ParseInternalControlReference(logger, variablesController, press
 		case 'expression':
 			if (useVariableFields) {
 				try {
-					const result = variablesController.parseExpression(options.location_expression, pressLocation, 'string')
+					const result = variablesController.executeExpression(options.location_expression, pressLocation, 'string')
 
 					location = parseLocationString(String(result.value))
 					referencedVariables = Array.from(result.variableIds)

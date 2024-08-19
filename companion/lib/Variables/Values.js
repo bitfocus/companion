@@ -16,11 +16,8 @@
  */
 
 import LogController from '../Log/Controller.js'
-import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 import EventEmitter from 'events'
-import { VARIABLE_UNKNOWN_VALUE, parseVariablesInString } from './Util.js'
+import { VARIABLE_UNKNOWN_VALUE, executeExpression, parseVariablesInString } from './Util.js'
 
 export class VariablesValues extends EventEmitter {
 	/**
@@ -82,62 +79,13 @@ export class VariablesValues extends EventEmitter {
 	 * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
 	 * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
 	 */
-	parseExpression(str, controlLocation, requiredType, injectedVariableValues) {
-		/** @type {Set<string>} */
-		const referencedVariableIds = new Set()
-
-		/**
-		 * @param {string} variableId
-		 * @returns {string}
-		 */
-		const getVariableValue = (variableId) => {
-			const result = this.parseVariables(`$(${variableId})`, controlLocation, injectedVariableValues)
-
-			for (const id of result.variableIds) {
-				referencedVariableIds.add(id)
-			}
-
-			return result.text
+	executeExpression(str, controlLocation, requiredType, injectedVariableValues) {
+		const injectedVariableValuesComplete = {
+			...this.#getInjectedVariablesForLocation(controlLocation),
+			...injectedVariableValues,
 		}
 
-		const functions = {
-			...ExpressionFunctions,
-			/**
-			 * @param {string} str
-			 * @returns {string}
-			 */
-			parseVariables: (str) => {
-				const result = this.parseVariables(str, controlLocation, injectedVariableValues)
-
-				// Track referenced variables
-				for (const varId of result.variableIds) {
-					referencedVariableIds.add(varId)
-				}
-
-				return result.text
-			},
-		}
-
-		let value = ResolveExpression(ParseExpression(str), getVariableValue, functions)
-
-		// Fix up the result for some types
-		switch (requiredType) {
-			case 'string':
-				value = `${value}`
-				break
-			case 'number':
-				value = Number(value)
-				break
-		}
-
-		if (requiredType && typeof value !== requiredType) {
-			throw new Error('Unexpected return type')
-		}
-
-		return {
-			value,
-			variableIds: referencedVariableIds,
-		}
+		return executeExpression(str, this.#variableValues, requiredType, injectedVariableValuesComplete)
 	}
 
 	/**

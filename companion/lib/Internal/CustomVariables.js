@@ -285,7 +285,7 @@ export default class CustomVariables {
 			return true
 		} else if (action.action === 'custom_variable_set_expression') {
 			try {
-				const result = this.#variableController.values.parseExpression(action.options.expression, extras.location)
+				const result = this.#variableController.values.executeExpression(action.options.expression, extras.location)
 				this.#variableController.custom.setValue(action.options.name, result.value)
 			} catch (/** @type {any} */ error) {
 				this.#logger.warn(`${error.toString()}, in expression: "${action.options.expression}"`)

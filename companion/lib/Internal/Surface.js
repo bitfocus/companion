@@ -228,7 +228,7 @@ export default class Surface {
 		let thePage = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			thePage = Number(this.#variableController.parseExpression(options.page_variable, location, 'number').value)
+			thePage = Number(this.#variableController.executeExpression(options.page_variable, location, 'number').value)
 		}
 
 		if (location) {

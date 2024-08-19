@@ -118,7 +118,7 @@ class InstanceDefinitions extends CoreBase {
 				if (style.text) {
 					if (style.textExpression) {
 						try {
-							const parseResult = this.variablesController.values.parseExpression(style.text, null)
+							const parseResult = this.variablesController.values.executeExpression(style.text, null)
 							style.text = parseResult.value + ''
 						} catch (e) {
 							this.logger.error(`Expression parse error: ${e}`)
