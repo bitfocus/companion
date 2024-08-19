@@ -49,12 +49,12 @@ class Instance extends CoreBase {
 
 	/**
 	 * @param {import('../Registry.js').default} registry
-	 * @param {import('./Variable.js').default} variable
 	 */
-	constructor(registry, variable) {
+	constructor(registry) {
 		super(registry, 'Instance/Controller')
 
-		this.variable = variable
+		this.variable = registry.variable
+		this.customVariables = registry.customVariables
 		this.definitions = new InstanceDefinitions(registry)
 		this.status = new InstanceStatus(registry.io, registry.controls)
 		this.moduleHost = new ModuleHost(registry, this.status)
@@ -524,6 +524,7 @@ class Instance extends CoreBase {
 	 */
 	clientConnect(client) {
 		this.variable.clientConnect(client)
+		this.customVariables.clientConnect(client)
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
 		this.modules.clientConnect(client)

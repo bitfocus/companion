@@ -37,17 +37,7 @@ describe('HttpApi', () => {
 					// Force config to return true
 					getKey: () => true,
 				},
-				instance: mock(
-					{
-						variable: mock(
-							{
-								custom: mock({}, mockOptions),
-							},
-							mockOptions
-						),
-					},
-					mockOptions
-				),
+				customVariables: mock({}, mockOptions),
 			},
 			mockOptions
 		)
@@ -90,7 +80,7 @@ describe('HttpApi', () => {
 				test('no value', async () => {
 					const { app, registry } = createService()
 
-					const mockFn = registry.instance.variable.custom.setValue
+					const mockFn = registry.customVariables.setValue
 					mockFn.mockReturnValue()
 
 					// Perform the request
@@ -104,7 +94,7 @@ describe('HttpApi', () => {
 				test('ok from query', async () => {
 					const { app, registry } = createService()
 
-					const mockFn = registry.instance.variable.custom.setValue
+					const mockFn = registry.customVariables.setValue
 					mockFn.mockReturnValue()
 
 					// Perform the request
@@ -119,7 +109,7 @@ describe('HttpApi', () => {
 				test('unknown name', async () => {
 					const { app, registry } = createService()
 
-					const mockFn = registry.instance.variable.custom.setValue
+					const mockFn = registry.customVariables.setValue
 					mockFn.mockReturnValue('Unknown name')
 
 					// Perform the request
@@ -172,7 +162,7 @@ describe('HttpApi', () => {
 			test('ok from query', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.setValue
+				const mockFn = registry.customVariables.setValue
 				mockFn.mockReturnValue()
 
 				// Perform the request
@@ -187,7 +177,7 @@ describe('HttpApi', () => {
 			test('ok from body', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.setValue
+				const mockFn = registry.customVariables.setValue
 				mockFn.mockReturnValue()
 
 				// Perform the request
@@ -205,7 +195,7 @@ describe('HttpApi', () => {
 			test('unknown name', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.setValue
+				const mockFn = registry.customVariables.setValue
 				mockFn.mockReturnValue('Unknown name')
 
 				// Perform the request
@@ -225,7 +215,7 @@ describe('HttpApi', () => {
 			test('no value', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.getValue
+				const mockFn = registry.customVariables.getValue
 				mockFn.mockReturnValue(undefined)
 
 				// Perform the request
@@ -240,7 +230,7 @@ describe('HttpApi', () => {
 			test('value empty string', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.getValue
+				const mockFn = registry.customVariables.getValue
 				mockFn.mockReturnValue('')
 
 				// Perform the request
@@ -255,7 +245,7 @@ describe('HttpApi', () => {
 			test('value proper string', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.getValue
+				const mockFn = registry.customVariables.getValue
 				mockFn.mockReturnValue('something 123')
 
 				// Perform the request
@@ -270,7 +260,7 @@ describe('HttpApi', () => {
 			test('value zero number', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.getValue
+				const mockFn = registry.customVariables.getValue
 				mockFn.mockReturnValue(0)
 
 				// Perform the request
@@ -285,7 +275,7 @@ describe('HttpApi', () => {
 			test('value real number', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.getValue
+				const mockFn = registry.customVariables.getValue
 				mockFn.mockReturnValue(455.8)
 
 				// Perform the request
@@ -300,7 +290,7 @@ describe('HttpApi', () => {
 			test('value false', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.getValue
+				const mockFn = registry.customVariables.getValue
 				mockFn.mockReturnValue(false)
 
 				// Perform the request
@@ -315,7 +305,7 @@ describe('HttpApi', () => {
 			test('value true', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.getValue
+				const mockFn = registry.customVariables.getValue
 				mockFn.mockReturnValue(true)
 
 				// Perform the request
@@ -330,7 +320,7 @@ describe('HttpApi', () => {
 			test('value object', async () => {
 				const { app, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.getValue
+				const mockFn = registry.customVariables.getValue
 				mockFn.mockReturnValue({
 					a: 1,
 					b: 'str',

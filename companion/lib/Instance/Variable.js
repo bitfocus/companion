@@ -16,12 +16,11 @@
  */
 
 import LogController from '../Log/Controller.js'
-import CoreBase from '../Core/Base.js'
-import InstanceCustomVariable from './CustomVariable.js'
 import jsonPatch from 'fast-json-patch'
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import EventEmitter from 'events'
 
 const logger = LogController.createLogger('Instance/Variable')
 
@@ -134,7 +133,27 @@ export function replaceAllVariables(string, newLabel) {
 	return string
 }
 
-class InstanceVariable extends CoreBase {
+class InstanceVariable extends EventEmitter {
+	/**
+	 * @access private
+	 * @readonly
+	 */
+	#logger = LogController.createLogger('Instance/Variable')
+
+	/**
+	 * @access private
+	 * @readonly
+	 * @type {import ('../UI/Handler.js').default}
+	 */
+	#io
+
+	/**
+	 * @access private
+	 * @readonly
+	 * @type {import('../Controls/Controller.js').default}
+	 */
+	#controls
+
 	/**
 	 * @type {VariableValueData}
 	 */
@@ -146,12 +165,14 @@ class InstanceVariable extends CoreBase {
 	#variableDefinitions = {}
 
 	/**
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../UI/Handler.js').default} io
+	 * @param {import('../Controls/Controller.js').default} controls
 	 */
-	constructor(registry) {
-		super(registry, 'Instance/Variable')
+	constructor(io, controls) {
+		super()
 
-		this.custom = new InstanceCustomVariable(registry.db, registry.io, this)
+		this.#io = io
+		this.#controls = controls
 	}
 
 	/**
@@ -274,8 +295,8 @@ class InstanceVariable extends CoreBase {
 			delete this.#variableDefinitions[label]
 			delete this.#variableValues[label]
 
-			if (this.io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', label, null)
+			if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
+				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', label, null)
 			}
 		}
 	}
@@ -290,7 +311,7 @@ class InstanceVariable extends CoreBase {
 		this.#variableValues[labelTo] = valuesTo
 
 		// Trigger any renames inside of the controls
-		this.controls.renameVariables(labelFrom, labelTo)
+		this.#controls.renameVariables(labelFrom, labelTo)
 
 		// Move variable values, and track the 'diff'
 		const valuesFrom = this.#variableValues[labelFrom]
@@ -315,12 +336,12 @@ class InstanceVariable extends CoreBase {
 			const definitions = (this.#variableDefinitions[labelTo] = oldDefinitions)
 			delete this.#variableDefinitions[labelFrom]
 
-			if (this.io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelTo, {
+			if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
+				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelTo, {
 					type: 'set',
 					variables: definitions,
 				})
-				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelFrom, null)
+				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelFrom, null)
 			}
 		}
 	}
@@ -332,8 +353,6 @@ class InstanceVariable extends CoreBase {
 	 * @returns {void}
 	 */
 	clientConnect(client) {
-		this.custom.clientConnect(client)
-
 		client.onPromise('variable-definitions:subscribe', () => {
 			client.join(VariableDefinitionsRoom)
 
@@ -357,7 +376,7 @@ class InstanceVariable extends CoreBase {
 	 * @returns {void}
 	 */
 	setVariableDefinitions(instance_label, variables) {
-		this.logger.silly('got instance variable definitions for ' + instance_label)
+		this.#logger.silly('got instance variable definitions for ' + instance_label)
 
 		/** @type {import('@companion-app/shared/Model/Variables.js').ModuleVariableDefinitions} */
 		const variablesObj = {}
@@ -374,9 +393,9 @@ class InstanceVariable extends CoreBase {
 		const variablesBefore = this.#variableDefinitions[instance_label]
 		this.#variableDefinitions[instance_label] = variablesObj
 
-		if (this.io.countRoomMembers(VariableDefinitionsRoom) > 0) {
+		if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
 			if (!variablesBefore) {
-				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
+				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
 					type: 'set',
 					variables: variablesObj,
 				})
@@ -384,7 +403,7 @@ class InstanceVariable extends CoreBase {
 				const patch = jsonPatch.compare(variablesBefore, variablesObj || {})
 
 				if (patch.length > 0) {
-					this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
+					this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
 						type: 'patch',
 						patch: patch,
 					})
@@ -413,8 +432,8 @@ class InstanceVariable extends CoreBase {
 				all_changed_variables_set.add(`${label}:${variable}`)
 
 				// Skip debug if it's just internal:time_* spamming.
-				if (this.logger.isSillyEnabled() && !(label === 'internal' && variable.startsWith('time_'))) {
-					this.logger.silly('Variable $(' + label + ':' + variable + ') is "' + value + '"')
+				if (this.#logger.isSillyEnabled() && !(label === 'internal' && variable.startsWith('time_'))) {
+					this.#logger.silly('Variable $(' + label + ':' + variable + ') is "' + value + '"')
 				}
 			}
 		}
@@ -429,13 +448,10 @@ class InstanceVariable extends CoreBase {
 	#emitVariablesChanged(all_changed_variables_set) {
 		try {
 			if (all_changed_variables_set.size > 0) {
-				this.internalModule.variablesChanged(all_changed_variables_set)
-				this.controls.onVariablesChanged(all_changed_variables_set)
-				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-				this.preview.onVariablesChanged(all_changed_variables_set)
+				this.emit('variables_changed', all_changed_variables_set)
 			}
 		} catch (e) {
-			this.logger.error(`Failed to process variables update: ${e}`)
+			this.#logger.error(`Failed to process variables update: ${e}`)
 		}
 	}
 

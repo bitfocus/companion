@@ -19,6 +19,7 @@ import UIController from './UI/Controller.js'
 import UIHandler from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import InstanceVariable from './Instance/Variable.js'
+import InstanceCustomVariable from './Instance/CustomVariable.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
@@ -178,6 +179,15 @@ class Registry extends EventEmitter {
 	api_router
 
 	/**
+	 * @type {import('./Instance/Variable.js').default}
+	 */
+	variable
+	/**
+	 * @type {import('./Instance/CustomVariable.js').default}
+	 */
+	customVariables
+
+	/**
 	 * @type {AppInfo}
 	 * @access public
 	 * @readonly
@@ -229,20 +239,28 @@ class Registry extends EventEmitter {
 		this.page = new PageController(this)
 		this.controls = new ControlsController(this)
 		this.graphics = new GraphicsController(this)
-		this.variable = new InstanceVariable(this)
+		this.variable = new InstanceVariable(this.io, this.controls)
+		this.customVariables = new InstanceCustomVariable(this.db, this.io, this.variable)
 		this.preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variable)
 		this.surfaces = new SurfaceController(this)
-		this.instance = new InstanceController(this, this.variable)
+		this.instance = new InstanceController(this)
 		this.services = new ServiceController(this)
 		this.cloud = new CloudController(this, this.clouddb, this.data.cache)
 		this.internalModule = new InternalController(this)
+
+		this.variable.on('variables_changed', (all_changed_variables_set) => {
+			this.internalModule.variablesChanged(all_changed_variables_set)
+			this.controls.onVariablesChanged(all_changed_variables_set)
+			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
+			this.preview.onVariablesChanged(all_changed_variables_set)
+		})
 
 		// old 'modules_loaded' events
 		this.data.metrics.startCycle()
 
 		this.controls.init()
 		this.controls.verifyConnectionIds()
-		this.instance.variable.custom.init()
+		this.customVariables.init()
 		this.internalModule.init()
 		this.graphics.regenerateAll(false)
 
