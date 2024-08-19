@@ -1,20 +1,8 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import {
-	CAlert,
-	CButton,
-	CButtonGroup,
-	CCallout,
-	CCol,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CRow,
-	CTabContent,
-	CTabPane,
-} from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CCallout, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faClock, faSync } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faSync } from '@fortawesome/free-solid-svg-icons'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
