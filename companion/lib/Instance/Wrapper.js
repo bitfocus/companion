@@ -193,6 +193,8 @@ class SocketEventsHandler {
 			return res.fields
 		} catch (/** @type {any} */ e) {
 			this.logger.warn('Error getting config fields: ' + e?.message)
+			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
+
 			throw e
 		}
 	}
@@ -375,6 +377,7 @@ class SocketEventsHandler {
 			return msg.options
 		} catch (/** @type {any} */ e) {
 			this.logger.warn('Error learning feedback options: ' + e?.message)
+			this.#sendToModuleLog('error', 'Error learning feedback options: ' + e?.message)
 		}
 	}
 
@@ -467,6 +470,7 @@ class SocketEventsHandler {
 			return msg.options
 		} catch (/** @type {any} */ e) {
 			this.logger.warn('Error learning action options: ' + e?.message)
+			this.#sendToModuleLog('error', 'Error learning action options: ' + e?.message)
 		}
 	}
 
@@ -495,6 +499,7 @@ class SocketEventsHandler {
 			})
 		} catch (/** @type {any} */ e) {
 			this.logger.warn(`Error executing action: ${e.message ?? e}`)
+			this.#sendToModuleLog('error', 'Error executing action: ' + e?.message)
 
 			throw e
 		}
@@ -594,11 +599,21 @@ class SocketEventsHandler {
 		}
 
 		// Send everything to the 'debug' page
+		this.#sendToModuleLog(msg.level, msg.message.toString())
+	}
+
+	/**
+	 * Send a message to the module 'debug' log page
+	 * @param {import('@companion-module/base').LogLevel} level
+	 * @param {string} message
+	 */
+	#sendToModuleLog(level, message) {
 		const debugLogRoom = ConnectionDebugLogRoom(this.connectionId)
 		if (this.#registry.io.countRoomMembers(debugLogRoom) > 0) {
-			this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, msg.level, msg.message.toString())
+			this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, level, message)
 		}
 	}
+
 	/**
 	 * Handle updating instance status from the child process
 	 * @param {import('@companion-module/base/dist/host-api/api.js').SetStatusMessage} msg
@@ -727,6 +742,7 @@ class SocketEventsHandler {
 
 		if (invalidIds.length > 0) {
 			this.logger.warn(`Got variable definitions with invalid ids: ${JSON.stringify(invalidIds)}`)
+			this.#sendToModuleLog('warn', `Got variable definitions with invalid ids: ${JSON.stringify(invalidIds)}`)
 		}
 	}
 
