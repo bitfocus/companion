@@ -151,7 +151,7 @@ function DiscoveredSurfacesTab() {
 		<>
 			<p style={{ marginBottom: '0.5rem' }}>
 				Discovered Companion Satellite instances will be listed here. You can easily configure them to connect to
-				Companion from here.
+				Companion from here. This supports Companion Satellite version 1.9.0 and later.
 			</p>
 
 			<SurfaceDiscoveryTable />
