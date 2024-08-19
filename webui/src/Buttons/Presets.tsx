@@ -11,7 +11,11 @@ import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '../Components/ButtonPreview.js'
 import { nanoid } from 'nanoid'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
-import type { UIPresetDefinition, UIPresetDefinitionText } from '@companion-app/shared/Model/Presets.js'
+import type {
+	UIPresetDefinition,
+	UIPresetDefinitionButton,
+	UIPresetDefinitionText,
+} from '@companion-app/shared/Model/Presets.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -236,6 +240,44 @@ interface PresetsButtonListProps {
 	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
 }
 
+interface PresetButtonGroup {
+	type: 'buttons'
+	presets: UIPresetDefinitionButton[]
+}
+
+function groupPresetsForCategory(
+	presets: Record<string, UIPresetDefinition>,
+	category: string
+): (PresetButtonGroup | UIPresetDefinitionText)[] {
+	const filteredPresets = Object.values(presets)
+		.filter((p) => p.category === category)
+		.sort((a, b) => a.order - b.order)
+
+	const result: (PresetButtonGroup | UIPresetDefinitionText)[] = []
+
+	let currentGroup: UIPresetDefinitionButton[] = []
+	for (const preset of filteredPresets) {
+		if (preset.type === 'text') {
+			result.push({
+				type: 'buttons',
+				presets: currentGroup,
+			})
+			currentGroup = []
+
+			result.push(preset)
+		} else {
+			currentGroup.push(preset)
+		}
+	}
+
+	result.push({
+		type: 'buttons',
+		presets: currentGroup,
+	})
+
+	return result
+}
+
 function PresetsButtonList({
 	presets,
 	selectedConnectionId,
@@ -247,10 +289,6 @@ function PresetsButtonList({
 		() => setConnectionAndCategory([selectedConnectionId, null]),
 		[setConnectionAndCategory, selectedConnectionId]
 	)
-
-	const filteredPresets = Object.values(presets)
-		.filter((p) => p.category === selectedCategory)
-		.sort((a, b) => a.order - b.order)
 
 	return (
 		<div>
@@ -268,23 +306,22 @@ function PresetsButtonList({
 					{selectedCategory}
 				</CButton>
 			</CButtonGroup>
-			<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: 10 }}>
-				{filteredPresets.map((preset) => {
-					if (preset.type === 'button') {
-						return (
-							<PresetIconPreview
-								key={preset.id}
-								connectionId={selectedConnectionId}
-								presetId={preset.id}
-								title={preset.label}
-							/>
-						)
-					} else if (preset.type === 'text') {
-						return <PresetText key={preset.id} preset={preset} />
-					}
+
+			{groupPresetsForCategory(presets, selectedCategory).map((preset) => {
+				if (preset.type === 'text') {
+					return <PresetText key={preset.id} preset={preset} />
+				} else if (preset.presets.length > 0) {
+					return (
+						<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: 10 }}>
+							{preset.presets.map((p) => (
+								<PresetIconPreview key={p.id} connectionId={selectedConnectionId} presetId={p.id} title={p.label} />
+							))}
+						</div>
+					)
+				} else {
 					return null
-				})}
-			</div>
+				}
+			})}
 
 			<br style={{ clear: 'both' }} />
 			<CCallout color="info" style={{ margin: '10px 0px' }}>
@@ -300,7 +337,7 @@ interface PresetTextProps {
 
 function PresetText({ preset }: Readonly<PresetTextProps>) {
 	return (
-		<div>
+		<div style={{ marginTop: '10px' }}>
 			<h5>{preset.label}</h5>
 			<p>{preset.text}</p>
 		</div>
