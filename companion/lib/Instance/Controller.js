@@ -43,6 +43,13 @@ class Instance extends CoreBase {
 	#lastClientJson = null
 
 	/**
+	 * @type {import('../Controls/Controller.js').default}
+	 * @access private
+	 * @readonly
+	 */
+	#controlsController
+
+	/**
 	 * @type {import('../Variables/Controller.js').VariablesController}
 	 * @access private
 	 * @readonly
@@ -61,6 +68,7 @@ class Instance extends CoreBase {
 		super(registry, 'Instance/Controller')
 
 		this.#variablesController = registry.variables
+		this.#controlsController = registry.controls
 		this.definitions = new InstanceDefinitions(registry)
 		this.status = new InstanceStatus(registry.io, registry.controls)
 		this.moduleHost = new ModuleHost(registry, this.status)
@@ -160,6 +168,8 @@ class Instance extends CoreBase {
 			const oldLabel = entry.label
 			entry.label = newLabel
 			this.#variablesController.values.connectionLabelRename(oldLabel, newLabel)
+			this.#variablesController.definitions.connectionLabelRename(oldLabel, newLabel)
+			this.#controlsController.renameVariables(oldLabel, newLabel)
 			this.definitions.updateVariablePrefixesForLabel(id, newLabel)
 		}
 
@@ -330,6 +340,7 @@ class Instance extends CoreBase {
 
 							this.definitions.forgetConnection(id)
 							this.#variablesController.values.forgetConnection(id, label)
+							this.#variablesController.definitions.forgetConnection(id, label)
 							this.controls.clearConnectionState(id)
 						})
 				} else {

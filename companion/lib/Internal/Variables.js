@@ -60,7 +60,7 @@ export default class Variables {
 	#internalModule
 
 	/**
-	 * @type {import('../Variables/Variable.js').default}
+	 * @type {import('../Variables/Values.js').VariablesValues}
 	 * @readonly
 	 */
 	#variableController
@@ -73,7 +73,7 @@ export default class Variables {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Variables/Variable.js').default} variableController
+	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
 	constructor(internalModule, variableController) {
 		this.#internalModule = internalModule

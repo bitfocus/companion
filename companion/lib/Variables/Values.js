@@ -16,35 +16,18 @@
  */
 
 import LogController from '../Log/Controller.js'
-import jsonPatch from 'fast-json-patch'
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 import EventEmitter from 'events'
 import { VARIABLE_UNKNOWN_VALUE, parseVariablesInString } from './Util.js'
 
-const VariableDefinitionsRoom = 'variable-definitions'
-
-class InstanceVariable extends EventEmitter {
+export class VariablesValues extends EventEmitter {
 	/**
 	 * @access private
 	 * @readonly
 	 */
-	#logger = LogController.createLogger('Instance/Variable')
-
-	/**
-	 * @access private
-	 * @readonly
-	 * @type {import ('../UI/Handler.js').default}
-	 */
-	#io
-
-	/**
-	 * @access private
-	 * @readonly
-	 * @type {import('../Controls/Controller.js').default}
-	 */
-	#controls
+	#logger = LogController.createLogger('Variables/Values')
 
 	/**
 	 * @type {import('./Util.js').VariableValueData}
@@ -52,19 +35,9 @@ class InstanceVariable extends EventEmitter {
 	#variableValues = {}
 
 	/**
-	 * @type {import('@companion-app/shared/Model/Variables.js').AllVariableDefinitions}
 	 */
-	#variableDefinitions = {}
-
-	/**
-	 * @param {import('../UI/Handler.js').default} io
-	 * @param {import('../Controls/Controller.js').default} controls
-	 */
-	constructor(io, controls) {
+	constructor() {
 		super()
-
-		this.#io = io
-		this.#controls = controls
 	}
 
 	/**
@@ -184,12 +157,7 @@ class InstanceVariable extends EventEmitter {
 				this.#emitVariablesChanged(removed_variables)
 			}
 
-			delete this.#variableDefinitions[label]
 			delete this.#variableValues[label]
-
-			if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', label, null)
-			}
 		}
 	}
 
@@ -201,9 +169,6 @@ class InstanceVariable extends EventEmitter {
 	connectionLabelRename(labelFrom, labelTo) {
 		const valuesTo = this.#variableValues[labelTo] || {}
 		this.#variableValues[labelTo] = valuesTo
-
-		// Trigger any renames inside of the controls
-		this.#controls.renameVariables(labelFrom, labelTo)
 
 		// Move variable values, and track the 'diff'
 		const valuesFrom = this.#variableValues[labelFrom]
@@ -221,21 +186,6 @@ class InstanceVariable extends EventEmitter {
 			delete this.#variableValues[labelFrom]
 			this.#emitVariablesChanged(all_changed_variables_set)
 		}
-
-		// Update the instance definitions
-		const oldDefinitions = this.#variableDefinitions[labelFrom]
-		if (oldDefinitions) {
-			const definitions = (this.#variableDefinitions[labelTo] = oldDefinitions)
-			delete this.#variableDefinitions[labelFrom]
-
-			if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelTo, {
-					type: 'set',
-					variables: definitions,
-				})
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelFrom, null)
-			}
-		}
 	}
 
 	/**
@@ -245,63 +195,9 @@ class InstanceVariable extends EventEmitter {
 	 * @returns {void}
 	 */
 	clientConnect(client) {
-		client.onPromise('variable-definitions:subscribe', () => {
-			client.join(VariableDefinitionsRoom)
-
-			return this.#variableDefinitions
-		})
-
-		client.onPromise('variable-definitions:unsubscribe', () => {
-			client.leave(VariableDefinitionsRoom)
-		})
-
 		client.onPromise('variables:instance-values', (label) => {
 			return this.#variableValues[label]
 		})
-	}
-
-	/**
-	 * Set the variable definitions for an instance
-	 * @access public
-	 * @param {string} instance_label
-	 * @param {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} variables
-	 * @returns {void}
-	 */
-	setVariableDefinitions(instance_label, variables) {
-		this.#logger.silly('got instance variable definitions for ' + instance_label)
-
-		/** @type {import('@companion-app/shared/Model/Variables.js').ModuleVariableDefinitions} */
-		const variablesObj = {}
-		for (const variable of variables || []) {
-			// Prune out the name
-			/** @type {import('@companion-app/shared/Model/Variables.js').VariableDefinition} */
-			const newVarObj = {
-				label: variable.label,
-			}
-
-			variablesObj[variable.name] = newVarObj
-		}
-
-		const variablesBefore = this.#variableDefinitions[instance_label]
-		this.#variableDefinitions[instance_label] = variablesObj
-
-		if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-			if (!variablesBefore) {
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
-					type: 'set',
-					variables: variablesObj,
-				})
-			} else {
-				const patch = jsonPatch.compare(variablesBefore, variablesObj || {})
-
-				if (patch.length > 0) {
-					this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
-						type: 'patch',
-						patch: patch,
-					})
-				}
-			}
-		}
 	}
 
 	/**
@@ -365,5 +261,3 @@ class InstanceVariable extends EventEmitter {
 		}
 	}
 }
-
-export default InstanceVariable

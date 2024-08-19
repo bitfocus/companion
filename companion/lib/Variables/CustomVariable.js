@@ -27,7 +27,7 @@ const CustomVariablesRoom = 'custom-variables'
 export class VariablesCustomVariable {
 	/**
 	 * Base variables handler
-	 * @type {import('./Variable.js').default}
+	 * @type {import('./Values.js').VariablesValues}
 	 * @access private
 	 * @readonly
 	 */
@@ -64,7 +64,7 @@ export class VariablesCustomVariable {
 	/**
 	 * @param {import ('../Data/Database.js').default} db
 	 * @param {import ('../UI/Handler.js').default} io
-	 * @param {import('./Variable.js').default} base
+	 * @param {import('./Values.js').VariablesValues} base
 	 */
 	constructor(db, io, base) {
 		this.#db = db

@@ -410,7 +410,7 @@ export default class InternalController extends CoreBase {
 			}
 		}
 
-		this.registry.variables.values.setVariableDefinitions('internal', variables)
+		this.registry.variables.definitions.setVariableDefinitions('internal', variables)
 	}
 
 	/**

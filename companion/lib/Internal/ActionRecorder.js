@@ -40,7 +40,7 @@ export default class ActionRecorder {
 	#pageController
 
 	/**
-	 * @type {import('../Variables/Variable.js').default}
+	 * @type {import('../Variables/Values.js').VariablesValues}
 	 * @readonly
 	 */
 	#variableController
@@ -49,7 +49,7 @@ export default class ActionRecorder {
 	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Controls/ActionRecorder.js').default} actionRecorder
 	 * @param {import('../Page/Controller.js').default} pageController
-	 * @param {import('../Variables/Variable.js').default} variableController
+	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
 	constructor(internalModule, actionRecorder, pageController, variableController) {
 		this.#internalModule = internalModule

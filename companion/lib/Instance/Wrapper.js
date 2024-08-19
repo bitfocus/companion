@@ -728,7 +728,7 @@ class SocketEventsHandler {
 			}
 		}
 
-		this.#registry.variables.values.setVariableDefinitions(this.#label, newVariables)
+		this.#registry.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
 			/** @type {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} */

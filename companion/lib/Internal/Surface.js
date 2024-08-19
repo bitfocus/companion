@@ -129,7 +129,7 @@ export default class Surface {
 	#surfaceController
 
 	/**
-	 * @type {import('../Variables/Variable.js').default}
+	 * @type {import('../Variables/Values.js').VariablesValues}
 	 * @readonly
 	 */
 	#variableController
@@ -141,7 +141,7 @@ export default class Surface {
 	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Surface/Controller.js').default} surfaceController
 	 * @param {import('../Controls/Controller.js').default} controlsController
-	 * @param {import('../Variables/Variable.js').default} variableController
+	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
 	constructor(internalModule, surfaceController, controlsController, variableController) {
 		this.#internalModule = internalModule
