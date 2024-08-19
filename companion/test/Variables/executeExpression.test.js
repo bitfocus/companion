@@ -45,4 +45,52 @@ describe('executeExpression', () => {
 		const res = executeExpression('parseVariables("$(test:$(another:value))")', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 'val1', variableIds: new Set(['test:something', 'another:value']) })
 	})
+
+	test('array variable', () => {
+		const injectedVariableValues = {
+			'$(test:something)': [1, 2, 3],
+		}
+
+		const res = executeExpression('$(test:something)[1]', {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: 2, variableIds: new Set(['test:something']) })
+	})
+
+	test('object variable', () => {
+		const injectedVariableValues = {
+			'$(test:something)': { a: 1, b: '123' },
+		}
+
+		const res = executeExpression('$(test:something)["b"]', {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: '123', variableIds: new Set(['test:something']) })
+	})
+
+	test('chained variables', () => {
+		const injectedVariableValues = {
+			'$(test:something)': '$(another:value)',
+			'$(another:value)': 'something',
+		}
+
+		const res = executeExpression('parseVariables("$(test:something)")', {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })
+	})
+
+	test('chained variables 2', () => {
+		const injectedVariableValues = {
+			'$(test:something)': '$(another:value)',
+			'$(another:value)': 'something',
+		}
+
+		const res = executeExpression('$(test:something)', {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })
+	})
+
+	test('chained array variable', () => {
+		const injectedVariableValues = {
+			'$(test:something)': '$(another:value)',
+			'$(another:value)': [1, 2, 3],
+		}
+
+		const res = executeExpression('join($(test:something), "/")', {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: '1/2/3', variableIds: new Set(['test:something', 'another:value']) })
+	})
 })

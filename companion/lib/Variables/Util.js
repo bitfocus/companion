@@ -19,6 +19,7 @@ import LogController from '../Log/Controller.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { SplitVariableId } from '../Resources/Util.js'
 
 export const VARIABLE_UNKNOWN_VALUE = '$NA'
 
@@ -110,7 +111,6 @@ export function replaceAllVariables(string, newLabel) {
 		let fromIndex = 0
 		while ((matches = VARIABLE_REGEX.exec(string.slice(fromIndex))) !== null) {
 			if (matchCount++ > 100) {
-				// nocommit was 100
 				// Crudely avoid infinite loops with an iteration limit
 				// logger.info(`Reached iteration limit for variable parsing`)
 				break
@@ -142,16 +142,40 @@ export function executeExpression(str, rawVariableValues, requiredType, injected
 
 	/**
 	 * @param {string} variableId
-	 * @returns {string}
+	 * @returns {import('@companion-app/shared/Expression/ExpressionResolve.js').VariableValue}
 	 */
 	const getVariableValue = (variableId) => {
-		const result = parseVariablesInString(`$(${variableId})`, rawVariableValues, injectedVariableValues)
+		referencedVariableIds.add(variableId)
 
-		for (const id of result.variableIds) {
-			referencedVariableIds.add(id)
+		// First check for an injected value
+		let value = injectedVariableValues?.[`$(${variableId})`]
+		if (value === undefined) {
+			// No value, lookup the raw value
+			const [connectionLabel, variableName] = SplitVariableId(variableId)
+			value = rawVariableValues[connectionLabel]?.[variableName]
 		}
 
-		return result.text
+		// If its a string, make sure any references to other variables are resolved
+		if (typeof value === 'string') {
+			// First check if it is a direct reference to another variable, so that the type can be preserved
+			const valueMatch = value.match(VARIABLE_REGEX)
+			if (valueMatch && valueMatch[0] === value) {
+				return getVariableValue(`${valueMatch[1]}:${valueMatch[2]}`)
+			} else {
+				// Fallback to parsing the string
+				const parsedValue = parseVariablesInString(value, rawVariableValues, injectedVariableValues)
+				value = parsedValue.text
+
+				for (const id of parsedValue.variableIds) {
+					referencedVariableIds.add(id)
+				}
+			}
+		}
+
+		// Make sure to return a value, even if its undefined
+		if (!value) return VARIABLE_UNKNOWN_VALUE
+
+		return value
 	}
 
 	const functions = {
