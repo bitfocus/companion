@@ -24,7 +24,7 @@ const CustomVariablesRoom = 'custom-variables'
 
 /** @typedef {import('@companion-module/base').CompanionVariableValue} CompanionVariableValue */
 
-export default class InstanceCustomVariable {
+export class VariablesCustomVariable {
 	/**
 	 * Base variables handler
 	 * @type {import('./Variable.js').default}
@@ -38,7 +38,7 @@ export default class InstanceCustomVariable {
 	 * @access private
 	 * @readonly
 	 */
-	#logger = LogController.createLogger('Instance/CustomVariable')
+	#logger = LogController.createLogger('Variables/CustomVariable')
 
 	/**
 	 * Custom variable definitions

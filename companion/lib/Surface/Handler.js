@@ -207,13 +207,6 @@ class SurfaceHandler extends EventEmitter {
 	 */
 	#graphics
 	/**
-	 * The core instance controller
-	 * @type {import('../Instance/Controller.js').default}
-	 * @readonly
-	 * @access public
-	 */
-	#instance
-	/**
 	 * The core page controller
 	 * @type {import('../Page/Controller.js').default}
 	 * @readonly
@@ -236,6 +229,14 @@ class SurfaceHandler extends EventEmitter {
 	#userconfig
 
 	/**
+	 * The core variable controller
+	 * @type {import('../Variables/Controller.js').VariablesController}
+	 * @readonly
+	 * @access private
+	 */
+	#variables
+
+	/**
 	 *
 	 * @param {import('../Registry.js').default} registry
 	 * @param {string} integrationType
@@ -250,10 +251,10 @@ class SurfaceHandler extends EventEmitter {
 
 		this.#controls = registry.controls
 		this.#graphics = registry.graphics
-		this.#instance = registry.instance
 		this.#page = registry.page
 		this.#surfaces = registry.surfaces
 		this.#userconfig = registry.userconfig
+		this.#variables = registry.variables
 
 		this.panel = panel
 		this.#surfaceConfig = surfaceConfig ?? {}
@@ -644,7 +645,7 @@ class SurfaceHandler extends EventEmitter {
 	 * @returns {void}
 	 */
 	#onSetVariable(name, value) {
-		this.#instance.variable.setVariableValues('internal', {
+		this.#variables.values.setVariableValues('internal', {
 			[name]: value,
 		})
 	}

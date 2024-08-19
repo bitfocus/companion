@@ -28,14 +28,14 @@ export default class CustomVariables {
 	// #internalModule
 
 	/**
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Controller.js').VariablesController}
 	 * @readonly
 	 */
 	#variableController
 
 	/**
 	 * @param {import('./Controller.js').default} _internalModule
-	 * @param {import('../Instance/Variable.js').default} variableController
+	 * @param {import('../Variables/Controller.js').VariablesController} variableController
 	 */
 	constructor(_internalModule, variableController) {
 		// this.#internalModule = internalModule
@@ -285,7 +285,7 @@ export default class CustomVariables {
 			return true
 		} else if (action.action === 'custom_variable_set_expression') {
 			try {
-				const result = this.#variableController.parseExpression(action.options.expression, extras.location)
+				const result = this.#variableController.values.parseExpression(action.options.expression, extras.location)
 				this.#variableController.custom.setValue(action.options.name, result.value)
 			} catch (/** @type {any} */ error) {
 				this.#logger.warn(`${error.toString()}, in expression: "${action.options.expression}"`)
@@ -294,7 +294,7 @@ export default class CustomVariables {
 			return true
 		} else if (action.action === 'custom_variable_store_variable') {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
-			const value = this.#variableController.getVariableValue(connectionLabel, variableName)
+			const value = this.#variableController.values.getVariableValue(connectionLabel, variableName)
 			this.#variableController.custom.setValue(action.options.name, value)
 			return true
 		} else if (action.action === 'custom_variable_reset_to_default') {

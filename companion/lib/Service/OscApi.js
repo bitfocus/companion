@@ -415,6 +415,6 @@ export class ServiceOscApi extends CoreBase {
 		this.logger.debug(`Got HTTP custom variable set value name "${variableName}" to value "${variableValue}"`)
 		if (variableValue === undefined) return
 
-		this.registry.customVariables.setValue(variableName, variableValue.toString())
+		this.registry.variables.custom.setValue(variableName, variableValue.toString())
 	}
 }

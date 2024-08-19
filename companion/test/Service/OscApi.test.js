@@ -30,7 +30,12 @@ describe('OscApi', () => {
 				surfaces: mock({}, mockOptions),
 				page: mock({}, mockOptions),
 				controls: mock({}, mockOptions),
-				customVariables: mock({}, mockOptions),
+				variables: mock(
+					{
+						custom: mock({}, mockOptions),
+					},
+					mockOptions
+				),
 			},
 			mockOptions
 		)
@@ -82,7 +87,7 @@ describe('OscApi', () => {
 			test('ok from query', async () => {
 				const { router, registry } = createService()
 
-				const mockFn = registry.customVariables.setValue
+				const mockFn = registry.variables.custom.setValue
 				mockFn.mockReturnValue()
 
 				// Perform the request
@@ -101,7 +106,7 @@ describe('OscApi', () => {
 			test('ok from body', async () => {
 				const { router, registry } = createService()
 
-				const mockFn = registry.customVariables.setValue
+				const mockFn = registry.variables.custom.setValue
 				mockFn.mockReturnValue()
 
 				// Perform the request
@@ -120,7 +125,7 @@ describe('OscApi', () => {
 			test('unknown name', async () => {
 				const { router, registry } = createService()
 
-				const mockFn = registry.customVariables.setValue
+				const mockFn = registry.variables.custom.setValue
 				mockFn.mockReturnValue('Unknown name')
 
 				// Perform the request

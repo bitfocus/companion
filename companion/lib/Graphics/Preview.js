@@ -67,7 +67,7 @@ class GraphicsPreview {
 
 	/**
 	 * @readonly
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Variable.js').default}
 	 */
 	#variablesController
 
@@ -81,7 +81,7 @@ class GraphicsPreview {
 	 * @param {import('./Controller.js').default} graphicsController
 	 * @param {import("../UI/Handler.js").default } ioController
 	 * @param {import("../Page/Controller.js").default} pageController
-	 * @param {import('../Instance/Variable.js').default} variablesController
+	 * @param {import('../Variables/Variable.js').default} variablesController
 	 */
 	constructor(graphicsController, ioController, pageController, variablesController) {
 		this.#graphicsController = graphicsController

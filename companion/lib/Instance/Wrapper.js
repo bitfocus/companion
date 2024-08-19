@@ -697,7 +697,7 @@ class SocketEventsHandler {
 			variables[variable.id] = variable.value
 		}
 
-		this.#registry.instance.variable.setVariableValues(this.#label, variables)
+		this.#registry.variables.values.setVariableValues(this.#label, variables)
 	}
 
 	/**
@@ -728,7 +728,7 @@ class SocketEventsHandler {
 			}
 		}
 
-		this.#registry.instance.variable.setVariableDefinitions(this.#label, newVariables)
+		this.#registry.variables.values.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
 			/** @type {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} */
@@ -737,7 +737,7 @@ class SocketEventsHandler {
 				variables[variable.id] = variable.value
 			}
 
-			this.#registry.instance.variable.setVariableValues(this.#label, variables)
+			this.#registry.variables.values.setVariableValues(this.#label, variables)
 		}
 
 		if (invalidIds.length > 0) {
@@ -797,7 +797,7 @@ class SocketEventsHandler {
 	async #handleParseVariablesInString(msg) {
 		try {
 			const location = msg.controlId ? this.#registry.page.getLocationOfControlId(msg.controlId) : null
-			const result = this.#registry.instance.variable.parseVariables(msg.text, location)
+			const result = this.#registry.variables.values.parseVariables(msg.text, location)
 
 			return { text: result.text, variableIds: result.variableIds }
 		} catch (/** @type {any} */ e) {
@@ -836,7 +836,7 @@ class SocketEventsHandler {
 	 */
 	async #handleSetCustomVariable(msg) {
 		try {
-			this.#registry.customVariables.setValue(msg.customVariableId, msg.value)
+			this.#registry.variables.custom.setValue(msg.customVariableId, msg.value)
 		} catch (/** @type {any} */ e) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}

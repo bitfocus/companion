@@ -3,7 +3,7 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 /**
  *
  * @param {import('winston').Logger} logger
- * @param {import('../Instance/Variable.js').default} variablesController
+ * @param {import('../Variables/Variable.js').default} variablesController
  * @param {import('../Resources/Util.js').ControlLocation | undefined} pressLocation
  * @param {Record<string, any>} options
  * @param {boolean} useVariableFields

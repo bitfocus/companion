@@ -42,6 +42,13 @@ class Instance extends CoreBase {
 	/** @type {Record<string, ClientConnectionConfig> | null} */
 	#lastClientJson = null
 
+	/**
+	 * @type {import('../Variables/Controller.js').VariablesController}
+	 * @access private
+	 * @readonly
+	 */
+	#variablesController
+
 	store = {
 		/** @type {Record<string, import('@companion-app/shared/Model/Connections.js').ConnectionConfig>} */
 		db: {},
@@ -53,8 +60,7 @@ class Instance extends CoreBase {
 	constructor(registry) {
 		super(registry, 'Instance/Controller')
 
-		this.variable = registry.variable
-		this.customVariables = registry.customVariables
+		this.#variablesController = registry.variables
 		this.definitions = new InstanceDefinitions(registry)
 		this.status = new InstanceStatus(registry.io, registry.controls)
 		this.moduleHost = new ModuleHost(registry, this.status)
@@ -153,7 +159,7 @@ class Instance extends CoreBase {
 		if (newLabel && entry.label != newLabel) {
 			const oldLabel = entry.label
 			entry.label = newLabel
-			this.variable.connectionLabelRename(oldLabel, newLabel)
+			this.#variablesController.values.connectionLabelRename(oldLabel, newLabel)
 			this.definitions.updateVariablePrefixesForLabel(id, newLabel)
 		}
 
@@ -323,7 +329,7 @@ class Instance extends CoreBase {
 							this.status.updateInstanceStatus(id, null, 'Disabled')
 
 							this.definitions.forgetConnection(id)
-							this.variable.forgetConnection(id, label)
+							this.#variablesController.values.forgetConnection(id, label)
 							this.controls.clearConnectionState(id)
 						})
 				} else {
@@ -364,7 +370,7 @@ class Instance extends CoreBase {
 
 		// forward cleanup elsewhere
 		this.definitions.forgetConnection(id)
-		this.variable.forgetConnection(id, label)
+		this.#variablesController.values.forgetConnection(id, label)
 		this.controls.forgetConnection(id)
 	}
 
@@ -523,8 +529,7 @@ class Instance extends CoreBase {
 	 * @returns {void}
 	 */
 	clientConnect(client) {
-		this.variable.clientConnect(client)
-		this.customVariables.clientConnect(client)
+		this.#variablesController.clientConnect(client)
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
 		this.modules.clientConnect(client)
