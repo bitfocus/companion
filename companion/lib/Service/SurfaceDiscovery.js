@@ -59,11 +59,9 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				}, 30000)
 
 				this.#satelliteBrowser.on('up', (service) => {
-					console.log('up', service)
 					this.#updateSatelliteService(undefined, service)
 				})
 				this.#satelliteBrowser.on('down', (service) => {
-					console.log('down', service)
 					this.#forgetSatelliteService(service)
 				})
 				this.#satelliteBrowser.on('txt-update', (newService, oldService) => {
@@ -84,6 +82,8 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	 * @param {import('@julusian/bonjour-service').Service} service
 	 */
 	#updateSatelliteService(oldService, service) {
+		this.logger.debug(`Found companion satellite device ${service.name} at ${service.addresses?.[0]}:${service.port}`)
+
 		if (oldService) {
 			const oldServiceInfo = this.#convertSatelliteServiceForUi(oldService)
 			const newServiceInfo = this.#convertSatelliteServiceForUi(service)

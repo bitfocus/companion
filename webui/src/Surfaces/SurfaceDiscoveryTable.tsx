@@ -18,8 +18,6 @@ export function SurfaceDiscoveryTable() {
 
 	return (
 		<>
-			<h3>TEST Discovery</h3>
-
 			<SetupSatelliteModal ref={setupSatelliteRef} />
 
 			<table className="table table-responsive-sm table-margin-top">
