@@ -2,13 +2,15 @@ import { ClientDiscoveredSurfaceInfo, SurfacesDiscoveryUpdate } from '@companion
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { socketEmitPromise, assertNever, SocketContext } from '../util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faBan, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SetupSatelliteModalRef, SetupSatelliteModal } from './SetupSatelliteModal.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { NonIdealState } from '../Components/NonIdealState.js'
 
 export function SurfaceDiscoveryTable() {
 	const discoveredSurfaces = useSurfaceDiscoverySubscription()
-	console.log(discoveredSurfaces)
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	const setupSatelliteRef = useRef<SetupSatelliteModalRef>(null)
 
@@ -30,12 +32,24 @@ export function SurfaceDiscoveryTable() {
 					</tr>
 				</thead>
 				<tbody>
-					{Object.entries(discoveredSurfaces).map(([id, svc]) =>
-						svc ? <SatelliteRow key={id} surfaceInfo={svc} showSetupSatellite={showSetupSatellite} /> : null
-					)}
-					{Object.values(discoveredSurfaces).length === 0 && (
+					{userConfig.properties?.discoveryEnabled ? (
+						<>
+							{Object.entries(discoveredSurfaces).map(([id, svc]) =>
+								svc ? <SatelliteRow key={id} surfaceInfo={svc} showSetupSatellite={showSetupSatellite} /> : null
+							)}
+							{Object.values(discoveredSurfaces).length === 0 && (
+								<tr>
+									<td colSpan={7}>
+										<NonIdealState icon={faSearch} text="Searching for Satellite installations" />
+									</td>
+								</tr>
+							)}
+						</>
+					) : (
 						<tr>
-							<td colSpan={7}>Searching for Satellite installations</td>
+							<td colSpan={7}>
+								<NonIdealState icon={faBan} text="Discovery of Satellite devices is disabled" />
+							</td>
 						</tr>
 					)}
 				</tbody>

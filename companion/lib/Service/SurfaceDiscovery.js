@@ -70,6 +70,8 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				this.#satelliteBrowser.on('srv-update', (newService, oldService) => {
 					this.#updateSatelliteService(oldService, newService)
 				})
+
+				this.currentState = true
 			} catch (e) {
 				this.logger.debug(`ERROR failed to start searching for companion satellite devices`)
 			}
@@ -139,11 +141,17 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		if (this.#satelliteBrowser) {
 			try {
 				this.currentState = false
+
+				for (const service of this.#satelliteBrowser.services) {
+					this.#forgetSatelliteService(service)
+				}
 				this.#satelliteBrowser.stop()
-				clearTimeout(this.#satelliteExpireInterval)
-				this.logger.info(`Stopped searching for satellite devices`)
 				this.#satelliteBrowser = undefined
+
+				clearTimeout(this.#satelliteExpireInterval)
 				this.#satelliteExpireInterval = undefined
+
+				this.logger.info(`Stopped searching for satellite devices`)
 			} catch (/** @type {any} */ e) {
 				this.logger.silly(`Could not stop searching for satellite devices: ${e.message}`)
 			}
