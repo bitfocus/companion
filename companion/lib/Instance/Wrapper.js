@@ -3,7 +3,7 @@ import { IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
 import { ConnectionDebugLogRoom } from './Host.js'
 import semver from 'semver'
 
-const range1_2_0OrLater = new semver.Range('>=1.2.0-0')
+const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
 /**
  * @typedef {import('@companion-module/base/dist/host-api/api.js').HostToModuleEventsV0} HostToModuleEventsV0
