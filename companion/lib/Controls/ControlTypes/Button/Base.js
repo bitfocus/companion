@@ -281,7 +281,7 @@ export default class ButtonControlBase extends ControlBase {
 
 			if (style.textExpression) {
 				try {
-					const parseResult = this.instance.variable.parseExpression(
+					const parseResult = this.variablesController.values.executeExpression(
 						style.text,
 						location,
 						undefined,
@@ -296,7 +296,7 @@ export default class ButtonControlBase extends ControlBase {
 					this.last_draw_variables = null
 				}
 			} else {
-				const parseResult = this.instance.variable.parseVariables(style.text, location, injectedVariableValues)
+				const parseResult = this.variablesController.values.parseVariables(style.text, location, injectedVariableValues)
 				style.text = parseResult.text
 				this.last_draw_variables = parseResult.variableIds.length > 0 ? new Set(parseResult.variableIds) : null
 			}

@@ -20,7 +20,7 @@ import { useButtonRenderCache } from '../Hooks/useSharedRenderCache.js'
 import { CButton, CFormInput } from '@coreui/react'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import { PresetDragItem } from './Presets.js'
+import { PresetDragItem } from './Presets/PresetDragItem.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void

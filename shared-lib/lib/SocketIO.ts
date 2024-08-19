@@ -58,8 +58,8 @@ export interface ClientToBackendEventsMap {
 	ssl_certificate_delete(): never
 	ssl_certificate_renew(): never
 
-	'bonjour:subscribe': (connectionId: string, queryId: string) => string
-	'bonjour:unsubscribe': (subId: string) => never
+	'bonjour:subscribe': (connectionId: string, queryId: string) => string[]
+	'bonjour:unsubscribe': (subIds: string[]) => never
 
 	'connection-debug:subscribe': (connectionId: string) => boolean
 	'connection-debug:unsubscribe': (connectionId: string) => void

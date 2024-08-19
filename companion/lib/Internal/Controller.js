@@ -51,17 +51,17 @@ export default class InternalController extends CoreBase {
 		this.#buildingBlocksFragment = new BuildingBlocks()
 
 		this.fragments = [
-			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.instance.variable),
+			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.variables.values),
 			this.#buildingBlocksFragment,
 			new Instance(this, registry.instance),
 			new Time(this),
-			new Controls(this, registry.graphics, registry.controls, registry.page, registry.instance.variable),
-			new CustomVariables(this, registry.instance.variable),
+			new Controls(this, registry.graphics, registry.controls, registry.page, registry.variables.values),
+			new CustomVariables(this, registry.variables),
 			new Page(this, registry.page),
-			new Surface(this, registry.surfaces, registry.controls, registry.instance.variable),
+			new Surface(this, registry.surfaces, registry.controls, registry.variables.values),
 			new System(this, registry),
 			new Triggers(this, registry.controls),
-			new Variables(this, registry.instance.variable),
+			new Variables(this, registry.variables.values),
 		]
 
 		// Set everything up
@@ -321,7 +321,7 @@ export default class InternalController extends CoreBase {
 	 * @returns {void}
 	 */
 	setVariables(variables) {
-		this.registry.instance.variable.setVariableValues('internal', variables)
+		this.registry.variables.values.setVariableValues('internal', variables)
 	}
 	/**
 	 * Recheck all feedbacks of specified types
@@ -410,7 +410,7 @@ export default class InternalController extends CoreBase {
 			}
 		}
 
-		this.registry.instance.variable.setVariableDefinitions('internal', variables)
+		this.registry.variables.definitions.setVariableDefinitions('internal', variables)
 	}
 
 	/**

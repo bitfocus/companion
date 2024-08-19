@@ -21,15 +21,15 @@ export function BonjourDeviceInputField({
 }: BonjourDeviceInputFieldProps) {
 	const socket = useContext(SocketContext)
 
-	const [_subId, setSubId] = useState<string | null>(null)
-	const subIdRef = useRef<string | null>(null)
+	const [_subIds, setSubIds] = useState<string[] | null>(null)
+	const subIdsRef = useRef<string[] | null>(null)
 
 	const [services, setServices] = useState<Record<string, ClientBonjourService | undefined>>({})
 
 	// Listen for data
 	useEffect(() => {
 		const onUp = (svc: ClientBonjourService) => {
-			if (svc.subId !== subIdRef.current) return
+			if (!subIdsRef.current?.includes(svc.subId)) return
 
 			// console.log('up', svc)
 
@@ -41,7 +41,7 @@ export function BonjourDeviceInputField({
 			})
 		}
 		const onDown = (svc: ClientBonjourService) => {
-			if (svc.subId !== subIdRef.current) return
+			if (!subIdsRef.current?.includes(svc.subId)) return
 
 			// console.log('down', svc)
 
@@ -64,19 +64,19 @@ export function BonjourDeviceInputField({
 	// Start/Stop the subscription
 	useEffect(() => {
 		let killed = false
-		let mySubId: string | null = null
+		let mySubIds: string[] | null = null
 		socketEmitPromise(socket, 'bonjour:subscribe', [connectionId, queryId])
-			.then((newSubId) => {
+			.then((newSubIds) => {
 				// Make sure it hasnt been terminated
 				if (killed) {
-					socket.emit('bonjour:unsubscribe', newSubId)
+					socket.emit('bonjour:unsubscribe', newSubIds)
 					return
 				}
 
 				// Sub is good, set it up
-				mySubId = newSubId
-				subIdRef.current = newSubId
-				setSubId(newSubId)
+				mySubIds = newSubIds
+				subIdsRef.current = newSubIds
+				setSubIds(newSubIds)
 				setServices({})
 			})
 			.catch((e) => {
@@ -86,11 +86,11 @@ export function BonjourDeviceInputField({
 		return () => {
 			killed = true
 
-			subIdRef.current = null
-			setSubId(null)
+			subIdsRef.current = null
+			setSubIds(null)
 			setServices({})
 
-			if (mySubId) socket.emit('bonjour:unsubscribe', mySubId)
+			if (mySubIds) socket.emit('bonjour:unsubscribe', mySubIds)
 		}
 	}, [socket, connectionId, queryId])
 

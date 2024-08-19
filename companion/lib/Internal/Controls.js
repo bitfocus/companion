@@ -149,7 +149,7 @@ export default class Controls {
 	#pagesController
 
 	/**
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Values.js').VariablesValues}
 	 * @readonly
 	 */
 	#variableController
@@ -159,7 +159,7 @@ export default class Controls {
 	 * @param {import('../Graphics/Controller.js').default} graphicsController
 	 * @param {import('../Controls/Controller.js').default} controlsController
 	 * @param {import('../Page/Controller.js').default} pagesController
-	 * @param {import('../Instance/Variable.js').default} variableController
+	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
 	constructor(internalModule, graphicsController, controlsController, pagesController, variableController) {
 		this.#internalModule = internalModule
@@ -194,7 +194,7 @@ export default class Controls {
 		let thePage = options.page
 
 		if (options.page_from_variable) {
-			thePage = this.#variableController.parseExpression(options.page_variable, location, 'number').value
+			thePage = this.#variableController.executeExpression(options.page_variable, location, 'number').value
 		}
 
 		if (thePage === 0 || thePage === '0') thePage = location?.pageNumber ?? null
@@ -242,7 +242,7 @@ export default class Controls {
 		let theStep = options.step
 
 		if (options.step_from_expression) {
-			theStep = this.#variableController.parseExpression(options.step_expression, extras.location, 'number').value
+			theStep = this.#variableController.executeExpression(options.step_expression, extras.location, 'number').value
 		}
 
 		return theStep
@@ -959,8 +959,11 @@ export default class Controls {
 
 			const forcePress = !!action.options.force
 
-			const pressIt = !!this.#variableController.parseExpression(action.options.expression, extras.location, 'boolean')
-				.value
+			const pressIt = !!this.#variableController.executeExpression(
+				action.options.expression,
+				extras.location,
+				'boolean'
+			).value
 
 			if (pressIt) {
 				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
@@ -1141,8 +1144,11 @@ export default class Controls {
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			const pressIt = !!this.#variableController.parseExpression(action.options.expression, extras.location, 'boolean')
-				.value
+			const pressIt = !!this.#variableController.executeExpression(
+				action.options.expression,
+				extras.location,
+				'boolean'
+			).value
 
 			if (pressIt) {
 				if (control && control.supportsSteps) {

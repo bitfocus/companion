@@ -60,7 +60,7 @@ export default class Variables {
 	#internalModule
 
 	/**
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Values.js').VariablesValues}
 	 * @readonly
 	 */
 	#variableController
@@ -73,7 +73,7 @@ export default class Variables {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Instance/Variable.js').default} variableController
+	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
 	constructor(internalModule, variableController) {
 		this.#internalModule = internalModule
@@ -192,7 +192,11 @@ export default class Variables {
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.type == 'check_expression') {
 			try {
-				const res = this.#variableController.parseExpression(feedback.options.expression, feedback.location, 'boolean')
+				const res = this.#variableController.executeExpression(
+					feedback.options.expression,
+					feedback.location,
+					'boolean'
+				)
 
 				this.#variableSubscriptions.set(feedback.id, Array.from(res.variableIds))
 

@@ -30,14 +30,9 @@ describe('TcpUdpApi', () => {
 				surfaces: mock({}, mockOptions),
 				page: mock({}, mockOptions),
 				controls: mock({}, mockOptions),
-				instance: mock(
+				variables: mock(
 					{
-						variable: mock(
-							{
-								custom: mock({}, mockOptions),
-							},
-							mockOptions
-						),
+						custom: mock({}, mockOptions),
 					},
 					mockOptions
 				),
@@ -85,7 +80,7 @@ describe('TcpUdpApi', () => {
 			test('ok from query', async () => {
 				const { router, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.setValue
+				const mockFn = registry.variables.custom.setValue
 				mockFn.mockReturnValue()
 
 				// Perform the request
@@ -98,7 +93,7 @@ describe('TcpUdpApi', () => {
 			test('ok empty', async () => {
 				const { router, registry } = createService()
 
-				const mockFn = registry.instance.variable.custom.setValue
+				const mockFn = registry.variables.custom.setValue
 				mockFn.mockReturnValue()
 
 				// Perform the request
