@@ -43,33 +43,37 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	}
 
 	return (
-		<div>
-			<h4>Surfaces</h4>
+		<div className="secondary-panel fill-height">
+			<div className="secondary-panel-header">
+				<h4>Surfaces</h4>
+			</div>
 
-			<CNav variant="tabs" role="tablist">
-				<CNavItem>
-					<CNavLink to={`${SURFACES_PAGE_PREFIX}/known`} as={NavLink}>
-						Known Surfaces
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink to={`${SURFACES_PAGE_PREFIX}/discovered`} as={NavLink}>
-						Discovered Surfaces
-					</CNavLink>
-				</CNavItem>
-			</CNav>
-			<CTabContent>
-				<CTabPane data-tab="known" visible={subPage === 'known'} transition={false}>
-					<MyErrorBoundary>
-						<KnownSurfacesTab />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane data-tab="discover" visible={subPage === 'discovered'} transition={false}>
-					<MyErrorBoundary>
-						<DiscoveredSurfacesTab />
-					</MyErrorBoundary>
-				</CTabPane>
-			</CTabContent>
+			<div className="secondary-panel-inner">
+				<CNav variant="tabs" role="tablist">
+					<CNavItem>
+						<CNavLink to={`${SURFACES_PAGE_PREFIX}/known`} as={NavLink}>
+							Known Surfaces
+						</CNavLink>
+					</CNavItem>
+					<CNavItem>
+						<CNavLink to={`${SURFACES_PAGE_PREFIX}/discovered`} as={NavLink}>
+							Discovered Surfaces
+						</CNavLink>
+					</CNavItem>
+				</CNav>
+				<CTabContent>
+					<CTabPane data-tab="known" visible={subPage === 'known'} transition={false}>
+						<MyErrorBoundary>
+							<KnownSurfacesTab />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="discover" visible={subPage === 'discovered'} transition={false}>
+						<MyErrorBoundary>
+							<DiscoveredSurfacesTab />
+						</MyErrorBoundary>
+					</CTabPane>
+				</CTabContent>
+			</div>
 		</div>
 	)
 })
