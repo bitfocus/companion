@@ -173,7 +173,7 @@ export function executeExpression(str, rawVariableValues, requiredType, injected
 		}
 
 		// Make sure to return a value, even if its undefined
-		if (!value) return VARIABLE_UNKNOWN_VALUE
+		if (value === undefined) return VARIABLE_UNKNOWN_VALUE
 
 		return value
 	}

@@ -93,4 +93,15 @@ describe('executeExpression', () => {
 		const res = executeExpression('join($(test:something), "/")', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: '1/2/3', variableIds: new Set(['test:something', 'another:value']) })
 	})
+
+	test('falsey variables', () => {
+		const res = executeExpression("concat($(test:page), '/', $(test:row), '/', $(test:col))", {
+			test: {
+				page: 0,
+				row: '',
+				col: undefined,
+			},
+		})
+		expect(res).toMatchObject({ value: '0//$NA', variableIds: new Set(['test:page', 'test:row', 'test:col']) })
+	})
 })
