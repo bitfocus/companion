@@ -1,4 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { DropdownChoice } from '@companion-module/base'
 
 export interface ClientSurfaceItem {
 	id: string
@@ -45,4 +46,33 @@ export interface SurfacesUpdateUpdateOp {
 	itemId: string
 
 	patch: JsonPatchOperation[]
+}
+
+export interface ClientDiscoveredSurfaceInfo {
+	id: string
+
+	surfaceType: 'satellite'
+
+	name: string
+	addresses: string[]
+	port: number
+
+	apiEnabled: boolean
+}
+
+export type SurfacesDiscoveryUpdate = SurfaceDiscoveryUpdateRemoveOp | SurfaceDiscoveryUpdateUpdateOp
+
+export interface SurfaceDiscoveryUpdateRemoveOp {
+	type: 'remove'
+	itemId: string
+}
+export interface SurfaceDiscoveryUpdateUpdateOp {
+	type: 'update'
+	// itemId: string
+
+	info: ClientDiscoveredSurfaceInfo
+}
+
+export interface CompanionExternalAddresses {
+	addresses: DropdownChoice[]
 }

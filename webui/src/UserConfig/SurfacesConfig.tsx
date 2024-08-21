@@ -37,6 +37,23 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 				</td>
 			</tr>
 			<tr>
+				<td>Watch for Discoverable Companion Satellite Installations</td>
+				<td>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.discoveryEnabled}
+						size="xl"
+						onChange={(e) => setValue('discoveryEnabled', e.currentTarget.checked)}
+					/>
+				</td>
+				<td>
+					<CButton onClick={() => resetValue('discoveryEnabled')} title="Reset to default">
+						<FontAwesomeIcon icon={faUndo} />
+					</CButton>
+				</td>
+			</tr>
+			<tr>
 				<td>
 					Enable connected Streamdecks
 					<br />

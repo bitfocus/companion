@@ -16,7 +16,15 @@ import type {
 	HelpDescription,
 	WrappedImage,
 } from './Model/Common.js'
-import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig, SurfacesUpdate } from './Model/Surfaces.js'
+import type {
+	ClientDevicesListItem,
+	ClientDiscoveredSurfaceInfo,
+	CompanionExternalAddresses,
+	SurfaceGroupConfig,
+	SurfacePanelConfig,
+	SurfacesDiscoveryUpdate,
+	SurfacesUpdate,
+} from './Model/Surfaces.js'
 import type {
 	ClientImportObject,
 	ClientImportSelection,
@@ -234,6 +242,14 @@ export interface ClientToBackendEventsMap {
 	'surfaces:config-set': (surfaceId: string, panelConfig: SurfacePanelConfig) => SurfacePanelConfig | string
 	'surfaces:group-config-get': (groupId: string) => SurfaceGroupConfig
 
+	'surfaces:discovery:join': () => Record<string, ClientDiscoveredSurfaceInfo>
+	'surfaces:discovery:leave': () => void
+	'surfaces:discovery:get-external:addresses': () => CompanionExternalAddresses
+	'surfaces:discovery:setup-satellite': (
+		satelliteInfo: ClientDiscoveredSurfaceInfo,
+		companionAddress: string
+	) => string | null
+
 	'emulator:startup': (emulatorId: string) => EmulatorConfig
 	'emulator:press': (emulatorId: string, column: number, row: number) => void
 	'emulator:release': (emulatorId: string, column: number, row: number) => void
@@ -329,6 +345,8 @@ export interface BackendToClientEventsMap {
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
 	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
+
+	'surfaces:discovery:update': (update: SurfacesDiscoveryUpdate) => void
 
 	'emulator:images': (newImages: EmulatorImage[] | EmulatorImageCache) => void
 	'emulator:config': (patch: JsonPatchOperation[] | EmulatorConfig) => void

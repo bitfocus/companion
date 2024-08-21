@@ -103,6 +103,8 @@ class DataUserConfig extends CoreBase {
 		gridSizeInlineGrow: false, // TODO: temporary until the styling of growing is better
 
 		installName: '',
+
+		discoveryEnabled: true,
 	}
 	/**
 	 * The user configuration settings
@@ -184,6 +186,8 @@ class DataUserConfig extends CoreBase {
 				emberplus_enabled: true,
 
 				xkeys_enable: false,
+
+				discoveryEnabled: true,
 			}
 
 			// check if these fields have already been defined

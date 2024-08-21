@@ -256,6 +256,15 @@ body {
 	grid-template-rows: auto 1fr;
 	row-gap: 5px;
 
+	&.fill-height {
+		height: 100%;
+		padding: 0;
+
+		.tab-content {
+			overflow-y: scroll;
+		}
+	}
+
 	.secondary-panel-header {
 		grid-row: 1;
 		grid-column: 1;

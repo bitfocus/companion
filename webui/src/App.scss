@@ -39,6 +39,10 @@ body {
 	animation-name: fadeIn;
 }
 
+.p-no-margin {
+	margin: 0;
+}
+
 #error-container,
 #current-import-container {
 	display: none;
