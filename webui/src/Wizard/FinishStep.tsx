@@ -37,7 +37,8 @@ export function FinishStep({ oldConfig, newConfig }: FinishStepProps) {
 				(!newConfig.xkeys_enable && oldConfig.xkeys_enable !== newConfig.xkeys_enable) ||
 				(!newConfig.loupedeck_enable && oldConfig.loupedeck_enable !== newConfig.loupedeck_enable) ||
 				(!newConfig.contour_shuttle_enable && oldConfig.contour_shuttle_enable !== newConfig.contour_shuttle_enable) ||
-				(!newConfig.vec_footpedal_enable && oldConfig.vec_footpedal_enable !== newConfig.vec_footpedal_enable)) && (
+				(!newConfig.vec_footpedal_enable && oldConfig.vec_footpedal_enable !== newConfig.vec_footpedal_enable) ||
+				(!newConfig.matrix_enable && oldConfig.matrix_enable !== newConfig.matrix_enable)) && (
 				<CAlert color="danger">
 					After completing this wizard a restart of Companion is required to apply your USB detection settings. You will
 					need to do this manually.

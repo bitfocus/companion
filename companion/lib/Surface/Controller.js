@@ -42,6 +42,7 @@ import ContourShuttleDriver from './USB/ContourShuttle.js'
 import VECFootpedalDriver from './USB/VECFootpedal.js'
 import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
+import MatrixDriver from './USB/Matrix.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
 
@@ -935,6 +936,20 @@ class SurfaceController extends CoreBase {
 											'framework-macropad',
 											FrameworkMacropadDriver
 										)
+									} else if (
+										deviceInfo.vendorId === 0x0203 && // 203 Electronics
+										(deviceInfo.productId & 0xFFC0) == 0x1040 // Matrix Block 6
+									) {
+										if (this.userconfig.getKey('matrix_enable')) {
+											await this.#addDevice(
+												{
+													path: deviceInfo.path,
+													options: {},
+												},
+												'203-matrix',
+												MatrixDriver	
+											)
+										}
 									}
 								}
 							})

@@ -65,6 +65,14 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 				/>
 			</div>
 
+			<div className="indent3">
+				<CFormCheck
+					label="203 Electronics Matrix USB Devices"
+					checked={config.matrix_enable}
+					onChange={(e) => setValue('matrix_enable', e.currentTarget.checked)}
+				/>
+			</div>
+
 			<br />
 			<h5>IP Surface Listeners</h5>
 			<div className="indent3">

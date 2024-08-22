@@ -181,6 +181,27 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 					</CButton>
 				</td>
 			</tr>
+			<tr>
+				<td>
+					Enable connected 203 Electronics Matrix
+					<br />
+					<em>(Requires Companion restart)</em>
+				</td>
+				<td>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.matrix_enable}
+						size="xl"
+						onChange={(e) => setValue('matrix_enable', e.currentTarget.checked)}
+					/>
+				</td>
+				<td>
+					<CButton onClick={() => resetValue('matrix_enable')} title="Reset to default">
+						<FontAwesomeIcon icon={faUndo} />
+					</CButton>
+				</td>
+			</tr>
 		</>
 	)
 })
