@@ -1,5 +1,48 @@
 # Bitfocus Companion
 
+## Companion v3.4.0 - Release Notes
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Add zoom control to button grid view
+- Add internal feedbacks which allow for composition of logic
+- Extend expression syntax:
+  - Expressions can now be multi-line and multi-statement
+  - Add time expression functions
+  - Allow comments
+  - Intermediate value variables
+- Add install name user config and show in header
+- Support per-user install on windows
+- Support for VEC footpedal as a surface
+- Allow surfaces larger than 32 buttons in satellite api
+- Add text color, css colors and row/columns in satellite api
+- Fuzzy match results when searching for actions/feedbacks
+- Update UI to updated framework. This includes small visual changes
+- Various UI tweaks and improvements
+- UI to discover, list and setup Satellite installations
+- Move variables tab to the top level
+- Use url parameters in some more pages, to allow for better bookmarks/links
+- Add row and column to bank_bg_change TCP messages
+- Improve render quality of blank buttons
+- Add variables for machine hostname
+- Various module api enhancements
+
+### 🐞 BUG FIXES
+
+- Updated canvas library, resolving some issues drawing some unicode characters
+- Very large text failing to draw with infinite loop
+- Variables input field not allowing certain character combinations
+- Clarify 'deprecated api' options in user config
+- Navigate back buttons not working when surface is in a group
+- Safari drawing buttons over scrollbar
+- Avoid flickering when draging actions or feedbacks around the editor
+- Avoid ui crash when action/feedback is missing name
+- Importing triggers fails to append due to duplicate ids
+
+### 🧩 NEW & UPDATED MODULES
+
+- 
+
 ## Companion v3.3.1 - Release Notes
 
 ### 🐞 BUG FIXES
