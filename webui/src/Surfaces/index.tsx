@@ -12,7 +12,7 @@ import { NavLink, NavigateFunction, useLocation, useNavigate } from 'react-route
 
 export const SURFACES_PAGE_PREFIX = '/surfaces'
 
-type SubPageType = 'known' | 'discovered'
+type SubPageType = 'configured' | 'discover'
 
 function useSurfacesSubPage(): SubPageType | null | false {
 	const routerLocation = useLocation()
@@ -21,13 +21,13 @@ function useSurfacesSubPage(): SubPageType | null | false {
 	const subPage = fragments[0]
 	if (!subPage) return null
 
-	if (subPage !== 'known' && subPage !== 'discovered') return null
+	if (subPage !== 'configured' && subPage !== 'discover') return null
 
 	return subPage
 }
 
 function navigateToSubPage(navigate: NavigateFunction, subPage: SubPageType | null): void {
-	if (!subPage) subPage = 'known'
+	if (!subPage) subPage = 'configured'
 
 	navigate(`${SURFACES_PAGE_PREFIX}/${subPage}`)
 }
@@ -36,9 +36,10 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	const navigate = useNavigate()
 
 	const subPage = useSurfacesSubPage()
+	console.log('subPage', subPage)
 	if (subPage === false) return null
 	if (!subPage) {
-		navigateToSubPage(navigate, null)
+		setTimeout(() => navigateToSubPage(navigate, null), 0)
 		return null
 	}
 
@@ -51,25 +52,25 @@ export const SurfacesPage = observer(function SurfacesPage() {
 			<div className="secondary-panel-inner">
 				<CNav variant="tabs" role="tablist">
 					<CNavItem>
-						<CNavLink to={`${SURFACES_PAGE_PREFIX}/known`} as={NavLink}>
-							Known Surfaces
+						<CNavLink to={`${SURFACES_PAGE_PREFIX}/configured`} as={NavLink}>
+							Configured Surfaces
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
-						<CNavLink to={`${SURFACES_PAGE_PREFIX}/discovered`} as={NavLink}>
-							Discovered Surfaces
+						<CNavLink to={`${SURFACES_PAGE_PREFIX}/discover`} as={NavLink}>
+							Discover
 						</CNavLink>
 					</CNavItem>
 				</CNav>
 				<CTabContent>
-					<CTabPane data-tab="known" visible={subPage === 'known'} transition={false}>
+					<CTabPane data-tab="configured" visible={subPage === 'configured'} transition={false}>
 						<MyErrorBoundary>
-							<KnownSurfacesTab />
+							<ConfiguredSurfacesTab />
 						</MyErrorBoundary>
 					</CTabPane>
-					<CTabPane data-tab="discover" visible={subPage === 'discovered'} transition={false}>
+					<CTabPane data-tab="discover" visible={subPage === 'discover'} transition={false}>
 						<MyErrorBoundary>
-							<DiscoveredSurfacesTab />
+							<DiscoverSurfacesTab />
 						</MyErrorBoundary>
 					</CTabPane>
 				</CTabContent>
@@ -78,7 +79,7 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	)
 })
 
-function KnownSurfacesTab() {
+function ConfiguredSurfacesTab() {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
@@ -150,7 +151,7 @@ function KnownSurfacesTab() {
 	)
 }
 
-function DiscoveredSurfacesTab() {
+function DiscoverSurfacesTab() {
 	return (
 		<>
 			<p style={{ marginBottom: '0.5rem' }}>

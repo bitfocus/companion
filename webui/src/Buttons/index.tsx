@@ -250,7 +250,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	if (pageNumber === null) {
 		return <></>
 	} else if (pageNumber <= 0) {
-		navigateToButtonsPage(navigate, getLastPageNumber())
+		setTimeout(() => navigateToButtonsPage(navigate, getLastPageNumber()), 0)
 		return <></>
 	}
 
