@@ -41,7 +41,7 @@
 
 ### 🧩 NEW & UPDATED MODULES
 
-- 
+-
 
 ## Companion v3.3.1 - Release Notes
 
