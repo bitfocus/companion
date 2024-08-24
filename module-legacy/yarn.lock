@@ -1524,17 +1524,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-ifelseware-avplayback/tar.gz/537a64980c7857907691f7187be29cd4584e2cff"
 
-"companion-module-imagine-lrc@github:bitfocus/companion-module-imagine-lrc#v1.1.0":
-  version "1.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-imagine-lrc/tar.gz/d30623d63243d432b0703413ef5f54b37c47eb1d"
-
 "companion-module-joy-playdeck@github:bitfocus/companion-module-joy-playdeck#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-joy-playdeck/tar.gz/f854d9662c452c2715c79bf142b257a3790fa14f"
-
-"companion-module-kramer-matrix@github:bitfocus/companion-module-kramer-matrix#v1.2.3":
-  version "1.2.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-kramer-matrix/tar.gz/1e27e5c22993abdb1c8662f6bdb50a107796669d"
 
 "companion-module-kramer-vp727@github:bitfocus/companion-module-kramer-vp727#v1.0.4":
   version "1.0.4"
