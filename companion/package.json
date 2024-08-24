@@ -77,7 +77,7 @@
 		"lru-cache": "^10.4.3",
 		"nanoid": "^5.0.7",
 		"node-machine-id": "^1.1.12",
-		"osc": "^2.4.4",
+		"osc": "2.4.5",
 		"p-debounce": "^4.0.0",
 		"p-queue": "^8.0.1",
 		"path-to-regexp": "^7.1.0",
