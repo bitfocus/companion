@@ -938,7 +938,9 @@ class SurfaceController extends CoreBase {
 										)
 									} else if (
 										deviceInfo.vendorId === 0x0203 && // 203 Electronics
-										(deviceInfo.productId & 0xFFC0) == 0x1040 // Matrix Block 6
+										(deviceInfo.productId & 0xFFC0) == 0x1040 && // Matrix Block 6
+										deviceInfo.usagePage === 0xff00 && // rawhid interface
+										deviceInfo.usage === 0x01
 									) {
 										if (this.userconfig.getKey('matrix_enable')) {
 											await this.#addDevice(

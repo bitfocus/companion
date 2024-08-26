@@ -17,15 +17,14 @@
 
 import { EventEmitter } from 'events'
 import LogController from '../../Log/Controller.js'
-import { HIDAsync } from 'node-hid'
 import { colorToRgb } from './Util.js'
+import HID from 'node-hid';
 
 /**
  * This is an implementation of a simple MIDI device for the 203 Electronics Matrix control surface.
  * Hardware: https://203.io/
  * It uses a specific OS available from https://github.com/203Electronics/MatrixOS
- * This driver targets the Matrix OS's Performance APP,
- * but will switch to an HID implementation in the future with a dedicated app.
+ * This driver targets the Matrix OS's Companion APP,
  */
 class SurfaceUSB203Matrix extends EventEmitter {
 	/**
@@ -43,15 +42,29 @@ class SurfaceUSB203Matrix extends EventEmitter {
 
 	/**
 	 * HID device
-	 * @type {import('node-hid').HIDAsync}
+	 * @type {import('node-hid').HIDDevice}
 	 * @access private
 	 * @readonly
 	 */
 	#device
 
 	/**
+	 * Last drawn colours, to allow resending when app launched or other off sync situations
+	 * @type {{ r: number, g: number, b: number }[][]}
+	 * @access private
+	 */
+	#lastColours
+
+	/**
+	 * Device is active or not
+	 * @type {boolean
+	 * @access private
+	 */
+		deviceActive = false;
+
+	/**
 	 * @param {string} devicePath
-	 * @param {import('node-hid').HIDAsync} device // TODO Change to Midi
+	 * @param {import('node-hid').HIDDevice} device
 	 */
 	constructor(devicePath, device) {
 		super()
@@ -83,11 +96,23 @@ class SurfaceUSB203Matrix extends EventEmitter {
 			this.emit('remove')
 		})
 
+		this.#inquiryActive()
+		this.#clearPanel()
+
 		this.#device.on('data', (data) => {
-			if (data[0] === 0x50) {
-				const x = data[1] - 1
-				const y = data[2] - 1
-				const pressed = data[3] > 0
+			if (data[0] === 0xff && data[1] === 0x01) {
+				if(data[2] == 1){
+					this.deviceActive = true;
+					this.#refreshPanel()
+				}
+				else{
+					this.deviceActive = false;
+				}
+			}
+			else if (data[0] === 0xff && data[1] === 0x10) {
+				const x = data[2]
+				const y = data[3]
+				const pressed = data[4] > 0
 
 				this.emit('click', x, y, pressed)
 			}
@@ -100,17 +125,17 @@ class SurfaceUSB203Matrix extends EventEmitter {
 	 * @returns {Promise<SurfaceUSB203Matrix>}
 	 */
 	static async create(devicePath) {
-		const device = await HIDAsync.open(devicePath)
+		const device = new HID.HID(devicePath)
 
 		try {
 			const self = new SurfaceUSB203Matrix(devicePath, device)
 
-			// Make sure the first clear happens properly
+			// Make sure the first clear happens properly & set up the lastColours array
 			self.clearDeck()
 
 			return self
 		} catch (e) {
-			await device.close().catch(() => null)
+			device.close()
 
 			throw e
 		}
@@ -124,6 +149,7 @@ class SurfaceUSB203Matrix extends EventEmitter {
 	 */
 	setConfig(config, force) {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
+			
 			this.#updateBrightness(config.brightness)
 		}
 
@@ -131,26 +157,38 @@ class SurfaceUSB203Matrix extends EventEmitter {
 	}
 
 	quit() {
-		this.#clearPanel()
-			.catch((e) => {
-				this.#logger.debug(`Clear deck failed: ${e}`)
-			})
-			.then(() => {
-				//close after the clear has been sent
-				this.#device.close()  // TODO
-			})
+		this.clearDeck
 	}
 
 	clearDeck() {
-		this.#clearPanel().catch((e) => {
-			this.#logger.debug(`Clear deck failed: ${e}`)
-		})
+		this.#clearPanel()
 	}
 
-	#clearPanel() { // TODO
-		const clearBuffer = Buffer.alloc(32)
-		clearBuffer.writeUint8(0x0b, 0)
-		return this.#device.write(clearBuffer)
+	#clearPanel() {
+		this.#lastColours = Array.from({ length: this.gridSize.columns }, () => Array.from({ length: this.gridSize.rows }, () => ({ r: 0, g: 0, b: 0 })));
+
+		if(!this.deviceActive) {
+			return
+		}
+
+		this.#device.write([0xff, 0x21])
+	}
+
+	#refreshPanel() {
+		// Clear the panel first
+		this.#device.write([0xff, 0x21])
+
+		for (let y = 0; y < this.gridSize.rows; y++) {
+			for (let x = 0; x < this.gridSize.columns; x++) {
+				var color = this.#lastColours[x][y]
+				if(color.r == 0 && color.g == 0 && color.b == 0){
+					continue;
+				}
+				this.#writeKeyColour(x, y, color, true)
+			}
+		}
+
+
 	}
 
 	/**
@@ -162,6 +200,7 @@ class SurfaceUSB203Matrix extends EventEmitter {
 	 */
 	draw(x, y, render) {
 		const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+
 		this.#writeKeyColour(x, y, color)
 	}
 
@@ -170,27 +209,33 @@ class SurfaceUSB203Matrix extends EventEmitter {
 	 * @param {number} x
 	 * @param {number} y
 	 * @param {{ r: number, g: number, b: number }} color
+	 * @param {boolean} forced
 	 */
-	#writeKeyColour(x, y, color) {  // TODO
-		const fillBuffer = Buffer.alloc(32)
-		fillBuffer.writeUint8(0x0f, 0)
-		fillBuffer.writeUint8(x + 1, 1)
-		fillBuffer.writeUint8(y + 1, 2)
+	#writeKeyColour(x, y, color, forced = false) {
+		if(!this.deviceActive){
+			return;
+		}
+		
+		var lastColor = this.#lastColours[x][y]
+		
+		if(!forced && color.r == lastColor.r && color.g == lastColor.g && color.b == lastColor.b){
+			return;
+		}
 
-		fillBuffer.writeUint8(color.r, 3)
-		fillBuffer.writeUint8(color.g, 4)
-		fillBuffer.writeUint8(color.b, 5)
+		this.#lastColours[x][y] = color
 
-		this.#device.write(fillBuffer).catch((e) => {
-			this.#logger.error(`write failed: ${e}`)
-		})
+		this.#device.write([0xff, 0x20, x, y, color.r, color.g, color.b])
 	}
 
 	/**
 	 * @param {number} brightness
 	 */
 	#updateBrightness(brightness) {
-		// TODO
+		this.#device.write([0xff, 0x30, brightness])
+	}
+
+	#inquiryActive() {
+		this.#device.write([0xff, 0x01])
 	}
 }
 
