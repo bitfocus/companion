@@ -118,7 +118,7 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 						// @ts-ignore
 						const value = getVariableValue(node.name)
 						if (value === undefined) throw new Error(`Missing variable value for "${coreNode.name}"`)
-						return value
+						return structuredClone(value)
 					}
 					case 'TemplateLiteral': {
 						let result = ''
@@ -199,79 +199,69 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 
 						/** @type {any} */
 						const left = node.left
-						if (left.type !== 'Identifier') throw new Error('Can only assign to an Identifier')
+						if (left.type === 'Identifier') {
+							const newValue = mutateValueForAssignment(node.operator, resolverState.values[left.name], rightValue)
 
-						let newValue = resolverState.values[left.name]
-						switch (node.operator) {
-							case '=':
-								newValue = rightValue
-								break
-							case '*=':
-								newValue = Number(newValue) * Number(rightValue)
-								break
-							case '**=':
-								newValue = Number(newValue) ** Number(rightValue)
-								break
-							case '/=':
-								newValue = Number(newValue) / Number(rightValue)
-								break
-							case '%=':
-								newValue = Number(newValue) % Number(rightValue)
-								break
-							case '+=':
-								newValue = Number(newValue) + Number(rightValue)
-								break
-							case '-=':
-								newValue = Number(newValue) - Number(rightValue)
-								break
-							case '<<=':
-								newValue = Number(newValue) << Number(rightValue)
-								break
-							case '>>=':
-								newValue = Number(newValue) >> Number(rightValue)
-								break
-							case '&=':
-								newValue = Number(newValue) & Number(rightValue)
-								break
-							case '^=':
-								newValue = Number(newValue) ^ Number(rightValue)
-								break
-							case '|=':
-								newValue = Number(newValue) | Number(rightValue)
-								break
-							case '||=':
-								newValue = newValue || rightValue
-								break
-							case '&&=':
-								newValue = newValue || rightValue
-								break
-							default:
-								throw new Error(`Unsupported assignment operator "${coreNode.operator}"`)
+							resolverState.values[left.name] = newValue
+							return newValue
+						} else if (left.type === 'MemberExpression') {
+							// @ts-ignore
+							const object = resolve(left.object)
+							// @ts-ignore
+							const property = resolve(left.property)
+
+							const newValue = mutateValueForAssignment(node.operator, object[property], rightValue)
+
+							object[property] = newValue
+							return rightValue
+						} else {
+							throw new Error(`Cannot assign to an ${left.type}`)
 						}
-
-						resolverState.values[left.name] = newValue
-						return newValue
 					}
 					case 'UpdateExpression': {
 						/** @type {any} */
 						const arg = node.argument
-						if (arg.type !== 'Identifier') throw new Error('Can only update an Identifier')
+						if (arg.type === 'Identifier') {
+							switch (node.operator) {
+								case '++':
+									if (node.prefix) {
+										return ++resolverState.values[arg.name]
+									} else {
+										return resolverState.values[arg.name]++
+									}
+								case '--':
+									if (node.prefix) {
+										return --resolverState.values[arg.name]
+									} else {
+										return resolverState.values[arg.name]--
+									}
+								default:
+									throw new Error(`Unsupported assignment operator "${coreNode.operator}"`)
+							}
+						} else if (arg.type === 'MemberExpression') {
+							// @ts-ignore
+							const object = resolve(arg.object)
+							// @ts-ignore
+							const property = resolve(arg.property)
 
-						switch (node.operator) {
-							case '++':
-								if (node.prefix) {
-									return ++resolverState.values[arg.name]
-								} else {
-									return resolverState.values[arg.name]++
-								}
-							case '--':
-								if (node.prefix) {
-									return --resolverState.values[arg.name]
-								} else {
-									return resolverState.values[arg.name]--
-								}
-							default:
-								throw new Error(`Unsupported assignment operator "${coreNode.operator}"`)
+							switch (node.operator) {
+								case '++':
+									if (node.prefix) {
+										return ++object[property]
+									} else {
+										return object[property]++
+									}
+								case '--':
+									if (node.prefix) {
+										return --object[property]
+									} else {
+										return object[property]--
+									}
+								default:
+									throw new Error(`Unsupported assignment operator "${coreNode.operator}"`)
+							}
+						} else {
+							throw new Error(`Cannot update ${arg.type}`)
 						}
 					}
 					case 'Identifier': {
@@ -292,4 +282,46 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 	}
 
 	return resolve(node)
+}
+
+/**
+ * Mutate a value based on an assignment operator
+ * @param {string} operator
+ * @param {any} leftValue
+ * @param {any} rightValue
+ * @returns
+ */
+function mutateValueForAssignment(operator, leftValue, rightValue) {
+	switch (operator) {
+		case '=':
+			return rightValue
+		case '*=':
+			return Number(leftValue) * Number(rightValue)
+		case '**=':
+			return Number(leftValue) ** Number(rightValue)
+		case '/=':
+			return Number(leftValue) / Number(rightValue)
+		case '%=':
+			return Number(leftValue) % Number(rightValue)
+		case '+=':
+			return Number(leftValue) + Number(rightValue)
+		case '-=':
+			return Number(leftValue) - Number(rightValue)
+		case '<<=':
+			return Number(leftValue) << Number(rightValue)
+		case '>>=':
+			return Number(leftValue) >> Number(rightValue)
+		case '&=':
+			return Number(leftValue) & Number(rightValue)
+		case '^=':
+			return Number(leftValue) ^ Number(rightValue)
+		case '|=':
+			return Number(leftValue) | Number(rightValue)
+		case '||=':
+			return leftValue || rightValue
+		case '&&=':
+			return leftValue || rightValue
+		default:
+			throw new Error(`Unsupported assignment operator "${operator}"`)
+	}
 }

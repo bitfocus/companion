@@ -326,4 +326,52 @@ describe('resolver', function () {
 			expect(result).toBe(2)
 		})
 	})
+
+	describe('assignment - array', () => {
+		it('array set', () => {
+			const result = resolve(parse('a = [4,5,6]\na[1]=2\nreturn a'), undefined)
+			expect(result).toEqual([4, 2, 6])
+		})
+
+		it('array set with semi colons', () => {
+			const result = resolve(parse('a=[4,5,6];a[1]=2;return a;'), undefined)
+			expect(result).toEqual([4, 2, 6])
+		})
+
+		it('array +=', () => {
+			const result = resolve(parse('a = [4,5,6]\na[1]+=2\nreturn a'), undefined)
+			expect(result).toEqual([4, 7, 6])
+		})
+
+		it('no return', () => {
+			const result = resolve(parse('a=[4,5,6]\na[1] = 1'), undefined)
+			expect(result).toEqual(1)
+		})
+
+		it('no return with update', () => {
+			const result = resolve(parse('a = [4,5,6]; ++a[0]'), undefined)
+			expect(result).toEqual(5)
+		})
+
+		it('return with update', () => {
+			const result = resolve(parse('a = [4,5,6]; ++a[0]; a'), undefined)
+			expect(result).toEqual([5, 5, 6])
+		})
+
+		it('mutate in place', () => {
+			const inputValue = [1, 2, 3]
+			const getVariable = (id) => {
+				switch (id) {
+					case 'some:var':
+						return inputValue
+				}
+			}
+
+			const result = resolve(parse('a = $(some:var); a[1]=5; a'), getVariable)
+			expect(result).toEqual([1, 5, 3])
+
+			// Ensure input is unchanged
+			expect(inputValue).toEqual([1, 2, 3])
+		})
+	})
 })
