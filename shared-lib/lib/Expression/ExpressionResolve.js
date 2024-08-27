@@ -286,7 +286,7 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 
 /**
  * Mutate a value based on an assignment operator
- * @param {string} operator
+ * @param {unknown} operator
  * @param {any} leftValue
  * @param {any} rightValue
  * @returns
