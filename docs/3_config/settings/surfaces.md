@@ -20,5 +20,5 @@ More details on supported surfaces are available in the chapter on [Surfaces](#7
 - **Enable connected VEC Footpedal (Requires Companion restart)**
   Whether to enable support for connecting to VEC Footpedal devices.
 
-- **Enable connected 203 Electronics Matrix (Requires Companion restart)**
-  Whether to enable support for connecting to 203 Electronics Matrix
+- **Enable connected 203 Systems Mystrix (Requires Companion restart)**
+  Whether to enable support for connecting to 203 Systems Mystrix

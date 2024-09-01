@@ -67,9 +67,9 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 
 			<div className="indent3">
 				<CFormCheck
-					label="203 Electronics Matrix USB Devices"
-					checked={config.matrix_enable}
-					onChange={(e) => setValue('matrix_enable', e.currentTarget.checked)}
+					label="203 Systems Mystrix USB Devices"
+					checked={config.mystrix_enable}
+					onChange={(e) => setValue('mystrix_enable', e.currentTarget.checked)}
 				/>
 			</div>
 

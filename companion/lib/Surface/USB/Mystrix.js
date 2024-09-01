@@ -21,12 +21,12 @@ import { colorToRgb } from './Util.js'
 import HID from 'node-hid';
 
 /**
- * This is an implementation of a simple MIDI device for the 203 Electronics Matrix control surface.
+ * This is an implementation of a simple MIDI device for the 203 Systems Mystrix control surface.
  * Hardware: https://203.io/
  * It uses a specific OS available from https://github.com/203Electronics/MatrixOS
  * This driver targets the Matrix OS's Companion APP,
  */
-class SurfaceUSB203Matrix extends EventEmitter {
+class SurfaceUSB203Mystrix extends EventEmitter {
 	/**
 	 * @type {import('winston').Logger}
 	 * @access private
@@ -69,21 +69,21 @@ class SurfaceUSB203Matrix extends EventEmitter {
 	constructor(devicePath, device) {
 		super()
 
-		this.#logger = LogController.createLogger(`Surface/USB/203Matrix/${devicePath}`)
+		this.#logger = LogController.createLogger(`Surface/USB/203Mystrix/${devicePath}`)
 
 		this.config = {
 			brightness: 100,
 		}
 
-		this.#logger.debug(`Adding 203 Matrix USB device: ${devicePath}`)
+		this.#logger.debug(`Adding 203 Systems Mystrix USB device: ${devicePath}`)
 
 		this.#device = device
 
 		this.info = {
-			type: `203 Electronics Matrix`,
+			type: `203 Systems Mystrix`,
 			devicePath: devicePath,
 			configFields: [],
-			deviceId: `203-matrix`,
+			deviceId: `203-mystrix`,
 		}
 
 		this.gridSize = {
@@ -120,15 +120,15 @@ class SurfaceUSB203Matrix extends EventEmitter {
 	}
 
 	/**
-	 * Open a 203 Matrix
+	 * Open a 203 Systems Mystrix
 	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSB203Matrix>}
+	 * @returns {Promise<SurfaceUSB203Mystrix>}
 	 */
 	static async create(devicePath) {
 		const device = new HID.HID(devicePath)
 
 		try {
-			const self = new SurfaceUSB203Matrix(devicePath, device)
+			const self = new SurfaceUSB203Mystrix(devicePath, device)
 
 			// Make sure the first clear happens properly & set up the lastColours array
 			self.clearDeck()
@@ -239,4 +239,4 @@ class SurfaceUSB203Matrix extends EventEmitter {
 	}
 }
 
-export default SurfaceUSB203Matrix
+export default SurfaceUSB203Mystrix

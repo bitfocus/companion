@@ -42,7 +42,7 @@ import ContourShuttleDriver from './USB/ContourShuttle.js'
 import VECFootpedalDriver from './USB/VECFootpedal.js'
 import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
-import MatrixDriver from './USB/Matrix.js'
+import MystrixDriver from './USB/Mystrix.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
 
@@ -937,19 +937,19 @@ class SurfaceController extends CoreBase {
 											FrameworkMacropadDriver
 										)
 									} else if (
-										deviceInfo.vendorId === 0x0203 && // 203 Electronics
-										(deviceInfo.productId & 0xFFC0) == 0x1040 && // Matrix Block 6
+										deviceInfo.vendorId === 0x0203 && // 203 Systems
+										(deviceInfo.productId & 0xFFC0) == 0x1040 && // Mystrix
 										deviceInfo.usagePage === 0xff00 && // rawhid interface
 										deviceInfo.usage === 0x01
 									) {
-										if (this.userconfig.getKey('matrix_enable')) {
+										if (this.userconfig.getKey('mystrix_enable')) {
 											await this.#addDevice(
 												{
 													path: deviceInfo.path,
 													options: {},
 												},
-												'203-matrix',
-												MatrixDriver	
+												'203-mystrix',
+												MystrixDriver	
 											)
 										}
 									}

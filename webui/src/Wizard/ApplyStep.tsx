@@ -81,13 +81,13 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 		)
 	}
 
-	if (oldConfig.setup_wizard === 0 || oldConfig.matrix_enable !== newConfig.matrix_enable) {
+	if (oldConfig.setup_wizard === 0 || oldConfig.mystrix_enable !== newConfig.mystrix_enable) {
 		changes.push(
-			newConfig.matrix_enable ? (
-				<li>203 Electronics Matrix hardware will be detected by Companion.</li>
+			newConfig.mystrix_enable ? (
+				<li>203 Systems Mystrix hardware will be detected by Companion.</li>
 			) : (
 				<li>
-					203 Electronics Matrix hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be detected by Companion.
+					203 Systems Mystrix hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be detected by Companion.
 				</li>
 			)
 		)

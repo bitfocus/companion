@@ -183,7 +183,7 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 			</tr>
 			<tr>
 				<td>
-					Enable connected 203 Electronics Matrix
+					Enable connected 203 Systems Mystrix
 					<br />
 					<em>(Requires Companion restart)</em>
 				</td>
@@ -191,13 +191,13 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 					<CFormSwitch
 						className="float-right"
 						color="success"
-						checked={config.matrix_enable}
+						checked={config.mystrix_enable}
 						size="xl"
-						onChange={(e) => setValue('matrix_enable', e.currentTarget.checked)}
+						onChange={(e) => setValue('mystrix_enable', e.currentTarget.checked)}
 					/>
 				</td>
 				<td>
-					<CButton onClick={() => resetValue('matrix_enable')} title="Reset to default">
+					<CButton onClick={() => resetValue('mystrix_enable')} title="Reset to default">
 						<FontAwesomeIcon icon={faUndo} />
 					</CButton>
 				</td>
