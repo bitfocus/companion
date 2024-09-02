@@ -294,6 +294,10 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 				this.server.on('connection', this.#processIncoming.bind(this))
 
+				this.server.on('error', (err) => {
+					this.logger.error(`Error: ${err.message}`)
+				})
+
 				this.currentState = true
 				this.logger.info('Listening on port ' + this.port)
 			} catch (/** @type {any} */ e) {
