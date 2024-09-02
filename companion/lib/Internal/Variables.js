@@ -202,7 +202,8 @@ export default class Variables {
 
 				return !!res.value
 			} catch (e) {
-				this.#logger.warn(`Failed to execute expression "${feedback.options.expression}": ${e}`)
+				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
+				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${e}`)
 
 				return false
 			}

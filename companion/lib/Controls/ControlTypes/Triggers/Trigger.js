@@ -203,7 +203,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @param {boolean} isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(registry, eventBus, controlId, storage, isImport) {
-		super(registry, controlId, 'Controls/ControlTypes/Triggers')
+		super(registry, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
 		this.actions = new FragmentActions(
 			registry.internalModule,
