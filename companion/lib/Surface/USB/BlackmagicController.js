@@ -1,7 +1,7 @@
 /*
  * This file is part of the Companion project
  * Copyright (c) 2018 Bitfocus AS
- * Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
+ * Authors: Julian Waller <me@julusian.co.uk>
  *
  * This program is free software.
  * You should have received a copy of the MIT licence as well as the Bitfocus
@@ -98,16 +98,6 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 			this.#logger.silly(`T-bar position has changed`, value)
 			this.emit('setVariable', 't-bar', value)
 		})
-
-		// this.#device.on('data', (data) => {
-		// 	if (data[0] === 0x50) {
-		// 		const x = data[1] - 1
-		// 		const y = data[2] - 1
-		// 		const pressed = data[3] > 0
-
-		// 		this.emit('click', x, y, pressed)
-		// 	}
-		// })
 	}
 	async #init() {
 		const serialNumber = await this.#device.getSerialNumber()
