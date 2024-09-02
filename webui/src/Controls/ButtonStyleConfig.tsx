@@ -19,7 +19,7 @@ import { InlineHelp } from '../Components/InlineHelp.js'
 interface ButtonStyleConfigProps {
 	controlId: string
 	controlType: string
-	style: Record<string, any> | undefined
+	style: ButtonStyleProperties | undefined
 	configRef: MutableRefObject<SomeButtonModel | undefined>
 	mainDialog?: boolean
 }
@@ -122,7 +122,7 @@ export function ButtonStyleConfig({
 }
 
 interface ButtonStyleConfigFieldsProps {
-	values: Record<string, any>
+	values: ButtonStyleProperties
 	setValueInner: (key: string, value: any) => void
 	setPng: (png64: string | null) => void
 	setPngError: (error: string | null) => void
@@ -253,7 +253,7 @@ export function ButtonStyleConfigFields({
 								label={'Topbar'}
 								choices={SHOW_HIDE_TOP_BAR}
 								setValue={setShowTopBar}
-								value={values.show_topbar}
+								value={(values.show_topbar as string) ?? false}
 								multiple={false}
 								helpText="By default, you have a top bar with the button name and the page number. With this option, you can manually override the default behavior."
 							/>

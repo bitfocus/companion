@@ -104,7 +104,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 						allowCustom &&
 						compiledRegex &&
 						!options.find((c) => c.value === val) &&
-						(typeof val !== 'string' || !val.match(compiledRegex))
+						!compiledRegex.exec(String(val))
 					) {
 						return false
 					}
@@ -115,7 +115,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 					allowCustom &&
 					compiledRegex &&
 					!options.find((c) => c.value === newValue) &&
-					(typeof newValue !== 'string' || !newValue.match(compiledRegex))
+					!compiledRegex.exec(String(newValue))
 				) {
 					return false
 				}
