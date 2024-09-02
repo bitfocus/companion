@@ -53,6 +53,18 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 				requiresRestart
 				field="vec_footpedal_enable"
 			/>
+			<UserConfigSwitchRow
+				userConfig={props}
+				label={
+					<>
+						Enable connected Blackmagic Atem Micro Panel
+						<br />
+						<em>You must not run the Atem software at the same time</em>
+					</>
+				}
+				requiresRestart
+				field="blackmagic_controller_enable"
+			/>
 		</>
 	)
 })

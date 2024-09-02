@@ -23,6 +23,7 @@ import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
+import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
 // @ts-ignore
 import shuttleControlUSB from 'shuttle-control-usb'
@@ -44,6 +45,7 @@ import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
+import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -900,6 +902,11 @@ class SurfaceController extends CoreBase {
 										deviceInfo.usage === 0x61
 									) {
 										await this.#addDevice(deviceInfo.path, {}, 'framework-macropad', FrameworkMacropadDriver)
+									} else if (
+										this.userconfig.getKey('blackmagic_controller_enable') &&
+										getBlackmagicControllerDeviceInfo(deviceInfo)
+									) {
+										await this.#addDevice(deviceInfo.path, {}, 'blackmagic-controller', SurfaceUSBBlackmagicController)
 									}
 								}
 							})
