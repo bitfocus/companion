@@ -188,26 +188,46 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	}
 
 	/**
+	 * Draw multiple buttons
+	 * @param {import('../Handler.js').DrawButtonItem[]} renders
+	 */
+	drawMany(renders) {
+		/** @type {import('@blackmagic-controller/core').BlackmagicControllerSetButtonColorValue[]} */
+		const colors = []
+
+		const threshold = 100 // Use a lower than 50% threshold, to make it more sensitive
+
+		for (const { x, y, image } of renders) {
+			const control = this.#device.CONTROLS.find(
+				(control) => control.type === 'button' && control.row === y && control.column === x
+			)
+			if (!control) continue
+
+			const color = colorToRgb(image.bgcolor)
+			colors.push({
+				// @ts-ignore
+				keyId: control.id,
+				red: color.r >= threshold,
+				green: color.g >= threshold,
+				blue: color.b >= threshold,
+			})
+		}
+
+		// Future: maybe this should debounce, to be able to batch better
+		this.#device.setButtonColors(colors).catch((e) => {
+			this.#logger.error(`write failed: ${e}`)
+		})
+	}
+
+	/**
 	 * Draw a button
 	 * @param {number} x
 	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
+	 * @param {import('../../Graphics/ImageResult.js').ImageResult} image
 	 * @returns {void}
 	 */
-	draw(x, y, render) {
-		const control = this.#device.CONTROLS.find(
-			(control) => control.type === 'button' && control.row === y && control.column === x
-		)
-		if (!control) return
-
-		const color = colorToRgb(render.bgcolor)
-		const threshold = 100 // Use a lower than 50% threshold, to make it more sensitive
-
-		this.#device
-			// @ts-expect-error, the type is not correct because tbar
-			.setButtonColor(control.id, color.r >= threshold, color.g >= threshold, color.b >= threshold)
-			.catch((e) => {
-				this.#logger.error(`write failed: ${e}`)
-			})
+	draw(x, y, image) {
+		// Should never be called, implement just in case
+		return this.drawMany([{ x, y, image }])
 	}
 }
