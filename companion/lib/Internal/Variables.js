@@ -51,8 +51,6 @@ function compareValues(op, value, value2) {
 }
 
 export default class Variables {
-	#logger = LogController.createLogger('Internal/Variables')
-
 	/**
 	 * @type {import('./Controller.js').default}
 	 * @readonly
