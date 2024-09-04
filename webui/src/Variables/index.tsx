@@ -74,8 +74,13 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 		const compactName = moduleInfo?.name?.replace(/\;.*/, '...')
 
 		return (
-			<CButton key={connectionId} color="primary" onClick={() => setConnectionId(connectionId ?? null)}>
-				<h6>{label ?? connectionId}</h6> <small>{compactName ?? '?'}</small>
+			<CButton
+				title={moduleInfo?.name}
+				key={connectionId}
+				color="primary"
+				onClick={() => setConnectionId(connectionId ?? null)}
+			>
+				<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
 			</CButton>
 		)
 	})
