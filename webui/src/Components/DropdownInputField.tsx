@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import React, { createContext, useContext, useMemo, useEffect, useCallback, memo } from 'react'
 import Select from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
+import { InlineHelp } from './InlineHelp.js'
 
 export const MenuPortalContext = createContext<HTMLElement | null>(null)
 
@@ -23,6 +24,7 @@ interface DropdownInputFieldProps<Multi extends boolean> {
 	setValue: (value: AsType<Multi>) => void
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
+	helpText?: string
 }
 
 interface DropdownChoiceInt {
@@ -44,6 +46,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	setValue,
 	setValid,
 	disabled,
+	helpText,
 }: DropdownInputFieldProps<Multi>) {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -101,7 +104,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 						allowCustom &&
 						compiledRegex &&
 						!options.find((c) => c.value === val) &&
-						(typeof val !== 'string' || !val.match(compiledRegex))
+						!compiledRegex.exec(String(val))
 					) {
 						return false
 					}
@@ -112,7 +115,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 					allowCustom &&
 					compiledRegex &&
 					!options.find((c) => c.value === newValue) &&
-					(typeof newValue !== 'string' || !newValue.match(compiledRegex))
+					!compiledRegex.exec(String(newValue))
 				) {
 					return false
 				}
@@ -131,7 +134,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	const onChange = useCallback(
 		(e: DropdownChoiceInt | DropdownChoiceInt[]) => {
 			const isMultiple = !!multiple
-			const newValue = Array.isArray(e) ? e?.map((v) => v.value) ?? [] : e?.value
+			const newValue = Array.isArray(e) ? (e?.map((v) => v.value) ?? []) : e?.value
 
 			const isValid = isValueValid(newValue)
 
@@ -167,6 +170,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	const selectProps: Partial<CreatableProps<any, any, any>> = {
 		isDisabled: disabled,
 		classNamePrefix: 'select-control',
+		className: 'select-control',
 		menuPortalTarget: menuPortal || document.body,
 		menuShouldBlockScroll: !!menuPortal, // The dropdown doesn't follow scroll when in a modal
 		menuPosition: 'fixed',
@@ -200,12 +204,18 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 			className={classNames({
 				'select-tooltip': true,
 				'select-invalid': !isValueValid(
-					isMultiple && currentValue ? currentValue.map((v) => v.value) ?? [] : currentValue[0]?.value
+					isMultiple && currentValue ? (currentValue.map((v) => v.value) ?? []) : currentValue[0]?.value
 				),
 			})}
 			title={tooltip}
 		>
-			{label ? <CFormLabel>{label}</CFormLabel> : null}
+			{helpText ? (
+				<InlineHelp help={helpText}>
+					<>{label ? <CFormLabel>{label}</CFormLabel> : null}</>
+				</InlineHelp>
+			) : (
+				<>{label ? <CFormLabel>{label}</CFormLabel> : null}</>
+			)}
 			{allowCustom ? (
 				<CreatableSelect
 					{...selectProps}

@@ -77,7 +77,7 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 			type: `Framework Macropad`,
 			devicePath: devicePath,
 			configFields: ['brightness'],
-			deviceId: '', // set in #init()
+			deviceId: `framework-macropad`,
 		}
 
 		this.gridSize = {
@@ -101,16 +101,6 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 		})
 	}
 
-	async #init() {
-		// const serialNumber = await this.#device.getSerialNumber()
-		this.info.deviceId = `framework-macropad`
-
-		this.#logger.debug(`Framework Macropad detected`)
-
-		// Make sure the first clear happens properly
-		await this.#clearPanel()
-	}
-
 	/**
 	 * Open a framework macropad
 	 * @param {string} devicePath
@@ -122,7 +112,8 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 		try {
 			const self = new SurfaceUSBFrameworkMacropad(devicePath, device)
 
-			await self.#init()
+			// Make sure the first clear happens properly
+			self.clearDeck()
 
 			return self
 		} catch (e) {
@@ -163,8 +154,6 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 	}
 
 	clearDeck() {
-		this.#logger.silly('elgato_base.prototype.clearDeck()')
-
 		this.#clearPanel().catch((e) => {
 			this.#logger.debug(`Clear deck failed: ${e}`)
 		})

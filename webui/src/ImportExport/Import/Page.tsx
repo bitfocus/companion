@@ -84,68 +84,49 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 			<CCol xs={12} xl={6}>
 				<h5>Source Page</h5>
 				<MyErrorBoundary>
-					<div>
+					<>
 						<CCol sm={12}>
-							<CButton
-								color="light"
-								style={{
-									float: 'right',
-									marginTop: 10,
-								}}
-								onClick={resetSourcePosition}
-							>
-								<FontAwesomeIcon icon={faHome} /> Home
-							</CButton>
-
 							<ButtonGridHeader
-								pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
+								pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 								changePage={isSinglePage ? undefined : changeImportPage}
 								setPage={isSinglePage ? undefined : setImportPageNumber}
-							/>
+							>
+								<CButton color="light" className="btn-right" title="Home Position" onClick={resetSourcePosition}>
+									<FontAwesomeIcon icon={faHome} />
+								</CButton>
+							</ButtonGridHeader>
 						</CCol>
 						<div className="buttongrid" ref={hasBeenRenderedRef}>
 							{hasBeenRendered && sourceGridSize && (
 								<ButtonInfiniteGrid
 									ref={sourceGridRef}
-									pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
+									pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 									gridSize={sourceGridSize}
 									buttonIconFactory={ButtonImportPreview}
 									drawScale={gridZoomValue / 100}
 								/>
 							)}
 						</div>
-					</div>
+					</>
 				</MyErrorBoundary>
 			</CCol>
 
 			<CCol xs={12} xl={6}>
 				<h5>Destination Page</h5>
 				<MyErrorBoundary>
-					<div>
+					<>
 						<CCol sm={12}>
-							<CButton
-								color="light"
-								style={{
-									float: 'right',
-									marginTop: 10,
-								}}
-								onClick={resetDestinationPosition}
-							>
-								<FontAwesomeIcon icon={faHome} /> Home
-							</CButton>
+							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} newPageAtEnd>
+								<ButtonGridZoomControl
+									useCompactButtons={true}
+									gridZoomValue={gridZoomValue}
+									gridZoomController={gridZoomController}
+								/>
 
-							<ButtonGridZoomControl
-								useCompactButtons={false}
-								gridZoomValue={gridZoomValue}
-								gridZoomController={gridZoomController}
-								style={{
-									float: 'right',
-									marginTop: 10,
-									marginRight: 3,
-								}}
-							/>
-
-							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} newPageAtEnd />
+								<CButton color="light" className="btn-right" title="Home Position" onClick={resetDestinationPosition}>
+									<FontAwesomeIcon icon={faHome} />
+								</CButton>
+							</ButtonGridHeader>
 						</CCol>
 						<div className="buttongrid">
 							{hasBeenRendered && destinationGridSize && (
@@ -158,7 +139,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 								/>
 							)}
 						</div>
-					</div>
+					</>
 				</MyErrorBoundary>
 			</CCol>
 			<CCol xs={12}>

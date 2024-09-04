@@ -3,7 +3,7 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 /**
  *
  * @param {import('winston').Logger} logger
- * @param {import('../Instance/Variable.js').default} variablesController
+ * @param {import('../Variables/Values.js').VariablesValues} variablesController
  * @param {import('../Resources/Util.js').ControlLocation | undefined} pressLocation
  * @param {Record<string, any>} options
  * @param {boolean} useVariableFields
@@ -15,7 +15,7 @@ export function ParseInternalControlReference(logger, variablesController, press
 	 * @returns {number | null}
 	 */
 	const sanitisePageNumber = (pageNumber) => {
-		return pageNumber == 0 ? pressLocation?.pageNumber ?? null : pageNumber
+		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
 	}
 	/**
 	 * @param {number} pageNumber
@@ -111,7 +111,7 @@ export function ParseInternalControlReference(logger, variablesController, press
 		case 'expression':
 			if (useVariableFields) {
 				try {
-					const result = variablesController.parseExpression(options.location_expression, pressLocation, 'string')
+					const result = variablesController.executeExpression(options.location_expression, pressLocation, 'string')
 
 					location = parseLocationString(String(result.value))
 					referencedVariables = Array.from(result.variableIds)

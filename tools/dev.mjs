@@ -8,6 +8,8 @@ import { fileURLToPath } from 'url'
 import concurrently from 'concurrently'
 import dotenv from 'dotenv'
 
+await $`zx ../tools/build_writefile.mjs`
+
 dotenv.config({
 	path: path.resolve(process.cwd(), '..', '.env'),
 })

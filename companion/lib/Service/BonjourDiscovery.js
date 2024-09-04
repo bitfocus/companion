@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash-es'
 import ServiceBase from './Base.js'
-import { Bonjour, Browser } from 'bonjour-service'
+import { Bonjour, Browser } from '@julusian/bonjour-service'
 import { nanoid } from 'nanoid'
 
 /**
@@ -97,7 +97,7 @@ class ServiceBonjourDiscovery extends ServiceBase {
 		client.onPromise('bonjour:subscribe', (connectionId, queryId) =>
 			this.#joinOrCreateSession(client, connectionId, queryId)
 		)
-		client.on('bonjour:unsubscribe', (subId) => this.#leaveSession(client, subId))
+		client.on('bonjour:unsubscribe', (subIds) => this.#leaveSession(client, subIds))
 	}
 
 	/**
@@ -124,77 +124,102 @@ class ServiceBonjourDiscovery extends ServiceBase {
 	 * @param {import('../UI/Handler.js').ClientSocket} client
 	 * @param {string} connectionId
 	 * @param {string} queryId
-	 * @returns {string} subId
+	 * @returns {string[]} subIds
 	 */
 	#joinOrCreateSession(client, connectionId, queryId) {
 		if (!this.server) throw new Error('Bonjour not running')
 
 		const manifest = this.instance.getManifestForInstance(connectionId)
-		const bonjourQuery = manifest?.bonjourQueries?.[queryId]
-		if (!bonjourQuery) throw new Error('Missing bonjour query')
+		/** @type {import('@companion-module/base/generated/manifest.js').ModuleBonjourQuery | import('@companion-module/base/generated/manifest.js').ModuleBonjourQuery[] | undefined} */
+		let bonjourQueries = manifest?.bonjourQueries?.[queryId]
+		if (!bonjourQueries) throw new Error('Missing bonjour query')
 
-		const filter = {
-			type: bonjourQuery.type,
-			protocol: bonjourQuery.protocol,
-			txt: bonjourQuery.txt,
+		if (!Array.isArray(bonjourQueries)) bonjourQueries = [bonjourQueries]
+
+		/** @type {BonjourBrowserFilter[]} */
+		const filters = []
+
+		for (const query of bonjourQueries) {
+			const filter = {
+				type: query.type,
+				protocol: query.protocol,
+				txt: query.txt,
+			}
+			if (typeof filter.type !== 'string' || !filter.type) throw new Error('Invalid type for bonjour query')
+			if (typeof filter.protocol !== 'string' || !filter.protocol) throw new Error('Invalid protocol for bonjour query')
+
+			filters.push(filter)
 		}
-		if (typeof filter.type !== 'string' || !filter.type) throw new Error('Invalid type for bonjour query')
-		if (typeof filter.protocol !== 'string' || !filter.protocol) throw new Error('Invalid protocol for bonjour query')
 
-		// Find existing browser
-		for (const [id, session] of this.#browsers.entries()) {
-			if (isEqual(session.filter, filter)) {
-				session.clientIds.add(client.id)
+		/** @type {string[]} */
+		const ids = []
 
-				client.join(BonjourRoom(id))
-				this.logger.info(`Client ${client.id} joined ${id}`)
+		for (const filter of filters) {
+			let foundExisting = false
 
-				// After this message, send already known services to the client
-				setImmediate(() => {
-					for (const svc of session.browser.services) {
-						client.emit(`bonjour:service:up`, this.#convertService(id, svc))
-					}
+			// Find existing browser
+			for (const [id, session] of this.#browsers.entries()) {
+				if (isEqual(session.filter, filter)) {
+					session.clientIds.add(client.id)
+
+					client.join(BonjourRoom(id))
+					this.logger.info(`Client ${client.id} joined ${id}`)
+
+					// After this message, send already known services to the client
+					setImmediate(() => {
+						for (const svc of session.browser.services) {
+							client.emit(`bonjour:service:up`, this.#convertService(id, svc))
+						}
+					})
+
+					foundExisting = true
+					ids.push(id)
+					break
+				}
+			}
+
+			if (!foundExisting) {
+				// Create new browser
+				this.logger.info(`Starting discovery of: ${JSON.stringify(filter)}`)
+				const browser = this.server.find(filter)
+				const id = nanoid()
+				const room = BonjourRoom(id)
+				this.#browsers.set(id, {
+					browser,
+					filter,
+					clientIds: new Set([client.id]),
 				})
 
-				return id
+				// Setup event handlers
+				browser.on('up', (svc) => {
+					this.io.emitToRoom(room, `bonjour:service:up`, this.#convertService(id, svc))
+				})
+				browser.on('down', (svc) => {
+					this.io.emitToRoom(room, `bonjour:service:down`, this.#convertService(id, svc))
+				})
+
+				// Report to client
+				client.join(room)
+				this.logger.info(`Client ${client.id} joined ${id}`)
+				ids.push(id)
 			}
 		}
 
-		// Create new browser
-		this.logger.info(`Starting discovery of: ${JSON.stringify(filter)}`)
-		const browser = this.server.find(filter)
-		const id = nanoid()
-		const room = BonjourRoom(id)
-		this.#browsers.set(id, {
-			browser,
-			filter,
-			clientIds: new Set([client.id]),
-		})
-
-		// Setup event handlers
-		browser.on('up', (svc) => {
-			this.io.emitToRoom(room, `bonjour:service:up`, this.#convertService(id, svc))
-		})
-		browser.on('down', (svc) => {
-			this.io.emitToRoom(room, `bonjour:service:down`, this.#convertService(id, svc))
-		})
-
-		// Report to client
-		client.join(room)
-		this.logger.info(`Client ${client.id} joined ${id}`)
-		return id
+		return ids
 	}
 
 	/**
 	 * Client is leaving a session
 	 * @param {import('../UI/Handler.js').ClientSocket} client
-	 * @param {string} subId
+	 * @param {string[]} subIds
 	 */
-	#leaveSession(client, subId) {
-		this.logger.info(`Client ${client.id} left ${subId}`)
-		client.leave(BonjourRoom(subId))
+	#leaveSession(client, subIds) {
+		for (const subId of subIds) {
+			this.logger.info(`Client ${client.id} left ${subId}`)
+			client.leave(BonjourRoom(subId))
 
-		this.#removeClientFromSession(client.id, subId)
+			this.#removeClientFromSession(client.id, subId)
+		}
 	}
 
 	/**
@@ -225,12 +250,13 @@ export default ServiceBonjourDiscovery
 /**
  * @typedef {{
  *   browser: Browser
- *   filter: {
- *     type: string
- *     protocol: 'tcp' | 'udp'
- *     txt: Record<string, string> | undefined
- *   }
+ *   filter: BonjourBrowserFilter
  *   clientIds: Set<string>
  * }} BonjourBrowserSession
  *
+ * @typedef {{
+ *   type: string
+ *   protocol: 'tcp' | 'udp'
+ *   txt: Record<string, string> | undefined
+ * }} BonjourBrowserFilter
  */

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import {
 	CButton,
 	CButtonGroup,
@@ -17,56 +17,72 @@ import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faAdd,
-	faCalculator,
+	faClock,
 	faClone,
 	faDownload,
 	faFileExport,
+	faList,
 	faSort,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
-import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import classNames from 'classnames'
 import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { NonIdealState } from '../Components/NonIdealState.js'
+import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+export const TRIGGERS_PAGE_PREFIX = '/triggers'
+
+function useSelectedTriggerId(): string | null {
+	const routerLocation = useLocation()
+	if (!routerLocation.pathname.startsWith(TRIGGERS_PAGE_PREFIX)) return null
+	const fragments = routerLocation.pathname.slice(TRIGGERS_PAGE_PREFIX.length + 1).split('/')
+	const triggerId = fragments[0]
+	if (!triggerId) return null
+
+	return CreateTriggerControlId(triggerId)
+}
+
+function navigateToTriggersPage(navigate: NavigateFunction, controlId: string | null): void {
+	if (!controlId) {
+		navigate(TRIGGERS_PAGE_PREFIX)
+		return
+	}
+
+	navigate(`${TRIGGERS_PAGE_PREFIX}/${controlId}`)
+}
 
 export const Triggers = observer(function Triggers() {
 	const { socket, triggersList } = useContext(RootAppStoreContext)
 
-	const [editItemId, setEditItemId] = useState<string | null>(null)
-	const [tabResetToken, setTabResetToken] = useState(nanoid())
-	const [activeTab, setActiveTab] = useState<'placeholder' | 'edit'>('placeholder')
+	const editItemId = useSelectedTriggerId()
+	const activeTab = editItemId ? 'edit' : 'placeholder'
+	const navigate = useNavigate()
 
 	// Ensure the selected trigger is valid
 	useEffect(() => {
-		setEditItemId((currentId) => {
-			if (currentId && triggersList.triggers.get(currentId)) {
-				return currentId
-			} else {
-				return null
-			}
-		})
-	}, [triggersList])
+		if (editItemId && !triggersList.triggers.get(editItemId)) {
+			navigateToTriggersPage(navigate, null)
+		}
+	}, [navigate, triggersList, editItemId])
 
-	const doChangeTab = useCallback((newTab: 'placeholder' | 'edit') => {
-		setActiveTab((oldTab) => {
-			// const preserveButtonsTab =  newTab === 'variables' && oldTab === 'edit'
-			if (newTab !== 'edit' && oldTab !== newTab /*&& !preserveButtonsTab*/) {
-				setEditItemId(null)
-				setTabResetToken(nanoid())
-			}
-			return newTab
-		})
+	const doChangeTab = useCallback((_newTab: 'placeholder' | 'edit') => {
+		// setActiveTab(newTab)
 	}, [])
-	const doEditItem = useCallback((controlId: string) => {
-		setEditItemId(controlId)
-		setActiveTab('edit')
-	}, [])
+	const doEditItem = useCallback(
+		(controlId: string) => {
+			const parsedId = ParseControlId(controlId)
+			if (parsedId?.type !== 'trigger') return
+
+			navigateToTriggersPage(navigate, parsedId.trigger)
+		},
+		[navigate]
+	)
 
 	const doAddNew = useCallback(() => {
 		socketEmitPromise(socket, 'triggers:create', [])
@@ -90,10 +106,12 @@ export const Triggers = observer(function Triggers() {
 
 			<CCol xs={12} xl={6} className="primary-panel">
 				<h4>Triggers and schedules</h4>
-				<p>This allows you to run actions based on Companion, feedback or time events.</p>
+				<p style={{ marginBottom: '0.5rem' }}>
+					This allows you to run actions based on Companion, feedback or time events.
+				</p>
 
-				<CButtonGroup style={{ marginBottom: '0.3em' }}>
-					<CButton color="primary" onClick={doAddNew}>
+				<CButtonGroup style={{ marginBottom: '1em' }}>
+					<CButton color="primary" onClick={doAddNew} size="sm">
 						<FontAwesomeIcon icon={faAdd} /> Add Trigger
 					</CButton>
 				</CButtonGroup>
@@ -101,7 +119,7 @@ export const Triggers = observer(function Triggers() {
 				<TriggersTable editItem={doEditItem} selectedControlId={editItemId} />
 
 				<CButton
-					color="light"
+					color="secondary"
 					style={{
 						marginTop: 10,
 					}}
@@ -127,19 +145,19 @@ export const Triggers = observer(function Triggers() {
 							})}
 						>
 							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
-								<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
+								<FontAwesomeIcon icon={faClock} /> Edit Trigger
 							</CNavLink>
 						</CNavItem>
 					</CNav>
 					<CTabContent>
 						{!editItemId && (
 							<CTabPane data-tab="placeholder" visible={activeTab === 'placeholder'}>
-								<p>Select a trigger...</p>
+								<NonIdealState text="Select a trigger to edit" icon={faClock} />
 							</CTabPane>
 						)}
 						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>
 							<MyErrorBoundary>
-								{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
+								{editItemId ? <EditTriggerPanel key={`${editItemId}`} controlId={editItemId} /> : ''}
 							</MyErrorBoundary>
 						</CTabPane>
 					</CTabContent>
@@ -182,15 +200,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 	)
 
 	return (
-		<table className="table-tight table-responsive-sm ">
-			<thead>
-				<tr>
-					<th>&nbsp;</th>
-					<th>Name</th>
-					<th>Trigger</th>
-					<th>&nbsp;</th>
-				</tr>
-			</thead>
+		<table className="table-tight table-responsive-sm" style={{ marginBottom: 10 }}>
 			<tbody>
 				{triggersList.triggers.size > 0 ? (
 					Array.from(triggersList.triggers.entries())
@@ -208,7 +218,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 				) : (
 					<tr>
 						<td colSpan={4} className="currentlyNone">
-							There currently are no triggers or scheduled tasks.
+							<NonIdealState icon={faList} text="There are currently no triggers or scheduled tasks." />
 						</td>
 					</tr>
 				)}
@@ -346,10 +356,12 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 					</CButton>
 
 					<CFormSwitch
+						className="connection-enabled-switch"
 						color="success"
 						checked={item.enabled}
 						onChange={doEnableDisable}
 						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+						size="xl"
 					/>
 				</CButtonGroup>
 			</td>

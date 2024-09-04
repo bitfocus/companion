@@ -19,8 +19,9 @@ import os from 'os'
 import { exec } from 'child_process'
 import { isEqual } from 'lodash-es'
 import LogController from '../Log/Controller.js'
+import systeminformation from 'systeminformation'
 
-function getNetworkInterfacesVariables() {
+async function getNetworkAndHostnameVariables() {
 	// TODO - review/refactor this
 
 	/** @type {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} */
@@ -28,6 +29,15 @@ function getNetworkInterfacesVariables() {
 	/** @type { import('@companion-module/base').CompanionVariableValues} */
 	const values = {}
 	let allIps = ''
+
+	try {
+		values['hostname'] = os.hostname()
+
+		const systemInfo = await systeminformation.osInfo()
+		values['hostname_fqdn'] = systemInfo.fqdn
+	} catch (e) {
+		// TODO
+	}
 
 	try {
 		const networkInterfaces = os.networkInterfaces()
@@ -77,7 +87,7 @@ export default class System {
 	#internalModule
 
 	/**
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Controller.js').VariablesController}
 	 * @readonly
 	 */
 	#variableController
@@ -94,7 +104,7 @@ export default class System {
 	constructor(internalModule, registry) {
 		this.#internalModule = internalModule
 		this.#registry = registry
-		this.#variableController = registry.instance.variable
+		this.#variableController = registry.variables
 
 		// TODO - reactive:
 		// self.system.emit('config_get', 'bind_ip', function (bind_ip) {
@@ -102,22 +112,33 @@ export default class System {
 		// })
 
 		// Update interfaces on an interval, but also soon after launch
-		setInterval(() => this.#updateNetworkInterfaces(), 30000)
-		setTimeout(() => this.#updateNetworkInterfaces(), 5000)
+		setInterval(() => this.#updateNetworkAndHostnameVariables(), 30000)
+		setTimeout(() => this.#updateNetworkAndHostnameVariables(), 5000)
 	}
 
-	#updateNetworkInterfaces() {
-		const info = getNetworkInterfacesVariables()
+	#updateNetworkAndHostnameVariablesRunning = false
+	#updateNetworkAndHostnameVariables() {
+		if (this.#updateNetworkAndHostnameVariablesRunning) return
+		this.#updateNetworkAndHostnameVariablesRunning = true
 
-		if (!isEqual(info.definitions, this.#interfacesDefinitions)) {
-			this.#interfacesDefinitions = info.definitions
-			this.#internalModule.regenerateVariables()
-		}
+		getNetworkAndHostnameVariables()
+			.then((info) => {
+				if (!isEqual(info.definitions, this.#interfacesDefinitions)) {
+					this.#interfacesDefinitions = info.definitions
+					this.#internalModule.regenerateVariables()
+				}
 
-		if (!isEqual(info.values, this.#interfacesValues)) {
-			this.#interfacesValues = info.values
-			this.#internalModule.setVariables(info.values)
-		}
+				if (!isEqual(info.values, this.#interfacesValues)) {
+					this.#interfacesValues = info.values
+					this.#internalModule.setVariables(info.values)
+				}
+			})
+			.catch((e) => {
+				this.#logger.error(`Failed to update network and hostname variables: ${e}`)
+			})
+			.finally(() => {
+				this.#updateNetworkAndHostnameVariablesRunning = false
+			})
 	}
 
 	/**
@@ -125,6 +146,14 @@ export default class System {
 	 */
 	getVariableDefinitions() {
 		return [
+			{
+				label: 'System: Hostname',
+				name: 'hostname',
+			},
+			{
+				label: 'System: Hostname (FQDN)',
+				name: 'hostname_fqdn',
+			},
 			{
 				label: 'System: IP of admin network interface',
 				name: 'bind_ip',
@@ -202,7 +231,7 @@ export default class System {
 	executeAction(action, extras) {
 		if (action.action === 'exec') {
 			if (action.options.path) {
-				const path = this.#variableController.parseVariables(action.options.path, extras.location).text
+				const path = this.#variableController.values.parseVariables(action.options.path, extras.location).text
 				this.#logger.silly(`Running path: '${path}'`)
 
 				exec(

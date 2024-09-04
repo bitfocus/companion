@@ -6,7 +6,6 @@ import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icon
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import { ButtonInfiniteGrid, ButtonInfiniteGridRef, PrimaryButtonGridIcon } from './ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered.js'
-import { useResizeObserver } from 'usehooks-ts'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -132,10 +131,6 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
-	const setSizeRef = useRef(null)
-	const holderSize = useResizeObserver({ ref: setSizeRef })
-	const useCompactButtons = (holderSize.width ?? 0) < 700 // Cutoff for what of the header row fit in the large mode
-
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
@@ -143,27 +138,25 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<EditPagePropertiesModal ref={editRef} />
 
 				<h4>Buttons</h4>
-				<p>
+				<p style={{ marginBottom: '0.5rem' }}>
 					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
 					and what they should do when you press or click on them.
 				</p>
 
-				<CRow ref={setSizeRef}>
+				<CRow>
 					<CCol sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
 							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
 								<FontAwesomeIcon icon={faFileExport} />
-								&nbsp;
-								{useCompactButtons ? '' : 'Export Page'}
 							</CButton>
 							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
-								<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Edit Page'}
+								<FontAwesomeIcon icon={faPencil} />
 							</CButton>
 							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
-								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home'}
+								<FontAwesomeIcon icon={faHome} />
 							</CButton>
 							<ButtonGridZoomControl
-								useCompactButtons={useCompactButtons}
+								useCompactButtons={true}
 								gridZoomValue={gridZoomValue}
 								gridZoomController={gridZoomController}
 							/>

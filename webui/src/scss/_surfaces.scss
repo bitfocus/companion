@@ -1,0 +1,5 @@
+.surfaces-tab-content {
+	display: grid;
+	grid-auto-flow: row;
+	grid-template-rows: auto 1fr auto;
+}

@@ -4,6 +4,8 @@ import { CButton, CButtonGroup } from '@coreui/react'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { NonIdealState } from '../../Components/NonIdealState.js'
+import { faList } from '@fortawesome/free-solid-svg-icons'
 
 interface TriggerPickerRowProps {
 	id: string
@@ -58,7 +60,7 @@ export const TriggerPicker = observer(function TriggerPicker({ selectControl }: 
 					) : (
 						<tr>
 							<td colSpan={2} className="currentlyNone">
-								There currently are no triggers or scheduled tasks.
+								<NonIdealState icon={faList} text="There are currently no triggers or scheduled tasks." />
 							</td>
 						</tr>
 					)}

@@ -16,7 +16,7 @@ import sanitizeHtml from 'sanitize-html'
 
 interface OptionsInputFieldProps {
 	connectionId: string
-	isOnControl: boolean
+	isLocatedInGrid: boolean
 	isAction: boolean
 	option: InternalActionInputField | InternalFeedbackInputField
 	value: any
@@ -43,7 +43,7 @@ function OptionLabel({
 
 export function OptionsInputField({
 	connectionId,
-	isOnControl,
+	isLocatedInGrid,
 	isAction,
 	option,
 	value,
@@ -199,8 +199,14 @@ export function OptionsInputField({
 			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (connectionId === 'internal') {
 				control =
-					InternalInstanceField(<OptionLabel option={option} />, option, isOnControl, !!readonly, value, setValue2) ??
-					undefined
+					InternalInstanceField(
+						<OptionLabel option={option} />,
+						option,
+						isLocatedInGrid,
+						!!readonly,
+						value,
+						setValue2
+					) ?? undefined
 			}
 			// Use default below
 			break

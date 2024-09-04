@@ -9,6 +9,7 @@ import ServiceOscSender from './OscSender.js'
 import ServiceRosstalk from './Rosstalk.js'
 import ServiceSatellite from './Satellite.js'
 import { ServiceSharedUdpManager } from './SharedUdpManager.js'
+import { ServiceSurfaceDiscovery } from './SurfaceDiscovery.js'
 import ServiceTcp from './Tcp.js'
 import ServiceUdp from './Udp.js'
 import ServiceVideohubPanel from './VideohubPanel.js'
@@ -52,6 +53,7 @@ class ServiceController {
 		this.videohubPanel = new ServiceVideohubPanel(registry)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(registry)
 		this.sharedUdpManager = new ServiceSharedUdpManager()
+		this.surfaceDiscovery = new ServiceSurfaceDiscovery(registry)
 	}
 
 	/**
@@ -73,6 +75,7 @@ class ServiceController {
 		this.tcp.updateUserConfig(key, value)
 		this.udp.updateUserConfig(key, value)
 		this.videohubPanel.updateUserConfig(key, value)
+		this.surfaceDiscovery.updateUserConfig(key, value)
 	}
 
 	/**
@@ -82,6 +85,7 @@ class ServiceController {
 	 */
 	clientConnect(client) {
 		this.bonjourDiscovery.clientConnect(client)
+		this.surfaceDiscovery.clientConnect(client)
 	}
 }
 

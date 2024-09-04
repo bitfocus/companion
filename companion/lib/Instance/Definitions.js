@@ -5,7 +5,7 @@ import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import ControlButtonNormal from '../Controls/ControlTypes/Button/Normal.js'
 import jsonPatch from 'fast-json-patch'
 import { diffObjects } from '@companion-app/shared/Diff.js'
-import { replaceAllVariables } from './Variable.js'
+import { replaceAllVariables } from '../Variables/Util.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -118,7 +118,7 @@ class InstanceDefinitions extends CoreBase {
 				if (style.text) {
 					if (style.textExpression) {
 						try {
-							const parseResult = this.instance.variable.parseExpression(style.text, null)
+							const parseResult = this.variablesController.values.executeExpression(style.text, null)
 							style.text = parseResult.value + ''
 						} catch (e) {
 							this.logger.error(`Expression parse error: ${e}`)
@@ -126,7 +126,7 @@ class InstanceDefinitions extends CoreBase {
 							style.text = 'ERR'
 						}
 					} else {
-						const parseResult = this.instance.variable.parseVariables(style.text, null)
+						const parseResult = this.variablesController.values.parseVariables(style.text, null)
 						style.text = parseResult.text
 					}
 				}
@@ -472,6 +472,8 @@ class InstanceDefinitions extends CoreBase {
 										}
 
 										for (const [setId, set] of Object.entries(step)) {
+											if (setId === 'name') continue
+
 											/** @type {import('@companion-module/base').CompanionPresetAction[]} */
 											const setActions = Array.isArray(set) ? set : set.actions
 											if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
@@ -484,6 +486,8 @@ class InstanceDefinitions extends CoreBase {
 												headline: act.headline,
 											}))
 										}
+
+										if (step.name) options.name = step.name
 
 										return {
 											options,

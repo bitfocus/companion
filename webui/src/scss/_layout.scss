@@ -98,19 +98,20 @@ body {
 	border-right: 1px solid #bbb;
 	// margin-bottom: 38px;
 
+	max-width: 1900px;
+	min-height: 300px;
+	max-height: 100%;
+
 	&.no-height-limit {
 		max-height: unset;
 	}
 
 	.tab-pane {
-		padding: 1rem;
+		padding: 1rem 1rem 1rem 1rem;
+
 		// Make absolute positioned child components be relative to this
 		position: relative;
 	}
-
-	max-width: 1900px;
-	min-height: 300px;
-	max-height: 100%;
 
 	.row-heading {
 		position: sticky;
@@ -135,7 +136,7 @@ body {
 		padding-bottom: 8px;
 		margin-bottom: -2px;
 		color: #555;
-
+		cursor: pointer;
 		/* this is a mess, but hey, it works */
 		&.active,
 		&.active:hover {
@@ -249,10 +250,20 @@ body {
 
 .secondary-panel {
 	padding-left: 15px;
+	padding-right: 0px;
 	padding-top: 5px;
 	display: grid;
 	grid-template-rows: auto 1fr;
 	row-gap: 5px;
+
+	&.fill-height {
+		height: 100%;
+		padding: 0;
+
+		.tab-content {
+			overflow-y: scroll;
+		}
+	}
 
 	.secondary-panel-header {
 		grid-row: 1;

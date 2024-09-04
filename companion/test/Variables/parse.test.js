@@ -1,4 +1,4 @@
-import { VARIABLE_UNKNOWN_VALUE, parseVariablesInString } from '../lib/Instance/Variable.js'
+import { VARIABLE_UNKNOWN_VALUE, parseVariablesInString } from '../../lib/Variables/Util.js'
 
 describe('variable parsing', () => {
 	test('undefined string', () => {

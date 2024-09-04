@@ -114,7 +114,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 		}
 	}
 
-	async #init() {
+	#init() {
 		this.#logger.debug(`Infinitton iDisplay detected`)
 
 		// Make sure the first clear happens properly
@@ -129,7 +129,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 	static async create(devicePath) {
 		const self = new SurfaceUSBInfinitton(devicePath)
 
-		await self.#init()
+		self.#init()
 
 		return self
 	}
@@ -187,7 +187,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 
 				if (rotation !== null) image = image.rotate(rotation)
 
-				const newbuffer = image.toBufferSync(imageRs.PixelFormat.Rgb)
+				const newbuffer = image.toBufferSync(imageRs.PixelFormat.Rgb).buffer
 				this.#infinitton.fillImage(key, newbuffer)
 			} catch (/** @type {any} */ e) {
 				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)

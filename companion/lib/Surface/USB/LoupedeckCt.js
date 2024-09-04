@@ -18,7 +18,7 @@
 import { EventEmitter } from 'events'
 import { LoupedeckBufferFormat, LoupedeckDisplayId, openLoupedeck } from '@loupedeck/node'
 import { convertPanelIndexToXY } from '../Util.js'
-import { translateRotation } from '../../Resources/Util.js'
+import { transformButtonImage } from '../../Resources/Util.js'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import LogController from '../../Log/Controller.js'
@@ -140,7 +140,7 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 			brightness: 100,
 		}
 
-		this.logger.debug(`Adding Loupedeck CT USB device ${devicePath}`)
+		this.logger.debug(`Adding Loupedeck CT device ${devicePath}`)
 
 		this.info = {
 			type: `Loupedeck CT`,
@@ -281,17 +281,7 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 
 				let newbuffer
 				try {
-					let image = imageRs.ImageTransformer.fromBuffer(
-						render.buffer,
-						render.bufferWidth,
-						render.bufferHeight,
-						imageRs.PixelFormat.Rgba
-					).scale(width, height)
-
-					const rotation = translateRotation(this.config.rotation)
-					if (rotation !== null) image = image.rotate(rotation)
-
-					newbuffer = await image.toBuffer(imageRs.PixelFormat.Rgb)
+					newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
 				} catch (e) {
 					this.logger.debug(`scale image failed: ${e}`)
 					this.emit('remove')
@@ -331,13 +321,6 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 		const y = xy[1]
 
 		this.emit('click', x, y, state)
-	}
-
-	async #init() {
-		this.logger.debug(`${this.#loupedeck.modelName} detected`)
-
-		// Make sure the first clear happens properly
-		await this.#loupedeck.blankDevice(true, true)
 	}
 
 	/**
@@ -411,7 +394,7 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 
 			const self = new SurfaceUSBLoupedeckCt(devicePath, loupedeck, info, serialNumber)
 
-			await self.#init()
+			self.clearDeck()
 
 			return self
 		} catch (e) {
@@ -484,8 +467,6 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 	}
 
 	clearDeck() {
-		this.logger.debug('loupedeck.clearDeck()')
-
 		this.#loupedeck.blankDevice(true, true).catch((e) => {
 			this.logger.debug(`blank failed: ${e}`)
 		})

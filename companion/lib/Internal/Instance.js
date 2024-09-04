@@ -432,7 +432,7 @@ export default class Instance {
 	 *
 	 * @param {import('./Types.js').InternalVisitor} visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('./Types.js').FeedbackForVisitor[]} feedbacks
 	 */
 	visitReferences(visitor, actions, feedbacks) {
 		for (const action of actions) {

@@ -1,4 +1,4 @@
-import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch, CFormLabel } from '@coreui/react'
+import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -6,19 +6,18 @@ import {
 	faExpandArrowsAlt,
 	faCopy,
 	faFolderOpen,
-	faQuestionCircle,
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { ConnectionsContext, DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { CheckboxInputField, DropdownInputField, TextInputField } from '../Components/index.js'
+import { DropdownInputField, TextInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
@@ -29,14 +28,14 @@ import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { LearnButton } from '../Components/LearnButton.js'
 import { AddFeedbackDropdown } from './AddFeedbackDropdown.js'
 import {
-	IFeedbackEditorFeedbackService,
 	IFeedbackEditorService,
 	useControlFeedbackService,
 	useControlFeedbacksEditorService,
 } from '../Services/Controls/ControlFeedbacksService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-
+import classNames from 'classnames'
+import { InlineHelp } from '../Components/InlineHelp.js'
 interface ControlFeedbacksEditorProps {
 	controlId: string
 	feedbacks: FeedbackInstance[]
@@ -45,6 +44,18 @@ interface ControlFeedbacksEditorProps {
 	booleanOnly: boolean
 	location: ControlLocation | undefined
 	addPlaceholder: string
+}
+
+function findAllFeedbackIdsDeep(feedbacks: FeedbackInstance[]): string[] {
+	const result: string[] = feedbacks.map((f) => f.id)
+
+	for (const feedback of feedbacks) {
+		if (feedback.children) {
+			result.push(...findAllFeedbackIdsDeep(feedback.children))
+		}
+	}
+
+	return result
 }
 
 export function ControlFeedbacksEditor({
@@ -60,21 +71,71 @@ export function ControlFeedbacksEditor({
 
 	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
 
-	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
-	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
+	const feedbackIds = useMemo(() => findAllFeedbackIdsDeep(feedbacks), [feedbacks])
 
-	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
-	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
+	const panelCollapseHelper = usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
 
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModal} />
 
+			<InlineFeedbacksEditor
+				controlId={controlId}
+				heading={heading}
+				feedbacks={feedbacks}
+				entityType={entityType}
+				booleanOnly={booleanOnly}
+				location={location}
+				addPlaceholder={addPlaceholder}
+				feedbacksService={feedbacksService}
+				parentId={null}
+				panelCollapseHelper={panelCollapseHelper}
+			/>
+		</>
+	)
+}
+
+interface InlineFeedbacksEditorProps {
+	controlId: string
+	heading: JSX.Element | string | null
+	feedbacks: FeedbackInstance[]
+	entityType: string
+	booleanOnly: boolean
+	location: ControlLocation | undefined
+	addPlaceholder: string
+	feedbacksService: IFeedbackEditorService
+	parentId: string | null
+	panelCollapseHelper: PanelCollapseHelper
+}
+
+const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
+	controlId,
+	heading,
+	feedbacks,
+	entityType,
+	booleanOnly,
+	location,
+	addPlaceholder,
+	feedbacksService,
+	parentId,
+	panelCollapseHelper,
+}: InlineFeedbacksEditorProps) {
+	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
+	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
+
+	const addFeedback = useCallback(
+		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, parentId),
+		[feedbacksService, parentId]
+	)
+
+	const childFeedbackIds = feedbacks.map((f) => f.id)
+
+	return (
+		<>
 			<MyErrorBoundary>
 				<AddFeedbacksModal
 					ref={addFeedbacksRef}
-					addFeedback={feedbacksService.addFeedback}
+					addFeedback={addFeedback}
 					booleanOnly={booleanOnly}
 					entityType={entityType}
 				/>
@@ -82,16 +143,25 @@ export function ControlFeedbacksEditor({
 
 			<h4 className="mt-3">
 				{heading}
-				{feedbacks.length > 1 && (
+
+				{feedbacks.length >= 1 && (
 					<CButtonGroup className="right">
 						<CButtonGroup>
-							{canExpandAll && (
-								<CButton size="sm" onClick={setAllExpanded} title="Expand all feedbacks">
+							{panelCollapseHelper.canExpandAll(parentId, childFeedbackIds) && (
+								<CButton
+									size="sm"
+									onClick={() => panelCollapseHelper.setAllExpanded(parentId, childFeedbackIds)}
+									title="Expand all feedbacks"
+								>
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							)}
-							{canCollapseAll && (
-								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all feedbacks">
+							{panelCollapseHelper.canCollapseAll(parentId, childFeedbackIds) && (
+								<CButton
+									size="sm"
+									onClick={() => panelCollapseHelper.setAllCollapsed(parentId, childFeedbackIds)}
+									title="Collapse all feedbacks"
+								>
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
@@ -106,27 +176,32 @@ export function ControlFeedbacksEditor({
 						<MyErrorBoundary key={a?.id ?? i}>
 							<FeedbackTableRow
 								key={a?.id ?? i}
+								controlId={controlId}
+								parentId={parentId}
 								entityType={entityType}
 								index={i}
 								feedback={a}
-								dragId={`feedback_${controlId}`}
+								dragId={`feedbacks_${controlId}`}
 								serviceFactory={feedbacksService}
-								setCollapsed={setPanelCollapsed}
-								isCollapsed={isPanelCollapsed(a.id)}
+								panelCollapseHelper={panelCollapseHelper}
 								booleanOnly={booleanOnly}
 								location={location}
 							/>
 						</MyErrorBoundary>
 					))}
+					{!!parentId && (
+						<FeedbackRowDropPlaceholder
+							dragId={`feedbacks_${controlId}`}
+							parentId={parentId}
+							feedbackCount={feedbacks ? feedbacks.length : 0}
+							moveCard={feedbacksService.moveCard}
+						/>
+					)}
 				</tbody>
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown
-					onSelect={feedbacksService.addFeedback}
-					booleanOnly={booleanOnly}
-					addPlaceholder={addPlaceholder}
-				/>
+				<AddFeedbackDropdown onSelect={addFeedback} booleanOnly={booleanOnly} addPlaceholder={addPlaceholder} />
 				<CButton
 					color="primary"
 					onClick={showAddModal}
@@ -140,63 +215,79 @@ export function ControlFeedbacksEditor({
 			</div>
 		</>
 	)
-}
+})
 
 interface FeedbackTableRowDragItem {
 	feedbackId: string
 	index: number
+	parentId: string | null
+	dragState: DragState | null
 }
 interface FeedbackTableRowDragStatus {
 	isDragging: boolean
 }
 
 interface FeedbackTableRowProps {
+	controlId: string
 	entityType: string
 	feedback: FeedbackInstance
 	serviceFactory: IFeedbackEditorService
 	index: number
+	parentId: string | null
 	dragId: string
-	isCollapsed: boolean
-	setCollapsed: (feedbackId: string, collapsed: boolean) => void
+	panelCollapseHelper: PanelCollapseHelper
 	booleanOnly: boolean
 	location: ControlLocation | undefined
 }
 
 function FeedbackTableRow({
+	controlId,
 	entityType,
 	feedback,
 	serviceFactory,
 	index,
+	parentId,
 	dragId,
-	isCollapsed,
-	setCollapsed,
+	panelCollapseHelper,
 	booleanOnly,
 	location,
 }: FeedbackTableRowProps) {
-	const service = useControlFeedbackService(serviceFactory, feedback)
-
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<FeedbackTableRowDragItem>({
 		accept: dragId,
-		hover(item, _monitor) {
+		hover(item, monitor) {
 			if (!ref.current) {
 				return
 			}
+
+			// Ensure the hover targets this element, and not a child element
+			if (!monitor.isOver({ shallow: true })) return
+
+			const dragParentId = item.parentId
 			const dragIndex = item.index
+
+			const hoverParentId = parentId
 			const hoverIndex = index
+			const hoverId = feedback.id
 			// Don't replace items with themselves
-			if (dragIndex === hoverIndex) {
+			if (item.feedbackId === hoverId || (dragIndex === hoverIndex && dragParentId === hoverParentId)) {
 				return
 			}
 
+			if (!checkDragState(item, monitor, hoverId)) return
+
 			// Time to actually perform the action
-			serviceFactory.moveCard(dragIndex, hoverIndex)
+			serviceFactory.moveCard(item.feedbackId, hoverParentId, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
 			// to avoid expensive index searches.
 			item.index = hoverIndex
+			item.parentId = hoverParentId
+		},
+		drop(item, _monitor) {
+			item.dragState = null
 		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag<FeedbackTableRowDragItem, unknown, FeedbackTableRowDragStatus>({
@@ -204,15 +295,14 @@ function FeedbackTableRow({
 		item: {
 			feedbackId: feedback.id,
 			index: index,
+			parentId: parentId,
+			dragState: null,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
 		}),
 	})
 	preview(drop(ref))
-
-	const doCollapse = useCallback(() => setCollapsed(feedback.id, true), [setCollapsed, feedback.id])
-	const doExpand = useCallback(() => setCollapsed(feedback.id, false), [setCollapsed, feedback.id])
 
 	if (!feedback) {
 		// Invalid feedback, so skip
@@ -226,13 +316,13 @@ function FeedbackTableRow({
 			</td>
 			<td>
 				<FeedbackEditor
+					controlId={controlId}
+					parentId={parentId}
 					entityType={entityType}
 					location={location}
 					feedback={feedback}
-					service={service}
-					isCollapsed={isCollapsed}
-					doCollapse={doCollapse}
-					doExpand={doExpand}
+					serviceFactory={serviceFactory}
+					panelCollapseHelper={panelCollapseHelper}
 					booleanOnly={booleanOnly}
 				/>
 			</td>
@@ -241,26 +331,28 @@ function FeedbackTableRow({
 }
 
 interface FeedbackEditorProps {
+	controlId: string
+	parentId: string | null
 	entityType: string
 	feedback: FeedbackInstance
 	location: ControlLocation | undefined
-	service: IFeedbackEditorFeedbackService
-	isCollapsed: boolean
-	doCollapse: () => void
-	doExpand: () => void
+	serviceFactory: IFeedbackEditorService
+	panelCollapseHelper: PanelCollapseHelper
 	booleanOnly: boolean
 }
 
 const FeedbackEditor = observer(function FeedbackEditor({
+	controlId,
+	parentId,
 	entityType,
 	feedback,
 	location,
-	service,
-	isCollapsed,
-	doCollapse,
-	doExpand,
+	serviceFactory,
+	panelCollapseHelper,
 	booleanOnly,
 }: FeedbackEditorProps) {
+	const service = useControlFeedbackService(serviceFactory, feedback)
+
 	const { feedbackDefinitions } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
@@ -287,6 +379,16 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
 
+	const doCollapse = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(feedback.id, true),
+		[panelCollapseHelper, feedback.id]
+	)
+	const doExpand = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(feedback.id, false),
+		[panelCollapseHelper, feedback.id]
+	)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(parentId, feedback.id)
+
 	return (
 		<>
 			<div className="editor-grid-header remove075right">
@@ -304,7 +406,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 				<div className="cell-controls">
 					<CButtonGroup>
-						{canSetHeadline && !headlineExpanded && (
+						{canSetHeadline && !headlineExpanded && !isCollapsed && (
 							<CButton size="sm" onClick={doEditHeadline} title="Set headline">
 								<FontAwesomeIcon icon={faPencil} />
 							</CButton>
@@ -341,9 +443,13 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 			{!isCollapsed && (
 				<div className="editor-grid remove075right">
-					<div className="cell-description">
-						{headlineExpanded && <p className="name">{name}</p>}
-						{feedbackSpec?.description || ''}
+					<div
+						className={classNames('cell-description', {
+							'no-options': feedbackOptions.length === 0,
+						})}
+					>
+						{headlineExpanded && <div className="name">{name}</div>}
+						{feedbackSpec?.description && <div className="description">{feedbackSpec?.description || ''}</div>}
 					</div>
 
 					{showButtonPreview && (
@@ -353,7 +459,11 @@ const FeedbackEditor = observer(function FeedbackEditor({
 					)}
 
 					<div className="cell-actions">
-						{feedbackSpec?.hasLearn && <LearnButton id={feedback.id} doLearn={service.performLearn} />}
+						{feedbackSpec?.hasLearn && (
+							<div style={{ marginTop: 10 }}>
+								<LearnButton id={feedback.id} doLearn={service.performLearn} />
+							</div>
+						)}
 					</div>
 
 					<div className="cell-option">
@@ -362,7 +472,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnControl={!!location}
+										isLocatedInGrid={!!location}
 										isAction={false}
 										connectionId={feedback.instance_id}
 										option={opt}
@@ -375,19 +485,45 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						</CForm>
 					</div>
 
+					{feedback.instance_id === 'internal' && feedbackSpec?.supportsChildFeedbacks && (
+						<div
+							className={classNames('cell-children', {
+								'hide-top-gap':
+									(feedbackSpec.showInvert || feedbackOptions.length > 0) && (feedback.children ?? []).length > 0,
+							})}
+						>
+							<CForm onSubmit={PreventDefaultHandler}>
+								<InlineFeedbacksEditor
+									controlId={controlId}
+									heading={null}
+									feedbacks={feedback.children ?? []}
+									entityType="condition"
+									booleanOnly
+									location={location}
+									addPlaceholder="+ Add condition"
+									feedbacksService={serviceFactory}
+									parentId={feedback.id}
+									panelCollapseHelper={panelCollapseHelper}
+								/>
+							</CForm>
+						</div>
+					)}
+
 					{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
 						<div className="cell-invert">
 							<MyErrorBoundary>
 								<CForm onSubmit={PreventDefaultHandler}>
-									<CFormLabel>
-										Invert
-										<FontAwesomeIcon
-											style={{ marginLeft: '5px' }}
-											icon={faQuestionCircle}
-											title={'If checked, the behaviour of this feedback is inverted'}
+									<div style={{ paddingLeft: 20 }}>
+										<CFormSwitch
+											label={
+												<InlineHelp help="If checked, the behaviour of this feedback is inverted">Invert</InlineHelp>
+											}
+											color="success"
+											checked={!!feedback.isInverted}
+											size="xl"
+											onChange={(e) => service.setInverted(e.currentTarget.checked)}
 										/>
-									</CFormLabel>
-									<CheckboxInputField value={!!feedback.isInverted} setValue={service.setInverted} />
+									</div>
 								</CForm>
 							</MyErrorBoundary>
 						</div>
@@ -493,4 +629,33 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 	} else {
 		return null
 	}
+}
+
+interface FeedbackRowDropPlaceholderProps {
+	dragId: string
+	parentId: string
+	feedbackCount: number
+	moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => void
+}
+
+function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard }: FeedbackRowDropPlaceholderProps) {
+	const [isDragging, drop] = useDrop<FeedbackTableRowDragItem, unknown, boolean>({
+		accept: dragId,
+		collect: (monitor) => {
+			return monitor.canDrop()
+		},
+		hover(item, _monitor) {
+			moveCard(item.feedbackId, parentId, 0)
+		},
+	})
+
+	if (!isDragging || feedbackCount > 0) return null
+
+	return (
+		<tr ref={drop} className={'feedbacklist-dropzone'}>
+			<td colSpan={3}>
+				<p>Drop feedback here</p>
+			</td>
+		</tr>
+	)
 }

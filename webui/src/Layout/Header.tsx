@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNav, CNavItem, CNavLink, CHeaderToggler, CContainer } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
-import { faBars, faLock } from '@fortawesome/free-solid-svg-icons'
+import { faBars, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -38,7 +38,12 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 		}
 	}, [socket])
 
-	const versionString = versionInfo ? `${versionInfo.appVersion} (${versionInfo.appBuild})` : '?'
+	const versionString = versionInfo
+		? versionInfo.appBuild.includes('stable')
+			? `v${versionInfo.appVersion}`
+			: `v${versionInfo.appBuild}`
+		: ''
+	const buildString = versionInfo ? `Build ${versionInfo.appBuild}` : ''
 
 	return (
 		<CHeader position="sticky" className="p-0">
@@ -52,20 +57,25 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 
 				<CHeaderNav className="d-none d-md-flex me-auto">
 					{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
-						<CNavItem className="install-name">{userConfig.properties?.installName}:</CNavItem>
+						<CNavItem className="install-name">{userConfig.properties?.installName}</CNavItem>
 					)}
 
 					<CNavItem>
-						<CNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
+						<CNavLink target="_new" title={buildString} href="https://bitfocus.io/companion/">
 							{versionString}
 						</CNavLink>
 					</CNavItem>
 
-					<CNavItem>
-						<CNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
-							{updateData?.message || ''}
-						</CNavLink>
-					</CNavItem>
+					{updateData?.message ? (
+						<CNavItem className="header-update-warn">
+							<CNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
+								<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
+								{updateData.message}
+							</CNavLink>
+						</CNavItem>
+					) : (
+						''
+					)}
 				</CHeaderNav>
 
 				{canLock && (

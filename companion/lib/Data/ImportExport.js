@@ -31,6 +31,7 @@ import { stringify as csvStringify } from 'csv-stringify/sync'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
 import LogController from '../Log/Controller.js'
 import { ReferencesVisitors } from '../Util/Visitors/ReferencesVisitors.js'
+import { nanoid } from 'nanoid'
 
 /**
  *
@@ -332,7 +333,7 @@ class DataImportExport extends CoreBase {
 			}
 
 			if (!config || !isFalsey(config.customVariables)) {
-				exp.custom_variables = this.instance.variable.custom.getDefinitions()
+				exp.custom_variables = this.variablesController.custom.getDefinitions()
 			}
 
 			if (!config || !isFalsey(config.connections)) {
@@ -640,7 +641,7 @@ class DataImportExport extends CoreBase {
 				...controlObj.style,
 				style: controlObj.type,
 			})
-			return !!res?.style ? res?.asDataUrl ?? null : null
+			return !!res?.style ? (res?.asDataUrl ?? null) : null
 		})
 
 		client.onPromise('loadsave:reset', (config) => {
@@ -663,7 +664,7 @@ class DataImportExport extends CoreBase {
 
 				// import custom variables
 				if (!config || config.customVariables) {
-					this.instance.variable.custom.replaceDefinitions(data.custom_variables || {})
+					this.variablesController.custom.replaceDefinitions(data.custom_variables || {})
 				}
 
 				// Always Import instances
@@ -823,7 +824,10 @@ class DataImportExport extends CoreBase {
 				for (const id of idsToImport) {
 					const trigger = data.triggers[id]
 
-					const controlId = CreateTriggerControlId(id)
+					let controlId = CreateTriggerControlId(id)
+					// If trigger already exists, generate a new id
+					if (this.controls.getControl(controlId)) controlId = CreateTriggerControlId(nanoid())
+
 					const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
 					this.controls.importTrigger(controlId, fixedControlObj)
 				}
@@ -889,7 +893,7 @@ class DataImportExport extends CoreBase {
 		}
 
 		if (!config || config.customVariables) {
-			this.instance.variable.custom.reset()
+			this.variablesController.custom.reset()
 		}
 
 		if (!config || config.userconfig) {
@@ -1036,6 +1040,7 @@ class DataImportExport extends CoreBase {
 			undefined,
 			allActions,
 			result.condition || [],
+			[],
 			result.events || [],
 			false
 		)
@@ -1134,7 +1139,8 @@ class DataImportExport extends CoreBase {
 			result.style,
 			allActions,
 			result.feedbacks || [],
-			undefined,
+			[],
+			[],
 			false
 		)
 

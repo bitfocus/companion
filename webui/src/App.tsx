@@ -14,7 +14,6 @@ import {
 	CButton,
 } from '@coreui/react'
 import {
-	faCalendarAlt,
 	faClipboardList,
 	faClock,
 	faCloud,
@@ -23,10 +22,11 @@ import {
 	faCog,
 	faFileImport,
 	faDollarSign,
+	faTh,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
-import { SurfacesPage } from './Surfaces/index.js'
+import { SURFACES_PAGE_PREFIX, SurfacesPage } from './Surfaces/index.js'
 import { UserConfig } from './UserConfig/index.js'
 import { LogPanel } from './LogPanel.js'
 import { DndProvider } from 'react-dnd'
@@ -34,9 +34,9 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { MySidebar } from './Layout/Sidebar.js'
 import { MyHeader } from './Layout/Header.js'
-import { Triggers } from './Triggers/index.js'
+import { Triggers, TRIGGERS_PAGE_PREFIX } from './Triggers/index.js'
 import { ConnectionsPage } from './Connections/index.js'
-import { ButtonsPage } from './Buttons/index.js'
+import { BUTTONS_PAGE_PREFIX, ButtonsPage } from './Buttons/index.js'
 import { ContextData } from './ContextData.js'
 import { CloudPage } from './Cloud/index.js'
 import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard/index.js'
@@ -230,7 +230,7 @@ const AppMain = observer(function AppMain({
 			<MySidebar sidebarShow={showSidebar} showWizard={showWizard} />
 			<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
-				<div className="body flex-grow-1 px-3">
+				<div className="body flex-grow-1">
 					{connected && loadingComplete ? (
 						unlocked ? (
 							<AppContent buttonGridHotPress={buttonGridHotPress} />
@@ -421,11 +421,14 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 	let hasMatchedPane = false
 	const getClassForPane = (prefix: string) => {
 		// Require the path to be the same, or to be a prefix with a sub-route
+
+		const paneBaseClass = 'pane-baseclass'
+
 		if (routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix) {
 			hasMatchedPane = true
-			return 'active show'
+			return paneBaseClass + ' active show'
 		} else {
-			return ''
+			return paneBaseClass
 		}
 	}
 
@@ -447,17 +450,17 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/buttons" as={NavLink}>
-						<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
+					<CNavLink to={BUTTONS_PAGE_PREFIX} as={NavLink}>
+						<FontAwesomeIcon icon={faTh} /> Buttons
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/surfaces" as={NavLink}>
+					<CNavLink to={SURFACES_PAGE_PREFIX} as={NavLink}>
 						<FontAwesomeIcon icon={faGamepad} /> Surfaces
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/triggers" as={NavLink}>
+					<CNavLink to={TRIGGERS_PAGE_PREFIX} as={NavLink}>
 						<FontAwesomeIcon icon={faClock} /> Triggers
 					</CNavLink>
 				</CNavItem>
@@ -495,17 +498,17 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 						<ConnectionsPage />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/buttons')}>
+				<CTabPane className={getClassForPane(BUTTONS_PAGE_PREFIX)}>
 					<MyErrorBoundary>
 						<ButtonsPage hotPress={buttonGridHotPress} />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/surfaces')}>
+				<CTabPane className={getClassForPane(SURFACES_PAGE_PREFIX)}>
 					<MyErrorBoundary>
 						<SurfacesPage />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/triggers')}>
+				<CTabPane className={getClassForPane(TRIGGERS_PAGE_PREFIX)}>
 					<MyErrorBoundary>
 						<Triggers />
 					</MyErrorBoundary>

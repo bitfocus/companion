@@ -287,6 +287,44 @@ export function translateRotation(rotation) {
 }
 
 /**
+ * Transform a button image render to the format needed for a surface integration
+ * @param {import('../Graphics/ImageResult.js').ImageResult} render
+ * @param {import('../Surface/Util.js').SurfaceRotation | 90 | -90 | 180 | 0 | null} rotation
+ * @param {number} targetWidth
+ * @param {number} targetHeight
+ * @param {imageRs.PixelFormat} targetFormat
+ * @returns {Promise<Buffer>}
+ */
+export async function transformButtonImage(render, rotation, targetWidth, targetHeight, targetFormat) {
+	let image = imageRs.ImageTransformer.fromBuffer(
+		render.buffer,
+		render.bufferWidth,
+		render.bufferHeight,
+		imageRs.PixelFormat.Rgba
+	)
+
+	const imageRsRotation = translateRotation(rotation)
+	if (imageRsRotation !== null) image = image.rotate(imageRsRotation)
+
+	image = image.scale(targetWidth, targetHeight)
+
+	// pad, in case a button is non-square
+	const dimensions = image.getCurrentDimensions()
+	const maxDimension = Math.max(dimensions.width, dimensions.height)
+	const xOffset = (targetWidth - maxDimension) / 2
+	const yOffset = (targetHeight - maxDimension) / 2
+	image = image.pad(Math.floor(xOffset), Math.ceil(xOffset), Math.floor(yOffset), Math.ceil(yOffset), {
+		red: 0,
+		green: 0,
+		blue: 0,
+		alpha: 255,
+	})
+
+	const computedImage = await image.toBuffer(targetFormat)
+	return computedImage.buffer
+}
+
+/**
  * Show an fatal error message to the user, and exit
  * @param {string} title
  * @param {string} message

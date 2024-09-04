@@ -25,6 +25,8 @@ export interface DrawImageBuffer {
 	y: number | undefined
 	width: number | undefined
 	height: number | undefined
+	drawScale: number | undefined
+	pixelFormat: 'RGB' | 'RGBA' | 'ARGB' | undefined
 }
 
 export interface UnparsedButtonStyle extends ButtonStyleProperties {

@@ -21,6 +21,8 @@ export const ExpressionFunctions = {
 		max = Number(max)
 		return min + Math.round(Math.random() * (max - min))
 	},
+	log: (v) => Math.log(v),
+	log10: (v) => Math.log10(v),
 
 	// String operations
 	trim: (v) => (v + '').trim(),
@@ -32,7 +34,7 @@ export const ExpressionFunctions = {
 		return (str + '').split(separator)
 	},
 	join: (arr = [], separator = ',') => {
-		return (arr.constructor === Array ? arr : [arr]).join(separator)
+		return (Array.isArray(arr) ? arr : [arr]).join(separator)
 	},
 	concat: (...strs) => ''.concat(...strs),
 	includes: (str, arg) => {

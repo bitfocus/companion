@@ -2,7 +2,7 @@ import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@co
 import { faCalculator, faGift, faPaperPlane, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
-import { InstancePresets } from './Presets.js'
+import { InstancePresets } from './Presets/Presets.js'
 import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
@@ -16,6 +16,35 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
+import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+
+export const BUTTONS_PAGE_PREFIX = '/buttons'
+const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
+
+function useUrlPageNumber(): number | null {
+	const routerLocation = useLocation()
+	if (!routerLocation.pathname.startsWith(BUTTONS_PAGE_PREFIX)) return null
+
+	const fragments = routerLocation.pathname.slice(BUTTONS_PAGE_PREFIX.length + 1).split('/')
+
+	const pageIndex = Number(fragments[0])
+	if (isNaN(pageIndex) || pageIndex <= 0) return 0
+
+	return pageIndex
+}
+
+function navigateToButtonsPage(navigate: NavigateFunction, pageNumber: number): void {
+	navigate(`${BUTTONS_PAGE_PREFIX}/${pageNumber}`)
+	window.sessionStorage.setItem(SESSION_STORAGE_LAST_BUTTONS_PAGE, pageNumber.toString())
+}
+
+function getLastPageNumber(): number {
+	const lastPage = Number(window.sessionStorage.getItem(SESSION_STORAGE_LAST_BUTTONS_PAGE))
+	if (!isNaN(lastPage) && lastPage > 0) {
+		return lastPage
+	}
+	return 1
+}
 
 interface ButtonsPageProps {
 	hotPress: boolean
@@ -30,8 +59,16 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('pages')
 	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
-	const [pageNumber, setPageNumber] = useState(1)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
+
+	const navigate = useNavigate()
+	const pageNumber = useUrlPageNumber()
+	const setPageNumber = useCallback(
+		(pageNumber: number) => {
+			navigateToButtonsPage(navigate, pageNumber)
+		},
+		[navigate]
+	)
 
 	const doChangeTab = useCallback((newTab: string) => {
 		setActiveTab((oldTab) => {
@@ -208,8 +245,15 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 				}
 			}
 		},
-		[socket, selectedButton, copyFromButton, gridSize]
+		[socket, selectedButton, copyFromButton, gridSize, setPageNumber]
 	)
+
+	if (pageNumber === null) {
+		return <></>
+	} else if (pageNumber <= 0) {
+		setTimeout(() => navigateToButtonsPage(navigate, getLastPageNumber()), 0)
+		return <></>
+	}
 
 	return (
 		<CRow className="buttons-page split-panels">

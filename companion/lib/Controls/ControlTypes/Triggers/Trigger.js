@@ -203,7 +203,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @param {boolean} isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(registry, eventBus, controlId, storage, isImport) {
-		super(registry, controlId, 'Controls/ControlTypes/Triggers')
+		super(registry, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
 		this.actions = new FragmentActions(
 			registry.internalModule,
@@ -230,7 +230,6 @@ export default class ControlTrigger extends ControlBase {
 		this.actions.action_sets = {
 			0: [],
 		}
-		this.feedbacks.feedbacks = []
 		this.events = []
 
 		if (!storage) {
@@ -245,7 +244,7 @@ export default class ControlTrigger extends ControlBase {
 
 			this.options = storage.options || this.options
 			this.actions.action_sets = storage.action_sets || this.actions.action_sets
-			this.feedbacks.feedbacks = storage.condition || this.feedbacks.feedbacks
+			this.feedbacks.loadStorage(storage.condition || [], true, isImport)
 			this.events = storage.events || this.events
 
 			if (isImport) this.postProcessImport()
@@ -480,11 +479,11 @@ export default class ControlTrigger extends ControlBase {
 	 * @access public
 	 */
 	collectReferencedConnections(foundConnectionIds, foundConnectionLabels) {
-		const allFeedbacks = this.feedbacks.feedbacks
+		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = this.actions.getAllActions()
 
 		for (const feedback of allFeedbacks) {
-			foundConnectionIds.add(feedback.instance_id)
+			foundConnectionIds.add(feedback.connectionId)
 		}
 		for (const action of allActions) {
 			foundConnectionIds.add(action.instance)
@@ -497,6 +496,7 @@ export default class ControlTrigger extends ControlBase {
 			visitor,
 			undefined,
 			allActions,
+			[],
 			allFeedbacks,
 			this.events
 		)
@@ -507,7 +507,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @returns {void}
 	 */
 	triggerLocationHasChanged() {
-		this.feedbacks.updateAllInternal()
+		this.feedbacks.resubscribeAllFeedbacks('internal')
 	}
 
 	/**
@@ -523,7 +523,7 @@ export default class ControlTrigger extends ControlBase {
 			type: this.type,
 			options: this.options,
 			action_sets: this.actions.action_sets,
-			condition: this.feedbacks.feedbacks,
+			condition: this.feedbacks.getAllFeedbackInstances(),
 			events: this.events,
 		}
 		return clone ? cloneDeep(obj) : obj
@@ -625,7 +625,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @access public
 	 */
 	renameVariables(labelFrom, labelTo) {
-		const allFeedbacks = this.feedbacks.feedbacks
+		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = this.actions.getAllActions()
 
 		// Fix up references
@@ -634,6 +634,7 @@ export default class ControlTrigger extends ControlBase {
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
 			allActions,
+			[],
 			allFeedbacks,
 			this.events,
 			true

@@ -11,12 +11,12 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { NumberInputField, TextInputField } from '../Components/index.js'
-import { ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { ConnectionsContext, DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { AddActionsModal, AddActionsModalRef } from './AddModal.js'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -30,6 +30,7 @@ import {
 } from '../Services/Controls/ControlActionsService.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import classNames from 'classnames'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -42,7 +43,7 @@ interface ControlActionSetEditorProps {
 	headingActions?: JSX.Element[]
 }
 
-export const ControlActionSetEditor = memo(function ControlActionSetEditor({
+export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 	controlId,
 	location,
 	stepId,
@@ -57,27 +58,26 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	const actionsService = useControlActionsEditorService(controlId, stepId, setId, confirmModal)
 
 	const actionIds = useMemo(() => (actions ? actions.map((act) => act.id) : []), [actions])
-	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`actions_${controlId}_${stepId}_${setId}`, actionIds)
+	const panelCollapseHelper = usePanelCollapseHelperLite(`actions_${controlId}_${stepId}_${setId}`, actionIds)
 
 	return (
 		<div className="action-category">
-			<h4>
+			<h5>
 				{heading}
 				<CButtonGroup className="right">
-					{actions && actions.length > 1 && canExpandAll && (
-						<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
+					{actions && actions.length > 1 && panelCollapseHelper.canExpandAll() && (
+						<CButton color="white" size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					)}
-					{actions && actions.length > 1 && canCollapseAll && (
-						<CButton color="white" size="sm" onClick={setAllCollapsed} title="Collapse all">
+					{actions && actions.length > 1 && panelCollapseHelper.canCollapseAll() && (
+						<CButton color="white" size="sm" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all">
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
 					{headingActions || ''}
 				</CButtonGroup>
-			</h4>
+			</h5>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
 				location={location}
@@ -86,8 +86,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 				setId={setId}
 				actions={actions}
 				actionsService={actionsService}
-				setPanelCollapsed={setPanelCollapsed}
-				isPanelCollapsed={isPanelCollapsed}
+				panelCollapseHelper={panelCollapseHelper}
 			/>
 			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={actionsService.addAction} />
 		</div>
@@ -127,8 +126,7 @@ interface ActionsListProps {
 	actions: ActionInstance[] | undefined
 	actionsService: IActionEditorService
 	readonly?: boolean
-	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
-	isPanelCollapsed: (panelId: string) => boolean
+	panelCollapseHelper: PanelCollapseHelperLite
 }
 
 export function ActionsList({
@@ -139,8 +137,7 @@ export function ActionsList({
 	actions,
 	actionsService,
 	readonly,
-	setPanelCollapsed,
-	isPanelCollapsed,
+	panelCollapseHelper,
 }: ActionsListProps) {
 	return (
 		<table className="table action-table">
@@ -158,8 +155,7 @@ export function ActionsList({
 								dragId={dragId}
 								serviceFactory={actionsService}
 								readonly={readonly ?? false}
-								setCollapsed={setPanelCollapsed}
-								isCollapsed={isPanelCollapsed(a.id)}
+								panelCollapseHelper={panelCollapseHelper}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -206,6 +202,7 @@ interface ActionTableRowDragItem {
 	stepId: string
 	setId: string | number
 	index: number
+	dragState: DragState | null
 }
 interface ActionTableRowDragStatus {
 	isDragging: boolean
@@ -221,8 +218,7 @@ interface ActionTableRowProps {
 	serviceFactory: IActionEditorService
 
 	readonly: boolean
-	isCollapsed: boolean
-	setCollapsed: (actionId: string, collapsed: boolean) => void
+	panelCollapseHelper: PanelCollapseHelperLite
 }
 
 const ActionTableRow = observer(function ActionTableRow({
@@ -234,8 +230,7 @@ const ActionTableRow = observer(function ActionTableRow({
 	dragId,
 	serviceFactory,
 	readonly,
-	isCollapsed,
-	setCollapsed,
+	panelCollapseHelper,
 }: ActionTableRowProps): JSX.Element | null {
 	const connectionsContext = useContext(ConnectionsContext)
 	const { actionDefinitions } = useContext(RootAppStoreContext)
@@ -254,16 +249,23 @@ const ActionTableRow = observer(function ActionTableRow({
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<ActionTableRowDragItem>({
 		accept: dragId,
-		hover(item, _monitor) {
+		hover(item, monitor) {
 			if (!ref.current) {
 				return
 			}
+
+			// Ensure the hover targets this element, and not a child element
+			if (!monitor.isOver({ shallow: true })) return
+
 			const dragIndex = item.index
 			const hoverIndex = index
+			const hoverId = action.id
 			// Don't replace items with themselves
-			if (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId) {
+			if (item.actionId === hoverId || (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId)) {
 				return
 			}
+
+			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(item.stepId, item.setId, item.index, index)
@@ -275,6 +277,9 @@ const ActionTableRow = observer(function ActionTableRow({
 			item.index = hoverIndex
 			item.setId = setId
 		},
+		drop(item, _monitor) {
+			item.dragState = null
+		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag<ActionTableRowDragItem, unknown, ActionTableRowDragStatus>({
 		type: dragId,
@@ -285,6 +290,7 @@ const ActionTableRow = observer(function ActionTableRow({
 			setId: setId,
 			index: index,
 			// ref: ref,
+			dragState: null,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
@@ -292,8 +298,15 @@ const ActionTableRow = observer(function ActionTableRow({
 	})
 	preview(drop(ref))
 
-	const doCollapse = useCallback(() => setCollapsed(action.id, true), [setCollapsed, action.id])
-	const doExpand = useCallback(() => setCollapsed(action.id, false), [setCollapsed, action.id])
+	const doCollapse = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(action.id, true),
+		[panelCollapseHelper, action.id]
+	)
+	const doExpand = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(action.id, false),
+		[panelCollapseHelper, action.id]
+	)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(action.id)
 
 	const canSetHeadline = !!service.setHeadline
 	const headline = action.headline
@@ -336,7 +349,7 @@ const ActionTableRow = observer(function ActionTableRow({
 
 					<div className="cell-controls">
 						<CButtonGroup>
-							{canSetHeadline && !headlineExpanded && (
+							{canSetHeadline && !headlineExpanded && !isCollapsed && (
 								<CButton size="sm" onClick={doEditHeadline} title="Set headline">
 									<FontAwesomeIcon icon={faPencil} />
 								</CButton>
@@ -373,7 +386,11 @@ const ActionTableRow = observer(function ActionTableRow({
 
 				{!isCollapsed && (
 					<div className="editor-grid">
-						<div className="cell-description">
+						<div
+							className={classNames('cell-description', {
+								'no-options': actionOptions.length === 0,
+							})}
+						>
 							{headlineExpanded && <p className="name">{name}</p>}
 							{actionSpec?.description}
 						</div>
@@ -412,7 +429,7 @@ const ActionTableRow = observer(function ActionTableRow({
 									<MyErrorBoundary key={i}>
 										<OptionsInputField
 											key={i}
-											isOnControl={!!location}
+											isLocatedInGrid={!!location}
 											isAction={true}
 											connectionId={action.instance}
 											option={opt}

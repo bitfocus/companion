@@ -1,7 +1,7 @@
 {
   "name": "@companion-app/workspace",
   "version": "3.99.0",
-  "packageManager": "yarn@4.3.1",
+  "packageManager": "yarn@4.4.0",
   "workspaces": [
     "companion",
     "shared-lib",
@@ -30,16 +30,21 @@
     "build:writefile": "zx ./tools/build_writefile.mjs",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
+  "engines": {
+    "npm": "please-use-yarn",
+    "yarn": "^4",
+    "node": ">=18.16 <19"
+  },
   "devDependencies": {
+    "@inquirer/prompts": "^5.3.8",
     "chokidar": "^3.6.0",
     "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
-    "inquirer": "^9.3.5",
     "jest": "^29.7.0",
     "octokit": "^4.0.2",
     "open": "^10.1.0",
-    "prettier": "^3.3.2",
-    "yaml": "^2.4.5",
+    "prettier": "^3.3.3",
+    "yaml": "^2.5.0",
     "zx": "^7.2.3"
   },
   "resolutions": {

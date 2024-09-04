@@ -7,12 +7,20 @@ $header-border: (
 	bottom: none,
 );
 $header-color: #fff;
+$header-brand-color: #fff;
+$header-brand-hover-color: #fff;
 $sidebar-bg: #111;
 $sidebar-brand-bg: adjust-color($header-bg, $lightness: -10%);
 
 $form-switch-color: #fff;
 $form-switch-checked-color: #fff;
 $form-switch-focus-color: #fff;
+$form-switch-widths: (
+	xl: (
+		width: 2.75em,
+		height: 1.5em,
+	),
+) !default;
 
 $btn-font-size-sm: 12px;
 $btn-font-size: 0.9rem;

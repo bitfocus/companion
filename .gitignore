@@ -92,3 +92,5 @@ typings/
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
+*/.yarn/*
+module-legacy/.yarnrc

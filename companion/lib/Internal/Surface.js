@@ -129,7 +129,7 @@ export default class Surface {
 	#surfaceController
 
 	/**
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Values.js').VariablesValues}
 	 * @readonly
 	 */
 	#variableController
@@ -147,7 +147,7 @@ export default class Surface {
 	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Surface/Controller.js').default} surfaceController
 	 * @param {import('../Controls/Controller.js').default} controlsController
-	 * @param {import('../Instance/Variable.js').default} variableController
+	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 * @param {import('../Page/Controller.js').default} pageController
 	 */
 	constructor(internalModule, surfaceController, controlsController, variableController, pageController) {
@@ -236,7 +236,7 @@ export default class Surface {
 		let thePage = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			thePage = Number(this.#variableController.parseExpression(options.page_variable, location, 'number').value)
+			thePage = Number(this.#variableController.executeExpression(options.page_variable, location, 'number').value)
 		}
 
 		if (location) {
@@ -677,7 +677,7 @@ export default class Surface {
 	 *
 	 * @param {import('./Types.js').InternalVisitor} _visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} _actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} _feedbacks
+	 * @param {import('./Types.js').FeedbackForVisitor[]} _feedbacks
 	 */
 	visitReferences(_visitor, _actions, _feedbacks) {
 		// actions page_variable handled by generic options visitor

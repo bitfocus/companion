@@ -40,7 +40,7 @@ export default class ActionRecorder {
 	#pageController
 
 	/**
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Values.js').VariablesValues}
 	 * @readonly
 	 */
 	#variableController
@@ -49,7 +49,7 @@ export default class ActionRecorder {
 	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Controls/ActionRecorder.js').default} actionRecorder
 	 * @param {import('../Page/Controller.js').default} pageController
-	 * @param {import('../Instance/Variable.js').default} variableController
+	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
 	constructor(internalModule, actionRecorder, pageController, variableController) {
 		this.#internalModule = internalModule
@@ -367,7 +367,7 @@ export default class ActionRecorder {
 	 *
 	 * @param {import('./Types.js').InternalVisitor} visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('./Types.js').FeedbackForVisitor[]} feedbacks
 	 */
 	visitReferences(visitor, actions, feedbacks) {
 		for (const action of actions) {

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, ChangeEvent, RefObject } from 'react'
+import React, { useCallback, useContext, ChangeEvent, RefObject, useMemo } from 'react'
 import {
 	ConnectionsContext,
 	socketEmitPromise,
@@ -6,15 +6,15 @@ import {
 	LoadingRetryOrError,
 	PreventDefaultHandler,
 } from '../../util.js'
-import { CButton, CAlert, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
-import { useMemo } from 'react'
+import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch, CCallout } from '@coreui/react'
 import { DropdownInputField } from '../../Components/index.js'
 import { ActionsList } from '../../Controls/ActionSetEditor.js'
-import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
+import { usePanelCollapseHelperLite } from '../../Helpers/CollapseHelper.js'
 import type { DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
+import { observer } from 'mobx-react-lite'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
@@ -118,13 +118,13 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 				<CRow className="flex-form-row" style={{ clear: 'both' }}>
 					<div>
 						<CButtonGroup className={'margin-bottom'}>
-							<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>
+							<CButton onClick={doClearActions} color="secondary" disabled={!sessionInfo.actions?.length}>
 								Clear Actions
 							</CButton>
 							<CButton onClick={doAbort} color="danger">
 								Discard
 							</CButton>
-							<CButton onClick={doFinish2} color="danger" disabled={!sessionInfo.actions?.length}>
+							<CButton onClick={doFinish2} color="secondary" disabled={!sessionInfo.actions?.length}>
 								Finish
 							</CButton>
 						</CButtonGroup>
@@ -138,11 +138,11 @@ interface RecorderSessionProps {
 	sessionId: string
 	sessionInfo: RecordSessionInfo | null
 }
-export function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
+export const RecorderSession = observer(function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 	const actionsService = useActionRecorderActionService(sessionId)
 
-	const { setPanelCollapsed, isPanelCollapsed } = usePanelCollapseHelper(
-		`action_recorder`,
+	const panelCollapseHelper = usePanelCollapseHelperLite(
+		'action_recorder',
 		sessionInfo?.actions?.map((a) => a.id) ?? []
 	)
 
@@ -158,10 +158,9 @@ export function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}
 				actionsService={actionsService}
-				setPanelCollapsed={setPanelCollapsed}
-				isPanelCollapsed={isPanelCollapsed}
+				panelCollapseHelper={panelCollapseHelper}
 			/>
-			{sessionInfo.actions.length === 0 ? <CAlert color="info">No actions have been recorded</CAlert> : ''}
+			{sessionInfo.actions.length === 0 ? <CCallout color="info">No actions have been recorded</CCallout> : ''}
 		</CCol>
 	)
-}
+})

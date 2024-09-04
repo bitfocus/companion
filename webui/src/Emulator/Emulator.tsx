@@ -122,8 +122,6 @@ export const Emulator = observer(function Emulator() {
 		}
 	}, [socket])
 
-	const [keyDown, setKeyDown] = useState<ControlLocation | null>(null)
-
 	// Register key handlers
 	useEffect(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
@@ -161,36 +159,23 @@ export const Emulator = observer(function Emulator() {
 		}
 	}, [socket, keymap, emulatorId])
 
-	useEffect(() => {
-		// handle changes to keyDown, as it isnt safe to do inside setState
-		if (!keyDown || !emulatorId) return
-
-		socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown.column, keyDown.row]).catch((e: any) => {
-			console.error('press failed', e)
-		})
-		console.log('emulator:press', emulatorId, keyDown)
-
-		return () => {
-			socketEmitPromise(socket, 'emulator:release', [emulatorId, keyDown.column, keyDown.row]).catch((e: any) => {
-				console.error('release failed', e)
-			})
-			console.log('emulator:release', emulatorId, keyDown)
-		}
-	}, [socket, keyDown, emulatorId])
-
-	useEffect(() => {
-		const onMouseUp = (e: MouseEvent) => {
-			e.preventDefault()
-			setKeyDown(null)
-		}
-
-		document.body.addEventListener('mouseup', onMouseUp)
-
-		return () => {
-			document.body.removeEventListener('mouseup', onMouseUp)
-			setKeyDown(null)
-		}
-	}, [])
+	const buttonClick = useCallback(
+		(location: ControlLocation, pressed: boolean) => {
+			if (!emulatorId) return
+			if (pressed) {
+				socketEmitPromise(socket, 'emulator:press', [emulatorId, location.column, location.row]).catch((e: any) => {
+					console.error('press failed', e)
+				})
+				console.log('emulator:press', emulatorId, location)
+			} else {
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, location.column, location.row]).catch((e: any) => {
+					console.error('release failed', e)
+				})
+				console.log('emulator:release', emulatorId, location)
+			}
+		},
+		[socket]
+	)
 
 	return (
 		<div className="page-tablet page-emulator">
@@ -200,7 +185,7 @@ export const Emulator = observer(function Emulator() {
 
 					<EmulatorButtons
 						imageCache={imageCache}
-						setKeyDown={setKeyDown}
+						buttonClick={buttonClick}
 						columns={config.emulator_columns}
 						rows={config.emulator_rows}
 					/>
@@ -263,23 +248,12 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 
 interface EmulatorButtonsProps {
 	imageCache: EmulatorImageCache
-	setKeyDown: (location: ControlLocation | null) => void
+	buttonClick: (location: ControlLocation, pressed: boolean) => void
 	columns: number
 	rows: number
 }
 
-function EmulatorButtons({ imageCache, setKeyDown, columns, rows }: EmulatorButtonsProps) {
-	const buttonClick = useCallback(
-		(location: ControlLocation, pressed: boolean) => {
-			if (pressed) {
-				setKeyDown(location)
-			} else {
-				setKeyDown(null)
-			}
-		},
-		[setKeyDown]
-	)
-
+function EmulatorButtons({ imageCache, buttonClick, columns, rows }: EmulatorButtonsProps) {
 	const gridStyle = useMemo(() => {
 		return {
 			gridTemplateColumns: 'minmax(0, 1fr) '.repeat(columns),

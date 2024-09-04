@@ -9,11 +9,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FormEvent, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from '../Controls/OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { TextInputField } from '../Components/TextInputField.js'
@@ -26,6 +26,7 @@ import {
 } from '../Services/Controls/ControlEventsService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import classNames from 'classnames'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -33,7 +34,11 @@ interface TriggerEventEditorProps {
 	heading: JSX.Element | string
 }
 
-export function TriggerEventEditor({ controlId, events, heading }: TriggerEventEditorProps) {
+export const TriggerEventEditor = observer(function TriggerEventEditor({
+	controlId,
+	events,
+	heading,
+}: TriggerEventEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
 	const eventsService = useControlEventsEditorService(controlId, confirmModal)
@@ -42,8 +47,7 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 	eventsRef.current = events
 
 	const eventIds = useMemo(() => events.map((ev) => ev.id), [events])
-	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`events_${controlId}`, eventIds)
+	const panelCollapseHelper = usePanelCollapseHelperLite(`events_${controlId}`, eventIds)
 
 	return (
 		<>
@@ -54,13 +58,13 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 				{events.length > 1 && (
 					<CButtonGroup className="right">
 						<CButtonGroup>
-							{canExpandAll && (
-								<CButton size="sm" onClick={setAllExpanded} title="Expand all events">
+							{panelCollapseHelper.canExpandAll() && (
+								<CButton size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all events">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							)}
-							{canCollapseAll && (
-								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all events">
+							{panelCollapseHelper.canCollapseAll() && (
+								<CButton size="sm" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all events">
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
@@ -79,8 +83,7 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 								event={a}
 								dragId={`events_${controlId}`}
 								serviceFactory={eventsService}
-								setCollapsed={setPanelCollapsed}
-								isCollapsed={isPanelCollapsed(a.id)}
+								panelCollapseHelper={panelCollapseHelper}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -92,10 +95,11 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 			</div>
 		</>
 	)
-}
+})
 
 interface EventsTableRowDragObject {
 	index: number
+	dragState: DragState | null
 }
 interface EventsTableRowDragCollection {
 	isDragging: boolean
@@ -106,9 +110,7 @@ interface EventsTableRowProps {
 	index: number
 	dragId: string
 	serviceFactory: IEventEditorService
-
-	isCollapsed: boolean
-	setCollapsed: (eventId: string, collapsed: boolean) => void
+	panelCollapseHelper: PanelCollapseHelperLite
 }
 
 function EventsTableRow({
@@ -116,24 +118,30 @@ function EventsTableRow({
 	index,
 	dragId,
 	serviceFactory,
-	isCollapsed,
-	setCollapsed,
+	panelCollapseHelper,
 }: EventsTableRowProps): JSX.Element | null {
 	const service = useControlEventService(serviceFactory, event)
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EventsTableRowDragObject>({
 		accept: dragId,
-		hover(item, _monitor) {
+		hover(item, monitor) {
 			if (!ref.current) {
 				return
 			}
+
+			// Ensure the hover targets this element, and not a child element
+			if (!monitor.isOver({ shallow: true })) return
+
 			const dragIndex = item.index
 			const hoverIndex = index
+			const hoverId = event.id
 			// Don't replace items with themselves
 			if (dragIndex === hoverIndex) {
 				return
 			}
+
+			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(dragIndex, hoverIndex)
@@ -144,20 +152,21 @@ function EventsTableRow({
 			// to avoid expensive index searches.
 			item.index = hoverIndex
 		},
+		drop(item, _monitor) {
+			item.dragState = null
+		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag<EventsTableRowDragObject, never, EventsTableRowDragCollection>({
 		type: dragId,
 		item: {
 			index: index,
+			dragState: null,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
 		}),
 	})
 	preview(drop(ref))
-
-	const doCollapse = useCallback(() => setCollapsed(event.id, true), [setCollapsed, event.id])
-	const doExpand = useCallback(() => setCollapsed(event.id, false), [setCollapsed, event.id])
 
 	if (!event) {
 		// Invalid event, so skip
@@ -170,13 +179,7 @@ function EventsTableRow({
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td>
-				<EventEditor
-					event={event}
-					service={service}
-					isCollapsed={isCollapsed}
-					doCollapse={doCollapse}
-					doExpand={doExpand}
-				/>
+				<EventEditor event={event} service={service} panelCollapseHelper={panelCollapseHelper} />
 			</td>
 		</tr>
 	)
@@ -185,18 +188,10 @@ function EventsTableRow({
 interface EventEditorProps {
 	event: EventInstance
 	service: IEventEditorEventService
-	isCollapsed: boolean
-	doCollapse: () => void
-	doExpand: () => void
+	panelCollapseHelper: PanelCollapseHelperLite
 }
 
-const EventEditor = observer(function EventEditor({
-	event,
-	service,
-	isCollapsed,
-	doCollapse,
-	doExpand,
-}: EventEditorProps) {
+const EventEditor = observer(function EventEditor({ event, service, panelCollapseHelper }: EventEditorProps) {
 	const { eventDefinitions } = useContext(RootAppStoreContext)
 
 	const eventSpec = eventDefinitions.definitions[event.type]
@@ -214,6 +209,16 @@ const EventEditor = observer(function EventEditor({
 	const headline = event.headline
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+
+	const doCollapse = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(event.id, true),
+		[panelCollapseHelper, event.id]
+	)
+	const doExpand = useCallback(
+		() => panelCollapseHelper.setPanelCollapsed(event.id, false),
+		[panelCollapseHelper, event.id]
+	)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(event.id)
 
 	return (
 		<>
@@ -269,7 +274,11 @@ const EventEditor = observer(function EventEditor({
 
 			{!isCollapsed && (
 				<div className="editor-grid editor-grid-events">
-					<div className="cell-description">
+					<div
+						className={classNames('cell-description', {
+							'no-options': eventOptions.length === 0,
+						})}
+					>
 						{headlineExpanded && <p className="name">{name}</p>}
 						{eventSpec?.description || ''}
 					</div>
@@ -280,7 +289,7 @@ const EventEditor = observer(function EventEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnControl={false}
+										isLocatedInGrid={false}
 										isAction={false}
 										connectionId={'internal'}
 										option={opt}

@@ -1,23 +1,88 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup } from '@coreui/react'
-import { socketEmitPromise } from '../util.js'
+import { CAlert, CButton, CButtonGroup, CCallout, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { TextInputField } from '../Components/TextInputField.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
+import { faAdd, faSync } from '@fortawesome/free-solid-svg-icons'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
-import classNames from 'classnames'
-import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
+import { KnownSurfacesTable } from './KnownSurfacesTable.js'
+import { NavLink, NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+
+export const SURFACES_PAGE_PREFIX = '/surfaces'
+
+type SubPageType = 'configured' | 'discover'
+
+function useSurfacesSubPage(): SubPageType | null | false {
+	const routerLocation = useLocation()
+	if (!routerLocation.pathname.startsWith(SURFACES_PAGE_PREFIX)) return false
+	const fragments = routerLocation.pathname.slice(SURFACES_PAGE_PREFIX.length + 1).split('/')
+	const subPage = fragments[0]
+	if (!subPage) return null
+
+	if (subPage !== 'configured' && subPage !== 'discover') return null
+
+	return subPage
+}
+
+function navigateToSubPage(navigate: NavigateFunction, subPage: SubPageType | null): void {
+	if (!subPage) subPage = 'configured'
+
+	navigate(`${SURFACES_PAGE_PREFIX}/${subPage}`)
+}
 
 export const SurfacesPage = observer(function SurfacesPage() {
-	const { surfaces, socket } = useContext(RootAppStoreContext)
+	const navigate = useNavigate()
 
-	const editModalRef = useRef<SurfaceEditModalRef>(null)
+	const subPage = useSurfacesSubPage()
+	console.log('subPage', subPage)
+	if (subPage === false) return null
+	if (!subPage) {
+		setTimeout(() => navigateToSubPage(navigate, null), 0)
+		return null
+	}
+
+	return (
+		<div className="secondary-panel fill-height">
+			<div className="secondary-panel-header">
+				<h4>Surfaces</h4>
+			</div>
+
+			<div className="secondary-panel-inner">
+				<CNav variant="tabs" role="tablist">
+					<CNavItem>
+						<CNavLink to={`${SURFACES_PAGE_PREFIX}/configured`} as={NavLink}>
+							Configured Surfaces
+						</CNavLink>
+					</CNavItem>
+					<CNavItem>
+						<CNavLink to={`${SURFACES_PAGE_PREFIX}/discover`} as={NavLink}>
+							Discover
+						</CNavLink>
+					</CNavItem>
+				</CNav>
+				<CTabContent>
+					<CTabPane data-tab="configured" visible={subPage === 'configured'} transition={false}>
+						<MyErrorBoundary>
+							<ConfiguredSurfacesTab />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="discover" visible={subPage === 'discover'} transition={false}>
+						<MyErrorBoundary>
+							<DiscoverSurfacesTab />
+						</MyErrorBoundary>
+					</CTabPane>
+				</CTabContent>
+			</div>
+		</div>
+	)
+})
+
+function ConfiguredSurfacesTab() {
+	const { socket } = useContext(RootAppStoreContext)
+
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
-	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState<string | null>(null)
@@ -43,285 +108,58 @@ export const SurfacesPage = observer(function SurfacesPage() {
 			console.error('Emulator add failed', err)
 		})
 	}, [socket])
-
-	const deleteEmulator = useCallback(
-		(surfaceId: string) => {
-			confirmRef?.current?.show('Remove Emulator', 'Are you sure?', 'Remove', () => {
-				socketEmitPromise(socket, 'surfaces:emulator-remove', [surfaceId]).catch((err) => {
-					console.error('Emulator remove failed', err)
-				})
-			})
-		},
-		[socket]
-	)
-
 	const addGroup = useCallback(() => {
 		addGroupModalRef.current?.show()
 	}, [socket])
 
-	const deleteGroup = useCallback(
-		(groupId: string) => {
-			confirmRef?.current?.show('Remove Group', 'Are you sure?', 'Remove', () => {
-				socketEmitPromise(socket, 'surfaces:group-remove', [groupId]).catch((err) => {
-					console.error('Group remove failed', err)
-				})
-			})
-		},
-		[socket]
-	)
-
-	const configureSurface = useCallback((surfaceId: string) => {
-		editModalRef.current?.show(surfaceId, null)
-	}, [])
-
-	const configureGroup = useCallback((groupId: string) => {
-		editModalRef.current?.show(null, groupId)
-	}, [])
-
-	const forgetSurface = useCallback(
-		(surfaceId: string) => {
-			confirmRef.current?.show(
-				'Forget Surface',
-				'Are you sure you want to forget this surface? Any settings will be lost',
-				'Forget',
-				() => {
-					socketEmitPromise(socket, 'surfaces:forget', [surfaceId]).catch((err) => {
-						console.error('fotget failed', err)
-					})
-				}
-			)
-		},
-		[socket]
-	)
-
-	const updateName = useCallback(
-		(surfaceId: string, name: string) => {
-			socketEmitPromise(socket, 'surfaces:set-name', [surfaceId, name]).catch((err) => {
-				console.error('Update name failed', err)
-			})
-		},
-		[socket]
-	)
-
-	const surfacesList = Array.from(surfaces.store.values()).sort((a, b) => {
-		if (a.index === undefined && b.index === undefined) {
-			return a.id.localeCompare(b.id)
-		} else {
-			return (a.index ?? Number.POSITIVE_INFINITY) - (b.index ?? Number.POSITIVE_INFINITY)
-		}
-	})
-
 	return (
-		<div>
-			<h4>Surfaces</h4>
-			<p>
-				These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you might
-				need to close the Elgato Streamdeck application and click the Rescan button below.
+		<>
+			<p style={{ marginBottom: '0.5rem' }}>
+				Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the Elgato
+				Streamdeck application and click the Rescan button below.
 			</p>
-
-			<CAlert color="info">
-				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite">
-					Companion Satellite
-				</a>
-				?
-			</CAlert>
 
 			<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
 				{scanError}
 			</CAlert>
 
-			<CButtonGroup>
+			<CButtonGroup size="sm">
 				<CButton color="warning" onClick={refreshUSB}>
 					<FontAwesomeIcon icon={faSync} spin={scanning} />
 					{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
 				</CButton>
-				<CButton color="danger" onClick={addEmulator}>
+				<CButton color="primary" onClick={addEmulator}>
 					<FontAwesomeIcon icon={faAdd} /> Add Emulator
 				</CButton>
-				<CButton color="warning" onClick={addGroup}>
+				<CButton color="secondary" onClick={addGroup}>
 					<FontAwesomeIcon icon={faAdd} /> Add Group
 				</CButton>
 			</CButtonGroup>
 
-			<SurfaceEditModal ref={editModalRef} />
-			<GenericConfirmModal ref={confirmRef} />
 			<AddSurfaceGroupModal ref={addGroupModalRef} />
 
-			<table className="table table-responsive-sm table-margin-top">
-				<thead>
-					<tr>
-						<th>NO</th>
-						<th>ID</th>
-						<th>Name</th>
-						<th>Type</th>
-						<th>Location</th>
-						<th>&nbsp;</th>
-					</tr>
-				</thead>
-				<tbody>
-					{surfacesList.map((group) => {
-						if (group.isAutoGroup && (group.surfaces || []).length === 1) {
-							return (
-								<SurfaceRow
-									key={group.id}
-									surface={group.surfaces[0]}
-									index={group.index}
-									updateName={updateName}
-									configureSurface={configureSurface}
-									deleteEmulator={deleteEmulator}
-									forgetSurface={forgetSurface}
-									noBorder={false}
-								/>
-							)
-						} else {
-							return (
-								<ManualGroupRow
-									key={group.id}
-									group={group}
-									configureGroup={configureGroup}
-									deleteGroup={deleteGroup}
-									updateName={updateName}
-									configureSurface={configureSurface}
-									deleteEmulator={deleteEmulator}
-									forgetSurface={forgetSurface}
-								/>
-							)
-						}
-					})}
+			<KnownSurfacesTable />
 
-					{surfacesList.length === 0 && (
-						<tr>
-							<td colSpan={7}>No control surfaces have been detected</td>
-						</tr>
-					)}
-				</tbody>
-			</table>
-		</div>
-	)
-})
-
-interface ManualGroupRowProps {
-	group: ClientDevicesListItem
-	configureGroup: (groupId: string) => void
-	deleteGroup: (groupId: string) => void
-	updateName: (surfaceId: string, name: string) => void
-	configureSurface: (surfaceId: string) => void
-	deleteEmulator: (surfaceId: string) => void
-	forgetSurface: (surfaceId: string) => void
-}
-function ManualGroupRow({
-	group,
-	configureGroup,
-	deleteGroup,
-	updateName,
-	configureSurface,
-	deleteEmulator,
-	forgetSurface,
-}: ManualGroupRowProps) {
-	const configureGroup2 = useCallback(() => configureGroup(group.id), [configureGroup, group.id])
-	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
-	const updateName2 = useCallback((val: string) => updateName(group.id, val), [updateName, group.id])
-
-	return (
-		<>
-			<tr>
-				<td>#{group.index}</td>
-				<td>{group.id}</td>
-				<td>
-					<TextInputField value={group.displayName} setValue={updateName2} />
-				</td>
-				<td>Group</td>
-				<td>-</td>
-				<td className="text-right">
-					<CButtonGroup>
-						<CButton onClick={configureGroup2} title="Configure">
-							<FontAwesomeIcon icon={faCog} /> Settings
-						</CButton>
-
-						<CButton onClick={deleteGroup2} title="Delete group">
-							<FontAwesomeIcon icon={faTrash} /> Delete
-						</CButton>
-					</CButtonGroup>
-				</td>
-			</tr>
-			{(group.surfaces || []).map((surface) => (
-				<SurfaceRow
-					key={surface.id}
-					surface={surface}
-					index={undefined}
-					updateName={updateName}
-					configureSurface={configureSurface}
-					deleteEmulator={deleteEmulator}
-					forgetSurface={forgetSurface}
-					noBorder
-				/>
-			))}
+			<CCallout color="info">
+				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite?companion-inapp-didyouknow">
+					Companion Satellite
+				</a>
+				?
+			</CCallout>
 		</>
 	)
 }
 
-interface SurfaceRowProps {
-	surface: ClientSurfaceItem
-	index: number | undefined
-	updateName: (surfaceId: string, name: string) => void
-	configureSurface: (surfaceId: string) => void
-	deleteEmulator: (surfaceId: string) => void
-	forgetSurface: (surfaceId: string) => void
-	noBorder: boolean
-}
-
-function SurfaceRow({
-	surface,
-	index,
-	updateName,
-	configureSurface,
-	deleteEmulator,
-	forgetSurface,
-	noBorder,
-}: SurfaceRowProps) {
-	const updateName2 = useCallback((val: string) => updateName(surface.id, val), [updateName, surface.id])
-	const configureSurface2 = useCallback(() => configureSurface(surface.id), [configureSurface, surface.id])
-	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
-	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])
-
+function DiscoverSurfacesTab() {
 	return (
-		<tr
-			className={classNames({
-				noBorder,
-			})}
-		>
-			<td>{index !== undefined ? `#${index}` : ''}</td>
-			<td>{surface.id}</td>
-			<td>
-				<TextInputField value={surface.name} setValue={updateName2} />
-			</td>
-			<td>{surface.type}</td>
-			<td>{surface.isConnected ? surface.location || 'Local' : 'Offline'}</td>
-			<td className="text-right">
-				{surface.isConnected ? (
-					<CButtonGroup>
-						<CButton onClick={configureSurface2} title="Configure">
-							<FontAwesomeIcon icon={faCog} /> Settings
-						</CButton>
+		<>
+			<p style={{ marginBottom: '0.5rem' }}>
+				Discovered Companion Satellite instances will be listed here. You can easily configure them to connect to
+				Companion from here. This supports Companion Satellite version 1.9.0 and later.
+			</p>
 
-						{surface.integrationType === 'emulator' && (
-							<>
-								<CButton href={`/emulator/${surface.id.substring(9)}`} target="_blank" title="Open Emulator">
-									<FontAwesomeIcon icon={faFolderOpen} />
-								</CButton>
-								<CButton onClick={deleteEmulator2} title="Delete Emulator">
-									<FontAwesomeIcon icon={faTrash} />
-								</CButton>
-							</>
-						)}
-					</CButtonGroup>
-				) : (
-					<CButton onClick={forgetSurface2}>
-						<FontAwesomeIcon icon={faTrash} /> Forget
-					</CButton>
-				)}
-			</td>
-		</tr>
+			<SurfaceDiscoveryTable />
+		</>
 	)
 }

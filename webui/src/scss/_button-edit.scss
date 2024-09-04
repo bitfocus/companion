@@ -68,7 +68,8 @@ table.feedback-table {
 		opacity: 0.5;
 	}
 
-	.actionlist-dropzone {
+	.actionlist-dropzone,
+	.feedbacklist-dropzone {
 		p {
 			border: 2px dashed #bbb;
 			border-radius: 5px;
@@ -125,6 +126,13 @@ table.feedback-table {
 			align-self: center;
 		}
 
+		.description {
+			color: #666;
+			line-height: 1.25em;
+			font-size: 12px;
+			margin-bottom: 10px;
+		}
+
 		.cell-description {
 			grid-row: 2;
 			grid-column: 1;
@@ -136,6 +144,10 @@ table.feedback-table {
 			.name {
 				font-weight: bold;
 				margin-bottom: 0;
+			}
+
+			&.no-options {
+				grid-column: 1/4;
 			}
 		}
 
@@ -158,7 +170,21 @@ table.feedback-table {
 			// }
 
 			.form-check {
-				padding-left: 0.25rem;
+				padding-left: 1.7rem;
+			}
+		}
+
+		.cell-children {
+			grid-row: 5;
+			grid-column: 1 / 4;
+
+			&.hide-top-gap {
+				// Avoid the large gap between expand/collapse buttons and the options/invert toggle
+				margin-top: -25px;
+			}
+
+			h4 {
+				margin-top: 0 !important;
 			}
 		}
 
@@ -173,7 +199,7 @@ table.feedback-table {
 		}
 
 		.cell-styles {
-			grid-row: 5;
+			grid-row: 6;
 			grid-column: 3;
 
 			.png-browse {
@@ -181,7 +207,7 @@ table.feedback-table {
 			}
 		}
 		.cell-styles-manage {
-			grid-row: 5;
+			grid-row: 6;
 			grid-column: 1 / 3;
 		}
 	}

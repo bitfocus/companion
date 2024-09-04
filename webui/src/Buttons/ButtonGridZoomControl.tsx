@@ -18,18 +18,16 @@ export interface ButtonGridZoomControlProps {
 	useCompactButtons: boolean
 	gridZoomValue: number
 	gridZoomController: GridZoomController
-	style?: React.CSSProperties
 }
 export function ButtonGridZoomControl({
 	useCompactButtons,
 	gridZoomValue,
 	gridZoomController,
-	style,
 }: ButtonGridZoomControlProps) {
 	return (
-		<CDropdown className="dropdown-zoom" style={style} autoClose="outside">
+		<CDropdown className="dropdown-zoom btn-right" autoClose="outside" title="View Scale">
 			<CDropdownToggle caret={!useCompactButtons} color="light">
-				<span className="sr-only">Zoom</span>
+				<span className="sr-only">View Scale</span>
 				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoomValue)}%`}
 			</CDropdownToggle>
 			<CDropdownMenu>
@@ -38,11 +36,11 @@ export function ButtonGridZoomControl({
 						<FontAwesomeIcon icon={faMinus} />
 					</CButton>
 					<CFormRange
-						name="zoom"
+						name="scale"
 						min={ZOOM_MIN}
 						max={ZOOM_MAX}
 						step={ZOOM_STEP}
-						title="Zoom"
+						title="Scale"
 						value={gridZoomValue}
 						onChange={(e) => gridZoomController.setZoom(parseInt(e.currentTarget.value))}
 					/>
@@ -55,7 +53,7 @@ export function ButtonGridZoomControl({
 					<CInputGroupText>%</CInputGroupText>
 				</CInputGroup>
 				<CLink className="dropdown-item" onClick={gridZoomController.zoomReset}>
-					Zoom to 100%
+					Scale to 100%
 				</CLink>
 			</CDropdownMenu>
 		</CDropdown>
