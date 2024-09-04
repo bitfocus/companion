@@ -679,7 +679,7 @@ class PageController extends CoreBase {
 		for (const pageNumber of pageNumbers) {
 			const pageInfo = this.getPageInfo(pageNumber)
 
-			this.emit('name', pageNumber, pageInfo ? pageInfo.name ?? '' : undefined)
+			this.emit('name', pageNumber, pageInfo ? (pageInfo.name ?? '') : undefined)
 
 			if (redraw && pageInfo) {
 				this.logger.silly('page controls invalidated for page', pageNumber)
