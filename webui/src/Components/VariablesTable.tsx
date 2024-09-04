@@ -153,10 +153,11 @@ const VariablesTableRow = memo(function VariablesTableRow({
 	onCopied,
 }: VariablesTableRowProps) {
 	const value = typeof valueRaw !== 'string' ? valueRaw + '' : valueRaw
+	const compactValue = value.length > 100 ? `${value.substring(0, 100)}...` : value
 
 	// Split into the lines
 	const elms: Array<string | JSX.Element> = []
-	const lines = value.split('\\n')
+	const lines = compactValue.split('\\n')
 	lines.forEach((l, i) => {
 		elms.push(l)
 		if (i <= lines.length - 1) {
@@ -187,6 +188,7 @@ const VariablesTableRow = memo(function VariablesTableRow({
 								padding: '1px 3px',
 								fontSize: 14,
 							}}
+							title={value}
 						>
 							{elms}
 						</code>
