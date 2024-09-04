@@ -626,7 +626,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								)}
 
 								{selectedStep2 && (
-									<div className="mt-10">
+									<>
 										<MyErrorBoundary>
 											<ControlActionSetEditor
 												heading={`Press actions`}
@@ -647,7 +647,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 											stepId={selectedKey}
 											removeSet={removeSet}
 										/>
-									</div>
+									</>
 								)}
 							</div>
 

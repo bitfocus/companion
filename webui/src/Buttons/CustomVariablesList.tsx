@@ -4,11 +4,9 @@ import { socketEmitPromise, PreventDefaultHandler, useComputed } from '../util.j
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-	faArrowLeft,
 	faCompressArrowsAlt,
 	faCopy,
 	faExpandArrowsAlt,
-	faLevelUp,
 	faSort,
 	faTimes,
 	faTrash,
@@ -198,28 +196,24 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 	return (
 		<div className="variables-panel">
-			<div>
-				<h4>Variables</h4>
-				<CButtonGroup size="sm">
-					<CButton color="primary" onClick={doBack}>
-						<FontAwesomeIcon icon={faArrowLeft} />
-						&nbsp; Go back
-					</CButton>
-					<CButton color="secondary" disabled>
-						Custom Variables
-					</CButton>
+			<h5>
+				Custom Variables
+				<CButtonGroup>
 					{!hasNoVariables && canExpandAll && (
-						<CButton color="secondary" onClick={setAllExpanded} title="Expand all">
-							<FontAwesomeIcon icon={faExpandArrowsAlt} /> Expand
+						<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
+							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					)}
 					{!hasNoVariables && canCollapseAll && (
-						<CButton color="secondary" onClick={setAllCollapsed} title="Collapse all">
-							<FontAwesomeIcon icon={faCompressArrowsAlt} /> Collapse
+						<CButton color="white" size="sm" onClick={setAllCollapsed} title="Collapse all">
+							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
+					<CButton color="primary" size="sm" onClick={doBack} className="gap-b">
+						Back
+					</CButton>
 				</CButtonGroup>
-			</div>
+			</h5>
 
 			<GenericConfirmModal ref={confirmRef} />
 
@@ -281,16 +275,12 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 				</tbody>
 			</table>
 
-			<h5>Create custom variable</h5>
+			<hr />
 			<div>
 				<CForm onSubmit={doCreateNew}>
 					<CInputGroup>
-						<CFormInput
-							type="text"
-							value={newName}
-							onChange={(e) => setNewName(e.currentTarget.value)}
-							placeholder="variableName"
-						/>
+						<CInputGroupText>Create custom variable:</CInputGroupText>
+						<CFormInput type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
 						<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
 							Add
 						</CButton>
@@ -393,25 +383,23 @@ function CustomVariableRow({
 			<td style={{ paddingRight: 0 }}>
 				<div className="editor-grid">
 					<div className="cell-header">
-						<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
-							<span className="variable-style">$({fullname})</span>
-						</CopyToClipboard>
-						<CButtonGroup className="right" size={isCollapsed ? 'sm' : undefined}>
+						$({fullname})
+						<CButtonGroup className="right">
 							{isCollapsed ? (
-								<CButton onClick={doExpand} title="Expand variable view">
+								<CButton size="sm" onClick={doExpand} title="Expand variable view">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							) : (
-								<CButton onClick={doCollapse} title="Collapse variable view">
+								<CButton size="sm" onClick={doCollapse} title="Collapse variable view">
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
 							<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
-								<CButton>
+								<CButton size="sm">
 									<FontAwesomeIcon icon={faCopy} />
 								</CButton>
 							</CopyToClipboard>
-							<CButton onClick={() => doDelete(name)}>
+							<CButton size="sm" onClick={() => doDelete(name)}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 						</CButtonGroup>
@@ -422,10 +410,9 @@ function CustomVariableRow({
 							<div className="cell-options">
 								<CForm onSubmit={PreventDefaultHandler}>
 									<CheckboxInputField
-										label="Persist value"
+										label="Persist value: "
 										value={info.persistCurrentValue}
 										setValue={(val) => setPersistenceValue(name, val)}
-										helpText="If enabled, the current value will be saved and restored when Companion restarts."
 									/>
 								</CForm>
 							</div>

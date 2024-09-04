@@ -1,12 +1,10 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { ConnectionsContext } from '../util.js'
 import { VariablesTable } from '../Components/VariablesTable.js'
 import { CustomVariablesList } from '../Buttons/CustomVariablesList.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faLevelUp } from '@fortawesome/free-solid-svg-icons'
 
 export const ConnectionVariables = function ConnectionVariables() {
 	const connectionsContext = useContext(ConnectionsContext)
@@ -81,11 +79,8 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 
 	return (
 		<div>
-			<h4>Variables</h4>
-			<p>
-				We use variables as placeholders in text, allowing dynamic updates based on the provided content. This enables
-				live updating of messages, making customization quick and easy.
-			</p>
+			<h5>Variables</h5>
+			<p>Some connection types provide variables for you to use in button text.</p>
 			<div className="variables-category-grid">
 				<CButton color="primary" onClick={() => setShowCustom(true)}>
 					Custom Variables
@@ -107,18 +102,15 @@ function VariablesList({ selectedConnectionLabel, setConnectionId }: VariablesLi
 
 	return (
 		<div className="variables-panel">
-			<h4>Variables</h4>
-			<CButtonGroup size="sm">
-				<CButton color="primary" onClick={doBack}>
-					<FontAwesomeIcon icon={faArrowLeft} />
-					&nbsp; Go back
+			<h5>
+				<CButton color="primary" size="sm" onClick={doBack}>
+					Back
 				</CButton>
-				<CButton color="secondary" onClick={doBack} disabled>
-					{selectedConnectionLabel}
-				</CButton>
-			</CButtonGroup>
+				Variables for {selectedConnectionLabel}
+			</h5>
 
 			<VariablesTable label={selectedConnectionLabel} />
+
 			<br style={{ clear: 'both' }} />
 		</div>
 	)

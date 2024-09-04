@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback } from 'react'
 import { CFormCheck, CFormLabel } from '@coreui/react'
-import { InlineHelp } from './InlineHelp.js'
 
 interface CheckboxInputFieldProps {
 	tooltip?: string
@@ -9,18 +8,9 @@ interface CheckboxInputFieldProps {
 	setValue: (value: boolean) => void
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
-	helpText?: string
 }
 
-export function CheckboxInputField({
-	tooltip,
-	label,
-	value,
-	setValue,
-	setValid,
-	disabled,
-	helpText,
-}: CheckboxInputFieldProps) {
+export function CheckboxInputField({ tooltip, label, value, setValue, setValid, disabled }: CheckboxInputFieldProps) {
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
 		setValid?.(true)
@@ -36,15 +26,7 @@ export function CheckboxInputField({
 
 	return (
 		<>
-			<>
-				{helpText ? (
-					<InlineHelp help={helpText}>{label ? <CFormLabel>{label}</CFormLabel> : ''}</InlineHelp>
-				) : label ? (
-					<>{label ? <CFormLabel>{label}</CFormLabel> : ''}</>
-				) : (
-					''
-				)}
-			</>
+			{label ? <CFormLabel>{label}</CFormLabel> : ''}
 			<div className="form-check">
 				<CFormCheck
 					type="checkbox"

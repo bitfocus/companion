@@ -26,7 +26,7 @@ export const UdpConfig = observer(function UdpConfig({ config, setValue, resetVa
 						className="float-right"
 						color="success"
 						checked={config.udp_enabled}
-						size={'xl'}
+						size={'lg'}
 						onChange={(e) => setValue('udp_enabled', e.currentTarget.checked)}
 					/>
 				</td>
@@ -75,7 +75,7 @@ export const UdpConfig = observer(function UdpConfig({ config, setValue, resetVa
 								className="float-right"
 								color="success"
 								checked={config.udp_legacy_api_enabled}
-								size={'xl'}
+								size={'lg'}
 								onChange={(e) => setValue('udp_legacy_api_enabled', e.currentTarget.checked)}
 							/>
 						</td>

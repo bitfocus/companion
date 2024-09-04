@@ -1,8 +1,10 @@
 import { CFormLabel, CFormSwitch } from '@coreui/react'
-import React, { MutableRefObject, useCallback, useContext, useRef, useState } from 'react'
+import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
 import { socketEmitPromise, SocketContext } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+
 interface ControlOptionsEditorProps {
 	controlId: string
 	controlType: string
@@ -74,9 +76,11 @@ export function ControlOptionsEditor({
 			<div className="flex w-full gap-2rem flex-form">
 				<div>
 					<CFormLabel>
-						<InlineHelp help="Delay times will be relative to the previous action, rather than all delays being relative to the button press.">
-							Relative Delays
-						</InlineHelp>
+						Relative Delays{' '}
+						<FontAwesomeIcon
+							icon={faQuestionCircle}
+							title="Delay times will be relative to the previous action, rather than all delays being relative to the button press."
+						/>
 					</CFormLabel>
 					<br />
 					<CFormSwitch
@@ -93,9 +97,11 @@ export function ControlOptionsEditor({
 					<>
 						<div>
 							<CFormLabel>
-								<InlineHelp help="When this button has multiple steps, progress to the next step when the button is released">
-									Progress
-								</InlineHelp>
+								Progress &nbsp;
+								<FontAwesomeIcon
+									icon={faQuestionCircle}
+									title="When this button has multiple steps, progress to the next step when the button is released"
+								/>
 							</CFormLabel>
 							<br />
 							<CFormSwitch
@@ -110,7 +116,8 @@ export function ControlOptionsEditor({
 
 						<div>
 							<CFormLabel>
-								<InlineHelp help="Make this button compatible with rotation events">Rotary Actions</InlineHelp>
+								Rotary Actions &nbsp;
+								<FontAwesomeIcon icon={faQuestionCircle} title="Make this button compatible with rotation events" />
 							</CFormLabel>
 							<br />
 							<CFormSwitch

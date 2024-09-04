@@ -21,7 +21,6 @@ import {
 	faClone,
 	faDownload,
 	faFileExport,
-	faList,
 	faSort,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
@@ -35,7 +34,6 @@ import classNames from 'classnames'
 import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { NonIdealState } from '../Components/NonIdealState.js'
 
 export const Triggers = observer(function Triggers() {
 	const { socket, triggersList } = useContext(RootAppStoreContext)
@@ -94,8 +92,8 @@ export const Triggers = observer(function Triggers() {
 				<h4>Triggers and schedules</h4>
 				<p>This allows you to run actions based on Companion, feedback or time events.</p>
 
-				<CButtonGroup style={{ marginBottom: '1em' }}>
-					<CButton color="primary" onClick={doAddNew} size="sm">
+				<CButtonGroup style={{ marginBottom: '0.3em' }}>
+					<CButton color="primary" onClick={doAddNew}>
 						<FontAwesomeIcon icon={faAdd} /> Add Trigger
 					</CButton>
 				</CButtonGroup>
@@ -210,7 +208,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 				) : (
 					<tr>
 						<td colSpan={4} className="currentlyNone">
-              <NonIdealState icon={faList} text="There are currently no triggers or scheduled tasks." />
+							There currently are no triggers or scheduled tasks.
 						</td>
 					</tr>
 				)}

@@ -152,6 +152,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		<RootAppStoreContext.Provider value={rootStore}>
 			<ConnectionsContext.Provider value={connections!}>
 				<NotificationsManager ref={notifierRef} />
+
 				{children(progressPercent, completedSteps.length === steps.length)}
 			</ConnectionsContext.Provider>
 		</RootAppStoreContext.Provider>

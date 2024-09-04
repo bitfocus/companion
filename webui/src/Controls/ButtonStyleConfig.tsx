@@ -14,7 +14,6 @@ import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/fr
 import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -171,15 +170,19 @@ export function ButtonStyleConfigFields({
 				<div style={specialStyleForButtonEditor}>
 					<label>
 						{values.textExpression ? (
-							<InlineHelp help="You can read more about expressions in the Getting Started pages">
+							<>
 								Button text expression
 								<InputFeatureIcons {...textInputFeatures} />
-							</InlineHelp>
+								<FontAwesomeIcon
+									icon={faQuestionCircle}
+									title="You can read more about expressions in the Getting Started pages"
+								/>
+							</>
 						) : (
-							<InlineHelp help="The text you see on the button you're working with. You can use variables, but not expressions.">
+							<>
 								Button text string
 								<InputFeatureIcons {...textInputFeatures} />
-							</InlineHelp>
+							</>
 						)}
 					</label>
 					<CInputGroup>
@@ -225,13 +228,7 @@ export function ButtonStyleConfigFields({
 						<div className="flex gap-1rem">
 							{showField2('color') && (
 								<div>
-									<ColorInputField
-										label={'Text'}
-										setValue={setColorValue}
-										value={values.color}
-										returnType="number"
-										helpText="Font color"
-									/>
+									<ColorInputField label={'Text'} setValue={setColorValue} value={values.color} returnType="number" />
 								</div>
 							)}
 							{showField2('bgcolor') && (
@@ -241,7 +238,6 @@ export function ButtonStyleConfigFields({
 										setValue={setBackgroundColorValue}
 										value={values.bgcolor}
 										returnType="number"
-										helpText="Background color"
 									/>
 								</div>
 							)}
@@ -255,7 +251,6 @@ export function ButtonStyleConfigFields({
 								setValue={setShowTopBar}
 								value={values.show_topbar}
 								multiple={false}
-								helpText="By default, you have a top bar with the button name and the page number. With this option, you can manually override the default behavior."
 							/>
 						</div>
 					)}
@@ -263,9 +258,7 @@ export function ButtonStyleConfigFields({
 					{showField2('alignment') && (
 						<div>
 							<div>
-								<label>
-									<InlineHelp help="Text alignment">Text</InlineHelp>
-								</label>
+								<label>Text</label>
 								<div style={{ border: '1px solid #ccc' }}>
 									<AlignmentInputField setValue={setAlignmentValue} value={values.alignment} />
 								</div>
@@ -275,9 +268,7 @@ export function ButtonStyleConfigFields({
 					{showField2('pngalignment') && (
 						<div>
 							<div>
-								<label>
-									<InlineHelp help="PNG background image alignment">PNG</InlineHelp>
-								</label>
+								<label>PNG</label>
 								<div style={{ border: '1px solid #ccc' }}>
 									<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment} />
 								</div>
@@ -287,7 +278,7 @@ export function ButtonStyleConfigFields({
 					{showField2('png64') && (
 						<div>
 							<label>
-								<InlineHelp help="Recommended minimum size is 72x72">PNG</InlineHelp>
+								PNG <FontAwesomeIcon icon={faQuestionCircle} title="Recommended minimum size is 72x72" />
 							</label>
 							<CButtonGroup className="png-browse">
 								<PNGInputField

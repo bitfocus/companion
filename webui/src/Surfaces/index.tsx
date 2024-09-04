@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faCog, faFolderOpen, faSearch, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
@@ -11,7 +11,6 @@ import classNames from 'classnames'
 import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { NonIdealState } from '../Components/NonIdealState.js'
 
 export const SurfacesPage = observer(function SurfacesPage() {
 	const { surfaces, socket } = useContext(RootAppStoreContext)
@@ -120,19 +119,27 @@ export const SurfacesPage = observer(function SurfacesPage() {
 				need to close the Elgato Streamdeck application and click the Rescan button below.
 			</p>
 
+			<CAlert color="info">
+				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite">
+					Companion Satellite
+				</a>
+				?
+			</CAlert>
+
 			<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
 				{scanError}
 			</CAlert>
 
 			<CButtonGroup>
-				<CButton color="danger" onClick={refreshUSB}>
+				<CButton color="warning" onClick={refreshUSB}>
 					<FontAwesomeIcon icon={faSync} spin={scanning} />
 					{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
 				</CButton>
-				<CButton color="secondary" onClick={addEmulator}>
+				<CButton color="danger" onClick={addEmulator}>
 					<FontAwesomeIcon icon={faAdd} /> Add Emulator
 				</CButton>
-				<CButton color="secondary" onClick={addGroup}>
+				<CButton color="warning" onClick={addGroup}>
 					<FontAwesomeIcon icon={faAdd} /> Add Group
 				</CButton>
 			</CButtonGroup>
@@ -185,20 +192,11 @@ export const SurfacesPage = observer(function SurfacesPage() {
 
 					{surfacesList.length === 0 && (
 						<tr>
-							<td colSpan={7}>
-								<NonIdealState icon={faSearch} text="No surfaces found" />
-							</td>
+							<td colSpan={7}>No control surfaces have been detected</td>
 						</tr>
 					)}
 				</tbody>
 			</table>
-			<CCallout color="info">
-				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite?companion-inapp-didyouknow">
-					Companion Satellite
-				</a>
-				?
-			</CCallout>
 		</div>
 	)
 })

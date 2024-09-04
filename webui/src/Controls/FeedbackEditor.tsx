@@ -15,7 +15,7 @@ import { ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../u
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { DropdownInputField, TextInputField } from '../Components/index.js'
+import { CheckboxInputField, DropdownInputField, TextInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
@@ -36,7 +36,6 @@ import {
 } from '../Services/Controls/ControlFeedbacksService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -343,8 +342,8 @@ const FeedbackEditor = observer(function FeedbackEditor({
 			{!isCollapsed && (
 				<div className="editor-grid remove075right">
 					<div className="cell-description">
-						{headlineExpanded && <div className="name">{name}</div>}
-						{feedbackSpec?.description && <div className="description">{feedbackSpec?.description || ''}</div>}
+						{headlineExpanded && <p className="name">{name}</p>}
+						{feedbackSpec?.description || ''}
 					</div>
 
 					{showButtonPreview && (
@@ -354,11 +353,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 					)}
 
 					<div className="cell-actions">
-						{feedbackSpec?.hasLearn && (
-							<div style={{ marginTop: 10 }}>
-								<LearnButton id={feedback.id} doLearn={service.performLearn} />
-							</div>
-						)}
+						{feedbackSpec?.hasLearn && <LearnButton id={feedback.id} doLearn={service.performLearn} />}
 					</div>
 
 					<div className="cell-option">
@@ -384,17 +379,15 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						<div className="cell-invert">
 							<MyErrorBoundary>
 								<CForm onSubmit={PreventDefaultHandler}>
-									<div style={{ paddingLeft: 20 }}>
-										<CFormSwitch
-											label={
-												<InlineHelp help="If checked, the behaviour of this feedback is inverted">Invert</InlineHelp>
-											}
-											color="success"
-											checked={!!feedback.isInverted}
-											size="xl"
-											onChange={(e) => service.setInverted(e.currentTarget.checked)}
+									<CFormLabel>
+										Invert
+										<FontAwesomeIcon
+											style={{ marginLeft: '5px' }}
+											icon={faQuestionCircle}
+											title={'If checked, the behaviour of this feedback is inverted'}
 										/>
-									</div>
+									</CFormLabel>
+									<CheckboxInputField value={!!feedback.isInverted} setValue={service.setInverted} />
 								</CForm>
 							</MyErrorBoundary>
 						</div>

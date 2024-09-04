@@ -167,9 +167,7 @@ const VariablesTableRow = memo(function VariablesTableRow({
 	return (
 		<tr>
 			<td>
-				<span className="variable-style">
-					$({label}:{variable.name})
-				</span>
+				$({label}:{variable.name})
 			</td>
 			<td>{variable.label}</td>
 			<td>
@@ -179,17 +177,7 @@ const VariablesTableRow = memo(function VariablesTableRow({
 					valueRaw === null ? (
 						'(empty)'
 					) : (
-						<code
-							style={{
-								backgroundColor: 'rgba(0,0,200,0.1)',
-								color: 'rgba(0,0,200,1)',
-								fontWeight: 'normal',
-								padding: '1px 3px',
-                fontSize: 14,
-							}}
-						>
-							{elms}
-						</code>
+						<code style={{ backgroundColor: 'rgba(255,0,0,0.1)', padding: '1px 4px' }}>{elms}</code>
 					)
 				}
 			</td>

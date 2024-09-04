@@ -3,7 +3,7 @@ import { ConnectionsContext, SocketContext, socketEmitPromise } from '../util.js
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
-import { CAlert, CButton, CCallout } from '@coreui/react'
+import { CAlert, CButton } from '@coreui/react'
 import { ResetWizardModal, ResetWizardModalRef } from './Reset.js'
 import { ExportWizardModal, ExportWizardModalRef } from './Export.js'
 import { ImportWizard } from './Import/index.js'
@@ -104,54 +104,42 @@ export function ImportExport() {
 			<ResetWizardModal ref={resetRef} />
 			<ExportWizardModal ref={exportRef} />
 
-			<h4>Import / Export Configuration</h4>
-			<p>On this page, you can import, export, and reset all settings stored in your Companion installation.</p>
+			<h5>Import configuration</h5>
+			{!fileApiIsSupported ? (
+				<>
+					<CAlert color="warning">File uploading is not supported in your browser</CAlert>
+				</>
+			) : (
+				<>
+					<p>
+						Use the button below to browse your computer for a <b>.companionconfig</b> file containing a configuration
+						set.
+					</p>
 
-			<CCallout color="success">
-				<h5>Export</h5>
-				<p>Download a file containing all connections and button pages.</p>
-				<CButton color="success" onClick={doExport}>
-					<FontAwesomeIcon icon={faDownload} style={{ marginRight: 7, marginLeft: -2 }} />
-					Export configuration
+					<p>
+						{loadError ? <CAlert color="warning">{loadError}</CAlert> : ''}
+
+						<label className="btn btn-success btn-file">
+							<FontAwesomeIcon icon={faFileImport} /> Import
+							<input type="file" onChange={loadSnapshot} style={{ display: 'none' }} accept=".companionconfig" />
+						</label>
+					</p>
+				</>
+			)}
+			<hr />
+			<h5>Export configuration</h5>
+			<p>Download a file containing all connections and button pages.</p>
+			<CButton color="success" onClick={doExport}>
+				<FontAwesomeIcon icon={faDownload} /> Export
+			</CButton>
+			<hr />
+			<h5>Reset configuration</h5>
+			<p>This will clear all connections, triggers and/or buttons.</p>
+			<p>
+				<CButton color="danger" style={{ backgroundColor: 'rgba(180,0,0,1)' }} onClick={doReset}>
+					<FontAwesomeIcon icon={faTrashAlt} /> Reset Configuration
 				</CButton>
-			</CCallout>
-
-			<CCallout color="warning">
-				<h5>Import</h5>
-				{!fileApiIsSupported ? (
-					<>
-						<CAlert color="warning">File uploading is not supported in your browser</CAlert>
-					</>
-				) : (
-					<>
-						<p>
-							Use the button below to browse your computer for a <b>.companionconfig</b> file containing a configuration
-							set.
-						</p>
-
-						<div>
-							{loadError ? <CAlert color="warning">{loadError}</CAlert> : ''}
-
-							<label className="btn btn-warning btn-file">
-								<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
-								Import configuration
-								<input type="file" onChange={loadSnapshot} style={{ display: 'none' }} accept=".companionconfig" />
-							</label>
-						</div>
-					</>
-				)}
-			</CCallout>
-
-			<CCallout color="danger">
-				<h5>Reset</h5>
-				<p>This will clear all connections, triggers and/or buttons.</p>
-				<div>
-					<CButton color="danger" style={{ backgroundColor: 'rgba(180,0,0,1)' }} onClick={doReset}>
-						<FontAwesomeIcon icon={faTrashAlt} style={{ marginRight: 7, marginLeft: -1 }} />
-						Reset configuration
-					</CButton>
-				</div>
-			</CCallout>
+			</p>
 		</>
 	)
 }

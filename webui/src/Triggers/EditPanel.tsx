@@ -20,7 +20,6 @@ import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -138,7 +137,15 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 
 							<MyErrorBoundary>
 								<ControlFeedbacksEditor
-									heading={<InlineHelp help="Only execute when all of these conditions are true">Condition</InlineHelp>}
+									heading={
+										<>
+											Condition &nbsp;
+											<FontAwesomeIcon
+												icon={faQuestionCircle}
+												title="Only execute when all of this conditions are true"
+											/>
+										</>
+									}
 									entityType="condition"
 									controlId={controlId}
 									feedbacks={config.condition}
