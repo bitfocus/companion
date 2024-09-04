@@ -16,7 +16,6 @@ interface PresetsCategoryListProps {
 export function PresetsCategoryList({
 	presets,
 	connectionInfo,
-	moduleInfo,
 	selectedConnectionId,
 	setConnectionAndCategory,
 }: Readonly<PresetsCategoryListProps>) {
@@ -51,7 +50,7 @@ export function PresetsCategoryList({
 						&nbsp; Go back
 					</CButton>
 					<CButton color="secondary" disabled>
-						{moduleInfo?.name || '?'} ({connectionInfo?.label || selectedConnectionId})
+						{connectionInfo?.label || selectedConnectionId}
 					</CButton>
 				</CButtonGroup>
 			</div>
