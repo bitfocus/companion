@@ -26,7 +26,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 		const compactName = moduleInfo?.name?.replace(/\;.*/, '...')
 
 		return (
-			<CButton title={compactName} key={id} color="primary" onClick={() => setConnectionAndCategory([id, null])}>
+			<CButton title={moduleInfo?.name} key={id} color="primary" onClick={() => setConnectionAndCategory([id, null])}>
 				<h6>{connectionInfo?.label ?? id}</h6> <small>{compactName ?? '?'}</small>
 			</CButton>
 		)
