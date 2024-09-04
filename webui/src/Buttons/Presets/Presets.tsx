@@ -87,9 +87,7 @@ export const InstancePresets = observer(function InstancePresets({ resetToken }:
 				<PresetsButtonList
 					presets={presets}
 					selectedConnectionId={connectionAndCategory[0]}
-					selectedConnectionLabel={
-						(moduleInfo?.name ?? '?') + ' (' + connectionInfo?.label || connectionAndCategory[0] + ')'
-					}
+					selectedConnectionLabel={connectionInfo?.label || connectionAndCategory[0]}
 					selectedCategory={connectionAndCategory[1]}
 					setConnectionAndCategory={setConnectionAndCategory}
 				/>
