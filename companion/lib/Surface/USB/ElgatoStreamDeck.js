@@ -23,7 +23,24 @@ import LogController from '../../Log/Controller.js'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	LegacyRotationConfigField,
+	LockConfigFields,
+} from '../CommonConfigFields.js'
 const setTimeoutPromise = util.promisify(setTimeout)
+
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	//
+	...OffsetConfigFields,
+	BrightnessConfigField,
+	LegacyRotationConfigField,
+	...LockConfigFields,
+]
 
 class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	/**
@@ -65,10 +82,11 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} USB device: ${devicePath}`)
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Elgato ${this.#streamDeck.PRODUCT_NAME}`,
 			devicePath: devicePath,
-			configFields: ['brightness', 'legacy_rotation'],
+			configFields: configFields,
 			deviceId: '', // set in #init()
 		}
 

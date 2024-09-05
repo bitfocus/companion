@@ -138,6 +138,7 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 
 		this.#logger.debug(`Adding Contour Shuttle USB device ${devicePath}`)
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Contour Shuttle ${this.deviceInfo.name}`,
 			devicePath: devicePath,

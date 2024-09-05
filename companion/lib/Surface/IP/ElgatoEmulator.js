@@ -20,6 +20,7 @@ import { cloneDeep } from 'lodash-es'
 import LogController from '../../Log/Controller.js'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
+import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
 
 /**
  *
@@ -38,6 +39,43 @@ const DefaultConfig = {
 	emulator_columns: 8,
 	emulator_rows: 4,
 }
+
+/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
+const configFields = [
+	{
+		id: 'emulator_rows',
+		type: 'number',
+		label: 'Row count',
+		default: 4,
+		min: 1,
+		step: 1,
+		max: 100,
+	},
+	{
+		id: 'emulator_columns',
+		type: 'number',
+		label: 'Column count',
+		default: 8,
+		min: 1,
+		step: 1,
+		max: 100,
+	},
+	...OffsetConfigFields,
+	RotationConfigField,
+	{
+		id: 'emulator_control_enable',
+		type: 'checkbox',
+		label: 'Enable support for Logitech R400/Mastercue/DSan',
+		default: true,
+	},
+	{
+		id: 'emulator_prompt_fullscreen',
+		type: 'checkbox',
+		label: 'Prompt to enter fullscreem',
+		default: true,
+	},
+	...LockConfigFields,
+]
 
 class SurfaceIPElgatoEmulator extends EventEmitter {
 	#logger = LogController.createLogger('Surface/IP/ElgatoEmulator')
@@ -108,10 +146,11 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 		this.#io = io
 		this.#emulatorId = emulatorId
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: 'Emulator',
 			devicePath: `emulator:${emulatorId}`,
-			configFields: ['emulator_control_enable', 'emulator_prompt_fullscreen', 'emulator_size'],
+			configFields: configFields,
 			deviceId: `emulator:${emulatorId}`,
 		}
 

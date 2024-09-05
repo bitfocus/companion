@@ -642,7 +642,7 @@ class SurfaceController extends CoreBase {
 		 * @param {SurfaceHandler | null} surfaceHandler
 		 * @returns {ClientSurfaceItem}
 		 */
-		function translateSurfaceConfig(id, config, surfaceHandler) {
+		const translateSurfaceConfig = (id, config, surfaceHandler) => {
 			/** @type {ClientSurfaceItem} */
 			const surfaceInfo = {
 				id: id,

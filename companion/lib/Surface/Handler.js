@@ -73,7 +73,7 @@ const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL = [
  *   deviceId: string
  *   devicePath: string
  *   type: string
- *   configFields: string[]
+ *   configFields: import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]
  *   location?: string
  * }} SurfacePanelInfo
  * @typedef {{

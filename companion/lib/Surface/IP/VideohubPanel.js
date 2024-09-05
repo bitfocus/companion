@@ -19,6 +19,12 @@ import { EventEmitter } from 'events'
 import { convertPanelIndexToXY } from '../Util.js'
 // @ts-ignore
 import VideohubServer from 'videohub-server'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	LockConfigFields,
+	RotationConfigField,
+} from '../CommonConfigFields.js'
 
 /**
  * @typedef {{
@@ -34,6 +40,25 @@ import VideohubServer from 'videohub-server'
  * }} VideohubPanelDeviceInfo
  */
 
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	...OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	{
+		id: 'videohub_page_count',
+		type: 'number',
+		label: 'Page Count',
+		default: 0,
+		min: 0,
+		step: 2,
+		max: 8,
+	},
+	...LockConfigFields,
+]
+
 class SurfaceIPVideohubPanel extends EventEmitter {
 	#logger = LogController.createLogger('Surface/IP/VideohubPanel')
 
@@ -43,10 +68,11 @@ class SurfaceIPVideohubPanel extends EventEmitter {
 	constructor(deviceInfo) {
 		super()
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,
-			configFields: ['brightness', 'videohub_page_count'],
+			configFields: configFields,
 			deviceId: deviceInfo.path,
 			location: deviceInfo.remoteAddress,
 		}

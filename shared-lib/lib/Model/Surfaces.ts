@@ -1,12 +1,18 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type { DropdownChoice } from '@companion-module/base'
+import type {
+	DropdownChoice,
+	CompanionInputFieldCheckbox,
+	CompanionInputFieldDropdown,
+	CompanionInputFieldNumber,
+} from '@companion-module/base'
+import { CompanionInputFieldTextInputExtended, EncodeIsVisible2 } from './Options.js'
 
 export interface ClientSurfaceItem {
 	id: string
 	type: string
 	integrationType: string
 	name: string
-	configFields: string[]
+	configFields: CompanionSurfaceConfigField[]
 	isConnected: boolean
 	displayName: string
 	location: string | null
@@ -76,3 +82,10 @@ export interface SurfaceDiscoveryUpdateUpdateOp {
 export interface CompanionExternalAddresses {
 	addresses: DropdownChoice[]
 }
+
+export type CompanionSurfaceConfigField =
+	| EncodeIsVisible2<CompanionInputFieldTextInputExtended>
+	| EncodeIsVisible2<CompanionInputFieldDropdown>
+	| EncodeIsVisible2<CompanionInputFieldNumber>
+	| EncodeIsVisible2<CompanionInputFieldCheckbox>
+// | EncodeIsVisible2<CompanionInputFieldCustomVariable>

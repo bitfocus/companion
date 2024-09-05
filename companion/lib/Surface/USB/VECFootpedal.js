@@ -60,6 +60,7 @@ class SurfaceUSBVECFootpedal extends EventEmitter {
 
 		this.#logger.debug(`Adding VEC Footpedal USB device ${devicePath}`)
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `VEC Footpedal ${this.deviceInfo.name}`,
 			devicePath: devicePath,
