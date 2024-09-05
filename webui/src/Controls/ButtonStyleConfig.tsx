@@ -188,7 +188,7 @@ export function ButtonStyleConfigFields({
 							setValue={setTextValue}
 							value={values.text ?? ''}
 							useVariables
-							useLocalVariables
+							useLocalVariables={'control'}
 							isExpression={values.textExpression}
 							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>
