@@ -73,7 +73,7 @@ export function OptionsInputField({
 					required={option.required}
 					placeholder={option.placeholder}
 					useVariables={features.variables}
-					useLocalVariables={features.local}
+					useLocalVariables={features.local ? 'control' : undefined}
 					isExpression={option.isExpression}
 					disabled={readonly}
 					setValue={setValue2}

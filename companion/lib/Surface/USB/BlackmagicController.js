@@ -27,23 +27,19 @@ import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../Co
  * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
  */
 const configFields = [
-	//
 	...OffsetConfigFields,
 	RotationConfigField,
 	...LockConfigFields,
 	{
 		id: 'tbarValueVariable',
 		type: 'custom-variable',
-		label: 'Custom variable to store T-bar value',
+		label: 'Variable to store T-bar value to',
 		tooltip: 'This produces a value between 0 and 1. You can use an expression to convert it into a different range.',
 	},
 	{
 		id: 'tbarLeds',
 		type: 'textinput',
 		label: 'T-bar LED pattern',
-		useVariables: true, //{
-		// local: true, // TODO
-		// },
 		isExpression: true,
 		tooltip:
 			'Set the pattern of LEDs on the T-bar. Use numbers -16 to 16, positive numbers light up from the bottom, negative from the top.',
@@ -59,11 +55,11 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	#logger
 
 	/**
-	 * @type {import('../../Variables/Values.js').VariablesValues}
+	 * @type {import('../Controller.js').SurfaceExecuteExpressionFn}
 	 * @access private
 	 * @readonly
 	 */
-	#variablesValues
+	#executeExpression
 
 	/**
 	 * @type {Record<string, any>}
@@ -89,15 +85,15 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	#lastTbarDrawReferencedVariables = null
 
 	/**
-	 * @param {import("../../Variables/Values.js").VariablesValues} variablesValues
+	 * @param {import('../Controller.js').SurfaceExecuteExpressionFn} executeExpression
 	 * @param {string} devicePath
 	 * @param {import('@blackmagic-controller/node').BlackmagicController} blackmagicController
 	 */
-	constructor(variablesValues, devicePath, blackmagicController) {
+	constructor(executeExpression, devicePath, blackmagicController) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/BlackmagicController/${devicePath}`)
-		this.#variablesValues = variablesValues
+		this.#executeExpression = executeExpression
 
 		this.config = {}
 
@@ -173,12 +169,10 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	 * @returns {Promise<SurfaceUSBBlackmagicController>}
 	 */
 	static async create(devicePath, options) {
-		if (!options.variableValues) throw new Error('Missing required variableValues option!')
-
 		const blackmagicController = await openBlackmagicController(devicePath)
 
 		try {
-			const self = new SurfaceUSBBlackmagicController(options.variableValues, devicePath, blackmagicController)
+			const self = new SurfaceUSBBlackmagicController(options.executeExpression, devicePath, blackmagicController)
 
 			/** @type {any} */
 			let errorDuringInit = null
@@ -279,9 +273,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 			const expressionText = this.config.tbarLeds
 			try {
-				const parseResult = this.#variablesValues.executeExpression(expressionText ?? '', undefined, undefined, {
-					// TODO - inject variables
-				})
+				const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
 				expressionResult = parseResult.value
 
 				this.#lastTbarDrawReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null

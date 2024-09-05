@@ -363,19 +363,22 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'textinput': {
-			const features: InputFeatureIconsProps = {
-				variables: !!definition.useVariables,
-				local: typeof definition.useVariables === 'object' && !!definition.useVariables?.local,
-			}
+			const features: InputFeatureIconsProps = definition.isExpression
+				? {
+						variables: true,
+						local: true,
+					}
+				: {}
 
 			return (
 				<TextInputField
+					// nocommit - figure out this label!
 					// label={<OptionLabel option={option} features={features} />}
 					value={value}
 					regex={definition.regex}
 					placeholder={definition.placeholder}
 					useVariables={features.variables}
-					useLocalVariables={features.local}
+					useLocalVariables={features.local ? 'surface' : undefined}
 					isExpression={definition.isExpression}
 					setValue={setValue2}
 				/>

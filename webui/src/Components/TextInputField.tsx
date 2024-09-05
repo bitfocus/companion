@@ -13,6 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { assertNever } from '../util.js'
 
 interface TextInputFieldProps {
 	label?: React.ReactNode
@@ -26,7 +27,7 @@ interface TextInputFieldProps {
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	useVariables?: boolean
-	useLocalVariables?: boolean
+	useLocalVariables?: 'control' | 'surface'
 	isExpression?: boolean
 }
 
@@ -133,7 +134,7 @@ export const TextInputField = observer(function TextInputField({
 					<VariablesSelect
 						showValue={showValue}
 						style={extraStyle}
-						useLocalVariables={!!useLocalVariables}
+						useLocalVariables={useLocalVariables}
 						storeValue={storeValue}
 						focusStoreValue={focusStoreValue}
 						blurClearValue={blurClearValue}
@@ -199,7 +200,7 @@ interface DropdownChoiceInt {
 interface VariablesSelectProps {
 	showValue: string
 	style: React.CSSProperties
-	useLocalVariables: boolean
+	useLocalVariables: 'control' | 'surface' | undefined
 	storeValue: (value: string) => void
 	focusStoreValue: () => void
 	blurClearValue: () => void
@@ -224,6 +225,8 @@ const VariablesSelect = observer(function VariablesSelect({
 	const { variablesStore } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
 
+	const localVariableOptions = useMemo(() => getLocalVariableOptions(useLocalVariables), [useLocalVariables])
+
 	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
 	const options = useMemo(() => {
 		// Update the suggestions list in tribute whenever anything changes
@@ -235,33 +238,10 @@ const VariablesSelect = observer(function VariablesSelect({
 			})
 		}
 
-		if (useLocalVariables) {
-			suggestions.push(
-				{
-					value: 'this:page',
-					label: 'This page',
-				},
-				{
-					value: 'this:column',
-					label: 'This column',
-				},
-				{
-					value: 'this:row',
-					label: 'This row',
-				},
-				{
-					value: 'this:step',
-					label: 'The current step of this button',
-				},
-				{
-					value: 'this:page_name',
-					label: 'This page name',
-				}
-			)
-		}
+		suggestions.push(...localVariableOptions)
 
 		return suggestions
-	}, [baseVariableDefinitions, useLocalVariables])
+	}, [baseVariableDefinitions, localVariableOptions])
 
 	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)
@@ -537,4 +517,52 @@ function FindVariableStartIndexFromCursor(text: string, cursor: number): number 
 	// TODO - ensure contents is valid
 
 	return previousOpen
+}
+
+function getLocalVariableOptions(variableSet: 'control' | 'surface' | undefined): DropdownChoiceInt[] {
+	switch (variableSet) {
+		case 'control':
+			return [
+				{
+					value: 'this:page',
+					label: 'This page',
+				},
+				{
+					value: 'this:column',
+					label: 'This column',
+				},
+				{
+					value: 'this:row',
+					label: 'This row',
+				},
+				{
+					value: 'this:step',
+					label: 'The current step of this button',
+				},
+				{
+					value: 'this:page_name',
+					label: 'This page name',
+				},
+			]
+		case 'surface':
+			return [
+				{
+					value: 'this:page',
+					label: 'This page',
+				},
+				{
+					value: 'this:surface_id',
+					label: 'The id of this surface',
+				},
+				{
+					value: 'this:page_name',
+					label: 'This page name',
+				},
+			]
+		case undefined:
+			return []
+		default:
+			assertNever(variableSet)
+			return []
+	}
 }

@@ -84,8 +84,10 @@ export interface CompanionExternalAddresses {
 	addresses: DropdownChoice[]
 }
 
+export type CompanionSurfaceInputFieldTextInput = Omit<CompanionInputFieldTextInputExtended, 'useVariables'>
+
 export type CompanionSurfaceConfigField =
-	| EncodeIsVisible2<CompanionInputFieldTextInputExtended>
+	| EncodeIsVisible2<CompanionSurfaceInputFieldTextInput>
 	| EncodeIsVisible2<CompanionInputFieldDropdown>
 	| EncodeIsVisible2<CompanionInputFieldNumber>
 	| EncodeIsVisible2<CompanionInputFieldCheckbox>
