@@ -9,6 +9,23 @@
 	}
 }
 
+.form-label .feature-icons {
+	background-color: #ddd;
+	border-radius: 100px; // as much as possible
+
+	margin-left: 3px;
+
+	padding-left: 3px;
+	padding-right: 3px;
+
+	svg {
+		margin-left: 2px;
+		margin-right: 2px;
+
+		font-size: 0.8rem;
+	}
+}
+
 .flex-form {
 	& > div:not(.btn-group) {
 		// column
@@ -23,23 +40,6 @@
 
 		svg {
 			margin-left: 5px;
-		}
-
-		.feature-icons {
-			background-color: #ddd;
-			border-radius: 100px; // as much as possible
-
-			margin-left: 3px;
-
-			padding-left: 3px;
-			padding-right: 3px;
-
-			svg {
-				margin-left: 2px;
-				margin-right: 2px;
-
-				font-size: 0.8rem;
-			}
 		}
 	}
 

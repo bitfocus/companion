@@ -28,7 +28,7 @@ import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField } from '../Components/TextInputField.js'
-import { InputFeatureIconsProps } from '../Controls/OptionsInputField.js'
+import { InputFeatureIcons, InputFeatureIconsProps } from '../Controls/OptionsInputField.js'
 
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
@@ -311,31 +311,11 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 								</>
 							)}
 
-							{surfaceConfig && surfaceInfo && (
-								<>
-									{surfaceInfo.configFields.map((field) => (
-										<>
-											<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
-												{field.label}
-												{field.tooltip && (
-													<FontAwesomeIcon
-														style={{ marginLeft: '5px' }}
-														icon={faQuestionCircle}
-														title={field.tooltip}
-													/>
-												)}
-											</CFormLabel>
-											<CCol sm={8}>
-												<ConfigField
-													definition={field}
-													value={surfaceConfig[field.id]}
-													setValue={setSurfaceConfigValue}
-												/>
-											</CCol>
-										</>
-									))}
-								</>
-							)}
+							{surfaceConfig &&
+								surfaceInfo &&
+								surfaceInfo.configFields.map((field) => (
+									<ConfigField definition={field} value={surfaceConfig[field.id]} setValue={setSurfaceConfigValue} />
+								))}
 						</CForm>
 					</CModalBody>
 					<CModalFooter>
@@ -360,20 +340,21 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 	const id = definition.id
 	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
 
+	let control: JSX.Element | string | undefined = undefined
+	let features: InputFeatureIconsProps | undefined
+
 	const fieldType = definition.type
 	switch (definition.type) {
-		case 'textinput': {
-			const features: InputFeatureIconsProps = definition.isExpression
+		case 'textinput':
+			features = definition.isExpression
 				? {
 						variables: true,
 						local: true,
 					}
 				: {}
 
-			return (
+			control = (
 				<TextInputField
-					// nocommit - figure out this label!
-					// label={<OptionLabel option={option} features={features} />}
 					value={value}
 					regex={definition.regex}
 					placeholder={definition.placeholder}
@@ -383,9 +364,10 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					setValue={setValue2}
 				/>
 			)
-		}
+
+			break
 		case 'number':
-			return (
+			control = (
 				<NumberInputField
 					required={definition.required}
 					min={definition.min}
@@ -396,8 +378,9 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					setValue={setValue2}
 				/>
 			)
+			break
 		case 'checkbox':
-			return (
+			control = (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
 					<CFormSwitch
 						color="success"
@@ -411,8 +394,9 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					/>
 				</div>
 			)
+			break
 		case 'dropdown':
-			return (
+			control = (
 				<DropdownInputField
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
@@ -423,10 +407,25 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					multiple={false}
 				/>
 			)
+			break
 		case 'custom-variable':
-			return <InternalCustomVariableDropdown value={value} setValue={setValue2} includeNone={true} />
+			control = <InternalCustomVariableDropdown value={value} setValue={setValue2} includeNone={true} />
 			break
 		default:
-			return <p>Unknown field "{fieldType}"</p>
+			control = <p>Unknown field "{fieldType}"</p>
+			break
 	}
+
+	return (
+		<>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+				{definition.label}
+				<InputFeatureIcons {...features} />
+				{definition.tooltip && (
+					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={definition.tooltip} />
+				)}
+			</CFormLabel>
+			<CCol sm={8}>{control}</CCol>
+		</>
+	)
 }
