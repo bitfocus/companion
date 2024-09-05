@@ -21,6 +21,17 @@ import { colorToRgb } from './Util.js'
 import { openBlackmagicController } from '@blackmagic-controller/node'
 import debounceFn from 'debounce-fn'
 import { ImageResult } from '../../Graphics/ImageResult.js'
+import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
+
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	//
+	...OffsetConfigFields,
+	RotationConfigField,
+	...LockConfigFields,
+]
 
 export class SurfaceUSBBlackmagicController extends EventEmitter {
 	/**
@@ -53,18 +64,17 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 		this.#logger = LogController.createLogger(`Surface/USB/BlackmagicController/${devicePath}`)
 
-		this.config = {
-			brightness: 50,
-		}
+		this.config = {}
 
 		this.#logger.debug(`Adding framework-macropad USB device: ${devicePath}`)
 
 		this.#device = blackmagicController
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Blackmagic ${this.#device.PRODUCT_NAME}`,
 			devicePath: devicePath,
-			configFields: [],
+			configFields: configFields,
 			deviceId: `blackmagic-controller`, // set in #init()
 		}
 
