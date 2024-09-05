@@ -4,6 +4,7 @@ import type {
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldDropdown,
 	CompanionInputFieldNumber,
+	CompanionInputFieldCustomVariable,
 } from '@companion-module/base'
 import { CompanionInputFieldTextInputExtended, EncodeIsVisible2 } from './Options.js'
 
@@ -88,4 +89,4 @@ export type CompanionSurfaceConfigField =
 	| EncodeIsVisible2<CompanionInputFieldDropdown>
 	| EncodeIsVisible2<CompanionInputFieldNumber>
 	| EncodeIsVisible2<CompanionInputFieldCheckbox>
-// | EncodeIsVisible2<CompanionInputFieldCustomVariable>
+	| EncodeIsVisible2<CompanionInputFieldCustomVariable>

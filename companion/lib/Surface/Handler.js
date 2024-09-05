@@ -331,6 +331,7 @@ class SurfaceHandler extends EventEmitter {
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
 		this.panel.on('setVariable', this.#onSetVariable.bind(this))
+		this.panel.on('setCustomVariable', this.#onSetCustomVariable.bind(this))
 
 		// subscribe to some xkeys specific events
 		this.panel.on('xkeys-subscribePage', this.#onXkeysSubscribePages.bind(this))
@@ -709,6 +710,16 @@ class SurfaceHandler extends EventEmitter {
 		this.#variables.values.setVariableValues('internal', {
 			[name]: value,
 		})
+	}
+
+	/**
+	 * Set the value of a custom variable
+	 * @param {string} name
+	 * @param {string | number} value
+	 * @returns {void}
+	 */
+	#onSetCustomVariable(name, value) {
+		this.#variables.custom.setValue(name, value)
 	}
 
 	/**

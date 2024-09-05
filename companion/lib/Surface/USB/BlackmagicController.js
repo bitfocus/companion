@@ -31,6 +31,11 @@ const configFields = [
 	...OffsetConfigFields,
 	RotationConfigField,
 	...LockConfigFields,
+	{
+		id: 'tbarValueVariable',
+		type: 'custom-variable',
+		label: 'Custom variable to store T-bar value',
+	},
 ]
 
 export class SurfaceUSBBlackmagicController extends EventEmitter {
@@ -54,6 +59,8 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	 * @readonly
 	 */
 	#device
+
+	#lastTbarValue = 0
 
 	/**
 	 * @param {string} devicePath
@@ -108,7 +115,9 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 		this.#device.on('tbar', (_control, value) => {
 			this.#logger.silly(`T-bar position has changed`, value)
-			this.emit('setVariable', 't-bar', Math.round(value * 255))
+			this.#lastTbarValue = value
+
+			this.#emitTbarValue()
 		})
 	}
 	async #init() {
@@ -117,6 +126,13 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 		// Make sure the first clear happens properly
 		await this.#device.clearPanel()
+	}
+
+	#emitTbarValue() {
+		const tbarVariableName = this.config.tbarValueVariable
+		if (tbarVariableName) {
+			this.emit('setCustomVariable', tbarVariableName, Math.round(this.#lastTbarValue * 255))
+		}
 	}
 
 	/**
@@ -159,6 +175,9 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	 * @returns false when nothing happens
 	 */
 	setConfig(config, _force) {
+		// This will be a no-op if the value hasn't changed
+		this.#emitTbarValue()
+
 		// if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 		// 	for (let y = 0; y < this.gridSize.rows; y++) {
 		// 		for (let x = 0; x < this.gridSize.columns; x++) {

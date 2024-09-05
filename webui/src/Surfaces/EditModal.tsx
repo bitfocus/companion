@@ -14,7 +14,7 @@ import { LoadingRetryOrError, socketEmitPromise, PreventDefaultHandler, useCompu
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalPageDropdown } from '../Controls/InternalInstanceFields.js'
+import { InternalCustomVariableDropdown, InternalPageDropdown } from '../Controls/InternalInstanceFields.js'
 import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
 import {
 	ClientDevicesListItem,
@@ -404,6 +404,9 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					multiple={false}
 				/>
 			)
+		case 'custom-variable':
+			return <InternalCustomVariableDropdown value={value} setValue={setValue2} includeNone={true} />
+			break
 		default:
 			return <p>Unknown field "{fieldType}"</p>
 	}
