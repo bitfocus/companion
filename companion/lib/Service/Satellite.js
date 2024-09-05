@@ -79,44 +79,38 @@ class ServiceSatellite extends ServiceBase {
 	 * @param {import('../Resources/Util.js').ParsedParams} params  - the device parameters
 	 */
 	#addDevice(socketLogger, socket, params) {
-		if (!params.DEVICEID) {
-			socket.write(`ADD-DEVICE ERROR MESSAGE="Missing DEVICEID"\n`)
-			return
+		const messageName = 'ADD-DEVICE'
+		if (!params.DEVICEID || params.DEVICEID === true) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing DEVICEID')
 		}
 		if (!params.PRODUCT_NAME) {
-			socket.write(`ADD-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Missing PRODUCT_NAME"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, params.DEVICEID, 'Missing PRODUCT_NAME')
 		}
 
 		const id = `${params.DEVICEID}`
 
 		if (id.startsWith('emulator')) {
 			// Some deviceId values are 'special' and cannot be used by satellite
-			socket.write(`ADD-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Reserved DEVICEID"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Reserved DEVICEID')
 		}
 
 		const existing = this.#findDeviceById(id)
 		if (existing) {
 			if (existing.socket === socket) {
-				socket.write(`ADD-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Device already added"\n`)
-				return
+				return this.#formatAndSendError(socket, messageName, id, 'Device already added')
 			} else {
-				socket.write(`ADD-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Device exists elsewhere"\n`)
-				return
+				return this.#formatAndSendError(existing.socket, messageName, id, 'Device exists elsewhere')
 			}
 		}
 
 		const keysTotal = params.KEYS_TOTAL ? Number(params.KEYS_TOTAL) : LEGACY_MAX_BUTTONS
 		if (isNaN(keysTotal) || keysTotal <= 0) {
-			socket.write(`ADD-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Invalid KEYS_TOTAL"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_TOTAL')
 		}
 
 		const keysPerRow = params.KEYS_PER_ROW ? Number(params.KEYS_PER_ROW) : LEGACY_BUTTONS_PER_ROW
 		if (isNaN(keysPerRow) || keysPerRow <= 0) {
-			socket.write(`ADD-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Invalid KEYS_PER_ROW"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_PER_ROW')
 		}
 
 		socketLogger.debug(`add surface "${id}"`)
@@ -139,8 +133,7 @@ class ServiceSatellite extends ServiceBase {
 		try {
 			transferVariables = parseTransferableValues(params.VARIABLES)
 		} catch (e) {
-			socket.write(`ADD-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Invalid VARIABLES"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid VARIABLES')
 		}
 
 		const device = this.surfaces.addSatelliteDevice({
@@ -301,38 +294,78 @@ class ServiceSatellite extends ServiceBase {
 	}
 
 	/**
+	 * Format and send an error message
+	 * @param {Socket} socket - the client socket
+	 * @param {string} messageName - the message name
+	 * @param {string | undefined} deviceId
+	 * @param {string} message - the message. this must not contain any newlines, or `"` characters
+	 * @returns {void}
+	 */
+	#formatAndSendError(socket, messageName, deviceId, message) {
+		if (deviceId) {
+			socket.write(`${messageName} ERROR DEVICEID="${deviceId}" MESSAGE="${message}"\n`)
+		} else {
+			socket.write(`${messageName} ERROR MESSAGE="${message}"\n`)
+		}
+	}
+
+	/**
+	 * Format and send an error message
+	 * @param {Socket} socket - the client socket
+	 * @param {string} messageName - the message name
+	 * @returns {void}
+	 */
+	#formatAndSendOk(socket, messageName) {
+		socket.write(`${messageName} OK\n`)
+	}
+
+	/**
 	 * Process a key press command
 	 * @param {Socket} socket - the client socket
-	 * @param {import('../Resources/Util.js').ParsedParams} params - the key press parameters
+	 * @param {string} messageName - the message name
+	 * @param {import('../Resources/Util.js').ParsedParams} params - the message parameters
+	 * @returns {SatelliteDevice | undefined}
 	 */
-	#keyPress(socket, params) {
+	#parseDeviceFromMessageAndReportError(socket, messageName, params) {
 		if (!params.DEVICEID) {
-			socket.write(`KEY-PRESS ERROR MESSAGE="Missing DEVICEID"\n`)
+			this.#formatAndSendError(socket, messageName, undefined, 'Missing DEVICEID')
 			return
 		}
 		const id = `${params.DEVICEID}`
 		const device = this.#devices.get(id)
 		if (device === undefined || device.socket !== socket) {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Device not found"\n`)
+			this.#formatAndSendError(socket, messageName, id, 'Device not found')
 			return
 		}
+
+		return device
+	}
+
+	/**
+	 * Process a key press command
+	 * @param {Socket} socket - the client socket
+	 * @param {import('../Resources/Util.js').ParsedParams} params - the key press parameters
+	 */
+	#keyPress(socket, params) {
+		const messageName = 'KEY-PRESS'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
 		if (!params.KEY) {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Missing KEY"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
 		}
 		const xy = device.device.parseKeyParam(params.KEY.toString())
 		if (!xy) {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Invalid KEY"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
 		}
 		if (!params.PRESSED) {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Missing PRESSED"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Missing PRESSED')
 		}
 		const pressed = !isFalsey(params.PRESSED)
 
 		device.device.doButton(...xy, pressed)
-		socket.write(`KEY-PRESS OK\n`)
+		this.#formatAndSendOk(socket, messageName)
 	}
 
 	/**
@@ -341,34 +374,26 @@ class ServiceSatellite extends ServiceBase {
 	 * @param {import('../Resources/Util.js').ParsedParams} params - the key rotate parameters
 	 */
 	#keyRotate(socket, params) {
-		if (!params.DEVICEID) {
-			socket.write(`KEY-ROTATE ERROR MESSAGE="Missing DEVICEID"\n`)
-			return
-		}
-		const id = `${params.DEVICEID}`
-		const device = this.#devices.get(id)
-		if (device === undefined || device.socket !== socket) {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Device not found"\n`)
-			return
-		}
+		const messageName = 'KEY-ROTATE'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
 		if (!params.KEY) {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Missing KEY"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
 		}
 		const xy = device.device.parseKeyParam(params.KEY.toString())
 		if (!xy) {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Invalid KEY"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
 		}
 		if (!params.DIRECTION) {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Missing DIRECTION"\n`)
-			return
+			return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
 		}
 
 		const direction = params.DIRECTION >= '1'
 
 		device.device.doRotate(...xy, direction)
-		socket.write(`KEY-ROTATE OK\n`)
+		this.#formatAndSendOk(socket, messageName)
 	}
 
 	/**
@@ -377,7 +402,25 @@ class ServiceSatellite extends ServiceBase {
 	 * @param {import('../Resources/Util.js').ParsedParams} params - the variable value parameters
 	 */
 	#setVariableValue(socket, params) {
-		// TODO - implement
+		const messageName = 'SET-VARIABLE-VALUE'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
+		const variableName = params.VARIABLE
+		if (!variableName || variableName === true) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing VARIABLE')
+		}
+
+		const encodedValue = params.VALUE
+		if (encodedValue === undefined || encodedValue === true) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing VALUE')
+		}
+
+		const variableValue = Buffer.from(encodedValue, 'base64').toString()
+
+		device.device.setVariableValue(variableName, variableValue)
+		this.#formatAndSendOk(socket, messageName)
 	}
 
 	/**
@@ -387,23 +430,16 @@ class ServiceSatellite extends ServiceBase {
 	 * @param {import('../Resources/Util.js').ParsedParams} params  - the device parameters
 	 */
 	#removeDevice(socketLogger, socket, params) {
-		if (!params.DEVICEID) {
-			socket.write(`REMOVE-DEVICE ERROR MESSAGE="Missing DEVICEID"\n`)
-			return
-		}
+		const messageName = 'REMOVE-DEVICE'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
 
-		const id = `${params.DEVICEID}`
-		const device = this.#devices.get(id)
+		socketLogger.info(`remove surface "${id}"`)
 
-		if (device && device.socket === socket) {
-			socketLogger.info(`remove surface "${id}"`)
-
-			this.surfaces.removeDevice(id)
-			this.#devices.delete(id)
-			socket.write(`REMOVE-DEVICE OK DEVICEID="${params.DEVICEID}"\n`)
-		} else {
-			socket.write(`REMOVE-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Device not found"\n`)
-		}
+		this.surfaces.removeDevice(id)
+		this.#devices.delete(id)
+		socket.write(`${messageName} OK DEVICEID="${params.DEVICEID}"\n`)
 	}
 }
 

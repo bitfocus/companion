@@ -47,14 +47,23 @@ import {
  * 	 name: string
  *   description: string | undefined
  * }} SatelliteTransferableValue
+ * @typedef {{
+ * 	 id: string
+ *   lastValue: import('@companion-module/base').CompanionVariableValue
+ * }} SatelliteInputVariableInfo
+ * @typedef {{
+ * 	 id: string
+ * }} SatelliteOutputVariableInfo
  */
 
 /**
  * @param {boolean} legacyRotation
  * @param {SatelliteDeviceInfo} deviceInfo
+ * @param {Record<string, SatelliteInputVariableInfo>} inputVariables
+ * @param {Record<string, SatelliteOutputVariableInfo>} outputVariables
  * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
  */
-function generateConfigFields(legacyRotation, deviceInfo) {
+function generateConfigFields(legacyRotation, deviceInfo, inputVariables, outputVariables) {
 	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
 	const fields = [
 		...OffsetConfigFields,
@@ -65,20 +74,26 @@ function generateConfigFields(legacyRotation, deviceInfo) {
 
 	for (const variable of deviceInfo.transferVariables) {
 		if (variable.type === 'input') {
+			const id = `satellite_input_${variable.id}`
 			fields.push({
-				id: `satellite_consumed_${variable.id}`,
+				id,
 				type: 'textinput',
 				label: variable.name,
 				tooltip: variable.description,
 				isExpression: true,
 			})
+
+			inputVariables[variable.id] = { id, lastValue: '' }
 		} else if (variable.type === 'output') {
+			const id = `satellite_output_${variable.id}`
 			fields.push({
-				id: `satellite_produced_${variable.id}`,
+				id,
 				type: 'custom-variable',
 				label: variable.name,
 				tooltip: variable.description,
 			})
+
+			outputVariables[variable.id] = { id }
 		}
 	}
 
@@ -127,6 +142,19 @@ class SurfaceIPSatellite extends EventEmitter {
 	#streamTextStyle = false
 
 	/**
+	 * @type {Record<string, SatelliteInputVariableInfo>}
+	 * @access private
+	 * @readonly
+	 */
+	#inputVariables = {}
+	/**
+	 * @type {Record<string, SatelliteOutputVariableInfo>}
+	 * @access private
+	 * @readonly
+	 */
+	#outputVariables = {}
+
+	/**
 	 *
 	 * @param {SatelliteDeviceInfo} deviceInfo
 	 */
@@ -148,7 +176,12 @@ class SurfaceIPSatellite extends EventEmitter {
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,
-			configFields: generateConfigFields(!!this.#streamBitmapSize, deviceInfo),
+			configFields: generateConfigFields(
+				!!this.#streamBitmapSize,
+				deviceInfo,
+				this.#inputVariables,
+				this.#outputVariables
+			),
 			deviceId: deviceInfo.path,
 			location: deviceInfo.socket.remoteAddress,
 		}
@@ -302,6 +335,23 @@ class SurfaceIPSatellite extends EventEmitter {
 		this.emit('rotate', column, row, direction)
 	}
 
+	/**
+	 * Set the value of a variable from this surface
+	 * @param {string} variableName
+	 * @param {import('@companion-module/base').CompanionVariableValue} variableValue
+	 */
+	setVariableValue(variableName, variableValue) {
+		const inputVariableInfo = this.#inputVariables[variableName]
+		if (!inputVariableInfo) return // Not known
+
+		inputVariableInfo.lastValue = variableValue
+
+		const targetCustomVariable = this.#config[inputVariableInfo.id]
+		if (!targetCustomVariable) return // Not configured
+
+		this.emit('setCustomVariable', targetCustomVariable, variableValue)
+	}
+
 	clearDeck() {
 		this.#logger.silly('elgato.prototype.clearDeck()')
 		if (this.socket !== undefined) {
@@ -322,6 +372,13 @@ class SurfaceIPSatellite extends EventEmitter {
 	setConfig(config, force) {
 		if ((force || this.#config.brightness != config.brightness) && config.brightness !== undefined) {
 			this.#setBrightness(config.brightness)
+		}
+
+		// Check if the variable name of the input variable has changed
+		for (const inputVariable of Object.values(this.#inputVariables)) {
+			if (config[inputVariable.id] && (force || this.#config[inputVariable.id] !== config[inputVariable.id])) {
+				this.emit('setCustomVariable', config[inputVariable.id], inputVariable.lastValue)
+			}
 		}
 
 		this.#config = config
