@@ -39,20 +39,50 @@ import {
  *   streamColors: string | boolean
  *   streamText: boolean
  *   streamTextStyle: boolean
+ *   transferVariables: SatelliteTransferableValue[]
  * }} SatelliteDeviceInfo
+ * @typedef {{
+ *   id: string
+ *   type: 'input' | 'output'
+ * 	 name: string
+ *   description: string | undefined
+ * }} SatelliteTransferableValue
  */
 
 /**
  * @param {boolean} legacyRotation
+ * @param {SatelliteDeviceInfo} deviceInfo
  * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
  */
-function generateConfigFields(legacyRotation) {
-	return [
+function generateConfigFields(legacyRotation, deviceInfo) {
+	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
+	const fields = [
 		...OffsetConfigFields,
 		BrightnessConfigField,
 		legacyRotation ? LegacyRotationConfigField : RotationConfigField,
 		...LockConfigFields,
 	]
+
+	for (const variable of deviceInfo.transferVariables) {
+		if (variable.type === 'input') {
+			fields.push({
+				id: `satellite_consumed_${variable.id}`,
+				type: 'textinput',
+				label: variable.name,
+				tooltip: variable.description,
+				isExpression: true,
+			})
+		} else if (variable.type === 'output') {
+			fields.push({
+				id: `satellite_produced_${variable.id}`,
+				type: 'custom-variable',
+				label: variable.name,
+				tooltip: variable.description,
+			})
+		}
+	}
+
+	return fields
 }
 
 class SurfaceIPSatellite extends EventEmitter {
@@ -118,7 +148,7 @@ class SurfaceIPSatellite extends EventEmitter {
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,
-			configFields: generateConfigFields(!!this.#streamBitmapSize),
+			configFields: generateConfigFields(!!this.#streamBitmapSize, deviceInfo),
 			deviceId: deviceInfo.path,
 			location: deviceInfo.socket.remoteAddress,
 		}

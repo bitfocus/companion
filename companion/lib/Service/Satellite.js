@@ -134,19 +134,29 @@ class ServiceSatellite extends ServiceBase {
 		const streamText = params.TEXT !== undefined && isTruthy(params.TEXT)
 		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 
+		/** @type {import('../Surface/IP/Satellite.js').SatelliteTransferableValue[]} */
+		let transferVariables
+		try {
+			transferVariables = parseTransferableValues(params.VARIABLES)
+		} catch (e) {
+			socket.write(`ADD-DEVICE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Invalid VARIABLES"\n`)
+			return
+		}
+
 		const device = this.surfaces.addSatelliteDevice({
 			path: id,
 			gridSize: {
 				columns: keysPerRow,
 				rows: keysTotal / keysPerRow,
 			},
-			socket: socket,
+			socket,
 			deviceId: id,
 			productName: `${params.PRODUCT_NAME}`,
-			streamBitmapSize: streamBitmapSize,
-			streamColors: streamColors,
-			streamText: streamText,
-			streamTextStyle: streamTextStyle,
+			streamBitmapSize,
+			streamColors,
+			streamText,
+			streamTextStyle,
+			transferVariables,
 		})
 
 		this.#devices.set(id, {
@@ -198,6 +208,9 @@ class ServiceSatellite extends ServiceBase {
 				break
 			case 'KEY-ROTATE':
 				this.#keyRotate(socket, params)
+				break
+			case 'SET-VARIABLE-VALUE':
+				this.#setVariableValue(socket, params)
 				break
 			case 'PING':
 				socket.write(`PONG ${body}\n`)
@@ -359,6 +372,15 @@ class ServiceSatellite extends ServiceBase {
 	}
 
 	/**
+	 * Process a set variable value command
+	 * @param {Socket} socket - the client socket
+	 * @param {import('../Resources/Util.js').ParsedParams} params - the variable value parameters
+	 */
+	#setVariableValue(socket, params) {
+		// TODO - implement
+	}
+
+	/**
 	 *
 	 * @param {import('winston').Logger} socketLogger
 	 * @param {Socket} socket - the client socket
@@ -394,3 +416,45 @@ export default ServiceSatellite
  *   device: import('../Surface/IP/Satellite.js').default
  * }} SatelliteDevice
  */
+
+/**
+ *
+ * @param {string | true | undefined} input
+ * @returns {import('../Surface/IP/Satellite.js').SatelliteTransferableValue[]}
+ */
+function parseTransferableValues(input) {
+	if (typeof input !== 'string') return []
+
+	const decodedInput = JSON.parse(Buffer.from(input, 'base64').toString())
+	if (!decodedInput) return []
+
+	/** @type {import('../Surface/IP/Satellite.js').SatelliteTransferableValue[]} */
+	const definitions = []
+
+	for (const field of decodedInput) {
+		const type = field.type
+		if (type !== 'input' && type !== 'output') {
+			throw new Error('Invalid transferable value definition')
+		}
+
+		const id = field.id
+		const name = field.name
+		const description = field.description
+
+		if (typeof id !== 'string' || typeof name !== 'string') {
+			throw new Error('Invalid transferable value definition')
+		}
+		if (description && typeof description !== 'string') {
+			throw new Error('Invalid transferable value definition')
+		}
+
+		definitions.push({
+			id,
+			type,
+			name,
+			description: description || undefined,
+		})
+	}
+
+	return definitions
+}
