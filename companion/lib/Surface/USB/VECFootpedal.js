@@ -19,6 +19,7 @@
 import EventEmitter from 'events'
 import vecFootpedal from 'vec-footpedal'
 import LogController from '../../Log/Controller.js'
+import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 
 const vecFootpedalInfo = {
 	// Treat as:
@@ -36,6 +37,16 @@ const vecFootpedalInfo = {
 function buttonToXy(modelInfo, info) {
 	return modelInfo.buttons[info - 1]
 }
+
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	//
+	...OffsetConfigFields,
+	RotationConfigField,
+	...LockConfigFields,
+]
 
 class SurfaceUSBVECFootpedal extends EventEmitter {
 	/**
@@ -64,7 +75,7 @@ class SurfaceUSBVECFootpedal extends EventEmitter {
 		this.info = {
 			type: `VEC Footpedal ${this.deviceInfo.name}`,
 			devicePath: devicePath,
-			configFields: [],
+			configFields: configFields,
 			deviceId: `vecfootpedal:${this.deviceInfo.id}`,
 		}
 
