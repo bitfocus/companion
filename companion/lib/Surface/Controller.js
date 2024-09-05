@@ -46,6 +46,7 @@ import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
+import { VariablesValues } from '../Variables/Values.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -906,7 +907,14 @@ class SurfaceController extends CoreBase {
 										this.userconfig.getKey('blackmagic_controller_enable') &&
 										getBlackmagicControllerDeviceInfo(deviceInfo)
 									) {
-										await this.#addDevice(deviceInfo.path, {}, 'blackmagic-controller', SurfaceUSBBlackmagicController)
+										await this.#addDevice(
+											deviceInfo.path,
+											{
+												variableValues: this.variablesController.values,
+											},
+											'blackmagic-controller',
+											SurfaceUSBBlackmagicController
+										)
 									}
 								}
 							})
@@ -1293,6 +1301,19 @@ class SurfaceController extends CoreBase {
 	}
 
 	/**
+	 * Propagate variable changes
+	 * @param {Set<string>} allChangedVariables - variables with changes
+	 * @access public
+	 */
+	onVariablesChanged(allChangedVariables) {
+		for (const surface of this.#surfaceHandlers.values()) {
+			if (surface?.panel?.onVariablesChanged) {
+				surface.panel.onVariablesChanged(allChangedVariables)
+			}
+		}
+	}
+
+	/**
 	 * Set the locked state of all surfaces
 	 * @param {boolean} locked
 	 * @param {boolean} forceUnlock Force all surfaces to be unlocked
@@ -1425,5 +1446,6 @@ export default SurfaceController
  *
  * @typedef {{
  *   useLegacyLayout?: boolean
+ *   variableValues?: VariablesValues
  * }} LocalUSBDeviceOptions
  */

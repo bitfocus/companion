@@ -247,6 +247,7 @@ class Registry extends EventEmitter {
 			this.controls.onVariablesChanged(all_changed_variables_set)
 			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
 			this.preview.onVariablesChanged(all_changed_variables_set)
+			this.surfaces.onVariablesChanged(all_changed_variables_set)
 		})
 
 		// old 'modules_loaded' events

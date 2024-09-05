@@ -35,6 +35,18 @@ const configFields = [
 		id: 'tbarValueVariable',
 		type: 'custom-variable',
 		label: 'Custom variable to store T-bar value',
+		tooltip: 'This produces a value between 0 and 1. You can use an expression to convert it into a different range.',
+	},
+	{
+		id: 'tbarLeds',
+		type: 'textinput',
+		label: 'T-bar LED pattern',
+		useVariables: true, //{
+		// local: true, // TODO
+		// },
+		isExpression: true,
+		tooltip:
+			'Set the pattern of LEDs on the T-bar. Use numbers -16 to 16, positive numbers light up from the bottom, negative from the top.',
 	},
 ]
 
@@ -45,6 +57,13 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	 * @readonly
 	 */
 	#logger
+
+	/**
+	 * @type {import('../../Variables/Values.js').VariablesValues}
+	 * @access private
+	 * @readonly
+	 */
+	#variablesValues
 
 	/**
 	 * @type {Record<string, any>}
@@ -63,13 +82,22 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	#lastTbarValue = 0
 
 	/**
+	 * The variables referenced in the last draw of the tbar. Whenever one of these changes, a redraw should be performed
+	 * @access protected
+	 * @type {Set<string> | null}
+	 */
+	#lastTbarDrawReferencedVariables = null
+
+	/**
+	 * @param {import("../../Variables/Values.js").VariablesValues} variablesValues
 	 * @param {string} devicePath
 	 * @param {import('@blackmagic-controller/node').BlackmagicController} blackmagicController
 	 */
-	constructor(devicePath, blackmagicController) {
+	constructor(variablesValues, devicePath, blackmagicController) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/BlackmagicController/${devicePath}`)
+		this.#variablesValues = variablesValues
 
 		this.config = {}
 
@@ -119,6 +147,9 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 			this.#emitTbarValue()
 		})
+
+		// Kick off the tbar value
+		this.#triggerRedrawTbar()
 	}
 	async #init() {
 		const serialNumber = await this.#device.getSerialNumber()
@@ -131,20 +162,23 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	#emitTbarValue() {
 		const tbarVariableName = this.config.tbarValueVariable
 		if (tbarVariableName) {
-			this.emit('setCustomVariable', tbarVariableName, Math.round(this.#lastTbarValue * 255))
+			this.emit('setCustomVariable', tbarVariableName, this.#lastTbarValue)
 		}
 	}
 
 	/**
 	 * Open a framework macropad
 	 * @param {string} devicePath
+	 * @param {import('../Controller.js').LocalUSBDeviceOptions} options
 	 * @returns {Promise<SurfaceUSBBlackmagicController>}
 	 */
-	static async create(devicePath) {
+	static async create(devicePath, options) {
+		if (!options.variableValues) throw new Error('Missing required variableValues option!')
+
 		const blackmagicController = await openBlackmagicController(devicePath)
 
 		try {
-			const self = new SurfaceUSBBlackmagicController(devicePath, blackmagicController)
+			const self = new SurfaceUSBBlackmagicController(options.variableValues, devicePath, blackmagicController)
 
 			/** @type {any} */
 			let errorDuringInit = null
@@ -178,6 +212,9 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 		// This will be a no-op if the value hasn't changed
 		this.#emitTbarValue()
 
+		// TODO - make more granular:
+		this.#triggerRedrawTbar()
+
 		// if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 		// 	for (let y = 0; y < this.gridSize.rows; y++) {
 		// 		for (let x = 0; x < this.gridSize.columns; x++) {
@@ -207,6 +244,76 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 			this.#logger.debug(`Clear deck failed: ${e}`)
 		})
 	}
+
+	/**
+	 * Propagate variable changes
+	 * @param {Set<string>} allChangedVariables - variables with changes
+	 * @access public
+	 */
+	onVariablesChanged(allChangedVariables) {
+		if (this.#lastTbarDrawReferencedVariables) {
+			for (const variable of allChangedVariables.values()) {
+				if (this.#lastTbarDrawReferencedVariables.has(variable)) {
+					this.#logger.silly('variable changed in tbar')
+					this.#triggerRedrawTbar()
+					return
+				}
+			}
+		}
+	}
+
+	/**
+	 * Trigger a redraw of the tbar, if it can be drawn
+	 * @access protected
+	 */
+	#triggerRedrawTbar = debounceFn(
+		() => {
+			const tbarControl = this.#device.CONTROLS.find((control) => control.type === 'tbar' && control.id === 0)
+			if (!tbarControl) {
+				this.#logger.error(`T-bar control not found`)
+				return
+			}
+
+			/** @type {any} */
+			let expressionResult = 0
+
+			const expressionText = this.config.tbarLeds
+			try {
+				const parseResult = this.#variablesValues.executeExpression(expressionText ?? '', undefined, undefined, {
+					// TODO - inject variables
+				})
+				expressionResult = parseResult.value
+
+				this.#lastTbarDrawReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
+			} catch (e) {
+				this.#logger.error(`T-bar expression parse error: ${e}`)
+
+				this.#lastTbarDrawReferencedVariables = null
+			}
+
+			let ledValues = new Array(tbarControl.ledSegments).fill(false)
+			const fillLedCount = Number(expressionResult)
+			if (isNaN(fillLedCount)) {
+				return // Future: allow patterns
+			}
+
+			if (fillLedCount > 0) {
+				ledValues.fill(true, Math.max(ledValues.length - fillLedCount, 0))
+			} else if (fillLedCount < 0) {
+				ledValues.fill(true, 0, Math.min(-fillLedCount, ledValues.length))
+			}
+
+			this.#device.setTbarLeds(ledValues).catch((e) => {
+				this.#logger.error(`write failed: ${e}`)
+			})
+		},
+		{
+			before: false,
+			after: true,
+			wait: 5,
+			maxWait: 20,
+		}
+	)
 
 	/**
 	 * Trigger a redraw of this control, if it can be drawn

@@ -28,6 +28,7 @@ import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField } from '../Components/TextInputField.js'
+import { InputFeatureIconsProps } from '../Controls/OptionsInputField.js'
 
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
@@ -361,10 +362,25 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 
 	const fieldType = definition.type
 	switch (definition.type) {
-		case 'textinput':
+		case 'textinput': {
+			const features: InputFeatureIconsProps = {
+				variables: !!definition.useVariables,
+				local: typeof definition.useVariables === 'object' && !!definition.useVariables?.local,
+			}
+
 			return (
-				<TextInputField value={value} regex={definition.regex} required={definition.required} setValue={setValue2} />
+				<TextInputField
+					// label={<OptionLabel option={option} features={features} />}
+					value={value}
+					regex={definition.regex}
+					placeholder={definition.placeholder}
+					useVariables={features.variables}
+					useLocalVariables={features.local}
+					isExpression={definition.isExpression}
+					setValue={setValue2}
+				/>
 			)
+		}
 		case 'number':
 			return (
 				<NumberInputField

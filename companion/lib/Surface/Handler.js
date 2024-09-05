@@ -85,6 +85,7 @@ const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL = [
  *   drawColor?: (pageOffset: number, x: number, y: number, color: number) => void
  *   setConfig(config: any, force?: boolean): void
  *   getDefaultConfig?: () => any
+ *   onVariablesChanged?: (allChangedVariables: Set<string>) => void
  *   quit(): void
  * } & EventEmitter} SurfacePanel
  * @typedef {{
