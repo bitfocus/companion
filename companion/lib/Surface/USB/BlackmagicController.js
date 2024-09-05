@@ -98,7 +98,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 		this.#device.on('tbar', (_control, value) => {
 			this.#logger.silly(`T-bar position has changed`, value)
-			this.emit('setVariable', 't-bar', value)
+			this.emit('setVariable', 't-bar', Math.round(value * 255))
 		})
 	}
 	async #init() {
