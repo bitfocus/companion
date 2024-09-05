@@ -19,6 +19,8 @@ import { EventEmitter } from 'events'
 import LogController from '../../Log/Controller.js'
 import { colorToRgb } from './Util.js'
 import { openBlackmagicController } from '@blackmagic-controller/node'
+import debounceFn from 'debounce-fn'
+import { ImageResult } from '../../Graphics/ImageResult.js'
 
 export class SurfaceUSBBlackmagicController extends EventEmitter {
 	/**
@@ -178,35 +180,60 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	}
 
 	/**
+	 * Trigger a redraw of this control, if it can be drawn
+	 * @access protected
+	 */
+	#triggerRedraw = debounceFn(
+		() => {
+			/** @type {import('@blackmagic-controller/core').BlackmagicControllerSetButtonColorValue[]} */
+			const colors = []
+
+			const threshold = 100 // Use a lower than 50% threshold, to make it more sensitive
+
+			for (const [id, image] of Object.entries(this.#pendingDraw)) {
+				const color = colorToRgb(image.bgcolor)
+				colors.push({
+					keyId: id,
+					red: color.r >= threshold,
+					green: color.g >= threshold,
+					blue: color.b >= threshold,
+				})
+			}
+
+			if (colors.length === 0) return
+
+			this.#pendingDraw = {}
+			this.#device.setButtonColors(colors).catch((e) => {
+				this.#logger.error(`write failed: ${e}`)
+			})
+		},
+		{
+			before: false,
+			after: true,
+			wait: 5,
+			maxWait: 20,
+		}
+	)
+	/**
+	 * @type {Record<string, ImageResult>}
+	 */
+	#pendingDraw = {}
+
+	/**
 	 * Draw multiple buttons
 	 * @param {import('../Handler.js').DrawButtonItem[]} renders
 	 */
 	drawMany(renders) {
-		/** @type {import('@blackmagic-controller/core').BlackmagicControllerSetButtonColorValue[]} */
-		const colors = []
-
-		const threshold = 100 // Use a lower than 50% threshold, to make it more sensitive
-
 		for (const { x, y, image } of renders) {
 			const control = this.#device.CONTROLS.find(
 				(control) => control.type === 'button' && control.row === y && control.column === x
 			)
 			if (!control) continue
 
-			const color = colorToRgb(image.bgcolor)
-			colors.push({
-				// @ts-ignore
-				keyId: control.id,
-				red: color.r >= threshold,
-				green: color.g >= threshold,
-				blue: color.b >= threshold,
-			})
+			this.#pendingDraw[control.id] = image
 		}
 
-		// Future: maybe this should debounce, to be able to batch better
-		this.#device.setButtonColors(colors).catch((e) => {
-			this.#logger.error(`write failed: ${e}`)
-		})
+		this.#triggerRedraw()
 	}
 
 	/**
