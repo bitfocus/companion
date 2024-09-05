@@ -27,6 +27,8 @@ import {
 	OffsetConfigFields,
 	RotationConfigField,
 } from '../CommonConfigFields.js'
+import debounceFn from 'debounce-fn'
+import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 
 /**
  * @typedef {{
@@ -53,17 +55,19 @@ import {
  * }} SatelliteInputVariableInfo
  * @typedef {{
  * 	 id: string
+ *   lastReferencedVariables: Set<string> | null
+ *   triggerUpdate?: () => void
  * }} SatelliteOutputVariableInfo
  */
 
 /**
- * @param {boolean} legacyRotation
  * @param {SatelliteDeviceInfo} deviceInfo
+ * @param {boolean} legacyRotation
  * @param {Record<string, SatelliteInputVariableInfo>} inputVariables
  * @param {Record<string, SatelliteOutputVariableInfo>} outputVariables
  * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
  */
-function generateConfigFields(legacyRotation, deviceInfo, inputVariables, outputVariables) {
+function generateConfigFields(deviceInfo, legacyRotation, inputVariables, outputVariables) {
 	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
 	const fields = [
 		...OffsetConfigFields,
@@ -83,7 +87,10 @@ function generateConfigFields(legacyRotation, deviceInfo, inputVariables, output
 				isExpression: true,
 			})
 
-			inputVariables[variable.id] = { id, lastValue: '' }
+			inputVariables[variable.id] = {
+				id,
+				lastValue: '',
+			}
 		} else if (variable.type === 'output') {
 			const id = `satellite_output_${variable.id}`
 			fields.push({
@@ -93,7 +100,10 @@ function generateConfigFields(legacyRotation, deviceInfo, inputVariables, output
 				tooltip: variable.description,
 			})
 
-			outputVariables[variable.id] = { id }
+			outputVariables[variable.id] = {
+				id,
+				lastReferencedVariables: null,
+			}
 		}
 	}
 
@@ -102,6 +112,13 @@ function generateConfigFields(legacyRotation, deviceInfo, inputVariables, output
 
 class SurfaceIPSatellite extends EventEmitter {
 	#logger = LogController.createLogger('Surface/IP/Satellite')
+
+	/**
+	 * @type {import('../Controller.js').SurfaceExecuteExpressionFn}
+	 * @access private
+	 * @readonly
+	 */
+	#executeExpression
 
 	/**
 	 * @type {ImageWriteQueue}
@@ -155,11 +172,13 @@ class SurfaceIPSatellite extends EventEmitter {
 	#outputVariables = {}
 
 	/**
-	 *
 	 * @param {SatelliteDeviceInfo} deviceInfo
+	 * @param {import('../Controller.js').SurfaceExecuteExpressionFn} executeExpression
 	 */
-	constructor(deviceInfo) {
+	constructor(deviceInfo, executeExpression) {
 		super()
+
+		this.#executeExpression = executeExpression
 
 		this.gridSize = deviceInfo.gridSize
 
@@ -177,8 +196,8 @@ class SurfaceIPSatellite extends EventEmitter {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,
 			configFields: generateConfigFields(
-				!!this.#streamBitmapSize,
 				deviceInfo,
+				!!this.#streamBitmapSize,
 				this.#inputVariables,
 				this.#outputVariables
 			),
@@ -357,11 +376,71 @@ class SurfaceIPSatellite extends EventEmitter {
 		if (this.socket !== undefined) {
 			this.socket.write(`KEYS-CLEAR DEVICEID=${this.deviceId}\n`)
 		} else {
-			this.#logger.debug('trying to emit to nonexistaant socket: ', this.deviceId)
+			this.#logger.debug('trying to emit to nonexistant socket: ', this.deviceId)
 		}
 	}
 
-	/* elgato-streamdeck functions */
+	/**
+	 * Propagate variable changes
+	 * @param {Set<string>} allChangedVariables - variables with changes
+	 * @access public
+	 */
+	onVariablesChanged(allChangedVariables) {
+		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
+			if (!outputVariable.lastReferencedVariables) continue
+
+			for (const variable of allChangedVariables.values()) {
+				if (!outputVariable.lastReferencedVariables.has(variable)) continue
+
+				// There is a change, recalcuate and send the value
+
+				this.#triggerOutputVariable(name, outputVariable)
+				break
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param {string} name
+	 * @param {SatelliteOutputVariableInfo} outputVariable
+	 */
+	#triggerOutputVariable(name, outputVariable) {
+		if (!outputVariable.triggerUpdate)
+			outputVariable.triggerUpdate = debounceFn(
+				() => {
+					/** @type {any} */
+					let expressionResult = VARIABLE_UNKNOWN_VALUE
+
+					const expressionText = this.#config[outputVariable.id]
+					try {
+						const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+						expressionResult = parseResult.value
+
+						outputVariable.lastReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
+					} catch (e) {
+						this.#logger.error(`expression parse error: ${e}`)
+
+						outputVariable.lastReferencedVariables = null
+					}
+
+					if (this.socket !== undefined) {
+						const base64Value = Buffer.from(expressionResult.toString()).toString('base64')
+						this.socket.write(`VARIABLE-VALUE DEVICEID=${this.deviceId} VARIABLE="${name}" VALUE="${base64Value}"\n`)
+					} else {
+						this.#logger.debug('trying to emit to nonexistant socket: ', this.deviceId)
+					}
+				},
+				{
+					before: false,
+					after: true,
+					wait: 5,
+					maxWait: 20,
+				}
+			)
+
+		outputVariable.triggerUpdate()
+	}
 
 	/**
 	 * Process the information from the GUI and what is saved in database
