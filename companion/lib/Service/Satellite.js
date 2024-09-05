@@ -18,8 +18,9 @@ import LogController from '../Log/Controller.js'
  * 		 - allow choice of returned color format
  * 		 - compatibility with internal CSS colors,
  * 		 - allow buttons > 32
+ * 1.7.0 - Support for transferable values. This allows surfaces to emit and consume values that don't align with a control in the grid.
  */
-const API_VERSION = '1.6.0'
+const API_VERSION = '1.7.0'
 
 /**
  * Class providing the Satellite/Remote Surface api.

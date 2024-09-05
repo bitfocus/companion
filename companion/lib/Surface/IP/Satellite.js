@@ -56,6 +56,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
  * @typedef {{
  * 	 id: string
  *   lastReferencedVariables: Set<string> | null
+ *   lastValue: any
  *   triggerUpdate?: () => void
  * }} SatelliteOutputVariableInfo
  */
@@ -81,10 +82,9 @@ function generateConfigFields(deviceInfo, legacyRotation, inputVariables, output
 			const id = `satellite_input_${variable.id}`
 			fields.push({
 				id,
-				type: 'textinput',
+				type: 'custom-variable',
 				label: variable.name,
 				tooltip: variable.description,
-				isExpression: true,
 			})
 
 			inputVariables[variable.id] = {
@@ -93,16 +93,19 @@ function generateConfigFields(deviceInfo, legacyRotation, inputVariables, output
 			}
 		} else if (variable.type === 'output') {
 			const id = `satellite_output_${variable.id}`
+
 			fields.push({
 				id,
-				type: 'custom-variable',
+				type: 'textinput',
 				label: variable.name,
 				tooltip: variable.description,
+				isExpression: true,
 			})
 
 			outputVariables[variable.id] = {
 				id,
 				lastReferencedVariables: null,
+				lastValue: undefined,
 			}
 		}
 	}
@@ -235,6 +238,11 @@ class SurfaceIPSatellite extends EventEmitter {
 				}
 			}
 		)
+
+		// Send all variables immediately
+		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
+			this.#triggerOutputVariable(name, outputVariable)
+		}
 	}
 
 	quit() {}
@@ -423,6 +431,10 @@ class SurfaceIPSatellite extends EventEmitter {
 
 						outputVariable.lastReferencedVariables = null
 					}
+
+					// Only send if the value has changed
+					if (outputVariable.lastValue === expressionResult) return
+					outputVariable.lastValue = expressionResult
 
 					if (this.socket !== undefined) {
 						const base64Value = Buffer.from(expressionResult.toString()).toString('base64')
