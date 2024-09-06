@@ -19,6 +19,28 @@ import { XKeys, setupXkeysPanel } from 'xkeys'
 import LogController from '../../Log/Controller.js'
 import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
 import { LEGACY_BUTTONS_PER_COLUMN, LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Util/Constants.js'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	LockConfigFields,
+} from '../CommonConfigFields.js'
+
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	...OffsetConfigFields,
+	BrightnessConfigField,
+	{
+		id: 'illuminate_pressed',
+		type: 'checkbox',
+		label: 'Illuminate pressed buttons',
+		default: true,
+	},
+	RotationConfigField,
+	...LockConfigFields,
+]
 
 class SurfaceUSBXKeys extends EventEmitter {
 	/**
@@ -99,10 +121,11 @@ class SurfaceUSBXKeys extends EventEmitter {
 		this.#myXkeysPanel = panel
 		this.#useLegacyLayout = !!options.useLegacyLayout
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `XKeys ${this.#myXkeysPanel.info.name}`,
 			devicePath: devicePath,
-			configFields: ['brightness', 'illuminate_pressed'],
+			configFields: configFields,
 			deviceId: deviceId,
 		}
 

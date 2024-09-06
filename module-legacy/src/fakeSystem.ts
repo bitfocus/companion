@@ -27,6 +27,7 @@ function convertPresetAction(action: CompanionPreset['actions'][0]): Complete<Mo
 		actionId: action.action,
 		delay: action.delay,
 		options: action.options ?? {},
+		headline: undefined,
 	}
 }
 function convertPresetFeedback(feedback: CompanionPreset['feedbacks'][0]): Complete<ModuleApi.CompanionPresetFeedback> {
@@ -35,11 +36,13 @@ function convertPresetFeedback(feedback: CompanionPreset['feedbacks'][0]): Compl
 		options: feedback.options ?? {},
 		style: feedback.style,
 		isInverted: undefined,
+		headline: undefined,
 	}
 }
 function convertPresetBank(bank: CompanionBankPreset): Complete<ModuleApi.CompanionButtonStyleProps> {
 	const res: Complete<ModuleApi.CompanionButtonStyleProps> = {
 		text: bank.text,
+		textExpression: undefined,
 		size: bank.size,
 		color: bank.color,
 		bgcolor: bank.bgcolor,

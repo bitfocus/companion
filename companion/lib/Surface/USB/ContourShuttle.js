@@ -19,6 +19,7 @@
 import EventEmitter from 'events'
 import shuttleControlUSB from 'shuttle-control-usb'
 import LogController from '../../Log/Controller.js'
+import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 
 const contourShuttleXpressInfo = {
 	// Treat as:
@@ -115,6 +116,16 @@ function buttonToXy(modelInfo, info) {
 	return modelInfo.buttons[info - 1]
 }
 
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	//
+	...OffsetConfigFields,
+	RotationConfigField,
+	...LockConfigFields,
+]
+
 class SurfaceUSBContourShuttle extends EventEmitter {
 	/**
 	 * @type {import('winston').Logger}
@@ -138,10 +149,11 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 
 		this.#logger.debug(`Adding Contour Shuttle USB device ${devicePath}`)
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Contour Shuttle ${this.deviceInfo.name}`,
 			devicePath: devicePath,
-			configFields: [],
+			configFields: configFields,
 			deviceId: `contourshuttle:${this.deviceInfo.id}`,
 		}
 

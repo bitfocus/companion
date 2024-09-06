@@ -360,11 +360,11 @@ function ConfigField({ label, setValue, setValid, definition, value, connectionI
 				<DropdownInputField
 					label={label}
 					choices={definition.choices}
-					// allowCustom={definition.allowCustom}
+					allowCustom={definition.allowCustom}
 					minSelection={definition.minSelection}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					maxSelection={definition.maxSelection}
-					// regex={definition.regex}
+					regex={definition.regex}
 					value={value}
 					setValue={setValue2}
 					setValid={setValid2}

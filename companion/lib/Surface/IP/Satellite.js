@@ -20,6 +20,13 @@ import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
+import {
+	BrightnessConfigField,
+	LegacyRotationConfigField,
+	LockConfigFields,
+	OffsetConfigFields,
+	RotationConfigField,
+} from '../CommonConfigFields.js'
 
 /**
  * @typedef {{
@@ -34,6 +41,19 @@ import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
  *   streamTextStyle: boolean
  * }} SatelliteDeviceInfo
  */
+
+/**
+ * @param {boolean} legacyRotation
+ * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+function generateConfigFields(legacyRotation) {
+	return [
+		...OffsetConfigFields,
+		BrightnessConfigField,
+		legacyRotation ? LegacyRotationConfigField : RotationConfigField,
+		...LockConfigFields,
+	]
+}
 
 class SurfaceIPSatellite extends EventEmitter {
 	#logger = LogController.createLogger('Surface/IP/Satellite')
@@ -83,14 +103,6 @@ class SurfaceIPSatellite extends EventEmitter {
 	constructor(deviceInfo) {
 		super()
 
-		this.info = {
-			type: deviceInfo.productName,
-			devicePath: deviceInfo.path,
-			configFields: ['brightness'],
-			deviceId: deviceInfo.path,
-			location: deviceInfo.socket.remoteAddress,
-		}
-
 		this.gridSize = deviceInfo.gridSize
 
 		this.deviceId = deviceInfo.deviceId
@@ -102,11 +114,16 @@ class SurfaceIPSatellite extends EventEmitter {
 		this.#streamText = deviceInfo.streamText
 		this.#streamTextStyle = deviceInfo.streamTextStyle
 
-		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
-
-		if (this.#streamBitmapSize) {
-			this.info.configFields.push('legacy_rotation')
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		this.info = {
+			type: deviceInfo.productName,
+			devicePath: deviceInfo.path,
+			configFields: generateConfigFields(!!this.#streamBitmapSize),
+			deviceId: deviceInfo.path,
+			location: deviceInfo.socket.remoteAddress,
 		}
+
+		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
 
 		this.#config = {
 			rotation: 0,

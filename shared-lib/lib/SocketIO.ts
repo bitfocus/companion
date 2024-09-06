@@ -352,7 +352,7 @@ export interface BackendToClientEventsMap {
 	'emulator:config': (patch: JsonPatchOperation[] | EmulatorConfig) => void
 
 	'bonjour:service:up': (svc: ClientBonjourService) => void
-	'bonjour:service:down': (svc: ClientBonjourService) => void
+	'bonjour:service:down': (subId: string, fqdn: string) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void

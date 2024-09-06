@@ -73,7 +73,7 @@ const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL = [
  *   deviceId: string
  *   devicePath: string
  *   type: string
- *   configFields: string[]
+ *   configFields: import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]
  *   location?: string
  * }} SurfacePanelInfo
  * @typedef {{
@@ -629,7 +629,7 @@ class SurfaceHandler extends EventEmitter {
 				if (controlId) {
 					this.#controls.rotateControl(controlId, direction, this.surfaceId)
 				}
-				this.#logger.debug(`Rotary ${thisPage}/${x2 + xOffset}/${y2 + yOffset} rotated ${direction ? 'right' : 'left'}`)
+				this.#logger.debug(`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${direction ? 'right' : 'left'}`)
 			} else {
 				// Ignore when locked out
 			}

@@ -23,6 +23,12 @@ import LogController from '../../Log/Controller.js'
 import { convertPanelIndexToXY } from '../Util.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	LockConfigFields,
+} from '../CommonConfigFields.js'
 
 /**
  * @typedef {{
@@ -142,6 +148,17 @@ function rotaryToXY(modelInfo, info) {
 	return undefined
 }
 
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	//
+	...OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	...LockConfigFields,
+]
+
 class SurfaceUSBLoupedeckLive extends EventEmitter {
 	/**
 	 * Loupdeck device handle
@@ -190,10 +207,11 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 
 		this.logger.debug(`Adding Loupedeck Live USB device ${devicePath}`)
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: this.#loupedeck.modelName,
 			devicePath: devicePath,
-			configFields: ['brightness'],
+			configFields: configFields,
 			deviceId: `loupedeck:${serialNumber}`,
 		}
 

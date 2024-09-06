@@ -51,8 +51,6 @@ function compareValues(op, value, value2) {
 }
 
 export default class Variables {
-	#logger = LogController.createLogger('Internal/Variables')
-
 	/**
 	 * @type {import('./Controller.js').default}
 	 * @readonly
@@ -202,7 +200,8 @@ export default class Variables {
 
 				return !!res.value
 			} catch (e) {
-				this.#logger.warn(`Failed to execute expression "${feedback.options.expression}": ${e}`)
+				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
+				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${e}`)
 
 				return false
 			}

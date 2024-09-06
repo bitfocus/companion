@@ -112,7 +112,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	 * @param {boolean} isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(registry, controlId, storage, isImport) {
-		super(registry, controlId, 'Controls/Button/Normal')
+		super(registry, controlId, `Controls/Button/Normal/${controlId}`)
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),

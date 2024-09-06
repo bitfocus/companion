@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 const { EventEmitter } = require('events')
 const { spawn, fork, exec } = require('child_process')
 const ps = require('ps-tree')

@@ -19,7 +19,7 @@ import { InlineHelp } from '../Components/InlineHelp.js'
 interface ButtonStyleConfigProps {
 	controlId: string
 	controlType: string
-	style: Record<string, any> | undefined
+	style: ButtonStyleProperties | undefined
 	configRef: MutableRefObject<SomeButtonModel | undefined>
 	mainDialog?: boolean
 }
@@ -122,7 +122,7 @@ export function ButtonStyleConfig({
 }
 
 interface ButtonStyleConfigFieldsProps {
-	values: Record<string, any>
+	values: Partial<ButtonStyleProperties>
 	setValueInner: (key: string, value: any) => void
 	setPng: (png64: string | null) => void
 	setPngError: (error: string | null) => void
@@ -186,7 +186,7 @@ export function ButtonStyleConfigFields({
 						<TextInputField
 							tooltip={'Button text'}
 							setValue={setTextValue}
-							value={values.text}
+							value={values.text ?? ''}
 							useVariables
 							useLocalVariables
 							isExpression={values.textExpression}
@@ -213,7 +213,7 @@ export function ButtonStyleConfigFields({
 									label={'Font size'}
 									choices={FONT_SIZES}
 									setValue={setSizeValue}
-									value={values.size}
+									value={values.size ?? 'auto'}
 									allowCustom={true}
 									regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
 									multiple={false}
@@ -228,7 +228,7 @@ export function ButtonStyleConfigFields({
 									<ColorInputField
 										label={'Text'}
 										setValue={setColorValue}
-										value={values.color}
+										value={values.color ?? 0}
 										returnType="number"
 										helpText="Font color"
 									/>
@@ -239,7 +239,7 @@ export function ButtonStyleConfigFields({
 									<ColorInputField
 										label={'BG'}
 										setValue={setBackgroundColorValue}
-										value={values.bgcolor}
+										value={values.bgcolor ?? 0}
 										returnType="number"
 										helpText="Background color"
 									/>
@@ -253,7 +253,7 @@ export function ButtonStyleConfigFields({
 								label={'Topbar'}
 								choices={SHOW_HIDE_TOP_BAR}
 								setValue={setShowTopBar}
-								value={values.show_topbar}
+								value={(values.show_topbar as string) ?? false}
 								multiple={false}
 								helpText="By default, you have a top bar with the button name and the page number. With this option, you can manually override the default behavior."
 							/>
@@ -267,7 +267,7 @@ export function ButtonStyleConfigFields({
 									<InlineHelp help="Text alignment">Text</InlineHelp>
 								</label>
 								<div style={{ border: '1px solid #ccc' }}>
-									<AlignmentInputField setValue={setAlignmentValue} value={values.alignment} />
+									<AlignmentInputField setValue={setAlignmentValue} value={values.alignment ?? 'center:center'} />
 								</div>
 							</div>
 						</div>
@@ -279,7 +279,7 @@ export function ButtonStyleConfigFields({
 									<InlineHelp help="PNG background image alignment">PNG</InlineHelp>
 								</label>
 								<div style={{ border: '1px solid #ccc' }}>
-									<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment} />
+									<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment ?? 'center:center'} />
 								</div>
 							</div>
 						</div>
