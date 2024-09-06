@@ -49,8 +49,8 @@ export interface ClientToBackendEventsMap {
 	'app-update-info': () => never
 	'app-version-info': () => AppVersionInfo
 
-	set_userconfig_key(key: string, value: any): never
-	reset_userconfig_key(key: string): never
+	set_userconfig_key(key: keyof UserConfigModel, value: any): never
+	reset_userconfig_key(key: keyof UserConfigModel): never
 	set_userconfig_keys(values: Partial<UserConfigModel>): never
 	'userconfig:get-all': () => UserConfigModel
 
@@ -318,7 +318,7 @@ export interface BackendToClientEventsMap {
 	'learn:add': (id: string) => void
 	'learn:remove': (id: string) => void
 
-	set_userconfig_key: (key: string, value: any) => void
+	set_userconfig_key: (key: keyof UserConfigModel, value: any) => void
 	'pages:update': (page: number, info: PageModel) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void

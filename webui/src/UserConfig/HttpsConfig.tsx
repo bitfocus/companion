@@ -1,27 +1,17 @@
 import React, { useCallback, useContext } from 'react'
-import {
-	CAlert,
-	CButton,
-	CDropdown,
-	CDropdownItem,
-	CDropdownMenu,
-	CDropdownToggle,
-	CFormInput,
-	CFormSwitch,
-} from '@coreui/react'
+import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
 import { SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
+import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
+import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
+import { UserConfigProps } from './Components/Common.js'
+import { UserConfigNumberInputRow } from './Components/UserConfigNumberInputRow.js'
+import { UserConfigPortNumberRow } from './Components/UserConfigPortNumberRow.js'
+import { UserConfigTextInputRow } from './Components/UserConfigTextInputRow.js'
 
-interface HttpsConfigProps {
-	config: UserConfigModel
-	setValue: (key: keyof UserConfigModel, value: any) => void
-	resetValue: (key: keyof UserConfigModel) => void
-}
-
-export const HttpsConfig = observer(function HttpsConfig({ config, setValue, resetValue }: HttpsConfigProps) {
+export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps) {
 	const socket = useContext(SocketContext)
 
 	const createSslCertificate = useCallback(() => {
@@ -41,11 +31,8 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 
 	return (
 		<>
-			<tr>
-				<th colSpan={3} className="settings-category">
-					HTTPS Web Server
-				</th>
-			</tr>
+			<UserConfigHeadingRow label="HTTPS Web Server" />
+
 			<tr>
 				<td colSpan={3}>
 					<p>An HTTPS server can be enabled for the Companion web interfaces should your deployment require it.</p>
@@ -55,70 +42,34 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 					</CAlert>
 				</td>
 			</tr>
-			<tr>
-				<td>HTTPS Web Server</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.https_enabled}
-						size="xl"
-						onChange={(e) => setValue('https_enabled', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('https_enabled')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
 
-			{config.https_enabled && (
+			<UserConfigSwitchRow userConfig={props} label="HTTPS Web Server" field="https_enabled" />
+
+			{props.config.https_enabled && (
 				<>
-					<tr>
-						<td>HTTPS Port</td>
-						<td>
-							<CFormInput
-								type="number"
-								value={config.https_port}
-								min={1024}
-								max={65535}
-								onChange={(e) => {
-									let value = Math.floor(Number(e.currentTarget.value))
-									if (isNaN(value)) return
-
-									value = Math.min(value, 65535)
-									value = Math.max(value, 1024)
-									setValue('https_port', value)
-								}}
-							/>
-						</td>
-						<td>
-							<CButton onClick={() => resetValue('https_port')} title="Reset to default">
-								<FontAwesomeIcon icon={faUndo} />
-							</CButton>
-						</td>
-					</tr>
+					<UserConfigPortNumberRow userConfig={props} label="HTTPS Port" field="https_port" />
 
 					<tr>
 						<td>Certificate Type</td>
 						<td>
 							<CDropdown className="mt-2" style={{ display: 'inline-block', overflow: 'visible' }}>
-								<CDropdownToggle>{config.https_cert_type === 'external' ? 'External' : 'Self Signed'}</CDropdownToggle>
+								<CDropdownToggle>
+									{props.config.https_cert_type === 'external' ? 'External' : 'Self Signed'}
+								</CDropdownToggle>
 								<CDropdownMenu>
-									<CDropdownItem onClick={() => setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
-									<CDropdownItem onClick={() => setValue('https_cert_type', 'external')}>External</CDropdownItem>
+									<CDropdownItem onClick={() => props.setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
+									<CDropdownItem onClick={() => props.setValue('https_cert_type', 'external')}>External</CDropdownItem>
 								</CDropdownMenu>
 							</CDropdown>
 						</td>
 						<td>
-							<CButton onClick={() => resetValue('https_cert_type')} title="Reset to default">
+							<CButton onClick={() => props.resetValue('https_cert_type')} title="Reset to default">
 								<FontAwesomeIcon icon={faUndo} />
 							</CButton>
 						</td>
 					</tr>
 
-					{config.https_cert_type === 'self' && (
+					{props.config.https_cert_type === 'self' && (
 						<tr>
 							<td colSpan={3}>
 								<table className="table table-responsive-sm">
@@ -127,54 +78,28 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 											<td colSpan={3}>This tool will help create a self-signed certificate for the server to use.</td>
 										</tr>
 
-										<tr>
-											<td>Common Name (Domain Name)</td>
-											<td>
-												<CFormInput
-													type="text"
-													value={config.https_self_cn}
-													onChange={(e) => setValue('https_self_cn', e.currentTarget.value)}
-												/>
-											</td>
-											<td>
-												<CButton onClick={() => resetValue('https_self_cn')} title="Reset to default">
-													<FontAwesomeIcon icon={faUndo} />
-												</CButton>
-											</td>
-										</tr>
-										<tr>
-											<td>Certificate Expiry Days</td>
-											<td>
-												<CFormInput
-													type="number"
-													value={config.https_self_expiry}
-													min={1}
-													max={65535}
-													onChange={(e) => {
-														let value = Math.floor(Number(e.currentTarget.value))
-														if (isNaN(value)) return
+										<UserConfigTextInputRow
+											userConfig={props}
+											label="Common Name (Domain Name)"
+											field="https_self_cn"
+										/>
+										<UserConfigNumberInputRow
+											userConfig={props}
+											label="Certificate Expiry Days"
+											field="https_self_expiry"
+											min={1}
+											max={65535}
+										/>
 
-														value = Math.min(value, 65535)
-														value = Math.max(value, 1)
-														setValue('https_self_expiry', value)
-													}}
-												/>
-											</td>
-											<td>
-												<CButton onClick={() => resetValue('https_self_expiry')} title="Reset to default">
-													<FontAwesomeIcon icon={faUndo} />
-												</CButton>
-											</td>
-										</tr>
 										<tr>
 											<td>
 												Certificate Details
 												<br />
-												{config.https_self_cert && config.https_self_cert.length > 0 ? (
+												{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
 													<ul>
-														<li>Common Name: {config.https_self_cert_cn}</li>
-														<li>Created: {config.https_self_cert_created}</li>
-														<li>Expiry Period: {config.https_self_cert_expiry}</li>
+														<li>Common Name: {props.config.https_self_cert_cn}</li>
+														<li>Created: {props.config.https_self_cert_created}</li>
+														<li>Expiry Period: {props.config.https_self_cert_expiry}</li>
 													</ul>
 												) : (
 													<ul>
@@ -183,7 +108,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 												)}
 											</td>
 											<td>
-												{config.https_self_cert && config.https_self_cert.length > 0 ? (
+												{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
 													<p>
 														<CButton onClick={renewSslCertificate} color="success" className="mb-2">
 															<FontAwesomeIcon icon={faSync} />
@@ -210,7 +135,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 						</tr>
 					)}
 
-					{config.https_cert_type === 'external' && (
+					{props.config.https_cert_type === 'external' && (
 						<tr>
 							<td colSpan={3}>
 								<table className="table table-responsive-sm">
@@ -228,57 +153,27 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 											</td>
 										</tr>
 
-										<tr>
-											<td>Private Key File (full path)</td>
-											<td>
-												<CFormInput
-													type="text"
-													value={config.https_ext_private_key}
-													onChange={(e) => setValue('https_ext_private_key', e.currentTarget.value)}
-												/>
-											</td>
-											<td>
-												<CButton onClick={() => resetValue('https_ext_private_key')} title="Reset to default">
-													<FontAwesomeIcon icon={faUndo} />
-												</CButton>
-											</td>
-										</tr>
-
-										<tr>
-											<td>Certificate File (full path)</td>
-											<td>
-												<CFormInput
-													type="text"
-													value={config.https_ext_certificate}
-													onChange={(e) => setValue('https_ext_certificate', e.currentTarget.value)}
-												/>
-											</td>
-											<td>
-												<CButton onClick={() => resetValue('https_ext_certificate')} title="Reset to default">
-													<FontAwesomeIcon icon={faUndo} />
-												</CButton>
-											</td>
-										</tr>
-
-										<tr>
-											<td>
-												Chain File (full path)
-												<br />
-												*Optional
-											</td>
-											<td>
-												<CFormInput
-													type="text"
-													value={config.https_ext_chain}
-													onChange={(e) => setValue('https_ext_chain', e.currentTarget.value)}
-												/>
-											</td>
-											<td>
-												<CButton onClick={() => resetValue('https_ext_chain')} title="Reset to default">
-													<FontAwesomeIcon icon={faUndo} />
-												</CButton>
-											</td>
-										</tr>
+										<UserConfigTextInputRow
+											userConfig={props}
+											label="Private Key File (full path)"
+											field="https_ext_private_key"
+										/>
+										<UserConfigTextInputRow
+											userConfig={props}
+											label="Certificate File (full path)"
+											field="https_ext_certificate"
+										/>
+										<UserConfigTextInputRow
+											userConfig={props}
+											label={
+												<>
+													Chain File (full path)
+													<br />
+													*Optional
+												</>
+											}
+											field="https_ext_chain"
+										/>
 									</tbody>
 								</table>
 							</td>

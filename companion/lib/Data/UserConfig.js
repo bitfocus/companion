@@ -358,12 +358,14 @@ class DataUserConfig extends CoreBase {
 
 	/**
 	 * Save/update a key/value pair to the user config
-	 * @param {string} key - the key to save under
+	 * @param {keyof import('@companion-app/shared/Model/UserConfigModel.js').UserConfigModel} key - the key to save under
 	 * @param {any} value - the object to save
 	 * @param {boolean} [save = true] - <code>false</code> if a DB save is not necessary
 	 * @access public
 	 */
 	setKey(key, value, save = true) {
+		if (!key) throw new Error('Missing key')
+
 		let checkControlsInBounds = false
 		if (key === 'gridSize') {
 			// value = { ...value }
@@ -407,6 +409,7 @@ class DataUserConfig extends CoreBase {
 	setKeys(objects) {
 		if (objects !== undefined) {
 			for (let key in objects) {
+				// @ts-ignore
 				this.setKey(key, objects[key], false)
 			}
 
