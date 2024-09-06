@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
+import React, { useCallback, useContext, useState, useMemo, useEffect, memo, BaseSyntheticEvent } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { socketEmitPromise, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
@@ -57,6 +57,27 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	const onCopied = useCallback(() => {
 		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [notifier])
+
+	const onMore = (e: BaseSyntheticEvent) => {
+		e.preventDefault();
+		const variableName = e.target.getAttribute('data-name')
+		document.querySelectorAll(`.fullValue[data-name="${variableName}"]`).forEach((el) => {
+			(el as HTMLElement).style.display = "inline";
+		});
+		document.querySelectorAll(`.compactValue[data-name="${variableName}"]`).forEach((el) => {
+			(el as HTMLElement).style.display = "none";
+		});
+	}
+	const onLess = (e: BaseSyntheticEvent) => {
+		e.preventDefault();
+		const variableName = e.target.getAttribute('data-name')
+		document.querySelectorAll(`.fullValue[data-name="${variableName}"]`).forEach((el) => {
+			(el as HTMLElement).style.display = "none";
+		});
+		document.querySelectorAll(`.compactValue[data-name="${variableName}"]`).forEach((el) => {
+			(el as HTMLElement).style.display = "inline";
+		});
+	}
 
 	const [candidates, errorMsg] = useMemo(() => {
 		let candidates: VariableDefinitionExt[] = []
@@ -131,6 +152,8 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 							value={variableValues[variable.name]}
 							label={label}
 							onCopied={onCopied}
+							onMore={onMore}
+							onLess={onLess}
 						/>
 					))}
 				</tbody>
@@ -143,7 +166,9 @@ interface VariablesTableRowProps {
 	variable: VariableDefinitionExt
 	label: string
 	value: CompanionVariableValue | undefined
-	onCopied: () => void
+	onCopied: () => void,
+	onMore: (e: BaseSyntheticEvent) => void,
+	onLess: (e: BaseSyntheticEvent) => void
 }
 
 const VariablesTableRow = memo(function VariablesTableRow({
@@ -151,17 +176,29 @@ const VariablesTableRow = memo(function VariablesTableRow({
 	value: valueRaw,
 	label,
 	onCopied,
+	onMore,
+	onLess
 }: VariablesTableRowProps) {
 	const value = typeof valueRaw !== 'string' ? valueRaw + '' : valueRaw
-	const compactValue = value.length > 100 ? `${value.substring(0, 100)}...` : value
+	const compactValue = value.length > 20 ? `${value.substring(0, 20)}...` : value
 
-	// Split into the lines
-	const elms: Array<string | JSX.Element> = []
+	// Split value into the lines
+	const fullElems: Array<string | JSX.Element> = []
+	const linesFull = value.split('\\n')
+	linesFull.forEach((l, i) => {
+		fullElems.push(l)
+		if (i <= linesFull.length - 1) {
+			fullElems.push(<br key={i} />)
+		}
+	})
+
+	// Split compactValue into the lines
+	const compactElms: Array<string | JSX.Element> = []
 	const lines = compactValue.split('\\n')
 	lines.forEach((l, i) => {
-		elms.push(l)
+		compactElms.push(l)
 		if (i <= lines.length - 1) {
-			elms.push(<br key={i} />)
+			compactElms.push(<br key={i} />)
 		}
 	})
 
@@ -171,16 +208,22 @@ const VariablesTableRow = memo(function VariablesTableRow({
 				<span className="variable-style">
 					$({label}:{variable.name})
 				</span>
+				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
+					<CButton size="sm" title="Copy variable name">
+						<FontAwesomeIcon icon={faCopy} />
+					</CButton>
+				</CopyToClipboard>
 			</td>
 			<td>{variable.label}</td>
 			<td>
 				{
 					/*elms === '' || elms === null || elms === undefined */ lines.length === 0 ||
-					valueRaw === undefined ||
-					valueRaw === null ? (
+						valueRaw === undefined ||
+						valueRaw === null ? (
 						'(empty)'
 					) : (
-						<code
+						<div>
+							<code className='compactValue' data-name={`${label}:${variable.name}`} 
 							style={{
 								backgroundColor: 'rgba(0,0,200,0.1)',
 								color: 'rgba(0,0,200,1)',
@@ -190,14 +233,37 @@ const VariablesTableRow = memo(function VariablesTableRow({
 							}}
 							title={value}
 						>
-							{elms}
+							{compactElms}
 						</code>
+						<code className='fullValue' data-name={`${label}:${variable.name}`} 
+							style={{
+								backgroundColor: 'rgba(0,0,200,0.1)',
+								color: 'rgba(0,0,200,1)',
+								fontWeight: 'normal',
+								padding: '1px 3px',
+								fontSize: 14,
+								display: "none"
+							}}
+							title={value}
+						>
+							{fullElems}
+						</code>
+						</div>
+						
 					)
 				}
+				{value == compactValue ? (
+					""
+				) : (
+					<div>
+						<a href='#' className={`compactValue`} data-name={`${label}:${variable.name}`} onClick={onMore} >More</a>
+						<a href='#' className={`fullValue`} data-name={`${label}:${variable.name}`} onClick={onLess} style={{display: "none"}}>Less</a>
+					</div>
+				)}
 			</td>
 			<td>
-				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
-					<CButton size="sm">
+				<CopyToClipboard text={value} onCopy={onCopied} >
+					<CButton size="sm" title="Copy variable value">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
 				</CopyToClipboard>
