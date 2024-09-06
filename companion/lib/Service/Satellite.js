@@ -19,6 +19,7 @@ import LogController from '../Log/Controller.js'
  * 		 - compatibility with internal CSS colors,
  * 		 - allow buttons > 32
  * 1.7.0 - Support for transferable values. This allows surfaces to emit and consume values that don't align with a control in the grid.
+ *       - allow surface to opt out of brightness slider and messages
  */
 const API_VERSION = '1.7.0'
 
@@ -116,6 +117,11 @@ class ServiceSatellite extends ServiceBase {
 
 		socketLogger.debug(`add surface "${id}"`)
 
+		let supportsBrightness = true
+		if (params.BRIGHTNESS !== undefined && !isTruthy(params.BRIGHTNESS)) {
+			supportsBrightness = false
+		}
+
 		let streamBitmapSize = null
 		if (params.BITMAPS !== undefined && !isFalsey(params.BITMAPS)) {
 			streamBitmapSize = Number(params.BITMAPS)
@@ -146,6 +152,7 @@ class ServiceSatellite extends ServiceBase {
 			socket,
 			deviceId: id,
 			productName: `${params.PRODUCT_NAME}`,
+			supportsBrightness,
 			streamBitmapSize,
 			streamColors,
 			streamText,

@@ -37,6 +37,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
  *   path: string
  *   socket: import('net').Socket
  *   gridSize: import('../Util.js').GridSize
+ *   supportsBrightness:boolean
  *   streamBitmapSize: number | null
  *   streamColors: string | boolean
  *   streamText: boolean
@@ -70,12 +71,11 @@ import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
  */
 function generateConfigFields(deviceInfo, legacyRotation, inputVariables, outputVariables) {
 	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
-	const fields = [
-		...OffsetConfigFields,
-		BrightnessConfigField,
-		legacyRotation ? LegacyRotationConfigField : RotationConfigField,
-		...LockConfigFields,
-	]
+	const fields = [...OffsetConfigFields]
+	if (deviceInfo.supportsBrightness) {
+		fields.push(BrightnessConfigField)
+	}
+	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
 
 	for (const variable of deviceInfo.transferVariables) {
 		if (variable.type === 'input') {
