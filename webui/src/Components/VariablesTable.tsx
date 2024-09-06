@@ -180,7 +180,7 @@ const VariablesTableRow = memo(function VariablesTableRow({
 	onLess
 }: VariablesTableRowProps) {
 	const value = typeof valueRaw !== 'string' ? valueRaw + '' : valueRaw
-	const compactValue = value.length > 20 ? `${value.substring(0, 20)}...` : value
+	const compactValue = value.length > 100 ? `${value.substring(0, 100)}...` : value
 
 	// Split value into the lines
 	const fullElems: Array<string | JSX.Element> = []
