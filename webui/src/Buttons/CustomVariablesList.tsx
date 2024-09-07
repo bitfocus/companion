@@ -434,7 +434,7 @@ function CustomVariableRow({
 								<CForm onSubmit={PreventDefaultHandler}>
 									<TextInputField
 										label="Current value: "
-										value={value || ''}
+										value={value ?? ''}
 										setValue={(val) => setCurrentValue(name, val)}
 									/>
 
