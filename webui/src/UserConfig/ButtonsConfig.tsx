@@ -25,6 +25,7 @@ export const ButtonsConfig = observer(function ButtonsConfig(props: UserConfigPr
 				userConfig={props}
 				label="Show the topbar on each button. This can be overridden per-button"
 				field="remove_topbar"
+				inverted
 			/>
 		</>
 	)

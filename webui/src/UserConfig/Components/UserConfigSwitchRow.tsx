@@ -9,13 +9,16 @@ interface UserConfigSwitchRowProps {
 	label: string | React.ReactNode
 	field: keyof UserConfigModel
 	requiresRestart?: boolean
+	inverted?: boolean
 }
 export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 	userConfig,
 	label,
 	field,
 	requiresRestart,
+	inverted,
 }: UserConfigSwitchRowProps) {
+	const invertIfNeeded = (value: boolean) => (inverted ? !value : value)
 	return (
 		<tr>
 			<td>
@@ -31,9 +34,9 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 				<CFormSwitch
 					className="float-right"
 					color="success"
-					checked={!!userConfig.config[field]}
+					checked={invertIfNeeded(!!userConfig.config[field])}
 					size="xl"
-					onChange={(e) => userConfig.setValue(field, e.currentTarget.checked)}
+					onChange={(e) => userConfig.setValue(field, invertIfNeeded(e.currentTarget.checked))}
 				/>
 			</td>
 			<td>
