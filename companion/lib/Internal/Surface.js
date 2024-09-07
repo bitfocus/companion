@@ -391,15 +391,34 @@ export default class Surface {
 				description: undefined,
 				options: [
 					{
+						type: 'checkbox',
+						label: 'Use variables for surface',
+						id: 'controller_from_variable',
+						default: false,
+					},
+					serializeIsVisibleFnSingle({
 						type: 'number',
-						label: 'Surface / controller',
+						label: 'Surface / group index',
 						id: 'controller',
-						tooltip: 'Emulator is 0, all other controllers in order of type and serial-number',
+						tooltip: 'Check the ID column in the surfaces tab',
 						min: 0,
 						max: 100,
 						default: 0,
 						range: false,
-					},
+						isVisible: (options) => !options.controller_from_variable,
+					}),
+					serializeIsVisibleFnSingle({
+						type: 'textinput',
+						label: 'Surface / group index',
+						id: 'controller_variable',
+						tooltip: 'Check the ID column in the surfaces tab',
+						default: '0',
+						isVisible: (options) => !!options.controller_from_variable,
+						useVariables: {
+							local: true,
+						},
+					}),
+
 					...CHOICES_PAGE_WITH_VARIABLES,
 				],
 			},
@@ -468,8 +487,22 @@ export default class Surface {
 			this.#changeSurfacePage(surfaceId, thePage)
 			return true
 		} else if (action.action === 'set_page_byindex') {
-			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(action.options.controller)
-			if (surfaceId === undefined) {
+			let surfaceIndex = action.options.controller
+			if (action.options.controller_from_variable) {
+				surfaceIndex = this.#variableController.parseVariables(
+					action.options.controller_variable,
+					extras?.location
+				).text
+			}
+
+			const surfaceIndexNumber = Number(surfaceIndex)
+			if (isNaN(surfaceIndexNumber) || surfaceIndexNumber < 0) {
+				this.#logger.warn(`Trying to set controller #${surfaceIndex} but it isn't a valid index.`)
+				return true
+			}
+
+			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(surfaceIndexNumber)
+			if (surfaceId === undefined || surfaceId === '') {
 				this.#logger.warn(`Trying to set controller #${action.options.controller} but it isn't available.`)
 				return true
 			}
