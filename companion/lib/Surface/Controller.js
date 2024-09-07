@@ -853,14 +853,7 @@ class SurfaceController extends CoreBase {
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
 									if (!ignoreStreamDeck) {
 										if (getStreamDeckDeviceInfo(deviceInfo)) {
-											await this.#addDevice(
-												{
-													path: deviceInfo.path,
-													options: {},
-												},
-												'elgato-streamdeck',
-												ElgatoStreamDeckDriver
-											)
+											await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', ElgatoStreamDeckDriver)
 											return
 										}
 									}
@@ -869,37 +862,21 @@ class SurfaceController extends CoreBase {
 										deviceInfo.vendorId === 0xffff &&
 										(deviceInfo.productId === 0x1f40 || deviceInfo.productId === 0x1f41)
 									) {
-										await this.#addDevice(
-											{
-												path: deviceInfo.path,
-												options: {},
-											},
-											'infinitton',
-											InfinittonDriver
-										)
+										await this.#addDevice(deviceInfo.path, {}, 'infinitton', InfinittonDriver)
 									} else if (
 										// More specific match has to be above xkeys
 										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
 										deviceInfo.productId === vecFootpedal.pids.FOOTPEDAL
 									) {
 										if (this.userconfig.getKey('vec_footpedal_enable')) {
-											await this.#addDevice(
-												{
-													path: deviceInfo.path,
-													options: {},
-												},
-												'vec-footpedal',
-												VECFootpedalDriver
-											)
+											await this.#addDevice(deviceInfo.path, {}, 'vec-footpedal', VECFootpedalDriver)
 										}
 									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
 										if (this.userconfig.getKey('xkeys_enable')) {
 											await this.#addDevice(
+												deviceInfo.path,
 												{
-													path: deviceInfo.path,
-													options: {
-														useLegacyLayout: !!this.userconfig.getKey('xkeys_legacy_layout'),
-													},
+													useLegacyLayout: !!this.userconfig.getKey('xkeys_legacy_layout'),
 												},
 												'xkeys',
 												XKeysDriver
@@ -912,14 +889,7 @@ class SurfaceController extends CoreBase {
 											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V2)
 									) {
 										if (this.userconfig.getKey('contour_shuttle_enable')) {
-											await this.#addDevice(
-												{
-													path: deviceInfo.path,
-													options: {},
-												},
-												'contour-shuttle',
-												ContourShuttleDriver
-											)
+											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', ContourShuttleDriver)
 										}
 									} else if (
 										deviceInfo.vendorId === 0x32ac && // frame.work
@@ -927,14 +897,7 @@ class SurfaceController extends CoreBase {
 										deviceInfo.usagePage === 0xffdd && // rawhid interface
 										deviceInfo.usage === 0x61
 									) {
-										await this.#addDevice(
-											{
-												path: deviceInfo.path,
-												options: {},
-											},
-											'framework-macropad',
-											FrameworkMacropadDriver
-										)
+										await this.#addDevice(deviceInfo.path, {}, 'framework-macropad', FrameworkMacropadDriver)
 									}
 								}
 							})
@@ -952,28 +915,12 @@ class SurfaceController extends CoreBase {
 												deviceInfo.model === LoupedeckModelId.RazerStreamController ||
 												deviceInfo.model === LoupedeckModelId.RazerStreamControllerX
 											) {
-												await this.#addDevice(
-													{
-														path: deviceInfo.path,
-														options: {},
-													},
-													'loupedeck-live',
-													LoupedeckLiveDriver,
-													true
-												)
+												await this.#addDevice(deviceInfo.path, {}, 'loupedeck-live', LoupedeckLiveDriver, true)
 											} else if (
 												deviceInfo.model === LoupedeckModelId.LoupedeckCt ||
 												deviceInfo.model === LoupedeckModelId.LoupedeckCtV1
 											) {
-												await this.#addDevice(
-													{
-														path: deviceInfo.path,
-														options: {},
-													},
-													'loupedeck-ct',
-													SurfaceUSBLoupedeckCt,
-													true
-												)
+												await this.#addDevice(deviceInfo.path, {}, 'loupedeck-ct', SurfaceUSBLoupedeckCt, true)
 											}
 										}
 									})
@@ -1060,21 +1007,22 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 *
-	 * @param {LocalUSBDeviceInfo} deviceInfo
+	 * @param {string} devicePath
+	 * @param {LocalUSBDeviceOptions} deviceOptions
 	 * @param {string} type
 	 * @param {{ create: (path: string, options: LocalUSBDeviceOptions) => Promise<import('./Handler.js').SurfacePanel>}} factory
 	 * @param {boolean} skipHidAccessCheck
 	 * @returns
 	 */
-	async #addDevice(deviceInfo, type, factory, skipHidAccessCheck = false) {
-		this.removeDevice(deviceInfo.path)
+	async #addDevice(devicePath, deviceOptions, type, factory, skipHidAccessCheck = false) {
+		this.removeDevice(devicePath)
 
-		this.logger.silly('add device ' + deviceInfo.path)
+		this.logger.silly('add device ' + devicePath)
 
 		if (!skipHidAccessCheck) {
 			// Check if we have access to the device
 			try {
-				const devicetest = new HID.HID(deviceInfo.path)
+				const devicetest = new HID.HID(devicePath)
 				devicetest.close()
 			} catch (e) {
 				this.logger.error(
@@ -1085,8 +1033,8 @@ class SurfaceController extends CoreBase {
 		}
 
 		try {
-			const dev = await factory.create(deviceInfo.path, deviceInfo.options)
-			this.#createSurfaceHandler(deviceInfo.path, type, dev)
+			const dev = await factory.create(devicePath, deviceOptions)
+			this.#createSurfaceHandler(devicePath, type, dev)
 
 			setImmediate(() => {
 				this.updateDevicesList()
