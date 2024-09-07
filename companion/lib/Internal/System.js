@@ -231,7 +231,7 @@ export default class System {
 	executeAction(action, extras) {
 		if (action.action === 'exec') {
 			if (action.options.path) {
-				const path = this.#variableController.values.parseVariables(action.options.path, extras.location).text
+				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.path, extras).text
 				this.#logger.silly(`Running path: '${path}'`)
 
 				exec(

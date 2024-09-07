@@ -176,14 +176,23 @@ export default class Variables {
 	 */
 	executeFeedback(feedback) {
 		if (feedback.type == 'variable_value') {
-			const result = this.#variableController.parseVariables(`$(${feedback.options.variable})`, null)
+			const result = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				`$(${feedback.options.variable})`,
+				feedback
+			)
 
 			this.#variableSubscriptions.set(feedback.id, result.variableIds)
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
 		} else if (feedback.type == 'variable_variable') {
-			const result1 = this.#variableController.parseVariables(`$(${feedback.options.variable})`, null)
-			const result2 = this.#variableController.parseVariables(`$(${feedback.options.variable2})`, null)
+			const result1 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				`$(${feedback.options.variable})`,
+				feedback
+			)
+			const result2 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				`$(${feedback.options.variable2})`,
+				feedback
+			)
 
 			this.#variableSubscriptions.set(feedback.id, [...result1.variableIds, ...result2.variableIds])
 

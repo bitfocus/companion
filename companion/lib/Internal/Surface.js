@@ -128,12 +128,6 @@ export default class Surface {
 	 */
 	#surfaceController
 
-	/**
-	 * @type {import('../Variables/Values.js').VariablesValues}
-	 * @readonly
-	 */
-	#variableController
-
 	/** Page history for surfaces */
 	#pageHistory = new Map()
 
@@ -141,13 +135,11 @@ export default class Surface {
 	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Surface/Controller.js').default} surfaceController
 	 * @param {import('../Controls/Controller.js').default} controlsController
-	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
-	constructor(internalModule, surfaceController, controlsController, variableController) {
+	constructor(internalModule, surfaceController, controlsController) {
 		this.#internalModule = internalModule
 		this.#surfaceController = surfaceController
 		this.#controlsController = controlsController
-		this.#variableController = variableController
 
 		setImmediate(() => {
 			this.#internalModule.setVariables({
@@ -197,7 +189,7 @@ export default class Surface {
 
 	/**
 	 * @param {Record<string, any>} options
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras | undefined} info
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} info
 	 * @param {boolean} useVariableFields
 	 * @returns {string | undefined}
 	 */
@@ -206,34 +198,36 @@ export default class Surface {
 		let surfaceId = options.controller + ''
 
 		if (useVariableFields && options.controller_from_variable) {
-			surfaceId = this.#variableController.parseVariables(options.controller_variable, info?.location).text
+			surfaceId = this.#internalModule.parseVariablesForInternalActionOrFeedback(options.controller_variable, info).text
 		}
 
 		surfaceId = surfaceId.trim()
 
-		if (info && surfaceId === 'self') surfaceId = info.surfaceId
+		if (info && surfaceId === 'self' && 'surfaceId' in info) surfaceId = info.surfaceId
 
 		return surfaceId
 	}
 
 	/**
 	 * @param {Record<string, any>} options
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
 	 * @param {boolean} useVariableFields
 	 * @param {string | undefined} surfaceId
 	 * @returns {number | 'back' | 'forward' | '+1' | '-1' | undefined}
 	 */
-	#fetchPage(options, location, useVariableFields, surfaceId) {
+	#fetchPage(options, extras, useVariableFields, surfaceId) {
 		/** @type {number | string | undefined} */
 		let thePage = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			thePage = Number(this.#variableController.executeExpression(options.page_variable, location, 'number').value)
+			thePage = Number(
+				this.#internalModule.executeExpressionForInternalActionOrFeedback(options.page_variable, extras, 'number').value
+			)
 		}
 
-		if (location) {
+		if (extras.location) {
 			// @ts-ignore
-			if (thePage === 0 || thePage === '0') thePage = location.pageNumber ?? location.page
+			if (thePage === 0 || thePage === '0') thePage = extras.location.pageNumber ?? extras.location.page
 		}
 
 		if (thePage === 'startup') {
@@ -481,7 +475,7 @@ export default class Surface {
 			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
 			if (!surfaceId) return true
 
-			const thePage = this.#fetchPage(action.options, extras.location, true, surfaceId)
+			const thePage = this.#fetchPage(action.options, extras, true, surfaceId)
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
@@ -489,9 +483,9 @@ export default class Surface {
 		} else if (action.action === 'set_page_byindex') {
 			let surfaceIndex = action.options.controller
 			if (action.options.controller_from_variable) {
-				surfaceIndex = this.#variableController.parseVariables(
+				surfaceIndex = this.#internalModule.parseVariablesForInternalActionOrFeedback(
 					action.options.controller_variable,
-					extras?.location
+					extras
 				).text
 			}
 
@@ -507,7 +501,7 @@ export default class Surface {
 				return true
 			}
 
-			const thePage = this.#fetchPage(action.options, extras.location, true, surfaceId)
+			const thePage = this.#fetchPage(action.options, extras, true, surfaceId)
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
@@ -686,10 +680,10 @@ export default class Surface {
 	 */
 	executeFeedback(feedback) {
 		if (feedback.type == 'surface_on_page') {
-			const surfaceId = this.#fetchSurfaceId(feedback.options, undefined, false)
+			const surfaceId = this.#fetchSurfaceId(feedback.options, feedback, false)
 			if (!surfaceId) return false
 
-			const thePage = this.#fetchPage(feedback.options, feedback.location, false, surfaceId)
+			const thePage = this.#fetchPage(feedback.options, feedback, false, surfaceId)
 
 			const currentPage = this.#surfaceController.devicePageGet(surfaceId, true)
 

@@ -20,8 +20,6 @@ import { SplitVariableId, rgb, serializeIsVisibleFnSingle } from '../Resources/U
 import { oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
-import { ParseInternalControlReference } from './Util.js'
-import LogController from '../Log/Controller.js'
 
 /** @type {import('./Types.js').InternalActionInputField[]} */
 const CHOICES_DYNAMIC_LOCATION = [
@@ -121,8 +119,6 @@ function checkCondition(op, condition, variable_value) {
 }
 
 export default class Controls {
-	#logger = LogController.createLogger('Internal/Controls')
-
 	/**
 	 * @type {import('./Controller.js').default}
 	 * @readonly
@@ -187,17 +183,21 @@ export default class Controls {
 
 	/**
 	 * @param {Record<string, any>} options
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
 	 * @returns {{ thePage: number | null }}
 	 */
-	#fetchPage(options, location) {
+	#fetchPage(options, extras) {
 		let thePage = options.page
 
 		if (options.page_from_variable) {
-			thePage = this.#variableController.executeExpression(options.page_variable, location, 'number').value
+			thePage = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+				options.page_variable,
+				extras,
+				'number'
+			).value
 		}
 
-		if (thePage === 0 || thePage === '0') thePage = location?.pageNumber ?? null
+		if (thePage === 0 || thePage === '0') thePage = extras.location?.pageNumber ?? null
 
 		return {
 			thePage,
@@ -207,7 +207,7 @@ export default class Controls {
 	/**
 	 *
 	 * @param {Record<string, any>} options
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} pressLocation
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
 	 * @param {boolean} useVariableFields
 	 * @returns {{
 	 *   theControlId: string | null,
@@ -215,11 +215,9 @@ export default class Controls {
 	 *   referencedVariables: string[]
 	 * }}
 	 */
-	#fetchLocationAndControlId(options, pressLocation, useVariableFields = false) {
-		const result = ParseInternalControlReference(
-			this.#logger,
-			this.#variableController,
-			pressLocation,
+	#fetchLocationAndControlId(options, extras, useVariableFields = false) {
+		const result = this.#internalModule.parseInternalControlReferenceForActionOrFeedback(
+			extras,
 			options,
 			useVariableFields
 		)
@@ -242,7 +240,11 @@ export default class Controls {
 		let theStep = options.step
 
 		if (options.step_from_expression) {
-			theStep = this.#variableController.executeExpression(options.step_expression, extras.location, 'number').value
+			theStep = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+				options.step_expression,
+				extras,
+				'number'
+			).value
 		}
 
 		return theStep
@@ -742,11 +744,7 @@ export default class Controls {
 	 */
 	executeFeedback(feedback) {
 		if (feedback.type === 'bank_style') {
-			const { theLocation, referencedVariables } = this.#fetchLocationAndControlId(
-				feedback.options,
-				feedback.location,
-				true
-			)
+			const { theLocation, referencedVariables } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			if (
 				!feedback.location ||
@@ -795,11 +793,7 @@ export default class Controls {
 				}
 			}
 		} else if (feedback.type === 'bank_pushed') {
-			const { theControlId, referencedVariables } = this.#fetchLocationAndControlId(
-				feedback.options,
-				feedback.location,
-				true
-			)
+			const { theControlId, referencedVariables } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			const control = theControlId && this.#controlsController.getControl(theControlId)
 			if (control && control.supportsPushed) {
@@ -821,7 +815,7 @@ export default class Controls {
 				}
 			}
 		} else if (feedback.type == 'bank_current_step') {
-			const { theControlId } = this.#fetchLocationAndControlId(feedback.options, feedback.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			const theStep = feedback.options.step
 
@@ -945,7 +939,7 @@ export default class Controls {
 	 */
 	executeAction(action, extras) {
 		if (action.action === 'button_pressrelease') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const forcePress = !!action.options.force
@@ -954,14 +948,14 @@ export default class Controls {
 			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
 			return true
 		} else if (action.action == 'button_pressrelease_if_expression') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const forcePress = !!action.options.force
 
-			const pressIt = !!this.#variableController.executeExpression(
+			const pressIt = !!this.#internalModule.executeExpressionForInternalActionOrFeedback(
 				action.options.expression,
-				extras.location,
+				extras,
 				'boolean'
 			).value
 
@@ -971,7 +965,7 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action == 'button_pressrelease_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const forcePress = !!action.options.force
@@ -979,7 +973,10 @@ export default class Controls {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
-			const condition = this.#variableController.parseVariables(action.options.value, extras.location).text
+			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				action.options.value,
+				extras
+			).text
 
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
@@ -989,7 +986,7 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action == 'button_press_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const forcePress = !!action.options.force
@@ -997,7 +994,10 @@ export default class Controls {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
-			const condition = this.#variableController.parseVariables(action.options.value, extras.location).text
+			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				action.options.value,
+				extras
+			).text
 
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
@@ -1006,7 +1006,7 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action == 'button_release_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const forcePress = !!action.options.force
@@ -1014,7 +1014,10 @@ export default class Controls {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
-			const condition = this.#variableController.parseVariables(action.options.value, extras.location).text
+			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				action.options.value,
+				extras
+			).text
 
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
@@ -1023,31 +1026,31 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action === 'button_press') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
 			return true
 		} else if (action.action === 'button_release') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
 			return true
 		} else if (action.action === 'button_rotate_left') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.rotateControl(theControlId, false, extras.surfaceId)
 			return true
 		} else if (action.action === 'button_rotate_right') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.rotateControl(theControlId, true, extras.surfaceId)
 			return true
 		} else if (action.action === 'bgcolor') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
@@ -1056,7 +1059,7 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action === 'textcolor') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
@@ -1065,7 +1068,7 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action === 'button_text') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
@@ -1075,16 +1078,14 @@ export default class Controls {
 
 			return true
 		} else if (action.action === 'panic_bank') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.actions.abortControlDelayed(theControlId, action.options.unlatch)
 			return true
 		} else if (action.action === 'panic_page') {
-			const { thePage } = this.#fetchPage(action.options, extras.location)
+			const { thePage } = this.#fetchPage(action.options, extras)
 			if (thePage === null) return true
-
-			console.log('thePage', thePage, action.options.ignoreSelf, extras.location)
 
 			this.#controlsController.actions.abortPageDelayed(
 				thePage,
@@ -1104,7 +1105,7 @@ export default class Controls {
 			this.#controlsController.actions.abortAllDelayed()
 			return true
 		} else if (action.action == 'bank_current_step') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const theStep = this.#fetchStep(action.options, extras)
@@ -1116,7 +1117,7 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action == 'bank_current_step_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const theStep = this.#fetchStep(action.options, extras)
@@ -1126,7 +1127,10 @@ export default class Controls {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
-			const condition = this.#variableController.parseVariables(action.options.value, extras.location).text
+			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				action.options.value,
+				extras
+			).text
 
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
@@ -1137,16 +1141,16 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action == 'bank_current_step_if_expression') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const theStep = this.#fetchStep(action.options, extras)
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			const pressIt = !!this.#variableController.executeExpression(
+			const pressIt = !!this.#internalModule.executeExpressionForInternalActionOrFeedback(
 				action.options.expression,
-				extras.location,
+				extras,
 				'boolean'
 			).value
 
@@ -1157,7 +1161,7 @@ export default class Controls {
 			}
 			return true
 		} else if (action.action == 'bank_current_step_delta') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
