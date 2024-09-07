@@ -32,8 +32,8 @@ export class SurfaceGroup {
 	 */
 	static DefaultOptions = {
 		name: 'Unnamed group',
-		last_page: 1,
-		startup_page: 1,
+		last_page_id: '',
+		startup_page_id: '',
 		use_last_page: true,
 	}
 
@@ -46,10 +46,10 @@ export class SurfaceGroup {
 
 	/**
 	 * The current page of this surface group
-	 * @type {number}
+	 * @type {string}
 	 * @access private
 	 */
-	#currentPage = 1
+	#currentPageId
 
 	/**
 	 * The surfaces belonging to this group
@@ -103,7 +103,7 @@ export class SurfaceGroup {
 	 * @type {import('../Page/Controller.js').default}
 	 * @access public
 	 */
-	#page
+	#pageController
 	/**
 	 * The core user config manager
 	 * @type {import('../Data/UserConfig.js').default}
@@ -114,18 +114,18 @@ export class SurfaceGroup {
 	/**
 	 * @param {import('../Surface/Controller.js').default} surfaceController
 	 * @param {import('../Data/Database.js').default} db
-	 * @param {import('../Page/Controller.js').default} page
+	 * @param {import('../Page/Controller.js').default} pageController
 	 * @param {import('../Data/UserConfig.js').default} userconfig
 	 * @param {string} groupId
 	 * @param {SurfaceHandler | null} soleHandler
 	 * @param {boolean} isLocked
 	 */
-	constructor(surfaceController, db, page, userconfig, groupId, soleHandler, isLocked) {
+	constructor(surfaceController, db, pageController, userconfig, groupId, soleHandler, isLocked) {
 		this.#logger = LogController.createLogger(`Surface/Group/${groupId}`)
 
 		this.#surfaceController = surfaceController
 		this.#db = db
-		this.#page = page
+		this.#pageController = pageController
 		this.#userconfig = userconfig
 
 		this.groupId = groupId
@@ -148,23 +148,30 @@ export class SurfaceGroup {
 
 		// Determine the correct page to use
 		if (this.groupConfig.use_last_page) {
-			this.#currentPage = this.groupConfig.last_page ?? 1
+			this.#currentPageId = this.groupConfig.last_page_id ?? '' // Fixed later if needed
 		} else {
-			this.#currentPage = this.groupConfig.last_page = this.groupConfig.startup_page ?? 1
+			this.#currentPageId = this.groupConfig.last_page_id = this.groupConfig.startup_page_id ?? '' // Fixed later if needed
+		}
+
+		// validate the current page id
+		if (!this.#pageController.isPageIdValid(this.#currentPageId)) {
+			this.#currentPageId = this.#pageController.getFirstPageId()
 		}
 
 		// Now attach and setup the surface
 		if (soleHandler) this.attachSurface(soleHandler)
 
 		this.#saveConfig()
-		this.#page.on('pagecount', this.#pageCountChange)
+		this.#pageController.on('pagecount', this.#pageCountChange)
+		this.#pageController.on('pageindexchange', this.#pageIndexChange)
 	}
 
 	/**
 	 * Stop anything processing this group, it is being marked as inactive
 	 */
 	dispose() {
-		this.#page.off('pagecount', this.#pageCountChange)
+		this.#pageController.off('pagecount', this.#pageCountChange)
+		this.#pageController.off('pageindexchange', this.#pageIndexChange)
 	}
 
 	/**
@@ -207,7 +214,7 @@ export class SurfaceGroup {
 		this.surfaceHandlers.push(surfaceHandler)
 
 		surfaceHandler.setLocked(this.#isLocked, true)
-		surfaceHandler.storeNewDevicePage(this.#currentPage, true)
+		surfaceHandler.storeNewDevicePage(this.#currentPageId, true)
 	}
 
 	/**
@@ -234,27 +241,22 @@ export class SurfaceGroup {
 
 	/**
 	 * Set the current page of this surface group
-	 * @param {number} newPage
+	 * @param {string} newPageId
 	 * @param {boolean} defer
 	 * @returns {void}
 	 */
-	setCurrentPage(newPage, defer = false) {
-		const pageCount = this.#page.getPageCount()
-		if (newPage > pageCount) {
-			newPage = 1
-		}
-		if (newPage <= 0) {
-			newPage = pageCount
-		}
-		this.#storeNewPage(newPage, defer)
+	setCurrentPage(newPageId, defer = false) {
+		if (!this.#pageController.isPageIdValid(newPageId)) return
+
+		this.#storeNewPage(newPageId, defer)
 	}
 
 	/**
 	 * Get the current page of this surface group
-	 * @returns {number}
+	 * @returns {string}
 	 */
-	getCurrentPage() {
-		return this.#currentPage
+	getCurrentPageId() {
+		return this.#currentPageId
 	}
 
 	/**
@@ -270,37 +272,54 @@ export class SurfaceGroup {
 	}
 
 	#increasePage() {
-		this.setCurrentPage(this.#currentPage + 1)
+		const newPageId = this.#pageController.getOffsetPageId(this.#currentPageId, 1)
+		if (!newPageId) return
+		this.setCurrentPage(newPageId)
 	}
 
 	#decreasePage() {
-		this.setCurrentPage(this.#currentPage - 1)
+		const newPageId = this.#pageController.getOffsetPageId(this.#currentPageId, -1)
+		if (!newPageId) return
+		this.setCurrentPage(newPageId)
 	}
 
 	/**
 	 * Update the current page if the total number of pages change
-	 * @param {number} pageCount
+	 * @param {number} _pageCount
 	 */
-	#pageCountChange = (pageCount) => {
-		if (this.#currentPage > pageCount) {
-			this.#storeNewPage(pageCount, true)
+	#pageCountChange = (_pageCount) => {
+		if (!this.#pageController.isPageIdValid(this.#currentPageId)) {
+			// TODO - choose a better value?
+			this.#storeNewPage(this.#pageController.getFirstPageId(), true)
+		}
+	}
+
+	/**
+	 * Update the current page if the index of the pages change
+	 * @param {Set<string>} pageIds
+	 */
+	#pageIndexChange = (pageIds) => {
+		if (pageIds.has(this.#currentPageId)) {
+			for (const surfaceHandler of this.surfaceHandlers) {
+				surfaceHandler.triggerRedraw(true)
+			}
 		}
 	}
 
 	/**
 	 * Update to a new page number
-	 * @param {number} newPage
+	 * @param {string} newPageId
 	 * @param {boolean} defer
 	 * @returns {void}
 	 */
-	#storeNewPage(newPage, defer = false) {
-		this.#currentPage = this.groupConfig.last_page = newPage
+	#storeNewPage(newPageId, defer = false) {
+		this.#currentPageId = this.groupConfig.last_page_id = newPageId
 		this.#saveConfig()
 
-		this.#surfaceController.emit('group_page', this.groupId, newPage)
+		this.#surfaceController.emit('group_page', this.groupId, newPageId)
 
 		for (const surfaceHandler of this.surfaceHandlers) {
-			surfaceHandler.storeNewDevicePage(newPage, defer)
+			surfaceHandler.storeNewDevicePage(newPageId, defer)
 		}
 	}
 
@@ -321,21 +340,21 @@ export class SurfaceGroup {
 
 				return
 			}
-			case 'startup_page': {
-				value = Number(value)
-				if (isNaN(value)) {
+			case 'startup_page_id': {
+				value = String(value)
+				if (!this.#pageController.isPageIdValid(value)) {
 					this.#logger.warn(`Invalid startup_page "${value}"`)
 					return 'invalid value'
 				}
 
-				this.groupConfig.startup_page = value
+				this.groupConfig.startup_page_id = value
 				this.#saveConfig()
 
 				return
 			}
-			case 'last_page': {
-				value = Number(value)
-				if (isNaN(value)) {
+			case 'last_page_id': {
+				value = String(value)
+				if (!this.#pageController.isPageIdValid(value)) {
 					this.#logger.warn(`Invalid current_page "${value}"`)
 					return 'invalid value'
 				}

@@ -49,8 +49,12 @@ class ServiceElgatoPlugin extends ServiceBase {
 		super(registry, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
 
 		this.graphics.on('button_drawn', (location, render) => {
+			if (!this.client) return
+
+			const currentPageNumber = this.page.getPageNumber(this.client.currentPageId)
+
 			// Send dynamic page
-			if (this.client && location.pageNumber === this.client.currentPage) {
+			if (location.pageNumber === currentPageNumber) {
 				this.#handleButtonDrawn(
 					{
 						...location,
@@ -63,9 +67,9 @@ class ServiceElgatoPlugin extends ServiceBase {
 			// Send specific page
 			this.#handleButtonDrawn(location, render)
 		})
-		this.surfaces.on('surface_page', (surfaceId, newPage) => {
+		this.surfaces.on('surface_page', (surfaceId, newPageId) => {
 			if (this.client && surfaceId === 'plugin') {
-				this.client.currentPage = newPage
+				this.client.currentPageId = newPageId
 
 				this.#redrawAllDynamicButtons()
 			}
@@ -136,6 +140,8 @@ class ServiceElgatoPlugin extends ServiceBase {
 	#redrawAllDynamicButtons() {
 		if (!this.client || !this.client.supportsCoordinates) return
 
+		const currentPageNumber = this.page.getPageNumber(this.client.currentPageId)
+
 		for (const listenerId of this.client.buttonListeners) {
 			if (!listenerId.startsWith('null_')) continue
 
@@ -149,7 +155,7 @@ class ServiceElgatoPlugin extends ServiceBase {
 					row: row,
 				},
 				this.graphics.getCachedRenderOrGeneratePlaceholder({
-					pageNumber: this.client.currentPage,
+					pageNumber: currentPageNumber ?? 0,
 					column: column,
 					row: row,
 				})
@@ -180,7 +186,7 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 				this.surfaces.addElgatoPluginDevice(id, socket)
 
-				socket.currentPage = this.surfaces.devicePageGet('plugin') || 1
+				socket.currentPageId = this.surfaces.devicePageGet('plugin') || this.page.getFirstPageId()
 
 				socket.apireply('new_device', {
 					result: true,
@@ -212,8 +218,10 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 				socket.apireply('request_button', { result: 'ok' })
 
+				const currentPageNumber = this.page.getPageNumber(socket.currentPageId)
+
 				const fromLocation = {
-					pageNumber: args.page === null ? socket.currentPage : Number(args.page),
+					pageNumber: args.page === null ? (currentPageNumber ?? 0) : Number(args.page),
 					column: Number(args.column),
 					row: Number(args.row),
 				}
@@ -377,10 +385,10 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 
 	/**
 	 * The current page number of the surface
-	 * @type {number}
+	 * @type {string}
 	 * @access public
 	 */
-	currentPage = 1
+	currentPageId = ''
 
 	/**
 	 * @type {ImageWriteQueue}

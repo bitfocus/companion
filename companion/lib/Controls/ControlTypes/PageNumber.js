@@ -146,7 +146,7 @@ export default class ControlButtonPageNumber extends ControlBase {
 	 */
 	pressControl(pressed, surfaceId) {
 		if (pressed && surfaceId) {
-			this.surfaces.devicePageSet(surfaceId, 1)
+			this.surfaces.devicePageSet(surfaceId, this.page.getFirstPageId())
 		}
 	}
 

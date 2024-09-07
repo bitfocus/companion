@@ -183,6 +183,58 @@ export const InternalPageDropdown = observer(function InternalPageDropdown({
 	)
 })
 
+interface InternalPageIdDropdownProps {
+	label: React.ReactNode
+	// isLocatedInGrid: boolean
+	includeStartup: boolean | undefined
+	includeDirection: boolean | undefined
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+}
+
+export const InternalPageIdDropdown = observer(function InternalPageDropdown({
+	label,
+	// isLocatedInGrid,
+	includeStartup,
+	includeDirection,
+	value,
+	setValue,
+	disabled,
+}: InternalPageIdDropdownProps) {
+	const { pages } = useContext(RootAppStoreContext)
+
+	const choices = useComputed(() => {
+		const choices: DropdownChoice[] = []
+		// if (isLocatedInGrid) {
+		// 	choices.push({ id: 0, label: 'This page' })
+		// }
+		if (includeStartup) {
+			choices.push({ id: 'startup', label: 'Startup page' })
+		}
+		if (includeDirection) {
+			choices.push({ id: 'back', label: 'Back' }, { id: 'forward', label: 'Forward' })
+		}
+
+		pages.data.forEach((pageInfo, i) => {
+			choices.push({ id: pageInfo.id, label: `${i + 1} (${pageInfo.name || ''})` })
+		})
+
+		return choices
+	}, [pages, /*isLocatedInGrid,*/ includeStartup, includeDirection])
+
+	return (
+		<DropdownInputField
+			label={label}
+			disabled={disabled}
+			value={value}
+			choices={choices}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
+})
+
 interface InternalCustomVariableDropdownProps {
 	label: React.ReactNode
 	value: any

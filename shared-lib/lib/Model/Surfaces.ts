@@ -22,8 +22,8 @@ export interface ClientDevicesListItem {
 
 export interface SurfaceGroupConfig {
 	name: string
-	last_page: number
-	startup_page: number
+	last_page_id: string // nocommit TODO migration
+	startup_page_id: string // nocommit TODO migration
 	use_last_page: boolean
 }
 

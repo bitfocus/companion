@@ -172,7 +172,7 @@ class PageController extends CoreBase {
 			this.#pageIds.splice(pageNumber - 1, 0, pageId)
 
 			// Update cache for controls on later pages
-			const changedPageNumbers = this.#updateAndRedrawAllPagesAfter(
+			const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesAfter(
 				Math.min(currentPageIndex + 1, pageNumber),
 				Math.max(currentPageIndex + 1, pageNumber)
 			)
@@ -184,6 +184,9 @@ class PageController extends CoreBase {
 				added: [],
 				changes: [],
 			})
+
+			// inform other interested controllers
+			this.emit('pageindexchange', changedPageIds)
 
 			return 'ok'
 		})
@@ -219,12 +222,13 @@ class PageController extends CoreBase {
 		this.#pageIds.splice(pageNumber - 1, 1)
 
 		// Update cache for controls on later pages
-		const changedPageNumbers = this.#updateAndRedrawAllPagesAfter(pageNumber, null)
+		const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesAfter(pageNumber, null)
 
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		const missingPageNumber = this.#pageIds.length + 1
 		changedPageNumbers.push(missingPageNumber)
 		this.graphics.clearAllForPage(missingPageNumber)
+		changedPageIds.add(pageInfo.id)
 
 		this.#commitChanges(changedPageNumbers, false)
 		this.io.emitToRoom(PagesRoom, 'pages:update', {
@@ -235,6 +239,7 @@ class PageController extends CoreBase {
 
 		// inform other interested controllers
 		this.emit('pagecount', this.getPageCount())
+		this.emit('pageindexchange', changedPageIds)
 
 		return removedControls
 	}
@@ -273,7 +278,7 @@ class PageController extends CoreBase {
 		this.#pageIds.splice(asPageNumber - 1, 0, ...insertedPageIds)
 
 		// Update cache for controls on later pages
-		const changedPageNumbers = this.#updateAndRedrawAllPagesAfter(asPageNumber, null)
+		const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesAfter(asPageNumber, null)
 
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		this.#commitChanges(changedPageNumbers, false)
@@ -287,6 +292,7 @@ class PageController extends CoreBase {
 
 		// inform other interested controllers
 		this.emit('pagecount', this.getPageCount())
+		this.emit('pageindexchange', changedPageIds)
 
 		return insertedPageIds
 	}
@@ -295,14 +301,16 @@ class PageController extends CoreBase {
 	 * Update page info and all renders for pages between two pages (inclusive)
 	 * @param {number} firstPageNumber
 	 * @param {number | null} lastPageNumber If null, run to the end
-	 * @return {number[]} pageNumbers
+	 * @return {{changedPageNumbers: number[], changedPageIds: Set<string>}}
 	 */
 	#updateAndRedrawAllPagesAfter(firstPageNumber, lastPageNumber) {
 		// Rebuild location cache
 		this.#rebuildLocationCache()
 
 		/** @type {number[]} */
-		const pageNumbers = []
+		const changedPageNumbers = []
+		/** @type {Set<string>} */
+		const changedPageIds = new Set()
 
 		if (lastPageNumber) {
 			lastPageNumber = Math.min(lastPageNumber, this.#pageIds.length)
@@ -314,12 +322,13 @@ class PageController extends CoreBase {
 			const pageInfo = this.getPageInfo(pageNumber)
 			if (!pageInfo) continue
 
-			this.#invalidateAllControls(pageNumber, pageInfo)
+			this.#invalidateAllControlsOnPageNumber(pageNumber, pageInfo)
 
-			pageNumbers.push(pageNumber)
+			changedPageNumbers.push(pageNumber)
+			changedPageIds.add(pageInfo.id)
 		}
 
-		return pageNumbers
+		return { changedPageNumbers, changedPageIds }
 	}
 
 	/**
@@ -396,12 +405,39 @@ class PageController extends CoreBase {
 	}
 
 	/**
+	 * Get the id of the first page in the system
+	 * @return {string}
+	 */
+	getFirstPageId() {
+		return this.#pageIds[0]
+	}
+
+	/**
+	 * Get the index of the given page id
+	 * @param {string} pageId
+	 * @returns {number | null}
+	 */
+	getPageNumber(pageId) {
+		const index = this.#pageIds.indexOf(pageId)
+		return index >= 0 ? index + 1 : null
+	}
+
+	/**
 	 * Check whether a page number exists
 	 * @param {number} pageNumber
 	 * @returns {boolean}
 	 */
 	isPageValid(pageNumber) {
 		return !!this.getPageInfo(pageNumber)
+	}
+
+	/**
+	 * Check whether a page id exists
+	 * @param {string} pageId
+	 * @returns {boolean}
+	 */
+	isPageIdValid(pageId) {
+		return this.#pagesById[pageId] !== undefined
 	}
 
 	/**
@@ -531,6 +567,24 @@ class PageController extends CoreBase {
 		const pageInfo = this.getPageInfo(pageNumber)
 		if (!pageInfo) return undefined
 		return pageInfo.name ?? ''
+	}
+
+	/**
+	 * Get the page id for a page offset from the specified id
+	 * @param {string} pageId
+	 * @param {number} offset
+	 * @returns {string|null}
+	 */
+	getOffsetPageId(pageId, offset) {
+		const index = this.#pageIds.indexOf(pageId)
+		if (index === -1) return null
+
+		let newIndex = index + offset
+		if (newIndex < 0)
+			newIndex = this.#pageIds.length + newIndex // wrap around to the end
+		else newIndex = newIndex % this.#pageIds.length // wrap around to the start
+
+		return this.#pageIds[newIndex]
 	}
 
 	/**
@@ -715,7 +769,7 @@ class PageController extends CoreBase {
 	 * @param {number} pageNumber
 	 * @param {import('@companion-app/shared/Model/PageModel.js').PageModel} pageInfo
 	 */
-	#invalidateAllControls(pageNumber, pageInfo) {
+	#invalidateAllControlsOnPageNumber(pageNumber, pageInfo) {
 		if (pageInfo?.controls) {
 			this.graphics.clearAllForPage(pageNumber)
 
