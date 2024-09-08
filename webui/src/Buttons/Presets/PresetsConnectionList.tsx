@@ -18,7 +18,14 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	const { modules } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
-	const options = Object.entries(presets).map(([id, vals]) => {
+	// Sort the connections by the same order as the connections list
+	const sortedPresets = Object.entries(presets).sort(
+		([a], [b]) =>
+			(connectionsContext[a].sortOrder ?? Number.POSITIVE_INFINITY) -
+			(connectionsContext[b].sortOrder ?? Number.POSITIVE_INFINITY)
+	)
+
+	const options = sortedPresets.map(([id, vals]) => {
 		if (!vals || Object.values(vals).length === 0) return ''
 
 		const connectionInfo = connectionsContext[id]
