@@ -97,7 +97,6 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 	}
 
 	setPanelCollapsed = (panelId: string, collapsed: boolean): void => {
-		console.log('collape', panelId)
 		runInAction(() => {
 			this.#ids.set(panelId, collapsed)
 
@@ -110,7 +109,6 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 	}
 
 	clearUnknownIds = (knownPanelIds: string[]): void => {
-		console.log('clear', knownPanelIds)
 		runInAction(() => {
 			const knownPanelIdsSet = new Set(knownPanelIds)
 
