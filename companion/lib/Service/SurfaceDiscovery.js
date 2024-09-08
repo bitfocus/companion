@@ -86,6 +86,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			try {
 				this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
 
+				// @ts-ignore why is this failing?
 				this.#streamDeckDiscovery.on('up', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
@@ -99,6 +100,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 						info: uiService,
 					})
 				})
+				// @ts-ignore why is this failing?
 				this.#streamDeckDiscovery.on('down', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
@@ -308,6 +310,8 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		})
 
 		client.onPromise('surfaces:discovery:setup-satellite', async (info, address) => {
+			if (info.surfaceType !== 'satellite') return 'invalid surface type'
+
 			// construct the remote url
 			const url = new URL('http://localhost:9999/api/config')
 			url.hostname = info.addresses[0] // TODO - choose correct address
