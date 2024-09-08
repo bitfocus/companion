@@ -975,7 +975,7 @@ class SurfaceController extends CoreBase {
 	addSatelliteDevice(deviceInfo) {
 		this.removeDevice(deviceInfo.path)
 
-		const device = new SurfaceIPSatellite(deviceInfo)
+		const device = new SurfaceIPSatellite(deviceInfo, this.#surfaceExecuteExpression.bind(this))
 
 		this.#createSurfaceHandler(deviceInfo.path, 'satellite', device)
 
