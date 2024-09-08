@@ -201,46 +201,40 @@ const VariablesTableRow = observer(function VariablesTableRow({
 					valueRaw === null ? (
 						'(empty)'
 					) : (
-						<div>
-							<code
-								className="compactValue"
-								data-name={`${label}:${variable.name}`}
-								style={{
-									backgroundColor: 'rgba(0,0,200,0.1)',
-									color: 'rgba(0,0,200,1)',
-									fontWeight: 'normal',
-									padding: '1px 3px',
-									fontSize: 14,
-								}}
-								title={value}
-							>
-								{panelCollapseHelper.isPanelCollapsed(variable.name) ? compactElms : fullElems}
-							</code>
-						</div>
+						<code
+							className="compactValue"
+							data-name={`${label}:${variable.name}`}
+							style={{
+								backgroundColor: 'rgba(0,0,200,0.1)',
+								color: 'rgba(0,0,200,1)',
+								fontWeight: 'normal',
+								padding: '1px 3px',
+								fontSize: 14,
+							}}
+							title={value}
+						>
+							{panelCollapseHelper.isPanelCollapsed(variable.name) ? compactElms : fullElems}
+						</code>
 					)
 				}
 				{value == compactValue ? (
 					''
+				) : panelCollapseHelper.isPanelCollapsed(variable.name) ? (
+					<a
+						href="#"
+						data-name={`${label}:${variable.name}`}
+						onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, false)}
+					>
+						More
+					</a>
 				) : (
-					<div>
-						{panelCollapseHelper.isPanelCollapsed(variable.name) ? (
-							<a
-								href="#"
-								data-name={`${label}:${variable.name}`}
-								onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, false)}
-							>
-								More
-							</a>
-						) : (
-							<a
-								href="#"
-								data-name={`${label}:${variable.name}`}
-								onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, true)}
-							>
-								Less
-							</a>
-						)}
-					</div>
+					<a
+						href="#"
+						data-name={`${label}:${variable.name}`}
+						onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, true)}
+					>
+						Less
+					</a>
 				)}
 			</td>
 			<td>
