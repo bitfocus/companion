@@ -202,8 +202,6 @@ const VariablesTableRow = observer(function VariablesTableRow({
 						'(empty)'
 					) : (
 						<code
-							className="compactValue"
-							data-name={`${label}:${variable.name}`}
 							style={{
 								backgroundColor: 'rgba(0,0,200,0.1)',
 								color: 'rgba(0,0,200,1)',
@@ -220,19 +218,11 @@ const VariablesTableRow = observer(function VariablesTableRow({
 				{value == compactValue ? (
 					''
 				) : panelCollapseHelper.isPanelCollapsed(variable.name) ? (
-					<a
-						href="#"
-						data-name={`${label}:${variable.name}`}
-						onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, false)}
-					>
+					<a href="#" onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, false)}>
 						More
 					</a>
 				) : (
-					<a
-						href="#"
-						data-name={`${label}:${variable.name}`}
-						onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, true)}
-					>
+					<a href="#" onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, true)}>
 						Less
 					</a>
 				)}
