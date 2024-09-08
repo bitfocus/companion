@@ -117,11 +117,6 @@ class ServiceSatellite extends ServiceBase {
 
 		socketLogger.debug(`add surface "${id}"`)
 
-		let supportsBrightness = true
-		if (params.BRIGHTNESS !== undefined && !isTruthy(params.BRIGHTNESS)) {
-			supportsBrightness = false
-		}
-
 		let streamBitmapSize = null
 		if (params.BITMAPS !== undefined && !isFalsey(params.BITMAPS)) {
 			streamBitmapSize = Number(params.BITMAPS)
@@ -134,6 +129,7 @@ class ServiceSatellite extends ServiceBase {
 		const streamColors = parseStringParamWithBooleanFallback(['hex', 'rgb'], 'hex', params.COLORS) || false
 		const streamText = params.TEXT !== undefined && isTruthy(params.TEXT)
 		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
+		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 
 		/** @type {import('../Surface/IP/Satellite.js').SatelliteTransferableValue[]} */
 		let transferVariables
