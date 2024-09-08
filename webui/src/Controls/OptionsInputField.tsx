@@ -13,6 +13,7 @@ import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import sanitizeHtml from 'sanitize-html'
+import { DropdownChoiceInt, ControlLocalVariables, InternalActionLocalVariables } from '../LocalVariableDefinitions.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -57,12 +58,22 @@ export function OptionsInputField({
 		return <p>Bad option</p>
 	}
 
+	const isInternal = connectionId === 'internal'
+
 	let control: JSX.Element | string | undefined = undefined
 	switch (option.type) {
 		case 'textinput': {
 			const features: InputFeatureIconsProps = {
 				variables: !!option.useVariables,
 				local: typeof option.useVariables === 'object' && !!option.useVariables?.local,
+			}
+
+			let localVariables: DropdownChoiceInt[] | undefined
+			if (features.local) {
+				localVariables = ControlLocalVariables
+				if (isInternal && isAction) {
+					localVariables = InternalActionLocalVariables
+				}
 			}
 
 			control = (
@@ -73,7 +84,7 @@ export function OptionsInputField({
 					required={option.required}
 					placeholder={option.placeholder}
 					useVariables={features.variables}
-					useLocalVariables={features.local}
+					localVariables={localVariables}
 					isExpression={option.isExpression}
 					disabled={readonly}
 					setValue={setValue2}
@@ -197,7 +208,7 @@ export function OptionsInputField({
 		}
 		default:
 			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
-			if (connectionId === 'internal') {
+			if (isInternal) {
 				control =
 					InternalInstanceField(
 						<OptionLabel option={option} />,

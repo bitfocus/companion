@@ -29,7 +29,7 @@ export class UserConfigStore {
 		}
 	})
 
-	public setValue = action((key: string, value: any): void => {
+	public setValue = action((key: keyof UserConfigModel, value: any): void => {
 		;(this.properties_ as any)[key] = value
 	})
 }

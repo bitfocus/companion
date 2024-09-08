@@ -7,9 +7,17 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
  * @param {import('../Resources/Util.js').ControlLocation | undefined} pressLocation
  * @param {Record<string, any>} options
  * @param {boolean} useVariableFields
+ * @param {import('../Variables/Util.js').VariablesCache=} injectedVariableValues - Inject some variable values
  * @returns {{ location: import('../Resources/Util.js').ControlLocation | null, referencedVariables: string[] }}
  */
-export function ParseInternalControlReference(logger, variablesController, pressLocation, options, useVariableFields) {
+export function ParseInternalControlReference(
+	logger,
+	variablesController,
+	pressLocation,
+	options,
+	useVariableFields,
+	injectedVariableValues
+) {
 	/**
 	 * @param {number} pageNumber
 	 * @returns {number | null}
@@ -100,7 +108,7 @@ export function ParseInternalControlReference(logger, variablesController, press
 			break
 		case 'text':
 			if (useVariableFields) {
-				const result = variablesController.parseVariables(options.location_text, pressLocation)
+				const result = variablesController.parseVariables(options.location_text, pressLocation, injectedVariableValues)
 
 				location = parseLocationString(result.text)
 				referencedVariables = result.variableIds
@@ -111,7 +119,12 @@ export function ParseInternalControlReference(logger, variablesController, press
 		case 'expression':
 			if (useVariableFields) {
 				try {
-					const result = variablesController.executeExpression(options.location_expression, pressLocation, 'string')
+					const result = variablesController.executeExpression(
+						options.location_expression,
+						pressLocation,
+						'string',
+						injectedVariableValues
+					)
 
 					location = parseLocationString(String(result.value))
 					referencedVariables = Array.from(result.variableIds)
