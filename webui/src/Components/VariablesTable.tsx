@@ -161,23 +161,14 @@ const VariablesTableRow = observer(function VariablesTableRow({
 	const value = typeof valueRaw !== 'string' ? valueRaw + '' : valueRaw
 	const compactValue = value.length > 100 ? `${value.substring(0, 100)}...` : value
 
-	// Split value into the lines
-	const fullElems: Array<string | JSX.Element> = []
-	const linesFull = value.split('\\n')
-	linesFull.forEach((l, i) => {
-		fullElems.push(l)
-		if (i <= linesFull.length - 1) {
-			fullElems.push(<br key={i} />)
-		}
-	})
-
-	// Split compactValue into the lines
-	const compactElms: Array<string | JSX.Element> = []
-	const lines = compactValue.split('\\n')
+	// Split display value into the lines
+	const displayValue = panelCollapseHelper.isPanelCollapsed(variable.name) ? compactValue : value
+	const elms: Array<string | JSX.Element> = []
+	const lines = displayValue.split('\\n')
 	lines.forEach((l, i) => {
-		compactElms.push(l)
+		elms.push(l)
 		if (i <= lines.length - 1) {
-			compactElms.push(<br key={i} />)
+			elms.push(<br key={i} />)
 		}
 	})
 
@@ -211,7 +202,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 							}}
 							title={value}
 						>
-							{panelCollapseHelper.isPanelCollapsed(variable.name) ? compactElms : fullElems}
+							{elms}
 						</code>
 					)
 				}
