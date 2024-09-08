@@ -15,6 +15,7 @@ import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.js'
 import { InlineHelp } from '../Components/InlineHelp.js'
+import { ControlLocalVariables } from '../LocalVariableDefinitions.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -188,7 +189,7 @@ export function ButtonStyleConfigFields({
 							setValue={setTextValue}
 							value={values.text ?? ''}
 							useVariables
-							useLocalVariables={'control'}
+							localVariables={ControlLocalVariables}
 							isExpression={values.textExpression}
 							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>

@@ -8,12 +8,11 @@ import Select, {
 	createFilter,
 } from 'react-select'
 import { MenuPortalContext } from './DropdownInputField.js'
-import { DropdownChoiceId } from '@companion-module/base'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { assertNever } from '../util.js'
+import type { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 
 interface TextInputFieldProps {
 	label?: React.ReactNode
@@ -27,7 +26,7 @@ interface TextInputFieldProps {
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	useVariables?: boolean
-	useLocalVariables?: 'control' | 'surface'
+	localVariables?: DropdownChoiceInt[]
 	isExpression?: boolean
 }
 
@@ -43,7 +42,7 @@ export const TextInputField = observer(function TextInputField({
 	setValid,
 	disabled,
 	useVariables,
-	useLocalVariables,
+	localVariables,
 	isExpression,
 }: TextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
@@ -134,7 +133,7 @@ export const TextInputField = observer(function TextInputField({
 					<VariablesSelect
 						showValue={showValue}
 						style={extraStyle}
-						useLocalVariables={useLocalVariables}
+						localVariables={localVariables}
 						storeValue={storeValue}
 						focusStoreValue={focusStoreValue}
 						blurClearValue={blurClearValue}
@@ -192,15 +191,10 @@ function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
 	}
 }
 
-interface DropdownChoiceInt {
-	value: string
-	label: DropdownChoiceId
-}
-
 interface VariablesSelectProps {
 	showValue: string
 	style: React.CSSProperties
-	useLocalVariables: 'control' | 'surface' | undefined
+	localVariables: DropdownChoiceInt[] | undefined
 	storeValue: (value: string) => void
 	focusStoreValue: () => void
 	blurClearValue: () => void
@@ -213,7 +207,7 @@ interface VariablesSelectProps {
 const VariablesSelect = observer(function VariablesSelect({
 	showValue,
 	style,
-	useLocalVariables,
+	localVariables,
 	storeValue,
 	focusStoreValue,
 	blurClearValue,
@@ -224,8 +218,6 @@ const VariablesSelect = observer(function VariablesSelect({
 }: Readonly<VariablesSelectProps>) {
 	const { variablesStore } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
-
-	const localVariableOptions = useMemo(() => getLocalVariableOptions(useLocalVariables), [useLocalVariables])
 
 	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
 	const options = useMemo(() => {
@@ -238,10 +230,10 @@ const VariablesSelect = observer(function VariablesSelect({
 			})
 		}
 
-		suggestions.push(...localVariableOptions)
+		if (localVariables) suggestions.push(...localVariables)
 
 		return suggestions
-	}, [baseVariableDefinitions, localVariableOptions])
+	}, [baseVariableDefinitions, localVariables])
 
 	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)
@@ -517,52 +509,4 @@ function FindVariableStartIndexFromCursor(text: string, cursor: number): number 
 	// TODO - ensure contents is valid
 
 	return previousOpen
-}
-
-function getLocalVariableOptions(variableSet: 'control' | 'surface' | undefined): DropdownChoiceInt[] {
-	switch (variableSet) {
-		case 'control':
-			return [
-				{
-					value: 'this:page',
-					label: 'This page',
-				},
-				{
-					value: 'this:column',
-					label: 'This column',
-				},
-				{
-					value: 'this:row',
-					label: 'This row',
-				},
-				{
-					value: 'this:step',
-					label: 'The current step of this button',
-				},
-				{
-					value: 'this:page_name',
-					label: 'This page name',
-				},
-			]
-		case 'surface':
-			return [
-				{
-					value: 'this:page',
-					label: 'This page',
-				},
-				{
-					value: 'this:surface_id',
-					label: 'The id of this surface',
-				},
-				{
-					value: 'this:page_name',
-					label: 'This page name',
-				},
-			]
-		case undefined:
-			return []
-		default:
-			assertNever(variableSet)
-			return []
-	}
 }

@@ -29,6 +29,7 @@ import { CModalExt } from '../Components/CModalExt.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField } from '../Components/TextInputField.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from '../Controls/OptionsInputField.js'
+import { SurfaceLocalVariables } from '../LocalVariableDefinitions.js'
 
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
@@ -359,7 +360,7 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					regex={definition.regex}
 					placeholder={definition.placeholder}
 					useVariables={features.variables}
-					useLocalVariables={features.local ? 'surface' : undefined}
+					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					isExpression={definition.isExpression}
 					setValue={setValue2}
 				/>

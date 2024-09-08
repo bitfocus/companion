@@ -28,6 +28,7 @@ import Triggers from './Triggers.js'
 import Variables from './Variables.js'
 import { cloneDeep } from 'lodash-es'
 import Page from './Page.js'
+import { ParseInternalControlReference } from './Util.js'
 
 export default class InternalController extends CoreBase {
 	/**
@@ -51,14 +52,14 @@ export default class InternalController extends CoreBase {
 		this.#buildingBlocksFragment = new BuildingBlocks()
 
 		this.fragments = [
-			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.variables.values),
+			new ActionRecorder(this, registry.controls.actionRecorder, registry.page),
 			this.#buildingBlocksFragment,
 			new Instance(this, registry.instance),
 			new Time(this),
 			new Controls(this, registry.graphics, registry.controls, registry.page, registry.variables.values),
 			new CustomVariables(this, registry.variables),
 			new Page(this, registry.page),
-			new Surface(this, registry.surfaces, registry.controls, registry.variables.values),
+			new Surface(this, registry.surfaces, registry.controls),
 			new System(this, registry),
 			new Triggers(this, registry.controls),
 			new Variables(this, registry.variables.values),
@@ -441,5 +442,73 @@ export default class InternalController extends CoreBase {
 		}
 
 		this.registry.controls.updateFeedbackValues('internal', newValues)
+	}
+
+	/**
+	 * Parse the variables in a string
+	 * @param {string} str - String to parse variables in
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
+	 * @param {import('../Variables/Util.js').VariablesCache=} injectedVariableValues - Inject some variable values
+	 * @returns {import('../Variables/Util.js').ParseVariablesResult} with variables replaced with values
+	 */
+	parseVariablesForInternalActionOrFeedback(str, extras, injectedVariableValues) {
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			...injectedVariableValues,
+		}
+		return this.variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
+	}
+
+	/**
+	 * Parse and execute an expression in a string
+	 * @param {string} str - String containing the expression to parse
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
+	 * @param {string=} requiredType - Fail if the result is not of specified type
+	 * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
+	 * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
+	 */
+	executeExpressionForInternalActionOrFeedback(str, extras, requiredType, injectedVariableValues) {
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			...injectedVariableValues,
+		}
+		return this.variablesController.values.executeExpression(
+			str,
+			extras.location,
+			requiredType,
+			injectedVariableValuesComplete
+		)
+	}
+
+	/**
+	 *
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
+	 * @param {Record<string, any>} options
+	 * @param {boolean} useVariableFields
+	 * @returns
+	 */
+	parseInternalControlReferenceForActionOrFeedback(extras, options, useVariableFields) {
+		const injectedVariableValues = 'id' in extras ? undefined : this.#getInjectedVariablesForLocation(extras)
+
+		return ParseInternalControlReference(
+			this.logger,
+			this.variablesController.values,
+			extras.location,
+			options,
+			useVariableFields,
+			injectedVariableValues
+		)
+	}
+
+	/**
+	 * Variables to inject based on an internal action
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
+	 * @returns {import('@companion-module/base').CompanionVariableValues}
+	 */
+	#getInjectedVariablesForLocation(extras) {
+		return {
+			// Doesn't need to be reactive, it's only for an action
+			'$(this:surface_id)': extras.surfaceId,
+		}
 	}
 }

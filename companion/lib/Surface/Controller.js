@@ -1203,7 +1203,7 @@ class SurfaceController extends CoreBase {
 	 */
 	getDeviceIdFromIndex(index) {
 		for (const group of this.getDevicesList()) {
-			if (group.index === index) {
+			if (group.index !== undefined && group.index === index) {
 				return group.id
 			}
 		}

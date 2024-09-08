@@ -21,11 +21,11 @@ import LogController from '../Log/Controller.js'
 export default class CustomVariables {
 	#logger = LogController.createLogger('Internal/CustomVariables')
 
-	// /**
-	//  * @type {import('./Controller.js').default}
-	//  * @readonly
-	//  */
-	// #internalModule
+	/**
+	 * @type {import('./Controller.js').default}
+	 * @readonly
+	 */
+	#internalModule
 
 	/**
 	 * @type {import('../Variables/Controller.js').VariablesController}
@@ -34,11 +34,11 @@ export default class CustomVariables {
 	#variableController
 
 	/**
-	 * @param {import('./Controller.js').default} _internalModule
+	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Variables/Controller.js').VariablesController} variableController
 	 */
-	constructor(_internalModule, variableController) {
-		// this.#internalModule = internalModule
+	constructor(internalModule, variableController) {
+		this.#internalModule = internalModule
 		this.#variableController = variableController
 	}
 
@@ -285,7 +285,10 @@ export default class CustomVariables {
 			return true
 		} else if (action.action === 'custom_variable_set_expression') {
 			try {
-				const result = this.#variableController.values.executeExpression(action.options.expression, extras.location)
+				const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+					action.options.expression,
+					extras
+				)
 				this.#variableController.custom.setValue(action.options.name, result.value)
 			} catch (/** @type {any} */ error) {
 				this.#logger.warn(`${error.toString()}, in expression: "${action.options.expression}"`)
