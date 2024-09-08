@@ -206,9 +206,11 @@ class ServiceSharedUdpPort {
 			})
 		)
 
-		this.waitForBind.finally(() => {
-			hasBound = true
-		})
+		this.waitForBind
+			.finally(() => {
+				hasBound = true
+			})
+			.catch(() => null)
 	}
 
 	logMemberCount() {
