@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState, useMemo, useEffect, memo, BaseSyntheticEvent } from 'react'
+import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { socketEmitPromise, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
@@ -8,6 +8,7 @@ import { CompanionVariableValues, type CompanionVariableValue } from '@companion
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { VariableDefinitionExt } from '../Stores/VariablesStore.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
 
 interface VariablesTableProps {
 	label: string
@@ -18,6 +19,8 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 
 	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
 	const [filter, setFilter] = useState('')
+
+	const panelCollapseHelper = usePanelCollapseHelperLite(`variables-table:${label}`, Object.keys(variableValues), true)
 
 	const variableDefinitions = useComputed(() => {
 		const defs = variablesStore.variableDefinitionsForLabel(label)
@@ -57,27 +60,6 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	const onCopied = useCallback(() => {
 		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [notifier])
-
-	const onMore = (e: BaseSyntheticEvent) => {
-		e.preventDefault();
-		const variableName = e.target.getAttribute('data-name')
-		document.querySelectorAll(`.fullValue[data-name="${variableName}"]`).forEach((el) => {
-			(el as HTMLElement).style.display = "inline";
-		});
-		document.querySelectorAll(`.compactValue[data-name="${variableName}"]`).forEach((el) => {
-			(el as HTMLElement).style.display = "none";
-		});
-	}
-	const onLess = (e: BaseSyntheticEvent) => {
-		e.preventDefault();
-		const variableName = e.target.getAttribute('data-name')
-		document.querySelectorAll(`.fullValue[data-name="${variableName}"]`).forEach((el) => {
-			(el as HTMLElement).style.display = "none";
-		});
-		document.querySelectorAll(`.compactValue[data-name="${variableName}"]`).forEach((el) => {
-			(el as HTMLElement).style.display = "inline";
-		});
-	}
 
 	const [candidates, errorMsg] = useMemo(() => {
 		let candidates: VariableDefinitionExt[] = []
@@ -152,8 +134,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 							value={variableValues[variable.name]}
 							label={label}
 							onCopied={onCopied}
-							onMore={onMore}
-							onLess={onLess}
+							panelCollapseHelper={panelCollapseHelper}
 						/>
 					))}
 				</tbody>
@@ -166,18 +147,16 @@ interface VariablesTableRowProps {
 	variable: VariableDefinitionExt
 	label: string
 	value: CompanionVariableValue | undefined
-	onCopied: () => void,
-	onMore: (e: BaseSyntheticEvent) => void,
-	onLess: (e: BaseSyntheticEvent) => void
+	onCopied: () => void
+	panelCollapseHelper: PanelCollapseHelperLite
 }
 
-const VariablesTableRow = memo(function VariablesTableRow({
+const VariablesTableRow = observer(function VariablesTableRow({
 	variable,
 	value: valueRaw,
 	label,
 	onCopied,
-	onMore,
-	onLess
+	panelCollapseHelper,
 }: VariablesTableRowProps) {
 	const value = typeof valueRaw !== 'string' ? valueRaw + '' : valueRaw
 	const compactValue = value.length > 100 ? `${value.substring(0, 100)}...` : value
@@ -218,51 +197,54 @@ const VariablesTableRow = memo(function VariablesTableRow({
 			<td>
 				{
 					/*elms === '' || elms === null || elms === undefined */ lines.length === 0 ||
-						valueRaw === undefined ||
-						valueRaw === null ? (
+					valueRaw === undefined ||
+					valueRaw === null ? (
 						'(empty)'
 					) : (
 						<div>
-							<code className='compactValue' data-name={`${label}:${variable.name}`} 
-							style={{
-								backgroundColor: 'rgba(0,0,200,0.1)',
-								color: 'rgba(0,0,200,1)',
-								fontWeight: 'normal',
-								padding: '1px 3px',
-								fontSize: 14,
-							}}
-							title={value}
-						>
-							{compactElms}
-						</code>
-						<code className='fullValue' data-name={`${label}:${variable.name}`} 
-							style={{
-								backgroundColor: 'rgba(0,0,200,0.1)',
-								color: 'rgba(0,0,200,1)',
-								fontWeight: 'normal',
-								padding: '1px 3px',
-								fontSize: 14,
-								display: "none"
-							}}
-							title={value}
-						>
-							{fullElems}
-						</code>
+							<code
+								className="compactValue"
+								data-name={`${label}:${variable.name}`}
+								style={{
+									backgroundColor: 'rgba(0,0,200,0.1)',
+									color: 'rgba(0,0,200,1)',
+									fontWeight: 'normal',
+									padding: '1px 3px',
+									fontSize: 14,
+								}}
+								title={value}
+							>
+								{panelCollapseHelper.isPanelCollapsed(variable.name) ? compactElms : fullElems}
+							</code>
 						</div>
-						
 					)
 				}
 				{value == compactValue ? (
-					""
+					''
 				) : (
 					<div>
-						<a href='#' className={`compactValue`} data-name={`${label}:${variable.name}`} onClick={onMore} >More</a>
-						<a href='#' className={`fullValue`} data-name={`${label}:${variable.name}`} onClick={onLess} style={{display: "none"}}>Less</a>
+						{panelCollapseHelper.isPanelCollapsed(variable.name) ? (
+							<a
+								href="#"
+								data-name={`${label}:${variable.name}`}
+								onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, false)}
+							>
+								More
+							</a>
+						) : (
+							<a
+								href="#"
+								data-name={`${label}:${variable.name}`}
+								onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, true)}
+							>
+								Less
+							</a>
+						)}
 					</div>
 				)}
 			</td>
 			<td>
-				<CopyToClipboard text={value} onCopy={onCopied} >
+				<CopyToClipboard text={value} onCopy={onCopied}>
 					<CButton size="sm" title="Copy variable value">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
