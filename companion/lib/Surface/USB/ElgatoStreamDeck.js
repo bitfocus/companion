@@ -32,15 +32,23 @@ import {
 const setTimeoutPromise = util.promisify(setTimeout)
 
 /**
- * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ * @param {import('@elgato-stream-deck/node').StreamDeck} streamDeck
+ * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
  */
-const configFields = [
-	//
-	...OffsetConfigFields,
-	BrightnessConfigField,
-	LegacyRotationConfigField,
-	...LockConfigFields,
-]
+function getConfigFields(streamDeck) {
+	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
+	const fields = [...OffsetConfigFields]
+
+	// Hide brightness for the pedal
+	const hasBrightness = !!streamDeck.CONTROLS.find(
+		(c) => c.type === 'lcd-segment' || (c.type === 'button' && c.feedbackType !== 'none')
+	)
+	if (hasBrightness) fields.push(BrightnessConfigField)
+
+	fields.push(LegacyRotationConfigField, ...LockConfigFields)
+
+	return fields
+}
 
 class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	/**
@@ -86,7 +94,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 		this.info = {
 			type: `Elgato ${this.#streamDeck.PRODUCT_NAME}`,
 			devicePath: devicePath,
-			configFields: configFields,
+			configFields: getConfigFields(this.#streamDeck),
 			deviceId: '', // set in #init()
 		}
 
