@@ -306,7 +306,7 @@ export async function transformButtonImage(render, rotation, targetWidth, target
 	const imageRsRotation = translateRotation(rotation)
 	if (imageRsRotation !== null) image = image.rotate(imageRsRotation)
 
-	image = image.scale(targetWidth, targetHeight)
+	image = image.scale(targetWidth, targetHeight, imageRs.ResizeMode.Fit)
 
 	// pad, in case a button is non-square
 	const dimensions = image.getCurrentDimensions()

@@ -1,5 +1,10 @@
-import { ClientDevicesListItem, SurfacesUpdate } from '@companion-app/shared/Model/Surfaces.js'
-import { action, observable } from 'mobx'
+import type {
+	ClientDevicesListItem,
+	OutboundSurfaceInfo,
+	SurfacesUpdate,
+	OutboundSurfacesUpdate,
+} from '@companion-app/shared/Model/Surfaces.js'
+import { action, observable, toJS } from 'mobx'
 import { assertNever } from '../util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
@@ -7,7 +12,9 @@ import { cloneDeep } from 'lodash-es'
 export class SurfacesStore {
 	readonly store = observable.map<string, ClientDevicesListItem>()
 
-	public reset = action((newData: Record<string, ClientDevicesListItem | undefined> | null): void => {
+	readonly outboundSurfaces = observable.map<string, OutboundSurfaceInfo>()
+
+	public resetSurfaces = action((newData: Record<string, ClientDevicesListItem | undefined> | null): void => {
 		this.store.clear()
 
 		if (newData) {
@@ -19,7 +26,7 @@ export class SurfacesStore {
 		}
 	})
 
-	public applyChange = action((change: SurfacesUpdate) => {
+	public applySurfacesChange = action((change: SurfacesUpdate) => {
 		const changeType = change.type
 		switch (change.type) {
 			case 'add':
@@ -41,4 +48,43 @@ export class SurfacesStore {
 				break
 		}
 	})
+
+	public resetOutboundSurfaces = action((newData: Record<string, OutboundSurfaceInfo | undefined> | null): void => {
+		this.outboundSurfaces.clear()
+
+		if (newData) {
+			for (const [id, item] of Object.entries(newData)) {
+				if (item) {
+					this.outboundSurfaces.set(id, item)
+				}
+			}
+		}
+	})
+
+	public applyOutboundSurfacesChange = action((change: OutboundSurfacesUpdate) => {
+		const changeType = change.type
+		switch (change.type) {
+			case 'add':
+				this.outboundSurfaces.set(change.itemId, change.info)
+				break
+			case 'remove':
+				this.outboundSurfaces.delete(change.itemId)
+				break
+			default:
+				console.error(`Unknown remote surfaces change change: ${changeType}`)
+				assertNever(change)
+				break
+		}
+	})
+
+	public getOutboundStreamDeckSurface = (address: string, port: number): OutboundSurfaceInfo | undefined => {
+		for (const surface of this.outboundSurfaces.values()) {
+			console.log('check', toJS(surface))
+
+			if (surface.type === 'elgato' && surface.address === address && (surface.port ?? 5343) === port) {
+				return surface
+			}
+		}
+		return undefined
+	}
 }

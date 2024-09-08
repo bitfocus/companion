@@ -1,4 +1,9 @@
-import { ClientDiscoveredSurfaceInfo, SurfacesDiscoveryUpdate } from '@companion-app/shared/Model/Surfaces.js'
+import {
+	ClientDiscoveredSurfaceInfo,
+	ClientDiscoveredSurfaceInfoSatellite,
+	ClientDiscoveredSurfaceInfoStreamDeck,
+	SurfacesDiscoveryUpdate,
+} from '@companion-app/shared/Model/Surfaces.js'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { socketEmitPromise, assertNever, SocketContext } from '../util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
@@ -7,16 +12,35 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SetupSatelliteModalRef, SetupSatelliteModal } from './SetupSatelliteModal.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
+import { observer } from 'mobx-react-lite'
 
-export function SurfaceDiscoveryTable() {
+export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 	const discoveredSurfaces = useSurfaceDiscoverySubscription()
-	const { userConfig } = useContext(RootAppStoreContext)
+	const { userConfig, socket } = useContext(RootAppStoreContext)
 
 	const setupSatelliteRef = useRef<SetupSatelliteModalRef>(null)
 
-	const showSetupSatellite = useCallback((surfaceInfo: ClientDiscoveredSurfaceInfo) => {
+	const showSetupSatellite = useCallback((surfaceInfo: ClientDiscoveredSurfaceInfoSatellite) => {
 		setupSatelliteRef.current?.show(surfaceInfo)
 	}, [])
+	const addRemoteStreamDeck = useCallback(
+		(surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck) => {
+			// TODO
+			socketEmitPromise(socket, 'surfaces:outbound:add', [
+				'elgato',
+				surfaceInfo.address,
+				surfaceInfo.port,
+				surfaceInfo.name,
+			])
+				.then(() => {
+					console.log('added streamdeck', surfaceInfo)
+				})
+				.catch((e) => {
+					console.error('Failed to add streamdeck: ', e)
+				})
+		},
+		[socket]
+	)
 
 	return (
 		<>
@@ -34,13 +58,23 @@ export function SurfaceDiscoveryTable() {
 				<tbody>
 					{userConfig.properties?.discoveryEnabled ? (
 						<>
-							{Object.entries(discoveredSurfaces).map(([id, svc]) =>
-								svc ? <SatelliteRow key={id} surfaceInfo={svc} showSetupSatellite={showSetupSatellite} /> : null
-							)}
+							{Object.entries(discoveredSurfaces).map(([id, svc]) => {
+								switch (svc?.surfaceType) {
+									case 'satellite':
+										return <SatelliteRow key={id} surfaceInfo={svc} showSetupSatellite={showSetupSatellite} />
+									case 'streamdeck':
+										return <StreamDeckRow key={id} surfaceInfo={svc} addRemoteStreamDeck={addRemoteStreamDeck} />
+									case undefined:
+										return null
+									default:
+										assertNever(svc)
+										return null
+								}
+							})}
 							{Object.values(discoveredSurfaces).length === 0 && (
 								<tr>
 									<td colSpan={7}>
-										<NonIdealState icon={faSearch} text="Searching for Satellite installations" />
+										<NonIdealState icon={faSearch} text="Searching for remote surfaces" />
 									</td>
 								</tr>
 							)}
@@ -48,7 +82,7 @@ export function SurfaceDiscoveryTable() {
 					) : (
 						<tr>
 							<td colSpan={7}>
-								<NonIdealState icon={faBan} text="Discovery of Satellite devices is disabled" />
+								<NonIdealState icon={faBan} text="Discovery of Remote surfaces is disabled" />
 							</td>
 						</tr>
 					)}
@@ -56,7 +90,7 @@ export function SurfaceDiscoveryTable() {
 			</table>
 		</>
 	)
-}
+})
 
 function useSurfaceDiscoverySubscription() {
 	const socket = useContext(SocketContext)
@@ -126,8 +160,8 @@ function useSurfaceDiscoverySubscription() {
 }
 
 interface SatelliteRowProps {
-	surfaceInfo: ClientDiscoveredSurfaceInfo
-	showSetupSatellite: (surfaceInfo: ClientDiscoveredSurfaceInfo) => void
+	surfaceInfo: ClientDiscoveredSurfaceInfoSatellite
+	showSetupSatellite: (surfaceInfo: ClientDiscoveredSurfaceInfoSatellite) => void
 }
 
 function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
@@ -168,3 +202,36 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 		</tr>
 	)
 }
+
+interface StreamDeckRowProps {
+	surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck
+	addRemoteStreamDeck: (surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck) => void
+}
+
+const StreamDeckRow = observer(function StreamDeckRow({ surfaceInfo, addRemoteStreamDeck }: StreamDeckRowProps) {
+	const { surfaces } = useContext(RootAppStoreContext)
+
+	const isAlreadyAdded = !!surfaces.getOutboundStreamDeckSurface(surfaceInfo.address, surfaceInfo.port)
+
+	return (
+		<tr>
+			<td>{surfaceInfo.name}</td>
+			<td>{surfaceInfo.modelName}</td>
+			<td>
+				<p className="p-no-margin">{surfaceInfo.address}</p>
+			</td>
+			<td>
+				<CButtonGroup>
+					<CButton
+						onClick={() => addRemoteStreamDeck(surfaceInfo)}
+						title={isAlreadyAdded ? 'Already added' : 'Add Stream Deck'}
+						className="btn-undefined"
+						disabled={isAlreadyAdded}
+					>
+						<FontAwesomeIcon icon={faPlus} /> Add Stream Deck
+					</CButton>
+				</CButtonGroup>
+			</td>
+		</tr>
+	)
+})

@@ -17,6 +17,7 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
+	remoteConnectionId: string | null
 }
 
 export interface ClientDevicesListItem {
@@ -55,7 +56,30 @@ export interface SurfacesUpdateUpdateOp {
 	patch: JsonPatchOperation[]
 }
 
-export interface ClientDiscoveredSurfaceInfo {
+export interface OutboundSurfaceInfo {
+	id: string
+	displayName: string
+	type: 'elgato'
+	address: string
+	port: number | undefined
+}
+
+export type OutboundSurfacesUpdate = OutboundSurfacesUpdateRemoveOp | OutboundSurfacesUpdateAddOp
+
+export interface OutboundSurfacesUpdateRemoveOp {
+	type: 'remove'
+	itemId: string
+}
+export interface OutboundSurfacesUpdateAddOp {
+	type: 'add'
+	itemId: string
+
+	info: OutboundSurfaceInfo
+}
+
+export type ClientDiscoveredSurfaceInfo = ClientDiscoveredSurfaceInfoSatellite | ClientDiscoveredSurfaceInfoStreamDeck
+
+export interface ClientDiscoveredSurfaceInfoSatellite {
 	id: string
 
 	surfaceType: 'satellite'
@@ -65,6 +89,19 @@ export interface ClientDiscoveredSurfaceInfo {
 	port: number
 
 	apiEnabled: boolean
+}
+
+export interface ClientDiscoveredSurfaceInfoStreamDeck {
+	id: string
+
+	surfaceType: 'streamdeck'
+
+	name: string
+	address: string
+	port: number
+
+	modelName: string
+	serialnumber: string | undefined
 }
 
 export type SurfacesDiscoveryUpdate = SurfaceDiscoveryUpdateRemoveOp | SurfaceDiscoveryUpdateUpdateOp

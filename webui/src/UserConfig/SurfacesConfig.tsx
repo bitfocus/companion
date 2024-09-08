@@ -12,7 +12,13 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 
 			<UserConfigSwitchRow
 				userConfig={props}
-				label="Watch for Discoverable Companion Satellite Installations"
+				label={
+					<>
+						Watch for Discoverable Remote Surfaces
+						<br />
+						Such as Companion Satellite and Stream Deck Studio
+					</>
+				}
 				field="discoveryEnabled"
 			/>
 

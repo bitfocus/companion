@@ -3,6 +3,7 @@ import ServiceBase from './Base.js'
 import { Bonjour, Browser } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
 import got from 'got'
+import { StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
 
 const SurfaceDiscoveryRoom = 'surfaces:discovery'
 
@@ -34,6 +35,10 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	 * @type {Browser | undefined}
 	 */
 	#satelliteBrowser
+	/**
+	 * @type {StreamDeckTcpDiscoveryService | undefined}
+	 */
+	#streamDeckDiscovery
 
 	/**
 	 * @type {NodeJS.Timeout | undefined}
@@ -44,12 +49,14 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'Service/Satellite', 'discoveryEnabled', null)
+		super(registry, 'Service/SurfaceDiscovery', 'discoveryEnabled', null)
 
 		this.init()
 	}
 
 	listen() {
+		this.currentState = true
+
 		if (!this.#satelliteBrowser) {
 			try {
 				this.#satelliteBrowser = this.#bonjour.find({ type: 'companion-satellite', protocol: 'tcp' })
@@ -70,10 +77,43 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				this.#satelliteBrowser.on('srv-update', (newService, oldService) => {
 					this.#updateSatelliteService(oldService, newService)
 				})
-
-				this.currentState = true
 			} catch (e) {
 				this.logger.debug(`ERROR failed to start searching for companion satellite devices`)
+			}
+		}
+
+		if (!this.#streamDeckDiscovery) {
+			try {
+				this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
+
+				this.#streamDeckDiscovery.on('up', (streamdeck) => {
+					const uiService = this.#convertStreamDeckForUi(streamdeck)
+					if (!uiService) return
+
+					this.logger.debug(
+						`Found streamdeck tcp device ${streamdeck.name} at ${streamdeck.address}:${streamdeck.port}`
+					)
+
+					this.io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
+						type: 'update',
+						info: uiService,
+					})
+				})
+				this.#streamDeckDiscovery.on('down', (streamdeck) => {
+					const uiService = this.#convertStreamDeckForUi(streamdeck)
+					if (!uiService) return
+
+					this.io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
+						type: 'remove',
+						itemId: uiService.id,
+					})
+				})
+
+				setImmediate(() => {
+					this.#streamDeckDiscovery?.query()
+				})
+			} catch (e) {
+				this.logger.debug(`ERROR failed to start searching for streamdeck tcp devices`)
 			}
 		}
 	}
@@ -133,20 +173,43 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	}
 
 	/**
+	 *
+	 * @param {import('@elgato-stream-deck/tcp').StreamDeckTcpDefinition} streamdeck
+	 * @returns {import('@companion-app/shared/Model/Surfaces.js').ClientDiscoveredSurfaceInfo | null}
+	 */
+	#convertStreamDeckForUi(streamdeck) {
+		if (!streamdeck.isPrimary) return null
+
+		return {
+			id: `streamdeck:${streamdeck.serialNumber ?? streamdeck.name}`,
+
+			surfaceType: 'streamdeck',
+
+			name: streamdeck.name,
+			address: streamdeck.address,
+			port: streamdeck.port,
+
+			modelName: streamdeck.modelName,
+			serialnumber: streamdeck.serialNumber,
+		}
+	}
+
+	/**
 	 * Kill the socket, if exists.
 	 * @access protected
 	 * @override
 	 */
 	disableModule() {
-		if (this.#satelliteBrowser) {
+		if (this.currentState) {
+			this.currentState = false
 			try {
-				this.currentState = false
-
-				for (const service of this.#satelliteBrowser.services) {
-					this.#forgetSatelliteService(service)
+				if (this.#satelliteBrowser) {
+					for (const service of this.#satelliteBrowser.services) {
+						this.#forgetSatelliteService(service)
+					}
+					this.#satelliteBrowser.stop()
+					this.#satelliteBrowser = undefined
 				}
-				this.#satelliteBrowser.stop()
-				this.#satelliteBrowser = undefined
 
 				clearTimeout(this.#satelliteExpireInterval)
 				this.#satelliteExpireInterval = undefined
@@ -154,6 +217,17 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				this.logger.info(`Stopped searching for satellite devices`)
 			} catch (/** @type {any} */ e) {
 				this.logger.silly(`Could not stop searching for satellite devices: ${e.message}`)
+			}
+
+			try {
+				if (this.#streamDeckDiscovery) {
+					this.#streamDeckDiscovery.destroy()
+					this.#streamDeckDiscovery = undefined
+				}
+
+				this.logger.info(`Stopped searching for streamdeck tcp devices`)
+			} catch (/** @type {any} */ e) {
+				this.logger.silly(`Could not stop searching for streamdeck tcp devices: ${e.message}`)
 			}
 		}
 	}
@@ -174,6 +248,13 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				for (const service of this.#satelliteBrowser.services) {
 					const uiService = this.#convertSatelliteServiceForUi(service)
 					services[uiService.id] = uiService
+				}
+			}
+
+			if (this.#streamDeckDiscovery) {
+				for (const service of this.#streamDeckDiscovery.knownStreamDecks) {
+					const uiService = this.#convertStreamDeckForUi(service)
+					if (uiService) services[uiService.id] = uiService
 				}
 			}
 

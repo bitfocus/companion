@@ -46,6 +46,7 @@ import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import MystrixDriver from './USB/203SystemsMystrix.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
+import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
 
@@ -114,10 +115,18 @@ class SurfaceController extends CoreBase {
 	#runningRefreshDevices = false
 
 	/**
+	 * @type {SurfaceOutboundController}
+	 * @readonly
+	 */
+	#outboundController
+
+	/**
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
 		super(registry, 'Surface/Controller')
+
+		this.#outboundController = new SurfaceOutboundController(this, registry.db, registry.io)
 
 		this.#surfacesAllLocked = !!this.userconfig.getKey('link_lockouts')
 
@@ -142,6 +151,7 @@ class SurfaceController extends CoreBase {
 			this.#refreshDevices().catch(() => {
 				this.logger.warn('Initial USB scan failed')
 			})
+			this.#outboundController.init()
 
 			this.updateDevicesList()
 
@@ -320,6 +330,8 @@ class SurfaceController extends CoreBase {
 	 * @access public
 	 */
 	clientConnect(client) {
+		this.#outboundController.clientConnect(client)
+
 		client.onPromise('emulator:startup', (id) => {
 			const fullId = EmulatorRoom(id)
 
@@ -641,6 +653,10 @@ class SurfaceController extends CoreBase {
 	 * @returns {ClientDevicesListItem[]}
 	 */
 	getDevicesList() {
+		const remoteConnections = Object.values(this.#outboundController.storage)
+
+		const usedRemoteConnectionIds = new Set()
+
 		/**
 		 *
 		 * @param {string} id
@@ -660,14 +676,27 @@ class SurfaceController extends CoreBase {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+				remoteConnectionId: null,
 			}
 
 			if (surfaceHandler) {
 				let location = surfaceHandler.panel.info.location
 				if (location && location.startsWith('::ffff:')) location = location.substring(7)
+				let remotePort = surfaceHandler.panel.info.remotePort
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
+
+				// Translate remote connections info
+				if (config?.integrationType === 'elgato-streamdeck-tcp') {
+					const matchingRemote = remoteConnections.find(
+						(s) => s.type === 'elgato' && s.address === location && s.port === remotePort
+					)
+					if (matchingRemote) {
+						surfaceInfo.remoteConnectionId = matchingRemote.id
+						usedRemoteConnectionIds.add(matchingRemote.id)
+					}
+				}
 			}
 
 			return surfaceInfo
@@ -751,6 +780,36 @@ class SurfaceController extends CoreBase {
 				result.push(groupResult)
 				groupsMap.set(groupId, groupResult)
 			}
+		}
+
+		for (const connection of remoteConnections) {
+			if (usedRemoteConnectionIds.has(connection.id)) continue
+
+			const tcpId = `tcp://${connection.address}:${connection.port}`
+
+			/** @type {ClientDevicesListItem} */
+			const groupResult = {
+				id: tcpId,
+				index: undefined,
+				displayName: `${connection.displayName || connection.type} - Offline`,
+				isAutoGroup: true,
+				surfaces: [
+					{
+						id: tcpId,
+						type: 'Unknown Elgato Stream Deck (TCP)',
+						integrationType: config?.integrationType || '',
+						name: config?.name || '',
+						// location: 'Offline',
+						configFields: [],
+						isConnected: false,
+						displayName: connection.displayName,
+						location: null,
+						remoteConnectionId: connection.id,
+					},
+				],
+			}
+			result.push(groupResult)
+			// groupsMap.set(groupId, groupResult)
 		}
 
 		return result
@@ -965,6 +1024,24 @@ class SurfaceController extends CoreBase {
 		} finally {
 			this.#runningRefreshDevices = false
 		}
+	}
+
+	/**
+	 *
+	 * @param {import('@elgato-stream-deck/tcp').StreamDeckTcp} streamdeck
+	 */
+	async addStreamdeckTcpDevice(streamdeck) {
+		const fakePath = `tcp://${streamdeck.remoteAddress}:${streamdeck.remotePort}`
+
+		this.removeDevice(fakePath)
+
+		const device = await ElgatoStreamDeckDriver.fromTcp(fakePath, streamdeck)
+
+		this.#createSurfaceHandler(fakePath, 'elgato-streamdeck-tcp', device)
+
+		setImmediate(() => this.updateDevicesList())
+
+		return device
 	}
 
 	/**
@@ -1201,6 +1278,8 @@ class SurfaceController extends CoreBase {
 				// Ignore for now
 			}
 		}
+
+		this.#outboundController.quit()
 
 		this.#surfaceHandlers.clear()
 		this.updateDevicesList()

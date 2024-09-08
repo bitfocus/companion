@@ -18,10 +18,12 @@ import type {
 } from './Model/Common.js'
 import type {
 	ClientDevicesListItem,
-	ClientDiscoveredSurfaceInfo,
-	CompanionExternalAddresses,
+	OutboundSurfaceInfo,
+	OutboundSurfacesUpdate,
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
+	ClientDiscoveredSurfaceInfo,
+	CompanionExternalAddresses,
 	SurfacesDiscoveryUpdate,
 	SurfacesUpdate,
 } from './Model/Surfaces.js'
@@ -250,6 +252,12 @@ export interface ClientToBackendEventsMap {
 		companionAddress: string
 	) => string | null
 
+	'surfaces:outbound:subscribe': () => Record<string, OutboundSurfaceInfo | undefined>
+	'surfaces:outbound:unsubscribe': () => void
+	'surfaces:outbound:add': (type: string, address: string, port: number | undefined, name?: string) => string
+	'surfaces:outbound:remove': (id: string) => void
+	'surfaces:outbound:set-name': (surfaceId: string, name: string) => void
+
 	'emulator:startup': (emulatorId: string) => EmulatorConfig
 	'emulator:press': (emulatorId: string, column: number, row: number) => void
 	'emulator:release': (emulatorId: string, column: number, row: number) => void
@@ -338,6 +346,7 @@ export interface BackendToClientEventsMap {
 	'connections:patch': (patch: JsonPatchOperation[] | false) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
+	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
 	'triggers:update': (change: TriggersUpdate) => void
 	'action-definitions:update': (change: ActionDefinitionUpdate) => void
 	'feedback-definitions:update': (change: FeedbackDefinitionUpdate) => void

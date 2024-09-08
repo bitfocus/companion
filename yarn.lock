@@ -1727,30 +1727,49 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/core@npm:7.0.0-0":
-  version: 7.0.0-0
-  resolution: "@elgato-stream-deck/core@npm:7.0.0-0"
+"@elgato-stream-deck/core@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/core::locator=%40companion-app%2Fworkspace%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@elgato-stream-deck/core@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/core::locator=%40companion-app%2Fworkspace%40workspace%3A."
   dependencies:
-    eventemitter3: "npm:^4.0.7"
+    eventemitter3: "npm:^5.0.1"
     tslib: "npm:^2.7.0"
-  checksum: 10c0/ff010af90878b304508157110353e07c7035616de8381c6a9ec748ff430cd738f3ebda2eadd70cbc9ebfa38f778024bd00225cee5ce8278d29ddda077b1166e4
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@elgato-stream-deck/node@npm:^7.0.0-0":
-  version: 7.0.0-0
-  resolution: "@elgato-stream-deck/node@npm:7.0.0-0"
+"@elgato-stream-deck/node-lib@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/node-lib::locator=%40companion-app%2Fworkspace%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@elgato-stream-deck/node-lib@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/node-lib::locator=%40companion-app%2Fworkspace%40workspace%3A."
   dependencies:
-    "@elgato-stream-deck/core": "npm:7.0.0-0"
-    eventemitter3: "npm:^4.0.7"
     jpeg-js: "npm:^0.4.4"
-    node-hid: "npm:^3.1.0"
-    tslib: "npm:^2.7.0"
+    tslib: "npm:^2.6.3"
   peerDependencies:
     "@julusian/jpeg-turbo": ^1.1.2 || ^2.0.0
-  checksum: 10c0/52a32a3505d04af8b3aedf4833b1510c05c01e533ae46d0317b4327744ce9595e281f042752262d2fee54b3e1ec4c9533f9629603992bb0122e7ecf84d24cb36
   languageName: node
-  linkType: hard
+  linkType: soft
+
+"@elgato-stream-deck/node@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/node::locator=%40companion-app%2Fworkspace%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@elgato-stream-deck/node@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/node::locator=%40companion-app%2Fworkspace%40workspace%3A."
+  dependencies:
+    "@elgato-stream-deck/core": "npm:7.0.0-0"
+    "@elgato-stream-deck/node-lib": "npm:7.0.0-0"
+    eventemitter3: "npm:^5.0.1"
+    node-hid: "npm:^3.1.0"
+    tslib: "npm:^2.7.0"
+  languageName: node
+  linkType: soft
+
+"@elgato-stream-deck/tcp@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/tcp::locator=%40companion-app%2Fworkspace%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@elgato-stream-deck/tcp@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/tcp::locator=%40companion-app%2Fworkspace%40workspace%3A."
+  dependencies:
+    "@elgato-stream-deck/core": "npm:7.0.0-0"
+    "@elgato-stream-deck/node-lib": "npm:7.0.0-0"
+    "@julusian/bonjour-service": "npm:^1.3.0-2"
+    eventemitter3: "npm:^5.0.1"
+    tslib: "npm:^2.6.3"
+  languageName: node
+  linkType: soft
 
 "@emotion/babel-plugin@npm:^11.11.0":
   version: 11.11.0
@@ -6728,6 +6747,7 @@ asn1@evs-broadcast/node-asn1:
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:~1.10.0"
     "@elgato-stream-deck/node": "npm:^7.0.0-0"
+    "@elgato-stream-deck/tcp": "npm:^7.0.0-0"
     "@julusian/bonjour-service": "npm:^1.3.0-2"
     "@julusian/image-rs": "npm:^1.1.1"
     "@julusian/jpeg-turbo": "npm:^2.1.0"
@@ -14681,7 +14701,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.6.2, tslib@npm:^2.7.0":
+"tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.6.2, tslib@npm:^2.6.3, tslib@npm:^2.7.0":
   version: 2.7.0
   resolution: "tslib@npm:2.7.0"
   checksum: 10c0/469e1d5bf1af585742128827000711efa61010b699cb040ab1800bcd3ccdd37f63ec30642c9e07c4439c1db6e46345582614275daca3e0f4abae29b0083f04a6

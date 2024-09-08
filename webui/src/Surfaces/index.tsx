@@ -9,10 +9,11 @@ import { observer } from 'mobx-react-lite'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
 import { KnownSurfacesTable } from './KnownSurfacesTable.js'
 import { NavLink, NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+import { OutboundSurfacesTable } from './OutboundSurfacesTable.js'
 
 export const SURFACES_PAGE_PREFIX = '/surfaces'
 
-type SubPageType = 'configured' | 'discover'
+type SubPageType = 'configured' | 'discover' | 'outbound'
 
 function useSurfacesSubPage(): SubPageType | null | false {
 	const routerLocation = useLocation()
@@ -21,7 +22,7 @@ function useSurfacesSubPage(): SubPageType | null | false {
 	const subPage = fragments[0]
 	if (!subPage) return null
 
-	if (subPage !== 'configured' && subPage !== 'discover') return null
+	if (subPage !== 'configured' && subPage !== 'discover' && subPage !== 'outbound') return null
 
 	return subPage
 }
@@ -61,6 +62,11 @@ export const SurfacesPage = observer(function SurfacesPage() {
 							Discover
 						</CNavLink>
 					</CNavItem>
+					<CNavItem>
+						<CNavLink to={`${SURFACES_PAGE_PREFIX}/outbound`} as={NavLink}>
+							Remote Surfaces
+						</CNavLink>
+					</CNavItem>
 				</CNav>
 				<CTabContent>
 					<CTabPane data-tab="configured" visible={subPage === 'configured'} transition={false}>
@@ -71,6 +77,11 @@ export const SurfacesPage = observer(function SurfacesPage() {
 					<CTabPane data-tab="discover" visible={subPage === 'discover'} transition={false}>
 						<MyErrorBoundary>
 							<DiscoverSurfacesTab />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="outbound" visible={subPage === 'outbound'} transition={false}>
+						<MyErrorBoundary>
+							<OutboundSurfacesTab />
 						</MyErrorBoundary>
 					</CTabPane>
 				</CTabContent>
@@ -155,11 +166,29 @@ function DiscoverSurfacesTab() {
 	return (
 		<>
 			<p style={{ marginBottom: '0.5rem' }}>
-				Discovered Companion Satellite instances will be listed here. You can easily configure them to connect to
-				Companion from here. This supports Companion Satellite version 1.9.0 and later.
+				Discovered remote surfaces, such as Companion Satellite and Stream Deck Studio will be listed here. You can
+				easily configure them to connect to Companion from here.
+				<br />
+				This requires Companion Satellite version 1.9.0 and later.
 			</p>
 
 			<SurfaceDiscoveryTable />
+		</>
+	)
+}
+
+function OutboundSurfacesTab() {
+	return (
+		<>
+			<p style={{ marginBottom: '0.5rem' }}>
+				The Stream Deck Studio supports network connection. You can set up the connection from Companion here, or use
+				the Discovered Surfaces tab.
+				<br />
+				This is not suitable for all remote surfaces such as Satellite, as that opens the connection to Companion
+				itself.
+			</p>
+
+			<OutboundSurfacesTable />
 		</>
 	)
 }
