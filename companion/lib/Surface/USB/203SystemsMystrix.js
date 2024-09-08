@@ -60,7 +60,7 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 	 * @type {boolean
 	 * @access private
 	 */
-		deviceActive = false;
+	deviceActive = false;
 
 	/**
 	 * @param {string} devicePath
@@ -101,11 +101,11 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 
 		this.#device.on('data', (data) => {
 			if (data[0] === 0xff && data[1] === 0x01) {
-				if(data[2] == 1){
+				if (data[2] == 1) {
 					this.deviceActive = true;
 					this.#refreshPanel()
 				}
-				else{
+				else {
 					this.deviceActive = false;
 				}
 			}
@@ -149,7 +149,7 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 	 */
 	setConfig(config, force) {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
-			
+
 			this.#updateBrightness(config.brightness)
 		}
 
@@ -167,7 +167,7 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 	#clearPanel() {
 		this.#lastColours = Array.from({ length: this.gridSize.columns }, () => Array.from({ length: this.gridSize.rows }, () => ({ r: 0, g: 0, b: 0 })));
 
-		if(!this.deviceActive) {
+		if (!this.deviceActive) {
 			return
 		}
 
@@ -181,7 +181,7 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 		for (let y = 0; y < this.gridSize.rows; y++) {
 			for (let x = 0; x < this.gridSize.columns; x++) {
 				var color = this.#lastColours[x][y]
-				if(color.r == 0 && color.g == 0 && color.b == 0){
+				if (color.r == 0 && color.g == 0 && color.b == 0) {
 					continue;
 				}
 				this.#writeKeyColour(x, y, color, true)
@@ -212,13 +212,13 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 	 * @param {boolean} forced
 	 */
 	#writeKeyColour(x, y, color, forced = false) {
-		if(!this.deviceActive){
+		if (!this.deviceActive) {
 			return;
 		}
-		
+
 		var lastColor = this.#lastColours[x][y]
-		
-		if(!forced && color.r == lastColor.r && color.g == lastColor.g && color.b == lastColor.b){
+
+		if (!forced && color.r == lastColor.r && color.g == lastColor.g && color.b == lastColor.b) {
 			return;
 		}
 
