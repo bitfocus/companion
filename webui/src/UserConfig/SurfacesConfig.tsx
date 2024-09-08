@@ -65,6 +65,12 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 				requiresRestart
 				field="blackmagic_controller_enable"
 			/>
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Enable connected 203 Systems Mystrix"
+				requiresRestart
+				field="mystrix_enable"
+			/>
 		</>
 	)
 })

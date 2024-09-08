@@ -45,6 +45,7 @@ class DataUserConfig extends CoreBase {
 		contour_shuttle_enable: false,
 		vec_footpedal_enable: false,
 		blackmagic_controller_enable: false,
+		mystrix_enable: false,
 
 		pin_enable: false,
 		link_lockouts: false,

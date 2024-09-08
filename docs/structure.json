@@ -269,6 +269,10 @@
 			{
 				"label": "VEC Footpedal",
 				"file": "7_surfaces/vec_footpedal.md"
+			},
+			{
+				"label": "203 Systems Mystrix",
+				"file": "7_surfaces/mystrix.md"
 			}
 		]
 	}
