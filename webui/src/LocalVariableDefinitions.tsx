@@ -35,3 +35,18 @@ export const InternalActionLocalVariables: DropdownChoiceInt[] = [
 		label: 'The id of the surface triggering this action',
 	},
 ]
+
+export const SurfaceLocalVariables: DropdownChoiceInt[] = [
+	{
+		value: 'this:page',
+		label: 'This page',
+	},
+	{
+		value: 'this:surface_id',
+		label: 'The id of this surface',
+	},
+	{
+		value: 'this:page_name',
+		label: 'This page name',
+	},
+]

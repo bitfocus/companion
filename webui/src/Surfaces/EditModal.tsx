@@ -14,7 +14,7 @@ import { LoadingRetryOrError, socketEmitPromise, PreventDefaultHandler, useCompu
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalPageDropdown } from '../Controls/InternalInstanceFields.js'
+import { InternalCustomVariableDropdown, InternalPageDropdown } from '../Controls/InternalInstanceFields.js'
 import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
 import {
 	ClientDevicesListItem,
@@ -28,6 +28,8 @@ import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField } from '../Components/TextInputField.js'
+import { InputFeatureIcons, InputFeatureIconsProps } from '../Controls/OptionsInputField.js'
+import { SurfaceLocalVariables } from '../LocalVariableDefinitions.js'
 
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
@@ -310,31 +312,11 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 								</>
 							)}
 
-							{surfaceConfig && surfaceInfo && (
-								<>
-									{surfaceInfo.configFields.map((field) => (
-										<>
-											<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
-												{field.label}
-												{field.tooltip && (
-													<FontAwesomeIcon
-														style={{ marginLeft: '5px' }}
-														icon={faQuestionCircle}
-														title={field.tooltip}
-													/>
-												)}
-											</CFormLabel>
-											<CCol sm={8}>
-												<ConfigField
-													definition={field}
-													value={surfaceConfig[field.id]}
-													setValue={setSurfaceConfigValue}
-												/>
-											</CCol>
-										</>
-									))}
-								</>
-							)}
+							{surfaceConfig &&
+								surfaceInfo &&
+								surfaceInfo.configFields.map((field) => (
+									<ConfigField definition={field} value={surfaceConfig[field.id]} setValue={setSurfaceConfigValue} />
+								))}
 						</CForm>
 					</CModalBody>
 					<CModalFooter>
@@ -359,14 +341,34 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 	const id = definition.id
 	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
 
+	let control: JSX.Element | string | undefined = undefined
+	let features: InputFeatureIconsProps | undefined
+
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'textinput':
-			return (
-				<TextInputField value={value} regex={definition.regex} required={definition.required} setValue={setValue2} />
+			features = definition.isExpression
+				? {
+						variables: true,
+						local: true,
+					}
+				: {}
+
+			control = (
+				<TextInputField
+					value={value}
+					regex={definition.regex}
+					placeholder={definition.placeholder}
+					useVariables={features.variables}
+					localVariables={features.local ? SurfaceLocalVariables : undefined}
+					isExpression={definition.isExpression}
+					setValue={setValue2}
+				/>
 			)
+
+			break
 		case 'number':
-			return (
+			control = (
 				<NumberInputField
 					required={definition.required}
 					min={definition.min}
@@ -377,8 +379,9 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					setValue={setValue2}
 				/>
 			)
+			break
 		case 'checkbox':
-			return (
+			control = (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
 					<CFormSwitch
 						color="success"
@@ -392,8 +395,9 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					/>
 				</div>
 			)
+			break
 		case 'dropdown':
-			return (
+			control = (
 				<DropdownInputField
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
@@ -404,7 +408,25 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					multiple={false}
 				/>
 			)
+			break
+		case 'custom-variable':
+			control = <InternalCustomVariableDropdown value={value} setValue={setValue2} includeNone={true} />
+			break
 		default:
-			return <p>Unknown field "{fieldType}"</p>
+			control = <p>Unknown field "{fieldType}"</p>
+			break
 	}
+
+	return (
+		<>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+				{definition.label}
+				<InputFeatureIcons {...features} />
+				{definition.tooltip && (
+					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={definition.tooltip} />
+				)}
+			</CFormLabel>
+			<CCol sm={8}>{control}</CCol>
+		</>
+	)
 }

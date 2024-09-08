@@ -23,6 +23,7 @@ import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
+import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
 // @ts-ignore
 import shuttleControlUSB from 'shuttle-control-usb'
@@ -44,6 +45,8 @@ import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
+import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
+import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -900,6 +903,11 @@ class SurfaceController extends CoreBase {
 										deviceInfo.usage === 0x61
 									) {
 										await this.#addDevice(deviceInfo.path, {}, 'framework-macropad', FrameworkMacropadDriver)
+									} else if (
+										this.userconfig.getKey('blackmagic_controller_enable') &&
+										getBlackmagicControllerDeviceInfo(deviceInfo)
+									) {
+										await this.#addDevice(deviceInfo.path, {}, 'blackmagic-controller', SurfaceUSBBlackmagicController)
 									}
 								}
 							})
@@ -1010,7 +1018,7 @@ class SurfaceController extends CoreBase {
 	/**
 	 *
 	 * @param {string} devicePath
-	 * @param {LocalUSBDeviceOptions} deviceOptions
+	 * @param {Omit<LocalUSBDeviceOptions, 'executeExpression'>} deviceOptions
 	 * @param {string} type
 	 * @param {{ create: (path: string, options: LocalUSBDeviceOptions) => Promise<import('./Handler.js').SurfacePanel>}} factory
 	 * @param {boolean} skipHidAccessCheck
@@ -1038,7 +1046,10 @@ class SurfaceController extends CoreBase {
 		this.#surfaceHandlers.set(devicePath, null)
 
 		try {
-			const dev = await factory.create(devicePath, deviceOptions)
+			const dev = await factory.create(devicePath, {
+				...deviceOptions,
+				executeExpression: this.#surfaceExecuteExpression.bind(this),
+			})
 			this.#createSurfaceHandler(devicePath, type, dev)
 
 			setImmediate(() => {
@@ -1049,6 +1060,33 @@ class SurfaceController extends CoreBase {
 
 			// Failed, remove the placeholder
 			this.#surfaceHandlers.delete(devicePath)
+		}
+	}
+
+	/** @type {SurfaceExecuteExpressionFn} */
+	#surfaceExecuteExpression(str, surfaceId, injectedVariableValues) {
+		const injectedVariableValuesComplete = {
+			...this.#getInjectedVariablesForSurfaceId(surfaceId),
+			...injectedVariableValues,
+		}
+
+		return this.variablesController.values.executeExpression(str, undefined, undefined, injectedVariableValuesComplete)
+	}
+
+	/**
+	 * Variables to inject based on location
+	 * @param {string} surfaceId
+	 * @returns {import('@companion-module/base').CompanionVariableValues}
+	 */
+	#getInjectedVariablesForSurfaceId(surfaceId) {
+		const pageNumber = this.devicePageGet(surfaceId)
+
+		return {
+			'$(this:surface_id)': surfaceId,
+			// Reactivity is triggered manually
+			'$(this:page)': pageNumber,
+			// Reactivity happens for these because of references to the inner variables
+			'$(this:page_name)': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
 		}
 	}
 
@@ -1286,6 +1324,19 @@ class SurfaceController extends CoreBase {
 	}
 
 	/**
+	 * Propagate variable changes
+	 * @param {Set<string>} allChangedVariables - variables with changes
+	 * @access public
+	 */
+	onVariablesChanged(allChangedVariables) {
+		for (const surface of this.#surfaceHandlers.values()) {
+			if (surface?.panel?.onVariablesChanged) {
+				surface.panel.onVariablesChanged(allChangedVariables)
+			}
+		}
+	}
+
+	/**
 	 * Set the locked state of all surfaces
 	 * @param {boolean} locked
 	 * @param {boolean} forceUnlock Force all surfaces to be unlocked
@@ -1412,11 +1463,9 @@ export default SurfaceController
 
 /**
  * @typedef {{
- *   path: string
- *   options: LocalUSBDeviceOptions
- * }} LocalUSBDeviceInfo
- *
- * @typedef {{
+ *   executeExpression: SurfaceExecuteExpressionFn
  *   useLegacyLayout?: boolean
  * }} LocalUSBDeviceOptions
+ *
+ * @typedef {(str: string, surfaceId: string, injectedVariableValues?: import('@companion-module/base').CompanionVariableValues) => { value: boolean|number|string|undefined, variableIds: Set<string> }} SurfaceExecuteExpressionFn
  */

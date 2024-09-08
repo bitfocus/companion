@@ -295,8 +295,13 @@ export class SurfaceGroup {
 
 		this.#surfaceController.emit('group_page', this.groupId, newPage)
 
+		// Future: this is not ideal, but is the best approach for this reactivity for now
+		const changedVariables = new Set(['this:page', 'this:page_name'])
+
 		for (const surfaceHandler of this.surfaceHandlers) {
 			surfaceHandler.storeNewDevicePage(newPage, defer)
+
+			if (surfaceHandler.panel.onVariablesChanged) surfaceHandler.panel.onVariablesChanged(changedVariables)
 		}
 	}
 

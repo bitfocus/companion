@@ -44,6 +44,7 @@ class DataUserConfig extends CoreBase {
 		loupedeck_enable: false,
 		contour_shuttle_enable: false,
 		vec_footpedal_enable: false,
+		blackmagic_controller_enable: false,
 
 		pin_enable: false,
 		link_lockouts: false,
