@@ -18,7 +18,7 @@
 import { EventEmitter } from 'events'
 import LogController from '../../Log/Controller.js'
 import { colorToRgb } from './Util.js'
-import HID from 'node-hid';
+import HID from 'node-hid'
 
 /**
  * This is an implementation of a simple MIDI device for the 203 Systems Mystrix control surface.
@@ -57,10 +57,10 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 
 	/**
 	 * Device is active or not
-	 * @type {boolean
+	 * @type {boolean}
 	 * @access private
 	 */
-	deviceActive = false;
+	deviceActive = false
 
 	/**
 	 * @param {string} devicePath
@@ -102,14 +102,12 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 		this.#device.on('data', (data) => {
 			if (data[0] === 0xff && data[1] === 0x01) {
 				if (data[2] == 1) {
-					this.deviceActive = true;
+					this.deviceActive = true
 					this.#refreshPanel()
+				} else {
+					this.deviceActive = false
 				}
-				else {
-					this.deviceActive = false;
-				}
-			}
-			else if (data[0] === 0xff && data[1] === 0x10) {
+			} else if (data[0] === 0xff && data[1] === 0x10) {
 				const x = data[2]
 				const y = data[3]
 				const pressed = data[4] > 0
@@ -149,7 +147,6 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 	 */
 	setConfig(config, force) {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
-
 			this.#updateBrightness(config.brightness)
 		}
 
@@ -165,7 +162,9 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 	}
 
 	#clearPanel() {
-		this.#lastColours = Array.from({ length: this.gridSize.columns }, () => Array.from({ length: this.gridSize.rows }, () => ({ r: 0, g: 0, b: 0 })));
+		this.#lastColours = Array.from({ length: this.gridSize.columns }, () =>
+			Array.from({ length: this.gridSize.rows }, () => ({ r: 0, g: 0, b: 0 }))
+		)
 
 		if (!this.deviceActive) {
 			return
@@ -182,13 +181,11 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 			for (let x = 0; x < this.gridSize.columns; x++) {
 				var color = this.#lastColours[x][y]
 				if (color.r == 0 && color.g == 0 && color.b == 0) {
-					continue;
+					continue
 				}
 				this.#writeKeyColour(x, y, color, true)
 			}
 		}
-
-
 	}
 
 	/**
@@ -213,13 +210,13 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 	 */
 	#writeKeyColour(x, y, color, forced = false) {
 		if (!this.deviceActive) {
-			return;
+			return
 		}
 
 		var lastColor = this.#lastColours[x][y]
 
 		if (!forced && color.r == lastColor.r && color.g == lastColor.g && color.b == lastColor.b) {
-			return;
+			return
 		}
 
 		this.#lastColours[x][y] = color

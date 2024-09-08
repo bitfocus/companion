@@ -909,10 +909,9 @@ class SurfaceController extends CoreBase {
 										getBlackmagicControllerDeviceInfo(deviceInfo)
 									) {
 										await this.#addDevice(deviceInfo.path, {}, 'blackmagic-controller', SurfaceUSBBlackmagicController)
-									
 									} else if (
 										deviceInfo.vendorId === 0x0203 && // 203 Systems
-										(deviceInfo.productId & 0xFFC0) == 0x1040 && // Mystrix
+										(deviceInfo.productId & 0xffc0) == 0x1040 && // Mystrix
 										deviceInfo.usagePage === 0xff00 && // rawhid interface
 										deviceInfo.usage === 0x01
 									) {
