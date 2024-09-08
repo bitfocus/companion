@@ -43,7 +43,7 @@ import ContourShuttleDriver from './USB/ContourShuttle.js'
 import VECFootpedalDriver from './USB/VECFootpedal.js'
 import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
-import MystrixDriver from './USB/Mystrix.js'
+import MystrixDriver from './USB/203SystemsMystrix.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
@@ -919,7 +919,7 @@ class SurfaceController extends CoreBase {
 										if (this.userconfig.getKey('mystrix_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', MystrixDriver)
 										}
-                  }
+									}
 								}
 							})
 						)

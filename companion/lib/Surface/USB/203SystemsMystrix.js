@@ -26,7 +26,7 @@ import HID from 'node-hid';
  * It uses a specific OS available from https://github.com/203Electronics/MatrixOS
  * This driver targets the Matrix OS's Companion APP,
  */
-class SurfaceUSB203Mystrix extends EventEmitter {
+class SurfaceUSB203SystemsMystrix extends EventEmitter {
 	/**
 	 * @type {import('winston').Logger}
 	 * @access private
@@ -42,7 +42,7 @@ class SurfaceUSB203Mystrix extends EventEmitter {
 
 	/**
 	 * HID device
-	 * @type {import('node-hid').HIDDevice}
+	 * @type {import('node-hid').HID}
 	 * @access private
 	 * @readonly
 	 */
@@ -64,12 +64,12 @@ class SurfaceUSB203Mystrix extends EventEmitter {
 
 	/**
 	 * @param {string} devicePath
-	 * @param {import('node-hid').HIDDevice} device
+	 * @param {import('node-hid').HID} device
 	 */
 	constructor(devicePath, device) {
 		super()
 
-		this.#logger = LogController.createLogger(`Surface/USB/203Mystrix/${devicePath}`)
+		this.#logger = LogController.createLogger(`Surface/USB/203SystemsMystrix/${devicePath}`)
 
 		this.config = {
 			brightness: 100,
@@ -122,13 +122,13 @@ class SurfaceUSB203Mystrix extends EventEmitter {
 	/**
 	 * Open a 203 Systems Mystrix
 	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSB203Mystrix>}
+	 * @returns {Promise<SurfaceUSB203SystemsMystrix>}
 	 */
 	static async create(devicePath) {
 		const device = new HID.HID(devicePath)
 
 		try {
-			const self = new SurfaceUSB203Mystrix(devicePath, device)
+			const self = new SurfaceUSB203SystemsMystrix(devicePath, device)
 
 			// Make sure the first clear happens properly & set up the lastColours array
 			self.clearDeck()
@@ -239,4 +239,4 @@ class SurfaceUSB203Mystrix extends EventEmitter {
 	}
 }
 
-export default SurfaceUSB203Mystrix
+export default SurfaceUSB203SystemsMystrix
