@@ -1727,49 +1727,53 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/core@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/core::locator=%40companion-app%2Fworkspace%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@elgato-stream-deck/core@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/core::locator=%40companion-app%2Fworkspace%40workspace%3A."
+"@elgato-stream-deck/core@npm:7.0.0":
+  version: 7.0.0
+  resolution: "@elgato-stream-deck/core@npm:7.0.0"
   dependencies:
     eventemitter3: "npm:^5.0.1"
     tslib: "npm:^2.7.0"
+  checksum: 10c0/8bfac25aebb83cc5e2aa79f5ca3118cebcdd07e822825335e08fb9a8fe95c71ef94be44b1cdef0f8469662c866547ae454632f7e8653273ec05eed48a5e5e537
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@elgato-stream-deck/node-lib@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/node-lib::locator=%40companion-app%2Fworkspace%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@elgato-stream-deck/node-lib@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/node-lib::locator=%40companion-app%2Fworkspace%40workspace%3A."
+"@elgato-stream-deck/node-lib@npm:7.0.0":
+  version: 7.0.0
+  resolution: "@elgato-stream-deck/node-lib@npm:7.0.0"
   dependencies:
     jpeg-js: "npm:^0.4.4"
     tslib: "npm:^2.6.3"
   peerDependencies:
     "@julusian/jpeg-turbo": ^1.1.2 || ^2.0.0
+  checksum: 10c0/362ede2d412d414876145e7239b23dc77a1e0ec0a848cee4da6a27b4b71fc248df9d9f6d3d45a4534c5af8dd0bb2841a25818855107780b8ac887ecb9c0cf319
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@elgato-stream-deck/node@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/node::locator=%40companion-app%2Fworkspace%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@elgato-stream-deck/node@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/node::locator=%40companion-app%2Fworkspace%40workspace%3A."
+"@elgato-stream-deck/node@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@elgato-stream-deck/node@npm:7.0.0"
   dependencies:
-    "@elgato-stream-deck/core": "npm:7.0.0-0"
-    "@elgato-stream-deck/node-lib": "npm:7.0.0-0"
+    "@elgato-stream-deck/core": "npm:7.0.0"
+    "@elgato-stream-deck/node-lib": "npm:7.0.0"
     eventemitter3: "npm:^5.0.1"
     node-hid: "npm:^3.1.0"
     tslib: "npm:^2.7.0"
+  checksum: 10c0/441dcbdea4d2949d27a065e795e43aa2e91d145c970386f2a1e8776636f7bf39de99f2c620c41cfbc62698ddb268b4f7bfea6c6ec37814c841b38421b6da926c
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@elgato-stream-deck/tcp@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/tcp::locator=%40companion-app%2Fworkspace%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@elgato-stream-deck/tcp@portal:/home/julus/Projects/libs/node-elgato-stream-deck/packages/tcp::locator=%40companion-app%2Fworkspace%40workspace%3A."
+"@elgato-stream-deck/tcp@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@elgato-stream-deck/tcp@npm:7.0.0"
   dependencies:
-    "@elgato-stream-deck/core": "npm:7.0.0-0"
-    "@elgato-stream-deck/node-lib": "npm:7.0.0-0"
+    "@elgato-stream-deck/core": "npm:7.0.0"
+    "@elgato-stream-deck/node-lib": "npm:7.0.0"
     "@julusian/bonjour-service": "npm:^1.3.0-2"
     eventemitter3: "npm:^5.0.1"
     tslib: "npm:^2.6.3"
+  checksum: 10c0/4f8c11fdaf1ae9f9db31ce76efb3dca941360df1df557b2e9f147dfe053fd707b08c9727e678b079c33e7ce9f4c72c940523e99b2f1f2373130c0e11e4e4923b
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@emotion/babel-plugin@npm:^11.11.0":
   version: 11.11.0
@@ -6746,8 +6750,8 @@ asn1@evs-broadcast/node-asn1:
     "@blackmagic-controller/node": "npm:^0.1.0"
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:~1.10.0"
-    "@elgato-stream-deck/node": "npm:^7.0.0-0"
-    "@elgato-stream-deck/tcp": "npm:^7.0.0-0"
+    "@elgato-stream-deck/node": "npm:^7.0.0"
+    "@elgato-stream-deck/tcp": "npm:^7.0.0"
     "@julusian/bonjour-service": "npm:^1.3.0-2"
     "@julusian/image-rs": "npm:^1.1.1"
     "@julusian/jpeg-turbo": "npm:^2.1.0"
