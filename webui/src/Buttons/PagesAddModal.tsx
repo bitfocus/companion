@@ -137,7 +137,7 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 							<td style={{ textAlign: 'left' }}>
 								<CButtonGroup>
 									<CButton
-										color="warning"
+										color="white"
 										size="sm"
 										onClick={doInsertPage}
 										title="Add at end"
@@ -190,12 +190,12 @@ function AddPageRow({ index, name, canDelete, changeName, doInsertPage, doDelete
 					>
 						<FontAwesomeIcon icon={faPencil} />
 					</CButton> */}
-					<CButton color="warning" size="sm" onClick={doInsertPage} title="Add page before" data-page={index}>
+					<CButton color="white" size="sm" onClick={doInsertPage} title="Add page before" data-page={index}>
 						<FontAwesomeIcon icon={faPlus} />
 					</CButton>
 
 					<CButton
-						color="danger"
+						color="white"
 						size="sm"
 						onClick={doDeletePage}
 						title="Delete"

@@ -105,7 +105,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 							<td style={{ textAlign: 'center' }}>
 								<CButtonGroup>
 									<CButton
-										color="warning"
+										color="white"
 										size="sm"
 										onClick={doInsertPage}
 										title="Insert page at end"
@@ -208,7 +208,7 @@ const PageListRow = observer(function PageListRow({
 			<td style={{ width: 0 }}>
 				<CButtonGroup>
 					<CButton
-						color="info"
+						color="white"
 						size="sm"
 						onClick={configurePage}
 						title="Edit page"
@@ -217,12 +217,12 @@ const PageListRow = observer(function PageListRow({
 					>
 						<FontAwesomeIcon icon={faPencil} />
 					</CButton>
-					<CButton color="warning" size="sm" onClick={doInsertPage} title="Insert page before" data-page={pageNumber}>
+					<CButton color="white" size="sm" onClick={doInsertPage} title="Insert page before" data-page={pageNumber}>
 						<FontAwesomeIcon icon={faPlus} />
 					</CButton>
 
 					<CButton
-						color="danger"
+						color="white"
 						size="sm"
 						onClick={doDeletePage}
 						title="Delete"
