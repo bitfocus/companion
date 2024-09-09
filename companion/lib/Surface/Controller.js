@@ -1341,45 +1341,45 @@ class SurfaceController extends CoreBase {
 		}
 	}
 	/**
-	 * Set the page number for a surface
+	 * Set the page id for a surface
 	 * @param {string} surfaceOrGroupId
-	 * @param {number} page
+	 * @param {string} pageId
 	 * @param {boolean=} looseIdMatching
 	 * @param {boolean=} defer Defer the drawing to the next tick
 	 * @returns {void}
 	 */
-	devicePageSet(surfaceOrGroupId, page, looseIdMatching, defer = false) {
+	devicePageSet(surfaceOrGroupId, pageId, looseIdMatching, defer = false) {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
-			surfaceGroup.setCurrentPage(page, defer)
+			surfaceGroup.setCurrentPage(pageId, defer)
 		}
 	}
 	/**
-	 * Get the page number of a surface
+	 * Get the page id of a surface
 	 * @param {string} surfaceOrGroupId
 	 * @param {boolean=} looseIdMatching
-	 * @returns {number | undefined}
+	 * @returns {string | undefined}
 	 */
 	devicePageGet(surfaceOrGroupId, looseIdMatching = false) {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
-			return surfaceGroup.getCurrentPage()
+			return surfaceGroup.getCurrentPageId()
 		} else {
 			return undefined
 		}
 	}
 	/**
-	 * Get the page number of a surface
+	 * Get the startup page id of a surface
 	 * @param {string} surfaceOrGroupId
 	 * @param {boolean=} looseIdMatching
-	 * @returns {number | undefined}
+	 * @returns {string | undefined}
 	 */
 	devicePageGetStartup(surfaceOrGroupId, looseIdMatching = false) {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
 			return surfaceGroup.groupConfig.use_last_page
-				? surfaceGroup.groupConfig.last_page
-				: surfaceGroup.groupConfig.startup_page
+				? surfaceGroup.groupConfig.last_page_id
+				: surfaceGroup.groupConfig.startup_page_id
 		} else {
 			return undefined
 		}

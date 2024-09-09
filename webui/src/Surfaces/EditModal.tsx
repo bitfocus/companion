@@ -14,7 +14,8 @@ import { LoadingRetryOrError, socketEmitPromise, PreventDefaultHandler, useCompu
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalCustomVariableDropdown, InternalPageDropdown } from '../Controls/InternalInstanceFields.js'
+import { InternalPageIdDropdown } from '../Controls/InternalInstanceFields.js'
+import { InternalCustomVariableDropdown } from '../Controls/InternalInstanceFields.js'
 import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
 import {
 	ClientDevicesListItem,
@@ -284,14 +285,14 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 										Startup Page
 									</CFormLabel>
 									<CCol sm={8}>
-										<InternalPageDropdown
+										<InternalPageIdDropdown
 											label={null}
 											disabled={!!groupConfig.use_last_page}
-											isLocatedInGrid={false}
+											// isLocatedInGrid={false}
 											includeDirection={false}
 											includeStartup={false}
-											value={groupConfig.startup_page}
-											setValue={(val) => setGroupConfigValue('startup_page', val)}
+											value={groupConfig.startup_page_id}
+											setValue={(val) => setGroupConfigValue('startup_page_id', val)}
 										/>
 									</CCol>
 
@@ -299,14 +300,14 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 										Current Page
 									</CFormLabel>
 									<CCol sm={8}>
-										<InternalPageDropdown
+										<InternalPageIdDropdown
 											label={null}
 											disabled={false}
-											isLocatedInGrid={false}
+											// isLocatedInGrid={false}
 											includeDirection={false}
 											includeStartup={false}
-											value={groupConfig.last_page}
-											setValue={(val) => setGroupConfigValue('last_page', val)}
+											value={groupConfig.last_page_id}
+											setValue={(val) => setGroupConfigValue('last_page_id', val)}
 										/>
 									</CCol>
 								</>

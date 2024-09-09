@@ -128,10 +128,10 @@ class SurfaceHandler extends EventEmitter {
 
 	/**
 	 * Current page of the surface
-	 * @type {number}
+	 * @type {string}
 	 * @access private
 	 */
-	#currentPage = 1
+	#currentPageId
 
 	/**
 	 * Current pincode entry if locked
@@ -416,13 +416,15 @@ class SurfaceHandler extends EventEmitter {
 
 				const gridSize = this.panelGridSize
 
+				const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+
 				/** @type {DrawButtonItem[]} */
 				const rawEntries = []
 
 				for (let y = 0; y < gridSize.rows; y++) {
 					for (let x = 0; x < gridSize.columns; x++) {
 						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder({
-							pageNumber: this.#currentPage,
+							pageNumber: pageNumber ?? 0,
 							column: x + xOffset,
 							row: y + yOffset,
 						})
@@ -510,9 +512,10 @@ class SurfaceHandler extends EventEmitter {
 		// If surface is locked ignore updates. pincode updates are handled separately
 		if (this.#isSurfaceLocked) return
 
-		if (this.#xkeysPageCount > 0) {
+		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+		if (this.#xkeysPageCount > 0 && pageNumber) {
 			// xkeys mode
-			const pageOffset = location.pageNumber - this.#currentPage
+			const pageOffset = location.pageNumber - pageNumber
 			if (this.panel.drawColor && pageOffset >= 0 && pageOffset < this.#xkeysPageCount) {
 				const [transformedX, transformedY] = rotateXYForPanel(
 					location.column,
@@ -523,7 +526,7 @@ class SurfaceHandler extends EventEmitter {
 
 				this.panel.drawColor(pageOffset, transformedX, transformedY, render.bgcolor)
 			}
-		} else if (location.pageNumber == this.#currentPage) {
+		} else if (location.pageNumber == pageNumber) {
 			// normal mode
 			const { xOffset, yOffset } = this.#getCurrentOffset()
 
@@ -589,6 +592,10 @@ class SurfaceHandler extends EventEmitter {
 	 */
 	#onDeviceClick(x, y, pressed, pageOffset) {
 		if (!this.panel) return
+
+		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+		if (!pageNumber) return
+
 		try {
 			if (!this.#isSurfaceLocked) {
 				this.emit('interaction')
@@ -600,7 +607,7 @@ class SurfaceHandler extends EventEmitter {
 
 				const coordinate = `${y2 + yOffset}/${x2 + xOffset}`
 
-				let thisPage = this.#currentPage
+				let thisPage = pageNumber
 
 				if (pressed) {
 					// Track what page was pressed for this key
@@ -671,6 +678,10 @@ class SurfaceHandler extends EventEmitter {
 	 */
 	#onDeviceRotate(x, y, direction, pageOffset) {
 		if (!this.panel) return
+
+		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+		if (!pageNumber) return
+
 		try {
 			if (!this.#isSurfaceLocked) {
 				this.emit('interaction')
@@ -680,7 +691,7 @@ class SurfaceHandler extends EventEmitter {
 				// Translate key for offset
 				const { xOffset, yOffset } = this.#getCurrentOffset()
 
-				let thisPage = this.#currentPage
+				let thisPage = pageNumber
 
 				// allow the xkeys (legacy mode) to span pages
 				thisPage += pageOffset ?? 0
@@ -745,12 +756,15 @@ class SurfaceHandler extends EventEmitter {
 	#xkeysDrawPages() {
 		if (!this.panel || !this.panel.drawColor) return
 
+		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+		if (!pageNumber) return
+
 		for (let page = 0; page < this.#xkeysPageCount; page++) {
 			for (let bank = 0; bank < LEGACY_MAX_BUTTONS; bank++) {
 				const xy = oldBankIndexToXY(bank)
 				if (xy) {
 					const render = this.#graphics.getCachedRenderOrGeneratePlaceholder({
-						pageNumber: this.#currentPage + page,
+						pageNumber: pageNumber + page,
 						column: xy[0],
 						row: xy[1],
 					})
@@ -771,7 +785,11 @@ class SurfaceHandler extends EventEmitter {
 	 * Reset the config of this surface to defaults
 	 */
 	resetConfig() {
-		this.#surfaceConfig.groupConfig = cloneDeep(SurfaceGroup.DefaultOptions)
+		this.#surfaceConfig.groupConfig = {
+			...cloneDeep(SurfaceGroup.DefaultOptions),
+			last_page_id: this.#page.getFirstPageId(),
+			startup_page_id: this.#page.getFirstPageId(),
+		}
 		this.#surfaceConfig.groupId = null
 		this.setPanelConfig(cloneDeep(SurfaceHandler.PanelDefaults))
 	}
@@ -865,15 +883,24 @@ class SurfaceHandler extends EventEmitter {
 
 	/**
 	 * Update to a new page number
-	 * @param {number} newpage
+	 * @param {string} newPageId
 	 * @param {boolean} defer
 	 * @returns {void}
 	 */
-	storeNewDevicePage(newpage, defer = false) {
-		this.#currentPage = newpage
+	storeNewDevicePage(newPageId, defer = false) {
+		this.#currentPageId = newPageId
 
-		this.#surfaces.emit('surface_page', this.surfaceId, newpage)
+		this.#surfaces.emit('surface_page', this.surfaceId, newPageId)
 
+		this.triggerRedraw(defer)
+	}
+
+	/**
+	 * Trigger a redraw of this surface
+	 * @param {boolean} defer
+	 * @returns {void}
+	 */
+	triggerRedraw(defer = false) {
 		if (defer) {
 			setImmediate(() => {
 				this.#drawPage()

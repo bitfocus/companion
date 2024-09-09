@@ -134,7 +134,10 @@ export default class Surface {
 	 */
 	#pageController
 
-	/** Page history for surfaces */
+	/**
+	 * Page history for surfaces
+	 * @type {Map<string, { history: string[], index: number }>}
+	 */
 	#pageHistory = new Map()
 
 	/**
@@ -221,31 +224,33 @@ export default class Surface {
 	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
 	 * @param {boolean} useVariableFields
 	 * @param {string | undefined} surfaceId
-	 * @returns {number | 'back' | 'forward' | '+1' | '-1' | undefined}
+	 * @returns {string | 'back' | 'forward' | '+1' | '-1' | undefined}
 	 */
 	#fetchPage(options, extras, useVariableFields, surfaceId) {
 		/** @type {number | string | undefined} */
-		let thePage = options.page
+		let thePageNumber = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			thePage = Number(
+			thePageNumber = Number(
 				this.#internalModule.executeExpressionForInternalActionOrFeedback(options.page_variable, extras, 'number').value
 			)
 		}
 
 		if (extras.location) {
-			// @ts-ignore
-			if (thePage === 0 || thePage === '0') thePage = extras.location.pageNumber ?? extras.location.page
+			if (thePageNumber === 0 || thePageNumber === '0')
+				// @ts-ignore
+				thePageNumber = extras.location.pageNumber ?? extras.location.page
 		}
 
-		if (thePage === 'startup') {
-			thePage = surfaceId && this.#surfaceController.devicePageGetStartup(surfaceId)
+		if (thePageNumber === 'startup') {
+			const thePageId = surfaceId && this.#surfaceController.devicePageGetStartup(surfaceId)
+			return thePageId || this.#pageController.getFirstPageId()
 		}
-		if (thePage === 'back' || thePage === 'forward' || thePage === '+1' || thePage === '-1') {
-			return thePage
+		if (thePageNumber === 'back' || thePageNumber === 'forward' || thePageNumber === '+1' || thePageNumber === '-1') {
+			return thePageNumber
 		}
 
-		return Number(thePage) || undefined
+		return this.#pageController.getPageInfo(Number(thePageNumber))?.id
 	}
 
 	/**
@@ -586,7 +591,7 @@ export default class Surface {
 	/**
 	 * Change the page of a surface
 	 * @param {string} surfaceId
-	 * @param {number | 'back' | 'forward' | '+1' | '-1'} toPage
+	 * @param {string | 'back' | 'forward' | '+1' | '-1'} toPage
 	 */
 	#changeSurfacePage(surfaceId, toPage) {
 		const groupId = this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
@@ -620,19 +625,16 @@ export default class Surface {
 					this.#surfaceController.devicePageSet(groupId, pageTarget, true)
 				}
 			} else {
-				const pageCount = this.#pageController.getPageCount()
-
+				/** @type {string | null} */
 				let newPage = toPage
 				if (newPage === '+1') {
-					newPage = currentPage + 1
-					if (newPage > pageCount) newPage = 1
+					newPage = this.#pageController.getOffsetPageId(currentPage, 1)
 				} else if (newPage === '-1') {
-					newPage = currentPage - 1
-					if (newPage < 1) newPage = pageCount
+					newPage = this.#pageController.getOffsetPageId(currentPage, -1)
 				} else {
-					newPage = Number(newPage)
+					newPage = String(newPage)
 				}
-				if (isNaN(newPage)) newPage = 1
+				if (!newPage || !this.#pageController.isPageIdValid(newPage)) newPage = this.#pageController.getFirstPageId()
 
 				// Change page
 				this.#surfaceController.devicePageSet(groupId, newPage, true, true)

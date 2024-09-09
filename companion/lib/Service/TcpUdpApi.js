@@ -84,7 +84,10 @@ export class ServiceTcpUdpApi extends CoreBase {
 			const page = parseInt(match.page)
 			const surfaceId = match.surfaceId
 
-			this.surfaces.devicePageSet(surfaceId, page)
+			const pageId = this.page.getPageInfo(page)?.id
+			if (!pageId) return 'Page not found'
+
+			this.surfaces.devicePageSet(surfaceId, pageId)
 
 			return `If ${surfaceId} is connected`
 		})
@@ -277,7 +280,10 @@ export class ServiceTcpUdpApi extends CoreBase {
 		const page = parseInt(match.page)
 		const surfaceId = match.surfaceId
 
-		this.surfaces.devicePageSet(surfaceId, page)
+		const pageId = this.page.getPageInfo(page)?.id
+		if (!pageId) return 'Page not found'
+
+		this.surfaces.devicePageSet(surfaceId, pageId)
 
 		return `If ${surfaceId} is connected`
 	}
