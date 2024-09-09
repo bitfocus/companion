@@ -30,6 +30,10 @@ export class PagesStore {
 		return this.store
 	}
 
+	public get pageCount(): number {
+		return this.store.length
+	}
+
 	public getControlIdAt(pageNumber: number, row: number, column: number): string | undefined {
 		return this.get(pageNumber)?.controls?.get(row)?.get(column)
 	}

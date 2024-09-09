@@ -62,7 +62,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
 	const navigate = useNavigate()
-	const pageNumber = useUrlPageNumber()
+	let pageNumber = useUrlPageNumber()
 	const setPageNumber = useCallback(
 		(pageNumber: number) => {
 			navigateToButtonsPage(navigate, pageNumber)
@@ -252,7 +252,13 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 		return <></>
 	} else if (pageNumber <= 0) {
 		setTimeout(() => navigateToButtonsPage(navigate, getLastPageNumber()), 0)
-		return <></>
+		// Force the number and let it render
+		pageNumber = 1
+	} else if (pageNumber > pages.pageCount) {
+		const newPageNumber = pages.pageCount
+		setTimeout(() => navigateToButtonsPage(navigate, newPageNumber), 0)
+		// Force the number and let it render
+		pageNumber = newPageNumber
 	}
 
 	return (
