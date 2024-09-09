@@ -3,7 +3,7 @@ import { IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
 import { ConnectionDebugLogRoom } from './Host.js'
 import semver from 'semver'
 
-const range1_2_0OrLater = new semver.Range('>=1.2.0-0')
+const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
 /**
  * @typedef {import('@companion-module/base/dist/host-api/api.js').HostToModuleEventsV0} HostToModuleEventsV0
@@ -193,6 +193,8 @@ class SocketEventsHandler {
 			return res.fields
 		} catch (/** @type {any} */ e) {
 			this.logger.warn('Error getting config fields: ' + e?.message)
+			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
+
 			throw e
 		}
 	}
@@ -209,23 +211,23 @@ class SocketEventsHandler {
 		// Find all the feedbacks on controls
 		const allControls = this.#registry.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
-			if (control.supportsFeedbacks && control.feedbacks.feedbacks.length > 0) {
+			const controlFeedbacks =
+				control.supportsFeedbacks && control.feedbacks.getFlattenedFeedbackInstances(this.connectionId)
+			if (controlFeedbacks && controlFeedbacks.length > 0) {
 				const imageSize = control.getBitmapSize()
-				for (const feedback of control.feedbacks.feedbacks) {
-					if (feedback.instance_id === this.connectionId) {
-						allFeedbacks[feedback.id] = {
-							id: feedback.id,
-							controlId: controlId,
-							feedbackId: feedback.type,
-							options: feedback.options,
+				for (const feedback of controlFeedbacks) {
+					allFeedbacks[feedback.id] = {
+						id: feedback.id,
+						controlId: controlId,
+						feedbackId: feedback.type,
+						options: feedback.options,
 
-							isInverted: !!feedback.isInverted,
+						isInverted: !!feedback.isInverted,
 
-							upgradeIndex: feedback.upgradeIndex ?? null,
-							disabled: !!feedback.disabled,
+						upgradeIndex: feedback.upgradeIndex ?? null,
+						disabled: !!feedback.disabled,
 
-							image: imageSize ?? undefined,
-						}
+						image: imageSize ?? undefined,
 					}
 				}
 			}
@@ -375,6 +377,7 @@ class SocketEventsHandler {
 			return msg.options
 		} catch (/** @type {any} */ e) {
 			this.logger.warn('Error learning feedback options: ' + e?.message)
+			this.#sendToModuleLog('error', 'Error learning feedback options: ' + e?.message)
 		}
 	}
 
@@ -467,6 +470,7 @@ class SocketEventsHandler {
 			return msg.options
 		} catch (/** @type {any} */ e) {
 			this.logger.warn('Error learning action options: ' + e?.message)
+			this.#sendToModuleLog('error', 'Error learning action options: ' + e?.message)
 		}
 	}
 
@@ -495,6 +499,7 @@ class SocketEventsHandler {
 			})
 		} catch (/** @type {any} */ e) {
 			this.logger.warn(`Error executing action: ${e.message ?? e}`)
+			this.#sendToModuleLog('error', 'Error executing action: ' + e?.message)
 
 			throw e
 		}
@@ -594,11 +599,21 @@ class SocketEventsHandler {
 		}
 
 		// Send everything to the 'debug' page
+		this.#sendToModuleLog(msg.level, msg.message.toString())
+	}
+
+	/**
+	 * Send a message to the module 'debug' log page
+	 * @param {import('@companion-module/base').LogLevel} level
+	 * @param {string} message
+	 */
+	#sendToModuleLog(level, message) {
 		const debugLogRoom = ConnectionDebugLogRoom(this.connectionId)
 		if (this.#registry.io.countRoomMembers(debugLogRoom) > 0) {
-			this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, msg.level, msg.message.toString())
+			this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, level, message)
 		}
 	}
+
 	/**
 	 * Handle updating instance status from the child process
 	 * @param {import('@companion-module/base/dist/host-api/api.js').SetStatusMessage} msg
@@ -682,7 +697,7 @@ class SocketEventsHandler {
 			variables[variable.id] = variable.value
 		}
 
-		this.#registry.instance.variable.setVariableValues(this.#label, variables)
+		this.#registry.variables.values.setVariableValues(this.#label, variables)
 	}
 
 	/**
@@ -713,7 +728,7 @@ class SocketEventsHandler {
 			}
 		}
 
-		this.#registry.instance.variable.setVariableDefinitions(this.#label, newVariables)
+		this.#registry.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
 			/** @type {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} */
@@ -722,11 +737,12 @@ class SocketEventsHandler {
 				variables[variable.id] = variable.value
 			}
 
-			this.#registry.instance.variable.setVariableValues(this.#label, variables)
+			this.#registry.variables.values.setVariableValues(this.#label, variables)
 		}
 
 		if (invalidIds.length > 0) {
 			this.logger.warn(`Got variable definitions with invalid ids: ${JSON.stringify(invalidIds)}`)
+			this.#sendToModuleLog('warn', `Got variable definitions with invalid ids: ${JSON.stringify(invalidIds)}`)
 		}
 	}
 
@@ -781,7 +797,7 @@ class SocketEventsHandler {
 	async #handleParseVariablesInString(msg) {
 		try {
 			const location = msg.controlId ? this.#registry.page.getLocationOfControlId(msg.controlId) : null
-			const result = this.#registry.instance.variable.parseVariables(msg.text, location)
+			const result = this.#registry.variables.values.parseVariables(msg.text, location)
 
 			return { text: result.text, variableIds: result.variableIds }
 		} catch (/** @type {any} */ e) {
@@ -820,7 +836,7 @@ class SocketEventsHandler {
 	 */
 	async #handleSetCustomVariable(msg) {
 		try {
-			this.#registry.instance.variable.custom.setValue(msg.customVariableId, msg.value)
+			this.#registry.variables.custom.setValue(msg.customVariableId, msg.value)
 		} catch (/** @type {any} */ e) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}

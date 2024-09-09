@@ -51,8 +51,6 @@ function compareValues(op, value, value2) {
 }
 
 export default class Variables {
-	#logger = LogController.createLogger('Internal/Variables')
-
 	/**
 	 * @type {import('./Controller.js').default}
 	 * @readonly
@@ -60,7 +58,7 @@ export default class Variables {
 	#internalModule
 
 	/**
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Values.js').VariablesValues}
 	 * @readonly
 	 */
 	#variableController
@@ -73,7 +71,7 @@ export default class Variables {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Instance/Variable.js').default} variableController
+	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
 	constructor(internalModule, variableController) {
 		this.#internalModule = internalModule
@@ -178,27 +176,41 @@ export default class Variables {
 	 */
 	executeFeedback(feedback) {
 		if (feedback.type == 'variable_value') {
-			const result = this.#variableController.parseVariables(`$(${feedback.options.variable})`, null)
+			const result = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				`$(${feedback.options.variable})`,
+				feedback
+			)
 
 			this.#variableSubscriptions.set(feedback.id, result.variableIds)
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
 		} else if (feedback.type == 'variable_variable') {
-			const result1 = this.#variableController.parseVariables(`$(${feedback.options.variable})`, null)
-			const result2 = this.#variableController.parseVariables(`$(${feedback.options.variable2})`, null)
+			const result1 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				`$(${feedback.options.variable})`,
+				feedback
+			)
+			const result2 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				`$(${feedback.options.variable2})`,
+				feedback
+			)
 
 			this.#variableSubscriptions.set(feedback.id, [...result1.variableIds, ...result2.variableIds])
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.type == 'check_expression') {
 			try {
-				const res = this.#variableController.parseExpression(feedback.options.expression, feedback.location, 'boolean')
+				const res = this.#variableController.executeExpression(
+					feedback.options.expression,
+					feedback.location,
+					'boolean'
+				)
 
 				this.#variableSubscriptions.set(feedback.id, Array.from(res.variableIds))
 
 				return !!res.value
 			} catch (e) {
-				this.#logger.warn(`Failed to execute expression "${feedback.options.expression}": ${e}`)
+				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
+				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${e}`)
 
 				return false
 			}
@@ -242,7 +254,7 @@ export default class Variables {
 	 *
 	 * @param {import('./Types.js').InternalVisitor} visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} _actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('./Types.js').FeedbackForVisitor[]} feedbacks
 	 */
 	visitReferences(visitor, _actions, feedbacks) {
 		for (const feedback of feedbacks) {

@@ -73,19 +73,27 @@ const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL = [
  *   deviceId: string
  *   devicePath: string
  *   type: string
- *   configFields: string[]
+ *   configFields: import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]
  *   location?: string
+ *   remotePort?: number
  * }} SurfacePanelInfo
  * @typedef {{
  *   info: SurfacePanelInfo
  *   gridSize: import('./Util.js').GridSize
  *   clearDeck(): void
  *   draw(x: number, y: number, render: ImageResult): void
+ *   drawMany?: (entries: DrawButtonItem[]) => void
  *   drawColor?: (pageOffset: number, x: number, y: number, color: number) => void
  *   setConfig(config: any, force?: boolean): void
  *   getDefaultConfig?: () => any
+ *   onVariablesChanged?: (allChangedVariables: Set<string>) => void
  *   quit(): void
  * } & EventEmitter} SurfacePanel
+ * @typedef {{
+ *   x: number
+ *   y: number
+ *   image: ImageResult
+ * }} DrawButtonItem
  */
 
 /**
@@ -207,13 +215,6 @@ class SurfaceHandler extends EventEmitter {
 	 */
 	#graphics
 	/**
-	 * The core instance controller
-	 * @type {import('../Instance/Controller.js').default}
-	 * @readonly
-	 * @access public
-	 */
-	#instance
-	/**
 	 * The core page controller
 	 * @type {import('../Page/Controller.js').default}
 	 * @readonly
@@ -236,6 +237,14 @@ class SurfaceHandler extends EventEmitter {
 	#userconfig
 
 	/**
+	 * The core variable controller
+	 * @type {import('../Variables/Controller.js').VariablesController}
+	 * @readonly
+	 * @access private
+	 */
+	#variables
+
+	/**
 	 *
 	 * @param {import('../Registry.js').default} registry
 	 * @param {string} integrationType
@@ -250,10 +259,10 @@ class SurfaceHandler extends EventEmitter {
 
 		this.#controls = registry.controls
 		this.#graphics = registry.graphics
-		this.#instance = registry.instance
 		this.#page = registry.page
 		this.#surfaces = registry.surfaces
 		this.#userconfig = registry.userconfig
+		this.#variables = registry.variables
 
 		this.panel = panel
 		this.#surfaceConfig = surfaceConfig ?? {}
@@ -324,6 +333,7 @@ class SurfaceHandler extends EventEmitter {
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
 		this.panel.on('setVariable', this.#onSetVariable.bind(this))
+		this.panel.on('setCustomVariable', this.#onSetCustomVariable.bind(this))
 
 		// subscribe to some xkeys specific events
 		this.panel.on('xkeys-subscribePage', this.#onXkeysSubscribePages.bind(this))
@@ -383,19 +393,31 @@ class SurfaceHandler extends EventEmitter {
 				const buffers = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
 				this.panel.clearDeck()
 
-				this.panel.draw(this.#pincodeCodePosition[0], this.#pincodeCodePosition[1], buffers.code)
+				/** @type {DrawButtonItem[]} */
+				const rawEntries = [
+					{
+						x: this.#pincodeCodePosition[0],
+						y: this.#pincodeCodePosition[1],
+						image: buffers.code,
+					},
+				]
 
 				this.#pincodeNumberPositions.forEach(([x, y], i) => {
 					if (buffers[i]) {
-						this.panel.draw(x, y, buffers[i])
+						rawEntries.push({ x, y, image: buffers[i] })
 					}
 				})
+
+				this.#drawButtons(rawEntries)
 			} else if (this.#xkeysPageCount > 0) {
 				this.#xkeysDrawPages()
 			} else {
 				const { xOffset, yOffset } = this.#getCurrentOffset()
 
 				const gridSize = this.panelGridSize
+
+				/** @type {DrawButtonItem[]} */
+				const rawEntries = []
 
 				for (let y = 0; y < gridSize.rows; y++) {
 					for (let x = 0; x < gridSize.columns; x++) {
@@ -405,23 +427,50 @@ class SurfaceHandler extends EventEmitter {
 							row: y + yOffset,
 						})
 
-						this.#drawButtonTransformed(x, y, image)
+						rawEntries.push({ x, y, image })
 					}
 				}
+
+				const transformedEntries = this.#transformButtonRenders(rawEntries)
+				this.#drawButtons(transformedEntries)
 			}
 		}
 	}
 
 	/**
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {ImageResult} image
-	 * @returns {void}
+	 * Transform the coordinates of multiple images for a surface
+	 * @param {DrawButtonItem[]} entries
+	 * @returns {DrawButtonItem[]}
 	 */
-	#drawButtonTransformed(x, y, image) {
-		const [transformedX, transformedY] = rotateXYForPanel(x, y, this.panelGridSize, this.#surfaceConfig.config.rotation)
+	#transformButtonRenders(entries) {
+		return entries.map((entry) => {
+			const [transformedX, transformedY] = rotateXYForPanel(
+				entry.x,
+				entry.y,
+				this.panelGridSize,
+				this.#surfaceConfig.config.rotation
+			)
 
-		this.panel.draw(transformedX, transformedY, image)
+			return {
+				x: transformedX,
+				y: transformedY,
+				image: entry.image,
+			}
+		})
+	}
+
+	/**
+	 * Draw multiple images to a surface
+	 * @param {DrawButtonItem[]} entries
+	 */
+	#drawButtons(entries) {
+		if (this.panel.drawMany) {
+			this.panel.drawMany(entries)
+		} else {
+			for (const entry of entries) {
+				this.panel.draw(entry.x, entry.y, entry.image)
+			}
+		}
 	}
 
 	/**
@@ -478,7 +527,16 @@ class SurfaceHandler extends EventEmitter {
 			// normal mode
 			const { xOffset, yOffset } = this.#getCurrentOffset()
 
-			this.#drawButtonTransformed(location.column - xOffset, location.row - yOffset, render)
+			/** @type {DrawButtonItem[]} */
+			const rawEntries = [
+				{
+					x: location.column - xOffset,
+					y: location.row - yOffset,
+					image: render,
+				},
+			]
+			const transformedEntries = this.#transformButtonRenders(rawEntries)
+			this.#drawButtons(transformedEntries)
 		}
 	}
 
@@ -586,7 +644,14 @@ class SurfaceHandler extends EventEmitter {
 				if (this.#isSurfaceLocked) {
 					// Update lockout button
 					const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
-					this.panel.draw(this.#pincodeCodePosition[0], this.#pincodeCodePosition[1], datap.code)
+
+					this.#drawButtons([
+						{
+							x: this.#pincodeCodePosition[0],
+							y: this.#pincodeCodePosition[1],
+							image: datap.code,
+						},
+					])
 				}
 			}
 		} catch (e) {
@@ -628,7 +693,7 @@ class SurfaceHandler extends EventEmitter {
 				if (controlId) {
 					this.#controls.rotateControl(controlId, direction, this.surfaceId)
 				}
-				this.#logger.debug(`Rotary ${thisPage}/${x2 + xOffset}/${y2 + yOffset} rotated ${direction ? 'right' : 'left'}`)
+				this.#logger.debug(`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${direction ? 'right' : 'left'}`)
 			} else {
 				// Ignore when locked out
 			}
@@ -644,9 +709,19 @@ class SurfaceHandler extends EventEmitter {
 	 * @returns {void}
 	 */
 	#onSetVariable(name, value) {
-		this.#instance.variable.setVariableValues('internal', {
+		this.#variables.values.setVariableValues('internal', {
 			[name]: value,
 		})
+	}
+
+	/**
+	 * Set the value of a custom variable
+	 * @param {string} name
+	 * @param {string | number} value
+	 * @returns {void}
+	 */
+	#onSetCustomVariable(name, value) {
+		this.#variables.custom.setValue(name, value)
 	}
 
 	/**

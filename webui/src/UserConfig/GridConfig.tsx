@@ -1,29 +1,14 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import {
-	CAlert,
-	CButton,
-	CCol,
-	CForm,
-	CFormInput,
-	CFormSwitch,
-	CModal,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { CAlert, CButton, CCol, CForm, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
+import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
+import { UserConfigProps } from './Components/Common.js'
+import { UserConfigStaticTextRow } from './Components/UserConfigStaticTextRow.js'
 
-interface GridConfigProps {
-	config: UserConfigModel
-	setValue: (key: keyof UserConfigModel, value: any) => void
-	resetValue: (key: keyof UserConfigModel) => void
-}
-
-export const GridConfig = observer(function GridConfig({ config, setValue, resetValue }: GridConfigProps) {
+export const GridConfig = observer(function GridConfig(props: UserConfigProps) {
 	const gridSizeRef = useRef<GridSizeModalRef>(null)
 
 	const editGridSize = useCallback(() => {
@@ -32,68 +17,33 @@ export const GridConfig = observer(function GridConfig({ config, setValue, reset
 
 	return (
 		<>
-			<tr>
-				<th colSpan={3} className="settings-category">
-					Button Grid
-					<GridSizeModal ref={gridSizeRef} />
-				</th>
-			</tr>
+			<GridSizeModal ref={gridSizeRef} />
+			<UserConfigHeadingRow label="Button Grid" />
 
-			{config.gridSize && (
-				<tr>
-					<td>Grid Size</td>
-					<td colSpan={2} style={{ textAlign: 'center' }}>
+			<UserConfigStaticTextRow
+				label="Grid Size"
+				text={
+					<>
 						<div>
-							{config.gridSize?.maxRow - config.gridSize?.minRow + 1} rows x{' '}
-							{config.gridSize?.maxColumn - config.gridSize?.minColumn + 1} columns
+							{props.config.gridSize.maxRow - props.config.gridSize.minRow + 1} rows x{' '}
+							{props.config.gridSize.maxColumn - props.config.gridSize.minColumn + 1} columns
 						</div>
 						<CButton onClick={editGridSize} color="secondary" size="sm" style={{ marginTop: 4 }}>
 							Edit size
 						</CButton>
-					</td>
-				</tr>
-			)}
+					</>
+				}
+			/>
+			<UserConfigStaticTextRow
+				label={<em>Current minimum</em>}
+				text={`${props.config.gridSize.minRow} rows x ${props.config.gridSize.minColumn} columns`}
+			/>
+			<UserConfigStaticTextRow
+				label={<em>Current maximums</em>}
+				text={`${props.config.gridSize.maxRow} rows x ${props.config.gridSize.maxColumn} columns`}
+			/>
 
-			<tr>
-				<td>
-					<em>Current minimum</em>
-				</td>
-				<td colSpan={2} style={{ textAlign: 'center' }}>
-					<div className="">
-						{config.gridSize?.minRow} rows x {config.gridSize?.minColumn} columns
-					</div>
-				</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td>
-					<em>Current maximums</em>
-				</td>
-				<td colSpan={2} style={{ textAlign: 'center' }}>
-					<div className="">
-						{config.gridSize?.maxRow} rows x {config.gridSize?.maxColumn} columns
-					</div>
-				</td>
-				<td></td>
-			</tr>
-
-			<tr>
-				<td>Allow expanding in grid view</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.gridSizeInlineGrow}
-						size="xl"
-						onChange={(e) => setValue('gridSizeInlineGrow', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('gridSizeInlineGrow')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
+			<UserConfigSwitchRow userConfig={props} label="Allow expanding in grid view" field="gridSizeInlineGrow" />
 		</>
 	)
 })

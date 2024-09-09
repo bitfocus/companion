@@ -273,7 +273,7 @@ export class ServiceHttpApi extends CoreBase {
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value}`)
-			const result = this.registry.instance.variable.custom.setValue(req.params.name, String(req.query.value))
+			const result = this.registry.variables.custom.setValue(req.params.name, String(req.query.value))
 			if (result) {
 				return res.send(result)
 			} else {
@@ -589,7 +589,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		const result = this.registry.instance.variable.custom.setValue(variableName, variableValue)
+		const result = this.registry.variables.custom.setValue(variableName, variableValue)
 		if (result) {
 			res.status(404).send('Not found')
 		} else {
@@ -608,7 +608,7 @@ export class ServiceHttpApi extends CoreBase {
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
 
-		const result = this.registry.instance.variable.custom.getValue(variableName)
+		const result = this.registry.variables.custom.getValue(variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {

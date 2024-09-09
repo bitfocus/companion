@@ -17,6 +17,7 @@
 
 import CoreBase from '../Core/Base.js'
 import ActionRecorder from './ActionRecorder.js'
+import BuildingBlocks from './BuildingBlocks.js'
 import Instance from './Instance.js'
 import Time from './Time.js'
 import Controls from './Controls.js'
@@ -27,6 +28,7 @@ import Triggers from './Triggers.js'
 import Variables from './Variables.js'
 import { cloneDeep } from 'lodash-es'
 import Page from './Page.js'
+import { ParseInternalControlReference } from './Util.js'
 
 export default class InternalController extends CoreBase {
 	/**
@@ -36,22 +38,31 @@ export default class InternalController extends CoreBase {
 	#feedbacks = new Map()
 
 	/**
+	 * @type {BuildingBlocks}
+	 * @readonly
+	 */
+	#buildingBlocksFragment
+
+	/**
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
 		super(registry, 'Internal/Controller')
 
+		this.#buildingBlocksFragment = new BuildingBlocks()
+
 		this.fragments = [
-			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.instance.variable),
+			new ActionRecorder(this, registry.controls.actionRecorder, registry.page),
+			this.#buildingBlocksFragment,
 			new Instance(this, registry.instance),
 			new Time(this),
-			new Controls(this, registry.graphics, registry.controls, registry.page, registry.instance.variable),
-			new CustomVariables(this, registry.instance.variable),
+			new Controls(this, registry.graphics, registry.controls, registry.page, registry.variables.values),
+			new CustomVariables(this, registry.variables),
 			new Page(this, registry.page),
-			new Surface(this, registry.surfaces, registry.controls, registry.instance.variable),
+			new Surface(this, registry.surfaces, registry.controls),
 			new System(this, registry),
 			new Triggers(this, registry.controls),
-			new Variables(this, registry.instance.variable),
+			new Variables(this, registry.variables.values),
 		]
 
 		// Set everything up
@@ -65,19 +76,17 @@ export default class InternalController extends CoreBase {
 		const allControls = this.registry.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			// Discover feedbacks to process
-			if (control.supportsFeedbacks && control.feedbacks.feedbacks) {
-				for (let feedback of control.feedbacks.feedbacks) {
-					if (feedback.instance_id === 'internal') {
-						if (control.feedbacks.feedbackReplace) {
-							const newFeedback = this.feedbackUpgrade(feedback, controlId)
-							if (newFeedback) {
-								feedback = newFeedback
-								control.feedbacks.feedbackReplace(newFeedback)
-							}
+			if (control.supportsFeedbacks) {
+				for (let feedback of control.feedbacks.getFlattenedFeedbackInstances('internal')) {
+					if (control.feedbacks.feedbackReplace) {
+						const newFeedback = this.feedbackUpgrade(feedback, controlId)
+						if (newFeedback) {
+							feedback = newFeedback
+							control.feedbacks.feedbackReplace(newFeedback)
 						}
-
-						this.feedbackUpdate(feedback, controlId)
 					}
+
+					this.feedbackUpdate(feedback, controlId)
 				}
 			}
 
@@ -242,15 +251,32 @@ export default class InternalController extends CoreBase {
 	 * Visit any references in some inactive internal actions and feedbacks
 	 * @param {import('./Types.js').InternalVisitor} visitor
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} rawFeedbacks
+	 * @param {import('../Controls/Fragments/FragmentFeedbackInstance.js').FragmentFeedbackInstance[]} feedbacks
 	 */
-	visitReferences(visitor, actions, feedbacks) {
+	visitReferences(visitor, actions, rawFeedbacks, feedbacks) {
 		const internalActions = actions.filter((a) => a.instance === 'internal')
-		const internalFeedbacks = feedbacks.filter((a) => a.instance_id === 'internal')
+
+		/** @type {import('./Types.js').FeedbackForVisitor[]} */
+		const simpleInternalFeedbacks = []
+
+		for (const feedback of rawFeedbacks) {
+			if (feedback.instance_id !== 'internal') continue
+			simpleInternalFeedbacks.push(feedback)
+		}
+		for (const feedback of feedbacks) {
+			if (feedback.connectionId !== 'internal') continue
+			const feedbackInstance = feedback.asFeedbackInstance()
+			simpleInternalFeedbacks.push({
+				id: feedbackInstance.id,
+				type: feedbackInstance.type,
+				options: feedback.rawOptions, // Ensure the options is not a copy/clone
+			})
+		}
 
 		for (const fragment of this.fragments) {
 			if ('visitReferences' in fragment && typeof fragment.visitReferences === 'function') {
-				fragment.visitReferences(visitor, internalActions, internalFeedbacks)
+				fragment.visitReferences(visitor, internalActions, simpleInternalFeedbacks)
 			}
 		}
 	}
@@ -281,12 +307,22 @@ export default class InternalController extends CoreBase {
 	}
 
 	/**
+	 * Execute a logic feedback
+	 * @param {import('../Controls/IControlFragments.js').FeedbackInstance} feedback
+	 * @param {boolean[]} childValues
+	 * @returns {boolean}
+	 */
+	executeLogicFeedback(feedback, childValues) {
+		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)
+	}
+
+	/**
 	 * Set internal variable values
 	 * @param {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} variables
 	 * @returns {void}
 	 */
 	setVariables(variables) {
-		this.registry.instance.variable.setVariableValues('internal', variables)
+		this.registry.variables.values.setVariableValues('internal', variables)
 	}
 	/**
 	 * Recheck all feedbacks of specified types
@@ -375,7 +411,7 @@ export default class InternalController extends CoreBase {
 			}
 		}
 
-		this.registry.instance.variable.setVariableDefinitions('internal', variables)
+		this.registry.variables.definitions.setVariableDefinitions('internal', variables)
 	}
 
 	/**
@@ -406,5 +442,73 @@ export default class InternalController extends CoreBase {
 		}
 
 		this.registry.controls.updateFeedbackValues('internal', newValues)
+	}
+
+	/**
+	 * Parse the variables in a string
+	 * @param {string} str - String to parse variables in
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
+	 * @param {import('../Variables/Util.js').VariablesCache=} injectedVariableValues - Inject some variable values
+	 * @returns {import('../Variables/Util.js').ParseVariablesResult} with variables replaced with values
+	 */
+	parseVariablesForInternalActionOrFeedback(str, extras, injectedVariableValues) {
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			...injectedVariableValues,
+		}
+		return this.variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
+	}
+
+	/**
+	 * Parse and execute an expression in a string
+	 * @param {string} str - String containing the expression to parse
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
+	 * @param {string=} requiredType - Fail if the result is not of specified type
+	 * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
+	 * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
+	 */
+	executeExpressionForInternalActionOrFeedback(str, extras, requiredType, injectedVariableValues) {
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			...injectedVariableValues,
+		}
+		return this.variablesController.values.executeExpression(
+			str,
+			extras.location,
+			requiredType,
+			injectedVariableValuesComplete
+		)
+	}
+
+	/**
+	 *
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
+	 * @param {Record<string, any>} options
+	 * @param {boolean} useVariableFields
+	 * @returns
+	 */
+	parseInternalControlReferenceForActionOrFeedback(extras, options, useVariableFields) {
+		const injectedVariableValues = 'id' in extras ? undefined : this.#getInjectedVariablesForLocation(extras)
+
+		return ParseInternalControlReference(
+			this.logger,
+			this.variablesController.values,
+			extras.location,
+			options,
+			useVariableFields,
+			injectedVariableValues
+		)
+	}
+
+	/**
+	 * Variables to inject based on an internal action
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
+	 * @returns {import('@companion-module/base').CompanionVariableValues}
+	 */
+	#getInjectedVariablesForLocation(extras) {
+		return {
+			// Doesn't need to be reactive, it's only for an action
+			'$(this:surface_id)': extras.surfaceId,
+		}
 	}
 }

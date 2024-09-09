@@ -1,4 +1,4 @@
-import { replaceAllVariables } from '../lib/Instance/Variable.js'
+import { replaceAllVariables } from '../../lib/Variables/Util.js'
 
 describe('variable replacing', () => {
 	test('undefined string', () => {

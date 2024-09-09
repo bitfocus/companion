@@ -26,7 +26,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
-import { SurfacesPage } from './Surfaces/index.js'
+import { SURFACES_PAGE_PREFIX, SurfacesPage } from './Surfaces/index.js'
 import { UserConfig } from './UserConfig/index.js'
 import { LogPanel } from './LogPanel.js'
 import { DndProvider } from 'react-dnd'
@@ -455,7 +455,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/surfaces" as={NavLink}>
+					<CNavLink to={SURFACES_PAGE_PREFIX} as={NavLink}>
 						<FontAwesomeIcon icon={faGamepad} /> Surfaces
 					</CNavLink>
 				</CNavItem>
@@ -503,7 +503,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 						<ButtonsPage hotPress={buttonGridHotPress} />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/surfaces')}>
+				<CTabPane className={getClassForPane(SURFACES_PAGE_PREFIX)}>
 					<MyErrorBoundary>
 						<SurfacesPage />
 					</MyErrorBoundary>

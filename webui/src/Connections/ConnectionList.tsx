@@ -289,7 +289,10 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const doDelete = useCallback(() => {
 		deleteModalRef.current?.show(
 			'Delete connection',
-			`Are you sure you want to delete "${connection.label}"?`,
+			[
+				`Are you sure you want to delete "${connection.label}"?`,
+				'This will remove all actions and feedbacks associated with this connection.',
+			],
 			'Delete',
 			() => {
 				socketEmitPromise(socket, 'connections:delete', [id]).catch((e) => {
@@ -408,9 +411,10 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 						style={{ backgroundColor: 'white' }}
 						content={
 							<>
+								{/* Note: the popover closing due to focus loss stops mouseup/click events propogating */}
 								<CButtonGroup vertical>
 									<CButton
-										onClick={doShowHelp}
+										onMouseDown={doShowHelp}
 										color="secondary"
 										title="Help"
 										disabled={!moduleInfo?.hasHelp}
@@ -423,7 +427,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 									</CButton>
 
 									<CButton
-										onClick={openBugUrl}
+										onMouseDown={openBugUrl}
 										color="secondary"
 										title="Issue Tracker"
 										disabled={!moduleInfo?.bugUrl}
@@ -436,7 +440,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 									</CButton>
 
 									<CButton
-										onClick={doShowVariables}
+										onMouseDown={doShowVariables}
 										title="Variables"
 										color="secondary"
 										disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
@@ -449,7 +453,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 									</CButton>
 
 									<CButton
-										onClick={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
+										onMouseDown={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
 										title="Logs"
 										color="secondary"
 										style={{ textAlign: 'left' }}
@@ -460,7 +464,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										View logs
 									</CButton>
 
-									<CButton onClick={doDelete} title="Delete" color="secondary" style={{ textAlign: 'left' }}>
+									<CButton onMouseDown={doDelete} title="Delete" color="secondary" style={{ textAlign: 'left' }}>
 										<Tuck>
 											<FontAwesomeIcon icon={faTrash} />
 										</Tuck>

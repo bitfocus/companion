@@ -22,9 +22,47 @@ import imageRs from '@julusian/image-rs'
 import LogController from '../../Log/Controller.js'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
-import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import { colorToRgb } from './Util.js'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	LegacyRotationConfigField,
+	LockConfigFields,
+} from '../CommonConfigFields.js'
 const setTimeoutPromise = util.promisify(setTimeout)
+
+/** @type {import('@elgato-stream-deck/node').JPEGEncodeOptions} */
+export const StreamDeckJpegOptions = {
+	quality: 95,
+	subsampling: 1, // 422
+}
+
+/**
+ * @param {import('@elgato-stream-deck/node').StreamDeck} streamDeck
+ * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+function getConfigFields(streamDeck) {
+	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
+	const fields = [...OffsetConfigFields]
+
+	// Hide brightness for the pedal
+	const hasBrightness = !!streamDeck.CONTROLS.find(
+		(c) => c.type === 'lcd-segment' || (c.type === 'button' && c.feedbackType !== 'none')
+	)
+	if (hasBrightness) fields.push(BrightnessConfigField)
+
+	fields.push(LegacyRotationConfigField, ...LockConfigFields)
+
+	if (streamDeck.HAS_NFC_READER)
+		fields.push({
+			id: 'nfc',
+			type: 'custom-variable',
+			label: 'Variable to store last read NFC tag to',
+			tooltip: '',
+		})
+
+	return fields
+}
 
 class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	/**
@@ -41,21 +79,30 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	config = {}
 
 	/**
-	 * Xkeys panel
-	 * @type {import('@elgato-stream-deck/node').StreamDeck}
+	 * Streamdeck panel
+	 * @type {import('@elgato-stream-deck/node').StreamDeck | import('@elgato-stream-deck/tcp').StreamDeckTcp}
 	 * @access private
 	 * @readonly
 	 */
 	#streamDeck
 
 	/**
+	 * Whether to cleanup the deck on quit
+	 */
+	#shouldCleanupOnQuit = true
+
+	/**
 	 * @param {string} devicePath
-	 * @param {import('@elgato-stream-deck/node').StreamDeck} streamDeck
+	 * @param {import('@elgato-stream-deck/node').StreamDeck | import('@elgato-stream-deck/tcp').StreamDeckTcp} streamDeck
 	 */
 	constructor(devicePath, streamDeck) {
 		super()
 
-		this.#logger = LogController.createLogger(`Surface/USB/ElgatoStreamdeck/${devicePath}`)
+		const tcpStreamdeck = 'tcpEvents' in streamDeck ? streamDeck : null
+
+		const protocol = tcpStreamdeck ? 'TCP' : 'USB'
+
+		this.#logger = LogController.createLogger(`Surface/${protocol}/ElgatoStreamdeck/${devicePath}`)
 
 		this.config = {
 			brightness: 100,
@@ -64,33 +111,101 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 		this.#streamDeck = streamDeck
 
-		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} USB device: ${devicePath}`)
+		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} ${protocol} device: ${devicePath}`)
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Elgato ${this.#streamDeck.PRODUCT_NAME}`,
 			devicePath: devicePath,
-			configFields: ['brightness', 'legacy_rotation'],
+			configFields: getConfigFields(this.#streamDeck),
 			deviceId: '', // set in #init()
+			location: undefined, // set later
+			remotePort: undefined, // set later
 		}
 
+		const allRowValues = this.#streamDeck.CONTROLS.map((control) => control.row)
+		const allColumnValues = this.#streamDeck.CONTROLS.map((button) => button.column)
+
+		// Future: maybe this should consider the min values too, but that requires handling in a bunch of places here
 		this.gridSize = {
-			columns: this.#streamDeck.KEY_COLUMNS,
-			rows: this.#streamDeck.KEY_ROWS,
-		}
-		if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
-			this.gridSize.rows += 2
-		} else if (this.#streamDeck.MODEL === DeviceModelId.NEO) {
-			this.gridSize.rows += 1
+			columns: Math.max(...allColumnValues) + 1,
+			rows: Math.max(...allRowValues) + 1,
 		}
 
 		this.write_queue = new ImageWriteQueue(
 			this.#logger,
-			async (/** @type {number} */ key, /** @type {import('../../Graphics/ImageResult.js').ImageResult} */ render) => {
-				let newbuffer = render.buffer
-				const targetSize = this.#streamDeck.ICON_SIZE
-				if (targetSize === 0) {
-					return
-				} else {
+			async (
+				/** @type {string} */ _id,
+				/** @type {number} */ x,
+				/** @type {number} */ y,
+				/** @type {import('../../Graphics/ImageResult.js').ImageResult} */ render
+			) => {
+				const control = this.#streamDeck.CONTROLS.find((control) => {
+					if (control.row !== y) return false
+
+					if (control.column === x) return true
+
+					if (control.type === 'lcd-segment' && x >= control.column && x < control.column + control.columnSpan)
+						return true
+
+					return false
+				})
+				if (!control) return
+
+				if (control.type === 'button') {
+					if (control.feedbackType === 'lcd') {
+						let newbuffer = render.buffer
+						if (control.pixelSize.width === 0 || control.pixelSize.height === 0) {
+							return
+						} else {
+							try {
+								newbuffer = await transformButtonImage(
+									render,
+									this.config.rotation,
+									control.pixelSize.width,
+									control.pixelSize.height,
+									imageRs.PixelFormat.Rgb
+								)
+							} catch (/** @type {any} */ e) {
+								this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+								this.emit('remove')
+								return
+							}
+						}
+
+						const maxAttempts = 3
+						for (let attempts = 1; attempts <= maxAttempts; attempts++) {
+							try {
+								await this.#streamDeck.fillKeyBuffer(control.index, newbuffer)
+								return
+							} catch (e) {
+								if (attempts == maxAttempts) {
+									this.#logger.debug(`fillImage failed after ${attempts} attempts: ${e}`)
+									this.emit('remove')
+									return
+								}
+								await setTimeoutPromise(20)
+							}
+						}
+					} else if (control.feedbackType === 'rgb') {
+						const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+						this.#streamDeck.fillKeyColor(control.index, color.r, color.g, color.b).catch((e) => {
+							this.#logger.debug(`color failed: ${e}`)
+						})
+					}
+				} else if (control.type === 'lcd-segment' && control.drawRegions) {
+					const drawColumn = x - control.column
+
+					const columnWidth = control.pixelSize.width / control.columnSpan
+					let drawX = drawColumn * columnWidth
+					if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
+						// Position aligned with the buttons/encoders
+						drawX = drawColumn * 216.666 + 25
+					}
+
+					const targetSize = control.pixelSize.height
+
+					let newbuffer
 					try {
 						newbuffer = await transformButtonImage(
 							render,
@@ -99,78 +214,6 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 							targetSize,
 							imageRs.PixelFormat.Rgb
 						)
-					} catch (/** @type {any} */ e) {
-						this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
-						this.emit('remove')
-						return
-					}
-				}
-
-				const maxAttempts = 3
-				for (let attempts = 1; attempts <= maxAttempts; attempts++) {
-					try {
-						await this.#streamDeck.fillKeyBuffer(key, newbuffer)
-						return
-					} catch (e) {
-						if (attempts == maxAttempts) {
-							this.#logger.debug(`fillImage failed after ${attempts} attempts: ${e}`)
-							this.emit('remove')
-							return
-						}
-						await setTimeoutPromise(20)
-					}
-				}
-			}
-		)
-
-		this.#streamDeck.on('error', (error) => {
-			this.#logger.error(`Error: ${error}`)
-			this.emit('remove')
-		})
-
-		this.#streamDeck.on('down', (keyIndex) => {
-			this.#emitClick(keyIndex, true)
-		})
-
-		this.#streamDeck.on('up', (keyIndex) => {
-			this.#emitClick(keyIndex, false)
-		})
-
-		if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
-			const encoderOffset = 12
-			this.#streamDeck.on('rotateLeft', (encoderIndex) => {
-				this.#emitRotate(encoderOffset + encoderIndex, false)
-			})
-			this.#streamDeck.on('rotateRight', (encoderIndex) => {
-				this.#emitRotate(encoderOffset + encoderIndex, true)
-			})
-			this.#streamDeck.on('encoderDown', (encoderIndex) => {
-				this.#emitClick(encoderOffset + encoderIndex, true)
-			})
-			this.#streamDeck.on('encoderUp', (encoderIndex) => {
-				this.#emitClick(encoderOffset + encoderIndex, false)
-			})
-
-			const lcdOffset = 8
-			const lcdPress = (/** @type {number} */ segmentIndex) => {
-				this.#emitClick(lcdOffset + segmentIndex, true)
-
-				setTimeout(() => {
-					this.#emitClick(lcdOffset + segmentIndex, false)
-				}, 20)
-			}
-			this.#streamDeck.on('lcdShortPress', lcdPress)
-			this.#streamDeck.on('lcdLongPress', lcdPress)
-
-			this.lcdWriteQueue = new ImageWriteQueue(
-				this.#logger,
-				async (
-					/** @type {number} */ key,
-					/** @type {import('../../Graphics/ImageResult.js').ImageResult} */ render
-				) => {
-					let newbuffer
-					try {
-						newbuffer = await transformButtonImage(render, this.config.rotation, 100, 100, imageRs.PixelFormat.Rgb)
 					} catch (e) {
 						this.#logger.debug(`scale image failed: ${e}`)
 						this.emit('remove')
@@ -180,11 +223,10 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 					const maxAttempts = 3
 					for (let attempts = 1; attempts <= maxAttempts; attempts++) {
 						try {
-							const x = key * 216.666 + 25
-							await this.#streamDeck.fillLcdRegion(x, 0, newbuffer, {
+							await this.#streamDeck.fillLcdRegion(control.id, drawX, 0, newbuffer, {
 								format: 'rgb',
-								width: 100,
-								height: 100,
+								width: targetSize,
+								height: targetSize,
 							})
 							return
 						} catch (e) {
@@ -196,38 +238,65 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 							await setTimeoutPromise(20)
 						}
 					}
+				} else if (control.type === 'encoder' && control.hasLed) {
+					const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+					await this.#streamDeck.setEncoderColor(control.index, color.r, color.g, color.b)
 				}
-			)
-		}
-	}
+			}
+		)
 
-	/**
-	 * Produce a click event
-	 * @param {number} key
-	 * @param {boolean} state
-	 */
-	#emitClick(key, state) {
-		if (this.#streamDeck.MODEL === DeviceModelId.NEO && key === 9) {
-			// pad around the lcd
-			key += 2
+		this.#streamDeck.on('error', (error) => {
+			this.#logger.error(`Error: ${error}`)
+			this.emit('remove')
+		})
+
+		if (tcpStreamdeck) {
+			// Don't call `close` upon quit, that gets handled automatically
+			this.#shouldCleanupOnQuit = false
+
+			this.info.location = tcpStreamdeck.remoteAddress
+			this.info.remotePort = tcpStreamdeck.remotePort
+
+			tcpStreamdeck.tcpEvents.on('disconnected', () => {
+				this.#logger.info(
+					`Lost connection to TCP Streamdeck ${tcpStreamdeck.remoteAddress}:${tcpStreamdeck.remotePort} (${this.#streamDeck.PRODUCT_NAME})`
+				)
+
+				this.emit('remove')
+			})
 		}
 
-		const xy = convertPanelIndexToXY(key, this.gridSize)
-		if (xy) {
-			this.emit('click', ...xy, state)
-		}
-	}
+		this.#streamDeck.on('down', (control) => {
+			this.emit('click', control.column, control.row, true)
+		})
 
-	/**
-	 * Produce a rotation event
-	 * @param {number} key
-	 * @param {boolean} direction
-	 */
-	#emitRotate(key, direction) {
-		const xy = convertPanelIndexToXY(key, this.gridSize)
-		if (xy) {
-			this.emit('rotate', ...xy, direction)
+		this.#streamDeck.on('up', (control) => {
+			this.emit('click', control.column, control.row, false)
+		})
+
+		this.#streamDeck.on('rotate', (control, amount) => {
+			this.emit('rotate', control.column, control.row, amount > 0)
+		})
+		this.#streamDeck.on('nfcRead', (tag) => {
+			const variableId = this.config.nfc
+			if (!variableId) return
+			this.emit('setCustomVariable', variableId, tag)
+		})
+
+		const lcdPress = (
+			/** @type {import('@elgato-stream-deck/node').StreamDeckLcdSegmentControlDefinition} */ control,
+			/** @type {import('@elgato-stream-deck/node').LcdPosition} */ position
+		) => {
+			const columnOffset = Math.floor((position.x / control.pixelSize.width) * control.columnSpan)
+
+			this.emit('click', control.column + columnOffset, control.row, true)
+
+			setTimeout(() => {
+				this.emit('click', control.column + columnOffset, control.row, false)
+			}, 20)
 		}
+		this.#streamDeck.on('lcdShortPress', lcdPress)
+		this.#streamDeck.on('lcdLongPress', lcdPress)
 	}
 
 	async #init() {
@@ -278,6 +347,31 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	}
 
 	/**
+	 * Wrap a tcp streamdeck
+	 * @param {string} fakePath
+	 * @param {import('@elgato-stream-deck/tcp').StreamDeckTcp} streamdeck
+	 */
+	static async fromTcp(fakePath, streamdeck) {
+		const self = new SurfaceUSBElgatoStreamDeck(fakePath, streamdeck)
+
+		/** @type {any} */
+		let errorDuringInit = null
+		const tmpErrorHandler = (/** @type {any} */ error) => {
+			errorDuringInit = errorDuringInit || error
+		}
+
+		// Ensure that any hid error during the init call don't cause a crash
+		self.on('error', tmpErrorHandler)
+
+		await self.#init()
+
+		if (errorDuringInit) throw errorDuringInit
+		self.off('error', tmpErrorHandler)
+
+		return self
+	}
+
+	/**
 	 * Process the information from the GUI and what is saved in database
 	 * @param {Record<string, any>} config
 	 * @param {boolean=} force
@@ -294,6 +388,8 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	}
 
 	quit() {
+		if (!this.#shouldCleanupOnQuit) return
+
 		this.#streamDeck
 			.resetToLogo()
 			.catch((e) => {
@@ -301,7 +397,9 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			})
 			.then(() => {
 				//close after the clear has been sent
-				this.#streamDeck.close()
+				this.#streamDeck.close().catch(() => {
+					// Ignore error
+				})
 			})
 	}
 
@@ -321,30 +419,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	 * @returns {void}
 	 */
 	draw(x, y, render) {
-		const key = convertXYToIndexForPanel(x, y, this.gridSize)
-		if (key === null) return
-
-		if (key >= 0 && key < this.#streamDeck.NUM_KEYS) {
-			this.write_queue.queue(key, render)
-		}
-
-		const segmentIndex = key - this.#streamDeck.NUM_KEYS
-		if (this.lcdWriteQueue && segmentIndex >= 0 && segmentIndex < this.#streamDeck.KEY_COLUMNS) {
-			this.lcdWriteQueue.queue(segmentIndex, render)
-		}
-
-		if (this.#streamDeck.MODEL === DeviceModelId.NEO && key >= this.#streamDeck.NUM_KEYS) {
-			const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
-			if (key === this.#streamDeck.NUM_KEYS) {
-				this.#streamDeck.fillKeyColor(this.#streamDeck.NUM_KEYS, color.r, color.g, color.b).catch((e) => {
-					this.#logger.debug(`color failed: ${e}`)
-				})
-			} else if (key === this.#streamDeck.NUM_KEYS + 3) {
-				this.#streamDeck.fillKeyColor(this.#streamDeck.NUM_KEYS + 1, color.r, color.g, color.b).catch((e) => {
-					this.#logger.debug(`color failed: ${e}`)
-				})
-			}
-		}
+		this.write_queue.queue(`${x}_${y}`, x, y, render)
 	}
 }
 

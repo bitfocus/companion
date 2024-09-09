@@ -16,7 +16,17 @@ import type {
 	HelpDescription,
 	WrappedImage,
 } from './Model/Common.js'
-import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig, SurfacesUpdate } from './Model/Surfaces.js'
+import type {
+	ClientDevicesListItem,
+	OutboundSurfaceInfo,
+	OutboundSurfacesUpdate,
+	SurfaceGroupConfig,
+	SurfacePanelConfig,
+	ClientDiscoveredSurfaceInfo,
+	CompanionExternalAddresses,
+	SurfacesDiscoveryUpdate,
+	SurfacesUpdate,
+} from './Model/Surfaces.js'
 import type {
 	ClientImportObject,
 	ClientImportSelection,
@@ -41,8 +51,8 @@ export interface ClientToBackendEventsMap {
 	'app-update-info': () => never
 	'app-version-info': () => AppVersionInfo
 
-	set_userconfig_key(key: string, value: any): never
-	reset_userconfig_key(key: string): never
+	set_userconfig_key(key: keyof UserConfigModel, value: any): never
+	reset_userconfig_key(key: keyof UserConfigModel): never
 	set_userconfig_keys(values: Partial<UserConfigModel>): never
 	'userconfig:get-all': () => UserConfigModel
 
@@ -50,8 +60,8 @@ export interface ClientToBackendEventsMap {
 	ssl_certificate_delete(): never
 	ssl_certificate_renew(): never
 
-	'bonjour:subscribe': (connectionId: string, queryId: string) => string
-	'bonjour:unsubscribe': (subId: string) => never
+	'bonjour:subscribe': (connectionId: string, queryId: string) => string[]
+	'bonjour:unsubscribe': (subIds: string[]) => never
 
 	'connection-debug:subscribe': (connectionId: string) => boolean
 	'connection-debug:unsubscribe': (connectionId: string) => void
@@ -106,8 +116,18 @@ export interface ClientToBackendEventsMap {
 	'controls:feedback:remove': (controlId: string, feedbackId: string) => boolean
 	'controls:feedback:set-inverted': (controlId: string, feedbackId: string, isInverted: boolean) => boolean
 	'controls:feedback:set-option': (controlId: string, feedbackId: string, key: string, val: any) => boolean
-	'controls:feedback:reorder': (controlId: string, dragIndex: number, hoverIndex: number) => boolean
-	'controls:feedback:add': (controlId: string, connectionId: string, feedbackType: string) => boolean
+	'controls:feedback:move': (
+		controlId: string,
+		dragFeedbackId: string,
+		hoverParentId: string | null,
+		hoverIndex: number
+	) => boolean
+	'controls:feedback:add': (
+		controlId: string,
+		parentId: string | null,
+		connectionId: string,
+		feedbackType: string
+	) => boolean
 
 	'controls:action:set-headline': (
 		controlId: string,
@@ -224,6 +244,20 @@ export interface ClientToBackendEventsMap {
 	'surfaces:config-set': (surfaceId: string, panelConfig: SurfacePanelConfig) => SurfacePanelConfig | string
 	'surfaces:group-config-get': (groupId: string) => SurfaceGroupConfig
 
+	'surfaces:discovery:join': () => Record<string, ClientDiscoveredSurfaceInfo>
+	'surfaces:discovery:leave': () => void
+	'surfaces:discovery:get-external:addresses': () => CompanionExternalAddresses
+	'surfaces:discovery:setup-satellite': (
+		satelliteInfo: ClientDiscoveredSurfaceInfo,
+		companionAddress: string
+	) => string | null
+
+	'surfaces:outbound:subscribe': () => Record<string, OutboundSurfaceInfo | undefined>
+	'surfaces:outbound:unsubscribe': () => void
+	'surfaces:outbound:add': (type: string, address: string, port: number | undefined, name?: string) => string
+	'surfaces:outbound:remove': (id: string) => void
+	'surfaces:outbound:set-name': (surfaceId: string, name: string) => void
+
 	'emulator:startup': (emulatorId: string) => EmulatorConfig
 	'emulator:press': (emulatorId: string, column: number, row: number) => void
 	'emulator:release': (emulatorId: string, column: number, row: number) => void
@@ -292,7 +326,7 @@ export interface BackendToClientEventsMap {
 	'learn:add': (id: string) => void
 	'learn:remove': (id: string) => void
 
-	set_userconfig_key: (key: string, value: any) => void
+	set_userconfig_key: (key: keyof UserConfigModel, value: any) => void
 	'pages:update': (page: number, info: PageModel) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void
@@ -312,6 +346,7 @@ export interface BackendToClientEventsMap {
 	'connections:patch': (patch: JsonPatchOperation[] | false) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
+	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
 	'triggers:update': (change: TriggersUpdate) => void
 	'action-definitions:update': (change: ActionDefinitionUpdate) => void
 	'feedback-definitions:update': (change: FeedbackDefinitionUpdate) => void
@@ -320,11 +355,13 @@ export interface BackendToClientEventsMap {
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
 	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
 
+	'surfaces:discovery:update': (update: SurfacesDiscoveryUpdate) => void
+
 	'emulator:images': (newImages: EmulatorImage[] | EmulatorImageCache) => void
 	'emulator:config': (patch: JsonPatchOperation[] | EmulatorConfig) => void
 
 	'bonjour:service:up': (svc: ClientBonjourService) => void
-	'bonjour:service:down': (svc: ClientBonjourService) => void
+	'bonjour:service:down': (subId: string, fqdn: string) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void

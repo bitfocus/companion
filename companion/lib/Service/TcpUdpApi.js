@@ -500,7 +500,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * @returns {void}
 	 */
 	#customVariableSetValue = (match) => {
-		const result = this.instance.variable.custom.setValue(match.name, match.value)
+		const result = this.variablesController.custom.setValue(match.name, match.value)
 		if (result) {
 			throw new ApiMessageError(result)
 		}

@@ -2,7 +2,7 @@ import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@co
 import { faCalculator, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
-import { InstancePresets } from './Presets.js'
+import { InstancePresets } from './Presets/Presets.js'
 import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
@@ -250,7 +250,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	if (pageNumber === null) {
 		return <></>
 	} else if (pageNumber <= 0) {
-		navigateToButtonsPage(navigate, getLastPageNumber())
+		setTimeout(() => navigateToButtonsPage(navigate, getLastPageNumber()), 0)
 		return <></>
 	}
 

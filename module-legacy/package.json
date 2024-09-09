@@ -11,7 +11,7 @@
     "generate-manifests": "node --loader ts-node/esm scripts/generate-manifests.ts"
   },
   "dependencies": {
-    "@companion-module/base": "~1.7.0",
+    "@companion-module/base": "~1.10.0",
     "@tsconfig/node18": "^18.2.4",
     "@types/debug": "^4.1.12",
     "@types/ws": "^8.5.10",
@@ -40,7 +40,6 @@
     "companion-module-behringer-wing": "github:bitfocus/companion-module-behringer-wing#v1.0.8",
     "companion-module-biamp-tesira": "github:bitfocus/companion-module-biamp-tesira#v1.0.0",
     "companion-module-blackbird-hdmimatrix": "github:bitfocus/companion-module-blackbird-hdmimatrix#v1.0.3",
-    "companion-module-blackbox-boxilla": "github:bitfocus/companion-module-blackbox-boxilla#v1.0.4",
     "companion-module-blackdiamondvideo-phantom800": "github:bitfocus/companion-module-blackdiamondvideo-phantom800#v1.0.1",
     "companion-module-blustream-hdmimatrix": "github:bitfocus/companion-module-blustream-hdmimatrix#v1.0.0",
     "companion-module-bmd-audiomonitor": "github:bitfocus/companion-module-bmd-audiomonitor#v1.0.3",
@@ -96,16 +95,11 @@
     "companion-module-gallery-virtualvtrpro": "github:bitfocus/companion-module-gallery-virtualvtrpro#v1.0.3",
     "companion-module-gammacontrol-gmaestro": "github:bitfocus/companion-module-gammacontrol-gmaestro#v1.0.2",
     "companion-module-gefen-dvimatrix": "github:bitfocus/companion-module-gefen-dvimatrix#v1.0.2",
-    "companion-module-generic-swp08": "github:bitfocus/companion-module-generic-swp08#v1.0.5",
     "companion-module-greenhippo-hippotizer": "github:bitfocus/companion-module-greenhippo-hippotizer#v1.0.4",
     "companion-module-groupme-webhooks": "github:bitfocus/companion-module-groupme-webhooks#v1.0.1",
     "companion-module-ifelseware-avkey": "github:bitfocus/companion-module-ifelseware-avkey#v1.0.3",
     "companion-module-ifelseware-avplayback": "github:bitfocus/companion-module-ifelseware-avplayback#v1.0.4",
-    "companion-module-imagine-lrc": "github:bitfocus/companion-module-imagine-lrc#v1.1.0",
-    "companion-module-ioversal-vertex": "github:bitfocus/companion-module-ioversal-vertex#v0.0.2",
     "companion-module-joy-playdeck": "github:bitfocus/companion-module-joy-playdeck#v1.0.2",
-    "companion-module-kiloview-ndi": "github:bitfocus/companion-module-kiloview-ndi#v1.0.2",
-    "companion-module-kramer-matrix": "github:bitfocus/companion-module-kramer-matrix#v1.2.3",
     "companion-module-kramer-vp727": "github:bitfocus/companion-module-kramer-vp727#v1.0.4",
     "companion-module-kramer-vp734": "github:bitfocus/companion-module-kramer-vp734#v1.0.1",
     "companion-module-kramer-vp773a": "github:bitfocus/companion-module-kramer-vp773a#v1.0.1",
@@ -138,10 +132,8 @@
     "companion-module-nevion-mrp": "github:bitfocus/companion-module-nevion-mrp#v2.0.3",
     "companion-module-newbluefx-titler": "github:bitfocus/companion-module-newbluefx-titler#v3.0.0",
     "companion-module-newtek-ndistudiomonitor": "github:bitfocus/companion-module-newtek-ndistudiomonitor#v1.0.3",
-    "companion-module-nexo-nxamp": "github:bitfocus/companion-module-nexo-nxamp#v1.0.1",
     "companion-module-nobe-omniscope": "github:bitfocus/companion-module-nobe-omniscope#v1.0.2",
     "companion-module-noismada-octopuslistener": "github:bitfocus/companion-module-noismada-octopuslistener#v1.0.5",
-    "companion-module-noismada-octopusshowcontrol": "github:bitfocus/companion-module-noismada-octopusshowcontrol#v1.2.1",
     "companion-module-novastar-h-series": "github:bitfocus/companion-module-novastar-h-series#v1.0.2",
     "companion-module-obsidiancontrol-onyx": "github:bitfocus/companion-module-obsidiancontrol-onyx#v1.0.5",
     "companion-module-octava-pro-dsx": "github:bitfocus/companion-module-octava-pro-dsx#v0.0.3",
@@ -161,8 +153,6 @@
     "companion-module-rationalacoustics-smaart3": "github:bitfocus/companion-module-rationalacoustics-smaart3#v1.0.5",
     "companion-module-rationalacoustics-smaart4": "github:bitfocus/companion-module-rationalacoustics-smaart4#v1.0.0",
     "companion-module-reddotlogics-hdmimatrix": "github:bitfocus/companion-module-reddotlogics-hdmimatrix#v1.0.2",
-    "companion-module-resi-decoders": "github:bitfocus/companion-module-resi-decoders#v1.1.5",
-    "companion-module-rgblink-mini": "github:bitfocus/companion-module-rgblink-mini#v1.0.2",
     "companion-module-rgblink-x3": "github:bitfocus/companion-module-rgblink-x3#v1.0.0",
     "companion-module-rocosoft-ptzjoy": "github:bitfocus/companion-module-rocosoft-ptzjoy#v1.0.2",
     "companion-module-roland-m5000": "github:bitfocus/companion-module-roland-m5000#v1.0.3",
@@ -186,7 +176,6 @@
     "companion-module-sonoran-coyote": "github:bitfocus/companion-module-sonoran-coyote#v1.0.2",
     "companion-module-sony-broadcastmonitor": "github:bitfocus/companion-module-sony-broadcastmonitor#v1.0.2",
     "companion-module-sony-cled": "github:bitfocus/companion-module-sony-cled#v1.0.2",
-    "companion-module-symetrix-dsp": "github:bitfocus/companion-module-symetrix-dsp#v1.5.1",
     "companion-module-tallyma-wirelesstally": "github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.5",
     "companion-module-televic-dcerno": "github:bitfocus/companion-module-televic-dcerno#v1.0.2",
     "companion-module-teracom-tcw181b": "github:bitfocus/companion-module-teracom-tcw181b#v1.0.4",
@@ -210,7 +199,7 @@
     "nanoid": "^3.3.7",
     "node-fetch": "^2.7.0",
     "node-rest-client": "^3.1.1",
-    "osc": "^2.4.4",
+    "osc": "2.4.5",
     "ping": "^0.4.4",
     "proxy-agent": "^6.4.0",
     "shortid": "^2.2.16",
@@ -230,5 +219,5 @@
   "resolutions": {
     "@types/node": "^14.18.63"
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "yarn@1.22.22"
 }

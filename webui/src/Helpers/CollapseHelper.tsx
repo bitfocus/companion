@@ -20,12 +20,14 @@ export interface PanelCollapseHelper {
 
 class PanelCollapseHelperStore implements PanelCollapseHelper {
 	readonly #storageId: string
+	readonly #defaultCollapsed: boolean
 
 	readonly #defaultExpandedAt = observable.map<string | null, boolean>()
 	readonly #ids = observable.map<string, boolean>()
 
-	constructor(storageId: string) {
+	constructor(storageId: string, defaultCollapsed = false) {
 		this.#storageId = `companion_ui_collapsed_${storageId}`
+		this.#defaultCollapsed = defaultCollapsed
 
 		// Try loading the old state
 		runInAction(() => {
@@ -103,7 +105,7 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 	}
 
 	isPanelCollapsed = (parentId: string | null, panelId: string): boolean => {
-		return this.#ids.get(panelId) ?? this.#defaultExpandedAt.get(parentId) ?? false
+		return this.#ids.get(panelId) ?? this.#defaultExpandedAt.get(parentId) ?? this.#defaultCollapsed
 	}
 
 	clearUnknownIds = (knownPanelIds: string[]): void => {
@@ -121,8 +123,12 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 	}
 }
 
-export function usePanelCollapseHelper(storageId: string, knownPanelIds: string[]): PanelCollapseHelper {
-	const store = useMemo(() => new PanelCollapseHelperStore(storageId), [storageId])
+export function usePanelCollapseHelper(
+	storageId: string,
+	knownPanelIds: string[],
+	defaultCollapsed = false
+): PanelCollapseHelper {
+	const store = useMemo(() => new PanelCollapseHelperStore(storageId, defaultCollapsed), [storageId, defaultCollapsed])
 
 	// Clear out any unknown panel IDs
 	useDeepCompareEffect(() => {
@@ -141,11 +147,15 @@ export interface PanelCollapseHelperLite {
 	isPanelCollapsed: (panelId: string) => boolean
 }
 
-export function usePanelCollapseHelperLite(storageId: string, knownPanelIds: string[]): PanelCollapseHelperLite {
+export function usePanelCollapseHelperLite(
+	storageId: string,
+	knownPanelIds: string[],
+	defaultCollapsed = false
+): PanelCollapseHelperLite {
 	const panelIdsRef = useRef<string[]>(knownPanelIds)
 	panelIdsRef.current = knownPanelIds
 
-	const collapseHelper = usePanelCollapseHelper(storageId, knownPanelIds)
+	const collapseHelper = usePanelCollapseHelper(storageId, knownPanelIds, defaultCollapsed)
 
 	return useMemo(
 		() => ({

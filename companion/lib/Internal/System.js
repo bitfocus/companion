@@ -87,7 +87,7 @@ export default class System {
 	#internalModule
 
 	/**
-	 * @type {import('../Instance/Variable.js').default}
+	 * @type {import('../Variables/Controller.js').VariablesController}
 	 * @readonly
 	 */
 	#variableController
@@ -104,7 +104,7 @@ export default class System {
 	constructor(internalModule, registry) {
 		this.#internalModule = internalModule
 		this.#registry = registry
-		this.#variableController = registry.instance.variable
+		this.#variableController = registry.variables
 
 		// TODO - reactive:
 		// self.system.emit('config_get', 'bind_ip', function (bind_ip) {
@@ -231,7 +231,7 @@ export default class System {
 	executeAction(action, extras) {
 		if (action.action === 'exec') {
 			if (action.options.path) {
-				const path = this.#variableController.parseVariables(action.options.path, extras.location).text
+				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.path, extras).text
 				this.#logger.silly(`Running path: '${path}'`)
 
 				exec(

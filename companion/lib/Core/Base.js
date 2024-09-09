@@ -160,6 +160,16 @@ class CoreBase extends EventEmitter {
 	get internalModule() {
 		return this.registry.internalModule
 	}
+
+	/**
+	 * The variables controller
+	 * @type {import('../Variables/Controller.js').VariablesController}
+	 * @access protected
+	 * @readonly
+	 */
+	get variablesController() {
+		return this.registry.variables
+	}
 }
 
 export default CoreBase

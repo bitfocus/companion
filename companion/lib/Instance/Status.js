@@ -109,6 +109,10 @@ export default class Status extends EventEmitter {
 				category = 'warning'
 				level = 'Initializing'
 				break
+			case 'authentication_failure':
+				category = 'warning'
+				level = 'Authentication Failure'
+				break
 			default:
 				category = 'warning'
 				break

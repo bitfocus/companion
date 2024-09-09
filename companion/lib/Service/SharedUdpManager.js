@@ -185,12 +185,17 @@ class ServiceSharedUdpPort {
 				member.messageHandler(message, rinfo)
 			}
 		})
+
+		let hasBound = false
+
 		this.socket.on('error', (error) => {
 			this.#logger.warn(`Socket error: ${error?.message ?? error}`)
 			destroyCallback()
 
-			for (const member of this.members) {
-				member.errorHandler(error)
+			if (hasBound) {
+				for (const member of this.members) {
+					member.errorHandler(error)
+				}
 			}
 		})
 
@@ -200,6 +205,12 @@ class ServiceSharedUdpPort {
 				this.socket.bind(portNumber, resolve)
 			})
 		)
+
+		this.waitForBind
+			.finally(() => {
+				hasBound = true
+			})
+			.catch(() => null)
 	}
 
 	logMemberCount() {

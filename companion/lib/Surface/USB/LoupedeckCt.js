@@ -22,6 +22,12 @@ import { transformButtonImage } from '../../Resources/Util.js'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import LogController from '../../Log/Controller.js'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	LockConfigFields,
+} from '../CommonConfigFields.js'
 
 /**
  * @typedef {{
@@ -94,6 +100,17 @@ function rotaryToXY(modelInfo, info) {
 	return undefined
 }
 
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	//
+	...OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	...LockConfigFields,
+]
+
 class SurfaceUSBLoupedeckCt extends EventEmitter {
 	/**
 	 * Loupdeck device handle
@@ -142,10 +159,11 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 
 		this.logger.debug(`Adding Loupedeck CT device ${devicePath}`)
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Loupedeck CT`,
 			devicePath: devicePath,
-			configFields: ['brightness'],
+			configFields: configFields,
 			deviceId: `loupedeck:${serialNumber}`,
 		}
 

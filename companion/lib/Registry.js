@@ -18,7 +18,7 @@ import SurfaceController from './Surface/Controller.js'
 import UIController from './UI/Controller.js'
 import UIHandler from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
-import InstanceVariable from './Instance/Variable.js'
+import { VariablesController } from './Variables/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
@@ -178,6 +178,11 @@ class Registry extends EventEmitter {
 	api_router
 
 	/**
+	 * @type {import('./Variables/Controller.js').VariablesController}
+	 */
+	variables
+
+	/**
 	 * @type {AppInfo}
 	 * @access public
 	 * @readonly
@@ -229,20 +234,28 @@ class Registry extends EventEmitter {
 		this.page = new PageController(this)
 		this.controls = new ControlsController(this)
 		this.graphics = new GraphicsController(this)
-		this.variable = new InstanceVariable(this)
-		this.preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variable)
+		this.variables = new VariablesController(this.db, this.io)
+		this.preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
 		this.surfaces = new SurfaceController(this)
-		this.instance = new InstanceController(this, this.variable)
+		this.instance = new InstanceController(this)
 		this.services = new ServiceController(this)
 		this.cloud = new CloudController(this, this.clouddb, this.data.cache)
 		this.internalModule = new InternalController(this)
+
+		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
+			this.internalModule.variablesChanged(all_changed_variables_set)
+			this.controls.onVariablesChanged(all_changed_variables_set)
+			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
+			this.preview.onVariablesChanged(all_changed_variables_set)
+			this.surfaces.onVariablesChanged(all_changed_variables_set)
+		})
 
 		// old 'modules_loaded' events
 		this.data.metrics.startCycle()
 
 		this.controls.init()
 		this.controls.verifyConnectionIds()
-		this.instance.variable.custom.init()
+		this.variables.custom.init()
 		this.internalModule.init()
 		this.graphics.regenerateAll(false)
 

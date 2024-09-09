@@ -360,7 +360,7 @@ class DataImportExport extends CoreBase {
 			}
 
 			if (!config || !isFalsey(config.customVariables)) {
-				exp.custom_variables = this.instance.variable.custom.getDefinitions()
+				exp.custom_variables = this.variablesController.custom.getDefinitions()
 			}
 
 			if (!config || !isFalsey(config.connections)) {
@@ -748,7 +748,7 @@ class DataImportExport extends CoreBase {
 
 				// import custom variables
 				if (!config || config.customVariables) {
-					this.instance.variable.custom.replaceDefinitions(data.custom_variables || {})
+					this.variablesController.custom.replaceDefinitions(data.custom_variables || {})
 				}
 
 				// Always Import instances
@@ -973,7 +973,7 @@ class DataImportExport extends CoreBase {
 		}
 
 		if (!config || config.customVariables) {
-			this.instance.variable.custom.reset()
+			this.variablesController.custom.reset()
 		}
 
 		if (!config || config.userconfig) {
@@ -1120,6 +1120,7 @@ class DataImportExport extends CoreBase {
 			undefined,
 			allActions,
 			result.condition || [],
+			[],
 			result.events || [],
 			false
 		)
@@ -1218,7 +1219,8 @@ class DataImportExport extends CoreBase {
 			result.style,
 			allActions,
 			result.feedbacks || [],
-			undefined,
+			[],
+			[],
 			false
 		)
 

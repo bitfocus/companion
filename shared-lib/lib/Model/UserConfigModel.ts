@@ -12,6 +12,8 @@ export interface UserConfigModel {
 	loupedeck_enable: boolean
 	contour_shuttle_enable: boolean
 	vec_footpedal_enable: boolean
+	blackmagic_controller_enable: boolean
+	mystrix_enable: boolean
 
 	pin_enable: boolean
 	link_lockouts: boolean
@@ -66,6 +68,9 @@ export interface UserConfigModel {
 	gridSizeInlineGrow: boolean
 
 	installName: string
+
+	/** Whether to run the mdns  */
+	discoveryEnabled: boolean
 }
 
 export interface UserConfigGridSize {
