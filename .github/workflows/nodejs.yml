@@ -163,290 +163,285 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build
-        uses: actions/upload-artifact@v4
+        uses: bitfocus/actions/upload-and-notify@main
         with:
-          path: ${{ steps.filenames.outputs.sourcename }}
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: main
+          dev-branch: develop
 
-      # - name: Upload build
-      #   uses: bitfocus/actions/upload-and-notify@main
-      #   with:
-      #     long-version: ${{ steps.filenames.outputs.longversion }}
-      #     beta-branch: main
-      #     dev-branch: develop
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
 
-      #     source-filename: ${{ steps.filenames.outputs.sourcename }}
-      #     destination-filename: ${{ steps.filenames.outputs.targetname }}
-      #     s3-host: ${{ secrets.S3_HOST }}
-      #     s3-bucket: ${{ secrets.S3_BUCKET }}/companion
-      #     s3-access-key: ${{ secrets.S3_KEY }}
-      #     s3-secret-key: ${{ secrets.S3_SECRET }}
+          api-product: companion
+          api-target: 'linux-arm64-tgz'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
-      #     api-product: companion
-      #     api-target: 'linux-arm64-tgz'
-      #     api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
+  osx-x64:
+    runs-on: macos-12
+    needs: check-types
+    timeout-minutes: 60
 
-  # osx-x64:
-  #   runs-on: macos-12
-  #   needs: check-types
-  #   timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
 
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - name: Use Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: '.node-version'
+      - name: Cache build sources
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: macos-x64-build-cache
 
-  #     - name: Cache build sources
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: .cache
-  #         key: macos-x64-build-cache
+      - name: build & package
+        run: |
+          corepack enable
 
-  #     - name: build & package
-  #       run: |
-  #         corepack enable
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
 
-  #         # try and avoid timeout errors
-  #         yarn config set httpTimeout 100000
+          yarn --immutable
+          yarn update
 
-  #         yarn --immutable
-  #         yarn update
+          yarn zx tools/build/complete.mjs darwin-x64
+        env:
+          CI: 1
+          CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLETEAMID: ${{ secrets.APPLETEAMID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          USE_HARD_LINKS: false
 
-  #         yarn zx tools/build/complete.mjs darwin-x64
-  #       env:
-  #         CI: 1
-  #         CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
-  #         CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
-  #         APPLEID: ${{ secrets.APPLEID }}
-  #         APPLETEAMID: ${{ secrets.APPLETEAMID }}
-  #         APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
-  #         SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-  #         USE_HARD_LINKS: false
+      - name: Determine files to upload
+        id: filenames
+        shell: bash
+        run: |
+          VERSION=$(cat ./dist/BUILD)
 
-  #     - name: Determine files to upload
-  #       id: filenames
-  #       shell: bash
-  #       run: |
-  #         VERSION=$(cat ./dist/BUILD)
+          echo "sourcename=electron-output/companion-mac-x64.dmg" >> $GITHUB_OUTPUT
+          echo "targetname=companion-mac-x64-${VERSION}.dmg" >> $GITHUB_OUTPUT
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
-  #         echo "sourcename=electron-output/companion-mac-x64.dmg" >> $GITHUB_OUTPUT
-  #         echo "targetname=companion-mac-x64-${VERSION}.dmg" >> $GITHUB_OUTPUT
-  #         echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
+      - name: Upload build
+        uses: bitfocus/actions/upload-and-notify@main
+        with:
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: main
+          dev-branch: develop
 
-  #     - name: Upload build
-  #       uses: bitfocus/actions/upload-and-notify@main
-  #       with:
-  #         long-version: ${{ steps.filenames.outputs.longversion }}
-  #         beta-branch: main
-  #         dev-branch: develop
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
 
-  #         source-filename: ${{ steps.filenames.outputs.sourcename }}
-  #         destination-filename: ${{ steps.filenames.outputs.targetname }}
-  #         s3-host: ${{ secrets.S3_HOST }}
-  #         s3-bucket: ${{ secrets.S3_BUCKET }}/companion
-  #         s3-access-key: ${{ secrets.S3_KEY }}
-  #         s3-secret-key: ${{ secrets.S3_SECRET }}
+          api-product: companion
+          api-target: 'mac-intel'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
-  #         api-product: companion
-  #         api-target: 'mac-intel'
-  #         api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
+  osx-arm64:
+    runs-on: macos-12
+    needs: check-types
+    timeout-minutes: 60
 
-  # osx-arm64:
-  #   runs-on: macos-12
-  #   needs: check-types
-  #   timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
 
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - name: Use Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: '.node-version'
+      - name: Cache build sources
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: macos-arm64-build-cache
 
-  #     - name: Cache build sources
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: .cache
-  #         key: macos-arm64-build-cache
+      - name: yarn update
+        run: |
+          corepack enable
 
-  #     - name: yarn update
-  #       run: |
-  #         corepack enable
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
 
-  #         # try and avoid timeout errors
-  #         yarn config set httpTimeout 100000
+          yarn --immutable
+          yarn update
+        env:
+          CI: 1
+      - name: build & package
+        run: |
+          yarn zx tools/build/complete.mjs darwin-arm64
+        env:
+          CI: 1
+          CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLETEAMID: ${{ secrets.APPLETEAMID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          USE_HARD_LINKS: false
+          SKIP_LAUNCH_CHECK: true
 
-  #         yarn --immutable
-  #         yarn update
-  #       env:
-  #         CI: 1
-  #     - name: build & package
-  #       run: |
-  #         yarn zx tools/build/complete.mjs darwin-arm64
-  #       env:
-  #         CI: 1
-  #         CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
-  #         CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
-  #         APPLEID: ${{ secrets.APPLEID }}
-  #         APPLETEAMID: ${{ secrets.APPLETEAMID }}
-  #         APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
-  #         SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-  #         USE_HARD_LINKS: false
-  #         SKIP_LAUNCH_CHECK: true
+      - name: Determine files to upload
+        id: filenames
+        shell: bash
+        run: |
+          VERSION=$(cat ./dist/BUILD)
 
-  #     - name: Determine files to upload
-  #       id: filenames
-  #       shell: bash
-  #       run: |
-  #         VERSION=$(cat ./dist/BUILD)
+          echo "sourcename=electron-output/companion-mac-arm64.dmg" >> $GITHUB_OUTPUT
+          echo "targetname=companion-mac-arm64-${VERSION}.dmg" >> $GITHUB_OUTPUT
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
-  #         echo "sourcename=electron-output/companion-mac-arm64.dmg" >> $GITHUB_OUTPUT
-  #         echo "targetname=companion-mac-arm64-${VERSION}.dmg" >> $GITHUB_OUTPUT
-  #         echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
+      - name: Upload build
+        uses: bitfocus/actions/upload-and-notify@main
+        with:
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: main
+          dev-branch: develop
 
-  #     - name: Upload build
-  #       uses: bitfocus/actions/upload-and-notify@main
-  #       with:
-  #         long-version: ${{ steps.filenames.outputs.longversion }}
-  #         beta-branch: main
-  #         dev-branch: develop
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
 
-  #         source-filename: ${{ steps.filenames.outputs.sourcename }}
-  #         destination-filename: ${{ steps.filenames.outputs.targetname }}
-  #         s3-host: ${{ secrets.S3_HOST }}
-  #         s3-bucket: ${{ secrets.S3_BUCKET }}/companion
-  #         s3-access-key: ${{ secrets.S3_KEY }}
-  #         s3-secret-key: ${{ secrets.S3_SECRET }}
+          api-product: companion
+          api-target: 'mac-arm'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
-  #         api-product: companion
-  #         api-target: 'mac-arm'
-  #         api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
+  win32-x64:
+    runs-on: windows-2019
+    needs: check-types
+    timeout-minutes: 30
 
-  # win32-x64:
-  #   runs-on: windows-2019
-  #   needs: check-types
-  #   timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
 
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - name: Use Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: '.node-version'
+      - name: Cache build sources
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: windows-x64-build-cache
 
-  #     - name: Cache build sources
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: .cache
-  #         key: windows-x64-build-cache
+      - name: build & package
+        shell: bash
+        run: |
+          corepack enable
 
-  #     - name: build & package
-  #       shell: bash
-  #       run: |
-  #         corepack enable
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
 
-  #         # try and avoid timeout errors
-  #         yarn config set httpTimeout 100000
+          yarn --immutable
+          yarn update
 
-  #         yarn --immutable
-  #         yarn update
+          yarn zx tools/build/complete.mjs win32-x64
+        env:
+          CI: 1
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
-  #         yarn zx tools/build/complete.mjs win32-x64
-  #       env:
-  #         CI: 1
-  #         CSC_LINK: ${{ secrets.CSC_LINK }}
-  #         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-  #         SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      - name: Determine files to upload
+        id: filenames
+        shell: bash
+        run: |
+          VERSION=$(cat ./dist/BUILD)
 
-  #     - name: Determine files to upload
-  #       id: filenames
-  #       shell: bash
-  #       run: |
-  #         VERSION=$(cat ./dist/BUILD)
+          echo "sourcename=electron-output/companion-win64.exe" >> $GITHUB_OUTPUT
+          echo "targetname=companion-win64-${VERSION}.exe" >> $GITHUB_OUTPUT
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
-  #         echo "sourcename=electron-output/companion-win64.exe" >> $GITHUB_OUTPUT
-  #         echo "targetname=companion-win64-${VERSION}.exe" >> $GITHUB_OUTPUT
-  #         echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
+      - name: Upload build
+        uses: bitfocus/actions/upload-and-notify@main
+        with:
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: main
+          dev-branch: develop
 
-  #     - name: Upload build
-  #       uses: bitfocus/actions/upload-and-notify@main
-  #       with:
-  #         long-version: ${{ steps.filenames.outputs.longversion }}
-  #         beta-branch: main
-  #         dev-branch: develop
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
 
-  #         source-filename: ${{ steps.filenames.outputs.sourcename }}
-  #         destination-filename: ${{ steps.filenames.outputs.targetname }}
-  #         s3-host: ${{ secrets.S3_HOST }}
-  #         s3-bucket: ${{ secrets.S3_BUCKET }}/companion
-  #         s3-access-key: ${{ secrets.S3_KEY }}
-  #         s3-secret-key: ${{ secrets.S3_SECRET }}
+          api-product: companion
+          api-target: 'win-x64'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
-  #         api-product: companion
-  #         api-target: 'win-x64'
-  #         api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
+  docker-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
-  # docker-image:
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 10
+    needs:
+      - linux-x64
+      - linux-arm64
 
-  #   needs:
-  #     - linux-x64
-  #     - linux-arm64
+    env:
+      IMAGE_NAME: companion
 
-  #   env:
-  #     IMAGE_NAME: companion
+    steps:
+      - name: Docker meta
+        if: ${{ needs.linux-x64.outputs.do-docker }}
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.linux-x64.outputs.version }}
+            type=ref,event=tag
+            type=ref,event=branch
 
-  #   steps:
-  #     - name: Docker meta
-  #       if: ${{ needs.linux-x64.outputs.do-docker }}
-  #       id: meta
-  #       uses: docker/metadata-action@v5
-  #       with:
-  #         images: |
-  #           ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}
-  #         tags: |
-  #           type=raw,value=${{ needs.linux-x64.outputs.version }}
-  #           type=ref,event=tag
-  #           type=ref,event=branch
+      - name: Set up QEMU
+        if: ${{ steps.meta.outputs.tags }}
+        uses: docker/setup-qemu-action@v3
 
-  #     - name: Set up QEMU
-  #       if: ${{ steps.meta.outputs.tags }}
-  #       uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        if: ${{ steps.meta.outputs.tags }}
+        uses: docker/setup-buildx-action@v3
 
-  #     - name: Set up Docker Buildx
-  #       if: ${{ steps.meta.outputs.tags }}
-  #       uses: docker/setup-buildx-action@v3
+      - name: Login to registry
+        if: ${{ steps.meta.outputs.tags }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - name: Login to registry
-  #       if: ${{ steps.meta.outputs.tags }}
-  #       uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        if: ${{ steps.meta.outputs.tags }}
 
-  #     - uses: actions/checkout@v4
-  #       if: ${{ steps.meta.outputs.tags }}
-
-  #     - name: Build and push
-  #       uses: docker/build-push-action@v6
-  #       if: ${{ steps.meta.outputs.tags }}
-  #       env:
-  #         DOCKER_BUILD_SUMMARY: false
-  #       with:
-  #         context: .
-  #         file: Dockerfile.prebuild
-  #         platforms: linux/amd64,linux/arm64/v8
-  #         push: true
-  #         labels: ${{ steps.meta.outputs.labels }}
-  #         tags: '${{ steps.meta.outputs.tags }}'
-  #         build-args: |
-  #           build_name=${{ needs.linux-x64.outputs.version }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        if: ${{ steps.meta.outputs.tags }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
+        with:
+          context: .
+          file: Dockerfile.prebuild
+          platforms: linux/amd64,linux/arm64/v8
+          push: true
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: '${{ steps.meta.outputs.tags }}'
+          build-args: |
+            build_name=${{ needs.linux-x64.outputs.version }}
