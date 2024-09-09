@@ -289,7 +289,10 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const doDelete = useCallback(() => {
 		deleteModalRef.current?.show(
 			'Delete connection',
-			`Are you sure you want to delete "${connection.label}"?`,
+			[
+				`Are you sure you want to delete "${connection.label}"?`,
+				'This will remove all actions and feedbacks associated with this connection.',
+			],
 			'Delete',
 			() => {
 				socketEmitPromise(socket, 'connections:delete', [id]).catch((e) => {

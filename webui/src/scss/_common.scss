@@ -183,6 +183,11 @@ code {
 	color: #fff;
 }
 
+.btn-white.disabled {
+	opacity: 0.4;
+	border-color: transparent;
+}
+
 .text-right {
 	text-align: right;
 }

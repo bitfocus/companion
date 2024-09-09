@@ -129,12 +129,6 @@ export default class Surface {
 	#surfaceController
 
 	/**
-	 * @type {import('../Variables/Values.js').VariablesValues}
-	 * @readonly
-	 */
-	#variableController
-
-	/**
 	 * @type {import('../Page/Controller.js').default}
 	 * @readonly
 	 */
@@ -150,14 +144,12 @@ export default class Surface {
 	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Surface/Controller.js').default} surfaceController
 	 * @param {import('../Controls/Controller.js').default} controlsController
-	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 * @param {import('../Page/Controller.js').default} pageController
 	 */
-	constructor(internalModule, surfaceController, controlsController, variableController, pageController) {
+	constructor(internalModule, surfaceController, controlsController, pageController) {
 		this.#internalModule = internalModule
 		this.#surfaceController = surfaceController
 		this.#controlsController = controlsController
-		this.#variableController = variableController
 		this.#pageController = pageController
 
 		setImmediate(() => {
@@ -208,7 +200,7 @@ export default class Surface {
 
 	/**
 	 * @param {Record<string, any>} options
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras | undefined} info
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} info
 	 * @param {boolean} useVariableFields
 	 * @returns {string | undefined}
 	 */
@@ -217,36 +209,37 @@ export default class Surface {
 		let surfaceId = options.controller + ''
 
 		if (useVariableFields && options.controller_from_variable) {
-			surfaceId = this.#variableController.parseVariables(options.controller_variable, info?.location).text
+			surfaceId = this.#internalModule.parseVariablesForInternalActionOrFeedback(options.controller_variable, info).text
 		}
 
 		surfaceId = surfaceId.trim()
 
-		if (info && surfaceId === 'self') surfaceId = info.surfaceId
+		if (info && surfaceId === 'self' && 'surfaceId' in info) surfaceId = info.surfaceId
 
 		return surfaceId
 	}
 
 	/**
 	 * @param {Record<string, any>} options
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
 	 * @param {boolean} useVariableFields
 	 * @param {string | undefined} surfaceId
 	 * @returns {string | 'back' | 'forward' | '+1' | '-1' | undefined}
 	 */
-	#fetchPage(options, location, useVariableFields, surfaceId) {
+	#fetchPage(options, extras, useVariableFields, surfaceId) {
 		/** @type {number | string | undefined} */
 		let thePageNumber = options.page
 
 		if (useVariableFields && options.page_from_variable) {
 			thePageNumber = Number(
-				this.#variableController.executeExpression(options.page_variable, location, 'number').value
+				this.#internalModule.executeExpressionForInternalActionOrFeedback(options.page_variable, extras, 'number').value
 			)
 		}
 
-		if (location) {
-			// @ts-ignore
-			if (thePageNumber === 0 || thePageNumber === '0') thePageNumber = location.pageNumber ?? location.page
+		if (extras.location) {
+			if (thePageNumber === 0 || thePageNumber === '0')
+				// @ts-ignore
+				thePageNumber = extras.location.pageNumber ?? extras.location.page
 		}
 
 		if (thePageNumber === 'startup') {
@@ -405,15 +398,34 @@ export default class Surface {
 				description: undefined,
 				options: [
 					{
+						type: 'checkbox',
+						label: 'Use variables for surface',
+						id: 'controller_from_variable',
+						default: false,
+					},
+					serializeIsVisibleFnSingle({
 						type: 'number',
-						label: 'Surface / controller',
+						label: 'Surface / group index',
 						id: 'controller',
-						tooltip: 'Emulator is 0, all other controllers in order of type and serial-number',
+						tooltip: 'Check the ID column in the surfaces tab',
 						min: 0,
 						max: 100,
 						default: 0,
 						range: false,
-					},
+						isVisible: (options) => !options.controller_from_variable,
+					}),
+					serializeIsVisibleFnSingle({
+						type: 'textinput',
+						label: 'Surface / group index',
+						id: 'controller_variable',
+						tooltip: 'Check the ID column in the surfaces tab',
+						default: '0',
+						isVisible: (options) => !!options.controller_from_variable,
+						useVariables: {
+							local: true,
+						},
+					}),
+
 					...CHOICES_PAGE_WITH_VARIABLES,
 				],
 			},
@@ -476,19 +488,33 @@ export default class Surface {
 			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
 			if (!surfaceId) return true
 
-			const thePage = this.#fetchPage(action.options, extras.location, true, surfaceId)
+			const thePage = this.#fetchPage(action.options, extras, true, surfaceId)
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
 			return true
 		} else if (action.action === 'set_page_byindex') {
-			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(action.options.controller)
-			if (surfaceId === undefined) {
+			let surfaceIndex = action.options.controller
+			if (action.options.controller_from_variable) {
+				surfaceIndex = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+					action.options.controller_variable,
+					extras
+				).text
+			}
+
+			const surfaceIndexNumber = Number(surfaceIndex)
+			if (isNaN(surfaceIndexNumber) || surfaceIndexNumber < 0) {
+				this.#logger.warn(`Trying to set controller #${surfaceIndex} but it isn't a valid index.`)
+				return true
+			}
+
+			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(surfaceIndexNumber)
+			if (surfaceId === undefined || surfaceId === '') {
 				this.#logger.warn(`Trying to set controller #${action.options.controller} but it isn't available.`)
 				return true
 			}
 
-			const thePage = this.#fetchPage(action.options, extras.location, true, surfaceId)
+			const thePage = this.#fetchPage(action.options, extras, true, surfaceId)
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
@@ -666,10 +692,10 @@ export default class Surface {
 	 */
 	executeFeedback(feedback) {
 		if (feedback.type == 'surface_on_page') {
-			const surfaceId = this.#fetchSurfaceId(feedback.options, undefined, false)
+			const surfaceId = this.#fetchSurfaceId(feedback.options, feedback, false)
 			if (!surfaceId) return false
 
-			const thePage = this.#fetchPage(feedback.options, feedback.location, false, surfaceId)
+			const thePage = this.#fetchPage(feedback.options, feedback, false, surfaceId)
 
 			const currentPage = this.#surfaceController.devicePageGet(surfaceId, true)
 

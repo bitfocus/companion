@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
+import React, { useCallback, useContext, useState, useMemo, useEffect } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { socketEmitPromise, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
@@ -8,6 +8,7 @@ import { CompanionVariableValues, type CompanionVariableValue } from '@companion
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { VariableDefinitionExt } from '../Stores/VariablesStore.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
 
 interface VariablesTableProps {
 	label: string
@@ -18,6 +19,8 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 
 	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
 	const [filter, setFilter] = useState('')
+
+	const panelCollapseHelper = usePanelCollapseHelperLite(`variables-table:${label}`, Object.keys(variableValues), true)
 
 	const variableDefinitions = useComputed(() => {
 		const defs = variablesStore.variableDefinitionsForLabel(label)
@@ -131,6 +134,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 							value={variableValues[variable.name]}
 							label={label}
 							onCopied={onCopied}
+							panelCollapseHelper={panelCollapseHelper}
 						/>
 					))}
 				</tbody>
@@ -144,19 +148,23 @@ interface VariablesTableRowProps {
 	label: string
 	value: CompanionVariableValue | undefined
 	onCopied: () => void
+	panelCollapseHelper: PanelCollapseHelperLite
 }
 
-const VariablesTableRow = memo(function VariablesTableRow({
+const VariablesTableRow = observer(function VariablesTableRow({
 	variable,
 	value: valueRaw,
 	label,
 	onCopied,
+	panelCollapseHelper,
 }: VariablesTableRowProps) {
 	const value = typeof valueRaw !== 'string' ? valueRaw + '' : valueRaw
+	const compactValue = value.length > 100 ? `${value.substring(0, 100)}...` : value
 
-	// Split into the lines
+	// Split display value into the lines
+	const displayValue = panelCollapseHelper.isPanelCollapsed(variable.name) ? compactValue : value
 	const elms: Array<string | JSX.Element> = []
-	const lines = value.split('\\n')
+	const lines = displayValue.split('\\n')
 	lines.forEach((l, i) => {
 		elms.push(l)
 		if (i <= lines.length - 1) {
@@ -170,6 +178,11 @@ const VariablesTableRow = memo(function VariablesTableRow({
 				<span className="variable-style">
 					$({label}:{variable.name})
 				</span>
+				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
+					<CButton size="sm" title="Copy variable name">
+						<FontAwesomeIcon icon={faCopy} />
+					</CButton>
+				</CopyToClipboard>
 			</td>
 			<td>{variable.label}</td>
 			<td>
@@ -187,15 +200,27 @@ const VariablesTableRow = memo(function VariablesTableRow({
 								padding: '1px 3px',
 								fontSize: 14,
 							}}
+							title={value}
 						>
 							{elms}
 						</code>
 					)
 				}
+				{value == compactValue ? (
+					''
+				) : panelCollapseHelper.isPanelCollapsed(variable.name) ? (
+					<a href="#" onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, false)}>
+						More
+					</a>
+				) : (
+					<a href="#" onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, true)}>
+						Less
+					</a>
+				)}
 			</td>
 			<td>
-				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
-					<CButton size="sm">
+				<CopyToClipboard text={value} onCopy={onCopied}>
+					<CButton size="sm" title="Copy variable value">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
 				</CopyToClipboard>

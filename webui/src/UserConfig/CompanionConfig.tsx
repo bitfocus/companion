@@ -1,35 +1,20 @@
 import React from 'react'
-import { CButton, CFormInput } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
+import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
+import { ResetButton, UserConfigProps } from './Components/Common.js'
+import { TextInputField } from '../Components/TextInputField.js'
 
-interface CompanionConfigProps {
-	config: UserConfigModel
-	setValue: (key: keyof UserConfigModel, value: any) => void
-	resetValue: (key: keyof UserConfigModel) => void
-}
-
-export const CompanionConfig = observer(function CompanionConfig({
-	config,
-	setValue,
-	resetValue,
-}: CompanionConfigProps) {
+export const CompanionConfig = observer(function CompanionConfig(props: UserConfigProps) {
 	return (
 		<>
-			<tr>
-				<th colSpan={3} className="settings-category">
-					Installation Name
-				</th>
-			</tr>
+			<UserConfigHeadingRow label="Installation Name" />
+
 			<tr>
 				<td>
 					<div className="mr-1">
-						<CFormInput
-							type="text"
-							value={config.installName}
-							onChange={(e) => setValue('installName', e.currentTarget.value)}
+						<TextInputField
+							value={String(props.config.installName)}
+							setValue={(value) => props.setValue('installName', value)}
 						/>
 					</div>
 				</td>
@@ -41,9 +26,7 @@ export const CompanionConfig = observer(function CompanionConfig({
 					></div>
 				</td>
 				<td>
-					<CButton onClick={() => resetValue('installName')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
+					<ResetButton userConfig={props} field="installName" />
 				</td>
 			</tr>
 		</>

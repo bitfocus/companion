@@ -40,14 +40,14 @@ export function BonjourDeviceInputField({
 				}
 			})
 		}
-		const onDown = (svc: ClientBonjourService) => {
-			if (!subIdsRef.current?.includes(svc.subId)) return
+		const onDown = (subId: string, fqdn: string) => {
+			if (!subIdsRef.current?.includes(subId)) return
 
 			// console.log('down', svc)
 
 			setServices((svcs) => {
 				const res = { ...svcs }
-				delete res[svc.fqdn]
+				delete res[fqdn]
 				return res
 			})
 		}

@@ -2,6 +2,7 @@ import { isEqual } from 'lodash-es'
 import ServiceBase from './Base.js'
 import { Bonjour, Browser } from '@julusian/bonjour-service'
 import { nanoid } from 'nanoid'
+import { isIPv4 } from 'net'
 
 /**
  * Generate socket.io room name
@@ -103,9 +104,13 @@ class ServiceBonjourDiscovery extends ServiceBase {
 	/**
 	 * @param {string} id
 	 * @param {any} svc
-	 * @returns {import('@companion-app/shared/Model/Common.js').ClientBonjourService}
+	 * @returns {import('@companion-app/shared/Model/Common.js').ClientBonjourService | null}
 	 */
 	#convertService(id, svc) {
+		// Future: whether to include ipv4, ipv6 should be configurable, but this is fine for now
+		const addresses = svc.addresses.filter((/** @type {string} */ addr) => isIPv4(addr))
+		if (addresses.length === 0) return null
+
 		return {
 			subId: id,
 			fqdn: svc.fqdn,
@@ -115,7 +120,7 @@ class ServiceBonjourDiscovery extends ServiceBase {
 			// protocol: svc.protocol,
 			// txt: svc.txt,
 			// host: svc.host,
-			addresses: svc.addresses,
+			addresses: addresses,
 		}
 	}
 
@@ -168,7 +173,8 @@ class ServiceBonjourDiscovery extends ServiceBase {
 					// After this message, send already known services to the client
 					setImmediate(() => {
 						for (const svc of session.browser.services) {
-							client.emit(`bonjour:service:up`, this.#convertService(id, svc))
+							const uiSvc = this.#convertService(id, svc)
+							if (uiSvc) client.emit(`bonjour:service:up`, uiSvc)
 						}
 					})
 
@@ -192,10 +198,11 @@ class ServiceBonjourDiscovery extends ServiceBase {
 
 				// Setup event handlers
 				browser.on('up', (svc) => {
-					this.io.emitToRoom(room, `bonjour:service:up`, this.#convertService(id, svc))
+					const uiSvc = this.#convertService(id, svc)
+					if (uiSvc) this.io.emitToRoom(room, `bonjour:service:up`, uiSvc)
 				})
 				browser.on('down', (svc) => {
-					this.io.emitToRoom(room, `bonjour:service:down`, this.#convertService(id, svc))
+					this.io.emitToRoom(room, `bonjour:service:down`, id, svc.fqdn)
 				})
 
 				// Report to client

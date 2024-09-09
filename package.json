@@ -36,7 +36,7 @@
     "node": ">=18.16 <19"
   },
   "devDependencies": {
-    "@inquirer/prompts": "^5.3.8",
+    "@inquirer/prompts": "^5.5.0",
     "chokidar": "^3.6.0",
     "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
@@ -44,7 +44,7 @@
     "octokit": "^4.0.2",
     "open": "^10.1.0",
     "prettier": "^3.3.3",
-    "yaml": "^2.5.0",
+    "yaml": "^2.5.1",
     "zx": "^7.2.3"
   },
   "resolutions": {

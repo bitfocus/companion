@@ -115,7 +115,7 @@ describe('SharedUdpManager', () => {
 			await expect(service.joinPort('udp4', 1234, defaultOwnerId, messageFn, errorFn)).rejects.toThrow(/Bind Error/)
 
 			expect(messageFn).toHaveBeenCalledTimes(0)
-			expect(errorFn).toHaveBeenCalledTimes(1)
+			expect(errorFn).toHaveBeenCalledTimes(0)
 
 			// Socket should have been created
 			expect(mockCreateSocket).toHaveBeenCalledTimes(1)

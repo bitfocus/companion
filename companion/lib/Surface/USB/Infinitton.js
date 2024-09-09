@@ -21,6 +21,23 @@ import { translateRotation } from '../../Resources/Util.js'
 import { EventEmitter } from 'events'
 import LogController from '../../Log/Controller.js'
 import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	LockConfigFields,
+} from '../CommonConfigFields.js'
+
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	//
+	...OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	...LockConfigFields,
+]
 
 class SurfaceUSBInfinitton extends EventEmitter {
 	/**
@@ -63,10 +80,11 @@ class SurfaceUSBInfinitton extends EventEmitter {
 			// @ts-ignore
 			const serialNumber = this.#infinitton.device.getDeviceInfo().serialNumber
 
+			/** @type {import('../Handler.js').SurfacePanelInfo} */
 			this.info = {
 				type: 'Infinitton iDisplay device',
 				devicePath: devicePath,
-				configFields: ['brightness', 'rotation'],
+				configFields: configFields,
 				deviceId: `infinitton:${serialNumber}`,
 			}
 

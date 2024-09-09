@@ -1,28 +1,17 @@
 import React from 'react'
-import { CAlert, CButton, CFormInput, CFormSwitch } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
+import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
+import { UserConfigProps } from './Components/Common.js'
+import { UserConfigTextInputRow } from './Components/UserConfigTextInputRow.js'
+import { UserConfigNumberInputRow } from './Components/UserConfigNumberInputRow.js'
 
-interface AdminPasswordConfigProps {
-	config: UserConfigModel
-	setValue: (key: keyof UserConfigModel, value: any) => void
-	resetValue: (key: keyof UserConfigModel) => void
-}
-
-export const AdminPasswordConfig = observer(function AdminPasswordConfig({
-	config,
-	setValue,
-	resetValue,
-}: AdminPasswordConfigProps) {
+export const AdminPasswordConfig = observer(function AdminPasswordConfig(props: UserConfigProps) {
 	return (
 		<>
-			<tr>
-				<th colSpan={3} className="settings-category">
-					Admin UI Password
-				</th>
-			</tr>
+			<UserConfigHeadingRow label="Admin UI Password" />
+
 			<tr>
 				<td colSpan={3}>
 					<CAlert color="danger">
@@ -32,63 +21,19 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig({
 					</CAlert>
 				</td>
 			</tr>
-			<tr>
-				<td>Enable Locking</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.admin_lockout}
-						size="xl"
-						onChange={(e) => setValue('admin_lockout', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('admin_lockout')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			{config.admin_lockout && (
-				<>
-					<tr>
-						<td>Session Timeout (minutes, 0 for no timeout)</td>
-						<td>
-							<CFormInput
-								type="number"
-								value={config.admin_timeout}
-								min={0}
-								step={1}
-								onChange={(e) => {
-									let value = Math.floor(Number(e.currentTarget.value))
-									if (isNaN(value)) return
 
-									value = Math.max(value, 0)
-									setValue('admin_timeout', value)
-								}}
-							/>
-						</td>
-						<td>
-							<CButton onClick={() => resetValue('admin_timeout')} title="Reset to default">
-								<FontAwesomeIcon icon={faUndo} />
-							</CButton>
-						</td>
-					</tr>
-					<tr>
-						<td>Password</td>
-						<td>
-							<CFormInput
-								type="text"
-								value={config.admin_password}
-								onChange={(e) => setValue('admin_password', e.currentTarget.value)}
-							/>
-						</td>
-						<td>
-							<CButton onClick={() => resetValue('admin_password')} title="Reset to default">
-								<FontAwesomeIcon icon={faUndo} />
-							</CButton>
-						</td>
-					</tr>
+			<UserConfigSwitchRow userConfig={props} label="Enable Locking" field="admin_lockout" />
+
+			{props.config.admin_lockout && (
+				<>
+					<UserConfigNumberInputRow
+						userConfig={props}
+						label="Session Timeout (minutes, 0 for no timeout)"
+						field="admin_timeout"
+						min={0}
+					/>
+
+					<UserConfigTextInputRow userConfig={props} label="Password" field="admin_password" />
 				</>
 			)}
 		</>

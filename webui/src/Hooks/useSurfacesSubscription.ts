@@ -13,31 +13,31 @@ export function useSurfacesSubscription(
 
 	useEffect(() => {
 		setLoadError?.(null)
-		store.reset(null)
+		store.resetSurfaces(null)
 		setReady(false)
 
 		socketEmitPromise(socket, 'surfaces:subscribe', [])
 			.then((surfaces) => {
 				setLoadError?.(null)
-				store.reset(surfaces)
+				store.resetSurfaces(surfaces)
 				setReady(true)
 			})
 			.catch((e) => {
 				setLoadError?.(`Failed to load surfaces list`)
 				console.error('Failed to load surfaces list:', e)
-				store.reset(null)
+				store.resetSurfaces(null)
 			})
 
 		const updateSurfaces = (changes: SurfacesUpdate[]) => {
 			for (const change of changes) {
-				store.applyChange(change)
+				store.applySurfacesChange(change)
 			}
 		}
 
 		socket.on('surfaces:update', updateSurfaces)
 
 		return () => {
-			store.reset(null)
+			store.resetSurfaces(null)
 
 			socket.off('surfaces:update', updateSurfaces)
 

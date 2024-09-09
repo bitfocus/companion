@@ -6,13 +6,10 @@ export interface CModalExtProps extends CModalProps {
 	onOpened?: () => void
 }
 
-export const CModalExt = forwardRef<HTMLDivElement, CModalExtProps>(function CModalExt({
-	onShow,
-	onOpened,
-	onClose,
-	onClosed,
-	...props
-}: CModalExtProps) {
+export const CModalExt = forwardRef<HTMLDivElement, CModalExtProps>(function CModalExt(
+	{ onShow, onOpened, onClose, onClosed, ...props }: CModalExtProps,
+	ref
+) {
 	// This needs to be about the same as the coreui fade duration, but a little higher to clear the data as expected
 	const fadeOutDuration = 1500
 	const fadeInDuration = 1000
@@ -35,5 +32,5 @@ export const CModalExt = forwardRef<HTMLDivElement, CModalExtProps>(function CMo
 		onClose?.()
 	}, [onClose])
 
-	return <CModal {...props} onShow={onShowExt} onClose={onCloseExt} />
+	return <CModal ref={ref} {...props} onShow={onShowExt} onClose={onCloseExt} />
 })

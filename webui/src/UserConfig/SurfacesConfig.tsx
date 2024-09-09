@@ -1,186 +1,82 @@
 import React from 'react'
-import { CButton, CFormSwitch } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
+import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
+import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
+import { UserConfigProps } from './Components/Common.js'
 
-interface SurfacesConfigProps {
-	config: UserConfigModel
-	setValue: (key: keyof UserConfigModel, value: any) => void
-	resetValue: (key: keyof UserConfigModel) => void
-}
-
-export const SurfacesConfig = observer(function SurfacesConfig({ config, setValue, resetValue }: SurfacesConfigProps) {
+export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfigProps) {
 	return (
 		<>
-			<tr>
-				<th colSpan={3} className="settings-category">
-					Surfaces
-				</th>
-			</tr>
-			<tr>
-				<td>Watch for new USB Devices</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.usb_hotplug}
-						size="xl"
-						onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('usb_hotplug')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
-				<td>Watch for Discoverable Companion Satellite Installations</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.discoveryEnabled}
-						size="xl"
-						onChange={(e) => setValue('discoveryEnabled', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('discoveryEnabled')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					Enable connected Streamdecks
-					<br />
-					When disabled support for the Elgato software Plugin will be enabled
-					<br />
-					<em>(Requires Companion restart)</em>
-				</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={!config.elgato_plugin_enable}
-						size="xl"
-						onChange={(e) => setValue('elgato_plugin_enable', !e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('elgato_plugin_enable')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					Enable connected X-keys
-					<br />
-					<em>(Requires Companion restart)</em>
-				</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.xkeys_enable}
-						size="xl"
-						onChange={(e) => setValue('xkeys_enable', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('xkeys_enable')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					Use old layout for X-keys
-					<br />
-					<em>(Requires Companion restart)</em>
-				</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.xkeys_legacy_layout}
-						size="xl"
-						onChange={(e) => setValue('xkeys_legacy_layout', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('xkeys_legacy_layout')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					Enable connected Loupedeck and Razer Stream Controller devices
-					<br />
-					<em>(Requires Companion restart)</em>
-				</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.loupedeck_enable}
-						size="xl"
-						onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('loupedeck_enable')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					Enable connected Contour Shuttle
-					<br />
-					<em>(Requires Companion restart)</em>
-				</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.contour_shuttle_enable}
-						size="xl"
-						onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('contour_shuttle_enable')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					Enable connected VEC Footpedal
-					<br />
-					<em>(Requires Companion restart)</em>
-				</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.vec_footpedal_enable}
-						size="xl"
-						onChange={(e) => setValue('vec_footpedal_enable', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('vec_footpedal_enable')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
+			<UserConfigHeadingRow label="Surfaces" />
+			<UserConfigSwitchRow userConfig={props} label="Watch for new USB Devices" field="usb_hotplug" />
+
+			<UserConfigSwitchRow
+				userConfig={props}
+				label={
+					<>
+						Watch for Discoverable Remote Surfaces
+						<br />
+						Such as Companion Satellite and Stream Deck Studio
+					</>
+				}
+				field="discoveryEnabled"
+			/>
+
+			<UserConfigSwitchRow
+				userConfig={props}
+				label={
+					<>
+						Enable connected Streamdecks
+						<br />
+						When disabled support for the Elgato software Plugin will be enabled
+					</>
+				}
+				requiresRestart
+				field="elgato_plugin_enable"
+			/>
+			<UserConfigSwitchRow userConfig={props} label="Enable connected X-keys" requiresRestart field="xkeys_enable" />
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Use old layout for X-keys"
+				requiresRestart
+				field="xkeys_legacy_layout"
+			/>
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Enable connected Loupedeck and Razer Stream Controller devices"
+				requiresRestart
+				field="loupedeck_enable"
+			/>
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Enable connected Contour Shuttle"
+				requiresRestart
+				field="contour_shuttle_enable"
+			/>
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Enable connected VEC Footpedal"
+				requiresRestart
+				field="vec_footpedal_enable"
+			/>
+			<UserConfigSwitchRow
+				userConfig={props}
+				label={
+					<>
+						Enable connected Blackmagic Atem Micro Panel
+						<br />
+						<em>You must not run the Atem software at the same time</em>
+					</>
+				}
+				requiresRestart
+				field="blackmagic_controller_enable"
+			/>
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Enable connected 203 Systems Mystrix"
+				requiresRestart
+				field="mystrix_enable"
+			/>
 		</>
 	)
 })

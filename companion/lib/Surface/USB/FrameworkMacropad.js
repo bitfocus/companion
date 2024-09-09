@@ -19,6 +19,23 @@ import { EventEmitter } from 'events'
 import LogController from '../../Log/Controller.js'
 import { HIDAsync } from 'node-hid'
 import { colorToRgb } from './Util.js'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	LockConfigFields,
+} from '../CommonConfigFields.js'
+
+/**
+ * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+const configFields = [
+	//
+	...OffsetConfigFields,
+	BrightnessConfigField,
+	RotationConfigField,
+	...LockConfigFields,
+]
 
 /**
  * This is an implementation of a simple HID device for the framework macropad.
@@ -73,10 +90,11 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 
 		this.#device = device
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Framework Macropad`,
 			devicePath: devicePath,
-			configFields: ['brightness'],
+			configFields: configFields,
 			deviceId: `framework-macropad`,
 		}
 
