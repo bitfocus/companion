@@ -246,11 +246,12 @@ export default class Surface {
 
 		if (location) {
 			// @ts-ignore
-			if (thePageNumber === 0 || thePageNumber === '0') thePage = location.pageNumber ?? location.page
+			if (thePageNumber === 0 || thePageNumber === '0') thePageNumber = location.pageNumber ?? location.page
 		}
 
 		if (thePageNumber === 'startup') {
-			thePageNumber = surfaceId && this.#surfaceController.devicePageGetStartup(surfaceId)
+			const thePageId = surfaceId && this.#surfaceController.devicePageGetStartup(surfaceId)
+			return thePageId || this.#pageController.getFirstPageId()
 		}
 		if (thePageNumber === 'back' || thePageNumber === 'forward' || thePageNumber === '+1' || thePageNumber === '-1') {
 			return thePageNumber

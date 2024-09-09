@@ -399,20 +399,16 @@ class SurfaceHandler extends EventEmitter {
 				const gridSize = this.panelGridSize
 
 				const pageNumber = this.#page.getPageNumber(this.#currentPageId)
-				if (!pageNumber) {
-					// Should never happen, blank it
-					this.panel.clearDeck()
-				} else {
-					for (let y = 0; y < gridSize.rows; y++) {
-						for (let x = 0; x < gridSize.columns; x++) {
-							const image = this.#graphics.getCachedRenderOrGeneratePlaceholder({
-								pageNumber: pageNumber,
-								column: x + xOffset,
-								row: y + yOffset,
-							})
 
-							this.#drawButtonTransformed(x, y, image)
-						}
+				for (let y = 0; y < gridSize.rows; y++) {
+					for (let x = 0; x < gridSize.columns; x++) {
+						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder({
+							pageNumber: pageNumber ?? 0,
+							column: x + xOffset,
+							row: y + yOffset,
+						})
+
+						this.#drawButtonTransformed(x, y, image)
 					}
 				}
 			}
