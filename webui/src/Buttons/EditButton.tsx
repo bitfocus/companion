@@ -20,6 +20,7 @@ import {
 import {
 	faChevronLeft,
 	faChevronRight,
+	faCopy,
 	faPencil,
 	faPlay,
 	faPlus,
@@ -442,6 +443,14 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		},
 		[socket, controlId]
 	)
+	const duplicateStep = useCallback(
+		(stepId: string) => {
+			socketEmitPromise(socket, 'controls:step:duplicate', [controlId, stepId]).catch((e) => {
+				console.error('Failed to duplicate step:', e)
+			})
+		},
+		[socket, controlId]
+	)
 	const swapSteps = useCallback(
 		(stepId1: string, stepId2: string) => {
 			socketEmitPromise(socket, 'controls:step:swap', [controlId, stepId1, stepId2])
@@ -516,11 +525,14 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 							</CNavLink>
 						</CNavItem>
 						{keys.length === 1 && (
-							<CNavItem key="add-step" className="nav-steps-special">
-								<CNavLink onClick={appendStep}>
-									<FontAwesomeIcon icon={faPlus} /> Add step
-								</CNavLink>
-							</CNavItem>
+							<div className="nav-last">
+								<CButton title="Add step" size="sm" onClick={appendStep}>
+									<FontAwesomeIcon icon={faPlus} />
+								</CButton>
+								<CButton title="Duplicate step" size="sm" onClick={() => duplicateStep('1')}>
+									<FontAwesomeIcon icon={faCopy} />
+								</CButton>
+							</div>
 						)}
 					</CNav>
 				</div>
@@ -583,6 +595,13 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 									onClick={appendStep}
 								>
 									<FontAwesomeIcon icon={faPlus} />
+								</CButton>
+								<CButton
+									style={{ backgroundColor: '#f0f0f0' }}
+									title="Duplicate step"
+									onClick={() => duplicateStep(selectedKey)}
+								>
+									<FontAwesomeIcon icon={faCopy} />
 								</CButton>
 								<CButton
 									style={{ backgroundColor: '#f0f0f0' }}

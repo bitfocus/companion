@@ -872,6 +872,44 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	}
 
 	/**
+	 * Duplicate a step on this control
+	 * @param {string} stepId the id of the step to duplicate
+	 * @returns {boolean}
+	 * @access public
+	 */
+	stepDuplicate(stepId) {
+		const existingKeys = GetStepIds(this.steps)
+			.map((k) => Number(k))
+			.filter((k) => !isNaN(k))
+
+		const stepToCopy = this.steps[stepId]
+		if (!stepToCopy) return false
+
+		const newStep = this.#getNewStepValue(cloneDeep(stepToCopy.action_sets), cloneDeep(stepToCopy.options))
+
+		// add one after the last
+		const max = Math.max(...existingKeys)
+
+		const newStepId = `${max + 1}`
+		this.steps[newStepId] = newStep
+
+		this.commitChange(true)
+
+		// Ensure the ui knows which step is current
+		this.sendRuntimePropsChange()
+
+		// Save the change, and perform a draw
+		this.commitChange(true)
+
+		// Treat it as an import, to make any ids unique
+		newStep.postProcessImport().catch((e) => {
+			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
+		})
+
+		return true
+	}
+
+	/**
 	 * Set the current (next to execute) action-set by index
 	 * @param {number} index The step index to make the next
 	 * @returns {boolean} success
