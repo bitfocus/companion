@@ -1,4 +1,7 @@
-import { ClientDiscoveredSurfaceInfo, CompanionExternalAddresses } from '@companion-app/shared/Model/Surfaces.js'
+import {
+	ClientDiscoveredSurfaceInfoSatellite,
+	CompanionExternalAddresses,
+} from '@companion-app/shared/Model/Surfaces.js'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { socketEmitPromise, SocketContext, LoadingBar } from '../util.js'
 import { CButton, CForm, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
@@ -6,13 +9,13 @@ import { CModalExt } from '../Components/CModalExt.js'
 import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
 
 export interface SetupSatelliteModalRef {
-	show(surfaceInfo: ClientDiscoveredSurfaceInfo): void
+	show(surfaceInfo: ClientDiscoveredSurfaceInfoSatellite): void
 }
 export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function SetupSatelliteModal(_props, ref) {
 	const socket = useContext(SocketContext)
 
 	const [show, setShow] = useState(false)
-	const [data, setData] = useState<ClientDiscoveredSurfaceInfo | null>(null)
+	const [data, setData] = useState<ClientDiscoveredSurfaceInfoSatellite | null>(null)
 
 	const [externalAddresses, setExternalAddresses] = useState<CompanionExternalAddresses | null>(null)
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(null)

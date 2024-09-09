@@ -23,7 +23,46 @@ import LogController from '../../Log/Controller.js'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
+import {
+	OffsetConfigFields,
+	BrightnessConfigField,
+	LegacyRotationConfigField,
+	LockConfigFields,
+} from '../CommonConfigFields.js'
 const setTimeoutPromise = util.promisify(setTimeout)
+
+/** @type {import('@elgato-stream-deck/node').JPEGEncodeOptions} */
+export const StreamDeckJpegOptions = {
+	quality: 95,
+	subsampling: 1, // 422
+}
+
+/**
+ * @param {import('@elgato-stream-deck/node').StreamDeck} streamDeck
+ * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+function getConfigFields(streamDeck) {
+	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
+	const fields = [...OffsetConfigFields]
+
+	// Hide brightness for the pedal
+	const hasBrightness = !!streamDeck.CONTROLS.find(
+		(c) => c.type === 'lcd-segment' || (c.type === 'button' && c.feedbackType !== 'none')
+	)
+	if (hasBrightness) fields.push(BrightnessConfigField)
+
+	fields.push(LegacyRotationConfigField, ...LockConfigFields)
+
+	if (streamDeck.HAS_NFC_READER)
+		fields.push({
+			id: 'nfc',
+			type: 'custom-variable',
+			label: 'Variable to store last read NFC tag to',
+			tooltip: '',
+		})
+
+	return fields
+}
 
 class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	/**
@@ -40,21 +79,30 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	config = {}
 
 	/**
-	 * Xkeys panel
-	 * @type {import('@elgato-stream-deck/node').StreamDeck}
+	 * Streamdeck panel
+	 * @type {import('@elgato-stream-deck/node').StreamDeck | import('@elgato-stream-deck/tcp').StreamDeckTcp}
 	 * @access private
 	 * @readonly
 	 */
 	#streamDeck
 
 	/**
+	 * Whether to cleanup the deck on quit
+	 */
+	#shouldCleanupOnQuit = true
+
+	/**
 	 * @param {string} devicePath
-	 * @param {import('@elgato-stream-deck/node').StreamDeck} streamDeck
+	 * @param {import('@elgato-stream-deck/node').StreamDeck | import('@elgato-stream-deck/tcp').StreamDeckTcp} streamDeck
 	 */
 	constructor(devicePath, streamDeck) {
 		super()
 
-		this.#logger = LogController.createLogger(`Surface/USB/ElgatoStreamdeck/${devicePath}`)
+		const tcpStreamdeck = 'tcpEvents' in streamDeck ? streamDeck : null
+
+		const protocol = tcpStreamdeck ? 'TCP' : 'USB'
+
+		this.#logger = LogController.createLogger(`Surface/${protocol}/ElgatoStreamdeck/${devicePath}`)
 
 		this.config = {
 			brightness: 100,
@@ -63,28 +111,25 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 		this.#streamDeck = streamDeck
 
-		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} USB device: ${devicePath}`)
+		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} ${protocol} device: ${devicePath}`)
 
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Elgato ${this.#streamDeck.PRODUCT_NAME}`,
 			devicePath: devicePath,
-			configFields: ['brightness', 'legacy_rotation'],
+			configFields: getConfigFields(this.#streamDeck),
 			deviceId: '', // set in #init()
+			location: undefined, // set later
+			remotePort: undefined, // set later
 		}
 
 		const allRowValues = this.#streamDeck.CONTROLS.map((control) => control.row)
 		const allColumnValues = this.#streamDeck.CONTROLS.map((button) => button.column)
 
-		const gridSpan = {
-			// minRow: Math.min(...allRowValues),
-			maxRow: Math.max(...allRowValues),
-			// minCol: Math.min(...allColumnValues),
-			maxCol: Math.max(...allColumnValues),
-		}
-
+		// Future: maybe this should consider the min values too, but that requires handling in a bunch of places here
 		this.gridSize = {
-			columns: gridSpan.maxCol + 1,
-			rows: gridSpan.maxRow + 1,
+			columns: Math.max(...allColumnValues) + 1,
+			rows: Math.max(...allRowValues) + 1,
 		}
 
 		this.write_queue = new ImageWriteQueue(
@@ -193,6 +238,9 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 							await setTimeoutPromise(20)
 						}
 					}
+				} else if (control.type === 'encoder' && control.hasLed) {
+					const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+					await this.#streamDeck.setEncoderColor(control.index, color.r, color.g, color.b)
 				}
 			}
 		)
@@ -201,6 +249,22 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			this.#logger.error(`Error: ${error}`)
 			this.emit('remove')
 		})
+
+		if (tcpStreamdeck) {
+			// Don't call `close` upon quit, that gets handled automatically
+			this.#shouldCleanupOnQuit = false
+
+			this.info.location = tcpStreamdeck.remoteAddress
+			this.info.remotePort = tcpStreamdeck.remotePort
+
+			tcpStreamdeck.tcpEvents.on('disconnected', () => {
+				this.#logger.info(
+					`Lost connection to TCP Streamdeck ${tcpStreamdeck.remoteAddress}:${tcpStreamdeck.remotePort} (${this.#streamDeck.PRODUCT_NAME})`
+				)
+
+				this.emit('remove')
+			})
+		}
 
 		this.#streamDeck.on('down', (control) => {
 			this.emit('click', control.column, control.row, true)
@@ -212,6 +276,11 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 		this.#streamDeck.on('rotate', (control, amount) => {
 			this.emit('rotate', control.column, control.row, amount > 0)
+		})
+		this.#streamDeck.on('nfcRead', (tag) => {
+			const variableId = this.config.nfc
+			if (!variableId) return
+			this.emit('setCustomVariable', variableId, tag)
 		})
 
 		const lcdPress = (
@@ -278,6 +347,31 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	}
 
 	/**
+	 * Wrap a tcp streamdeck
+	 * @param {string} fakePath
+	 * @param {import('@elgato-stream-deck/tcp').StreamDeckTcp} streamdeck
+	 */
+	static async fromTcp(fakePath, streamdeck) {
+		const self = new SurfaceUSBElgatoStreamDeck(fakePath, streamdeck)
+
+		/** @type {any} */
+		let errorDuringInit = null
+		const tmpErrorHandler = (/** @type {any} */ error) => {
+			errorDuringInit = errorDuringInit || error
+		}
+
+		// Ensure that any hid error during the init call don't cause a crash
+		self.on('error', tmpErrorHandler)
+
+		await self.#init()
+
+		if (errorDuringInit) throw errorDuringInit
+		self.off('error', tmpErrorHandler)
+
+		return self
+	}
+
+	/**
 	 * Process the information from the GUI and what is saved in database
 	 * @param {Record<string, any>} config
 	 * @param {boolean=} force
@@ -294,6 +388,8 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	}
 
 	quit() {
+		if (!this.#shouldCleanupOnQuit) return
+
 		this.#streamDeck
 			.resetToLogo()
 			.catch((e) => {
@@ -301,7 +397,9 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			})
 			.then(() => {
 				//close after the clear has been sent
-				this.#streamDeck.close()
+				this.#streamDeck.close().catch(() => {
+					// Ignore error
+				})
 			})
 	}
 

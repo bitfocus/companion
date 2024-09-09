@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CompanionSocketType, socketEmitPromise } from '../util.js'
 import type { UserConfigStore } from '../Stores/UserConfigStore.js'
+import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export function useUserConfigSubscription(
 	socket: CompanionSocketType,
@@ -27,7 +28,7 @@ export function useUserConfigSubscription(
 				store.reset(null)
 			})
 
-		const updateUserConfigValue = (key: string, value: any) => {
+		const updateUserConfigValue = (key: keyof UserConfigModel, value: any) => {
 			store.setValue(key, value)
 		}
 

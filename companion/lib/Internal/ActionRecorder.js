@@ -40,22 +40,14 @@ export default class ActionRecorder {
 	#pageController
 
 	/**
-	 * @type {import('../Variables/Values.js').VariablesValues}
-	 * @readonly
-	 */
-	#variableController
-
-	/**
 	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Controls/ActionRecorder.js').default} actionRecorder
 	 * @param {import('../Page/Controller.js').default} pageController
-	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
-	constructor(internalModule, actionRecorder, pageController, variableController) {
+	constructor(internalModule, actionRecorder, pageController) {
 		this.#internalModule = internalModule
 		this.#actionRecorder = actionRecorder
 		this.#pageController = pageController
-		this.#variableController = variableController
 
 		setImmediate(() => {
 			this.#internalModule.setVariables({
@@ -237,10 +229,10 @@ export default class ActionRecorder {
 
 			return true
 		} else if (action.action === 'action_recorder_save_to_button') {
-			let stepId = this.#variableController.parseVariables(action.options.step, extras.location).text
-			let setId = this.#variableController.parseVariables(action.options.set, extras.location).text
-			const pageRaw = this.#variableController.parseVariables(action.options.page, extras.location).text
-			const bankRaw = this.#variableController.parseVariables(action.options.bank, extras.location).text
+			let stepId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.step, extras).text
+			let setId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.set, extras).text
+			const pageRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.page, extras).text
+			const bankRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.bank, extras).text
 
 			if (setId === 'press') setId = 'down'
 			else if (setId === 'release') setId = 'up'

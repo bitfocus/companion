@@ -20,6 +20,15 @@ import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
+import {
+	BrightnessConfigField,
+	LegacyRotationConfigField,
+	LockConfigFields,
+	OffsetConfigFields,
+	RotationConfigField,
+} from '../CommonConfigFields.js'
+import debounceFn from 'debounce-fn'
+import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 
 /**
  * @typedef {{
@@ -28,15 +37,91 @@ import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
  *   path: string
  *   socket: import('net').Socket
  *   gridSize: import('../Util.js').GridSize
+ *   supportsBrightness:boolean
  *   streamBitmapSize: number | null
  *   streamColors: string | boolean
  *   streamText: boolean
  *   streamTextStyle: boolean
+ *   transferVariables: SatelliteTransferableValue[]
  * }} SatelliteDeviceInfo
+ * @typedef {{
+ *   id: string
+ *   type: 'input' | 'output'
+ * 	 name: string
+ *   description: string | undefined
+ * }} SatelliteTransferableValue
+ * @typedef {{
+ * 	 id: string
+ *   lastValue: import('@companion-module/base').CompanionVariableValue
+ * }} SatelliteInputVariableInfo
+ * @typedef {{
+ * 	 id: string
+ *   lastReferencedVariables: Set<string> | null
+ *   lastValue: any
+ *   triggerUpdate?: () => void
+ * }} SatelliteOutputVariableInfo
  */
+
+/**
+ * @param {SatelliteDeviceInfo} deviceInfo
+ * @param {boolean} legacyRotation
+ * @param {Record<string, SatelliteInputVariableInfo>} inputVariables
+ * @param {Record<string, SatelliteOutputVariableInfo>} outputVariables
+ * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
+ */
+function generateConfigFields(deviceInfo, legacyRotation, inputVariables, outputVariables) {
+	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
+	const fields = [...OffsetConfigFields]
+	if (deviceInfo.supportsBrightness) {
+		fields.push(BrightnessConfigField)
+	}
+	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
+
+	for (const variable of deviceInfo.transferVariables) {
+		if (variable.type === 'input') {
+			const id = `satellite_input_${variable.id}`
+			fields.push({
+				id,
+				type: 'custom-variable',
+				label: variable.name,
+				tooltip: variable.description,
+			})
+
+			inputVariables[variable.id] = {
+				id,
+				lastValue: '',
+			}
+		} else if (variable.type === 'output') {
+			const id = `satellite_output_${variable.id}`
+
+			fields.push({
+				id,
+				type: 'textinput',
+				label: variable.name,
+				tooltip: variable.description,
+				isExpression: true,
+			})
+
+			outputVariables[variable.id] = {
+				id,
+				lastReferencedVariables: null,
+				lastValue: undefined,
+			}
+		}
+	}
+
+	return fields
+}
 
 class SurfaceIPSatellite extends EventEmitter {
 	#logger = LogController.createLogger('Surface/IP/Satellite')
+
+	/**
+	 * @type {import('../Controller.js').SurfaceExecuteExpressionFn}
+	 * @access private
+	 * @readonly
+	 */
+	#executeExpression
 
 	/**
 	 * @type {ImageWriteQueue}
@@ -77,19 +162,26 @@ class SurfaceIPSatellite extends EventEmitter {
 	#streamTextStyle = false
 
 	/**
-	 *
-	 * @param {SatelliteDeviceInfo} deviceInfo
+	 * @type {Record<string, SatelliteInputVariableInfo>}
+	 * @access private
+	 * @readonly
 	 */
-	constructor(deviceInfo) {
+	#inputVariables = {}
+	/**
+	 * @type {Record<string, SatelliteOutputVariableInfo>}
+	 * @access private
+	 * @readonly
+	 */
+	#outputVariables = {}
+
+	/**
+	 * @param {SatelliteDeviceInfo} deviceInfo
+	 * @param {import('../Controller.js').SurfaceExecuteExpressionFn} executeExpression
+	 */
+	constructor(deviceInfo, executeExpression) {
 		super()
 
-		this.info = {
-			type: deviceInfo.productName,
-			devicePath: deviceInfo.path,
-			configFields: ['brightness'],
-			deviceId: deviceInfo.path,
-			location: deviceInfo.socket.remoteAddress,
-		}
+		this.#executeExpression = executeExpression
 
 		this.gridSize = deviceInfo.gridSize
 
@@ -102,11 +194,21 @@ class SurfaceIPSatellite extends EventEmitter {
 		this.#streamText = deviceInfo.streamText
 		this.#streamTextStyle = deviceInfo.streamTextStyle
 
-		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
-
-		if (this.#streamBitmapSize) {
-			this.info.configFields.push('legacy_rotation')
+		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		this.info = {
+			type: deviceInfo.productName,
+			devicePath: deviceInfo.path,
+			configFields: generateConfigFields(
+				deviceInfo,
+				!!this.#streamBitmapSize,
+				this.#inputVariables,
+				this.#outputVariables
+			),
+			deviceId: deviceInfo.path,
+			location: deviceInfo.socket.remoteAddress,
 		}
+
+		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
 
 		this.#config = {
 			rotation: 0,
@@ -136,6 +238,11 @@ class SurfaceIPSatellite extends EventEmitter {
 				}
 			}
 		)
+
+		// Send all variables immediately
+		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
+			this.#triggerOutputVariable(name, outputVariable)
+		}
 	}
 
 	quit() {}
@@ -255,16 +362,97 @@ class SurfaceIPSatellite extends EventEmitter {
 		this.emit('rotate', column, row, direction)
 	}
 
+	/**
+	 * Set the value of a variable from this surface
+	 * @param {string} variableName
+	 * @param {import('@companion-module/base').CompanionVariableValue} variableValue
+	 */
+	setVariableValue(variableName, variableValue) {
+		const inputVariableInfo = this.#inputVariables[variableName]
+		if (!inputVariableInfo) return // Not known
+
+		inputVariableInfo.lastValue = variableValue
+
+		const targetCustomVariable = this.#config[inputVariableInfo.id]
+		if (!targetCustomVariable) return // Not configured
+
+		this.emit('setCustomVariable', targetCustomVariable, variableValue)
+	}
+
 	clearDeck() {
 		this.#logger.silly('elgato.prototype.clearDeck()')
 		if (this.socket !== undefined) {
 			this.socket.write(`KEYS-CLEAR DEVICEID=${this.deviceId}\n`)
 		} else {
-			this.#logger.debug('trying to emit to nonexistaant socket: ', this.deviceId)
+			this.#logger.debug('trying to emit to nonexistant socket: ', this.deviceId)
 		}
 	}
 
-	/* elgato-streamdeck functions */
+	/**
+	 * Propagate variable changes
+	 * @param {Set<string>} allChangedVariables - variables with changes
+	 * @access public
+	 */
+	onVariablesChanged(allChangedVariables) {
+		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
+			if (!outputVariable.lastReferencedVariables) continue
+
+			for (const variable of allChangedVariables.values()) {
+				if (!outputVariable.lastReferencedVariables.has(variable)) continue
+
+				// There is a change, recalcuate and send the value
+
+				this.#triggerOutputVariable(name, outputVariable)
+				break
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param {string} name
+	 * @param {SatelliteOutputVariableInfo} outputVariable
+	 */
+	#triggerOutputVariable(name, outputVariable) {
+		if (!outputVariable.triggerUpdate)
+			outputVariable.triggerUpdate = debounceFn(
+				() => {
+					/** @type {any} */
+					let expressionResult = VARIABLE_UNKNOWN_VALUE
+
+					const expressionText = this.#config[outputVariable.id]
+					try {
+						const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+						expressionResult = parseResult.value
+
+						outputVariable.lastReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
+					} catch (e) {
+						this.#logger.error(`expression parse error: ${e}`)
+
+						outputVariable.lastReferencedVariables = null
+					}
+
+					// Only send if the value has changed
+					if (outputVariable.lastValue === expressionResult) return
+					outputVariable.lastValue = expressionResult
+
+					if (this.socket !== undefined) {
+						const base64Value = Buffer.from(expressionResult.toString()).toString('base64')
+						this.socket.write(`VARIABLE-VALUE DEVICEID=${this.deviceId} VARIABLE="${name}" VALUE="${base64Value}"\n`)
+					} else {
+						this.#logger.debug('trying to emit to nonexistant socket: ', this.deviceId)
+					}
+				},
+				{
+					before: false,
+					after: true,
+					wait: 5,
+					maxWait: 20,
+				}
+			)
+
+		outputVariable.triggerUpdate()
+	}
 
 	/**
 	 * Process the information from the GUI and what is saved in database
@@ -275,6 +463,13 @@ class SurfaceIPSatellite extends EventEmitter {
 	setConfig(config, force) {
 		if ((force || this.#config.brightness != config.brightness) && config.brightness !== undefined) {
 			this.#setBrightness(config.brightness)
+		}
+
+		// Check if the variable name of the input variable has changed
+		for (const inputVariable of Object.values(this.#inputVariables)) {
+			if (config[inputVariable.id] && (force || this.#config[inputVariable.id] !== config[inputVariable.id])) {
+				this.emit('setCustomVariable', config[inputVariable.id], inputVariable.lastValue)
+			}
 		}
 
 		this.#config = config

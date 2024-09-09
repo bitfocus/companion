@@ -25,6 +25,8 @@ import { HttpConfig } from './HttpConfig.js'
 import { CompanionConfig } from './CompanionConfig.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { UserConfigProps } from './Components/Common.js'
+import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export const UserConfig = memo(function UserConfig() {
 	return (
@@ -53,7 +55,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 	const { userConfig, socket } = useContext(RootAppStoreContext)
 
 	const setValue = useCallback(
-		(key: string, value: any) => {
+		(key: keyof UserConfigModel, value: any) => {
 			console.log('set ', key, value)
 			socket.emit('set_userconfig_key', key, value)
 		},
@@ -61,7 +63,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 	)
 
 	const resetValue = useCallback(
-		(key: string) => {
+		(key: keyof UserConfigModel) => {
 			console.log('reset ', key)
 			socket.emit('reset_userconfig_key', key)
 		},
@@ -70,30 +72,36 @@ const UserConfigTable = observer(function UserConfigTable() {
 
 	if (!userConfig.properties) return null
 
+	const userConfigProps: UserConfigProps = {
+		config: userConfig.properties,
+		setValue,
+		resetValue,
+	}
+
 	return (
 		<table className="table table-responsive-sm table-settings">
 			<tbody>
-				<CompanionConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<ButtonsConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<GridConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<SurfacesConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<PinLockoutConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
+				<CompanionConfig {...userConfigProps} />
+				<ButtonsConfig {...userConfigProps} />
+				<GridConfig {...userConfigProps} />
+				<SurfacesConfig {...userConfigProps} />
+				<PinLockoutConfig {...userConfigProps} />
 
-				<SatelliteConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<TcpConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<UdpConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<HttpConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<OscConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<RosstalkConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<EmberPlusConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<VideohubServerConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
-				<ArtnetConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
+				<SatelliteConfig {...userConfigProps} />
+				<TcpConfig {...userConfigProps} />
+				<UdpConfig {...userConfigProps} />
+				<HttpConfig {...userConfigProps} />
+				<OscConfig {...userConfigProps} />
+				<RosstalkConfig {...userConfigProps} />
+				<EmberPlusConfig {...userConfigProps} />
+				<VideohubServerConfig {...userConfigProps} />
+				<ArtnetConfig {...userConfigProps} />
 
-				<AdminPasswordConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
+				<AdminPasswordConfig {...userConfigProps} />
 
-				<HttpsConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
+				<HttpsConfig {...userConfigProps} />
 
-				<ExperimentsConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
+				<ExperimentsConfig {...userConfigProps} />
 			</tbody>
 		</table>
 	)
