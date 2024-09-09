@@ -146,6 +146,19 @@ export class SurfaceGroup {
 			...this.groupConfig,
 		}
 
+		// Live fixup the last_page config
+		if (this.groupConfig.last_page) {
+			this.groupConfig.last_page_id =
+				this.#pageController.getPageInfo(this.groupConfig.last_page)?.id ?? this.groupConfig.last_page_id
+			delete this.groupConfig.last_page
+		}
+		// Live fixup the startup_page config
+		if (this.groupConfig.startup_page) {
+			this.groupConfig.startup_page_id =
+				this.#pageController.getPageInfo(this.groupConfig.startup_page)?.id ?? this.groupConfig.startup_page_id
+			delete this.groupConfig.startup_page
+		}
+
 		// Determine the correct page to use
 		if (this.groupConfig.use_last_page) {
 			this.#currentPageId = this.groupConfig.last_page_id ?? '' // Fixed later if needed

@@ -22,9 +22,14 @@ export interface ClientDevicesListItem {
 
 export interface SurfaceGroupConfig {
 	name: string
-	last_page_id: string // nocommit TODO migration
-	startup_page_id: string // nocommit TODO migration
+	last_page_id: string
+	startup_page_id: string
 	use_last_page: boolean
+
+	/** @deprecated. replaced by last_page_id */
+	last_page?: number
+	/** @deprecated. replaced by startup_page_id */
+	startup_page?: number
 }
 
 export type SurfacePanelConfig = Record<string, any>
