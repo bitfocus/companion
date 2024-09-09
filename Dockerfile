@@ -1,4 +1,4 @@
-FROM node:18-bookworm as companion-builder
+FROM node:22-bookworm AS companion-builder
 
 # Installation Prep
 RUN apt-get update && apt-get install -y \
