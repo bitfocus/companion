@@ -529,7 +529,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								<CButton title="Add step" size="sm" onClick={appendStep}>
 									<FontAwesomeIcon icon={faPlus} />
 								</CButton>
-								<CButton title="Duplicate step" size="sm" onClick={() => duplicateStep('1')}>
+								<CButton title="Duplicate step" size="sm" onClick={() => duplicateStep(keys[0])}>
 									<FontAwesomeIcon icon={faCopy} />
 								</CButton>
 							</div>
