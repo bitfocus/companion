@@ -67,7 +67,7 @@
 		"ejson": "^2.2.3",
 		"emberplus-connection": "^0.2.1",
 		"env-paths": "^3.0.0",
-		"express": "^4.19.2",
+		"express": "^4.20.0",
 		"express-serve-zip": "^1.1.0",
 		"fast-json-patch": "^3.1.1",
 		"find-process": "patch:find-process@npm%3A1.4.7#~/.yarn/patches/find-process-npm-1.4.7-e91aca1924.patch",
