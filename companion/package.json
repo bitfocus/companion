@@ -82,7 +82,7 @@
 		"osc": "2.4.5",
 		"p-debounce": "^4.0.0",
 		"p-queue": "^8.0.1",
-		"path-to-regexp": "^7.1.0",
+		"path-to-regexp": "^8.0.0",
 		"pngjs": "^7.0.0",
 		"respawn": "*",
 		"selfsigned": "^2.4.1",

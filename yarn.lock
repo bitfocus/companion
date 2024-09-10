@@ -6797,7 +6797,7 @@ asn1@evs-broadcast/node-asn1:
     osc: "npm:2.4.5"
     p-debounce: "npm:^4.0.0"
     p-queue: "npm:^8.0.1"
-    path-to-regexp: "npm:^7.1.0"
+    path-to-regexp: "npm:^8.0.0"
     pngjs: "npm:^7.0.0"
     respawn: "npm:*"
     selfsigned: "npm:^2.4.1"
@@ -12220,10 +12220,10 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"path-to-regexp@npm:^7.1.0":
-  version: 7.1.0
-  resolution: "path-to-regexp@npm:7.1.0"
-  checksum: 10c0/8a5e6a496e980c7e8769bfa57fa9e2b6c79a9410e59739095f0bc9ea847b5d719ba629d4840dc1428791082d73e7d4a08bc1223a365eae26653f8f0eb0e0f7cb
+"path-to-regexp@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "path-to-regexp@npm:8.0.0"
+  checksum: 10c0/21a24e929b975a9c70507d6554b4c5cb9171fd06a7040d178f20bee5ab15d7624bf1803a6ee6776703e9ecdb6a354f1cf5f7636d5bb9e779f73d34ce8c53eccb
   languageName: node
   linkType: hard
 
