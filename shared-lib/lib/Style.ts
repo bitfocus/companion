@@ -1,4 +1,4 @@
-export const ButtonStyleProperties = [
+export const ButtonStyleProperties: { id: string; label: string }[] = [
 	{ id: 'text', label: 'Text' },
 	{ id: 'size', label: 'Font Size' },
 	{ id: 'png64', label: 'PNG' },

@@ -1,18 +1,16 @@
+import type { ControlLocation } from './Model/Common.js'
+
 /**
  * Present a location as a string
- * @param {import("./Model/Common.js").ControlLocation} location
- * @returns {string}
  */
-export function formatLocation(location) {
+export function formatLocation(location: ControlLocation): string {
 	return `${location.pageNumber ?? '?'}/${location.row ?? '?'}/${location.column ?? '?'}`
 }
 
 /**
  * Convert old bank index to xy
- * @param {number} bank
- * @returns {[number, number] | null}
  */
-export function oldBankIndexToXY(bank) {
+export function oldBankIndexToXY(bank: number): [number, number] | null {
 	bank = Number(bank)
 	if (isNaN(bank) || bank <= 0 || bank > 32) return null
 	bank -= 1
@@ -27,11 +25,8 @@ export function oldBankIndexToXY(bank) {
 
 /**
  * Combine xy values into old bank index
- * @param {number} x
- * @param {number} y
- * @returns {number | null}
  */
-export function xyToOldBankIndex(x, y) {
+export function xyToOldBankIndex(x: number, y: number): number | null {
 	const perRow = 8
 	if (x < 0 || y < 0 || x >= perRow || y >= 4) return null
 
@@ -40,28 +35,32 @@ export function xyToOldBankIndex(x, y) {
 
 /**
  * Create full bank control id
- * @param {string} id
- * @returns {string}
  */
-export function CreateBankControlId(id) {
+export function CreateBankControlId(id: string): string {
 	return `bank:${id}`
 }
 
 /**
  * Create full trigger control id
- * @param {string} triggerId
- * @returns {string}
  */
-export function CreateTriggerControlId(triggerId) {
+export function CreateTriggerControlId(triggerId: string): string {
 	return `trigger:${triggerId}`
 }
 
+export interface ParsedControlIdBank {
+	type: 'bank'
+	control: string
+}
+export interface ParsedControlIdTrigger {
+	type: 'trigger'
+	trigger: string
+}
+export type ParsedControlIdType = ParsedControlIdBank | ParsedControlIdTrigger
+
 /**
  * Parse a controlId
- * @param {string} controlId
- * @returns {{ type: 'bank', control: string } | { type: 'trigger', trigger: string} | undefined}
  */
-export function ParseControlId(controlId) {
+export function ParseControlId(controlId: string): ParsedControlIdType | undefined {
 	if (typeof controlId === 'string') {
 		const match = controlId.match(/^bank:(.*)$/)
 		if (match) {

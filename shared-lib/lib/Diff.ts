@@ -1,15 +1,14 @@
 import jsonPatch from 'fast-json-patch'
+import type { ObjectsDiff } from './Model/Common.js'
 
 /**
  * Diff a structure of objects, generating a json-patch for each inner object individually
- * @template T
- * @param {Record<string, T | undefined>} oldObjects
- * @param {Record<string, T | undefined>} newObjects
- * @returns {import("./Model/Common.js").ObjectsDiff<T> | undefined}
  */
-export function diffObjects(oldObjects, newObjects) {
-	/** @type {import("./Model/Common.js").ObjectsDiff<T>} */
-	const diff = {
+export function diffObjects<T>(
+	oldObjects: Record<string, T | undefined>,
+	newObjects: Record<string, T | undefined>
+): ObjectsDiff<T> | undefined {
+	const diff: ObjectsDiff<T> = {
 		added: {},
 		changed: {},
 		removed: [],

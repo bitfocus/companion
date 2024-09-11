@@ -23,7 +23,7 @@ import ModuleHost, { ConnectionDebugLogRoom } from './Host.js'
 import InstanceStatus from './Status.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
+import { isLabelValid, makeLabelSafe } from '../../../shared-lib/dist/Label.js'
 import InstanceModules from './Modules.js'
 
 const InstancesRoom = 'instances'

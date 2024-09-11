@@ -16,7 +16,7 @@
  */
 
 import LogController from '../Log/Controller.js'
-import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
+import { isCustomVariableValid } from '../../../shared-lib/dist/CustomVariable.js'
 
 const custom_variable_prefix = `custom_`
 

@@ -4,7 +4,7 @@ import CoreBase from '../Core/Base.js'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import ControlButtonNormal from '../Controls/ControlTypes/Button/Normal.js'
 import jsonPatch from 'fast-json-patch'
-import { diffObjects } from '@companion-app/shared/Diff.js'
+import { diffObjects } from '../../../shared-lib/dist/Diff.js'
 import { replaceAllVariables } from '../Variables/Util.js'
 
 const PresetsRoom = 'presets'

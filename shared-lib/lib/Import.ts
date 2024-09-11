@@ -1,14 +1,9 @@
-/**
- * @typedef {{label?: string; sortOrder?: number}} MinimalInstanceInfo
- */
+export type MinimalInstanceInfo = { label?: string; sortOrder?: number }
 
-/**
- *
- * @param {[id: string, obj: MinimalInstanceInfo | undefined]} param0
- * @param {[id: string, obj: MinimalInstanceInfo | undefined]} param1
- * @returns number
- */
-export function compareExportedInstances([aId, aObj], [bId, bObj]) {
+export function compareExportedInstances(
+	[aId, aObj]: [id: string, obj: MinimalInstanceInfo | undefined],
+	[bId, bObj]: [id: string, obj: MinimalInstanceInfo | undefined]
+): number {
 	if (!aObj || !bObj) return 0 // Satisfy typings
 
 	// If order is the same, sort by label

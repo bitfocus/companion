@@ -5,11 +5,11 @@
   "exports": {
     "./*.js": {
       "types": "./dist/*.d.ts",
-      "default": "./lib/*.js"
+      "default": "./dist/*.js"
     },
     "./*.cjs": {
       "types": "./dist/*.d.cts",
-      "default": "./lib/*.cjs"
+      "default": "./dist/*.cjs"
     }
   },
   "dependencies": {
