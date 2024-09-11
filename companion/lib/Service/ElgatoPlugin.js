@@ -3,7 +3,7 @@ import ServiceBase from './Base.js'
 import { WebSocketServer, WebSocket } from 'ws'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { EventEmitter } from 'events'
-import ImageWriteQueue from '../Resources/ImageWriteQueue.js'
+import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import { transformButtonImage } from '../Resources/Util.js'
 
@@ -391,7 +391,7 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 	currentPageId = ''
 
 	/**
-	 * @type {ImageWriteQueue}
+	 * @type {ImageWriteQueue<string | number, [Record<string, number | null>, import('../Graphics/ImageResult.js').ImageResult]>}
 	 * @access private
 	 */
 	#write_queue
@@ -410,7 +410,7 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 			this.#logger,
 			async (
 				/** @type {string | number} */ _id,
-				/** @type {Record<string, number>} */ partial,
+				/** @type {Record<string, number | null>} */ partial,
 				/** @type {import('../Graphics/ImageResult.js').ImageResult} */ render
 			) => {
 				const targetSize = 72 // Compatibility

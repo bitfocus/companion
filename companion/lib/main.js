@@ -27,7 +27,7 @@ program.command('check-launches', { hidden: true }).action(() => {
 
 program
 	.option('--list-interfaces', 'List the available network interfaces that can be passed to --admin-interface')
-	.option('--admin-port <number>', 'Set the port the admin ui should bind to', 8000)
+	.option('--admin-port <number>', 'Set the port the admin ui should bind to', '8000')
 	.option(
 		'--admin-interface <string>',
 		'Set the interface the admin ui should bind to. The first ip on this interface will be used'
@@ -49,6 +49,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 
 		const interfaces = os.networkInterfaces()
 		for (const [ifname, ifgroup] of Object.entries(interfaces)) {
+			if (!ifgroup) continue
 			for (const ifAddr of ifgroup) {
 				// onlt show non-ipv4 addresses for now
 				if ('IPv4' === ifAddr.family) {
@@ -97,6 +98,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	let configDir = options.configDir
 	if (!configDir) {
 		// Check the old location first
+		// @ts-ignore
 		configDir = path.join(process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'], 'companion')
 		if (!fs.pathExistsSync(configDir)) {
 			// Creating a new folder, so use the proper place
@@ -162,9 +164,8 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	if (!machineId) {
 		// Use stored value
 		if (fs.pathExistsSync(machineIdPath)) {
-			let text = ''
 			try {
-				text = fs.readFileSync(machineIdPath)
+				const text = fs.readFileSync(machineIdPath)
 				if (text) {
 					machineId = text.toString()
 				}

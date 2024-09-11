@@ -15,49 +15,44 @@
  *
  */
 
-class ImageWriteQueue {
+import type winston from 'winston'
+
+export class ImageWriteQueue<TKey extends string | number, TArgs extends any[]> {
 	/**
 	 * Images currently being processed
-	 * @type {Set<number | string>}
-	 * @access private
-	 * @readonly
 	 */
-	#inProgress = new Set()
+	readonly #inProgress = new Set<TKey>()
 
 	/**
 	 * Maximum number of images to process concurrently
-	 * @type {number}
-	 * @access private
-	 * @readonly
 	 */
-	#maxConcurrent = 3
+	readonly #maxConcurrent: number = 3
 
 	/**
 	 * Images pending being processed
-	 * @type {{ key: number | string, args: any[] }[]}
-	 * @access private
-	 * @readonly
 	 */
-	#pendingImages = []
+	readonly #pendingImages: Array<{ key: TKey; args: TArgs }> = []
 
-	/**
-	 * @param {import('winston').Logger} logger
-	 * @param {Function} callback
-	 * @param {number=} maxConcurrent
-	 */
-	constructor(logger, callback, maxConcurrent) {
-		this.logger = logger
-		this.callback = callback
+	readonly #logger: winston.Logger
+	readonly #callback: (key: TKey, ...args: TArgs) => Promise<void>
+
+	constructor(
+		logger: winston.Logger,
+		callback: (key: TKey, ...args: NoInfer<TArgs>) => Promise<void>,
+		maxConcurrent?: number
+	) {
+		this.#logger = logger
+		this.#callback = callback
 
 		if (maxConcurrent !== undefined) this.#maxConcurrent = maxConcurrent
 	}
 
 	/**
 	 * Queue an operation for the queue
-	 * @param {number | string} key
-	 * @param {...any} args Arguments for the callback
+	 * @param key
+	 * @param args Arguments for the callback
 	 */
-	queue(key, ...args) {
+	queue(key: TKey, ...args: TArgs): void {
 		let updated = false
 		// Try and replace an existing queued image first
 		for (const img of this.#pendingImages) {
@@ -97,10 +92,10 @@ class ImageWriteQueue {
 			// Track which key is being processed
 			this.#inProgress.add(nextImage.key)
 
-			this.callback(nextImage.key, ...nextImage.args)
+			this.#callback(nextImage.key, ...nextImage.args)
 				.catch((/** @type {any} */ e) => {
 					// Ensure it doesnt error out
-					this.logger.silly('fillImage error:', e)
+					this.#logger.silly('fillImage error:', e)
 				})
 				.then(() => {
 					// Stop tracking key
@@ -114,5 +109,3 @@ class ImageWriteQueue {
 		}
 	}
 }
-
-export default ImageWriteQueue

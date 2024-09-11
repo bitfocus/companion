@@ -1,6 +1,6 @@
-/** @type Array<string | null> */
+/** @type Array<string> */
 const ConfigReleaseDirs = [
-	null, // Root
+	'', // Root
 	// The config subfolders that exist.
 	// For each major/minor release, a new entry should be added here,
 	'v3.0',

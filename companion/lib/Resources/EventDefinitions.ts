@@ -1,5 +1,8 @@
 import dayjs from 'dayjs'
 import os from 'os'
+import type { EventDefinition } from '@companion-app/shared/Model/Common.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { InternalVisitor } from '../Internal/Types.js'
 
 /**
  * Definitions for the trigger event types
@@ -23,12 +26,7 @@ import os from 'os'
  * disclosing the source code of your own applications.
  */
 
-/**
- * @typedef {import('@companion-app/shared/Model/Common.js').EventDefinition} EventDefinition
- */
-
-/** @type {Record<string, EventDefinition>} */
-export const EventDefinitions = {
+export const EventDefinitions: Record<string, EventDefinition> = {
 	interval: {
 		name: 'Time Interval',
 		options: [
@@ -178,11 +176,10 @@ switch (os.platform()) {
 
 /**
  * Visit any references within an event
- * @param {import('../Internal/Types.js').InternalVisitor} visitor Visitor to be used
- * @param {import('@companion-app/shared/Model/EventModel.js').EventInstance} event Events to fixup
- * @returns {void}
+ * @param visitor Visitor to be used
+ * @param event Events to fixup
  */
-export function visitEventOptions(visitor, event) {
+export function visitEventOptions(visitor: InternalVisitor, event: EventInstance): void {
 	// Handle special cases
 	if (event.type === 'variable_changed') {
 		visitor.visitVariableName(event.options, 'variableId')

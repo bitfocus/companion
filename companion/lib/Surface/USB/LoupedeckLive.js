@@ -17,7 +17,7 @@
 
 import { EventEmitter } from 'events'
 import { LoupedeckBufferFormat, LoupedeckModelId, openLoupedeck } from '@loupedeck/node'
-import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
+import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import LogController from '../../Log/Controller.js'
 import { convertPanelIndexToXY } from '../Util.js'
@@ -175,7 +175,7 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 	#modelInfo
 
 	/**
-	 * @type {ImageWriteQueue}
+	 * @type {ImageWriteQueue<number, [import('../../Graphics/ImageResult.js').ImageResult]>}
 	 * @access private
 	 */
 	#writeQueue

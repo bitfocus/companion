@@ -21,7 +21,7 @@ import GraphicsRenderer from './Renderer.js'
 import CoreBase from '../Core/Base.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
-import ImageWriteQueue from '../Resources/ImageWriteQueue.js'
+import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
@@ -72,6 +72,9 @@ class GraphicsController extends CoreBase {
 	 */
 	#renderLRUCache = new LRUCache({ max: 100 })
 
+	/**
+	 * @type {ImageWriteQueue<string, [import('../Resources/Util.js').ControlLocation, boolean]>}
+	 */
 	#renderQueue
 
 	#pool = workerPool.pool(

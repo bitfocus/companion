@@ -1,19 +1,31 @@
 import { serializeIsVisibleFn } from '@companion-module/base/dist/internal/base.js'
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
+import type { ImageResult } from '../Graphics/ImageResult.js'
+import type { SurfaceRotation } from '../Surface/Util.js'
+import type Registry from '../Registry.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@companion-app/shared/Model/Options.js'
+import type { CompanionInputFieldBase } from '@companion-module/base'
 
-/** @typedef {import('@companion-app/shared/Model/Common.js').ControlLocation} ControlLocation */
+/** @deprecated remove this re-export */
+export { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 /**
  * Combine rgba components to a 32bit value
- * @param {number | string} a 0-255
- * @param {number | string} r 0-255
- * @param {number | string} g 0-255
- * @param {number | string} b 0-255
- * @param {number} base
- * @returns {number | false}
+ * @param a 0-255
+ * @param r 0-255
+ * @param g 0-255
+ * @param b 0-255
+ * @param base
  */
-export const argb = (a, r, g, b, base = 10) => {
+export function argb(
+	a: number | string,
+	r: number | string,
+	g: number | string,
+	b: number | string,
+	base = 10
+): number | false {
 	// @ts-ignore
 	a = parseInt(a, base)
 	// @ts-ignore
@@ -33,10 +45,8 @@ export const argb = (a, r, g, b, base = 10) => {
 
 /**
  * Convert a 24bit number itno rgb components
- * @param {number} decimal
- * @returns {{ red: number, green: number, blue: number }}
  */
-export const decimalToRgb = (decimal) => {
+export const decimalToRgb = (decimal: number): { red: number; green: number; blue: number } => {
 	return {
 		red: (decimal >> 16) & 0xff,
 		green: (decimal >> 8) & 0xff,
@@ -46,13 +56,12 @@ export const decimalToRgb = (decimal) => {
 
 /**
  * Combine rgb components to a 24bit value
- * @param {number | string} r 0-255
- * @param {number | string} g 0-255
- * @param {number | string} b 0-255
- * @param {number} base
- * @returns {number | false}
+ * @param r 0-255
+ * @param g 0-255
+ * @param b 0-255
+ * @param base
  */
-export const rgb = (r, g, b, base = 10) => {
+export const rgb = (r: number | string, g: number | string, b: number | string, base = 10): number | false => {
 	// @ts-ignore
 	r = parseInt(r, base)
 	// @ts-ignore
@@ -66,10 +75,8 @@ export const rgb = (r, g, b, base = 10) => {
 
 /**
  * Convert a 24bit/32bit number itno rgb components
- * @param {number} dec
- * @returns {{ a:number, r: number, g: number, b: number }}
  */
-export const rgbRev = (dec) => {
+export const rgbRev = (dec: number): { a: number; r: number; g: number; b: number } => {
 	dec = Math.floor(dec)
 	return {
 		a: dec > 0xffffff ? (255 - ((dec & 0xff000000) >>> 24)) / 255 : 1,
@@ -81,11 +88,11 @@ export const rgbRev = (dec) => {
 
 /**
  * parse a Companion color number or a css color string and return a css color string
- * @param {number|string} color
- * @param {boolean|undefined} skipValidation defaults to false
- * @returns {string} a css color string
+ * @param color
+ * @param skipValidation defaults to false
+ * @returns a css color string
  */
-export const parseColor = (color, skipValidation = false) => {
+export const parseColor = (color: number | string, skipValidation = false): string => {
 	if (typeof color === 'number' || (typeof color === 'string' && !isNaN(Number(color)))) {
 		const col = rgbRev(Number(color))
 		return `rgba(${col.r}, ${col.g}, ${col.b}, ${col.a})`
@@ -103,10 +110,8 @@ export const parseColor = (color, skipValidation = false) => {
 
 /**
  * Parse a css color string to a number
- * @param {any} color
- * @returns {number | false}
  */
-export const parseColorToNumber = (color) => {
+export const parseColorToNumber = (color: string | number | Uint8Array): number | false => {
 	if (typeof color === 'string') {
 		const newColor = colord(color)
 		if (newColor.isValid()) {
@@ -122,13 +127,13 @@ export const parseColorToNumber = (color) => {
 }
 
 /**
- * @param {number} milliseconds
+ * @param milliseconds
  */
-export const delay = (milliseconds) => {
+export const delay = (milliseconds: number) => {
 	return new Promise((resolve) => setTimeout(resolve, milliseconds || 0))
 }
 
-export const getTimestamp = () => {
+export const getTimestamp = (): string => {
 	let d = new Date()
 	let year = d.getFullYear().toString()
 	let month = convert2Digit(d.getMonth() + 1)
@@ -141,10 +146,8 @@ export const getTimestamp = () => {
 
 /**
  * Convert a number to a 2 digit string
- * @param {number} num
- * @returns {string}
  */
-export const convert2Digit = (num) => {
+export const convert2Digit = (num: number): string => {
 	if (num < 10) {
 		return '0' + num
 	} else {
@@ -154,36 +157,28 @@ export const convert2Digit = (num) => {
 
 /**
  * Check if Satellite API value is falsey
- * @param {any} val
- * @returns {boolean}
  */
-export const isFalsey = (val) => {
+export const isFalsey = (val: any): boolean => {
 	return (typeof val === 'string' && val.toLowerCase() == 'false') || val == '0' || !Boolean(val)
 }
 
 /**
  * Check if Satellite API value is truthy
- * @param {any} val
- * @returns {boolean}
  */
-export const isTruthy = (val) => {
+export const isTruthy = (val: any): boolean => {
 	return (
 		!isFalsey(val) &&
 		((typeof val === 'string' && (val.toLowerCase() == 'true' || val.toLowerCase() == 'yes')) || Number(val) >= 1)
 	)
 }
 
-/**
- * @typedef {Record<string, string | true | undefined>} ParsedParams
- */
+export type ParsedParams = Record<string, string | true | undefined>
 
 /**
  * Parse a Satellite API message
- * @param {string} line
- * @returns {ParsedParams}
  */
-export function parseLineParameters(line) {
-	const makeSafe = (/** @type {number} */ index) => {
+export function parseLineParameters(line: string): ParsedParams {
+	const makeSafe = (index: number) => {
 		return index === -1 ? Number.POSITIVE_INFINITY : index
 	}
 
@@ -232,8 +227,7 @@ export function parseLineParameters(line) {
 		}
 	}
 
-	/** @type {ParsedParams} */
-	const res = {}
+	const res: ParsedParams = {}
 
 	for (const fragment of fragments) {
 		const [key, value] = fragment.split('=', 2)
@@ -247,12 +241,12 @@ export function parseLineParameters(line) {
  * Checks if parameter is one of the list and returns it if so.
  * If it is not in the list but a trueish value, the defaultVal will be returned.
  * Otherwise returnes null.
- * @param {string[]} list
- * @param {string} defaultVal
- * @param {unknown} parameter
- * @returns {string | null}
  */
-export function parseStringParamWithBooleanFallback(list, defaultVal, parameter) {
+export function parseStringParamWithBooleanFallback(
+	list: string[],
+	defaultVal: string,
+	parameter: unknown
+): string | null {
 	const param = String(parameter)
 	if (list.includes(param)) {
 		return param
@@ -265,21 +259,15 @@ export function parseStringParamWithBooleanFallback(list, defaultVal, parameter)
 
 /**
  * Clamp a value to be within a range
- * @param {number} val
- * @param {number} min
- * @param {number} max
- * @returns {number}
  */
-export function clamp(val, min, max) {
+export function clamp(val: number, min: number, max: number): number {
 	return Math.min(Math.max(val, min), max)
 }
 
 /**
  * Translate rotation to @julusian/image-rs equivalent
- * @param {import('../Surface/Util.js').SurfaceRotation | 90 | -90 | 180 | 0 | null} rotation
- * @returns {imageRs.RotationMode | null}
  */
-export function translateRotation(rotation) {
+export function translateRotation(rotation: SurfaceRotation | 90 | -90 | 180 | 0 | null): imageRs.RotationMode | null {
 	if (rotation === 90 || rotation === 'surface90') return imageRs.RotationMode.CW270
 	if (rotation === -90 || rotation === 'surface-90') return imageRs.RotationMode.CW90
 	if (rotation === 180 || rotation === 'surface180') return imageRs.RotationMode.CW180
@@ -288,14 +276,14 @@ export function translateRotation(rotation) {
 
 /**
  * Transform a button image render to the format needed for a surface integration
- * @param {import('../Graphics/ImageResult.js').ImageResult} render
- * @param {import('../Surface/Util.js').SurfaceRotation | 90 | -90 | 180 | 0 | null} rotation
- * @param {number} targetWidth
- * @param {number} targetHeight
- * @param {imageRs.PixelFormat} targetFormat
- * @returns {Promise<Buffer>}
  */
-export async function transformButtonImage(render, rotation, targetWidth, targetHeight, targetFormat) {
+export async function transformButtonImage(
+	render: ImageResult,
+	rotation: SurfaceRotation | 90 | -90 | 180 | 0 | null,
+	targetWidth: number,
+	targetHeight: number,
+	targetFormat: imageRs.PixelFormat
+): Promise<Buffer> {
 	let image = imageRs.ImageTransformer.fromBuffer(
 		render.buffer,
 		render.bufferWidth,
@@ -326,10 +314,8 @@ export async function transformButtonImage(render, rotation, targetWidth, target
 
 /**
  * Show an fatal error message to the user, and exit
- * @param {string} title
- * @param {string} message
  */
-export async function showFatalError(title, message) {
+export function showFatalError(title: string, message: string): void {
 	sendOverIpc({
 		messageType: 'fatal-error',
 		title,
@@ -342,10 +328,8 @@ export async function showFatalError(title, message) {
 
 /**
  * Show an error message to the user
- * @param {string} title
- * @param {string} message
  */
-export async function showErrorMessage(title, message) {
+export function showErrorMessage(title: string, message: string): void {
 	sendOverIpc({
 		messageType: 'show-error',
 		title,
@@ -357,9 +341,8 @@ export async function showErrorMessage(title, message) {
 
 /**
  * Send message over IPC to parent
- * @param {any} data
  */
-export function sendOverIpc(data) {
+export function sendOverIpc(data: any) {
 	if (process.env.COMPANION_IPC_PARENT && process.send) {
 		process.send(data)
 	}
@@ -367,19 +350,18 @@ export function sendOverIpc(data) {
 
 /**
  * Whether the application is packaged with webpack
- * @returns {boolean}
  */
-export function isPackaged() {
+export function isPackaged(): boolean {
 	return typeof __webpack_require__ === 'function'
 }
 
 /**
  * Get the size of the bitmap for a button
- * @param {import('../Registry.js').default} registry
- * @param {any} style
- * @returns {{ width: number, height: number }}
  */
-export function GetButtonBitmapSize(registry, style) {
+export function GetButtonBitmapSize(
+	registry: Registry,
+	style: ButtonStyleProperties
+): { width: number; height: number } {
 	let removeTopBar = !style.show_topbar
 	if (style.show_topbar === 'default' || style.show_topbar === undefined) {
 		removeTopBar = registry.userconfig.getKey('remove_topbar') === true
@@ -398,23 +380,13 @@ export function GetButtonBitmapSize(registry, style) {
 	}
 }
 
-/**
- *
- * @param {string} variableId
- * @returns {[string, string]}
- */
-export function SplitVariableId(variableId) {
+export function SplitVariableId(variableId: string): [string, string] {
 	const res = TrySplitVariableId(variableId)
 	if (res === null) throw new Error(`"${variableId}" is not a valid variable id`)
 	return res
 }
 
-/**
- *
- * @param {string} variableId
- * @returns {[string, string] | null}
- */
-export function TrySplitVariableId(variableId) {
+export function TrySplitVariableId(variableId: string): [string, string] | null {
 	if (!variableId) return null
 	const splitIndex = variableId.indexOf(':')
 	if (splitIndex === -1) return null
@@ -427,15 +399,16 @@ export function TrySplitVariableId(variableId) {
 
 /**
  * Parse an alignment value
- * @param {string} alignment
- * @param {boolean=} validate Throw if value is invalid
- * @returns {[horizontal: 'left' | 'right' | 'center', vertical: 'top' | 'bottom' | 'center', full: string]}
+ * @param alignment
+ * @param validate Throw if value is invalid
  */
-export function ParseAlignment(alignment, validate) {
+export function ParseAlignment(
+	alignment: string,
+	validate?: boolean
+): [horizontal: 'left' | 'right' | 'center', vertical: 'top' | 'bottom' | 'center', full: string] {
 	const [halignRaw, valignRaw] = alignment.toLowerCase().split(':', 2)
 
-	/** @type {'left' | 'right' | 'center'} */
-	let halign
+	let halign: 'left' | 'right' | 'center'
 	if (halignRaw !== 'left' && halignRaw !== 'right' && halignRaw !== 'center') {
 		if (validate) throw new Error(`Invalid horizontal component: "${halignRaw}"`)
 
@@ -444,8 +417,7 @@ export function ParseAlignment(alignment, validate) {
 		halign = halignRaw
 	}
 
-	/** @type {'top' | 'bottom' | 'center'} */
-	let valign
+	let valign: 'top' | 'bottom' | 'center'
 	if (valignRaw !== 'top' && valignRaw !== 'bottom' && valignRaw !== 'center') {
 		if (validate) throw new Error(`Invalid vertical component: "${valignRaw}"`)
 
@@ -457,13 +429,9 @@ export function ParseAlignment(alignment, validate) {
 	return [halign, valign, `${halign}:${valign}`]
 }
 
-/**
- *
- * @template {import('@companion-module/base').CompanionInputFieldBase | import('../Internal/Types.js').CompanionInputFieldBaseExtended} T
- * @param {T} field
- * @returns {import('../Internal/Types.js').EncodeIsVisible2<T>}
- */
-export function serializeIsVisibleFnSingle(field) {
+export function serializeIsVisibleFnSingle<T extends CompanionInputFieldBase | CompanionInputFieldBaseExtended>(
+	field: T
+): EncodeIsVisible2<T> {
 	// @ts-ignore
 	return serializeIsVisibleFn([field])[0]
 }

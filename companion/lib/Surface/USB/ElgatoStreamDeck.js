@@ -20,7 +20,7 @@ import { DeviceModelId, openStreamDeck } from '@elgato-stream-deck/node'
 import util from 'util'
 import imageRs from '@julusian/image-rs'
 import LogController from '../../Log/Controller.js'
-import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
+import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
 import {
@@ -87,6 +87,11 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	#streamDeck
 
 	/**
+	 * @type {ImageWriteQueue<string, [number, number, import('../../Graphics/ImageResult.js').ImageResult]>}
+	 */
+	#writeQueue
+
+	/**
 	 * Whether to cleanup the deck on quit
 	 */
 	#shouldCleanupOnQuit = true
@@ -131,7 +136,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			rows: Math.max(...allRowValues) + 1,
 		}
 
-		this.write_queue = new ImageWriteQueue(
+		this.#writeQueue = new ImageWriteQueue(
 			this.#logger,
 			async (
 				/** @type {string} */ _id,
@@ -417,7 +422,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	 * @returns {void}
 	 */
 	draw(x, y, render) {
-		this.write_queue.queue(`${x}_${y}`, x, y, render)
+		this.#writeQueue.queue(`${x}_${y}`, x, y, render)
 	}
 }
 
