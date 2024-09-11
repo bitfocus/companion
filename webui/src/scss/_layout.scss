@@ -131,6 +131,10 @@ body {
 }
 
 .nav.nav-tabs {
+	.nav-last {
+		margin-left: auto;
+	}
+
 	.nav-item .nav-link {
 		border: 1px solid rgba(255, 255, 255, 0);
 		padding-bottom: 8px;

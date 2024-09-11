@@ -189,6 +189,7 @@ export interface ClientToBackendEventsMap {
 	'controls:action-set:remove': (controlId: string, stepId: string, setId: string) => boolean
 
 	'controls:step:add': (controlId: string) => string | false
+	'controls:step:duplicate': (controlId: string, stepId: string) => boolean
 	'controls:step:remove': (controlId: string, stepId: string) => boolean
 	'controls:step:swap': (controlId: string, stepId1: string, stepId2: string) => boolean
 	'controls:step:set-current': (controlId: string, stepId: string) => boolean
