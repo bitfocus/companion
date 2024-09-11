@@ -31,9 +31,9 @@ import shuttleControlUSB from 'shuttle-control-usb'
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
-import SurfaceIPElgatoEmulator, { EmulatorRoom } from './IP/ElgatoEmulator.js'
-import SurfaceIPElgatoPlugin from './IP/ElgatoPlugin.js'
-import SurfaceIPSatellite, { SatelliteDeviceInfo } from './IP/Satellite.js'
+import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
+import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
+import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
 import ElgatoStreamDeckDriver from './USB/ElgatoStreamDeck.js'
 import InfinittonDriver from './USB/Infinitton.js'
 import XKeysDriver from './USB/XKeys.js'
@@ -42,7 +42,7 @@ import SurfaceUSBLoupedeckCt from './USB/LoupedeckCt.js'
 import ContourShuttleDriver from './USB/ContourShuttle.js'
 import VECFootpedalDriver from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
-import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
+import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import MystrixDriver from './USB/203SystemsMystrix.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
@@ -880,7 +880,7 @@ export class SurfaceController extends CoreBase {
 										deviceInfo.usagePage === 0xffdd && // rawhid interface
 										deviceInfo.usage === 0x61
 									) {
-										await this.#addDevice(deviceInfo.path, {}, 'framework-macropad', FrameworkMacropadDriver)
+										await this.#addDevice(deviceInfo.path, {}, 'framework-macropad', SurfaceUSBFrameworkMacropad)
 									} else if (
 										this.userconfig.getKey('blackmagic_controller_enable') &&
 										getBlackmagicControllerDeviceInfo(deviceInfo)

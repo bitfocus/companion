@@ -18,50 +18,39 @@
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import { convertPanelIndexToXY } from '../Util.js'
+import { convertPanelIndexToXY, GridSize } from '../Util.js'
 import { LEGACY_MAX_BUTTONS } from '../../Util/Constants.js'
+import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type ControlsController from '../../Controls/Controller.js'
+import type PageController from '../../Page/Controller.js'
+import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
-class SurfaceIPElgatoPlugin extends EventEmitter {
-	#logger = LogController.createLogger('Surface/IP/ElgatoPlugin')
+export class SurfaceIPElgatoPlugin extends EventEmitter implements SurfacePanel {
+	readonly #logger = LogController.createLogger('Surface/IP/ElgatoPlugin')
 
-	/**
-	 * @type {import('../Util.js').GridSize}
-	 * @readonly
-	 * @access public
-	 */
-	gridSize = {
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize = {
 		columns: 8,
 		rows: 4,
 	}
 
-	/**
-	 * @type {Record<string, any>}
-	 * @access private
-	 */
-	_config = {
+	_config: Record<string, any> = {
 		rotation: 0,
 		never_lock: true,
 	}
 
-	/**
-	 * @type {import('../../Controls/Controller.js').default}
-	 * @access private
-	 */
-	#controlsController
+	readonly #controlsController: ControlsController
+	readonly #pageController: PageController
 
-	/**
-	 * @type {import('../../Page/Controller.js').default}
-	 * @access private
-	 */
-	#pageController
+	readonly socket: ServiceElgatoPluginSocket
 
-	/**
-	 * @param {import('../../Controls/Controller.js').default} controlsController
-	 * @param {import('../../Page/Controller.js').default} pageController
-	 * @param {string} devicePath
-	 * @param {import('../../Service/ElgatoPlugin.js').ServiceElgatoPluginSocket} socket
-	 */
-	constructor(controlsController, pageController, devicePath, socket) {
+	constructor(
+		controlsController: ControlsController,
+		pageController: PageController,
+		devicePath: string,
+		socket: ServiceElgatoPluginSocket
+	) {
 		super()
 
 		this.#controlsController = controlsController
@@ -79,7 +68,6 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 		this.#logger.debug(`Adding Elgato Streamdeck Plugin (${this.socket.supportsPng ? 'PNG' : 'Bitmap'})`)
 
-		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: 'Elgato Streamdeck Plugin',
 			devicePath: devicePath,
@@ -87,7 +75,7 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 			deviceId: 'plugin', // Note: this is also defined elsewhere
 		}
 
-		const triggerKeyPress = (/** @type {Record<string,any>} */ data, /** @type {boolean} */ pressed) => {
+		const triggerKeyPress = (data: Record<string, any>, pressed: boolean) => {
 			if ('row' in data || 'column' in data) {
 				if (data.page == null) {
 					this.emit('click', Number(data.column), Number(data.row), pressed)
@@ -122,10 +110,10 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 			}
 		}
 
-		socket.on('keydown', (data) => triggerKeyPress(data, true))
-		socket.on('keyup', (data) => triggerKeyPress(data, false))
+		socket.on('keydown', (data: any) => triggerKeyPress(data, true))
+		socket.on('keyup', (data: any) => triggerKeyPress(data, false))
 
-		socket.on('rotate', (data) => {
+		socket.on('rotate', (data: any) => {
 			const right = data.ticks > 0
 
 			if ('row' in data || 'column' in data) {
@@ -168,17 +156,15 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 	/**
 	 * Produce a click event
-	 * @param {number} key
-	 * @param {boolean} state
 	 */
-	#emitClick(key, state) {
+	#emitClick(key: number, state: boolean) {
 		const xy = convertPanelIndexToXY(key, this.gridSize)
 		if (xy) {
 			this.emit('click', ...xy, state)
 		}
 	}
 
-	quit() {
+	quit(): void {
 		this.socket.removeAllListeners('keyup')
 		this.socket.removeAllListeners('keydown')
 		this.socket.removeAllListeners('rotate')
@@ -186,12 +172,8 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
-	 * @returns {void}
 	 */
-	draw(x, y, render) {
+	draw(x: number, y: number, render: ImageResult): void {
 		if (this.socket.supportsCoordinates) {
 			// Uses manual subscriptions
 			return
@@ -208,7 +190,7 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 		}
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		this.#logger.silly('elgato.prototype.clearDeck()')
 
 		if (this.socket.supportsCoordinates) {
@@ -224,11 +206,9 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} _force
 	 * @returns false when nothing happens
 	 */
-	setConfig(config, _force) {
+	setConfig(config: Record<string, any>, _force = false): void {
 		this._config = config
 
 		// ensure rotation is disabled
@@ -236,5 +216,3 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 		this._config.never_lock = true
 	}
 }
-
-export default SurfaceIPElgatoPlugin

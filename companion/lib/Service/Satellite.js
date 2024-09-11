@@ -453,7 +453,7 @@ export default ServiceSatellite
  * @typedef {{
  *   id: string
  *   socket: Socket
- *   device: import('../Surface/IP/Satellite.js').default
+ *   device: import('../Surface/IP/Satellite.js').SurfaceIPSatellite
  * }} SatelliteDevice
  */
 

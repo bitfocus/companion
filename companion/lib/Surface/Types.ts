@@ -27,8 +27,8 @@ export interface SurfacePanelInfo {
 	location?: string
 }
 export interface SurfacePanel extends EventEmitter {
-	info: SurfacePanelInfo
-	gridSize: GridSize
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
 	clearDeck(): void
 	draw(x: number, y: number, render: ImageResult): void
 	drawMany?: (entries: DrawButtonItem[]) => void

@@ -21,18 +21,24 @@ import LogController from '../../Log/Controller.js'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
 import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { EmulatorConfig, EmulatorImage, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
+import type UIHandler from '../../UI/Handler.js'
+import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { GridSize } from '../Util.js'
+import type { ClientSocket } from '../../UI/Handler.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 /**
  *
  * @param {string} id
  * @returns {string}
  */
-export function EmulatorRoom(id) {
+export function EmulatorRoom(id: string): string {
 	return `emulator:${id}`
 }
 
-/** @type {import('@companion-app/shared/Model/Common.js').EmulatorConfig} */
-const DefaultConfig = {
+const DefaultConfig: EmulatorConfig = {
 	emulator_control_enable: false,
 	emulator_prompt_fullscreen: false,
 
@@ -40,8 +46,7 @@ const DefaultConfig = {
 	emulator_rows: 4,
 }
 
-/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
-const configFields = [
+const configFields: CompanionSurfaceConfigField[] = [
 	{
 		id: 'emulator_rows',
 		type: 'number',
@@ -77,46 +82,30 @@ const configFields = [
 	...LockConfigFields,
 ]
 
-class SurfaceIPElgatoEmulator extends EventEmitter {
-	#logger = LogController.createLogger('Surface/IP/ElgatoEmulator')
+export class SurfaceIPElgatoEmulator extends EventEmitter implements SurfacePanel {
+	readonly #logger = LogController.createLogger('Surface/IP/ElgatoEmulator')
 
-	/**
-	 * @type {string}
-	 */
-	#emulatorId
+	readonly #emulatorId: string
 
-	/**
-	 * @type {import('../../UI/Handler.js').default}
-	 */
-	#io
+	readonly #io: UIHandler
 
-	/**
-	 * @type {import('@companion-app/shared/Model/Common.js').EmulatorConfig}
-	 * @access private
-	 */
-	#lastSentConfigJson = cloneDeep(DefaultConfig)
+	#lastSentConfigJson: EmulatorConfig = cloneDeep(DefaultConfig)
 
-	/**
-	 * @type {Map<string, [number, number]>}
-	 */
-	#pendingBufferUpdates = new Map()
+	readonly #pendingBufferUpdates = new Map<string, [number, number]>()
 
-	/**
-	 * @type {import('@companion-app/shared/Model/Common.js').EmulatorImageCache}
-	 * @access private
-	 */
-	imageCache = {}
+	#imageCache: EmulatorImageCache = {}
+
+	readonly info: SurfacePanelInfo
 
 	#emitChanged = debounceFn(
 		() => {
 			if (this.#pendingBufferUpdates.size > 0) {
-				/** @type {import('@companion-app/shared/Model/Common.js').EmulatorImage[]} */
-				const newImages = []
+				const newImages: EmulatorImage[] = []
 				for (const [x, y] of this.#pendingBufferUpdates.values()) {
 					newImages.push({
 						x,
 						y,
-						buffer: this.imageCache[y]?.[x] || false,
+						buffer: this.#imageCache[y]?.[x] || false,
 					})
 				}
 
@@ -136,17 +125,12 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 		}
 	)
 
-	/**
-	 * @param {import('../../UI/Handler.js').default} io
-	 * @param {string} emulatorId
-	 */
-	constructor(io, emulatorId) {
+	constructor(io: UIHandler, emulatorId: string) {
 		super()
 
 		this.#io = io
 		this.#emulatorId = emulatorId
 
-		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: 'Emulator',
 			devicePath: `emulator:${emulatorId}`,
@@ -156,37 +140,30 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 
 		this.#logger.debug('Adding Elgato Streamdeck Emulator')
 
-		this.imageCache = {}
+		this.#imageCache = {}
 	}
 
-	get gridSize() {
+	get gridSize(): GridSize {
 		return {
 			columns: this.#lastSentConfigJson?.emulator_columns || 8,
 			rows: this.#lastSentConfigJson?.emulator_rows || 4,
 		}
 	}
 
-	/**
-	 * @param {import('../../UI/Handler.js').ClientSocket} client
-	 * @returns {import('@companion-app/shared/Model/Common.js').EmulatorConfig}
-	 */
-	setupClient(client) {
-		client.emit('emulator:images', this.imageCache)
+	setupClient(client: ClientSocket): EmulatorConfig {
+		client.emit('emulator:images', this.#imageCache)
 
 		return this.#lastSentConfigJson
 	}
 
-	getDefaultConfig() {
+	getDefaultConfig(): EmulatorConfig {
 		return cloneDeep(DefaultConfig)
 	}
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {import('@companion-app/shared/Model/Common.js').EmulatorConfig} config
-	 * @param {boolean=} _force
-	 * @returns {void}
 	 */
-	setConfig(config, _force) {
+	setConfig(config: EmulatorConfig, _force = false) {
 		// Populate some defaults
 		if (!config.emulator_columns) config.emulator_columns = this.getDefaultConfig().emulator_columns
 		if (!config.emulator_rows) config.emulator_rows = this.getDefaultConfig().emulator_rows
@@ -204,7 +181,7 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 		const oldSize = this.gridSize
 		if (config.emulator_columns !== oldSize.columns || config.emulator_rows !== oldSize.rows) {
 			// Clear the cache to ensure no bleed
-			this.imageCache = {}
+			this.#imageCache = {}
 
 			for (let y = 0; y < oldSize.rows; y++) {
 				for (let x = 0; x < oldSize.columns; x++) {
@@ -221,16 +198,12 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 		this.#lastSentConfigJson = cloneDeep(config)
 	}
 
-	quit() {}
+	quit(): void {}
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
-	 * @returns {void}
 	 */
-	draw(x, y, render) {
+	draw(x: number, y: number, render: ImageResult): void {
 		const size = this.gridSize
 		if (x < 0 || y < 0 || x >= size.columns || y >= size.rows) return
 
@@ -240,8 +213,8 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 			return
 		}
 
-		let yCache = this.imageCache[y]
-		if (!yCache) yCache = this.imageCache[y] = {}
+		let yCache = this.#imageCache[y]
+		if (!yCache) yCache = this.#imageCache[y] = {}
 		yCache[x] = dataUrl || undefined
 
 		this.#trackChanged(x, y)
@@ -250,19 +223,16 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 
 	/**
 	 * Track the pending changes
-	 * @param {number} x
-	 * @param {number} y
-	 * @returns {void}
 	 */
-	#trackChanged(x, y) {
+	#trackChanged(x: number, y: number): void {
 		this.#pendingBufferUpdates.set(`${x}/${y}`, [x, y])
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		this.#logger.silly('elgato.prototype.clearDeck()')
 
 		// clear all images
-		this.imageCache = {}
+		this.#imageCache = {}
 
 		const roomName = EmulatorRoom(this.#emulatorId)
 		if (this.#io.countRoomMembers(roomName) > 0) {
@@ -270,5 +240,3 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 		}
 	}
 }
-
-export default SurfaceIPElgatoEmulator

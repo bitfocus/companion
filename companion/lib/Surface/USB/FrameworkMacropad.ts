@@ -16,20 +16,21 @@
  */
 
 import { EventEmitter } from 'events'
-import LogController from '../../Log/Controller.js'
+import LogController, { Logger } from '../../Log/Controller.js'
 import { HIDAsync } from 'node-hid'
-import { colorToRgb } from './Util.js'
+import { colorToRgb, RgbColor } from './Util.js'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,
 	RotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { GridSize } from '../Util.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
-/**
- * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
- */
-const configFields = [
+const configFields: CompanionSurfaceConfigField[] = [
 	//
 	...OffsetConfigFields,
 	BrightnessConfigField,
@@ -43,41 +44,25 @@ const configFields = [
  * Hardware: https://frame.work/gb/en/products/16-rgb-macropad
  * It uses a custom firmware available from https://github.com/Julusian/framework_qmk_firmware
  */
-class SurfaceUSBFrameworkMacropad extends EventEmitter {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger
+export class SurfaceUSBFrameworkMacropad extends EventEmitter implements SurfacePanel {
+	readonly #logger: Logger
 
-	/**
-	 * @type {Record<string, any>}
-	 * @access private
-	 */
-	config = {}
+	config: Record<string, any> = {}
 
 	/**
 	 * HID device
-	 * @type {import('node-hid').HIDAsync}
-	 * @access private
-	 * @readonly
 	 */
-	#device
+	readonly #device: HIDAsync
 
 	/**
 	 * Last drawn colours, to allow resending when brightness changes
-	 * @type {Record<string, { r: number, g: number, b: number }>}
-	 * @access private
-	 * @readonly
 	 */
-	#lastColours = {}
+	readonly #lastColours: Record<string, RgbColor> = {}
 
-	/**
-	 * @param {string} devicePath
-	 * @param {import('node-hid').HIDAsync} device
-	 */
-	constructor(devicePath, device) {
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
+
+	constructor(devicePath: string, device: HIDAsync) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/FrameworkMacropad/${devicePath}`)
@@ -90,7 +75,6 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 
 		this.#device = device
 
-		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Framework Macropad`,
 			devicePath: devicePath,
@@ -121,10 +105,8 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 
 	/**
 	 * Open a framework macropad
-	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSBFrameworkMacropad>}
 	 */
-	static async create(devicePath) {
+	static async create(devicePath: string): Promise<SurfaceUSBFrameworkMacropad> {
 		const device = await HIDAsync.open(devicePath)
 
 		try {
@@ -143,11 +125,9 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} force
 	 * @returns false when nothing happens
 	 */
-	setConfig(config, force) {
+	setConfig(config: Record<string, any>, force = false) {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 			for (let y = 0; y < this.gridSize.rows; y++) {
 				for (let x = 0; x < this.gridSize.columns; x++) {
@@ -160,7 +140,7 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 		this.config = config
 	}
 
-	quit() {
+	quit(): void {
 		this.#clearPanel()
 			.catch((e) => {
 				this.#logger.debug(`Clear deck failed: ${e}`)
@@ -171,38 +151,28 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 			})
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		this.#clearPanel().catch((e) => {
 			this.#logger.debug(`Clear deck failed: ${e}`)
 		})
 	}
 
-	#clearPanel() {
+	async #clearPanel(): Promise<void> {
 		const clearBuffer = Buffer.alloc(32)
 		clearBuffer.writeUint8(0x0b, 0)
-		return this.#device.write(clearBuffer)
+		await this.#device.write(clearBuffer)
 	}
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
-	 * @returns {void}
 	 */
-	draw(x, y, render) {
+	draw(x: number, y: number, render: ImageResult): void {
 		const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
 		this.#lastColours[`${x},${y}`] = color
 		this.#writeKeyColour(x, y, color)
 	}
 
-	/**
-	 *
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {{ r: number, g: number, b: number }} color
-	 */
-	#writeKeyColour(x, y, color) {
+	#writeKeyColour(x: number, y: number, color: RgbColor): void {
 		const fillBuffer = Buffer.alloc(32)
 		fillBuffer.writeUint8(0x0f, 0)
 		fillBuffer.writeUint8(x + 1, 1)
@@ -218,5 +188,3 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 		})
 	}
 }
-
-export default SurfaceUSBFrameworkMacropad
