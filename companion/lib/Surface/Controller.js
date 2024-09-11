@@ -670,10 +670,6 @@ class SurfaceController extends CoreBase {
 	 * @returns {ClientDevicesListItem[]}
 	 */
 	getDevicesList() {
-		const remoteConnections = Object.values(this.#outboundController.storage)
-
-		const usedRemoteConnectionIds = new Set()
-
 		/**
 		 *
 		 * @param {string} id
@@ -693,27 +689,17 @@ class SurfaceController extends CoreBase {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
-				remoteConnectionId: null,
+
+				size: config?.gridSize || null,
+				offset: { columns: config?.xOffset ?? 0, rows: config?.yOffset ?? 0 },
 			}
 
 			if (surfaceHandler) {
 				let location = surfaceHandler.panel.info.location
 				if (location && location.startsWith('::ffff:')) location = location.substring(7)
-				let remotePort = surfaceHandler.panel.info.remotePort
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
-
-				// Translate remote connections info
-				if (config?.integrationType === 'elgato-streamdeck-tcp') {
-					const matchingRemote = remoteConnections.find(
-						(s) => s.type === 'elgato' && s.address === location && s.port === remotePort
-					)
-					if (matchingRemote) {
-						surfaceInfo.remoteConnectionId = matchingRemote.id
-						usedRemoteConnectionIds.add(matchingRemote.id)
-					}
-				}
 			}
 
 			return surfaceInfo
@@ -797,36 +783,6 @@ class SurfaceController extends CoreBase {
 				result.push(groupResult)
 				groupsMap.set(groupId, groupResult)
 			}
-		}
-
-		for (const connection of remoteConnections) {
-			if (usedRemoteConnectionIds.has(connection.id)) continue
-
-			const tcpId = `tcp://${connection.address}:${connection.port}`
-
-			/** @type {ClientDevicesListItem} */
-			const groupResult = {
-				id: tcpId,
-				index: undefined,
-				displayName: `${connection.displayName || connection.type} - Offline`,
-				isAutoGroup: true,
-				surfaces: [
-					{
-						id: tcpId,
-						type: 'Unknown Elgato Stream Deck (TCP)',
-						integrationType: config?.integrationType || '',
-						name: config?.name || '',
-						// location: 'Offline',
-						configFields: [],
-						isConnected: false,
-						displayName: connection.displayName,
-						location: null,
-						remoteConnectionId: connection.id,
-					},
-				],
-			}
-			result.push(groupResult)
-			// groupsMap.set(groupId, groupResult)
 		}
 
 		return result

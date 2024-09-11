@@ -120,7 +120,6 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			configFields: getConfigFields(this.#streamDeck),
 			deviceId: '', // set in #init()
 			location: undefined, // set later
-			remotePort: undefined, // set later
 		}
 
 		const allRowValues = this.#streamDeck.CONTROLS.map((control) => control.row)
@@ -255,7 +254,6 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			this.#shouldCleanupOnQuit = false
 
 			this.info.location = tcpStreamdeck.remoteAddress
-			this.info.remotePort = tcpStreamdeck.remotePort
 
 			tcpStreamdeck.tcpEvents.on('disconnected', () => {
 				this.#logger.info(
