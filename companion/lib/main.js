@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
 // Setup some fixes before loading any imports
-import './lib/Util/FixImports.js'
+import './Util/FixImports.js'
 
 // Setup logging before anything else runs
-import './lib/Log/Controller.js'
+import './Log/Controller.js'
 
 // Now we can think about startup
 import { Command } from 'commander'
-import Registry from './lib/Registry.js'
+import Registry from './Registry.js'
 import os from 'os'
 import path from 'path'
 import fs from 'fs-extra'
 import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
-import logger from './lib/Log/Controller.js'
-import { ConfigReleaseDirs } from '../launcher/Paths.cjs'
+import logger from './Log/Controller.js'
+import { ConfigReleaseDirs } from '@companion-app/shared/Paths.cjs'
 
 const program = new Command()
 

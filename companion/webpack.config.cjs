@@ -9,7 +9,7 @@ const buildFile = fs.readFileSync(path.join(__dirname, '../BUILD')).toString().t
 
 module.exports = {
 	entry: {
-		main: './main.js',
+		main: './lib/main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
 		RenderThread: './lib/Graphics/Thread.js',
 	},
@@ -70,6 +70,17 @@ module.exports = {
 				generator: {
 					filename: 'SENTRY',
 				},
+			},
+			{
+				test: /.([cm]?ts|tsx)$/,
+				use: [
+					{
+						loader: 'ts-loader',
+						options: {
+							transpileOnly: true,
+						},
+					},
+				],
 			},
 		],
 	},

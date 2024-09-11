@@ -1,5 +1,5 @@
 {
-	"include": ["lib/**/*.js", "lib/**/*.ts"],
+	"include": ["lib/**/*.js", "lib/**/*.cjs", "lib/**/*.ts","lib/**/*.cts"],
 	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
 	"compilerOptions": {
 		"outDir": "./dist",

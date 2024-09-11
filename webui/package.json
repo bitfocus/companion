@@ -25,7 +25,7 @@
     "classnames": "^2.5.1",
     "csv-stringify": "^6.5.1",
     "dayjs": "^1.11.13",
-    "fast-json-patch": "^3.1.1",
+    "fast-json-patch": "patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch",
     "fuzzysort": "^3.0.2",
     "html-entities": "^2.5.2",
     "intersection-observer": "^0.12.2",

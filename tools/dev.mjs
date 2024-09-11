@@ -33,6 +33,10 @@ concurrently([
 		command: `yarn dev --preserveWatchOutput`,
 		cwd: '../shared-lib',
 	},
+	{
+		command: `yarn build:watch --preserveWatchOutput`,
+		cwd: '../companion',
+	},
 ]).result.catch((e) => {
 	console.error(e)
 
@@ -93,7 +97,7 @@ chokidar
 await start()
 
 async function start() {
-	node = $.spawn('node', ['main.js', ...process.argv.slice(3)], {
+	node = $.spawn('node', ['dist/main.js', ...process.argv.slice(3)], {
 		stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
 		cwd: fileURLToPath(new URL('../companion', import.meta.url)),
 		env: {

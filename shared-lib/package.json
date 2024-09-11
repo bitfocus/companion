@@ -6,6 +6,10 @@
     "./*.js": {
       "types": "./dist/*.d.ts",
       "default": "./lib/*.js"
+    },
+    "./*.cjs": {
+      "types": "./dist/*.d.cts",
+      "default": "./lib/*.cjs"
     }
   },
   "dependencies": {
