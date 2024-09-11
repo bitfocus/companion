@@ -11,20 +11,29 @@
   - Add time expression functions
   - Allow comments
   - Intermediate value variables
+  - Objects and arrays can be mutated
 - Add install name user config and show in header
 - Support per-user install on windows
+- Support for Stream Deck Studio
 - Support for VEC footpedal as a surface
+- Support for Blackmagic Atem Micro Panel
+- Support for 203 Systems Mystrix panel
 - Allow surfaces larger than 32 buttons in satellite api
 - Add text color, css colors and row/columns in satellite api
+- Support variables in satellite api
 - Fuzzy match results when searching for actions/feedbacks
 - Update UI to updated framework. This includes small visual changes
 - Various UI tweaks and improvements
 - UI to discover, list and setup Satellite installations
 - Move variables tab to the top level
+- Long values in variables table are collapsed for readability
 - Use url parameters in some more pages, to allow for better bookmarks/links
 - Add row and column to bank_bg_change TCP messages
 - Improve render quality of blank buttons
 - Add variables for machine hostname
+- Allow changing page by surface index from variable
+- Add new local variables
+- Option to duplicate steps on a button
 - Various module api enhancements
 
 ### 🐞 BUG FIXES
@@ -38,6 +47,9 @@
 - Avoid flickering when draging actions or feedbacks around the editor
 - Avoid ui crash when action/feedback is missing name
 - Importing triggers fails to append due to duplicate ids
+- Improved error handling
+- Font sizes sometimes show as invalid
+-
 
 ### 🧩 NEW & UPDATED MODULES
 
