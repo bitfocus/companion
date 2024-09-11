@@ -5,7 +5,7 @@ import type {
 	OutboundSurfacesUpdate,
 	ClientSurfaceItem,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { action, observable, toJS } from 'mobx'
+import { action, observable } from 'mobx'
 import { assertNever } from '../util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
