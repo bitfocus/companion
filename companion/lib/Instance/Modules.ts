@@ -87,7 +87,7 @@ export class InstanceModules extends CoreBase {
 		]
 
 		const legacyCandidates = await this.#moduleScanner.loadInfoForModulesInDir(
-			generatePath('module-legacy/manifests'),
+			generatePath('bundled-modules/_legacy'),
 			false
 		)
 

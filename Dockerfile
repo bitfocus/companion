@@ -26,7 +26,6 @@ FROM debian:bookworm-slim
 WORKDIR /app
 COPY --from=companion-builder /app/dist	/app/
 COPY --from=companion-builder /app/docker-entrypoint.sh /docker-entrypoint.sh
-COPY --from=companion-builder /app/module-legacy/manifests	/app/module-legacy/manifests
 
 # Install curl for the health check
 RUN apt update && apt install -y \

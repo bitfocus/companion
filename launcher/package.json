@@ -91,10 +91,6 @@
 			{
 				"from": "../dist",
 				"to": "."
-			},
-			{
-				"from": "../module-legacy/manifests",
-				"to": "./module-legacy/manifests"
 			}
 		]
 	}
