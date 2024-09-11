@@ -79,7 +79,7 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 		this.#logger.debug(`Adding Elgato Streamdeck Plugin (${this.socket.supportsPng ? 'PNG' : 'Bitmap'})`)
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: 'Elgato Streamdeck Plugin',
 			devicePath: devicePath,

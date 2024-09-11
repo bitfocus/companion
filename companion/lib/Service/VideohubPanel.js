@@ -133,6 +133,6 @@ export default ServiceVideohubPanel
 /**
  * @typedef {{
  *   id: string
- *   device: import('../Surface/IP/VideohubPanel.js').default
+ *   device: import('../Surface/IP/VideohubPanel.js').SurfaceIPVideohubPanel
  * }} VideohubPanelWrapper
  */

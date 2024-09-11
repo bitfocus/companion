@@ -159,7 +159,7 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 
 		this.logger.debug(`Adding Loupedeck CT device ${devicePath}`)
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Loupedeck CT`,
 			devicePath: devicePath,

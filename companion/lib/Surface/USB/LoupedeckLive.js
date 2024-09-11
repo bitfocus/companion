@@ -207,7 +207,7 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 
 		this.logger.debug(`Adding Loupedeck Live USB device ${devicePath}`)
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: this.#loupedeck.modelName,
 			devicePath: devicePath,

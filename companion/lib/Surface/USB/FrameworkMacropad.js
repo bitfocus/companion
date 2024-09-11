@@ -90,7 +90,7 @@ class SurfaceUSBFrameworkMacropad extends EventEmitter {
 
 		this.#device = device
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Framework Macropad`,
 			devicePath: devicePath,

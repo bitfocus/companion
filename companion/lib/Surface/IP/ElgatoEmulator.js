@@ -146,7 +146,7 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 		this.#io = io
 		this.#emulatorId = emulatorId
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: 'Emulator',
 			devicePath: `emulator:${emulatorId}`,

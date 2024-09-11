@@ -23,7 +23,7 @@ import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController, { Logger } from '../Log/Controller.js'
-import type { CompanionSurfaceConfigField, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type ControlsController from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type PageController from '../Page/Controller.js'
@@ -32,6 +32,7 @@ import type DataUserConfig from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '../Resources/Util.js'
 import type Registry from '../Registry.js'
+import { DrawButtonItem, SurfacePanel } from './Types.js'
 
 const PINCODE_NUMBER_POSITIONS: [number, number][] = [
 	// 0
@@ -68,31 +69,6 @@ const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL: [number, number][] = [
 	[3, 0],
 	[4, 0],
 ]
-
-export interface SurfacePanelInfo {
-	deviceId: string
-	devicePath: string
-	type: string
-	configFields: CompanionSurfaceConfigField[]
-	location?: string
-}
-export interface SurfacePanel extends EventEmitter {
-	info: SurfacePanelInfo
-	gridSize: GridSize
-	clearDeck(): void
-	draw(x: number, y: number, render: ImageResult): void
-	drawMany?: (entries: DrawButtonItem[]) => void
-	drawColor?: (pageOffset: number, x: number, y: number, color: number) => void
-	setConfig(config: any, force?: boolean): void
-	getDefaultConfig?: () => any
-	onVariablesChanged?: (allChangedVariables: Set<string>) => void
-	quit(): void
-}
-export interface DrawButtonItem {
-	x: number
-	y: number
-	image: ImageResult
-}
 
 /**
  * Get the display name of a surface

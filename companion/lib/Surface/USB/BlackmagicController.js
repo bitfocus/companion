@@ -55,7 +55,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	#logger
 
 	/**
-	 * @type {import('../Controller.js').SurfaceExecuteExpressionFn}
+	 * @type {import('../Types.js').SurfaceExecuteExpressionFn}
 	 * @access private
 	 * @readonly
 	 */
@@ -85,7 +85,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	#lastTbarDrawReferencedVariables = null
 
 	/**
-	 * @param {import('../Controller.js').SurfaceExecuteExpressionFn} executeExpression
+	 * @param {import('../Types.js').SurfaceExecuteExpressionFn} executeExpression
 	 * @param {string} devicePath
 	 * @param {import('@blackmagic-controller/node').BlackmagicController} blackmagicController
 	 */
@@ -101,7 +101,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 		this.#device = blackmagicController
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Blackmagic ${this.#device.PRODUCT_NAME}`,
 			devicePath: devicePath,
@@ -165,7 +165,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	/**
 	 * Open a framework macropad
 	 * @param {string} devicePath
-	 * @param {import('../Controller.js').LocalUSBDeviceOptions} options
+	 * @param {import('../Types.js').LocalUSBDeviceOptions} options
 	 * @returns {Promise<SurfaceUSBBlackmagicController>}
 	 */
 	static async create(devicePath, options) {
@@ -349,7 +349,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 	/**
 	 * Draw multiple buttons
-	 * @param {import('../Handler.js').DrawButtonItem[]} renders
+	 * @param {import('../Types.js').DrawButtonItem[]} renders
 	 */
 	drawMany(renders) {
 		for (const { x, y, image } of renders) {

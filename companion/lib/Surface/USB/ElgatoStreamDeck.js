@@ -118,7 +118,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} ${protocol} device: ${devicePath}`)
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Elgato ${this.#streamDeck.PRODUCT_NAME}`,
 			devicePath: devicePath,

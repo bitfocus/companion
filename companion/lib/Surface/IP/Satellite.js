@@ -117,7 +117,7 @@ class SurfaceIPSatellite extends EventEmitter {
 	#logger = LogController.createLogger('Surface/IP/Satellite')
 
 	/**
-	 * @type {import('../Controller.js').SurfaceExecuteExpressionFn}
+	 * @type {import('../Types.js').SurfaceExecuteExpressionFn}
 	 * @access private
 	 * @readonly
 	 */
@@ -176,7 +176,7 @@ class SurfaceIPSatellite extends EventEmitter {
 
 	/**
 	 * @param {SatelliteDeviceInfo} deviceInfo
-	 * @param {import('../Controller.js').SurfaceExecuteExpressionFn} executeExpression
+	 * @param {import('../Types.js').SurfaceExecuteExpressionFn} executeExpression
 	 */
 	constructor(deviceInfo, executeExpression) {
 		super()
@@ -194,7 +194,7 @@ class SurfaceIPSatellite extends EventEmitter {
 		this.#streamText = deviceInfo.streamText
 		this.#streamTextStyle = deviceInfo.streamTextStyle
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,

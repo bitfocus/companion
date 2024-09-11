@@ -30,7 +30,7 @@ import shuttleControlUSB from 'shuttle-control-usb'
 // @ts-ignore
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
-import { SurfaceHandler, SurfacePanel, getSurfaceName } from './Handler.js'
+import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import SurfaceIPElgatoEmulator, { EmulatorRoom } from './IP/ElgatoEmulator.js'
 import SurfaceIPElgatoPlugin from './IP/ElgatoPlugin.js'
 import SurfaceIPSatellite, { SatelliteDeviceInfo } from './IP/Satellite.js'
@@ -41,7 +41,7 @@ import LoupedeckLiveDriver from './USB/LoupedeckLive.js'
 import SurfaceUSBLoupedeckCt from './USB/LoupedeckCt.js'
 import ContourShuttleDriver from './USB/ContourShuttle.js'
 import VECFootpedalDriver from './USB/VECFootpedal.js'
-import SurfaceIPVideohubPanel, { VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
+import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import MystrixDriver from './USB/203SystemsMystrix.js'
 import CoreBase from '../Core/Base.js'
@@ -54,7 +54,8 @@ import type Registry from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
-import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type { LocalUSBDeviceOptions, SurfacePanel, SurfacePanelFactory } from './Types.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -1410,18 +1411,3 @@ export class SurfaceController extends CoreBase {
 		return surfaces.find((d) => d && d.surfaceId === surfaceId2) || undefined
 	}
 }
-
-export type SurfacePanelFactory = {
-	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
-}
-
-export interface LocalUSBDeviceOptions {
-	executeExpression: SurfaceExecuteExpressionFn
-	useLegacyLayout?: boolean
-}
-
-export type SurfaceExecuteExpressionFn = (
-	str: string,
-	surfaceId: string,
-	injectedVariableValues?: CompanionVariableValues
-) => { value: CompanionVariableValue | undefined; variableIds: Set<string> }

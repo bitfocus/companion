@@ -80,7 +80,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 			// @ts-ignore
 			const serialNumber = this.#infinitton.device.getDeviceInfo().serialNumber
 
-			/** @type {import('../Handler.js').SurfacePanelInfo} */
+			/** @type {import('../Types.js').SurfacePanelInfo} */
 			this.info = {
 				type: 'Infinitton iDisplay device',
 				devicePath: devicePath,

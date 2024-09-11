@@ -121,7 +121,7 @@ class SurfaceUSBXKeys extends EventEmitter {
 		this.#myXkeysPanel = panel
 		this.#useLegacyLayout = !!options.useLegacyLayout
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
+		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `XKeys ${this.#myXkeysPanel.info.name}`,
 			devicePath: devicePath,
@@ -292,7 +292,7 @@ class SurfaceUSBXKeys extends EventEmitter {
 	/**
 	 * Create an xkeys device
 	 * @param {string} devicePath
-	 * @param {import('../Controller.js').LocalUSBDeviceOptions} options
+	 * @param {import('../Types.js').LocalUSBDeviceOptions} options
 	 * @returns {Promise<SurfaceUSBXKeys>}
 	 */
 	static async create(devicePath, options) {

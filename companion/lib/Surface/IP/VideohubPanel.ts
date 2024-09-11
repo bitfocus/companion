@@ -16,7 +16,7 @@
  */
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
-import { convertPanelIndexToXY } from '../Util.js'
+import { convertPanelIndexToXY, GridSize } from '../Util.js'
 // @ts-ignore
 import VideohubServer from 'videohub-server'
 import {
@@ -25,25 +25,23 @@ import {
 	LockConfigFields,
 	RotationConfigField,
 } from '../CommonConfigFields.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
-/**
- * @typedef {{
- *   productName: string
- *   path: string
- *   remoteAddress: string
- *   panelInfo: {
- *     buttonsColumns: number
- *     buttonsRows: number
- *   }
- *   serverId: string
- *   server: VideohubServer
- * }} VideohubPanelDeviceInfo
- */
+export interface VideohubPanelDeviceInfo {
+	productName: string
+	path: string
+	remoteAddress: string
+	panelInfo: {
+		buttonsColumns: number
+		buttonsRows: number
+	}
+	serverId: string
+	server: VideohubServer
+}
 
-/**
- * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
- */
-const configFields = [
+const configFields: CompanionSurfaceConfigField[] = [
 	...OffsetConfigFields,
 	BrightnessConfigField,
 	RotationConfigField,
@@ -59,16 +57,25 @@ const configFields = [
 	...LockConfigFields,
 ]
 
-class SurfaceIPVideohubPanel extends EventEmitter {
+export class SurfaceIPVideohubPanel extends EventEmitter implements SurfacePanel {
 	#logger = LogController.createLogger('Surface/IP/VideohubPanel')
 
-	/**
-	 * @param {VideohubPanelDeviceInfo} deviceInfo
-	 */
-	constructor(deviceInfo) {
+	readonly info: SurfacePanelInfo
+
+	readonly gridSize: GridSize
+
+	private readonly server: VideohubServer
+	private readonly serverId: string
+	private readonly deviceId: string
+
+	private _config: {
+		brightness: number
+		videohub_page_count: number
+	}
+
+	constructor(deviceInfo: VideohubPanelDeviceInfo) {
 		super()
 
-		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,
@@ -99,21 +106,15 @@ class SurfaceIPVideohubPanel extends EventEmitter {
 
 	/**
 	 * Draw a button
-	 * @param {number} _x
-	 * @param {number} _y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} _render
-	 * @returns {void}
 	 */
-	draw(_x, _y, _render) {
+	draw(_x: number, _y: number, _render: ImageResult): void {
 		// Not supported
 	}
 
 	/**
 	 * Produce a click event
-	 * @param {number} destination
-	 * @param {number} button
 	 */
-	doButton(destination, button) {
+	doButton(destination: number, button: number): void {
 		const xy = convertPanelIndexToXY(button, this.gridSize)
 		if (xy) {
 			this.emit('click', ...xy, true, destination)
@@ -125,7 +126,7 @@ class SurfaceIPVideohubPanel extends EventEmitter {
 		}
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		// Not supported
 	}
 
@@ -133,11 +134,9 @@ class SurfaceIPVideohubPanel extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} force
 	 * @returns false when nothing happens
 	 */
-	setConfig(config, force) {
+	setConfig(config: Record<string, any>, force = false) {
 		console.log('setup', config, force)
 		const newBrightness = Math.floor(config.brightness / 10)
 		if ((force || this._config.brightness != newBrightness) && config.brightness !== undefined) {
@@ -154,10 +153,9 @@ class SurfaceIPVideohubPanel extends EventEmitter {
 
 	/**
 	 * Set the brihgtness of the panel
-	 * @param {number} value 0-100
-	 * @returns {void}
+	 * @param value 0-100
 	 */
-	#setBrightness(value) {
+	#setBrightness(value: number): void {
 		this.#logger.silly('brightness: ' + value)
 
 		try {
@@ -169,10 +167,8 @@ class SurfaceIPVideohubPanel extends EventEmitter {
 
 	/**
 	 * Set the number of page buttons to use on the panel
-	 * @param {number} value
-	 * @returns {void}
 	 */
-	#setPageCount(value) {
+	#setPageCount(value: number): void {
 		this.#logger.silly('page count: ' + value)
 
 		try {
@@ -182,5 +178,3 @@ class SurfaceIPVideohubPanel extends EventEmitter {
 		}
 	}
 }
-
-export default SurfaceIPVideohubPanel
