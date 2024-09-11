@@ -49,36 +49,17 @@ export const KnownSurfacesTable = observer(function SurfacesPage() {
 	}, [])
 
 	const forgetSurface = useCallback(
-		(surfaceId: string, remoteConnectionId: string | null) => {
-			if (remoteConnectionId) {
-				confirmRef.current?.show(
-					'Disconnect and Forget Surface',
-					[
-						'Are you sure you want to disconnect from and forget this surface? Any settings will be lost.',
-						'Any surfaces sharing this connection will also be disconnected.',
-					],
-					'Forget',
-					() => {
-						socketEmitPromise(socket, 'surfaces:forget', [surfaceId]).catch((err) => {
-							console.error('fotget failed', err)
-						})
-						socketEmitPromise(socket, 'surfaces:outbound:remove', [remoteConnectionId]).catch((err) => {
-							console.error('fotget failed', err)
-						})
-					}
-				)
-			} else {
-				confirmRef.current?.show(
-					'Forget Surface',
-					'Are you sure you want to forget this surface? Any settings will be lost',
-					'Forget',
-					() => {
-						socketEmitPromise(socket, 'surfaces:forget', [surfaceId]).catch((err) => {
-							console.error('fotget failed', err)
-						})
-					}
-				)
-			}
+		(surfaceId: string) => {
+			confirmRef.current?.show(
+				'Forget Surface',
+				'Are you sure you want to forget this surface? Any settings will be lost',
+				'Forget',
+				() => {
+					socketEmitPromise(socket, 'surfaces:forget', [surfaceId]).catch((err) => {
+						console.error('fotget failed', err)
+					})
+				}
+			)
 		},
 		[socket]
 	)
@@ -167,7 +148,7 @@ interface ManualGroupRowProps {
 	updateName: (surfaceId: string, name: string) => void
 	configureSurface: (surfaceId: string) => void
 	deleteEmulator: (surfaceId: string) => void
-	forgetSurface: (surfaceId: string, remoteConnectionId: string | null) => void
+	forgetSurface: (surfaceId: string) => void
 }
 function ManualGroupRow({
 	group,
@@ -226,7 +207,7 @@ interface SurfaceRowProps {
 	updateName: (surfaceId: string, name: string) => void
 	configureSurface: (surfaceId: string) => void
 	deleteEmulator: (surfaceId: string) => void
-	forgetSurface: (surfaceId: string, remoteConnectionId: string | null) => void
+	forgetSurface: (surfaceId: string) => void
 	noBorder: boolean
 }
 
@@ -242,10 +223,7 @@ function SurfaceRow({
 	const updateName2 = useCallback((val: string) => updateName(surface.id, val), [updateName, surface.id])
 	const configureSurface2 = useCallback(() => configureSurface(surface.id), [configureSurface, surface.id])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
-	const forgetSurface2 = useCallback(
-		() => forgetSurface(surface.id, surface.remoteConnectionId),
-		[forgetSurface, surface.id]
-	)
+	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])
 
 	return (
 		<tr
@@ -277,12 +255,6 @@ function SurfaceRow({
 								</CButton>
 							</>
 						)}
-
-						{surface.remoteConnectionId ? (
-							<CButton onClick={forgetSurface2} title="Disconnect Surface">
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>
-						) : null}
 					</CButtonGroup>
 				) : (
 					<CButton onClick={forgetSurface2}>

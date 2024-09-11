@@ -17,7 +17,6 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
-	remoteConnectionId: string | null
 }
 
 export interface ClientDevicesListItem {

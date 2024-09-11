@@ -46,13 +46,6 @@ export class SurfaceOutboundController {
 	})
 
 	/**
-	 * @type {Record<string, import('@companion-app/shared/Model/Surfaces.js').OutboundSurfaceInfo>}
-	 */
-	get storage() {
-		return this.#storage
-	}
-
-	/**
 	 *
 	 * @param {import('./Controller.js').default} controller
 	 * @param {import('../Data/Database.js').default} db
@@ -153,7 +146,6 @@ export class SurfaceOutboundController {
 					info: newInfo,
 				},
 			])
-			setImmediate(() => this.#controller.updateDevicesList())
 
 			this.#streamdeckTcpConnectionManager.connectTo(address, port)
 
@@ -173,7 +165,6 @@ export class SurfaceOutboundController {
 					itemId: id,
 				},
 			])
-			setImmediate(() => this.#controller.updateDevicesList())
 
 			this.#streamdeckTcpConnectionManager.disconnectFrom(surfaceInfo.address, surfaceInfo.port)
 		})
@@ -193,7 +184,6 @@ export class SurfaceOutboundController {
 					info: surfaceInfo,
 				},
 			])
-			setImmediate(() => this.#controller.updateDevicesList())
 		})
 	}
 

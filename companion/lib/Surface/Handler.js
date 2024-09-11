@@ -75,7 +75,6 @@ const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL = [
  *   type: string
  *   configFields: import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]
  *   location?: string
- *   remotePort?: number
  * }} SurfacePanelInfo
  * @typedef {{
  *   info: SurfacePanelInfo
