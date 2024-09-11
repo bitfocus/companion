@@ -672,6 +672,9 @@ class SurfaceController extends CoreBase {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+
+				size: config?.gridSize || null,
+				offset: { columns: config?.xOffset ?? 0, rows: config?.yOffset ?? 0 },
 			}
 
 			if (surfaceHandler) {

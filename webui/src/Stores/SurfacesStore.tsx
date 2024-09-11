@@ -3,11 +3,13 @@ import type {
 	OutboundSurfaceInfo,
 	SurfacesUpdate,
 	OutboundSurfacesUpdate,
+	ClientSurfaceItem,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { action, observable, toJS } from 'mobx'
 import { assertNever } from '../util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
+import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export class SurfacesStore {
 	readonly store = observable.map<string, ClientDevicesListItem>()
@@ -79,12 +81,42 @@ export class SurfacesStore {
 
 	public getOutboundStreamDeckSurface = (address: string, port: number): OutboundSurfaceInfo | undefined => {
 		for (const surface of this.outboundSurfaces.values()) {
-			console.log('check', toJS(surface))
-
 			if (surface.type === 'elgato' && surface.address === address && (surface.port ?? 5343) === port) {
 				return surface
 			}
 		}
 		return undefined
+	}
+
+	public getSurfacesOverflowingBounds = (
+		bounds: UserConfigGridSize
+	): { neededBounds: UserConfigGridSize; surfaces: ClientSurfaceItem[] } => {
+		const neededBounds: UserConfigGridSize = { ...bounds }
+		const overflowingSurfaces: ClientSurfaceItem[] = []
+
+		for (const group of this.store.values()) {
+			for (const surface of group.surfaces) {
+				if (!surface.size || !surface.offset) continue
+
+				const minX = surface.offset.columns
+				const minY = surface.offset.rows
+				const maxX = minX + surface.size.columns - 1
+				const maxY = minY + surface.size.rows - 1
+
+				if (minX < bounds.minColumn || minY < bounds.minRow || maxX > bounds.maxColumn || maxY > bounds.maxRow) {
+					overflowingSurfaces.push(surface)
+
+					neededBounds.minColumn = Math.min(neededBounds.minColumn, minX)
+					neededBounds.maxColumn = Math.max(neededBounds.maxColumn, maxX)
+					neededBounds.minRow = Math.min(neededBounds.minRow, minY)
+					neededBounds.maxRow = Math.max(neededBounds.maxRow, maxY)
+				}
+			}
+		}
+
+		return {
+			neededBounds,
+			surfaces: overflowingSurfaces,
+		}
 	}
 }

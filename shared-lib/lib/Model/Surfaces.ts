@@ -8,6 +8,11 @@ import type {
 } from '@companion-module/base'
 import { CompanionInputFieldTextInputExtended, EncodeIsVisible2 } from './Options.js'
 
+export interface RowsAndColumns {
+	rows: number
+	columns: number
+}
+
 export interface ClientSurfaceItem {
 	id: string
 	type: string
@@ -17,6 +22,9 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
+
+	size: RowsAndColumns | null
+	offset: RowsAndColumns | null
 }
 
 export interface ClientDevicesListItem {
