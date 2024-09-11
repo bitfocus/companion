@@ -15,7 +15,7 @@
  *
  */
 
-import GraphicsRenderer from './Renderer.js'
+import { GraphicsRenderer } from './Renderer.js'
 import workerPool from 'workerpool'
 
 workerPool.worker({

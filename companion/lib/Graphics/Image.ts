@@ -15,18 +15,15 @@
  *
  */
 
-import { Canvas, ImageData } from '@napi-rs/canvas'
+import { Canvas, ImageData, SKRSContext2D } from '@napi-rs/canvas'
 import LogController from '../Log/Controller.js'
 import { PNG } from 'pngjs'
+import type { HorizontalAlignment, VerticalAlignment } from '../Resources/Util.js'
 
 const DEFAULT_FONTS =
 	'Companion-sans, Companion-symbols1, Companion-symbols2, Companion-symbols3, Companion-symbols4, Companion-symbols5, Companion-symbols6, Companion-emoji'
 
-/**
- * @param {string | Buffer} pngData
- * @returns {Promise<PNG>}
- */
-async function pngParse(pngData) {
+async function pngParse(pngData: string | Buffer): Promise<PNG> {
 	return new Promise((resolve, reject) => {
 		new PNG().parse(pngData, (err, data) => {
 			if (err) reject(err)
@@ -35,25 +32,30 @@ async function pngParse(pngData) {
 	})
 }
 
+type LineOrientation = 'inside' | 'center' | 'outside'
+
 /**
  * Class for generating an image and rendering some content to it
  */
-class Image {
-	/** @type {Canvas} */
-	canvas
+export class Image {
+	readonly #logger = LogController.createLogger('Graphics/Image')
 
-	/** @type {import('@napi-rs/canvas').SKRSContext2D} */
-	context2d
+	readonly canvas: Canvas
+	readonly context2d: SKRSContext2D
+
+	readonly width: number
+	readonly height: number
+
+	readonly realwidth: number
+	readonly realheight: number
 
 	/**
 	 * Create an image
-	 * @param {number} width the width of the image in integer
-	 * @param {number} height the height of the image in integer
-	 * @param {number} oversampling a factor of how much more pixels the image should have in width and height
+	 * @param width the width of the image in integer
+	 * @param height the height of the image in integer
+	 * @param oversampling a factor of how much more pixels the image should have in width and height
 	 */
-	constructor(width, height, oversampling) {
-		this.logger = LogController.createLogger('Graphics/Image')
-
+	constructor(width: number, height: number, oversampling: number) {
 		/* Defaults for custom images from modules */
 		if (width === undefined) {
 			width = 72
@@ -71,6 +73,7 @@ class Image {
 
 		this.realwidth = width * oversampling
 		this.realheight = height * oversampling
+
 		this.canvas = new Canvas(this.realwidth, this.realheight)
 		this.context2d = this.canvas.getContext('2d')
 		this.context2d.scale(oversampling, oversampling)
@@ -78,24 +81,23 @@ class Image {
 
 	/**
 	 * fills the whole image with a color
-	 * @param {string} color CSS color string
-	 * @returns {boolean} success
+	 * @param color CSS color string
+	 * @returns success
 	 */
-	fillColor(color) {
+	fillColor(color: string): boolean {
 		return this.box(0, 0, this.realwidth, this.realheight, color)
 	}
 
 	/**
 	 * draws a line between two given points
-	 * @param {number} x1
-	 * @param {number} y1
-	 * @param {number} x2
-	 * @param {number} y2
-	 * @param {string} color CSS color string
-	 * @param {number} lineWidth
-	 * @returns {true}
+	 * @param x1
+	 * @param y1
+	 * @param x2
+	 * @param y2
+	 * @param color CSS color string
+	 * @param lineWidth
 	 */
-	line(x1, y1, x2, y2, color, lineWidth = 1) {
+	line(x1: number, y1: number, x2: number, y2: number, color: string, lineWidth = 1): boolean {
 		this.context2d.lineWidth = lineWidth
 		this.context2d.strokeStyle = color
 		this.context2d.beginPath()
@@ -109,37 +111,46 @@ class Image {
 
 	/**
 	 * draws a horizontal line at given height from top
-	 * @param {number} y
-	 * @param {string} color CSS color string
-	 * @returns {boolean} success
+	 * @param y
+	 * @param color CSS color string
+	 * @returns success
 	 */
-	horizontalLine(y, color) {
+	horizontalLine(y: number, color: string): boolean {
 		return this.line(0, y, this.width, y, color)
 	}
 
 	/**
 	 * draws a vertical line at given distance from left
-	 * @param {number} x
-	 * @param {string} color CSS color string
-	 * @returns {boolean} success
+	 * @param x
+	 * @param color CSS color string
+	 * @returns success
 	 */
-	verticalLine(x, color) {
+	verticalLine(x: number, color: string): boolean {
 		return this.line(x, 0, x, this.height, color)
 	}
 
 	/**
 	 * draws a box with optional fill color and optional outline
-	 * @param {number} x1
-	 * @param {number} y1
-	 * @param {number} x2
-	 * @param {number} y2
-	 * @param {string|undefined} color CSS string fill color, unfilled if undefined
-	 * @param {string|undefined} strokeColor CSS string line color, no line if undefined
-	 * @param {number|undefined} lineWidth line width defaults to 1
-	 * @param {'inside'|'center'|'outside'|undefined} lineOrientation defaults to 'inside'
-	 * @returns {boolean} something has been drawn
+	 * @param x1
+	 * @param y1
+	 * @param x2
+	 * @param y2
+	 * @param color CSS string fill color, unfilled if undefined
+	 * @param strokeColor CSS string line color, no line if undefined
+	 * @param lineWidth line width defaults to 1
+	 * @param lineOrientation defaults to 'inside'
+	 * @returns something has been drawn
 	 */
-	box(x1, y1, x2, y2, color = undefined, strokeColor = undefined, lineWidth = 1, lineOrientation = 'inside') {
+	box(
+		x1: number,
+		y1: number,
+		x2: number,
+		y2: number,
+		color?: string,
+		strokeColor?: string,
+		lineWidth = 1,
+		lineOrientation: LineOrientation = 'inside'
+	): boolean {
 		if (x2 == x1 || y2 == y1) return false
 		let didDraw = false
 		if (color) {
@@ -156,16 +167,24 @@ class Image {
 
 	/**
 	 * Draws an outline rectangle
-	 * @param {number} x1 position of left edge
-	 * @param {number} y1 position of top edge
-	 * @param {number} x2 position of right edge
-	 * @param {number} y2 position of bottom edge
-	 * @param {string} color color string
-	 * @param {number|undefined} lineWidth line width
-	 * @param {'inside'|'center'|'outside'|undefined} lineOrientation direction of lines in regard to the edges
-	 * @returns {boolean} returns true if a visible rectangle has been drawn
+	 * @param x1 position of left edge
+	 * @param y1 position of top edge
+	 * @param x2 position of right edge
+	 * @param y2 position of bottom edge
+	 * @param color color string
+	 * @param lineWidth line width
+	 * @param  lineOrientation direction of lines in regard to the edges
+	 * @returns returns true if a visible rectangle has been drawn
 	 */
-	boxLine(x1, y1, x2, y2, color, lineWidth = 1, lineOrientation = 'inside') {
+	boxLine(
+		x1: number,
+		y1: number,
+		x2: number,
+		y2: number,
+		color: string,
+		lineWidth = 1,
+		lineOrientation: LineOrientation = 'inside'
+	): boolean {
 		if (lineWidth <= 0) return false
 		const halfline = lineWidth / 2
 		switch (lineOrientation) {
@@ -197,26 +216,25 @@ class Image {
 	/**
 	 * Draws an image to the canvas from PGN data
 	 * the image can be fitted and cropped to the canvas in many variations
-	 * @param {Buffer} data base64 encoded buffer with the raw PGN data
-	 * @param {number} xStart left position where to place the image
-	 * @param {number} yStart top position where to place the image
-	 * @param {number} width width of the bounding box where to place the image
-	 * @param {number} height height of the bounding box where to place the image
-	 * @param {'left'|'center'|'right'} halign horizontal alignment of the image in the bounding box (defaults to center)
-	 * @param {'top'|'center'|'bottom'} valign vertical alignment of the image in the bounding box (defaults to center)
-	 * @param {number|'crop'|'fill'|'fit'|'fit_or_shrink'} scale the size factor of the image. Number scales by specified amount, fill scales to fill the bounding box neglecting aspect ratio, crop scales to fill the bounding box and crop if necessary, fit scales to fit the bounding box with the longer side
-	 * @returns {Promise<void>}
+	 * @param data base64 encoded buffer with the raw PGN data
+	 * @param xStart left position where to place the image
+	 * @param yStart top position where to place the image
+	 * @param width width of the bounding box where to place the image
+	 * @param height height of the bounding box where to place the image
+	 * @param halign horizontal alignment of the image in the bounding box (defaults to center)
+	 * @param valign vertical alignment of the image in the bounding box (defaults to center)
+	 * @param scale the size factor of the image. Number scales by specified amount, fill scales to fill the bounding box neglecting aspect ratio, crop scales to fill the bounding box and crop if necessary, fit scales to fit the bounding box with the longer side
 	 */
 	async drawFromPNGdata(
-		data,
+		data: Buffer,
 		xStart = 0,
 		yStart = 0,
 		width = 72,
 		height = 72,
-		halign = 'center',
-		valign = 'center',
-		scale = 1
-	) {
+		halign: HorizontalAlignment = 'center',
+		valign: VerticalAlignment = 'center',
+		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink' = 1
+	): Promise<void> {
 		let png = await pngParse(data)
 
 		let imageWidth = png.width
@@ -360,15 +378,15 @@ class Image {
 	/**
 	 * draws a single line of left aligned text
 	 * the line lenght is not wrapped or limited and may extend beyond the canvas
-	 * @param {number} x left position where to start the line
-	 * @param {number} y top position where to start the line
-	 * @param {string} text
-	 * @param {string} color CSS color string
-	 * @param {number} fontsize Em height
-	 * @param {boolean=} dummy Don't actually draw anything just return the text width
-	 * @returns {number} width of the line
+	 * @param x left position where to start the line
+	 * @param y top position where to start the line
+	 * @param text
+	 * @param color CSS color string
+	 * @param fontsize Em height
+	 * @param dummy Don't actually draw anything just return the text width
+	 * @returns width of the line
 	 */
-	drawTextLine(x, y, text, color, fontsize, dummy) {
+	drawTextLine(x: number, y: number, text: string, color: string, fontsize: number, dummy = false): number {
 		if (text === undefined || text.length == 0) return 0
 
 		if (isNaN(fontsize)) return 0
@@ -389,16 +407,24 @@ class Image {
 
 	/**
 	 * draws a single line of aligned text, doesn't care for line breaks or length
-	 * @param {number} x horizontal value of the alignment point
-	 * @param {number} y vertical value of the alignment point
-	 * @param {string} text
-	 * @param {string} color CSS color string
-	 * @param {number} fontsize Em height
-	 * @param {'left'|'center'|'right'|undefined} halignment defaults to 'center'
-	 * @param {'top'|'center'|'bottom'|'baseline'|undefined} valignment defaults to 'center'
+	 * @param x horizontal value of the alignment point
+	 * @param y vertical value of the alignment point
+	 * @param text
+	 * @param color CSS color string
+	 * @param fontsize Em height
+	 * @param halignment defaults to 'center'
+	 * @param valignment defaults to 'center'
 	 * @returns the width of the line
 	 */
-	drawTextLineAligned(x, y, text, color, fontsize, halignment = 'center', valignment = 'center') {
+	drawTextLineAligned(
+		x: number,
+		y: number,
+		text: string,
+		color: string,
+		fontsize: number,
+		halignment: HorizontalAlignment = 'center',
+		valignment: VerticalAlignment = 'center'
+	): number {
 		if (text === undefined || text.length == 0) return 0
 		if (halignment != 'left' && halignment != 'center' && halignment != 'right') halignment = 'left'
 
@@ -430,30 +456,30 @@ class Image {
 
 	/**
 	 * Draws aligned text in an boxed area.
-	 * @param {number} x bounding box top left horizontal value
-	 * @param {number} y bounding box top left vertical value
-	 * @param {number} w bounding box width
-	 * @param {number} h bounding box height
-	 * @param {string} text the text to draw
-	 * @param {string} color CSS color string
-	 * @param {number | 'auto'} fontsize height of font, either pixels or 'auto'
-	 * @param {string} halign horizontal alignment left, center, right
-	 * @param {string} valign vertical alignment top, center, bottom
-	 * @param {boolean} dummy don't actually draw anything if true, just return if the text fits
-	 * @returns {boolean} returns true if text fits
+	 * @param x bounding box top left horizontal value
+	 * @param y bounding box top left vertical value
+	 * @param w bounding box width
+	 * @param h bounding box height
+	 * @param text the text to draw
+	 * @param color CSS color string
+	 * @param fontsize height of font, either pixels or 'auto'
+	 * @param halign horizontal alignment left, center, right
+	 * @param valign vertical alignment top, center, bottom
+	 * @param dummy don't actually draw anything if true, just return if the text fits
+	 * @returns returns true if text fits
 	 */
 	drawAlignedText(
-		x = 0,
-		y = 0,
-		w = 72,
-		h = 72,
-		text,
-		color,
-		fontsize = 'auto',
-		halign = 'center',
-		valign = 'center',
+		x: number,
+		y: number,
+		w: number,
+		h: number,
+		text: string,
+		color: string,
+		fontsize: number | 'auto' = 'auto',
+		halign: HorizontalAlignment = 'center',
+		valign: VerticalAlignment = 'center',
 		dummy = false
-	) {
+	): boolean {
 		// let textFits = true
 		let lineheight
 		let fontheight
@@ -516,24 +542,15 @@ class Image {
 
 		/**
 		 * this is necessary to get unicode compatible substring where a codepoint can be more than one char
-		 * @param {string} string
-		 * @param {number} start
-		 * @param {number} end
-		 * @returns {string}
 		 */
-		const substring = (string, start, end) => {
+		const substring = (string: string, start: number, end: number): string => {
 			const chars = [...string]
 			if (!start) start = 0
 			if (!end) end = chars.length
 			return chars.slice(start, end).join('')
 		}
 
-		/**
-		 *
-		 * @param {string} text
-		 * @returns {{ ascent: number, descent: number, maxCodepoints: number}}
-		 */
-		const findLastChar = (text) => {
+		const findLastChar = (text: string): { ascent: number; descent: number; maxCodepoints: number } => {
 			// skia-canvas built-in line break algorithm is poor
 			let length = [...text].length
 			//console.log('\nstart linecheck for', text, 'in width', w, 'chars', length)
@@ -796,30 +813,37 @@ class Image {
 	 * The buffer data is expected to be RGB or ARGB data, 1 byte per color,
 	 * horizontally. Top left is first three bytes.
 	 *
-	 * @param {number} x left position of insert point
-	 * @param {number} y top position of insert point
-	 * @param {number} width integer information of the width of the buffer
-	 * @param {number} height integer information of the height of the buffer
-	 * @param {Buffer | Uint8Array | string} bufferRaw
-	 * @param {'RGB' | 'RGBA' | 'ARGB' =} format pixel format of the buffer, if known
-	 * @param {number=} scale scaling factor
+	 * @param x left position of insert point
+	 * @param y top position of insert point
+	 * @param width integer information of the width of the buffer
+	 * @param height integer information of the height of the buffer
+	 * @param bufferRaw
+	 * @param format pixel format of the buffer, if known
+	 * @param scale scaling factor
 	 */
-	drawPixelBuffer(x, y, width, height, bufferRaw, format, scale) {
-		/** @type {Buffer} */
-		let buffer
+	drawPixelBuffer(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		bufferRaw: Buffer | Uint8Array | string,
+		format?: 'RGB' | 'RGBA' | 'ARGB',
+		scale?: number
+	): void {
+		let buffer: Buffer
 		if (typeof bufferRaw == 'object') {
 			if (bufferRaw instanceof Buffer) {
 				buffer = bufferRaw
 			} else if (bufferRaw instanceof Uint8Array) {
 				buffer = Buffer.from(bufferRaw.buffer, bufferRaw.byteOffset, bufferRaw.byteLength)
 			} else {
-				this.logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
+				this.#logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
 				return
 			}
 		} else if (typeof bufferRaw == 'string') {
 			buffer = Buffer.from(bufferRaw, 'base64')
 		} else {
-			this.logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
+			this.#logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
 			return
 		}
 
@@ -827,17 +851,17 @@ class Image {
 		const rgbaByteCount = width * height * 4
 
 		if (format == 'RGB' && buffer.length !== rgbByteCount) {
-			this.logger.error(
+			this.#logger.error(
 				`Pixelbuffer of format ${format} with ${buffer.length} bytes is not expected ${rgbByteCount} bytes`
 			)
 			return
 		} else if ((format == 'RGBA' || format == 'ARGB') && buffer.length !== rgbaByteCount) {
-			this.logger.error(
+			this.#logger.error(
 				`Pixelbuffer of format ${format} with ${buffer.length} bytes is not expected ${rgbaByteCount} bytes`
 			)
 			return
 		} else if (!format && buffer.length < rgbByteCount) {
-			this.logger.error(`Pixelbuffer of ${buffer.length} bytes is not expected ${rgbByteCount} bytes`)
+			this.#logger.error(`Pixelbuffer of ${buffer.length} bytes is not expected ${rgbByteCount} bytes`)
 			return
 		}
 
@@ -865,7 +889,7 @@ class Image {
 				buffer[i * 4 + 3] = 255 // Alpha
 			}
 		} else {
-			this.logger.error(
+			this.#logger.error(
 				`Pixelbuffer for a ${width}x${height} image should be either ${rgbByteCount} or ${
 					rgbaByteCount
 				} bytes big. Not ${buffer.length} (${format})`
@@ -874,11 +898,11 @@ class Image {
 		}
 
 		// create HTML compatible imageData object
-		let imageData
+		let imageData: ImageData
 		try {
 			imageData = new ImageData(new Uint8ClampedArray(buffer), width, height)
-		} catch (/** @type {any} */ error) {
-			this.logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ` + error.stack)
+		} catch (error: any) {
+			this.#logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ` + error.stack)
 			return
 		}
 
@@ -894,24 +918,29 @@ class Image {
 
 	/**
 	 * Draws a border around the button
-	 * @param {number} depth width of the border
-	 * @param {string} color CSS color of the border
-	 * @returns {boolean} true if there is a visible border
+	 * @param depth width of the border
+	 * @param color CSS color of the border
+	 * @returns true if there is a visible border
 	 */
-	drawBorder(depth = 1, color = 'red') {
+	drawBorder(depth = 1, color = 'red'): boolean {
 		if (depth <= 0) return false
 		return this.boxLine(0, 0, this.width, this.height, color, depth, 'inside')
 	}
 
 	/**
 	 * Draws a triangle in a corner
-	 * @param {number} depth
-	 * @param {string} color CSS color string
-	 * @param {'left'|'right'|undefined} halign defaults to 'left'
-	 * @param {'top'|'bottom'|undefined} valign defaults to 'top'
-	 * @returns {boolean} success
+	 * @param depth
+	 * @param color CSS color string
+	 * @param halign defaults to 'left'
+	 * @param valign defaults to 'top'
+	 * @returns success
 	 */
-	drawCornerTriangle(depth = 0, color, halign = 'left', valign = 'top') {
+	drawCornerTriangle(
+		depth: number,
+		color: string,
+		halign: HorizontalAlignment = 'left',
+		valign: VerticalAlignment = 'top'
+	): boolean {
 		if (depth == 0) return false
 		let points
 
@@ -950,13 +979,13 @@ class Image {
 
 	/**
 	 * Draws an outline path from some points
-	 * @param {number[][]} pathPoints an array of x and y points
-	 * @param {string} color CSS color
-	 * @param {number|undefined} lineWidth defaults to 1
-	 * @param {boolean} close if true close the path from last point to first point, if last and first point are identical path will be autoclosed
-	 * @returns {boolean} success
+	 * @param pathPoints an array of x and y points
+	 * @param color CSS color
+	 * @param lineWidth defaults to 1
+	 * @param close if true close the path from last point to first point, if last and first point are identical path will be autoclosed
+	 * @returns success
 	 */
-	drawPath(pathPoints, color, lineWidth = 1, close = false) {
+	drawPath(pathPoints: number[][], color: string, lineWidth = 1, close = false): boolean {
 		if (lineWidth <= 0) return false
 		if (!Array.isArray(pathPoints) || pathPoints.length == 0) return false
 		this.context2d.beginPath()
@@ -977,11 +1006,11 @@ class Image {
 
 	/**
 	 * Draws a filled path from some points
-	 * @param {number[][]} pathPoints an array of x and y points
-	 * @param {string} color CSS color
-	 * @returns {boolean} success
+	 * @param pathPoints an array of x and y points
+	 * @param color CSS color
+	 * @returns success
 	 */
-	drawFilledPath(pathPoints, color) {
+	drawFilledPath(pathPoints: number[][], color: string): boolean {
 		if (!Array.isArray(pathPoints) || pathPoints.length == 0) return false
 		this.context2d.beginPath()
 		const [firstPoint, ...points] = pathPoints
@@ -998,28 +1027,24 @@ class Image {
 	/**
 	 * returns the pixels of the image in a buffer
 	 * color order is RGBA
-	 * @returns {Buffer} RGBA buffer of the pixels
+	 * @returns RGBA buffer of the pixels
 	 */
-	buffer() {
+	buffer(): Buffer {
 		const buffer = Buffer.from(this.context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
 		return buffer
 	}
 
 	/**
 	 * returns the image as a data-url
-	 * @returns {Promise<string>}
 	 */
-	toDataURL() {
+	toDataURL(): Promise<string> {
 		return this.canvas.toDataURLAsync('image/png')
 	}
 
 	/**
 	 * returns the image as a data-url
-	 * @returns {string}
 	 */
-	toDataURLSync() {
+	toDataURLSync(): string {
 		return this.canvas.toDataURL('image/png')
 	}
 }
-
-export default Image

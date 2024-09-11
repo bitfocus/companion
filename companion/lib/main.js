@@ -61,7 +61,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		process.exit(0)
 	}
 
-	logger.logger.info('Application starting')
+	logger.createLogger('Main').info('Application starting')
 
 	if (isNaN(options.adminPort)) {
 		console.error(`Port number is not valid`)

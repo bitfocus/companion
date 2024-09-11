@@ -73,7 +73,7 @@ class CoreBase extends EventEmitter {
 
 	/**
 	 * The core graphics controller
-	 * @type {import('../Graphics/Controller.js').default}
+	 * @type {import('../Graphics/Controller.js').GraphicsController}
 	 * @access protected
 	 * @readonly
 	 */
@@ -113,7 +113,7 @@ class CoreBase extends EventEmitter {
 
 	/**
 	 * The core page controller
-	 * @type {import('../Graphics/Preview.js').default}
+	 * @type {import('../Graphics/Preview.js').GraphicsPreview}
 	 * @access protected
 	 * @readonly
 	 */

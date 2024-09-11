@@ -208,7 +208,7 @@ class SurfaceHandler extends EventEmitter {
 	#controls
 	/**
 	 * The core graphics controller
-	 * @type {import('../Graphics/Controller.js').default}
+	 * @type {import('../Graphics/Controller.js').GraphicsController}
 	 * @readonly
 	 * @access public
 	 */

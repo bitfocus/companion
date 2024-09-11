@@ -1,22 +1,25 @@
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlConfigRoom } from '../Controls/ControlBase.js'
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { GraphicsController } from './Controller.js'
+import type { VariablesValues } from '../Variables/Values.js'
+import type UIHandler from '../UI/Handler.js'
+import type PageController from '../Page/Controller.js'
+import { ImageResult } from './ImageResult.js'
 
 /**
  * Get Socket.io room for preview updates
- * @param {import('../Resources/Util.js').ControlLocation} location
- * @returns {string}
  */
-function PreviewLocationRoom(location) {
+function PreviewLocationRoom(location: ControlLocation): string {
 	return `preview:location:${location.pageNumber}:${location.row}:${location.column}`
 }
 
 /**
  * Ensure a location is correctly formed as numbers
- * @param {import('../Resources/Util.js').ControlLocation} location
- * @returns {import('../Resources/Util.js').ControlLocation}
  */
-function ensureLocationIsNumber(location) {
+function ensureLocationIsNumber(location: ControlLocation): ControlLocation {
 	return {
 		pageNumber: Number(location.pageNumber),
 		row: Number(location.row),
@@ -44,46 +47,22 @@ function ensureLocationIsNumber(location) {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class GraphicsPreview {
-	#logger = LogController.createLogger('Graphics/Preview')
+export class GraphicsPreview {
+	readonly #logger = LogController.createLogger('Graphics/Preview')
 
-	/**
-	 * @readonly
-	 * @type {import('./Controller.js').default}
-	 */
-	#graphicsController
+	readonly #graphicsController: GraphicsController
+	readonly #ioController: UIHandler
+	readonly #pageController: PageController
+	readonly #variablesController: VariablesValues
 
-	/**
-	 * @readonly
-	 * @type {import('../UI/Handler.js').default}
-	 */
-	#ioController
+	readonly #buttonReferencePreviews = new Map<string, PreviewSession>()
 
-	/**
-	 * @readonly
-	 * @type {import('../Page/Controller.js').default}
-	 */
-	#pageController
-
-	/**
-	 * @readonly
-	 * @type {import('../Variables/Values.js').VariablesValues}
-	 */
-	#variablesController
-
-	/**
-	 * Current button reference previews
-	 * @type {Map<string, PreviewSession>}
-	 */
-	#buttonReferencePreviews = new Map()
-
-	/**
-	 * @param {import('./Controller.js').default} graphicsController
-	 * @param {import("../UI/Handler.js").default } ioController
-	 * @param {import("../Page/Controller.js").default} pageController
-	 * @param {import('../Variables/Values.js').VariablesValues} variablesController
-	 */
-	constructor(graphicsController, ioController, pageController, variablesController) {
+	constructor(
+		graphicsController: GraphicsController,
+		ioController: UIHandler,
+		pageController: PageController,
+		variablesController: VariablesValues
+	) {
 		this.#graphicsController = graphicsController
 		this.#ioController = ioController
 		this.#pageController = pageController
@@ -94,13 +73,11 @@ class GraphicsPreview {
 
 	/**
 	 * Setup a client's calls
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client connection
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket) {
 		/** @type {Map<string, Set<string>>} */
 		const locationSubsForClient = new Map()
-		const getLocationSubId = (/** @type {import('../Resources/Util.js').ControlLocation} */ location) =>
+		const getLocationSubId = (location: ControlLocation): string =>
 			`${location.pageNumber}_${location.row}_${location.column}`
 
 		client.onPromise('preview:location:subscribe', (location, subId) => {
@@ -168,11 +145,8 @@ class GraphicsPreview {
 
 	/**
 	 * Send a button update to the UIs
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @param {import('./ImageResult.js').ImageResult} render
-	 * @access public
 	 */
-	#updateButton(location, render) {
+	#updateButton(location: ControlLocation, render: ImageResult): void {
 		// Push the updated render to any clients viewing a preview of a control
 		const controlId = this.#pageController.getControlIdAt(location)
 		if (controlId) {
@@ -198,12 +172,7 @@ class GraphicsPreview {
 		}
 	}
 
-	/**
-	 *
-	 * @param {Set<string>} allChangedSet
-	 * @returns {void}
-	 */
-	onVariablesChanged(allChangedSet) {
+	onVariablesChanged(allChangedSet: Set<string>): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.length) continue
@@ -250,15 +219,11 @@ class GraphicsPreview {
 	}
 }
 
-export default GraphicsPreview
-
-/**
- * @typedef {{
- *   id: string
- *   location: import('../Resources/Util.js').ControlLocation | undefined
- *   options: Record<string, any>
- *   resolvedLocation: import('../Resources/Util.js').ControlLocation | null
- *   referencedVariableIds: string[]
- *   client: import('../UI/Handler.js').ClientSocket
- * }} PreviewSession
- */
+interface PreviewSession {
+	id: string
+	location: ControlLocation | undefined
+	options: Record<string, any>
+	resolvedLocation: ControlLocation | null
+	referencedVariableIds: string[]
+	client: ClientSocket
+}

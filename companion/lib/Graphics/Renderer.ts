@@ -15,11 +15,12 @@
  *
  */
 
-import Image from './Image.js'
-import { ParseAlignment, parseColor } from '../Resources/Util.js'
+import { Image } from './Image.js'
+import { ControlLocation, ParseAlignment, parseColor } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
-//import {performance} from 'perf_hooks'
+import type { GraphicsOptions } from './Controller.js'
+import { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -49,15 +50,11 @@ const internalIcons = {
 
 // let lastDraw = 0
 
-export default class GraphicsRenderer {
+export class GraphicsRenderer {
 	/**
 	 * Draw the image for an empty button
-	 * @param {import('./Controller.js').GraphicsOptions} options
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @access public
-	 * @returns Image render object
 	 */
-	static drawBlank(options, location) {
+	static drawBlank(options: GraphicsOptions, location: ControlLocation): ImageResult {
 		// let now = performance.now()
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
@@ -76,14 +73,13 @@ export default class GraphicsRenderer {
 
 	/**
 	 * Draw the image for a button
-	 * @param {import('./Controller.js').GraphicsOptions} options
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel} drawStyle The style to draw
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
-	 * @param {string | undefined} pagename
-	 * @access public
-	 * @returns {Promise<ImageResult>} Image render object
 	 */
-	static async drawButtonImage(options, drawStyle, location, pagename) {
+	static async drawButtonImage(
+		options: GraphicsOptions,
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined
+	): Promise<ImageResult> {
 		const { buffer, width, height, dataUrl, draw_style } = await GraphicsRenderer.drawButtonImageUnwrapped(
 			options,
 			drawStyle,
@@ -94,17 +90,14 @@ export default class GraphicsRenderer {
 		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle)
 	}
 
-	/**
-	 *
-	 * @param {Buffer} buffer
-	 * @param {number} width
-	 * @param {number} height
-	 * @param {string} dataUrl
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel['style'] | undefined} draw_style
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel} drawStyle
-	 * @returns
-	 */
-	static wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle) {
+	static wrapDrawButtonImage(
+		buffer: Buffer,
+		width: number,
+		height: number,
+		dataUrl: string,
+		draw_style: DrawStyleModel['style'] | undefined,
+		drawStyle: DrawStyleModel
+	): ImageResult {
 		const draw_style2 = draw_style === 'button' ? (drawStyle.style === 'button' ? drawStyle : undefined) : draw_style
 
 		return new ImageResult(buffer, width, height, dataUrl, draw_style2)
@@ -112,20 +105,24 @@ export default class GraphicsRenderer {
 
 	/**
 	 * Draw the image for a btuton
-	 * @param {import('./Controller.js').GraphicsOptions} options
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel} drawStyle The style to draw
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
-	 * @param {string | undefined} pagename
-	 * @access public
-	 * @returns {Promise<{ buffer: Buffer, width: number, height: number, dataUrl: string, draw_style: import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel['style'] | undefined}>} Image render object
 	 */
-	static async drawButtonImageUnwrapped(options, drawStyle, location, pagename) {
+	static async drawButtonImageUnwrapped(
+		options: GraphicsOptions,
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined
+	): Promise<{
+		buffer: Buffer
+		width: number
+		height: number
+		dataUrl: string
+		draw_style: DrawStyleModel['style'] | undefined
+	}> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
 		const img = new Image(72, 72, 4)
 
-		/** @type {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel['style'] | undefined} */
-		let draw_style = undefined
+		let draw_style: DrawStyleModel['style'] | undefined = undefined
 
 		// special button types
 		if (drawStyle.style == 'pageup') {
@@ -201,16 +198,16 @@ export default class GraphicsRenderer {
 
 	/**
 	 * Draw the main button
-	 * @param {Image} img Image to draw to
-	 * @param {import('./Controller.js').GraphicsOptions} options
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').DrawStyleButtonModel} drawStyle The style to draw
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
-	 * @access private
 	 */
-	static async #drawButtonMain(img, options, drawStyle, location) {
-		let show_topbar = !!drawStyle.show_topbar
+	static async #drawButtonMain(
+		img: Image,
+		options: GraphicsOptions,
+		drawStyle: DrawStyleButtonModel,
+		location: ControlLocation | undefined
+	): Promise<void> {
+		let showTopbar = !!drawStyle.show_topbar
 		if (drawStyle.show_topbar === 'default' || drawStyle.show_topbar === undefined) {
-			show_topbar = !options.remove_topbar
+			showTopbar = !options.remove_topbar
 		}
 
 		// handle upgrade from pre alignment-support configuration
@@ -222,7 +219,7 @@ export default class GraphicsRenderer {
 		}
 
 		// Draw background color first
-		!show_topbar
+		!showTopbar
 			? img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
 			: img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
 
@@ -233,17 +230,17 @@ export default class GraphicsRenderer {
 				let data = Buffer.from(png64, 'base64')
 				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
 
-				!show_topbar
+				!showTopbar
 					? await img.drawFromPNGdata(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
 					: await img.drawFromPNGdata(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
 			} catch (e) {
 				console.error('error drawing image:', e)
 				img.box(0, 14, 71, 57, 'black')
-				!show_topbar
+				!showTopbar
 					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
 					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
 
-				GraphicsRenderer.#drawTopbar(img, show_topbar, drawStyle, location)
+				GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
 				return
 			}
 		}
@@ -252,7 +249,7 @@ export default class GraphicsRenderer {
 		try {
 			for (const image of drawStyle.imageBuffers || []) {
 				if (image.buffer) {
-					const yOffset = show_topbar ? 14 : 0
+					const yOffset = showTopbar ? 14 : 0
 
 					const x = image.x ?? 0
 					const y = yOffset + (image.y ?? 0)
@@ -264,19 +261,18 @@ export default class GraphicsRenderer {
 			}
 		} catch (e) {
 			img.fillColor('black')
-			!show_topbar
+			!showTopbar
 				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 
-			GraphicsRenderer.#drawTopbar(img, show_topbar, drawStyle, location)
+			GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
 			return
 		}
 
 		// Draw button text
 		const [halign, valign] = ParseAlignment(drawStyle.alignment)
 
-		/** @type {'auto' | number} */
-		let fontSize = 'auto'
+		let fontSize: 'auto' | number = 'auto'
 		if (drawStyle.size == 'small') {
 			fontSize = 7 // compatibility with v1 database
 		} else if (drawStyle.size == 'large') {
@@ -285,26 +281,26 @@ export default class GraphicsRenderer {
 			fontSize = Number(drawStyle.size) || 'auto'
 		}
 
-		if (!show_topbar) {
+		if (!showTopbar) {
 			img.drawAlignedText(2, 1, 68, 70, drawStyle.text, parseColor(drawStyle.color), fontSize, halign, valign)
 		} else {
 			img.drawAlignedText(2, 15, 68, 57, drawStyle.text, parseColor(drawStyle.color), fontSize, halign, valign)
 		}
 
 		// At last draw Topbar on top
-		GraphicsRenderer.#drawTopbar(img, show_topbar, drawStyle, location)
+		GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
 	}
 
 	/**
 	 * Draw the topbar onto an image for a button
-	 * @param {Image} img Image to draw to
-	 * @param {boolean} show_topbar
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').DrawStyleButtonModel} drawStyle The style to draw
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
-	 * @access private
 	 */
-	static #drawTopbar(img, show_topbar, drawStyle, location) {
-		if (!show_topbar) {
+	static #drawTopbar(
+		img: Image,
+		showTopbar: boolean,
+		drawStyle: DrawStyleButtonModel,
+		location: ControlLocation | undefined
+	) {
+		if (!showTopbar) {
 			if (drawStyle.pushed) {
 				img.drawBorder(3, colorButtonYellow)
 			}
@@ -332,10 +328,10 @@ export default class GraphicsRenderer {
 		let rightMax = 72
 
 		// first the cloud icon if present
-		if (drawStyle.cloud_error && show_topbar) {
+		if (drawStyle.cloud_error && showTopbar) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloudError)
 			rightMax -= 17
-		} else if (drawStyle.cloud && show_topbar) {
+		} else if (drawStyle.cloud && showTopbar) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloud)
 			rightMax -= 17
 		}
@@ -381,10 +377,9 @@ export default class GraphicsRenderer {
 
 	/**
 	 * Draw pincode entry button for given number
-	 * @param {number} num Display number
-	 * @returns {ImageResult}
+	 * @param num Display number
 	 */
-	static drawPincodeNumber(num) {
+	static drawPincodeNumber(num: number): ImageResult {
 		const img = new Image(72, 72, 3)
 		img.fillColor(colorDarkGrey)
 		img.drawTextLineAligned(36, 36, `${num}`, colorWhite, 44, 'center', 'center')
@@ -393,10 +388,8 @@ export default class GraphicsRenderer {
 
 	/**
 	 * Draw pincode entry button
-	 * @param {string | undefined} code
-	 * @returns {ImageResult}
 	 */
-	static drawPincodeEntry(code) {
+	static drawPincodeEntry(code: string | undefined): ImageResult {
 		const img = new Image(72, 72, 4)
 		img.fillColor(colorDarkGrey)
 		img.drawTextLineAligned(36, 30, 'Lockout', colorButtonYellow, 14, 'center', 'center')

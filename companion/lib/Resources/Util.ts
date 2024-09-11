@@ -397,6 +397,9 @@ export function TrySplitVariableId(variableId: string): [string, string] | null 
 	return [label, variable]
 }
 
+export type HorizontalAlignment = 'left' | 'right' | 'center'
+export type VerticalAlignment = 'top' | 'bottom' | 'center'
+
 /**
  * Parse an alignment value
  * @param alignment
@@ -405,7 +408,7 @@ export function TrySplitVariableId(variableId: string): [string, string] | null 
 export function ParseAlignment(
 	alignment: string,
 	validate?: boolean
-): [horizontal: 'left' | 'right' | 'center', vertical: 'top' | 'bottom' | 'center', full: string] {
+): [horizontal: HorizontalAlignment, vertical: VerticalAlignment, full: string] {
 	const [halignRaw, valignRaw] = alignment.toLowerCase().split(':', 2)
 
 	let halign: 'left' | 'right' | 'center'

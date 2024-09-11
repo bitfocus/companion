@@ -17,32 +17,31 @@
 
 import { LRUCache } from 'lru-cache'
 import { GlobalFonts } from '@napi-rs/canvas'
-import GraphicsRenderer from './Renderer.js'
+import { GraphicsRenderer } from './Renderer.js'
 import CoreBase from '../Core/Base.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import { ImageResult } from './ImageResult.js'
+import type { ImageResult } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
-import { isPackaged } from '../Resources/Util.js'
+import { type ControlLocation, isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
+import type Registry from '../Registry.js'
+import type { CompanionButtonStyleProps, CompanionVariableValues } from '@companion-module/base'
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
-/**
- * @typedef {{
- *   page_direction_flipped: boolean,
- *   page_plusminus: boolean,
- *   remove_topbar: boolean
- * }} GraphicsOptions
- */
+export interface GraphicsOptions {
+	page_direction_flipped: boolean
+	page_plusminus: boolean
+	remove_topbar: boolean
+}
 
 /**
- *
- * @param {string} fontFilename
- * @returns {string}
+ * Generate full path to a font file, handling both packaged and non-packaged environments
  */
-function generateFontUrl(fontFilename) {
+function generateFontUrl(fontFilename: string): string {
 	if (isPackaged()) {
 		return path.join(__dirname, 'assets/Fonts', fontFilename)
 	} else {
@@ -50,32 +49,23 @@ function generateFontUrl(fontFilename) {
 	}
 }
 
-class GraphicsController extends CoreBase {
+export class GraphicsController extends CoreBase {
 	/**
 	 * Cached UserConfig values that affect button rendering
-	 * @access private
-	 * @type {GraphicsOptions}
 	 */
-	#drawOptions
+	readonly #drawOptions: GraphicsOptions
 
 	/**
 	 * Current button renders cache
-	 * @access private
-	 * @type {Map<number, Map<number, Map<number, ImageResult>>>}
 	 */
-	#renderCache = new Map()
+	readonly #renderCache = new Map<number, Map<number, Map<number, ImageResult>>>()
 
 	/**
 	 * Last recently used cache for button renders
-	 * @type {LRUCache<string, ImageResult>}
-	 * @access private
 	 */
-	#renderLRUCache = new LRUCache({ max: 100 })
+	readonly #renderLRUCache = new LRUCache<string, ImageResult>({ max: 100 })
 
-	/**
-	 * @type {ImageWriteQueue<string, [import('../Resources/Util.js').ControlLocation, boolean]>}
-	 */
-	#renderQueue
+	readonly #renderQueue: ImageWriteQueue<string, [ControlLocation, boolean]>
 
 	#pool = workerPool.pool(
 		isPackaged() ? path.join(__dirname, './RenderThread.js') : fileURLToPath(new URL('./Thread.js', import.meta.url)),
@@ -95,15 +85,10 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Generated pincode bitmaps
-	 * @type {Omit<PincodeBitmaps, 'code'> | null}
-	 * @access private
 	 */
-	#pincodeBuffersCache
+	#pincodeBuffersCache: Omit<PincodeBitmaps, 'code'> | null
 
-	/**
-	 * @param {import('../Registry.js').default} registry
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Graphics/Controller')
 
 		this.setMaxListeners(0)
@@ -116,12 +101,7 @@ class GraphicsController extends CoreBase {
 
 		this.#renderQueue = new ImageWriteQueue(
 			this.logger,
-			/**
-			 * @param {string} _id
-			 * @param {import('../Resources/Util.js').ControlLocation} location
-			 * @param {boolean} skipInvalidation
-			 */
-			async (_id, location, skipInvalidation) => {
+			async (_id: string, location: ControlLocation, skipInvalidation: boolean) => {
 				try {
 					const gridSize = this.userconfig.getKey('gridSize')
 					const locationIsInBounds =
@@ -139,8 +119,7 @@ class GraphicsController extends CoreBase {
 					if (location && locationIsInBounds) {
 						// Update the internal b_text_1_4 variable
 						setImmediate(() => {
-							/** @type {import('@companion-module/base').CompanionVariableValues} */
-							const values = {}
+							const values: CompanionVariableValues = {}
 
 							// Update text, if it is present
 							values[`b_text_${location.pageNumber}_${location.row}_${location.column}`] =
@@ -158,13 +137,12 @@ class GraphicsController extends CoreBase {
 						})
 					}
 
-					let render
+					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
 						const pagename = this.page.getPageName(location.pageNumber)
 
 						// Check if the image is already present in the render cache and if so, return it
-						/** @type {import('../Resources/Util.js').ControlLocation | undefined} */
-						let keyLocation
+						let keyLocation: ControlLocation | undefined
 						if (buttonStyle.style === 'button') {
 							const globalShowTopBar = !this.#drawOptions.remove_topbar && buttonStyle.show_topbar === 'default'
 							keyLocation = globalShowTopBar || buttonStyle.show_topbar === true ? location : undefined
@@ -218,17 +196,14 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Clear all renders for the specified page, replacing with 'blank' renders
-	 * @param {number} pageNumber
-	 * @returns
 	 */
-	clearAllForPage(pageNumber) {
+	clearAllForPage(pageNumber: number): void {
 		const pageCache = this.#renderCache.get(pageNumber)
 		if (!pageCache) return
 
 		for (const [row, rowCache] of pageCache.entries()) {
 			for (const column of rowCache.keys()) {
-				/** @type {import('../Resources/Util.js').ControlLocation} */
-				const location = {
+				const location: ControlLocation = {
 					pageNumber,
 					row,
 					column,
@@ -244,10 +219,8 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Store a new render
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @param {ImageResult} render
 	 */
-	#updateCacheWithRender(location, render) {
+	#updateCacheWithRender(location: ControlLocation, render: ImageResult): void {
 		let pageCache = this.#renderCache.get(location.pageNumber)
 		if (!pageCache) {
 			pageCache = new Map()
@@ -266,7 +239,7 @@ class GraphicsController extends CoreBase {
 	/**
 	 * Redraw the page controls on every page
 	 */
-	invalidatePageControls() {
+	invalidatePageControls(): void {
 		const allControls = this.controls.getAllControls()
 		for (const control of Object.values(allControls)) {
 			if (control.type === 'pageup' || control.type === 'pagedown') {
@@ -277,12 +250,9 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Draw a preview of a button
-	 * @param {import('@companion-module/base').CompanionButtonStyleProps & {style: 'button'}} buttonStyle
-	 * @returns {Promise<ImageResult>}
 	 */
-	async drawPreview(buttonStyle) {
-		/** @type {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel} */
-		const drawStyle = {
+	async drawPreview(buttonStyle: CompanionButtonStyleProps & { style: 'button' }): Promise<ImageResult> {
+		const drawStyle: DrawStyleModel = {
 			...buttonStyle,
 
 			textExpression: false,
@@ -313,11 +283,10 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Process an updated userconfig value and update as necessary.
-	 * @param {string} key - the saved key
-	 * @param {(boolean|number|string)} value - the saved value
-	 * @access public
+	 * @param key - the saved key
+	 * @param value - the saved value
 	 */
-	updateUserConfig(key, value) {
+	updateUserConfig(key: string, value: boolean | number | string) {
 		if (key == 'page_direction_flipped') {
 			this.#drawOptions.page_direction_flipped = !!value
 			this.invalidatePageControls()
@@ -337,10 +306,8 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Regenerate the render of a control
-	 * @param {string} controlId
-	 * @returns {void}
 	 */
-	invalidateControl(controlId) {
+	invalidateControl(controlId: string): void {
 		const location = this.page.getLocationOfControlId(controlId)
 		if (location) {
 			this.invalidateButton(location)
@@ -349,19 +316,16 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Regenerate the render of a button at a location
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @returns {void}
 	 */
-	invalidateButton(location) {
+	invalidateButton(location: ControlLocation): void {
 		this.#drawAndCacheButton(location)
 	}
 
 	/**
 	 * Regenerate every button image
-	 * @param {boolean=} skipInvalidation whether to skip reporting invalidations of each button
-	 * @access private
+	 * @param skipInvalidation whether to skip reporting invalidations of each button
 	 */
-	regenerateAll(skipInvalidation = false) {
+	regenerateAll(skipInvalidation = false): void {
 		const pageCount = this.page.getPageCount()
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
 			const populatedLocations = this.page.getAllPopulatedLocationsOnPage(pageNumber)
@@ -373,21 +337,16 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Generate and cache
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @param {boolean} skipInvalidation
-	 * @returns {void}
 	 */
-	#drawAndCacheButton(location, skipInvalidation = false) {
+	#drawAndCacheButton(location: ControlLocation, skipInvalidation = false): void {
 		const id = `${location.pageNumber}_${location.row}_${location.column}`
 		this.#renderQueue.queue(id, location, skipInvalidation)
 	}
 
 	/**
 	 * Discard any renders for controls that are outside of the valid grid bounds
-	 * @returns
-	 * @access public
 	 */
-	discardAllOutOfBoundsControls() {
+	discardAllOutOfBoundsControls(): void {
 		const { minColumn, maxColumn, minRow, maxRow } = this.userconfig.getKey('gridSize')
 
 		for (const page of this.#renderCache.values()) {
@@ -412,10 +371,8 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Generate pincode images
-	 * @param {string} pincode
-	 * @returns {PincodeBitmaps}
 	 */
-	getImagesForPincode(pincode) {
+	getImagesForPincode(pincode: string): PincodeBitmaps {
 		if (!this.#pincodeBuffersCache) {
 			this.#pincodeBuffersCache = {}
 
@@ -432,19 +389,15 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Get the cached render of a button
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @returns {ImageResult | undefined}
 	 */
-	getCachedRender(location) {
+	getCachedRender(location: ControlLocation): ImageResult | undefined {
 		return this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 	}
 
 	/**
 	 * Get the cached render of a button, or generate a placeholder it if is missing
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @returns {ImageResult}
 	 */
-	getCachedRenderOrGeneratePlaceholder(location) {
+	getCachedRenderOrGeneratePlaceholder(location: ControlLocation): ImageResult {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
@@ -453,16 +406,23 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Draw a button image in the worker pool
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel} drawStyle The style to draw
-	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
-	 * @param {string | undefined} pagename
-	 * @param {number} remainingAttempts
-	 * @returns {Promise<{ buffer: Buffer, width: number, height: number, dataUrl: string, draw_style: import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel['style'] | undefined}>} Image render object
+	 * @returns Image render object
 	 */
-	async #executePoolDrawButtonImage(drawStyle, location, pagename, remainingAttempts) {
+	async #executePoolDrawButtonImage(
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined,
+		remainingAttempts: number
+	): Promise<{
+		buffer: Buffer
+		width: number
+		height: number
+		dataUrl: string
+		draw_style: DrawStyleModel['style'] | undefined
+	}> {
 		try {
 			return this.#pool.exec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename])
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
 			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
 				return this.#executePoolDrawButtonImage(drawStyle, location, pagename, remainingAttempts - 1)
@@ -473,11 +433,7 @@ class GraphicsController extends CoreBase {
 	}
 }
 
-export default GraphicsController
-
-/**
- * @typedef {{
- *   code: ImageResult
- *   [index: number]: ImageResult
- * }} PincodeBitmaps
- */
+type PincodeBitmaps = {
+	code: ImageResult
+	[index: number]: ImageResult
+}

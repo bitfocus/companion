@@ -127,7 +127,7 @@ export default class Controls {
 
 	/**
 	 * The core graphics controller
-	 * @type {import('../Graphics/Controller.js').default}
+	 * @type {import('../Graphics/Controller.js').GraphicsController}
 	 * @readonly
 	 */
 	#graphicsController
@@ -152,7 +152,7 @@ export default class Controls {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Graphics/Controller.js').default} graphicsController
+	 * @param {import('../Graphics/Controller.js').GraphicsController} graphicsController
 	 * @param {import('../Controls/Controller.js').default} controlsController
 	 * @param {import('../Page/Controller.js').default} pagesController
 	 * @param {import('../Variables/Values.js').VariablesValues} variableController

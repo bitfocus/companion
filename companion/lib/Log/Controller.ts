@@ -7,9 +7,15 @@ import fs from 'fs-extra'
 import winston from 'winston'
 import Transport from 'winston-transport'
 import supportsColor from 'supports-color'
-import consoleColors from './Colors.js'
+import { LogColors } from './Colors.js'
 import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
+import type UIHandler from '../UI/Handler.js'
+import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { AppInfo } from '../Registry.js'
+
+export type Logger = winston.Logger
 
 const SentrySeverity = {
 	debug: 'debug',
@@ -18,23 +24,18 @@ const SentrySeverity = {
 	error: 'error',
 }
 
+type LogLineFn = (line: any) => void
 class ToMemoryTransport extends Transport {
-	/**
-	 * @param {Transport.TransportStreamOptions | undefined} opts
-	 * @param {(line: any) => void} addToHistory
-	 */
-	constructor(opts, addToHistory) {
+	readonly #addToHistory: LogLineFn
+
+	constructor(opts: Transport.TransportStreamOptions | undefined, addToHistory: LogLineFn) {
 		super(opts)
 
-		this.addToHistory = addToHistory
+		this.#addToHistory = addToHistory
 	}
 
-	/**
-	 * @param {any} info
-	 * @param {() => void} callback
-	 */
-	log(info, callback) {
-		this.addToHistory(info)
+	log(info: any, callback: () => void) {
+		this.#addToHistory(info)
 
 		callback()
 	}
@@ -65,21 +66,15 @@ const LogRoom = 'logs'
 class LogController {
 	/**
 	 * The Sentry <code>addBreadcrumb</code> function, if initialized
-	 * @type {typeof addBreadcrumb | null}
-	 * @access protected
 	 */
-	#addBreadcrumb = null
-	/**
-	 * The log array
-	 * @type {import('@companion-app/shared/Model/LogLine.js').ClientLogLine[]}
-	 * @access protected
-	 */
-	#history = []
+	#addBreadcrumb: typeof addBreadcrumb | null = null
 
-	/**
-	 * @type {import('../UI/Handler.js').default | null}
-	 */
-	#ioController = null
+	#history: ClientLogLine[] = []
+
+	#ioController: UIHandler | null = null
+
+	#winston: winston.Logger
+	#logger: winston.Logger
 
 	/**
 	 * Create a new logger
@@ -87,10 +82,8 @@ class LogController {
 	constructor() {
 		/**
 		 * Select a colour for a log namespace
-		 * @param {string} namespace
-		 * @returns {number}
 		 */
-		function selectColor(namespace) {
+		function selectColor(namespace: string): number {
 			let hash = 0
 
 			for (let i = 0; i < namespace.length; i++) {
@@ -98,12 +91,12 @@ class LogController {
 				hash |= 0 // Convert to 32bit integer
 			}
 
-			return consoleColors[Math.abs(hash) % consoleColors.length]
+			return LogColors[Math.abs(hash) % LogColors.length]
 		}
 
 		if (process.env.JEST_WORKER_ID) {
 			// Use a simpler log setup in tests
-			this.winston = winston.createLogger({
+			this.#winston = winston.createLogger({
 				level: 'silly',
 				transports: [
 					new winston.transports.Console({
@@ -125,7 +118,7 @@ class LogController {
 			]
 			if (supportsColor.stdout) consoleFormat.unshift(winston.format.colorize())
 
-			this.winston = winston.createLogger({
+			this.#winston = winston.createLogger({
 				level: 'info',
 				transports: [
 					new winston.transports.Console({
@@ -143,32 +136,27 @@ class LogController {
 			})
 		}
 
-		this.logger = this.createLogger('Log/Controller')
+		this.#logger = this.createLogger('Log/Controller')
 	}
 
 	/**
 	 * Set the log level to output
-	 * @param {string} level
 	 */
-	setLogLevel(level) {
-		this.winston.level = level
+	setLogLevel(level: string): void {
+		this.#winston.level = level
 	}
 
 	/**
 	 * Create a child logger
-	 * @param {string} source
-	 * @returns {winston.Logger}
 	 */
-	createLogger(source) {
-		return this.winston.child({ source })
+	createLogger(source: string): Logger {
+		return this.#winston.child({ source })
 	}
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('logs:subscribe', () => {
 			client.join(LogRoom)
 
@@ -195,8 +183,7 @@ class LogController {
 		})
 	}
 
-	/** @type {import('@companion-app/shared/Model/LogLine.js').ClientLogLine[]} */
-	#pendingLines = []
+	#pendingLines: ClientLogLine[] = []
 	debounceSendLines = debounceFn(
 		() => {
 			if (this.#ioController && this.#ioController.countRoomMembers(LogRoom) > 0) {
@@ -213,10 +200,8 @@ class LogController {
 
 	/**
 	 * Add a line logged to winston to the log history
-	 * @param {any} line
-	 * @access private
 	 */
-	#addToHistory(line) {
+	#addToHistory(line: any) {
 		/** @type {import('@companion-app/shared/Model/LogLine.js').ClientLogLine} */
 		const uiLine = {
 			time: line.timestamp,
@@ -245,12 +230,12 @@ class LogController {
 
 	/**
 	 * Get all of the log entries
-	 * @param {boolean} [clone = false] - <code>true</code> if a clone is needed instead of a reference
-	 * @return {import('@companion-app/shared/Model/LogLine.js').ClientLogLine[]} the log entries
+	 * @param clone - <code>true</code> if a clone is needed instead of a reference
+	 * @return the log entries
 	 * @access public
 	 */
-	getAllLines(clone = false) {
-		this.logger.silly(`get all`)
+	getAllLines(clone = false): ClientLogLine[] {
+		this.#logger.silly(`get all`)
 
 		if (clone) {
 			return cloneDeep(this.#history)
@@ -261,12 +246,8 @@ class LogController {
 
 	/**
 	 * Initialize Sentry and UI logging
-	 * @param {import('../Registry.js').AppInfo } appInfo
-	 * @param {import('../UI/Handler.js').default} ioController
-	 * @returns {void}
-	 * @access public
 	 */
-	init(appInfo, ioController) {
+	init(appInfo: AppInfo, ioController: UIHandler): void {
 		this.#ioController = ioController
 
 		// Allow the DSN to be provided as an env variable
@@ -278,7 +259,7 @@ class LogController {
 					.toString()
 					.trim()
 			} catch (e) {
-				this.logger.info('Sentry DSN not located')
+				this.#logger.info('Sentry DSN not located')
 			}
 		}
 
@@ -300,13 +281,13 @@ class LogController {
 				scope.setUser({ id: appInfo.machineId })
 				scope.setExtra('build', appInfo.appBuild)
 			} catch (e) {
-				this.logger.info(`Failed to setup sentry reporting: ${e}`)
+				this.#logger.info(`Failed to setup sentry reporting: ${e}`)
 			}
 
 			this.#addBreadcrumb = addBreadcrumb
-			this.logger.info(`Sentry error reporting configured`)
+			this.#logger.info(`Sentry error reporting configured`)
 		} else {
-			this.logger.info('Sentry error reporting is disabled')
+			this.#logger.info('Sentry error reporting is disabled')
 		}
 	}
 }
