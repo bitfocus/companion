@@ -30,10 +30,10 @@ import shuttleControlUSB from 'shuttle-control-usb'
 // @ts-ignore
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
-import SurfaceHandler, { getSurfaceName } from './Handler.js'
+import { SurfaceHandler, SurfacePanel, getSurfaceName } from './Handler.js'
 import SurfaceIPElgatoEmulator, { EmulatorRoom } from './IP/ElgatoEmulator.js'
 import SurfaceIPElgatoPlugin from './IP/ElgatoPlugin.js'
-import SurfaceIPSatellite from './IP/Satellite.js'
+import SurfaceIPSatellite, { SatelliteDeviceInfo } from './IP/Satellite.js'
 import ElgatoStreamDeckDriver from './USB/ElgatoStreamDeck.js'
 import InfinittonDriver from './USB/Infinitton.js'
 import XKeysDriver from './USB/XKeys.js'
@@ -41,7 +41,7 @@ import LoupedeckLiveDriver from './USB/LoupedeckLive.js'
 import SurfaceUSBLoupedeckCt from './USB/LoupedeckCt.js'
 import ContourShuttleDriver from './USB/ContourShuttle.js'
 import VECFootpedalDriver from './USB/VECFootpedal.js'
-import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
+import SurfaceIPVideohubPanel, { VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import MystrixDriver from './USB/203SystemsMystrix.js'
 import CoreBase from '../Core/Base.js'
@@ -49,6 +49,12 @@ import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
+import type { ClientDevicesListItem, ClientSurfaceItem, SurfacesUpdate } from '@companion-app/shared/Model/Surfaces.js'
+import type Registry from '../Registry.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
+import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
+import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -56,74 +62,51 @@ HID.devices()
 
 const SurfacesRoom = 'surfaces'
 
-class SurfaceController extends CoreBase {
+export class SurfaceController extends CoreBase {
 	/**
 	 * The last sent json object
-	 * @type {Record<string, ClientDevicesListItem> }
-	 * @access private
 	 */
-	#lastSentJson = {}
+	#lastSentJson: Record<string, ClientDevicesListItem> = {}
 
 	/**
 	 * All the opened and active surfaces
-	 * @type {Map<string, SurfaceHandler | null>}
-	 * @access private
 	 */
-	#surfaceHandlers = new Map()
+	readonly #surfaceHandlers = new Map<string, SurfaceHandler | null>()
 
 	/**
 	 * The surface groups wrapping the surface handlers
-	 * @type {Map<string, SurfaceGroup>}
-	 * @access private
 	 */
-	#surfaceGroups = new Map()
+	readonly #surfaceGroups = new Map<string, SurfaceGroup>()
 
 	/**
 	 * Last time each surface was interacted with, for lockouts
 	 * The values get cleared when a surface is locked, and remains while unlocked
-	 * @type {Map<string, number>}
-	 * @access private
 	 */
-	#surfacesLastInteraction = new Map()
+	readonly #surfacesLastInteraction = new Map<string, number>()
 
 	/**
 	 * Timer for lockout checking
-	 * @type {NodeJS.Timeout | null}
-	 * @access private
 	 */
-	#surfaceLockoutTimer = null
+	#surfaceLockoutTimer: NodeJS.Timeout | null = null
 
 	/**
 	 * If lockouts are linked, track whether they are currently locked
-	 * @type {boolean}
-	 * @access private
 	 */
-	#surfacesAllLocked = false
+	#surfacesAllLocked: boolean = false
 
 	/**
 	 * Whether usb hotplug is currently configured and running
-	 * @type {boolean}
-	 * @access private
 	 */
-	#runningUsbHotplug = false
+	#runningUsbHotplug: boolean = false
 
 	/**
 	 * Whether a usb scan is currently in progress
-	 * @type {boolean}
-	 * @access private
 	 */
-	#runningRefreshDevices = false
+	#runningRefreshDevices: boolean = false
 
-	/**
-	 * @type {SurfaceOutboundController}
-	 * @readonly
-	 */
-	#outboundController
+	readonly #outboundController: SurfaceOutboundController
 
-	/**
-	 * @param {import('../Registry.js').default} registry
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Surface/Controller')
 
 		this.#outboundController = new SurfaceOutboundController(this, registry.db, registry.io)
@@ -181,8 +164,6 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Trigger a rescan of connected devices
-	 * @type {() => Promise<void | string>}
-	 * @access public
 	 */
 	triggerRefreshDevices = pDebounce(async () => this.#refreshDevices(), 50, {
 		before: false,
@@ -190,11 +171,10 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Process an updated userconfig value and update as necessary.
-	 * @param {string} key - the saved key
-	 * @param {(boolean|number|string)} value - the saved value
-	 * @access public
+	 * @param key - the saved key
+	 * @param value - the saved value
 	 */
-	updateUserConfig(key, value) {
+	updateUserConfig(key: string, value: boolean | number | string): void {
 		if (key === 'usb_hotplug') {
 			try {
 				if (!value && this.#runningUsbHotplug) {
@@ -258,18 +238,15 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Check if a surface should be timed out
-	 * @param {string} groupId
-	 * @param {number} timeout
-	 * @returns {boolean}
 	 */
-	#isSurfaceGroupTimedOut(groupId, timeout) {
+	#isSurfaceGroupTimedOut(groupId: string, timeout: number): boolean {
 		if (!this.isPinLockEnabled()) return false
 
 		const lastInteraction = this.#surfacesLastInteraction.get(groupId) || 0
 		return lastInteraction + timeout < Date.now()
 	}
 
-	triggerRefreshDevicesEvent() {
+	triggerRefreshDevicesEvent(): void {
 		this.triggerRefreshDevices().catch((e) => {
 			this.logger.warn(`Hotplug device refresh failed: ${e}`)
 		})
@@ -277,10 +254,10 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Add an emulator
-	 * @param {string} id base id of the emulator
-	 * @param {boolean} skipUpdate Skip emitting an update to the devices list
+	 * @param id base id of the emulator
+	 * @param skipUpdate Skip emitting an update to the devices list
 	 */
-	addEmulator(id, skipUpdate = false) {
+	addEmulator(id: string, skipUpdate = false): void {
 		const fullId = EmulatorRoom(id)
 		if (this.#surfaceHandlers.has(fullId)) {
 			throw new Error(`Emulator "${id}" already exists!`)
@@ -293,12 +270,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Create a `SurfaceHandler` for a `SurfacePanel`
-	 * @param {string} surfaceId
-	 * @param {string} integrationType
-	 * @param {import('./Handler.js').SurfacePanel} panel
-	 * @returns {void}
 	 */
-	#createSurfaceHandler(surfaceId, integrationType, panel) {
+	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): void {
 		const surfaceConfig = this.getDeviceConfig(panel.info.deviceId)
 		if (!surfaceConfig) {
 			this.logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
@@ -334,10 +307,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		this.#outboundController.clientConnect(client)
 
 		client.onPromise('emulator:startup', (id) => {
@@ -401,7 +372,7 @@ class SurfaceController extends CoreBase {
 		client.onPromise('surfaces:rescan', async () => {
 			try {
 				return this.triggerRefreshDevices()
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				return e.message
 			}
 		})
@@ -572,10 +543,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Attach a `SurfaceHandler` to its `SurfaceGroup`
-	 * @param {SurfaceHandler} surfaceHandler
-	 * @returns {void}
 	 */
-	#attachSurfaceToGroup(surfaceHandler) {
+	#attachSurfaceToGroup(surfaceHandler: SurfaceHandler): void {
 		const rawSurfaceGroupId = surfaceHandler.getGroupId()
 		const surfaceGroupId = rawSurfaceGroupId || surfaceHandler.surfaceId
 		const existingGroup = this.#surfaceGroups.get(surfaceGroupId)
@@ -616,10 +585,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Detach a `SurfaceHandler` from its `SurfaceGroup`
-	 * @param {SurfaceHandler} surfaceHandler
-	 * @returns {void}
 	 */
-	#detachSurfaceFromGroup(surfaceHandler) {
+	#detachSurfaceFromGroup(surfaceHandler: SurfaceHandler): void {
 		const existingGroupId = surfaceHandler.getGroupId() || surfaceHandler.surfaceId
 		const existingGroup = existingGroupId ? this.#surfaceGroups.get(existingGroupId) : null
 		if (!existingGroup) return
@@ -637,21 +604,18 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Get the config object for a surface
-	 * @param {string} surfaceId
-	 * @returns {any} Config object, or undefined
+	 * @returns Config object, or undefined
 	 */
-	getDeviceConfig(surfaceId) {
+	getDeviceConfig(surfaceId: string): any {
 		const config = this.db.getKey('deviceconfig', {})
 		return config[surfaceId]
 	}
 
 	/**
 	 * Set the config object for a surface
-	 * @param {string} surfaceId
-	 * @param {any | undefined} surfaceConfig
-	 * @returns {boolean} Already had config
+	 * @returns Already had config
 	 */
-	setDeviceConfig(surfaceId, surfaceConfig) {
+	setDeviceConfig(surfaceId: string, surfaceConfig: any | undefined): boolean {
 		const config = this.db.getKey('deviceconfig', {})
 		const exists = !!config[surfaceId]
 
@@ -665,21 +629,13 @@ class SurfaceController extends CoreBase {
 		return exists
 	}
 
-	/**
-	 *
-	 * @returns {ClientDevicesListItem[]}
-	 */
-	getDevicesList() {
-		/**
-		 *
-		 * @param {string} id
-		 * @param {Record<string, any>} config
-		 * @param {SurfaceHandler | null} surfaceHandler
-		 * @returns {ClientSurfaceItem}
-		 */
-		const translateSurfaceConfig = (id, config, surfaceHandler) => {
-			/** @type {ClientSurfaceItem} */
-			const surfaceInfo = {
+	getDevicesList(): ClientDevicesListItem[] {
+		const translateSurfaceConfig = (
+			id: string,
+			config: Record<string, any>,
+			surfaceHandler: SurfaceHandler | null
+		): ClientSurfaceItem => {
+			const surfaceInfo: ClientSurfaceItem = {
 				id: id,
 				type: config?.type || 'Unknown',
 				integrationType: config?.integrationType || '',
@@ -705,43 +661,34 @@ class SurfaceController extends CoreBase {
 			return surfaceInfo
 		}
 
-		/** @type {ClientDevicesListItem[]} */
-		const result = []
+		const result: ClientDevicesListItem[] = []
 
 		const surfaceGroups = Array.from(this.#surfaceGroups.values())
-		surfaceGroups.sort(
-			/**
-			 * @param {SurfaceGroup} a
-			 * @param {SurfaceGroup} b
-			 * @returns -1 | 0 | 1
-			 */
-			(a, b) => {
-				// manual groups must be first
-				if (!a.isAutoGroup && b.isAutoGroup) {
-					return -1
-				} else if (!b.isAutoGroup && a.isAutoGroup) {
-					return 1
-				}
-
-				const aIsEmulator = a.groupId.startsWith('emulator:')
-				const bIsEmulator = b.groupId.startsWith('emulator:')
-
-				// emulator must be first
-				if (aIsEmulator && !bIsEmulator) {
-					return -1
-				} else if (bIsEmulator && !aIsEmulator) {
-					return 1
-				}
-
-				// then by id
-				return a.groupId.localeCompare(b.groupId)
+		surfaceGroups.sort((a, b) => {
+			// manual groups must be first
+			if (!a.isAutoGroup && b.isAutoGroup) {
+				return -1
+			} else if (!b.isAutoGroup && a.isAutoGroup) {
+				return 1
 			}
-		)
 
-		const groupsMap = new Map()
+			const aIsEmulator = a.groupId.startsWith('emulator:')
+			const bIsEmulator = b.groupId.startsWith('emulator:')
+
+			// emulator must be first
+			if (aIsEmulator && !bIsEmulator) {
+				return -1
+			} else if (bIsEmulator && !aIsEmulator) {
+				return 1
+			}
+
+			// then by id
+			return a.groupId.localeCompare(b.groupId)
+		})
+
+		const groupsMap = new Map<string, ClientDevicesListItem>()
 		surfaceGroups.forEach((group, index) => {
-			/** @type {ClientDevicesListItem} */
-			const groupResult = {
+			const groupResult: ClientDevicesListItem = {
 				id: group.groupId,
 				index: index,
 				displayName: group.displayName,
@@ -754,7 +701,7 @@ class SurfaceController extends CoreBase {
 			groupsMap.set(group.groupId, groupResult)
 		})
 
-		const mappedSurfaceId = new Set()
+		const mappedSurfaceId = new Set<string>()
 		for (const group of result) {
 			for (const surface of group.surfaces) {
 				mappedSurfaceId.add(surface.id)
@@ -762,7 +709,7 @@ class SurfaceController extends CoreBase {
 		}
 
 		// Add any automatic groups for offline surfaces
-		const config = this.db.getKey('deviceconfig', {})
+		const config: Record<string, any> = this.db.getKey('deviceconfig', {})
 		for (const [surfaceId, surface] of Object.entries(config)) {
 			if (mappedSurfaceId.has(surfaceId)) continue
 
@@ -772,8 +719,7 @@ class SurfaceController extends CoreBase {
 			if (existingGroup) {
 				existingGroup.surfaces.push(translateSurfaceConfig(surfaceId, surface, null))
 			} else {
-				/** @type {ClientDevicesListItem} */
-				const groupResult = {
+				const groupResult: ClientDevicesListItem = {
 					id: groupId,
 					index: undefined,
 					displayName: `${surface.name || surface.type} (${surfaceId}) - Offline`,
@@ -788,7 +734,7 @@ class SurfaceController extends CoreBase {
 		return result
 	}
 
-	reset() {
+	reset(): void {
 		// Each active handler will re-add itself when doing the save as part of its own reset
 		this.db.setKey('deviceconfig', {})
 		this.db.setKey('surface-groups', {})
@@ -796,20 +742,18 @@ class SurfaceController extends CoreBase {
 		this.updateDevicesList()
 	}
 
-	updateDevicesList() {
+	updateDevicesList(): void {
 		const newJsonArr = cloneDeep(this.getDevicesList())
 
 		const hasSubscribers = this.io.countRoomMembers(SurfacesRoom) > 0
 
-		/** @type {Record<string, ClientDevicesListItem>} */
-		const newJson = {}
+		const newJson: Record<string, ClientDevicesListItem> = {}
 		for (const surface of newJsonArr) {
 			newJson[surface.id] = surface
 		}
 
 		if (hasSubscribers) {
-			/** @type {import('@companion-app/shared/Model/Surfaces.js').SurfacesUpdate[]} */
-			const changes = []
+			const changes: SurfacesUpdate[] = []
 
 			for (const [id, info] of Object.entries(newJson)) {
 				if (!info) continue
@@ -851,7 +795,7 @@ class SurfaceController extends CoreBase {
 		this.#lastSentJson = newJson
 	}
 
-	async #refreshDevices() {
+	async #refreshDevices(): Promise<string | undefined> {
 		// Ensure only one scan is being run at a time
 		if (this.#runningRefreshDevices) {
 			return this.triggerRefreshDevices()
@@ -999,11 +943,7 @@ class SurfaceController extends CoreBase {
 		}
 	}
 
-	/**
-	 *
-	 * @param {import('@elgato-stream-deck/tcp').StreamDeckTcp} streamdeck
-	 */
-	async addStreamdeckTcpDevice(streamdeck) {
+	async addStreamdeckTcpDevice(streamdeck: StreamDeckTcp) {
 		const fakePath = `tcp://${streamdeck.remoteAddress}:${streamdeck.remotePort}`
 
 		this.removeDevice(fakePath)
@@ -1019,10 +959,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Add a satellite device
-	 * @param {import('./IP/Satellite.js').SatelliteDeviceInfo} deviceInfo
-	 * @returns {SurfaceIPSatellite}
 	 */
-	addSatelliteDevice(deviceInfo) {
+	addSatelliteDevice(deviceInfo: SatelliteDeviceInfo): SurfaceIPSatellite {
 		this.removeDevice(deviceInfo.path)
 
 		const device = new SurfaceIPSatellite(deviceInfo, this.#surfaceExecuteExpression.bind(this))
@@ -1038,10 +976,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Add a new videohub panel
-	 * @param {import('./IP/VideohubPanel.js').VideohubPanelDeviceInfo} deviceInfo
-	 * @returns {SurfaceIPVideohubPanel}
 	 */
-	addVideohubPanelDevice(deviceInfo) {
+	addVideohubPanelDevice(deviceInfo: VideohubPanelDeviceInfo): SurfaceIPVideohubPanel {
 		this.removeDevice(deviceInfo.path)
 
 		const device = new SurfaceIPVideohubPanel(deviceInfo)
@@ -1057,11 +993,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Add the elgato plugin connection
-	 * @param {string} devicePath
-	 * @param {import('../Service/ElgatoPlugin.js').ServiceElgatoPluginSocket} socket
-	 * @returns
 	 */
-	addElgatoPluginDevice(devicePath, socket) {
+	addElgatoPluginDevice(devicePath: string, socket: ServiceElgatoPluginSocket): SurfaceIPElgatoPlugin {
 		this.removeDevice(devicePath)
 
 		const device = new SurfaceIPElgatoPlugin(this.controls, this.page, devicePath, socket)
@@ -1075,16 +1008,13 @@ class SurfaceController extends CoreBase {
 		return device
 	}
 
-	/**
-	 *
-	 * @param {string} devicePath
-	 * @param {Omit<LocalUSBDeviceOptions, 'executeExpression'>} deviceOptions
-	 * @param {string} type
-	 * @param {{ create: (path: string, options: LocalUSBDeviceOptions) => Promise<import('./Handler.js').SurfacePanel>}} factory
-	 * @param {boolean} skipHidAccessCheck
-	 * @returns
-	 */
-	async #addDevice(devicePath, deviceOptions, type, factory, skipHidAccessCheck = false) {
+	async #addDevice(
+		devicePath: string,
+		deviceOptions: Omit<LocalUSBDeviceOptions, 'executeExpression'>,
+		type: string,
+		factory: SurfacePanelFactory,
+		skipHidAccessCheck = false
+	) {
 		this.removeDevice(devicePath)
 
 		this.logger.silly('add device ' + devicePath)
@@ -1123,8 +1053,11 @@ class SurfaceController extends CoreBase {
 		}
 	}
 
-	/** @type {SurfaceExecuteExpressionFn} */
-	#surfaceExecuteExpression(str, surfaceId, injectedVariableValues) {
+	#surfaceExecuteExpression(
+		str: string,
+		surfaceId: string,
+		injectedVariableValues: CompanionVariableValues | undefined
+	) {
 		const injectedVariableValuesComplete = {
 			...this.#getInjectedVariablesForSurfaceId(surfaceId),
 			...injectedVariableValues,
@@ -1135,10 +1068,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Variables to inject based on location
-	 * @param {string} surfaceId
-	 * @returns {import('@companion-module/base').CompanionVariableValues}
 	 */
-	#getInjectedVariablesForSurfaceId(surfaceId) {
+	#getInjectedVariablesForSurfaceId(surfaceId: string): CompanionVariableValues {
 		const pageNumber = this.devicePageGet(surfaceId)
 
 		return {
@@ -1150,23 +1081,20 @@ class SurfaceController extends CoreBase {
 		}
 	}
 
-	exportAll(clone = true) {
+	exportAll(clone = true): any {
 		const obj = this.db.getKey('deviceconfig', {}) || {}
 		return clone ? cloneDeep(obj) : obj
 	}
 
-	exportAllGroups(clone = true) {
+	exportAllGroups(clone = true): any {
 		const obj = this.db.getKey('surface-groups', {}) || {}
 		return clone ? cloneDeep(obj) : obj
 	}
 
 	/**
 	 * Import a surface configuration
-	 * @param {Record<string, *>} surfaceGroups
-	 * @param {Record<string, *>} surfaces
-	 * @returns {void}
 	 */
-	importSurfaces(surfaceGroups, surfaces) {
+	importSurfaces(surfaceGroups: Record<string, any>, surfaces: Record<string, any>): void {
 		for (const [id, surfaceGroup] of Object.entries(surfaceGroups)) {
 			let group = this.#getGroupForId(id, true)
 			if (!group) {
@@ -1213,11 +1141,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Remove a surface
-	 * @param {string} devicePath
-	 * @param {boolean=} purge
-	 * @returns {void}
 	 */
-	removeDevice(devicePath, purge) {
+	removeDevice(devicePath: string, purge = false): void {
 		const surfaceHandler = this.#surfaceHandlers.get(devicePath)
 		if (surfaceHandler) {
 			this.logger.silly('remove device ' + devicePath)
@@ -1242,7 +1167,7 @@ class SurfaceController extends CoreBase {
 		this.updateDevicesList()
 	}
 
-	quit() {
+	quit(): void {
 		for (const surface of this.#surfaceHandlers.values()) {
 			if (!surface) continue
 			try {
@@ -1260,10 +1185,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Find surfaceId by index
-	 * @param {number} index
-	 * @returns {string | undefined}
 	 */
-	getDeviceIdFromIndex(index) {
+	getDeviceIdFromIndex(index: number): string | undefined {
 		for (const group of this.getDevicesList()) {
 			if (group.index !== undefined && group.index === index) {
 				return group.id
@@ -1274,11 +1197,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Perform page-up for a surface
-	 * @param {string} surfaceOrGroupId
-	 * @param {boolean=} looseIdMatching
-	 * @returns {void}
 	 */
-	devicePageUp(surfaceOrGroupId, looseIdMatching) {
+	devicePageUp(surfaceOrGroupId: string, looseIdMatching = false): void {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
 			surfaceGroup.doPageUp()
@@ -1286,11 +1206,8 @@ class SurfaceController extends CoreBase {
 	}
 	/**
 	 * Perform page-down for a surface
-	 * @param {string} surfaceOrGroupId
-	 * @param {boolean=} looseIdMatching
-	 * @returns {void}
 	 */
-	devicePageDown(surfaceOrGroupId, looseIdMatching) {
+	devicePageDown(surfaceOrGroupId: string, looseIdMatching = false): void {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
 			surfaceGroup.doPageDown()
@@ -1298,13 +1215,12 @@ class SurfaceController extends CoreBase {
 	}
 	/**
 	 * Set the page id for a surface
-	 * @param {string} surfaceOrGroupId
-	 * @param {string} pageId
-	 * @param {boolean=} looseIdMatching
-	 * @param {boolean=} defer Defer the drawing to the next tick
-	 * @returns {void}
+	 * @param surfaceOrGroupId
+	 * @param pageId
+	 * @param looseIdMatching
+	 * @param defer Defer the drawing to the next tick
 	 */
-	devicePageSet(surfaceOrGroupId, pageId, looseIdMatching, defer = false) {
+	devicePageSet(surfaceOrGroupId: string, pageId: string, looseIdMatching = false, defer = false): void {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
 			surfaceGroup.setCurrentPage(pageId, defer)
@@ -1312,11 +1228,8 @@ class SurfaceController extends CoreBase {
 	}
 	/**
 	 * Get the page id of a surface
-	 * @param {string} surfaceOrGroupId
-	 * @param {boolean=} looseIdMatching
-	 * @returns {string | undefined}
 	 */
-	devicePageGet(surfaceOrGroupId, looseIdMatching = false) {
+	devicePageGet(surfaceOrGroupId: string, looseIdMatching = false): string | undefined {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
 			return surfaceGroup.getCurrentPageId()
@@ -1326,11 +1239,8 @@ class SurfaceController extends CoreBase {
 	}
 	/**
 	 * Get the startup page id of a surface
-	 * @param {string} surfaceOrGroupId
-	 * @param {boolean=} looseIdMatching
-	 * @returns {string | undefined}
 	 */
-	devicePageGetStartup(surfaceOrGroupId, looseIdMatching = false) {
+	devicePageGetStartup(surfaceOrGroupId: string, looseIdMatching = false): string | undefined {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
 			return surfaceGroup.groupConfig.use_last_page
@@ -1343,11 +1253,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Get the groupId for a surfaceId (or groupId)
-	 * @param {string} surfaceOrGroupId
-	 * @param {boolean=} looseIdMatching
-	 * @returns {string | undefined}
 	 */
-	getGroupIdFromDeviceId(surfaceOrGroupId, looseIdMatching) {
+	getGroupIdFromDeviceId(surfaceOrGroupId: string, looseIdMatching = false): string | undefined {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 
 		return surfaceGroup?.groupId
@@ -1381,16 +1288,14 @@ class SurfaceController extends CoreBase {
 	 * Is pin lock enabled
 	 * @returns {boolean}
 	 */
-	isPinLockEnabled() {
+	isPinLockEnabled(): boolean {
 		return !!this.userconfig.getKey('pin_enable')
 	}
 
 	/**
 	 * Propagate variable changes
-	 * @param {Set<string>} allChangedVariables - variables with changes
-	 * @access public
 	 */
-	onVariablesChanged(allChangedVariables) {
+	onVariablesChanged(allChangedVariables: Set<string>): void {
 		for (const surface of this.#surfaceHandlers.values()) {
 			if (surface?.panel?.onVariablesChanged) {
 				surface.panel.onVariablesChanged(allChangedVariables)
@@ -1400,11 +1305,10 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Set the locked state of all surfaces
-	 * @param {boolean} locked
-	 * @param {boolean} forceUnlock Force all surfaces to be unlocked
-	 * @returns
+	 * @param locked
+	 * @param forceUnlock Force all surfaces to be unlocked
 	 */
-	setAllLocked(locked, forceUnlock = false) {
+	setAllLocked(locked: boolean, forceUnlock = false): void {
 		if (forceUnlock) {
 			locked = false
 		} else {
@@ -1422,12 +1326,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Set all surfaces as locked
-	 * @param {string} surfaceOrGroupId
-	 * @param {boolean} locked
-	 * @param {boolean} looseIdMatching
-	 * @returns {void}
 	 */
-	setSurfaceOrGroupLocked(surfaceOrGroupId, locked, looseIdMatching = false) {
+	setSurfaceOrGroupLocked(surfaceOrGroupId: string, locked: boolean, looseIdMatching = false): void {
 		if (!this.isPinLockEnabled()) return
 
 		if (this.userconfig.getKey('link_lockouts')) {
@@ -1451,12 +1351,11 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Set the brightness of a surface
-	 * @param {string} surfaceId
-	 * @param {number} brightness 0-100
-	 * @param {boolean} looseIdMatching
-	 * @returns {void}
+	 * @param surfaceId
+	 * @param brightness 0-100
+	 * @param looseIdMatching
 	 */
-	setDeviceBrightness(surfaceId, brightness, looseIdMatching = false) {
+	setDeviceBrightness(surfaceId: string, brightness: number, looseIdMatching = false): void {
 		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
 		if (device) {
 			device.setBrightness(brightness)
@@ -1465,11 +1364,8 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Get the `SurfaceGroup` for a surfaceId or groupId
-	 * @param {string} surfaceOrGroupId
-	 * @param {boolean} looseIdMatching
-	 * @returns {SurfaceGroup | undefined}
 	 */
-	#getGroupForId(surfaceOrGroupId, looseIdMatching = false) {
+	#getGroupForId(surfaceOrGroupId: string, looseIdMatching = false): SurfaceGroup | undefined {
 		const matchingGroup = this.#surfaceGroups.get(surfaceOrGroupId)
 		if (matchingGroup) return matchingGroup
 
@@ -1484,11 +1380,10 @@ class SurfaceController extends CoreBase {
 
 	/**
 	 * Get the `SurfaceHandler` for a surfaceId
-	 * @param {string} surfaceId
-	 * @param {boolean} looseIdMatching Loosely match the id, to handle old device naming
-	 * @returns
+	 * @param surfaceId
+	 * @param looseIdMatching Loosely match the id, to handle old device naming
 	 */
-	#getSurfaceHandlerForId(surfaceId, looseIdMatching) {
+	#getSurfaceHandlerForId(surfaceId: string, looseIdMatching: boolean): SurfaceHandler | undefined {
 		if (surfaceId === 'emulator') surfaceId = 'emulator:emulator'
 
 		const surfaces = Array.from(this.#surfaceHandlers.values())
@@ -1512,22 +1407,21 @@ class SurfaceController extends CoreBase {
 
 		// or maybe a satellite?
 		surfaceId2 = `satellite-${surfaceId}`
-		return surfaces.find((d) => d && d.surfaceId === surfaceId2)
+		return surfaces.find((d) => d && d.surfaceId === surfaceId2) || undefined
 	}
 }
 
-export default SurfaceController
+export type SurfacePanelFactory = {
+	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
+}
 
-/**
- * @typedef {import('@companion-app/shared/Model/Surfaces.js').ClientSurfaceItem} ClientSurfaceItem
- * @typedef {import('@companion-app/shared/Model/Surfaces.js').ClientDevicesListItem} ClientDevicesListItem
- */
+export interface LocalUSBDeviceOptions {
+	executeExpression: SurfaceExecuteExpressionFn
+	useLegacyLayout?: boolean
+}
 
-/**
- * @typedef {{
- *   executeExpression: SurfaceExecuteExpressionFn
- *   useLegacyLayout?: boolean
- * }} LocalUSBDeviceOptions
- *
- * @typedef {(str: string, surfaceId: string, injectedVariableValues?: import('@companion-module/base').CompanionVariableValues) => { value: boolean|number|string|undefined, variableIds: Set<string> }} SurfaceExecuteExpressionFn
- */
+export type SurfaceExecuteExpressionFn = (
+	str: string,
+	surfaceId: string,
+	injectedVariableValues?: CompanionVariableValues
+) => { value: CompanionVariableValue | undefined; variableIds: Set<string> }

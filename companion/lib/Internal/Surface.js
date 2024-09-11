@@ -123,7 +123,7 @@ export default class Surface {
 	#controlsController
 
 	/**
-	 * @type {import('../Surface/Controller.js').default}
+	 * @type {import('../Surface/Controller.js').SurfaceController}
 	 * @readonly
 	 */
 	#surfaceController
@@ -142,7 +142,7 @@ export default class Surface {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Surface/Controller.js').default} surfaceController
+	 * @param {import('../Surface/Controller.js').SurfaceController} surfaceController
 	 * @param {import('../Controls/Controller.js').default} controlsController
 	 * @param {import('../Page/Controller.js').default} pageController
 	 */

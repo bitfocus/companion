@@ -1,14 +1,10 @@
-/** @typedef {{ columns: number, rows: number }} GridSize */
-/** @typedef {'surface90' | 'surface-90' | 'surface180' | 'surface0'} SurfaceRotation */
+export type GridSize = { columns: number; rows: number }
+export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0'
 
 /**
  * Convert a coordinate to surface index
- * @param {number} x
- * @param {number} y
- * @param {GridSize} gridSize
- * @returns {number | null}
  */
-export function convertXYToIndexForPanel(x, y, gridSize) {
+export function convertXYToIndexForPanel(x: number, y: number, gridSize: GridSize): number | null {
 	if (x < 0 || y < 0 || x >= gridSize.columns || y >= gridSize.rows) return null
 
 	return y * gridSize.columns + x
@@ -16,11 +12,8 @@ export function convertXYToIndexForPanel(x, y, gridSize) {
 
 /**
  * Convert a surface index to coordinates
- * @param {number} index
- * @param {GridSize} gridSize
- * @returns {[x: number, y: number] | null}
  */
-export function convertPanelIndexToXY(index, gridSize) {
+export function convertPanelIndexToXY(index: number, gridSize: GridSize): [x: number, y: number] | null {
 	index = Number(index)
 	if (isNaN(index) || index < 0 || index >= gridSize.columns * gridSize.rows) return null
 
@@ -31,13 +24,13 @@ export function convertPanelIndexToXY(index, gridSize) {
 
 /**
  * Rotate a coordinate
- * @param {number} x
- * @param {number} y
- * @param {GridSize} gridSize
- * @param {SurfaceRotation} rotation
- * @returns
  */
-export function rotateXYForPanel(x, y, gridSize, rotation) {
+export function rotateXYForPanel(
+	x: number,
+	y: number,
+	gridSize: GridSize,
+	rotation: SurfaceRotation
+): [number, number] {
 	switch (rotation) {
 		case 'surface90':
 			return [y, gridSize.columns - x - 1]
@@ -52,13 +45,13 @@ export function rotateXYForPanel(x, y, gridSize, rotation) {
 
 /**
  * Unrotate a coordinate
- * @param {number} x
- * @param {number} y
- * @param {GridSize} gridSize
- * @param {SurfaceRotation} rotation
- * @returns
  */
-export function unrotateXYForPanel(x, y, gridSize, rotation) {
+export function unrotateXYForPanel(
+	x: number,
+	y: number,
+	gridSize: GridSize,
+	rotation: SurfaceRotation
+): [number, number] {
 	switch (rotation) {
 		case 'surface90':
 			return [gridSize.columns - y - 1, x]

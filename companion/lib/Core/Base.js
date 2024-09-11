@@ -133,7 +133,7 @@ class CoreBase extends EventEmitter {
 
 	/**
 	 * The core device controller
-	 * @type {import('../Surface/Controller.js').default}
+	 * @type {import('../Surface/Controller.js').SurfaceController}
 	 * @access protected
 	 * @readonly
 	 */

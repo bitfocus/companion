@@ -17,20 +17,19 @@
  */
 
 import { cloneDeep } from 'lodash-es'
-import LogController from '../Log/Controller.js'
-
-/**
- * @typedef {import('./Handler.js').default} SurfaceHandler
- */
+import LogController, { type Logger } from '../Log/Controller.js'
+import type { SurfaceHandler } from './Handler.js'
+import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceController } from './Controller.js'
+import type DataDatabase from '../Data/Database.js'
+import type PageController from '../Page/Controller.js'
+import type DataUserConfig from '../Data/UserConfig.js'
 
 export class SurfaceGroup {
 	/**
 	 * The defaults config for a group
-	 * @type {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig}
-	 * @access public
-	 * @static
 	 */
-	static DefaultOptions = {
+	static readonly DefaultOptions: SurfaceGroupConfig = {
 		name: 'Unnamed group',
 		last_page_id: '',
 		startup_page_id: '',
@@ -39,10 +38,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Id of this group
-	 * @type {string}
-	 * @access public
 	 */
-	groupId
+	readonly groupId: string
 
 	/**
 	 * The current page of this surface group
@@ -53,74 +50,54 @@ export class SurfaceGroup {
 
 	/**
 	 * The surfaces belonging to this group
-	 * @type {SurfaceHandler[]}
-	 * @access private
 	 */
-	surfaceHandlers = []
+	surfaceHandlers: SurfaceHandler[] = []
 
 	/**
 	 * Whether this is an auto-group to wrap a single surface handler
-	 * @type {boolean}
-	 * @access private
 	 */
-	#isAutoGroup = false
+	readonly #isAutoGroup: boolean = false
 
 	/**
 	 * Whether surfaces in this group should be locked
-	 * @type {boolean}
-	 * @access private
 	 */
-	#isLocked = false
+	#isLocked: boolean = false
 
 	/**
 	 * Configuration of this surface group
-	 * @type {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig}
-	 * @access public
 	 */
-	groupConfig
+	groupConfig: SurfaceGroupConfig
 
 	/**
 	 * The logger
-	 * @type {import('winston').Logger}
-	 * @access private
 	 */
-	#logger
+	#logger: Logger
 
 	/**
-	 * @type {import('../Surface/Controller.js').default}
-	 * @access public
 	 */
-	#surfaceController
-
+	#surfaceController: SurfaceController
 	/**
 	 * The core database library
-	 * @type {import('../Data/Database.js').default}
-	 * @access public
 	 */
-	#db
+	#db: DataDatabase
 	/**
 	 * The core page controller
-	 * @type {import('../Page/Controller.js').default}
-	 * @access public
 	 */
-	#pageController
+	#pageController: PageController
 	/**
 	 * The core user config manager
-	 * @type {import('../Data/UserConfig.js').default}
-	 * @access public
 	 */
-	#userconfig
+	#userconfig: DataUserConfig
 
-	/**
-	 * @param {import('../Surface/Controller.js').default} surfaceController
-	 * @param {import('../Data/Database.js').default} db
-	 * @param {import('../Page/Controller.js').default} pageController
-	 * @param {import('../Data/UserConfig.js').default} userconfig
-	 * @param {string} groupId
-	 * @param {SurfaceHandler | null} soleHandler
-	 * @param {boolean} isLocked
-	 */
-	constructor(surfaceController, db, pageController, userconfig, groupId, soleHandler, isLocked) {
+	constructor(
+		surfaceController: SurfaceController,
+		db: DataDatabase,
+		pageController: PageController,
+		userconfig: DataUserConfig,
+		groupId: string,
+		soleHandler: SurfaceHandler | null,
+		isLocked: boolean
+	) {
 		this.#logger = LogController.createLogger(`Surface/Group/${groupId}`)
 
 		this.#surfaceController = surfaceController
@@ -182,7 +159,7 @@ export class SurfaceGroup {
 	/**
 	 * Stop anything processing this group, it is being marked as inactive
 	 */
-	dispose() {
+	dispose(): void {
 		this.#pageController.off('pagecount', this.#pageCountChange)
 		this.#pageController.off('pageindexchange', this.#pageIndexChange)
 	}
@@ -190,7 +167,7 @@ export class SurfaceGroup {
 	/**
 	 * Delete this group from the config
 	 */
-	forgetConfig() {
+	forgetConfig(): void {
 		const groupsConfig = this.#db.getKey('surface-groups', {})
 		delete groupsConfig[this.groupId]
 		this.#db.setKey('surface-groups', groupsConfig)
@@ -199,14 +176,14 @@ export class SurfaceGroup {
 	/**
 	 * Check if this SurfaceGroup is an automatically generated group for a standalone surface
 	 */
-	get isAutoGroup() {
+	get isAutoGroup(): boolean {
 		return this.#isAutoGroup
 	}
 
 	/**
 	 * Get the displayname of this surface group
 	 */
-	get displayName() {
+	get displayName(): string {
 		const firstHandler = this.surfaceHandlers[0]
 		if (this.#isAutoGroup && firstHandler) {
 			return firstHandler.displayName
@@ -217,10 +194,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Add a surface to be run by this group
-	 * @param {SurfaceHandler} surfaceHandler
-	 * @returns {void}
 	 */
-	attachSurface(surfaceHandler) {
+	attachSurface(surfaceHandler: SurfaceHandler): void {
 		if (this.#isAutoGroup && this.surfaceHandlers.length)
 			throw new Error(`Cannot add surfaces to group: "${this.groupId}"`)
 
@@ -232,10 +207,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Detach a surface from this group
-	 * @param {SurfaceHandler} surfaceHandler
-	 * @returns {void}
 	 */
-	detachSurface(surfaceHandler) {
+	detachSurface(surfaceHandler: SurfaceHandler): void {
 		const surfaceId = surfaceHandler.surfaceId
 		this.surfaceHandlers = this.surfaceHandlers.filter((handler) => handler.surfaceId !== surfaceId)
 	}
@@ -254,11 +227,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Set the current page of this surface group
-	 * @param {string} newPageId
-	 * @param {boolean} defer
-	 * @returns {void}
 	 */
-	setCurrentPage(newPageId, defer = false) {
+	setCurrentPage(newPageId: string, defer = false): void {
 		if (!this.#pageController.isPageIdValid(newPageId)) return
 
 		this.#storeNewPage(newPageId, defer)
@@ -268,15 +238,14 @@ export class SurfaceGroup {
 	 * Get the current page of this surface group
 	 * @returns {string}
 	 */
-	getCurrentPageId() {
+	getCurrentPageId(): string {
 		return this.#currentPageId
 	}
 
 	/**
 	 * Perform page-up for this surface group
-	 * @returns {void}
 	 */
-	doPageUp() {
+	doPageUp(): void {
 		if (this.#userconfig.getKey('page_direction_flipped') === true) {
 			this.#decreasePage()
 		} else {
@@ -298,9 +267,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Update the current page if the total number of pages change
-	 * @param {number} _pageCount
 	 */
-	#pageCountChange = (_pageCount) => {
+	#pageCountChange = (_pageCount: number): void => {
 		if (!this.#pageController.isPageIdValid(this.#currentPageId)) {
 			// TODO - choose a better value?
 			this.#storeNewPage(this.#pageController.getFirstPageId(), true)
@@ -309,9 +277,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Update the current page if the index of the pages change
-	 * @param {Set<string>} pageIds
 	 */
-	#pageIndexChange = (pageIds) => {
+	#pageIndexChange = (pageIds: Set<string>): void => {
 		if (pageIds.has(this.#currentPageId)) {
 			for (const surfaceHandler of this.surfaceHandlers) {
 				surfaceHandler.triggerRedraw(true)
@@ -321,11 +288,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Update to a new page number
-	 * @param {string} newPageId
-	 * @param {boolean} defer
-	 * @returns {void}
 	 */
-	#storeNewPage(newPageId, defer = false) {
+	#storeNewPage(newPageId: string, defer = false): void {
 		this.#currentPageId = this.groupConfig.last_page_id = newPageId
 		this.#saveConfig()
 
@@ -343,11 +307,10 @@ export class SurfaceGroup {
 
 	/**
 	 * Update the config for this SurfaceGroup
-	 * @param {string} key Config field to change
-	 * @param {any} value New value for the field
-	 * @returns
+	 * @param key Config field to change
+	 * @param value New value for the field
 	 */
-	setGroupConfigValue(key, value) {
+	setGroupConfigValue(key: string, value: any): string | undefined {
 		this.#logger.debug(`Set config "${key}" to "${value}"`)
 		switch (key) {
 			case 'use_last_page': {
@@ -389,10 +352,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Set the surface as locked
-	 * @param {boolean} locked
-	 * @returns {void}
 	 */
-	setLocked(locked) {
+	setLocked(locked: boolean): void {
 		// // skip if surface can't be locked
 		// if (this.#surfaceConfig.config.never_lock) return
 
@@ -407,10 +368,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Set the name of this surface group
-	 * @param {string} name
-	 * @returns {void}
 	 */
-	setName(name) {
+	setName(name: string): void {
 		this.groupConfig.name = name || 'Unnamed group'
 		this.#saveConfig()
 

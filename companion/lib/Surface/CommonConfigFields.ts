@@ -1,5 +1,6 @@
-/** @type {import("@companion-app/shared/Model/Surfaces.js").CompanionSurfaceConfigField[]} */
-export const OffsetConfigFields = [
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+
+export const OffsetConfigFields: CompanionSurfaceConfigField[] = [
 	{
 		id: 'xOffset',
 		type: 'number',
@@ -18,8 +19,7 @@ export const OffsetConfigFields = [
 	},
 ]
 
-/** @type {import("@companion-app/shared/Model/Surfaces.js").CompanionSurfaceConfigField} */
-export const BrightnessConfigField = {
+export const BrightnessConfigField: CompanionSurfaceConfigField = {
 	id: 'brightness',
 	type: 'number',
 	label: 'Brightness',
@@ -29,8 +29,7 @@ export const BrightnessConfigField = {
 	max: 100,
 }
 
-/** @type {import("@companion-app/shared/Model/Surfaces.js").CompanionSurfaceConfigField} */
-export const RotationConfigField = {
+export const RotationConfigField: CompanionSurfaceConfigField = {
 	id: 'rotation',
 	type: 'dropdown',
 	label: 'Surface Rotation',
@@ -43,8 +42,7 @@ export const RotationConfigField = {
 	],
 }
 
-/** @type {import("@companion-app/shared/Model/Surfaces.js").CompanionSurfaceConfigField} */
-export const LegacyRotationConfigField = {
+export const LegacyRotationConfigField: CompanionSurfaceConfigField = {
 	id: 'rotation',
 	type: 'dropdown',
 	label: 'Surface Rotation',
@@ -60,8 +58,7 @@ export const LegacyRotationConfigField = {
 	],
 }
 
-/** @type {import("@companion-app/shared/Model/Surfaces.js").CompanionSurfaceConfigField[]} */
-export const LockConfigFields = [
+export const LockConfigFields: CompanionSurfaceConfigField[] = [
 	{
 		id: 'never_lock',
 		type: 'checkbox',

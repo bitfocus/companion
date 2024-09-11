@@ -2,56 +2,40 @@ import { nanoid } from 'nanoid'
 import LogController from '../Log/Controller.js'
 import { DEFAULT_TCP_PORT, StreamDeckTcpConnectionManager } from '@elgato-stream-deck/tcp'
 import { StreamDeckJpegOptions } from './USB/ElgatoStreamDeck.js'
+import type { SurfaceController } from './Controller.js'
+import type DataDatabase from '../Data/Database.js'
+import type UIHandler from '../UI/Handler.js'
+import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import { ClientSocket } from '../UI/Handler.js'
 
 const OutboundSurfacesRoom = 'surfaces:outbound'
 
 export class SurfaceOutboundController {
 	/**
 	 * The logger for this class
-	 * @type {import('winston').Logger}
-	 * @access protected
 	 */
-	#logger = LogController.createLogger('SurfaceOutboundController')
+	readonly #logger = LogController.createLogger('SurfaceOutboundController')
 
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#controller
+	readonly #controller: SurfaceController
 
 	/**
 	 * The core database library
-	 * @type {import('../Data/Database.js').default}
-	 * @access protected
-	 * @readonly
 	 */
-	#db
+	readonly #db: DataDatabase
 
 	/**
 	 * The core interface client
-	 * @type {import('../UI/Handler.js').default}
-	 * @access protected
-	 * @readonly
 	 */
-	#io
+	readonly #io: UIHandler
 
-	/**
-	 * @type {Record<string, import('@companion-app/shared/Model/Surfaces.js').OutboundSurfaceInfo>}
-	 */
-	#storage = {}
+	#storage: Record<string, OutboundSurfaceInfo> = {}
 
 	#streamdeckTcpConnectionManager = new StreamDeckTcpConnectionManager({
 		jpegOptions: StreamDeckJpegOptions,
 		autoConnectToSecondaries: true,
 	})
 
-	/**
-	 *
-	 * @param {import('./Controller.js').default} controller
-	 * @param {import('../Data/Database.js').default} db
-	 * @param {import('../UI/Handler.js').default} io
-	 */
-	constructor(controller, db, io) {
+	constructor(controller: SurfaceController, db: DataDatabase, io: UIHandler) {
 		this.#controller = controller
 		this.#db = db
 		this.#io = io
@@ -82,7 +66,7 @@ export class SurfaceOutboundController {
 	 * Initialize the module, loading the configuration from the db
 	 * @access public
 	 */
-	init() {
+	init(): void {
 		this.#storage = this.#db.getKey('outbound_surfaces', {})
 
 		for (const surfaceInfo of Object.values(this.#storage)) {
@@ -100,10 +84,8 @@ export class SurfaceOutboundController {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('surfaces:outbound:subscribe', async () => {
 			client.join(OutboundSurfacesRoom)
 
@@ -127,8 +109,7 @@ export class SurfaceOutboundController {
 			this.#logger.info(`Adding new Remote Streamdeck at ${address}:${port} (${name})`)
 
 			const id = nanoid()
-			/** @type {import('@companion-app/shared/Model/Surfaces.js').OutboundSurfaceInfo} */
-			const newInfo = {
+			const newInfo: OutboundSurfaceInfo = {
 				id,
 				type: 'elgato',
 				address,
@@ -187,7 +168,7 @@ export class SurfaceOutboundController {
 		})
 	}
 
-	quit() {
+	quit(): void {
 		this.#streamdeckTcpConnectionManager.disconnectFromAll()
 	}
 }
