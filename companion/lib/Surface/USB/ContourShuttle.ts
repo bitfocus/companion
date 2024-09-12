@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
  * This file is part of the Companion project
  * Copyright (c) 2023 Peter Newman
@@ -17,11 +16,22 @@
  */
 
 import EventEmitter from 'events'
-import shuttleControlUSB from 'shuttle-control-usb'
-import LogController from '../../Log/Controller.js'
+import shuttleControlUSB, { type ShuttleDeviceInfo } from 'shuttle-control-usb'
+import LogController, { Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { GridSize } from '../Util.js'
 
-const contourShuttleXpressInfo = {
+interface ShuttleModelInfo {
+	totalCols: number
+	totalRows: number
+	jog: [number, number]
+	shuttle: [number, number]
+	buttons: [number, number][]
+}
+
+const contourShuttleXpressInfo: ShuttleModelInfo = {
 	// Treat as:
 	// 3 buttons
 	// button, two encoders (jog and shuttle), button
@@ -41,7 +51,7 @@ const contourShuttleXpressInfo = {
 		[3, 1],
 	],
 }
-const contourShuttleProV1Info = {
+const contourShuttleProV1Info: ShuttleModelInfo = {
 	// Same as Pro V2 only without the buttons either side of the encoders
 	// Map the same for consistency and compatibility
 	totalCols: 5,
@@ -73,7 +83,7 @@ const contourShuttleProV1Info = {
 		[2, 3],
 	],
 }
-const contourShuttleProV2Info = {
+const contourShuttleProV2Info: ShuttleModelInfo = {
 	// 4 buttons
 	// 5 buttons
 	// button, two encoders (jog and shuttle), button
@@ -112,35 +122,39 @@ const contourShuttleProV2Info = {
 	],
 }
 
-function buttonToXy(modelInfo, info) {
+function buttonToXy(modelInfo: ShuttleModelInfo, info: number): [number, number] | undefined {
 	return modelInfo.buttons[info - 1]
 }
 
-/**
- * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
- */
-const configFields = [
+const configFields: CompanionSurfaceConfigField[] = [
 	//
 	...OffsetConfigFields,
 	RotationConfigField,
 	...LockConfigFields,
 ]
 
-class SurfaceUSBContourShuttle extends EventEmitter {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger
+export class SurfaceUSBContourShuttle extends EventEmitter implements SurfacePanel {
+	readonly #logger: Logger
 
-	constructor(devicePath, contourShuttle, modelInfo, deviceInfo) {
+	private readonly contourShuttle: typeof shuttleControlUSB
+	private readonly modelInfo: ShuttleModelInfo
+
+	config: Record<string, any>
+
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
+
+	constructor(
+		devicePath: string,
+		contourShuttle: typeof shuttleControlUSB,
+		modelInfo: ShuttleModelInfo,
+		deviceInfo: ShuttleDeviceInfo
+	) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/ContourShuttle/${devicePath}`)
 
 		this.contourShuttle = contourShuttle
-		this.deviceInfo = deviceInfo
 		this.modelInfo = modelInfo
 
 		this.config = {
@@ -151,10 +165,10 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 
 		/** @type {import('../Handler.js').SurfacePanelInfo} */
 		this.info = {
-			type: `Contour Shuttle ${this.deviceInfo.name}`,
+			type: `Contour Shuttle ${deviceInfo.name}`,
 			devicePath: devicePath,
 			configFields: configFields,
-			deviceId: `contourshuttle:${this.deviceInfo.id}`,
+			deviceId: `contourshuttle:${deviceInfo.id}`,
 		}
 
 		this.gridSize = {
@@ -210,18 +224,17 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 			this.emit('setVariable', 'shuttle', current)
 		})
 
-		this.contourShuttle.on('disconnect', (error) => {
-			console.error(error)
+		this.contourShuttle.on('disconnected', () => {
 			this.emit('remove')
 		})
 	}
 
 	/**
 	 * Open a countour shuttle
-	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSBContourShuttle>}
 	 */
-	static async create(devicePath) {
+	static async create(devicePath: string): Promise<SurfaceUSBContourShuttle> {
+		// TODO: this doesn't work now that we aren't using threads. This will be completely broken when trying to use more than one
+
 		const contourShuttle = shuttleControlUSB
 		// We're doing device search via Companion so don't run it here too
 		contourShuttle.start(false)
@@ -230,6 +243,8 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 			let info = null
 			contourShuttle.connect(devicePath)
 			deviceInfo = contourShuttle.getDeviceByPath(devicePath)
+			if (!deviceInfo) throw new Error('Device not found!')
+
 			switch (deviceInfo.name) {
 				case 'ShuttleXpress':
 					info = contourShuttleXpressInfo
@@ -259,17 +274,15 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} _force
 	 * @returns false when nothing happens
 	 */
-	setConfig(config, _force) {
+	setConfig(config: Record<string, any>, _force = false) {
 		// No config currently present
 		this.config = config
 	}
 
 	quit() {
-		this.contourShuttle.close()
+		this.contourShuttle.stop()
 	}
 
 	draw() {
@@ -280,5 +293,3 @@ class SurfaceUSBContourShuttle extends EventEmitter {
 		// Not relevant for this device
 	}
 }
-
-export default SurfaceUSBContourShuttle

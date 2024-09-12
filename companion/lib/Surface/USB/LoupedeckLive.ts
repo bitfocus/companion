@@ -16,11 +16,17 @@
  */
 
 import { EventEmitter } from 'events'
-import { LoupedeckBufferFormat, LoupedeckModelId, openLoupedeck } from '@loupedeck/node'
+import {
+	LoupedeckBufferFormat,
+	LoupedeckControlInfo,
+	LoupedeckDevice,
+	LoupedeckModelId,
+	openLoupedeck,
+} from '@loupedeck/node'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import LogController from '../../Log/Controller.js'
-import { convertPanelIndexToXY } from '../Util.js'
+import LogController, { Logger } from '../../Log/Controller.js'
+import { convertPanelIndexToXY, GridSize } from '../Util.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
 import {
@@ -29,22 +35,22 @@ import {
 	RotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import { SurfacePanelInfo } from '../Types.js'
+import { ImageResult } from '../../Graphics/ImageResult.js'
 
-/**
- * @typedef {{
- *   totalCols: number
- *   totalRows: number
- *   lcdCols: number
- *   lcdRows: number
- *   lcdXOffset: number
- *   lcdAsButtons: boolean
- *   encoders: Array<[x: number, y: number]>
- *   buttons: Array<[x: number, y: number]>
- * }} ModelInfo
- */
+interface ModelInfo {
+	totalCols: number
+	totalRows: number
+	lcdCols: number
+	lcdRows: number
+	lcdXOffset: number
+	lcdAsButtons: boolean
+	encoders: Array<[x: number, y: number]>
+	buttons: Array<[x: number, y: number]>
+}
 
-/** @type {ModelInfo} */
-const loupedeckLiveInfo = {
+const loupedeckLiveInfo: ModelInfo = {
 	totalCols: 8,
 	totalRows: 4,
 
@@ -72,8 +78,7 @@ const loupedeckLiveInfo = {
 		[7, 3],
 	],
 }
-/** @type {ModelInfo} */
-const loupedeckLiveSInfo = {
+const loupedeckLiveSInfo: ModelInfo = {
 	totalCols: 7,
 	totalRows: 3,
 
@@ -93,8 +98,7 @@ const loupedeckLiveSInfo = {
 		[6, 2],
 	],
 }
-/** @type {ModelInfo} */
-const razerStreamControllerXInfo = {
+const razerStreamControllerXInfo: ModelInfo = {
 	totalCols: 5,
 	totalRows: 3,
 
@@ -109,11 +113,8 @@ const razerStreamControllerXInfo = {
 
 /**
  * Convert a loupedeck control to x/y coordinates
- * @param {ModelInfo} modelInfo
- * @param {import('@loupedeck/node').LoupedeckControlInfo} info
- * @returns {[x: number, y: number] | undefined}
  */
-function buttonToXY(modelInfo, info) {
+function buttonToXY(modelInfo: ModelInfo, info: LoupedeckControlInfo): [x: number, y: number] | undefined {
 	const index = modelInfo.buttons[info.index]
 	if (info.type === 'button' && index !== undefined) {
 		return index
@@ -123,11 +124,8 @@ function buttonToXY(modelInfo, info) {
 }
 /**
  * Convert a loupedeck lcd x/y coordinate to companion x/y coordinates
- * @param {ModelInfo} modelInfo
- * @param {number} key
- * @returns {number}
  */
-const translateTouchKeyIndex = (modelInfo, key) => {
+const translateTouchKeyIndex = (modelInfo: ModelInfo, key: number): number => {
 	const x = key % modelInfo.lcdCols
 	const y = Math.floor(key / modelInfo.lcdCols)
 	return y * modelInfo.totalCols + x + modelInfo.lcdXOffset
@@ -135,11 +133,8 @@ const translateTouchKeyIndex = (modelInfo, key) => {
 
 /**
  * Convert a loupedeck control to x/y coordinates
- * @param {ModelInfo} modelInfo
- * @param {import('@loupedeck/node').LoupedeckControlInfo} info
- * @returns {[x: number, y: number] | undefined}
  */
-function rotaryToXY(modelInfo, info) {
+function rotaryToXY(modelInfo: ModelInfo, info: LoupedeckControlInfo): [x: number, y: number] | undefined {
 	const index = modelInfo.encoders[info.index]
 	if (info.type === 'rotary' && index !== undefined) {
 		return index
@@ -148,10 +143,7 @@ function rotaryToXY(modelInfo, info) {
 	return undefined
 }
 
-/**
- * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
- */
-const configFields = [
+const configFields: CompanionSurfaceConfigField[] = [
 	//
 	...OffsetConfigFields,
 	BrightnessConfigField,
@@ -159,44 +151,30 @@ const configFields = [
 	...LockConfigFields,
 ]
 
-class SurfaceUSBLoupedeckLive extends EventEmitter {
+export class SurfaceUSBLoupedeckLive extends EventEmitter {
+	readonly #logger: Logger
+
 	/**
 	 * Loupdeck device handle
-	 * @type {import('@loupedeck/node').LoupedeckDevice}
-	 * @access private
 	 */
-	#loupedeck
+	readonly #loupedeck: LoupedeckDevice
 
 	/**
 	 * Information about the current loupedeck model
-	 * @type {ModelInfo}
-	 * @access private
 	 */
-	#modelInfo
+	readonly #modelInfo: ModelInfo
 
-	/**
-	 * @type {ImageWriteQueue<number, [import('../../Graphics/ImageResult.js').ImageResult]>}
-	 * @access private
-	 */
-	#writeQueue
+	readonly #writeQueue: ImageWriteQueue<number, [import('../../Graphics/ImageResult.js').ImageResult]>
 
-	/**
-	 * @type {Record<string, any>}
-	 * @access private
-	 */
-	config
+	config: Record<string, any>
 
-	/**
-	 *
-	 * @param {string} devicePath
-	 * @param {import('@loupedeck/node').LoupedeckDevice} loupedeck
-	 * @param {ModelInfo} modelInfo
-	 * @param {string} serialNumber
-	 */
-	constructor(devicePath, loupedeck, modelInfo, serialNumber) {
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
+
+	constructor(devicePath: string, loupedeck: LoupedeckDevice, modelInfo: ModelInfo, serialNumber: string) {
 		super()
 
-		this.logger = LogController.createLogger(`Surface/USB/Loupedeck/${devicePath}`)
+		this.#logger = LogController.createLogger(`Surface/USB/Loupedeck/${devicePath}`)
 
 		this.#loupedeck = loupedeck
 		this.#modelInfo = modelInfo
@@ -205,9 +183,8 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 			brightness: 100,
 		}
 
-		this.logger.debug(`Adding Loupedeck Live USB device ${devicePath}`)
+		this.#logger.debug(`Adding Loupedeck Live USB device ${devicePath}`)
 
-		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: this.#loupedeck.modelName,
 			devicePath: devicePath,
@@ -221,7 +198,7 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 		}
 
 		this.#loupedeck.on('error', (error) => {
-			this.logger.error(`error: ${error}`)
+			this.#logger.error(`error: ${error}`)
 			this.emit('remove')
 		})
 
@@ -277,12 +254,12 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 
 		// @ts-ignore
 		this.#loupedeck.on('disconnect', (error) => {
-			this.logger.error(`disconnected: ${error}`)
+			this.#logger.error(`disconnected: ${error}`)
 			this.emit('remove')
 		})
 
 		this.#writeQueue = new ImageWriteQueue(
-			this.logger,
+			this.#logger,
 			async (/** @type {number} */ key, /** @type {import('../../Graphics/ImageResult.js').ImageResult} */ render) => {
 				const width = this.#loupedeck.lcdKeySize
 				const height = this.#loupedeck.lcdKeySize
@@ -291,7 +268,7 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 				try {
 					newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
 				} catch (e) {
-					this.logger.debug(`scale image failed: ${e}`)
+					this.#logger.debug(`scale image failed: ${e}`)
 					this.emit('remove')
 					return
 				}
@@ -299,7 +276,7 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 				try {
 					await this.#loupedeck.drawKeyBuffer(key, newbuffer, LoupedeckBufferFormat.RGB)
 				} catch (e) {
-					this.logger.debug(`fillImage failed: ${e}`)
+					this.#logger.debug(`fillImage failed: ${e}`)
 					this.emit('remove')
 				}
 			}
@@ -308,10 +285,8 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 
 	/**
 	 * Produce a click event
-	 * @param {number} key
-	 * @param {boolean} state
 	 */
-	#emitClick(key, state) {
+	#emitClick(key: number, state: boolean) {
 		const xy = convertPanelIndexToXY(key, this.gridSize)
 		if (xy) {
 			this.emit('click', ...xy, state)
@@ -320,10 +295,8 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 
 	/**
 	 * Open a loupedeck
-	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSBLoupedeckLive>}
 	 */
-	static async create(devicePath) {
+	static async create(devicePath: string): Promise<SurfaceUSBLoupedeckLive> {
 		const loupedeck = await openLoupedeck(devicePath)
 		try {
 			let info = null
@@ -359,21 +332,19 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} force
 	 * @returns false when nothing happens
 	 */
-	setConfig(config, force) {
+	setConfig(config: Record<string, any>, force = false): void {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 			this.#loupedeck.setBrightness(config.brightness / 100).catch((e) => {
-				this.logger.debug(`Set brightness failed: ${e}`)
+				this.#logger.debug(`Set brightness failed: ${e}`)
 			})
 		}
 
 		this.config = config
 	}
 
-	quit() {
+	quit(): void {
 		try {
 			this.clearDeck()
 		} catch (e) {}
@@ -383,12 +354,8 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
-	 * @returns {void}
 	 */
-	draw(x, y, render) {
+	draw(x: number, y: number, render: ImageResult): void {
 		const lcdX = x - this.#modelInfo.lcdXOffset
 		if (lcdX >= 0 && lcdX < this.#modelInfo.lcdCols && y >= 0 && y < this.#modelInfo.lcdRows) {
 			const button = lcdX + y * this.#modelInfo.lcdCols
@@ -408,18 +375,16 @@ class SurfaceUSBLoupedeckLive extends EventEmitter {
 					blue: color.b,
 				})
 				.catch((e) => {
-					this.logger.debug(`color failed: ${e}`)
+					this.#logger.debug(`color failed: ${e}`)
 				})
 		}
 	}
 
-	clearDeck() {
-		this.logger.debug('loupedeck.clearDeck()')
+	clearDeck(): void {
+		this.#logger.debug('loupedeck.clearDeck()')
 
 		this.#loupedeck.blankDevice(true, true).catch((e) => {
-			this.logger.debug(`blank failed: ${e}`)
+			this.#logger.debug(`blank failed: ${e}`)
 		})
 	}
 }
-
-export default SurfaceUSBLoupedeckLive

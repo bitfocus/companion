@@ -16,17 +16,25 @@
  */
 
 import { EventEmitter } from 'events'
-import LogController from '../../Log/Controller.js'
+import LogController, { Logger } from '../../Log/Controller.js'
 import { colorToRgb } from './Util.js'
-import { openBlackmagicController } from '@blackmagic-controller/node'
+import { BlackmagicController, openBlackmagicController } from '@blackmagic-controller/node'
 import debounceFn from 'debounce-fn'
-import { ImageResult } from '../../Graphics/ImageResult.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type {
+	DrawButtonItem,
+	LocalUSBDeviceOptions,
+	SurfaceExecuteExpressionFn,
+	SurfacePanel,
+	SurfacePanelInfo,
+} from '../Types.js'
+import type { GridSize } from '../Util.js'
+import type { CompanionVariableValue } from '@companion-module/base'
+import type { BlackmagicControllerSetButtonColorValue } from '@blackmagic-controller/core'
 
-/**
- * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
- */
-const configFields = [
+const configFields: CompanionSurfaceConfigField[] = [
 	...OffsetConfigFields,
 	RotationConfigField,
 	...LockConfigFields,
@@ -46,50 +54,30 @@ const configFields = [
 	},
 ]
 
-export class SurfaceUSBBlackmagicController extends EventEmitter {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger
+export class SurfaceUSBBlackmagicController extends EventEmitter implements SurfacePanel {
+	readonly #logger: Logger
 
-	/**
-	 * @type {import('../Types.js').SurfaceExecuteExpressionFn}
-	 * @access private
-	 * @readonly
-	 */
-	#executeExpression
+	readonly #executeExpression: SurfaceExecuteExpressionFn
 
-	/**
-	 * @type {Record<string, any>}
-	 * @access private
-	 */
-	config = {}
+	readonly #device: BlackmagicController
 
-	/**
-	 * HID device
-	 * @type {import('@blackmagic-controller/node').BlackmagicController}
-	 * @access private
-	 * @readonly
-	 */
-	#device
+	config: Record<string, any> = {}
 
-	#lastTbarValue = 0
+	#lastTbarValue: number = 0
+
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
 
 	/**
 	 * The variables referenced in the last draw of the tbar. Whenever one of these changes, a redraw should be performed
-	 * @access protected
-	 * @type {Set<string> | null}
 	 */
-	#lastTbarDrawReferencedVariables = null
+	#lastTbarDrawReferencedVariables: Set<string> | null = null
 
-	/**
-	 * @param {import('../Types.js').SurfaceExecuteExpressionFn} executeExpression
-	 * @param {string} devicePath
-	 * @param {import('@blackmagic-controller/node').BlackmagicController} blackmagicController
-	 */
-	constructor(executeExpression, devicePath, blackmagicController) {
+	constructor(
+		executeExpression: SurfaceExecuteExpressionFn,
+		devicePath: string,
+		blackmagicController: BlackmagicController
+	) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/BlackmagicController/${devicePath}`)
@@ -163,20 +151,16 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	}
 
 	/**
-	 * Open a framework macropad
-	 * @param {string} devicePath
-	 * @param {import('../Types.js').LocalUSBDeviceOptions} options
-	 * @returns {Promise<SurfaceUSBBlackmagicController>}
+	 * Open a blackmagic controller
 	 */
-	static async create(devicePath, options) {
+	static async create(devicePath: string, options: LocalUSBDeviceOptions): Promise<SurfaceUSBBlackmagicController> {
 		const blackmagicController = await openBlackmagicController(devicePath)
 
 		try {
 			const self = new SurfaceUSBBlackmagicController(options.executeExpression, devicePath, blackmagicController)
 
-			/** @type {any} */
-			let errorDuringInit = null
-			const tmpErrorHandler = (/** @type {any} */ error) => {
+			let errorDuringInit: any = null
+			const tmpErrorHandler = (error: any) => {
 				errorDuringInit = errorDuringInit || error
 			}
 
@@ -198,11 +182,9 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} _force
 	 * @returns false when nothing happens
 	 */
-	setConfig(config, _force) {
+	setConfig(config: Record<string, any>, _force = false) {
 		// This will be a no-op if the value hasn't changed
 		this.#emitTbarValue()
 
@@ -241,10 +223,8 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 	/**
 	 * Propagate variable changes
-	 * @param {Set<string>} allChangedVariables - variables with changes
-	 * @access public
 	 */
-	onVariablesChanged(allChangedVariables) {
+	onVariablesChanged(allChangedVariables: Set<string>) {
 		if (this.#lastTbarDrawReferencedVariables) {
 			for (const variable of allChangedVariables.values()) {
 				if (this.#lastTbarDrawReferencedVariables.has(variable)) {
@@ -268,8 +248,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 				return
 			}
 
-			/** @type {any} */
-			let expressionResult = 0
+			let expressionResult: CompanionVariableValue | undefined = 0
 
 			const expressionText = this.config.tbarLeds
 			try {
@@ -313,8 +292,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 	 */
 	#triggerRedraw = debounceFn(
 		() => {
-			/** @type {import('@blackmagic-controller/core').BlackmagicControllerSetButtonColorValue[]} */
-			const colors = []
+			const colors: BlackmagicControllerSetButtonColorValue[] = []
 
 			const threshold = 100 // Use a lower than 50% threshold, to make it more sensitive
 
@@ -342,16 +320,12 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 			maxWait: 20,
 		}
 	)
-	/**
-	 * @type {Record<string, ImageResult>}
-	 */
-	#pendingDraw = {}
+	#pendingDraw: Record<string, ImageResult> = {}
 
 	/**
 	 * Draw multiple buttons
-	 * @param {import('../Types.js').DrawButtonItem[]} renders
 	 */
-	drawMany(renders) {
+	drawMany(renders: DrawButtonItem[]) {
 		for (const { x, y, image } of renders) {
 			const control = this.#device.CONTROLS.find(
 				(control) => control.type === 'button' && control.row === y && control.column === x
@@ -366,12 +340,8 @@ export class SurfaceUSBBlackmagicController extends EventEmitter {
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} image
-	 * @returns {void}
 	 */
-	draw(x, y, image) {
+	draw(x: number, y: number, image: ImageResult): void {
 		// Should never be called, implement just in case
 		return this.drawMany([{ x, y, image }])
 	}

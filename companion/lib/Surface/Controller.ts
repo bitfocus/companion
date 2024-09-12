@@ -25,7 +25,6 @@ import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
-// @ts-ignore
 import shuttleControlUSB from 'shuttle-control-usb'
 // @ts-ignore
 import vecFootpedal from 'vec-footpedal'
@@ -37,9 +36,9 @@ import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
 import ElgatoStreamDeckDriver from './USB/ElgatoStreamDeck.js'
 import InfinittonDriver from './USB/Infinitton.js'
 import XKeysDriver from './USB/XKeys.js'
-import LoupedeckLiveDriver from './USB/LoupedeckLive.js'
+import { SurfaceUSBLoupedeckLive } from './USB/LoupedeckLive.js'
 import SurfaceUSBLoupedeckCt from './USB/LoupedeckCt.js'
-import ContourShuttleDriver from './USB/ContourShuttle.js'
+import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
 import VECFootpedalDriver from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
@@ -872,7 +871,7 @@ export class SurfaceController extends CoreBase {
 											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V2)
 									) {
 										if (this.userconfig.getKey('contour_shuttle_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', ContourShuttleDriver)
+											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
 										}
 									} else if (
 										deviceInfo.vendorId === 0x32ac && // frame.work
@@ -912,7 +911,7 @@ export class SurfaceController extends CoreBase {
 												deviceInfo.model === LoupedeckModelId.RazerStreamController ||
 												deviceInfo.model === LoupedeckModelId.RazerStreamControllerX
 											) {
-												await this.#addDevice(deviceInfo.path, {}, 'loupedeck-live', LoupedeckLiveDriver, true)
+												await this.#addDevice(deviceInfo.path, {}, 'loupedeck-live', SurfaceUSBLoupedeckLive, true)
 											} else if (
 												deviceInfo.model === LoupedeckModelId.LoupedeckCt ||
 												deviceInfo.model === LoupedeckModelId.LoupedeckCtV1
