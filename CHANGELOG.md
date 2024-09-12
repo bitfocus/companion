@@ -11,20 +11,29 @@
   - Add time expression functions
   - Allow comments
   - Intermediate value variables
+  - Objects and arrays can be mutated
 - Add install name user config and show in header
 - Support per-user install on windows
+- Support for Stream Deck Studio
 - Support for VEC footpedal as a surface
+- Support for Blackmagic Atem Micro Panel
+- Support for 203 Systems Mystrix panel
 - Allow surfaces larger than 32 buttons in satellite api
 - Add text color, css colors and row/columns in satellite api
+- Support variables in satellite api
 - Fuzzy match results when searching for actions/feedbacks
 - Update UI to updated framework. This includes small visual changes
 - Various UI tweaks and improvements
 - UI to discover, list and setup Satellite installations
 - Move variables tab to the top level
+- Long values in variables table are collapsed for readability
 - Use url parameters in some more pages, to allow for better bookmarks/links
 - Add row and column to bank_bg_change TCP messages
 - Improve render quality of blank buttons
 - Add variables for machine hostname
+- Allow changing page by surface index from variable
+- Add new local variables
+- Option to duplicate steps on a button
 - Various module api enhancements
 
 ### 🐞 BUG FIXES
@@ -38,10 +47,164 @@
 - Avoid flickering when draging actions or feedbacks around the editor
 - Avoid ui crash when action/feedback is missing name
 - Importing triggers fails to append due to duplicate ids
+- Improved error handling
+- Font sizes sometimes show as invalid
+-
 
 ### 🧩 NEW & UPDATED MODULES
 
--
+- aimedia-icap
+- aimedia-lexilive
+- allenheath-ahm
+- analogway-awj
+- aten-matrix
+- audiotechnica-digitalmixer
+- avmediatools-protimer
+- avstumpfl-pixera
+- aws-elementallive
+- aws-medialive
+- axeltechnology-xplayout
+- axeltechnology-xradio
+- barco-eventmaster
+- baserow-baserow
+- behringer-x32
+- behringer-xair
+- birddog-central
+- birddog-cloud
+- birddog-converters
+- birddog-ptz
+- blackbox-boxilla
+- bmd-atem
+- bmd-hyperdeck
+- bmd-teranex
+- bmd-ultimatte
+- bss-soundweb
+- canon-ptz
+- casparcg-server
+- chamsys-magicq-osc
+- chamsys-magicq-udp
+- chamsys-quickq
+- chyronhego-lyric
+- dan-dugan-automixer
+- dataton-watchout-json
+- evertz-symphony
+- extron-smp351
+- figure53-qlab-advance
+- figure53-qview
+- generic-blink
+- generic-dataentry
+- generic-filereader
+- generic-http
+- generic-osc
+- generic-pjlink
+- generic-snmp
+- generic-speedtest
+- generic-ssh
+- generic-stopwatch
+- generic-swp02
+- generic-swp08
+- generic-tcp-serial
+- generic-tcp-udp
+- generic-webtable
+- getontime-ontime
+- google-sheets
+- h2r-graphics
+- hdtv-wolfpackgreen
+- highend-hog4
+- homeassistant-server
+- ibm-watson
+- imagine-lrc
+- imimot-mitti
+- ioversal-vertex
+- ipl-ocp
+- justmacros-lua
+- kiloview-ndi
+- klang-app
+- klang-immersive
+- kramer-matrix
+- leonreucher-vstopowerpoint
+- lost-cause-photographic-controlroom
+- ltn-schedule
+- middleman-breaktime
+- monteiro-pptvideo
+- moxa-e2200series
+- netgear-avline
+- newblue-captivate
+- newtek-tricaster
+- nexo-nxamp
+- noismada-octopusshowcontrol
+- novastar-mediaserver
+- novastar-mxreal3
+- nrk-sofie-chef
+- ntp-technology-dot
+- obs-studio
+- optimalaudio-zone
+- panasonic-cameras
+- peavy-ratc
+- pixelhue-mediaserver
+- presentationtools-aps
+- presentationtools-cuetimer
+- ptzoptics-visca
+- radiodj-rest
+- raspberry-gpio
+- resi-decoders
+- rgblink-mini
+- riedel-rrcs
+- rogueamoeba-farrago
+- roku-tv
+- roland-v160hd
+- roland-v600uhd
+- rossvideo-xpression
+- samsung-smarttv
+- sennheiser-digital6000
+- shure-mxa910
+- shure-mxcw
+- shure-mxn5
+- shure-mxw
+- shure-psm1000
+- shure-scm820
+- shure-wireless
+- simonhyde-piclock
+- singularlive-studio
+- slack-webhooks
+- smodetech-smodelive
+- socialstream-ninja
+- softron-movierecorder
+- songbeamer-osc
+- sony-bravia
+- sony-serialtally
+- soundcraft-ui
+- sounddevices-pixnet
+- spacecommz-intercom
+- spotify-remote
+- stagetec-xci
+- stagetimerio-api
+- studiocoast-vmix
+- symetrix-dsp
+- tascam-cd
+- tascam-cd400u
+- tascam-da-6400
+- tasmota-http
+- techministry-tallyarbiter
+- telestream-prism
+- tellyo-streamstudio
+- teradek-prism
+- tieline-gateway
+- timemachines-clock
+- tinkerlist-cuez-automator
+- toolsonair-justincapture
+- tplink-kasasmartplug
+- vaddio-ptz
+- vbaudio-voicemeeter
+- vdo-ninja
+- vicreo-display
+- videolan-vlc
+- vitec-avediaplayer9300-series
+- yamaha-rcp
+- zenvideo-ndirouter
+- zerodensity-realityhub
+- zinc-oscpoint
+- zoom-osc-iso
 
 ## Companion v3.3.1 - Release Notes
 
