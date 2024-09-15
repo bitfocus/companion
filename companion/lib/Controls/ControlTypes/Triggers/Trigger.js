@@ -196,7 +196,7 @@ export default class ControlTrigger extends ControlBase {
 	has_actions_running = false
 
 	/**
-	 * @param {import('../../../Registry.js').default} registry - the application core
+	 * @param {import('../../../Registry.js').Registry} registry - the application core
 	 * @param {TriggerEvents} eventBus - the main trigger event bus
 	 * @param {string} controlId - id of the control
 	 * @param {import('@companion-app/shared/Model/TriggerModel.js').TriggerModel | null} storage - persisted storage object

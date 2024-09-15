@@ -1,4 +1,4 @@
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
 import express from 'express'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
@@ -49,7 +49,7 @@ export class ServiceHttpApi extends CoreBase {
 	#express
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 * @param {import('../UI/Express.js').default} express - express
 	 */
 	constructor(registry, express) {

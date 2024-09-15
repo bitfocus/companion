@@ -17,7 +17,7 @@
 
 import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { cloneDeep } from 'lodash-es'
@@ -73,7 +73,7 @@ class InstanceModules extends CoreBase {
 	#moduleScanner = new InstanceModuleScanner()
 
 	/**
-	 * @param {import("../Registry.js").default} registry
+	 * @param {import("../Registry.js").Registry} registry
 	 */
 	constructor(registry) {
 		super(registry, 'Instance/Modules')

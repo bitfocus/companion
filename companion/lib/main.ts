@@ -8,7 +8,7 @@ import './Log/Controller.js'
 
 // Now we can think about startup
 import { Command } from 'commander'
-import Registry from './Registry.js'
+import { Registry } from './Registry.js'
 import os from 'os'
 import path from 'path'
 import fs from 'fs-extra'

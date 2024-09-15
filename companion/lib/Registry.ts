@@ -1,8 +1,8 @@
 import EventEmitter from 'events'
 import fs from 'fs-extra'
 import express from 'express'
-import LogController from './Log/Controller.js'
-import CloudController from './Cloud/Controller.js'
+import LogController, { Logger } from './Log/Controller.js'
+import { CloudController } from './Cloud/Controller.js'
 import ControlsController from './Controls/Controller.js'
 import { GraphicsController } from './Graphics/Controller.js'
 import { GraphicsPreview } from './Graphics/Preview.js'
@@ -22,10 +22,8 @@ import { VariablesController } from './Variables/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
-/**
- * @type {string}
- */
-let buildNumber
+
+let buildNumber: string
 try {
 	if (process.env.JEST_WORKER_ID) {
 		buildNumber = '0.0.0-JEST'
@@ -69,132 +67,92 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class Registry extends EventEmitter {
+export class Registry extends EventEmitter {
 	/**
 	 * The cloud database
-	 * @type {CloudDatabase}
-	 * @access public
 	 */
-	clouddb
+	clouddb: CloudDatabase
+
+	cloud: CloudController
 	/**
 	 * The core controls controller
-	 * @type {ControlsController}
-	 * @access public
 	 */
-	controls
+	controls: ControlsController
 	/**
 	 * The core database library
-	 * @type {DataDatabase}
-	 * @access public
 	 */
-	db
+	db: DataDatabase
 	/**
 	 * The core graphics controller
-	 * @type {GraphicsController}
-	 * @access public
 	 */
-	graphics
+	graphics: GraphicsController
 	/**
 	 * The core instance controller
-	 * @type {InstanceController}
-	 * @access public
 	 */
-	instance
+	instance: InstanceController
 	/**
 	 * The core interface client
-	 * @type {UIHandler}
-	 * @access public
 	 */
-	io
+	io: UIHandler
 	/**
 	 * The logger
-	 * @type {import('winston').Logger}
-	 * @access private
 	 */
-	#logger
+	#logger: Logger
 	/**
 	 * The core page controller
-	 * @type {PageController}
-	 * @access public
 	 */
-	page
+	page: PageController
 	/**
 	 * The core page controller
-	 * @type {GraphicsPreview}
-	 * @access public
 	 */
-	preview
+	preview: GraphicsPreview
 	/**
 	 * The core service controller
-	 * @type {ServiceController}
-	 * @access public
 	 */
-	services
+	services: ServiceController
 	/**
 	 * The core device controller
-	 * @type {SurfaceController}
-	 * @access public
 	 */
-	surfaces
+	surfaces: SurfaceController
 	/**
 	 * The modules' event emitter interface
-	 * @type {EventEmitter}
-	 * @access public
 	 */
-	system
+	system: EventEmitter
 	/**
 	 * The core user config manager
-	 * @type {DataUserConfig}
-	 * @access public
 	 */
-	userconfig
+	userconfig: DataUserConfig
 
 	/**
 	 * The 'internal' module
-	 * @type {InternalController}
-	 * @access public
 	 */
-	internalModule
+	internalModule: InternalController
 
 	/**
 	 * The 'data' controller
-	 * @type {DataController}
-	 * @access public
 	 */
-	data
+	data: DataController
 
 	/**
 	 * The 'ui' controller
-	 * @type {UIController}
-	 * @access public
 	 */
-	ui
+	ui: UIController
 
 	/**
 	 * Express Router for /int api endpoints
-	 * @type {import('express').Router}
-	 * @access public
 	 */
-	api_router
+	api_router: express.Router
 
-	/**
-	 * @type {import('./Variables/Controller.js').VariablesController}
-	 */
-	variables
+	variables: VariablesController
 
-	/**
-	 * @type {AppInfo}
-	 * @access public
-	 * @readonly
-	 */
-	appInfo
+	readonly appInfo: AppInfo
 
 	/**
 	 * Create a new application <code>Registry</code>
-	 * @param {string} configDir - the configuration path
-	 * @param {string} machineId - the machine uuid
+	 * @param configDir - the configuration path
+	 * @param machineId - the machine uuid
 	 */
-	constructor(configDir, machineId) {
+	constructor(configDir: string, machineId: string) {
 		super()
 
 		if (!configDir) throw new Error(`Missing configDir`)
@@ -220,7 +178,7 @@ class Registry extends EventEmitter {
 	 * @param {string} bind_ip
 	 * @param {number} http_port
 	 */
-	async ready(extraModulePath, bind_ip, http_port) {
+	async ready(extraModulePath: string, bind_ip: string, http_port: number) {
 		this.#logger.debug('launching core modules')
 
 		this.api_router = express.Router()
@@ -269,60 +227,46 @@ class Registry extends EventEmitter {
 		this.controls.triggers.emit('startup')
 
 		if (process.env.COMPANION_IPC_PARENT) {
-			process.on(
-				'message',
-				/**
-				 * @type {function(any):void}
-				 */
-				(msg) => {
-					try {
-						if (msg.messageType === 'http-rebind') {
-							this.rebindHttp(msg.ip, msg.port)
-						} else if (msg.messageType === 'exit') {
-							this.exit(false, false)
-						} else if (msg.messageType === 'scan-usb') {
-							this.surfaces.triggerRefreshDevices().catch(() => {
-								showErrorMessage('USB Scan Error', 'Failed to scan for USB devices.')
-							})
-						} else if (msg.messageType === 'power-status') {
-							this.instance.powerStatusChange(msg.status)
-						} else if (msg.messageType === 'lock-screen') {
-							this.controls.triggers.emit('locked', !!msg.status)
-						}
-					} catch (e) {
-						this.#logger.debug(`Failed to handle IPC message: ${e}`)
+			process.on('message', (msg: any): void => {
+				try {
+					if (msg.messageType === 'http-rebind') {
+						this.rebindHttp(msg.ip, msg.port)
+					} else if (msg.messageType === 'exit') {
+						this.exit(false, false)
+					} else if (msg.messageType === 'scan-usb') {
+						this.surfaces.triggerRefreshDevices().catch(() => {
+							showErrorMessage('USB Scan Error', 'Failed to scan for USB devices.')
+						})
+					} else if (msg.messageType === 'power-status') {
+						this.instance.powerStatusChange(msg.status)
+					} else if (msg.messageType === 'lock-screen') {
+						this.controls.triggers.emit('locked', !!msg.status)
 					}
+				} catch (e) {
+					this.#logger.debug(`Failed to handle IPC message: ${e}`)
 				}
-			)
+			})
 		}
 
 		if (process.env.COMPANION_IPC_PARENT || process.env.COMPANION_DEV_MODULES) {
-			process.on(
-				'message',
-				/**
-				 * @type {function(any):void}
-				 */
-				(msg) => {
-					try {
-						if (msg.messageType === 'reload-extra-module') {
-							this.instance.modules.reloadExtraModule(msg.fullpath).catch((e) => {
-								this.#logger.warn(`Failed to reload module: ${e}`)
-							})
-						}
-					} catch (e) {
-						this.#logger.debug(`Failed to handle IPC message: ${e}`)
+			process.on('message', (msg: any): void => {
+				try {
+					if (msg.messageType === 'reload-extra-module') {
+						this.instance.modules.reloadExtraModule(msg.fullpath).catch((e) => {
+							this.#logger.warn(`Failed to reload module: ${e}`)
+						})
 					}
+				} catch (e) {
+					this.#logger.debug(`Failed to handle IPC message: ${e}`)
 				}
-			)
+			})
 		}
 	}
 
 	/**
 	 * Request application exit
-	 * @param {boolean} fromInternal
-	 * @param {boolean} restart
 	 */
-	exit(fromInternal, restart) {
+	exit(fromInternal: boolean, restart: boolean) {
 		Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
@@ -358,10 +302,8 @@ class Registry extends EventEmitter {
 
 	/**
 	 * Rebind the http server to an ip and port (https will update to the same ip if running)
-	 * @param {string} bind_ip
-	 * @param {number} http_port
 	 */
-	rebindHttp(bind_ip, http_port) {
+	rebindHttp(bind_ip: string, http_port: number): void {
 		// ensure the port looks reasonable
 		if (http_port < 1024 || http_port > 65535) {
 			http_port = 8000
@@ -371,14 +313,10 @@ class Registry extends EventEmitter {
 	}
 }
 
-export default Registry
-
-/**
- * @typedef {{
- *   configDir: string
- *   machineId: string
- *   appVersion: string
- *   appBuild: string
- *   pkgInfo: string
- * }} AppInfo
- */
+export interface AppInfo {
+	configDir: string
+	machineId: string
+	appVersion: string
+	appBuild: string
+	pkgInfo: string
+}

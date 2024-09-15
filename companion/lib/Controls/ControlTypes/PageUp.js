@@ -87,7 +87,7 @@ export default class ControlButtonPageUp extends ControlBase {
 	supportsPushed = false
 
 	/**
-	 * @param {import('../../Registry.js').default} registry - the application core
+	 * @param {import('../../Registry.js').Registry} registry - the application core
 	 * @param {string} controlId - id of the control
 	 * @param {import('@companion-app/shared/Model/ButtonModel.js').PageUpButtonModel | null} storage - persisted storage object
 	 * @param {boolean} isImport - if this is importing a button, not creating at startup

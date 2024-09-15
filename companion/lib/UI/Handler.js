@@ -155,7 +155,7 @@ class UIHandler {
 
 	/**
 	 *
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 * @param {*} http
 	 */
 	constructor(registry, http) {

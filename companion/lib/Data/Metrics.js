@@ -16,12 +16,12 @@
  */
 
 import crypto from 'crypto'
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import got from 'got'
 
 class DataMetrics extends CoreBase {
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Data/Metrics')

@@ -43,7 +43,7 @@ class ServiceElgatoPlugin extends ServiceBase {
 	port = 28492
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application's core
+	 * @param {import('../Registry.js').Registry} registry - the application's core
 	 */
 	constructor(registry) {
 		super(registry, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)

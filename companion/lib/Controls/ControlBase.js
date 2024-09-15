@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es'
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
 
@@ -65,7 +65,7 @@ export default class ControlBase extends CoreBase {
 	checkButtonStatus
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 * @param {string} controlId - id of the control
 	 * @param {string} debugNamespace
 	 */

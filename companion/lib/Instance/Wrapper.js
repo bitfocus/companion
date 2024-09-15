@@ -24,7 +24,7 @@ class SocketEventsHandler {
 	#ipcWrapper
 
 	/**
-	 * @type {import('../Registry.js').default}
+	 * @type {import('../Registry.js').Registry}
 	 */
 	#registry
 
@@ -64,7 +64,7 @@ class SocketEventsHandler {
 
 	/**
 	 *
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 * @param {import('./Status.js').default} instanceStatus
 	 * @param {*} monitor
 	 * @param {string} connectionId

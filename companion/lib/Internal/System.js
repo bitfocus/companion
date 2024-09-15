@@ -75,7 +75,7 @@ export default class System {
 	#logger = LogController.createLogger('Internal/System')
 
 	/**
-	 * @type {import('../Registry.js').default}
+	 * @type {import('../Registry.js').Registry}
 	 * @readonly
 	 */
 	#registry
@@ -99,7 +99,7 @@ export default class System {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 */
 	constructor(internalModule, registry) {
 		this.#internalModule = internalModule

@@ -1,4 +1,4 @@
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import ControlButtonNormal from './ControlTypes/Button/Normal.js'
 import ControlButtonPageDown from './ControlTypes/PageDown.js'
 import ControlButtonPageNumber from './ControlTypes/PageNumber.js'
@@ -86,7 +86,7 @@ class ControlsController extends CoreBase {
 	#activeLearnRequests = new Set()
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Controls/Controller')

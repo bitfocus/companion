@@ -68,7 +68,7 @@ class ModuleHost {
 	#logger = LogController.createLogger('Instance/ModuleHost')
 
 	/**
-	 * @type {import('../Registry.js').default}
+	 * @type {import('../Registry.js').Registry}
 	 */
 	#registry
 
@@ -89,7 +89,7 @@ class ModuleHost {
 	#children
 
 	/**
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 * @param {import('./Status.js').default} instanceStatus
 	 */
 	constructor(registry, instanceStatus) {

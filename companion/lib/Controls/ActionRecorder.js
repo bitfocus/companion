@@ -48,7 +48,7 @@ export default class ActionRecorder extends EventEmitter {
 
 	/**
 	 * @access private
-	 * @type {import('../Registry.js').default}
+	 * @type {import('../Registry.js').Registry}
 	 * @readonly
 	 */
 	#registry
@@ -83,7 +83,7 @@ export default class ActionRecorder extends EventEmitter {
 	#lastSentSessionInfoJsons = {}
 
 	/**
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 */
 	constructor(registry) {
 		super()

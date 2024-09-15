@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import ControlButtonNormal from '../Controls/ControlTypes/Button/Normal.js'
 import jsonPatch from 'fast-json-patch'
@@ -54,7 +54,7 @@ class InstanceDefinitions extends CoreBase {
 	#presetDefinitions = {}
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Instance/Definitions')

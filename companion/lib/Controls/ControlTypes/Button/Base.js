@@ -122,7 +122,7 @@ export default class ButtonControlBase extends ControlBase {
 	steps = {}
 
 	/**
-	 * @param {import('../../../Registry.js').default} registry
+	 * @param {import('../../../Registry.js').Registry} registry
 	 * @param {string} controlId
 	 * @param {string} debugNamespace
 	 */

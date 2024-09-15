@@ -41,7 +41,7 @@ class ServiceTcp extends ServiceTcpBase {
 	port = 16759
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Service/Tcp', 'tcp_enabled', 'tcp_listen_port')

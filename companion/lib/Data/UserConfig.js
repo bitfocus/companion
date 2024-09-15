@@ -1,6 +1,6 @@
 import selfsigned from 'selfsigned'
 import { cloneDeep } from 'lodash-es'
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 
 /**
  * The class that manages the applications's user configurable settings
@@ -116,7 +116,7 @@ class DataUserConfig extends CoreBase {
 	data
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Data/UserConfig')

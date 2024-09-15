@@ -46,7 +46,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	#satelliteExpireInterval
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Service/SurfaceDiscovery', 'discoveryEnabled', null)

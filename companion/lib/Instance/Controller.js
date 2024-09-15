@@ -17,7 +17,7 @@
 
 import { nanoid } from 'nanoid'
 import { delay } from '../Resources/Util.js'
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import InstanceDefinitions from './Definitions.js'
 import ModuleHost, { ConnectionDebugLogRoom } from './Host.js'
 import InstanceStatus from './Status.js'
@@ -62,7 +62,7 @@ class Instance extends CoreBase {
 	}
 
 	/**
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 */
 	constructor(registry) {
 		super(registry, 'Instance/Controller')

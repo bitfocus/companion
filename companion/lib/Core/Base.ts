@@ -1,5 +1,16 @@
 import { EventEmitter } from 'events'
-import LogController from '../Log/Controller.js'
+import LogController, { Logger } from '../Log/Controller.js'
+import type { Registry } from '../Registry.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type InternalController from '../Internal/Controller.js'
+import type DataUserConfig from '../Data/UserConfig.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type ServiceController from '../Service/Controller.js'
+import type UIHandler from '../UI/Handler.js'
+import type Instance from '../Instance/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type DataDatabase from '../Data/Database.js'
+import type ControlsController from '../Controls/Controller.js'
 
 /**
  * Abstract class to be extended by most core classes.  Provides access to the
@@ -22,28 +33,25 @@ import LogController from '../Log/Controller.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class CoreBase extends EventEmitter {
+export class CoreBase extends EventEmitter {
 	/**
 	 * The application core
-	 * @type {import('../Registry.js').default}
-	 * @access protected
+	 * TODO: make protected/private
 	 */
-	registry
+	readonly registry: Registry
 
 	/**
 	 * The logger for this class
-	 * @type {import('winston').Logger}
-	 * @access protected
 	 */
-	logger
+	protected readonly logger: Logger
 
 	/**
 	 * This needs to be called in the extending class
 	 * using <code>super(registry, 'module_name', 'module_path')</code>.
-	 * @param {import('../Registry.js').default} registry - the application core
-	 * @param {string} debugNamespace - module path to be used in the debugger
+	 * @param registry - the application core
+	 * @param debugNamespace - module path to be used in the debugger
 	 */
-	constructor(registry, debugNamespace) {
+	constructor(registry: Registry, debugNamespace: string) {
 		super()
 
 		this.registry = registry
@@ -53,59 +61,44 @@ class CoreBase extends EventEmitter {
 
 	/**
 	 * The core controls controller
-	 * @type {import('../Controls/Controller.js').default}
-	 * @access protected
-	 * @readonly
+	 * TODO: make protected/private
 	 */
-	get controls() {
+	get controls(): ControlsController {
 		return this.registry.controls
 	}
 
 	/**
 	 * The core database library
-	 * @type {import('../Data/Database.js').default}
-	 * @access protected
-	 * @readonly
 	 */
-	get db() {
+	protected get db(): DataDatabase {
 		return this.registry.db
 	}
 
 	/**
 	 * The core graphics controller
-	 * @type {import('../Graphics/Controller.js').GraphicsController}
-	 * @access protected
-	 * @readonly
 	 */
-	get graphics() {
+	protected get graphics(): GraphicsController {
 		return this.registry.graphics
 	}
 
 	/**
 	 * The core instance controller
-	 * @type {import('../Instance/Controller.js').default}
-	 * @access protected
-	 * @readonly
 	 */
-	get instance() {
+	protected get instance(): Instance {
 		return this.registry.instance
 	}
 
 	/**
 	 * The core interface client
-	 * @type {import('../UI/Handler.js').default}
-	 * @access protected
-	 * @readonly
+	 * TODO: make protected/private
 	 */
-	get io() {
+	get io(): UIHandler {
 		return this.registry.io
 	}
 
 	/**
 	 * The core page controller
-	 * @type {import('../Page/Controller.js').default}
-	 * @access protected
-	 * @readonly
+	 * TODO: make protected/private
 	 */
 	get page() {
 		return this.registry.page
@@ -113,63 +106,43 @@ class CoreBase extends EventEmitter {
 
 	/**
 	 * The core page controller
-	 * @type {import('../Graphics/Preview.js').GraphicsPreview}
-	 * @access protected
-	 * @readonly
 	 */
-	get preview() {
+	protected get preview() {
 		return this.registry.preview
 	}
 
 	/**
 	 * The core service controller
-	 * @type {import('../Service/Controller.js').default}
-	 * @access protected
-	 * @readonly
 	 */
-	get services() {
+	protected get services(): ServiceController {
 		return this.registry.services
 	}
 
 	/**
 	 * The core device controller
-	 * @type {import('../Surface/Controller.js').SurfaceController}
-	 * @access protected
-	 * @readonly
 	 */
-	get surfaces() {
+	protected get surfaces(): SurfaceController {
 		return this.registry.surfaces
 	}
 
 	/**
 	 * The core user config manager
-	 * @type {import('../Data/UserConfig.js').default}
-	 * @access protected
-	 * @readonly
 	 */
-	get userconfig() {
+	protected get userconfig(): DataUserConfig {
 		return this.registry.userconfig
 	}
 
 	/**
 	 * The internal module
-	 * @type {import('../Internal/Controller.js').default}
-	 * @access protected
-	 * @readonly
 	 */
-	get internalModule() {
+	protected get internalModule(): InternalController {
 		return this.registry.internalModule
 	}
 
 	/**
 	 * The variables controller
-	 * @type {import('../Variables/Controller.js').VariablesController}
-	 * @access protected
-	 * @readonly
 	 */
-	get variablesController() {
+	protected get variablesController(): VariablesController {
 		return this.registry.variables
 	}
 }
-
-export default CoreBase

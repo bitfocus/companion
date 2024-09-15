@@ -5,7 +5,7 @@ import DataUserConfig from './UserConfig.js'
 
 class DataController {
 	/**
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 */
 	constructor(registry) {
 		this.cache = new DataCache(registry.appInfo.configDir)

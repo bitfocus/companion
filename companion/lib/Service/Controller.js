@@ -36,7 +36,7 @@ import ServiceVideohubPanel from './VideohubPanel.js'
  */
 class ServiceController {
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		this.httpApi = new ServiceHttpApi(registry, registry.ui.express)

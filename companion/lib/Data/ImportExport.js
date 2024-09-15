@@ -22,7 +22,7 @@ import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
 import { getTimestamp, isFalsey } from '../Resources/Util.js'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import archiver from 'archiver'
 import path from 'path'
 import fs from 'fs'
@@ -128,7 +128,7 @@ class DataImportExport extends CoreBase {
 	#currentImportTask = null
 
 	/**
-	 * @param {import("../Registry.js").default} registry
+	 * @param {import("../Registry.js").Registry} registry
 	 */
 	constructor(registry) {
 		super(registry, 'Data/ImportExport')

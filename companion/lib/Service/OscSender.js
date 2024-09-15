@@ -31,7 +31,7 @@ class ServiceOscSender extends ServiceOscBase {
 	port = 0
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Service/OscSender', null, null)

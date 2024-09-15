@@ -5,7 +5,7 @@ import UIUpdate from './Update.js'
 
 class UIController {
 	/**
-	 * @param {import("../Registry.js").default} registry
+	 * @param {import("../Registry.js").Registry} registry
 	 */
 	constructor(registry) {
 		this.express = new UIExpress(registry)

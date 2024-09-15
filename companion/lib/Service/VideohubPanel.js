@@ -37,7 +37,7 @@ class ServiceVideohubPanel extends ServiceBase {
 	devices = new Map()
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Service/VideohubPanel', 'videohub_panel_enabled', null)

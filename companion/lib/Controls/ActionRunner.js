@@ -1,4 +1,4 @@
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 
 /**
  * Class to handle execution of actions.
@@ -31,7 +31,7 @@ export default class ActionRunner extends CoreBase {
 	#timers_running = new Map()
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Control/ActionRunner')

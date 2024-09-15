@@ -15,7 +15,7 @@
  *
  */
 
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import ActionRecorder from './ActionRecorder.js'
 import BuildingBlocks from './BuildingBlocks.js'
 import Instance from './Instance.js'
@@ -44,7 +44,7 @@ export default class InternalController extends CoreBase {
 	#buildingBlocksFragment
 
 	/**
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 */
 	constructor(registry) {
 		super(registry, 'Internal/Controller')

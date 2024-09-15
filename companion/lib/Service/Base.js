@@ -1,4 +1,4 @@
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 
 /**
  * Abstract class providing base functionality for services.
@@ -65,7 +65,7 @@ class ServiceBase extends CoreBase {
 	/**
 	 * This needs to be called in the extending class
 	 * using <code>super(registry, 'module_name', 'module_path', enableConfig, portConfig)</code>.
-	 * @param {import('../Registry.js').default} registry - the core registry
+	 * @param {import('../Registry.js').Registry} registry - the core registry
 	 * @param {string} debugNamespace - module path to be used in the debugger
 	 * @param {?string} enableConfig - the key for the userconfig that sets if the module is enabled or disabled
 	 * @param {?string} portConfig - the key for the userconfig that sets the service ports

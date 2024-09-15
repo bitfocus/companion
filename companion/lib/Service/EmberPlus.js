@@ -103,7 +103,7 @@ class ServiceEmberPlus extends ServiceBase {
 	#pushedButtons = new Set()
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application's core
+	 * @param {import('../Registry.js').Registry} registry - the application's core
 	 */
 	constructor(registry) {
 		super(registry, 'Service/EmberPlus', 'emberplus_enabled', null)

@@ -39,7 +39,7 @@ class ServiceUdp extends ServiceUdpBase {
 	port = 16759
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
 	constructor(registry) {
 		super(registry, 'Service/Udp', 'udp_enabled', 'udp_listen_port')

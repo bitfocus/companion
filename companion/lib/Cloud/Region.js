@@ -28,7 +28,7 @@ import LogController from '../Log/Controller.js'
  * @author William Viker <william@bitfocus.io>
  * @since 2.3.0
  */
-class CloudRegion {
+export class CloudRegion {
 	/**
 	 * The logger for this class
 	 * @type {ReturnType<typeof LogController.createLogger>}
@@ -65,7 +65,7 @@ class CloudRegion {
 
 	/**
 	 * Setup a Bitfocus Cloud region
-	 * @param {import('./Controller.js').default} cloud - the cloud controller
+	 * @param {import('./Controller.js').CloudController} cloud - the cloud controller
 	 * @param {string} id - this unique ID
 	 * @param {{ host: string, name: string }} data - setup data for the region
 	 */
@@ -490,8 +490,6 @@ class CloudRegion {
 		}
 	}
 }
-
-export default CloudRegion
 
 /**
  * @typedef {Object} CloudRegionState

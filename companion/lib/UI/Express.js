@@ -68,7 +68,7 @@ class UIExpress {
 	#legacyApiRouter = Express.Router()
 
 	/**
-	 * @param {import('../Registry.js').default} registry
+	 * @param {import('../Registry.js').Registry} registry
 	 */
 	constructor(registry) {
 		this.registry = registry

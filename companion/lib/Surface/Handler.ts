@@ -31,7 +31,7 @@ import type { SurfaceController } from './Controller.js'
 import type DataUserConfig from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '../Resources/Util.js'
-import type Registry from '../Registry.js'
+import type { Registry } from '../Registry.js'
 import { DrawButtonItem, SurfacePanel } from './Types.js'
 
 const PINCODE_NUMBER_POSITIONS: [number, number][] = [

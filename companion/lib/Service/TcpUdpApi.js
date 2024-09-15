@@ -1,4 +1,4 @@
-import CoreBase from '../Core/Base.js'
+import { CoreBase } from '../Core/Base.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import RegexRouter from './RegexRouter.js'
@@ -54,7 +54,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	}
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the core registry
+	 * @param {import('../Registry.js').Registry} registry - the core registry
 	 * @param {string} protocolName - the protocol name
 	 * @param {string | null} legacyRoutesEnableKey - Userconfig key to enable/disable legacy routes
 	 */

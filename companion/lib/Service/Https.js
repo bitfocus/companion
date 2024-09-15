@@ -53,7 +53,7 @@ class ServiceHttps extends ServiceBase {
 	server = undefined
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the core registry
+	 * @param {import('../Registry.js').Registry} registry - the core registry
 	 * @param {import('../UI/Express.js').default} express - the app framework
 	 */
 	constructor(registry, express) {

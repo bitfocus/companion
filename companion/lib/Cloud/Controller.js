@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash-es'
-import CoreBase from '../Core/Base.js'
-import CloudRegion from './Region.js'
+import { CoreBase } from '../Core/Base.js'
+import { CloudRegion } from './Region.js'
 import got from 'got'
 import { v4 } from 'uuid'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
@@ -29,7 +29,7 @@ const CLOUD_URL = 'https://api.bitfocus.io/v1'
  * disclosing the source code of your own applications.
  */
 
-class CloudController extends CoreBase {
+export class CloudController extends CoreBase {
 	/**
 	 * A clist of known cloud regions
 	 * @type {{[region: string]: { host: string, name: string }}}
@@ -97,7 +97,7 @@ class CloudController extends CoreBase {
 	}
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../Registry.js').Registry} registry - the application core
 	 * @param {import('../Data/CloudDatabase.js').default} clouddb
 	 * @param {import('../Data/Cache.js').default} cache
 	 */
@@ -731,8 +731,6 @@ class CloudController extends CoreBase {
 		}
 	}
 }
-
-export default CloudController
 
 /**
  * @typedef {Object} CloudControllerState
