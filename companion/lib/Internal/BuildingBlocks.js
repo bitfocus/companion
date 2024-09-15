@@ -87,7 +87,7 @@ export default class BuildingBlocks {
 
 	/**
 	 * Execute a logic feedback
-	 * @param {import('../Controls/IControlFragments.js').FeedbackInstance} feedback
+	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
 	 * @param {boolean[]} childValues
 	 * @returns {boolean}
 	 */

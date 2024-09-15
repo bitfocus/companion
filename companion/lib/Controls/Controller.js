@@ -14,7 +14,7 @@ import ActionRunner from './ActionRunner.js'
 import ActionRecorder from './ActionRecorder.js'
 import ControlTrigger from './ControlTypes/Triggers/Trigger.js'
 import { nanoid } from 'nanoid'
-import TriggerEvents from './TriggerEvents.js'
+import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'
 
 export const TriggersListRoom = 'triggers:list'
@@ -66,7 +66,7 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * The currently configured controls
-	 * @type {Map<string, import('./IControlFragments.js').SomeControl>}
+	 * @type {Map<string, import('./IControlFragments.js').SomeControl<any>>}
 	 * @access private
 	 */
 	#controls = new Map()
@@ -559,7 +559,7 @@ class ControlsController extends CoreBase {
 
 		client.onPromise('controls:action:duplicate', (controlId, stepId, setId, id) => {
 			const control = this.getControl(controlId)
-			if (!control) return false
+			if (!control) return null
 
 			if (control.supportsActions) {
 				return control.actionDuplicate(stepId, setId, id)
@@ -712,7 +712,7 @@ class ControlsController extends CoreBase {
 		client.onPromise('triggers:subscribe', () => {
 			client.join(TriggersListRoom)
 
-			/** @type {Record<string, import('./ControlTypes/Triggers/Trigger.js').ClientTriggerData>} */
+			/** @type {Record<string, import('@companion-app/shared/Model/TriggerModel.js').ClientTriggerData>} */
 			const triggers = {}
 
 			for (const [controlId, control] of this.#controls.entries()) {
@@ -929,7 +929,7 @@ class ControlsController extends CoreBase {
 	 * @param {'button' | 'trigger' | 'all'} category 'button' | 'trigger' | 'all'
 	 * @param {SomeControlModel | string} controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param {boolean} isImport Whether this is an import, and needs additional processing
-	 * @returns {import('./IControlFragments.js').SomeControl | null}
+	 * @returns {import('./IControlFragments.js').SomeControl<any> | null}
 	 * @access private
 	 */
 	#createClassForControl(controlId, category, controlObj, isImport) {
@@ -974,7 +974,7 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Get all of the populated controls
-	 * @returns {ReadonlyMap<string, import('./IControlFragments.js').SomeControl>}
+	 * @returns {ReadonlyMap<string, import('./IControlFragments.js').SomeControl<any>>}
 	 * @access public
 	 */
 	getAllControls() {
@@ -1000,7 +1000,7 @@ class ControlsController extends CoreBase {
 	/**
 	 * Get a control if it has been populated
 	 * @param {string} controlId
-	 * @returns {import('./IControlFragments.js').SomeControl | undefined}
+	 * @returns {import('./IControlFragments.js').SomeControl<any> | undefined}
 	 * @access public
 	 */
 	getControl(controlId) {

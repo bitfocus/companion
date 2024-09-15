@@ -1,4 +1,4 @@
-import type { FeedbackInstance } from '../../Controls/IControlFragments.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 
 /**

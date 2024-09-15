@@ -38,7 +38,7 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Shared event bus, across all triggers
-	 * @type {import('../../../TriggerEvents.js').default}
+	 * @type {import('../../../TriggerEvents.js').TriggerEvents}
 	 * @access private
 	 */
 	#eventBus
@@ -86,7 +86,7 @@ export default class TriggersEventTimer {
 	#sunEvents = []
 
 	/**
-	 * @param {import('../../../TriggerEvents.js').default} eventBus
+	 * @param {import('../../../TriggerEvents.js').TriggerEvents} eventBus
 	 * @param {string} controlId
 	 * @param {(nowTime: number) => void} executeActions
 	 */

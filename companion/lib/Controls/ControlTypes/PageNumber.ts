@@ -1,5 +1,5 @@
-import ControlBase from '../ControlBase.js'
-import {
+import { ControlBase } from '../ControlBase.js'
+import type {
 	ControlWithoutActionSets,
 	ControlWithoutActions,
 	ControlWithoutEvents,
@@ -9,6 +9,9 @@ import {
 	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../IControlFragments.js'
+import type { Registry } from '../../Registry.js'
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import { PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 
 /**
  * Class for a pagenum button control.
@@ -39,60 +42,36 @@ import {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ControlButtonPageNumber extends ControlBase {
-	/**
-	 * @readonly
-	 */
-	type = 'pagenum'
+export default class ControlButtonPageNumber
+	extends ControlBase<PageNumberButtonModel>
+	implements
+		ControlWithoutActions,
+		ControlWithoutFeedbacks,
+		ControlWithoutSteps,
+		ControlWithoutStyle,
+		ControlWithoutEvents,
+		ControlWithoutActionSets,
+		ControlWithoutOptions,
+		ControlWithoutPushed
+{
+	readonly type = 'pagenum'
+
+	readonly supportsActions = false
+	readonly supportsSteps = false
+	readonly supportsFeedbacks = false
+	readonly supportsStyle = false
+	readonly supportsEvents = false
+	readonly supportsActionSets = false
+	readonly supportsOptions = false
+	readonly supportsPushed = false
 
 	/**
-	 * @readonly
-	 * @type {false}
+	 * @param registry - the application core
+	 * @param controlId - id of the control
+	 * @param storage - persisted storage object
+	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	supportsActions = false
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsSteps = false
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsFeedbacks = false
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsStyle = false
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsEvents = false
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsActionSets = false
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsOptions = false
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsPushed = false
-
-	/**
-	 * @param {import('../../Registry.js').Registry} registry - the application core
-	 * @param {string} controlId - id of the control
-	 * @param {import('@companion-app/shared/Model/ButtonModel.js').PageNumberButtonModel | null} storage - persisted storage object
-	 * @param {boolean} isImport - if this is importing a button, not creating at startup
-	 */
-	constructor(registry, controlId, storage, isImport) {
+	constructor(registry: Registry, controlId: string, storage: PageNumberButtonModel | null, isImport: boolean) {
 		super(registry, controlId, 'Controls/Button/PageNumber')
 
 		if (!storage) {
@@ -112,10 +91,9 @@ export default class ControlButtonPageNumber extends ControlBase {
 
 	/**
 	 * Get the complete style object of a button
-	 * @returns {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel} the processed style of the button
-	 * @access public
+	 * @returns the processed style of the button
 	 */
-	getDrawStyle() {
+	getDrawStyle(): DrawStyleModel {
 		return {
 			style: 'pagenum',
 		}
@@ -123,28 +101,26 @@ export default class ControlButtonPageNumber extends ControlBase {
 
 	/**
 	 * Collect the connection ids and labels referenced by this control
-	 * @param {Set<string>} _foundConnectionIds - connection ids being referenced
-	 * @param {Set<string>} _foundConnectionLabels - connection labels being referenced
-	 * @access public
+	 * @param foundConnectionIds - connection ids being referenced
+	 * @param foundConnectionLabels - connection labels being referenced
 	 */
-	collectReferencedConnections(_foundConnectionIds, _foundConnectionLabels) {
+	collectReferencedConnections(_foundConnectionIds: Set<string>, _foundConnectionLabels: Set<string>) {
 		// Nothing being referenced
 	}
 
 	/**
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
-	triggerLocationHasChanged() {
+	triggerLocationHasChanged(): void {
 		// Nothing to do
 	}
 
 	/**
 	 * Execute a press of this control
-	 * @param {boolean} pressed Whether the control is pressed
-	 * @param {string | undefined} surfaceId The surface that intiated this press
-	 * @access public
+	 * @param pressed Whether the control is pressed
+	 * @param surfaceId The surface that intiated this press
 	 */
-	pressControl(pressed, surfaceId) {
+	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {
 			this.surfaces.devicePageSet(surfaceId, this.page.getFirstPageId())
 		}
@@ -153,13 +129,21 @@ export default class ControlButtonPageNumber extends ControlBase {
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param {boolean} _clone - Whether to return a cloned object
-	 * @returns {import('@companion-app/shared/Model/ButtonModel.js').PageNumberButtonModel}
-	 * @access public
+	 * @param _clone - Whether to return a cloned object
 	 */
-	toJSON(_clone = true) {
+	toJSON(_clone = true): PageNumberButtonModel {
 		return {
 			type: this.type,
 		}
+	}
+
+	getBitmapSize() {
+		return null
+	}
+	renameVariables(_labelFrom: string, _labelTo: string) {
+		// Nothing to do
+	}
+	verifyConnectionIds(_knownConnectionIds: Set<string>) {
+		// Nothing to do
 	}
 }

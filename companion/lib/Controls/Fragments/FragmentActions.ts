@@ -129,7 +129,7 @@ export class FragmentActions {
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(setId: string, id: string): boolean {
+	actionDuplicate(setId: string, id: string): string | null {
 		const action_set = this.action_sets[setId]
 		if (action_set) {
 			const index = action_set.findIndex((act) => act.id === id)
@@ -143,11 +143,11 @@ export class FragmentActions {
 
 				this.#commitChange(false)
 
-				return true
+				return actionItem.id
 			}
 		}
 
-		return false
+		return null
 	}
 
 	/**

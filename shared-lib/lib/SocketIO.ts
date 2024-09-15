@@ -144,7 +144,7 @@ export interface ClientToBackendEventsMap {
 		enabled: boolean
 	) => boolean
 	'controls:action:learn': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
-	'controls:action:duplicate': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
+	'controls:action:duplicate': (controlId: string, stepId: string, setId: string, actionId: string) => string | null
 	'controls:action:remove': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
 	'controls:action:set-delay': (
 		controlId: string,

@@ -1,5 +1,5 @@
 import type { ControlLocation } from '../Resources/Util.js'
-import type { FeedbackInstance } from '../Controls/IControlFragments.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { VisitorReferencesCollector } from '../Util/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdater } from '../Util/Visitors/ReferencesUpdater.js'
 import { CompanionOptionValues } from '@companion-module/base'

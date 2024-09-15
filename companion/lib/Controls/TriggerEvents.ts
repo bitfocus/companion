@@ -2,6 +2,17 @@ import EventEmitter from 'events'
 import { performance } from 'perf_hooks'
 import LogController from '../Log/Controller.js'
 
+interface TriggerEventsEvents {
+	tick: [nowSeconds: number, nowMilliseconds: number]
+	startup: []
+	client_connect: []
+	locked: [locked: boolean]
+
+	trigger_enabled: [controlId: string, enabled: boolean]
+	control_press: [controlId: string, pressed: boolean, surfaceId: string | undefined]
+	variables_changed: [changed: Set<string>]
+}
+
 /**
  * Main bus for trigger events
  *
@@ -24,27 +35,20 @@ import LogController from '../Log/Controller.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class TriggerEvents extends EventEmitter {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger = LogController.createLogger('Controls/TriggerEvents')
+export class TriggerEvents extends EventEmitter<TriggerEventsEvents> {
+	readonly #logger = LogController.createLogger('Controls/TriggerEvents')
 
 	/**
 	 * The last tick time emitted
-	 * @type {number}
-	 * @access private
 	 */
-	#lastTick = Math.round(performance.now() / 1000)
+	#lastTick: number = Math.round(performance.now() / 1000)
 
 	constructor() {
 		super()
 
 		this.setMaxListeners(0)
 
-		this.interval = setInterval(() => {
+		setInterval(() => {
 			try {
 				// Future: Would this benefit from ticking more than once a second?
 				const nowSeconds = Math.round(performance.now() / 1000)
@@ -58,10 +62,8 @@ export default class TriggerEvents extends EventEmitter {
 
 	/**
 	 * Get the last tick time emitted
-	 * @return {number}
-	 * @access public
 	 */
-	getLastTickTime() {
+	getLastTickTime(): number {
 		return this.#lastTick
 	}
 }

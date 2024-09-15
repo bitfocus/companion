@@ -1,4 +1,4 @@
-import ControlBase from '../../ControlBase.js'
+import { ControlBase } from '../../ControlBase.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { cloneDeep } from 'lodash-es'
 import { FragmentFeedbacks } from '../../Fragments/FragmentFeedbacks.js'

@@ -57,7 +57,7 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Shared event bus, across all triggers
-	 * @type {import('../../../TriggerEvents.js').default}
+	 * @type {import('../../../TriggerEvents.js').TriggerEvents}
 	 * @access private
 	 */
 	#eventBus
@@ -84,7 +84,7 @@ export default class TriggersEventMisc {
 	#startupEvents = []
 
 	/**
-	 * @param {import('../../../TriggerEvents.js').default} eventBus
+	 * @param {import('../../../TriggerEvents.js').TriggerEvents} eventBus
 	 * @param {string} controlId
 	 * @param {(nowTime: number) => void} executeActions
 	 */

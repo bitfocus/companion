@@ -2,13 +2,13 @@ import { cloneDeep } from 'lodash-es'
 import { CoreBase } from '../Core/Base.js'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
+import type { Registry } from '../Registry.js'
+import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Get Socket.io room to use for changes to a control config
- * @param {string} controlId
- * @returns {string}
  */
-export function ControlConfigRoom(controlId) {
+export function ControlConfigRoom(controlId: string): string {
 	return `controls:${controlId}`
 }
 
@@ -34,42 +34,27 @@ export function ControlConfigRoom(controlId) {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ControlBase extends CoreBase {
-	/**
-	 * @readonly
-	 * @type {string}
-	 * @access public
-	 */
-	type
+export abstract class ControlBase<TJson> extends CoreBase {
+	abstract readonly type: string
 
 	/**
 	 * The last sent config json object
-	 * @type {Record<string, any> | null}
-	 * @access private
 	 */
-	#lastSentConfigJson = null
+	#lastSentConfigJson: TJson | null = null
 	/**
 	 * The last sent runtime json object
-	 * @type {Record<string, any> | null}
-	 * @access private
 	 */
-	#lastSentRuntimeJson = null
+	#lastSentRuntimeJson: Record<string, any> | null = null
 
 	/**
 	 * Check the status of a control, and re-draw if needed
-	 * @access public
-	 * @type {((redraw?: boolean) => boolean)=}
-	 * @returns {boolean} whether the status changed
-	 * @abstract
+	 * @returns whether the status changed
 	 */
-	checkButtonStatus
+	checkButtonStatus: ((redraw?: boolean) => boolean) | undefined
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 * @param {string} controlId - id of the control
-	 * @param {string} debugNamespace
-	 */
-	constructor(registry, controlId, debugNamespace) {
+	readonly controlId: string
+
+	constructor(registry: Registry, controlId: string, debugNamespace: string) {
 		super(registry, debugNamespace)
 
 		this.controlId = controlId
@@ -78,8 +63,7 @@ export default class ControlBase extends CoreBase {
 	/**
 	 * Post-process a change to this control
 	 * This includes, redrawing, writing to the db and informing any interested clients
-	 * @param {boolean} redraw - whether to redraw the control
-	 * @access protected
+	 * @param redraw - whether to redraw the control
 	 */
 	commitChange(redraw = true) {
 		// Check if the status has changed
@@ -91,7 +75,7 @@ export default class ControlBase extends CoreBase {
 		const newJson = this.toJSON(true)
 
 		// Save to db
-		this.db.setKey(['controls', this.controlId], newJson)
+		this.db.setKey(['controls', this.controlId], newJson as any)
 
 		// Now broadcast to any interested clients
 		const roomName = ControlConfigRoom(this.controlId)
@@ -109,9 +93,8 @@ export default class ControlBase extends CoreBase {
 	/**
 	 * Prepare this control for deletion, this should be extended by controls.
 	 * Immediately after this is called, it will be removed from the store, and assumed to be fully deleted
-	 * @access public
 	 */
-	destroy() {
+	destroy(): void {
 		// Inform clients
 		const roomName = ControlConfigRoom(this.controlId)
 		if (this.io.countRoomMembers(roomName) > 0) {
@@ -122,38 +105,28 @@ export default class ControlBase extends CoreBase {
 
 	/**
 	 * Collect the instance ids and labels referenced by this control
-	 * @param {Set<string>} _foundConnectionIds - instance ids being referenced
-	 * @param {Set<string>} _foundConnectionLabels - instance labels being referenced
+	 * @param foundConnectionIds - instance ids being referenced
+	 * @param foundConnectionLabels - instance labels being referenced
 	 * @access public
 	 * @abstract
 	 */
-	collectReferencedConnections(_foundConnectionIds, _foundConnectionLabels) {
-		throw new Error('must be implemented by subclass!')
-	}
+	abstract collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void
 
 	/**
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
-	triggerLocationHasChanged() {
-		throw new Error('must be implemented by subclass!')
-	}
+	abstract triggerLocationHasChanged(): void
 
 	/**
 	 * Get the size of the bitmap render of this control
-	 * @access public
-	 * @returns {{ width: number, height: number } | null}
-	 * @abstract
 	 */
-	getBitmapSize() {
-		return null
-	}
+	abstract getBitmapSize(): { width: number; height: number } | null
 
 	/**
 	 * Get the complete style object of a button
-	 * @returns {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel | null} the processed style of the button
-	 * @access public
+	 * @returns the processed style of the button
 	 */
-	getDrawStyle() {
+	getDrawStyle(): DrawStyleModel | null {
 		return null
 	}
 
@@ -161,9 +134,8 @@ export default class ControlBase extends CoreBase {
 	 * Emit a change to the runtime properties of this control.
 	 * This is for any properties that the ui may want about this control which are not persisted in toJSON()
 	 * This is done via this.toRuntimeJSON()
-	 * @access protected
 	 */
-	sendRuntimePropsChange() {
+	protected sendRuntimePropsChange(): void {
 		const newJson = cloneDeep(this.toRuntimeJSON())
 
 		// Now broadcast to any interested clients
@@ -182,28 +154,20 @@ export default class ControlBase extends CoreBase {
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param {boolean=} _clone - Whether to return a cloned object
-	 * @returns {Record<string, any>}
-	 * @access public
-	 * @abstract
+	 * @param clone - Whether to return a cloned object
 	 */
-	toJSON(_clone = true) {
-		throw new Error('must be implemented by subclass!')
-	}
+	abstract toJSON(clone: boolean): TJson
 
 	/**
 	 * Get any volatile properties for the control
 	 * Not all controls have additional data
-	 * @returns {Record<string, any>}
-	 * @access public
 	 */
-	toRuntimeJSON() {
+	toRuntimeJSON(): Record<string, any> {
 		return {}
 	}
 
 	/**
 	 * Trigger a redraw of this control, if it can be drawn
-	 * @access protected
 	 */
 	triggerRedraw = debounceFn(
 		() => {
@@ -228,33 +192,21 @@ export default class ControlBase extends CoreBase {
 
 	/**
 	 * Rename an instance for variables used in the controls
-	 * @param {string} _labelFrom - the old instance short name
-	 * @param {string} _labelTo - the new instance short name
-	 * @returns {void}
-	 * @access public
+	 * @param labelFrom - the old instance short name
+	 * @param labelTo - the new instance short name
 	 */
-	renameVariables(_labelFrom, _labelTo) {
-		// To be implemented by subclasses
-	}
+	abstract renameVariables(labelFrom: string, labelTo: string): void
 
 	/**
 	 * Prune any items on controls which belong to an unknown connectionId
-	 * @param {Set<string>} _knownConnectionIds
-	 * @access public
 	 */
-	verifyConnectionIds(_knownConnectionIds) {
-		// To be implemented by subclasses
-	}
+	abstract verifyConnectionIds(knownConnectionIds: Set<string>): void
 
 	/**
 	 * Execute a press of a control
-	 * @param {boolean} _pressed Whether the control is pressed
-	 * @param {string | undefined} _surfaceId The surface that intiated this press
-	 * @param {boolean=} _force Trigger actions even if already in the state
-	 * @returns {void}
-	 * @access public
+	 * @param pressed Whether the control is pressed
+	 * @param surfaceId The surface that intiated this press
+	 * @param force Trigger actions even if already in the state
 	 */
-	pressControl(_pressed, _surfaceId, _force) {
-		// To be implemented by subclasses
-	}
+	abstract pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void
 }

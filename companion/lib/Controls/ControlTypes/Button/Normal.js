@@ -218,7 +218,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	 * @param {string} stepId
 	 * @param {string} setId
 	 * @param {string} id
-	 * @returns {boolean} success
+	 * @returns {string|null} success
 	 * @access public
 	 */
 	actionDuplicate(stepId, setId, id) {
@@ -226,7 +226,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 		if (step) {
 			return step.actionDuplicate(setId, id)
 		} else {
-			return false
+			return null
 		}
 	}
 

@@ -1,4 +1,4 @@
-import ControlBase from '../../ControlBase.js'
+import { ControlBase } from '../../ControlBase.js'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
 import { FragmentFeedbacks } from '../../Fragments/FragmentFeedbacks.js'
 import { TriggersListRoom } from '../../Controller.js'
@@ -11,8 +11,8 @@ import { clamp } from '../../../Resources/Util.js'
 import TriggersEventVariables from './Events/Variable.js'
 import { nanoid } from 'nanoid'
 import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'
-import TriggerEvents from '../../TriggerEvents.js'
-import {
+import type { TriggerEvents } from '../../TriggerEvents.js'
+import type {
 	ControlWithActions,
 	ControlWithEvents,
 	ControlWithFeedbacks,
@@ -23,25 +23,14 @@ import {
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
-
-/**
- * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
- * @typedef {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
- * @typedef {import('@companion-app/shared/Model/EventModel.js').EventInstance} EventInstance
- */
+import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { Registry } from '../../../Registry.js'
+import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
 /**
  * Class for an interval trigger.
  *
- * @extends ControlBase
- * @implements {ControlWithActions}
- * @implements {ControlWithEvents}
- * @implements {ControlWithFeedbacks}
- * @implements {ControlWithoutSteps}
- * @implements {ControlWithoutStyle}
- * @implements {ControlWithoutActionSets}
- * @implements {ControlWithOptions}
- * @implements {ControlWithoutPushed}
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -59,60 +48,33 @@ import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ControlTrigger extends ControlBase {
-	/**
-	 * @readonly
-	 */
-	type = 'trigger'
+export default class ControlTrigger
+	extends ControlBase<TriggerModel>
+	implements
+		ControlWithActions,
+		ControlWithEvents,
+		ControlWithFeedbacks,
+		ControlWithoutSteps,
+		ControlWithoutStyle,
+		ControlWithoutActionSets,
+		ControlWithOptions,
+		ControlWithoutPushed
+{
+	readonly type = 'trigger'
 
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsActions = true
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsEvents = true
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsSteps = false
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsFeedbacks = true
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsStyle = false
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsActionSets = false
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsOptions = true
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsPushed = false
+	readonly supportsActions = true
+	readonly supportsEvents = true
+	readonly supportsSteps = false
+	readonly supportsFeedbacks = true
+	readonly supportsStyle = false
+	readonly supportsActionSets = false
+	readonly supportsOptions = true
+	readonly supportsPushed = false
 
 	/**
 	 * The defaults options for a trigger
-	 * @type {import('@companion-app/shared/Model/TriggerModel.js').TriggerOptions}
-	 * @access public
-	 * @static
 	 */
-	static DefaultOptions = {
+	static DefaultOptions: TriggerOptions = {
 		name: 'New Trigger',
 		enabled: false,
 		sortOrder: 0,
@@ -121,88 +83,76 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Enabled condition_true or condition_false events
-	 * @type {Set<string>}
-	 * @access private
 	 */
-	#conditionCheckEvents = new Set()
+	readonly #conditionCheckEvents = new Set<string>()
 
 	/**
 	 * Last value of the condition
-	 * @type {boolean}
-	 * @access private
 	 */
-	#conditionCheckLastValue = false
+	#conditionCheckLastValue: boolean = false
 
 	/**
 	 * Shared event bus, across all triggers
-	 * @type {TriggerEvents}
-	 * @access private
 	 */
-	#eventBus
+	readonly #eventBus: TriggerEvents
 
 	/**
 	 * The last time the trigger was executed
-	 * @type {number | undefined}
-	 * @access private
 	 */
-	#lastExecuted = undefined
+	#lastExecuted: number | undefined = undefined
 
 	/**
 	 * The last sent trigger json object
-	 * @type {ClientTriggerData | null}
-	 * @access private
 	 */
-	#lastSentTriggerJson = null
+	#lastSentTriggerJson: ClientTriggerData | null = null
 
 	/**
 	 * The events for this trigger
-	 * @type {EventInstance[]}
-	 * @access public
 	 */
-	events = []
+	events: EventInstance[] = []
 
 	/**
 	 * Miscellaneous trigger events helper
-	 * @type {TriggersEventMisc}
-	 * @access private
 	 */
-	#miscEvents
+	readonly #miscEvents: TriggersEventMisc
 
 	/**
 	 * Basic trigger configuration
-	 * @type {import('@companion-app/shared/Model/TriggerModel.js').TriggerOptions}
-	 * @access public
 	 */
-	options
+	options: TriggerOptions
 
 	/**
 	 * Timer based trigger events helper
-	 * @type {TriggersEventTimer}
-	 * @access private
 	 */
-	#timerEvents
+	readonly #timerEvents: TriggersEventTimer
 
 	/**
 	 * Variables based trigger events helper
-	 * @type {TriggersEventVariables}
-	 * @access private
 	 */
-	#variablesEvents
+	readonly #variablesEvents: TriggersEventVariables
 
 	/**
 	 * Whether this button has delayed actions running
-	 * @access protected
 	 */
-	has_actions_running = false
+	has_actions_running: boolean = false
+
+	readonly actions: FragmentActions
+	readonly feedbacks: FragmentFeedbacks
 
 	/**
-	 * @param {import('../../../Registry.js').Registry} registry - the application core
-	 * @param {TriggerEvents} eventBus - the main trigger event bus
-	 * @param {string} controlId - id of the control
-	 * @param {import('@companion-app/shared/Model/TriggerModel.js').TriggerModel | null} storage - persisted storage object
-	 * @param {boolean} isImport - if this is importing a button, not creating at startup
+	 * @param registry - the application core
+	 * @param eventBus - the main trigger event bus
+	 * @param controlId - id of the control
+	 * @param storage - persisted storage object
+	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(registry, eventBus, controlId, storage, isImport) {
+	constructor(
+		registry: Registry,
+		eventBus: TriggerEvents,
+		controlId: string,
+		storage: TriggerModel | null,
+		isImport: boolean
+	) {
 		super(registry, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
 		this.actions = new FragmentActions(
@@ -258,147 +208,98 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Add an action to this control
-	 * @param {string} _stepId
-	 * @param {string} _setId
-	 * @param {ActionInstance} actionItem
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionAdd(_stepId, _setId, actionItem) {
+	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance): boolean {
 		return this.actions.actionAdd('0', actionItem)
 	}
 
 	/**
 	 * Append some actions to this button
-	 * @param {string} _stepId
-	 * @param {string} _setId the action_set id to update
-	 * @param {ActionInstance[]} newActions actions to append
-	 * @access public
 	 */
-	actionAppend(_stepId, _setId, newActions) {
+	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[]): boolean {
 		return this.actions.actionAppend('0', newActions)
 	}
 
 	/**
 	 * Learn the options for an action, by asking the instance for the current values
-	 * @param {string} _stepId
-	 * @param {string} _setId the id of the action set
-	 * @param {string} id the id of the action
-	 * @returns {Promise<boolean>} success
-	 * @access public
 	 */
-	async actionLearn(_stepId, _setId, id) {
+	async actionLearn(_stepId: string, _setId: string, id: string): Promise<boolean> {
 		return this.actions.actionLearn('0', id)
 	}
 
 	/**
 	 * Enable or disable an action
-	 * @param {string} _stepId
-	 * @param {string} _setId
-	 * @param {string} id
-	 * @param {boolean} enabled
-	 * @access public
 	 */
-	actionEnabled(_stepId, _setId, id, enabled) {
+	actionEnabled(_stepId: string, _setId: string, id: string, enabled: boolean): boolean {
 		return this.actions.actionEnabled('0', id, enabled)
 	}
 
 	/**
 	 * Set action headline
-	 * @param {string} _stepId
-	 * @param {string} _setId
-	 * @param {string} id
-	 * @param {string} headline
-	 * @returns {boolean}
-	 * @access public
 	 */
-	actionHeadline(_stepId, _setId, id, headline) {
+	actionHeadline(_stepId: string, _setId: string, id: string, headline: string): boolean {
 		return this.actions.actionHeadline('0', id, headline)
 	}
 
 	/**
 	 * Remove an action from this control
-	 * @param {string} _stepId
-	 * @param {string} _setId the id of the action set
-	 * @param {string} id the id of the action
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionRemove(_stepId, _setId, id) {
+	actionRemove(_stepId: string, _setId: string, id: string): boolean {
 		return this.actions.actionRemove('0', id)
 	}
 
 	/**
 	 * Duplicate an action on this control
-	 * @param {string} _stepId
-	 * @param {string} _setId
-	 * @param {string} id
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionDuplicate(_stepId, _setId, id) {
+	actionDuplicate(_stepId: string, _setId: string, id: string): string | null {
 		return this.actions.actionDuplicate('0', id)
 	}
 
 	/**
 	 * Remove an action from this control
-	 * @param {Pick<ActionInstance, 'id' | 'action' | 'options'>} newProps
-	 * @access public
 	 */
-	actionReplace(newProps, skipNotifyModule = false) {
+	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
 		return this.actions.actionReplace(newProps, skipNotifyModule)
 	}
 
 	/**
 	 * Replace all the actions in a set
-	 * @param {string} _stepId
-	 * @param {string} _setId the action_set id to update
-	 * @param {ActionInstance[]} newActions actions to populate
-	 * @access public
 	 */
-	actionReplaceAll(_stepId, _setId, newActions) {
+	actionReplaceAll(_stepId: string, _setId: string, newActions: ActionInstance[]): boolean {
 		return this.actions.actionReplaceAll('0', newActions)
 	}
 
 	/**
 	 * Set the delay of an action
-	 * @param {string} _stepId
-	 * @param {string} _setId the action_set id
-	 * @param {string} id the action id
-	 * @param {number} delay the desired delay
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionSetDelay(_stepId, _setId, id, delay) {
+	actionSetDelay(_stepId: string, _setId: string, id: string, delay: number): boolean {
 		return this.actions.actionSetDelay('0', id, delay)
 	}
 
 	/**
 	 * Set an opton of an action
-	 * @param {string} _stepId
-	 * @param {string} _setId the action_set id
-	 * @param {string} id the action id
-	 * @param {string} key the desired option to set
-	 * @param {any} value the new value of the option
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionSetOption(_stepId, _setId, id, key, value) {
+	actionSetOption(_stepId: string, _setId: string, id: string, key: string, value: any): boolean {
 		return this.actions.actionSetOption('0', id, key, value)
 	}
 
 	/**
 	 * Reorder an action in the list or move between sets
-	 * @param {string} _dragStepId
-	 * @param {string} _dragSetId the action_set id to remove from
-	 * @param {number} dragIndex the index of the action to move
-	 * @param {string} _dropStepId
-	 * @param {string} _dropSetId the target action_set of the action
-	 * @param {number} dropIndex the target index of the action
-	 * @returns {boolean} success
-	 * @access public
+	 * @param _dragStepId
+	 * @param _dragSetId the action_set id to remove from
+	 * @param dragIndex the index of the action to move
+	 * @param _dropStepId
+	 * @param _dropSetId the target action_set of the action
+	 * @param dropIndex the target index of the action
 	 */
-	actionReorder(_dragStepId, _dragSetId, dragIndex, _dropStepId, _dropSetId, dropIndex) {
+	actionReorder(
+		_dragStepId: string,
+		_dragSetId: string,
+		dragIndex: number,
+		_dropStepId: string,
+		_dropSetId: string,
+		dropIndex: number
+	): boolean {
 		const set = this.actions.action_sets['0']
 		if (set) {
 			dragIndex = clamp(dragIndex, 0, set.length)
@@ -416,20 +317,17 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Remove any tracked state for a connection
-	 * @param {string} connectionId
-	 * @access public
 	 */
-	clearConnectionState(connectionId) {
+	clearConnectionState(connectionId: string): void {
 		this.feedbacks.clearConnectionState(connectionId)
 	}
 
 	/**
 	 * Execute the actions of this trigger
-	 * @param {number} nowTime
-	 * @param {boolean} isTest Whether this is a 'test' execution from the ui and should skip condition checks
-	 * @returns {void}
+	 * @param nowTime
+	 * @param isTest Whether this is a 'test' execution from the ui and should skip condition checks
 	 */
-	executeActions(nowTime, isTest = false) {
+	executeActions(nowTime: number, isTest = false): void {
 		if (isTest) {
 			this.logger.debug(`Test Execute ${this.options.name}`)
 		} else {
@@ -459,11 +357,9 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Get all the actions on this control
-	 * @returns {ActionInstance[]}
 	 */
-	getAllActions() {
-		/** @type {ActionInstance[]} */
-		const actions = []
+	getAllActions(): ActionInstance[] {
+		const actions: ActionInstance[] = []
 
 		for (const set of Object.values(this.actions.action_sets)) {
 			if (set) actions.push(...set)
@@ -474,11 +370,10 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Collect the instance ids and labels referenced by this control
-	 * @param {Set<string>} foundConnectionIds - instance ids being referenced
-	 * @param {Set<string>} foundConnectionLabels - instance labels being referenced
-	 * @access public
+	 * @param foundConnectionIds - instance ids being referenced
+	 * @param foundConnectionLabels - instance labels being referenced
 	 */
-	collectReferencedConnections(foundConnectionIds, foundConnectionLabels) {
+	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>) {
 		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = this.actions.getAllActions()
 
@@ -504,22 +399,18 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
-	 * @returns {void}
 	 */
-	triggerLocationHasChanged() {
+	triggerLocationHasChanged(): void {
 		this.feedbacks.resubscribeAllFeedbacks('internal')
 	}
 
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param {boolean} clone - Whether to return a cloned object
-	 * @returns {import('@companion-app/shared/Model/TriggerModel.js').TriggerModel}
-	 * @access public
+	 * @param clone - Whether to return a cloned object
 	 */
-	toJSON(clone = true) {
-		/** @type {import('@companion-app/shared/Model/TriggerModel.js').TriggerModel} */
-		const obj = {
+	toJSON(clone = true): TriggerModel {
+		const obj: TriggerModel = {
 			type: this.type,
 			options: this.options,
 			action_sets: this.actions.action_sets,
@@ -529,12 +420,8 @@ export default class ControlTrigger extends ControlBase {
 		return clone ? cloneDeep(obj) : obj
 	}
 
-	/**
-	 * @returns {ClientTriggerData}
-	 */
-	toTriggerJSON() {
-		/** @type {string[]} */
-		const eventStrings = []
+	toTriggerJSON(): ClientTriggerData {
+		const eventStrings: string[] = []
 		for (const event of this.events) {
 			if (event.enabled) {
 				switch (event.type) {
@@ -591,10 +478,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Remove any actions and feedbacks referencing a specified connectionId
-	 * @param {string} connectionId
-	 * @access public
 	 */
-	forgetConnection(connectionId) {
+	forgetConnection(connectionId: string): void {
 		const changedFeedbacks = this.feedbacks.forgetConnection(connectionId)
 		const changedActions = this.actions.forgetConnection(connectionId)
 
@@ -606,7 +491,7 @@ export default class ControlTrigger extends ControlBase {
 	/**
 	 * Start or stop the trigger from running
 	 */
-	#setupEvents() {
+	#setupEvents(): void {
 		this.#timerEvents.setEnabled(this.options.enabled)
 		this.#miscEvents.setEnabled(this.options.enabled)
 		this.#variablesEvents.setEnabled(this.options.enabled)
@@ -620,11 +505,11 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Rename an instance for variables used in this control
-	 * @param {string} labelFrom - the old instance short name
-	 * @param {string} labelTo - the new instance short name
+	 * @param labelFrom - the old instance short name
+	 * @param labelTo - the new instance short name
 	 * @access public
 	 */
-	renameVariables(labelFrom, labelTo) {
+	renameVariables(labelFrom: string, labelTo: string): void {
 		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = this.actions.getAllActions()
 
@@ -644,11 +529,7 @@ export default class ControlTrigger extends ControlBase {
 		this.commitChange(changed)
 	}
 
-	/**
-	 * @param {EventInstance} event
-	 * @returns {void}
-	 */
-	#restartEvent(event) {
+	#restartEvent(event: EventInstance): void {
 		if (event.enabled) {
 			switch (event.type) {
 				case 'interval':
@@ -700,19 +581,15 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Mark the button as having pending delayed actions
-	 * @param {boolean} _running Whether any delayed actions are pending
-	 * @param {boolean} _skip_up Mark the button as released, skipping the release actions
+	 * @param running Whether any delayed actions are pending
+	 * @param skip_up Mark the button as released, skipping the release actions
 	 * @access public
 	 */
-	setActionsRunning(_running, _skip_up) {
+	setActionsRunning(_running: boolean, _skip_up: boolean) {
 		// Nothing to do
 	}
 
-	/**
-	 * @param {EventInstance} event
-	 * @returns {void}
-	 */
-	#stopEvent(event) {
+	#stopEvent(event: EventInstance): void {
 		switch (event.type) {
 			case 'interval':
 				this.#timerEvents.clearInterval(event.id)
@@ -754,13 +631,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Update an option field of this control
-	 * @access public
-	 * @param {string} key
-	 * @param {number} value
-	 * @param {boolean=} forceSet
-	 * @returns {boolean}
 	 */
-	optionsSetField(key, value, forceSet) {
+	optionsSetField(key: string, value: number, forceSet?: boolean): boolean {
 		if (!forceSet && key === 'sortOrder') throw new Error('sortOrder cannot be set by the client')
 
 		// @ts-ignore
@@ -780,9 +652,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
-	 * @access protected
 	 */
-	postProcessImport() {
+	postProcessImport(): void {
 		const ps = []
 
 		ps.push(this.feedbacks.postProcessImport())
@@ -799,10 +670,8 @@ export default class ControlTrigger extends ControlBase {
 	/**
 	 * Prune all actions/feedbacks referencing unknown instances
 	 * Doesn't do any cleanup, as it is assumed that the instance has not been running
-	 * @param {Set<string>} knownConnectionIds
-	 * @access public
 	 */
-	verifyConnectionIds(knownConnectionIds) {
+	verifyConnectionIds(knownConnectionIds: Set<string>): void {
 		const changedActions = this.actions.verifyConnectionIds(knownConnectionIds)
 		const changedFeedbacks = this.feedbacks.verifyConnectionIds(knownConnectionIds)
 
@@ -815,9 +684,8 @@ export default class ControlTrigger extends ControlBase {
 	 * Emit a change to the runtime properties of this control.
 	 * This is for any properties that the ui may want about this control which are not persisted in toJSON()
 	 * This is done via this.toRuntimeJSON()
-	 * @access protected
 	 */
-	#sendTriggerJsonChange() {
+	#sendTriggerJsonChange(): void {
 		const newJson = cloneDeep(this.toTriggerJSON())
 
 		if (this.io.countRoomMembers(TriggersListRoom) > 0) {
@@ -842,13 +710,13 @@ export default class ControlTrigger extends ControlBase {
 		this.#lastSentTriggerJson = newJson
 	}
 
-	commitChange(redraw = true) {
+	commitChange(redraw = true): void {
 		super.commitChange(redraw)
 
 		this.#sendTriggerJsonChange()
 	}
 
-	destroy() {
+	destroy(): void {
 		this.#timerEvents.destroy()
 		this.#miscEvents.destroy()
 		this.#variablesEvents.destroy()
@@ -905,11 +773,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Add an event to this control
-	 * @param {EventInstance} eventItem the item to add
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	eventAdd(eventItem) {
+	eventAdd(eventItem: EventInstance): boolean {
 		this.events.push(eventItem)
 
 		// Inform relevant module
@@ -922,11 +787,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Duplicate an event on this control
-	 * @param {string} id
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	eventDuplicate(id) {
+	eventDuplicate(id: string): boolean {
 		const index = this.events.findIndex((fb) => fb.id === id)
 		if (index !== -1) {
 			const eventItem = cloneDeep(this.events[index])
@@ -946,11 +808,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Enable or disable an event
-	 * @param {string} id
-	 * @param {boolean} enabled
-	 * @returns {boolean} success
 	 */
-	eventEnabled(id, enabled) {
+	eventEnabled(id: string, enabled: boolean): boolean {
 		for (const event of this.events) {
 			if (event && event.id === id) {
 				event.enabled = !!enabled
@@ -969,12 +828,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Set event headline
-	 * @param {string} id
-	 * @param {string} headline
-	 * @returns {boolean}
-	 * @access public
 	 */
-	eventHeadline(id, headline) {
+	eventHeadline(id: string, headline: string): boolean {
 		for (const event of this.events) {
 			if (event && event.id === id) {
 				event.headline = headline
@@ -990,11 +845,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Remove an event from this control
-	 * @param {string} id the id of the event
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	eventRemove(id) {
+	eventRemove(id: string): boolean {
 		const index = this.events.findIndex((ev) => ev.id === id)
 		if (index !== -1) {
 			const event = this.events[index]
@@ -1012,12 +864,10 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Reorder an event in the list
-	 * @param {number} oldIndex the index of the event to move
-	 * @param {number} newIndex the target index of the event
-	 * @returns {boolean}
-	 * @access public
+	 * @param oldIndex the index of the event to move
+	 * @param newIndex the target index of the event
 	 */
-	eventReorder(oldIndex, newIndex) {
+	eventReorder(oldIndex: number, newIndex: number): boolean {
 		oldIndex = clamp(oldIndex, 0, this.events.length)
 		newIndex = clamp(newIndex, 0, this.events.length)
 		this.events.splice(newIndex, 0, ...this.events.splice(oldIndex, 1))
@@ -1029,13 +879,8 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Update an option for an event
-	 * @param {string} id the id of the event
-	 * @param {string} key the key/name of the property
-	 * @param {any} value the new value
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	eventSetOptions(id, key, value) {
+	eventSetOptions(id: string, key: string, value: any): boolean {
 		for (const event of this.events) {
 			if (event && event.id === id) {
 				if (!event.options) event.options = {}
@@ -1053,8 +898,14 @@ export default class ControlTrigger extends ControlBase {
 
 		return false
 	}
-}
 
-/**
- * @typedef {import('@companion-app/shared/Model/TriggerModel.js').ClientTriggerData} ClientTriggerData
- */
+	/**
+	 * Execute a press of this control
+	 */
+	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
+		// Nothing to do
+	}
+	getBitmapSize() {
+		return null
+	}
+}
