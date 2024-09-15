@@ -33,16 +33,16 @@ import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
 import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
-import ElgatoStreamDeckDriver from './USB/ElgatoStreamDeck.js'
-import InfinittonDriver from './USB/Infinitton.js'
-import XKeysDriver from './USB/XKeys.js'
+import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
+import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
+import { SurfaceUSBXKeys } from './USB/XKeys.js'
 import { SurfaceUSBLoupedeckLive } from './USB/LoupedeckLive.js'
-import SurfaceUSBLoupedeckCt from './USB/LoupedeckCt.js'
+import { SurfaceUSBLoupedeckCt } from './USB/LoupedeckCt.js'
 import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
 import VECFootpedalDriver from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
-import MystrixDriver from './USB/203SystemsMystrix.js'
+import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
@@ -835,7 +835,7 @@ export class SurfaceController extends CoreBase {
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
 									if (!ignoreStreamDeck) {
 										if (getStreamDeckDeviceInfo(deviceInfo)) {
-											await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', ElgatoStreamDeckDriver)
+											await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
 											return
 										}
 									}
@@ -844,7 +844,7 @@ export class SurfaceController extends CoreBase {
 										deviceInfo.vendorId === 0xffff &&
 										(deviceInfo.productId === 0x1f40 || deviceInfo.productId === 0x1f41)
 									) {
-										await this.#addDevice(deviceInfo.path, {}, 'infinitton', InfinittonDriver)
+										await this.#addDevice(deviceInfo.path, {}, 'infinitton', SurfaceUSBInfinitton)
 									} else if (
 										// More specific match has to be above xkeys
 										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
@@ -861,7 +861,7 @@ export class SurfaceController extends CoreBase {
 													useLegacyLayout: !!this.userconfig.getKey('xkeys_legacy_layout'),
 												},
 												'xkeys',
-												XKeysDriver
+												SurfaceUSBXKeys
 											)
 										}
 									} else if (
@@ -892,7 +892,7 @@ export class SurfaceController extends CoreBase {
 										deviceInfo.usage === 0x01
 									) {
 										if (this.userconfig.getKey('mystrix_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', MystrixDriver)
+											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
 										}
 									}
 								}
@@ -948,7 +948,7 @@ export class SurfaceController extends CoreBase {
 
 		this.removeDevice(fakePath)
 
-		const device = await ElgatoStreamDeckDriver.fromTcp(fakePath, streamdeck)
+		const device = await SurfaceUSBElgatoStreamDeck.fromTcp(fakePath, streamdeck)
 
 		this.#createSurfaceHandler(fakePath, 'elgato-streamdeck-tcp', device)
 

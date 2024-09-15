@@ -16,9 +16,12 @@
  */
 
 import { EventEmitter } from 'events'
-import LogController from '../../Log/Controller.js'
-import { colorToRgb } from './Util.js'
+import LogController, { Logger } from '../../Log/Controller.js'
+import { colorToRgb, RgbColor } from './Util.js'
 import HID from 'node-hid'
+import type { SurfacePanelInfo } from '../Types.js'
+import type { GridSize } from '../Util.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 /**
  * This is an implementation of a simple MIDI device for the 203 Systems Mystrix control surface.
@@ -26,47 +29,27 @@ import HID from 'node-hid'
  * It uses a specific OS available from https://github.com/203Electronics/MatrixOS
  * This driver targets the Matrix OS's Companion APP,
  */
-class SurfaceUSB203SystemsMystrix extends EventEmitter {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger
+export class SurfaceUSB203SystemsMystrix extends EventEmitter {
+	readonly #logger: Logger
 
-	/**
-	 * @type {Record<string, any>}
-	 * @access private
-	 */
-	config = {}
+	config: Record<string, any> = {}
 
-	/**
-	 * HID device
-	 * @type {import('node-hid').HID}
-	 * @access private
-	 * @readonly
-	 */
-	#device
+	readonly #device: HID.HID
 
 	/**
 	 * Last drawn colours, to allow resending when app launched or other off sync situations
-	 * @type {{ r: number, g: number, b: number }[][]}
-	 * @access private
 	 */
-	#lastColours
+	#lastColours: RgbColor[][]
 
 	/**
 	 * Device is active or not
-	 * @type {boolean}
-	 * @access private
 	 */
-	deviceActive = false
+	#deviceActive: boolean = false
 
-	/**
-	 * @param {string} devicePath
-	 * @param {import('node-hid').HID} device
-	 */
-	constructor(devicePath, device) {
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
+
+	constructor(devicePath: string, device: HID.HID) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/203SystemsMystrix/${devicePath}`)
@@ -102,10 +85,10 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 		this.#device.on('data', (data) => {
 			if (data[0] === 0xff && data[1] === 0x01) {
 				if (data[2] == 1) {
-					this.deviceActive = true
+					this.#deviceActive = true
 					this.#refreshPanel()
 				} else {
-					this.deviceActive = false
+					this.#deviceActive = false
 				}
 			} else if (data[0] === 0xff && data[1] === 0x10) {
 				const x = data[2]
@@ -119,10 +102,8 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 
 	/**
 	 * Open a 203 Systems Mystrix
-	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSB203SystemsMystrix>}
 	 */
-	static async create(devicePath) {
+	static async create(devicePath: string): Promise<SurfaceUSB203SystemsMystrix> {
 		const device = new HID.HID(devicePath)
 
 		try {
@@ -141,11 +122,8 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} force
-	 * @returns false when nothing happens
 	 */
-	setConfig(config, force) {
+	setConfig(config: Record<string, any>, force = false): void {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 			this.#updateBrightness(config.brightness)
 		}
@@ -153,33 +131,33 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 		this.config = config
 	}
 
-	quit() {
+	quit(): void {
 		this.clearDeck
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		this.#clearPanel()
 	}
 
-	#clearPanel() {
+	#clearPanel(): void {
 		this.#lastColours = Array.from({ length: this.gridSize.columns }, () =>
 			Array.from({ length: this.gridSize.rows }, () => ({ r: 0, g: 0, b: 0 }))
 		)
 
-		if (!this.deviceActive) {
+		if (!this.#deviceActive) {
 			return
 		}
 
 		this.#device.write([0xff, 0x21])
 	}
 
-	#refreshPanel() {
+	#refreshPanel(): void {
 		// Clear the panel first
 		this.#device.write([0xff, 0x21])
 
 		for (let y = 0; y < this.gridSize.rows; y++) {
 			for (let x = 0; x < this.gridSize.columns; x++) {
-				var color = this.#lastColours[x][y]
+				const color = this.#lastColours[x][y]
 				if (color.r == 0 && color.g == 0 && color.b == 0) {
 					continue
 				}
@@ -190,26 +168,15 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
-	 * @returns {void}
 	 */
-	draw(x, y, render) {
+	draw(x: number, y: number, render: ImageResult): void {
 		const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
 
 		this.#writeKeyColour(x, y, color)
 	}
 
-	/**
-	 *
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {{ r: number, g: number, b: number }} color
-	 * @param {boolean} forced
-	 */
-	#writeKeyColour(x, y, color, forced = false) {
-		if (!this.deviceActive) {
+	#writeKeyColour(x: number, y: number, color: RgbColor, forced = false): void {
+		if (!this.#deviceActive) {
 			return
 		}
 
@@ -224,16 +191,11 @@ class SurfaceUSB203SystemsMystrix extends EventEmitter {
 		this.#device.write([0xff, 0x20, x, y, color.r, color.g, color.b])
 	}
 
-	/**
-	 * @param {number} brightness
-	 */
-	#updateBrightness(brightness) {
+	#updateBrightness(brightness: number): void {
 		this.#device.write([0xff, 0x30, brightness])
 	}
 
-	#inquiryActive() {
+	#inquiryActive(): void {
 		this.#device.write([0xff, 0x01])
 	}
 }
-
-export default SurfaceUSB203SystemsMystrix

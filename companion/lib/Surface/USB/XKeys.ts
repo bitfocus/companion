@@ -15,9 +15,9 @@
  */
 
 import { EventEmitter } from 'events'
-import { XKeys, setupXkeysPanel } from 'xkeys'
-import LogController from '../../Log/Controller.js'
-import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
+import { XKeys, setupXkeysPanel, Color as XKeysColor } from 'xkeys'
+import LogController, { Logger } from '../../Log/Controller.js'
+import { convertPanelIndexToXY, convertXYToIndexForPanel, GridSize } from '../Util.js'
 import { LEGACY_BUTTONS_PER_COLUMN, LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Util/Constants.js'
 import {
 	OffsetConfigFields,
@@ -25,11 +25,11 @@ import {
 	RotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { LocalUSBDeviceOptions, SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
-/**
- * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
- */
-const configFields = [
+const configFields: CompanionSurfaceConfigField[] = [
 	...OffsetConfigFields,
 	BrightnessConfigField,
 	{
@@ -42,76 +42,45 @@ const configFields = [
 	...LockConfigFields,
 ]
 
-class SurfaceUSBXKeys extends EventEmitter {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger
+export class SurfaceUSBXKeys extends EventEmitter implements SurfacePanel {
+	readonly #logger: Logger
 
-	/**
-	 * @type {Record<string, any>}
-	 * @access private
-	 */
-	config = {}
+	config: Record<string, any> = {}
 
 	/**
 	 * Last drawn colors to the device
-	 * @type {(import('xkeys').Color | undefined)[]}
-	 * @access private
-	 * @readonly
 	 */
-	#lastColors = []
+	readonly #lastColors: Array<XKeysColor | undefined> = []
 
 	/**
 	 * Current pressed button indices
-	 * @type {Set<number>}
-	 * @access private
-	 * @readonly
 	 */
-	#pressed = new Set()
+	readonly #pressed = new Set<number>()
 
 	/**
 	 * Xkeys panel
-	 * @type {XKeys}
-	 * @access private
-	 * @readonly
 	 */
-	#myXkeysPanel
+	readonly #myXkeysPanel: XKeys
 
 	/**
 	 * Whether to use the legacy layout, instead of accurate layouts
-	 * @type {boolean}
-	 * @access private
-	 * @readonly
 	 */
-	#useLegacyLayout
+	readonly #useLegacyLayout: boolean
 
 	/**
 	 * Translate device index to companion index
-	 * @type {(number | undefined)[]}
-	 * @access private
-	 * @readonly
 	 */
-	#mapDeviceToCompanion = []
+	readonly #mapDeviceToCompanion: Array<number | undefined> = []
 
 	/**
 	 * Translate companion index to device index
-	 * @type {(number | undefined)[]}
-	 * @access private
-	 * @readonly
 	 */
-	#mapCompanionToDevice = []
+	readonly #mapCompanionToDevice: Array<number | undefined> = []
 
-	/**
-	 *
-	 * @param {string} devicePath
-	 * @param {XKeys} panel
-	 * @param {string} deviceId
-	 * @param {*} options
-	 */
-	constructor(devicePath, panel, deviceId, options) {
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
+
+	constructor(devicePath: string, panel: XKeys, deviceId: string, options: LocalUSBDeviceOptions) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/XKeys/${devicePath}`)
@@ -121,7 +90,6 @@ class SurfaceUSBXKeys extends EventEmitter {
 		this.#myXkeysPanel = panel
 		this.#useLegacyLayout = !!options.useLegacyLayout
 
-		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `XKeys ${this.#myXkeysPanel.info.name}`,
 			devicePath: devicePath,
@@ -252,10 +220,8 @@ class SurfaceUSBXKeys extends EventEmitter {
 
 	/**
 	 * Translate companion keyindex to xkeys
-	 * @param {number} keyIndex
-	 * @returns {[x: number, y: number, pageOffset: number | undefined] | void}
 	 */
-	#translateIndexToXY(keyIndex) {
+	#translateIndexToXY(keyIndex: number): [x: number, y: number, pageOffset: number | undefined] | void {
 		if (this.#useLegacyLayout) {
 			const key = this.#mapDeviceToCompanion[keyIndex - 1]
 			if (key === undefined) {
@@ -279,7 +245,7 @@ class SurfaceUSBXKeys extends EventEmitter {
 		}
 	}
 
-	#init() {
+	#init(): void {
 		if (this.#useLegacyLayout) {
 			setTimeout(() => {
 				const { colCount, rowCount } = this.#myXkeysPanel.info
@@ -291,11 +257,8 @@ class SurfaceUSBXKeys extends EventEmitter {
 
 	/**
 	 * Create an xkeys device
-	 * @param {string} devicePath
-	 * @param {import('../Types.js').LocalUSBDeviceOptions} options
-	 * @returns {Promise<SurfaceUSBXKeys>}
 	 */
-	static async create(devicePath, options) {
+	static async create(devicePath: string, options: LocalUSBDeviceOptions): Promise<SurfaceUSBXKeys> {
 		const panel = await setupXkeysPanel(devicePath)
 
 		try {
@@ -316,10 +279,8 @@ class SurfaceUSBXKeys extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @returns false when nothing happens
 	 */
-	setConfig(config) {
+	setConfig(config: Record<string, any>): void {
 		try {
 			if (
 				(this.config.brightness != config.brightness && config.brightness !== undefined) ||
@@ -340,7 +301,7 @@ class SurfaceUSBXKeys extends EventEmitter {
 	/**
 	 * When quit is called, close the deck
 	 */
-	quit() {
+	quit(): void {
 		const xkeys = this.#myXkeysPanel
 
 		if (xkeys) {
@@ -352,12 +313,8 @@ class SurfaceUSBXKeys extends EventEmitter {
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
-	 * @returns {void}
 	 */
-	draw(x, y, render) {
+	draw(x: number, y: number, render: ImageResult): void {
 		// Should never be used for legacy layout
 		if (this.#useLegacyLayout) return
 
@@ -371,13 +328,13 @@ class SurfaceUSBXKeys extends EventEmitter {
 
 	/**
 	 * Set the color of a button by coordinate
-	 * @param {number} page Page offset
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {number} color 24bit colour value
+	 * @param page Page offset
+	 * @param x
+	 * @param y
+	 * @param color 24bit colour value
 	 * @returns
 	 */
-	drawColor(page, x, y, color) {
+	drawColor(page: number, x: number, y: number, color: number) {
 		if (!this.#useLegacyLayout) return
 
 		const key = convertXYToIndexForPanel(x, y, this.gridSize)
@@ -393,11 +350,10 @@ class SurfaceUSBXKeys extends EventEmitter {
 
 	/**
 	 * Set the color of a button by device index
-	 * @param {number | undefined} buttonIndex
-	 * @param {number} color 24bit colour value
-	 * @returns
+	 * @param buttonIndex
+	 * @param color 24bit colour value
 	 */
-	#drawColorAtIndex(buttonIndex, color) {
+	#drawColorAtIndex(buttonIndex: number | undefined, color: number): void {
 		if (buttonIndex === undefined) return
 
 		// Feedback
@@ -419,9 +375,7 @@ class SurfaceUSBXKeys extends EventEmitter {
 		this.#lastColors[buttonIndex] = color2
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		// noop
 	}
 }
-
-export default SurfaceUSBXKeys

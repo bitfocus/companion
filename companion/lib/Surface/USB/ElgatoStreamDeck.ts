@@ -16,10 +16,10 @@
  */
 
 import { EventEmitter } from 'events'
-import { DeviceModelId, openStreamDeck } from '@elgato-stream-deck/node'
+import { DeviceModelId, JPEGEncodeOptions, openStreamDeck, StreamDeck } from '@elgato-stream-deck/node'
 import util from 'util'
 import imageRs from '@julusian/image-rs'
-import LogController from '../../Log/Controller.js'
+import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
@@ -29,21 +29,21 @@ import {
 	LegacyRotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { LcdPosition, StreamDeckLcdSegmentControlDefinition, StreamDeckTcp } from '@elgato-stream-deck/tcp'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { GridSize } from '../Util.js'
+
 const setTimeoutPromise = util.promisify(setTimeout)
 
-/** @type {import('@elgato-stream-deck/node').JPEGEncodeOptions} */
-export const StreamDeckJpegOptions = {
+export const StreamDeckJpegOptions: JPEGEncodeOptions = {
 	quality: 95,
 	subsampling: 1, // 422
 }
 
-/**
- * @param {import('@elgato-stream-deck/node').StreamDeck} streamDeck
- * @return {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
- */
-function getConfigFields(streamDeck) {
-	/** @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]} */
-	const fields = [...OffsetConfigFields]
+function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] {
+	const fields: CompanionSurfaceConfigField[] = [...OffsetConfigFields]
 
 	// Hide brightness for the pedal
 	const hasBrightness = !!streamDeck.CONTROLS.find(
@@ -64,43 +64,24 @@ function getConfigFields(streamDeck) {
 	return fields
 }
 
-class SurfaceUSBElgatoStreamDeck extends EventEmitter {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger
+export class SurfaceUSBElgatoStreamDeck extends EventEmitter implements SurfacePanel {
+	readonly #logger: Logger
 
-	/**
-	 * @type {Record<string, any>}
-	 * @access private
-	 */
-	config = {}
+	config: Record<string, any> = {}
 
-	/**
-	 * Streamdeck panel
-	 * @type {import('@elgato-stream-deck/node').StreamDeck | import('@elgato-stream-deck/tcp').StreamDeckTcp}
-	 * @access private
-	 * @readonly
-	 */
-	#streamDeck
+	readonly #streamDeck: StreamDeck | StreamDeckTcp
 
-	/**
-	 * @type {ImageWriteQueue<string, [number, number, import('../../Graphics/ImageResult.js').ImageResult]>}
-	 */
-	#writeQueue
+	readonly #writeQueue: ImageWriteQueue<string, [number, number, ImageResult]>
 
 	/**
 	 * Whether to cleanup the deck on quit
 	 */
 	#shouldCleanupOnQuit = true
 
-	/**
-	 * @param {string} devicePath
-	 * @param {import('@elgato-stream-deck/node').StreamDeck | import('@elgato-stream-deck/tcp').StreamDeckTcp} streamDeck
-	 */
-	constructor(devicePath, streamDeck) {
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
+
+	constructor(devicePath: string, streamDeck: StreamDeck | StreamDeckTcp) {
 		super()
 
 		const tcpStreamdeck = 'tcpEvents' in streamDeck ? streamDeck : null
@@ -118,7 +99,6 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} ${protocol} device: ${devicePath}`)
 
-		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Elgato ${this.#streamDeck.PRODUCT_NAME}`,
 			devicePath: devicePath,
@@ -136,118 +116,110 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			rows: Math.max(...allRowValues) + 1,
 		}
 
-		this.#writeQueue = new ImageWriteQueue(
-			this.#logger,
-			async (
-				/** @type {string} */ _id,
-				/** @type {number} */ x,
-				/** @type {number} */ y,
-				/** @type {import('../../Graphics/ImageResult.js').ImageResult} */ render
-			) => {
-				const control = this.#streamDeck.CONTROLS.find((control) => {
-					if (control.row !== y) return false
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, x, y, render) => {
+			const control = this.#streamDeck.CONTROLS.find((control) => {
+				if (control.row !== y) return false
 
-					if (control.column === x) return true
+				if (control.column === x) return true
 
-					if (control.type === 'lcd-segment' && x >= control.column && x < control.column + control.columnSpan)
-						return true
+				if (control.type === 'lcd-segment' && x >= control.column && x < control.column + control.columnSpan)
+					return true
 
-					return false
-				})
-				if (!control) return
+				return false
+			})
+			if (!control) return
 
-				if (control.type === 'button') {
-					if (control.feedbackType === 'lcd') {
-						let newbuffer = render.buffer
-						if (control.pixelSize.width === 0 || control.pixelSize.height === 0) {
-							return
-						} else {
-							try {
-								newbuffer = await transformButtonImage(
-									render,
-									this.config.rotation,
-									control.pixelSize.width,
-									control.pixelSize.height,
-									imageRs.PixelFormat.Rgb
-								)
-							} catch (/** @type {any} */ e) {
-								this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
-								this.emit('remove')
-								return
-							}
-						}
-
-						const maxAttempts = 3
-						for (let attempts = 1; attempts <= maxAttempts; attempts++) {
-							try {
-								await this.#streamDeck.fillKeyBuffer(control.index, newbuffer)
-								return
-							} catch (e) {
-								if (attempts == maxAttempts) {
-									this.#logger.debug(`fillImage failed after ${attempts} attempts: ${e}`)
-									this.emit('remove')
-									return
-								}
-								await setTimeoutPromise(20)
-							}
-						}
-					} else if (control.feedbackType === 'rgb') {
-						const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
-						this.#streamDeck.fillKeyColor(control.index, color.r, color.g, color.b).catch((e) => {
-							this.#logger.debug(`color failed: ${e}`)
-						})
-					}
-				} else if (control.type === 'lcd-segment' && control.drawRegions) {
-					const drawColumn = x - control.column
-
-					const columnWidth = control.pixelSize.width / control.columnSpan
-					let drawX = drawColumn * columnWidth
-					if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
-						// Position aligned with the buttons/encoders
-						drawX = drawColumn * 216.666 + 25
-					}
-
-					const targetSize = control.pixelSize.height
-
-					let newbuffer
-					try {
-						newbuffer = await transformButtonImage(
-							render,
-							this.config.rotation,
-							targetSize,
-							targetSize,
-							imageRs.PixelFormat.Rgb
-						)
-					} catch (e) {
-						this.#logger.debug(`scale image failed: ${e}`)
-						this.emit('remove')
+			if (control.type === 'button') {
+				if (control.feedbackType === 'lcd') {
+					let newbuffer = render.buffer
+					if (control.pixelSize.width === 0 || control.pixelSize.height === 0) {
 						return
+					} else {
+						try {
+							newbuffer = await transformButtonImage(
+								render,
+								this.config.rotation,
+								control.pixelSize.width,
+								control.pixelSize.height,
+								imageRs.PixelFormat.Rgb
+							)
+						} catch (e: any) {
+							this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+							this.emit('remove')
+							return
+						}
 					}
 
 					const maxAttempts = 3
 					for (let attempts = 1; attempts <= maxAttempts; attempts++) {
 						try {
-							await this.#streamDeck.fillLcdRegion(control.id, drawX, 0, newbuffer, {
-								format: 'rgb',
-								width: targetSize,
-								height: targetSize,
-							})
+							await this.#streamDeck.fillKeyBuffer(control.index, newbuffer)
 							return
 						} catch (e) {
 							if (attempts == maxAttempts) {
-								this.#logger.error(`fillImage failed after ${attempts}: ${e}`)
+								this.#logger.debug(`fillImage failed after ${attempts} attempts: ${e}`)
 								this.emit('remove')
 								return
 							}
 							await setTimeoutPromise(20)
 						}
 					}
-				} else if (control.type === 'encoder' && control.hasLed) {
+				} else if (control.feedbackType === 'rgb') {
 					const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
-					await this.#streamDeck.setEncoderColor(control.index, color.r, color.g, color.b)
+					this.#streamDeck.fillKeyColor(control.index, color.r, color.g, color.b).catch((e) => {
+						this.#logger.debug(`color failed: ${e}`)
+					})
 				}
+			} else if (control.type === 'lcd-segment' && control.drawRegions) {
+				const drawColumn = x - control.column
+
+				const columnWidth = control.pixelSize.width / control.columnSpan
+				let drawX = drawColumn * columnWidth
+				if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
+					// Position aligned with the buttons/encoders
+					drawX = drawColumn * 216.666 + 25
+				}
+
+				const targetSize = control.pixelSize.height
+
+				let newbuffer
+				try {
+					newbuffer = await transformButtonImage(
+						render,
+						this.config.rotation,
+						targetSize,
+						targetSize,
+						imageRs.PixelFormat.Rgb
+					)
+				} catch (e) {
+					this.#logger.debug(`scale image failed: ${e}`)
+					this.emit('remove')
+					return
+				}
+
+				const maxAttempts = 3
+				for (let attempts = 1; attempts <= maxAttempts; attempts++) {
+					try {
+						await this.#streamDeck.fillLcdRegion(control.id, drawX, 0, newbuffer, {
+							format: 'rgb',
+							width: targetSize,
+							height: targetSize,
+						})
+						return
+					} catch (e) {
+						if (attempts == maxAttempts) {
+							this.#logger.error(`fillImage failed after ${attempts}: ${e}`)
+							this.emit('remove')
+							return
+						}
+						await setTimeoutPromise(20)
+					}
+				}
+			} else if (control.type === 'encoder' && control.hasLed) {
+				const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+				await this.#streamDeck.setEncoderColor(control.index, color.r, color.g, color.b)
 			}
-		)
+		})
 
 		this.#streamDeck.on('error', (error) => {
 			this.#logger.error(`Error: ${error}`)
@@ -286,10 +258,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			this.emit('setCustomVariable', variableId, tag)
 		})
 
-		const lcdPress = (
-			/** @type {import('@elgato-stream-deck/node').StreamDeckLcdSegmentControlDefinition} */ control,
-			/** @type {import('@elgato-stream-deck/node').LcdPosition} */ position
-		) => {
+		const lcdPress = (control: StreamDeckLcdSegmentControlDefinition, position: LcdPosition) => {
 			const columnOffset = Math.floor((position.x / control.pixelSize.width) * control.columnSpan)
 
 			this.emit('click', control.column + columnOffset, control.row, true)
@@ -312,10 +281,8 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 	/**
 	 * Open a streamdeck
-	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSBElgatoStreamDeck>}
 	 */
-	static async create(devicePath) {
+	static async create(devicePath: string): Promise<SurfaceUSBElgatoStreamDeck> {
 		const streamDeck = await openStreamDeck(devicePath, {
 			// useOriginalKeyOrder: true,
 			jpegOptions: {
@@ -327,9 +294,8 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 		try {
 			const self = new SurfaceUSBElgatoStreamDeck(devicePath, streamDeck)
 
-			/** @type {any} */
-			let errorDuringInit = null
-			const tmpErrorHandler = (/** @type {any} */ error) => {
+			let errorDuringInit: any = null
+			const tmpErrorHandler = (error: any) => {
 				errorDuringInit = errorDuringInit || error
 			}
 
@@ -351,15 +317,12 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 	/**
 	 * Wrap a tcp streamdeck
-	 * @param {string} fakePath
-	 * @param {import('@elgato-stream-deck/tcp').StreamDeckTcp} streamdeck
 	 */
-	static async fromTcp(fakePath, streamdeck) {
+	static async fromTcp(fakePath: string, streamdeck: StreamDeckTcp): Promise<SurfaceUSBElgatoStreamDeck> {
 		const self = new SurfaceUSBElgatoStreamDeck(fakePath, streamdeck)
 
-		/** @type {any} */
-		let errorDuringInit = null
-		const tmpErrorHandler = (/** @type {any} */ error) => {
+		let errorDuringInit: any = null
+		const tmpErrorHandler = (error: any) => {
 			errorDuringInit = errorDuringInit || error
 		}
 
@@ -376,11 +339,9 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} force
 	 * @returns false when nothing happens
 	 */
-	setConfig(config, force) {
+	setConfig(config: Record<string, any>, force: boolean = false) {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 			this.#streamDeck.setBrightness(config.brightness).catch((e) => {
 				this.#logger.debug(`Set brightness failed: ${e}`)
@@ -390,7 +351,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 		this.config = config
 	}
 
-	quit() {
+	quit(): void {
 		if (!this.#shouldCleanupOnQuit) return
 
 		this.#streamDeck
@@ -406,7 +367,7 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 			})
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		this.#logger.silly('elgato_base.prototype.clearDeck()')
 
 		this.#streamDeck.clearPanel().catch((e) => {
@@ -416,14 +377,8 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
-	 * @returns {void}
 	 */
-	draw(x, y, render) {
+	draw(x: number, y: number, render: ImageResult): void {
 		this.#writeQueue.queue(`${x}_${y}`, x, y, render)
 	}
 }
-
-export default SurfaceUSBElgatoStreamDeck

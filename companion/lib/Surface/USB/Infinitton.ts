@@ -19,50 +19,36 @@ import imageRs from '@julusian/image-rs'
 import Infinitton from 'infinitton-idisplay'
 import { translateRotation } from '../../Resources/Util.js'
 import { EventEmitter } from 'events'
-import LogController from '../../Log/Controller.js'
-import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
+import LogController, { Logger } from '../../Log/Controller.js'
+import { convertPanelIndexToXY, convertXYToIndexForPanel, GridSize } from '../Util.js'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,
 	RotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
+import type { SurfacePanelInfo } from '../Types.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
-/**
- * @type {import('@companion-app/shared/Model/Surfaces.js').CompanionSurfaceConfigField[]}
- */
-const configFields = [
-	//
+const configFields: CompanionSurfaceConfigField[] = [
 	...OffsetConfigFields,
 	BrightnessConfigField,
 	RotationConfigField,
 	...LockConfigFields,
 ]
 
-class SurfaceUSBInfinitton extends EventEmitter {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger
+export class SurfaceUSBInfinitton extends EventEmitter {
+	readonly #logger: Logger
 
-	/**
-	 * @type {Record<string, any>}
-	 * @access private
-	 */
-	config
+	config: Record<string, any>
 
-	/**
-	 * @type {Infinitton}
-	 * @access private
-	 */
-	#infinitton
+	readonly #infinitton: Infinitton
 
-	/**
-	 * @param {string} devicePath
-	 */
-	constructor(devicePath) {
+	readonly info: SurfacePanelInfo
+	readonly gridSize: GridSize
+
+	constructor(devicePath: string) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/ElgatoStreamdeck/${devicePath}`)
@@ -80,7 +66,6 @@ class SurfaceUSBInfinitton extends EventEmitter {
 			// @ts-ignore
 			const serialNumber = this.#infinitton.device.getDeviceInfo().serialNumber
 
-			/** @type {import('../Types.js').SurfacePanelInfo} */
 			this.info = {
 				type: 'Infinitton iDisplay device',
 				devicePath: devicePath,
@@ -122,17 +107,15 @@ class SurfaceUSBInfinitton extends EventEmitter {
 
 	/**
 	 * Produce a click event
-	 * @param {number} key
-	 * @param {boolean} state
 	 */
-	#emitClick(key, state) {
+	#emitClick(key: number, state: boolean) {
 		const xy = convertPanelIndexToXY(key, this.gridSize)
 		if (xy) {
 			this.emit('click', ...xy, state)
 		}
 	}
 
-	#init() {
+	#init(): void {
 		this.#logger.debug(`Infinitton iDisplay detected`)
 
 		// Make sure the first clear happens properly
@@ -141,10 +124,8 @@ class SurfaceUSBInfinitton extends EventEmitter {
 
 	/**
 	 * Open an infinitton
-	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSBInfinitton>}
 	 */
-	static async create(devicePath) {
+	static async create(devicePath: string): Promise<SurfaceUSBInfinitton> {
 		const self = new SurfaceUSBInfinitton(devicePath)
 
 		self.#init()
@@ -154,11 +135,8 @@ class SurfaceUSBInfinitton extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {Record<string, any>} config
-	 * @param {boolean=} force
-	 * @returns false when nothing happens
 	 */
-	setConfig(config, force) {
+	setConfig(config: Record<string, any>, force = false): void {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 			this.#infinitton.setBrightness(config.brightness)
 		}
@@ -166,7 +144,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 		this.config = config
 	}
 
-	quit() {
+	quit(): void {
 		const dev = this.#infinitton
 
 		if (dev !== undefined) {
@@ -180,12 +158,8 @@ class SurfaceUSBInfinitton extends EventEmitter {
 
 	/**
 	 * Draw a button
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {import('../../Graphics/ImageResult.js').ImageResult} render
-	 * @returns {void}
 	 */
-	draw(x, y, render) {
+	draw(x: number, y: number, render: ImageResult): void {
 		let key = convertXYToIndexForPanel(x, y, this.gridSize)
 		if (key === null) return
 
@@ -207,7 +181,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 
 				const newbuffer = image.toBufferSync(imageRs.PixelFormat.Rgb).buffer
 				this.#infinitton.fillImage(key, newbuffer)
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
 				this.emit('remove')
 				return
@@ -215,11 +189,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 		}
 	}
 
-	/**
-	 * @param {number} input
-	 * @returns {number}
-	 */
-	#mapButton(input) {
+	#mapButton(input: number): number {
 		const map = '4 3 2 1 0 9 8 7 6 5 14 13 12 11 10'.split(/ /)
 		if (input < 0) {
 			return -1
@@ -228,11 +198,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 		return parseInt(map[input])
 	}
 
-	/**
-	 * @param {number} input
-	 * @returns {number | undefined}
-	 */
-	#reverseButton(input) {
+	#reverseButton(input: number): number | undefined {
 		const map = '4 3 2 1 0 9 8 7 6 5 14 13 12 11 10'.split(/ /)
 		for (let pos = 0; pos < map.length; pos++) {
 			if (Number(map[input]) == pos) return pos
@@ -241,7 +207,7 @@ class SurfaceUSBInfinitton extends EventEmitter {
 		return
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		this.#logger.debug('infinitton.prototype.clearDeck()')
 
 		const keysTotal = this.gridSize.columns * this.gridSize.rows
@@ -250,5 +216,3 @@ class SurfaceUSBInfinitton extends EventEmitter {
 		}
 	}
 }
-
-export default SurfaceUSBInfinitton
