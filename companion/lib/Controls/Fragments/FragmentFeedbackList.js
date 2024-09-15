@@ -381,7 +381,7 @@ export class FragmentFeedbackList {
 	verifyConnectionIds(knownConnectionIds) {
 		// Clean out feedbacks
 		const feedbackLength = this.#feedbacks.length
-		this.feedbacks = this.#feedbacks.filter((feedback) => !!feedback && knownConnectionIds.has(feedback.connectionId))
+		this.#feedbacks = this.#feedbacks.filter((feedback) => !!feedback && knownConnectionIds.has(feedback.connectionId))
 		let changed = this.#feedbacks.length !== feedbackLength
 
 		for (const feedback of this.#feedbacks) {
