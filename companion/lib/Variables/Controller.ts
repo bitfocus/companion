@@ -18,34 +18,16 @@
 import { VariablesCustomVariable } from './CustomVariable.js'
 import { VariablesInstanceDefinitions } from './InstanceDefinitions.js'
 import { VariablesValues } from './Values.js'
+import type DataDatabase from '../Data/Database.js'
+import type UIHandler from '../UI/Handler.js'
+import { ClientSocket } from '../UI/Handler.js'
 
 export class VariablesController {
-	/**
-	 * @type {VariablesCustomVariable}
-	 * @access public
-	 * @readonly
-	 */
-	custom
+	readonly custom: VariablesCustomVariable
+	readonly values: VariablesValues
+	readonly definitions: VariablesInstanceDefinitions
 
-	/**
-	 * @type {VariablesValues}
-	 * @access public
-	 * @readonly
-	 */
-	values
-
-	/**
-	 * @type {VariablesInstanceDefinitions}
-	 * @access public
-	 * @readonly
-	 */
-	definitions
-
-	/**
-	 * @param {import ('../Data/Database.js').default} db
-	 * @param {import('../UI/Handler.js').default} io
-	 */
-	constructor(db, io) {
+	constructor(db: DataDatabase, io: UIHandler) {
 		this.values = new VariablesValues()
 		this.custom = new VariablesCustomVariable(db, io, this.values)
 		this.definitions = new VariablesInstanceDefinitions(io)
@@ -53,10 +35,8 @@ export class VariablesController {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket) {
 		this.values.clientConnect(client)
 		this.custom.clientConnect(client)
 		this.definitions.clientConnect(client)

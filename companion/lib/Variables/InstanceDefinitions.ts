@@ -17,6 +17,14 @@
 
 import LogController from '../Log/Controller.js'
 import jsonPatch from 'fast-json-patch'
+import type UIHandler from '../UI/Handler.js'
+import type {
+	AllVariableDefinitions,
+	ModuleVariableDefinitions,
+	VariableDefinition,
+} from '@companion-app/shared/Model/Variables.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
 
 const VariableDefinitionsRoom = 'variable-definitions'
 
@@ -24,37 +32,16 @@ const VariableDefinitionsRoom = 'variable-definitions'
  * Variable definitions as defined by the instances/connections
  */
 export class VariablesInstanceDefinitions {
-	/**
-	 * @access private
-	 * @readonly
-	 */
-	#logger = LogController.createLogger('Variables/Definitions')
+	readonly #logger = LogController.createLogger('Variables/Definitions')
+	readonly #io: UIHandler
 
-	/**
-	 * @access private
-	 * @readonly
-	 * @type {import ('../UI/Handler.js').default}
-	 */
-	#io
+	readonly #variableDefinitions: AllVariableDefinitions = {}
 
-	/**
-	 * @type {import('@companion-app/shared/Model/Variables.js').AllVariableDefinitions}
-	 */
-	#variableDefinitions = {}
-
-	/**
-	 * @param {import ('../UI/Handler.js').default} io
-	 */
-	constructor(io) {
+	constructor(io: UIHandler) {
 		this.#io = io
 	}
 
-	/**
-	 * @param {string} _id
-	 * @param {string} label
-	 * @returns {void}
-	 */
-	forgetConnection(_id, label) {
+	forgetConnection(_id: string, label: string): void {
 		if (label !== undefined) {
 			delete this.#variableDefinitions[label]
 
@@ -64,12 +51,7 @@ export class VariablesInstanceDefinitions {
 		}
 	}
 
-	/**
-	 * @param {string} labelFrom
-	 * @param {string} labelTo
-	 * @returns {void}
-	 */
-	connectionLabelRename(labelFrom, labelTo) {
+	connectionLabelRename(labelFrom: string, labelTo: string): void {
 		// Update the instance definitions
 		const oldDefinitions = this.#variableDefinitions[labelFrom]
 		if (oldDefinitions) {
@@ -88,11 +70,8 @@ export class VariablesInstanceDefinitions {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
-	 * @returns {void}
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('variable-definitions:subscribe', () => {
 			client.join(VariableDefinitionsRoom)
 
@@ -106,20 +85,14 @@ export class VariablesInstanceDefinitions {
 
 	/**
 	 * Set the variable definitions for an instance
-	 * @access public
-	 * @param {string} instance_label
-	 * @param {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} variables
-	 * @returns {void}
 	 */
-	setVariableDefinitions(instance_label, variables) {
+	setVariableDefinitions(instance_label: string, variables: VariableDefinitionTmp[]): void {
 		this.#logger.silly('got instance variable definitions for ' + instance_label)
 
-		/** @type {import('@companion-app/shared/Model/Variables.js').ModuleVariableDefinitions} */
-		const variablesObj = {}
+		const variablesObj: ModuleVariableDefinitions = {}
 		for (const variable of variables || []) {
 			// Prune out the name
-			/** @type {import('@companion-app/shared/Model/Variables.js').VariableDefinition} */
-			const newVarObj = {
+			const newVarObj: VariableDefinition = {
 				label: variable.label,
 			}
 

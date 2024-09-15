@@ -17,9 +17,10 @@
 
 import LogController from '../Log/Controller.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { ResolveExpression, VariableValue } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { SplitVariableId } from '../Resources/Util.js'
+import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 
 export const VARIABLE_UNKNOWN_VALUE = '$NA'
 
@@ -28,20 +29,22 @@ const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
 
 const logger = LogController.createLogger('Variables/Util')
 
-/**
- * @typedef {Record<string, Record<string, import('@companion-module/base').CompanionVariableValue | undefined> | undefined>} VariableValueData
- * @typedef {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} VariablesCache
- * @typedef {{ text: string, variableIds: string[] }} ParseVariablesResult
- */
+export type VariableValueData = Record<string, Record<string, CompanionVariableValue | undefined> | undefined>
+export type VariablesCache = Record<string, CompanionVariableValue | undefined>
+export interface ParseVariablesResult {
+	text: string
+	variableIds: string[]
+}
+export interface ExecuteExpressionResult {
+	value: boolean | number | string | undefined
+	variableIds: Set<string>
+}
 
-/**
- *
- * @param {import('@companion-module/base').CompanionVariableValue} string
- * @param {VariableValueData} rawVariableValues
- * @param {VariablesCache=} cachedVariableValues
- * @returns {ParseVariablesResult}
- */
-export function parseVariablesInString(string, rawVariableValues, cachedVariableValues) {
+export function parseVariablesInString(
+	string: CompanionVariableValue,
+	rawVariableValues: VariableValueData,
+	cachedVariableValues: VariablesCache = {}
+): ParseVariablesResult {
 	if (string === undefined || string === null || string === '') {
 		return {
 			text: string,
@@ -49,12 +52,11 @@ export function parseVariablesInString(string, rawVariableValues, cachedVariable
 		}
 	}
 	if (typeof string !== 'string') string = `${string}`
-	if (!cachedVariableValues) cachedVariableValues = {}
 
-	const referencedVariableIds = []
+	const referencedVariableIds: string[] = []
 
 	let matchCount = 0
-	let matches
+	let matches: RegExpExecArray | null
 	while ((matches = VARIABLE_REGEX.exec(string))) {
 		if (matchCount++ > 100) {
 			// Crudely avoid infinite loops with an iteration limit
@@ -88,8 +90,8 @@ export function parseVariablesInString(string, rawVariableValues, cachedVariable
 		}
 
 		// Pass a function, to avoid special interpreting of `$$` and other sequences
-		// @ts-ignore `cachedValue` gets populated by this point
-		string = string.replace(fullId, () => cachedValue)
+		const cachedValueConst = cachedValue?.toString()
+		string = string.replace(fullId, () => cachedValueConst)
 	}
 
 	return {
@@ -100,14 +102,11 @@ export function parseVariablesInString(string, rawVariableValues, cachedVariable
 
 /**
  * Replace all the variables in a string, to reference a new label
- * @param {string} string
- * @param {string} newLabel
- * @returns {string}
  */
-export function replaceAllVariables(string, newLabel) {
+export function replaceAllVariables(string: string, newLabel: string): string {
 	if (string && string.includes('$(')) {
 		let matchCount = 0
-		let matches
+		let matches: RegExpExecArray | null
 		let fromIndex = 0
 		while ((matches = VARIABLE_REGEX.exec(string.slice(fromIndex))) !== null) {
 			if (matchCount++ > 100) {
@@ -130,21 +129,20 @@ export function replaceAllVariables(string, newLabel) {
 
 /**
  * Parse and execute an expression in a string
- * @param {string} str - String containing the expression to parse
- * @param {VariableValueData} rawVariableValues
- * @param {string=} requiredType - Fail if the result is not of specified type
- * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
- * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
+ * @param str - String containing the expression to parse
+ * @param rawVariableValues
+ * @param requiredType - Fail if the result is not of specified type
+ * @param injectedVariableValues - Inject some variable values
  */
-export function executeExpression(str, rawVariableValues, requiredType, injectedVariableValues) {
-	/** @type {Set<string>} */
-	const referencedVariableIds = new Set()
+export function executeExpression(
+	str: string,
+	rawVariableValues: VariableValueData,
+	requiredType?: string,
+	injectedVariableValues?: CompanionVariableValues
+): ExecuteExpressionResult {
+	const referencedVariableIds = new Set<string>()
 
-	/**
-	 * @param {string} variableId
-	 * @returns {import('@companion-app/shared/Expression/ExpressionResolve.js').VariableValue}
-	 */
-	const getVariableValue = (variableId) => {
+	const getVariableValue = (variableId: string): VariableValue => {
 		referencedVariableIds.add(variableId)
 
 		// First check for an injected value
@@ -180,11 +178,7 @@ export function executeExpression(str, rawVariableValues, requiredType, injected
 
 	const functions = {
 		...ExpressionFunctions,
-		/**
-		 * @param {string} str
-		 * @returns {string}
-		 */
-		parseVariables: (str) => {
+		parseVariables: (str: string): string => {
 			const result = parseVariablesInString(str, rawVariableValues, injectedVariableValues)
 
 			// Track referenced variables

@@ -17,53 +17,44 @@
 
 import LogController from '../Log/Controller.js'
 import EventEmitter from 'events'
-import { VARIABLE_UNKNOWN_VALUE, executeExpression, parseVariablesInString } from './Util.js'
+import {
+	ExecuteExpressionResult,
+	ParseVariablesResult,
+	VARIABLE_UNKNOWN_VALUE,
+	VariableValueData,
+	VariablesCache,
+	executeExpression,
+	parseVariablesInString,
+} from './Util.js'
+import type { ControlLocation } from '../Resources/Util.js'
+import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { ClientSocket } from '../UI/Handler.js'
 
 export class VariablesValues extends EventEmitter {
-	/**
-	 * @access private
-	 * @readonly
-	 */
-	#logger = LogController.createLogger('Variables/Values')
+	readonly #logger = LogController.createLogger('Variables/Values')
 
-	/**
-	 * @type {import('./Util.js').VariableValueData}
-	 */
-	#variableValues = {}
+	#variableValues: VariableValueData = {}
 
-	/**
-	 */
-	constructor() {
-		super()
-	}
-
-	/**
-	 *
-	 * @param {string} label
-	 * @param {string} name
-	 * @returns {import('@companion-module/base').CompanionVariableValue | undefined}
-	 */
-	getVariableValue(label, name) {
+	getVariableValue(label: string, name: string): CompanionVariableValue | undefined {
 		return this.#variableValues[label]?.[name]
 	}
 
-	/**
-	 *
-	 * @param {string} name
-	 * @returns {import('@companion-module/base').CompanionVariableValue | undefined}
-	 */
-	getCustomVariableValue(name) {
+	getCustomVariableValue(name: string): CompanionVariableValue | undefined {
 		return this.getVariableValue('internal', `custom_${name}`)
 	}
 
 	/**
 	 * Parse the variables in a string
-	 * @param {string} str - String to parse variables in
-	 * @param {import('@companion-app/shared/Model/Common.js').ControlLocation | null | undefined} controlLocation - Location of the control
-	 * @param {import('./Util.js').VariablesCache=} injectedVariableValues - Inject some variable values
-	 * @returns {import('./Util.js').ParseVariablesResult} with variables replaced with values
+	 * @param str - String to parse variables in
+	 * @param controlLocation - Location of the control
+	 * @param injectedVariableValues - Inject some variable values
+	 * @returns with variables replaced with values
 	 */
-	parseVariables(str, controlLocation, injectedVariableValues) {
+	parseVariables(
+		str: string,
+		controlLocation: ControlLocation | null | undefined,
+		injectedVariableValues?: VariablesCache
+	): ParseVariablesResult {
 		const injectedVariableValuesComplete = {
 			...this.#getInjectedVariablesForLocation(controlLocation),
 			...injectedVariableValues,
@@ -73,13 +64,18 @@ export class VariablesValues extends EventEmitter {
 
 	/**
 	 * Parse and execute an expression in a string
-	 * @param {string} str - String containing the expression to parse
-	 * @param {import('@companion-app/shared/Model/Common.js').ControlLocation | null | undefined} controlLocation - Location of the control
-	 * @param {string=} requiredType - Fail if the result is not of specified type
-	 * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
-	 * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
+	 * @param str - String containing the expression to parse
+	 * @param controlLocation - Location of the control
+	 * @param requiredType - Fail if the result is not of specified type
+	 * @param injectedVariableValues - Inject some variable values
+	 * @returns result of the expression
 	 */
-	executeExpression(str, controlLocation, requiredType, injectedVariableValues) {
+	executeExpression(
+		str: string,
+		controlLocation: ControlLocation | null | undefined,
+		requiredType?: string,
+		injectedVariableValues?: CompanionVariableValues
+	): ExecuteExpressionResult {
 		const injectedVariableValuesComplete = {
 			...this.#getInjectedVariablesForLocation(controlLocation),
 			...injectedVariableValues,
@@ -88,16 +84,11 @@ export class VariablesValues extends EventEmitter {
 		return executeExpression(str, this.#variableValues, requiredType, injectedVariableValuesComplete)
 	}
 
-	/**
-	 * @param {string} _id
-	 * @param {string} label
-	 * @returns {void}
-	 */
-	forgetConnection(_id, label) {
+	forgetConnection(_id: string, label: string): void {
 		if (label !== undefined) {
 			const valuesForLabel = this.#variableValues[label]
 			if (valuesForLabel !== undefined) {
-				const removed_variables = new Set()
+				const removed_variables = new Set<string>()
 				for (let variable in valuesForLabel) {
 					valuesForLabel[variable] = undefined
 					removed_variables.add(`${label}:${variable}`)
@@ -109,19 +100,14 @@ export class VariablesValues extends EventEmitter {
 		}
 	}
 
-	/**
-	 * @param {string} labelFrom
-	 * @param {string} labelTo
-	 * @returns {void}
-	 */
-	connectionLabelRename(labelFrom, labelTo) {
+	connectionLabelRename(labelFrom: string, labelTo: string): void {
 		const valuesTo = this.#variableValues[labelTo] || {}
 		this.#variableValues[labelTo] = valuesTo
 
 		// Move variable values, and track the 'diff'
 		const valuesFrom = this.#variableValues[labelFrom]
 		if (valuesFrom !== undefined) {
-			const all_changed_variables_set = new Set()
+			const all_changed_variables_set = new Set<string>()
 
 			for (let variable in valuesFrom) {
 				valuesTo[variable] = valuesFrom[variable]
@@ -138,26 +124,18 @@ export class VariablesValues extends EventEmitter {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
-	 * @returns {void}
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('variables:instance-values', (label) => {
 			return this.#variableValues[label]
 		})
 	}
 
-	/**
-	 * @param {string} label
-	 * @param {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} variables
-	 * @returns {void}
-	 */
-	setVariableValues(label, variables) {
+	setVariableValues(label: string, variables: Record<string, CompanionVariableValue | undefined>): void {
 		const moduleValues = this.#variableValues[label] ?? {}
 		this.#variableValues[label] = moduleValues
 
-		const all_changed_variables_set = new Set()
+		const all_changed_variables_set = new Set<string>()
 		for (const variable in variables) {
 			// Note: explicitly using for-in here, as Object.entries is slow
 			const value = variables[variable]
@@ -177,11 +155,7 @@ export class VariablesValues extends EventEmitter {
 		this.#emitVariablesChanged(all_changed_variables_set)
 	}
 
-	/**
-	 * @param {Set<string>} all_changed_variables_set
-	 * @returns {void}
-	 */
-	#emitVariablesChanged(all_changed_variables_set) {
+	#emitVariablesChanged(all_changed_variables_set: Set<string>) {
 		try {
 			if (all_changed_variables_set.size > 0) {
 				this.emit('variables_changed', all_changed_variables_set)
@@ -193,10 +167,8 @@ export class VariablesValues extends EventEmitter {
 
 	/**
 	 * Variables to inject based on location
-	 * @param {import('@companion-app/shared/Model/Common.js').ControlLocation | null | undefined} location
-	 * @returns {import('@companion-module/base').CompanionVariableValues}
 	 */
-	#getInjectedVariablesForLocation(location) {
+	#getInjectedVariablesForLocation(location: ControlLocation | null | undefined): CompanionVariableValues {
 		return {
 			'$(this:page)': location?.pageNumber,
 			'$(this:column)': location?.column,

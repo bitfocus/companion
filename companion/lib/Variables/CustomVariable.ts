@@ -16,70 +16,46 @@
  */
 
 import LogController from '../Log/Controller.js'
-import { isCustomVariableValid } from '../../../shared-lib/dist/CustomVariable.js'
+import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
+import type { VariablesValues } from './Values.js'
+import type {
+	CustomVariablesModel,
+	CustomVariableUpdate,
+	CustomVariableUpdateRemoveOp,
+} from '@companion-app/shared/Model/CustomVariableModel.js'
+import type DataDatabase from '../Data/Database.js'
+import type UIHandler from '../UI/Handler.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { CompanionVariableValue } from '@companion-module/base'
 
 const custom_variable_prefix = `custom_`
 
 const CustomVariablesRoom = 'custom-variables'
 
-/** @typedef {import('@companion-module/base').CompanionVariableValue} CompanionVariableValue */
-
 export class VariablesCustomVariable {
-	/**
-	 * Base variables handler
-	 * @type {import('./Values.js').VariablesValues}
-	 * @access private
-	 * @readonly
-	 */
-	#base
-
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	#logger = LogController.createLogger('Variables/CustomVariable')
+	readonly #logger = LogController.createLogger('Variables/CustomVariable')
+	readonly #variableValues: VariablesValues
 
 	/**
 	 * Custom variable definitions
-	 * @type {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariablesModel}
-	 * @access private
 	 */
-	#custom_variables
+	#custom_variables: CustomVariablesModel
 
-	/**
-	 * @type {import ('../Data/Database.js').default}
-	 * @access private
-	 * @readonly
-	 */
-	#db
+	readonly #db: DataDatabase
+	readonly #io: UIHandler
 
-	/**
-	 * @type {import ('../UI/Handler.js').default}
-	 * @access private
-	 * @readonly
-	 */
-	#io
-
-	/**
-	 * @param {import ('../Data/Database.js').default} db
-	 * @param {import ('../UI/Handler.js').default} io
-	 * @param {import('./Values.js').VariablesValues} base
-	 */
-	constructor(db, io, base) {
+	constructor(db: DataDatabase, io: UIHandler, variableValues: VariablesValues) {
 		this.#db = db
 		this.#io = io
-		this.#base = base
+		this.#variableValues = variableValues
 
 		this.#custom_variables = this.#db.getKey('custom_variables', {})
 	}
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket) {
 		client.onPromise('custom-variables:subscribe', () => {
 			client.join(CustomVariablesRoom)
 
@@ -100,12 +76,11 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Create a new custom variable
-	 * @param {string} name
-	 * @param {string} defaultVal Default value of the variable (string)
-	 * @returns undefined or failure reason
-	 * @access public
+	 * @param name
+	 * @param defaultVal Default value of the variable (string)
+	 * @returns null or failure reason
 	 */
-	createVariable(name, defaultVal) {
+	createVariable(name: string, defaultVal: string): string | null {
 		if (this.#custom_variables[name]) {
 			return `Variable "${name}" already exists`
 		}
@@ -127,7 +102,7 @@ export class VariablesCustomVariable {
 			sortOrder: highestSortOrder + 1,
 		}
 
-		this.doSave()
+		this.#doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
@@ -146,14 +121,12 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Create a custom variable
-	 * @param {string} name
-	 * @returns undefined or failure reason
-	 * @access public
+	 * @param name
 	 */
-	deleteVariable(name) {
+	deleteVariable(name: string): void {
 		delete this.#custom_variables[name]
 
-		this.doSave()
+		this.#doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
@@ -165,59 +138,48 @@ export class VariablesCustomVariable {
 		}
 
 		this.#setValueInner(name, undefined)
-
-		return undefined
 	}
 
 	/**
 	 * Save the current custom variables
-	 * @access protected
 	 */
-	doSave() {
+	#doSave(): void {
 		this.#db.setKey('custom_variables', this.#custom_variables)
 	}
 
 	/**
 	 * Get all the current custom variable definitions
-	 * @returns {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariablesModel}
-	 * @access public
 	 */
-	getDefinitions() {
+	getDefinitions(): CustomVariablesModel {
 		return this.#custom_variables
 	}
 
 	/**
 	 * Check if a custom variable exists
-	 * @param {string} name
-	 * @returns {boolean}
 	 */
-	hasCustomVariable(name) {
+	hasCustomVariable(name: string): boolean {
 		return !!this.#custom_variables[name]
 	}
 
 	/**
 	 * Initialise the custom variables
 	 */
-	init() {
+	init(): void {
 		// Load the startup values of custom variables
 		if (Object.keys(this.#custom_variables).length > 0) {
-			/** @type {Record<string, CompanionVariableValue>} */
-			const newValues = {}
+			const newValues: Record<string, CompanionVariableValue> = {}
 			for (const [name, info] of Object.entries(this.#custom_variables)) {
 				newValues[`${custom_variable_prefix}${name}`] = info.defaultValue || ''
 			}
-			this.#base.setVariableValues('internal', newValues)
+			this.#variableValues.setVariableValues('internal', newValues)
 		}
 	}
 
 	/**
 	 * Replace all of the current custom variables with new ones
-	 * @param {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariablesModel} custom_variables
-	 * @access public
 	 */
-	replaceDefinitions(custom_variables) {
-		/** @type {Record<string, CompanionVariableValue | undefined>} */
-		const newValues = {}
+	replaceDefinitions(custom_variables: CustomVariablesModel): void {
+		const newValues: Record<string, CompanionVariableValue | undefined> = {}
 		// Mark the current variables as to be deleted
 		for (const name of Object.keys(this.#custom_variables || {})) {
 			newValues[`${custom_variable_prefix}${name}`] = undefined
@@ -230,14 +192,13 @@ export class VariablesCustomVariable {
 		const namesBefore = Object.keys(this.#custom_variables)
 
 		this.#custom_variables = custom_variables || {}
-		this.doSave()
+		this.#doSave()
 
 		// apply the default values
-		this.#base.setVariableValues('internal', newValues)
+		this.#variableValues.setVariableValues('internal', newValues)
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			/** @type {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariableUpdate[]} **/
-			const changes = []
+			const changes: CustomVariableUpdate[] = []
 
 			// Add inserts
 			for (const [id, info] of Object.entries(this.#custom_variables)) {
@@ -269,32 +230,28 @@ export class VariablesCustomVariable {
 	/**
 	 * Remove any custom variables
 	 */
-	reset() {
+	reset(): void {
 		const namesBefore = Object.keys(this.#custom_variables)
 
 		this.#custom_variables = {}
-		this.doSave()
+		this.#doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && namesBefore.length > 0) {
 			this.#io.emitToRoom(
 				CustomVariablesRoom,
 				'custom-variables:update',
-				namesBefore.map(
-					/** @return {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariableUpdateRemoveOp} **/ (
-						name
-					) => ({ type: 'remove', itemId: name })
-				)
+				namesBefore.map((name): CustomVariableUpdateRemoveOp => ({ type: 'remove', itemId: name }))
 			)
 		}
 	}
 
 	/**
 	 * Set the persistence of a custom variable
-	 * @param {string} name
-	 * @param {boolean} persistent
-	 * @returns {string | null} Failure reason, if any
+	 * @param name
+	 * @param persistent
+	 * @returns Failure reason, if any
 	 */
-	setPersistence(name, persistent) {
+	setPersistence(name: string, persistent: boolean): string | null {
 		if (!this.#custom_variables[name]) {
 			return 'Unknown name'
 		}
@@ -303,12 +260,12 @@ export class VariablesCustomVariable {
 
 		if (this.#custom_variables[name].persistCurrentValue) {
 			const fullname = `${custom_variable_prefix}${name}`
-			const value = this.#base.getVariableValue('internal', fullname)
+			const value = this.#variableValues.getVariableValue('internal', fullname)
 
 			this.#custom_variables[name].defaultValue = value ?? ''
 		}
 
-		this.doSave()
+		this.#doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
@@ -325,9 +282,9 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Set the order of the custom variable
-	 * @param {string[]} newNames Sorted variable names
+	 * @param newNames Sorted variable names
 	 */
-	setOrder(newNames) {
+	setOrder(newNames: string[]): void {
 		if (!Array.isArray(newNames)) throw new Error('Expected array of names')
 
 		// Update the order based on the ids provided
@@ -356,11 +313,10 @@ export class VariablesCustomVariable {
 			}
 		}
 
-		this.doSave()
+		this.#doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			/** @type {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariableUpdate[]} **/
-			const changes = []
+			const changes: CustomVariableUpdate[] = []
 
 			// Add inserts
 			for (const [id, info] of Object.entries(this.#custom_variables)) {
@@ -379,21 +335,19 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Get the value of a custom variable
-	 * @param {string} name
-	 * @returns {CompanionVariableValue | undefined}
 	 */
-	getValue(name) {
+	getValue(name: string): CompanionVariableValue | undefined {
 		const fullname = `${custom_variable_prefix}${name}`
-		return this.#base.getVariableValue('internal', fullname)
+		return this.#variableValues.getVariableValue('internal', fullname)
 	}
 
 	/**
 	 * Set the value of a custom variable
-	 * @param {string} name
-	 * @param {CompanionVariableValue | undefined} value
-	 * @returns {string | null} Failure reason, if any
+	 * @param name
+	 * @param value
+	 * @returns Failure reason, if any
 	 */
-	setValue(name, value) {
+	setValue(name: string, value: CompanionVariableValue | undefined): string | null {
 		if (this.#custom_variables[name]) {
 			this.#logger.silly(`Set value "${name}":${value}`)
 			this.#setValueInner(name, value)
@@ -405,12 +359,10 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Helper for setting the value of a custom variable
-	 * @param {string} name
-	 * @param {CompanionVariableValue | undefined} value
 	 */
-	#setValueInner(name, value) {
+	#setValueInner(name: string, value: CompanionVariableValue | undefined): void {
 		const fullname = `${custom_variable_prefix}${name}`
-		this.#base.setVariableValues('internal', {
+		this.#variableValues.setVariableValues('internal', {
 			[fullname]: value,
 		})
 
@@ -419,9 +371,8 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Reset a custom variable to the default value
-	 * @param {string} name
 	 */
-	resetValueToDefault(name) {
+	resetValueToDefault(name: string): void {
 		if (this.#custom_variables[name]) {
 			const value = this.#custom_variables[name].defaultValue
 			this.#logger.silly(`Set value "${name}":${value}`)
@@ -431,16 +382,15 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Propogate the current value of a custom variable to be the new default value
-	 * @param {string} name
 	 */
-	syncValueToDefault(name) {
+	syncValueToDefault(name: string): void {
 		if (this.#custom_variables[name]) {
 			const fullname = `${custom_variable_prefix}${name}`
-			const value = this.#base.getVariableValue('internal', fullname)
+			const value = this.#variableValues.getVariableValue('internal', fullname)
 			this.#logger.silly(`Set default value "${name}":${value}`)
 			this.#custom_variables[name].defaultValue = value ?? ''
 
-			this.doSave()
+			this.#doSave()
 
 			if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
@@ -456,12 +406,8 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Set the default value of a custom variable
-	 * @param {string} name
-	 * @param {string} value Default value of the variable (string)
-	 * @returns undefined or failure reason
-	 * @access public
 	 */
-	setVariableDefaultValue(name, value) {
+	setVariableDefaultValue(name: string, value: string): string | null {
 		if (!this.#custom_variables[name]) {
 			return 'Unknown name'
 		}
@@ -471,7 +417,7 @@ export class VariablesCustomVariable {
 
 		this.#custom_variables[name].defaultValue = value
 
-		this.doSave()
+		this.#doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
@@ -488,14 +434,12 @@ export class VariablesCustomVariable {
 
 	/**
 	 * Update the persisted value of a variable, if required
-	 * @param {string} name
-	 * @param {CompanionVariableValue | undefined} value
 	 */
-	#persistCustomVariableValue(name, value) {
+	#persistCustomVariableValue(name: string, value: CompanionVariableValue | undefined): void {
 		if (this.#custom_variables[name] && this.#custom_variables[name].persistCurrentValue) {
 			this.#custom_variables[name].defaultValue = value ?? ''
 
-			this.doSave()
+			this.#doSave()
 
 			if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
