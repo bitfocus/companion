@@ -1,4 +1,5 @@
-import ServiceUdpBase from './UdpBase.js'
+import type { Registry } from '../Registry.js'
+import { ServiceUdpBase, DgramRemoteInfo } from './UdpBase.js'
 
 /**
  * Class providing the Artnet api.
@@ -21,45 +22,25 @@ import ServiceUdpBase from './UdpBase.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceArtnet extends ServiceUdpBase {
-	/**
-	 * The port to open the socket with.  Default: <code>6454</code>
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 6454
+export class ServiceArtnet extends ServiceUdpBase {
+	#currentPage: number = 0
+	#currentBank: number = 0
+	#currentDir: number = 0
 
-	/**
-	 * @type {number}
-	 * @access private
-	 */
-	#currentPage = 0
-	/**
-	 * @type {number}
-	 * @access private
-	 */
-	#currentBank = 0
-	/**
-	 * @type {number}
-	 * @access private
-	 */
-	#currentDir = 0
-
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/Artnet', 'artnet_enabled', null)
+
+		this.port = 6454
 
 		this.init()
 	}
 
 	/**
 	 * Process an incoming message from a remote
-	 * @param {Buffer} data - the incoming message
-	 * @param {import('./UdpBase.js').ServiceUdpBase_DgramRemoteInfo} _remote - remote address information
+	 * @param data - the incoming message
+	 * @param _remote - remote address information
 	 */
-	processIncoming(data, _remote) {
+	processIncoming(data: Buffer, _remote: DgramRemoteInfo) {
 		try {
 			if (data.length >= 18 + 255) {
 				// const sequence = data.readUInt8(12)
@@ -82,8 +63,8 @@ class ServiceArtnet extends ServiceUdpBase {
 
 					if (dmxPage !== this.#currentPage || dmxBank !== this.#currentBank || dmxDir !== this.#currentDir) {
 						this.#currentPage = dmxPage
-						this.currentBank = dmxBank
-						this.currentDir = dmxDir
+						this.#currentBank = dmxBank
+						this.#currentDir = dmxDir
 
 						if (dmxDir == 0 || dmxPage == 0 || dmxBank == 0) {
 							return
@@ -106,10 +87,8 @@ class ServiceArtnet extends ServiceUdpBase {
 					}
 				}
 			}
-		} catch (/** @type {any} */ err) {
+		} catch (err: any) {
 			this.logger.silly(`message error: ${err.toString()}`, err.stack)
 		}
 	}
 }
-
-export default ServiceArtnet

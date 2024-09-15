@@ -1,5 +1,7 @@
 import OSC from 'osc'
-import ServiceOscBase from './OscBase.js'
+import { ServiceOscBase } from './OscBase.js'
+import type { Registry } from '../Registry.js'
+import { OSCSomeArguments } from '@companion-module/base'
 
 /**
  * Class providing OSC send services.
@@ -22,39 +24,28 @@ import ServiceOscBase from './OscBase.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceOscSender extends ServiceOscBase {
-	/**
-	 * The port to open the socket with.  Default: <code>0</code> (random)
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 0
-
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+export class ServiceOscSender extends ServiceOscBase {
+	constructor(registry: Registry) {
 		super(registry, 'Service/OscSender', null, null)
+
+		this.port = 0
 
 		this.init()
 	}
 
 	/**
 	 * Process an incoming message from a client
-	 * @param {import('osc').OscMessage} _message - the incoming message part
-	 * @access protected
 	 */
-	processIncoming(_message) {}
+	protected override processIncoming() {}
 
 	/**
 	 * Send an OSC command to a host
-	 * @param {string} host - the receiving host
-	 * @param {number} port - the receiving port
-	 * @param {string} path - the OSC path
-	 * @param {import('@companion-module/base').OSCSomeArguments} args - arguments to include
-	 * @access public
+	 * @param host - the receiving host
+	 * @param port - the receiving port
+	 * @param path - the OSC path
+	 * @param args - arguments to include
 	 */
-	send(host, port, path, args) {
+	send(host: string, port: number, path: string, args: OSCSomeArguments) {
 		if (this.server !== undefined) {
 			this.server.send(
 				{
@@ -69,13 +60,12 @@ class ServiceOscSender extends ServiceOscBase {
 
 	/**
 	 * Send multiple OSC commands to a host
-	 * @param {string} host - the receiving host
-	 * @param {number} port - the receiving port
-	 * @param {number} time - OSC 64-bit time tag (see OSC specification); <code>0</code> to send immediately
-	 * @param {ServiceOscSender_CompanionOSCBundle[]} bundle - the packages to send
-	 * @access public
+	 * @param host - the receiving host
+	 * @param port - the receiving port
+	 * @param time - OSC 64-bit time tag (see OSC specification); <code>0</code> to send immediately
+	 * @param bundle - the packages to send
 	 */
-	sendBundle(host, port, time, bundle) {
+	sendBundle(host: string, port: number, time: number, bundle: ServiceOscSender_CompanionOSCBundle) {
 		if (this.server !== undefined && bundle !== undefined) {
 			this.server.send(
 				{
@@ -92,15 +82,16 @@ class ServiceOscSender extends ServiceOscBase {
 
 /**
  * An argument to include with an OSC package
- * @typedef ServiceOscSender_CompanionOSCArgument
- * @property {string} type - 'f' = float | 'i' = int | 's' = string
- * @property {number|string} value - the argument's value
  */
+export interface ServiceOscSender_CompanionOSCArgument {
+	type: string
+	value: number | string
+}
 
 /**
  * A full OSC package when sending a bundle
- * @typedef ServiceOscSender_CompanionOSCBundle
- * @property {string} address - the OSC path
- * @property {ServiceOscSender_CompanionOSCArgument[]} args - arguments to include
  */
-export default ServiceOscSender
+export interface ServiceOscSender_CompanionOSCBundle {
+	address: string
+	args: ServiceOscSender_CompanionOSCArgument[]
+}

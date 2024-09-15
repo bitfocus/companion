@@ -1,7 +1,7 @@
 import { CoreBase } from '../Core/Base.js'
 import { parseColorToNumber, rgb } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import RegexRouter from './RegexRouter.js'
+import { RegexRouter } from './RegexRouter.js'
 
 /**
  * Class providing the OSC API.

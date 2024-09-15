@@ -1,6 +1,6 @@
 import _https from 'https'
 import fs from 'fs'
-import ServiceBase from './Base.js'
+import { ServiceBase } from './Base.js'
 
 /**
  * Class providing the HTTPS web interface.
@@ -142,6 +142,13 @@ class ServiceHttps extends ServiceBase {
 					this.logger.silly(`Could not start: Incomplete or no self-signed certificate on file`)
 				}
 			}
+		}
+	}
+
+	close() {
+		if (this.server) {
+			this.server.close()
+			this.server = undefined
 		}
 	}
 

@@ -1,6 +1,8 @@
-import ServiceBase from './Base.js'
+import { ServiceBase } from './Base.js'
 // @ts-ignore
 import VideohubServer from 'videohub-server'
+import type { SurfaceIPVideohubPanel } from '../Surface/IP/VideohubPanel.js'
+import type { Registry } from '../Registry.js'
 
 /**
  * Class providing the Videohub Server api.
@@ -23,61 +25,52 @@ import VideohubServer from 'videohub-server'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceVideohubPanel extends ServiceBase {
-	/**
-	 * @type {VideohubServer | undefined}
-	 */
-	server = undefined
+export class ServiceVideohubPanel extends ServiceBase {
+	#server: VideohubServer | undefined = undefined
 
 	/**
 	 * The remote devices
-	 * @type {Map<string, VideohubPanelWrapper>}
-	 * @access protected
 	 */
-	devices = new Map()
+	readonly #devices = new Map<string, VideohubPanelWrapper>()
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/VideohubPanel', 'videohub_panel_enabled', null)
 
 		this.init()
 	}
 
-	listen() {
-		this.server = new VideohubServer({
+	protected listen() {
+		this.#server = new VideohubServer({
 			manualConfigure: true,
 		})
 
-		this.server.on('error', (/** @type {any} */ e) => {
+		this.#server.on('error', (e: any) => {
 			this.logger.debug(`listen-socket error: ${e}`)
 		})
-		this.server.on('connect', this.#connectPanel.bind(this))
+		this.#server.on('connect', this.#connectPanel.bind(this))
 
-		this.server.on('disconnect', this.#disconnectPanel.bind(this))
-		this.server.on('press', this.#pressPanel.bind(this))
+		this.#server.on('disconnect', this.#disconnectPanel.bind(this))
+		this.#server.on('press', this.#pressPanel.bind(this))
 
 		try {
-			this.server.start()
+			this.#server.start()
 			this.currentState = true
 		} catch (e) {
 			this.logger.debug(`ERROR opening videohub server port`)
 		}
 	}
 
-	close() {
-		this.server.destroy()
+	protected close() {
+		if (this.#server) {
+			this.#server.destroy()
+			this.#server = undefined
+		}
 	}
 
 	/**
 	 * Panel connected
-	 * @param {string} id
-	 * @param {*} info
-	 * @param {string} remoteAddress
-	 * @returns {void}
 	 */
-	#connectPanel(id, info, remoteAddress) {
+	#connectPanel(id: string, info: any, remoteAddress: string): void {
 		const fullId = `videohub:${id}`
 		this.logger.info(`Panel "${fullId}" connected from ${remoteAddress}`)
 
@@ -88,11 +81,11 @@ class ServiceVideohubPanel extends ServiceBase {
 
 			panelInfo: info,
 
-			server: this.server,
+			server: this.#server,
 			serverId: remoteAddress, // TODO
 		})
 
-		this.devices.set(fullId, {
+		this.#devices.set(fullId, {
 			id: fullId,
 			device: device,
 		})
@@ -100,39 +93,30 @@ class ServiceVideohubPanel extends ServiceBase {
 
 	/**
 	 * Panel disconnected
-	 * @param {string} id
-	 * @returns {void}
 	 */
-	#disconnectPanel(id) {
+	#disconnectPanel(id: string): void {
 		const fullId = `videohub:${id}`
 		this.logger.info(`Panel "${fullId}" disconnected from`)
 
-		this.devices.delete(fullId)
+		this.#devices.delete(fullId)
 		this.surfaces.removeDevice(fullId)
 	}
 
 	/**
 	 * Panel button pressed
-	 * @param {string} id
-	 * @param {number} destination
-	 * @param {number} button
 	 */
-	#pressPanel(id, destination, button) {
+	#pressPanel(id: string, destination: number, button: number): void {
 		const fullId = `videohub:${id}`
 		this.logger.debug(`Panel "${fullId}" pressed ${destination}-${button}`)
 
-		const device = this.devices.get(fullId)
+		const device = this.#devices.get(fullId)
 		if (device) {
 			device.device.doButton(destination, button)
 		}
 	}
 }
 
-export default ServiceVideohubPanel
-
-/**
- * @typedef {{
- *   id: string
- *   device: import('../Surface/IP/VideohubPanel.js').SurfaceIPVideohubPanel
- * }} VideohubPanelWrapper
- */
+interface VideohubPanelWrapper {
+	id: string
+	device: SurfaceIPVideohubPanel
+}

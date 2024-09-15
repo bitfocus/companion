@@ -1,4 +1,5 @@
 import { CoreBase } from '../Core/Base.js'
+import type { Registry } from '../Registry.js'
 
 /**
  * Abstract class providing base functionality for services.
@@ -22,55 +23,38 @@ import { CoreBase } from '../Core/Base.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceBase extends CoreBase {
+export abstract class ServiceBase extends CoreBase {
 	/**
 	 * Flag to track if the module is currently enabled
-	 * @type {boolean}
-	 * @access protected
 	 */
-	currentState = false
+	protected currentState: boolean = false
 	/**
 	 * The user config setting to track if the module should be enabled/disabled
-	 * @type {?string}
-	 * @access protected
 	 */
-	enableConfig
+	protected readonly enableConfig: string | null
 	/**
 	 * Flag to track if the module is setup and ready to be enabled
-	 * @type {boolean}
-	 * @access protected
 	 */
-	initialized = false
+	protected initialized: boolean = false
 	/**
 	 * The user config setting to track if the module should be enabled/disabled
-	 * @type {?string}
-	 * @access protected
 	 */
-	portConfig
+	protected readonly portConfig: string | null
 
 	/**
 	 * The port number to use for this service
-	 * @type {number}
-	 * @access protected
 	 */
-	port = 0
-
-	/**
-	 * Server handle
-	 * @type {unknown | undefined}
-	 * @access protected
-	 */
-	server
+	protected port: number = 0
 
 	/**
 	 * This needs to be called in the extending class
 	 * using <code>super(registry, 'module_name', 'module_path', enableConfig, portConfig)</code>.
-	 * @param {import('../Registry.js').Registry} registry - the core registry
-	 * @param {string} debugNamespace - module path to be used in the debugger
-	 * @param {?string} enableConfig - the key for the userconfig that sets if the module is enabled or disabled
-	 * @param {?string} portConfig - the key for the userconfig that sets the service ports
+	 * @param registry - the core registry
+	 * @param debugNamespace - module path to be used in the debugger
+	 * @param enableConfig - the key for the userconfig that sets if the module is enabled or disabled
+	 * @param portConfig - the key for the userconfig that sets the service ports
 	 */
-	constructor(registry, debugNamespace, enableConfig, portConfig) {
+	constructor(registry: Registry, debugNamespace: string, enableConfig: string | null, portConfig: string | null) {
 		super(registry, debugNamespace)
 
 		this.enableConfig = enableConfig
@@ -79,25 +63,19 @@ class ServiceBase extends CoreBase {
 
 	/**
 	 * Close the socket before deleting it
-	 * @access protected
 	 */
-	close() {
-		// @ts-ignore
-		this.server?.close()
-	}
+	protected abstract close(): void
 
 	/**
 	 * Kill the socket, if exists.
-	 * @access protected
 	 */
-	disableModule() {
-		if (this.server) {
+	protected disableModule() {
+		if (this.currentState) {
 			try {
 				this.currentState = false
 				this.close()
 				this.logger.info(`Stopped listening on port ${this.port}`)
-				delete this.server
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.silly(`Could not stop listening: ${e.message}`)
 			}
 		}
@@ -105,13 +83,12 @@ class ServiceBase extends CoreBase {
 
 	/**
 	 * Call to enable the socket if the module is initialized.
-	 * @access protected
 	 */
-	enableModule() {
+	protected enableModule() {
 		if (this.initialized === true) {
 			try {
 				this.listen()
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.error(`Error listening: ${e.message}`)
 			}
 		}
@@ -119,10 +96,8 @@ class ServiceBase extends CoreBase {
 
 	/**
 	 * Process a socket error and disable the module.
-	 * @param {any} e - the error
-	 * @access protected
 	 */
-	handleSocketError(e) {
+	protected handleSocketError(e: any) {
 		let message
 		let disable = false
 
@@ -148,9 +123,8 @@ class ServiceBase extends CoreBase {
 
 	/**
 	 * Initialize and enable the socket if defaults allow.
-	 * @access protected
 	 */
-	init() {
+	protected init() {
 		this.initialized = true
 
 		if (!this.enableConfig || (this.enableConfig && this.userconfig.getKey(this.enableConfig) === true)) {
@@ -160,16 +134,13 @@ class ServiceBase extends CoreBase {
 
 	/**
 	 * Start the service if it is not already running
-	 * @access protected
-	 * @abstract
 	 */
-	listen() {}
+	protected abstract listen(): void
 
 	/**
 	 * Stop and restart the module, if enabled.
-	 * @access protected
 	 */
-	restartModule() {
+	protected restartModule() {
 		this.disableModule()
 
 		if (!this.enableConfig || (this.enableConfig && this.userconfig.getKey(this.enableConfig) === true)) {
@@ -179,11 +150,10 @@ class ServiceBase extends CoreBase {
 
 	/**
 	 * Process an updated userconfig value and enable/disable the module, if necessary.
-	 * @param {string} key - the saved key
-	 * @param {(boolean|number|string)} value - the saved value
-	 * @access public
+	 * @param key - the saved key
+	 * @param value - the saved value
 	 */
-	updateUserConfig(key, value) {
+	updateUserConfig(key: string, value: boolean | number | string) {
 		if (this.enableConfig !== undefined && key == this.enableConfig) {
 			if (this.currentState == false && value == true) {
 				this.enableModule()
@@ -201,5 +171,3 @@ class ServiceBase extends CoreBase {
 		}
 	}
 }
-
-export default ServiceBase

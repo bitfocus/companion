@@ -1,4 +1,4 @@
-import ServiceBase from './Base.js'
+import { ServiceBase } from './Base.js'
 import { isFalsey, isTruthy, parseLineParameters, parseStringParamWithBooleanFallback } from '../Resources/Util.js'
 import net, { Socket } from 'net'
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
@@ -295,6 +295,13 @@ class ServiceSatellite extends ServiceBase {
 		socket.on('close', doCleanup)
 
 		socket.write(`BEGIN CompanionVersion=${this.registry.appInfo.appBuild} ApiVersion=${API_VERSION}\n`)
+	}
+
+	close() {
+		if (this.server) {
+			this.server.close()
+			this.server = undefined
+		}
 	}
 
 	/**

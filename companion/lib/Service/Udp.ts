@@ -1,5 +1,6 @@
 import { ServiceTcpUdpApi } from './TcpUdpApi.js'
-import ServiceUdpBase from './UdpBase.js'
+import { DgramRemoteInfo, ServiceUdpBase } from './UdpBase.js'
+import type { Registry } from '../Registry.js'
 
 /**
  * Class providing the UDP api.
@@ -22,27 +23,16 @@ import ServiceUdpBase from './UdpBase.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceUdp extends ServiceUdpBase {
+export class ServiceUdp extends ServiceUdpBase {
 	/**
 	 * The service api command processor
-	 * @type {ServiceTcpUdpApi}
-	 * @access protected
-	 * @readonly
 	 */
-	#api
+	readonly #api: ServiceTcpUdpApi
 
-	/**
-	 * The port to open the socket with.  Default: <code>16759</code>
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 16759
-
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/Udp', 'udp_enabled', 'udp_listen_port')
+
+		this.port = 16759
 
 		this.#api = new ServiceTcpUdpApi(registry, 'udp', 'udp_legacy_api_enabled')
 
@@ -51,10 +41,8 @@ class ServiceUdp extends ServiceUdpBase {
 
 	/**
 	 * Process an incoming message from a remote
-	 * @param {Buffer} data - the incoming message
-	 * @param {import('./UdpBase.js').ServiceUdpBase_DgramRemoteInfo} remote - remote address information
 	 */
-	processIncoming(data, remote) {
+	protected override processIncoming(data: Buffer, remote: DgramRemoteInfo) {
 		this.logger.silly(`${remote.address}:${remote.port} received packet: "${data.toString().trim()}"`)
 
 		this.#api
@@ -67,5 +55,3 @@ class ServiceUdp extends ServiceUdpBase {
 			})
 	}
 }
-
-export default ServiceUdp

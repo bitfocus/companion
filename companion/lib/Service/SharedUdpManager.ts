@@ -1,6 +1,6 @@
 import { Socket, createSocket } from 'dgram'
 import { nanoid } from 'nanoid'
-import LogController from '../Log/Controller.js'
+import LogController, { Logger } from '../Log/Controller.js'
 
 /**
  * Class providing 'shared' udp sockets for modules.
@@ -27,29 +27,25 @@ export class ServiceSharedUdpManager {
 	//  */
 	// #logger = LogController.createLogger(`Service/SharedUdpManager`)
 
-	/**
-	 * @type {Map<string, ServiceSharedUdpPort>}
-	 */
-	#sockets = new Map()
+	#sockets = new Map<string, ServiceSharedUdpPort>()
 
 	/**
 	 * Count the number of active ports
-	 * @returns {number}
 	 */
-	countActivePorts() {
+	countActivePorts(): number {
 		return this.#sockets.size
 	}
 
 	/**
 	 * Add a listener
-	 * @param {'udp4' | 'udp6'} family
-	 * @param {number} portNumber
-	 * @param {string} ownerId
-	 * @param {( message: Buffer, rInfo: import('dgram').RemoteInfo) => void} messageHandler
-	 * @param {( error: Error) => void} errorHandler
-	 * @returns {Promise<string>}
 	 */
-	async joinPort(family, portNumber, ownerId, messageHandler, errorHandler) {
+	async joinPort(
+		family: 'udp4' | 'udp6',
+		portNumber: number,
+		ownerId: string,
+		messageHandler: ServiceSharedUdpMember['messageHandler'],
+		errorHandler: ServiceSharedUdpMember['errorHandler']
+	): Promise<string> {
 		const socketId = createSocketId(family, portNumber)
 
 		let socket = this.#sockets.get(socketId)
@@ -80,10 +76,8 @@ export class ServiceSharedUdpManager {
 
 	/**
 	 * Remove a listener
-	 * @param {string} ownerId
-	 * @param {string} handleId
 	 */
-	leavePort(ownerId, handleId) {
+	leavePort(ownerId: string, handleId: string): void {
 		for (const [socketId, socket] of this.#sockets.entries()) {
 			socket.members = socket.members.filter((m) => m.ownerId !== ownerId || m.handleId !== handleId)
 			socket.logMemberCount()
@@ -98,9 +92,8 @@ export class ServiceSharedUdpManager {
 
 	/**
 	 * Remove all listeners belonging to an owner
-	 * @param {string} ownerId
 	 */
-	leaveAllFromOwner(ownerId) {
+	leaveAllFromOwner(ownerId: string): void {
 		for (const [socketId, socket] of this.#sockets.entries()) {
 			socket.members = socket.members.filter((m) => m.ownerId !== ownerId)
 			socket.logMemberCount()
@@ -115,26 +108,15 @@ export class ServiceSharedUdpManager {
 
 	/**
 	 * Send a message from a shared port
-	 * @param {string} ownerId
-	 * @param {string} handleId
-	 * @param {string} address
-	 * @param {number} port
-	 * @param {Uint8Array} message
 	 */
-	sendOnPort(ownerId, handleId, address, port, message) {
+	sendOnPort(ownerId: string, handleId: string, address: string, port: number, message: Uint8Array) {
 		const socket = this.#findSocket(ownerId, handleId)
 		if (!socket) throw new Error(`Not a member of the socket`)
 
 		socket.socket.send(message, port, address)
 	}
 
-	/**
-	 *
-	 * @param {string} ownerId
-	 * @param {string} handleId
-	 * @returns {ServiceSharedUdpPort | undefined}
-	 */
-	#findSocket(ownerId, handleId) {
+	#findSocket(ownerId: string, handleId: string): ServiceSharedUdpPort | undefined {
 		for (const socket of this.#sockets.values()) {
 			if (socket.members.find((m) => m.ownerId === ownerId && m.handleId === handleId)) {
 				return socket
@@ -144,38 +126,21 @@ export class ServiceSharedUdpManager {
 	}
 }
 
-/**
- * @param {'udp4' | 'udp6'} type
- * @param {number} portNumber
- * @returns {string}
- */
-function createSocketId(type, portNumber) {
+function createSocketId(type: 'udp4' | 'udp6', portNumber: number): string {
 	return `${type}-${portNumber}`
 }
 
 class ServiceSharedUdpPort {
 	/**
 	 * The logger for this class
-	 * @type {import('winston').Logger}
-	 * @access private
 	 */
-	#logger
+	#logger: Logger
 
-	/** @type {ServiceSharedUdpMember[]} */
-	members = []
+	members: ServiceSharedUdpMember[] = []
+	readonly socket: Socket
+	readonly waitForBind: Promise<void>
 
-	/** @type {Socket} */
-	socket
-
-	/** @type {Promise<void>} */
-	waitForBind
-
-	/**
-	 * @param {'udp4' | 'udp6'} family
-	 * @param {number} portNumber
-	 * @param {() => void} destroyCallback
-	 */
-	constructor(family, portNumber, destroyCallback) {
+	constructor(family: 'udp4' | 'udp6', portNumber: number, destroyCallback: () => void) {
 		this.#logger = LogController.createLogger(`Service/SharedUdpPort/${family}/${portNumber}`)
 
 		this.#logger.info('Initialising shared socket')
@@ -199,12 +164,10 @@ class ServiceSharedUdpPort {
 			}
 		})
 
-		this.waitForBind = /** @type {Promise<void>} */ (
-			new Promise((resolve, reject) => {
-				this.socket.once('error', reject)
-				this.socket.bind(portNumber, resolve)
-			})
-		)
+		this.waitForBind = /** @type {Promise<void>} */ new Promise((resolve, reject) => {
+			this.socket.once('error', reject)
+			this.socket.bind(portNumber, resolve)
+		})
 
 		this.waitForBind
 			.finally(() => {
@@ -213,25 +176,23 @@ class ServiceSharedUdpPort {
 			.catch(() => null)
 	}
 
-	logMemberCount() {
+	logMemberCount(): void {
 		this.#logger.debug(`Now has ${this.members.length} members`)
 	}
 
 	/**
 	 * Dispose of this shared socket
 	 */
-	dispose() {
+	dispose(): void {
 		this.#logger.info('Disposing of shared socket')
 
 		this.socket.close()
 	}
 }
 
-/**
- * @typedef {{
- *   ownerId: string
- *   handleId: string
- *   messageHandler: (message: Buffer, rInfo: import('dgram').RemoteInfo) => void
- *   errorHandler: (error: Error) => void
- * }} ServiceSharedUdpMember
- */
+interface ServiceSharedUdpMember {
+	ownerId: string
+	handleId: string
+	messageHandler: (message: Buffer, rInfo: import('dgram').RemoteInfo) => void
+	errorHandler: (error: Error) => void
+}

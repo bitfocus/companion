@@ -1,5 +1,7 @@
 import { formatLocation, oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
-import ServiceTcpBase from './TcpBase.js'
+import { ServiceTcpBase, TcpClientInfo } from './TcpBase.js'
+import type { Registry } from '../Registry.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 /**
  * Class providing the Rosstalk api.
@@ -23,37 +25,31 @@ import ServiceTcpBase from './TcpBase.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceRosstalk extends ServiceTcpBase {
-	/**
-	 * The port to open the socket with.  Default: <code>7788</code>
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 7788
+export class ServiceRosstalk extends ServiceTcpBase {
 	/**
 	 * The time to auto-release the button since this can only
 	 * receive presses.  Default: <code>20 ms</code>
-	 * @type {number}
-	 * @access protected
 	 */
-	releaseTime = 20
+	readonly #releaseTime = 20
 
 	/**
 	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/Rosstalk', 'rosstalk_enabled', null)
+
+		this.port = 7788
 
 		this.init()
 	}
 
 	/**
 	 * Process an incoming message from a client
-	 * @param {import('./TcpBase.js').TcpClientInfo} _client - the client's tcp socket
-	 * @param {string} data - the incoming message part
+	 * @param _client - the client's tcp socket
+	 * @param data - the incoming message part
 	 * @access protected
 	 */
-	processIncoming(_client, data) {
+	protected processIncoming(_client: TcpClientInfo, data: string) {
 		data = data.toString()
 
 		const matchCC = data.match(/CC ([0-9]+)\:([0-9]+)/)
@@ -83,12 +79,7 @@ class ServiceRosstalk extends ServiceTcpBase {
 		}
 	}
 
-	/**
-	 *
-	 * @param {import('@companion-app/shared/Model/Common.js').ControlLocation} location
-	 * @returns
-	 */
-	#executeTrigger(location) {
+	#executeTrigger(location: ControlLocation): void {
 		const controlId = this.page.getControlIdAt(location)
 		if (!controlId) {
 			this.logger.info(`Ignore empty button ${formatLocation(location)}`)
@@ -101,8 +92,6 @@ class ServiceRosstalk extends ServiceTcpBase {
 		setTimeout(() => {
 			this.controls.pressControl(controlId, false, 'rosstalk')
 			this.logger.info(`Release button ${formatLocation(location)}`)
-		}, this.releaseTime)
+		}, this.#releaseTime)
 	}
 }
-
-export default ServiceRosstalk

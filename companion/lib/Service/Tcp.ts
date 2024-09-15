@@ -1,7 +1,8 @@
 import { decimalToRgb } from '../Resources/Util.js'
 import { ApiMessageError, ServiceTcpUdpApi } from './TcpUdpApi.js'
-import ServiceTcpBase from './TcpBase.js'
+import { ServiceTcpBase, TcpClientInfo } from './TcpBase.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import type { Registry } from '../Registry.js'
 
 /**
  * Class providing the TCP api.
@@ -24,27 +25,16 @@ import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceTcp extends ServiceTcpBase {
+export class ServiceTcp extends ServiceTcpBase {
 	/**
 	 * The service api command processor
-	 * @type {ServiceTcpUdpApi}
-	 * @access protected
-	 * @readonly
 	 */
-	#api
+	readonly #api: ServiceTcpUdpApi
 
-	/**
-	 * The port to open the socket with.  Default: <code>16759</code>
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 16759
-
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/Tcp', 'tcp_enabled', 'tcp_listen_port')
+
+		this.port = 16759
 
 		this.#api = new ServiceTcpUdpApi(registry, 'tcp', 'tcp_legacy_api_enabled')
 
@@ -79,11 +69,10 @@ class ServiceTcp extends ServiceTcpBase {
 
 	/**
 	 * Process an incoming message from a client
-	 * @param {import('./TcpBase.js').TcpClientInfo} client - the client's tcp socket
-	 * @param {string} chunk - the incoming message part
-	 * @access protected
+	 * @param client - the client's tcp socket
+	 * @param chunk - the incoming message part
 	 */
-	processIncoming(client, chunk) {
+	protected processIncoming(client: TcpClientInfo, chunk: string): void {
 		let i = 0,
 			line = '',
 			offset = 0
@@ -117,5 +106,3 @@ class ServiceTcp extends ServiceTcpBase {
 		client.receiveBuffer = client.receiveBuffer.substr(offset)
 	}
 }
-
-export default ServiceTcp

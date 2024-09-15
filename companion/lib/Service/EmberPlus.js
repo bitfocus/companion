@@ -1,6 +1,6 @@
 import { EmberServer, Model as EmberModel } from 'emberplus-connection'
 import { getPath } from 'emberplus-connection/dist/Ember/Lib/util.js'
-import ServiceBase from './Base.js'
+import { ServiceBase } from './Base.js'
 import { formatLocation, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { pad } from '@companion-app/shared/Util.js'
 import { parseColorToNumber } from '../Resources/Util.js'

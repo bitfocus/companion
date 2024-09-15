@@ -1,7 +1,8 @@
 import { CoreBase } from '../Core/Base.js'
-import { parseColorToNumber } from '../Resources/Util.js'
+import { ControlLocation, parseColorToNumber } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import RegexRouter from './RegexRouter.js'
+import { RegexRouter } from './RegexRouter.js'
+import type { Registry } from '../Registry.js'
 
 /**
  * Common API command processing for {@link ServiceTcp} and {@link ServiceUdp}.
@@ -27,38 +28,29 @@ import RegexRouter from './RegexRouter.js'
 export class ServiceTcpUdpApi extends CoreBase {
 	/**
 	 * Message router
-	 * @type {RegexRouter}
-	 * @access private
-	 * @readonly
 	 */
-	#router
+	readonly #router: RegexRouter
 
 	/**
 	 * Protocol name
-	 * @type {string}
-	 * @access private
-	 * @readonly
 	 */
-	#protocolName
+	readonly #protocolName: string
 
 	/**
 	 * Userconfig key to enable/disable legacy routes
-	 * @type {string | null}
-	 * @access private
-	 * @readonly
 	 */
-	#legacyRoutesEnableKey
+	readonly #legacyRoutesEnableKey: string | null
 
-	get router() {
+	get router(): RegexRouter {
 		return this.#router
 	}
 
 	/**
-	 * @param {import('../Registry.js').Registry} registry - the core registry
-	 * @param {string} protocolName - the protocol name
-	 * @param {string | null} legacyRoutesEnableKey - Userconfig key to enable/disable legacy routes
+	 * @param registry - the core registry
+	 * @param protocolName - the protocol name
+	 * @param legacyRoutesEnableKey - Userconfig key to enable/disable legacy routes
 	 */
-	constructor(registry, protocolName, legacyRoutesEnableKey) {
+	constructor(registry: Registry, protocolName: string, legacyRoutesEnableKey: string | null) {
 		super(registry, 'Service/Api')
 
 		this.#router = new RegexRouter(() => {
@@ -276,7 +268,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * @param {Record<string, string>} match
 	 * @returns {string | void}
 	 */
-	#surfaceSetPage = (match) => {
+	#surfaceSetPage = (match: Record<string, string>): string => {
 		const page = parseInt(match.page)
 		const surfaceId = match.surfaceId
 
@@ -293,7 +285,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * @param {Record<string, string>} match
 	 * @returns {string | void}
 	 */
-	#surfacePageUp = (match) => {
+	#surfacePageUp = (match: Record<string, string>): string => {
 		const surfaceId = match.surfaceId
 
 		this.surfaces.devicePageUp(surfaceId)
@@ -306,7 +298,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * @param {Record<string, string>} match
 	 * @returns {string | void}
 	 */
-	#surfacePageDown = (match) => {
+	#surfacePageDown = (match: Record<string, string>): string => {
 		const surfaceId = match.surfaceId
 
 		this.surfaces.devicePageDown(surfaceId)
@@ -316,10 +308,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform control press
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationPress = (match) => {
+	#locationPress = (match: Record<string, string>): void => {
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location press at ${formatLocation(location)} (${controlId})`)
@@ -336,10 +326,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform control down
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationDown = (match) => {
+	#locationDown = (match: Record<string, string>): void => {
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location down at ${formatLocation(location)} (${controlId})`)
@@ -351,10 +339,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform control up
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationUp = (match) => {
+	#locationUp = (match: Record<string, string>): void => {
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location up at ${formatLocation(location)} (${controlId})`)
@@ -366,10 +352,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform control rotate left
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationRotateLeft = (match) => {
+	#locationRotateLeft = (match: Record<string, string>): void => {
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location rotate-left at ${formatLocation(location)} (${controlId})`)
@@ -381,10 +365,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform control rotate right
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationRotateRight = (match) => {
+	#locationRotateRight = (match: Record<string, string>): void => {
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location rotate-right at ${formatLocation(location)} (${controlId})`)
@@ -396,10 +378,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Set control step
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationSetStep = (match) => {
+	#locationSetStep = (match: Record<string, string>): void => {
 		const step = parseInt(match.step)
 		const { location, controlId } = this.#locationParse(match)
 
@@ -418,10 +398,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform control style text change
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationStyleText = (match) => {
+	#locationStyleText = (match: Record<string, string>): void => {
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location style text at ${formatLocation(location)} (${controlId}) `)
@@ -441,10 +419,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform control style color change
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationStyleColor = (match) => {
+	#locationStyleColor = (match: Record<string, string>): void => {
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location style color at ${formatLocation(location)} (${controlId}) `)
@@ -464,10 +440,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform control style bgcolor change
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#locationStyleBgcolor = (match) => {
+	#locationStyleBgcolor = (match: Record<string, string>): void => {
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location style bgcolor at ${formatLocation(location)} (${controlId}) `)
@@ -490,7 +464,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * @param {Record<string, string>} _match
 	 * @returns {Promise<void>}
 	 */
-	#surfacesRescan = async (_match) => {
+	#surfacesRescan = async (_match: Record<string, string>): Promise<void> => {
 		this.logger.debug('Rescanning USB')
 
 		try {
@@ -502,10 +476,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform custom variable set value
-	 * @param {Record<string, string>} match
-	 * @returns {void}
 	 */
-	#customVariableSetValue = (match) => {
+	#customVariableSetValue = (match: Record<string, string>): void => {
 		const result = this.variablesController.custom.setValue(match.name, match.value)
 		if (result) {
 			throw new ApiMessageError(result)
@@ -514,10 +486,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Parse the location and controlId from a request
-	 * @param {Record<string, string>} match
-	 * @returns {{ location: import('../Resources/Util.js').ControlLocation, controlId: string | null }}
 	 */
-	#locationParse = (match) => {
+	#locationParse = (match: Record<string, string>): { location: ControlLocation; controlId: string | null } => {
 		const location = {
 			pageNumber: Number(match.page),
 			row: Number(match.row),
@@ -534,10 +504,8 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Fire an API command from a raw TCP/UDP command
-	 * @param {string} data - the raw command
-	 * @returns {Promise<string>}
 	 */
-	async parseApiCommand(data) {
+	async parseApiCommand(data: string): Promise<string | undefined | void> {
 		data = data.trim()
 		this.logger.silly(`API parsing command: ${data}`)
 
@@ -546,10 +514,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 }
 
 export class ApiMessageError extends Error {
-	/**
-	 * @param {string} message
-	 */
-	constructor(message) {
+	constructor(message: string) {
 		super(message)
 	}
 }

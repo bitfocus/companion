@@ -1,5 +1,5 @@
 import LogController from '../Log/Controller.js'
-import ServiceBase from './Base.js'
+import { ServiceBase } from './Base.js'
 import { WebSocketServer, WebSocket } from 'ws'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { EventEmitter } from 'events'

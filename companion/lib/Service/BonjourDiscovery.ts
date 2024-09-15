@@ -1,15 +1,16 @@
 import { isEqual } from 'lodash-es'
-import ServiceBase from './Base.js'
+import { ServiceBase } from './Base.js'
 import { Bonjour, Browser } from '@julusian/bonjour-service'
 import { nanoid } from 'nanoid'
 import { isIPv4 } from 'net'
+import type { Registry } from '../Registry.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
 
 /**
  * Generate socket.io room name
- * @param {string} id
- * @returns {string}
  */
-function BonjourRoom(id) {
+function BonjourRoom(id: string): string {
 	return `bonjour:${id}`
 }
 
@@ -34,23 +35,15 @@ function BonjourRoom(id) {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceBonjourDiscovery extends ServiceBase {
-	/**
-	 * @type {Bonjour | undefined}
-	 * @access protected
-	 */
-	server = undefined
-
+export class ServiceBonjourDiscovery extends ServiceBase {
 	/**
 	 * Active browsers running
-	 * @type {Map<string, BonjourBrowserSession>}
 	 */
-	#browsers = new Map()
+	#browsers = new Map<string, BonjourBrowserSession>()
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	#server: Bonjour | undefined
+
+	constructor(registry: Registry) {
 		super(registry, 'Service/BonjourDiscovery', null, null)
 
 		this.init()
@@ -58,15 +51,14 @@ class ServiceBonjourDiscovery extends ServiceBase {
 
 	/**
 	 * Start the service if it is not already running
-	 * @access protected
 	 */
-	listen() {
-		if (this.server === undefined) {
+	protected listen() {
+		if (this.#server === undefined) {
 			try {
-				this.server = new Bonjour()
+				this.#server = new Bonjour()
 
 				this.logger.info('Listening for Bonjour messages')
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.error(`Could not launch: ${e.message}`)
 			}
 		}
@@ -76,18 +68,17 @@ class ServiceBonjourDiscovery extends ServiceBase {
 	 * Close the socket before deleting it
 	 * @access protected
 	 */
-	close() {
-		if (this.server) {
-			this.server.destroy()
+	protected close() {
+		if (this.#server) {
+			this.#server.destroy()
+			this.#server = undefined
 		}
 	}
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.on('disconnect', () => {
 			// Ensure any sessions the client was part of are cleaned up
 			for (const subId of this.#browsers.keys()) {
@@ -101,14 +92,9 @@ class ServiceBonjourDiscovery extends ServiceBase {
 		client.on('bonjour:unsubscribe', (subIds) => this.#leaveSession(client, subIds))
 	}
 
-	/**
-	 * @param {string} id
-	 * @param {any} svc
-	 * @returns {import('@companion-app/shared/Model/Common.js').ClientBonjourService | null}
-	 */
-	#convertService(id, svc) {
+	#convertService(id: string, svc: any): ClientBonjourService | null {
 		// Future: whether to include ipv4, ipv6 should be configurable, but this is fine for now
-		const addresses = svc.addresses.filter((/** @type {string} */ addr) => isIPv4(addr))
+		const addresses = svc.addresses.filter((addr: string) => isIPv4(addr))
 		if (addresses.length === 0) return null
 
 		return {
@@ -126,13 +112,9 @@ class ServiceBonjourDiscovery extends ServiceBase {
 
 	/**
 	 * Client is starting or joining a session
-	 * @param {import('../UI/Handler.js').ClientSocket} client
-	 * @param {string} connectionId
-	 * @param {string} queryId
-	 * @returns {string[]} subIds
 	 */
-	#joinOrCreateSession(client, connectionId, queryId) {
-		if (!this.server) throw new Error('Bonjour not running')
+	#joinOrCreateSession(client: ClientSocket, connectionId: string, queryId: string): string[] {
+		if (!this.#server) throw new Error('Bonjour not running')
 
 		const manifest = this.instance.getManifestForInstance(connectionId)
 		/** @type {import('@companion-module/base/generated/manifest.js').ModuleBonjourQuery | import('@companion-module/base/generated/manifest.js').ModuleBonjourQuery[] | undefined} */
@@ -156,8 +138,7 @@ class ServiceBonjourDiscovery extends ServiceBase {
 			filters.push(filter)
 		}
 
-		/** @type {string[]} */
-		const ids = []
+		const ids: string[] = []
 
 		for (const filter of filters) {
 			let foundExisting = false
@@ -187,7 +168,7 @@ class ServiceBonjourDiscovery extends ServiceBase {
 			if (!foundExisting) {
 				// Create new browser
 				this.logger.info(`Starting discovery of: ${JSON.stringify(filter)}`)
-				const browser = this.server.find(filter)
+				const browser = this.#server.find(filter)
 				const id = nanoid()
 				const room = BonjourRoom(id)
 				this.#browsers.set(id, {
@@ -217,10 +198,8 @@ class ServiceBonjourDiscovery extends ServiceBase {
 
 	/**
 	 * Client is leaving a session
-	 * @param {import('../UI/Handler.js').ClientSocket} client
-	 * @param {string[]} subIds
 	 */
-	#leaveSession(client, subIds) {
+	#leaveSession(client: ClientSocket, subIds: string[]): void {
 		for (const subId of subIds) {
 			this.logger.info(`Client ${client.id} left ${subId}`)
 			client.leave(BonjourRoom(subId))
@@ -235,7 +214,7 @@ class ServiceBonjourDiscovery extends ServiceBase {
 	 * @param {string} subId
 	 * @returns {void}
 	 */
-	#removeClientFromSession(clientId, subId) {
+	#removeClientFromSession(clientId: string, subId: string): void {
 		const session = this.#browsers.get(subId)
 		if (!session || !session.clientIds.delete(clientId)) return
 
@@ -252,18 +231,14 @@ class ServiceBonjourDiscovery extends ServiceBase {
 	}
 }
 
-export default ServiceBonjourDiscovery
+interface BonjourBrowserSession {
+	browser: Browser
+	filter: BonjourBrowserFilter
+	clientIds: Set<string>
+}
 
-/**
- * @typedef {{
- *   browser: Browser
- *   filter: BonjourBrowserFilter
- *   clientIds: Set<string>
- * }} BonjourBrowserSession
- *
- * @typedef {{
- *   type: string
- *   protocol: 'tcp' | 'udp'
- *   txt: Record<string, string> | undefined
- * }} BonjourBrowserFilter
- */
+interface BonjourBrowserFilter {
+	type: string
+	protocol: 'tcp' | 'udp'
+	txt: Record<string, string> | undefined
+}

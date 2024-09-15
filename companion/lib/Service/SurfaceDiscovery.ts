@@ -1,9 +1,12 @@
 import { isEqual } from 'lodash-es'
-import ServiceBase from './Base.js'
-import { Bonjour, Browser } from '@julusian/bonjour-service'
+import { ServiceBase } from './Base.js'
+import { Bonjour, Browser, Service } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
 import got from 'got'
-import { StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
+import { StreamDeckTcpDefinition, StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
+import type { Registry } from '../Registry.js'
+import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { ClientSocket } from '../UI/Handler.js'
 
 const SurfaceDiscoveryRoom = 'surfaces:discovery'
 
@@ -31,24 +34,15 @@ const SurfaceDiscoveryRoom = 'surfaces:discovery'
 export class ServiceSurfaceDiscovery extends ServiceBase {
 	#bonjour = new Bonjour()
 
-	/**
-	 * @type {Browser | undefined}
-	 */
-	#satelliteBrowser
-	/**
-	 * @type {StreamDeckTcpDiscoveryService | undefined}
-	 */
-	#streamDeckDiscovery
+	#satelliteBrowser: Browser | undefined
+	#streamDeckDiscovery: StreamDeckTcpDiscoveryService | undefined
 
-	/**
-	 * @type {NodeJS.Timeout | undefined}
-	 */
-	#satelliteExpireInterval
+	#satelliteExpireInterval: NodeJS.Timeout | undefined
 
 	/**
 	 * @param {import('../Registry.js').Registry} registry - the application core
 	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/SurfaceDiscovery', 'discoveryEnabled', null)
 
 		this.init()
@@ -120,12 +114,13 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		}
 	}
 
-	/**
-	 *
-	 * @param {import('@julusian/bonjour-service').Service | undefined} oldService
-	 * @param {import('@julusian/bonjour-service').Service} service
-	 */
-	#updateSatelliteService(oldService, service) {
+	close() {
+		this.#streamDeckDiscovery?.destroy()
+		this.#streamDeckDiscovery = undefined
+		this.#bonjour.destroy()
+	}
+
+	#updateSatelliteService(oldService: Service | undefined, service: Service) {
 		this.logger.debug(`Found companion satellite device ${service.name} at ${service.addresses?.[0]}:${service.port}`)
 
 		if (oldService) {
@@ -144,23 +139,14 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		})
 	}
 
-	/**
-	 *
-	 * @param {import('@julusian/bonjour-service').Service} service
-	 */
-	#forgetSatelliteService(service) {
+	#forgetSatelliteService(service: Service) {
 		this.io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
 			type: 'remove',
 			itemId: this.#convertSatelliteServiceForUi(service).id,
 		})
 	}
 
-	/**
-	 *
-	 * @param {import('@julusian/bonjour-service').Service} service
-	 * @returns {import('@companion-app/shared/Model/Surfaces.js').ClientDiscoveredSurfaceInfo}
-	 */
-	#convertSatelliteServiceForUi(service) {
+	#convertSatelliteServiceForUi(service: Service): ClientDiscoveredSurfaceInfo {
 		return {
 			id: service.fqdn,
 
@@ -174,12 +160,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		}
 	}
 
-	/**
-	 *
-	 * @param {import('@elgato-stream-deck/tcp').StreamDeckTcpDefinition} streamdeck
-	 * @returns {import('@companion-app/shared/Model/Surfaces.js').ClientDiscoveredSurfaceInfo | null}
-	 */
-	#convertStreamDeckForUi(streamdeck) {
+	#convertStreamDeckForUi(streamdeck: StreamDeckTcpDefinition): ClientDiscoveredSurfaceInfo | null {
 		if (!streamdeck.isPrimary) return null
 
 		return {
@@ -201,7 +182,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	 * @access protected
 	 * @override
 	 */
-	disableModule() {
+	protected disableModule() {
 		if (this.currentState) {
 			this.currentState = false
 			try {
@@ -217,7 +198,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				this.#satelliteExpireInterval = undefined
 
 				this.logger.info(`Stopped searching for satellite devices`)
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.silly(`Could not stop searching for satellite devices: ${e.message}`)
 			}
 
@@ -228,7 +209,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				}
 
 				this.logger.info(`Stopped searching for streamdeck tcp devices`)
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.silly(`Could not stop searching for streamdeck tcp devices: ${e.message}`)
 			}
 		}
@@ -236,15 +217,12 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('surfaces:discovery:join', () => {
 			client.join(SurfaceDiscoveryRoom)
 
-			/** @type {Record<string, import('@companion-app/shared/Model/Surfaces.js').ClientDiscoveredSurfaceInfo>} */
-			const services = {}
+			const services: Record<string, ClientDiscoveredSurfaceInfo> = {}
 
 			if (this.#satelliteBrowser) {
 				for (const service of this.#satelliteBrowser.services) {
@@ -335,9 +313,3 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		})
 	}
 }
-
-/**
- * @typedef {{
- *   id: string
- * }} SatelliteServiceInfo
- */

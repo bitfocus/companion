@@ -1,5 +1,7 @@
-import ServiceOscBase from './OscBase.js'
+import { ServiceOscBase } from './OscBase.js'
 import { ServiceOscApi } from './OscApi.js'
+import type { Registry } from '../Registry.js'
+import { OscReceivedMessage } from 'osc'
 
 /**
  * Class providing OSC receive services.
@@ -22,26 +24,16 @@ import { ServiceOscApi } from './OscApi.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceOscListener extends ServiceOscBase {
-	/**
-	 * The port to open the socket with.  Default: <code>12321</code>
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 12321
-
+export class ServiceOscListener extends ServiceOscBase {
 	/**
 	 * Api router
-	 * @type {ServiceOscApi}
-	 * @access private
 	 */
-	#api
+	readonly #api: ServiceOscApi
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/OscListener', 'osc_enabled', 'osc_listen_port')
+
+		this.port = 12321
 
 		this.init()
 
@@ -50,10 +42,8 @@ class ServiceOscListener extends ServiceOscBase {
 
 	/**
 	 * Process an incoming message from a client
-	 * @param {import('osc').OscReceivedMessage} message - the incoming message part
-	 * @access protected
 	 */
-	processIncoming(message) {
+	protected override processIncoming(message: OscReceivedMessage) {
 		try {
 			this.#api.router.processMessage(message.address, message)
 		} catch (error) {
@@ -61,5 +51,3 @@ class ServiceOscListener extends ServiceOscBase {
 		}
 	}
 }
-
-export default ServiceOscListener

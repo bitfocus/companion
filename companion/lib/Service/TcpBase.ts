@@ -1,4 +1,4 @@
-import ServiceBase from './Base.js'
+import { ServiceBase } from './Base.js'
 import net, { Socket } from 'net'
 
 /**
@@ -23,37 +23,18 @@ import net, { Socket } from 'net'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceTcpBase extends ServiceBase {
-	/**
-	 * @type {net.Server | undefined}
-	 * @access protected
-	 */
-	server = undefined
+export abstract class ServiceTcpBase extends ServiceBase {
+	protected server: net.Server | undefined = undefined
 
 	/**
 	 * This stored client sockets
-	 * @type {Array<Socket>}
-	 * @access protected
 	 */
-	clients = []
-
-	/**
-	 * This needs to be called in the extending class
-	 * using <code>super(registry, 'module_name', 'module_path', enableConfig, portConfig)</code>.
-	 * @param {import('../Registry.js').Registry} registry - the core registry
-	 * @param {string} debugNamespace - module path to be used in the debugger
-	 * @param {?string} enableConfig - the key for the userconfig that sets if the module is enabled or disabled
-	 * @param {?string} portConfig - the key for the userconfig that sets the service ports
-	 */
-	constructor(registry, debugNamespace, enableConfig, portConfig) {
-		super(registry, debugNamespace, enableConfig, portConfig)
-	}
+	protected clients: Array<Socket> = []
 
 	/**
 	 * Start the service if it is not already running
-	 * @access protected
 	 */
-	listen() {
+	protected listen() {
 		if (this.portConfig) {
 			this.port = this.userconfig.getKey(this.portConfig)
 		}
@@ -83,10 +64,6 @@ class ServiceTcpBase extends ServiceBase {
 					this.logger.debug('Client connected: ' + clientInfo.name)
 
 					client.on('data', this.processIncoming.bind(this, clientInfo))
-
-					if (this.initSocket !== undefined && typeof this.initSocket == 'function') {
-						this.initSocket(clientInfo)
-					}
 				})
 
 				this.server.on('error', this.handleSocketError.bind(this))
@@ -94,9 +71,16 @@ class ServiceTcpBase extends ServiceBase {
 				this.server.listen(this.port)
 				this.currentState = true
 				this.logger.info('Listening on port ' + this.port)
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.error(`Could not launch: ${e.message}`)
 			}
+		}
+	}
+
+	protected close() {
+		if (this.server) {
+			this.server.close()
+			this.server = undefined
 		}
 	}
 
@@ -107,20 +91,11 @@ class ServiceTcpBase extends ServiceBase {
 	 * @access protected
 	 * @abstract
 	 */
-	processIncoming(_client, _chunk) {}
-
-	/**
-	 * @type {((socket: TcpClientInfo) => void) | undefined}
-	 */
-	initSocket
+	protected abstract processIncoming(client: TcpClientInfo, chunk: string): void
 }
 
-export default ServiceTcpBase
-
-/**
- * @typedef {{
- *   name: string
- *   receiveBuffer: string
- *   socket: Socket
- * }} TcpClientInfo
- */
+export interface TcpClientInfo {
+	name: string
+	receiveBuffer: string
+	socket: Socket
+}
