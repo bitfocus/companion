@@ -6,45 +6,29 @@ import { TrySplitVariableId } from '../../Resources/Util.js'
 export class VisitorReferencesCollector {
 	/**
 	 * Referenced instance labels
-	 * @type {Set<string>}
-	 * @access public
-	 * @readonly
 	 */
-	connecionLabels
+	readonly connecionLabels: Set<string>
 
 	/**
 	 * Referenced instance ids
-	 * @type {Set<string>}
-	 * @access public
-	 * @readonly
 	 */
-	connectionIds
+	readonly connectionIds: Set<string>
 
-	/**
-	 * @param {Set<string> | undefined} foundConnectionIds
-	 * @param {Set<string> | undefined} foundConnectionLabels
-	 */
-	constructor(foundConnectionIds, foundConnectionLabels) {
+	constructor(foundConnectionIds: Set<string> | undefined, foundConnectionLabels: Set<string> | undefined) {
 		this.connecionLabels = foundConnectionLabels || new Set()
 		this.connectionIds = foundConnectionIds || new Set()
 	}
 
 	/**
 	 * Visit an instance id property
-	 * @param {Record<string, any>} obj
-	 * @param {string} propName
-	 * @param {string=} _feedbackId
 	 */
-	visitInstanceId(obj, propName, _feedbackId) {
+	visitInstanceId(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
 		this.connectionIds.add(obj[propName])
 	}
 	/**
 	 * Visit an instance id array property
-	 * @param {Record<string, any>} obj
-	 * @param {string} propName
-	 * @param {string=} _feedbackId
 	 */
-	visitInstanceIdArray(obj, propName, _feedbackId) {
+	visitInstanceIdArray(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
 		for (const id of obj[propName]) {
 			this.connectionIds.add(id)
 		}
@@ -52,10 +36,8 @@ export class VisitorReferencesCollector {
 
 	/**
 	 * Visit a property containing variables
-	 * @param {Record<string, any>} obj
-	 * @param {string} propName
 	 */
-	visitString(obj, propName) {
+	visitString(obj: Record<string, any>, propName: string): void {
 		const rawStr = obj[propName]
 		if (typeof rawStr !== 'string') return
 
@@ -70,10 +52,8 @@ export class VisitorReferencesCollector {
 
 	/**
 	 * Visit a variable name property
-	 * @param {Record<string, any>} obj
-	 * @param {string} propName
 	 */
-	visitVariableName(obj, propName) {
+	visitVariableName(obj: Record<string, any>, propName: string): void {
 		const label = TrySplitVariableId(obj[propName])
 		if (label) this.connecionLabels.add(label[0])
 	}

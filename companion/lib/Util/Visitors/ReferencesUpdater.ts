@@ -6,60 +6,44 @@ import { TrySplitVariableId } from '../../Resources/Util.js'
 export class VisitorReferencesUpdater {
 	/**
 	 * Instance label remapping
-	 * @type {Record<string, string> | undefined}
-	 * @access public
-	 * @readonly
 	 */
-	connectionLabelsRemap
+	readonly connectionLabelsRemap: Record<string, string> | undefined
 
 	/**
 	 * Instance id remapping
-	 * @type {Record<string, string> | undefined}
-	 * @access public
-	 * @readonly
 	 */
-	connectionIdRemap
+	readonly connectionIdRemap: Record<string, string> | undefined
 
 	/**
 	 * Feedback ids that have been changed
-	 * @type {Set<string>}
-	 * @access public
-	 * @readonly
 	 */
-	changedFeedbackIds = new Set()
+	readonly changedFeedbackIds = new Set<string>()
 
 	/**
 	 * Whether any changes have been made
-	 * @type {boolean}
-	 * @access public
 	 */
-	changed = false
+	changed: boolean = false
 
-	/**
-	 * @param {Record<string, string> | undefined} connectionLabelsRemap
-	 * @param {Record<string, string> | undefined} connectionIdRemap
-	 */
-	constructor(connectionLabelsRemap, connectionIdRemap) {
+	constructor(
+		connectionLabelsRemap: Record<string, string> | undefined,
+		connectionIdRemap: Record<string, string> | undefined
+	) {
 		this.connectionLabelsRemap = connectionLabelsRemap
 		this.connectionIdRemap = connectionIdRemap
 	}
 
 	/**
 	 * Track a feedback as having changed
-	 * @param {string | undefined} feedbackId
 	 */
-	#trackChange(feedbackId) {
+	#trackChange(feedbackId: string | undefined): void {
 		this.changed = true
 		if (feedbackId) this.changedFeedbackIds.add(feedbackId)
 	}
 
 	/**
 	 * Visit an instance id property
-	 * @param {Record<string, any>} obj
-	 * @param {string | number} propName
-	 * @param {string=} feedbackId
 	 */
-	visitInstanceId(obj, propName, feedbackId) {
+	visitInstanceId(obj: Record<string, any>, propName: string | number, feedbackId?: string) {
 		if (!this.connectionIdRemap) return
 
 		const oldId = obj[propName]
@@ -72,11 +56,8 @@ export class VisitorReferencesUpdater {
 	}
 	/**
 	 * Visit an instance id array property
-	 * @param {Record<string, any>} obj
-	 * @param {string} propName
-	 * @param {string=} feedbackId
 	 */
-	visitInstanceIdArray(obj, propName, feedbackId) {
+	visitInstanceIdArray(obj: Record<string, any>, propName: string, feedbackId?: string) {
 		if (!this.connectionIdRemap) return
 
 		const array = obj[propName]
@@ -87,11 +68,8 @@ export class VisitorReferencesUpdater {
 
 	/**
 	 * Visit a property containing variables
-	 * @param {Record<string, any>} obj
-	 * @param {string} propName
-	 * @param {string=} feedbackId
 	 */
-	visitString(obj, propName, feedbackId) {
+	visitString(obj: Record<string, any>, propName: string, feedbackId?: string) {
 		if (!this.connectionLabelsRemap) return
 
 		const labelsRemap = this.connectionLabelsRemap
@@ -128,11 +106,8 @@ export class VisitorReferencesUpdater {
 
 	/**
 	 * Visit a variable name property
-	 * @param {Record<string, any>} obj
-	 * @param {string} propName
-	 * @param {string=} feedbackId
 	 */
-	visitVariableName(obj, propName, feedbackId) {
+	visitVariableName(obj: Record<string, any>, propName: string, feedbackId?: string) {
 		if (!this.connectionLabelsRemap) return
 
 		const id = TrySplitVariableId(obj[propName])

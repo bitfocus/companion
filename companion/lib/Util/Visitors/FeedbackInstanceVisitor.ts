@@ -1,9 +1,10 @@
+import type { FeedbackInstance } from '../../Controls/IControlFragments.js'
+import type { InternalVisitor } from '../../Internal/Types.js'
+
 /**
  * Visits a feedback instance.
- * @param {import("../../Internal/Types.js").InternalVisitor} visitor
- * @param {import("../../Controls/IControlFragments.js").FeedbackInstance} feedback
  */
-export function visitFeedbackInstance(visitor, feedback) {
+export function visitFeedbackInstance(visitor: InternalVisitor, feedback: FeedbackInstance) {
 	// Fixup any boolean feedbacks
 	if (feedback.style?.text) {
 		visitor.visitString(feedback.style, 'text')
