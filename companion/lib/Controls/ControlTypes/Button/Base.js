@@ -1,8 +1,8 @@
 import ControlBase from '../../ControlBase.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { cloneDeep } from 'lodash-es'
-import FragmentFeedbacks from '../../Fragments/FragmentFeedbacks.js'
-import FragmentActions from '../../Fragments/FragmentActions.js'
+import { FragmentFeedbacks } from '../../Fragments/FragmentFeedbacks.js'
+import { FragmentActions } from '../../Fragments/FragmentActions.js'
 import {
 	ControlWithFeedbacks,
 	ControlWithOptions,

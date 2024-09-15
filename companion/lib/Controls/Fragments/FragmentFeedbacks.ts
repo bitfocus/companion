@@ -1,11 +1,12 @@
 import { cloneDeep } from 'lodash-es'
-import LogController from '../../Log/Controller.js'
+import LogController, { Logger } from '../../Log/Controller.js'
 import { FragmentFeedbackInstance } from './FragmentFeedbackInstance.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
-
-/**
- * @typedef {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
- */
+import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
+import type InstanceDefinitions from '../../Instance/Definitions.js'
+import type InternalController from '../../Internal/Controller.js'
+import type ModuleHost from '../../Instance/Host.js'
+import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 
 /**
  * Helper for ControlTypes with feedbacks
@@ -28,14 +29,11 @@ import { FragmentFeedbackList } from './FragmentFeedbackList.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class FragmentFeedbacks {
+export class FragmentFeedbacks {
 	/**
 	 * The defaults style for a button
-	 * @type {import('@companion-app/shared/Model/StyleModel.js').ButtonStyleProperties}
-	 * @access public
-	 * @static
 	 */
-	static DefaultStyle = {
+	static DefaultStyle: ButtonStyleProperties = {
 		text: '',
 		textExpression: false,
 		size: 'auto',
@@ -49,68 +47,55 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * The base style without feedbacks applied
-	 * @type {import('@companion-app/shared/Model/StyleModel.js').ButtonStyleProperties}
-	 * @access public
 	 */
-	baseStyle = cloneDeep(FragmentFeedbacks.DefaultStyle)
+	baseStyle: ButtonStyleProperties = cloneDeep(FragmentFeedbacks.DefaultStyle)
 
 	/**
 	 * Whether this set of feedbacks can only use boolean feedbacks
-	 * @type {boolean}
-	 * @access private
 	 */
-	#booleanOnly
+	readonly #booleanOnly: boolean
+
+	readonly #controlId: string
 
 	/**
 	 * The feedbacks on this control
-	 * @type {FragmentFeedbackList}
-	 * @access public
 	 */
-	#feedbacks
+	readonly #feedbacks: FragmentFeedbackList
 
 	/**
 	 * Whether this set of feedbacks can only use boolean feedbacks
-	 * @type {boolean}
-	 * @access public
 	 */
-	get isBooleanOnly() {
+	get isBooleanOnly(): boolean {
 		return this.#booleanOnly
 	}
 
 	/**
 	 * Commit changes to the database and disk
-	 * @type {(redraw?: boolean) => void}
-	 * @access private
 	 */
-	#commitChange
+	readonly #commitChange: (redraw?: boolean) => void
 
 	/**
 	 * Trigger a redraw/invalidation of the control
-	 * @type {() => void}
-	 * @access private
 	 */
-	#triggerRedraw
+	readonly #triggerRedraw: () => void
 
 	/**
 	 * The logger
-	 * @type {import('winston').Logger}
-	 * @access private
 	 */
-	#logger
+	readonly #logger: Logger
 
-	/**
-	 * @param {import('../../Instance/Definitions.js').default} instanceDefinitions
-	 * @param {import('../../Internal/Controller.js').default} internalModule
-	 * @param {import('../../Instance/Host.js').default} moduleHost
-	 * @param {string} controlId - id of the control
-	 * @param {(redraw?: boolean) => void} commitChange
-	 * @param {() => void} triggerRedraw
-	 * @param {boolean} booleanOnly
-	 */
-	constructor(instanceDefinitions, internalModule, moduleHost, controlId, commitChange, triggerRedraw, booleanOnly) {
+	constructor(
+		instanceDefinitions: InstanceDefinitions,
+		internalModule: InternalController,
+		moduleHost: ModuleHost,
+		controlId: string,
+		commitChange: (redraw?: boolean) => void,
+		triggerRedraw: () => void,
+		booleanOnly: boolean
+	) {
 		this.#logger = LogController.createLogger(`Controls/Fragments/Feedbacks/${controlId}`)
 
-		this.controlId = controlId
+		this.#controlId = controlId
 		this.#commitChange = commitChange
 		this.#triggerRedraw = triggerRedraw
 		this.#booleanOnly = booleanOnly
@@ -119,7 +104,7 @@ export default class FragmentFeedbacks {
 			instanceDefinitions,
 			internalModule,
 			moduleHost,
-			this.controlId,
+			this.#controlId,
 			null,
 			this.#booleanOnly
 		)
@@ -127,27 +112,25 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Initialise from storage
-	 * @param {FeedbackInstance[]} feedbacks
-	 * @param {boolean=} skipSubscribe Whether to skip calling subscribe for the new feedbacks
-	 * @param {boolean=} isCloned Whether this is a cloned instance
+	 * @param feedbacks
+	 * @param skipSubscribe Whether to skip calling subscribe for the new feedbacks
+	 * @param isCloned Whether this is a cloned instance
 	 */
-	loadStorage(feedbacks, skipSubscribe, isCloned) {
+	loadStorage(feedbacks: FeedbackInstance[], skipSubscribe?: boolean, isCloned?: boolean) {
 		this.#feedbacks.loadStorage(feedbacks, !!skipSubscribe, !!isCloned)
 	}
 
 	/**
 	 * Get the value from all feedbacks as a single boolean
 	 */
-	checkValueAsBoolean() {
+	checkValueAsBoolean(): boolean {
 		return this.#feedbacks.getBooleanValue()
 	}
 
 	/**
 	 * Remove any tracked state for a connection
-	 * @param {string} connectionId
-	 * @access public
 	 */
-	clearConnectionState(connectionId) {
+	clearConnectionState(connectionId: string): void {
 		const changed = this.#feedbacks.clearCachedValueForConnectionId(connectionId)
 		if (changed) this.#triggerRedraw()
 	}
@@ -156,20 +139,17 @@ export default class FragmentFeedbacks {
 	 * Prepare this control for deletion
 	 * @access public
 	 */
-	destroy() {
+	destroy(): void {
 		this.loadStorage([])
 	}
 
 	/**
 	 * Add a feedback to this control
-	 * @param {FeedbackInstance} feedbackItem the item to add
-	 * @param {string | null} parentId the ids of parent feedback that this feedback should be added as a child of
-	 * @returns {boolean} success
-	 * @access public
+	 * @param feedbackItem the item to add
+	 * @param parentId the ids of parent feedback that this feedback should be added as a child of
 	 */
-	feedbackAdd(feedbackItem, parentId) {
-		/** @type {FragmentFeedbackInstance} */
-		let newFeedback
+	feedbackAdd(feedbackItem: FeedbackInstance, parentId: string | null): boolean {
+		let newFeedback: FragmentFeedbackInstance
 
 		if (parentId) {
 			const parent = this.#feedbacks.findById(parentId)
@@ -190,11 +170,8 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Duplicate an feedback on this control
-	 * @param {string} id
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	feedbackDuplicate(id) {
+	feedbackDuplicate(id: string): boolean {
 		const feedback = this.#feedbacks.duplicateFeedback(id)
 		if (feedback) {
 			this.#commitChange(false)
@@ -207,12 +184,8 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Enable or disable a feedback
-	 * @param {string} id
-	 * @param {boolean} enabled
-	 * @returns {boolean}
-	 * @access public
 	 */
-	feedbackEnabled(id, enabled) {
+	feedbackEnabled(id: string, enabled: boolean): boolean {
 		const feedback = this.#feedbacks.findById(id)
 		if (feedback) {
 			feedback.setEnabled(enabled)
@@ -227,11 +200,8 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Set headline for the feedback
-	 * @param {string} id
-	 * @param {string} headline
-	 * @returns {boolean} success
 	 */
-	feedbackHeadline(id, headline) {
+	feedbackHeadline(id: string, headline: string): boolean {
 		const feedback = this.#feedbacks.findById(id)
 		if (feedback) {
 			feedback.setHeadline(headline)
@@ -246,11 +216,8 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Learn the options for a feedback, by asking the instance for the current values
-	 * @param {string} id the id of the feedback
-	 * @returns {Promise<boolean>} success
-	 * @access public
 	 */
-	async feedbackLearn(id) {
+	async feedbackLearn(id: string): Promise<boolean> {
 		const feedback = this.#feedbacks.findById(id)
 		if (!feedback) return false
 
@@ -268,11 +235,8 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Remove a feedback from this control
-	 * @param {string} id the id of the feedback
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	feedbackRemove(id) {
+	feedbackRemove(id: string): boolean {
 		if (this.#feedbacks.removeFeedback(id)) {
 			this.#commitChange()
 
@@ -284,13 +248,11 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Move a feedback within the heirarchy
-	 * @param {string } moveFeedbackId the id of the feedback to move
-	 * @param {string | null} newParentId the target parentId of the feedback
-	 * @param {number} newIndex the target index of the feedback
-	 * @returns {boolean}
-	 * @access public
+	 * @param moveFeedbackId the id of the feedback to move
+	 * @param newParentId the target parentId of the feedback
+	 * @param newIndex the target index of the feedback
 	 */
-	feedbackMoveTo(moveFeedbackId, newParentId, newIndex) {
+	feedbackMoveTo(moveFeedbackId: string, newParentId: string | null, newIndex: number): boolean {
 		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
 		if (!oldItem) return false
 
@@ -320,10 +282,11 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Replace a feedback with an updated version
-	 * @param {Pick<FeedbackInstance, 'id' | 'type' | 'style' | 'options' | 'isInverted'>} newProps
-	 * @access public
 	 */
-	feedbackReplace(newProps, skipNotifyModule = false) {
+	feedbackReplace(
+		newProps: Pick<FeedbackInstance, 'id' | 'type' | 'style' | 'options' | 'isInverted'>,
+		skipNotifyModule = false
+	): boolean {
 		const feedback = this.#feedbacks.findById(newProps.id)
 		if (feedback) {
 			feedback.replaceProps(newProps, skipNotifyModule)
@@ -338,13 +301,11 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Update an option for a feedback
-	 * @param {string} id the id of the feedback
-	 * @param {string} key the key/name of the property
-	 * @param {any} value the new value
-	 * @returns {boolean} success
-	 * @access public
+	 * @param id the id of the feedback
+	 * @param key the key/name of the property
+	 * @param value the new value
 	 */
-	feedbackSetOptions(id, key, value) {
+	feedbackSetOptions(id: string, key: string, value: any): boolean {
 		const feedback = this.#feedbacks.findById(id)
 		if (feedback) {
 			feedback.setOption(key, value)
@@ -359,12 +320,10 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Set whether a boolean feedback should be inverted
-	 * @param {string} id the id of the feedback
-	 * @param {boolean} isInverted the new value
-	 * @returns {boolean} success
-	 * @access public
+	 * @param id the id of the feedback
+	 * @param isInverted the new value
 	 */
-	feedbackSetInverted(id, isInverted) {
+	feedbackSetInverted(id: string, isInverted: boolean): boolean {
 		const feedback = this.#feedbacks.findById(id)
 		if (feedback) {
 			feedback.setInverted(!!isInverted)
@@ -379,12 +338,10 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Update the selected style properties for a boolean feedback
-	 * @param {string} id the id of the feedback
-	 * @param {string[]} selected the properties to be selected
-	 * @returns {boolean} success
-	 * @access public
+	 * @param id the id of the feedback
+	 * @param selected the properties to be selected
 	 */
-	feedbackSetStyleSelection(id, selected) {
+	feedbackSetStyleSelection(id: string, selected: string[]): boolean {
 		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
 		const feedback = this.#feedbacks.findById(id)
@@ -399,13 +356,11 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Update an style property for a boolean feedback
-	 * @param {string} id the id of the feedback
-	 * @param {string} key the key/name of the property
-	 * @param {any} value the new value
-	 * @returns {boolean} success
-	 * @access public
+	 * @param id the id of the feedback
+	 * @param key the key/name of the property
+	 * @param value the new value
 	 */
-	feedbackSetStyleValue(id, key, value) {
+	feedbackSetStyleValue(id: string, key: string, value: any): boolean {
 		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
 		const feedback = this.#feedbacks.findById(id)
@@ -420,41 +375,34 @@ export default class FragmentFeedbacks {
 
 	/**
 	 * Remove any actions referencing a specified connectionId
-	 * @param {string} connectionId
-	 * @returns {boolean}
-	 * @access public
 	 */
-	forgetConnection(connectionId) {
+	forgetConnection(connectionId: string): boolean {
 		// Cleanup any feedbacks
 		return this.#feedbacks.forgetForConnection(connectionId)
 	}
 
 	/**
 	 * Get all the feedback instances
-	 * @returns {FeedbackInstance[]}
 	 */
-	getAllFeedbackInstances() {
+	getAllFeedbackInstances(): FeedbackInstance[] {
 		return this.#feedbacks.asFeedbackInstances()
 	}
 
 	/**
 	 * Get all the feedbacks contained
-	 * @returns {FragmentFeedbackInstance[]}
 	 */
-	getAllFeedbacks() {
+	getAllFeedbacks(): FragmentFeedbackInstance[] {
 		return this.#feedbacks.getAllFeedbacks()
 	}
 
 	/**
 	 * Get all the feedback instances
-	 * @param {string=} onlyConnectionId Optionally, only for a specific connection
-	 * @returns {Omit<FeedbackInstance, 'children'>[]}
+	 * @param onlyConnectionId Optionally, only for a specific connection
 	 */
-	getFlattenedFeedbackInstances(onlyConnectionId) {
-		/** @type {FeedbackInstance[]} */
-		const instances = []
+	getFlattenedFeedbackInstances(onlyConnectionId?: string): Omit<FeedbackInstance, 'children'>[] {
+		const instances: FeedbackInstance[] = []
 
-		const extractInstances = (/** @type {FeedbackInstance[]} */ feedbacks) => {
+		const extractInstances = (feedbacks: FeedbackInstance[]) => {
 			for (const feedback of feedbacks) {
 				if (!onlyConnectionId || onlyConnectionId === feedback.instance_id) {
 					instances.push({
@@ -477,41 +425,35 @@ export default class FragmentFeedbacks {
 	/**
 	 * Get the unparsed style for these feedbacks
 	 * Note: Does not clone the style
-	 * @returns {import('@companion-app/shared/Model/StyleModel.js').UnparsedButtonStyle} the unprocessed style
-	 * @access public
 	 */
-	getUnparsedStyle() {
+	getUnparsedStyle(): UnparsedButtonStyle {
 		return this.#feedbacks.getUnparsedStyle(this.baseStyle)
 	}
 
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
-	 * @returns {Promise<void>}
-	 * @access protected
 	 */
-	async postProcessImport() {
+	async postProcessImport(): Promise<void> {
 		await Promise.all(this.#feedbacks.postProcessImport()).catch((/** @type {any} */ e) => {
-			this.#logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
+			this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
 		})
 	}
 
 	/**
 	 * Re-trigger 'subscribe' for all feedbacks
 	 * This should be used when something has changed which will require all feedbacks to be re-run
-	 * @param {string=} onlyConnectionId If set, only re-subscribe feedbacks for this connection
-	 * @returns {void}
+	 * @param onlyConnectionId If set, only re-subscribe feedbacks for this connection
 	 */
-	resubscribeAllFeedbacks(onlyConnectionId) {
+	resubscribeAllFeedbacks(onlyConnectionId?: string): void {
 		this.#feedbacks.subscribe(true, onlyConnectionId)
 	}
 
 	/**
 	 * Update the feedbacks on the button with new values
-	 * @param {string} connectionId The instance the feedbacks are for
-	 * @param {Record<string, any>} newValues The new fedeback values
-	 * @returns {void}
+	 * @param connectionId The instance the feedbacks are for
+	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId, newValues) {
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
 		let changed = false
 
 		for (const id in newValues) {
@@ -529,10 +471,8 @@ export default class FragmentFeedbacks {
 	/**
 	 * Prune all actions/feedbacks referencing unknown conncetions
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 * @param {Set<string>} knownConnectionIds
-	 * @access public
 	 */
-	verifyConnectionIds(knownConnectionIds) {
+	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
 		return this.#feedbacks.verifyConnectionIds(knownConnectionIds)
 	}
 }

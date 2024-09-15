@@ -1,6 +1,6 @@
 import ButtonControlBase from './Base.js'
 import { cloneDeep } from 'lodash-es'
-import FragmentActions from '../../Fragments/FragmentActions.js'
+import { FragmentActions } from '../../Fragments/FragmentActions.js'
 import { clamp } from '../../../Resources/Util.js'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'

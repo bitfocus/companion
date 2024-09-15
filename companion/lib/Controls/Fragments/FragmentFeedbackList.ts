@@ -1,63 +1,42 @@
 import { FragmentFeedbackInstance } from './FragmentFeedbackInstance.js'
 import { clamp } from '../../Resources/Util.js'
+import type InstanceDefinitions from '../../Instance/Definitions.js'
+import type InternalController from '../../Internal/Controller.js'
+import type ModuleHost from '../../Instance/Host.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 
 export class FragmentFeedbackList {
-	/**
-	 * @type {import('../../Instance/Definitions.js').default}
-	 * @access private
-	 */
-	#instanceDefinitions
-
-	/**
-	 * @type {import('../../Internal/Controller.js').default}
-	 * @access private
-	 */
-	#internalModule
-
-	/**
-	 * @type {import('../../Instance/Host.js').default}
-	 * @access private
-	 */
-	#moduleHost
+	readonly #instanceDefinitions: InstanceDefinitions
+	readonly #internalModule: InternalController
+	readonly #moduleHost: ModuleHost
 
 	/**
 	 * Id of the control this belongs to
-	 * @type {string}
-	 * @access private
 	 */
-	#controlId
+	readonly #controlId: string
 
-	/**
-	 * @type {string | null}
-	 * @readonly
-	 */
-	#id
+	readonly #id: string | null
 
 	/**
 	 * Whether this set of feedbacks can only use boolean feedbacks
-	 * @type {boolean}
-	 * @access private
 	 */
-	#booleanOnly
+	readonly #booleanOnly: boolean
 
-	/**
-	 * @type {FragmentFeedbackInstance[]}
-	 */
-	#feedbacks = []
+	#feedbacks: FragmentFeedbackInstance[] = []
 
-	get id() {
+	get id(): string | null {
 		return this.#id
 	}
 
-	/**
-	 * @param {import('../../Instance/Definitions.js').default} instanceDefinitions
-	 * @param {import('../../Internal/Controller.js').default} internalModule
-	 * @param {import('../../Instance/Host.js').default} moduleHost
-	 * @param {string} controlId - id of the control
-	 * @param {string | null} id id of the parent
-	 * @param {boolean} booleanOnly
-	 */
-	constructor(instanceDefinitions, internalModule, moduleHost, controlId, id, booleanOnly) {
+	constructor(
+		instanceDefinitions: InstanceDefinitions,
+		internalModule: InternalController,
+		moduleHost: ModuleHost,
+		controlId: string,
+		id: string | null,
+		booleanOnly: boolean
+	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
@@ -68,25 +47,22 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Get all the feedbacks
-	 * @returns {FragmentFeedbackInstance[]}
 	 */
-	getAllFeedbacks() {
+	getAllFeedbacks(): FragmentFeedbackInstance[] {
 		return [...this.#feedbacks, ...this.#feedbacks.flatMap((feedback) => feedback.getAllChildren())]
 	}
 
 	/**
 	 * Get the contained feedbacks as `FeedbackInstance`s
-	 * @returns {import('./FragmentFeedbackInstance.js').FeedbackInstance[]}
 	 */
-	asFeedbackInstances() {
+	asFeedbackInstances(): FeedbackInstance[] {
 		return this.#feedbacks.map((feedback) => feedback.asFeedbackInstance())
 	}
 
 	/**
 	 * Get the value of this feedback as a boolean
-	 * @returns {boolean}
 	 */
-	getBooleanValue() {
+	getBooleanValue(): boolean {
 		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
 
 		let result = true
@@ -100,11 +76,10 @@ export class FragmentFeedbackList {
 		return result
 	}
 
-	getChildBooleanValues() {
+	getChildBooleanValues(): boolean[] {
 		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
 
-		/** @type {boolean[]} */
-		const values = []
+		const values: boolean[] = []
 
 		for (const feedback of this.#feedbacks) {
 			if (feedback.disabled) continue
@@ -117,11 +92,11 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Initialise from storage
-	 * @param {import('./FragmentFeedbackInstance.js').FeedbackInstance[]} feedbacks
-	 * @param {boolean} skipSubscribe Whether to skip calling subscribe for the new feedbacks
-	 * @param {boolean} isCloned Whether this is a cloned instance
+	 * @param feedbacks
+	 * @param skipSubscribe Whether to skip calling subscribe for the new feedbacks
+	 * @param isCloned Whether this is a cloned instance
 	 */
-	loadStorage(feedbacks, skipSubscribe, isCloned) {
+	loadStorage(feedbacks: FeedbackInstance[], skipSubscribe: boolean, isCloned: boolean): void {
 		// Inform modules of feedback cleanup
 		for (const feedback of this.#feedbacks) {
 			feedback.cleanup()
@@ -157,12 +132,10 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Inform the instance of an updated feedback
-	 * @param {boolean} recursive whether to call recursively
-	 * @param {string=} onlyConnectionId If set, only subscribe feedbacks for this connection
-	 * @returns {void}
-	 * @access private
+	 * @param recursive whether to call recursively
+	 * @param onlyConnectionId If set, only subscribe feedbacks for this connection
 	 */
-	subscribe(recursive, onlyConnectionId) {
+	subscribe(recursive: boolean, onlyConnectionId?: string): void {
 		for (const child of this.#feedbacks) {
 			child.subscribe(recursive, onlyConnectionId)
 		}
@@ -170,10 +143,9 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Clear cached values for any feedback belonging to the given connection
-	 * @param {string} connectionId
-	 * @returns {boolean} Whether a value was changed
+	 * @returns Whether a value was changed
 	 */
-	clearCachedValueForConnectionId(connectionId) {
+	clearCachedValueForConnectionId(connectionId: string): boolean {
 		let changed = false
 
 		for (const feedback of this.#feedbacks) {
@@ -187,10 +159,8 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Find a child feedback by id
-	 * @param {string} id
-	 * @returns {FragmentFeedbackInstance | undefined}
 	 */
-	findById(id) {
+	findById(id: string): FragmentFeedbackInstance | undefined {
 		for (const feedback of this.#feedbacks) {
 			if (feedback.id === id) return feedback
 
@@ -203,10 +173,10 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Find the index of a child feedback, and the parent list
-	 * @param {string} id
-	 * @returns {{ parent: FragmentFeedbackList, index: number, item: FragmentFeedbackInstance } | undefined}
 	 */
-	findParentAndIndex(id) {
+	findParentAndIndex(
+		id: string
+	): { parent: FragmentFeedbackList; index: number; item: FragmentFeedbackInstance } | undefined {
 		const index = this.#feedbacks.findIndex((fb) => fb.id === id)
 		if (index !== -1) {
 			return { parent: this, index, item: this.#feedbacks[index] }
@@ -221,11 +191,10 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Add a child feedback to this feedback
-	 * @param {import('./FragmentFeedbackInstance.js').FeedbackInstance} feedback
-	 * @param {boolean=} isCloned Whether this is a cloned instance
-	 * @returns {FragmentFeedbackInstance}
+	 * @param feedback
+	 * @param isCloned Whether this is a cloned instance
 	 */
-	addFeedback(feedback, isCloned) {
+	addFeedback(feedback: FeedbackInstance, isCloned?: boolean): FragmentFeedbackInstance {
 		const newFeedback = new FragmentFeedbackInstance(
 			this.#instanceDefinitions,
 			this.#internalModule,
@@ -244,10 +213,8 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Remove a child feedback
-	 * @param {string} id
-	 * @returns {boolean} success
 	 */
-	removeFeedback(id) {
+	removeFeedback(id: string): boolean {
 		const index = this.#feedbacks.findIndex((fb) => fb.id === id)
 		if (index !== -1) {
 			const feedback = this.#feedbacks[index]
@@ -267,10 +234,8 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Reorder a feedback in the list
-	 * @param {number} oldIndex
-	 * @param {number} newIndex
 	 */
-	moveFeedback(oldIndex, newIndex) {
+	moveFeedback(oldIndex: number, newIndex: number): void {
 		oldIndex = clamp(oldIndex, 0, this.#feedbacks.length)
 		newIndex = clamp(newIndex, 0, this.#feedbacks.length)
 		this.#feedbacks.splice(newIndex, 0, ...this.#feedbacks.splice(oldIndex, 1))
@@ -279,10 +244,8 @@ export class FragmentFeedbackList {
 	/**
 	 * Pop a child feedback from the list
 	 * Note: this is used when moving a feedback to a different parent. Lifecycle is not managed
-	 * @param {number} index
-	 * @returns {FragmentFeedbackInstance | undefined}
 	 */
-	popFeedback(index) {
+	popFeedback(index: number): FragmentFeedbackInstance | undefined {
 		const feedback = this.#feedbacks[index]
 		if (!feedback) return undefined
 
@@ -294,10 +257,8 @@ export class FragmentFeedbackList {
 	/**
 	 * Push a child feedback to the list
 	 * Note: this is used when moving a feedback from a different parent. Lifecycle is not managed
-	 * @param {FragmentFeedbackInstance} feedback
-	 * @param {number} index
 	 */
-	pushFeedback(feedback, index) {
+	pushFeedback(feedback: FragmentFeedbackInstance, index: number): void {
 		index = clamp(index, 0, this.#feedbacks.length)
 
 		this.#feedbacks.splice(index, 0, feedback)
@@ -305,10 +266,8 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Check if this list can accept a specified child
-	 * @param {FragmentFeedbackInstance} feedback
-	 * @returns {boolean}
 	 */
-	canAcceptFeedback(feedback) {
+	canAcceptFeedback(feedback: FragmentFeedbackInstance): boolean {
 		if (!this.#booleanOnly) return true
 
 		const definition = feedback.getDefinition()
@@ -319,10 +278,8 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Duplicate a feedback
-	 * @param {string} id
-	 * @returns {FragmentFeedbackInstance | undefined}
 	 */
-	duplicateFeedback(id) {
+	duplicateFeedback(id: string): FragmentFeedbackInstance | undefined {
 		const feedbackIndex = this.#feedbacks.findIndex((fb) => fb.id === id)
 		if (feedbackIndex !== -1) {
 			const feedbackInstance = this.#feedbacks[feedbackIndex].asFeedbackInstance()
@@ -352,10 +309,8 @@ export class FragmentFeedbackList {
 
 	/**
 	 * Cleanup and forget any children belonging to the given connection
-	 * @param {string} connectionId
-	 * @returns {boolean}
 	 */
-	forgetForConnection(connectionId) {
+	forgetForConnection(connectionId: string): boolean {
 		let changed = false
 
 		this.#feedbacks = this.#feedbacks.filter((feedback) => {
@@ -375,13 +330,11 @@ export class FragmentFeedbackList {
 	/**
 	 * Prune all actions/feedbacks referencing unknown conncetions
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 * @param {Set<string>} knownConnectionIds
-	 * @access public
 	 */
-	verifyConnectionIds(knownConnectionIds) {
+	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
 		// Clean out feedbacks
 		const feedbackLength = this.#feedbacks.length
-		this.feedbacks = this.#feedbacks.filter((feedback) => !!feedback && knownConnectionIds.has(feedback.connectionId))
+		this.#feedbacks = this.#feedbacks.filter((feedback) => !!feedback && knownConnectionIds.has(feedback.connectionId))
 		let changed = this.#feedbacks.length !== feedbackLength
 
 		for (const feedback of this.#feedbacks) {
@@ -396,15 +349,13 @@ export class FragmentFeedbackList {
 	/**
 	 * Get the unparsed style for these feedbacks
 	 * Note: Does not clone the style
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').ButtonStyleProperties} baseStyle Style of the button without feedbacks applied
-	 * @returns {import('@companion-app/shared/Model/StyleModel.js').UnparsedButtonStyle} the unprocessed style
-	 * @access public
+	 * @param baseStyle Style of the button without feedbacks applied
+	 * @returns the unprocessed style
 	 */
-	getUnparsedStyle(baseStyle) {
+	getUnparsedStyle(baseStyle: ButtonStyleProperties): UnparsedButtonStyle {
 		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
-		/** @type {import('@companion-app/shared/Model/StyleModel.js').UnparsedButtonStyle} */
-		let style = {
+		let style: UnparsedButtonStyle = {
 			...baseStyle,
 			imageBuffers: [],
 		}
@@ -459,10 +410,8 @@ export class FragmentFeedbackList {
 
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
-	 * @returns {Promise<void>[]}
-	 * @access protected
 	 */
-	postProcessImport() {
+	postProcessImport(): Promise<void>[] {
 		return this.#feedbacks.flatMap((feedback) => feedback.postProcessImport())
 	}
 }

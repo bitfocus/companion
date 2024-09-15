@@ -1,6 +1,6 @@
 import ControlBase from '../../ControlBase.js'
-import FragmentActions from '../../Fragments/FragmentActions.js'
-import FragmentFeedbacks from '../../Fragments/FragmentFeedbacks.js'
+import { FragmentActions } from '../../Fragments/FragmentActions.js'
+import { FragmentFeedbacks } from '../../Fragments/FragmentFeedbacks.js'
 import { TriggersListRoom } from '../../Controller.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'

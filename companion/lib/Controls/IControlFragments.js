@@ -1,5 +1,5 @@
 import ControlBase from './ControlBase.js'
-import FragmentFeedbacks from './Fragments/FragmentFeedbacks.js'
+import { FragmentFeedbacks } from './Fragments/FragmentFeedbacks.js'
 
 /**
  * @typedef {ControlBase & (ControlWithSteps | ControlWithoutSteps) & (ControlWithStyle | ControlWithoutStyle) & (ControlWithFeedbacks | ControlWithoutFeedbacks) & (ControlWithActions | ControlWithoutActions) & (ControlWithEvents | ControlWithoutEvents) & (ControlWithActionSets | ControlWithoutActionSets) & (ControlWithOptions | ControlWithoutOptions) & (ControlWithPushed | ControlWithoutPushed)} SomeControl
