@@ -1,18 +1,20 @@
 import { ServiceArtnet } from './Artnet.js'
 import { ServiceBonjourDiscovery } from './BonjourDiscovery.js'
-import ServiceElgatoPlugin from './ElgatoPlugin.js'
-import ServiceEmberPlus from './EmberPlus.js'
+import { ServiceElgatoPlugin } from './ElgatoPlugin.js'
+import { ServiceEmberPlus } from './EmberPlus.js'
 import { ServiceHttpApi } from './HttpApi.js'
-import ServiceHttps from './Https.js'
+import { ServiceHttps } from './Https.js'
 import { ServiceOscListener } from './OscListener.js'
 import { ServiceOscSender } from './OscSender.js'
 import { ServiceRosstalk } from './Rosstalk.js'
-import ServiceSatellite from './Satellite.js'
+import { ServiceSatellite } from './Satellite.js'
 import { ServiceSharedUdpManager } from './SharedUdpManager.js'
 import { ServiceSurfaceDiscovery } from './SurfaceDiscovery.js'
 import { ServiceTcp } from './Tcp.js'
 import { ServiceUdp } from './Udp.js'
 import { ServiceVideohubPanel } from './VideohubPanel.js'
+import type { Registry } from '../Registry.js'
+import type { ClientSocket } from '../UI/Handler.js'
 
 /**
  * Class that manages all of the services.
@@ -34,11 +36,24 @@ import { ServiceVideohubPanel } from './VideohubPanel.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceController {
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+export class ServiceController {
+	readonly httpApi: ServiceHttpApi
+	readonly https: ServiceHttps
+	readonly oscSender: ServiceOscSender
+	readonly oscListener: ServiceOscListener
+	readonly tcp: ServiceTcp
+	readonly udp: ServiceUdp
+	readonly emberplus: ServiceEmberPlus
+	readonly artnet: ServiceArtnet
+	readonly rosstalk: ServiceRosstalk
+	readonly satellite: ServiceSatellite
+	readonly elgatoPlugin: ServiceElgatoPlugin
+	readonly videohubPanel: ServiceVideohubPanel
+	readonly bonjourDiscovery: ServiceBonjourDiscovery
+	readonly sharedUdpManager: ServiceSharedUdpManager
+	readonly surfaceDiscovery: ServiceSurfaceDiscovery
+
+	constructor(registry: Registry) {
 		this.httpApi = new ServiceHttpApi(registry, registry.ui.express)
 		this.https = new ServiceHttps(registry, registry.ui.express)
 		this.oscSender = new ServiceOscSender(registry)
@@ -58,11 +73,10 @@ class ServiceController {
 
 	/**
 	 * Update a key/value pair from the user config
-	 * @param {string} key - the key that changed
-	 * @param {(boolean|number|string)} value - the new value
-	 * @access public
+	 * @param key - the key that changed
+	 * @param value - the new value
 	 */
-	updateUserConfig(key, value) {
+	updateUserConfig(key: string, value: boolean | number | string): void {
 		this.artnet.updateUserConfig(key, value)
 		this.bonjourDiscovery.updateUserConfig(key, value)
 		this.elgatoPlugin.updateUserConfig(key, value)
@@ -80,13 +94,9 @@ class ServiceController {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		this.bonjourDiscovery.clientConnect(client)
 		this.surfaceDiscovery.clientConnect(client)
 	}
 }
-
-export default ServiceController

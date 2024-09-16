@@ -6,7 +6,7 @@ import type { SurfaceRotation } from '../Surface/Util.js'
 import type { Registry } from '../Registry.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@companion-app/shared/Model/Options.js'
-import type { CompanionInputFieldBase } from '@companion-module/base'
+import type { CompanionAlignment, CompanionInputFieldBase } from '@companion-module/base'
 
 /** @deprecated remove this re-export */
 export { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -408,7 +408,7 @@ export type VerticalAlignment = 'top' | 'bottom' | 'center'
 export function ParseAlignment(
 	alignment: string,
 	validate?: boolean
-): [horizontal: HorizontalAlignment, vertical: VerticalAlignment, full: string] {
+): [horizontal: HorizontalAlignment, vertical: VerticalAlignment, full: CompanionAlignment] {
 	const [halignRaw, valignRaw] = alignment.toLowerCase().split(':', 2)
 
 	let halign: 'left' | 'right' | 'center'

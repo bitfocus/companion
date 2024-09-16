@@ -3,8 +3,12 @@ import { getPath } from 'emberplus-connection/dist/Ember/Lib/util.js'
 import { ServiceBase } from './Base.js'
 import { formatLocation, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { pad } from '@companion-app/shared/Util.js'
-import { parseColorToNumber } from '../Resources/Util.js'
+import { ControlLocation, parseColorToNumber } from '../Resources/Util.js'
 import { LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { EmberValue } from 'emberplus-connection/dist/types/types.js'
+import type { Registry } from '../Registry.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1
@@ -19,12 +23,8 @@ const LEGACY_NODE_BG_COLOR = 3
 
 /**
  * Generate ember+ path
- * @param {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigGridSize} gridSize
- * @param {import('../Resources/Util.js').ControlLocation} location
- * @param {number} node
- * @returns {string}
  */
-function buildPathForLocation(gridSize, location, node) {
+function buildPathForLocation(gridSize: UserConfigGridSize, location: ControlLocation, node: number): string {
 	const row = location.row - gridSize.minRow
 	const column = location.column - gridSize.minColumn
 	return `0.2.${location.pageNumber}.${row}.${column}.${node}`
@@ -32,30 +32,22 @@ function buildPathForLocation(gridSize, location, node) {
 
 /**
  * Generate ember+ path
- * @param {number} page
- * @param {number} bank
- * @param {number} node
- * @returns {string}
  */
-function buildPathForButton(page, bank, node) {
+function buildPathForButton(page: number, bank: number, node: number): string {
 	return `0.1.${page}.${bank}.${node}`
 }
 /**
  * Convert internal color to hex
- * @param {any} color
- * @returns {string}
  */
-function formatColorAsHex(color) {
+function formatColorAsHex(color: any): string {
 	const newColor = parseColorToNumber(color)
 	if (newColor === false) return '#000000'
 	return `#${pad(newColor.toString(16).slice(-6), '0', 6)}`
 }
 /**
  * Parse hex color as number
- * @param {string} hex
- * @returns {number}
  */
-function parseHexColor(hex) {
+function parseHexColor(hex: string): number {
 	return parseInt(hex.slice(1, 7), 16)
 }
 
@@ -81,32 +73,18 @@ function parseHexColor(hex) {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceEmberPlus extends ServiceBase {
-	/**
-	 * @type {EmberServer | undefined}
-	 * @access protected
-	 */
-	server = undefined
-
-	/**
-	 * The port to open the socket with.  Default: <code>9092</code>
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 9092
+export class ServiceEmberPlus extends ServiceBase {
+	#server: EmberServer | undefined = undefined
 
 	/**
 	 * Bank state array
-	 * @type {Set<string>}
-	 * @access private
 	 */
-	#pushedButtons = new Set()
+	#pushedButtons = new Set<string>()
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application's core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/EmberPlus', 'emberplus_enabled', null)
+
+		this.port = 9092
 
 		this.graphics.on('button_drawn', this.#updateBankFromRender.bind(this))
 		this.page.on('pagecount', this.#pageCountChange.bind(this))
@@ -116,33 +94,27 @@ class ServiceEmberPlus extends ServiceBase {
 
 	/**
 	 * Close the socket before deleting it
-	 * @access protected
 	 */
-	close() {
-		if (this.server) {
-			this.server.discard()
+	protected close(): void {
+		if (this.#server) {
+			this.#server.discard()
 		}
 	}
 
 	/**
 	 * Get the page/bank structure in EmberModel form
-	 * @returns {Record<number, EmberModel.NumberedTreeNodeImpl<any>>}
-	 * @access private
 	 */
-	#getPagesTree() {
-		/** @type {Record<number, EmberModel.NumberedTreeNodeImpl<any>>} */
-		let output = {}
+	#getPagesTree(): Record<number, EmberModel.NumberedTreeNodeImpl<any>> {
+		let output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 
 		const pageCount = this.page.getPageCount() // TODO - handle resize
 
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
-			/** @type {Record<number, EmberModel.NumberedTreeNodeImpl<any>>} */
-			const children = {}
+			const children: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 			for (let bank = 1; bank <= LEGACY_MAX_BUTTONS; bank++) {
 				const controlId = this.page.getControlIdAtOldBankIndex(pageNumber, bank)
 				const control = controlId ? this.controls.getControl(controlId) : undefined
 
-				/** @type {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel | null} */
 				let drawStyle = control?.getDrawStyle() || null
 				if (drawStyle?.style !== 'button') drawStyle = null
 
@@ -215,31 +187,25 @@ class ServiceEmberPlus extends ServiceBase {
 
 	/**
 	 * Get the locations (page/row/column) structure in EmberModel form
-	 * @returns {Record<number, EmberModel.NumberedTreeNodeImpl<any>>}
-	 * @access private
 	 */
-	#getLocationTree() {
-		/** @type {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigGridSize} */
-		const gridSize = this.userconfig.getKey('gridSize')
+	#getLocationTree(): Record<number, EmberModel.NumberedTreeNodeImpl<any>> {
+		const gridSize: UserConfigGridSize = this.userconfig.getKey('gridSize')
 		if (!gridSize) return {}
 
 		const rowCount = gridSize.maxRow - gridSize.minRow + 1
 		const columnCount = gridSize.maxColumn - gridSize.minColumn + 1
 
-		/** @type {Record<number, EmberModel.NumberedTreeNodeImpl<any>>} */
-		const output = {}
+		const output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 
 		const pageCount = this.page.getPageCount() // TODO - handle resize
 
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
 			// TODO - the numbers won't be stable  when resizing the `min` grid values
 
-			/** @type {Record<number, EmberModel.NumberedTreeNodeImpl<any>>} */
-			const pageRows = {}
+			const pageRows: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 			for (let rowI = 0; rowI < rowCount; rowI++) {
 				const row = gridSize.minRow + rowI
-				/** @type {Record<number, EmberModel.NumberedTreeNodeImpl<any>>} */
-				const rowColumns = {}
+				const rowColumns: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 
 				for (let colI = 0; colI < columnCount; colI++) {
 					const column = gridSize.minColumn + colI
@@ -252,7 +218,6 @@ class ServiceEmberPlus extends ServiceBase {
 					const controlId = this.page.getControlIdAt(location)
 					const control = controlId ? this.controls.getControl(controlId) : undefined
 
-					/** @type {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel | null} */
 					let drawStyle = control?.getDrawStyle() || null
 					if (drawStyle?.style !== 'button') drawStyle = null
 
@@ -336,14 +301,13 @@ class ServiceEmberPlus extends ServiceBase {
 
 	/**
 	 * Start the service if it is not already running
-	 * @access protected
 	 */
-	listen() {
+	protected listen(): void {
 		if (this.portConfig) {
 			this.port = this.userconfig.getKey(this.portConfig)
 		}
 
-		if (this.server === undefined) {
+		if (this.#server === undefined) {
 			try {
 				const root = {
 					0: new EmberModel.NumberedTreeNodeImpl(0, new EmberModel.EmberNodeImpl('Companion Tree'), {
@@ -384,15 +348,15 @@ class ServiceEmberPlus extends ServiceBase {
 					}),
 				}
 
-				this.server = new EmberServer(this.port)
-				this.server.on('error', this.handleSocketError.bind(this))
-				this.server.onSetValue = this.setValue.bind(this)
-				this.server.init(root)
+				this.#server = new EmberServer(this.port)
+				this.#server.on('error', this.handleSocketError.bind(this))
+				this.#server.onSetValue = this.setValue.bind(this)
+				this.#server.init(root)
 
 				this.currentState = true
 				this.logger.info('Listening on port ' + this.port)
 				this.logger.silly('Listening on port ' + this.port)
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.error(`Could not launch: ${e.message}`)
 			}
 		}
@@ -400,11 +364,11 @@ class ServiceEmberPlus extends ServiceBase {
 
 	/**
 	 * Process a received command
-	 * @param {EmberModel.NumberedTreeNodeImpl<any>} parameter - the raw path
-	 * @param {import('emberplus-connection/dist/types/types.js').EmberValue} value - the new value
-	 * @returns {Promise<boolean>} - <code>true</code> if the command was successfully parsed
+	 * @param parameter - the raw path
+	 * @param value - the new value
+	 * @returns <code>true</code> if the command was successfully parsed
 	 */
-	async setValue(parameter, value) {
+	async setValue(parameter: EmberModel.NumberedTreeNodeImpl<any>, value: EmberValue): Promise<boolean> {
 		const path = getPath(parameter)
 
 		const pathInfo = path.split('.')
@@ -424,7 +388,7 @@ class ServiceEmberPlus extends ServiceBase {
 					this.logger.silly(`Change button ${controlId} pressed to ${value}`)
 
 					this.controls.pressControl(controlId, !!value, `emberplus`)
-					this.server?.update(parameter, { value })
+					this.#server?.update(parameter, { value })
 					return true
 				}
 				case LEGACY_NODE_TEXT: {
@@ -435,7 +399,7 @@ class ServiceEmberPlus extends ServiceBase {
 						control.styleSetFields({ text: value })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
-						this.server?.update(parameter, { value })
+						this.#server?.update(parameter, { value })
 						return true
 					}
 					return false
@@ -449,7 +413,7 @@ class ServiceEmberPlus extends ServiceBase {
 						control.styleSetFields({ color: color })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
-						this.server?.update(parameter, { value })
+						this.#server?.update(parameter, { value })
 						return true
 					}
 					return false
@@ -463,7 +427,7 @@ class ServiceEmberPlus extends ServiceBase {
 						control.styleSetFields({ bgcolor: color })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
-						this.server?.update(parameter, { value })
+						this.#server?.update(parameter, { value })
 						return true
 					}
 					return false
@@ -489,7 +453,7 @@ class ServiceEmberPlus extends ServiceBase {
 					this.logger.silly(`Change bank ${controlId} pressed to ${value}`)
 
 					this.controls.pressControl(controlId, !!value, `emberplus`)
-					this.server?.update(parameter, { value })
+					this.#server?.update(parameter, { value })
 					return true
 				}
 				case LOCATION_NODE_TEXT: {
@@ -500,7 +464,7 @@ class ServiceEmberPlus extends ServiceBase {
 						control.styleSetFields({ text: value })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
-						this.server?.update(parameter, { value })
+						this.#server?.update(parameter, { value })
 						return true
 					}
 					return false
@@ -514,7 +478,7 @@ class ServiceEmberPlus extends ServiceBase {
 						control.styleSetFields({ color: color })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
-						this.server?.update(parameter, { value })
+						this.#server?.update(parameter, { value })
 						return true
 					}
 					return false
@@ -528,7 +492,7 @@ class ServiceEmberPlus extends ServiceBase {
 						control.styleSetFields({ bgcolor: color })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
-						this.server?.update(parameter, { value })
+						this.#server?.update(parameter, { value })
 						return true
 					}
 					return false
@@ -541,21 +505,20 @@ class ServiceEmberPlus extends ServiceBase {
 
 	/**
 	 * Update the tree from the pageCount changing
-	 * @param {number} _pageCount
 	 */
-	#pageCountChange(_pageCount) {
+	#pageCountChange(_pageCount: number): void {
 		// TODO: This is excessive, but further research is needed to figure out how to edit the ember tree structure
 		this.restartModule()
 	}
 
 	/**
 	 * Send the latest bank state to the page/bank indicated
-	 * @param {import('../Resources/Util.js').ControlLocation} location - the location of the control
-	 * @param {boolean} pushed - the state
-	 * @param {string | undefined} surfaceId - checks the <code>surfaceId</code> to ensure that Ember+ doesn't loop its own state change back
+	 * @param location - the location of the control
+	 * @param pushed - the state
+	 * @param checks the <code>surfaceId</code> to ensure that Ember+ doesn't loop its own state change back
 	 */
-	updateButtonState(location, pushed, surfaceId) {
-		if (!this.server) return
+	updateButtonState(location: ControlLocation, pushed: boolean, surfaceId: string | undefined): void {
+		if (!this.#server) return
 		if (surfaceId === 'emberplus') return
 
 		const bank = xyToOldBankIndex(location.column, location.row)
@@ -576,24 +539,24 @@ class ServiceEmberPlus extends ServiceBase {
 
 	/**
 	 * Send the latest bank text to the page/bank indicated
-	 * @param {*} location
-	 * @param {*} render
 	 */
-	#updateBankFromRender(location, render) {
-		if (!this.server) return
+	#updateBankFromRender(location: ControlLocation, render: ImageResult): void {
+		if (!this.#server) return
 		//this.logger.info(`Updating ${page}.${bank} label ${this.banks[page][bank].text}`)
+
+		const style = typeof render.style !== 'string' ? render.style : undefined
 
 		// New 'location' path
 		const gridSize = this.userconfig.getKey('gridSize')
 		if (gridSize) {
-			this.#updateNodePath(buildPathForLocation(gridSize, location, LOCATION_NODE_TEXT), render.style?.text || '')
+			this.#updateNodePath(buildPathForLocation(gridSize, location, LOCATION_NODE_TEXT), style?.text || '')
 			this.#updateNodePath(
 				buildPathForLocation(gridSize, location, LOCATION_NODE_TEXT_COLOR),
-				formatColorAsHex(render.style?.color || 0)
+				formatColorAsHex(style?.color || 0)
 			)
 			this.#updateNodePath(
 				buildPathForLocation(gridSize, location, LOCATION_NODE_BG_COLOR),
-				formatColorAsHex(render.style?.bgcolor || 0)
+				formatColorAsHex(style?.bgcolor || 0)
 			)
 		}
 
@@ -602,42 +565,33 @@ class ServiceEmberPlus extends ServiceBase {
 		if (bank === null) return
 
 		// Update ember+ with internal state of button
-		this.#updateNodePath(buildPathForButton(location.pageNumber, bank, LEGACY_NODE_TEXT), render.style?.text || '')
+		this.#updateNodePath(buildPathForButton(location.pageNumber, bank, LEGACY_NODE_TEXT), style?.text || '')
 		this.#updateNodePath(
 			buildPathForButton(location.pageNumber, bank, LEGACY_NODE_TEXT_COLOR),
-			formatColorAsHex(render.style?.color || 0)
+			formatColorAsHex(style?.color || 0)
 		)
 		this.#updateNodePath(
 			buildPathForButton(location.pageNumber, bank, LEGACY_NODE_BG_COLOR),
-			formatColorAsHex(render.style?.bgcolor || 0)
+			formatColorAsHex(style?.bgcolor || 0)
 		)
 	}
 
-	/**
-	 *
-	 * @param {string} path
-	 * @param {import('emberplus-connection/dist/types/types.js').EmberValue} newValue
-	 * @returns {void}
-	 */
-	#updateNodePath(path, newValue) {
-		if (!this.server) return
+	#updateNodePath(path: string, newValue: EmberValue): void {
+		if (!this.#server) return
 
-		const node = this.server.getElementByPath(path)
+		const node = this.#server.getElementByPath(path)
 		if (!node) return
 
 		// @ts-ignore
 		if (node.contents.value !== newValue) {
-			this.server.update(node, { value: newValue })
+			this.#server.update(node, { value: newValue })
 		}
 	}
 
 	/**
 	 * Process an updated userconfig value and enable/disable the module, if necessary.
-	 * @param {string} key - the saved key
-	 * @param {(boolean|number|string)} value - the saved value
-	 * @access public
 	 */
-	updateUserConfig(key, value) {
+	updateUserConfig(key: string, value: boolean | number | string): void {
 		super.updateUserConfig(key, value)
 
 		if (key == 'gridSize') {
@@ -645,5 +599,3 @@ class ServiceEmberPlus extends ServiceBase {
 		}
 	}
 }
-
-export default ServiceEmberPlus

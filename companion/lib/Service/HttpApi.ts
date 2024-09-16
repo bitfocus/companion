@@ -1,8 +1,11 @@
 import { CoreBase } from '../Core/Base.js'
-import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
+import { ControlLocation, ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
 import express from 'express'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import Express from 'express'
+import type { UIExpress } from '../UI/Express.js'
+import type { Registry } from '../Registry.js'
+import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Class providing the HTTP API.
@@ -28,31 +31,24 @@ import Express from 'express'
 export class ServiceHttpApi extends CoreBase {
 	/**
 	 * new Api express router
-	 * @type {import('express').Router}
-	 * @access private
 	 */
-	#apiRouter
+	readonly #apiRouter: express.Router
 
 	/**
 	 * new legacy Api express router
-	 * @type {import('express').Router}
-	 * @access private
 	 */
-	#legacyApiRouter
+	readonly #legacyApiRouter: express.Router
 
 	/**
 	 * The web application framework
-	 * @type {import('../UI/Express.js').UIExpress}
-	 * @access protected
-	 * @readonly
 	 */
-	#express
+	readonly #express: UIExpress
 
 	/**
 	 * @param {import('../Registry.js').Registry} registry - the application core
 	 * @param {import('../UI/Express.js').UIExpress} express - express
 	 */
-	constructor(registry, express) {
+	constructor(registry: Registry, express: UIExpress) {
 		super(registry, 'Service/HttpApi')
 
 		this.#express = express
@@ -201,7 +197,7 @@ export class ServiceHttpApi extends CoreBase {
 				return
 			}
 
-			const newFields = {}
+			const newFields: Partial<ButtonStyleProperties> = {}
 
 			if (req.query.bgcolor) {
 				const value = String(req.query.bgcolor).replace(/#/, '')
@@ -220,12 +216,12 @@ export class ServiceHttpApi extends CoreBase {
 			}
 
 			if (req.query.size) {
-				const value = String(req.query.size).replace(/pt/i, '')
+				const value = Number(String(req.query.size).replace(/pt/i, ''))
 				newFields.size = value
 			}
 
 			if (req.query.text || req.query.text === '') {
-				newFields.text = req.query.text
+				newFields.text = String(req.query.text)
 			}
 
 			if (req.query.png64 || req.query.png64 === '') {
@@ -236,7 +232,7 @@ export class ServiceHttpApi extends CoreBase {
 					res.send('png64 must be a base64 encoded png file')
 					return
 				} else {
-					newFields.png64 = req.query.png64
+					newFields.png64 = String(req.query.png64)
 				}
 			}
 
@@ -315,11 +311,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform surfaces rescan
-	 * @param {express.Request} _req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#surfacesRescan = (_req, res) => {
+	#surfacesRescan = (_req: express.Request, res: express.Response): void => {
 		this.logger.info('Got HTTP surface rescan')
 		this.registry.surfaces.triggerRefreshDevices().then(
 			() => {
@@ -333,10 +326,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform surfaces rescan
-	 * @param {express.Request} req
-	 * @returns {{ location: import('../Resources/Util.js').ControlLocation, controlId: string | null }}
 	 */
-	#locationParse = (req) => {
+	#locationParse = (req: express.Request): { location: ControlLocation; controlId: string | null } => {
 		const location = {
 			pageNumber: Number(req.params.page),
 			row: Number(req.params.row),
@@ -353,11 +344,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform control press
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#locationPress = (req, res) => {
+	#locationPress = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control press ${formatLocation(location)} - ${controlId}`)
 
@@ -379,11 +367,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform control down
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#locationDown = (req, res) => {
+	#locationDown = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control down ${formatLocation(location)} - ${controlId}`)
 
@@ -399,11 +384,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform control up
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#locationUp = (req, res) => {
+	#locationUp = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control up ${formatLocation(location)} - ${controlId}`)
 
@@ -419,11 +401,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform control rotate left
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#locationRotateLeft = (req, res) => {
+	#locationRotateLeft = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control rotate left ${formatLocation(location)} - ${controlId}`)
 
@@ -439,11 +418,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform control rotate right
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#locationRotateRight = (req, res) => {
+	#locationRotateRight = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control rotate right ${formatLocation(location)} - ${controlId}`)
 
@@ -459,11 +435,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Set control step
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#locationStep = (req, res) => {
+	#locationStep = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		const step = Number(req.query.step)
 
@@ -489,11 +462,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform control style change
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#locationStyle = (req, res) => {
+	#locationStyle = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control syle ${formatLocation(location)} - ${controlId}`)
 
@@ -508,7 +478,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		const newFields = {}
+		const newFields: Partial<ButtonStyleProperties> = {}
 
 		const bgcolor = req.query.bgcolor || req.body.bgcolor
 		if (bgcolor !== undefined) {
@@ -569,11 +539,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Perform custom variable set value
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#customVariableSetValue = (req, res) => {
+	#customVariableSetValue = (req: express.Request, res: express.Response): void => {
 		const variableName = req.params.name
 		let variableValue = null
 
@@ -599,11 +566,8 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * Retrieve a custom variable current value
-	 * @param {express.Request} req
-	 * @param {express.Response} res
-	 * @returns {void}
 	 */
-	#customVariableGetValue = (req, res) => {
+	#customVariableGetValue = (req: express.Request, res: express.Response): void => {
 		const variableName = req.params.name
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)

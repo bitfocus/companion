@@ -1,7 +1,9 @@
 import { CoreBase } from '../Core/Base.js'
-import { parseColorToNumber, rgb } from '../Resources/Util.js'
+import { ControlLocation, parseColorToNumber, rgb } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { RegexRouter } from './RegexRouter.js'
+import type { Registry } from '../Registry.js'
+import { OscReceivedMessage } from 'osc'
 
 /**
  * Class providing the OSC API.
@@ -27,19 +29,14 @@ import { RegexRouter } from './RegexRouter.js'
 export class ServiceOscApi extends CoreBase {
 	/**
 	 * Message router
-	 * @type {RegexRouter}
-	 * @access private
 	 */
-	#router
+	readonly #router: RegexRouter
 
-	get router() {
+	get router(): RegexRouter {
 		return this.#router
 	}
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/OscApi')
 
 		this.#router = new RegexRouter()
@@ -48,99 +45,111 @@ export class ServiceOscApi extends CoreBase {
 		this.#setupNewOscRoutes()
 	}
 
-	#isLegacyRouteAllowed() {
+	#isLegacyRouteAllowed(): boolean {
 		return !!this.userconfig.getKey('osc_legacy_api_enabled')
 	}
 
-	#setupLegacyOscRoutes() {
-		this.#router.addPath('/press/bank/:page(\\d+)/:bank(\\d+)', (match, message) => {
-			if (!this.#isLegacyRouteAllowed()) return
+	#setupLegacyOscRoutes(): void {
+		this.#router.addPath(
+			'/press/bank/:page(\\d+)/:bank(\\d+)',
+			(match: Record<string, string>, message: OscReceivedMessage) => {
+				if (!this.#isLegacyRouteAllowed()) return
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
-			if (!controlId) return
+				const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+				if (!controlId) return
 
-			if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == '1') {
-				this.logger.info(`Got /press/bank/ (press) for ${controlId}`)
-				this.controls.pressControl(controlId, true, undefined)
-			} else if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == '0') {
-				this.logger.info(`Got /press/bank/ (release) for ${controlId}`)
-				this.controls.pressControl(controlId, false, undefined)
-			} else {
-				this.logger.info(`Got /press/bank/ (trigger)${controlId}`)
-				this.controls.pressControl(controlId, true, undefined)
-
-				setTimeout(() => {
-					this.logger.info(`Auto releasing /press/bank/ (trigger)${controlId}`)
+				if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == 1) {
+					this.logger.info(`Got /press/bank/ (press) for ${controlId}`)
+					this.controls.pressControl(controlId, true, undefined)
+				} else if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == 0) {
+					this.logger.info(`Got /press/bank/ (release) for ${controlId}`)
 					this.controls.pressControl(controlId, false, undefined)
-				}, 20)
+				} else {
+					this.logger.info(`Got /press/bank/ (trigger)${controlId}`)
+					this.controls.pressControl(controlId, true, undefined)
+
+					setTimeout(() => {
+						this.logger.info(`Auto releasing /press/bank/ (trigger)${controlId}`)
+						this.controls.pressControl(controlId, false, undefined)
+					}, 20)
+				}
 			}
-		})
+		)
 
-		this.#router.addPath('/style/bgcolor/:page(\\d+)/:bank(\\d+)', (match, message) => {
-			if (!this.#isLegacyRouteAllowed()) return
+		this.#router.addPath(
+			'/style/bgcolor/:page(\\d+)/:bank(\\d+)',
+			(match: Record<string, string>, message: OscReceivedMessage) => {
+				if (!this.#isLegacyRouteAllowed()) return
 
-			if (message.args.length > 2) {
-				const r = message.args[0].value
-				const g = message.args[1].value
-				const b = message.args[2].value
-				if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
-					if (!controlId) return
+				if (message.args.length > 2) {
+					const r = message.args[0].value
+					const g = message.args[1].value
+					const b = message.args[2].value
+					if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
+						const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+						if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/bgcolor for ${controlId}`)
-						control.styleSetFields({ bgcolor: rgb(r, g, b) })
-					} else {
-						this.logger.info(`Got /style/bgcolor for unknown control: ${controlId}`)
+						const control = this.controls.getControl(controlId)
+						if (control && control.supportsStyle) {
+							this.logger.info(`Got /style/bgcolor for ${controlId}`)
+							control.styleSetFields({ bgcolor: rgb(r, g, b) })
+						} else {
+							this.logger.info(`Got /style/bgcolor for unknown control: ${controlId}`)
+						}
 					}
 				}
 			}
-		})
+		)
 
-		this.#router.addPath('/style/color/:page(\\d+)/:bank(\\d+)', (match, message) => {
-			if (!this.#isLegacyRouteAllowed()) return
+		this.#router.addPath(
+			'/style/color/:page(\\d+)/:bank(\\d+)',
+			(match: Record<string, string>, message: OscReceivedMessage) => {
+				if (!this.#isLegacyRouteAllowed()) return
 
-			if (message.args.length > 2) {
-				const r = message.args[0].value
-				const g = message.args[1].value
-				const b = message.args[2].value
-				if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
-					if (!controlId) return
+				if (message.args.length > 2) {
+					const r = message.args[0].value
+					const g = message.args[1].value
+					const b = message.args[2].value
+					if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
+						const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+						if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/color for ${controlId}`)
-						control.styleSetFields({ color: rgb(r, g, b) })
-					} else {
-						this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						const control = this.controls.getControl(controlId)
+						if (control && control.supportsStyle) {
+							this.logger.info(`Got /style/color for ${controlId}`)
+							control.styleSetFields({ color: rgb(r, g, b) })
+						} else {
+							this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						}
 					}
 				}
 			}
-		})
+		)
 
-		this.#router.addPath('/style/text/:page(\\d+)/:bank(\\d+)', (match, message) => {
-			if (!this.#isLegacyRouteAllowed()) return
+		this.#router.addPath(
+			'/style/text/:page(\\d+)/:bank(\\d+)',
+			(match: Record<string, string>, message: OscReceivedMessage) => {
+				if (!this.#isLegacyRouteAllowed()) return
 
-			if (message.args.length > 0) {
-				const text = message.args[0].value
-				if (typeof text === 'string') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
-					if (!controlId) return
+				if (message.args.length > 0) {
+					const text = message.args[0].value
+					if (typeof text === 'string') {
+						const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+						if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/text for ${controlId}`)
-						control.styleSetFields({ text: text })
-					} else {
-						this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						const control = this.controls.getControl(controlId)
+						if (control && control.supportsStyle) {
+							this.logger.info(`Got /style/text for ${controlId}`)
+							control.styleSetFields({ text: text })
+						} else {
+							this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						}
 					}
 				}
 			}
-		})
+		)
 
-		this.#router.addPath('/rescan', (_match, _message) => {
+		this.#router.addPath('/rescan', (_match: Record<string, string>, _message: OscReceivedMessage) => {
 			if (!this.#isLegacyRouteAllowed()) return
 
 			this.logger.info('Got /rescan 1')
@@ -198,10 +207,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Parse the location and controlId from a request
-	 * @param {Record<string, string>} match
-	 * @returns {{ location: import('../Resources/Util.js').ControlLocation, controlId: string | null }}
 	 */
-	#locationParse = (match) => {
+	#locationParse = (match: Record<string, string>): { location: ControlLocation; controlId: string | null } => {
 		const location = {
 			pageNumber: Number(match.page),
 			row: Number(match.row),
@@ -218,11 +225,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform control press
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} _message
-	 * @returns {void}
 	 */
-	#locationPress = (match, _message) => {
+	#locationPress = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
 		this.logger.info(`Got OSC control press ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
@@ -238,11 +242,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform control down
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} _message
-	 * @returns {void}
 	 */
-	#locationDown = (match, _message) => {
+	#locationDown = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
 		this.logger.info(`Got OSC control down ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
@@ -252,11 +253,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform control up
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} _message
-	 * @returns {void}
 	 */
-	#locationUp = (match, _message) => {
+	#locationUp = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
 		this.logger.info(`Got OSC control up ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
@@ -266,11 +264,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform control rotate left
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} _message
-	 * @returns {void}
 	 */
-	#locationRotateLeft = (match, _message) => {
+	#locationRotateLeft = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
 		this.logger.info(`Got OSC control rotate left ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
@@ -280,11 +275,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform control rotate right
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} _message
-	 * @returns {void}
 	 */
-	#locationRotateRight = (match, _message) => {
+	#locationRotateRight = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
 		this.logger.info(`Got OSC control rotate right ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
@@ -294,11 +286,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Set control step
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} message
-	 * @returns {void}
 	 */
-	#locationStep = (match, message) => {
+	#locationStep = (match: Record<string, string>, message: OscReceivedMessage): void => {
 		if (message.args.length === 0) return
 
 		const { location, controlId } = this.#locationParse(match)
@@ -317,11 +306,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform control style text change
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} message
-	 * @returns {void}
 	 */
-	#locationSetStyleText = (match, message) => {
+	#locationSetStyleText = (match: Record<string, string>, message: OscReceivedMessage): void => {
 		if (message.args.length === 0) return
 
 		const text = message.args[0]?.value
@@ -337,11 +323,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform control style color change
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} message
-	 * @returns {void}
 	 */
-	#locationSetStyleColor = (match, message) => {
+	#locationSetStyleColor = (match: Record<string, string>, message: OscReceivedMessage): void => {
 		if (message.args.length === 0) return
 
 		const { location, controlId } = this.#locationParse(match)
@@ -351,8 +334,7 @@ export class ServiceOscApi extends CoreBase {
 		const control = this.controls.getControl(controlId)
 		if (!control || !control.supportsStyle) return
 
-		/** @type {number | false} */
-		let color = false
+		let color: number | false = false
 		if (message.args.length === 3) {
 			const r = message.args[0].value
 			const g = message.args[1].value
@@ -370,11 +352,8 @@ export class ServiceOscApi extends CoreBase {
 	}
 	/**
 	 * Perform control style bgcolor change
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} message
-	 * @returns {void}
 	 */
-	#locationSetStyleBgcolor = (match, message) => {
+	#locationSetStyleBgcolor = (match: Record<string, string>, message: OscReceivedMessage): void => {
 		if (message.args.length === 0) return
 
 		const { location, controlId } = this.#locationParse(match)
@@ -384,8 +363,7 @@ export class ServiceOscApi extends CoreBase {
 		const control = this.controls.getControl(controlId)
 		if (!control || !control.supportsStyle) return
 
-		/** @type {number | false} */
-		let color = false
+		let color: number | false = false
 		if (message.args.length === 3) {
 			const r = message.args[0].value
 			const g = message.args[1].value
@@ -404,11 +382,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform custom variable set value
-	 * @param {Record<string, string>} match
-	 * @param {import('osc').OscReceivedMessage} message
-	 * @returns {void}
 	 */
-	#customVariableSetValue = (match, message) => {
+	#customVariableSetValue = (match: Record<string, string>, message: OscReceivedMessage): void => {
 		const variableName = match.name
 		const variableValue = message.args?.[0]?.value
 

@@ -6,6 +6,8 @@ import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import { transformButtonImage } from '../Resources/Util.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
+import type { Registry } from '../Registry.js'
 
 /**
  * Class providing the Elgato Plugin service.
@@ -28,30 +30,22 @@ import { transformButtonImage } from '../Resources/Util.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceElgatoPlugin extends ServiceBase {
-	/**
-	 * @type {WebSocketServer | undefined}
-	 * @access protected
-	 */
-	server = undefined
-
-	/**
-	 * The port to open the socket with.  Default: <code>28492</code>
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 28492
+export class ServiceElgatoPlugin extends ServiceBase {
+	#server: WebSocketServer | undefined
+	#client: ServiceElgatoPluginSocket | undefined
 
 	/**
 	 * @param {import('../Registry.js').Registry} registry - the application's core
 	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
 
-		this.graphics.on('button_drawn', (location, render) => {
-			if (!this.client) return
+		this.port = 28492
 
-			const currentPageNumber = this.page.getPageNumber(this.client.currentPageId)
+		this.graphics.on('button_drawn', (location, render) => {
+			if (!this.#client) return
+
+			const currentPageNumber = this.page.getPageNumber(this.#client.currentPageId)
 
 			// Send dynamic page
 			if (location.pageNumber === currentPageNumber) {
@@ -68,8 +62,8 @@ class ServiceElgatoPlugin extends ServiceBase {
 			this.#handleButtonDrawn(location, render)
 		})
 		this.surfaces.on('surface_page', (surfaceId, newPageId) => {
-			if (this.client && surfaceId === 'plugin') {
-				this.client.currentPageId = newPageId
+			if (this.#client && surfaceId === 'plugin') {
+				this.#client.currentPageId = newPageId
 
 				this.#redrawAllDynamicButtons()
 			}
@@ -80,32 +74,27 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 	/**
 	 * Close the socket before deleting it
-	 * @access protected
 	 */
-	close() {
-		if (this.server) {
+	protected close(): void {
+		if (this.#server) {
 			this.logger.info('Shutting down')
 
-			for (const client of this.server.clients) {
+			for (const client of this.#server.clients) {
 				client.terminate()
 			}
 
-			this.server.close()
-			delete this.server
+			this.#server.close()
+			this.#server = undefined
 		}
 	}
 
-	/**
-	 * @param {{ pageNumber: number | null; row: number; column: number }} location
-	 * @param {import('../Graphics/ImageResult.js').ImageResult} render
-	 */
-	#handleButtonDrawn(location, render) {
+	#handleButtonDrawn(location: { pageNumber: number | null; row: number; column: number }, render: ImageResult): void {
 		if (location.pageNumber !== null) location.pageNumber = Number(location.pageNumber)
 
-		if (this.client && this.client.buttonListeners) {
+		if (this.#client && this.#client.buttonListeners) {
 			const id = `${location.pageNumber}_${location.column}_${location.row}`
-			if (this.client.buttonListeners.has(id)) {
-				this.client.fillImage(
+			if (this.#client.buttonListeners.has(id)) {
+				this.#client.fillImage(
 					id,
 					{
 						page: location.pageNumber,
@@ -122,8 +111,8 @@ class ServiceElgatoPlugin extends ServiceBase {
 			if (location.column >= 0 && location.row >= 0 && location.column < cols && location.row < rows) {
 				const bank = location.column + location.row * cols
 				const id = `${location.pageNumber}_${bank}`
-				if (this.client.buttonListeners.has(id)) {
-					this.client.fillImage(
+				if (this.#client.buttonListeners.has(id)) {
+					this.#client.fillImage(
 						id,
 						{
 							page: location.pageNumber,
@@ -137,12 +126,12 @@ class ServiceElgatoPlugin extends ServiceBase {
 		}
 	}
 
-	#redrawAllDynamicButtons() {
-		if (!this.client || !this.client.supportsCoordinates) return
+	#redrawAllDynamicButtons(): void {
+		if (!this.#client || !this.#client.supportsCoordinates) return
 
-		const currentPageNumber = this.page.getPageNumber(this.client.currentPageId)
+		const currentPageNumber = this.page.getPageNumber(this.#client.currentPageId)
 
-		for (const listenerId of this.client.buttonListeners) {
+		for (const listenerId of this.#client.buttonListeners) {
 			if (!listenerId.startsWith('null_')) continue
 
 			const [_page, column, row] = listenerId.split('_').map((i) => Number(i))
@@ -165,9 +154,8 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 	/**
 	 * Setup the socket for v2 API
-	 * @param {ServiceElgatoPluginSocket} socket
 	 */
-	#initAPI2(socket) {
+	#initAPI2(socket: ServiceElgatoPluginSocket): void {
 		this.logger.silly('init api v2')
 		socket.once('new_device', (/** @type {string | Record<string, any>} */ info) => {
 			try {
@@ -196,15 +184,15 @@ class ServiceElgatoPlugin extends ServiceBase {
 					supportsCoordinates: socket.supportsCoordinates,
 				})
 
-				this.client = socket
+				this.#client = socket
 
 				socket.on('close', () => {
 					this.surfaces.removeDevice(id)
 					socket.removeAllListeners('keyup')
 					socket.removeAllListeners('keydown')
-					delete this.client
+					this.#client = undefined
 				})
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.error(`Elgato plugin add failed: ${e?.message ?? e}`)
 				socket.close()
 			}
@@ -265,9 +253,8 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 	/**
 	 * Setup the socket processing and rig the appropriate version processing
-	 * @param {ServiceElgatoPluginSocket} socket
 	 */
-	#initSocket(socket) {
+	#initSocket(socket: ServiceElgatoPluginSocket): void {
 		socket.on('version', (args) => {
 			if (args.version > 2) {
 				// Newer than current api version
@@ -287,28 +274,27 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 	/**
 	 * Start the service if it is not already running
-	 * @access protected
 	 */
-	listen() {
+	protected listen(): void {
 		if (this.portConfig) {
 			this.port = this.userconfig.getKey(this.portConfig)
 		}
 
-		if (this.server === undefined) {
+		if (this.#server === undefined) {
 			try {
-				this.server = new WebSocketServer({
+				this.#server = new WebSocketServer({
 					port: this.port,
 				})
 
-				this.server.on('connection', this.#processIncoming.bind(this))
+				this.#server.on('connection', this.#processIncoming.bind(this))
 
-				this.server.on('error', (err) => {
+				this.#server.on('error', (err) => {
 					this.logger.error(`Error: ${err.message}`)
 				})
 
 				this.currentState = true
 				this.logger.info('Listening on port ' + this.port)
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.error(`Could not launch: ${e.message}`)
 			}
 		}
@@ -316,10 +302,8 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 	/**
 	 * Set up a new socket connection
-	 * @param {WebSocket} socket
-	 * @returns {void}
 	 */
-	#processIncoming(socket) {
+	#processIncoming(socket: WebSocket): void {
 		// @ts-ignore
 		const remoteAddress = socket.remoteAddress
 
@@ -345,95 +329,53 @@ class ServiceElgatoPlugin extends ServiceBase {
 	}
 }
 
-export default ServiceElgatoPlugin
-
 export class ServiceElgatoPluginSocket extends EventEmitter {
-	#logger = LogController.createLogger('Surface/ElgatoPlugin/Socket')
+	readonly #logger = LogController.createLogger('Surface/ElgatoPlugin/Socket')
 
-	/**
-	 * @type {WebSocket}
-	 * @readonly
-	 */
-	socket
+	readonly socket: WebSocket
+	readonly remoteAddress: string
 
-	/**
-	 * @type {string}
-	 * @readonly
-	 */
-	remoteAddress
-
-	/**
-	 * @type {Set<string>}
-	 * @readonly
-	 */
-	buttonListeners = new Set()
+	readonly buttonListeners = new Set<string>()
 
 	/**
 	 *
-	 * @type {boolean}
-	 * @access public
 	 */
 	supportsPng = false
 
 	/**
 	 * Whether the connected plugin supports using coordinates.
 	 * This also means that it will require explicit subscribing to each dynamic button
-	 * @type {boolean}
-	 * @access public
 	 */
 	supportsCoordinates = false
 
 	/**
 	 * The current page number of the surface
-	 * @type {string}
-	 * @access public
 	 */
-	currentPageId = ''
+	currentPageId: string = ''
 
-	/**
-	 * @type {ImageWriteQueue<string | number, [Record<string, number | null>, import('../Graphics/ImageResult.js').ImageResult]>}
-	 * @access private
-	 */
-	#write_queue
+	readonly #write_queue: ImageWriteQueue<string | number, [Record<string, number | null>, ImageResult]>
 
-	/**
-	 * @param {WebSocket} socket
-	 * @param {string }remoteAddress
-	 */
-	constructor(socket, remoteAddress) {
+	constructor(socket: WebSocket, remoteAddress: string) {
 		super()
 
 		this.socket = socket
 		this.remoteAddress = remoteAddress
 
-		this.#write_queue = new ImageWriteQueue(
-			this.#logger,
-			async (
-				/** @type {string | number} */ _id,
-				/** @type {Record<string, number | null>} */ partial,
-				/** @type {import('../Graphics/ImageResult.js').ImageResult} */ render
-			) => {
-				const targetSize = 72 // Compatibility
-				try {
-					const newbuffer = await transformButtonImage(render, null, targetSize, targetSize, imageRs.PixelFormat.Rgb)
+		this.#write_queue = new ImageWriteQueue(this.#logger, async (_id, partial, render) => {
+			const targetSize = 72 // Compatibility
+			try {
+				const newbuffer = await transformButtonImage(render, null, targetSize, targetSize, imageRs.PixelFormat.Rgb)
 
-					this.apicommand('fillImage', { ...partial, data: newbuffer })
-				} catch (/** @type {any} */ e) {
-					this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
-					this.emit('remove')
-					return
-				}
+				this.apicommand('fillImage', { ...partial, data: newbuffer })
+			} catch (e: any) {
+				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+				this.emit('remove')
+				return
 			}
-		)
+		})
 	}
 
-	/**
-	 *
-	 * @param {string | number} id
-	 * @param {Record<string, number | null>} partial
-	 * @param {import('../Graphics/ImageResult.js').ImageResult} render
-	 */
-	fillImage(id, partial, render) {
+	fillImage(id: string | number, partial: Record<string, number | null>, render: ImageResult): void {
 		if (this.supportsPng) {
 			this.apicommand('fillImage', {
 				...partial,
@@ -447,23 +389,23 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 
 	/**
 	 * Package and send a command
-	 * @param {string} command - the command
-	 * @param {Object} args - arguments for the command
+	 * @param command - the command
+	 * @param args - arguments for the command
 	 */
-	apicommand(command, args) {
+	apicommand(command: string, args: object): void {
 		this.socket.send(JSON.stringify({ command: command, arguments: args }))
 	}
 
 	/**
 	 * Package and send a response
-	 * @param {string} command - the command
-	 * @param {Object} args - arguments for the command
+	 * @param command - the command
+	 * @param args - arguments for the command
 	 */
-	apireply(command, args) {
+	apireply(command: string, args: object): void {
 		this.socket.send(JSON.stringify({ response: command, arguments: args }))
 	}
 
-	close() {
+	close(): void {
 		this.socket.close()
 	}
 }

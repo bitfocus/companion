@@ -1,8 +1,16 @@
 import { ServiceBase } from './Base.js'
-import { isFalsey, isTruthy, parseLineParameters, parseStringParamWithBooleanFallback } from '../Resources/Util.js'
+import {
+	isFalsey,
+	isTruthy,
+	ParsedParams,
+	parseLineParameters,
+	parseStringParamWithBooleanFallback,
+} from '../Resources/Util.js'
 import net, { Socket } from 'net'
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
-import LogController from '../Log/Controller.js'
+import LogController, { Logger } from '../Log/Controller.js'
+import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../Surface/IP/Satellite.js'
+import type { Registry } from '../Registry.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -44,43 +52,26 @@ const API_VERSION = '1.7.0'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ServiceSatellite extends ServiceBase {
+export class ServiceSatellite extends ServiceBase {
 	/**
 	 * The remote devices
-	 * @type {Map<string, SatelliteDevice>}
-	 * @access protected
 	 */
-	#devices = new Map()
+	#devices = new Map<string, SatelliteDevice>()
 
-	/**
-	 * The port to open the socket with.  Default: <code>16622</code>
-	 * @type {number}
-	 * @access protected
-	 */
-	port = 16622
+	server: net.Server | undefined = undefined
 
-	/**
-	 * @type {net.Server | undefined}
-	 * @access protected
-	 */
-	server = undefined
-
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Service/Satellite', null, null)
+
+		this.port = 16622
 
 		this.init()
 	}
 
 	/**
 	 *
-	 * @param {import('winston').Logger} socketLogger
-	 * @param {Socket} socket - the client socket
-	 * @param {import('../Resources/Util.js').ParsedParams} params  - the device parameters
 	 */
-	#addDevice(socketLogger, socket, params) {
+	#addDevice(socketLogger: Logger, socket: Socket, params: ParsedParams): void {
 		const messageName = 'ADD-DEVICE'
 		if (!params.DEVICEID || params.DEVICEID === true) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Missing DEVICEID')
@@ -167,10 +158,8 @@ class ServiceSatellite extends ServiceBase {
 
 	/**
 	 *
-	 * @param {string} id
-	 * @returns {SatelliteDevice | undefined}
 	 */
-	#findDeviceById(id) {
+	#findDeviceById(id: string): SatelliteDevice | undefined {
 		for (const device of this.#devices.values()) {
 			if (device.id === id) return device
 		}
@@ -179,11 +168,8 @@ class ServiceSatellite extends ServiceBase {
 
 	/**
 	 * Process a command from a client
-	 * @param {import('winston').Logger} socketLogger
-	 * @param {Socket} socket - the client socket
-	 * @param {string} line - the received command
 	 */
-	#handleCommand(socketLogger, socket, line) {
+	#handleCommand(socketLogger: Logger, socket: Socket, line: string): void {
 		if (!line.trim().toUpperCase().startsWith('PING')) {
 			socketLogger.silly(`received "${line}"`)
 		}
@@ -244,10 +230,8 @@ class ServiceSatellite extends ServiceBase {
 
 	/**
 	 * Set up a client socket
-	 * @param {import('winston').Logger} socketLogger
-	 * @param {Socket} socket - the client socket
 	 */
-	initSocket(socketLogger, socket) {
+	initSocket(socketLogger: Logger, socket: Socket): void {
 		socketLogger.info(`new connection`)
 
 		let receivebuffer = ''
@@ -297,7 +281,7 @@ class ServiceSatellite extends ServiceBase {
 		socket.write(`BEGIN CompanionVersion=${this.registry.appInfo.appBuild} ApiVersion=${API_VERSION}\n`)
 	}
 
-	close() {
+	close(): void {
 		if (this.server) {
 			this.server.close()
 			this.server = undefined
@@ -306,13 +290,12 @@ class ServiceSatellite extends ServiceBase {
 
 	/**
 	 * Format and send an error message
-	 * @param {Socket} socket - the client socket
-	 * @param {string} messageName - the message name
-	 * @param {string | undefined} deviceId
-	 * @param {string} message - the message. this must not contain any newlines, or `"` characters
-	 * @returns {void}
+	 * @param socket - the client socket
+	 * @param messageName - the message name
+	 * @param deviceId
+	 * @param message - the message. this must not contain any newlines, or `"` characters
 	 */
-	#formatAndSendError(socket, messageName, deviceId, message) {
+	#formatAndSendError(socket: Socket, messageName: string, deviceId: string | undefined, message: string): void {
 		if (deviceId) {
 			socket.write(`${messageName} ERROR DEVICEID="${deviceId}" MESSAGE="${message}"\n`)
 		} else {
@@ -322,22 +305,24 @@ class ServiceSatellite extends ServiceBase {
 
 	/**
 	 * Format and send an error message
-	 * @param {Socket} socket - the client socket
-	 * @param {string} messageName - the message name
-	 * @returns {void}
+	 * @param socket - the client socket
+	 * @param messageName - the message name
 	 */
-	#formatAndSendOk(socket, messageName) {
+	#formatAndSendOk(socket: Socket, messageName: string): void {
 		socket.write(`${messageName} OK\n`)
 	}
 
 	/**
 	 * Process a key press command
-	 * @param {Socket} socket - the client socket
-	 * @param {string} messageName - the message name
-	 * @param {import('../Resources/Util.js').ParsedParams} params - the message parameters
-	 * @returns {SatelliteDevice | undefined}
+	 * @param socket - the client socket
+	 * @param messageName - the message name
+	 * @param params - the message parameters
 	 */
-	#parseDeviceFromMessageAndReportError(socket, messageName, params) {
+	#parseDeviceFromMessageAndReportError(
+		socket: Socket,
+		messageName: string,
+		params: ParsedParams
+	): SatelliteDevice | undefined {
 		if (!params.DEVICEID) {
 			this.#formatAndSendError(socket, messageName, undefined, 'Missing DEVICEID')
 			return
@@ -354,10 +339,8 @@ class ServiceSatellite extends ServiceBase {
 
 	/**
 	 * Process a key press command
-	 * @param {Socket} socket - the client socket
-	 * @param {import('../Resources/Util.js').ParsedParams} params - the key press parameters
 	 */
-	#keyPress(socket, params) {
+	#keyPress(socket: Socket, params: ParsedParams): void {
 		const messageName = 'KEY-PRESS'
 		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
 		if (!device) return
@@ -381,10 +364,8 @@ class ServiceSatellite extends ServiceBase {
 
 	/**
 	 * Process a key rotate command
-	 * @param {Socket} socket - the client socket
-	 * @param {import('../Resources/Util.js').ParsedParams} params - the key rotate parameters
 	 */
-	#keyRotate(socket, params) {
+	#keyRotate(socket: Socket, params: ParsedParams): void {
 		const messageName = 'KEY-ROTATE'
 		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
 		if (!device) return
@@ -409,10 +390,8 @@ class ServiceSatellite extends ServiceBase {
 
 	/**
 	 * Process a set variable value command
-	 * @param {Socket} socket - the client socket
-	 * @param {import('../Resources/Util.js').ParsedParams} params - the variable value parameters
 	 */
-	#setVariableValue(socket, params) {
+	#setVariableValue(socket: Socket, params: ParsedParams): void {
 		const messageName = 'SET-VARIABLE-VALUE'
 		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
 		if (!device) return
@@ -434,13 +413,7 @@ class ServiceSatellite extends ServiceBase {
 		this.#formatAndSendOk(socket, messageName)
 	}
 
-	/**
-	 *
-	 * @param {import('winston').Logger} socketLogger
-	 * @param {Socket} socket - the client socket
-	 * @param {import('../Resources/Util.js').ParsedParams} params  - the device parameters
-	 */
-	#removeDevice(socketLogger, socket, params) {
+	#removeDevice(socketLogger: Logger, socket: Socket, params: ParsedParams): void {
 		const messageName = 'REMOVE-DEVICE'
 		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
 		if (!device) return
@@ -454,22 +427,13 @@ class ServiceSatellite extends ServiceBase {
 	}
 }
 
-export default ServiceSatellite
+interface SatelliteDevice {
+	id: string
+	socket: Socket
+	device: SurfaceIPSatellite
+}
 
-/**
- * @typedef {{
- *   id: string
- *   socket: Socket
- *   device: import('../Surface/IP/Satellite.js').SurfaceIPSatellite
- * }} SatelliteDevice
- */
-
-/**
- *
- * @param {string | true | undefined} input
- * @returns {import('../Surface/IP/Satellite.js').SatelliteTransferableValue[]}
- */
-function parseTransferableValues(input) {
+function parseTransferableValues(input: string | true | undefined): SatelliteTransferableValue[] {
 	if (typeof input !== 'string') return []
 
 	const decodedInput = JSON.parse(Buffer.from(input, 'base64').toString())
