@@ -302,9 +302,6 @@ export class SurfaceIPSatellite extends EventEmitter implements SurfacePanel {
 
 	/**
 	 * Produce a click event
-	 * @param {number} column
-	 * @param {number} row
-	 * @param {boolean} state
 	 */
 	doButton(column: number, row: number, state: boolean): void {
 		this.emit('click', column, row, state)
@@ -312,9 +309,6 @@ export class SurfaceIPSatellite extends EventEmitter implements SurfacePanel {
 
 	/**
 	 * Produce a rotation event
-	 * @param {number} column
-	 * @param {number} row
-	 * @param {boolean} direction
 	 */
 	doRotate(column: number, row: number, direction: boolean): void {
 		this.emit('rotate', column, row, direction)
@@ -362,11 +356,6 @@ export class SurfaceIPSatellite extends EventEmitter implements SurfacePanel {
 		}
 	}
 
-	/**
-	 *
-	 * @param {string} name
-	 * @param {SatelliteOutputVariableInfo} outputVariable
-	 */
 	#triggerOutputVariable(name: string, outputVariable: SatelliteOutputVariableInfo): void {
 		if (!outputVariable.triggerUpdate)
 			outputVariable.triggerUpdate = debounceFn(

@@ -54,7 +54,6 @@ function parseHexColor(hex: string): number {
 /**
  * Class providing the Ember+ api.
  *
- * @extends ServiceBase
  * @author Balte de Wit <contact@balte.nl>
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>

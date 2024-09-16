@@ -16,13 +16,11 @@ interface TriggerEventsEvents {
 /**
  * Main bus for trigger events
  *
- * @extends EventEmitter
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
- * @abstract
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.

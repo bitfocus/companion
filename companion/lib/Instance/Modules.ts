@@ -70,7 +70,7 @@ export class InstanceModules extends CoreBase {
 
 	/**
 	 * Initialise instances
-	 * @param {string} extraModulePath - extra directory to search for modules
+	 * @param extraModulePath - extra directory to search for modules
 	 */
 	async initInstances(extraModulePath: string): Promise<void> {
 		function generatePath(subpath: string): string {

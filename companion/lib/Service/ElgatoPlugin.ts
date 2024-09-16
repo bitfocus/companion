@@ -12,7 +12,6 @@ import type { Registry } from '../Registry.js'
 /**
  * Class providing the Elgato Plugin service.
  *
- * @extends ServiceBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -34,9 +33,6 @@ export class ServiceElgatoPlugin extends ServiceBase {
 	#server: WebSocketServer | undefined
 	#client: ServiceElgatoPluginSocket | undefined
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application's core
-	 */
 	constructor(registry: Registry) {
 		super(registry, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
 

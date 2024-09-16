@@ -15,13 +15,11 @@ export function ControlConfigRoom(controlId: string): string {
 /**
  * Abstract class for a control.
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
- * @abstract
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.
@@ -107,8 +105,6 @@ export abstract class ControlBase<TJson> extends CoreBase {
 	 * Collect the instance ids and labels referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
-	 * @access public
-	 * @abstract
 	 */
 	abstract collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void
 

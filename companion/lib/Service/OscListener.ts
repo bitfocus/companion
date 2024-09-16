@@ -6,7 +6,6 @@ import { OscReceivedMessage } from 'osc'
 /**
  * Class providing OSC receive services.
  *
- * @extends ServiceOscBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

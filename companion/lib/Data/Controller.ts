@@ -11,9 +11,6 @@ export class DataController {
 	readonly importExport: DataImportExport
 	readonly metrics: DataMetrics
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry
-	 */
 	constructor(registry: Registry) {
 		this.cache = new DataCache(registry.appInfo.configDir)
 		this.userconfig = new DataUserConfig(registry)

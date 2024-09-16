@@ -17,7 +17,6 @@ function BonjourRoom(id: string): string {
 /**
  * Class providing Bonjour discovery for modules.
  *
- * @extends ServiceBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -210,9 +209,6 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 	/**
 	 * Remove a client from a session
-	 * @param {string} clientId
-	 * @param {string} subId
-	 * @returns {void}
 	 */
 	#removeClientFromSession(clientId: string, subId: string): void {
 		const session = this.#browsers.get(subId)

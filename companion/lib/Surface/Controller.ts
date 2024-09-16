@@ -349,10 +349,6 @@ export class SurfaceController extends CoreBase {
 
 		// client.onPromise(
 		// 	'emulator:stop',
-		// 	/**
-		// 	 * @param {string} id
-		// 	 * @returns {void}
-		// 	 */
 		// 	(id) => {
 		// 		const fullId = EmulatorRoom(id)
 

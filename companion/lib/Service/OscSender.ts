@@ -6,7 +6,6 @@ import { OSCSomeArguments } from '@companion-module/base'
 /**
  * Class providing OSC send services.
  *
- * @extends ServiceOscBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

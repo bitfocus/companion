@@ -13,7 +13,6 @@ import type { InternalController } from '../../Internal/Controller.js'
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
- * @abstract
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.
@@ -285,9 +284,8 @@ export class FragmentActions {
 
 	/**
 	 * Replace all the actions in a set
-	 * @param {string} setId the action_set id to update
-	 * @param {ActionInstance[]} newActions actions to populate
-	 * @access public
+	 * @param setId the action_set id to update
+	 * @param newActions actions to populate
 	 */
 	actionReplaceAll(setId: string, newActions: ActionInstance[]): boolean {
 		const oldActionSet = this.action_sets[setId]

@@ -56,9 +56,6 @@ export class InstanceController extends CoreBase {
 	readonly moduleHost: ModuleHost
 	readonly modules: InstanceModules
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry
-	 */
 	constructor(registry: Registry) {
 		super(registry, 'Instance/Controller')
 
@@ -82,7 +79,6 @@ export class InstanceController extends CoreBase {
 
 	/**
 	 * Handle an electron power event
-	 * @param {string} event
 	 */
 	powerStatusChange(event: string): void {
 		if (event == 'resume') {

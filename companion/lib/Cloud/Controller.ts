@@ -16,7 +16,6 @@ const CLOUD_URL = 'https://api.bitfocus.io/v1'
 /**
  * The class that manages the Bitfocus Cloud functionality
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -323,8 +322,8 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Handle a page name update
-	 * @param {string} _id - the page ID
-	 * @param {string} _name - the new name
+	 * @param _id - the page ID
+	 * @param _name - the new name
 	 */
 	#handlePageNameUpdate(_id: string, _name: string): void {
 		for (let region in this.#regionInstances) {

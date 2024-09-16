@@ -5,7 +5,6 @@ import type { Registry } from '../Registry.js'
 /**
  * Class providing the UDP api.
  *
- * @extends ServiceUdpBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

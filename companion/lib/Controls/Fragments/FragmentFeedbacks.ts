@@ -16,7 +16,6 @@ import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
- * @abstract
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.

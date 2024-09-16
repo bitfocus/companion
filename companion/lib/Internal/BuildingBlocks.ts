@@ -34,9 +34,6 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	//  */
 	// #internalModule
 
-	// /**
-	//  * @param {import('./Controller.js').default} internalModule
-	//  */
 	// constructor(internalModule) {
 	// 	this.#internalModule = internalModule
 	// }

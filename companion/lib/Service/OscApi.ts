@@ -8,7 +8,6 @@ import { OscReceivedMessage } from 'osc'
 /**
  * Class providing the OSC API.
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

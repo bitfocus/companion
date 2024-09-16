@@ -28,11 +28,6 @@ import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
 import type { GridSize } from '../Util.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
-/**
- *
- * @param {string} id
- * @returns {string}
- */
 export function EmulatorRoom(id: string): string {
 	return `emulator:${id}`
 }

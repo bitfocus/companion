@@ -427,7 +427,7 @@ export class TriggersEventTimer {
 
 	/**
 	 * Remove a timeofday event listener
-	 * @param {string} id Id of the event
+	 * @param id Id of the event
 	 */
 	clearTimeOfDay(id: string): void {
 		this.#timeOfDayEvents = this.#timeOfDayEvents.filter((tod) => tod.id !== id)

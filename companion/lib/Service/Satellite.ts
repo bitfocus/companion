@@ -34,7 +34,6 @@ const API_VERSION = '1.7.0'
 /**
  * Class providing the Satellite/Remote Surface api.
  *
- * @extends ServiceBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

@@ -49,7 +49,6 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
  * The core controller that sets up all the controllers needed
  * for the app.
  *
- * @extends EventEmitter
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -174,9 +173,9 @@ export class Registry extends EventEmitter {
 
 	/**
 	 * Startup the application
-	 * @param {string} extraModulePath - extra directory to search for modules
-	 * @param {string} bind_ip
-	 * @param {number} http_port
+	 * @param extraModulePath - extra directory to search for modules
+	 * @param bind_ip
+	 * @param http_port
 	 */
 	async ready(extraModulePath: string, bind_ip: string, http_port: number) {
 		this.#logger.debug('launching core modules')

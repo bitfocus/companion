@@ -451,11 +451,11 @@ export class InternalController extends CoreBase {
 
 	/**
 	 * Parse and execute an expression in a string
-	 * @param {string} str - String containing the expression to parse
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
-	 * @param {string=} requiredType - Fail if the result is not of specified type
-	 * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
-	 * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
+	 * @param str - String containing the expression to parse
+	 * @param extras
+	 * @param requiredType - Fail if the result is not of specified type
+	 * @param injectedVariableValues - Inject some variable values
+	 * @returns result of the expression
 	 */
 	executeExpressionForInternalActionOrFeedback(
 		str: string,

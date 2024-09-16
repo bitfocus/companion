@@ -7,7 +7,6 @@ import type { Registry } from '../Registry.js'
 /**
  * Class providing the TCP api.
  *
- * @extends ServiceTcpBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

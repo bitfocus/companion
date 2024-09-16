@@ -7,7 +7,6 @@ import type { Registry } from '../Registry.js'
 /**
  * Common API command processing for {@link ServiceTcp} and {@link ServiceUdp}.
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -265,8 +264,6 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform surface set to page
-	 * @param {Record<string, string>} match
-	 * @returns {string | void}
 	 */
 	#surfaceSetPage = (match: Record<string, string>): string => {
 		const page = parseInt(match.page)
@@ -282,8 +279,6 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform surface page up
-	 * @param {Record<string, string>} match
-	 * @returns {string | void}
 	 */
 	#surfacePageUp = (match: Record<string, string>): string => {
 		const surfaceId = match.surfaceId
@@ -295,8 +290,6 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform surface page down
-	 * @param {Record<string, string>} match
-	 * @returns {string | void}
 	 */
 	#surfacePageDown = (match: Record<string, string>): string => {
 		const surfaceId = match.surfaceId
@@ -461,8 +454,6 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	/**
 	 * Perform surfaces rescan
-	 * @param {Record<string, string>} _match
-	 * @returns {Promise<void>}
 	 */
 	#surfacesRescan = async (_match: Record<string, string>): Promise<void> => {
 		this.logger.debug('Rescanning USB')

@@ -28,8 +28,6 @@ import type { Registry } from '../Registry.js'
 
 /**
  * Create a zip serve app
- * @param {fs.PathLike} zipPath
- * @param {string[]} folderPaths
  */
 function createServeStatic(zipPath: fs.PathLike, folderPaths: string[]): Express.RequestHandler {
 	const maxAge = process.env.PRODUCTION ? 3600000 : 0

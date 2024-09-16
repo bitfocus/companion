@@ -4,13 +4,11 @@ import net, { Socket } from 'net'
 /**
  * Abstract class providing base functionality for TCP services.
  *
- * @extends ServiceBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 2.3.0
- * @abstract
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.
@@ -86,10 +84,6 @@ export abstract class ServiceTcpBase extends ServiceBase {
 
 	/**
 	 * Process an incoming message from a client
-	 * @param {TcpClientInfo} _client - the client's tcp socket
-	 * @param {string} _chunk - the incoming message part
-	 * @access protected
-	 * @abstract
 	 */
 	protected abstract processIncoming(client: TcpClientInfo, chunk: string): void
 }

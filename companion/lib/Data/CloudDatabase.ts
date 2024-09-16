@@ -15,7 +15,6 @@ function generateMachineId() {
 /**
  * The class that manages the applications's cloud config database
  *
- * @extends DataStoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

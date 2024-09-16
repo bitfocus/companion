@@ -4,7 +4,6 @@ import { ServiceUdpBase, DgramRemoteInfo } from './UdpBase.js'
 /**
  * Class providing the Artnet api.
  *
- * @extends ServiceUdpBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

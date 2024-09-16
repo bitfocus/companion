@@ -13,7 +13,6 @@ const PagesRoom = 'pages'
 /**
  * The class that manages the user pages
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

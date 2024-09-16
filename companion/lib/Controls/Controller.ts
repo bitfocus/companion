@@ -38,7 +38,6 @@ type SomeControlModel = SomeButtonModel | TriggerModel
 /**
  * The class that manages the controls
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -344,25 +343,16 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise(
-			'controls:feedback:enabled',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {boolean} enabled
-			 * @returns {boolean}
-			 */
-			(controlId, id, enabled) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:feedback:enabled', (controlId, id, enabled) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackEnabled(id, enabled)
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
-				}
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackEnabled(id, enabled)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
 			}
-		)
+		})
 
 		client.onPromise('controls:feedback:set-headline', (controlId, id, headline) => {
 			const control = this.getControl(controlId)

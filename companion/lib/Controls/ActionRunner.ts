@@ -7,7 +7,6 @@ import type { ControlLocation } from '../Resources/Util.js'
 /**
  * Class to handle execution of actions.
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

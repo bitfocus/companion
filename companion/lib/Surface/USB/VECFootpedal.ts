@@ -129,8 +129,6 @@ export class SurfaceUSBVECFootpedal extends EventEmitter implements SurfacePanel
 
 	/**
 	 * Open a VEC Footpedal
-	 * @param {string} devicePath
-	 * @returns {Promise<SurfaceUSBVECFootpedal>}
 	 */
 	static async create(devicePath: string): Promise<SurfaceUSBVECFootpedal> {
 		const pedal = vecFootpedal

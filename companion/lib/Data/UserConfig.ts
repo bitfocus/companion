@@ -9,7 +9,6 @@ import type { pki } from 'node-forge'
 /**
  * The class that manages the applications's user configurable settings
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

@@ -13,7 +13,6 @@ const SurfaceDiscoveryRoom = 'surfaces:discovery'
 /**
  * Class providing the discovery of Satellite Surface.
  *
- * @extends ServiceBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -39,9 +38,6 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 
 	#satelliteExpireInterval: NodeJS.Timeout | undefined
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
 	constructor(registry: Registry) {
 		super(registry, 'Service/SurfaceDiscovery', 'discoveryEnabled', null)
 

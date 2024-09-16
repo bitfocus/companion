@@ -6,7 +6,6 @@ import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 /**
  * Class providing the Rosstalk api.
  *
- * @extends ServiceTcpBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Justin Osborne <justin@eblah.com>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
@@ -32,9 +31,6 @@ export class ServiceRosstalk extends ServiceTcpBase {
 	 */
 	readonly #releaseTime = 20
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
 	constructor(registry: Registry) {
 		super(registry, 'Service/Rosstalk', 'rosstalk_enabled', null)
 

@@ -24,7 +24,6 @@ import { CompanionVariableValues } from '@companion-module/base'
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
- * @abstract
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.
@@ -104,11 +103,10 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 	/**
 	 * Check the status of a control, and re-draw if needed
-	 * @param {boolean} redraw whether to perform a draw
-	 * @returns {boolean} whether the status changed
-	 * @access public
+	 * @param redraw whether to perform a draw
+	 * @returns whether the status changed
 	 */
-	checkButtonStatus = (redraw = true) => {
+	checkButtonStatus = (redraw = true): boolean => {
 		// Find all the connections referenced by the button
 		const connectionIds = new Set<string>()
 		for (const step of Object.values(this.steps)) {

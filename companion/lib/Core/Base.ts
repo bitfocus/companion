@@ -20,7 +20,6 @@ import type { ControlsController } from '../Controls/Controller.js'
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @since 2.3.0
- * @abstract
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.

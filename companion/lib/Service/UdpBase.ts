@@ -4,13 +4,11 @@ import dgram from 'dgram'
 /**
  * Abstract class providing base functionality for UDP services.
  *
- * @extends ServiceBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 2.3.0
- * @abstract
  * @copyright 2022 Bitfocus AS
  * @license
  * This program is free software.

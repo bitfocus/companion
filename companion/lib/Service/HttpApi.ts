@@ -10,7 +10,6 @@ import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js
 /**
  * Class providing the HTTP API.
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -44,10 +43,6 @@ export class ServiceHttpApi extends CoreBase {
 	 */
 	readonly #express: UIExpress
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 * @param {import('../UI/Express.js').UIExpress} express - express
-	 */
 	constructor(registry: Registry, express: UIExpress) {
 		super(registry, 'Service/HttpApi')
 

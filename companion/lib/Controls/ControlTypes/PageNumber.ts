@@ -16,15 +16,6 @@ import { PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.j
 /**
  * Class for a pagenum button control.
  *
- * @extends ControlBase
- * @implements {ControlWithoutActions}
- * @implements {ControlWithoutFeedbacks}
- * @implements {ControlWithoutSteps}
- * @implements {ControlWithoutStyle}
- * @implements {ControlWithoutEvents}
- * @implements {ControlWithoutActionSets}
- * @implements {ControlWithoutOptions}
- * @implements {ControlWithoutPushed}
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>

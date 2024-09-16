@@ -414,7 +414,6 @@ export class DataStoreBase {
 
 	// /**
 	//  * Save/update multiple key/value pairs to the database
-	//  * @param {Array.<(number|string),Object>} keyvalueobj - the key to save under
 	//  * @access public
 	//  */
 	// setKeys(keyvalueobj) {
