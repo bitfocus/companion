@@ -4,8 +4,8 @@ import { FragmentFeedbackInstance } from './FragmentFeedbackInstance.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
 import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
-import type InternalController from '../../Internal/Controller.js'
-import type ModuleHost from '../../Instance/Host.js'
+import type { InternalController } from '../../Internal/Controller.js'
+import type { ModuleHost } from '../../Instance/Host.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 
 /**

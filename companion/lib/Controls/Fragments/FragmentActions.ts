@@ -2,8 +2,8 @@ import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import LogController, { Logger } from '../../Log/Controller.js'
 import type { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import type ModuleHost from '../../Instance/Host.js'
-import type InternalController from '../../Internal/Controller.js'
+import type { ModuleHost } from '../../Instance/Host.js'
+import type { InternalController } from '../../Internal/Controller.js'
 
 /**
  * Helper for ControlTypes with actions

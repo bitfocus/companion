@@ -1,7 +1,7 @@
 import { VisitorReferencesUpdater } from './ReferencesUpdater.js'
 import { visitEventOptions } from '../../Resources/EventDefinitions.js'
 import { visitFeedbackInstance } from './FeedbackInstanceVisitor.js'
-import type InternalModule from '../../Internal/Controller.js'
+import type { InternalController } from '../../Internal/Controller.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { FragmentFeedbackInstance } from '../../Controls/Fragments/FragmentFeedbackInstance.js'
@@ -21,7 +21,7 @@ export class ReferencesVisitors {
 	 * @param events Array of events belonging to the control
 	 */
 	static visitControlReferences(
-		internalModule: InternalModule,
+		internalModule: InternalController,
 		visitor: InternalVisitor,
 		style: ButtonStyleProperties | undefined,
 		actions: ActionInstance[],
@@ -69,7 +69,7 @@ export class ReferencesVisitors {
 	 * @returns Whether any changes were made
 	 */
 	static fixupControlReferences(
-		internalModule: InternalModule,
+		internalModule: InternalController,
 		updateMaps: FixupReferencesUpdateMaps,
 		style: ButtonStyleProperties | undefined,
 		actions: ActionInstance[],

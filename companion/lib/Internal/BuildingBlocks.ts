@@ -15,11 +15,18 @@
  *
  */
 
-import { combineRgb } from '@companion-module/base'
+import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import LogController from '../Log/Controller.js'
+import type {
+	FeedbackForVisitor,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
+import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
-export default class BuildingBlocks {
-	#logger = LogController.createLogger('Internal/BuildingBlocks')
+export class InternalBuildingBlocks implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
 
 	// /**
 	//  * @type {import('./Controller.js').default}
@@ -34,19 +41,15 @@ export default class BuildingBlocks {
 	// 	this.#internalModule = internalModule
 	// }
 
-	/**
-	 *
-	 * @returns {Record<string, import('./Types.js').InternalFeedbackDefinition>}
-	 */
-	getFeedbackDefinitions() {
+	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			logic_and: {
 				type: 'boolean',
 				label: 'Logic: AND',
 				description: 'Test if multiple conditions are true',
 				style: {
-					color: combineRgb(255, 255, 255),
-					bgcolor: combineRgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [],
@@ -59,8 +62,8 @@ export default class BuildingBlocks {
 				label: 'Logic: OR',
 				description: 'Test if one or more of multiple conditions is true',
 				style: {
-					color: combineRgb(255, 255, 255),
-					bgcolor: combineRgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [],
@@ -73,8 +76,8 @@ export default class BuildingBlocks {
 				label: 'Logic: XOR',
 				description: 'Test if only one of multiple conditions is true',
 				style: {
-					color: combineRgb(255, 255, 255),
-					bgcolor: combineRgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [],
@@ -87,11 +90,8 @@ export default class BuildingBlocks {
 
 	/**
 	 * Execute a logic feedback
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @param {boolean[]} childValues
-	 * @returns {boolean}
 	 */
-	executeLogicFeedback(feedback, childValues) {
+	executeLogicFeedback(feedback: FeedbackInstance, childValues: boolean[]): boolean {
 		if (feedback.type === 'logic_and') {
 			if (childValues.length === 0) return !!feedback.isInverted
 
@@ -105,5 +105,9 @@ export default class BuildingBlocks {
 			this.#logger.warn(`Unexpected logic feedback type "${feedback.type}"`)
 			return false
 		}
+	}
+
+	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+		// Nothing to do
 	}
 }

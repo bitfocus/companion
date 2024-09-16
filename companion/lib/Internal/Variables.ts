@@ -16,9 +16,19 @@
  */
 
 import LogController from '../Log/Controller.js'
-import { rgb } from '../Resources/Util.js'
+import type { InternalController } from './Controller.js'
+import type { VariablesValues } from '../Variables/Values.js'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
+import type { CompanionInputFieldDropdown } from '@companion-module/base'
+import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
-const COMPARISON_OPERATION = {
+const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
 	label: 'Operation',
 	id: 'op',
@@ -31,13 +41,7 @@ const COMPARISON_OPERATION = {
 	],
 }
 
-/**
- * @param {any} op
- * @param {any} value
- * @param {any} value2
- * @returns {boolean}
- */
-function compareValues(op, value, value2) {
+function compareValues(op: any, value: any, value2: any): boolean {
 	switch (op) {
 		case 'gt':
 			return value > parseFloat(value2)
@@ -50,43 +54,29 @@ function compareValues(op, value, value2) {
 	}
 }
 
-export default class Variables {
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
-
-	/**
-	 * @type {import('../Variables/Values.js').VariablesValues}
-	 * @readonly
-	 */
-	#variableController
+export class InternalVariables implements InternalModuleFragment {
+	readonly #internalModule: InternalController
+	readonly #variableController: VariablesValues
 
 	/**
 	 * The dependencies of variables that should retrigger each feedback
-	 * @type {Map<string, string[]>}
 	 */
-	#variableSubscriptions = new Map()
+	#variableSubscriptions = new Map<string, string[]>()
 
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Variables/Values.js').VariablesValues} variableController
-	 */
-	constructor(internalModule, variableController) {
+	constructor(internalModule: InternalController, variableController: VariablesValues) {
 		this.#internalModule = internalModule
 		this.#variableController = variableController
 	}
 
-	getFeedbackDefinitions() {
+	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			variable_value: {
 				type: 'boolean',
 				label: 'Variable: Check value',
 				description: 'Change style based on the value of a variable',
 				style: {
-					color: rgb(255, 255, 255),
-					bgcolor: rgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [
@@ -123,8 +113,8 @@ export default class Variables {
 				label: 'Variable: Compare two variables',
 				description: 'Change style based on a variable compared to another variable',
 				style: {
-					color: rgb(255, 255, 255),
-					bgcolor: rgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [
@@ -149,8 +139,8 @@ export default class Variables {
 				label: 'Variable: Check boolean expression',
 				description: 'Change style based on a boolean expression',
 				style: {
-					color: rgb(255, 255, 255),
-					bgcolor: rgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [
@@ -171,10 +161,8 @@ export default class Variables {
 
 	/**
 	 * Get an updated value for a feedback
-	 * @param {import('./Types.js').FeedbackInstanceExt} feedback
-	 * @returns {boolean | void}
 	 */
-	executeFeedback(feedback) {
+	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
 		if (feedback.type == 'variable_value') {
 			const result = this.#internalModule.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
@@ -217,26 +205,20 @@ export default class Variables {
 		}
 	}
 
-	/**
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @returns {void}
-	 */
-	forgetFeedback(feedback) {
+	forgetFeedback(feedback: FeedbackInstanceExt): void {
 		this.#variableSubscriptions.delete(feedback.id)
 	}
 
 	/**
 	 * Some variables have been changed
-	 * @param {Set<string>} all_changed_variables_set
-	 * @returns {void}
 	 */
-	variablesChanged(all_changed_variables_set) {
+	variablesChanged(all_changed_variables_set: Set<string>): void {
 		/**
 		 * Danger: It is important to not do any debounces here.
 		 * Doing so will cause triggers which are 'on variable change' with a condition to check the variable value to break
 		 */
 
-		const affected_ids = []
+		const affected_ids: string[] = []
 		for (const [id, names] of this.#variableSubscriptions.entries()) {
 			for (const name of names) {
 				if (all_changed_variables_set.has(name)) {
@@ -252,11 +234,8 @@ export default class Variables {
 
 	/**
 	 *
-	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} _actions
-	 * @param {import('./Types.js').FeedbackForVisitor[]} feedbacks
 	 */
-	visitReferences(visitor, _actions, feedbacks) {
+	visitReferences(visitor: InternalVisitor, _actions: ActionInstance[], feedbacks: FeedbackForVisitor[]): void {
 		for (const feedback of feedbacks) {
 			try {
 				// check_expression.expression handled by generic options visitor

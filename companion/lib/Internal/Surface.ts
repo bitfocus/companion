@@ -15,13 +15,27 @@
  *
  */
 
-import { combineRgb } from '@companion-module/base'
+import { combineRgb, CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalActionDefinition,
+	InternalActionInputField,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
+import type { InternalController } from './Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
-/** @type {import('./Types.js').InternalActionInputField[]} */
-const CHOICES_SURFACE_GROUP_WITH_VARIABLES = [
+const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
 		label: 'Use variables for surface',
@@ -48,8 +62,7 @@ const CHOICES_SURFACE_GROUP_WITH_VARIABLES = [
 	}),
 ]
 
-/** @type {import('./Types.js').InternalActionInputField[]} */
-const CHOICES_SURFACE_ID_WITH_VARIABLES = [
+const CHOICES_SURFACE_ID_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
 		label: 'Use variables for surface',
@@ -77,8 +90,7 @@ const CHOICES_SURFACE_ID_WITH_VARIABLES = [
 	}),
 ]
 
-/** @type {import('./Types.js').InternalActionInputField[]} */
-const CHOICES_PAGE_WITH_VARIABLES = [
+const CHOICES_PAGE_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
 		label: 'Use variables for page',
@@ -107,46 +119,25 @@ const CHOICES_PAGE_WITH_VARIABLES = [
 	}),
 ]
 
-export default class Surface {
-	#logger = LogController.createLogger('Internal/Surface')
+export class InternalSurface implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('Internal/Surface')
 
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
-
-	/**
-	 * @type {import('../Controls/Controller.js').ControlsController}
-	 * @readonly
-	 */
-	#controlsController
-
-	/**
-	 * @type {import('../Surface/Controller.js').SurfaceController}
-	 * @readonly
-	 */
-	#surfaceController
-
-	/**
-	 * @type {import('../Page/Controller.js').PageController}
-	 * @readonly
-	 */
-	#pageController
+	readonly #internalModule: InternalController
+	readonly #controlsController: ControlsController
+	readonly #surfaceController: SurfaceController
+	readonly #pageController: PageController
 
 	/**
 	 * Page history for surfaces
-	 * @type {Map<string, { history: string[], index: number }>}
 	 */
-	#pageHistory = new Map()
+	readonly #pageHistory = new Map<string, { history: string[]; index: number }>()
 
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Surface/Controller.js').SurfaceController} surfaceController
-	 * @param {import('../Controls/Controller.js').ControlsController} controlsController
-	 * @param {import('../Page/Controller.js').PageController} pageController
-	 */
-	constructor(internalModule, surfaceController, controlsController, pageController) {
+	constructor(
+		internalModule: InternalController,
+		surfaceController: SurfaceController,
+		controlsController: ControlsController,
+		pageController: PageController
+	) {
 		this.#internalModule = internalModule
 		this.#surfaceController = surfaceController
 		this.#controlsController = controlsController
@@ -198,15 +189,12 @@ export default class Surface {
 		this.#surfaceController.on('group_name', () => debounceUpdateVariables())
 	}
 
-	/**
-	 * @param {Record<string, any>} options
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} info
-	 * @param {boolean} useVariableFields
-	 * @returns {string | undefined}
-	 */
-	#fetchSurfaceId(options, info, useVariableFields) {
-		/** @type {string | undefined} */
-		let surfaceId = options.controller + ''
+	#fetchSurfaceId(
+		options: Record<string, any>,
+		info: RunActionExtras | FeedbackInstanceExt,
+		useVariableFields: boolean
+	): string | undefined {
+		let surfaceId: string | undefined = options.controller + ''
 
 		if (useVariableFields && options.controller_from_variable) {
 			surfaceId = this.#internalModule.parseVariablesForInternalActionOrFeedback(options.controller_variable, info).text
@@ -219,16 +207,13 @@ export default class Surface {
 		return surfaceId
 	}
 
-	/**
-	 * @param {Record<string, any>} options
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
-	 * @param {boolean} useVariableFields
-	 * @param {string | undefined} surfaceId
-	 * @returns {string | 'back' | 'forward' | '+1' | '-1' | undefined}
-	 */
-	#fetchPage(options, extras, useVariableFields, surfaceId) {
-		/** @type {number | string | undefined} */
-		let thePageNumber = options.page
+	#fetchPage(
+		options: Record<string, any>,
+		extras: RunActionExtras | FeedbackInstanceExt,
+		useVariableFields: boolean,
+		surfaceId: string | undefined
+	): string | 'back' | 'forward' | '+1' | '-1' | undefined {
+		let thePageNumber: number | string | undefined = options.page
 
 		if (useVariableFields && options.page_from_variable) {
 			thePageNumber = Number(
@@ -253,12 +238,8 @@ export default class Surface {
 		return this.#pageController.getPageInfo(Number(thePageNumber))?.id
 	}
 
-	/**
-	 * @returns {import('../Instance/Wrapper.js').VariableDefinitionTmp[]}
-	 */
-	getVariableDefinitions() {
-		/** @type {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} */
-		const variables = [
+	getVariableDefinitions(): VariableDefinitionTmp[] {
+		const variables: VariableDefinitionTmp[] = [
 			{
 				label: 'XKeys: T-bar position',
 				name: 't-bar',
@@ -318,9 +299,8 @@ export default class Surface {
 		return variables
 	}
 
-	updateVariables() {
-		/** @type {import('@companion-module/base').CompanionVariableValues} */
-		const values = {}
+	updateVariables(): void {
+		const values: CompanionVariableValues = {}
 
 		const surfaceInfos = this.#surfaceController.getDevicesList()
 		for (const surfaceGroup of surfaceInfos) {
@@ -348,13 +328,7 @@ export default class Surface {
 		this.#internalModule.setVariables(values)
 	}
 
-	/**
-	 * Perform an upgrade for an action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {string} _controlId
-	 * @returns {import('@companion-app/shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
-	 */
-	actionUpgrade(action, _controlId) {
+	actionUpgrade(action: ActionInstance, _controlId: string): void | ActionInstance {
 		// Upgrade an action. This check is not the safest, but it should be ok
 		if (action.options.controller === 'emulator') {
 			// Hope that the default emulator still exists
@@ -364,10 +338,7 @@ export default class Surface {
 		}
 	}
 
-	/**
-	 * @returns {Record<string, import('./Types.js').InternalActionDefinition>}
-	 */
-	getActionDefinitions() {
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
 			set_brightness: {
 				label: 'Surface: Set to brightness',
@@ -471,13 +442,7 @@ export default class Surface {
 		}
 	}
 
-	/**
-	 * Run a single internal action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {boolean} Whether the action was handled
-	 */
-	executeAction(action, extras) {
+	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
 		if (action.action === 'set_brightness') {
 			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
 			if (!surfaceId) return true
@@ -590,10 +555,8 @@ export default class Surface {
 
 	/**
 	 * Change the page of a surface
-	 * @param {string} surfaceId
-	 * @param {string | 'back' | 'forward' | '+1' | '-1'} toPage
 	 */
-	#changeSurfacePage(surfaceId, toPage) {
+	#changeSurfacePage(surfaceId: string, toPage: string | 'back' | 'forward' | '+1' | '-1'): void {
 		const groupId = this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
 		if (!groupId) return
 
@@ -625,8 +588,7 @@ export default class Surface {
 					this.#surfaceController.devicePageSet(groupId, pageTarget, true)
 				}
 			} else {
-				/** @type {string | null} */
-				let newPage = toPage
+				let newPage: string | null = toPage
 				if (newPage === '+1') {
 					newPage = this.#pageController.getOffsetPageId(currentPage, 1)
 				} else if (newPage === '-1') {
@@ -655,7 +617,7 @@ export default class Surface {
 		}
 	}
 
-	getFeedbackDefinitions() {
+	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			surface_on_page: {
 				type: 'boolean',
@@ -671,6 +633,8 @@ export default class Surface {
 						type: 'internal:surface_serial',
 						label: 'Surface / group',
 						id: 'controller',
+						includeSelf: false,
+						default: '',
 					},
 					{
 						type: 'internal:page',
@@ -685,12 +649,7 @@ export default class Surface {
 		}
 	}
 
-	/**
-	 * Get an updated value for a feedback
-	 * @param {import('./Types.js').FeedbackInstanceExt} feedback
-	 * @returns {boolean | void}
-	 */
-	executeFeedback(feedback) {
+	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
 		if (feedback.type == 'surface_on_page') {
 			const surfaceId = this.#fetchSurfaceId(feedback.options, feedback, false)
 			if (!surfaceId) return false
@@ -702,13 +661,8 @@ export default class Surface {
 			return currentPage == thePage
 		}
 	}
-	/**
-	 *
-	 * @param {import('./Types.js').InternalVisitor} _visitor
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} _actions
-	 * @param {import('./Types.js').FeedbackForVisitor[]} _feedbacks
-	 */
-	visitReferences(_visitor, _actions, _feedbacks) {
+
+	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
 		// actions page_variable handled by generic options visitor
 		// actions controller_variable handled by generic options visitor
 	}

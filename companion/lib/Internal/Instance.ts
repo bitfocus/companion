@@ -15,60 +15,35 @@
  *
  */
 
-import { combineRgb } from '@companion-module/base'
-import { rgb } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
+import type { InternalController } from './Controller.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
+import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
 
-export default class Instance {
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
+export class InternalInstance implements InternalModuleFragment {
+	readonly #internalModule: InternalController
+	readonly #instanceController: InstanceController
 
-	/**
-	 * @type {import('../Instance/Controller.js').InstanceController}
-	 * @readonly
-	 */
-	#instanceController
+	#instanceStatuses: Record<string, ConnectionStatusEntry> = {}
+	#instancesTotal: number = 0
+	#instancesDisabled: number = 0
+	#instancesError: number = 0
+	#instancesWarning: number = 0
+	#instancesOk: number = 0
 
-	/**
-	 * @type {Record<string, import('@companion-app/shared/Model/Common.js').ConnectionStatusEntry>}
-	 * @access private
-	 */
-	#instanceStatuses = {}
-	/**
-	 * @type {number}
-	 * @access private
-	 */
-	#instancesTotal = 0
-	/**
-	 * @type {number}
-	 * @access private
-	 */
-	#instancesDisabled = 0
-	/**
-	 * @type {number}
-	 * @access private
-	 */
-	#instancesError = 0
-	/**
-	 * @type {number}
-	 * @access private
-	 */
-	#instancesWarning = 0
-	/**
-	 * @type {number}
-	 * @access private
-	 */
-	#instancesOk = 0
-
-	/**
-	 * @type {() => void}
-	 * @access private
-	 */
 	#debounceCheckFeedbacks = debounceFn(
-		() => {
+		(): void => {
 			this.#internalModule.checkFeedbacks('instance_status', 'instance_custom_state')
 		},
 		{
@@ -78,12 +53,8 @@ export default class Instance {
 		}
 	)
 
-	/**
-	 * @type {() => void}
-	 * @access private
-	 */
 	#debounceRegenerateVariables = debounceFn(
-		() => {
+		(): void => {
 			this.#internalModule.regenerateVariables()
 			this.updateVariables()
 		},
@@ -94,11 +65,7 @@ export default class Instance {
 		}
 	)
 
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Instance/Controller.js').InstanceController} instanceController
-	 */
-	constructor(internalModule, instanceController) {
+	constructor(internalModule: InternalController, instanceController: InstanceController) {
 		this.#internalModule = internalModule
 		this.#instanceController = instanceController
 
@@ -108,12 +75,8 @@ export default class Instance {
 		this.#instanceController.on('connection_deleted', this.#debounceRegenerateVariables.bind(this))
 	}
 
-	/**
-	 * @returns {import('../Instance/Wrapper.js').VariableDefinitionTmp[]}
-	 */
-	getVariableDefinitions() {
-		/** @type {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} */
-		const variables = [
+	getVariableDefinitions(): VariableDefinitionTmp[] {
+		const variables: VariableDefinitionTmp[] = [
 			{
 				label: 'Connection: Count total',
 				name: 'instance_total',
@@ -150,10 +113,7 @@ export default class Instance {
 		return variables
 	}
 
-	/**
-	 * @returns {Record<string, import('./Types.js').InternalActionDefinition>}
-	 */
-	getActionDefinitions() {
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
 			instance_control: {
 				label: 'Connection: Enable or disable connection',
@@ -181,68 +141,70 @@ export default class Instance {
 		}
 	}
 
-	getFeedbackDefinitions() {
+	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			instance_status: {
 				type: 'advanced',
 				label: 'Connection: Check Status',
 				description:
 					'Change button color on Connection Status\nDisabled color is not used when "All" connections is selected',
+				style: undefined,
+				showInvert: false,
 				options: [
 					{
 						type: 'internal:instance_id',
 						label: 'Connection or All',
 						id: 'instance_id',
 						includeAll: true,
-						default: 'all',
+						multiple: false,
 					},
 					{
 						type: 'colorpicker',
 						label: 'OK foreground color',
 						id: 'ok_fg',
-						default: rgb(255, 255, 255),
+						default: 0xffffff,
 					},
 					{
 						type: 'colorpicker',
 						label: 'OK background color',
 						id: 'ok_bg',
-						default: rgb(0, 200, 0),
+						default: 0x00c800,
 					},
 					{
 						type: 'colorpicker',
 						label: 'Warning foreground color',
 						id: 'warning_fg',
-						default: rgb(0, 0, 0),
+						default: 0x000000,
 					},
 					{
 						type: 'colorpicker',
 						label: 'Warning background color',
 						id: 'warning_bg',
-						default: rgb(255, 255, 0),
+						default: 0xffff00,
 					},
 					{
 						type: 'colorpicker',
 						label: 'Error foreground color',
 						id: 'error_fg',
-						default: rgb(255, 255, 255),
+						default: 0xffffff,
 					},
 					{
 						type: 'colorpicker',
 						label: 'Error background color',
 						id: 'error_bg',
-						default: rgb(200, 0, 0),
+						default: 0xc80000,
 					},
 					{
 						type: 'colorpicker',
 						label: 'Disabled foreground color',
 						id: 'disabled_fg',
-						default: rgb(153, 153, 153),
+						default: 0x999999,
 					},
 					{
 						type: 'colorpicker',
 						label: 'Disabled background color',
 						id: 'disabled_bg',
-						default: rgb(64, 64, 64),
+						default: 0x404040,
 					},
 				],
 			},
@@ -251,8 +213,8 @@ export default class Instance {
 				label: 'Connection: When matches specified status',
 				description: 'Change style when a connection matches the specified status',
 				style: {
-					color: combineRgb(255, 255, 255),
-					bgcolor: combineRgb(0, 255, 0),
+					color: 0xffffff,
+					bgcolor: 0x00ff00,
 				},
 				showInvert: true,
 				options: [
@@ -261,6 +223,7 @@ export default class Instance {
 						label: 'Connection',
 						id: 'instance_id',
 						includeAll: false,
+						multiple: false,
 					},
 					{
 						type: 'dropdown',
@@ -271,7 +234,7 @@ export default class Instance {
 							{ id: 'good', label: 'OK' },
 							{ id: 'warning', label: 'Warning' },
 							{ id: 'error', label: 'Error' },
-							{ id: null, label: 'Disabled' },
+							{ id: null as any, label: 'Disabled' },
 						],
 					},
 				],
@@ -279,13 +242,7 @@ export default class Instance {
 		}
 	}
 
-	/**
-	 * Run a single internal action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} _extras
-	 * @returns {boolean} Whether the action was handled
-	 */
-	executeAction(action, _extras) {
+	executeAction(action: ActionInstance, _extras: RunActionExtras): boolean {
 		if (action.action === 'instance_control') {
 			let newState = action.options.enable == 'true'
 			if (action.options.enable == 'toggle') {
@@ -301,12 +258,7 @@ export default class Instance {
 		}
 	}
 
-	/**
-	 * Get an updated value for a feedback
-	 * @param {import('./Types.js').FeedbackInstanceExt} feedback
-	 * @returns {import('@companion-module/base').CompanionFeedbackButtonStyleResult | boolean | void}
-	 */
-	executeFeedback(feedback) {
+	executeFeedback(feedback: FeedbackInstanceExt): CompanionFeedbackButtonStyleResult | boolean | void {
 		if (feedback.type === 'instance_status') {
 			if (feedback.options.instance_id == 'all') {
 				if (this.#instancesError > 0) {
@@ -366,9 +318,8 @@ export default class Instance {
 		}
 	}
 
-	updateVariables() {
-		/** @type {import('@companion-module/base').CompanionVariableValues} */
-		const values = {
+	updateVariables(): void {
+		const values: CompanionVariableValues = {
 			instance_total: this.#instancesTotal,
 			instance_disabled: this.#instancesDisabled,
 			instance_errors: this.#instancesError,
@@ -392,12 +343,7 @@ export default class Instance {
 		this.#internalModule.setVariables(values)
 	}
 
-	/**
-	 *
-	 * @param {Record<string, import('@companion-app/shared/Model/Common.js').ConnectionStatusEntry>} instanceStatuses
-	 * @returns {void}
-	 */
-	#calculateInstanceErrors(instanceStatuses) {
+	#calculateInstanceErrors(instanceStatuses: Record<string, ConnectionStatusEntry>): void {
 		let numTotal = 0
 		let numDisabled = 0
 		let numError = 0
@@ -428,13 +374,8 @@ export default class Instance {
 		this.updateVariables()
 		this.#debounceCheckFeedbacks()
 	}
-	/**
-	 *
-	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('./Types.js').FeedbackForVisitor[]} feedbacks
-	 */
-	visitReferences(visitor, actions, feedbacks) {
+
+	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]): void {
 		for (const action of actions) {
 			try {
 				if (action.action === 'instance_control') {

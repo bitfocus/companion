@@ -15,26 +15,23 @@
  *
  */
 
-export default class Time {
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { InternalController } from './Controller.js'
+import type { FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
 
-	/**
-	 *
-	 * @param {import('./Controller.js').default} internalModule
-	 */
-	constructor(internalModule) {
+export class InternalTime implements InternalModuleFragment {
+	readonly #internalModule: InternalController
+
+	constructor(internalModule: InternalController) {
 		this.#internalModule = internalModule
 
-		this.time_interval = setInterval(() => {
+		setInterval(() => {
 			this.updateVariables()
 		}, 500) // Do it at 2hz to make sure we dont skip one
 	}
 
-	getVariableDefinitions() {
+	getVariableDefinitions(): VariableDefinitionTmp[] {
 		return [
 			{
 				label: 'Date ISO (YYYY-MM-DD)',
@@ -99,7 +96,7 @@ export default class Time {
 		]
 	}
 
-	updateVariables() {
+	updateVariables(): void {
 		const now = new Date()
 		const hours = now.getHours()
 		const hours12 = hours % 12
@@ -136,5 +133,9 @@ export default class Time {
 			time_hm_12: hhmm12,
 			time_h_12: hh12,
 		})
+	}
+
+	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+		// Nothing to do
 	}
 }

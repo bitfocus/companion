@@ -17,35 +17,24 @@
 
 import { SplitVariableId } from '../Resources/Util.js'
 import LogController from '../Log/Controller.js'
+import type { FeedbackForVisitor, InternalActionDefinition, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type { InternalController } from './Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
 
-export default class CustomVariables {
-	#logger = LogController.createLogger('Internal/CustomVariables')
+export class InternalCustomVariables implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('Internal/CustomVariables')
 
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
+	readonly #internalModule: InternalController
+	readonly #variableController: VariablesController
 
-	/**
-	 * @type {import('../Variables/Controller.js').VariablesController}
-	 * @readonly
-	 */
-	#variableController
-
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Variables/Controller.js').VariablesController} variableController
-	 */
-	constructor(internalModule, variableController) {
+	constructor(internalModule: InternalController, variableController: VariablesController) {
 		this.#internalModule = internalModule
 		this.#variableController = variableController
 	}
 
-	/**
-	 * @returns {Record<string, import('./Types.js').InternalActionDefinition>}
-	 */
-	getActionDefinitions() {
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
 			custom_variable_set_value: {
 				label: 'Custom Variable: Set raw value',
@@ -145,15 +134,9 @@ export default class CustomVariables {
 		}
 	}
 
-	/**
-	 * Perform an upgrade for an action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {string} _controlId
-	 * @returns {import('@companion-app/shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
-	 */
-	actionUpgrade(action, _controlId) {
+	actionUpgrade(action: ActionInstance, _controlId: string): ActionInstance | void {
 		const variableRegex = /^\$\(([^:$)]+):([^)$]+)\)$/
-		const wrapValue = (/** @type {string | number} */ val) => {
+		const wrapValue = (val: string | number) => {
 			if (!isNaN(Number(val))) {
 				return Number(val)
 			} else if (typeof val === 'string' && val.trim().match(variableRegex)) {
@@ -266,13 +249,7 @@ export default class CustomVariables {
 		}
 	}
 
-	/**
-	 * Run a single internal action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {boolean} Whether the action was handled
-	 */
-	executeAction(action, extras) {
+	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
 		if (action.action === 'custom_variable_set_value') {
 			this.#variableController.custom.setValue(action.options.name, action.options.value)
 			return true
@@ -290,7 +267,7 @@ export default class CustomVariables {
 					extras
 				)
 				this.#variableController.custom.setValue(action.options.name, result.value)
-			} catch (/** @type {any} */ error) {
+			} catch (error: any) {
 				this.#logger.warn(`${error.toString()}, in expression: "${action.options.expression}"`)
 			}
 
@@ -310,13 +287,8 @@ export default class CustomVariables {
 			return false
 		}
 	}
-	/**
-	 *
-	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('./Types.js').FeedbackForVisitor[]} _feedbacks
-	 */
-	visitReferences(visitor, actions, _feedbacks) {
+
+	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
 		for (const action of actions) {
 			try {
 				// custom_variable_set_expression.expression handled by generic options visitor

@@ -16,35 +16,28 @@
  */
 
 import LogController from '../Log/Controller.js'
-import { rgb } from '../Resources/Util.js'
+import type { InternalController } from './Controller.js'
+import type { ActionRecorder } from '../Controls/ActionRecorder.js'
+import type { PageController } from '../Page/Controller.js'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
 
-export default class ActionRecorder {
-	#logger = LogController.createLogger('Internal/ActionRecorder')
+export class InternalActionRecorder implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('Internal/ActionRecorder')
 
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
+	readonly #internalModule: InternalController
+	readonly #actionRecorder: ActionRecorder
+	readonly #pageController: PageController
 
-	/**
-	 * @type {import('../Controls/ActionRecorder.js').ActionRecorder}
-	 * @readonly
-	 */
-	#actionRecorder
-
-	/**
-	 * @type {import('../Page/Controller.js').PageController}
-	 * @readonly
-	 */
-	#pageController
-
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Controls/ActionRecorder.js').ActionRecorder} actionRecorder
-	 * @param {import('../Page/Controller.js').PageController} pageController
-	 */
-	constructor(internalModule, actionRecorder, pageController) {
+	constructor(internalModule: InternalController, actionRecorder: ActionRecorder, pageController: PageController) {
 		this.#internalModule = internalModule
 		this.#actionRecorder = actionRecorder
 		this.#pageController = pageController
@@ -67,10 +60,7 @@ export default class ActionRecorder {
 		})
 	}
 
-	/**
-	 * @returns {Record<string, import('./Types.js').InternalActionDefinition>}
-	 */
-	getActionDefinitions() {
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
 			action_recorder_set_recording: {
 				label: 'Action Recorder: Set recording',
@@ -176,13 +166,7 @@ export default class ActionRecorder {
 		}
 	}
 
-	/**
-	 * Run a single internal action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {boolean} Whether the action was handled
-	 */
-	executeAction(action, extras) {
+	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
 		if (action.action === 'action_recorder_set_recording') {
 			const session = this.#actionRecorder.getSession()
 			if (session) {
@@ -198,7 +182,7 @@ export default class ActionRecorder {
 			if (session) {
 				let result = new Set(session.connectionIds)
 
-				const selectedIds = new Set(action.options.connections)
+				const selectedIds = new Set<string>(action.options.connections)
 
 				switch (action.options.mode) {
 					case 'set':
@@ -276,14 +260,15 @@ export default class ActionRecorder {
 		}
 	}
 
-	getFeedbackDefinitions() {
+	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			action_recorder_check_connections: {
 				type: 'boolean',
 				label: 'Action Recorder: Check if specified connections are selected',
+				description: undefined,
 				style: {
-					color: rgb(255, 255, 255),
-					bgcolor: rgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [
@@ -323,10 +308,8 @@ export default class ActionRecorder {
 
 	/**
 	 * Get an updated value for a feedback
-	 * @param {import('./Types.js').FeedbackInstanceExt} feedback
-	 * @returns {boolean | void}
 	 */
-	executeFeedback(feedback) {
+	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
 		if (feedback.type === 'action_recorder_check_connections') {
 			const session = this.#actionRecorder.getSession()
 			if (!session) return false
@@ -355,13 +338,8 @@ export default class ActionRecorder {
 			}
 		}
 	}
-	/**
-	 *
-	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('./Types.js').FeedbackForVisitor[]} feedbacks
-	 */
-	visitReferences(visitor, actions, feedbacks) {
+
+	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]) {
 		for (const action of actions) {
 			if (action.action === 'action_recorder_set_connections') {
 				visitor.visitInstanceIdArray(action.options, 'connections')

@@ -20,14 +20,19 @@ import { exec } from 'child_process'
 import { isEqual } from 'lodash-es'
 import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { FeedbackForVisitor, InternalActionDefinition, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type { Registry } from '../Registry.js'
+import type { InternalController } from './Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
 async function getNetworkAndHostnameVariables() {
 	// TODO - review/refactor this
 
-	/** @type {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} */
-	const definitions = []
-	/** @type { import('@companion-module/base').CompanionVariableValues} */
-	const values = {}
+	const definitions: VariableDefinitionTmp[] = []
+	const values: CompanionVariableValues = {}
 	let allIps = ''
 
 	try {
@@ -71,37 +76,17 @@ async function getNetworkAndHostnameVariables() {
 	return { definitions, values }
 }
 
-export default class System {
-	#logger = LogController.createLogger('Internal/System')
+export class InternalSystem implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('Internal/System')
 
-	/**
-	 * @type {import('../Registry.js').Registry}
-	 * @readonly
-	 */
-	#registry
+	readonly #registry: Registry
+	readonly #internalModule: InternalController
+	readonly #variableController: VariablesController
 
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
+	#interfacesDefinitions: VariableDefinitionTmp[] = []
+	#interfacesValues: CompanionVariableValues = {}
 
-	/**
-	 * @type {import('../Variables/Controller.js').VariablesController}
-	 * @readonly
-	 */
-	#variableController
-
-	/** @type {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} */
-	#interfacesDefinitions = []
-	/** @type {import('@companion-module/base').CompanionVariableValues} */
-	#interfacesValues = {}
-
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Registry.js').Registry} registry
-	 */
-	constructor(internalModule, registry) {
+	constructor(internalModule: InternalController, registry: Registry) {
 		this.#internalModule = internalModule
 		this.#registry = registry
 		this.#variableController = registry.variables
@@ -166,12 +151,8 @@ export default class System {
 		]
 	}
 
-	/**
-	 * @returns {Record<string, import('./Types.js').InternalActionDefinition>}
-	 */
-	getActionDefinitions() {
-		/** @type {Record<string, import('./Types.js').InternalActionDefinition>} */
-		const actions = {
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
+		const actions: Record<string, InternalActionDefinition> = {
 			exec: {
 				label: 'System: Run shell path (local)',
 				description: undefined,
@@ -222,13 +203,7 @@ export default class System {
 		return actions
 	}
 
-	/**
-	 * Run a single internal action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {boolean} Whether the action was handled
-	 */
-	executeAction(action, extras) {
+	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
 		if (action.action === 'exec') {
 			if (action.options.path) {
 				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.path, extras).text
@@ -265,5 +240,9 @@ export default class System {
 		} else {
 			return false
 		}
+	}
+
+	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+		// Nothing to do
 	}
 }

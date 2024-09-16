@@ -15,29 +15,20 @@
  *
  */
 
-// import LogController from '../Log/Controller.js'
+import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { InternalController } from './Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import type { FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
-export default class Page {
+export class InternalPage implements InternalModuleFragment {
 	// #logger = LogController.createLogger('Internal/Page')
 
-	/**
-	 * @type {import('../Page/Controller.js').PageController}
-	 * @readonly
-	 */
-	#pageController
+	readonly #pageController: PageController
+	readonly #internalModule: InternalController
 
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
-
-	/**
-	 *
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Page/Controller.js').PageController} pageController
-	 */
-	constructor(internalModule, pageController) {
+	constructor(internalModule: InternalController, pageController: PageController) {
 		this.#internalModule = internalModule
 		this.#pageController = pageController
 
@@ -45,23 +36,14 @@ export default class Page {
 		this.#pageController.on('pagecount', () => this.#internalModule.regenerateVariables())
 	}
 
-	/**
-	 * @param {number} page
-	 * @param {string} name
-	 * @returns {void}
-	 */
-	#nameChange(page, name) {
+	#nameChange(page: Number, name: string): void {
 		this.#internalModule.setVariables({
 			[`page_number_${page}_name`]: name,
 		})
 	}
 
-	/**
-	 * @returns {import('../Instance/Wrapper.js').VariableDefinitionTmp[]}
-	 */
-	getVariableDefinitions() {
-		/** @type {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} */
-		const variables = []
+	getVariableDefinitions(): VariableDefinitionTmp[] {
+		const variables: VariableDefinitionTmp[] = []
 		for (let i = 1; i <= this.#pageController.getPageCount(); i++) {
 			variables.push({
 				name: `page_number_${i}_name`,
@@ -71,12 +53,15 @@ export default class Page {
 		return variables
 	}
 
-	updateVariables() {
-		/** @type {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} */
-		const variables = {}
+	updateVariables(): void {
+		const variables: CompanionVariableValues = {}
 		for (let i = 1; i <= this.#pageController.getPageCount(); i++) {
 			variables[`page_number_${i}_name`] = this.#pageController.getPageName(i)
 		}
 		this.#internalModule.setVariables(variables)
+	}
+
+	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+		// Nothing to do
 	}
 }

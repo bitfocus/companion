@@ -1,36 +1,27 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { Logger } from '../Log/Controller.js'
+import type { VariablesValues } from '../Variables/Values.js'
+import type { VariablesCache } from '../Variables/Util.js'
 
 /**
  *
- * @param {import('winston').Logger} logger
- * @param {import('../Variables/Values.js').VariablesValues} variablesController
- * @param {import('../Resources/Util.js').ControlLocation | undefined} pressLocation
- * @param {Record<string, any>} options
- * @param {boolean} useVariableFields
- * @param {import('../Variables/Util.js').VariablesCache=} injectedVariableValues - Inject some variable values
- * @returns {{ location: import('../Resources/Util.js').ControlLocation | null, referencedVariables: string[] }}
  */
 export function ParseInternalControlReference(
-	logger,
-	variablesController,
-	pressLocation,
-	options,
-	useVariableFields,
-	injectedVariableValues
-) {
-	/**
-	 * @param {number} pageNumber
-	 * @returns {number | null}
-	 */
-	const sanitisePageNumber = (pageNumber) => {
+	logger: Logger,
+	variablesController: VariablesValues,
+	pressLocation: ControlLocation | undefined,
+	options: Record<string, any>,
+	useVariableFields: boolean,
+	injectedVariableValues?: VariablesCache
+): {
+	location: ControlLocation | null
+	referencedVariables: string[]
+} {
+	const sanitisePageNumber = (pageNumber: number): number | null => {
 		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
 	}
-	/**
-	 * @param {number} pageNumber
-	 * @param {string} str
-	 * @returns {import('../Resources/Util.js').ControlLocation | null}
-	 */
-	const parseBankString = (pageNumber, str) => {
+	const parseBankString = (pageNumber: number, str: string): ControlLocation | null => {
 		// Legacy bank id
 		const bankIndex = Number(str.trim())
 		const xy = oldBankIndexToXY(bankIndex)
@@ -51,11 +42,7 @@ export function ParseInternalControlReference(
 		}
 	}
 
-	/**
-	 * @param {string | undefined} str
-	 * @returns {import('../Resources/Util.js').ControlLocation | null}
-	 */
-	const parseLocationString = (str) => {
+	const parseLocationString = (str: string | undefined): ControlLocation | null => {
 		if (!str) return null
 
 		const parts = str.split('/') // TODO - more chars
@@ -91,10 +78,8 @@ export function ParseInternalControlReference(
 		}
 	}
 
-	/** @type {import('../Resources/Util.js').ControlLocation | null} */
-	let location = null
-	/** @type {string[]} */
-	let referencedVariables = []
+	let location: ControlLocation | null = null
+	let referencedVariables: string[] = []
 
 	switch (options.location_target) {
 		case 'this':
@@ -128,7 +113,7 @@ export function ParseInternalControlReference(
 
 					location = parseLocationString(String(result.value))
 					referencedVariables = Array.from(result.variableIds)
-				} catch (/** @type {any} */ error) {
+				} catch (error: any) {
 					logger.warn(`${error.toString()}, in expression: "${options.location_expression}"`)
 				}
 			}

@@ -16,13 +16,32 @@
  */
 
 import { cloneDeep } from 'lodash-es'
-import { SplitVariableId, rgb, serializeIsVisibleFnSingle } from '../Resources/Util.js'
+import { ControlLocation, SplitVariableId, serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import { oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalActionDefinition,
+	InternalActionInputField,
+	InternalFeedbackDefinition,
+	InternalFeedbackInputField,
+	InternalModuleFragment,
+	InternalVisitor,
+	ExecuteFeedbackResultWithReferences,
+} from './Types.js'
+import type { CompanionVariableValue } from '@companion-module/base'
+import type { InternalController } from './Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import type { VariablesValues } from '../Variables/Values.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
-/** @type {import('./Types.js').InternalActionInputField[]} */
-const CHOICES_DYNAMIC_LOCATION = [
+const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
 	{
 		type: 'dropdown',
 		label: 'Target',
@@ -59,8 +78,7 @@ const CHOICES_DYNAMIC_LOCATION = [
 	}),
 ]
 
-/** @type {import('./Types.js').InternalActionInputField[]} */
-const CHOICES_STEP_WITH_VARIABLES = [
+const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
 		label: 'Use variables for step',
@@ -96,12 +114,11 @@ const ButtonStylePropertiesExt = [
 	{ id: 'imageBuffers', label: 'Image buffers' },
 ]
 
-/**
- * @param {string} op
- * @param {import('@companion-module/base').CompanionVariableValue} condition
- * @param {import('@companion-module/base').CompanionVariableValue | undefined} variable_value
- */
-function checkCondition(op, condition, variable_value) {
+function checkCondition(
+	op: string,
+	condition: CompanionVariableValue,
+	variable_value: CompanionVariableValue | undefined
+): boolean {
 	let variable_value_number = Number(variable_value)
 	let condition_number = Number(condition)
 
@@ -118,46 +135,20 @@ function checkCondition(op, condition, variable_value) {
 	}
 }
 
-export default class Controls {
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
+export class InternalControls implements InternalModuleFragment {
+	readonly #internalModule: InternalController
+	readonly #graphicsController: GraphicsController
+	readonly #controlsController: ControlsController
+	readonly #pagesController: PageController
+	readonly #variableController: VariablesValues
 
-	/**
-	 * The core graphics controller
-	 * @type {import('../Graphics/Controller.js').GraphicsController}
-	 * @readonly
-	 */
-	#graphicsController
-
-	/**
-	 * @type {import('../Controls/Controller.js').ControlsController}
-	 * @readonly
-	 */
-	#controlsController
-
-	/**
-	 * @type {import('../Page/Controller.js').PageController}
-	 * @readonly
-	 */
-	#pagesController
-
-	/**
-	 * @type {import('../Variables/Values.js').VariablesValues}
-	 * @readonly
-	 */
-	#variableController
-
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Graphics/Controller.js').GraphicsController} graphicsController
-	 * @param {import('../Controls/Controller.js').ControlsController} controlsController
-	 * @param {import('../Page/Controller.js').PageController} pagesController
-	 * @param {import('../Variables/Values.js').VariablesValues} variableController
-	 */
-	constructor(internalModule, graphicsController, controlsController, pagesController, variableController) {
+	constructor(
+		internalModule: InternalController,
+		graphicsController: GraphicsController,
+		controlsController: ControlsController,
+		pagesController: PageController,
+		variableController: VariablesValues
+	) {
 		this.#internalModule = internalModule
 		this.#graphicsController = graphicsController
 		this.#controlsController = controlsController
@@ -181,12 +172,7 @@ export default class Controls {
 		})
 	}
 
-	/**
-	 * @param {Record<string, any>} options
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {{ thePage: number | null }}
-	 */
-	#fetchPage(options, extras) {
+	#fetchPage(options: Record<string, any>, extras: RunActionExtras): { thePage: number | null } {
 		let thePage = options.page
 
 		if (options.page_from_variable) {
@@ -204,18 +190,15 @@ export default class Controls {
 		}
 	}
 
-	/**
-	 *
-	 * @param {Record<string, any>} options
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
-	 * @param {boolean} useVariableFields
-	 * @returns {{
-	 *   theControlId: string | null,
-	 *   theLocation: import('../Resources/Util.js').ControlLocation | null,
-	 *   referencedVariables: string[]
-	 * }}
-	 */
-	#fetchLocationAndControlId(options, extras, useVariableFields = false) {
+	#fetchLocationAndControlId(
+		options: Record<string, any>,
+		extras: RunActionExtras | FeedbackInstanceExt,
+		useVariableFields = false
+	): {
+		theControlId: string | null
+		theLocation: ControlLocation | null
+		referencedVariables: string[]
+	} {
 		const result = this.#internalModule.parseInternalControlReferenceForActionOrFeedback(
 			extras,
 			options,
@@ -231,12 +214,7 @@ export default class Controls {
 		}
 	}
 
-	/**
-	 * @param {Record<string, any>} options
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {number}
-	 */
-	#fetchStep(options, extras) {
+	#fetchStep(options: Record<string, any>, extras: RunActionExtras): number {
 		let theStep = options.step
 
 		if (options.step_from_expression) {
@@ -250,10 +228,7 @@ export default class Controls {
 		return theStep
 	}
 
-	/**
-	 * @returns {Record<string, import('./Types.js').InternalActionDefinition>}
-	 */
-	getActionDefinitions() {
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
 			button_pressrelease: {
 				label: 'Button: Trigger press and release',
@@ -638,13 +613,15 @@ export default class Controls {
 		}
 	}
 
-	getFeedbackDefinitions() {
+	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			bank_style: {
 				type: 'advanced',
 				label: 'Button: Use another buttons style',
 				description: 'Imitate the style of another button',
 				showButtonPreview: true,
+				style: undefined,
+				showInvert: false,
 				options: [
 					...CHOICES_DYNAMIC_LOCATION,
 					{
@@ -663,8 +640,8 @@ export default class Controls {
 				description: 'Change style when a button is being pressed',
 				showButtonPreview: true,
 				style: {
-					color: rgb(255, 255, 255),
-					bgcolor: rgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [
@@ -683,8 +660,8 @@ export default class Controls {
 				description: 'Change style based on the current step of a button',
 				showButtonPreview: true,
 				style: {
-					color: rgb(0, 0, 0),
-					bgcolor: rgb(0, 255, 0),
+					color: 0x000000,
+					bgcolor: 0x00ff00,
 				},
 				showInvert: true,
 				options: [
@@ -696,18 +673,14 @@ export default class Controls {
 						id: 'step',
 						default: 1,
 						min: 1,
+						max: Number.MAX_SAFE_INTEGER,
 					},
 				],
 			},
 		}
 	}
 
-	/**
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @param {string} _controlId
-	 * @returns {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance | void}
-	 */
-	feedbackUpgrade(feedback, _controlId) {
+	feedbackUpgrade(feedback: FeedbackInstance, _controlId: string): FeedbackInstance | void {
 		let changed = false
 
 		if (feedback.options.bank !== undefined) {
@@ -737,12 +710,7 @@ export default class Controls {
 		if (changed) return feedback
 	}
 
-	/**
-	 * Get an updated value for a feedback
-	 * @param {import('./Types.js').FeedbackInstanceExt} feedback
-	 * @returns {{ referencedVariables: string[], value: any } | void}
-	 */
-	executeFeedback(feedback) {
+	executeFeedback(feedback: FeedbackInstanceExt): ExecuteFeedbackResultWithReferences | void {
 		if (feedback.type === 'bank_style') {
 			const { theLocation, referencedVariables } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
@@ -834,13 +802,7 @@ export default class Controls {
 		}
 	}
 
-	/**
-	 * Perform an upgrade for an action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {string} _controlId
-	 * @returns {import('@companion-app/shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
-	 */
-	actionUpgrade(action, _controlId) {
+	actionUpgrade(action: ActionInstance, _controlId: string): ActionInstance | void {
 		let changed = false
 		if (
 			action.action === 'button_pressrelease' ||
@@ -931,13 +893,7 @@ export default class Controls {
 		if (changed) return action
 	}
 
-	/**
-	 * Run a single internal action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {boolean} Whether the action was handled
-	 */
-	executeAction(action, extras) {
+	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
 		if (action.action === 'button_pressrelease') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
@@ -1174,13 +1130,8 @@ export default class Controls {
 			return false
 		}
 	}
-	/**
-	 *
-	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('./Types.js').FeedbackForVisitor[]} _feedbacks
-	 */
-	visitReferences(visitor, actions, _feedbacks) {
+
+	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
 		for (const action of actions) {
 			try {
 				// any expression/variables fields are handled by generic options visitor

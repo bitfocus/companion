@@ -16,53 +16,62 @@
  */
 
 import { CoreBase } from '../Core/Base.js'
-import ActionRecorder from './ActionRecorder.js'
-import BuildingBlocks from './BuildingBlocks.js'
-import Instance from './Instance.js'
-import Time from './Time.js'
-import Controls from './Controls.js'
-import CustomVariables from './CustomVariables.js'
-import Surface from './Surface.js'
-import System from './System.js'
-import Triggers from './Triggers.js'
-import Variables from './Variables.js'
+import { InternalActionRecorder } from './ActionRecorder.js'
+import { InternalBuildingBlocks } from './BuildingBlocks.js'
+import { InternalInstance } from './Instance.js'
+import { InternalTime } from './Time.js'
+import { InternalControls } from './Controls.js'
+import { InternalCustomVariables } from './CustomVariables.js'
+import { InternalSurface } from './Surface.js'
+import { InternalSystem } from './System.js'
+import { InternalTriggers } from './Triggers.js'
+import { InternalVariables } from './Variables.js'
 import { cloneDeep } from 'lodash-es'
-import Page from './Page.js'
+import { InternalPage } from './Page.js'
 import { ParseInternalControlReference } from './Util.js'
+import type { Registry } from '../Registry.js'
+import type {
+	ActionDefinition,
+	FeedbackDefinition,
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { FragmentFeedbackInstance } from '../Controls/Fragments/FragmentFeedbackInstance.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { NewFeedbackValue } from '../Controls/Controller.js'
+import type { VariablesCache } from '../Variables/Util.js'
+import type { ParseVariablesResult } from '../Variables/Util.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
-export default class InternalController extends CoreBase {
-	/**
-	 * @type {Map<string, import('./Types.js').FeedbackInstanceExt>}
-	 * @readonly
-	 */
-	#feedbacks = new Map()
+export class InternalController extends CoreBase {
+	readonly #feedbacks = new Map<string, import('./Types.js').FeedbackInstanceExt>()
 
-	/**
-	 * @type {BuildingBlocks}
-	 * @readonly
-	 */
-	#buildingBlocksFragment
+	readonly #buildingBlocksFragment: InternalBuildingBlocks
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry
-	 */
-	constructor(registry) {
+	readonly fragments: InternalModuleFragment[]
+
+	constructor(registry: Registry) {
 		super(registry, 'Internal/Controller')
 
-		this.#buildingBlocksFragment = new BuildingBlocks()
+		this.#buildingBlocksFragment = new InternalBuildingBlocks()
 
 		this.fragments = [
-			new ActionRecorder(this, registry.controls.actionRecorder, registry.page),
+			new InternalActionRecorder(this, registry.controls.actionRecorder, registry.page),
 			this.#buildingBlocksFragment,
-			new Instance(this, registry.instance),
-			new Time(this),
-			new Controls(this, registry.graphics, registry.controls, registry.page, registry.variables.values),
-			new CustomVariables(this, registry.variables),
-			new Page(this, registry.page),
-			new Surface(this, registry.surfaces, registry.controls, registry.page),
-			new System(this, registry),
-			new Triggers(this, registry.controls),
-			new Variables(this, registry.variables.values),
+			new InternalInstance(this, registry.instance),
+			new InternalTime(this),
+			new InternalControls(this, registry.graphics, registry.controls, registry.page, registry.variables.values),
+			new InternalCustomVariables(this, registry.variables),
+			new InternalPage(this, registry.page),
+			new InternalSurface(this, registry.surfaces, registry.controls, registry.page),
+			new InternalSystem(this, registry),
+			new InternalTriggers(this, registry.controls),
+			new InternalVariables(this, registry.variables.values),
 		]
 
 		// Set everything up
@@ -71,7 +80,7 @@ export default class InternalController extends CoreBase {
 		this.regenerateVariables()
 	}
 
-	init() {
+	init(): void {
 		// Find all the feedbacks on controls
 		const allControls = this.registry.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
@@ -116,11 +125,11 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * Perform an upgrade for an action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {string} controlId
-	 * @returns {import('@companion-app/shared/Model/ActionModel.js').ActionInstance | undefined} Updated action if any changes were made
+	 * @param action
+	 * @param controlId
+	 * @returns Updated action if any changes were made
 	 */
-	actionUpgrade(action, controlId) {
+	actionUpgrade(action: ActionInstance, controlId: string): ActionInstance | undefined {
 		for (const fragment of this.fragments) {
 			if ('actionUpgrade' in fragment && typeof fragment.actionUpgrade === 'function') {
 				try {
@@ -130,7 +139,7 @@ export default class InternalController extends CoreBase {
 						// It was handled, so break
 						return newAction
 					}
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.logger.silly(
 						`Action upgrade failed: ${JSON.stringify(action)}(${controlId}) - ${e?.message ?? e} ${e?.stack}`
 					)
@@ -142,11 +151,11 @@ export default class InternalController extends CoreBase {
 	}
 	/**
 	 * Perform an upgrade for a feedback
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @param {string} controlId
-	 * @returns {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance | undefined} Updated feedback if any changes were made
+	 * @param feedback
+	 * @param controlId
+	 * @returns Updated feedback if any changes were made
 	 */
-	feedbackUpgrade(feedback, controlId) {
+	feedbackUpgrade(feedback: FeedbackInstance, controlId: string): FeedbackInstance | undefined {
 		for (const fragment of this.fragments) {
 			if ('feedbackUpgrade' in fragment && typeof fragment.feedbackUpgrade === 'function') {
 				try {
@@ -156,7 +165,7 @@ export default class InternalController extends CoreBase {
 						// It was handled, so break
 						return newFeedback
 					}
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.logger.silly(
 						`Feedback upgrade failed: ${JSON.stringify(feedback)}(${controlId}) - ${e?.message ?? e} ${e?.stack}`
 					)
@@ -169,18 +178,14 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * A feedback has changed, and state should be updated
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @param {string} controlId
-	 * @returns {void}
 	 */
-	feedbackUpdate(feedback, controlId) {
+	feedbackUpdate(feedback: FeedbackInstance, controlId: string): void {
 		if (feedback.instance_id !== 'internal') throw new Error(`Feedback is not for internal instance`)
 		if (feedback.disabled) return
 
 		const location = this.page.getLocationOfControlId(controlId)
 
-		/** @type {import('./Types.js').FeedbackInstanceExt} */
-		const cloned = {
+		const cloned: FeedbackInstanceExt = {
 			...cloneDeep(feedback),
 			controlId,
 			location,
@@ -198,10 +203,8 @@ export default class InternalController extends CoreBase {
 	}
 	/**
 	 * A feedback has been deleted
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @returns {void}
 	 */
-	feedbackDelete(feedback) {
+	feedbackDelete(feedback: FeedbackInstance): void {
 		if (feedback.instance_id !== 'internal') throw new Error(`Feedback is not for internal instance`)
 
 		this.#feedbacks.delete(feedback.id)
@@ -210,7 +213,7 @@ export default class InternalController extends CoreBase {
 			if ('forgetFeedback' in fragment && typeof fragment.forgetFeedback === 'function') {
 				try {
 					fragment.forgetFeedback(feedback)
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.logger.silly(`Feedback forget failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 				}
 			}
@@ -218,17 +221,15 @@ export default class InternalController extends CoreBase {
 	}
 	/**
 	 * Get an updated value for a feedback
-	 * @param {import('./Types.js').FeedbackInstanceExt} feedback
-	 * @returns {any}
 	 */
-	#feedbackGetValue(feedback) {
+	#feedbackGetValue(feedback: FeedbackInstanceExt): any {
 		for (const fragment of this.fragments) {
 			if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
-				/** @type {undefined | void | boolean |import('@companion-module/base').CompanionFeedbackButtonStyleResult | { value: any, referencedVariables: string[] }} */
-				let value
+				/** @type {} */
+				let value: ReturnType<Required<InternalModuleFragment>['executeFeedback']> | undefined
 				try {
 					value = fragment.executeFeedback(feedback)
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.logger.silly(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 				}
 
@@ -249,16 +250,16 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * Visit any references in some inactive internal actions and feedbacks
-	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} rawFeedbacks
-	 * @param {import('../Controls/Fragments/FragmentFeedbackInstance.js').FragmentFeedbackInstance[]} feedbacks
 	 */
-	visitReferences(visitor, actions, rawFeedbacks, feedbacks) {
+	visitReferences(
+		visitor: InternalVisitor,
+		actions: ActionInstance[],
+		rawFeedbacks: FeedbackInstance[],
+		feedbacks: FragmentFeedbackInstance[]
+	): void {
 		const internalActions = actions.filter((a) => a.instance === 'internal')
 
-		/** @type {import('./Types.js').FeedbackForVisitor[]} */
-		const simpleInternalFeedbacks = []
+		const simpleInternalFeedbacks: FeedbackForVisitor[] = []
 
 		for (const feedback of rawFeedbacks) {
 			if (feedback.instance_id !== 'internal') continue
@@ -283,11 +284,8 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * Run a single internal action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {void}
 	 */
-	executeAction(action, extras) {
+	executeAction(action: ActionInstance, extras: RunActionExtras): void {
 		for (const fragment of this.fragments) {
 			if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
 				try {
@@ -295,7 +293,7 @@ export default class InternalController extends CoreBase {
 						// It was handled, so break
 						return
 					}
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.logger.warn(
 						`Action execute failed: ${JSON.stringify(action)}(${JSON.stringify(extras)}) - ${e?.message ?? e} ${
 							e?.stack
@@ -308,32 +306,24 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * Execute a logic feedback
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @param {boolean[]} childValues
-	 * @returns {boolean}
 	 */
-	executeLogicFeedback(feedback, childValues) {
+	executeLogicFeedback(feedback: FeedbackInstance, childValues: boolean[]): boolean {
 		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)
 	}
 
 	/**
 	 * Set internal variable values
-	 * @param {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} variables
-	 * @returns {void}
 	 */
-	setVariables(variables) {
+	setVariables(variables: Record<string, CompanionVariableValue | undefined>): void {
 		this.registry.variables.values.setVariableValues('internal', variables)
 	}
 	/**
 	 * Recheck all feedbacks of specified types
-	 * @param  {...string} types
-	 * @returns {void}
 	 */
-	checkFeedbacks(...types) {
+	checkFeedbacks(...types: string[]): void {
 		const typesSet = new Set(types)
 
-		/** @type {import('../Controls/Controller.js').NewFeedbackValue[]} */
-		const newValues = []
+		const newValues: NewFeedbackValue[] = []
 
 		for (const [id, feedback] of this.#feedbacks.entries()) {
 			if (typesSet.size === 0 || typesSet.has(feedback.type)) {
@@ -349,12 +339,9 @@ export default class InternalController extends CoreBase {
 	}
 	/**
 	 * Recheck all feedbacks of specified id
-	 * @param  {...string} ids
-	 * @returns {void}
 	 */
-	checkFeedbacksById(...ids) {
-		/** @type {import('../Controls/Controller.js').NewFeedbackValue[]} */
-		const newValues = []
+	checkFeedbacksById(...ids: string[]): void {
+		const newValues: NewFeedbackValue[] = []
 
 		for (const id of ids) {
 			const feedback = this.#feedbacks.get(id)
@@ -369,9 +356,8 @@ export default class InternalController extends CoreBase {
 
 		this.registry.controls.updateFeedbackValues('internal', newValues)
 	}
-	#regenerateActions() {
-		/** @type {Record<string, import('@companion-app/shared/Model/ActionDefinitionModel.js').ActionDefinition>} */
-		let actions = {}
+	#regenerateActions(): void {
+		let actions: Record<string, ActionDefinition> = {}
 
 		for (const fragment of this.fragments) {
 			if ('getActionDefinitions' in fragment && typeof fragment.getActionDefinitions === 'function') {
@@ -379,7 +365,6 @@ export default class InternalController extends CoreBase {
 					actions[id] = {
 						...action,
 						hasLearn: action.hasLearn ?? false,
-						// @ts-ignore
 						learnTimeout: action.learnTimeout,
 					}
 				}
@@ -388,21 +373,25 @@ export default class InternalController extends CoreBase {
 
 		this.registry.instance.definitions.setActionDefinitions('internal', actions)
 	}
-	#regenerateFeedbacks() {
-		/** @type {Record<string, import('@companion-app/shared/Model/FeedbackDefinitionModel.js').FeedbackDefinition>} */
-		let feedbacks = {}
+	#regenerateFeedbacks(): void {
+		let feedbacks: Record<string, FeedbackDefinition> = {}
 
 		for (const fragment of this.fragments) {
 			if ('getFeedbackDefinitions' in fragment && typeof fragment.getFeedbackDefinitions === 'function') {
 				for (const [id, feedback] of Object.entries(fragment.getFeedbackDefinitions())) {
-					feedbacks[id] = feedback
+					feedbacks[id] = {
+						...feedback,
+						showInvert: feedback.showInvert ?? false,
+						hasLearn: feedback.hasLearn ?? false,
+						learnTimeout: feedback.learnTimeout,
+					}
 				}
 			}
 		}
 
 		this.registry.instance.definitions.setFeedbackDefinitions('internal', feedbacks)
 	}
-	regenerateVariables() {
+	regenerateVariables(): void {
 		const variables = []
 
 		for (const fragment of this.fragments) {
@@ -414,10 +403,7 @@ export default class InternalController extends CoreBase {
 		this.registry.variables.definitions.setVariableDefinitions('internal', variables)
 	}
 
-	/**
-	 * @param {Set<string>} all_changed_variables_set
-	 */
-	variablesChanged(all_changed_variables_set) {
+	variablesChanged(all_changed_variables_set: Set<string>): void {
 		// Inform all fragments
 		for (const fragment of this.fragments) {
 			if ('variablesChanged' in fragment && typeof fragment.variablesChanged === 'function') {
@@ -425,7 +411,7 @@ export default class InternalController extends CoreBase {
 			}
 		}
 
-		const newValues = []
+		const newValues: NewFeedbackValue[] = []
 
 		// Lookup feedbacks
 		for (const [id, feedback] of this.#feedbacks.entries()) {
@@ -446,12 +432,16 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * Parse the variables in a string
-	 * @param {string} str - String to parse variables in
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
-	 * @param {import('../Variables/Util.js').VariablesCache=} injectedVariableValues - Inject some variable values
-	 * @returns {import('../Variables/Util.js').ParseVariablesResult} with variables replaced with values
+	 * @param str - String to parse variables in
+	 * @param extras
+	 * @param injectedVariableValues - Inject some variable values
+	 * @returns with variables replaced with values
 	 */
-	parseVariablesForInternalActionOrFeedback(str, extras, injectedVariableValues) {
+	parseVariablesForInternalActionOrFeedback(
+		str: string,
+		extras: RunActionExtras | FeedbackInstanceExt,
+		injectedVariableValues?: VariablesCache
+	): ParseVariablesResult {
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
 			...injectedVariableValues,
@@ -467,7 +457,12 @@ export default class InternalController extends CoreBase {
 	 * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
 	 * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
 	 */
-	executeExpressionForInternalActionOrFeedback(str, extras, requiredType, injectedVariableValues) {
+	executeExpressionForInternalActionOrFeedback(
+		str: string,
+		extras: RunActionExtras | FeedbackInstanceExt,
+		requiredType?: string,
+		injectedVariableValues?: CompanionVariableValues
+	): { value: boolean | number | string | undefined; variableIds: Set<string> } {
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
 			...injectedVariableValues,
@@ -482,12 +477,15 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 *
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras | import('./Types.js').FeedbackInstanceExt} extras
-	 * @param {Record<string, any>} options
-	 * @param {boolean} useVariableFields
-	 * @returns
 	 */
-	parseInternalControlReferenceForActionOrFeedback(extras, options, useVariableFields) {
+	parseInternalControlReferenceForActionOrFeedback(
+		extras: RunActionExtras | FeedbackInstanceExt,
+		options: Record<string, any>,
+		useVariableFields: boolean
+	): {
+		location: ControlLocation | null
+		referencedVariables: string[]
+	} {
 		const injectedVariableValues = 'id' in extras ? undefined : this.#getInjectedVariablesForLocation(extras)
 
 		return ParseInternalControlReference(
@@ -502,10 +500,8 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * Variables to inject based on an internal action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @returns {import('@companion-module/base').CompanionVariableValues}
 	 */
-	#getInjectedVariablesForLocation(extras) {
+	#getInjectedVariablesForLocation(extras: RunActionExtras): CompanionVariableValues {
 		return {
 			// Doesn't need to be reactive, it's only for an action
 			'$(this:surface_id)': extras.surfaceId,

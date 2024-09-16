@@ -15,28 +15,26 @@
  *
  */
 
-import { rgb } from '../Resources/Util.js'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import debounceFn from 'debounce-fn'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { InternalController } from './Controller.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
 
-export default class Triggers {
-	/**
-	 * @type {import('../Controls/Controller.js').ControlsController}
-	 * @readonly
-	 */
-	#controlsController
+export class InternalTriggers implements InternalModuleFragment {
+	readonly #controlsController: ControlsController
+	readonly #internalModule: InternalController
 
-	/**
-	 * @type {import('./Controller.js').default}
-	 * @readonly
-	 */
-	#internalModule
-
-	/**
-	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Controls/Controller.js').ControlsController} controlsController
-	 */
-	constructor(internalModule, controlsController) {
+	constructor(internalModule: InternalController, controlsController: ControlsController) {
 		this.#internalModule = internalModule
 		this.#controlsController = controlsController
 
@@ -54,10 +52,7 @@ export default class Triggers {
 		this.#controlsController.triggers.on('trigger_enabled', () => debounceCheckFeedbacks())
 	}
 
-	/**
-	 * @returns {Record<string, import('./Types.js').InternalActionDefinition>}
-	 */
-	getActionDefinitions() {
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
 			trigger_enabled: {
 				label: 'Trigger: Enable or disable trigger',
@@ -84,13 +79,7 @@ export default class Triggers {
 		}
 	}
 
-	/**
-	 * Perform an upgrade for an action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {string} _controlId
-	 * @returns {import('@companion-app/shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
-	 */
-	actionUpgrade(action, _controlId) {
+	actionUpgrade(action: ActionInstance, _controlId: string): ActionInstance | void {
 		if (action.action === 'trigger_enabled' && !isNaN(Number(action.options.trigger_id))) {
 			action.options.trigger_id = CreateTriggerControlId(action.options.trigger_id)
 
@@ -98,13 +87,7 @@ export default class Triggers {
 		}
 	}
 
-	/**
-	 * Run a single internal action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} _extras
-	 * @returns {boolean} Whether the action was handled
-	 */
-	executeAction(action, _extras) {
+	executeAction(action: ActionInstance, _extras: RunActionExtras): boolean {
 		if (action.action === 'trigger_enabled') {
 			const control = this.#controlsController.getControl(action.options.trigger_id)
 			if (!control || control.type !== 'trigger' || !control.supportsOptions) return false
@@ -120,14 +103,15 @@ export default class Triggers {
 		}
 	}
 
-	getFeedbackDefinitions() {
+	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			trigger_enabled: {
 				type: 'boolean',
 				label: 'Trigger: When enabled or disabled',
+				description: undefined,
 				style: {
-					color: rgb(255, 255, 255),
-					bgcolor: rgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [
@@ -151,12 +135,7 @@ export default class Triggers {
 		}
 	}
 
-	/**
-	 * Get an updated value for a feedback
-	 * @param {import('./Types.js').FeedbackInstanceExt} feedback
-	 * @returns {boolean | void}
-	 */
-	executeFeedback(feedback) {
+	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
 		if (feedback.type === 'trigger_enabled') {
 			const control = this.#controlsController.getControl(feedback.options.trigger_id)
 			if (!control || control.type !== 'trigger' || !control.supportsOptions) return false
@@ -165,5 +144,9 @@ export default class Triggers {
 			const target = feedback.options.enable == 'true'
 			return state == target
 		}
+	}
+
+	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+		// Nothing to do
 	}
 }

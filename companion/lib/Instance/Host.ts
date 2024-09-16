@@ -62,7 +62,7 @@ interface ModuleChild {
 	skipApiVersionCheck?: boolean
 }
 
-class ModuleHost {
+export class ModuleHost {
 	readonly #logger = LogController.createLogger('Instance/ModuleHost')
 
 	readonly #registry: Registry
@@ -522,5 +522,3 @@ class ModuleHost {
 		})
 	}
 }
-
-export default ModuleHost
