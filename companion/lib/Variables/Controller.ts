@@ -19,7 +19,7 @@ import { VariablesCustomVariable } from './CustomVariable.js'
 import { VariablesInstanceDefinitions } from './InstanceDefinitions.js'
 import { VariablesValues } from './Values.js'
 import type DataDatabase from '../Data/Database.js'
-import type UIHandler from '../UI/Handler.js'
+import type { UIHandler } from '../UI/Handler.js'
 import { ClientSocket } from '../UI/Handler.js'
 
 export class VariablesController {

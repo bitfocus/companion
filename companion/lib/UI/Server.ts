@@ -15,54 +15,47 @@
  *
  */
 
-import { Server as _http } from 'http'
+import { Server as HttpServer } from 'http'
 import LogController from '../Log/Controller.js'
 import { sendOverIpc } from '../Resources/Util.js'
+import express from 'express'
 
-class UIServer extends _http {
-	#logger = LogController.createLogger('UI/Server')
+export class UIServer extends HttpServer {
+	readonly #logger = LogController.createLogger('UI/Server')
 
-	/**
-	 * @param {import('express').Express} express
-	 */
-	constructor(express) {
+	constructor(express: express.Express) {
 		super(express)
 	}
 
 	/**
 	 *
-	 * @param {string} bind_ip
-	 * @param {number} http_port
 	 */
-	rebindHttp(bind_ip, http_port) {
-		this.bind_ip = bind_ip
-		this.http_port = http_port
-
+	rebindHttp(bind_ip: string, http_port: number) {
 		if (this !== undefined && this.close !== undefined) {
 			this.close()
 		}
 		try {
-			this.on('error', (/** @type {any} */ e) => {
+			this.on('error', (e: any) => {
 				if (e.code == 'EADDRNOTAVAIL') {
-					this.#logger.error(`Failed to bind to: ${this.bind_ip}`)
+					this.#logger.error(`Failed to bind to: ${bind_ip}`)
 					sendOverIpc({
 						messageType: 'http-bind-status',
 						appStatus: 'Error',
-						appURL: `${this.bind_ip} unavailable. Select another IP`,
+						appURL: `${bind_ip} unavailable. Select another IP`,
 						appLaunch: null,
 					})
 				} else {
 					this.#logger.error(e)
 				}
-			}).listen(this.http_port, this.bind_ip, () => {
+			}).listen(http_port, bind_ip, () => {
 				const address0 = this.address()
 				const address = typeof address0 === 'object' ? address0 : undefined
 
 				this.#logger.info(`new url: http://${address?.address}:${address?.port}/`)
 
-				let ip = this.bind_ip == '0.0.0.0' ? '127.0.0.1' : this.bind_ip
+				let ip = bind_ip == '0.0.0.0' ? '127.0.0.1' : bind_ip
 				let url = `http://${ip}:${address?.port}/`
-				let info = this.bind_ip == '0.0.0.0' ? `All Interfaces: e.g. ${url}` : url
+				let info = bind_ip == '0.0.0.0' ? `All Interfaces: e.g. ${url}` : url
 				sendOverIpc({
 					messageType: 'http-bind-status',
 					appStatus: 'Running',
@@ -75,5 +68,3 @@ class UIServer extends _http {
 		}
 	}
 }
-
-export default UIServer

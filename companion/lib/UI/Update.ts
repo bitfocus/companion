@@ -18,34 +18,23 @@
 import os from 'os'
 import got from 'got'
 import LogController from '../Log/Controller.js'
+import type { AppInfo } from '../Registry.js'
+import type { UIHandler } from './Handler.js'
+import type { ClientSocket } from './Handler.js'
+import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
 
-class UIUpdate {
-	#logger = LogController.createLogger('UI/Update')
+export class UIUpdate {
+	readonly #logger = LogController.createLogger('UI/Update')
 
-	/**
-	 * @type {import('../Registry.js').AppInfo}
-	 * @readonly
-	 */
-	#appInfo
-
-	/**
-	 * @type {import('./Handler.js').default}
-	 * @readonly
-	 */
-	#ioController
+	readonly #appInfo: AppInfo
+	readonly #ioController: UIHandler
 
 	/**
 	 * Latest update information
-	 * @type {import('@companion-app/shared/Model/Common.js').AppUpdateInfo | null}
-	 * @access private
 	 */
-	#latestUpdateData = null
+	#latestUpdateData: AppUpdateInfo | null = null
 
-	/**
-	 * @param {import('../Registry.js').AppInfo} appInfo
-	 * @param {import('./Handler.js').default} ioController
-	 */
-	constructor(appInfo, ioController) {
+	constructor(appInfo: AppInfo, ioController: UIHandler) {
 		this.#logger.silly('loading update')
 		this.#appInfo = appInfo
 		this.#ioController = ioController
@@ -63,10 +52,8 @@ class UIUpdate {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.on('app-update-info', () => {
 			if (this.#latestUpdateData) {
 				client.emit('app-update-info', this.#latestUpdateData)
@@ -102,7 +89,7 @@ class UIUpdate {
 	/**
 	 * Perform the update request
 	 */
-	#requestUpdate() {
+	#requestUpdate(): void {
 		got
 			.post('https://updates.bitfocus.io/updates', {
 				json: this.compilePayload(),
@@ -110,14 +97,12 @@ class UIUpdate {
 			})
 			.then(({ body }) => {
 				this.#logger.debug('fresh update data received', body)
-				this.#latestUpdateData = body
+				this.#latestUpdateData = body as AppUpdateInfo
 
-				this.#ioController.emit('app-update-info', body)
+				this.#ioController.emit('app-update-info', this.#latestUpdateData)
 			})
 			.catch((e) => {
 				this.#logger.verbose('update server said something unexpected!', e)
 			})
 	}
 }
-
-export default UIUpdate

@@ -4,9 +4,8 @@ import { DEFAULT_TCP_PORT, StreamDeckTcpConnectionManager } from '@elgato-stream
 import { StreamDeckJpegOptions } from './USB/ElgatoStreamDeck.js'
 import type { SurfaceController } from './Controller.js'
 import type DataDatabase from '../Data/Database.js'
-import type UIHandler from '../UI/Handler.js'
+import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import { ClientSocket } from '../UI/Handler.js'
 
 const OutboundSurfacesRoom = 'surfaces:outbound'
 

@@ -42,7 +42,7 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * The web application framework
-	 * @type {import('../UI/Express.js').default}
+	 * @type {import('../UI/Express.js').UIExpress}
 	 * @access protected
 	 * @readonly
 	 */
@@ -50,7 +50,7 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * @param {import('../Registry.js').Registry} registry - the application core
-	 * @param {import('../UI/Express.js').default} express - express
+	 * @param {import('../UI/Express.js').UIExpress} express - express
 	 */
 	constructor(registry, express) {
 		super(registry, 'Service/HttpApi')

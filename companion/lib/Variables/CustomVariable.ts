@@ -24,8 +24,7 @@ import type {
 	CustomVariableUpdateRemoveOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type DataDatabase from '../Data/Database.js'
-import type UIHandler from '../UI/Handler.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 
 const custom_variable_prefix = `custom_`

@@ -17,7 +17,7 @@
 
 import LogController from '../Log/Controller.js'
 import jsonPatch from 'fast-json-patch'
-import type UIHandler from '../UI/Handler.js'
+import type { UIHandler } from '../UI/Handler.js'
 import type {
 	AllVariableDefinitions,
 	ModuleVariableDefinitions,

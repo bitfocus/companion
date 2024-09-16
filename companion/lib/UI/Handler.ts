@@ -15,16 +15,17 @@
  *
  */
 
-import { Server as _io, Server, Socket } from 'socket.io'
-import LogController from '../Log/Controller.js'
+import { Server as SocketIOServer, Server, Socket } from 'socket.io'
+import LogController, { Logger } from '../Log/Controller.js'
+import type { Registry } from '../Registry.js'
+import type { Server as HttpServer } from 'http'
+import type { Server as HttpsServer } from 'https'
 
-/**
- * @typedef {import('@companion-app/shared/SocketIO.js').ClientToBackendEventsListenMap} IOListenEvents
- * @typedef {import('@companion-app/shared/SocketIO.js').BackendToClientEventsMap} IOEmitEvents
- * @typedef {import('@companion-app/shared/SocketIO.js').ClientToBackendEventsWithNoResponse} IOListenEventsNoResponse
- * @typedef {import('@companion-app/shared/SocketIO.js').ClientToBackendEventsWithPromiseResponse} IOListenEventsWithResponse
- * @typedef {Server<IOListenEvents, IOEmitEvents>} IOServerType
- */
+type IOListenEvents = import('@companion-app/shared/SocketIO.js').ClientToBackendEventsListenMap
+type IOEmitEvents = import('@companion-app/shared/SocketIO.js').BackendToClientEventsMap
+type IOListenEventsNoResponse = import('@companion-app/shared/SocketIO.js').ClientToBackendEventsWithNoResponse
+type IOListenEventsWithResponse = import('@companion-app/shared/SocketIO.js').ClientToBackendEventsWithPromiseResponse
+type IOServerType = Server<IOListenEvents, IOEmitEvents>
 
 /**
  * Wrapper around a socket.io client socket, to provide a promise based api for async calls
@@ -32,76 +33,56 @@ import LogController from '../Log/Controller.js'
 export class ClientSocket {
 	/**
 	 * Logger
-	 * @type {import('winston').Logger}
 	 */
-	logger
+	private readonly logger: Logger
 
 	/**
 	 * Socket.io socket
-	 * @type {Socket<IOListenEvents, IOEmitEvents>}
-	 * @access private
 	 */
-	#socket
+	readonly #socket: Socket<IOListenEvents, IOEmitEvents>
 
-	/**
-	 * @param {Socket<IOListenEvents, IOEmitEvents>} socket
-	 * @param {import('winston').Logger} logger
-	 */
-	constructor(socket, logger) {
+	constructor(socket: Socket<IOListenEvents, IOEmitEvents>, logger: Logger) {
 		this.#socket = socket
 		this.logger = logger
 	}
 
 	/**
 	 * Unique id for the socket
-	 * @returns {string}
 	 */
-	get id() {
+	get id(): string {
 		return this.#socket.id
 	}
 
 	/**
 	 * Join a room
-	 * @param {string} room
-	 * @returns {void}
 	 */
-	join(room) {
+	join(room: string): void {
 		this.#socket.join(room)
 	}
 	/**
 	 * Leave a room
-	 * @param {string} room
-	 * @returns {void}
 	 */
-	leave(room) {
+	leave(room: string): void {
 		this.#socket.leave(room)
 	}
 
 	/**
 	 * Send a message to the client
-	 * @template {keyof IOEmitEvents} T
-	 * @param {T} name
-	 * @param {Parameters<IOEmitEvents[T]>} args
-	 * @returns {void}
 	 */
-	emit(name, ...args) {
+	emit<T extends keyof IOEmitEvents>(name: T, ...args: Parameters<IOEmitEvents[T]>): void {
 		this.#socket.emit(name, ...args)
 	}
 
 	/**
 	 * Listen to an event
-	 * @template {keyof IOListenEventsNoResponse} T
-	 * @param {T} name
-	 * @param {IOListenEvents[T]} fcn
-	 * @returns {ClientSocket}
 	 */
-	on(name, fcn) {
+	on<T extends keyof IOListenEventsNoResponse>(name: T, fcn: IOListenEvents[T]): ClientSocket {
 		// @ts-expect-error Types are hard to get correct
 		this.#socket.on(name, (...args) => {
 			try {
-				// @ts-expect-error Typs are hard
+				// @ts-expect-error Types are hard
 				fcn(...args)
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				this.logger.warn(`Error in client handler '${name}': ${e} ${e?.stack}`)
 			}
 		})
@@ -110,19 +91,15 @@ export class ClientSocket {
 	/**
 	 * A promise based alternative to the `on` method, for methods which want to return a value.
 	 * Note: it expects the first parameter of the call to be the callback
-	 * @template {keyof IOListenEventsWithResponse} T
-	 * @param {T} name
-	 * @param {IOListenEvents[T]} fcn
-	 * @returns {ClientSocket}
 	 */
-	onPromise(name, fcn) {
+	onPromise<T extends keyof IOListenEventsWithResponse>(name: T, fcn: IOListenEvents[T]): ClientSocket {
 		// @ts-expect-error Types are hard
 		this.#socket.on(name, (args, cb) => {
 			Promise.resolve().then(async () => {
 				try {
 					const result = await fcn(...args)
 					cb(null, result)
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.logger.warn(`Error in client handler '${name}': ${e} ${e?.stack}`)
 					if (cb) cb(e?.message ?? 'error', null)
 				}
@@ -132,34 +109,21 @@ export class ClientSocket {
 	}
 }
 
-class UIHandler {
-	#logger = LogController.createLogger('UI/Handler')
+export class UIHandler {
+	readonly #logger = LogController.createLogger('UI/Handler')
+
+	readonly #registry: Registry
 
 	/**
 	 * Socket.IO Server options
-	 * @type {Partial<import('socket.io').ServerOptions>}
-	 * @access private
 	 */
-	#socketIOOptions
+	readonly #socketIOOptions: Partial<import('socket.io').ServerOptions>
 
-	/**
-	 * @type {IOServerType}
-	 * @access private
-	 */
-	#httpIO
-	/**
-	 * @type {IOServerType | undefined}
-	 * @access private
-	 */
-	#httpsIO
+	readonly #httpIO: IOServerType
+	#httpsIO: IOServerType | undefined
 
-	/**
-	 *
-	 * @param {import('../Registry.js').Registry} registry
-	 * @param {*} http
-	 */
-	constructor(registry, http) {
-		this.registry = registry
+	constructor(registry: Registry, http: HttpServer) {
+		this.#registry = registry
 
 		this.#socketIOOptions = {
 			allowEIO3: true,
@@ -172,38 +136,36 @@ class UIHandler {
 			},
 		}
 
-		this.#httpIO = new _io(http, this.#socketIOOptions)
+		this.#httpIO = new SocketIOServer(http, this.#socketIOOptions)
 
 		this.#httpIO.on('connect', this.#clientConnect.bind(this))
 	}
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {Socket<IOListenEvents, IOEmitEvents>} rawClient - the client socket
-	 * @access public
 	 */
-	#clientConnect(rawClient) {
+	#clientConnect(rawClient: Socket<IOListenEvents, IOEmitEvents>): void {
 		this.#logger.debug(`socket ${rawClient.id} connected`)
 
 		const client = new ClientSocket(rawClient, this.#logger)
 
 		client.onPromise('app-version-info', () => {
 			return {
-				appVersion: this.registry.appInfo.appVersion,
-				appBuild: this.registry.appInfo.appBuild,
+				appVersion: this.#registry.appInfo.appVersion,
+				appBuild: this.#registry.appInfo.appBuild,
 			}
 		})
 
 		LogController.clientConnect(client)
-		this.registry.ui?.clientConnect(client)
-		this.registry.data?.clientConnect(client)
-		this.registry.page.clientConnect(client)
-		this.registry.controls.clientConnect(client)
-		this.registry.preview.clientConnect(client)
-		this.registry.surfaces.clientConnect(client)
-		this.registry.instance.clientConnect(client)
-		this.registry.cloud?.clientConnect(client)
-		this.registry.services.clientConnect(client)
+		this.#registry.ui?.clientConnect(client)
+		this.#registry.data?.clientConnect(client)
+		this.#registry.page.clientConnect(client)
+		this.#registry.controls.clientConnect(client)
+		this.#registry.preview.clientConnect(client)
+		this.#registry.surfaces.clientConnect(client)
+		this.#registry.instance.clientConnect(client)
+		this.#registry.cloud?.clientConnect(client)
+		this.#registry.services.clientConnect(client)
 
 		client.on('disconnect', () => {
 			this.#logger.debug('socket ' + client.id + ' disconnected')
@@ -212,11 +174,8 @@ class UIHandler {
 
 	/**
 	 * Send a message to all connected clients
-	 * @template {keyof IOEmitEvents} T
-	 * @param {T} event Name of the event
-	 * @param {Parameters<IOEmitEvents[T]>} args Arguments of the event
 	 */
-	emit(event, ...args) {
+	emit<T extends keyof IOEmitEvents>(event: T, ...args: Parameters<IOEmitEvents[T]>): void {
 		this.#httpIO.emit(event, ...args)
 
 		if (this.#httpsIO) {
@@ -226,12 +185,8 @@ class UIHandler {
 
 	/**
 	 * Send a message to all connected clients in a room
-	 * @template {keyof IOEmitEvents} T
-	 * @param {string} room Name of the room
-	 * @param {T} event Name of the event
-	 * @param {Parameters<IOEmitEvents[T]>} args Arguments of the event
 	 */
-	emitToRoom(room, event, ...args) {
+	emitToRoom<T extends keyof IOEmitEvents>(room: string, event: T, ...args: Parameters<IOEmitEvents[T]>): void {
 		this.#httpIO.to(room).emit(event, ...args)
 
 		if (this.#httpsIO) {
@@ -241,10 +196,8 @@ class UIHandler {
 
 	/**
 	 * Count the number of members in a room
-	 * @param {string} room
-	 * @returns {number}
 	 */
-	countRoomMembers(room) {
+	countRoomMembers(room: string): number {
 		let clientsInRoom = 0
 
 		const httpRoom = this.#httpIO.sockets.adapter.rooms.get(room)
@@ -260,15 +213,12 @@ class UIHandler {
 
 	/**
 	 * Bind to the https server
-	 * @param {*} https
 	 */
-	bindToHttps(https) {
+	bindToHttps(https: HttpsServer): void {
 		if (https) {
-			this.#httpsIO = new _io(https, this.#socketIOOptions)
+			this.#httpsIO = new SocketIOServer(https, this.#socketIOOptions)
 
 			this.#httpsIO.on('connect', this.#clientConnect.bind(this))
 		}
 	}
 }
-
-export default UIHandler

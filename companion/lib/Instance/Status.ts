@@ -3,9 +3,8 @@ import { isEqual } from 'lodash-es'
 // import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import type UIHandler from '../UI/Handler.js'
+import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import { ClientSocket } from '../UI/Handler.js'
 
 export class InstanceStatus extends EventEmitter {
 	/**

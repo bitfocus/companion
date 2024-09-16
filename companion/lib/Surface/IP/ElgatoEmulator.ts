@@ -23,10 +23,9 @@ import debounceFn from 'debounce-fn'
 import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import type { EmulatorConfig, EmulatorImage, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
-import type UIHandler from '../../UI/Handler.js'
+import type { UIHandler, ClientSocket } from '../../UI/Handler.js'
 import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
 import type { GridSize } from '../Util.js'
-import type { ClientSocket } from '../../UI/Handler.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 /**

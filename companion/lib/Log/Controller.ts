@@ -10,9 +10,8 @@ import supportsColor from 'supports-color'
 import { LogColors } from './Colors.js'
 import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
-import type UIHandler from '../UI/Handler.js'
+import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import type { AppInfo } from '../Registry.js'
 
 export type Logger = winston.Logger

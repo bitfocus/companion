@@ -22,16 +22,16 @@ import cors from 'cors'
 import fs from 'fs'
 // @ts-ignore
 import serveZip from 'express-serve-zip'
-import LogController from '../Log/Controller.js'
 import { fileURLToPath } from 'url'
 import bodyParser from 'body-parser'
+import type { Registry } from '../Registry.js'
 
 /**
  * Create a zip serve app
  * @param {fs.PathLike} zipPath
  * @param {string[]} folderPaths
  */
-function createServeStatic(zipPath, folderPaths) {
+function createServeStatic(zipPath: fs.PathLike, folderPaths: string[]): Express.RequestHandler {
 	const maxAge = process.env.PRODUCTION ? 3600000 : 0
 
 	if (fs.existsSync(zipPath)) {
@@ -60,19 +60,14 @@ function createServeStatic(zipPath, folderPaths) {
 	}
 }
 
-class UIExpress {
-	logger = LogController.createLogger('UI/Express')
+export class UIExpress {
+	// readonly #logger = LogController.createLogger('UI/Express')
 
-	app = Express()
+	readonly app = Express()
 	#apiRouter = Express.Router()
 	#legacyApiRouter = Express.Router()
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry
-	 */
-	constructor(registry) {
-		this.registry = registry
-
+	constructor(registry: Registry) {
 		this.app.use(cors())
 
 		this.app.use((_req, res, next) => {
@@ -89,15 +84,15 @@ class UIExpress {
 		// parse text/plain
 		this.app.use(bodyParser.text())
 
-		this.app.use('/int', this.registry.api_router, (_req, res) => {
+		this.app.use('/int', registry.api_router, (_req, res) => {
 			res.status(404)
 			res.send('Not found')
 		})
 
 		this.app.use('/instance/:label', (req, res, _next) => {
 			const label = req.params.label
-			const connectionId = this.registry.instance.getIdForLabel(label) || label
-			const instance = this.registry.instance.moduleHost.getChild(connectionId)
+			const connectionId = registry.instance.getIdForLabel(label) || label
+			const instance = registry.instance.moduleHost.getChild(connectionId)
 			if (instance) {
 				instance.executeHttpRequest(req, res)
 			} else {
@@ -111,11 +106,7 @@ class UIExpress {
 		// Use the router #legacyApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use((r, s, n) => this.#legacyApiRouter(r, s, n))
 
-		/**
-		 * @param {string} subpath
-		 * @returns {string}
-		 */
-		function getResourcePath(subpath) {
+		function getResourcePath(subpath: string): string {
 			if (isPackaged()) {
 				return path.join(__dirname, subpath)
 			} else {
@@ -148,19 +139,15 @@ class UIExpress {
 
 	/**
 	 * Set a new router as the ApiRouter
-	 * @param {*} router
 	 */
-	set apiRouter(router) {
+	set apiRouter(router: Express.Router) {
 		this.#apiRouter = router
 	}
 
 	/**
 	 * Set a new router as the legacyApiRouter
-	 * @param {*} router
 	 */
-	set legacyApiRouter(router) {
+	set legacyApiRouter(router: Express.Router) {
 		this.#legacyApiRouter = router
 	}
 }
-
-export default UIExpress

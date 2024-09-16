@@ -33,7 +33,7 @@ class ServiceHttps extends ServiceBase {
 
 	/**
 	 * The web application framework
-	 * @type {import('../UI/Express.js').default}
+	 * @type {import('../UI/Express.js').UIExpress}
 	 * @access protected
 	 * @readonly
 	 */
@@ -54,7 +54,7 @@ class ServiceHttps extends ServiceBase {
 
 	/**
 	 * @param {import('../Registry.js').Registry} registry - the core registry
-	 * @param {import('../UI/Express.js').default} express - the app framework
+	 * @param {import('../UI/Express.js').UIExpress} express - the app framework
 	 */
 	constructor(registry, express) {
 		super(registry, 'Service/Https', 'https_enabled', 'https_port')
