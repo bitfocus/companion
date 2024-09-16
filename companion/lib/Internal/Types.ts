@@ -1,4 +1,4 @@
-import type { ControlLocation } from '../Resources/Util.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { VisitorReferencesCollector } from '../Util/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdater } from '../Util/Visitors/ReferencesUpdater.js'
@@ -7,10 +7,6 @@ import type { InternalActionDefinition } from '@companion-app/shared/Model/Actio
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
-
-export * from '@companion-app/shared/Model/Options.js'
-export * from '@companion-app/shared/Model/ActionDefinitionModel.js'
-export * from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export interface FeedbackInstanceExt extends FeedbackInstance {
 	controlId: string

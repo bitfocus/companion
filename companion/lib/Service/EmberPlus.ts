@@ -3,12 +3,13 @@ import { getPath } from 'emberplus-connection/dist/Ember/Lib/util.js'
 import { ServiceBase } from './Base.js'
 import { formatLocation, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { pad } from '@companion-app/shared/Util.js'
-import { ControlLocation, parseColorToNumber } from '../Resources/Util.js'
+import { parseColorToNumber } from '../Resources/Util.js'
 import { LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { EmberValue } from 'emberplus-connection/dist/types/types.js'
 import type { Registry } from '../Registry.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1

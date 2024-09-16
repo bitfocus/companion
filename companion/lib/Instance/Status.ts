@@ -6,7 +6,11 @@ import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.j
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { ControlsController } from '../Controls/Controller.js'
 
-export class InstanceStatus extends EventEmitter {
+export interface InstanceStatusEvents {
+	status_change: [statuses: Record<string, ConnectionStatusEntry>]
+}
+
+export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 	/**
 	 * The latest statuses object
 	 * levels: null = unknown, see updateInstanceStatus for possible values

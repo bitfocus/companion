@@ -16,11 +16,12 @@
  */
 
 import { Image } from './Image.js'
-import { ControlLocation, ParseAlignment, parseColor } from '../Resources/Util.js'
+import { ParseAlignment, parseColor } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
 import type { GraphicsOptions } from './Controller.js'
-import { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'

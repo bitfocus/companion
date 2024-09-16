@@ -30,7 +30,7 @@ import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ControlLocation } from '../Resources/Util.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { Registry } from '../Registry.js'
 import { DrawButtonItem, SurfacePanel } from './Types.js'
 

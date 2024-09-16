@@ -2,7 +2,7 @@ import { CoreBase } from '../Core/Base.js'
 import type { Registry } from '../Registry.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { ControlLocation } from '../Resources/Util.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 /**
  * Class to handle execution of actions.

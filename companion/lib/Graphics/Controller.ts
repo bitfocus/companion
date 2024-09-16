@@ -23,12 +23,13 @@ import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import type { ImageResult } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
-import { type ControlLocation, isPackaged } from '../Resources/Util.js'
+import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import type { Registry } from '../Registry.js'
 import type { CompanionButtonStyleProps, CompanionVariableValues } from '@companion-module/base'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 

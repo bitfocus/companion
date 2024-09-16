@@ -17,8 +17,9 @@
 
 import SCClient from 'socketcluster-client'
 import { isEqual } from 'lodash-es'
-import { ControlLocation, delay } from '../Resources/Util.js'
+import { delay } from '../Resources/Util.js'
 import LogController, { Logger } from '../Log/Controller.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CloudController } from './Controller.js'
 import type { UIHandler } from '../UI/Handler.js'
 

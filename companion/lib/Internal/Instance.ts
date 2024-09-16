@@ -20,16 +20,11 @@ import type { InternalController } from './Controller.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type {
-	FeedbackForVisitor,
-	FeedbackInstanceExt,
-	InternalActionDefinition,
-	InternalFeedbackDefinition,
-	InternalModuleFragment,
-	InternalVisitor,
-} from './Types.js'
-import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
+import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
+import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export class InternalInstance implements InternalModuleFragment {
 	readonly #internalModule: InternalController

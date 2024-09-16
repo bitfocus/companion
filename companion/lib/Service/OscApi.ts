@@ -1,9 +1,10 @@
 import { CoreBase } from '../Core/Base.js'
-import { ControlLocation, parseColorToNumber, rgb } from '../Resources/Util.js'
+import { parseColorToNumber, rgb } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { RegexRouter } from './RegexRouter.js'
 import type { Registry } from '../Registry.js'
-import { OscReceivedMessage } from 'osc'
+import type { OscReceivedMessage } from 'osc'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 /**
  * Class providing the OSC API.

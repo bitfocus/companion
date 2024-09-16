@@ -1,7 +1,8 @@
 import { CoreBase } from '../Core/Base.js'
-import { ControlLocation, parseColorToNumber } from '../Resources/Util.js'
+import { parseColorToNumber } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { RegexRouter } from './RegexRouter.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { Registry } from '../Registry.js'
 
 /**

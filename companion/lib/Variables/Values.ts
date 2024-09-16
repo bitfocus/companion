@@ -26,7 +26,7 @@ import {
 	executeExpression,
 	parseVariablesInString,
 } from './Util.js'
-import type { ControlLocation } from '../Resources/Util.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'
 

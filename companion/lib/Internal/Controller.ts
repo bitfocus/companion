@@ -30,14 +30,7 @@ import { cloneDeep } from 'lodash-es'
 import { InternalPage } from './Page.js'
 import { ParseInternalControlReference } from './Util.js'
 import type { Registry } from '../Registry.js'
-import type {
-	ActionDefinition,
-	FeedbackDefinition,
-	FeedbackForVisitor,
-	FeedbackInstanceExt,
-	InternalModuleFragment,
-	InternalVisitor,
-} from './Types.js'
+import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { FragmentFeedbackInstance } from '../Controls/Fragments/FragmentFeedbackInstance.js'
@@ -46,7 +39,9 @@ import type { CompanionVariableValue, CompanionVariableValues } from '@companion
 import type { NewFeedbackValue } from '../Controls/Controller.js'
 import type { VariablesCache } from '../Variables/Util.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 
 export class InternalController extends CoreBase {
 	readonly #feedbacks = new Map<string, import('./Types.js').FeedbackInstanceExt>()

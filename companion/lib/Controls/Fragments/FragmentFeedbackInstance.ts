@@ -9,7 +9,8 @@ import type { ModuleHost } from '../../Instance/Host.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
-import type { FeedbackDefinition, InternalVisitor } from '../../Internal/Types.js'
+import type { InternalVisitor } from '../../Internal/Types.js'
+import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export class FragmentFeedbackInstance {
 	/**

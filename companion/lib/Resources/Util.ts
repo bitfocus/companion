@@ -8,9 +8,6 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@companion-app/shared/Model/Options.js'
 import type { CompanionAlignment, CompanionInputFieldBase } from '@companion-module/base'
 
-/** @deprecated remove this re-export */
-export { ControlLocation } from '@companion-app/shared/Model/Common.js'
-
 /**
  * Combine rgba components to a 32bit value
  * @param a 0-255
