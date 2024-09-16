@@ -16,17 +16,24 @@ import ControlTrigger from './ControlTypes/Triggers/Trigger.js'
 import { nanoid } from 'nanoid'
 import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'
+import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ClientTriggerData, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { SomeControl } from './IControlFragments.js'
+import type { Registry } from '../Registry.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
 
-/**
- * @typedef {import('@companion-app/shared/Model/ButtonModel.js').SomeButtonModel | import('@companion-app/shared/Model/TriggerModel.js').TriggerModel} SomeControlModel
- */
+type SomeControlModel = SomeButtonModel | TriggerModel
 
-/**
- * @typedef {ControlTrigger | ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp} SomeRealControl
- */
+// type SomeRealControl =
+// 	| ControlTrigger
+// 	| ControlButtonNormal
+// 	| ControlButtonPageDown
+// 	| ControlButtonPageNumber
+// 	| ControlButtonPageUp
 
 /**
  * The class that manages the controls
@@ -49,46 +56,33 @@ const ActiveLearnRoom = 'learn:active'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class ControlsController extends CoreBase {
+export class ControlsController extends CoreBase {
 	/**
 	 * Actions runner
-	 * @type {ActionRunner}
-	 * @access public
 	 */
-	actions
+	readonly actions: ActionRunner
 
 	/**
 	 * Actions recorder
-	 * @type {ActionRecorder}
-	 * @access public
 	 */
-	actionRecorder
+	readonly actionRecorder: ActionRecorder
 
 	/**
 	 * The currently configured controls
-	 * @type {Map<string, import('./IControlFragments.js').SomeControl<any>>}
-	 * @access private
 	 */
-	#controls = new Map()
+	#controls = new Map<string, SomeControl<any>>()
 
 	/**
 	 * Triggers events
-	 * @type {TriggerEvents}
-	 * @access public
 	 */
-	triggers
+	readonly triggers: TriggerEvents
 
 	/**
 	 * Active learn requests. Ids of actions & feedbacks
-	 * @type {Set<string>}
-	 * @access private
 	 */
-	#activeLearnRequests = new Set()
+	readonly #activeLearnRequests = new Set<string>()
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Controls/Controller')
 
 		this.actions = new ActionRunner(registry)
@@ -98,10 +92,9 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Check the connection-status of every control
-	 * @access public
 	 */
 	checkAllStatus = debounceFn(
-		() => {
+		(): void => {
 			for (const control of this.#controls.values()) {
 				if (typeof control.checkButtonStatus === 'function') {
 					control.checkButtonStatus()
@@ -118,10 +111,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Remove any tracked state for a connection
-	 * @param {string} connectionId
-	 * @access public
 	 */
-	clearConnectionState(connectionId) {
+	clearConnectionState(connectionId: string): void {
 		for (const control of this.#controls.values()) {
 			if (control.supportsActions || control.supportsFeedbacks) {
 				control.clearConnectionState(connectionId)
@@ -131,10 +122,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		this.actionRecorder.clientConnect(client)
 
 		this.triggers.emit('client_connect')
@@ -712,8 +701,7 @@ class ControlsController extends CoreBase {
 		client.onPromise('triggers:subscribe', () => {
 			client.join(TriggersListRoom)
 
-			/** @type {Record<string, import('@companion-app/shared/Model/TriggerModel.js').ClientTriggerData>} */
-			const triggers = {}
+			const triggers: Record<string, ClientTriggerData> = {}
 
 			for (const [controlId, control] of this.#controls.entries()) {
 				if (control instanceof ControlTrigger) {
@@ -925,14 +913,17 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Create a new control class instance
-	 * @param {string} controlId Id of the control
-	 * @param {'button' | 'trigger' | 'all'} category 'button' | 'trigger' | 'all'
-	 * @param {SomeControlModel | string} controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
-	 * @param {boolean} isImport Whether this is an import, and needs additional processing
-	 * @returns {import('./IControlFragments.js').SomeControl<any> | null}
-	 * @access private
+	 * @param controlId Id of the control
+	 * @param category 'button' | 'trigger' | 'all'
+	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
+	 * @param isImport Whether this is an import, and needs additional processing
 	 */
-	#createClassForControl(controlId, category, controlObj, isImport) {
+	#createClassForControl(
+		controlId: string,
+		category: 'button' | 'trigger' | 'all',
+		controlObj: SomeControlModel | string,
+		isImport: boolean
+	): SomeControl<any> | null {
 		const controlType = typeof controlObj === 'object' ? controlObj.type : controlObj
 		const controlObj2 = typeof controlObj === 'object' ? controlObj : null
 		if (category === 'all' || category === 'button') {
@@ -960,11 +951,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Update all controls to forget a connection
-	 * @param {string} connectionId
-	 * @returns {void}
-	 * @access public
 	 */
-	forgetConnection(connectionId) {
+	forgetConnection(connectionId: string): void {
 		for (const control of this.#controls.values()) {
 			if (control.supportsActions || control.supportsFeedbacks) {
 				control.forgetConnection(connectionId)
@@ -974,21 +962,16 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Get all of the populated controls
-	 * @returns {ReadonlyMap<string, import('./IControlFragments.js').SomeControl<any>>}
-	 * @access public
 	 */
-	getAllControls() {
+	getAllControls(): ReadonlyMap<string, SomeControl<any>> {
 		return this.#controls // TODO - readonly?
 	}
 
 	/**
 	 * Get all of the trigger controls
-	 * @returns {ControlTrigger[]}
-	 * @access public
 	 */
-	getAllTriggers() {
-		/** @type {ControlTrigger[]} */
-		const triggers = []
+	getAllTriggers(): ControlTrigger[] {
+		const triggers: ControlTrigger[] = []
 		for (const control of this.#controls.values()) {
 			if (control instanceof ControlTrigger) {
 				triggers.push(control)
@@ -999,21 +982,16 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Get a control if it has been populated
-	 * @param {string} controlId
-	 * @returns {import('./IControlFragments.js').SomeControl<any> | undefined}
-	 * @access public
 	 */
-	getControl(controlId) {
+	getControl(controlId: string): SomeControl<any> | undefined {
 		if (!controlId) return undefined
 		return this.#controls.get(controlId)
 	}
 
 	/**
 	 * Get a Trigger control if it exists
-	 * @param {string} triggerId
-	 * @returns {ControlTrigger | undefined}
 	 */
-	getTrigger(triggerId) {
+	getTrigger(triggerId: string): ControlTrigger | undefined {
 		const controlId = CreateTriggerControlId(triggerId)
 		const control = this.#controls.get(controlId)
 		if (!control || !(control instanceof ControlTrigger)) return undefined
@@ -1022,13 +1000,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Import a control
-	 * @param {import('../Resources/Util.js').ControlLocation} location Location to import to
-	 * @param {import('@companion-app/shared/Model/ButtonModel.js').SomeButtonModel} definition object to import
-	 * @param {string=} forceControlId
-	 * @returns
-	 * @access public
 	 */
-	importControl(location, definition, forceControlId) {
+	importControl(location: ControlLocation, definition: SomeButtonModel, forceControlId?: string): boolean {
 		if (forceControlId && !this.#validateBankControlId(forceControlId)) {
 			// Control id is not valid!
 			return false
@@ -1060,12 +1033,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Import a trigger
-	 * @param {string} controlId Id for the trigger
-	 * @param {import('@companion-app/shared/Model/TriggerModel.js').TriggerModel} definition object to import
-	 * @returns
-	 * @access public
 	 */
-	importTrigger(controlId, definition) {
+	importTrigger(controlId: string, definition: TriggerModel): boolean {
 		if (!this.#validateTriggerControlId(controlId)) {
 			// Control id is not valid!
 			return false
@@ -1089,9 +1058,9 @@ class ControlsController extends CoreBase {
 	/**
 	 * Initialise the controls
 	 */
-	init() {
+	init(): void {
 		// Init all the control classes
-		const config = this.db.getKey('controls', {})
+		const config: Record<string, SomeControlModel> = this.db.getKey('controls', {})
 		for (const [controlId, controlObj] of Object.entries(config)) {
 			if (controlObj && controlObj.type) {
 				const inst = this.#createClassForControl(controlId, 'all', controlObj, false)
@@ -1102,10 +1071,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Propagate variable changes to the controls
-	 * @param {Set<string>} allChangedVariablesSet
-	 * @access public
 	 */
-	onVariablesChanged(allChangedVariablesSet) {
+	onVariablesChanged(allChangedVariablesSet: Set<string>): void {
 		// Inform triggers of the change
 		this.triggers.emit('variables_changed', allChangedVariablesSet)
 
@@ -1120,14 +1087,12 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Execute a press of a control
-	 * @param {string} controlId Id of the control
-	 * @param {boolean} pressed Whether the control is pressed
-	 * @param {string | undefined} surfaceId The surface that intiated this press
-	 * @param {boolean=} force Trigger actions even if already in the state
-	 * @returns {boolean} success
-	 * @access public
+	 * @param controlId Id of the control
+	 * @param pressed Whether the control is pressed
+	 * @param surfaceId The surface that intiated this press
+	 * @param force Trigger actions even if already in the state
 	 */
-	pressControl(controlId, pressed, surfaceId, force) {
+	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
 		const control = this.getControl(controlId)
 		if (control) {
 			this.triggers.emit('control_press', controlId, pressed, surfaceId)
@@ -1142,13 +1107,11 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Execute rotation of a control
-	 * @param {string} controlId Id of the control
-	 * @param {boolean} direction Whether the control is rotated to the right
-	 * @param {string | undefined} surfaceId The surface that intiated this rotate
-	 * @returns {boolean} success
-	 * @access public
+	 * @param controlId Id of the control
+	 * @param direction Whether the control is rotated to the right
+	 * @param surfaceId The surface that intiated this rotate
 	 */
-	rotateControl(controlId, direction, surfaceId) {
+	rotateControl(controlId: string, direction: boolean, surfaceId: string | undefined): boolean {
 		const control = this.getControl(controlId)
 		if (control && control.supportsActionSets) {
 			control.rotateControl(direction, surfaceId)
@@ -1160,12 +1123,10 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Rename a connection for variables used in the controls
-	 * @param {string} labelFrom - the old connection short name
-	 * @param {string} labelTo - the new connection short name
-	 * @returns {void}
-	 * @access public
+	 * @param labelFrom - the old connection short name
+	 * @param labelTo - the new connection short name
 	 */
-	renameVariables(labelFrom, labelTo) {
+	renameVariables(labelFrom: string, labelTo: string): void {
 		for (const control of this.#controls.values()) {
 			control.renameVariables(labelFrom, labelTo)
 		}
@@ -1173,10 +1134,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Delete a control
-	 * @param {string} controlId
-	 * @returns {void}
 	 */
-	deleteControl(controlId) {
+	deleteControl(controlId: string): void {
 		const control = this.getControl(controlId)
 		if (control) {
 			control.destroy()
@@ -1200,12 +1159,12 @@ class ControlsController extends CoreBase {
 	/**
 	 * Create a control
 	 * Danger: This will not delete an existing control from the specified location
-	 * @param {import('../Resources/Util.js').ControlLocation} location Location to place in the grid
-	 * @param {string} newType The type of the new control to create (if any)
-	 * @returns {string | null} controlId
+	 * @param location Location to place in the grid
+	 * @param newType The type of the new control to create (if any)
+	 * @returns controlId
 	 * @access public
 	 */
-	createButtonControl(location, newType) {
+	createButtonControl(location: ControlLocation, newType: string): string | null {
 		if (!this.page.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
@@ -1226,11 +1185,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Set an item as learning, or not
-	 * @param {string} id
-	 * @param {boolean} isActive
-	 * @returns {void}
 	 */
-	#setIsLearning(id, isActive) {
+	#setIsLearning(id: string, isActive: boolean): void {
 		if (isActive) {
 			this.#activeLearnRequests.add(id)
 			this.io.emitToRoom(ActiveLearnRoom, 'learn:add', id)
@@ -1242,15 +1198,13 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Update values for some feedbacks
-	 * @param {string} connectionId
-	 * @param {NewFeedbackValue[]} result - object containing new values for the feedbacks that have changed
-	 * @access public
+	 * @param connectionId
+	 * @param result - object containing new values for the feedbacks that have changed
 	 */
-	updateFeedbackValues(connectionId, result) {
+	updateFeedbackValues(connectionId: string, result: NewFeedbackValue[]): void {
 		if (result.length === 0) return
 
-		/** @type {Record<string, Record<string, any>>} */
-		const values = {}
+		const values: Record<string, Record<string, any>> = {}
 
 		for (const item of result) {
 			if (!values[item.controlId]) values[item.controlId] = {}
@@ -1269,11 +1223,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Verify a controlId is valid for the current id scheme and grid size
-	 * @param {string} controlId
-	 * @returns {boolean} control is valid
-	 * @access private
 	 */
-	#validateBankControlId(controlId) {
+	#validateBankControlId(controlId: string): boolean {
 		const parsed = ParseControlId(controlId)
 		if (parsed?.type !== 'bank') return false
 
@@ -1282,11 +1233,8 @@ class ControlsController extends CoreBase {
 
 	/**
 	 * Verify a controlId is valid for the current id scheme and grid size
-	 * @param {string} controlId
-	 * @returns {boolean} control is valid
-	 * @access private
 	 */
-	#validateTriggerControlId(controlId) {
+	#validateTriggerControlId(controlId: string): boolean {
 		const parsed = ParseControlId(controlId)
 		if (parsed?.type !== 'trigger') return false
 
@@ -1297,7 +1245,7 @@ class ControlsController extends CoreBase {
 	 * Prune any items on controls which belong to an unknown connectionId
 	 * @access public
 	 */
-	verifyConnectionIds() {
+	verifyConnectionIds(): void {
 		const knownConnectionIds = new Set(this.instance.getAllInstanceIds())
 		knownConnectionIds.add('internal')
 
@@ -1307,12 +1255,8 @@ class ControlsController extends CoreBase {
 	}
 }
 
-export default ControlsController
-
-/**
- * @typedef {{
- *   id: string
- *   controlId: string
- *   value: any
- * }} NewFeedbackValue
- */
+export interface NewFeedbackValue {
+	id: string
+	controlId: string
+	value: any
+}

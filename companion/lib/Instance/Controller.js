@@ -43,7 +43,7 @@ class Instance extends CoreBase {
 	#lastClientJson = null
 
 	/**
-	 * @type {import('../Controls/Controller.js').default}
+	 * @type {import('../Controls/Controller.js').ControlsController}
 	 * @access private
 	 * @readonly
 	 */

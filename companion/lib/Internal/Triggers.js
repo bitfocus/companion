@@ -21,7 +21,7 @@ import debounceFn from 'debounce-fn'
 
 export default class Triggers {
 	/**
-	 * @type {import('../Controls/Controller.js').default}
+	 * @type {import('../Controls/Controller.js').ControlsController}
 	 * @readonly
 	 */
 	#controlsController
@@ -34,7 +34,7 @@ export default class Triggers {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Controls/Controller.js').default} controlsController
+	 * @param {import('../Controls/Controller.js').ControlsController} controlsController
 	 */
 	constructor(internalModule, controlsController) {
 		this.#internalModule = internalModule

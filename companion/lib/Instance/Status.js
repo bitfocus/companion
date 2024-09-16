@@ -32,7 +32,7 @@ export default class Status extends EventEmitter {
 	#io
 
 	/**
-	 * @type {import('../Controls/Controller.js').default}
+	 * @type {import('../Controls/Controller.js').ControlsController}
 	 * @access private
 	 * @readonly
 	 */
@@ -40,7 +40,7 @@ export default class Status extends EventEmitter {
 
 	/**
 	 * @param {import('../UI/Handler.js').default} io
-	 * @param {import('../Controls/Controller.js').default} controls
+	 * @param {import('../Controls/Controller.js').ControlsController} controls
 	 */
 	constructor(io, controls) {
 		super()

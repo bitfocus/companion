@@ -21,7 +21,7 @@ import { oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/Contro
 import { convertPanelIndexToXY, GridSize } from '../Util.js'
 import { LEGACY_MAX_BUTTONS } from '../../Util/Constants.js'
 import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
-import type ControlsController from '../../Controls/Controller.js'
+import type { ControlsController } from '../../Controls/Controller.js'
 import type { PageController } from '../../Page/Controller.js'
 import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'

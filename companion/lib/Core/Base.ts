@@ -10,7 +10,7 @@ import type UIHandler from '../UI/Handler.js'
 import type Instance from '../Instance/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type DataDatabase from '../Data/Database.js'
-import type ControlsController from '../Controls/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
 
 /**
  * Abstract class to be extended by most core classes.  Provides access to the
