@@ -1352,13 +1352,17 @@ class SurfaceController extends CoreBase {
 		this.#surfaceGroups.clear()
 
 		// Re-attach in auto-groups
-		for (const surface of this.#surfaceHandlers.values()) {
+		for (const [id, surface] of this.#surfaceHandlers.entries()) {
 			if (!surface) continue
 
 			try {
-				surface.resetConfig()
+				if (id.startsWith('emulator:')) {
+					this.removeDevice(id, true)
+				} else {
+					surface.resetConfig()
 
-				this.#attachSurfaceToGroup(surface)
+					this.#attachSurfaceToGroup(surface)
+				}
 			} catch (e) {
 				this.logger.warn('Could not reattach a surface')
 			}
