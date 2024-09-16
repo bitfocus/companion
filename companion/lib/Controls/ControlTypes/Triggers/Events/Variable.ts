@@ -27,7 +27,7 @@ interface VariableChangeEvent {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class TriggersEventVariables {
+export class TriggersEventVariables {
 	/**
 	 * Whether the trigger is currently enabled
 	 */

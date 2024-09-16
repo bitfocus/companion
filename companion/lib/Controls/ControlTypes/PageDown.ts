@@ -33,7 +33,7 @@ import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ControlButtonPageDown
+export class ControlButtonPageDown
 	extends ControlBase<PageDownButtonModel>
 	implements
 		ControlWithoutActions,

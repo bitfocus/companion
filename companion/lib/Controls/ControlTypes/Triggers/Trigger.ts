@@ -5,10 +5,10 @@ import { TriggersListRoom } from '../../Controller.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
-import TriggersEventTimer from './Events/Timer.js'
-import TriggersEventMisc from './Events/Misc.js'
+import { TriggersEventTimer } from './Events/Timer.js'
+import { TriggersEventMisc } from './Events/Misc.js'
 import { clamp } from '../../../Resources/Util.js'
-import TriggersEventVariables from './Events/Variable.js'
+import { TriggersEventVariables } from './Events/Variable.js'
 import { nanoid } from 'nanoid'
 import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
@@ -48,7 +48,7 @@ import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ControlTrigger
+export class ControlTrigger
 	extends ControlBase<TriggerModel>
 	implements
 		ControlWithActions,

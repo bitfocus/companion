@@ -23,52 +23,48 @@ import ModuleHost, { ConnectionDebugLogRoom } from './Host.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { isLabelValid, makeLabelSafe } from '../../../shared-lib/dist/Label.js'
+import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { Registry } from '../Registry.js'
+import type { ModuleManifest } from '@companion-module/base'
+import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ClientSocket } from '../UI/Handler.js'
 
 const InstancesRoom = 'instances'
 
-/**
- * @typedef {import('@companion-app/shared/Model/Common.js').ClientConnectionConfig} ClientConnectionConfig
- */
-/**
- * @typedef {{
- *   type: string
- *   product?: string
- * }} CreateConnectionData
- */
+type CreateConnectionData = {
+	type: string
+	product?: string
+}
 
-class InstanceController extends CoreBase {
-	/** @type {Record<string, ClientConnectionConfig> | null} */
-	#lastClientJson = null
+export class InstanceController extends CoreBase {
+	#lastClientJson: Record<string, ClientConnectionConfig> | null = null
 
-	/**
-	 * @type {import('../Controls/Controller.js').ControlsController}
-	 * @access private
-	 * @readonly
-	 */
-	#controlsController
+	readonly #controlsController: ControlsController
+	readonly #variablesController: VariablesController
 
-	/**
-	 * @type {import('../Variables/Controller.js').VariablesController}
-	 * @access private
-	 * @readonly
-	 */
-	#variablesController
-
-	store = {
-		/** @type {Record<string, import('@companion-app/shared/Model/Connections.js').ConnectionConfig>} */
+	store: { db: Record<string, ConnectionConfig> } = {
 		db: {},
 	}
+
+	readonly definitions: InstanceDefinitions
+	readonly status: InstanceStatus
+	readonly moduleHost: ModuleHost
+	readonly modules: InstanceModules
 
 	/**
 	 * @param {import('../Registry.js').Registry} registry
 	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Instance/Controller')
 
 		this.#variablesController = registry.variables
 		this.#controlsController = registry.controls
+
 		this.definitions = new InstanceDefinitions(registry)
 		this.status = new InstanceStatus(registry.io, registry.controls)
 		this.moduleHost = new ModuleHost(registry, this.status)
@@ -80,7 +76,7 @@ class InstanceController extends CoreBase {
 		this.commitChanges()
 	}
 
-	getAllInstanceIds() {
+	getAllInstanceIds(): string[] {
 		return Object.keys(this.store.db)
 	}
 
@@ -88,7 +84,7 @@ class InstanceController extends CoreBase {
 	 * Handle an electron power event
 	 * @param {string} event
 	 */
-	powerStatusChange(event) {
+	powerStatusChange(event: string): void {
 		if (event == 'resume') {
 			this.logger.info('Power: Resuming')
 
@@ -106,9 +102,9 @@ class InstanceController extends CoreBase {
 
 	/**
 	 * Initialise instances
-	 * @param {string} extraModulePath - extra directory to search for modules
+	 * @param extraModulePath - extra directory to search for modules
 	 */
-	async initInstances(extraModulePath) {
+	async initInstances(extraModulePath: string): Promise<void> {
 		this.logger.silly('instance_init', this.store.db)
 
 		await this.modules.initInstances(extraModulePath)
@@ -120,11 +116,7 @@ class InstanceController extends CoreBase {
 		this.emit('connection_added')
 	}
 
-	/**
-	 * @param {string} module_id
-	 * @returns {void}
-	 */
-	reloadUsesOfModule(module_id) {
+	reloadUsesOfModule(module_id: string): void {
 		// restart usages of this module
 		/** @type {string[]} */
 		let reloadLabels = []
@@ -142,13 +134,13 @@ class InstanceController extends CoreBase {
 
 	/**
 	 *
-	 * @param {string} id
-	 * @param {string | null} newLabel
-	 * @param {unknown | null} config
-	 * @param {boolean} skip_notify_instance
-	 * @returns {void}
 	 */
-	setInstanceLabelAndConfig(id, newLabel, config, skip_notify_instance = false) {
+	setInstanceLabelAndConfig(
+		id: string,
+		newLabel: string | null,
+		config: unknown | null,
+		skip_notify_instance = false
+	): void {
 		const entry = this.store.db[id]
 		if (!entry) {
 			this.logger.warn(`setInstanceLabelAndConfig id "${id}" does not exist!`)
@@ -184,7 +176,7 @@ class InstanceController extends CoreBase {
 
 		const updateInstance = !!newLabel || (config && !skip_notify_instance)
 		if (updateInstance && instance) {
-			instance.updateConfigAndLabel(entry.config, entry.label).catch((/** @type {any} */ e) => {
+			instance.updateConfigAndLabel(entry.config, entry.label).catch((e: any) => {
 				instance.logger.warn('Error updating instance configuration: ' + e.message)
 			})
 		}
@@ -193,11 +185,9 @@ class InstanceController extends CoreBase {
 	}
 
 	/**
-	 * @param {string} prefix
-	 * @param {string=} ignoreId
-	 * @returns
+	 *
 	 */
-	makeLabelUnique(prefix, ignoreId) {
+	makeLabelUnique(prefix: string, ignoreId?: string): string {
 		const knownLabels = new Set()
 		for (const [id, obj] of Object.entries(this.store.db)) {
 			if (id !== ignoreId && obj && obj.label) {
@@ -219,11 +209,8 @@ class InstanceController extends CoreBase {
 
 	/**
 	 * Add a new instance of a module
-	 * @param {CreateConnectionData} data
-	 * @param {boolean} disabled
-	 * @returns {string}
 	 */
-	addInstance(data, disabled) {
+	addInstance(data: CreateConnectionData, disabled: boolean): string {
 		let module = data.type
 
 		const moduleInfo = this.modules.getModuleManifest(module)
@@ -236,12 +223,8 @@ class InstanceController extends CoreBase {
 
 	/**
 	 * Add a new instance of a module with a predetermined label
-	 * @param {CreateConnectionData} data
-	 * @param {string} label
-	 * @param {boolean} disabled
-	 * @returns {string}
 	 */
-	addInstanceWithLabel(data, label, disabled) {
+	addInstanceWithLabel(data: CreateConnectionData, label: string, disabled: boolean): string {
 		let module = data.type
 		let product = data.product
 
@@ -282,19 +265,11 @@ class InstanceController extends CoreBase {
 		return id
 	}
 
-	/**
-	 * @param {string} id
-	 * @returns {string | undefined}
-	 */
-	getLabelForInstance(id) {
+	getLabelForInstance(id: string): string | undefined {
 		return this.store.db[id]?.label
 	}
 
-	/**
-	 * @param {string} label
-	 * @returns {string | undefined}
-	 */
-	getIdForLabel(label) {
+	getIdForLabel(label: string): string | undefined {
 		for (const [id, conf] of Object.entries(this.store.db)) {
 			if (conf && conf.label === label) {
 				return id
@@ -303,11 +278,7 @@ class InstanceController extends CoreBase {
 		return undefined
 	}
 
-	/**
-	 * @param {string} id
-	 * @returns {import('@companion-module/base').ModuleManifest | undefined}
-	 */
-	getManifestForInstance(id) {
+	getManifestForInstance(id: string): ModuleManifest | undefined {
 		const config = this.store.db[id]
 		if (!config) return undefined
 
@@ -316,12 +287,7 @@ class InstanceController extends CoreBase {
 		return moduleManifest?.manifest
 	}
 
-	/**
-	 * @param {string} id
-	 * @param {boolean} state
-	 * @returns {void}
-	 */
-	enableDisableInstance(id, state) {
+	enableDisableInstance(id: string, state: boolean): void {
 		const connectionConfig = this.store.db[id]
 		if (connectionConfig) {
 			const label = connectionConfig.label
@@ -358,11 +324,7 @@ class InstanceController extends CoreBase {
 		}
 	}
 
-	/**
-	 * @param {string} id
-	 * @returns {Promise<void>}
-	 */
-	async deleteInstance(id) {
+	async deleteInstance(id: string): Promise<void> {
 		const label = this.store.db[id]?.label
 		this.logger.info(`Deleting instance: ${label ?? id}`)
 
@@ -385,10 +347,7 @@ class InstanceController extends CoreBase {
 		this.controls.forgetConnection(id)
 	}
 
-	/**
-	 * @returns {Promise<void>}
-	 */
-	async deleteAllInstances() {
+	async deleteAllInstances(): Promise<void> {
 		const ps = []
 		for (const instanceId of Object.keys(this.store.db)) {
 			ps.push(this.deleteInstance(instanceId))
@@ -399,11 +358,9 @@ class InstanceController extends CoreBase {
 
 	/**
 	 * Get information for the metrics system about the current instances
-	 * @returns {Record<string, number>}
 	 */
-	getInstancesMetrics() {
-		/** @type {Record<string, number>} */
-		const instancesCounts = {}
+	getInstancesMetrics(): Record<string, number> {
+		const instancesCounts: Record<string, number> = {}
 
 		for (const instance_config of Object.values(this.store.db)) {
 			if (instance_config.instance_type !== 'bitfocus-companion' && instance_config.enabled !== false) {
@@ -420,18 +377,15 @@ class InstanceController extends CoreBase {
 
 	/**
 	 * Stop/destroy all running instances
-	 * @returns {Promise<void>}
 	 */
-	async destroyAllInstances() {
+	async destroyAllInstances(): Promise<void> {
 		return this.moduleHost.queueStopAllConnections()
 	}
 
 	/**
 	 * Save the instances config to the db, and inform clients
-	 * @access protected
-	 * @returns {void}
 	 */
-	commitChanges() {
+	commitChanges(): void {
 		this.db.setKey('instance', this.store.db)
 
 		const newJson = cloneDeep(this.getClientJson())
@@ -449,12 +403,8 @@ class InstanceController extends CoreBase {
 
 	/**
 	 *
-	 * @param {string} instanceId
-	 * @param {boolean} minimal
-	 * @param {boolean} clone
-	 * @returns {import('@companion-app/shared/Model/ExportModel.js').ExportInstanceFullv4 | import('@companion-app/shared/Model/ExportModel.js').ExportInstanceMinimalv4}
 	 */
-	exportInstance(instanceId, minimal = false, clone = true) {
+	exportInstance(instanceId: string, minimal = false, clone = true): ExportInstanceFullv4 | ExportInstanceMinimalv4 {
 		const rawObj = this.store.db[instanceId]
 		const obj = minimal
 			? {
@@ -469,40 +419,29 @@ class InstanceController extends CoreBase {
 		return clone ? cloneDeep(obj) : obj
 	}
 
-	/**
-	 * @param {boolean} clone
-	 * @returns {Record<string, import('@companion-app/shared/Model/Connections.js').ConnectionConfig | undefined>}
-	 */
-	exportAll(clone = true) {
+	exportAll(clone = true): Record<string, ConnectionConfig | undefined> {
 		const obj = this.store.db
 		return clone ? cloneDeep(obj) : obj
 	}
 
 	/**
 	 * Get the status of an instance
-	 * @param {String} connectionId
-	 * @returns {import('@companion-app/shared/Model/Common.js').ConnectionStatusEntry|undefined}
 	 */
-	getConnectionStatus(connectionId) {
+	getConnectionStatus(connectionId: string): ConnectionStatusEntry | undefined {
 		return this.status.getConnectionStatus(connectionId)
 	}
 
 	/**
 	 * Get the config object of an instance
-	 * @param {String} connectionId
-	 * @returns {import('@companion-app/shared/Model/Connections.js').ConnectionConfig | undefined}
 	 */
-	getInstanceConfig(connectionId) {
+	getInstanceConfig(connectionId: string): ConnectionConfig | undefined {
 		return this.store.db[connectionId]
 	}
 
 	/**
 	 * Start an instance running
-	 * @param {string} id
-	 * @param {boolean} is_being_created
-	 * @returns {void}
 	 */
-	activate_module(id, is_being_created = false) {
+	activate_module(id: string, is_being_created = false): void {
 		const config = this.store.db[id]
 		if (!config) throw new Error('Cannot activate unknown module')
 
@@ -535,11 +474,8 @@ class InstanceController extends CoreBase {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
-	 * @returns {void}
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		this.#variablesController.clientConnect(client)
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
@@ -568,8 +504,8 @@ class InstanceController extends CoreBase {
 
 			if (instance) {
 				try {
-					/** @type {any} Making types match is messy */
-					const fields = await instance.requestConfigFields()
+					// TODO: makiing types match is messy
+					const fields: any = await instance.requestConfigFields()
 
 					const instanceConf = this.store.db[id]
 
@@ -579,7 +515,7 @@ class InstanceController extends CoreBase {
 						config: instanceConf?.config,
 						instance_type: instanceConf?.instance_type,
 					}
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.logger.silly(`Failed to load instance config_fields: ${e.message}`)
 					return null
 				}
@@ -656,9 +592,8 @@ class InstanceController extends CoreBase {
 		})
 	}
 
-	getClientJson() {
-		/** @type {Record<string, ClientConnectionConfig>} */
-		const result = {}
+	getClientJson(): Record<string, ClientConnectionConfig> {
+		const result: Record<string, ClientConnectionConfig> = {}
 
 		for (const [id, config] of Object.entries(this.store.db)) {
 			result[id] = {
@@ -680,5 +615,3 @@ class InstanceController extends CoreBase {
 		return result
 	}
 }
-
-export default InstanceController

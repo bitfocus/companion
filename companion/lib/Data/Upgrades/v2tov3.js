@@ -1,4 +1,4 @@
-import ControlTrigger from '../../Controls/ControlTypes/Triggers/Trigger.js'
+import { ControlTrigger } from '../../Controls/ControlTypes/Triggers/Trigger.js'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'

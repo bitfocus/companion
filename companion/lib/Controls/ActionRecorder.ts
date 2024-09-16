@@ -44,7 +44,7 @@ interface ActionRecorderEvents {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
+export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	readonly #logger = LogController.createLogger('Control/ActionRecorder')
 
 	readonly #registry: Registry

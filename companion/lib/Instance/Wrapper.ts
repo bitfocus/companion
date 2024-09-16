@@ -1,76 +1,88 @@
-import LogController from '../Log/Controller.js'
-import { IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
+import LogController, { Logger } from '../Log/Controller.js'
+import { IpcEventHandlers, IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
 import { ConnectionDebugLogRoom } from './Host.js'
 import semver from 'semver'
+import type express from 'express'
+import type {
+	ActionInstance as ModuleActionInstance,
+	FeedbackInstance as ModuleFeedbackInstance,
+	HostToModuleEventsV0,
+	ModuleToHostEventsV0,
+	SomeEncodedCompanionConfigField,
+	LogMessageMessage,
+	SetStatusMessage,
+	SetActionDefinitionsMessage,
+	SetFeedbackDefinitionsMessage,
+	UpdateFeedbackValuesMessage,
+	SetVariableValuesMessage,
+	SetVariableDefinitionsMessage,
+	SetPresetDefinitionsMessage,
+	SaveConfigMessage,
+	SendOscMessage,
+	ParseVariablesInStringMessage,
+	ParseVariablesInStringResponseMessage,
+	RecordActionMessage,
+	SetCustomVariableMessage,
+	UpgradedDataResponseMessage,
+	SharedUdpSocketMessageJoin,
+	SharedUdpSocketMessageLeave,
+	SharedUdpSocketMessageSend,
+} from '@companion-module/base/dist/host-api/api.js'
+import type { Registry } from '../Registry.js'
+import type { InstanceStatus } from './Status.js'
+import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type {
+	CompanionHTTPRequest,
+	CompanionInputFieldBase,
+	CompanionOptionValues,
+	CompanionVariableValue,
+	LogLevel,
+} from '@companion-module/base'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import { PresetDefinitionTmp } from './Definitions.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
-/**
- * @typedef {import('@companion-module/base/dist/host-api/api.js').HostToModuleEventsV0} HostToModuleEventsV0
- * @typedef {import('@companion-module/base/dist/host-api/api.js').ModuleToHostEventsV0} ModuleToHostEventsV0
- * @typedef {import('@companion-module/base/dist/host-api/ipc-wrapper.js').IpcEventHandlers<ModuleToHostEventsV0>} IpcEventHandlers
- */
+type Monitor = any // TODO
 
-class SocketEventsHandler {
-	/**
-	 * @type {import('winston').Logger}
-	 * @access public
-	 */
-	logger
+export class SocketEventsHandler {
+	logger: Logger
 
-	/**
-	 * @type {IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>}
-	 */
-	#ipcWrapper
+	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
 
-	/**
-	 * @type {import('../Registry.js').Registry}
-	 */
-	#registry
+	readonly #registry: Registry
 
-	/**
-	 * @type {import('./Status.js').InstanceStatus}
-	 */
-	#instanceStatus
+	readonly #instanceStatus: InstanceStatus
 
-	/**
-	 * @type {string}
-	 * @access public
-	 */
-	connectionId
+	readonly connectionId: string
 
 	#hasHttpHandler = false
-	/**
-	 * @access public
-	 */
-	hasRecordActionsHandler = false
 
-	/**
-	 * @type {boolean}
-	 */
-	#expectsLabelUpdates = false
+	hasRecordActionsHandler: boolean = false
+
+	#expectsLabelUpdates: boolean = false
 
 	/**
 	 * Current label of the connection
-	 * @type {string}
 	 */
-	#label
+	#label: string
 
 	/**
 	 * Unsubscribe listeners, for use during cleanup
-	 * @type {() => void}
 	 */
-	#unsubListeners
+	#unsubListeners: () => void
 
-	/**
-	 *
-	 * @param {import('../Registry.js').Registry} registry
-	 * @param {import('./Status.js').InstanceStatus} instanceStatus
-	 * @param {*} monitor
-	 * @param {string} connectionId
-	 * @param {string} apiVersion0
-	 */
-	constructor(registry, instanceStatus, monitor, connectionId, apiVersion0) {
+	constructor(
+		registry: Registry,
+		instanceStatus: InstanceStatus,
+		monitor: Monitor,
+		connectionId: string,
+		apiVersion0: string
+	) {
 		this.logger = LogController.createLogger(`Instance/Wrapper/${connectionId}`)
 
 		const apiVersion = semver.parse(apiVersion0)
@@ -82,10 +94,7 @@ class SocketEventsHandler {
 		this.connectionId = connectionId
 		this.#expectsLabelUpdates = range1_2_0OrLater.test(apiVersion)
 
-		/**
-		 * @type {IpcEventHandlers}
-		 */
-		const funcs = {
+		const funcs: IpcEventHandlers<ModuleToHostEventsV0> = {
 			'log-message': this.#handleLogMessage.bind(this),
 			'set-status': this.#handleSetStatus.bind(this),
 			setActionDefinitions: this.#handleSetActionDefinitions.bind(this),
@@ -117,7 +126,7 @@ class SocketEventsHandler {
 			5000
 		)
 
-		const messageHandler = (/** @type {any} */ msg) => {
+		const messageHandler = (msg: any) => {
 			this.#ipcWrapper.receivedMessage(msg)
 		}
 		monitor.child.on('message', messageHandler)
@@ -129,10 +138,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Initialise the instance class running in the child process
-	 * @param {import('@companion-app/shared/Model/Connections.js').ConnectionConfig} config
-	 * @returns {Promise<void>}
 	 */
-	async init(config) {
+	async init(config: ConnectionConfig): Promise<void> {
 		this.logger = LogController.createLogger(`Instance/Wrapper/${config.label}`)
 		this.#label = config.label
 
@@ -165,11 +172,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Forward an updated config object to the instance class
-	 * @param {unknown} config
-	 * @param {string} label
-	 * @returns {Promise<void>}
 	 */
-	async updateConfigAndLabel(config, label) {
+	async updateConfigAndLabel(config: unknown, label: string): Promise<void> {
 		this.logger = LogController.createLogger(`Instance/Wrapper/${label}`)
 		this.#label = label
 
@@ -185,13 +189,12 @@ class SocketEventsHandler {
 
 	/**
 	 * Fetch the config fields from the instance to show in the ui
-	 * @returns {Promise<import('@companion-module/base/dist/host-api/api.js').SomeEncodedCompanionConfigField[]>} config fields
 	 */
-	async requestConfigFields() {
+	async requestConfigFields(): Promise<SomeEncodedCompanionConfigField[]> {
 		try {
 			const res = await this.#ipcWrapper.sendWithCb('getConfigFields', {})
 			return res.fields
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.warn('Error getting config fields: ' + e?.message)
 			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
 
@@ -201,12 +204,9 @@ class SocketEventsHandler {
 
 	/**
 	 * Get all the feedback instances for this instance
-	 * @access private
-	 * @returns {Record<string, import('@companion-module/base/dist/host-api/api.js').FeedbackInstance>}
 	 */
-	#getAllFeedbackInstances() {
-		/** @type {Record<string, import('@companion-module/base/dist/host-api/api.js').FeedbackInstance>} */
-		const allFeedbacks = {}
+	#getAllFeedbackInstances(): Record<string, ModuleFeedbackInstance> {
+		const allFeedbacks: Record<string, ModuleFeedbackInstance> = {}
 
 		// Find all the feedbacks on controls
 		const allControls = this.#registry.controls.getAllControls()
@@ -240,7 +240,7 @@ class SocketEventsHandler {
 	 * Send all feedback instances to the child process
 	 * @access public - needs to be re-run when the topbar setting changes
 	 */
-	async sendAllFeedbackInstances() {
+	async sendAllFeedbackInstances(): Promise<void> {
 		const msg = {
 			feedbacks: this.#getAllFeedbackInstances(),
 		}
@@ -250,10 +250,9 @@ class SocketEventsHandler {
 
 	/**
 	 * Send the list of changed variables to the child process
-	 * @param {string[]} changedVariableIds
 	 * @access public - called whenever variables change
 	 */
-	async sendVariablesChanged(changedVariableIds) {
+	async sendVariablesChanged(changedVariableIds: string[]): Promise<void> {
 		// Future: only inform module of variables it parsed and should react to.
 		// This will help avoid excess work when variables are not interesting to a module.
 
@@ -264,12 +263,9 @@ class SocketEventsHandler {
 
 	/**
 	 * Get all the action instances for this instance
-	 * @access private
-	 * @returns {Record<string, import('@companion-module/base/dist/host-api/api.js').ActionInstance>}
 	 */
-	#getAllActionInstances() {
-		/** @type {Record<string, import('@companion-module/base/dist/host-api/api.js').ActionInstance>} */
-		const allActions = {}
+	#getAllActionInstances(): Record<string, ModuleActionInstance> {
+		const allActions: Record<string, ModuleActionInstance> = {}
 
 		const allControls = this.#registry.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
@@ -309,11 +305,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Inform the child instance class about an updated feedback
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @param {string} controlId
-	 * @returns {Promise<void>}
 	 */
-	async feedbackUpdate(feedback, controlId) {
+	async feedbackUpdate(feedback: FeedbackInstance, controlId: string): Promise<void> {
 		if (feedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
 		if (feedback.disabled) return
 
@@ -340,11 +333,11 @@ class SocketEventsHandler {
 
 	/**
 	 *
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
-	 * @param {string} controlId
-	 * @returns {Promise<import('@companion-module/base').CompanionOptionValues | undefined | void>}
 	 */
-	async feedbackLearnValues(feedback, controlId) {
+	async feedbackLearnValues(
+		feedback: FeedbackInstance,
+		controlId: string
+	): Promise<CompanionOptionValues | undefined | void> {
 		if (feedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
 
 		const control = this.#registry.controls.getControl(controlId)
@@ -375,7 +368,7 @@ class SocketEventsHandler {
 			)
 
 			return msg.options
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.warn('Error learning feedback options: ' + e?.message)
 			this.#sendToModuleLog('error', 'Error learning feedback options: ' + e?.message)
 		}
@@ -383,10 +376,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Inform the child instance class about an feedback that has been deleted
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} oldFeedback
-	 * @returns {Promise<void>}
 	 */
-	async feedbackDelete(oldFeedback) {
+	async feedbackDelete(oldFeedback: FeedbackInstance): Promise<void> {
 		if (oldFeedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
 
 		await this.#ipcWrapper.sendWithCb('updateFeedbacks', {
@@ -399,11 +390,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Inform the child instance class about an updated action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {string} controlId
-	 * @returns {Promise<void>}
 	 */
-	async actionUpdate(action, controlId) {
+	async actionUpdate(action: ActionInstance, controlId: string): Promise<void> {
 		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
 		if (action.disabled) return
 
@@ -423,10 +411,8 @@ class SocketEventsHandler {
 	}
 	/**
 	 * Inform the child instance class about an action that has been deleted
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} oldAction
-	 * @returns {Promise<void>}
 	 */
-	async actionDelete(oldAction) {
+	async actionDelete(oldAction: ActionInstance): Promise<void> {
 		if (oldAction.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
 
 		await this.#ipcWrapper.sendWithCb('updateActions', {
@@ -439,11 +425,11 @@ class SocketEventsHandler {
 
 	/**
 	 *
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {string} controlId
-	 * @returns {Promise<import('@companion-module/base').CompanionOptionValues | undefined | void>}
 	 */
-	async actionLearnValues(action, controlId) {
+	async actionLearnValues(
+		action: ActionInstance,
+		controlId: string
+	): Promise<CompanionOptionValues | undefined | void> {
 		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
 
 		const actionSpec = this.#registry.instance.definitions.getActionDefinition(this.connectionId, action.action)
@@ -468,7 +454,7 @@ class SocketEventsHandler {
 			)
 
 			return msg.options
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.warn('Error learning action options: ' + e?.message)
 			this.#sendToModuleLog('error', 'Error learning action options: ' + e?.message)
 		}
@@ -476,11 +462,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Tell the child instance class to execute an action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {RunActionExtras} extras
-	 * @returns {Promise<void>}
 	 */
-	async actionRun(action, extras) {
+	async actionRun(action: ActionInstance, extras: RunActionExtras): Promise<void> {
 		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
 
 		try {
@@ -497,7 +480,7 @@ class SocketEventsHandler {
 
 				surfaceId: extras?.surfaceId,
 			})
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.warn(`Error executing action: ${e.message ?? e}`)
 			this.#sendToModuleLog('error', 'Error executing action: ' + e?.message)
 
@@ -507,14 +490,13 @@ class SocketEventsHandler {
 
 	/**
 	 * Tell the child instance class to 'destroy' itself
-	 * @returns {Promise<void>}
 	 */
-	async destroy() {
+	async destroy(): Promise<void> {
 		// Cleanup the system once the module is destroyed
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
 		}
 
@@ -529,27 +511,27 @@ class SocketEventsHandler {
 	/**
 	 * Perform any cleanup
 	 */
-	cleanup() {
+	cleanup(): void {
 		this.#registry.services.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 	}
 
 	/**
 	 *
-	 * @param {*} req
-	 * @param {*} res
-	 * @returns {void}
 	 */
-	executeHttpRequest(req, res) {
+	executeHttpRequest(req: express.Request, res: express.Response): void {
 		if (this.#hasHttpHandler) {
-			const requestData = {
+			const requestData: CompanionHTTPRequest = {
 				baseUrl: req.baseUrl,
 				body: req.body,
+				// @ts-ignore TODO
 				headers: req.headers,
 				hostname: req.hostname,
+				// @ts-ignore TODO
 				ip: req.ip,
 				method: req.method,
 				originalUrl: req.originalUrl,
 				path: req.path,
+				// @ts-ignore TODO
 				query: req.query,
 			}
 
@@ -589,10 +571,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle a log message from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').LogMessageMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleLogMessage(msg) {
+	async #handleLogMessage(msg: LogMessageMessage): Promise<void> {
 		if (msg.level === 'error' || msg.level === 'warn' || msg.level === 'info') {
 			// Ignore debug from modules in main log
 			this.logger.log(msg.level, msg.message)
@@ -604,10 +584,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Send a message to the module 'debug' log page
-	 * @param {import('@companion-module/base').LogLevel} level
-	 * @param {string} message
 	 */
-	#sendToModuleLog(level, message) {
+	#sendToModuleLog(level: LogLevel, message: string): void {
 		const debugLogRoom = ConnectionDebugLogRoom(this.connectionId)
 		if (this.#registry.io.countRoomMembers(debugLogRoom) > 0) {
 			this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, level, message)
@@ -616,10 +594,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle updating instance status from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SetStatusMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSetStatus(msg) {
+	async #handleSetStatus(msg: SetStatusMessage): Promise<void> {
 		// this.logger.silly(`Updating status`)
 
 		this.#instanceStatus.updateInstanceStatus(this.connectionId, msg.status, msg.message)
@@ -627,12 +603,9 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle settings action definitions from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SetActionDefinitionsMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSetActionDefinitions(msg) {
-		/** @type {Record<string, import('@companion-app/shared/Model/ActionDefinitionModel.js').ActionDefinition>} */
-		const actions = {}
+	async #handleSetActionDefinitions(msg: SetActionDefinitionsMessage): Promise<void> {
+		const actions: Record<string, ActionDefinition> = {}
 
 		for (const rawAction of msg.actions || []) {
 			actions[rawAction.id] = {
@@ -650,12 +623,9 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle settings feedback definitions from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SetFeedbackDefinitionsMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSetFeedbackDefinitions(msg) {
-		/** @type {Record<string, import('@companion-app/shared/Model/FeedbackDefinitionModel.js').FeedbackDefinition>} */
-		const feedbacks = {}
+	async #handleSetFeedbackDefinitions(msg: SetFeedbackDefinitionsMessage): Promise<void> {
+		const feedbacks: Record<string, FeedbackDefinition> = {}
 
 		for (const rawFeedback of msg.feedbacks || []) {
 			feedbacks[rawFeedback.id] = {
@@ -676,23 +646,18 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle updating feedback values from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').UpdateFeedbackValuesMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleUpdateFeedbackValues(msg) {
+	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
 		this.#registry.controls.updateFeedbackValues(this.connectionId, msg.values)
 	}
 
 	/**
 	 * Handle updating variable values from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SetVariableValuesMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSetVariableValues(msg) {
+	async #handleSetVariableValues(msg: SetVariableValuesMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableValues before init was called`)
 
-		/** @type {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} */
-		const variables = {}
+		const variables: Record<string, CompanionVariableValue | undefined> = {}
 		for (const variable of msg.newValues) {
 			variables[variable.id] = variable.value
 		}
@@ -702,17 +667,14 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle setting variable definitions from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SetVariableDefinitionsMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSetVariableDefinitions(msg) {
+	async #handleSetVariableDefinitions(msg: SetVariableDefinitionsMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableDefinitions before init was called`)
 
 		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
 		const invalidIds = []
 
-		/** @type {VariableDefinitionTmp[]} */
-		const newVariables = []
+		const newVariables: VariableDefinitionTmp[] = []
 		for (const variable of msg.variables) {
 			// Enure it is correctly formed
 			if (variable && typeof variable.name === 'string' && typeof variable.id === 'string') {
@@ -731,8 +693,7 @@ class SocketEventsHandler {
 		this.#registry.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
-			/** @type {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} */
-			const variables = {}
+			const variables: Record<string, CompanionVariableValue | undefined> = {}
 			for (const variable of msg.newValues) {
 				variables[variable.id] = variable.value
 			}
@@ -748,22 +709,19 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle setting preset definitions from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SetPresetDefinitionsMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSetPresetDefinitions(msg) {
+	async #handleSetPresetDefinitions(msg: SetPresetDefinitionsMessage): Promise<void> {
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
 			// Convert back to an object
-			/** @type {Record<string, import('./Definitions.js').PresetDefinitionTmp>} */
-			const presets = {}
+			const presets: Record<string, PresetDefinitionTmp> = {}
 			for (const preset of msg.presets) {
 				presets[preset.id] = preset
 			}
 
 			this.#registry.instance.definitions.setPresetDefinitions(this.connectionId, this.#label, presets)
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
 			throw new Error(`Failed to set Preset Definitions: ${e}`)
@@ -772,35 +730,34 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle saving an updated config object from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SaveConfigMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSaveConfig(msg) {
+	async #handleSaveConfig(msg: SaveConfigMessage): Promise<void> {
 		// Save config, but do not automatically call this module's updateConfig again
 		this.#registry.instance.setInstanceLabelAndConfig(this.connectionId, null, msg.config, true)
 	}
 
 	/**
 	 * Handle sending an osc message from the child process
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SendOscMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSendOsc(msg) {
+	async #handleSendOsc(msg: SendOscMessage): Promise<void> {
 		this.#registry.services.oscSender.send(msg.host, msg.port, msg.path, msg.args)
 	}
 
 	/**
 	 * Handle request to parse variables in a string
-	 * @param {import('@companion-module/base/dist/host-api/api.js').ParseVariablesInStringMessage} msg
-	 * @returns {Promise<import('@companion-module/base/dist/host-api/api.js').ParseVariablesInStringResponseMessage>}
 	 */
-	async #handleParseVariablesInString(msg) {
+	async #handleParseVariablesInString(
+		msg: ParseVariablesInStringMessage
+	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
 			const location = msg.controlId ? this.#registry.page.getLocationOfControlId(msg.controlId) : null
 			const result = this.#registry.variables.values.parseVariables(msg.text, location)
 
-			return { text: result.text, variableIds: result.variableIds }
-		} catch (/** @type {any} */ e) {
+			return {
+				text: result.text,
+				variableIds: result.variableIds,
+			}
+		} catch (e: any) {
 			this.logger.error(`Parse variables failed: ${e}`)
 
 			throw new Error(`Failed to parse variables in string`)
@@ -809,10 +766,8 @@ class SocketEventsHandler {
 
 	/**
 	 * Handle action recorded by the instance
-	 * @param {import('@companion-module/base/dist/host-api/api.js').RecordActionMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleRecordAction(msg) {
+	async #handleRecordAction(msg: RecordActionMessage): Promise<void> {
 		let delay = msg.delay || 0
 		if (isNaN(delay) || delay < 0) delay = 0
 
@@ -824,30 +779,26 @@ class SocketEventsHandler {
 				delay,
 				msg.uniquenessId ?? undefined
 			)
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.error(`Record action failed: ${e}`)
 		}
 	}
 
 	/**
 	 * Handle the module setting a custom variable
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SetCustomVariableMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleSetCustomVariable(msg) {
+	async #handleSetCustomVariable(msg: SetCustomVariableMessage): Promise<void> {
 		try {
 			this.#registry.variables.custom.setValue(msg.customVariableId, msg.value)
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}
 	}
 
 	/**
 	 * Handle the module informing us of some actions/feedbacks which have been run through upgrade scripts
-	 * @param {import('@companion-module/base/dist/host-api/api.js').UpgradedDataResponseMessage} msg
-	 * @returns {Promise<void>}
 	 */
-	async #handleUpgradedItems(msg) {
+	async #handleUpgradedItems(msg: UpgradedDataResponseMessage): Promise<void> {
 		try {
 			// TODO - we should batch these changes when there are multiple on one control (to void excessive redrawing)
 
@@ -890,16 +841,15 @@ class SocketEventsHandler {
 					}
 				}
 			}
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.error(`Upgrades failed to save: ${e}`)
 		}
 	}
 
 	/**
 	 * Inform the child instance class to start or stop recording actions
-	 * @param {boolean} recording
 	 */
-	async startStopRecordingActions(recording) {
+	async startStopRecordingActions(recording: boolean): Promise<void> {
 		if (!this.hasRecordActionsHandler) throw new Error(`Not supported by connection`)
 
 		await this.#ipcWrapper.sendWithCb('startStopRecordActions', {
@@ -909,10 +859,8 @@ class SocketEventsHandler {
 
 	/**
 	 *
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SharedUdpSocketMessageJoin} msg
-	 * @returns {Promise<string>}
 	 */
-	async #handleSharedUdpSocketJoin(msg) {
+	async #handleSharedUdpSocketJoin(msg: SharedUdpSocketMessageJoin): Promise<string> {
 		const handleId = await this.#registry.services.sharedUdpManager.joinPort(
 			msg.family,
 			msg.portNumber,
@@ -937,16 +885,14 @@ class SocketEventsHandler {
 	}
 	/**
 	 *
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SharedUdpSocketMessageLeave} msg
 	 */
-	async #handleSharedUdpSocketLeave(msg) {
+	async #handleSharedUdpSocketLeave(msg: SharedUdpSocketMessageLeave): Promise<void> {
 		this.#registry.services.sharedUdpManager.leavePort(this.connectionId, msg.handleId)
 	}
 	/**
 	 *
-	 * @param {import('@companion-module/base/dist/host-api/api.js').SharedUdpSocketMessageSend} msg
 	 */
-	async #handleSharedUdpSocketSend(msg) {
+	async #handleSharedUdpSocketSend(msg: SharedUdpSocketMessageSend): Promise<void> {
 		this.#registry.services.sharedUdpManager.sendOnPort(
 			this.connectionId,
 			msg.handleId,
@@ -957,13 +903,7 @@ class SocketEventsHandler {
 	}
 }
 
-export default SocketEventsHandler
-
-/**
- * @param {import('@companion-module/base').CompanionInputFieldBase[]} options
- * @returns {boolean}
- */
-function shouldShowInvertForFeedback(options) {
+function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolean {
 	for (const option of options) {
 		if (option.type === 'checkbox' && (option.id === 'invert' || option.id === 'inverted')) {
 			// It looks like there is already a matching field
@@ -975,13 +915,13 @@ function shouldShowInvertForFeedback(options) {
 	return true
 }
 
-/**
- * @typedef {{
- *   controlId: string
- *   surfaceId: string | undefined
- *   location: import('../Resources/Util.js').ControlLocation | undefined
- * }} RunActionExtras
- */
-/**
- * @typedef {{ label: string, name: string }} VariableDefinitionTmp
- */
+export interface RunActionExtras {
+	controlId: string
+	surfaceId: string | undefined
+	location: ControlLocation | undefined
+}
+
+export interface VariableDefinitionTmp {
+	label: string
+	name: string
+}

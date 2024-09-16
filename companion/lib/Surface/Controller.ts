@@ -39,7 +39,7 @@ import { SurfaceUSBXKeys } from './USB/XKeys.js'
 import { SurfaceUSBLoupedeckLive } from './USB/LoupedeckLive.js'
 import { SurfaceUSBLoupedeckCt } from './USB/LoupedeckCt.js'
 import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
-import VECFootpedalDriver from './USB/VECFootpedal.js'
+import { SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
@@ -851,7 +851,7 @@ export class SurfaceController extends CoreBase {
 										deviceInfo.productId === vecFootpedal.pids.FOOTPEDAL
 									) {
 										if (this.userconfig.getKey('vec_footpedal_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'vec-footpedal', VECFootpedalDriver)
+											await this.#addDevice(deviceInfo.path, {}, 'vec-footpedal', SurfaceUSBVECFootpedal)
 										}
 									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
 										if (this.userconfig.getKey('xkeys_enable')) {

@@ -40,7 +40,7 @@ import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleMode
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ControlButtonNormal
+export class ControlButtonNormal
 	extends ButtonControlBase<NormalButtonModel, NormalButtonOptions>
 	implements ControlWithSteps, ControlWithActions, ControlWithoutEvents, ControlWithActionSets
 {

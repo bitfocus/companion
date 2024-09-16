@@ -1,8 +1,8 @@
 import { CoreBase } from '../Core/Base.js'
-import ControlButtonNormal from './ControlTypes/Button/Normal.js'
-import ControlButtonPageDown from './ControlTypes/PageDown.js'
-import ControlButtonPageNumber from './ControlTypes/PageNumber.js'
-import ControlButtonPageUp from './ControlTypes/PageUp.js'
+import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
+import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
+import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
+import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import {
 	CreateBankControlId,
 	CreateTriggerControlId,
@@ -11,8 +11,8 @@ import {
 } from '@companion-app/shared/ControlId.js'
 import { ControlConfigRoom } from './ControlBase.js'
 import { ActionRunner } from './ActionRunner.js'
-import ActionRecorder from './ActionRecorder.js'
-import ControlTrigger from './ControlTypes/Triggers/Trigger.js'
+import { ActionRecorder } from './ActionRecorder.js'
+import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { nanoid } from 'nanoid'
 import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'

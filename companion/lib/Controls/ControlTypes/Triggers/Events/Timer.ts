@@ -50,7 +50,7 @@ interface SunEvent {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class TriggersEventTimer {
+export class TriggersEventTimer {
 	/**
 	 * Whether the trigger is currently enabled
 	 */

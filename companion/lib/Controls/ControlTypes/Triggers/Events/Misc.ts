@@ -41,7 +41,7 @@ interface StartupEvent {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class TriggersEventMisc {
+export class TriggersEventMisc {
 	/**
 	 * Enabled events listening for client connect
 	 */

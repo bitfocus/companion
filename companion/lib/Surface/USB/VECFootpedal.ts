@@ -54,7 +54,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-class SurfaceUSBVECFootpedal extends EventEmitter implements SurfacePanel {
+export class SurfaceUSBVECFootpedal extends EventEmitter implements SurfacePanel {
 	readonly #logger: Logger
 
 	config: Record<string, any>
@@ -184,5 +184,3 @@ class SurfaceUSBVECFootpedal extends EventEmitter implements SurfacePanel {
 		// Not relevant for this device
 	}
 }
-
-export default SurfaceUSBVECFootpedal

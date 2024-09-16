@@ -28,7 +28,7 @@ export default class ActionRecorder {
 	#internalModule
 
 	/**
-	 * @type {import('../Controls/ActionRecorder.js').default}
+	 * @type {import('../Controls/ActionRecorder.js').ActionRecorder}
 	 * @readonly
 	 */
 	#actionRecorder
@@ -41,7 +41,7 @@ export default class ActionRecorder {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Controls/ActionRecorder.js').default} actionRecorder
+	 * @param {import('../Controls/ActionRecorder.js').ActionRecorder} actionRecorder
 	 * @param {import('../Page/Controller.js').PageController} pageController
 	 */
 	constructor(internalModule, actionRecorder, pageController) {

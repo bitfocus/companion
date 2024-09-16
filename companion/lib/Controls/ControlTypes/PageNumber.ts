@@ -42,7 +42,7 @@ import { PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.j
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ControlButtonPageNumber
+export class ControlButtonPageNumber
 	extends ControlBase<PageNumberButtonModel>
 	implements
 		ControlWithoutActions,

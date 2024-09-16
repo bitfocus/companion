@@ -27,7 +27,7 @@ export default class Instance {
 	#internalModule
 
 	/**
-	 * @type {import('../Instance/Controller.js').default}
+	 * @type {import('../Instance/Controller.js').InstanceController}
 	 * @readonly
 	 */
 	#instanceController
@@ -96,7 +96,7 @@ export default class Instance {
 
 	/**
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Instance/Controller.js').default} instanceController
+	 * @param {import('../Instance/Controller.js').InstanceController} instanceController
 	 */
 	constructor(internalModule, instanceController) {
 		this.#internalModule = internalModule
