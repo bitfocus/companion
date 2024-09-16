@@ -20,7 +20,7 @@ import LogController from '../Log/Controller.js'
 import { PNG } from 'pngjs'
 
 const DEFAULT_FONTS =
-	'Companion-sans, Companion-symbols1, Companion-symbols2, Companion-symbols3, Companion-symbols4, Companion-symbols5, Companion-symbols6, Companion-emoji'
+	'Companion-sans, Companion-symbols1, Companion-symbols2, Companion-symbols3, Companion-symbols4, Companion-symbols5, Companion-symbols6, Companion-gurmukhi, Companion-simplified-chinese, Companion-emoji'
 
 /**
  * @param {string | Buffer} pngData
