@@ -1,9 +1,15 @@
 import { isEqual } from 'lodash-es'
 import { CoreBase } from '../Core/Base.js'
-import { CloudRegion } from './Region.js'
+import { CloudRegion, RegionInfo } from './Region.js'
 import got from 'got'
 import { v4 } from 'uuid'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import { ControlLocation, delay } from '../Resources/Util.js'
+import type { Registry } from '../Registry.js'
+import type CloudDatabase from '../Data/CloudDatabase.js'
+import type DataCache from '../Data/Cache.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 
 const CLOUD_URL = 'https://api.bitfocus.io/v1'
 
@@ -32,57 +38,36 @@ const CLOUD_URL = 'https://api.bitfocus.io/v1'
 export class CloudController extends CoreBase {
 	/**
 	 * A clist of known cloud regions
-	 * @type {{[region: string]: { host: string, name: string }}}
-	 * @access public
-	 * @static
 	 */
-	static availableRegions = {}
+	static availableRegions: { [region: string]: RegionInfo } = {}
 	/**
 	 * The cloud data store
-	 * @type {{token: string, user: string, connections: {[region: string]: boolean}, cloudActive: boolean}}}
-	 * @access protected
 	 */
-	data = {
-		token: '',
-		user: '',
-		connections: {},
-		cloudActive: false,
-	}
+	data: { token: string; user: string; connections: { [region: string]: boolean }; cloudActive: boolean }
 	/**
 	 * Protocol version
-	 * @readonly
 	 */
-	protocolVersion = 1
+	readonly protocolVersion = 1
 	/**
 	 * The current comapnion ID
-	 * @type {string}
-	 * @access public
 	 */
-	companionId = 'N/A'
+	readonly companionId: string
 	/**
 	 * Array of known client IDs, with their last seen time
-	 * @type {Map<string, number>}
-	 * @access public
 	 */
-	knownIds = new Map()
+	knownIds = new Map<string, number>()
 	/**
 	 * Time of last client ID cleanup
-	 * @type {number}
-	 * @access public
 	 */
-	lastKnownIdCleanup = Date.now()
+	lastKnownIdCleanup: number = Date.now()
 	/**
 	 * The initialized region handlers
-	 * @type {{[region: string]: CloudRegion}}
-	 * @access protected
 	 */
-	regionInstances = {}
+	#regionInstances: { [region: string]: CloudRegion } = {}
 	/**
 	 * The state object for the UI
-	 * @type {CloudControllerState}
-	 * @access public
 	 */
-	state = {
+	state: CloudControllerState = {
 		uuid: '',
 		authenticating: false,
 		authenticated: false,
@@ -96,12 +81,10 @@ export class CloudController extends CoreBase {
 		canActivate: false,
 	}
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 * @param {import('../Data/CloudDatabase.js').default} clouddb
-	 * @param {import('../Data/Cache.js').default} cache
-	 */
-	constructor(registry, clouddb, cache) {
+	readonly clouddb: CloudDatabase
+	readonly cache: DataCache
+
+	constructor(registry: Registry, clouddb: CloudDatabase, cache: DataCache) {
 		super(registry, 'Cloud/Controller')
 
 		this.clouddb = clouddb
@@ -109,7 +92,7 @@ export class CloudController extends CoreBase {
 
 		this.companionId = registry.appInfo.machineId
 		const uuid = this.clouddb.getKey('uuid', undefined)
-		this.setState({ uuid })
+		this.#setState({ uuid })
 
 		const regions = this.cache.getKey('cloud_servers', undefined)
 
@@ -121,7 +104,7 @@ export class CloudController extends CoreBase {
 			}
 		}
 
-		this.setupRegions()
+		this.#setupRegions()
 
 		this.data = this.clouddb.getKey('auth', {
 			token: '',
@@ -131,80 +114,72 @@ export class CloudController extends CoreBase {
 		})
 
 		if (this.data.token) {
-			this.handleCloudRefresh(this.data.token)
+			this.#handleCloudRefresh(this.data.token)
 		}
 
 		if (this.data.user) {
-			this.setState({ authenticatedAs: this.data.user })
+			this.#setState({ authenticatedAs: this.data.user })
 		}
 
-		this.handleCloudInfrastructureRefresh()
+		this.#handleCloudInfrastructureRefresh()
 
 		// Refresh every 24 hours
-		setInterval(this.handlePeriodicRefresh.bind(this), 3600e3 * 24)
+		setInterval(this.#handlePeriodicRefresh.bind(this), 3600e3 * 24)
 
 		// Ping every second, if someone is watching
-		setInterval(this.timerTick.bind(this), 1000)
+		setInterval(this.#timerTick.bind(this), 1000)
 
-		this.graphics.on('button_drawn', this.updateBank.bind(this))
+		this.graphics.on('button_drawn', this.#updateBank.bind(this))
 
-		this.updateAllBanks()
+		this.#updateAllBanks()
 
-		this.page.on('name', this.handlePageNameUpdate.bind(this))
+		this.page.on('name', this.#handlePageNameUpdate.bind(this))
 	}
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
-		client.on('cloud_state_get', this.handleCloudStateRequest.bind(this, client))
-		client.on('cloud_state_set', this.handleCloudStateSet.bind(this, client))
-		client.on('cloud_region_state_get', this.handleCloudRegionStateRequest.bind(this, client))
-		client.on('cloud_region_state_set', this.handleCloudRegionStateSet.bind(this, client))
-		client.on('cloud_login', this.handleCloudLogin.bind(this, client))
-		client.on('cloud_logout', this.handleCloudLogout.bind(this, client))
-		client.on('cloud_regenerate_uuid', this.handleCloudRegenerateUUID.bind(this, client))
+	clientConnect(client: ClientSocket): void {
+		client.on('cloud_state_get', this.#handleCloudStateRequest.bind(this, client))
+		client.on('cloud_state_set', this.#handleCloudStateSet.bind(this, client))
+		client.on('cloud_region_state_get', this.#handleCloudRegionStateRequest.bind(this, client))
+		client.on('cloud_region_state_set', this.#handleCloudRegionStateSet.bind(this, client))
+		client.on('cloud_login', this.#handleCloudLogin.bind(this, client))
+		client.on('cloud_logout', this.#handleCloudLogout.bind(this, client))
+		client.on('cloud_regenerate_uuid', this.#handleCloudRegenerateUUID.bind(this, client))
 	}
 
 	/**
 	 * Disconnect and cleanup all the regions
-	 * @access public
 	 */
-	destroy() {
-		for (let region in this.regionInstances) {
+	destroy(): void {
+		for (let region in this.#regionInstances) {
 			try {
-				this.regionInstances[region].destroy()
-			} catch (/** @type {any} */ e) {
+				this.#regionInstances[region].destroy()
+			} catch (e: any) {
 				this.logger.silly(`couldn't destroy region ${region}: ${e.message}`)
 			}
 		}
 	}
 
-	/**
-	 * Get the current page names
-	 * @return {Record<string, string>}
-	 */
-	getPages() {
-		/**
-		 * @type {Record<string, string>}
-		 */
-		const reduceinit = {}
-		const pages = this.registry.page.getAll(false) ?? {}
+	// /**
+	//  * Get the current page names
+	//  */
+	// getPages(): Record<string, string> {
+	// 	const reduceinit: Record<string, string> = {}
+	// 	const pages = this.registry.page.getAll(false) ?? {}
 
-		return Object.entries(pages).reduce((acc, [key, page]) => {
-			if (page) acc[key] = page.name
-			return acc
-		}, reduceinit)
-	}
+	// 	return Object.entries(pages).reduce((acc, [key, page]) => {
+	// 		if (page) acc[key] = page.name
+	// 		return acc
+	// 	}, reduceinit)
+	// }
 
 	/**
 	 * Get the current bank database
-	 * @returns {Object} the bank database
-	 * @access public
+	 * @returns the bank database
 	 */
-	getBanks() {
+	getBanks(): object[] {
 		const retval = []
 
 		for (const controlId of this.controls.getAllControls().keys()) {
@@ -252,10 +227,8 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Request the current infrastructure information
-	 * @async
-	 * @access protected
 	 */
-	async handleCloudInfrastructureRefresh() {
+	async #handleCloudInfrastructureRefresh(): Promise<void> {
 		try {
 			const response = await got.get(CLOUD_URL + '/infrastructure/cloud/regions', {
 				headers: {
@@ -268,7 +241,7 @@ export class CloudController extends CoreBase {
 				responseType: 'json',
 			})
 
-			const result = response.body
+			const result: any = response.body
 			this.logger.silly('Cloud setup: ', result)
 
 			if (result.regions) {
@@ -289,9 +262,9 @@ export class CloudController extends CoreBase {
 
 				if (legacySubstitution !== undefined) {
 					for (const oldId in legacySubstitution) {
-						if (this.regionInstances[oldId]) {
-							this.regionInstances[legacySubstitution[oldId]] = this.regionInstances[oldId]
-							delete this.regionInstances[oldId]
+						if (this.#regionInstances[oldId]) {
+							this.#regionInstances[legacySubstitution[oldId]] = this.#regionInstances[oldId]
+							delete this.#regionInstances[oldId]
 						}
 
 						if (this.data.connections[oldId]) {
@@ -302,10 +275,10 @@ export class CloudController extends CoreBase {
 				}
 
 				// Delete removed regions
-				for (const id in this.regionInstances) {
+				for (const id in this.#regionInstances) {
 					if (CloudController.availableRegions[id] === undefined) {
-						this.regionInstances[id].destroy()
-						delete this.regionInstances[id]
+						this.#regionInstances[id].destroy()
+						delete this.#regionInstances[id]
 					}
 				}
 
@@ -315,19 +288,19 @@ export class CloudController extends CoreBase {
 					if (CloudController.availableRegions) {
 						for (const id in CloudController.availableRegions) {
 							newRegions.push(id)
-							if (this.regionInstances[id] !== undefined) {
-								this.regionInstances[id].updateSetup(CloudController.availableRegions[id])
+							if (this.#regionInstances[id] !== undefined) {
+								this.#regionInstances[id].updateSetup(CloudController.availableRegions[id])
 							} else {
-								this.regionInstances[id] = new CloudRegion(this, id, CloudController.availableRegions[id])
+								this.#regionInstances[id] = new CloudRegion(this, id, CloudController.availableRegions[id])
 							}
 						}
 					}
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.logger.silly(e.message)
 				}
 
-				this.setState({ regions: newRegions })
-				this.readConnections(this.data.connections)
+				this.#setState({ regions: newRegions })
+				this.#readConnections(this.data.connections)
 			}
 		} catch (e) {
 			this.logger.silly('Cloud infrastructure error: ', e)
@@ -336,18 +309,16 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Change UUID of this companion instance
-	 * @async
-	 * @param {import('../UI/Handler.js').ClientSocket} _client - the client connection
-	 * @access protected
+	 * @param  _client - the client connection
 	 */
-	async handleCloudRegenerateUUID(_client) {
+	async #handleCloudRegenerateUUID(_client: ClientSocket): Promise<void> {
 		const newUuid = v4()
-		this.setState({ uuid: newUuid })
+		this.#setState({ uuid: newUuid })
 		this.clouddb.setKey('uuid', newUuid)
 
-		this.setState({ cloudActive: false })
-		await new Promise((resolve) => setTimeout(resolve, 1000))
-		this.setState({ cloudActive: true })
+		this.#setState({ cloudActive: false })
+		await delay(1000)
+		this.#setState({ cloudActive: true })
 	}
 
 	/**
@@ -355,9 +326,9 @@ export class CloudController extends CoreBase {
 	 * @param {string} _id - the page ID
 	 * @param {string} _name - the new name
 	 */
-	handlePageNameUpdate(_id, _name) {
-		for (let region in this.regionInstances) {
-			if (!!this.regionInstances[region]?.socketTransmit) {
+	#handlePageNameUpdate(_id: string, _name: string): void {
+		for (let region in this.#regionInstances) {
+			if (!!this.#regionInstances[region]?.socketTransmit) {
 				//TODO: Push page name
 			}
 		}
@@ -365,16 +336,14 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Process a login request from the UI
-	 * @async
-	 * @param {import('../UI/Handler.js').ClientSocket} _client - the client connection
-	 * @param {string} email - the login email
-	 * @param {string} password - the login password
-	 * @access protected
+	 * @param _client - the client connection
+	 * @param email - the login email
+	 * @param password - the login password
 	 */
-	async handleCloudLogin(_client, email, password) {
+	async #handleCloudLogin(_client: ClientSocket, email: string, password: string): Promise<void> {
 		let response
 
-		this.setState({ error: null, authenticating: true })
+		this.#setState({ error: null, authenticating: true })
 		try {
 			response = await got.post(CLOUD_URL + '/auth/login', {
 				headers: {
@@ -384,15 +353,15 @@ export class CloudController extends CoreBase {
 				json: { email, password },
 				responseType: 'json',
 			})
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			if (e.response?.statusCode >= 400 && e.response?.statusCode < 500) {
-				this.setState({
+				this.#setState({
 					authenticated: false,
 					authenticating: false,
 					error: e.response?.body?.message || 'Invalid email or password',
 				})
 			} else {
-				this.setState({
+				this.#setState({
 					authenticated: false,
 					authenticating: false,
 					error: 'Could not connect to the cloud',
@@ -403,45 +372,45 @@ export class CloudController extends CoreBase {
 		}
 
 		try {
-			const responseObject = response.body
+			const responseObject: any = response.body
 			this.logger.silly('Cloud result: ', responseObject)
 			if (responseObject.token !== undefined) {
 				this.data.token = responseObject.token
 				this.data.user = email
 				this.clouddb.setKey('auth', this.data)
-				this.setState({ authenticated: true, authenticating: false, authenticatedAs: email, error: null })
-				this.readConnections(this.data.connections)
+				this.#setState({ authenticated: true, authenticating: false, authenticatedAs: email, error: null })
+				this.#readConnections(this.data.connections)
 			} else {
-				this.setState({ authenticated: false, authenticating: false, error: responseObject.message })
+				this.#setState({ authenticated: false, authenticating: false, error: responseObject.message })
 				this.destroy()
 			}
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.error(`Cloud error: ${e.message}`)
-			this.setState({ authenticated: false, authenticating: false, error: JSON.stringify(e) })
+			this.#setState({ authenticated: false, authenticating: false, error: JSON.stringify(e) })
 			this.destroy()
 		}
 	}
 
 	/**
 	 * Process a logout request for the UI
-	 * @param {import('../UI/Handler.js').ClientSocket} _client - the client connection
+	 * @param _client - the client connection
 	 */
-	handleCloudLogout(_client) {
+	#handleCloudLogout(_client: ClientSocket): void {
 		this.data.user = ''
 		this.data.token = ''
 		this.data.connections = {}
 		this.data.cloudActive = false
 		this.clouddb.setKey('auth', this.data)
 
-		this.setState({
+		this.#setState({
 			authenticated: false,
 			authenticatedAs: '',
 			authenticating: false,
 			cloudActive: false,
 		})
 
-		for (const id in this.regionInstances) {
-			this.regionInstances[id].setState({ enabled: false })
+		for (const id in this.#regionInstances) {
+			this.#regionInstances[id].setState({ enabled: false })
 		}
 
 		this.destroy()
@@ -449,13 +418,11 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Request an updated token from the cloud service
-	 * @async
-	 * @param {string} token - the current session token
-	 * @access protected
+	 * @param token - the current session token
 	 */
-	async handleCloudRefresh(token) {
+	async #handleCloudRefresh(token: string): Promise<void> {
 		// For transparency, show the user that we're refreshing
-		this.setState({ authenticating: true })
+		this.#setState({ authenticating: true })
 		try {
 			const response = await got.post(CLOUD_URL + '/refresh', {
 				headers: {
@@ -466,30 +433,30 @@ export class CloudController extends CoreBase {
 				responseType: 'json',
 			})
 
-			const result = response.body
+			const result: any = response.body
 			this.logger.silly('Cloud result: ', result)
 
 			if (result.token) {
 				this.data.token = result.token
 				this.clouddb.setKey('auth', this.data)
-				this.setState({
+				this.#setState({
 					authenticated: true,
 					authenticatedAs: result.customer?.email,
 					authenticating: false,
 					error: null,
 					cloudActive: this.data.cloudActive,
 				})
-				this.readConnections(this.data.connections)
+				this.#readConnections(this.data.connections)
 			} else {
-				this.setState({
+				this.#setState({
 					authenticated: false,
 					authenticating: false,
 					error: 'Cannot refresh login token, please login again.',
 				})
 			}
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.error(`Cloud refresh error: ${e.message}`)
-			this.setState({
+			this.#setState({
 				authenticated: false,
 				authenticating: false,
 				error: 'Cannot reach authentication/cloud-api server',
@@ -501,92 +468,82 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Process and return a state request from the UI
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the cloud connection
-	 * @access protected
+	 * @param client - the cloud connection
 	 */
-	handleCloudStateRequest(client) {
+	#handleCloudStateRequest(client: ClientSocket): void {
 		this.logger.silly('handleCloudStateRequest')
 		client.emit('cloud_state', this.state)
 	}
 
 	/**
 	 * Process an updated state from the UI
-	 * @param {import('../UI/Handler.js').ClientSocket} _client - the cloud connection
-	 * @param {Partial<CloudControllerState>} newState - the new state
-	 * @access protected
+	 * @param _client - the cloud connection
+	 * @param newState - the new state
 	 */
-	handleCloudStateSet(_client, newState) {
+	#handleCloudStateSet(_client: ClientSocket, newState: Partial<CloudControllerState>): void {
 		this.logger.silly('handleCloudStateSet', newState)
-		this.setState({ ...newState })
+		this.#setState({ ...newState })
 	}
 
 	/**
 	 * Process and send a region state request from the UI
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client connection
-	 * @param {string} region - the region to process
-	 * @access protected
+	 * @param client - the client connection
+	 * @param region - the region to process
 	 */
-	handleCloudRegionStateRequest(client, region) {
+	#handleCloudRegionStateRequest(client: ClientSocket, region: string): void {
 		this.logger.silly(`handleCloudregionStateRequest: ${region}`)
-		if (this.regionInstances[region] !== undefined) {
-			client.emit('cloud_region_state', region, this.regionInstances[region].state)
+		if (this.#regionInstances[region] !== undefined) {
+			client.emit('cloud_region_state', region, this.#regionInstances[region].state)
 		}
 	}
 
 	/**
 	 * Process an updated region state from the UI
-	 * @param {import('../UI/Handler.js').ClientSocket} _client - the client connection
-	 * @param {string} region - the region to process
-	 * @param {Object} newState - the new state
-	 * @access protected
+	 * @param _client - the client connection
+	 * @param region - the region to process
+	 * @param newState - the new state
 	 */
-	handleCloudRegionStateSet(_client, region, newState) {
+	#handleCloudRegionStateSet(_client: ClientSocket, region: string, newState: object): void {
 		this.logger.silly(`handleCloudRegionStateSet: ${region}`, newState)
-		if (this.regionInstances[region] !== undefined) {
-			this.regionInstances[region].setState({ ...newState, cloudActive: this.state.cloudActive })
+		if (this.#regionInstances[region] !== undefined) {
+			this.#regionInstances[region].setState({ ...newState, cloudActive: this.state.cloudActive })
 		}
-		const activeRegions = Object.values(this.regionInstances).filter((r) => r.state.enabled).length
-		this.setState({ canActivate: activeRegions >= 2 })
+		const activeRegions = Object.values(this.#regionInstances).filter((r) => r.state.enabled).length
+		this.#setState({ canActivate: activeRegions >= 2 })
 	}
 
 	/**
 	 * If a token exists, refresh it
-	 * @async
-	 * @access protected
 	 */
-	async handlePeriodicRefresh() {
+	async #handlePeriodicRefresh(): Promise<void> {
 		if (this.data.token) {
-			await this.handleCloudInfrastructureRefresh()
-			await this.handleCloudRefresh(this.data.token)
+			await this.#handleCloudInfrastructureRefresh()
+			await this.#handleCloudRefresh(this.data.token)
 		}
 	}
 
 	/**
 	 * Send enable information from the DB to the regions
-	 * @param {{[region: string]: boolean}} connections - the region enable information
-	 * @access protected
+	 * @param connections - the region enable information
 	 */
-	readConnections(connections) {
+	#readConnections(connections: { [region: string]: boolean }): void {
 		this.logger.silly('READ CONNECTIONS', connections)
 		if (connections) {
 			for (let region in connections) {
-				this.logger.silly(`Has region: ${region}`, region in this.regionInstances)
-				if (this.regionInstances[region]) {
-					this.regionInstances[region].setState({ enabled: connections[region], cloudActive: this.state.cloudActive })
+				this.logger.silly(`Has region: ${region}`, region in this.#regionInstances)
+				if (this.#regionInstances[region]) {
+					this.#regionInstances[region].setState({ enabled: connections[region], cloudActive: this.state.cloudActive })
 				}
 			}
-			const activeRegions = Object.values(this.regionInstances).filter((r) => r.state.enabled).length
-			this.setState({ canActivate: activeRegions >= 2 })
+			const activeRegions = Object.values(this.#regionInstances).filter((r) => r.state.enabled).length
+			this.#setState({ canActivate: activeRegions >= 2 })
 		}
 	}
 
 	/**
 	 * Save region enable state information
-	 * @access public
-	 * @param {string} region
-	 * @param {boolean} enabled
 	 */
-	saveConnection(region, enabled) {
+	saveConnection(region: string, enabled: boolean): void {
 		if (this.data.connections === undefined) {
 			this.data.connections = {}
 		}
@@ -598,12 +555,11 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Merge and transmit new state information
-	 * @param {Partial<CloudControllerState>} draftState - the updated state(s)
-	 * @access protected
+	 * @param draftState - the updated state(s)
 	 */
-	setState(draftState) {
-		const oldState = { ...this.state }
-		const newState = {
+	#setState(draftState: Partial<CloudControllerState>): void {
+		const oldState: CloudControllerState = { ...this.state }
+		const newState: CloudControllerState = {
 			...this.state,
 			...draftState,
 		}
@@ -623,8 +579,8 @@ export class CloudController extends CoreBase {
 			this.clouddb.setKey('auth', this.data)
 
 			if (newState.authenticated) {
-				for (let region in this.regionInstances) {
-					this.regionInstances[region].setState({ cloudActive: newState.cloudActive })
+				for (let region in this.#regionInstances) {
+					this.#regionInstances[region].setState({ cloudActive: newState.cloudActive })
 				}
 
 				// Was authenticated when cloudActive was changed, so we can skip the next check in setState
@@ -633,8 +589,8 @@ export class CloudController extends CoreBase {
 		}
 
 		if (this.data.token) {
-			for (let region in this.regionInstances) {
-				let currentRegion = this.regionInstances[region]
+			for (let region in this.#regionInstances) {
+				let currentRegion = this.#regionInstances[region]
 
 				if (oldState.authenticated !== newState.authenticated) {
 					if (currentRegion.state?.enabled && newState.authenticated && newState.cloudActive) {
@@ -651,9 +607,8 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Initialize all the regions
-	 * @access protected
 	 */
-	setupRegions() {
+	#setupRegions(): void {
 		try {
 			if (CloudController.availableRegions) {
 				/** @type {string[]} */
@@ -661,27 +616,26 @@ export class CloudController extends CoreBase {
 
 				for (const id in CloudController.availableRegions) {
 					regions.push(id)
-					this.regionInstances[id] = new CloudRegion(this, id, CloudController.availableRegions[id])
+					this.#regionInstances[id] = new CloudRegion(this, id, CloudController.availableRegions[id])
 				}
 
-				this.setState({
+				this.#setState({
 					regions,
 				})
 			}
-		} catch (/** @type {any} */ e) {
+		} catch (e: any) {
 			this.logger.silly(e.message)
 		}
 	}
 
 	/**
 	 * If needed, ping all the regions
-	 * @access protected
 	 */
-	timerTick() {
+	#timerTick(): void {
 		if (this.state.ping === true) {
-			for (let region in this.regionInstances) {
+			for (let region in this.#regionInstances) {
 				try {
-					this.regionInstances[region].timerTick()
+					this.#regionInstances[region].timerTick()
 				} catch (e) {}
 			}
 		}
@@ -689,14 +643,13 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Get copies of all the current bank styles
-	 * @access protected
 	 */
-	updateAllBanks() {
+	#updateAllBanks(): void {
 		const updateId = v4()
 		const data = this.getBanks()
-		for (let region in this.regionInstances) {
-			if (!!this.regionInstances[region]?.socketTransmit) {
-				this.regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
+		for (let region in this.#regionInstances) {
+			if (!!this.#regionInstances[region]?.socketTransmit) {
+				this.#regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
 					updateId,
 					type: 'full',
 					data,
@@ -707,17 +660,16 @@ export class CloudController extends CoreBase {
 
 	/**
 	 * Store and transmit an updated bank style
-	 * @param {import('../Resources/Util.js').ControlLocation} location - the location of the control
-	 * @param {import('../Graphics/ImageResult.js').ImageResult} render
-	 * @access protected
+	 * @param location - the location of the control
+	 * @param render
 	 */
-	updateBank(location, render) {
+	#updateBank(location: ControlLocation, render: ImageResult): void {
 		const bank = xyToOldBankIndex(location.column, location.row)
 		if (typeof render.style === 'object' && !render.style.cloud && bank) {
 			const updateId = v4()
-			for (let region in this.regionInstances) {
-				if (!!this.regionInstances[region]?.socketTransmit) {
-					this.regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
+			for (let region in this.#regionInstances) {
+				if (!!this.#regionInstances[region]?.socketTransmit) {
+					this.#regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
 						updateId,
 						type: 'single',
 						location,
@@ -732,18 +684,16 @@ export class CloudController extends CoreBase {
 	}
 }
 
-/**
- * @typedef {Object} CloudControllerState
- *
- * @property {string} uuid - the machine UUID
- * @property {boolean} authenticating - is the cloud authenticating
- * @property {boolean} authenticated - is the cloud authenticated
- * @property {string} authenticatedAs - the cloud username
- * @property {boolean} ping - is someone watching the cloud pings
- * @property {string[]} regions - the cloud regions
- * @property {string} tryUsername - the username to try
- * @property {string} tryPassword - the password to try
- * @property {null|string} error - the error message
- * @property {boolean} cloudActive - is the cloud active
- * @property {boolean} canActivate - can the cloud be activated
- */
+interface CloudControllerState {
+	uuid: string
+	authenticating: boolean
+	authenticated: boolean
+	authenticatedAs: string
+	ping: boolean
+	regions: string[]
+	tryUsername: string
+	tryPassword: string
+	error: null | string
+	cloudActive: boolean
+	canActivate: boolean
+}
