@@ -1,4 +1,4 @@
-import DataStoreBase from './StoreBase.js'
+import { DataStoreBase } from './StoreBase.js'
 import { upgradeStartup } from './Upgrade.js'
 
 /**
@@ -22,27 +22,22 @@ import { upgradeStartup } from './Upgrade.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class DataDatabase extends DataStoreBase {
+export class DataDatabase extends DataStoreBase {
 	/**
 	 * The stored defaults for a new db
-	 * @type {Object}
-	 * @access protected
 	 */
-	static Defaults = {
+	private static Defaults: object = {
 		page_config_version: 3,
 	}
 	/**
 	 * The default minimum interval in ms to save to disk (4000 ms)
-	 * @type {number}
-	 * @access public
-	 * @static
 	 */
-	static SaveInterval = 4000
+	private static SaveInterval: number = 4000
 
 	/**
-	 * @param {string} configDir - the root config directory
+	 * @param configDir - the root config directory
 	 */
-	constructor(configDir) {
+	constructor(configDir: string) {
 		super(configDir, 'db', DataDatabase.SaveInterval, DataDatabase.Defaults, 'Data/Database')
 
 		this.loadSync()
@@ -50,5 +45,3 @@ class DataDatabase extends DataStoreBase {
 		upgradeStartup(this)
 	}
 }
-
-export default DataDatabase

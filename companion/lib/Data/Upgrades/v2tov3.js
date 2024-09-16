@@ -395,7 +395,7 @@ function convertSurfacesToV3(db) {
 
 /**
  * do the database upgrades to convert from the v2 to the v3 format
- * @param {import('../Database.js').default} db
+ * @param {import('../Database.js').DataDatabase} db
  * @param {import('winston').Logger} logger
  * @returns {void}
  */

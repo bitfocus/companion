@@ -18,7 +18,7 @@
 const FILE_VERSION = 4
 
 import os from 'os'
-import { upgradeImport } from '../Data/Upgrade.js'
+import { upgradeImport } from './Upgrade.js'
 import { cloneDeep } from 'lodash-es'
 import { getTimestamp, isFalsey } from '../Resources/Util.js'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
@@ -29,30 +29,52 @@ import fs from 'fs'
 import zlib from 'node:zlib'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
-import LogController from '../Log/Controller.js'
+import LogController, { Logger } from '../Log/Controller.js'
 import { ReferencesVisitors } from '../Util/Visitors/ReferencesVisitors.js'
 import { nanoid } from 'nanoid'
+import type express from 'express'
+import type { ParsedQs } from 'qs'
+import type {
+	ExportControlv4,
+	ExportFullv4,
+	ExportInstancesv4,
+	ExportPageContentv4,
+	ExportPageModelv4,
+	ExportTriggerContentv4,
+	ExportTriggersListv4,
+	SomeExportv4,
+} from '@companion-app/shared/Model/ExportModel.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { Registry } from '../Registry.js'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type {
+	ClientExportSelection,
+	ClientImportObject,
+	ClientPageInfo,
+	ClientResetSelection,
+	InstanceRemappings,
+} from '@companion-app/shared/Model/ImportExport.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
+import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { ActionInstance, ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
+import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 
-/**
- *
- * @param {import('qs').ParsedQs[0]} raw
- * @returns {'json-gz' | 'json' | undefined}
- */
-function parseDownloadFormat(raw) {
+type DownloadFormat = 'json-gz' | 'json'
+function parseDownloadFormat(raw: ParsedQs[0]): DownloadFormat | undefined {
 	if (raw === 'json-gz' || raw === 'json') return raw
 	return undefined
 }
 
-/**
- * @param {import('winston').Logger} logger
- * @param {import("express").Response} res
- * @param {import("express").NextFunction} next
- * @param {import("@companion-app/shared/Model/ExportModel.js").SomeExportv4} data
- * @param {string} filename
- * @param {'json-gz' | 'json' | undefined} format
- * @returns {void}
- */
-function downloadBlob(logger, res, next, data, filename, format) {
+function downloadBlob(
+	logger: Logger,
+	res: express.Response,
+	next: express.NextFunction,
+	data: SomeExportv4,
+	filename: string,
+	format: DownloadFormat | undefined
+): void {
 	const dataStr = JSON.stringify(data, undefined, '\t')
 
 	if (!format || format === 'json-gz') {
@@ -81,14 +103,8 @@ function downloadBlob(logger, res, next, data, filename, format) {
 	}
 }
 
-/**
- *
- * @param {import('@companion-app/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
- * @returns {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigGridSize}
- */
-const find_smallest_grid_for_page = (pageInfo) => {
-	/** @type {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigGridSize} */
-	const gridSize = {
+const find_smallest_grid_for_page = (pageInfo: ExportPageContentv4): UserConfigGridSize => {
+	const gridSize: UserConfigGridSize = {
 		minColumn: 0,
 		maxColumn: 7,
 		minRow: 0,
@@ -119,34 +135,21 @@ const find_smallest_grid_for_page = (pageInfo) => {
 	return gridSize
 }
 
-class DataImportExport extends CoreBase {
+export class DataImportExport extends CoreBase {
 	/**
 	 * If there is a current import task that clients should be aware of, this will be set
-	 * @type {'reset' | 'import' | null}
-	 * @access private
 	 */
-	#currentImportTask = null
+	#currentImportTask: 'reset' | 'import' | null = null
 
-	/**
-	 * @param {import("../Registry.js").Registry} registry
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Data/ImportExport')
 
-		/**
-		 *
-		 * @param {Set<string>} referencedConnectionIds
-		 * @param {Set<string>} referencedConnectionLabels
-		 * @param {boolean} minimalExport
-		 * @returns {import('@companion-app/shared/Model/ExportModel.js').ExportInstancesv4}
-		 */
 		const generate_export_for_referenced_instances = (
-			referencedConnectionIds,
-			referencedConnectionLabels,
+			referencedConnectionIds: Set<string>,
+			referencedConnectionLabels: Set<string>,
 			minimalExport = false
-		) => {
-			/** @type {import('@companion-app/shared/Model/ExportModel.js').ExportInstancesv4} */
-			const instancesExport = {}
+		): ExportInstancesv4 => {
+			const instancesExport: ExportInstancesv4 = {}
 
 			referencedConnectionIds.delete('internal') // Ignore the internal module
 			for (const connectionId of referencedConnectionIds) {
@@ -164,16 +167,10 @@ class DataImportExport extends CoreBase {
 			return instancesExport
 		}
 
-		/**
-		 *
-		 * @param {*} triggerControls
-		 * @returns {import('@companion-app/shared/Model/ExportModel.js').ExportTriggersListv4}
-		 */
-		const generate_export_for_triggers = (triggerControls) => {
-			/** @type {Record<string, import('@companion-app/shared/Model/ExportModel.js').ExportTriggerContentv4>} */
-			const triggersExport = {}
-			const referencedConnectionIds = new Set()
-			const referencedConnectionLabels = new Set()
+		const generate_export_for_triggers = (triggerControls: ControlTrigger[]): ExportTriggersListv4 => {
+			const triggersExport: ExportTriggerContentv4 = {}
+			const referencedConnectionIds = new Set<string>()
+			const referencedConnectionLabels = new Set<string>()
 			for (const control of triggerControls) {
 				const parsedId = ParseControlId(control.controlId)
 				if (parsedId?.type === 'trigger') {
@@ -230,8 +227,8 @@ class DataImportExport extends CoreBase {
 				const pageInfo = this.page.getPageInfo(page, true)
 				if (!pageInfo) throw new Error(`Page "${page}" not found!`)
 
-				const referencedConnectionIds = new Set()
-				const referencedConnectionLabels = new Set()
+				const referencedConnectionIds = new Set<string>()
+				const referencedConnectionLabels = new Set<string>()
 
 				const pageExport = generatePageExportInfo(pageInfo, referencedConnectionIds, referencedConnectionLabels)
 
@@ -241,8 +238,7 @@ class DataImportExport extends CoreBase {
 				)
 
 				// Export file protocol version
-				/** @type {import('@companion-app/shared/Model/ExportModel.js').ExportPageModelv4} */
-				const exp = {
+				const exp: ExportPageModelv4 = {
 					version: FILE_VERSION,
 					type: 'page',
 					page: pageExport,
@@ -256,15 +252,12 @@ class DataImportExport extends CoreBase {
 			}
 		})
 
-		/**
-		 * @param {Readonly<import('@companion-app/shared/Model/PageModel.js').PageModel>} pageInfo
-		 * @param {Set<string>} referencedConnectionIds
-		 * @param {Set<string>} referencedConnectionLabels
-		 * @returns {import('@companion-app/shared/Model/ExportModel.js').ExportPageContentv4}
-		 */
-		const generatePageExportInfo = (pageInfo, referencedConnectionIds, referencedConnectionLabels) => {
-			/** @type {import('@companion-app/shared/Model/ExportModel.js').ExportPageContentv4} */
-			const pageExport = {
+		const generatePageExportInfo = (
+			pageInfo: PageModel,
+			referencedConnectionIds: Set<string>,
+			referencedConnectionLabels: Set<string>
+		): ExportPageContentv4 => {
+			const pageExport: ExportPageContentv4 = {
 				name: pageInfo.name,
 				controls: {},
 				gridSize: this.userconfig.getKey('gridSize'),
@@ -285,23 +278,17 @@ class DataImportExport extends CoreBase {
 			return pageExport
 		}
 
-		/**
-		 *
-		 * @param {ClientExportSelection | null} config
-		 * @returns
-		 */
-		const generateCustomExport = (config) => {
+		const generateCustomExport = (config: ClientExportSelection | null): ExportFullv4 => {
 			// Export file protocol version
-			/** @type {import('@companion-app/shared/Model/ExportModel.js').ExportFullv4} */
-			const exp = {
+			const exp: ExportFullv4 = {
 				version: FILE_VERSION,
 				type: 'full',
 			}
 
 			const rawControls = this.controls.getAllControls()
 
-			const referencedConnectionIds = new Set()
-			const referencedConnectionLabels = new Set()
+			const referencedConnectionIds = new Set<string>()
+			const referencedConnectionLabels = new Set<string>()
 
 			if (!config || !isFalsey(config.buttons)) {
 				exp.pages = {}
@@ -317,8 +304,7 @@ class DataImportExport extends CoreBase {
 			}
 
 			if (!config || !isFalsey(config.triggers)) {
-				/** @type {Record<string, import('@companion-app/shared/Model/ExportModel.js').ExportTriggerContentv4>} */
-				const triggersExport = {}
+				const triggersExport: ExportTriggerContentv4 = {}
 				for (const control of rawControls.values()) {
 					if (control.type === 'trigger') {
 						const parsedId = ParseControlId(control.controlId)
@@ -467,14 +453,7 @@ class DataImportExport extends CoreBase {
 		})
 	}
 
-	/**
-	 *
-	 * @template T
-	 * @param {'reset' | 'import'} newTaskType
-	 * @param {() => Promise<T>} executeFn
-	 * @returns {Promise<T>}
-	 */
-	async checkOrRunImportTask(newTaskType, executeFn) {
+	async #checkOrRunImportTask<T>(newTaskType: 'reset' | 'import', executeFn: () => Promise<T>): Promise<T> {
 		if (this.#currentImportTask) throw new Error('Another operation is in progress')
 
 		this.#currentImportTask = newTaskType
@@ -490,17 +469,14 @@ class DataImportExport extends CoreBase {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		if (this.#currentImportTask) {
 			// Inform about in progress task
 			client.emit('load-save:task', this.#currentImportTask)
 		}
 
-		/** @type {ClientPendingImport | null} */
-		let clientPendingImport = null
+		let clientPendingImport: ClientPendingImport | null = null
 
 		client.onPromise('loadsave:abort', () => {
 			if (clientPendingImport) {
@@ -549,13 +525,12 @@ class DataImportExport extends CoreBase {
 			}
 
 			if (object.type === 'trigger_list') {
-				/** @type {import('@companion-app/shared/Model/ExportModel.js').ExportFullv4} */
 				object = {
 					type: 'full',
 					version: FILE_VERSION,
 					triggers: object.triggers,
 					instances: object.instances,
-				}
+				} satisfies ExportFullv4
 			}
 
 			// Store the object on the client
@@ -565,8 +540,7 @@ class DataImportExport extends CoreBase {
 			}
 
 			// Build a minimal object to send back to the client
-			/** @type {ClientImportObject} */
-			const clientObject = {
+			const clientObject: ClientImportObject = {
 				type: object.type,
 				instances: {},
 				controls: 'pages' in object,
@@ -585,11 +559,7 @@ class DataImportExport extends CoreBase {
 				}
 			}
 
-			/**
-			 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
-			 * @returns {ClientPageInfo}
-			 */
-			function simplifyPageForClient(pageInfo) {
+			function simplifyPageForClient(pageInfo: ExportPageContentv4): ClientPageInfo {
 				return {
 					name: pageInfo.name,
 					gridSize: find_smallest_grid_for_page(pageInfo),
@@ -647,13 +617,13 @@ class DataImportExport extends CoreBase {
 		client.onPromise('loadsave:reset', (config) => {
 			if (!config) throw new Error('Missing reset config')
 
-			return this.checkOrRunImportTask('reset', async () => {
+			return this.#checkOrRunImportTask('reset', async () => {
 				return this.#reset(config)
 			})
 		})
 
 		client.onPromise('loadsave:import-full', async (config) => {
-			return this.checkOrRunImportTask('import', async () => {
+			return this.#checkOrRunImportTask('import', async () => {
 				const data = clientPendingImport?.object
 				if (!data) throw new Error('No in-progress import object')
 
@@ -696,13 +666,11 @@ class DataImportExport extends CoreBase {
 			})
 		})
 
-		/**
-		 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
-		 * @param {number} topage
-		 * @param {InstanceAppliedRemappings} instanceIdMap
-		 * @returns {void}
-		 */
-		const doPageImport = (pageInfo, topage, instanceIdMap) => {
+		const doPageImport = (
+			pageInfo: ExportPageContentv4,
+			topage: number,
+			instanceIdMap: InstanceAppliedRemappings
+		): void => {
 			// Cleanup the old page
 			const discardedControlIds = this.page.resetPage(topage)
 			for (const controlId of discardedControlIds) {
@@ -714,7 +682,7 @@ class DataImportExport extends CoreBase {
 					// Ensure the configured grid size is large enough for the import
 					const requiredSize = pageInfo.gridSize || find_smallest_grid_for_page(pageInfo)
 					const currentSize = this.userconfig.getKey('gridSize')
-					const updatedSize = {}
+					const updatedSize: Partial<UserConfigGridSize> = {}
 					if (currentSize.minColumn > requiredSize.minColumn) updatedSize.minColumn = Number(requiredSize.minColumn)
 					if (currentSize.maxColumn < requiredSize.maxColumn) updatedSize.maxColumn = Number(requiredSize.maxColumn)
 					if (currentSize.minRow > requiredSize.minRow) updatedSize.minRow = Number(requiredSize.minRow)
@@ -752,7 +720,7 @@ class DataImportExport extends CoreBase {
 		}
 
 		client.onPromise('loadsave:import-page', async (topage, frompage, instanceRemapping) => {
-			return this.checkOrRunImportTask('import', async () => {
+			return this.#checkOrRunImportTask('import', async () => {
 				const data = clientPendingImport?.object
 				if (!data) throw new Error('No in-progress import object')
 
@@ -790,8 +758,7 @@ class DataImportExport extends CoreBase {
 				doPageImport(pageInfo, topage, instanceIdMap)
 
 				// Report the used remap to the ui, for future imports
-				/** @type {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} */
-				const instanceRemap2 = {}
+				const instanceRemap2: InstanceRemappings = {}
 				for (const [id, obj] of Object.entries(instanceIdMap)) {
 					instanceRemap2[id] = obj.id
 				}
@@ -801,7 +768,7 @@ class DataImportExport extends CoreBase {
 		})
 
 		client.onPromise('loadsave:import-triggers', async (idsToImport0, instanceRemapping, replaceExisting) => {
-			return this.checkOrRunImportTask('import', async () => {
+			return this.#checkOrRunImportTask('import', async () => {
 				const data = clientPendingImport?.object
 				if (!data) throw new Error('No in-progress import object')
 
@@ -833,8 +800,7 @@ class DataImportExport extends CoreBase {
 				}
 
 				// Report the used remap to the ui, for future imports
-				/** @type {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} */
-				const instanceRemap2 = {}
+				const instanceRemap2: InstanceRemappings = {}
 				for (const [id, obj] of Object.entries(instanceIdMap)) {
 					instanceRemap2[id] = obj.id
 				}
@@ -844,13 +810,7 @@ class DataImportExport extends CoreBase {
 		})
 	}
 
-	/**
-	 *
-	 * @param {ClientResetSelection | undefined} config
-	 * @param {boolean} skipNavButtons
-	 * @returns {Promise<'ok'>}
-	 */
-	async #reset(config, skipNavButtons = false) {
+	async #reset(config: ClientResetSelection | undefined, skipNavButtons = false): Promise<'ok'> {
 		const controls = this.controls.getAllControls()
 
 		if (!config || config.buttons) {
@@ -903,14 +863,11 @@ class DataImportExport extends CoreBase {
 		return 'ok'
 	}
 
-	/**
-	 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportInstancesv4 | undefined} instances
-	 * @param {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} instanceRemapping
-	 * @returns {InstanceAppliedRemappings}
-	 */
-	#importInstances(instances, instanceRemapping) {
-		/** @type {InstanceAppliedRemappings} */
-		const instanceIdMap = {}
+	#importInstances(
+		instances: ExportInstancesv4 | undefined,
+		instanceRemapping: InstanceRemappings
+	): InstanceAppliedRemappings {
+		const instanceIdMap: InstanceAppliedRemappings = {}
 
 		if (instances) {
 			const instanceEntries = Object.entries(instances)
@@ -964,18 +921,11 @@ class DataImportExport extends CoreBase {
 		return instanceIdMap
 	}
 
-	/**
-	 * @param {Readonly<import('@companion-app/shared/Model/ExportModel.js').ExportTriggerContentv4>} control
-	 * @param {InstanceAppliedRemappings} instanceIdMap
-	 * @returns {import('@companion-app/shared/Model/TriggerModel.js').TriggerModel}
-	 */
-	#fixupTriggerControl(control, instanceIdMap) {
+	#fixupTriggerControl(control: ExportTriggerContentv4, instanceIdMap: InstanceAppliedRemappings): TriggerModel {
 		// Future: this does not feel durable
 
-		/** @type {Record<string, string>} */
-		const connectionLabelRemap = {}
-		/** @type {Record<string, string>} */
-		const connectionIdRemap = {}
+		const connectionLabelRemap: Record<string, string> = {}
+		const connectionIdRemap: Record<string, string> = {}
 		for (const [oldId, info] of Object.entries(instanceIdMap)) {
 			if (info.oldLabel && info.label !== info.oldLabel) {
 				connectionLabelRemap[info.oldLabel] = info.label
@@ -985,8 +935,7 @@ class DataImportExport extends CoreBase {
 			}
 		}
 
-		/** @type {import('@companion-app/shared/Model/TriggerModel.js').TriggerModel} */
-		const result = {
+		const result: TriggerModel = {
 			type: 'trigger',
 			options: cloneDeep(control.options),
 			action_sets: {},
@@ -995,8 +944,7 @@ class DataImportExport extends CoreBase {
 		}
 
 		if (control.condition) {
-			/** @type {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} */
-			const newFeedbacks = []
+			const newFeedbacks: FeedbackInstance[] = []
 			for (const feedback of control.condition) {
 				const instanceInfo = instanceIdMap[feedback?.instance_id]
 				if (feedback && instanceInfo) {
@@ -1010,13 +958,11 @@ class DataImportExport extends CoreBase {
 			result.condition = newFeedbacks
 		}
 
-		/** @type {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} */
-		const allActions = []
+		const allActions: ActionInstance[] = []
 		if (control.action_sets) {
 			for (const [setId, action_set] of Object.entries(control.action_sets)) {
-				/** @type {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} */
-				const newActions = []
-				for (const action of action_set) {
+				const newActions: ActionInstance[] = []
+				for (const action of action_set as any) {
 					const instanceInfo = instanceIdMap[action?.instance]
 					if (action && instanceInfo) {
 						newActions.push({
@@ -1048,12 +994,7 @@ class DataImportExport extends CoreBase {
 		return result
 	}
 
-	/**
-	 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportControlv4 } control
-	 * @param {InstanceAppliedRemappings} instanceIdMap
-	 * @returns {import('@companion-app/shared/Model/ButtonModel.js').SomeButtonModel}
-	 */
-	#fixupControl(control, instanceIdMap) {
+	#fixupControl(control: ExportControlv4, instanceIdMap: InstanceAppliedRemappings): SomeButtonModel {
 		// Future: this does not feel durable
 
 		if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
@@ -1062,10 +1003,8 @@ class DataImportExport extends CoreBase {
 			}
 		}
 
-		/** @type {Record<string, string>} */
-		const connectionLabelRemap = {}
-		/** @type {Record<string, string>} */
-		const connectionIdRemap = {}
+		const connectionLabelRemap: Record<string, string> = {}
+		const connectionIdRemap: Record<string, string> = {}
 		for (const [oldId, info] of Object.entries(instanceIdMap)) {
 			if (info.oldLabel && info.label !== info.oldLabel) {
 				connectionLabelRemap[info.oldLabel] = info.label
@@ -1075,8 +1014,7 @@ class DataImportExport extends CoreBase {
 			}
 		}
 
-		/** @type {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonModel} */
-		const result = {
+		const result: NormalButtonModel = {
 			type: 'button',
 			options: cloneDeep(control.options),
 			style: cloneDeep(control.style),
@@ -1085,8 +1023,7 @@ class DataImportExport extends CoreBase {
 		}
 
 		if (control.feedbacks) {
-			/** @type {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} */
-			const newFeedbacks = []
+			const newFeedbacks: FeedbackInstance[] = []
 			for (const feedback of control.feedbacks) {
 				const instanceInfo = instanceIdMap[feedback?.instance_id]
 				if (feedback && instanceInfo) {
@@ -1100,20 +1037,17 @@ class DataImportExport extends CoreBase {
 			result.feedbacks = newFeedbacks
 		}
 
-		/** @type {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} */
-		const allActions = []
+		const allActions: ActionInstance[] = []
 		if (control.steps) {
-			for (const [stepId, step] of Object.entries(control.steps)) {
-				/** @type {import('@companion-app/shared/Model/ActionModel.js').ActionSetsModel} */
-				const newStepSets = {}
+			for (const [stepId, step] of Object.entries<any>(control.steps)) {
+				const newStepSets: ActionSetsModel = {}
 				result.steps[stepId] = {
 					action_sets: newStepSets,
 					options: cloneDeep(step.options),
 				}
 
-				for (const [setId, action_set] of Object.entries(step.action_sets)) {
-					/** @type {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} */
-					const newActions = []
+				for (const [setId, action_set] of Object.entries<any>(step.action_sets)) {
+					const newActions: ActionInstance[] = []
 					for (const action of action_set) {
 						const instanceInfo = instanceIdMap[action?.instance]
 						if (action && instanceInfo) {
@@ -1148,19 +1082,12 @@ class DataImportExport extends CoreBase {
 	}
 }
 
-export default DataImportExport
+type InstanceAppliedRemappings = Record<
+	string,
+	{ id: string; label: string; lastUpgradeIndex?: number; oldLabel?: string }
+>
 
-/**
- * @typedef {Record<string, { id: string, label: string, lastUpgradeIndex?: number, oldLabel?: string}>} InstanceAppliedRemappings
- *
- * @typedef {import('@companion-app/shared/Model/ImportExport.js').ClientPageInfo} ClientPageInfo
- * @typedef {import('@companion-app/shared/Model/ImportExport.js').ClientImportObject} ClientImportObject
- * @typedef {import('@companion-app/shared/Model/ImportExport.js').ClientImportSelection} ClientImportSelection
- * @typedef {import('@companion-app/shared/Model/ImportExport.js').ClientExportSelection} ClientExportSelection
- * @typedef {import('@companion-app/shared/Model/ImportExport.js').ClientResetSelection} ClientResetSelection
- *
- * @typedef {{
- *   object: import('@companion-app/shared/Model/ExportModel.js').ExportFullv4 | import('@companion-app/shared/Model/ExportModel.js').ExportPageModelv4
- *   timeout: null
- * }} ClientPendingImport
- */
+type ClientPendingImport = {
+	object: ExportFullv4 | ExportPageModelv4
+	timeout: null
+}

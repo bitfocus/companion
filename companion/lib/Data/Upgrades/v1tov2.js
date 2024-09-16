@@ -2,7 +2,7 @@ import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Util/Constants.js'
 
 /**
  * do the database upgrades to convert from the v1 to the v2 format
- * @param {import('../Database.js').default} db
+ * @param {import('../Database.js').DataDatabase} db
  * @param {import('winston').Logger} _logger
  * @returns {void}
  */

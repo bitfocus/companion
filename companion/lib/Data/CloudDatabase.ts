@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import DataStoreBase from './StoreBase.js'
+import { DataStoreBase } from './StoreBase.js'
 import nodeMachineId from 'node-machine-id'
 
 function generateMachineId() {
@@ -33,13 +33,11 @@ function generateMachineId() {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class CloudDatabase extends DataStoreBase {
+export class CloudDatabase extends DataStoreBase {
 	/**
 	 * The stored defaults for a new db
-	 * @type {Object}
-	 * @access protected
 	 */
-	static Defaults = {
+	private static Defaults: object = {
 		uuid: generateMachineId(),
 		auth: {
 			token: '',
@@ -51,20 +49,15 @@ class CloudDatabase extends DataStoreBase {
 
 	/**
 	 * The default minimum interval in ms to save to disk (4000 ms)
-	 * @type {number}
-	 * @access public
-	 * @static
 	 */
-	static SaveInterval = 4000
+	private static SaveInterval: number = 4000
 
 	/**
-	 * @param {string} configDir - the root config directory
+	 * @param configDir - the root config directory
 	 */
-	constructor(configDir) {
+	constructor(configDir: string) {
 		super(configDir, 'cloud', CloudDatabase.SaveInterval, CloudDatabase.Defaults, 'Data/CloudDatabase')
 
 		this.loadSync()
 	}
 }
-
-export default CloudDatabase

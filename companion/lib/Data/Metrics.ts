@@ -18,12 +18,10 @@
 import crypto from 'crypto'
 import { CoreBase } from '../Core/Base.js'
 import got from 'got'
+import type { Registry } from '../Registry.js'
 
-class DataMetrics extends CoreBase {
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+export class DataMetrics extends CoreBase {
+	constructor(registry: Registry) {
 		super(registry, 'Data/Metrics')
 	}
 
@@ -33,10 +31,7 @@ class DataMetrics extends CoreBase {
 	#cycle() {
 		this.logger.silly('cycle')
 
-		/**
-		 * @type {string[]}
-		 */
-		const relevantDevices = []
+		const relevantDevices: string[] = []
 
 		try {
 			const surfaceGroups = this.surfaces.getDevicesList()
@@ -76,9 +71,8 @@ class DataMetrics extends CoreBase {
 
 	/**
 	 * Submit metrics
-	 * @param {Record<string, any>} payload
 	 */
-	#pushMetrics(payload) {
+	#pushMetrics(payload: Record<string, any>): void {
 		got
 			.post('https://updates.bitfocus.io/companion/metrics', {
 				json: payload,
@@ -92,7 +86,7 @@ class DataMetrics extends CoreBase {
 	/**
 	 * Start the reporting cycle
 	 */
-	startCycle() {
+	startCycle(): void {
 		// don't bother with pushing metrics in the startup phase, let's give the system a chance to start up
 		setTimeout(() => this.#cycle(), 1000 * 120)
 
@@ -100,5 +94,3 @@ class DataMetrics extends CoreBase {
 		setInterval(() => this.#cycle(), 1000 * 60 * 60)
 	}
 }
-
-export default DataMetrics

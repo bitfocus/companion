@@ -1,9 +1,8 @@
-import DataStoreBase from './StoreBase.js'
+import { DataStoreBase } from './StoreBase.js'
 
 /**
  * The class that manages the applications's disk cache
  *
- * @extends DataStoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -21,29 +20,22 @@ import DataStoreBase from './StoreBase.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class DataCache extends DataStoreBase {
+export class DataCache extends DataStoreBase {
 	/**
 	 * The stored defaults for a new cache
-	 * @type {Object}
-	 * @access protected
 	 */
-	static Defaults = {}
+	private static Defaults: object = {}
 	/**
 	 * The default minimum interval in ms to save to disk (30000 ms)
-	 * @type {number}
-	 * @access public
-	 * @static
 	 */
-	static SaveInterval = 30000
+	private static SaveInterval: number = 30000
 
 	/**
-	 * @param {string} configDir - the root config directory
+	 * @param configDir - the root config directory
 	 */
-	constructor(configDir) {
+	constructor(configDir: string) {
 		super(configDir, 'datacache', DataCache.SaveInterval, DataCache.Defaults, 'Data/Cache')
 
 		this.loadSync()
 	}
 }
-
-export default DataCache

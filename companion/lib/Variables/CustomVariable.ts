@@ -23,7 +23,7 @@ import type {
 	CustomVariableUpdate,
 	CustomVariableUpdateRemoveOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
-import type DataDatabase from '../Data/Database.js'
+import type { DataDatabase } from '../Data/Database.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 

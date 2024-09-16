@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import path from 'path'
 import { cloneDeep } from 'lodash-es'
-import LogController from '../Log/Controller.js'
+import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage } from '../Resources/Util.js'
 
 /**
@@ -25,107 +25,83 @@ import { showErrorMessage } from '../Resources/Util.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class DataStoreBase {
+export class DataStoreBase {
+	protected readonly logger: Logger
+
 	/**
 	 * The full backup file path
-	 * @type {string}
-	 * @access protected
 	 */
-	cfgBakFile = ''
+	private readonly cfgBakFile: string = ''
 	/**
 	 * The full corrupt file path
-	 * @type {string}
-	 * @access protected
 	 */
-	cfgCorruptFile = ''
+	private readonly cfgCorruptFile: string = ''
 	/**
 	 * The config directory
-	 * @type {string}
-	 * @access protected
 	 */
-	cfgDir = ''
+	private readonly cfgDir: string = ''
 	/**
 	 * The full main file path
-	 * @type {string}
-	 * @access protected
 	 */
-	cfgFile = ''
+	private readonly cfgFile: string = ''
 	/**
 	 * The full temporary file path
-	 * @type {string}
-	 * @access protected
 	 */
-	cfgTmpFile = ''
+	private readonly cfgTmpFile: string = ''
 	/**
 	 * The stored defaults for a new store
-	 * @type {Object}
-	 * @access protected
 	 */
-	defaults = {}
+	private readonly defaults: object = {}
 	/**
 	 * Flag to tell the <code>saveInternal</code> there's
 	 * changes to save to disk
-	 * @type {boolean}
-	 * @access protected
 	 */
-	dirty = false
+	private dirty = false
 	/**
 	 * Flag if this database was created fresh on this run
-	 * @type {boolean}
-	 * @access protected
 	 */
-	isFirstRun = false
+	private isFirstRun = false
 	/**
 	 * Timestamp of last save to disk
-	 * @type {number}
-	 * @access protected
 	 */
-	lastsave = Date.now()
+	private lastsave = Date.now()
 	/**
 	 * The name to use for the file and logging
-	 * @type {string}
-	 * @access protected
 	 */
-	name = ''
+	private readonly name: string = ''
 
 	/**
 	 * The time to use for the save interval
-	 * @type {?NodeJS.Timeout}
-	 * @access protected
 	 */
-	saveCycle
+	private saveCycle: NodeJS.Timeout | undefined
 
 	/**
 	 * The interval to fire a save to disk when dirty
 	 * @type {number}
 	 * @access protected
 	 */
-	saveInterval
+	private readonly saveInterval: number
 
 	/**
 	 * Semaphore while the store is saving to disk
-	 * @type {boolean}
-	 * @access protected
 	 */
-	saving = false
+	private saving = false
 
 	/**
 	 * The flat file DB in RAM
-	 * @type {Record<string, any>}
-	 * @access protected
 	 */
-	store = {}
+	private store: Record<string, any> = {}
 
 	/**
 	 * This needs to be called in the extending class
 	 * using <code>super(registry, name, saveInterval, defaults, debug)</code>.
-	 * @param {string} configDir - the root config directory
-	 * @param {string} name - the name of the flat file
-	 * @param {number} saveInterval - minimum interval in ms to save to disk
-	 * @param {Object} defaults - the default data to use when making a new file
-	 * @param {string} debug - module path to be used in the debugger
+	 * @param configDir - the root config directory
+	 * @param name - the name of the flat file
+	 * @param saveInterval - minimum interval in ms to save to disk
+	 * @param defaults - the default data to use when making a new file
+	 * @param debug - module path to be used in the debugger
 	 */
-	constructor(configDir, name, saveInterval, defaults, debug) {
+	constructor(configDir: string, name: string, saveInterval: number, defaults: object, debug: string) {
 		this.logger = LogController.createLogger(debug)
 
 		this.cfgDir = configDir
@@ -141,10 +117,9 @@ class DataStoreBase {
 
 	/**
 	 * Delete a key/value pair
-	 * @param {string} key - the key to be delete
-	 * @access public
+	 * @param key - the key to be delete
 	 */
-	deleteKey(key) {
+	deleteKey(key: string): void {
 		this.logger.silly(`${this.name}_del (${key})`)
 		if (key !== undefined) {
 			delete this.store[key]
@@ -154,16 +129,14 @@ class DataStoreBase {
 
 	/**
 	 * Save the database to file making a `FILE.bak` version then moving it into place
-	 * @async
-	 * @param {boolean} [withBackup = true] - can be set to <code>false</code> if the current file should not be moved to `FILE.bak`
-	 * @access protected
+	 * @param withBackup - can be set to <code>false</code> if the current file should not be moved to `FILE.bak`
 	 */
-	async doSave(withBackup) {
+	protected async doSave(withBackup = true): Promise<void> {
 		const jsonSave = JSON.stringify(this.store)
 		this.dirty = false
 		this.lastsave = Date.now()
 
-		if (withBackup === true) {
+		if (withBackup) {
 			try {
 				const file = await fs.readFile(this.cfgFile, 'utf8')
 
@@ -203,11 +176,10 @@ class DataStoreBase {
 
 	/**
 	 * Get the entire database
-	 * @param {boolean} [clone = false] - <code>true</code> if a clone is needed instead of a link
-	 * @returns {Record<string, any>} the database
-	 * @access public
+	 * @param clone - <code>true</code> if a clone is needed instead of a link
+	 * @returns the database
 	 */
-	getAll(clone = false) {
+	getAll(clone = false): Record<string, any> {
 		let out
 		this.logger.silly(`${this.name}_all`)
 
@@ -221,49 +193,45 @@ class DataStoreBase {
 	}
 
 	/**
-	 * @returns {string} the directory of the flat file
-	 * @access public
+	 * @returns the directory of the flat file
 	 */
-	getCfgDir() {
+	getCfgDir(): string {
 		return this.cfgDir
 	}
 
 	/**
-	 * @returns {string} the flat file
-	 * @access public
+	 * @returns the flat file
 	 */
-	getCfgFile() {
+	getCfgFile(): string {
 		return this.cfgFile
 	}
 
 	/**
-	 * @returns {boolean} the 'is first run' flag
-	 * @access public
+	 * @returns the 'is first run' flag
 	 */
-	getIsFirstRun() {
+	getIsFirstRun(): boolean {
 		return this.isFirstRun
 	}
 
 	/**
-	 * @returns {string | void} JSON of the database
-	 * @access public
+	 * @returns JSON of the database
 	 */
-	getJSON() {
+	getJSON(): string | null {
 		try {
 			return JSON.stringify(this.store)
 		} catch (e) {
 			this.logger.silly(`JSON error: ${e}`)
+			return null
 		}
 	}
 
 	/**
 	 * Get a value from the database
-	 * @param {string} key - the key to be retrieved
-	 * @param {?any} defaultValue - the default value to use if the key doesn't exist
-	 * @param {boolean} [clone = false] - <code>true</code> if a clone is needed instead of a link
-	 * @access public
+	 * @param key - the key to be retrieved
+	 * @param defaultValue - the default value to use if the key doesn't exist
+	 * @param clone - <code>true</code> if a clone is needed instead of a link
 	 */
-	getKey(key, defaultValue, clone = false) {
+	getKey(key: string, defaultValue?: any, clone = false): any {
 		let out
 		this.logger.silly(`${this.name}_get(${key})`)
 
@@ -283,10 +251,9 @@ class DataStoreBase {
 
 	/**
 	 * Checks if the database has a value
-	 * @param {string} key - the key to be checked
-	 * @access public
+	 * @param key - the key to be checked
 	 */
-	hasKey(key) {
+	hasKey(key: string): boolean {
 		return this.store[key] !== undefined
 	}
 
@@ -294,7 +261,7 @@ class DataStoreBase {
 	 * Attempt to load the database from disk
 	 * @access protected
 	 */
-	loadSync() {
+	protected loadSync(): void {
 		if (fs.existsSync(this.cfgFile)) {
 			this.logger.silly(this.cfgFile, 'exists. trying to read')
 
@@ -327,14 +294,13 @@ class DataStoreBase {
 			this.loadDefaults()
 		}
 
-		this.setSaveCycle()
+		this.#setSaveCycle()
 	}
 
 	/**
 	 * Attempt to load the backup file from disk as a recovery
-	 * @access protected
 	 */
-	loadBackupSync() {
+	protected loadBackupSync(): void {
 		if (fs.existsSync(this.cfgBakFile)) {
 			this.logger.silly(this.cfgBakFile, 'exists. trying to read')
 			let data = fs.readFileSync(this.cfgBakFile, 'utf8')
@@ -365,9 +331,8 @@ class DataStoreBase {
 
 	/**
 	 * Save the defaults since a file could not be found/loaded/parses
-	 * @access protected
 	 */
-	loadDefaults() {
+	protected loadDefaults(): void {
 		this.store = cloneDeep(this.defaults)
 		this.isFirstRun = true
 		this.save()
@@ -375,10 +340,9 @@ class DataStoreBase {
 
 	/**
 	 * Save the database to file
-	 * @param {boolean} [withBackup = true] - can be set to `false` if the current file should not be moved to `FILE.bak`
-	 * @access protected
+	 * @param withBackup - can be set to `false` if the current file should not be moved to `FILE.bak`
 	 */
-	save(withBackup = true) {
+	save(withBackup = true): void {
 		if (this.saving === false) {
 			this.logger.silly(`${this.name}_save: begin`)
 			this.saving = true
@@ -400,9 +364,8 @@ class DataStoreBase {
 
 	/**
 	 * Execute a save if the database is dirty
-	 * @access public
 	 */
-	saveImmediate() {
+	saveImmediate(): void {
 		if (this.dirty === true) {
 			this.save()
 		}
@@ -410,19 +373,18 @@ class DataStoreBase {
 
 	/**
 	 * Register that there are changes in the database that need to be saved as soon as possible
-	 * @access protected
 	 */
-	setDirty() {
+	protected setDirty(): void {
 		this.dirty = true
 	}
 
 	/**
 	 * Save/update a key/value pair to the database
-	 * @param {(number|string|string[])} key - the key to save under
-	 * @param {Object | undefined} value - the object to save
+	 * @param key - the key to save under
+	 * @param value - the object to save
 	 * @access public
 	 */
-	setKey(key, value) {
+	setKey(key: number | string | string[], value: any): void {
 		this.logger.silly(`${this.name}_set(${key}, ${value})`)
 
 		if (key !== undefined) {
@@ -470,9 +432,8 @@ class DataStoreBase {
 
 	/**
 	 * Setup the save cycle interval
-	 * @access protected
 	 */
-	setSaveCycle() {
+	#setSaveCycle(): void {
 		if (this.saveCycle) return
 
 		this.saveCycle = setInterval(() => {
@@ -483,5 +444,3 @@ class DataStoreBase {
 		}, this.saveInterval)
 	}
 }
-
-export default DataStoreBase

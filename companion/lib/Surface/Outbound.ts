@@ -3,7 +3,7 @@ import LogController from '../Log/Controller.js'
 import { DEFAULT_TCP_PORT, StreamDeckTcpConnectionManager } from '@elgato-stream-deck/tcp'
 import { StreamDeckJpegOptions } from './USB/ElgatoStreamDeck.js'
 import type { SurfaceController } from './Controller.js'
-import type DataDatabase from '../Data/Database.js'
+import type { DataDatabase } from '../Data/Database.js'
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 

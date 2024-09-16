@@ -1,5 +1,5 @@
 import DataStoreBase from '../lib/Data/StoreBase.js'
-import DataDatabase from '../lib/Data/Database.js'
+import { DataDatabase } from '../lib/Data/Database.js'
 import LogController from '../lib/Log/Controller.js'
 import v2tov3 from '../lib/Data/Upgrades/v2tov3.js'
 import { cloneDeep } from 'lodash-es'

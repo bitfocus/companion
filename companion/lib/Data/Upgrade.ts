@@ -5,7 +5,8 @@ import v1tov2 from './Upgrades/v1tov2.js'
 import v2tov3 from './Upgrades/v2tov3.js'
 import v3tov4 from './Upgrades/v3tov4.js'
 import { showFatalError } from '../Resources/Util.js'
-import DataDatabase from './Database.js'
+import type { DataDatabase } from './Database.js'
+import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModel.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -19,9 +20,8 @@ const targetVersion = allUpgrades.length + 1
 /**
  * Upgrade the db to the latest version.
  * This has the raw db object before anything else has gotten access, so no need to worry about other components getting confused
- * @param {DataDatabase} db
  */
-export function upgradeStartup(db) {
+export function upgradeStartup(db: DataDatabase): void {
 	const currentVersion = db.getKey('page_config_version', 1)
 
 	// Ensure that the db isnt too new
@@ -37,11 +37,11 @@ export function upgradeStartup(db) {
 	} else {
 		logger.info(`Upgrading db from version ${currentVersion} to ${targetVersion}`)
 
-		const saveUpgradeCopy = (/** @type {DataDatabase} */ db, /** @type {number} */ i) => {
+		const saveUpgradeCopy = (db: DataDatabase, i: number) => {
 			try {
 				let jsonSave = db.getJSON()
 
-				if (jsonSave !== undefined) {
+				if (jsonSave) {
 					fs.writeFileSync(`${db.getCfgFile()}.v${i}`, jsonSave)
 				}
 			} catch (err) {
@@ -64,10 +64,8 @@ export function upgradeStartup(db) {
 
 /**
  * Upgrade an exported page or full configuration to the latest format
- * @param {any} obj
- * @returns {import('@companion-app/shared/Model/ExportModel.js').SomeExportv4}
  */
-export function upgradeImport(obj) {
+export function upgradeImport(obj: any): SomeExportv4 {
 	const currentVersion = obj.version || 1
 
 	for (let i = currentVersion; i < targetVersion; i++) {

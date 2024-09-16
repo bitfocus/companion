@@ -1,6 +1,10 @@
 import selfsigned from 'selfsigned'
 import { cloneDeep } from 'lodash-es'
 import { CoreBase } from '../Core/Base.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { Registry } from '../Registry.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { pki } from 'node-forge'
 
 /**
  * The class that manages the applications's user configurable settings
@@ -23,14 +27,11 @@ import { CoreBase } from '../Core/Base.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class DataUserConfig extends CoreBase {
+export class DataUserConfig extends CoreBase {
 	/**
 	 * The defaults for the user config fields
-	 * @type {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigModel}
-	 * @access public
-	 * @static
 	 */
-	static Defaults = {
+	static Defaults: UserConfigModel = {
 		setup_wizard: 0,
 
 		page_direction_flipped: false,
@@ -110,25 +111,20 @@ class DataUserConfig extends CoreBase {
 	}
 	/**
 	 * The user configuration settings
-	 * @type {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigModel}
-	 * @access protected
 	 */
-	data
+	#data: UserConfigModel
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Data/UserConfig')
 
 		this.registry.on('http_rebind', (bind_ip) => {
-			if (this.data !== undefined && DataUserConfig.Defaults.https_self_cn == this.data.https_self_cn) {
+			if (this.#data !== undefined && DataUserConfig.Defaults.https_self_cn == this.#data.https_self_cn) {
 				this.setKey('https_self_cn', bind_ip)
 			}
 			DataUserConfig.Defaults.https_self_cn = bind_ip
 		})
 
-		this.data = this.db.getKey('userconfig', cloneDeep(DataUserConfig.Defaults))
+		this.#data = this.db.getKey('userconfig', cloneDeep(DataUserConfig.Defaults))
 
 		this.#populateMissingForExistingDb()
 
@@ -136,31 +132,27 @@ class DataUserConfig extends CoreBase {
 		// copy default values. this will set newly added defaults too
 		for (let k in DataUserConfig.Defaults) {
 			// @ts-ignore
-			if (this.data[k] === undefined) {
+			if (this.#data[k] === undefined) {
 				// @ts-ignore
-				this.data[k] = DataUserConfig.Defaults[k]
+				this.#data[k] = DataUserConfig.Defaults[k]
 				save = true
 			}
 		}
 
 		// make sure the db has an updated copy
 		if (save) {
-			this.db.setKey('userconfig', this.data)
+			this.db.setKey('userconfig', this.#data)
 		}
 	}
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.on('set_userconfig_key', this.setKey.bind(this))
 		client.on('set_userconfig_keys', this.setKeys.bind(this))
 		client.on('reset_userconfig_key', this.resetKey.bind(this))
-		client.onPromise('userconfig:get-all', () => {
-			return this.data
-		})
+		client.onPromise('userconfig:get-all', () => this.#data)
 
 		client.on('ssl_certificate_create', this.createSslCertificate.bind(this))
 		client.on('ssl_certificate_delete', this.deleteSslCertificate.bind(this))
@@ -169,13 +161,11 @@ class DataUserConfig extends CoreBase {
 
 	/**
 	 * For an existing DB we need to check if some new settings are present
-	 * @access protected
 	 */
-	#populateMissingForExistingDb() {
+	#populateMissingForExistingDb(): void {
 		if (!this.db.getIsFirstRun()) {
 			// This is an existing db, so setup the ports to match how it used to be
-			/** @type {Partial<import('@companion-app/shared/Model/UserConfigModel.js').UserConfigModel>} */
-			const legacy_config = {
+			const legacy_config: Partial<UserConfigModel> = {
 				tcp_enabled: true,
 				tcp_listen_port: 51234,
 
@@ -196,7 +186,7 @@ class DataUserConfig extends CoreBase {
 			let has_been_defined = false
 			for (const k in legacy_config) {
 				// @ts-ignore
-				if (this.data[k] !== undefined) {
+				if (this.#data[k] !== undefined) {
 					has_been_defined = true
 					break
 				}
@@ -207,51 +197,49 @@ class DataUserConfig extends CoreBase {
 				this.logger.info('Running one-time userconfig v2 upgrade')
 				for (let k in legacy_config) {
 					// @ts-ignore
-					if (this.data[k] === undefined) {
+					if (this.#data[k] === undefined) {
 						// @ts-ignore
-						this.data[k] = legacy_config[k]
+						this.#data[k] = legacy_config[k]
 					}
 				}
 			}
 
 			// Preserve old behaviour
-			if (this.data['usb_hotplug'] === undefined) {
-				this.data['usb_hotplug'] = false
+			if (this.#data['usb_hotplug'] === undefined) {
+				this.#data['usb_hotplug'] = false
 			}
 
 			// Enable the legacy OSC api if OSC is enabled
-			if (this.data.osc_enabled && this.data.osc_legacy_api_enabled === undefined) {
-				this.data.osc_legacy_api_enabled = true
+			if (this.#data.osc_enabled && this.#data.osc_legacy_api_enabled === undefined) {
+				this.#data.osc_legacy_api_enabled = true
 			}
 
 			// Enable the legacy TCP api if TCP is enabled
-			if (this.data.tcp_enabled && this.data.tcp_legacy_api_enabled === undefined) {
-				this.data.tcp_legacy_api_enabled = true
+			if (this.#data.tcp_enabled && this.#data.tcp_legacy_api_enabled === undefined) {
+				this.#data.tcp_legacy_api_enabled = true
 			}
 
 			// Enable the legacy UDP api if UDP is enabled
-			if (this.data.udp_enabled && this.data.udp_legacy_api_enabled === undefined) {
-				this.data.udp_legacy_api_enabled = true
+			if (this.#data.udp_enabled && this.#data.udp_legacy_api_enabled === undefined) {
+				this.#data.udp_legacy_api_enabled = true
 			}
 
 			// Enable the http api (both modern and legacy)
-			if (this.data.http_api_enabled === undefined) {
-				this.data.http_api_enabled = true
-				this.data.http_legacy_api_enabled = true
+			if (this.#data.http_api_enabled === undefined) {
+				this.#data.http_api_enabled = true
+				this.#data.http_legacy_api_enabled = true
 			}
 		}
 	}
 
 	/**
 	 * Generate a self-signed SSL certificate
-	 * @access protected
 	 */
-	createSslCertificate() {
+	private createSslCertificate(): void {
 		try {
-			/** @type {import('node-forge').pki.CertificateField[]} */
-			const attrs = [{ name: 'commonName', value: String(this.data.https_self_cn) }]
+			const attrs: pki.CertificateField[] = [{ name: 'commonName', value: String(this.#data.https_self_cn) }]
 			const pems = selfsigned.generate(attrs, {
-				days: Number(this.data.https_self_expiry) || undefined,
+				days: Number(this.#data.https_self_expiry) || undefined,
 				algorithm: 'sha256',
 				keySize: 2048,
 			})
@@ -260,9 +248,9 @@ class DataUserConfig extends CoreBase {
 					https_self_cert_public: pems.public,
 					https_self_cert_private: pems.private,
 					https_self_cert: pems.cert,
-					https_self_cert_cn: this.data.https_self_cn,
+					https_self_cert_cn: this.#data.https_self_cn,
 					https_self_cert_created: new Date().toLocaleString(),
-					https_self_cert_expiry: `${Number(this.data.https_self_expiry)} days`,
+					https_self_cert_expiry: `${Number(this.#data.https_self_expiry)} days`,
 				}
 
 				this.setKeys(cert)
@@ -276,9 +264,8 @@ class DataUserConfig extends CoreBase {
 
 	/**
 	 * Delete a stored self-signed SSL certificate
-	 * @access protected
 	 */
-	deleteSslCertificate() {
+	private deleteSslCertificate(): void {
 		this.setKeys({
 			https_self_cert: '',
 			https_self_cert_created: '',
@@ -291,14 +278,13 @@ class DataUserConfig extends CoreBase {
 
 	/**
 	 * Get a specific use config setting
-	 * @param {string} key
-	 * @param {boolean} [clone = false] - <code>true</code> if a clone is needed instead of a link
-	 * @returns {any} the config value
-	 * @access public
+	 * @param key
+	 * @param [clone = false] - <code>true</code> if a clone is needed instead of a link
+	 * @returns the config value
 	 */
-	getKey(key, clone = false) {
+	getKey(key: string, clone = false): any {
 		// @ts-ignore
-		let out = this.data[key]
+		let out = this.#data[key]
 
 		if (clone === true) {
 			out = cloneDeep(out)
@@ -311,12 +297,11 @@ class DataUserConfig extends CoreBase {
 	 * Try to renew a stored self-signed SSL certificate
 	 * @access protected
 	 */
-	renewSslCertificate() {
+	private renewSslCertificate(): void {
 		try {
-			/** @type {import('node-forge').pki.CertificateField[]} */
-			const attrs = [{ name: 'commonName', value: String(this.data.https_self_cert_cn) }]
+			const attrs: pki.CertificateField[] = [{ name: 'commonName', value: String(this.#data.https_self_cert_cn) }]
 			const pems = selfsigned.generate(attrs, {
-				days: Number(this.data.https_self_expiry) || undefined,
+				days: Number(this.#data.https_self_expiry) || undefined,
 				algorithm: 'sha256',
 				keySize: 2048,
 				// keyPair: {
@@ -328,7 +313,7 @@ class DataUserConfig extends CoreBase {
 				const cert = {
 					https_self_cert: pems.cert,
 					https_self_cert_created: new Date().toLocaleString(),
-					https_self_cert_expiry: `${Number(this.data.https_self_expiry)} days`,
+					https_self_cert_expiry: `${Number(this.#data.https_self_expiry)} days`,
 				}
 
 				this.setKeys(cert)
@@ -342,30 +327,27 @@ class DataUserConfig extends CoreBase {
 
 	/**
 	 * Reset the user config to the default
-	 * @access public
 	 */
-	reset() {
+	reset(): void {
 		this.setKeys(DataUserConfig.Defaults)
 	}
 
 	/**
 	 * Reset a user config to its default
-	 * @param {string} key - the key to reset
-	 * @access public
+	 * @param key - the key to reset
 	 */
-	resetKey(key) {
+	resetKey(key: string): void {
 		// @ts-ignore
 		this.setKey(key, DataUserConfig.Defaults[key])
 	}
 
 	/**
 	 * Save/update a key/value pair to the user config
-	 * @param {keyof import('@companion-app/shared/Model/UserConfigModel.js').UserConfigModel} key - the key to save under
-	 * @param {any} value - the object to save
-	 * @param {boolean} [save = true] - <code>false</code> if a DB save is not necessary
-	 * @access public
+	 * @param key - the key to save under
+	 * @param value - the object to save
+	 * @param save - <code>false</code> if a DB save is not necessary
 	 */
-	setKey(key, value, save = true) {
+	setKey(key: keyof UserConfigModel, value: any, save = true): void {
 		if (!key) throw new Error('Missing key')
 
 		let checkControlsInBounds = false
@@ -378,9 +360,9 @@ class DataUserConfig extends CoreBase {
 		}
 
 		// @ts-ignore
-		this.data[key] = value
+		this.#data[key] = value
 		if (save) {
-			this.db.setKey('userconfig', this.data)
+			this.db.setKey('userconfig', this.#data)
 		}
 
 		this.logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
@@ -405,19 +387,16 @@ class DataUserConfig extends CoreBase {
 
 	/**
 	 * Save/update multiple key/value pairs to the user config
-	 * @param {Record<string, any>} objects - the key/value pairs
-	 * @access public
+	 * @param objects - the key/value pairs
 	 */
-	setKeys(objects) {
+	setKeys(objects: Record<string, any>): void {
 		if (objects !== undefined) {
 			for (let key in objects) {
 				// @ts-ignore
 				this.setKey(key, objects[key], false)
 			}
 
-			this.db.setKey('userconfig', this.data)
+			this.db.setKey('userconfig', this.#data)
 		}
 	}
 }
-
-export default DataUserConfig

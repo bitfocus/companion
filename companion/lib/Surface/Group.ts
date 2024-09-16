@@ -21,9 +21,9 @@ import LogController, { type Logger } from '../Log/Controller.js'
 import type { SurfaceHandler } from './Handler.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfaceController } from './Controller.js'
-import type DataDatabase from '../Data/Database.js'
+import type { DataDatabase } from '../Data/Database.js'
 import type { PageController } from '../Page/Controller.js'
-import type DataUserConfig from '../Data/UserConfig.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 export class SurfaceGroup {
 	/**

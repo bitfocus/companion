@@ -13,7 +13,7 @@ function CreateBankControlIdOld(page, bank) {
 }
 
 /**
- * @param {import('../Database.js').default} db
+ * @param {import('../Database.js').DataDatabase} db
  * @returns {void}
  */
 function addControlIdsToPages(db) {
@@ -42,7 +42,7 @@ function addControlIdsToPages(db) {
 
 /**
  * do the database upgrades to convert from the v3 to the v4 format
- * @param {import('../Database.js').default} db
+ * @param {import('../Database.js').DataDatabase} db
  * @param {import('winston').Logger} _logger
  * @returns {void}
  */
