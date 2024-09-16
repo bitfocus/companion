@@ -73,7 +73,7 @@ class ModuleHost {
 	#registry
 
 	/**
-	 * @type {import('./Status.js').default}
+	 * @type {import('./Status.js').InstanceStatus}
 	 */
 	#instanceStatus
 
@@ -90,7 +90,7 @@ class ModuleHost {
 
 	/**
 	 * @param {import('../Registry.js').Registry} registry
-	 * @param {import('./Status.js').default} instanceStatus
+	 * @param {import('./Status.js').InstanceStatus} instanceStatus
 	 */
 	constructor(registry, instanceStatus) {
 		this.#registry = registry

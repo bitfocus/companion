@@ -1,23 +1,24 @@
 import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
-import { validateManifest } from '@companion-module/base'
+import { ModuleManifest, validateManifest } from '@companion-module/base'
+import type { ModuleInfo } from './Modules.js'
+import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 export class InstanceModuleScanner {
-	#logger = LogController.createLogger('Instance/ModuleScanner')
+	readonly #logger = LogController.createLogger('Instance/ModuleScanner')
 
 	/**
 	 * Load information about all modules in a directory
 	 * @access private
-	 * @param {string} searchDir - Path to search for modules
-	 * @param {boolean} checkForPackaged - Whether to check for a packaged version
-	 * @returns {Promise<import('./Modules.js').ModuleInfo[]>}
+	 * @param searchDir - Path to search for modules
+	 * @param checkForPackaged - Whether to check for a packaged version
 	 */
-	async loadInfoForModulesInDir(searchDir, checkForPackaged) {
+	async loadInfoForModulesInDir(searchDir: string, checkForPackaged: boolean): Promise<ModuleInfo[]> {
 		if (await fs.pathExists(searchDir)) {
 			const candidates = await fs.readdir(searchDir)
 
-			const ps = []
+			const ps: Promise<ModuleInfo | undefined>[] = []
 
 			for (const candidate of candidates) {
 				const candidatePath = path.join(searchDir, candidate)
@@ -25,7 +26,6 @@ export class InstanceModuleScanner {
 			}
 
 			const res = await Promise.all(ps)
-			// @ts-ignore
 			return res.filter((v) => !!v)
 		} else {
 			return []
@@ -34,11 +34,10 @@ export class InstanceModuleScanner {
 
 	/**
 	 * Load information about a module
-	 * @access private
-	 * @param {string} fullpath - Fullpath to the module
-	 * @param {boolean} checkForPackaged - Whether to check for a packaged version
+	 * @param fullpath - Fullpath to the module
+	 * @param checkForPackaged - Whether to check for a packaged version
 	 */
-	async loadInfoForModule(fullpath, checkForPackaged) {
+	async loadInfoForModule(fullpath: string, checkForPackaged: boolean): Promise<ModuleInfo | undefined> {
 		try {
 			let isPackaged = false
 			const pkgDir = path.join(fullpath, 'pkg')
@@ -57,16 +56,14 @@ export class InstanceModuleScanner {
 				return
 			}
 			const manifestJsonStr = await fs.readFile(manifestPath)
-			/** @type {import('@companion-module/base').ModuleManifest} */
-			const manifestJson = JSON.parse(manifestJsonStr.toString())
+			const manifestJson: ModuleManifest = JSON.parse(manifestJsonStr.toString())
 
 			validateManifest(manifestJson)
 
 			const helpPath = path.join(fullpath, 'companion/HELP.md')
 
 			const hasHelp = await fs.pathExists(helpPath)
-			/** @type {import('./Modules.js').ModuleDisplayInfo} */
-			const moduleDisplay = {
+			const moduleDisplay: ModuleDisplayInfo = {
 				id: manifestJson.id,
 				name: manifestJson.manufacturer + ': ' + manifestJson.products.join('; '),
 				version: manifestJson.version,
@@ -78,8 +75,7 @@ export class InstanceModuleScanner {
 				keywords: manifestJson.keywords,
 			}
 
-			/** @type {import('./Modules.js').ModuleInfo} */
-			const moduleManifestExt = {
+			const moduleManifestExt: ModuleInfo = {
 				manifest: manifestJson,
 				basePath: path.resolve(fullpath),
 				helpPath: hasHelp ? helpPath : null,

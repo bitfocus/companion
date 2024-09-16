@@ -1,48 +1,25 @@
 import jsonPatch from 'fast-json-patch'
 import { isEqual } from 'lodash-es'
-import LogController from '../Log/Controller.js'
+// import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
+import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type UIHandler from '../UI/Handler.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import { ClientSocket } from '../UI/Handler.js'
 
-/**
- * @typedef {import('@companion-app/shared/Model/Common.js').ConnectionStatusEntry} StatusEntry
- */
-
-export default class Status extends EventEmitter {
+export class InstanceStatus extends EventEmitter {
 	/**
 	 * The latest statuses object
 	 * levels: null = unknown, see updateInstanceStatus for possible values
-	 * @type {Record<string, StatusEntry>}
-	 * @access private
 	 */
-	#instanceStatuses = {}
+	#instanceStatuses: Record<string, ConnectionStatusEntry> = {}
 
-	/**
-	 * @type {import('winston').Logger}
-	 * @access private
-	 * @readonly
-	 */
-	// @ts-ignore
-	#logger = LogController.createLogger('Instance/Status')
+	// readonly #logger = LogController.createLogger('Instance/Status')
 
-	/**
-	 * @type {import('../UI/Handler.js').default}
-	 * @access private
-	 * @readonly
-	 */
-	#io
+	readonly #io: UIHandler
+	readonly #controls: ControlsController
 
-	/**
-	 * @type {import('../Controls/Controller.js').ControlsController}
-	 * @access private
-	 * @readonly
-	 */
-	#controls
-
-	/**
-	 * @param {import('../UI/Handler.js').default} io
-	 * @param {import('../Controls/Controller.js').ControlsController} controls
-	 */
-	constructor(io, controls) {
+	constructor(io: UIHandler, controls: ControlsController) {
 		super()
 
 		this.#io = io
@@ -51,10 +28,8 @@ export default class Status extends EventEmitter {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('connections:get-statuses', () => {
 			return this.#instanceStatuses
 		})
@@ -62,13 +37,9 @@ export default class Status extends EventEmitter {
 
 	/**
 	 * Update the status of a connection
-	 * @param {string} connectionId
-	 * @param {string | null} level
-	 * @param {string | null} msg
 	 */
-	updateInstanceStatus(connectionId, level, msg) {
-		/** @type {string | null} */
-		let category = 'warning'
+	updateInstanceStatus(connectionId: string, level: string | null, msg: string | null): void {
+		let category: string | null = 'warning'
 
 		switch (level) {
 			case null:
@@ -136,18 +107,15 @@ export default class Status extends EventEmitter {
 
 	/**
 	 * Get the status of an instance
-	 * @param {String} connectionId
-	 * @returns {StatusEntry}
 	 */
-	getConnectionStatus(connectionId) {
+	getConnectionStatus(connectionId: string): ConnectionStatusEntry | undefined {
 		return this.#instanceStatuses[connectionId]
 	}
 
 	/**
 	 * Forget the status of an instance
-	 * @param {string} connectionId
 	 */
-	forgetConnectionStatus(connectionId) {
+	forgetConnectionStatus(connectionId: string): void {
 		const newStatuses = { ...this.#instanceStatuses }
 		delete newStatuses[connectionId]
 
@@ -160,9 +128,8 @@ export default class Status extends EventEmitter {
 
 	/**
 	 * Helper to update the statuses
-	 * @param {Record<string, StatusEntry>} newObj
 	 */
-	#setStatuses(newObj) {
+	#setStatuses(newObj: Record<string, ConnectionStatusEntry>): void {
 		const patch = jsonPatch.compare(this.#instanceStatuses || {}, newObj || {})
 		if (patch.length > 0) {
 			// TODO - make this be a subscription with a dedicated room

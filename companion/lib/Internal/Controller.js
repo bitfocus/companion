@@ -370,7 +370,7 @@ export default class InternalController extends CoreBase {
 		this.registry.controls.updateFeedbackValues('internal', newValues)
 	}
 	#regenerateActions() {
-		/** @type {Record<string, import('../Instance/Definitions.js').ActionDefinition>} */
+		/** @type {Record<string, import('@companion-app/shared/Model/ActionDefinitionModel.js').ActionDefinition>} */
 		let actions = {}
 
 		for (const fragment of this.fragments) {
@@ -389,7 +389,7 @@ export default class InternalController extends CoreBase {
 		this.registry.instance.definitions.setActionDefinitions('internal', actions)
 	}
 	#regenerateFeedbacks() {
-		/** @type {Record<string, import('../Instance/Definitions.js').FeedbackDefinition>} */
+		/** @type {Record<string, import('@companion-app/shared/Model/FeedbackDefinitionModel.js').FeedbackDefinition>} */
 		let feedbacks = {}
 
 		for (const fragment of this.fragments) {

@@ -33,7 +33,7 @@ export default class Instance {
 	#instanceController
 
 	/**
-	 * @type {Record<string, import('../Instance/Status.js').StatusEntry>}
+	 * @type {Record<string, import('@companion-app/shared/Model/Common.js').ConnectionStatusEntry>}
 	 * @access private
 	 */
 	#instanceStatuses = {}
@@ -394,7 +394,7 @@ export default class Instance {
 
 	/**
 	 *
-	 * @param {Record<string, import('../Instance/Status.js').StatusEntry>} instanceStatuses
+	 * @param {Record<string, import('@companion-app/shared/Model/Common.js').ConnectionStatusEntry>} instanceStatuses
 	 * @returns {void}
 	 */
 	#calculateInstanceErrors(instanceStatuses) {

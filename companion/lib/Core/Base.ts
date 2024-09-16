@@ -7,7 +7,7 @@ import type DataUserConfig from '../Data/UserConfig.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type ServiceController from '../Service/Controller.js'
 import type UIHandler from '../UI/Handler.js'
-import type Instance from '../Instance/Controller.js'
+import type InstanceController from '../Instance/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type DataDatabase from '../Data/Database.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -84,7 +84,7 @@ export class CoreBase extends EventEmitter {
 	/**
 	 * The core instance controller
 	 */
-	protected get instance(): Instance {
+	protected get instance(): InstanceController {
 		return this.registry.instance
 	}
 

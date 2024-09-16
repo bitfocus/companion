@@ -29,7 +29,7 @@ class SocketEventsHandler {
 	#registry
 
 	/**
-	 * @type {import('./Status.js').default}
+	 * @type {import('./Status.js').InstanceStatus}
 	 */
 	#instanceStatus
 
@@ -65,7 +65,7 @@ class SocketEventsHandler {
 	/**
 	 *
 	 * @param {import('../Registry.js').Registry} registry
-	 * @param {import('./Status.js').default} instanceStatus
+	 * @param {import('./Status.js').InstanceStatus} instanceStatus
 	 * @param {*} monitor
 	 * @param {string} connectionId
 	 * @param {string} apiVersion0
@@ -631,7 +631,7 @@ class SocketEventsHandler {
 	 * @returns {Promise<void>}
 	 */
 	async #handleSetActionDefinitions(msg) {
-		/** @type {Record<string, import('./Definitions.js').ActionDefinition>} */
+		/** @type {Record<string, import('@companion-app/shared/Model/ActionDefinitionModel.js').ActionDefinition>} */
 		const actions = {}
 
 		for (const rawAction of msg.actions || []) {
@@ -654,7 +654,7 @@ class SocketEventsHandler {
 	 * @returns {Promise<void>}
 	 */
 	async #handleSetFeedbackDefinitions(msg) {
-		/** @type {Record<string, import('./Definitions.js').FeedbackDefinition>} */
+		/** @type {Record<string, import('@companion-app/shared/Model/FeedbackDefinitionModel.js').FeedbackDefinition>} */
 		const feedbacks = {}
 
 		for (const rawFeedback of msg.feedbacks || []) {

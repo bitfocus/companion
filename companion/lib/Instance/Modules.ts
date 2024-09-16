@@ -23,59 +23,46 @@ import { fileURLToPath } from 'url'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import { InstanceModuleScanner } from './ModuleScanner.js'
+import type express from 'express'
+import type { ModuleManifest } from '@companion-module/base'
+import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { Registry } from '../Registry.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
 
 const ModulesRoom = 'modules'
 
-/**
- * @typedef {{
- *   basePath: string
- *   helpPath: string | null
- *   display: ModuleDisplayInfo
- *   manifest: import('@companion-module/base').ModuleManifest
- *   isOverride?: boolean
- *   isPackaged: boolean
- * }} ModuleInfo
- */
+export interface ModuleInfo {
+	basePath: string
+	helpPath: string | null
+	display: ModuleDisplayInfo
+	manifest: ModuleManifest
+	isOverride?: boolean
+	isPackaged: boolean
+}
 
-/**
- * @typedef {import('@companion-app/shared/Model/ModuleInfo.js').ModuleDisplayInfo} ModuleDisplayInfo
- */
-
-class InstanceModules extends CoreBase {
+export class InstanceModules extends CoreBase {
 	/**
 	 * Last module info sent to clients
-	 * @type {Record<string, ModuleDisplayInfo> | null}
-	 * @access private
 	 */
-	#lastModulesJson = null
+	#lastModulesJson: Record<string, ModuleDisplayInfo> | null = null
 
 	/**
 	 * Known module info
-	 * @type {Map<string, ModuleInfo >}
-	 * @access private
-	 * @readonly
 	 */
-	#knownModules = new Map()
+	readonly #knownModules = new Map<string, ModuleInfo>()
 
 	/**
 	 * Module renames
-	 * @type {Map<string, string>}
-	 * @access private
-	 * @readonly
 	 */
-	#moduleRenames = new Map()
+	readonly #moduleRenames = new Map<string, string>()
 
 	/**
 	 * Module scanner helper
-	 * @access private
-	 * @readonly
 	 */
-	#moduleScanner = new InstanceModuleScanner()
+	readonly #moduleScanner = new InstanceModuleScanner()
 
-	/**
-	 * @param {import("../Registry.js").Registry} registry
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Instance/Modules')
 
 		this.registry.api_router.get('/help/module/:moduleId/*', this.#getHelpAsset)
@@ -85,12 +72,8 @@ class InstanceModules extends CoreBase {
 	 * Initialise instances
 	 * @param {string} extraModulePath - extra directory to search for modules
 	 */
-	async initInstances(extraModulePath) {
-		/**
-		 * @param {string} subpath
-		 * @returns {string}
-		 */
-		function generatePath(subpath) {
+	async initInstances(extraModulePath: string): Promise<void> {
+		function generatePath(subpath: string): string {
 			if (isPackaged()) {
 				return path.join(__dirname, subpath)
 			} else {
@@ -180,9 +163,8 @@ class InstanceModules extends CoreBase {
 
 	/**
 	 * Reload modules from developer path
-	 * @param {string} fullpath
 	 */
-	async reloadExtraModule(fullpath) {
+	async reloadExtraModule(fullpath: string): Promise<void> {
 		this.logger.info(`Attempting to reload module in: ${fullpath}`)
 
 		const reloadedModule = await this.#moduleScanner.loadInfoForModule(fullpath, true)
@@ -231,19 +213,16 @@ class InstanceModules extends CoreBase {
 
 	/**
 	 * Checks whether an instance_type has been renamed
-	 * @param {string} instance_type
-	 * @returns {string} the instance_type that should be used (often the provided parameter)
+	 * @returns the instance_type that should be used (often the provided parameter)
 	 */
-	verifyInstanceTypeIsCurrent(instance_type) {
+	verifyInstanceTypeIsCurrent(instance_type: string): string {
 		return this.#moduleRenames.get(instance_type) || instance_type
 	}
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('modules:subscribe', () => {
 			client.join(ModulesRoom)
 
@@ -259,11 +238,9 @@ class InstanceModules extends CoreBase {
 
 	/**
 	 * Get display version of module infos
-	 * @returns {Record<string, ModuleDisplayInfo>}
 	 */
-	getModulesJson() {
-		/** @type {Record<string, ModuleDisplayInfo>} */
-		const result = {}
+	getModulesJson(): Record<string, ModuleDisplayInfo> {
+		const result: Record<string, ModuleDisplayInfo> = {}
 
 		for (const [id, module] of this.#knownModules.entries()) {
 			if (module) result[id] = module.display
@@ -274,21 +251,17 @@ class InstanceModules extends CoreBase {
 
 	/**
 	 *
-	 * @access public
-	 * @param {string} moduleId
-	 * @return {ModuleInfo | undefined}
 	 */
-	getModuleManifest(moduleId) {
+	getModuleManifest(moduleId: string): ModuleInfo | undefined {
 		return this.#knownModules.get(moduleId)
 	}
 
 	/**
 	 * Load the help markdown file for a specified moduleId
-	 * @access public
-	 * @param {string} moduleId
-	 * @returns {Promise<[err: string, result: null] | [err: null, result: import('@companion-app/shared/Model/Common.js').HelpDescription]>}
 	 */
-	#getHelpForModule = async (moduleId) => {
+	#getHelpForModule = async (
+		moduleId: string
+	): Promise<[err: string, result: null] | [err: null, result: HelpDescription]> => {
 		try {
 			const moduleInfo = this.#knownModules.get(moduleId)
 			if (moduleInfo && moduleInfo.helpPath) {
@@ -319,12 +292,12 @@ class InstanceModules extends CoreBase {
 
 	/**
 	 * Return a module help asset over http
-	 * @param {import('express').Request<{ moduleId:string }>} req
-	 * @param {import('express').Response} res
-	 * @param {import('express').NextFunction} next
-	 * @returns
 	 */
-	#getHelpAsset = (req, res, next) => {
+	#getHelpAsset = (
+		req: express.Request<{ moduleId: string }>,
+		res: express.Response,
+		next: express.NextFunction
+	): void => {
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
 		// @ts-ignore
 		const file = req.params[0].replace(/\.\.+/g, '')
@@ -343,5 +316,3 @@ class InstanceModules extends CoreBase {
 		next()
 	}
 }
-
-export default InstanceModules

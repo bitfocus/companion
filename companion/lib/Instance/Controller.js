@@ -18,13 +18,13 @@
 import { nanoid } from 'nanoid'
 import { delay } from '../Resources/Util.js'
 import { CoreBase } from '../Core/Base.js'
-import InstanceDefinitions from './Definitions.js'
+import { InstanceDefinitions } from './Definitions.js'
 import ModuleHost, { ConnectionDebugLogRoom } from './Host.js'
-import InstanceStatus from './Status.js'
+import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import { isLabelValid, makeLabelSafe } from '../../../shared-lib/dist/Label.js'
-import InstanceModules from './Modules.js'
+import { InstanceModules } from './Modules.js'
 
 const InstancesRoom = 'instances'
 
@@ -38,7 +38,7 @@ const InstancesRoom = 'instances'
  * }} CreateConnectionData
  */
 
-class Instance extends CoreBase {
+class InstanceController extends CoreBase {
 	/** @type {Record<string, ClientConnectionConfig> | null} */
 	#lastClientJson = null
 
@@ -481,7 +481,7 @@ class Instance extends CoreBase {
 	/**
 	 * Get the status of an instance
 	 * @param {String} connectionId
-	 * @returns {import('./Status.js').StatusEntry}
+	 * @returns {import('@companion-app/shared/Model/Common.js').ConnectionStatusEntry|undefined}
 	 */
 	getConnectionStatus(connectionId) {
 		return this.status.getConnectionStatus(connectionId)
@@ -681,4 +681,4 @@ class Instance extends CoreBase {
 	}
 }
 
-export default Instance
+export default InstanceController

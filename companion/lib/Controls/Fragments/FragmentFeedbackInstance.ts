@@ -3,14 +3,13 @@ import { nanoid } from 'nanoid'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
 import { visitFeedbackInstance } from '../../Util/Visitors/FeedbackInstanceVisitor.js'
-import type InstanceDefinitions from '../../Instance/Definitions.js'
+import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type InternalController from '../../Internal/Controller.js'
 import type ModuleHost from '../../Instance/Host.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import type { FeedbackDefinition } from '../../Instance/Definitions.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
-import type { InternalVisitor } from '../../Internal/Types.js'
+import type { FeedbackDefinition, InternalVisitor } from '../../Internal/Types.js'
 
 export class FragmentFeedbackInstance {
 	/**
