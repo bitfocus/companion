@@ -3,6 +3,10 @@ import { CoreBase } from '../Core/Base.js'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
 import { default_nav_buttons_definitions } from './Defaults.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { PageModel, PageModelChangesItem } from '@companion-app/shared/Model/PageModel.js'
+import type { Registry } from '../Registry.js'
+import type { ClientSocket } from '../UI/Handler.js'
 
 const PagesRoom = 'pages'
 
@@ -27,34 +31,23 @@ const PagesRoom = 'pages'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-class PageController extends CoreBase {
+export class PageController extends CoreBase {
 	/**
 	 * Cache the location of each control
-	 * @type {Map<string, import('@companion-app/shared/Model/Common.js').ControlLocation>}
-	 * @access private
-	 * @readonly
 	 */
-	#locationCache = new Map()
+	readonly #locationCache = new Map<string, ControlLocation>()
 
 	/**
 	 * Pages data
-	 * @type {Record<string, import('@companion-app/shared/Model/PageModel.js').PageModel>}
-	 * @access private
-	 * @readonly
 	 */
-	#pagesById = {}
+	readonly #pagesById: Record<string, PageModel> = {}
 
 	/**
 	 * Page ids by index
-	 * @type {string[]}
-	 * @access private
 	 */
-	#pageIds = []
+	#pageIds: string[] = []
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Page/Controller')
 
 		const rawPageData = this.db.getKey('page', {}) ?? {}
@@ -64,10 +57,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket) {
 		client.onPromise('pages:set-name', (pageNumber, name) => {
 			this.logger.silly(`socket: pages:set-name ${pageNumber}: ${name}`)
 
@@ -202,11 +193,10 @@ class PageController extends CoreBase {
 	/**
 	 * Deletes a page
 	 * Note: Controls will be orphaned if not explicitly deleted by the caller
-	 * @param {number} pageNumber - the page id
+	 * @param pageNumber - the page id
 	 * @returns ControlIds referenced on the page
-	 * @access public
 	 */
-	deletePage(pageNumber) {
+	deletePage(pageNumber: number): string[] {
 		this.logger.silly('Delete page ' + pageNumber)
 
 		if (pageNumber === 1 && this.getPageCount() == 1) throw new Error(`Can't delete last page`)
@@ -246,18 +236,14 @@ class PageController extends CoreBase {
 
 	/**
 	 * Insert a new page, with the given page number
-	 * @param {number} asPageNumber
-	 * @param {string[]} pageNames
 	 */
-	insertPages(asPageNumber, pageNames) {
+	insertPages(asPageNumber: number, pageNames: string[]): string[] {
 		if (asPageNumber > this.getPageCount() + 1 || asPageNumber <= 0) throw new Error('New page number is out of range')
 
-		/** @type {import('@companion-app/shared/Model/PageModel.js').PageModel[]} */
-		const insertedPages = []
+		const insertedPages: PageModel[] = []
 
 		for (const pageName of pageNames) {
-			/** @type {import('@companion-app/shared/Model/PageModel.js').PageModel} */
-			const newPageInfo = {
+			const newPageInfo: PageModel = {
 				id: nanoid(),
 				name: pageName ?? 'PAGE',
 				controls: {},
@@ -299,18 +285,18 @@ class PageController extends CoreBase {
 
 	/**
 	 * Update page info and all renders for pages between two pages (inclusive)
-	 * @param {number} firstPageNumber
-	 * @param {number | null} lastPageNumber If null, run to the end
-	 * @return {{changedPageNumbers: number[], changedPageIds: Set<string>}}
+	 * @param firstPageNumber
+	 * @param lastPageNumber If null, run to the end
 	 */
-	#updateAndRedrawAllPagesAfter(firstPageNumber, lastPageNumber) {
+	#updateAndRedrawAllPagesAfter(
+		firstPageNumber: number,
+		lastPageNumber: number | null
+	): { changedPageNumbers: number[]; changedPageIds: Set<string> } {
 		// Rebuild location cache
 		this.#rebuildLocationCache()
 
-		/** @type {number[]} */
-		const changedPageNumbers = []
-		/** @type {Set<string>} */
-		const changedPageIds = new Set()
+		const changedPageNumbers: number[] = []
+		const changedPageIds = new Set<string>()
 
 		if (lastPageNumber) {
 			lastPageNumber = Math.min(lastPageNumber, this.#pageIds.length)
@@ -333,13 +319,10 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get the entire page table
-	 * @param {boolean} [clone = false] - <code>true</code> if a copy should be returned
-	 * @returns {Record<number, import('@companion-app/shared/Model/PageModel.js').PageModel>} the pages
-	 * @access public
+	 * @param [clone = false] - <code>true</code> if a copy should be returned
 	 */
-	getAll(clone = false) {
-		/** @type {Record<number, import('@companion-app/shared/Model/PageModel.js').PageModel>} **/
-		const savePages = {}
+	getAll(clone = false): Record<number, PageModel> {
+		const savePages: Record<number, PageModel> = {}
 		this.#pageIds.map((id, index) => {
 			const pageInfo = this.#pagesById[id]
 			savePages[index + 1] = pageInfo || {
@@ -358,10 +341,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get all ControlIds on the specified page
-	 * @param {number} pageNumber
-	 * @returns {string[]}
 	 */
-	getAllControlIdsOnPage(pageNumber) {
+	getAllControlIdsOnPage(pageNumber: number): string[] {
 		const page = this.getPageInfo(pageNumber)
 		if (page) {
 			return Object.values(page.controls)
@@ -374,14 +355,11 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get all populated locations on the specified page
-	 * @param {number} pageNumber
-	 * @returns {import('../Resources/Util.js').ControlLocation[]}
 	 */
-	getAllPopulatedLocationsOnPage(pageNumber) {
+	getAllPopulatedLocationsOnPage(pageNumber: number): ControlLocation[] {
 		const page = this.getPageInfo(pageNumber)
 		if (page) {
-			/** @type {import('../Resources/Util.js').ControlLocation[]} */
-			const locations = []
+			const locations: ControlLocation[] = []
 			for (const row of Object.keys(page.controls)) {
 				const rowObj = page.controls[Number(row)]
 				if (!rowObj) continue
@@ -406,56 +384,44 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get the id of the first page in the system
-	 * @return {string}
 	 */
-	getFirstPageId() {
+	getFirstPageId(): string {
 		return this.#pageIds[0]
 	}
 
 	/**
 	 * Get the index of the given page id
-	 * @param {string} pageId
-	 * @returns {number | null}
 	 */
-	getPageNumber(pageId) {
+	getPageNumber(pageId: string): number | null {
 		const index = this.#pageIds.indexOf(pageId)
 		return index >= 0 ? index + 1 : null
 	}
 
 	/**
 	 * Check whether a page number exists
-	 * @param {number} pageNumber
-	 * @returns {boolean}
 	 */
-	isPageValid(pageNumber) {
+	isPageValid(pageNumber: number): boolean {
 		return !!this.getPageInfo(pageNumber)
 	}
 
 	/**
 	 * Check whether a page id exists
-	 * @param {string} pageId
-	 * @returns {boolean}
 	 */
-	isPageIdValid(pageId) {
+	isPageIdValid(pageId: string): boolean {
 		return this.#pagesById[pageId] !== undefined
 	}
 
 	/**
 	 * Get the location of a controlId
-	 * @param {string} controlId
-	 * @returns {import('../Resources/Util.js').ControlLocation | undefined}
 	 */
-	getLocationOfControlId(controlId) {
+	getLocationOfControlId(controlId: string): ControlLocation | undefined {
 		return this.#locationCache.get(controlId)
 	}
 
 	/**
 	 * Set the controlId at a specific location
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @param {string | null} controlId
-	 * @returns {boolean}
 	 */
-	setControlIdAt(location, controlId) {
+	setControlIdAt(location: ControlLocation, controlId: string | null): boolean {
 		const page = this.getPageInfo(location.pageNumber)
 		if (page) {
 			if (!page.controls[location.row]) page.controls[location.row] = {}
@@ -499,10 +465,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get the controlId at a specific location
-	 * @param {import('../Resources/Util.js').ControlLocation} location
-	 * @returns {string | null}
 	 */
-	getControlIdAt(location) {
+	getControlIdAt(location: ControlLocation): string | null {
 		const page = this.getPageInfo(location.pageNumber)
 		if (page) {
 			return page.controls[location.row]?.[location.column]
@@ -513,11 +477,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get the controlId at a specific location
-	 * @param {number} pageNumber
-	 * @param {number} bank
-	 * @returns {string | null}
 	 */
-	getControlIdAtOldBankIndex(pageNumber, bank) {
+	getControlIdAtOldBankIndex(pageNumber: number, bank: number): string | null {
 		const xy = oldBankIndexToXY(bank)
 		if (xy) {
 			return this.getControlIdAt({
@@ -532,20 +493,17 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get the total number of pages
-	 * @returns number
 	 */
-	getPageCount() {
+	getPageCount(): number {
 		return this.#pageIds.length
 	}
 
 	/**
 	 * Get a specific page object
-	 * @param {number} pageNumber - the page id
-	 * @param {boolean} [clone = false] - <code>true</code> if a copy should be returned
-	 * @returns {import('@companion-app/shared/Model/PageModel.js').PageModel | undefined} the requested page
-	 * @access public
+	 * @param pageNumber - the page id
+	 * @param [clone = false] - <code>true</code> if a copy should be returned
 	 */
-	getPageInfo(pageNumber, clone = false) {
+	getPageInfo(pageNumber: number, clone = false): PageModel | undefined {
 		const pageId = this.#pageIds[pageNumber - 1]
 		if (!pageId) return undefined
 
@@ -559,11 +517,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get the name for a page
-	 * @param {number} pageNumber - the page id
-	 * @returns {string | undefined} the page's name
-	 * @access public
 	 */
-	getPageName(pageNumber) {
+	getPageName(pageNumber: number): string | undefined {
 		const pageInfo = this.getPageInfo(pageNumber)
 		if (!pageInfo) return undefined
 		return pageInfo.name ?? ''
@@ -571,11 +526,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Get the page id for a page offset from the specified id
-	 * @param {string} pageId
-	 * @param {number} offset
-	 * @returns {string|null}
 	 */
-	getOffsetPageId(pageId, offset) {
+	getOffsetPageId(pageId: string, offset: number): string | null {
 		const index = this.#pageIds.indexOf(pageId)
 		if (index === -1) return null
 
@@ -590,12 +542,11 @@ class PageController extends CoreBase {
 	/**
 	 * Reset a page to defaults and empty
 	 * Note: Controls will be orphaned if not explicitly deleted by the caller
-	 * @param {number} pageNumber - the page id
-	 * @param {boolean} [redraw = true] - <code>true</code> if the graphics should invalidate
+	 * @param pageNumber - the page id
+	 * @param [redraw = true] - <code>true</code> if the graphics should invalidate
 	 * @returns ControlIds referenced on the page
-	 * @access public
 	 */
-	resetPage(pageNumber, redraw = true) {
+	resetPage(pageNumber: number, redraw = true): string[] {
 		this.logger.silly('Reset page ' + pageNumber)
 
 		const removedControls = this.getAllControlIdsOnPage(pageNumber)
@@ -604,8 +555,7 @@ class PageController extends CoreBase {
 		const pageInfo = this.getPageInfo(pageNumber)
 		if (!pageInfo) return removedControls
 
-		/** @type {import('@companion-app/shared/Model/PageModel.js').PageModelChangesItem['controls']} */
-		const controlChanges = []
+		const controlChanges: PageModelChangesItem['controls'] = []
 
 		// Clear cache for old controls
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
@@ -642,10 +592,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Recreate the default nav buttons on a page
-	 * @param {number} pageNumber - the page id
-	 * @access public
 	 */
-	createPageDefaultNavButtons(pageNumber) {
+	createPageDefaultNavButtons(pageNumber: number): void {
 		for (const { type, location } of default_nav_buttons_definitions) {
 			const fullLocation = {
 				...location,
@@ -660,12 +608,9 @@ class PageController extends CoreBase {
 
 	/**
 	 * Finds all controls that are outside of the valid grid bounds
-	 * @returns {string[]}
-	 * @access public
 	 */
-	findAllOutOfBoundsControls() {
-		/** @type {string[]} */
-		const foundControlIds = []
+	findAllOutOfBoundsControls(): string[] {
+		const foundControlIds: string[] = []
 
 		const { minColumn, maxColumn, minRow, maxRow } = this.userconfig.getKey('gridSize')
 
@@ -693,12 +638,11 @@ class PageController extends CoreBase {
 
 	/**
 	 * Set/update a page
-	 * @param {number} pageNumber - the page id
-	 * @param {string} name - the page object containing the name
-	 * @param {boolean} [redraw = true] - <code>true</code> if the graphics should invalidate
-	 * @access public
+	 * @param pageNumber - the page id
+	 * @param name - the page object containing the name
+	 * @param redraw - <code>true</code> if the graphics should invalidate
 	 */
-	setPageName(pageNumber, name, redraw = true) {
+	setPageName(pageNumber: number, name: string, redraw = true): void {
 		const pageInfo = this.getPageInfo(pageNumber)
 		if (!pageInfo) {
 			throw new Error('Page must be created before it can be imported to')
@@ -724,10 +668,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Commit changes to a page entry
-	 * @param {number[]} pageNumbers
-	 * @param {boolean} redraw
 	 */
-	#commitChanges(pageNumbers, redraw = true) {
+	#commitChanges(pageNumbers: number[], redraw = true): void {
 		this.db.setKey('page', this.getAll(false))
 
 		for (const pageNumber of pageNumbers) {
@@ -744,10 +686,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Redraw the page number control on the specified page
-	 * @param {number} pageNumber
-	 * @param {import('@companion-app/shared/Model/PageModel.js').PageModel} pageInfo
 	 */
-	#invalidatePageNumberControls(pageNumber, pageInfo) {
+	#invalidatePageNumberControls(pageNumber: number, pageInfo: PageModel): void {
 		if (pageInfo?.controls) {
 			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 				for (const [column, controlId] of Object.entries(rowObj)) {
@@ -766,10 +706,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Redraw allcontrols on the specified page
-	 * @param {number} pageNumber
-	 * @param {import('@companion-app/shared/Model/PageModel.js').PageModel} pageInfo
 	 */
-	#invalidateAllControlsOnPageNumber(pageNumber, pageInfo) {
+	#invalidateAllControlsOnPageNumber(pageNumber: number, pageInfo: PageModel): void {
 		if (pageInfo?.controls) {
 			this.graphics.clearAllForPage(pageNumber)
 
@@ -788,7 +726,7 @@ class PageController extends CoreBase {
 		}
 	}
 
-	#rebuildLocationCache() {
+	#rebuildLocationCache(): void {
 		this.#locationCache.clear()
 
 		this.#pageIds.forEach((pageId, pageIndex) => {
@@ -810,10 +748,8 @@ class PageController extends CoreBase {
 
 	/**
 	 * Load the page table with defaults
-	 * @param {Record<string, import('@companion-app/shared/Model/PageModel.js').PageModel>} rawPageData
-	 * @access protected
 	 */
-	#setupPages(rawPageData) {
+	#setupPages(rawPageData: Record<string, PageModel>): void {
 		// Load existing data
 		for (let i = 1; true; i++) {
 			const pageInfo = rawPageData[i]
@@ -828,8 +764,7 @@ class PageController extends CoreBase {
 
 		// Default values
 		if (this.#pageIds.length === 0) {
-			/** @type {import('@companion-app/shared/Model/PageModel.js').PageModel} */
-			const newPageInfo = {
+			const newPageInfo: PageModel = {
 				id: nanoid(),
 				name: 'PAGE',
 				controls: {},
@@ -850,5 +785,3 @@ class PageController extends CoreBase {
 		this.#rebuildLocationCache()
 	}
 }
-
-export default PageController

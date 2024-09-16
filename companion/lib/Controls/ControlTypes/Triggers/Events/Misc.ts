@@ -1,10 +1,25 @@
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
-import LogController from '../../../../Log/Controller.js'
+import LogController, { Logger } from '../../../../Log/Controller.js'
+import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 
-/** @typedef {{ id: string, delay: number }} ConnectEvent */
-/** @typedef {{ id: string, pressed: boolean, delay?: undefined }} PressEvent */
-/** @typedef {{ id: string, isLocked: boolean, delay?: undefined }} LockEvent */
-/** @typedef {{ id: string, delay: number }} StartupEvent */
+interface ConnectEvent {
+	id: string
+	delay: number
+}
+interface PressEvent {
+	id: string
+	pressed: boolean
+	delay?: undefined
+}
+interface LockEvent {
+	id: string
+	isLocked: boolean
+	delay?: undefined
+}
+interface StartupEvent {
+	id: string
+	delay: number
+}
 
 /**
  * This is a special event runner, it handles miscellaneous simple events *
@@ -29,66 +44,45 @@ import LogController from '../../../../Log/Controller.js'
 export default class TriggersEventMisc {
 	/**
 	 * Enabled events listening for client connect
-	 * @type {ConnectEvent[]}
-	 * @access private
 	 */
-	#clientConnectEvents = []
+	#clientConnectEvents: ConnectEvent[] = []
 
 	/**
 	 * Enabled events listening for button presses
-	 * @type {PressEvent[]}
-	 * @access private
 	 */
-	#controlPressEvents = []
+	#controlPressEvents: PressEvent[] = []
 
 	/**
 	 * Enabled events listening for computer locked or unlocked events
-	 * @type {LockEvent[]}
-	 * @access private
 	 */
-	#computerLockEvents = []
+	#computerLockEvents: LockEvent[] = []
 
 	/**
 	 * Whether the trigger is currently enabled
-	 * @type {boolean}
-	 * @access private
 	 */
-	#enabled = false
+	#enabled: boolean = false
 
 	/**
 	 * Shared event bus, across all triggers
-	 * @type {import('../../../TriggerEvents.js').TriggerEvents}
-	 * @access private
 	 */
-	#eventBus
+	readonly #eventBus: TriggerEvents
 
 	/**
 	 * Execute the actions of the parent trigger
-	 * @type {(nowTime: number) => void}
-	 * @access private
 	 */
-	#executeActions
+	readonly #executeActions: (nowTime: number) => void
 
 	/**
 	 * The logger for this class
-	 * @type {import('winston').Logger}
-	 * @access protected
 	 */
-	#logger
+	readonly #logger: Logger
 
 	/**
 	 * Enabled events listening for startup
-	 * @type {StartupEvent[]}
-	 * @access private
 	 */
-	#startupEvents = []
+	#startupEvents: StartupEvent[] = []
 
-	/**
-	 * @param {import('../../../TriggerEvents.js').TriggerEvents} eventBus
-	 * @param {string} controlId
-	 * @param {(nowTime: number) => void} executeActions
-	 */
-	constructor(eventBus, controlId, executeActions) {
+	constructor(eventBus: TriggerEvents, controlId: string, executeActions: (nowTime: number) => void) {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Misc/${controlId}`)
 
 		this.#eventBus = eventBus
@@ -103,9 +97,8 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Destroy this event handler
-	 * @access public
 	 */
-	destroy() {
+	destroy(): void {
 		this.#eventBus.off('startup', this.#onStartup)
 		this.#eventBus.off('locked', this.#onLockedState)
 		this.#eventBus.off('client_connect', this.#onClientConnect)
@@ -114,12 +107,11 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Handler for the control_press event
-	 * @param {string} _controlId Id of the control which was pressed
-	 * @param {boolean} pressed Whether the control was pressed or depressed.
-	 * @param {string | undefined} surfaceId Source of the event
-	 * @access private
+	 * @param _controlId Id of the control which was pressed
+	 * @param pressed Whether the control was pressed or depressed.
+	 * @param surfaceId Source of the event
 	 */
-	#onControlPress = (_controlId, pressed, surfaceId) => {
+	#onControlPress = (_controlId: string, pressed: boolean, surfaceId: string | undefined): void => {
 		if (this.#enabled) {
 			// If the press originated from a trigger, then ignore it
 			const parsedSurfaceId = surfaceId ? ParseControlId(surfaceId) : undefined
@@ -141,7 +133,7 @@ export default class TriggersEventMisc {
 				setImmediate(() => {
 					try {
 						this.#executeActions(nowTime)
-					} catch (/** @type {any} */ e) {
+					} catch (e: any) {
 						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
 					}
 				})
@@ -151,31 +143,25 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Handler for the computer_locked and computer_unlocked event
-	 * @param {boolean} isLocked
-	 * @access private
 	 */
-	#onLockedState = (isLocked) => {
+	#onLockedState = (isLocked: boolean): void => {
 		const events = this.#computerLockEvents.filter((evt) => evt.isLocked === isLocked)
 		return this.#runEvents(events)
 	}
 
 	/**
 	 * Handler for the client_connect event
-	 * @access private
 	 */
-	#onClientConnect = () => this.#runEvents(this.#clientConnectEvents)
+	#onClientConnect = (): void => this.#runEvents(this.#clientConnectEvents)
 	/**
 	 * Handler for the startup event
-	 * @access private
 	 */
-	#onStartup = () => this.#runEvents(this.#startupEvents)
+	#onStartup = (): void => this.#runEvents(this.#startupEvents)
 
 	/**
 	 * Handler for an array of events
-	 * @param {ConnectEvent[] | PressEvent[] | LockEvent[] | StartupEvent[]} events
-	 * @access private
 	 */
-	#runEvents(events) {
+	#runEvents(events: ConnectEvent[] | PressEvent[] | LockEvent[] | StartupEvent[]): void {
 		if (this.#enabled) {
 			const nowTime = Date.now()
 
@@ -183,7 +169,7 @@ export default class TriggersEventMisc {
 				setTimeout(() => {
 					try {
 						this.#executeActions(nowTime)
-					} catch (/** @type {any} */ e) {
+					} catch (e: any) {
 						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
 					}
 				}, event.delay || 0)
@@ -193,18 +179,17 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Set whether the events are enabled
-	 * @param {boolean} enabled
 	 */
-	setEnabled(enabled) {
+	setEnabled(enabled: boolean): void {
 		this.#enabled = enabled
 	}
 
 	/**
 	 * Add a startup event listener
-	 * @param {string} id Id of the event
-	 * @param {number} delay Execution delay (ms) after the event fires
+	 * @param id Id of the event
+	 * @param delay Execution delay (ms) after the event fires
 	 */
-	setStartup(id, delay) {
+	setStartup(id: string, delay: number): void {
 		this.clearStartup(id)
 
 		this.#startupEvents.push({
@@ -215,18 +200,17 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Remove a startup event listener
-	 * @param {string} id Id of the event
 	 */
-	clearStartup(id) {
+	clearStartup(id: string): void {
 		this.#startupEvents = this.#startupEvents.filter((int) => int.id !== id)
 	}
 
 	/**
 	 * Add a client_connect event listener
-	 * @param {string} id Id of the event
-	 * @param {number} delay Execution delay (ms) after the event fires
+	 * @param id Id of the event
+	 * @param delay Execution delay (ms) after the event fires
 	 */
-	setClientConnect(id, delay) {
+	setClientConnect(id: string, delay: number): void {
 		this.clearClientConnect(id)
 
 		this.#clientConnectEvents.push({
@@ -237,18 +221,17 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Remove a client_connect event listener
-	 * @param {string} id Id of the event
 	 */
-	clearClientConnect(id) {
+	clearClientConnect(id: string): void {
 		this.#clientConnectEvents = this.#clientConnectEvents.filter((int) => int.id !== id)
 	}
 
 	/**
 	 * Add a control_press event listener
-	 * @param {string} id Id of the event
-	 * @param {boolean} pressed Listen for pressed or depressed events
+	 * @param id Id of the event
+	 * @param pressed Listen for pressed or depressed events
 	 */
-	setControlPress(id, pressed) {
+	setControlPress(id: string, pressed: boolean): void {
 		this.clearControlPress(id)
 
 		this.#controlPressEvents.push({
@@ -259,18 +242,17 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Remove a control_press event listener
-	 * @param {string} id Id of the event
 	 */
-	clearControlPress(id) {
+	clearControlPress(id: string): void {
 		this.#controlPressEvents = this.#controlPressEvents.filter((int) => int.id !== id)
 	}
 
 	/**
 	 * Add a computer_locked or computer_unlocked event listener
-	 * @param {string} id Id of the event
-	 * @param {boolean} isLocked Listen for locked or unlocked events
+	 * @param id Id of the event
+	 * @param isLocked Listen for locked or unlocked events
 	 */
-	setComputerLocked(id, isLocked) {
+	setComputerLocked(id: string, isLocked: boolean): void {
 		this.clearComputerLocked(id)
 
 		this.#computerLockEvents.push({
@@ -281,9 +263,8 @@ export default class TriggersEventMisc {
 
 	/**
 	 * Remove a computer_locked or computer_unlocked event listener
-	 * @param {string} id Id of the event
 	 */
-	clearComputerLocked(id) {
+	clearComputerLocked(id: string): void {
 		this.#computerLockEvents = this.#computerLockEvents.filter((int) => int.id !== id)
 	}
 }

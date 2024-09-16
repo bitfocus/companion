@@ -139,7 +139,7 @@ export default class Controls {
 	#controlsController
 
 	/**
-	 * @type {import('../Page/Controller.js').default}
+	 * @type {import('../Page/Controller.js').PageController}
 	 * @readonly
 	 */
 	#pagesController
@@ -154,7 +154,7 @@ export default class Controls {
 	 * @param {import('./Controller.js').default} internalModule
 	 * @param {import('../Graphics/Controller.js').GraphicsController} graphicsController
 	 * @param {import('../Controls/Controller.js').default} controlsController
-	 * @param {import('../Page/Controller.js').default} pagesController
+	 * @param {import('../Page/Controller.js').PageController} pagesController
 	 * @param {import('../Variables/Values.js').VariablesValues} variableController
 	 */
 	constructor(internalModule, graphicsController, controlsController, pagesController, variableController) {

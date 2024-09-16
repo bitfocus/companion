@@ -30,7 +30,11 @@ import type { ControlLocation } from '../Resources/Util.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'
 
-export class VariablesValues extends EventEmitter {
+interface VariablesValuesEvents {
+	variables_changed: [changed: Set<string>]
+}
+
+export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #logger = LogController.createLogger('Variables/Values')
 
 	#variableValues: VariableValueData = {}

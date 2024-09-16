@@ -6,7 +6,7 @@ import type { ClientSocket } from '../UI/Handler.js'
 import type { GraphicsController } from './Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type UIHandler from '../UI/Handler.js'
-import type PageController from '../Page/Controller.js'
+import type { PageController } from '../Page/Controller.js'
 import { ImageResult } from './ImageResult.js'
 
 /**

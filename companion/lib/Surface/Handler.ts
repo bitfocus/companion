@@ -26,7 +26,7 @@ import LogController, { Logger } from '../Log/Controller.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type ControlsController from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
-import type PageController from '../Page/Controller.js'
+import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from './Controller.js'
 import type DataUserConfig from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -77,7 +77,13 @@ export function getSurfaceName(config: Record<string, any>, surfaceId: string): 
 	return `${config?.name || config?.type || 'Unknown'} (${surfaceId})`
 }
 
-export class SurfaceHandler extends EventEmitter {
+interface SurfaceHandlerEvents {
+	interaction: []
+	unlocked: []
+	configUpdated: [Record<string, any> | undefined]
+}
+
+export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	static PanelDefaults = {
 		// defaults from the panel - TODO properly
 		brightness: 100,

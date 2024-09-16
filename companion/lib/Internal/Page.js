@@ -21,7 +21,7 @@ export default class Page {
 	// #logger = LogController.createLogger('Internal/Page')
 
 	/**
-	 * @type {import('../Page/Controller.js').default}
+	 * @type {import('../Page/Controller.js').PageController}
 	 * @readonly
 	 */
 	#pageController
@@ -35,7 +35,7 @@ export default class Page {
 	/**
 	 *
 	 * @param {import('./Controller.js').default} internalModule
-	 * @param {import('../Page/Controller.js').default} pageController
+	 * @param {import('../Page/Controller.js').PageController} pageController
 	 */
 	constructor(internalModule, pageController) {
 		this.#internalModule = internalModule
