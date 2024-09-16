@@ -1,4 +1,8 @@
 import { CoreBase } from '../Core/Base.js'
+import type { Registry } from '../Registry.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { ControlLocation } from '../Resources/Util.js'
 
 /**
  * Class to handle execution of actions.
@@ -21,30 +25,23 @@ import { CoreBase } from '../Core/Base.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ActionRunner extends CoreBase {
+export class ActionRunner extends CoreBase {
 	/**
 	 * Timers for all pending delayed actions
-	 * @type {Map<NodeJS.Timeout, string>}
-	 * @access private
-	 * @readonly
 	 */
-	#timers_running = new Map()
+	readonly #timers_running = new Map<NodeJS.Timeout, string>()
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry - the application core
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Control/ActionRunner')
 	}
 
 	/**
 	 * Abort all pending delayed actions
-	 * @access public
 	 */
-	abortAllDelayed() {
+	abortAllDelayed(): void {
 		this.logger.silly('Aborting delayed actions')
 
-		const affectedControlIds = new Set()
+		const affectedControlIds = new Set<string>()
 
 		// Clear the timers
 		for (const [timer, controlId] of this.#timers_running.entries()) {
@@ -61,11 +58,10 @@ export default class ActionRunner extends CoreBase {
 
 	/**
 	 * Abort pending delayed actions for a control
-	 * @param {string} controlId Id of the control
-	 * @param {boolean} skip_up Mark button as released
-	 * @access public
+	 * @param controlId Id of the control
+	 * @param skip_up Mark button as released
 	 */
-	abortControlDelayed(controlId, skip_up) {
+	abortControlDelayed(controlId: string, skip_up: boolean): void {
 		// Clear any timers
 		let cleared = false
 		for (const [timer, timerControlId] of this.#timers_running.entries()) {
@@ -86,11 +82,10 @@ export default class ActionRunner extends CoreBase {
 
 	/**
 	 * Abort pending delayed actions for a page
-	 * @param {number} pageNumber Page to abort actions for
-	 * @param {import('../Resources/Util.js').ControlLocation[]=} skipLocations locations to skip
-	 * @access public
+	 * @param pageNumber Page to abort actions for
+	 * @param skipLocations locations to skip
 	 */
-	abortPageDelayed(pageNumber, skipLocations) {
+	abortPageDelayed(pageNumber: number, skipLocations?: ControlLocation[]) {
 		const controlIds = new Set(this.page.getAllControlIdsOnPage(pageNumber))
 
 		// Remove any skipped locations
@@ -109,17 +104,14 @@ export default class ActionRunner extends CoreBase {
 
 	/**
 	 * Run a single action
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
-	 * @access private
 	 */
-	#runAction(action, extras) {
+	#runAction(action: ActionInstance, extras: RunActionExtras): void {
 		if (action.instance === 'internal') {
 			this.internalModule.executeAction(action, extras)
 		} else {
 			const instance = this.instance.moduleHost.getChild(action.instance)
 			if (instance) {
-				instance.actionRun(action, extras).catch((/** @type {any} */ e) => {
+				instance.actionRun(action, extras).catch((e) => {
 					this.logger.silly(`Error executing action for ${instance.connectionId}: ${e.message ?? e}`)
 				})
 			} else {
@@ -130,11 +122,8 @@ export default class ActionRunner extends CoreBase {
 
 	/**
 	 * Inform a control whether actions are running
-	 * @param {string} controlId
-	 * @param {boolean} running
-	 * @param {boolean=} skip_up
 	 */
-	#setControlIsRunning(controlId, running, skip_up) {
+	#setControlIsRunning(controlId: string, running: boolean, skip_up?: boolean) {
 		const control = this.controls.getControl(controlId)
 		if (control && control.supportsActions) {
 			control.setActionsRunning(running, skip_up ?? false)
@@ -143,14 +132,13 @@ export default class ActionRunner extends CoreBase {
 
 	/**
 	 * Run multiple actions
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions0
-	 * @param {string} controlId
-	 * @param {boolean} relative_delay
-	 * @param {Omit<import('../Instance/Wrapper.js').RunActionExtras, 'controlId' | 'location'>} extras
-	 * @returns {void}
-	 * @access public
 	 */
-	runMultipleActions(actions0, controlId, relative_delay, extras) {
+	runMultipleActions(
+		actions0: ActionInstance[],
+		controlId: string,
+		relative_delay: boolean,
+		extras: Omit<RunActionExtras, 'controlId' | 'location'>
+	): void {
 		const actions = actions0.filter((act) => !act.disabled)
 
 		if (actions.length === 0) {
@@ -158,8 +146,7 @@ export default class ActionRunner extends CoreBase {
 		}
 
 		// Handle whether the delays are absolute or relative.
-		/** @type {Record<string, number>} */
-		const effective_delays = {}
+		const effective_delays: Record<string, number> = {}
 		let tmp_delay = 0
 		for (const action of actions) {
 			let this_delay = !action.delay ? 0 : Number(action.delay)
@@ -178,8 +165,7 @@ export default class ActionRunner extends CoreBase {
 		}
 
 		const location = this.page.getLocationOfControlId(controlId)
-		/** @type {import('../Instance/Wrapper.js').RunActionExtras} */
-		const extra2 = {
+		const extra2: RunActionExtras = {
 			...(extras || {}),
 			location,
 			controlId,

@@ -1,30 +1,28 @@
-import ButtonControlBase from './Base.js'
+import { ButtonControlBase } from './Base.js'
 import { cloneDeep } from 'lodash-es'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
 import { clamp } from '../../../Resources/Util.js'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'
-import {
+import type {
 	ControlWithActionSets,
 	ControlWithActions,
 	ControlWithSteps,
 	ControlWithoutEvents,
 } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
-
-/**
- * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
- * @typedef {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
- */
+import type {
+	NormalButtonModel,
+	NormalButtonOptions,
+	NormalButtonSteps,
+} from '@companion-app/shared/Model/ButtonModel.js'
+import type { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type { Registry } from '../../../Registry.js'
+import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Class for the stepped button control.
  *
- * @extends ButtonControlBase
- * @implements {ControlWithSteps}
- * @implements {ControlWithActions}
- * @implements {ControlWithoutEvents}
- * @implements {ControlWithActionSets}
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -42,76 +40,35 @@ import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ControlButtonNormal extends ButtonControlBase {
-	/**
-	 * @readonly
-	 */
-	type = 'button'
+export default class ControlButtonNormal
+	extends ButtonControlBase<NormalButtonModel, NormalButtonOptions>
+	implements ControlWithSteps, ControlWithActions, ControlWithoutEvents, ControlWithActionSets
+{
+	readonly type = 'button'
 
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsActions = true
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsSteps = true
-	/**
-	 * @readonly
-	 * @type {false}
-	 */
-	supportsEvents = false
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsActionSets = true
+	readonly supportsActions = true
+	readonly supportsSteps = true
+	readonly supportsEvents = false
+	readonly supportsActionSets = true
 
 	/**
 	 * The defaults options for a step
-	 * @type {import('@companion-app/shared/Model/ActionModel.js').ActionStepOptions}
-	 * @access public
-	 * @static
 	 */
-	static DefaultStepOptions = {
+	static DefaultStepOptions: ActionStepOptions = {
 		runWhileHeld: [], // array of set ids
 	}
 
 	/**
 	 * The id of the currently selected (next to be executed) step
-	 * @access private
 	 */
-	#current_step_id = '0'
+	#current_step_id: string = '0'
 
 	/**
 	 * Button hold state for each surface
-	 * @type {Map<string, SurfaceHoldState>}
-	 * @access private
 	 */
-	#surfaceHoldState = new Map()
+	#surfaceHoldState = new Map<string, SurfaceHoldState>()
 
-	/**
-	 * Steps on this button
-	 * @access public
-	 * @type {Record<string, FragmentActions>}
-	 */
-	steps
-
-	/**
-	 * The config of this button
-	 * @type {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonOptions}
-	 */
-	options
-
-	/**
-	 * @param {import('../../../Registry.js').Registry} registry - the application core
-	 * @param {string} controlId - id of the control
-	 * @param {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonModel | null} storage - persisted storage object
-	 * @param {boolean} isImport - if this is importing a button, not creating at startup
-	 */
-	constructor(registry, controlId, storage, isImport) {
+	constructor(registry: Registry, controlId: string, storage: NormalButtonModel | null, isImport: boolean) {
 		super(registry, controlId, `Controls/Button/Normal/${controlId}`)
 
 		this.options = {
@@ -120,7 +77,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			stepAutoProgress: true,
 		}
 		this.steps = {
-			0: this.#getNewStepValue(),
+			0: this.#getNewStepValue(null, null),
 		}
 		this.#current_step_id = '0'
 
@@ -153,11 +110,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Abort any running 'while held' timers
-	 * @access protected
-	 * @param {string | undefined} surfaceId
-	 * @returns {void}
 	 */
-	abortRunningHoldTimers(surfaceId) {
+	private abortRunningHoldTimers(surfaceId: string | undefined): void {
 		if (surfaceId) {
 			const existingState = this.#surfaceHoldState.get(surfaceId)
 			if (existingState) {
@@ -182,13 +136,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Add an action to this control
-	 * @param {string} stepId
-	 * @param {string} setId
-	 * @param {ActionInstance} actionItem
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionAdd(stepId, setId, actionItem) {
+	actionAdd(stepId: string, setId: string, actionItem: ActionInstance): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionAdd(setId, actionItem)
@@ -199,12 +148,11 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Append some actions to this button
-	 * @param {string} stepId
-	 * @param {string} setId the action_set id to update
-	 * @param {ActionInstance[]} newActions actions to append
-	 * @access public
+	 * @param stepId
+	 * @param setId the action_set id to update
+	 * @param newActions actions to append
 	 */
-	actionAppend(stepId, setId, newActions) {
+	actionAppend(stepId: string, setId: string, newActions: ActionInstance[]): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionAppend(setId, newActions)
@@ -215,13 +163,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Duplicate an action on this control
-	 * @param {string} stepId
-	 * @param {string} setId
-	 * @param {string} id
-	 * @returns {string|null} success
-	 * @access public
 	 */
-	actionDuplicate(stepId, setId, id) {
+	actionDuplicate(stepId: string, setId: string, id: string): string | null {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionDuplicate(setId, id)
@@ -232,13 +175,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Enable or disable an action
-	 * @param {string} stepId
-	 * @param {string} setId
-	 * @param {string} id
-	 * @param {boolean} enabled
-	 * @access public
 	 */
-	actionEnabled(stepId, setId, id, enabled) {
+	actionEnabled(stepId: string, setId: string, id: string, enabled: boolean): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionEnabled(setId, id, enabled)
@@ -249,14 +187,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Set action headline
-	 * @param {string} stepId
-	 * @param {string} setId
-	 * @param {string} id
-	 * @param {string} headline
-	 * @returns {boolean}
-	 * @access public
 	 */
-	actionHeadline(stepId, setId, id, headline) {
+	actionHeadline(stepId: string, setId: string, id: string, headline: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionHeadline(setId, id, headline)
@@ -267,13 +199,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Learn the options for an action, by asking the instance for the current values
-	 * @param {string} stepId
-	 * @param {string} setId the id of the action set
-	 * @param {string} id the id of the action
-	 * @returns {Promise<boolean>} success
-	 * @access public
 	 */
-	async actionLearn(stepId, setId, id) {
+	async actionLearn(stepId: string, setId: string, id: string): Promise<boolean> {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionLearn(setId, id)
@@ -284,13 +211,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Remove an action from this control
-	 * @param {string} stepId
-	 * @param {string} setId the id of the action set
-	 * @param {string} id the id of the action
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionRemove(stepId, setId, id) {
+	actionRemove(stepId: string, setId: string, id: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionRemove(setId, id)
@@ -301,16 +223,15 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Reorder an action in the list or move between sets
-	 * @param {string} dragStepId
-	 * @param {string} dragSetId the action_set id to remove from
-	 * @param {number} dragIndex the index of the action to move
-	 * @param {string} dropStepId
-	 * @param {string} dropSetId the target action_set of the action
-	 * @param {number} dropIndex the target index of the action
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionReorder(dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex) {
+	actionReorder(
+		dragStepId: string,
+		dragSetId: string,
+		dragIndex: number,
+		dropStepId: string,
+		dropSetId: string,
+		dropIndex: number
+	): boolean {
 		const fromSet = this.steps[dragStepId]?.action_sets?.[dragSetId]
 		const toSet = this.steps[dropStepId]?.action_sets?.[dropSetId]
 		if (fromSet && toSet) {
@@ -329,23 +250,18 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Remove an action from this control
-	 * @param {Pick<ActionInstance, 'id' | 'action' | 'options'>} newProps
-	 * @access public
 	 */
-	actionReplace(newProps, skipNotifyModule = false) {
+	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
 		for (const step of Object.values(this.steps)) {
-			step.actionReplace(newProps, skipNotifyModule)
+			if (step.actionReplace(newProps, skipNotifyModule)) return true
 		}
+		return false
 	}
 
 	/**
 	 * Replace all the actions in a set
-	 * @param {string} stepId
-	 * @param {string} setId the action_set id to update
-	 * @param {ActionInstance[]} newActions actions to populate
-	 * @access public
 	 */
-	actionReplaceAll(stepId, setId, newActions) {
+	actionReplaceAll(stepId: string, setId: string, newActions: ActionInstance[]): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionReplaceAll(setId, newActions)
@@ -356,14 +272,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Set the delay of an action
-	 * @param {string} stepId
-	 * @param {string} setId the action_set id
-	 * @param {string} id the action id
-	 * @param {number} delay the desired delay
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionSetDelay(stepId, setId, id, delay) {
+	actionSetDelay(stepId: string, setId: string, id: string, delay: number): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionSetDelay(setId, id, delay)
@@ -374,15 +284,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Set an opton of an action
-	 * @param {string} stepId
-	 * @param {string} setId the action_set id
-	 * @param {string} id the action id
-	 * @param {string} key the desired option to set
-	 * @param {any} value the new value of the option
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionSetOption(stepId, setId, id, key, value) {
+	actionSetOption(stepId: string, setId: string, id: string, key: string, value: any): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionSetOption(setId, id, key, value)
@@ -393,11 +296,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Add an action set to this control
-	 * @param {string} stepId
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionSetAdd(stepId) {
+	actionSetAdd(stepId: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			let redraw = false
@@ -426,12 +326,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Remove an action-set from this control
-	 * @param {string} stepId
-	 * @param {string} setId0 the id of the action-set
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionSetRemove(stepId, setId0) {
+	actionSetRemove(stepId: string, setId0: string): boolean {
 		const setId = Number(setId0)
 
 		// Ensure valid
@@ -470,13 +366,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Rename an action-sets
-	 * @param {string} stepId
-	 * @param {string} oldSetId0 The old id of the set
-	 * @param {string} newSetId0 The new id for the set
-	 * @returns {boolean} success
-	 * @access public
 	 */
-	actionSetRename(stepId, oldSetId0, newSetId0) {
+	actionSetRename(stepId: string, oldSetId0: string, newSetId0: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			const newSetId = Number(newSetId0)
@@ -507,14 +398,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 		return false
 	}
 
-	/**
-	 * @param {string} stepId
-	 * @param {string} setId0
-	 * @param {boolean} runWhileHeld
-	 * @returns {boolean}
-	 * @access public
-	 */
-	actionSetRunWhileHeld(stepId, setId0, runWhileHeld) {
+	actionSetRunWhileHeld(stepId: string, setId0: string, runWhileHeld: boolean): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			// Ensure it is a number
@@ -543,9 +427,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Prepare this control for deletion
-	 * @access public
 	 */
-	destroy() {
+	destroy(): void {
 		this.abortRunningHoldTimers(undefined)
 
 		super.destroy()
@@ -553,20 +436,17 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Get the index of the current (next to execute) step
-	 * @returns {number} The index of current step
-	 * @access public
+	 * @returns The index of current step
 	 */
-	getActiveStepIndex() {
+	getActiveStepIndex(): number {
 		const out = GetStepIds(this.steps).indexOf(this.#current_step_id)
 		return out !== -1 ? out : 0
 	}
 
 	/**
 	 * Get the complete style object of a button
-	 * @returns {import('@companion-app/shared/Model/StyleModel.js').DrawStyleButtonModel} the processed style of the button
-	 * @override
 	 */
-	getDrawStyle() {
+	override getDrawStyle(): DrawStyleButtonModel {
 		const style = super.getDrawStyle()
 		if (!style) return style
 
@@ -577,13 +457,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 		return style
 	}
 
-	/**
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionSetsModel=} existingActions
-	 * @param {import("@companion-app/shared/Model/ActionModel.js").ActionStepOptions=} existingOptions
-	 */
-	#getNewStepValue(existingActions, existingOptions) {
-		/** @type {import('@companion-app/shared/Model/ActionModel.js').ActionSetsModel} */
-		const action_sets = existingActions || {
+	#getNewStepValue(existingActions: ActionSetsModel | null, existingOptions: ActionStepOptions | null) {
+		const action_sets: ActionSetsModel = existingActions || {
 			down: [],
 			up: [],
 		}
@@ -613,11 +488,10 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Collect the instance ids and labels referenced by this control
-	 * @param {Set<string>} foundConnectionIds - instance ids being referenced
-	 * @param {Set<string>} foundConnectionLabels - instance labels being referenced
-	 * @access public
+	 * @param foundConnectionIds - instance ids being referenced
+	 * @param foundConnectionLabels - instance labels being referenced
 	 */
-	collectReferencedConnections(foundConnectionIds, foundConnectionLabels) {
+	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
 		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = []
 
@@ -648,18 +522,14 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	/**
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
-	triggerLocationHasChanged() {
+	triggerLocationHasChanged(): void {
 		this.feedbacks.resubscribeAllFeedbacks('internal')
 	}
 
 	/**
 	 * Update an option field of this control
-	 * @access public
-	 * @param {string} key
-	 * @param {any} value
-	 * @returns {boolean}
 	 */
-	optionsSetField(key, value) {
+	optionsSetField(key: string, value: any): boolean {
 		// Check if rotary_actions should be added/remove
 		if (key === 'rotaryActions') {
 			for (const step of Object.values(this.steps)) {
@@ -682,19 +552,16 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Execute a press of this control
-	 * @param {boolean} pressed Whether the control is pressed
-	 * @param {string | undefined} surfaceId The surface that intiated this press
-	 * @param {boolean} force Trigger actions even if already in the state
-	 * @returns {void}
-	 * @access public
+	 * @param pressed Whether the control is pressed
+	 * @param surfaceId The surface that intiated this press
+	 * @param force Trigger actions even if already in the state
 	 */
-	pressControl(pressed, surfaceId, force) {
+	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
 		const [this_step_id, next_step_id] = this.#validateCurrentStepId()
 
 		let pressedDuration = 0
 		let pressedStep = this_step_id
-		/** @type {SurfaceHoldState | undefined} */
-		let holdState = undefined
+		let holdState: SurfaceHoldState | undefined = undefined
 		if (surfaceId) {
 			// Calculate the press duration, or track when the press started
 			if (pressed) {
@@ -738,8 +605,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			// Make sure to execute for the step that was active when the press started
 			const step = pressedStep && this.steps[pressedStep]
 			if (step) {
-				/** @type {string | number} */
-				let action_set_id = pressed ? 'down' : 'up'
+				let action_set_id: string | number = pressed ? 'down' : 'up'
 
 				if (!pressed && pressedDuration) {
 					// find the correct set to execute on up
@@ -752,11 +618,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 					}
 				}
 
-				/**
-				 * @param {string | number} set_id
-				 * @returns {void}
-				 */
-				const runActionSet = (set_id) => {
+				const runActionSet = (set_id: string | number): void => {
 					const actions = step.action_sets[set_id]
 					if (actions) {
 						this.logger.silly('found actions')
@@ -794,11 +656,10 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Execute a rotate of this control
-	 * @param {boolean} direction Whether the control was rotated to the right
-	 * @param {string | undefined} surfaceId The surface that intiated this rotate
-	 * @access public
+	 * @param direction Whether the control was rotated to the right
+	 * @param surfaceId The surface that intiated this rotate
 	 */
-	rotateControl(direction, surfaceId) {
+	rotateControl(direction: boolean, surfaceId: string | undefined): void {
 		const [this_step_id] = this.#validateCurrentStepId()
 
 		const step = this_step_id && this.steps[this_step_id]
@@ -820,16 +681,15 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Add a step to this control
-	 * @returns {string} Id of new step
-	 * @access public
+	 * @returns Id of new step
 	 */
-	stepAdd() {
+	stepAdd(): string {
 		const existingKeys = GetStepIds(this.steps)
 			.map((k) => Number(k))
 			.filter((k) => !isNaN(k))
 		if (existingKeys.length === 0) {
 			// add the default '0' set
-			this.steps['0'] = this.#getNewStepValue()
+			this.steps['0'] = this.#getNewStepValue(null, null)
 
 			this.commitChange(true)
 
@@ -839,7 +699,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			const max = Math.max(...existingKeys)
 
 			const stepId = `${max + 1}`
-			this.steps[stepId] = this.#getNewStepValue()
+			this.steps[stepId] = this.#getNewStepValue(null, null)
 
 			this.commitChange(true)
 
@@ -849,11 +709,9 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Progress through the action-sets
-	 * @param {number} amount Number of steps to progress
-	 * @returns {boolean} success
-	 * @access public
+	 * @param amount Number of steps to progress
 	 */
-	stepAdvanceDelta(amount) {
+	stepAdvanceDelta(amount: number): boolean {
 		if (amount && typeof amount === 'number') {
 			const all_steps = GetStepIds(this.steps)
 			if (all_steps.length > 0) {
@@ -873,11 +731,9 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Duplicate a step on this control
-	 * @param {string} stepId the id of the step to duplicate
-	 * @returns {boolean}
-	 * @access public
+	 * @param stepId the id of the step to duplicate
 	 */
-	stepDuplicate(stepId) {
+	stepDuplicate(stepId: string): boolean {
 		const existingKeys = GetStepIds(this.steps)
 			.map((k) => Number(k))
 			.filter((k) => !isNaN(k))
@@ -911,11 +767,9 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Set the current (next to execute) action-set by index
-	 * @param {number} index The step index to make the next
-	 * @returns {boolean} success
-	 * @access public
+	 * @param index The step index to make the next
 	 */
-	stepMakeCurrent(index) {
+	stepMakeCurrent(index: number): boolean {
 		if (typeof index === 'number') {
 			const stepId = GetStepIds(this.steps)[index - 1]
 			if (stepId !== undefined) {
@@ -928,11 +782,9 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Remove an action-set from this control
-	 * @param {string} stepId the id of the action-set
-	 * @returns {boolean} success
-	 * @access public
+	 * @param stepId the id of the action-set
 	 */
-	stepRemove(stepId) {
+	stepRemove(stepId: string): boolean {
 		const oldKeys = GetStepIds(this.steps)
 
 		if (oldKeys.length > 1) {
@@ -964,11 +816,9 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Set the current (next to execute) action-set by id
-	 * @param {string} stepId The step id to make the next
-	 * @returns {boolean} success
-	 * @access public
+	 * @param stepId The step id to make the next
 	 */
-	stepSelectCurrent(stepId) {
+	stepSelectCurrent(stepId: string): boolean {
 		if (this.steps[stepId]) {
 			// Ensure it isn't currently pressed
 			// this.setPushed(false)
@@ -987,12 +837,10 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Swap two action-sets
-	 * @param {string} stepId1 One of the action-sets
-	 * @param {string} stepId2 The other action-set
-	 * @returns {boolean} success
-	 * @access public
+	 * @param stepId1 One of the action-sets
+	 * @param stepId2 The other action-set
 	 */
-	stepSwap(stepId1, stepId2) {
+	stepSwap(stepId1: string, stepId2: string): boolean {
 		if (this.steps[stepId1] && this.steps[stepId2]) {
 			const tmp = this.steps[stepId1]
 			this.steps[stepId1] = this.steps[stepId2]
@@ -1008,12 +856,10 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Rename step
-	 * @param {string} stepId the id of the action-set
-	 * @param {string | undefined} newName the new name of the step
-	 * @returns {boolean} success
-	 * @access public
+	 * @param stepId the id of the action-set
+	 * @param newName the new name of the step
 	 */
-	stepRename(stepId, newName) {
+	stepRename(stepId: string, newName: string | undefined): boolean {
 		if (this.steps[stepId]) {
 			if (newName !== undefined) {
 				this.steps[stepId].rename(newName)
@@ -1028,13 +874,10 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param {boolean} clone - Whether to return a cloned object
-	 * @returns {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonModel}
-	 * @access public
+	 * @param clone - Whether to return a cloned object
 	 */
-	toJSON(clone = true) {
-		/** @type {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonSteps} */
-		const stepsJson = {}
+	override toJSON(clone = true): NormalButtonModel {
+		const stepsJson: NormalButtonSteps = {}
 		for (const [id, step] of Object.entries(this.steps)) {
 			stepsJson[id] = {
 				action_sets: step.action_sets,
@@ -1042,8 +885,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			}
 		}
 
-		/** @type {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonModel} */
-		const obj = {
+		const obj: NormalButtonModel = {
 			type: this.type,
 			style: this.feedbacks.baseStyle,
 			options: this.options,
@@ -1056,20 +898,14 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Get any volatile properties for the control
-	 * @access public
-	 * @override
 	 */
-	toRuntimeJSON() {
+	override toRuntimeJSON() {
 		return {
 			current_step_id: this.#current_step_id,
 		}
 	}
 
-	/**
-	 *
-	 * @returns {[null, null] | [string, string]}
-	 */
-	#validateCurrentStepId() {
+	#validateCurrentStepId(): [null, null] | [string, string] {
 		const this_step_raw = this.#current_step_id
 		const stepIds = GetStepIds(this.steps)
 		if (stepIds.length > 0) {
@@ -1088,10 +924,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	}
 }
 
-/**
- * @typedef {{
- *   pressed: number
- *   step: string | null
- *   timers: NodeJS.Timeout[]
- * }} SurfaceHoldState
- */
+interface SurfaceHoldState {
+	pressed: number
+	step: string | null
+	timers: NodeJS.Timeout[]
+}

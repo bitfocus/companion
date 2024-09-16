@@ -1,7 +1,8 @@
-import { ControlBase } from './ControlBase.js'
-import { FragmentFeedbacks } from './Fragments/FragmentFeedbacks.js'
-import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ControlBase } from './ControlBase.js'
+import type { FragmentFeedbacks } from './Fragments/FragmentFeedbacks.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithSteps | ControlWithoutSteps) &
@@ -80,7 +81,7 @@ export interface ControlWithoutSteps extends ControlBase<any> {
 export interface ControlWithStyle extends ControlBase<any> {
 	readonly supportsStyle: true
 
-	readonly button_status: 'good' | 'warning' | 'error'
+	readonly button_status: ButtonStatus
 
 	/**
 	 * Update the style fields of this control

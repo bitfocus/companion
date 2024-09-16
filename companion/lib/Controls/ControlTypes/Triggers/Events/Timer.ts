@@ -1,12 +1,34 @@
 import dayjs from 'dayjs'
-import LogController from '../../../../Log/Controller.js'
+import LogController, { Logger } from '../../../../Log/Controller.js'
+import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
-/** @typedef {{ id: string, period: number, lastExecute: number }} IntervalEvent */
-/** @typedef {{ id: string, time: Record<string, any>, nextExecute: number | null }} TimeOfDayEvent */
-/** @typedef {{ id: string, params: Record<string, any>, nextExecute: number }} SunEvent */
+interface IntervalEvent {
+	id: string
+	period: number
+	lastExecute: number
+}
+interface TimeOfDayEvent {
+	id: string
+	time: Record<string, any>
+	nextExecute: number | null
+}
+interface SunEvent {
+	id: string
+	params: Record<string, any>
+	nextExecute: number
+}
 
-/** @typedef {{ type: 'sunset' | 'sunrise', latitude: number, longitude: number, offset: number}} SunEventParams */
-/** @typedef {{ time: string, days: number[] }} TimeOfDayEventParams */
+// interface SunEventParams {
+// 	type: 'sunset' | 'sunrise'
+// 	latitude: number
+// 	longitude: number
+// 	offset: number
+// }
+// interface TimeOfDayEventParams {
+// 	time: string
+// 	days: number[]
+// }
 
 /**
  * This is the runner for time based trigger events
@@ -31,66 +53,45 @@ import LogController from '../../../../Log/Controller.js'
 export default class TriggersEventTimer {
 	/**
 	 * Whether the trigger is currently enabled
-	 * @type {boolean}
-	 * @access private
 	 */
-	#enabled = false
+	#enabled: boolean = false
 
 	/**
 	 * Shared event bus, across all triggers
-	 * @type {import('../../../TriggerEvents.js').TriggerEvents}
-	 * @access private
 	 */
-	#eventBus
+	readonly #eventBus: TriggerEvents
 
 	/**
 	 * Execute the actions of the parent trigger
-	 * @type {(nowTime: number) => void}
-	 * @access private
 	 */
-	#executeActions
+	readonly #executeActions: (nowTime: number) => void
 
 	/**
 	 * Enabled time interval events
-	 * @type {IntervalEvent[]}
-	 * @access private
 	 */
-	#intervalEvents = []
+	#intervalEvents: IntervalEvent[] = []
 
 	/**
 	 * The last tick received from the clock
-	 * @type {number}
-	 * @access private
 	 */
-	#lastTick
+	#lastTick: number
 
 	/**
 	 * The logger for this class
-	 * @type {import('winston').Logger}
-	 * @access protected
 	 */
-	#logger
+	readonly #logger: Logger
 
 	/**
 	 * Enabled time of day events
-	 * @type {TimeOfDayEvent[]}
-	 * @access private
 	 */
-	#timeOfDayEvents = []
+	#timeOfDayEvents: TimeOfDayEvent[] = []
 
 	/**
 	 * Enable sun based events
-	 * @type {SunEvent[]}
-	 * @access private
 	 */
-	#sunEvents = []
+	#sunEvents: SunEvent[] = []
 
-	/**
-	 * @param {import('../../../TriggerEvents.js').TriggerEvents} eventBus
-	 * @param {string} controlId
-	 * @param {(nowTime: number) => void} executeActions
-	 */
-	constructor(eventBus, controlId, executeActions) {
+	constructor(eventBus: TriggerEvents, controlId: string, executeActions: (nowTime: number) => void) {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Timer/${controlId}`)
 
 		this.#eventBus = eventBus
@@ -102,18 +103,15 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Destroy this event handler
-	 * @access public
 	 */
-	destroy() {
+	destroy(): void {
 		this.#eventBus.off('tick', this.#onTick)
 	}
 
 	/**
 	 * Get a description for an interval event
-	 * @param {import('../Trigger.js').EventInstance} event Event to describe
-	 * @returns
 	 */
-	getIntervalDescription(event) {
+	getIntervalDescription(event: EventInstance): string {
 		const seconds = Number(event.options.seconds)
 
 		let time = `${seconds} seconds`
@@ -128,10 +126,9 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Calculate the next unix time that an timeofday event should execute at
-	 * @param {Record<string, any>} time - time details for timeofday event
-	 * @returns {number | null}
+	 * @param time - time details for timeofday event
 	 */
-	#getNextTODExecuteTime(time) {
+	#getNextTODExecuteTime(time: Record<string, any>): number | null {
 		if (typeof time.time !== 'string' || !Array.isArray(time.days) || !time.days.length) return null
 
 		const timeMatch = time.time.match(/^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/i)
@@ -175,10 +172,8 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Get a description for a time of day event
-	 * @param {import('../Trigger.js').EventInstance} event Event to describe
-	 * @returns
 	 */
-	getTimeOfDayDescription(event) {
+	getTimeOfDayDescription(event: EventInstance): string {
 		let day_str = 'Unknown'
 		if (event.options.days) {
 			// @ts-ignore
@@ -205,11 +200,9 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Calculate the next unix time that an sunrise or set event should execute at
-	 * @param {Record<string, any>} input
-	 * @returns
 	 */
 
-	#getNextSunExecuteTime(input) {
+	#getNextSunExecuteTime(input: Record<string, any>): number {
 		let latitude = input.latitude
 		let longitude = input.longitude
 		let offset = input.offset
@@ -231,14 +224,7 @@ export default class TriggersEventTimer {
 
 		// Modified function to calculate the sunrise/set time by adam-carter-fms
 		// https://gist.github.com/adam-carter-fms/a44a14c0a8cdacbbc38276f6d553e024#file-sunriseset-js-L12
-		/**
-		 * @param {boolean} sunset
-		 * @param {number} latitude
-		 * @param {number} longitude
-		 * @param {number} offset
-		 * @param {number} nextDay
-		 */
-		function getSunEvent(sunset, latitude, longitude, offset, nextDay) {
+		function getSunEvent(sunset: boolean, latitude: number, longitude: number, offset: number, nextDay: number): Date {
 			const res = new Date()
 			res.setDate(res.getDate() + nextDay)
 			const now = res
@@ -330,10 +316,8 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Get a description for a sun event
-	 * @param {import('../Trigger.js').EventInstance} event Event to describe
-	 * @returns
 	 */
-	getSunDescription(event) {
+	getSunDescription(event: EventInstance): string {
 		let type_str = 'Undefined'
 		if (event.options.type == 'sunrise') {
 			type_str = 'Sunrise'
@@ -347,11 +331,10 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Handler for the timer tick event
-	 * @param {number} tickSeconds Number of ticks since application startup
-	 * @param {number} nowTime Current wall time of the event
-	 * @access private
+	 * @param tickSeconds Number of ticks since application startup
+	 * @param nowTime Current wall time of the event
 	 */
-	#onTick = (tickSeconds, nowTime) => {
+	#onTick = (tickSeconds: number, nowTime: number): void => {
 		let execute = false
 
 		for (const interval of this.#intervalEvents) {
@@ -382,7 +365,7 @@ export default class TriggersEventTimer {
 			setImmediate(() => {
 				try {
 					this.#executeActions(nowTime)
-				} catch (/** @type {any} */ e) {
+				} catch (e: any) {
 					this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
 				}
 			})
@@ -393,9 +376,8 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Set whether the events are enabled
-	 * @param {boolean} enabled
 	 */
-	setEnabled(enabled) {
+	setEnabled(enabled: boolean): void {
 		if (!this.#enabled && enabled) {
 			// Reset all the intervals, to be based from the next tick
 			for (const interval of this.#intervalEvents) {
@@ -408,10 +390,10 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Add an interval event listener
-	 * @param {string} id Id of the event
-	 * @param {number} period Time interval of the trigger (in seconds)
+	 * @param id Id of the event
+	 * @param period Time interval of the trigger (in seconds)
 	 */
-	setInterval(id, period) {
+	setInterval(id: string, period: number): void {
 		this.clearInterval(id)
 
 		if (period && period > 0) {
@@ -425,18 +407,15 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Remove an interval event listener
-	 * @param {string} id Id of the event
 	 */
-	clearInterval(id) {
+	clearInterval(id: string): void {
 		this.#intervalEvents = this.#intervalEvents.filter((int) => int.id !== id)
 	}
 
 	/**
 	 * Add a timeofday event listener
-	 * @param {string} id Id of the event
-	 * @param {Record<string, any>} time time details
 	 */
-	setTimeOfDay(id, time) {
+	setTimeOfDay(id: string, time: Record<string, any>): void {
 		this.clearTimeOfDay(id)
 
 		this.#timeOfDayEvents.push({
@@ -450,16 +429,14 @@ export default class TriggersEventTimer {
 	 * Remove a timeofday event listener
 	 * @param {string} id Id of the event
 	 */
-	clearTimeOfDay(id) {
+	clearTimeOfDay(id: string): void {
 		this.#timeOfDayEvents = this.#timeOfDayEvents.filter((tod) => tod.id !== id)
 	}
 
 	/**
 	 * Add a sun event listener
-	 * @param {string} id Id of the event
-	 * @param {Record<string, any>} params parameters: latitude, longitude and offset
 	 */
-	setSun(id, params) {
+	setSun(id: string, params: Record<string, any>): void {
 		this.clearSun(id)
 
 		this.#sunEvents.push({
@@ -471,9 +448,8 @@ export default class TriggersEventTimer {
 
 	/**
 	 * Remove a timeofday event listener
-	 * @param {string} id Id of the event
 	 */
-	clearSun(id) {
+	clearSun(id: string): void {
 		this.#sunEvents = this.#sunEvents.filter((sun) => sun.id !== id)
 	}
 }

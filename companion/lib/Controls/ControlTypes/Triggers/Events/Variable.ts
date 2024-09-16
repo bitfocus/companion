@@ -1,6 +1,11 @@
-import LogController from '../../../../Log/Controller.js'
+import LogController, { Logger } from '../../../../Log/Controller.js'
+import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
-/** @typedef {{ id: string, variableId: string }} VariableChangeEvent */
+interface VariableChangeEvent {
+	id: string
+	variableId: string
+}
 
 /**
  * This is the runner for variables based trigger events
@@ -25,45 +30,30 @@ import LogController from '../../../../Log/Controller.js'
 export default class TriggersEventVariables {
 	/**
 	 * Whether the trigger is currently enabled
-	 * @type {boolean}
-	 * @access private
 	 */
-	#enabled = false
+	#enabled: boolean = false
 
 	/**
 	 * Shared event bus, across all triggers
-	 * @type {import('../../../TriggerEvents.js').TriggerEvents}
-	 * @access private
 	 */
-	#eventBus
+	readonly #eventBus: TriggerEvents
 
 	/**
 	 * Execute the actions of the parent trigger
-	 * @type {(nowTime: number) => void}
-	 * @access private
 	 */
-	#executeActions
+	readonly #executeActions: (nowTime: number) => void
 
 	/**
 	 * The logger for this class
-	 * @type {import('winston').Logger}
-	 * @access protected
 	 */
-	#logger
+	readonly #logger: Logger
 
 	/**
 	 * Enabled time of day events
-	 * @type {VariableChangeEvent[]}
-	 * @access private
 	 */
-	#variableChangeEvents = []
+	#variableChangeEvents: VariableChangeEvent[] = []
 
-	/**
-	 * @param {import('../../../TriggerEvents.js').TriggerEvents} eventBus
-	 * @param {string} controlId
-	 * @param {(nowTime: number) => void} executeActions
-	 */
-	constructor(eventBus, controlId, executeActions) {
+	constructor(eventBus: TriggerEvents, controlId: string, executeActions: (nowTime: number) => void) {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Timer/${controlId}`)
 
 		this.#eventBus = eventBus
@@ -74,27 +64,23 @@ export default class TriggersEventVariables {
 
 	/**
 	 * Destroy this event handler
-	 * @access public
 	 */
-	destroy() {
+	destroy(): void {
 		this.#eventBus.off('variables_changed', this.#onVariablesChanged)
 	}
 
 	/**
 	 * Get a description for a variable_changed event
-	 * @param {import('../Trigger.js').EventInstance} event Event to describe
-	 * @returns
 	 */
-	getVariablesChangedDescription(event) {
+	getVariablesChangedDescription(event: EventInstance): string {
 		return `When <strong>$(${event.options.variableId})</strong> changes`
 	}
 
 	/**
 	 * Handler for the variable_changed event
-	 * @param {Set<string>} allChangedVariables Set of all the variables that have changed
-	 * @access private
+	 * @param allChangedVariables Set of all the variables that have changed
 	 */
-	#onVariablesChanged = (allChangedVariables) => {
+	#onVariablesChanged = (allChangedVariables: Set<string>): void => {
 		if (this.#enabled) {
 			let execute = false
 
@@ -110,7 +96,7 @@ export default class TriggersEventVariables {
 				setImmediate(() => {
 					try {
 						this.#executeActions(nowTime)
-					} catch (/** @type {any} */ e) {
+					} catch (e: any) {
 						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
 					}
 				})
@@ -120,18 +106,17 @@ export default class TriggersEventVariables {
 
 	/**
 	 * Set whether the events are enabled
-	 * @param {boolean} enabled
 	 */
-	setEnabled(enabled) {
+	setEnabled(enabled: boolean): void {
 		this.#enabled = enabled
 	}
 
 	/**
 	 * Add a variable_changed event listener
-	 * @param {string} id Id of the event
-	 * @param {string} variableId Id of the variable to watch
+	 * @param id Id of the event
+	 * @param variableId Id of the variable to watch
 	 */
-	setVariableChanged(id, variableId) {
+	setVariableChanged(id: string, variableId: string): void {
 		this.clearVariableChanged(id)
 
 		this.#variableChangeEvents.push({
@@ -142,9 +127,9 @@ export default class TriggersEventVariables {
 
 	/**
 	 * Remove a variable_changed event listener
-	 * @param {string} id Id of the event
+	 * @param id Id of the event
 	 */
-	clearVariableChanged(id) {
+	clearVariableChanged(id: string): void {
 		this.#variableChangeEvents = this.#variableChangeEvents.filter((int) => int.id !== id)
 	}
 }

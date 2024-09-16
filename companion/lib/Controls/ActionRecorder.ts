@@ -4,21 +4,22 @@ import jsonPatch from 'fast-json-patch'
 import { clamp } from '../Resources/Util.js'
 import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
+import type { Registry } from '../Registry.js'
+import type {
+	RecordActionTmp,
+	RecordSessionInfo,
+	RecordSessionListInfo,
+} from '@companion-app/shared/Model/ActionRecorderModel.js'
+import type { ClientSocket } from '../UI/Handler.js'
 
 const SessionListRoom = 'action-recorder:session-list'
-/**
- * @param {string} id
- * @returns {string}
- */
-function SessionRoom(id) {
+function SessionRoom(id: string): string {
 	return `action-recorder:session:${id}`
 }
 
-/**
- * @typedef {import('@companion-app/shared/Model/ActionRecorderModel.js').RecordSessionInfo} RecordSessionInfo
- * @typedef {import('@companion-app/shared/Model/ActionRecorderModel.js').RecordSessionListInfo} RecordSessionListInfo
- * @typedef {import('@companion-app/shared/Model/ActionRecorderModel.js').RecordActionTmp} RecordActionTmp
- */
+interface ActionRecorderEvents {
+	sessions_changed: [sessionIds: string[]]
+}
 
 /**
  * Class to handle recording of actions onto a control.
@@ -43,49 +44,33 @@ function SessionRoom(id) {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ActionRecorder extends EventEmitter {
-	#logger = LogController.createLogger('Control/ActionRecorder')
+export default class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
+	readonly #logger = LogController.createLogger('Control/ActionRecorder')
 
-	/**
-	 * @access private
-	 * @type {import('../Registry.js').Registry}
-	 * @readonly
-	 */
-	#registry
+	readonly #registry: Registry
 
 	/**
 	 * The connection ids which are currently informed to be recording
 	 * Note: this may contain some ids which are not,
-	 * @type {Set<string>}
-	 * @access private
 	 */
-	#currentlyRecordingConnectionIds = new Set()
+	#currentlyRecordingConnectionIds = new Set<string>()
 
 	/**
 	 * Data from the current recording session
-	 * @type {RecordSessionInfo}
-	 * @access private
 	 */
-	#currentSession
+	#currentSession: RecordSessionInfo
 
 	/**
 	 * The last sent info json object
-	 * @type {Record<string, RecordSessionListInfo> }
-	 * @access private
 	 */
-	#lastSentSessionListJson = {}
+	#lastSentSessionListJson: Record<string, RecordSessionListInfo> = {}
 
 	/**
 	 * The last sent info json object
-	 * @type {Record<string, RecordSessionInfo>}
-	 * @access private
 	 */
-	#lastSentSessionInfoJsons = {}
+	#lastSentSessionInfoJsons: Record<string, RecordSessionInfo> = {}
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry
-	 */
-	constructor(registry) {
+	constructor(registry: Registry) {
 		super()
 
 		this.#registry = registry
@@ -104,10 +89,8 @@ export default class ActionRecorder extends EventEmitter {
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {import('../UI/Handler.js').ClientSocket} client - the client socket
-	 * @access public
 	 */
-	clientConnect(client) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('action-recorder:subscribe', () => {
 			client.join(SessionListRoom)
 
@@ -165,7 +148,7 @@ export default class ActionRecorder extends EventEmitter {
 			this.setSelectedConnectionIds(connectionIds)
 		})
 
-		client.onPromise('action-recorder:session:subscribe', (/** @type {string} */ sessionId) => {
+		client.onPromise('action-recorder:session:subscribe', (sessionId) => {
 			if (!this.#currentSession || this.#currentSession.id !== sessionId)
 				throw new Error(`Invalid session: ${sessionId}`)
 
@@ -173,7 +156,7 @@ export default class ActionRecorder extends EventEmitter {
 
 			return this.#lastSentSessionInfoJsons[sessionId]
 		})
-		client.onPromise('action-recorder:session:unsubscribe', (/** @type {any} */ sessionId) => {
+		client.onPromise('action-recorder:session:unsubscribe', (sessionId) => {
 			client.leave(SessionRoom(sessionId))
 		})
 
@@ -231,19 +214,16 @@ export default class ActionRecorder extends EventEmitter {
 				this.commitChanges([sessionId])
 			}
 		})
-		client.onPromise(
-			'action-recorder:session:action-reorder',
-			(/** @type {string} */ sessionId, /** @type {number} */ oldIndex, /** @type {number} */ newIndex) => {
-				if (!this.#currentSession || this.#currentSession.id !== sessionId)
-					throw new Error(`Invalid session: ${sessionId}`)
+		client.onPromise('action-recorder:session:action-reorder', (sessionId, oldIndex, newIndex) => {
+			if (!this.#currentSession || this.#currentSession.id !== sessionId)
+				throw new Error(`Invalid session: ${sessionId}`)
 
-				oldIndex = clamp(oldIndex, 0, this.#currentSession.actions.length)
-				newIndex = clamp(newIndex, 0, this.#currentSession.actions.length)
-				this.#currentSession.actions.splice(newIndex, 0, ...this.#currentSession.actions.splice(oldIndex, 1))
+			oldIndex = clamp(oldIndex, 0, this.#currentSession.actions.length)
+			newIndex = clamp(newIndex, 0, this.#currentSession.actions.length)
+			this.#currentSession.actions.splice(newIndex, 0, ...this.#currentSession.actions.splice(oldIndex, 1))
 
-				this.commitChanges([sessionId])
-			}
-		)
+			this.commitChanges([sessionId])
+		})
 		client.onPromise('action-recorder:session:save-to-control', (sessionId, controlId, stepId, setId, mode) => {
 			if (!this.#currentSession || this.#currentSession.id !== sessionId)
 				throw new Error(`Invalid session: ${sessionId}`)
@@ -255,10 +235,9 @@ export default class ActionRecorder extends EventEmitter {
 	/**
 	 * Commit any changes to interested clients.
 	 * Informs all clients about the 'list' of sessions, and any interested clients about specified sessions
-	 * @param {Array<string>} sessionIds any sessions that have changed and should be diffed
-	 * @access protected
+	 * @param sessionIds any sessions that have changed and should be diffed
 	 */
-	commitChanges(sessionIds) {
+	private commitChanges(sessionIds: string[]) {
 		if (sessionIds && Array.isArray(sessionIds)) {
 			for (const sessionId of sessionIds) {
 				const sessionInfo = this.#currentSession && this.#currentSession.id === sessionId ? this.#currentSession : null
@@ -281,8 +260,7 @@ export default class ActionRecorder extends EventEmitter {
 			}
 		}
 
-		/** @type {Record<string, RecordSessionListInfo>} */
-		const newSessionListJson = {}
+		const newSessionListJson: Record<string, RecordSessionListInfo> = {}
 
 		if (this.#currentSession) {
 			newSessionListJson[this.#currentSession.id] = {
@@ -305,10 +283,8 @@ export default class ActionRecorder extends EventEmitter {
 	/**
 	 * Destroy the recorder session, and create a fresh one
 	 * Note: this discards any actions that havent yet been added to a control
-	 * @access public
-	 * @param {boolean} [preserveConnections]
 	 */
-	destroySession(preserveConnections) {
+	destroySession(preserveConnections?: boolean): void {
 		const oldSession = this.#currentSession
 
 		this.#currentSession.isRunning = false
@@ -333,22 +309,22 @@ export default class ActionRecorder extends EventEmitter {
 	/**
 	 * Discard all the actions currently held in the recording session
 	 */
-	discardActions() {
+	discardActions(): void {
 		this.#currentSession.actions = []
 
 		this.commitChanges([this.#currentSession.id])
 	}
 
-	getSession() {
+	getSession(): RecordSessionInfo {
 		return this.#currentSession
 	}
 
 	/**
 	 * An conncetion has just started/stopped, make sure it is aware if it should be recording
-	 * @param {string} connectionId
-	 * @param {boolean} running Whether it is now running
+	 * @param connectionId
+	 * @param running Whether it is now running
 	 */
-	connectionAvailabilityChange(connectionId, running) {
+	connectionAvailabilityChange(connectionId: string, running: boolean): void {
 		if (!running) {
 			if (this.#currentSession) {
 				// Remove the connection which has stopped
@@ -363,22 +339,21 @@ export default class ActionRecorder extends EventEmitter {
 
 	/**
 	 * Add an action received from a connection to the session
-	 * @access public
-	 * @param {string} connectionId
-	 * @param {string} actionId
-	 * @param {Record<string,any>} options
-	 * @param {number} delay
-	 * @param {string | undefined} uniquenessId
 	 */
-	receiveAction(connectionId, actionId, options, delay, uniquenessId) {
+	receiveAction(
+		connectionId: string,
+		actionId: string,
+		options: Record<string, any>,
+		delay: number,
+		uniquenessId: string | undefined
+	): void {
 		const changedSessionIds = []
 
 		if (this.#currentSession) {
 			const session = this.#currentSession
 
 			if (session.connectionIds.includes(connectionId)) {
-				/** @type {RecordActionTmp} */
-				const newAction = {
+				const newAction: RecordActionTmp = {
 					id: nanoid(),
 					instance: connectionId,
 					action: actionId,
@@ -409,12 +384,8 @@ export default class ActionRecorder extends EventEmitter {
 
 	/**
 	 * Save the recorded actions to a control
-	 * @param {string} controlId The id of the control
-	 * @param {string} stepId
-	 * @param {string} setId The action-set to write to (if applicable)
-	 * @param {string} mode 'replace' or 'append'
 	 */
-	saveToControlId(controlId, stepId, setId, mode) {
+	saveToControlId(controlId: string, stepId: string, setId: string, mode: 'replace' | 'append'): void {
 		if (mode !== 'replace' && mode !== 'append') throw new Error(`Invalid mode: ${mode}`)
 
 		const control = this.#registry.controls.getControl(controlId)
@@ -439,9 +410,8 @@ export default class ActionRecorder extends EventEmitter {
 
 	/**
 	 * Set the current session as recording
-	 * @param {boolean} isRunning
 	 */
-	setRecording(isRunning) {
+	setRecording(isRunning: boolean): void {
 		this.#currentSession.isRunning = !!isRunning
 		this.#syncRecording()
 
@@ -450,9 +420,8 @@ export default class ActionRecorder extends EventEmitter {
 
 	/**
 	 * Set the current connections being recorded from
-	 * @param {Array<string>} connectionIds0
 	 */
-	setSelectedConnectionIds(connectionIds0) {
+	setSelectedConnectionIds(connectionIds0: string[]): void {
 		if (!Array.isArray(connectionIds0)) throw new Error('Expected array of connection ids')
 		const allValidIds = new Set(this.#registry.instance.getAllInstanceIds())
 		const connectionIds = connectionIds0.filter((id) => allValidIds.has(id))
@@ -467,10 +436,10 @@ export default class ActionRecorder extends EventEmitter {
 	 * Sync the correct recording status to each connection
 	 * @access private
 	 */
-	#syncRecording() {
-		const ps = []
+	#syncRecording(): void {
+		const ps: Promise<any>[] = []
 
-		const targetRecordingConnectionIds = new Set()
+		const targetRecordingConnectionIds = new Set<string>()
 		if (this.#currentSession && this.#currentSession.isRunning) {
 			for (const id of this.#currentSession.connectionIds) {
 				targetRecordingConnectionIds.add(id)
@@ -483,7 +452,7 @@ export default class ActionRecorder extends EventEmitter {
 			const connection = this.#registry.instance.moduleHost.getChild(connectionId)
 			if (connection) {
 				ps.push(
-					connection.startStopRecordingActions(true).catch((/** @type {any} */ e) => {
+					connection.startStopRecordingActions(true).catch((e) => {
 						this.#logger.warn(`Failed to start recording for "${connectionId}": ${e}`)
 					})
 				)
@@ -496,7 +465,7 @@ export default class ActionRecorder extends EventEmitter {
 				const connection = this.#registry.instance.moduleHost.getChild(connectionId)
 				if (connection) {
 					ps.push(
-						connection.startStopRecordingActions(false).catch((/** @type {any} */ e) => {
+						connection.startStopRecordingActions(false).catch((e) => {
 							this.#logger.warn(`Failed to stop recording for "${connectionId}": ${e}`)
 						})
 					)

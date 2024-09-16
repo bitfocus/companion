@@ -3,27 +3,22 @@ import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { cloneDeep } from 'lodash-es'
 import { FragmentFeedbacks } from '../../Fragments/FragmentFeedbacks.js'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
-import {
+import type {
 	ControlWithFeedbacks,
 	ControlWithOptions,
 	ControlWithPushed,
 	ControlWithStyle,
 } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
-
-/**
- * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
- * @typedef {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
- */
+import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
+import type { Registry } from '../../../Registry.js'
+import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 /**
  * Abstract class for a editable button control.
  *
- * @extends ControlBase
- * @implements {ControlWithStyle}
- * @implements {ControlWithFeedbacks}
- * @implements {ControlWithOptions}
- * @implements {ControlWithPushed}
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -42,91 +37,58 @@ import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class ButtonControlBase extends ControlBase {
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsStyle = true
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsFeedbacks = true
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsOptions = true
-	/**
-	 * @readonly
-	 * @type {true}
-	 */
-	supportsPushed = true
+export abstract class ButtonControlBase<TJson, TOptions extends Record<string, any>>
+	extends ControlBase<TJson>
+	implements ControlWithStyle, ControlWithFeedbacks, ControlWithOptions, ControlWithPushed
+{
+	readonly supportsStyle = true
+	readonly supportsFeedbacks = true
+	readonly supportsOptions = true
+	readonly supportsPushed = true
 
 	/**
 	 * The defaults options for a button
-	 * @type {import('@companion-app/shared/Model/ButtonModel.js').ButtonOptionsBase}
-	 * @access public
-	 * @static
 	 */
-	static DefaultOptions = {
+	static DefaultOptions: ButtonOptionsBase = {
 		relativeDelay: false,
 	}
 
 	/**
 	 * The feedbacks fragment
-	 * @type {FragmentFeedbacks}
-	 * @access public
-	 * @readonly
 	 */
-	feedbacks
+	readonly feedbacks: FragmentFeedbacks
 
 	/**
 	 * The current status of this button
-	 * @type {'good' | 'warning' | 'error'}
-	 * @access protected
 	 */
-	button_status = 'good'
+	button_status: ButtonStatus = 'good'
 
 	/**
 	 * The config of this button
-	 * @type {import('@companion-app/shared/Model/ButtonModel.js').ButtonOptionsBase}
 	 */
-	options
+	options: TOptions
 
 	/**
 	 * Whether this button has delayed actions running
-	 * @access protected
 	 */
 	has_actions_running = false
 
 	/**
 	 * Whether this button is currently pressed
-	 * @access public
 	 */
 	pushed = false
 
 	/**
 	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
-	 * @access protected
-	 * @type {Set<string> | null}
 	 */
-	last_draw_variables = null
+	protected last_draw_variables: Set<string> | null = null
 
 	/**
 	 * Steps on this button
-	 * @access public
-	 * @type {Record<number, FragmentActions>}
 	 */
-	steps = {}
+	steps: Record<string, FragmentActions> = {}
 
-	/**
-	 * @param {import('../../../Registry.js').Registry} registry
-	 * @param {string} controlId
-	 * @param {string} debugNamespace
-	 */
-	constructor(registry, controlId, debugNamespace) {
+	constructor(registry: Registry, controlId: string, debugNamespace: string) {
 		super(registry, controlId, debugNamespace)
 
 		this.feedbacks = new FragmentFeedbacks(
@@ -148,7 +110,7 @@ export default class ButtonControlBase extends ControlBase {
 	 */
 	checkButtonStatus = (redraw = true) => {
 		// Find all the connections referenced by the button
-		const connectionIds = new Set()
+		const connectionIds = new Set<string>()
 		for (const step of Object.values(this.steps)) {
 			for (const actions of Object.values(step.action_sets)) {
 				if (!actions) continue
@@ -160,8 +122,7 @@ export default class ButtonControlBase extends ControlBase {
 		}
 
 		// Figure out the combined status
-		/** @type {'good' | 'warning' | 'error'} */
-		let status = 'good'
+		let status: ButtonStatus = 'good'
 		for (const connectionId of connectionIds) {
 			const connectionStatus = this.instance.getConnectionStatus(connectionId)
 			if (connectionStatus) {
@@ -191,20 +152,15 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Remove any tracked state for a connection
-	 * @param {string} connectionId
-	 * @returns {void}
-	 * @access public
 	 */
-	clearConnectionState(connectionId) {
+	clearConnectionState(connectionId: string): void {
 		this.feedbacks.clearConnectionState(connectionId)
 	}
 
 	/**
 	 * Prepare this control for deletion
-	 * @returns {void}
-	 * @access public
 	 */
-	destroy() {
+	destroy(): void {
 		this.feedbacks.destroy()
 
 		for (const step of Object.values(this.steps)) {
@@ -216,11 +172,8 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Remove any actions and feedbacks referencing a specified connectionId
-	 * @param {string} connectionId
-	 * @returns {void}
-	 * @access public
 	 */
-	forgetConnection(connectionId) {
+	forgetConnection(connectionId: string): void {
 		const changedFeedbacks = this.feedbacks.forgetConnection(connectionId)
 
 		let changedSteps = false
@@ -236,10 +189,9 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Get all the actions on this control
-	 * @returns {ActionInstance[]}
 	 */
-	getAllActions() {
-		const actions = []
+	getAllActions(): ActionInstance[] {
+		const actions: ActionInstance[] = []
 
 		for (const step of Object.values(this.steps)) {
 			for (const set of Object.values(step.action_sets)) {
@@ -253,25 +205,21 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Get the size of the bitmap render of this control
-	 * @access public
-	 * @abstract
 	 */
-	getBitmapSize() {
+	getBitmapSize(): { width: number; height: number } | null {
 		return GetButtonBitmapSize(this.registry, this.feedbacks.baseStyle)
 	}
 
 	/**
 	 * Get the complete style object of a button
-	 * @returns {import('@companion-app/shared/Model/StyleModel.js').DrawStyleButtonModel} the processed style of the button
-	 * @access public
+	 * @returns the processed style of the button
 	 */
-	getDrawStyle() {
+	getDrawStyle(): DrawStyleButtonModel {
 		let style = this.feedbacks.getUnparsedStyle()
 
 		if (style.text) {
 			// Block out the button text
-			/** @type {import('@companion-module/base').CompanionVariableValues} */
-			const injectedVariableValues = {}
+			const injectedVariableValues: CompanionVariableValues = {}
 			const location = this.page.getLocationOfControlId(this.controlId)
 			if (location) {
 				// Ensure we don't enter into an infinite loop
@@ -320,10 +268,9 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Propagate variable changes
-	 * @param {Set<string>} allChangedVariables - variables with changes
-	 * @access public
+	 * @param allChangedVariables - variables with changes
 	 */
-	onVariablesChanged(allChangedVariables) {
+	onVariablesChanged(allChangedVariables: Set<string>): void {
 		if (this.last_draw_variables) {
 			for (const variable of allChangedVariables.values()) {
 				if (this.last_draw_variables.has(variable)) {
@@ -338,11 +285,8 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Update an option field of this control
-	 * @access public
-	 * @param {string} key
-	 * @param {any} value
 	 */
-	optionsSetField(key, value) {
+	optionsSetField(key: string, value: any): boolean {
 		// @ts-ignore
 		this.options[key] = value
 
@@ -353,10 +297,8 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
-	 * @returns {void}
-	 * @access protected
 	 */
-	postProcessImport() {
+	protected postProcessImport(): void {
 		const ps = []
 
 		ps.push(this.feedbacks.postProcessImport())
@@ -374,25 +316,11 @@ export default class ButtonControlBase extends ControlBase {
 	}
 
 	/**
-	 * Execute a press of this control
-	 * @param {boolean} _pressed Whether the control is pressed
-	 * @param {string | undefined} _surfaceId The surface that intiated this press
-	 * @param {boolean=} _force Trigger actions even if already in the state
-	 * @returns {void}
-	 * @access public
-	 * @abstract
-	 */
-	pressControl(_pressed, _surfaceId, _force) {
-		throw new Error('must be implemented by subclass!')
-	}
-
-	/**
 	 * Rename a connection for variables used in this control
-	 * @param {string} labelFrom - the old connection short name
-	 * @param {string} labelTo - the new connection short name
-	 * @access public
+	 * @param labelFrom - the old connection short name
+	 * @param labelTo - the new connection short name
 	 */
-	renameVariables(labelFrom, labelTo) {
+	renameVariables(labelFrom: string, labelTo: string): void {
 		const allFeedbacks = this.feedbacks.getAllFeedbacks()
 		const allActions = []
 		for (const step of Object.values(this.steps)) {
@@ -417,11 +345,10 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Mark the button as having pending delayed actions
-	 * @param {boolean} running Whether any delayed actions are pending
-	 * @param {boolean} skip_up Mark the button as released, skipping the release actions
-	 * @access public
+	 * @param running Whether any delayed actions are pending
+	 * @param skip_up Mark the button as released, skipping the release actions
 	 */
-	setActionsRunning(running, skip_up) {
+	setActionsRunning(running: boolean, skip_up: boolean): void {
 		this.has_actions_running = running
 
 		if (skip_up) {
@@ -434,12 +361,11 @@ export default class ButtonControlBase extends ControlBase {
 	/**
 	 * Set the button as being pushed.
 	 * Notifies interested observers
-	 * @param {boolean} direction new state
-	 * @param {string=} surfaceId surface which triggered the change
-	 * @returns {boolean} the pushed state changed
-	 * @access public
+	 * @param direction new state
+	 * @param surfaceId surface which triggered the change
+	 * @returns the pushed state changed
 	 */
-	setPushed(direction, surfaceId) {
+	setPushed(direction: boolean, surfaceId?: string): boolean {
 		const wasPushed = this.pushed
 		// Record is as pressed
 		this.pushed = !!direction
@@ -462,11 +388,10 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Update the style fields of this control
-	 * @param {Record<string, any>} diff - config diff to apply
-	 * @returns {boolean} true if any changes were made
-	 * @access public
+	 * @param diff - config diff to apply
+	 * @returns true if any changes were made
 	 */
-	styleSetFields(diff) {
+	styleSetFields(diff: Record<string, any>): boolean {
 		if (diff.png64) {
 			// Strip the prefix off the base64 png
 			if (typeof diff.png64 === 'string' && diff.png64.match(/data:.*?image\/png/)) {
@@ -498,10 +423,8 @@ export default class ButtonControlBase extends ControlBase {
 	/**
 	 * Prune all actions/feedbacks referencing unknown connections
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 * @param {Set<string>} knownConnectionIds
-	 * @access public
 	 */
-	verifyConnectionIds(knownConnectionIds) {
+	verifyConnectionIds(knownConnectionIds: Set<string>): void {
 		const changedFeedbacks = this.feedbacks.verifyConnectionIds(knownConnectionIds)
 
 		let changedSteps = false

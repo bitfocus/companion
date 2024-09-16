@@ -10,7 +10,7 @@ import {
 	formatLocation,
 } from '@companion-app/shared/ControlId.js'
 import { ControlConfigRoom } from './ControlBase.js'
-import ActionRunner from './ActionRunner.js'
+import { ActionRunner } from './ActionRunner.js'
 import ActionRecorder from './ActionRecorder.js'
 import ControlTrigger from './ControlTypes/Triggers/Trigger.js'
 import { nanoid } from 'nanoid'
