@@ -771,10 +771,15 @@ class SurfaceController extends CoreBase {
 		return result
 	}
 
-	reset() {
+	async reset() {
 		// Each active handler will re-add itself when doing the save as part of its own reset
 		this.db.setKey('deviceconfig', {})
 		this.db.setKey('surface-groups', {})
+		this.#outboundController.reset()
+
+		// Wait for the surfaces to disconnect before clearing their config
+		await new Promise((resolve) => setTimeout(resolve, 500))
+
 		this.#resetAllDevices()
 		this.updateDevicesList()
 	}

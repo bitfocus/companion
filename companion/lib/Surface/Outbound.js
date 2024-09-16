@@ -187,6 +187,22 @@ export class SurfaceOutboundController {
 		})
 	}
 
+	reset() {
+		this.#streamdeckTcpConnectionManager.disconnectFromAll()
+
+		/** @type {import('@companion-app/shared/Model/Surfaces.js').OutboundSurfacesUpdateRemoveOp[]} */
+		const ops = Object.keys(this.#storage).map((id) => ({
+			type: 'remove',
+			itemId: id,
+		}))
+		if (ops.length > 0) {
+			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', ops)
+		}
+
+		this.#storage = {}
+		this.#saveToDb()
+	}
+
 	quit() {
 		this.#streamdeckTcpConnectionManager.disconnectFromAll()
 	}

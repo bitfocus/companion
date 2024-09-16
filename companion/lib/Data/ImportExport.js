@@ -961,7 +961,7 @@ class DataImportExport extends CoreBase {
 		}
 
 		if (!config || config.surfaces) {
-			this.surfaces.reset()
+			await this.surfaces.reset()
 		}
 
 		if (!config || config.triggers) {
