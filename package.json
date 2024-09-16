@@ -6,8 +6,7 @@
     "companion",
     "shared-lib",
     "webui",
-    "launcher",
-    "vendor/*"
+    "launcher"
   ],
   "type": "module",
   "scripts": {

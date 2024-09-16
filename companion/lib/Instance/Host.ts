@@ -1,7 +1,5 @@
-import LogController from '../Log/Controller.js'
+import LogController, { Logger } from '../Log/Controller.js'
 import PQueue from 'p-queue'
-// @ts-ignore
-import Respawn from 'respawn'
 import { nanoid } from 'nanoid'
 import path from 'path'
 import semver from 'semver'
@@ -9,6 +7,11 @@ import { SocketEventsHandler } from './Wrapper.js'
 import fs from 'fs-extra'
 import ejson from 'ejson'
 import os from 'os'
+import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import type { Registry } from '../Registry.js'
+import type { InstanceStatus } from './Status.js'
+import { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInfo } from './Modules.js'
 
 // This is a messy way to load a package.json, but createRequire, or path.resolve aren't webpack safe
 const moduleBasePkgStr = fs
@@ -26,10 +29,9 @@ const validApiRange = new semver.Range(
 
 /**
  * A backoff sleep strategy
- * @param {number} i
- * @returns {number} ms to sleep
+ * @returns ms to sleep
  */
-function sleepStrategy(i) {
+function sleepStrategy(i: number): number {
 	const low = 3
 	const min = 1000
 	const max = 60 * 1000
@@ -42,57 +44,38 @@ function sleepStrategy(i) {
 
 /**
  *
- * @param {string} id
- * @returns {`connection-debug:update:${string}`}
  */
-export function ConnectionDebugLogRoom(id) {
+export function ConnectionDebugLogRoom(id: string): `connection-debug:update:${string}` {
 	return `connection-debug:update:${id}`
 }
 
-/**
- * @typedef {{
- *   connectionId: string
- *   logger: import('winston').Logger
- *   restartCount: number
- *   isReady: boolean
- *   monitor?: any
- *   handler?: SocketEventsHandler
- *   lifeCycleQueue: PQueue
- *   authToken?: string
- *   crashed?: NodeJS.Timeout
- *   skipApiVersionCheck?: boolean
- * }} ModuleChild
- */
+interface ModuleChild {
+	connectionId: string
+	logger: Logger
+	restartCount: number
+	isReady: boolean
+	monitor?: any
+	handler?: SocketEventsHandler
+	lifeCycleQueue: PQueue
+	authToken?: string
+	crashed?: NodeJS.Timeout
+	skipApiVersionCheck?: boolean
+}
 
 class ModuleHost {
-	#logger = LogController.createLogger('Instance/ModuleHost')
+	readonly #logger = LogController.createLogger('Instance/ModuleHost')
 
-	/**
-	 * @type {import('../Registry.js').Registry}
-	 */
-	#registry
-
-	/**
-	 * @type {import('./Status.js').InstanceStatus}
-	 */
-	#instanceStatus
+	readonly #registry: Registry
+	readonly #instanceStatus: InstanceStatus
 
 	/**
 	 * Queue for starting connections, to limit how many can be starting concurrently
-	 * @type {PQueue}
 	 */
-	#startQueue
+	readonly #startQueue: PQueue
 
-	/**
-	 * @type {Map<string, ModuleChild>}
-	 */
-	#children
+	#children: Map<string, ModuleChild>
 
-	/**
-	 * @param {import('../Registry.js').Registry} registry
-	 * @param {import('./Status.js').InstanceStatus} instanceStatus
-	 */
-	constructor(registry, instanceStatus) {
+	constructor(registry: Registry, instanceStatus: InstanceStatus) {
 		this.#registry = registry
 		this.#instanceStatus = instanceStatus
 
@@ -104,11 +87,8 @@ class ModuleHost {
 
 	/**
 	 * Bind events/initialise a connected child process
-	 * @param {ModuleChild} child
-	 * @param {() => void} startupCompleted
-	 * @param {(err: Error) => void} startupFailed
 	 */
-	#listenToModuleSocket(child, startupCompleted, startupFailed) {
+	#listenToModuleSocket(child: ModuleChild, startupCompleted: () => void, startupFailed: (err: Error) => void): void {
 		const forceRestart = () => {
 			// Force restart the connection, as it failed to initialise and will be broken
 			child.restartCount++
@@ -138,11 +118,7 @@ class ModuleHost {
 
 		const debugLogRoom = ConnectionDebugLogRoom(child.connectionId)
 
-		/**
-		 * @param {Record<string, any>} msg
-		 * @returns {void}
-		 */
-		const initHandler = (msg) => {
+		const initHandler = (msg: Record<string, any>): void => {
 			if (msg.direction === 'call' && msg.name === 'register' && msg.callbackId && msg.payload) {
 				const { apiVersion, connectionId, verificationToken } = ejson.parse(msg.payload)
 				if (!child.skipApiVersionCheck && !validApiRange.test(apiVersion)) {
@@ -243,11 +219,8 @@ class ModuleHost {
 
 	/**
 	 * Get a handle to an active instance
-	 * @param {string} connectionId
-	 * @param {boolean=} allowInitialising
-	 * @returns {SocketEventsHandler | undefined} ??
 	 */
-	getChild(connectionId, allowInitialising) {
+	getChild(connectionId: string, allowInitialising?: boolean): SocketEventsHandler | undefined {
 		const child = this.#children.get(connectionId)
 		if (child && (child.isReady || allowInitialising)) {
 			return child.handler
@@ -260,7 +233,7 @@ class ModuleHost {
 	 * Resend feedbacks to all active instances.
 	 * This will trigger a subscribe call for each feedback
 	 */
-	resubscribeAllFeedbacks() {
+	resubscribeAllFeedbacks(): void {
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady) {
 				child.handler.sendAllFeedbackInstances().catch((/** @type {any} */ e) => {
@@ -273,9 +246,8 @@ class ModuleHost {
 	/**
 	 * Send a list of changed variables to all active instances.
 	 * This will trigger feedbacks using variables to be rechecked
-	 * @param {Set<string>} all_changed_variables_set
 	 */
-	onVariablesChanged(all_changed_variables_set) {
+	onVariablesChanged(all_changed_variables_set: Set<string>): void {
 		const changedVariableIds = Array.from(all_changed_variables_set)
 
 		for (const child of this.#children.values()) {
@@ -290,9 +262,8 @@ class ModuleHost {
 	/**
 	 * Stop all running instances
 	 */
-	async queueStopAllConnections() {
-		/** @type {Array<Promise<void>>} */
-		const ps = []
+	async queueStopAllConnections(): Promise<void> {
+		const ps: Promise<void>[] = []
 
 		for (const connectionId of this.#children.keys()) {
 			ps.push(this.queueStopConnection(connectionId))
@@ -303,9 +274,8 @@ class ModuleHost {
 
 	/**
 	 * Stop an instance process/thread
-	 * @param {string} connectionId
 	 */
-	async queueStopConnection(connectionId) {
+	async queueStopConnection(connectionId: string): Promise<void> {
 		const child = this.#children.get(connectionId)
 		if (child) {
 			await child.lifeCycleQueue.add(async () => this.#doStopConnectionInner(connectionId, true))
@@ -314,11 +284,10 @@ class ModuleHost {
 
 	/**
 	 * Stop an instance running
-	 * @access private
-	 * @param {string} connectionId
-	 * @param {boolean} allowDeleteIfEmpty delete the work-queue if it has no further jobs
+	 * @param connectionId
+	 * @param allowDeleteIfEmpty delete the work-queue if it has no further jobs
 	 */
-	async #doStopConnectionInner(connectionId, allowDeleteIfEmpty) {
+	async #doStopConnectionInner(connectionId: string, allowDeleteIfEmpty: boolean): Promise<void> {
 		const child = this.#children.get(connectionId)
 		if (child) {
 			// Ensure a new child cant register
@@ -358,11 +327,9 @@ class ModuleHost {
 
 	/**
 	 * Update the logger label for a child process
-	 * @param {string} connectionId
-	 * @param {string} label
 	 */
-	updateChildLabel(connectionId, label) {
-		let child = this.#children.get(connectionId)
+	updateChildLabel(connectionId: string, label: string): void {
+		const child = this.#children.get(connectionId)
 		if (child) {
 			child.logger = LogController.createLogger(`Instance/${label}`)
 		}
@@ -370,12 +337,12 @@ class ModuleHost {
 
 	/**
 	 * Start or restart an instance process
-	 * @access public
-	 * @param {string} connectionId
-	 * @param {import('@companion-app/shared/Model/Connections.js').ConnectionConfig} config
-	 * @param {import('./Modules.js').ModuleInfo | undefined} moduleInfo
 	 */
-	async queueRestartConnection(connectionId, config, moduleInfo) {
+	async queueRestartConnection(
+		connectionId: string,
+		config: ConnectionConfig,
+		moduleInfo: ModuleInfo | undefined
+	): Promise<void> {
 		if (!config || !moduleInfo) return
 
 		let child = this.#children.get(connectionId)
@@ -447,16 +414,16 @@ class ModuleHost {
 							}
 						}
 
-						const cmd = [
+						const cmd: string[] = [
 							// Future: vary depending on module version
 							// 'node', // For now we can use fork
 							inspectPort !== undefined ? `--inspect=${inspectPort}` : undefined,
 							jsPath,
-						].filter((v) => !!v)
+						].filter((v): v is string => !!v)
 						this.#logger.silly(`Connection "${config.label}" command: ${JSON.stringify(cmd)}`)
 
-						const monitor = Respawn(cmd, {
-							name: `Connection "${config.label}"(${connectionId})`,
+						const monitor = new RespawnMonitor(cmd, {
+							// name: `Connection "${config.label}"(${connectionId})`,
 							env: {
 								CONNECTION_ID: connectionId,
 								VERIFICATION_TOKEN: child.authToken,
