@@ -382,6 +382,7 @@ class Instance extends CoreBase {
 		// forward cleanup elsewhere
 		this.definitions.forgetConnection(id)
 		this.#variablesController.values.forgetConnection(id, label)
+		this.#variablesController.definitions.forgetConnection(id, label)
 		this.controls.forgetConnection(id)
 	}
 
