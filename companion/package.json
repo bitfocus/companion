@@ -10,7 +10,7 @@
 		"dev:inner": "run -TB zx ../tools/dev.mjs --extra-module-path=../module-local-dev",
 		"dev:debug": "run dev:inner --admin-address 127.0.0.1 --log-level silly",
 		"build:watch": "tsc --watch",
-		"build": "webpack",
+		"build": "tsc && webpack",
 		"check-types": "tsc --noEmit",
 		"watch-types": "tsc --noEmit --watch"
 	},
@@ -40,7 +40,6 @@
 		"@types/uuid": "^10.0.0",
 		"@types/ws": "^8.5.12",
 		"supertest": "^7.0.0",
-		"ts-loader": "^9.5.1",
 		"typescript": "~5.5.4",
 		"webpack": "^5.94.0",
 		"webpack-cli": "^5.1.4"

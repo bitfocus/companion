@@ -9,9 +9,9 @@ const buildFile = fs.readFileSync(path.join(__dirname, '../BUILD')).toString().t
 
 module.exports = {
 	entry: {
-		main: './lib/main.ts',
+		main: './dist/main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
-		RenderThread: './lib/Graphics/Thread.ts',
+		RenderThread: './dist/Graphics/Thread.js',
 	},
 	mode: 'production',
 	devtool: sentryAuthToken ? 'source-map' : undefined,
@@ -74,17 +74,6 @@ module.exports = {
 				generator: {
 					filename: 'SENTRY',
 				},
-			},
-			{
-				test: /.([cm]?ts|tsx)$/,
-				use: [
-					{
-						loader: 'ts-loader',
-						options: {
-							transpileOnly: true,
-						},
-					},
-				],
 			},
 		],
 	},
