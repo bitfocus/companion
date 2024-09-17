@@ -24,10 +24,6 @@ import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/Fee
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
 
-	// /**
-	//  * @type {import('./Controller.js').default}
-	//  * @readonly
-	//  */
 	// #internalModule
 
 	// constructor(internalModule) {

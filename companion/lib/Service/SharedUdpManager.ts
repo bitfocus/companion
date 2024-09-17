@@ -22,8 +22,6 @@ import LogController, { Logger } from '../Log/Controller.js'
 export class ServiceSharedUdpManager {
 	// /**
 	//  * The logger for this class
-	//  * @type {import('winston').Logger}
-	//  * @access private
 	//  */
 	// #logger = LogController.createLogger(`Service/SharedUdpManager`)
 
@@ -164,7 +162,7 @@ class ServiceSharedUdpPort {
 			}
 		})
 
-		this.waitForBind = /** @type {Promise<void>} */ new Promise((resolve, reject) => {
+		this.waitForBind = new Promise<void>((resolve, reject) => {
 			this.socket.once('error', reject)
 			this.socket.bind(portNumber, resolve)
 		})

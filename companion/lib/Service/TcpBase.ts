@@ -40,8 +40,7 @@ export abstract class ServiceTcpBase extends ServiceBase {
 		if (this.server === undefined) {
 			try {
 				this.server = net.createServer((client) => {
-					/** @type {TcpClientInfo} */
-					const clientInfo = {
+					const clientInfo: TcpClientInfo = {
 						name: client.remoteAddress + ':' + client.remotePort,
 						receiveBuffer: '',
 						socket: client,

@@ -77,8 +77,6 @@ export class DataStoreBase {
 
 	/**
 	 * The interval to fire a save to disk when dirty
-	 * @type {number}
-	 * @access protected
 	 */
 	private readonly saveInterval: number
 

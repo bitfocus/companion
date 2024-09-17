@@ -60,6 +60,7 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ActionInstance, ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 type DownloadFormat = 'json-gz' | 'json'
 function parseDownloadFormat(raw: ParsedQs[0]): DownloadFormat | undefined {
@@ -706,8 +707,7 @@ export class DataImportExport extends CoreBase {
 							// Import the control
 							const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
 
-							/** @type {import('../Resources/Util.js').ControlLocation} */
-							const location = {
+							const location: ControlLocation = {
 								pageNumber: Number(topage),
 								column: Number(column),
 								row: Number(row),

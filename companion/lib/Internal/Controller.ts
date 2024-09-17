@@ -220,7 +220,6 @@ export class InternalController extends CoreBase {
 	#feedbackGetValue(feedback: FeedbackInstanceExt): any {
 		for (const fragment of this.fragments) {
 			if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
-				/** @type {} */
 				let value: ReturnType<Required<InternalModuleFragment>['executeFeedback']> | undefined
 				try {
 					value = fragment.executeFeedback(feedback)

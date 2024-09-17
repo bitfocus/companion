@@ -433,7 +433,7 @@ export class FragmentFeedbacks {
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	async postProcessImport(): Promise<void> {
-		await Promise.all(this.#feedbacks.postProcessImport()).catch((/** @type {any} */ e) => {
+		await Promise.all(this.#feedbacks.postProcessImport()).catch((e) => {
 			this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
 		})
 	}

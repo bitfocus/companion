@@ -6,6 +6,7 @@ import { StreamDeckTcpDefinition, StreamDeckTcpDiscoveryService } from '@elgato-
 import type { Registry } from '../Registry.js'
 import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { ClientSocket } from '../UI/Handler.js'
+import type { DropdownChoice } from '@companion-module/base'
 
 const SurfaceDiscoveryRoom = 'surfaces:discovery'
 
@@ -242,8 +243,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		client.onPromise('surfaces:discovery:get-external:addresses', async () => {
 			const rawInterfacesList = await systeminformation.networkInterfaces()
 
-			/** @type {import('@companion-module/base').DropdownChoice[]} */
-			const addresses = []
+			const addresses: DropdownChoice[] = []
 
 			try {
 				const systemInfo = await systeminformation.osInfo()

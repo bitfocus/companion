@@ -54,9 +54,6 @@ export class FragmentFeedbackInstance {
 		return this.#data.instance_id
 	}
 
-	/**
-	 * @type {any}
-	 */
 	get cachedValue(): any {
 		return this.#cachedValue
 	}
@@ -163,7 +160,7 @@ export class FragmentFeedbackInstance {
 		// Inform relevant module
 		const connection = this.#moduleHost.getChild(this.#data.instance_id, true)
 		if (connection) {
-			connection.feedbackDelete(this.asFeedbackInstance()).catch((/** @type {any} */ e) => {
+			connection.feedbackDelete(this.asFeedbackInstance()).catch((e) => {
 				this.#logger.silly(`feedback_delete to connection failed: ${e.message}`)
 			})
 		}
@@ -188,7 +185,7 @@ export class FragmentFeedbackInstance {
 			} else {
 				const connection = this.#moduleHost.getChild(this.#data.instance_id, true)
 				if (connection) {
-					connection.feedbackUpdate(this.asFeedbackInstance(), this.#controlId).catch((/** @type {any} */ e) => {
+					connection.feedbackUpdate(this.asFeedbackInstance(), this.#controlId).catch((e) => {
 						this.#logger.silly(`feedback_update to connection failed: ${e.message} ${e.stack}`)
 					})
 				}

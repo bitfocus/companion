@@ -163,7 +163,6 @@ export class SurfaceIPSatellite extends EventEmitter implements SurfacePanel {
 		this.#streamText = deviceInfo.streamText
 		this.#streamTextStyle = deviceInfo.streamTextStyle
 
-		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,

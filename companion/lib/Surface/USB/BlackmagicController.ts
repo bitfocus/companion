@@ -89,7 +89,6 @@ export class SurfaceUSBBlackmagicController extends EventEmitter implements Surf
 
 		this.#device = blackmagicController
 
-		/** @type {import('../Types.js').SurfacePanelInfo} */
 		this.info = {
 			type: `Blackmagic ${this.#device.PRODUCT_NAME}`,
 			devicePath: devicePath,

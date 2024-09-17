@@ -74,8 +74,7 @@ export class GraphicsPreview {
 	 * Setup a client's calls
 	 */
 	clientConnect(client: ClientSocket) {
-		/** @type {Map<string, Set<string>>} */
-		const locationSubsForClient = new Map()
+		const locationSubsForClient = new Map<string, Set<string>>()
 		const getLocationSubId = (location: ControlLocation): string =>
 			`${location.pageNumber}_${location.row}_${location.column}`
 

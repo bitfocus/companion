@@ -114,8 +114,7 @@ export class InstanceController extends CoreBase {
 
 	reloadUsesOfModule(module_id: string): void {
 		// restart usages of this module
-		/** @type {string[]} */
-		let reloadLabels = []
+		let reloadLabels: string[] = []
 		for (const [id, instance_config] of Object.entries(this.store.db)) {
 			if (instance_config && instance_config.instance_type === module_id && instance_config.enabled) {
 				reloadLabels.push(instance_config.label)

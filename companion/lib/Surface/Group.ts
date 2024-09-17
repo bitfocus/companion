@@ -43,10 +43,8 @@ export class SurfaceGroup {
 
 	/**
 	 * The current page of this surface group
-	 * @type {string}
-	 * @access private
 	 */
-	#currentPageId
+	#currentPageId: string
 
 	/**
 	 * The surfaces belonging to this group

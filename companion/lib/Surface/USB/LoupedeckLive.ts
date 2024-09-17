@@ -258,29 +258,26 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter {
 			this.emit('remove')
 		})
 
-		this.#writeQueue = new ImageWriteQueue(
-			this.#logger,
-			async (/** @type {number} */ key, /** @type {import('../../Graphics/ImageResult.js').ImageResult} */ render) => {
-				const width = this.#loupedeck.lcdKeySize
-				const height = this.#loupedeck.lcdKeySize
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, render) => {
+			const width = this.#loupedeck.lcdKeySize
+			const height = this.#loupedeck.lcdKeySize
 
-				let newbuffer
-				try {
-					newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
-				} catch (e) {
-					this.#logger.debug(`scale image failed: ${e}`)
-					this.emit('remove')
-					return
-				}
-
-				try {
-					await this.#loupedeck.drawKeyBuffer(key, newbuffer, LoupedeckBufferFormat.RGB)
-				} catch (e) {
-					this.#logger.debug(`fillImage failed: ${e}`)
-					this.emit('remove')
-				}
+			let newbuffer
+			try {
+				newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
+			} catch (e) {
+				this.#logger.debug(`scale image failed: ${e}`)
+				this.emit('remove')
+				return
 			}
-		)
+
+			try {
+				await this.#loupedeck.drawKeyBuffer(key, newbuffer, LoupedeckBufferFormat.RGB)
+			} catch (e) {
+				this.#logger.debug(`fillImage failed: ${e}`)
+				this.emit('remove')
+			}
+		})
 	}
 
 	/**

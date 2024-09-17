@@ -180,7 +180,6 @@ export class ControlsController extends CoreBase {
 
 			const fromControl = this.getControl(fromControlId)
 			if (!fromControl) return false
-			/** @type {any} */
 			const controlJson = fromControl.toJSON(true)
 
 			// Delete the control at the destination
@@ -711,8 +710,7 @@ export class ControlsController extends CoreBase {
 			this.#controls.set(controlId, newControl)
 
 			// Add trigger to the end of the list
-			/** @type {ControlTrigger[]} */
-			const allTriggers = []
+			const allTriggers: ControlTrigger[] = []
 			for (const control of this.#controls.values()) {
 				if (control instanceof ControlTrigger) {
 					allTriggers.push(control)
@@ -755,7 +753,6 @@ export class ControlsController extends CoreBase {
 
 			const fromControl = this.getControl(controlId)
 			if (fromControl) {
-				/** @type {any} */
 				const controlJson = fromControl.toJSON(true)
 
 				const newControl = this.#createClassForControl(newControlId, 'trigger', controlJson, true)

@@ -201,8 +201,7 @@ class LogController {
 	 * Add a line logged to winston to the log history
 	 */
 	#addToHistory(line: any) {
-		/** @type {import('@companion-app/shared/Model/LogLine.js').ClientLogLine} */
-		const uiLine = {
+		const uiLine: ClientLogLine = {
 			time: line.timestamp,
 			source: stripAnsi(line.source),
 			level: line.level,

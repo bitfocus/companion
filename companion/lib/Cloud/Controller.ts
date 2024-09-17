@@ -611,8 +611,7 @@ export class CloudController extends CoreBase {
 	#setupRegions(): void {
 		try {
 			if (CloudController.availableRegions) {
-				/** @type {string[]} */
-				const regions = []
+				const regions: string[] = []
 
 				for (const id in CloudController.availableRegions) {
 					regions.push(id)

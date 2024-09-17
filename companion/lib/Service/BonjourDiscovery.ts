@@ -116,14 +116,12 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		if (!this.#server) throw new Error('Bonjour not running')
 
 		const manifest = this.instance.getManifestForInstance(connectionId)
-		/** @type {import('@companion-module/base/generated/manifest.js').ModuleBonjourQuery | import('@companion-module/base/generated/manifest.js').ModuleBonjourQuery[] | undefined} */
 		let bonjourQueries = manifest?.bonjourQueries?.[queryId]
 		if (!bonjourQueries) throw new Error('Missing bonjour query')
 
 		if (!Array.isArray(bonjourQueries)) bonjourQueries = [bonjourQueries]
 
-		/** @type {BonjourBrowserFilter[]} */
-		const filters = []
+		const filters: BonjourBrowserFilter[] = []
 
 		for (const query of bonjourQueries) {
 			const filter = {

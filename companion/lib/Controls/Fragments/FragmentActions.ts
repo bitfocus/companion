@@ -212,8 +212,7 @@ export class FragmentActions {
 				if (instance) {
 					const newOptions = await instance.actionLearnValues(action, this.#controlId)
 					if (newOptions) {
-						/** @type {ActionInstance} */
-						const newAction = {
+						const newAction: ActionInstance = {
 							...action,
 							options: newOptions,
 						}
@@ -375,7 +374,7 @@ export class FragmentActions {
 		if (!action.disabled) {
 			const instance = this.#moduleHost.getChild(action.instance, true)
 			if (instance) {
-				instance.actionUpdate(action, this.#controlId).catch((/** @type {any} */ e) => {
+				instance.actionUpdate(action, this.#controlId).catch((e) => {
 					this.#logger.silly(`action_update to connection failed: ${e.message}`)
 				})
 			}
@@ -389,7 +388,7 @@ export class FragmentActions {
 		// Inform relevant module
 		const instance = this.#moduleHost.getChild(action.instance, true)
 		if (instance) {
-			instance.actionDelete(action).catch((/** @type {any} */ e) => {
+			instance.actionDelete(action).catch((e) => {
 				this.#logger.silly(`action_delete to connection failed: ${e.message}`)
 			})
 		}

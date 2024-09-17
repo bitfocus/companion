@@ -740,8 +740,7 @@ export class InternalControls implements InternalModuleFragment {
 						referencedVariables,
 					}
 				} else {
-					/** @type {Record<string, any>} */
-					const newStyle = {}
+					const newStyle: Record<string, any> = {}
 
 					for (const prop of feedback.options.properties) {
 						// @ts-ignore

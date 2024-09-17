@@ -206,7 +206,7 @@ export class ModuleHost {
 						// Inform action recorder
 						this.#registry.controls.actionRecorder.connectionAvailabilityChange(connectionId, true)
 					})
-					.catch((/** @type {any} */ e) => {
+					.catch((e) => {
 						this.#logger.warn(`Instance "${config.label || child.connectionId}" failed to init: ${e} ${e?.stack}`)
 						this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', `Failed to init: ${e} ${e?.stack}`)
 
@@ -237,7 +237,7 @@ export class ModuleHost {
 	resubscribeAllFeedbacks(): void {
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady) {
-				child.handler.sendAllFeedbackInstances().catch((/** @type {any} */ e) => {
+				child.handler.sendAllFeedbackInstances().catch((e) => {
 					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.connectionId}": ${e}`)
 				})
 			}
@@ -253,7 +253,7 @@ export class ModuleHost {
 
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady) {
-				child.handler.sendVariablesChanged(changedVariableIds).catch((/** @type {any} */ e) => {
+				child.handler.sendVariablesChanged(changedVariableIds).catch((e) => {
 					this.#logger.warn(`sendVariablesChanged failed for "${child.connectionId}": ${e}`)
 				})
 			}
@@ -481,7 +481,7 @@ export class ModuleHost {
 							this.#logger.debug(`Connection "${config.label}" crashed`)
 							this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')
 						})
-						monitor.on('stdout', (/** @type {Buffer} */ data) => {
+						monitor.on('stdout', (data) => {
 							if (!moduleInfo.isPackaged) {
 								// Only show stdout for modules which are being developed
 								child.logger.verbose(`stdout: ${data.toString()}`)
@@ -491,7 +491,7 @@ export class ModuleHost {
 								this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'console', data.toString())
 							}
 						})
-						monitor.on('stderr', (/** @type {Buffer} */ data) => {
+						monitor.on('stderr', (data) => {
 							child.logger.verbose(`stderr: ${data.toString()}`)
 							if (this.#registry.io.countRoomMembers(debugLogRoom) > 0) {
 								this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', data.toString())

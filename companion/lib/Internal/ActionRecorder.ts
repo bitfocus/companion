@@ -219,8 +219,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 			let page = Number(pageRaw)
 			let bank = Number(bankRaw)
 			if (!isNaN(page) && !isNaN(bank) && setId && stepId) {
-				/** @type {string | null} */
-				let controlId = null
+				let controlId: string | null = null
 
 				if (page === 0) page = extras.location?.pageNumber ?? 0
 				if (bank === 0 && extras.location) {

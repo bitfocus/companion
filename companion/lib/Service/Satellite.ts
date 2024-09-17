@@ -121,8 +121,7 @@ export class ServiceSatellite extends ServiceBase {
 		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 
-		/** @type {import('../Surface/IP/Satellite.js').SatelliteTransferableValue[]} */
-		let transferVariables
+		let transferVariables: SatelliteTransferableValue[]
 		try {
 			transferVariables = parseTransferableValues(params.VARIABLES)
 		} catch (e) {
@@ -438,8 +437,7 @@ function parseTransferableValues(input: string | true | undefined): SatelliteTra
 	const decodedInput = JSON.parse(Buffer.from(input, 'base64').toString())
 	if (!decodedInput) return []
 
-	/** @type {import('../Surface/IP/Satellite.js').SatelliteTransferableValue[]} */
-	const definitions = []
+	const definitions: SatelliteTransferableValue[] = []
 
 	for (const field of decodedInput) {
 		const type = field.type

@@ -153,7 +153,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 	 */
 	#initAPI2(socket: ServiceElgatoPluginSocket): void {
 		this.logger.silly('init api v2')
-		socket.once('new_device', (/** @type {string | Record<string, any>} */ info) => {
+		socket.once('new_device', (info: string | Record<string, any>) => {
 			try {
 				// Process the parameter, backwards compatible
 				const remoteId = typeof info === 'string' ? info : info.id
