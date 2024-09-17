@@ -22,7 +22,7 @@ export default class Time {
 	 */
 	#internalModule
 
-	#startTime = Date.now()
+	#startTime = Math.floor(Date.now() / 1000)
 
 	/**
 	 *
@@ -122,7 +122,7 @@ export default class Time {
 		const hhmmss12 = `${hhmm12}:${ss}`
 		const ts = Math.floor(now.getTime() / 1000)
 
-		const uptime = Math.floor((now.getTime() - this.#startTime) / 1000)
+		const uptime = ts - this.#startTime
 
 		this.#internalModule.setVariables({
 			date_iso: `${year}-${month}-${day}`,
