@@ -26,7 +26,7 @@ export interface SurfacePanelInfo {
 	configFields: CompanionSurfaceConfigField[]
 	location?: string
 }
-export interface SurfacePanel extends EventEmitter {
+export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	clearDeck(): void
@@ -42,4 +42,20 @@ export interface DrawButtonItem {
 	x: number
 	y: number
 	image: ImageResult
+}
+
+export interface SurfacePanelEvents {
+	remove: []
+	error: [error: Error]
+
+	click: [x: number, y: number, pressed: boolean, pageOffset?: number]
+	rotate: [x: number, y: number, direction: boolean]
+
+	setVariable: [variableId: string, value: CompanionVariableValue]
+	setCustomVariable: [variableId: string, value: CompanionVariableValue]
+
+	resized: []
+
+	/** @deprecated */
+	'xkeys-subscribePage': [pageCount: number]
 }

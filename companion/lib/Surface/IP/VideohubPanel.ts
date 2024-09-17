@@ -26,7 +26,7 @@ import {
 	RotationConfigField,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 export interface VideohubPanelDeviceInfo {
@@ -57,7 +57,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceIPVideohubPanel extends EventEmitter implements SurfacePanel {
+export class SurfaceIPVideohubPanel extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	#logger = LogController.createLogger('Surface/IP/VideohubPanel')
 
 	readonly info: SurfacePanelInfo

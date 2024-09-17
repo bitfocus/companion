@@ -36,7 +36,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import { SurfacePanelInfo } from '../Types.js'
+import { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import { ImageResult } from '../../Graphics/ImageResult.js'
 
 interface ModelInfo {
@@ -151,7 +151,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceUSBLoupedeckLive extends EventEmitter {
+export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
 
 	/**

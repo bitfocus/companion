@@ -45,6 +45,10 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
 	process.exit(1)
 }
 
+export interface RegistryEvents {
+	http_rebind: [bind_ip: string, http_port: number]
+}
+
 /**
  * The core controller that sets up all the controllers needed
  * for the app.
@@ -66,7 +70,7 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class Registry extends EventEmitter {
+export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The cloud database
 	 */

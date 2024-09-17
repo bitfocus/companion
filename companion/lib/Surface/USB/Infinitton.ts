@@ -27,7 +27,7 @@ import {
 	RotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
-import type { SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
@@ -38,7 +38,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceUSBInfinitton extends EventEmitter {
+export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
 
 	config: Record<string, any>

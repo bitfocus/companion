@@ -31,7 +31,7 @@ import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { Socket } from 'net'
 import type { ImageResult, ImageResultStyle } from '../../Graphics/ImageResult.js'
 
@@ -113,7 +113,7 @@ function generateConfigFields(
 	return fields
 }
 
-export class SurfaceIPSatellite extends EventEmitter implements SurfacePanel {
+export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger = LogController.createLogger('Surface/IP/Satellite')
 
 	readonly #executeExpression: SurfaceExecuteExpressionFn

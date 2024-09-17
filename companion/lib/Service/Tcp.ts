@@ -38,7 +38,7 @@ export class ServiceTcp extends ServiceTcpBase {
 		this.#api = new ServiceTcpUdpApi(registry, 'tcp', 'tcp_legacy_api_enabled')
 
 		this.graphics.on('button_drawn', (location, render) => {
-			const bgcolor = render.style?.bgcolor || 0
+			const bgcolor = (typeof render.style !== 'string' ? render.style : {})?.bgcolor || 0
 
 			const bank = xyToOldBankIndex(location.column, location.row)
 

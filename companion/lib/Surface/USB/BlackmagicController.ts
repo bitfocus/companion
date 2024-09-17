@@ -28,6 +28,7 @@ import type {
 	LocalUSBDeviceOptions,
 	SurfaceExecuteExpressionFn,
 	SurfacePanel,
+	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from '../Types.js'
 import type { GridSize } from '../Util.js'
@@ -54,7 +55,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	},
 ]
 
-export class SurfaceUSBBlackmagicController extends EventEmitter implements SurfacePanel {
+export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
 
 	readonly #executeExpression: SurfaceExecuteExpressionFn

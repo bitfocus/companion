@@ -325,7 +325,7 @@ export class CloudController extends CoreBase {
 	 * @param _id - the page ID
 	 * @param _name - the new name
 	 */
-	#handlePageNameUpdate(_id: string, _name: string): void {
+	#handlePageNameUpdate(_pageNumber: number, _name: string | undefined): void {
 		for (let region in this.#regionInstances) {
 			if (!!this.#regionInstances[region]?.socketTransmit) {
 				//TODO: Push page name

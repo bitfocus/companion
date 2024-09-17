@@ -41,7 +41,13 @@ type CreateConnectionData = {
 	product?: string
 }
 
-export class InstanceController extends CoreBase {
+interface InstanceControllerEvents {
+	connection_added: [connectionId?: string]
+	connection_updated: [connectionId: string]
+	connection_deleted: [connectionId: string]
+}
+
+export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	#lastClientJson: Record<string, ClientConnectionConfig> | null = null
 
 	readonly #controlsController: ControlsController

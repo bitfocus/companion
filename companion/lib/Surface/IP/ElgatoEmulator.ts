@@ -24,7 +24,7 @@ import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../Co
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import type { EmulatorConfig, EmulatorImage, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
 import type { UIHandler, ClientSocket } from '../../UI/Handler.js'
-import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { GridSize } from '../Util.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
@@ -76,7 +76,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceIPElgatoEmulator extends EventEmitter implements SurfacePanel {
+export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger = LogController.createLogger('Surface/IP/ElgatoEmulator')
 
 	readonly #emulatorId: string

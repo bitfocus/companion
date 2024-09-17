@@ -20,7 +20,7 @@ import shuttleControlUSB, { type ShuttleDeviceInfo } from 'shuttle-control-usb'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { GridSize } from '../Util.js'
 
 interface ShuttleModelInfo {
@@ -133,7 +133,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceUSBContourShuttle extends EventEmitter implements SurfacePanel {
+export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
 
 	private readonly contourShuttle: typeof shuttleControlUSB

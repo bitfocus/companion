@@ -62,7 +62,21 @@ HID.devices()
 
 const SurfacesRoom = 'surfaces'
 
-export class SurfaceController extends CoreBase {
+export interface SurfaceControllerEvents {
+	surface_name: [surfaceId: string, name: string]
+	surface_page: [surfaceId: string, pageId: string]
+	'surface-add': [surfaceId: string]
+	'surface-delete': [surfaceId: string]
+
+	'surface-in-group': [surfaceId: string, groupId: string | null]
+
+	group_name: [groupId: string, name: string]
+	group_page: [groupId: string, pageId: string]
+	'group-add': [groupId: string]
+	'group-delete': [surfaceId: string]
+}
+
+export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	/**
 	 * The last sent json object
 	 */

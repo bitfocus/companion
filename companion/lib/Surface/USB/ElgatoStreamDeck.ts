@@ -30,7 +30,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { LcdPosition, StreamDeckLcdSegmentControlDefinition, StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type { GridSize } from '../Util.js'
@@ -64,7 +64,7 @@ function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] 
 	return fields
 }
 
-export class SurfaceUSBElgatoStreamDeck extends EventEmitter implements SurfacePanel {
+export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
 
 	config: Record<string, any> = {}

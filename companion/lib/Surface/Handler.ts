@@ -33,6 +33,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { Registry } from '../Registry.js'
 import { DrawButtonItem, SurfacePanel } from './Types.js'
+import { CompanionVariableValue } from '@companion-module/base'
 
 const PINCODE_NUMBER_POSITIONS: [number, number][] = [
 	// 0
@@ -500,7 +501,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#drawPage()
 	}
 
-	#onDeviceClick(x: number, y: number, pressed: boolean, pageOffset: number): void {
+	#onDeviceClick(x: number, y: number, pressed: boolean, pageOffset?: number): void {
 		if (!this.panel) return
 
 		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
@@ -578,7 +579,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		}
 	}
 
-	#onDeviceRotate(x: number, y: number, direction: boolean, pageOffset: number): void {
+	#onDeviceRotate(x: number, y: number, direction: boolean, pageOffset?: number): void {
 		if (!this.panel) return
 
 		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
@@ -621,7 +622,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Set the value of a variable
 	 */
-	#onSetVariable(name: string, value: string | number): void {
+	#onSetVariable(name: string, value: CompanionVariableValue): void {
 		this.#variables.values.setVariableValues('internal', {
 			[name]: value,
 		})
@@ -630,7 +631,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Set the value of a custom variable
 	 */
-	#onSetCustomVariable(name: string, value: string | number): void {
+	#onSetCustomVariable(name: string, value: CompanionVariableValue): void {
 		this.#variables.custom.setValue(name, value)
 	}
 

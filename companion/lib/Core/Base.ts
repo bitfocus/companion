@@ -12,6 +12,8 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { ControlsController } from '../Controls/Controller.js'
 
+type EventMap<T> = Record<keyof T, any[]> | [never]
+
 /**
  * Abstract class to be extended by most core classes.  Provides access to the
  * {@link Registry} and other core modules.
@@ -32,7 +34,7 @@ import type { ControlsController } from '../Controls/Controller.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class CoreBase extends EventEmitter {
+export class CoreBase<TEvents extends EventMap<TEvents> = never> extends EventEmitter<TEvents> {
 	/**
 	 * The application core
 	 * TODO: make protected/private

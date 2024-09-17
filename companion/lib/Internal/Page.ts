@@ -36,7 +36,7 @@ export class InternalPage implements InternalModuleFragment {
 		this.#pageController.on('pagecount', () => this.#internalModule.regenerateVariables())
 	}
 
-	#nameChange(page: Number, name: string): void {
+	#nameChange(page: number, name: string | undefined): void {
 		this.#internalModule.setVariables({
 			[`page_number_${page}_name`]: name,
 		})

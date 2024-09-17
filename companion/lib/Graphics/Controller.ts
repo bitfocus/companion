@@ -50,7 +50,11 @@ function generateFontUrl(fontFilename: string): string {
 	}
 }
 
-export class GraphicsController extends CoreBase {
+interface GraphicsControllerEvents {
+	button_drawn: [location: ControlLocation, render: ImageResult]
+}
+
+export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 	/**
 	 * Cached UserConfig values that affect button rendering
 	 */

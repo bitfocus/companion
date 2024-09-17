@@ -26,7 +26,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { GridSize } from '../Util.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
@@ -44,7 +44,7 @@ const configFields: CompanionSurfaceConfigField[] = [
  * Hardware: https://frame.work/gb/en/products/16-rgb-macropad
  * It uses a custom firmware available from https://github.com/Julusian/framework_qmk_firmware
  */
-export class SurfaceUSBFrameworkMacropad extends EventEmitter implements SurfacePanel {
+export class SurfaceUSBFrameworkMacropad extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
 
 	config: Record<string, any> = {}

@@ -10,6 +10,13 @@ import type { ClientSocket } from '../UI/Handler.js'
 
 const PagesRoom = 'pages'
 
+interface PageControllerEvents {
+	pagecount: [count: number]
+	pageindexchange: [pageIds: Set<string>]
+
+	name: [pageNumber: number, name: string | undefined]
+}
+
 /**
  * The class that manages the user pages
  *
@@ -30,7 +37,7 @@ const PagesRoom = 'pages'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class PageController extends CoreBase {
+export class PageController extends CoreBase<PageControllerEvents> {
 	/**
 	 * Cache the location of each control
 	 */
