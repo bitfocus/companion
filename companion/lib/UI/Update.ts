@@ -16,7 +16,6 @@
  */
 
 import os from 'os'
-import got from 'got'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import type { UIHandler } from './Handler.js'
@@ -90,13 +89,16 @@ export class UIUpdate {
 	 * Perform the update request
 	 */
 	#requestUpdate(): void {
-		got
-			.post('https://updates.bitfocus.io/updates', {
-				json: this.compilePayload(),
-				responseType: 'json',
-			})
-			.then(({ body }) => {
-				this.#logger.debug('fresh update data received', body)
+		fetch('https://updates.bitfocus.io/updates', {
+			method: 'POST',
+			body: JSON.stringify(this.compilePayload()),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+			.then(async (response) => response.json())
+			.then((body) => {
+				this.#logger.debug(`fresh update data received ${JSON.stringify(body)}`)
 				this.#latestUpdateData = body as AppUpdateInfo
 
 				this.#ioController.emit('app-update-info', this.#latestUpdateData)

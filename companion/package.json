@@ -73,7 +73,6 @@
 		"find-process": "patch:find-process@npm%3A1.4.7#~/.yarn/patches/find-process-npm-1.4.7-e91aca1924.patch",
 		"fs-extra": "^11.2.0",
 		"get-port": "^7.1.0",
-		"got": "^14.4.2",
 		"infinitton-idisplay": "^1.2.0",
 		"lodash-es": "^4.17.21",
 		"lru-cache": "^11.0.1",

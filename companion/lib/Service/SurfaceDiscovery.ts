@@ -2,7 +2,6 @@ import { isEqual } from 'lodash-es'
 import { ServiceBase } from './Base.js'
 import { Bonjour, Browser, Service } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
-import got from 'got'
 import { StreamDeckTcpDefinition, StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
 import type { Registry } from '../Registry.js'
 import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
@@ -294,12 +293,15 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			this.logger.info(`Setting up satellite ${info.name} at ${url.toString()} to ${address}:${16622}`)
 
 			try {
-				await got(url, {
+				await fetch(url, {
 					method: 'POST',
-					json: {
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
 						host: address,
 						port: 16622, // TODO - dynamic
-					},
+					}),
 				})
 
 				return null

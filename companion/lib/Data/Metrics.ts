@@ -17,7 +17,6 @@
 
 import crypto from 'crypto'
 import { CoreBase } from '../Core/Base.js'
-import got from 'got'
 import type { Registry } from '../Registry.js'
 
 export class DataMetrics extends CoreBase {
@@ -73,14 +72,15 @@ export class DataMetrics extends CoreBase {
 	 * Submit metrics
 	 */
 	#pushMetrics(payload: Record<string, any>): void {
-		got
-			.post('https://updates.bitfocus.io/companion/metrics', {
-				json: payload,
-				responseType: 'json',
-			})
-			.catch(() => {
-				// don't care.
-			})
+		fetch('https://updates.bitfocus.io/companion/metrics', {
+			method: 'POST',
+			body: JSON.stringify(payload),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		}).catch(() => {
+			// don't care.
+		})
 	}
 
 	/**

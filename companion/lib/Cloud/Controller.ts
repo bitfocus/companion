@@ -1,7 +1,6 @@
 import { isEqual } from 'lodash-es'
 import { CoreBase } from '../Core/Base.js'
 import { CloudRegion, RegionInfo } from './Region.js'
-import got from 'got'
 import { v4 } from 'uuid'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { delay } from '../Resources/Util.js'
@@ -230,18 +229,18 @@ export class CloudController extends CoreBase {
 	 */
 	async #handleCloudInfrastructureRefresh(): Promise<void> {
 		try {
-			const response = await got.get(CLOUD_URL + '/infrastructure/cloud/regions', {
+			const url = new URL(CLOUD_URL + '/infrastructure/cloud/regions')
+			if (process.env.NODE_ENV !== 'production') url.searchParams.append('testing', 'true')
+
+			const responseBody = await fetch(url, {
+				method: 'POST',
 				headers: {
 					accept: 'application/json',
 					'content-type': 'application/json',
 				},
-				searchParams: {
-					...(process.env.NODE_ENV !== 'production' ? { testing: 'true' } : {}),
-				},
-				responseType: 'json',
-			})
+			}).then(async (response) => response.json())
 
-			const result: any = response.body
+			const result: any = responseBody
 			this.logger.silly('Cloud setup: ', result)
 
 			if (result.regions) {
@@ -341,19 +340,20 @@ export class CloudController extends CoreBase {
 	 * @param password - the login password
 	 */
 	async #handleCloudLogin(_client: ClientSocket, email: string, password: string): Promise<void> {
-		let response
+		let responseObject: any
 
 		this.#setState({ error: null, authenticating: true })
 		try {
-			response = await got.post(CLOUD_URL + '/auth/login', {
+			responseObject = await fetch(CLOUD_URL + '/auth/login', {
+				method: 'POST',
 				headers: {
 					accept: 'application/json',
 					'content-type': 'application/json',
 				},
-				json: { email, password },
-				responseType: 'json',
-			})
+				body: JSON.stringify({ email, password }),
+			}).then(async (response) => response.json())
 		} catch (e: any) {
+			console.log('res', e)
 			if (e.response?.statusCode >= 400 && e.response?.statusCode < 500) {
 				this.#setState({
 					authenticated: false,
@@ -372,7 +372,6 @@ export class CloudController extends CoreBase {
 		}
 
 		try {
-			const responseObject: any = response.body
 			this.logger.silly('Cloud result: ', responseObject)
 			if (responseObject.token !== undefined) {
 				this.data.token = responseObject.token
@@ -424,16 +423,17 @@ export class CloudController extends CoreBase {
 		// For transparency, show the user that we're refreshing
 		this.#setState({ authenticating: true })
 		try {
-			const response = await got.post(CLOUD_URL + '/refresh', {
+			const result: any = await fetch(CLOUD_URL + '/refresh', {
+				method: 'POST',
 				headers: {
 					accept: 'application/json',
 					'content-type': 'application/json',
 					authorization: `Bearer ${token}`,
 				},
-				responseType: 'json',
-			})
 
-			const result: any = response.body
+				body: '{}',
+			}).then(async (response) => response.json())
+
 			this.logger.silly('Cloud result: ', result)
 
 			if (result.token) {
