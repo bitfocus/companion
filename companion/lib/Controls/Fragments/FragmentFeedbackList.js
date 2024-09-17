@@ -213,7 +213,8 @@ export class FragmentFeedbackList {
 		}
 
 		for (const feedback of this.#feedbacks) {
-			return feedback.findParentAndIndex(id)
+			const found = feedback.findParentAndIndex(id)
+			if (found) return found
 		}
 
 		return undefined

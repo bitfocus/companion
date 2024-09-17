@@ -434,6 +434,8 @@ class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
+			if (moveFeedbackId === newParentId) throw new Error('Cannot move feedback to itself')
+
 			if (control.supportsFeedbacks) {
 				return control.feedbacks.feedbackMoveTo(moveFeedbackId, newParentId, newIndex)
 			} else {
