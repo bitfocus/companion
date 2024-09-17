@@ -11,9 +11,6 @@ RUN yarn config set network-timeout 200000 -g
 WORKDIR /app
 COPY . /app/
 
-# Install dependencies
-RUN CI=1 ./tools/yarn.sh
-
 # Generate version number file
 RUN yarn build:writefile
 

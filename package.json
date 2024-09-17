@@ -16,7 +16,6 @@
     "dev:debug": "yarn workspace companion dev:debug",
     "dev:webui": "yarn workspace @companion-app/webui dev",
     "build:ts": "yarn workspaces foreach --all run build:ts",
-    "update": "./tools/update.sh",
     "dist:webui": "yarn workspace @companion-app/webui build",
     "dist": "zx ./tools/build/complete.mjs",
     "macdist": "run dist mac-x64",

@@ -67,7 +67,6 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn --immutable
-          yarn update
 
           yarn zx tools/build/complete.mjs linux-x64
 
@@ -138,7 +137,6 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn --immutable
-          yarn update
 
           yarn zx tools/build/complete.mjs linux-arm64
 
@@ -208,7 +206,6 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn --immutable
-          yarn update
 
           yarn zx tools/build/complete.mjs darwin-x64
         env:
@@ -269,7 +266,7 @@ jobs:
           path: .cache
           key: macos-arm64-build-cache-${{ hashFiles('nodejs-versions.json') }}
 
-      - name: yarn update
+      - name: prepare
         run: |
           corepack enable
 
@@ -277,7 +274,6 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn --immutable
-          yarn update
         env:
           CI: 1
       - name: build & package
@@ -351,7 +347,6 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn --immutable
-          yarn update
 
           yarn zx tools/build/complete.mjs win32-x64
         env:

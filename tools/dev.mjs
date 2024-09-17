@@ -3,6 +3,7 @@
 import chokidar from 'chokidar'
 import { $ } from 'zx/core'
 import path from 'path'
+import fs from 'fs'
 import debounceFn from 'debounce-fn'
 import { fileURLToPath } from 'url'
 import concurrently from 'concurrently'
@@ -39,16 +40,44 @@ console.log('Ensuring nodejs binaries are available')
 const platformInfo = determinePlatformInfo(undefined)
 await fetchNodejs(platformInfo)
 
-console.log('Building shared-lib')
+console.log('Ensuring bundled modules are synced')
+
+await $`git submodule init`
+await $`git submodule sync`
+await $`git submodule update`
+
+console.log('Performing first build of components')
+
+if (!fs.existsSync('../shared-lib/dist')) {
+	await $`yarn workspace @companion-app/shared build:ts`.catch((e) => {
+		console.error(e)
+	})
+}
+if (!fs.existsSync('../companion/dist')) {
+	await $`yarn workspace companion build`.catch((e) => {
+		console.error(e)
+	})
+}
+if (!fs.existsSync('../webui/build')) {
+	await $`yarn workspace @companion-app/webui build`.catch((e) => {
+		console.error(e)
+	})
+} else {
+	console.warn('Skipping webui build, you may need to run `yarn dist:webui` if changes have been made recently')
+}
+
+console.log('Starting application')
 
 concurrently([
 	{
 		command: `yarn dev --preserveWatchOutput`,
 		cwd: '../shared-lib',
+		name: 'shared-lib',
 	},
 	{
 		command: `yarn build:watch --preserveWatchOutput`,
 		cwd: '../companion',
+		name: 'companion',
 	},
 ]).result.catch((e) => {
 	console.error(e)
@@ -107,8 +136,6 @@ chokidar
 		fn()
 	})
 
-await start()
-
 async function start() {
 	node = $.spawn('node', ['dist/main.js', ...process.argv.slice(3)], {
 		stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
@@ -162,3 +189,6 @@ function signalHandler(signal) {
 process.on('SIGINT', signalHandler)
 process.on('SIGTERM', signalHandler)
 process.on('SIGQUIT', signalHandler)
+
+// Trigger a start soon
+setTimeout(() => restart(), 5000)
