@@ -730,10 +730,15 @@ export class SurfaceController extends CoreBase {
 		return result
 	}
 
-	reset(): void {
+	async reset(): Promise<void> {
 		// Each active handler will re-add itself when doing the save as part of its own reset
 		this.db.setKey('deviceconfig', {})
 		this.db.setKey('surface-groups', {})
+		this.#outboundController.reset()
+
+		// Wait for the surfaces to disconnect before clearing their config
+		await new Promise((resolve) => setTimeout(resolve, 500))
+
 		this.#resetAllDevices()
 		this.updateDevicesList()
 	}
@@ -1267,13 +1272,17 @@ export class SurfaceController extends CoreBase {
 		this.#surfaceGroups.clear()
 
 		// Re-attach in auto-groups
-		for (const surface of this.#surfaceHandlers.values()) {
+		for (const [id, surface] of this.#surfaceHandlers.entries()) {
 			if (!surface) continue
 
 			try {
-				surface.resetConfig()
+				if (id.startsWith('emulator:')) {
+					this.removeDevice(id, true)
+				} else {
+					surface.resetConfig()
 
-				this.#attachSurfaceToGroup(surface)
+					this.#attachSurfaceToGroup(surface)
+				}
 			} catch (e) {
 				this.logger.warn('Could not reattach a surface')
 			}

@@ -5,7 +5,7 @@ import { StreamDeckJpegOptions } from './USB/ElgatoStreamDeck.js'
 import type { SurfaceController } from './Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
-import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { OutboundSurfaceInfo, OutboundSurfacesUpdateRemoveOp } from '@companion-app/shared/Model/Surfaces.js'
 
 const OutboundSurfacesRoom = 'surfaces:outbound'
 
@@ -165,6 +165,21 @@ export class SurfaceOutboundController {
 				},
 			])
 		})
+	}
+
+	reset(): void {
+		this.#streamdeckTcpConnectionManager.disconnectFromAll()
+
+		const ops: OutboundSurfacesUpdateRemoveOp[] = Object.keys(this.#storage).map((id) => ({
+			type: 'remove',
+			itemId: id,
+		}))
+		if (ops.length > 0) {
+			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', ops)
+		}
+
+		this.#storage = {}
+		this.#saveToDb()
 	}
 
 	quit(): void {

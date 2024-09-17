@@ -189,6 +189,8 @@ export class GraphicsController extends CoreBase {
 		GlobalFonts.registerFromPath(generateFontUrl('NotoMusic-Regular.ttf'), 'Companion-symbols4')
 		GlobalFonts.registerFromPath(generateFontUrl('NotoSansLinearA-Regular.ttf'), 'Companion-symbols5')
 		GlobalFonts.registerFromPath(generateFontUrl('NotoSansLinearB-Regular.ttf'), 'Companion-symbols6')
+		GlobalFonts.registerFromPath(generateFontUrl('NotoSansGurmukhi-Regular.ttf'), 'Companion-gurmukhi')
+		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSC-Regular.ttf'), 'Companion-simplified-chinese')
 		GlobalFonts.registerFromPath(generateFontUrl('NotoColorEmoji-compat.ttf'), 'Companion-emoji')
 		GlobalFonts.registerFromPath(generateFontUrl('pf_tempesta_seven.ttf'), '5x7')
 
