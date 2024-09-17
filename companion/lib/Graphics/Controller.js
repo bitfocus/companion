@@ -26,6 +26,7 @@ import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
+import debounceFn from 'debounce-fn'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
@@ -98,6 +99,25 @@ class GraphicsController extends CoreBase {
 	#pincodeBuffersCache
 
 	/**
+	 * @type {import('@companion-module/base').CompanionVariableValues|null}
+	 */
+	#pendingVariables = null
+	/**
+	 * Debounce updating the variables, as buttons are often drawn in floods
+	 */
+	#debouncePendingVariables = debounceFn(
+		() => {
+			const values = this.#pendingVariables
+			this.#pendingVariables = null
+			this.variablesController.values.setVariableValues('internal', values)
+		},
+		{
+			wait: 10,
+			maxWait: 40,
+		}
+	)
+
+	/**
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
@@ -151,7 +171,13 @@ class GraphicsController extends CoreBase {
 							values[`b_step_${location.pageNumber}_${location.row}_${location.column}`] =
 								buttonStyle?.style === 'button' ? (buttonStyle.step_cycle ?? 1) : undefined
 
-							this.variablesController.values.setVariableValues('internal', values)
+							// Submit the updated values
+							if (this.#pendingVariables) {
+								Object.assign(this.#pendingVariables, values)
+							} else {
+								this.#pendingVariables = values
+							}
+							this.#debouncePendingVariables()
 						})
 					}
 
