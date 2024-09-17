@@ -48,6 +48,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: true
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -118,6 +119,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: true
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -187,6 +189,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: true
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -255,6 +258,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: true
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -327,6 +331,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: true
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
