@@ -10,10 +10,5 @@ webui/public/legacy
 /LICENSE.md
 docs/*
 
-module-legacy/image/Font.js
-module-legacy/manifests
-module-legacy/dist
-module-legacy/entrypoints
-
 module-local-dev
 bundled-modules
