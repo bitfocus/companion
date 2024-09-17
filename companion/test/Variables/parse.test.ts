@@ -1,8 +1,9 @@
+import { describe, test, expect } from 'vitest'
 import { VARIABLE_UNKNOWN_VALUE, parseVariablesInString } from '../../lib/Variables/Util.js'
 
 describe('variable parsing', () => {
 	test('undefined string', () => {
-		expect(parseVariablesInString(undefined, {})).toMatchObject({ text: undefined, variableIds: [] })
+		expect(parseVariablesInString(undefined as any, {})).toMatchObject({ text: undefined, variableIds: [] })
 	})
 
 	test('empty string', () => {

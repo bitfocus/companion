@@ -12,7 +12,7 @@
 		"declaration": true,
 		"importHelpers": true,
 		"pretty": true,
-		"types": ["node", "jest"]
+		// "types": ["node", "jest"]
 	},
 	"include": ["src/**/*.ts", "scripts/**/*.ts"],
 	"compileOnSave": false,

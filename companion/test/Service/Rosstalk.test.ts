@@ -1,6 +1,7 @@
-import { jest } from '@jest/globals'
-import { mock } from 'jest-mock-extended'
-import ServiceRosstalk from '../../lib/Service/Rosstalk'
+import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { mock, mockDeep } from 'vitest-mock-extended'
+import { ServiceRosstalk } from '../../lib/Service/Rosstalk'
+import type { Registry } from '../../lib/Registry'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -10,61 +11,58 @@ const mockOptions = {
 
 describe('Rosstalk', () => {
 	function createService() {
-		const logger = mock(
-			{
-				info: jest.fn(),
-				warn: jest.fn(),
-				debug: jest.fn(),
-			},
-			mockOptions
-		)
-		const logController = mock(
-			{
-				createLogger: () => logger,
-			},
-			mockOptions
-		)
-		const registry = mock(
-			{
-				log: logController,
-				page: mock(
-					{
-						getControlIdAt: jest.fn(),
-					},
-					mockOptions
-				),
-				controls: mock(
-					{
-						pressControl: jest.fn(),
-					},
-					mockOptions
-				),
-				userconfig: {
-					// Force config to return true
-					getKey: () => false,
+		// const logger = mock(
+		// 	{
+		// 		info: vi.fn(),
+		// 		warn: vi.fn(),
+		// 		debug: vi.fn(),
+		// 	},
+		// 	mockOptions
+		// )
+		// const logController = mock(
+		// 	{
+		// 		createLogger: () => logger,
+		// 	},
+		// 	mockOptions
+		// )
+		const registry = mockDeep<Registry>(mockOptions, {
+			// log: logController,
+			page: mock(
+				{
+					getControlIdAt: vi.fn(),
 				},
+				mockOptions
+			),
+			controls: mock(
+				{
+					pressControl: vi.fn(),
+				},
+				mockOptions
+			),
+			userconfig: {
+				// Force config to return true
+				getKey: () => false,
 			},
-			mockOptions
-		)
+		})
 
 		const service = new ServiceRosstalk(registry)
 
 		return {
 			registry,
 			service,
-			logger,
+			// logger,
 		}
 	}
 
 	describe('CC - bank', () => {
 		beforeEach(() => {
-			jest.useFakeTimers()
+			vi.useFakeTimers()
 		})
 
 		test('no control', async () => {
 			const { registry, service } = createService()
 
-			service.processIncoming(null, 'CC 12:24')
+			service.processIncoming(null as any, 'CC 12:24')
 
 			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 			expect(registry.page.getControlIdAt).toHaveBeenLastCalledWith({
@@ -79,7 +77,7 @@ describe('Rosstalk', () => {
 		test('out of range', async () => {
 			const { registry, service } = createService()
 
-			service.processIncoming(null, 'CC 12:34')
+			service.processIncoming(null as any, 'CC 12:34')
 
 			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -88,7 +86,7 @@ describe('Rosstalk', () => {
 		test('bad format', async () => {
 			const { registry, service } = createService()
 
-			service.processIncoming(null, 'CC 12:')
+			service.processIncoming(null as any, 'CC 12:')
 
 			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -98,7 +96,7 @@ describe('Rosstalk', () => {
 			const { registry, service } = createService()
 			registry.page.getControlIdAt.mockReturnValue('myControl')
 
-			service.processIncoming(null, 'CC 12:24')
+			service.processIncoming(null as any, 'CC 12:24')
 
 			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 			expect(registry.page.getControlIdAt).toHaveBeenLastCalledWith({
@@ -110,7 +108,7 @@ describe('Rosstalk', () => {
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
 			expect(registry.controls.pressControl).toHaveBeenLastCalledWith('myControl', true, 'rosstalk')
 
-			jest.advanceTimersByTime(100)
+			vi.advanceTimersByTime(100)
 
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(2)
 			expect(registry.controls.pressControl).toHaveBeenLastCalledWith('myControl', false, 'rosstalk')
@@ -119,7 +117,7 @@ describe('Rosstalk', () => {
 		test('bad format coordinates', async () => {
 			const { registry, service } = createService()
 
-			service.processIncoming(null, 'CC 12/3/')
+			service.processIncoming(null as any, 'CC 12/3/')
 
 			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -129,7 +127,7 @@ describe('Rosstalk', () => {
 			const { registry, service } = createService()
 			registry.page.getControlIdAt.mockReturnValue('myControl')
 
-			service.processIncoming(null, 'CC 12/3/4')
+			service.processIncoming(null as any, 'CC 12/3/4')
 
 			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 			expect(registry.page.getControlIdAt).toHaveBeenLastCalledWith({
@@ -141,7 +139,7 @@ describe('Rosstalk', () => {
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
 			expect(registry.controls.pressControl).toHaveBeenLastCalledWith('myControl', true, 'rosstalk')
 
-			jest.advanceTimersByTime(100)
+			vi.advanceTimersByTime(100)
 
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(2)
 			expect(registry.controls.pressControl).toHaveBeenLastCalledWith('myControl', false, 'rosstalk')

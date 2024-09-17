@@ -25,8 +25,8 @@ const pkgInfo = JSON.parse(pkgInfoStr.toString())
 
 let buildNumber: string
 try {
-	if (process.env.JEST_WORKER_ID) {
-		buildNumber = '0.0.0-JEST'
+	if (process.env.VITEST_WORKER_ID) {
+		buildNumber = '0.0.0-VITEST'
 	} else {
 		buildNumber = fs
 			.readFileSync(new URL('../../BUILD', import.meta.url))

@@ -25,7 +25,7 @@ export class DataDatabase extends DataStoreBase {
 	/**
 	 * The stored defaults for a new db
 	 */
-	private static Defaults: object = {
+	static Defaults: object = {
 		page_config_version: 3,
 	}
 	/**

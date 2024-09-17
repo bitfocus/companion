@@ -3,13 +3,10 @@ import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Util/Constants.js'
+import type { DataDatabase } from '../Database.js'
+import type { Logger } from '../../Log/Controller.js'
 
-/**
- *
- * @param {*} obj
- * @returns
- */
-function convertInstanceToV3(obj) {
+function convertInstanceToV3(obj: any): any {
 	if (obj.config === undefined) {
 		const newConfig = { ...obj }
 		delete newConfig.instance_type
@@ -29,11 +26,7 @@ function convertInstanceToV3(obj) {
 	}
 }
 
-/**
- *
- * @param {*} db
- */
-function convertInstancesToV3(db) {
+function convertInstancesToV3(db: DataDatabase) {
 	if (db.hasKey('instance')) {
 		const instances = db.getKey('instance')
 		// Delete the old internal module, as it is truly internal now
@@ -49,21 +42,11 @@ function convertInstancesToV3(db) {
 	}
 }
 
-/**
- *
- * @param {number} page
- * @param {number} bank
- * @returns {string}
- */
-function CreateBankControlIdOld(page, bank) {
+function CreateBankControlIdOld(page: number, bank: number): string {
 	return `bank:${page}-${bank}`
 }
 
-/**
- *
- * @param {*} db
- */
-function convertToControls(db) {
+function convertToControls(db: DataDatabase): void {
 	if (!db.hasKey('controls')) {
 		const oldBankConfig = db.getKey('bank', {})
 		const oldActions = db.getKey('bank_actions', {})
@@ -71,8 +54,7 @@ function convertToControls(db) {
 		const oldRotateLeftActions = db.getKey('bank_rotate_left_actions', {})
 		const oldRotateRightActions = db.getKey('bank_rotate_right_actions', {})
 
-		/** @type {any} */
-		const newSteps = {}
+		const newSteps: any = {}
 
 		for (let page = 1; page <= LEGACY_PAGE_COUNT; page++) {
 			const obj = {
@@ -96,8 +78,7 @@ function convertToControls(db) {
 		const oldConfig = db.getKey('bank', {})
 		const oldFeedbacks = db.getKey('feedbacks', {})
 
-		/** @type {any} */
-		const newControls = {}
+		const newControls: any = {}
 		for (let page = 1; page <= LEGACY_PAGE_COUNT; page++) {
 			for (let bank = 1; bank <= LEGACY_MAX_BUTTONS; bank++) {
 				const bankConfig = oldConfig[page]?.[bank]
@@ -131,17 +112,9 @@ function convertToControls(db) {
 	}
 }
 
-/**
- * @param {import('winston').Logger} logger
- * @param {*} entry
- * @param {number} index
- * @returns
- */
-function convertTriggerToControl(logger, entry, index) {
-	/** @type {any} */
-	const actions = []
-	/** @type {any} */
-	const control = {
+function convertTriggerToControl(logger: Logger, entry: any, index: number): any {
+	const actions: any[] = []
+	const control: any = {
 		type: 'trigger',
 		options: cloneDeep(ControlTrigger.DefaultOptions),
 		action_sets: { 0: actions },
@@ -314,20 +287,14 @@ function convertTriggerToControl(logger, entry, index) {
 	return control
 }
 
-/**
- *
- * @param {*} db
- * @param {*} logger
- */
-function convertSchedulerToControls(db, logger) {
+function convertSchedulerToControls(db: DataDatabase, logger: Logger) {
 	if (db.hasKey('scheduler')) {
 		let controls = db.getKey('controls')
 		let scheduler = db.getKey('scheduler')
 
 		if (Array.isArray(scheduler)) {
 			// Convert into an object
-			/** @type {any} */
-			const obj = {}
+			const obj: any = {}
 			for (const conf of scheduler) {
 				obj[conf.id] = conf
 			}
@@ -345,11 +312,7 @@ function convertSchedulerToControls(db, logger) {
 	}
 }
 
-/**
- *
- * @param {*} db
- */
-function convertEmulatorToV3(db) {
+function convertEmulatorToV3(db: DataDatabase): void {
 	if (db.hasKey('userconfig')) {
 		const userconfig = db.getKey('userconfig')
 
@@ -367,12 +330,7 @@ function convertEmulatorToV3(db) {
 	}
 }
 
-/**
- *
- * @param {*} db
- * @returns
- */
-function convertSurfacesToV3(db) {
+function convertSurfacesToV3(db: DataDatabase) {
 	const devices = db.getKey('deviceconfig')
 	if (!devices) return
 
@@ -395,11 +353,8 @@ function convertSurfacesToV3(db) {
 
 /**
  * do the database upgrades to convert from the v2 to the v3 format
- * @param {import('../Database.js').DataDatabase} db
- * @param {import('winston').Logger} logger
- * @returns {void}
  */
-function convertDatabaseToV3(db, logger) {
+function convertDatabaseToV3(db: DataDatabase, logger: Logger): void {
 	convertInstancesToV3(db)
 
 	convertToControls(db)
@@ -410,12 +365,7 @@ function convertDatabaseToV3(db, logger) {
 	convertSurfacesToV3(db)
 }
 
-/**
- *
- * @param {*} oldObj
- * @returns
- */
-function convertPageToV3(oldObj) {
+function convertPageToV3(oldObj: any) {
 	// find the old data
 	const oldPageConfig = oldObj.config || {}
 	const oldPageActions = oldObj.actions || {}
@@ -424,8 +374,7 @@ function convertPageToV3(oldObj) {
 	const oldPageRotateRightActions = oldObj.rotate_right_actions || {}
 
 	// create the new data
-	/** @type {any} */
-	const result = {
+	const result: any = {
 		config: {},
 		steps: {},
 	}
@@ -452,12 +401,7 @@ function convertPageToV3(oldObj) {
 	return result
 }
 
-/**
- *
- * @param {*} control
- * @returns
- */
-function fixUpControl(control) {
+function fixUpControl(control: any) {
 	if (control.type === 'press') {
 		control.type = 'button'
 
@@ -493,8 +437,8 @@ function fixUpControl(control) {
 		delete control.action_sets
 	}
 
-	for (const step of Object.values(control.steps || {})) {
-		for (const set of Object.values(step.action_sets)) {
+	for (const step of Object.values<any>(control.steps || {})) {
+		for (const set of Object.values<any>(step.action_sets)) {
 			for (const action of set) {
 				if (action.instance === 'bitfocus-companion') {
 					action.instance = 'internal'
@@ -512,15 +456,9 @@ function fixUpControl(control) {
 	return control
 }
 
-/**
- * @param {*} obj
- * @param {import('winston').Logger} logger
- * @returns
- */
-function convertImportToSets(obj, logger) {
+function convertImportToSets(obj: any, logger: Logger) {
 	if (obj.type == 'full') {
-		/** @type {any} */
-		const newObj = {
+		const newObj: any = {
 			version: 3,
 			orig_version: obj.orig_version || obj.version,
 			type: 'full',
@@ -555,7 +493,7 @@ function convertImportToSets(obj, logger) {
 		}
 
 		if (obj.triggers) {
-			newObj.triggers = obj.triggers.map((/** @type {any} */ trigger, /** @type {any} */ index) =>
+			newObj.triggers = obj.triggers.map((trigger: any, index: number) =>
 				convertTriggerToControl(logger, trigger, index)
 			)
 		}
@@ -563,8 +501,7 @@ function convertImportToSets(obj, logger) {
 		return newObj
 	} else {
 		// type == 'page'
-		/** @type {any} */
-		const newObj = {
+		const newObj: any = {
 			version: 3,
 			orig_version: obj.orig_version || obj.version,
 			type: 'page',
@@ -600,10 +537,7 @@ function convertImportToSets(obj, logger) {
 	}
 }
 
-/**
- * @param {*} config
- */
-function splitBankConfigToStyleAndOptions(config) {
+function splitBankConfigToStyleAndOptions(config: any) {
 	const type = config.style === 'png' ? 'button' : config.style
 
 	const style = {
@@ -624,16 +558,14 @@ function splitBankConfigToStyleAndOptions(config) {
 	return { style, options, type }
 }
 
-/**
- * @param {*} style
- * @param {*[]} actions
- * @param {*[]} release_actions
- * @param {*[]} rotate_left_actions
- * @param {*[]} rotate_right_actions
- */
-function combineActionsToStepsAndSets(style, actions, release_actions, rotate_left_actions, rotate_right_actions) {
-	/** @type {any} */
-	const bank_action_steps = {}
+function combineActionsToStepsAndSets(
+	style: any,
+	actions: any[],
+	release_actions: any[],
+	rotate_left_actions: any[],
+	rotate_right_actions: any[]
+) {
+	const bank_action_steps: any = {}
 	if (style.latch) {
 		bank_action_steps['0'] = {
 			action_sets: {

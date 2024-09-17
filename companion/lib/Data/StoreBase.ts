@@ -90,7 +90,7 @@ export class DataStoreBase {
 	/**
 	 * The flat file DB in RAM
 	 */
-	private store: Record<string, any> = {}
+	store: Record<string, any> = {}
 
 	/**
 	 * This needs to be called in the extending class

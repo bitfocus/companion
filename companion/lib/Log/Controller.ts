@@ -93,7 +93,7 @@ class LogController {
 			return LogColors[Math.abs(hash) % LogColors.length]
 		}
 
-		if (process.env.JEST_WORKER_ID) {
+		if (process.env.VITEST_WORKER_ID) {
 			// Use a simpler log setup in tests
 			this.#winston = winston.createLogger({
 				level: 'silly',

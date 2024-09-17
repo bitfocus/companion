@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { ParseExpression, FindAllReferencedVariables } from '../lib/Expression/ExpressionParse'
 
 function ParseExpression2(str) {

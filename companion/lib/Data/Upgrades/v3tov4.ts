@@ -1,29 +1,25 @@
 import { cloneDeep } from 'lodash-es'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
+import type { DataDatabase } from '../Database.js'
+import type { Logger } from '../../Log/Controller.js'
+import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 
 /**
  * Create an old-style bank controlId
- * @param {string | number} page
- * @param {number} bank
- * @returns {string}
  */
-function CreateBankControlIdOld(page, bank) {
+function CreateBankControlIdOld(page: string | number, bank: number): string {
 	return `bank:${page}-${bank}`
 }
 
-/**
- * @param {import('../Database.js').DataDatabase} db
- * @returns {void}
- */
-function addControlIdsToPages(db) {
+function addControlIdsToPages(db: DataDatabase): void {
 	const controls = db.getKey('controls', {})
 	const pages = db.getKey('page', {})
 
 	const maxButtons = 32
 	const perRow = 8
 
-	for (const [number, page] of Object.entries(pages)) {
+	for (const [number, page] of Object.entries<any>(pages)) {
 		if (!page.controls) {
 			page.controls = {}
 
@@ -42,11 +38,8 @@ function addControlIdsToPages(db) {
 
 /**
  * do the database upgrades to convert from the v3 to the v4 format
- * @param {import('../Database.js').DataDatabase} db
- * @param {import('winston').Logger} _logger
- * @returns {void}
  */
-function convertDatabaseToV4(db, _logger) {
+function convertDatabaseToV4(db: DataDatabase, _logger: Logger) {
 	addControlIdsToPages(db)
 
 	// If xkeys was previously enabled, then preserve the old layout
@@ -58,10 +51,8 @@ function convertDatabaseToV4(db, _logger) {
 
 /**
  * Parse an old-style bank controlId
- * @param {string} controlId
- * @returns
  */
-function ParseBankControlId(controlId) {
+function ParseBankControlId(controlId: string): any {
 	if (typeof controlId === 'string') {
 		const match = controlId.match(/^bank:(\d+)-(\d+)$/)
 		if (match) {
@@ -76,13 +67,9 @@ function ParseBankControlId(controlId) {
 	return undefined
 }
 
-/**
- * @param {{ triggers?: import('@companion-app/shared/Model/TriggerModel.js').TriggerModel[] | Record<string, import('@companion-app/shared/Model/TriggerModel.js').TriggerModel>; }} obj
- */
-function ensureTriggersAreObject(obj) {
+function ensureTriggersAreObject(obj: { triggers?: TriggerModel[] | Record<string, TriggerModel> }) {
 	if (obj.triggers && Array.isArray(obj.triggers)) {
-		/** @type {Record<string, import('@companion-app/shared/Model/TriggerModel.js').TriggerModel>} */
-		const triggersObj = {}
+		const triggersObj: Record<string, TriggerModel> = {}
 		for (const trigger of obj.triggers) {
 			triggersObj[nanoid()] = trigger
 		}
@@ -90,17 +77,13 @@ function ensureTriggersAreObject(obj) {
 	}
 }
 
-/**
- * @param {any} obj
- * @returns {void}
- */
-function convertImportToV4(obj) {
+function convertImportToV4(obj: any) {
 	if (obj.type == 'full') {
 		const newObj = { ...obj }
 		newObj.pages = cloneDeep(newObj.pages)
 		delete newObj.controls
 
-		for (const page of Object.values(newObj.pages)) {
+		for (const page of Object.values<any>(newObj.pages)) {
 			page.controls = {}
 		}
 

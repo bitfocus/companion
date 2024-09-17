@@ -1,12 +1,11 @@
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Util/Constants.js'
+import type { DataDatabase } from '../Database.js'
+import type { Logger } from '../../Log/Controller.js'
 
 /**
  * do the database upgrades to convert from the v1 to the v2 format
- * @param {import('../Database.js').DataDatabase} db
- * @param {import('winston').Logger} _logger
- * @returns {void}
  */
-function convertDatabase15To32(db, _logger) {
+function convertDatabase15To32(db: DataDatabase, _logger: Logger): void {
 	const oldBankConfig = db.getKey('bank', {})
 	const oldActions = db.getKey('bank_actions', {})
 	const oldReleaseActions = db.getKey('bank_release_actions', {})
@@ -29,12 +28,7 @@ function convertDatabase15To32(db, _logger) {
 	}
 }
 
-/**
- *
- * @param {*} oldObj
- * @returns
- */
-function convertPage15To32(oldObj) {
+function convertPage15To32(oldObj: any): any {
 	// find the old data
 	const oldPageConfig = oldObj.config || {}
 	const oldPageActions = oldObj.actions || {}
@@ -42,8 +36,7 @@ function convertPage15To32(oldObj) {
 	const oldPageFeedbacks = oldObj.feedbacks || {}
 
 	// create the new data
-	/** @type {any} */
-	const result = {
+	const result: any = {
 		config: {},
 		actions: {},
 		release_actions: {},
@@ -78,12 +71,7 @@ function convertPage15To32(oldObj) {
 	return result
 }
 
-/**
- *
- * @param {*} obj
- * @returns
- */
-function convertImport15To32(obj) {
+function convertImport15To32(obj: any): any {
 	if (obj.type == 'full') {
 		obj.version = 2
 
@@ -147,12 +135,7 @@ function convertImport15To32(obj) {
 // 	return obj
 // }
 
-/**
- *
- * @param {*} key
- * @returns
- */
-function from12to32(key) {
+function from12to32(key: number): number {
 	key = key - 1
 
 	var rows = Math.floor(key / 4)
@@ -166,11 +149,7 @@ function from12to32(key) {
 	return res
 }
 
-/**
- *
- * @param {*} config
- */
-function upgradeBankStyle(config) {
+function upgradeBankStyle(config: any) {
 	if (config && config.style) {
 		if (config.style == 'bigtext') {
 			config.size = 'large'

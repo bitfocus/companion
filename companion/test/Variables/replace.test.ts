@@ -1,8 +1,9 @@
+import { describe, test, expect } from 'vitest'
 import { replaceAllVariables } from '../../lib/Variables/Util.js'
 
 describe('variable replacing', () => {
 	test('undefined string', () => {
-		expect(replaceAllVariables(undefined, 'new-label')).toBe(undefined)
+		expect(replaceAllVariables(undefined as any, 'new-label')).toBe(undefined)
 	})
 
 	test('empty string', () => {

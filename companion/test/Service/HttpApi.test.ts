@@ -1,10 +1,13 @@
-import { jest } from '@jest/globals'
-import { mock } from 'jest-mock-extended'
+import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { mock, mockDeep } from 'vitest-mock-extended'
 import { ServiceHttpApi } from '../../lib/Service/HttpApi'
 import express from 'express'
 import supertest from 'supertest'
 import bodyParser from 'body-parser'
 import { rgb } from '../../lib/Resources/Util'
+import type { Registry } from '../../lib/Registry'
+import type { ControlButtonNormal } from '../../lib/Controls/ControlTypes/Button/Normal'
+import type { UIExpress } from '../../lib/UI/Express'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -14,38 +17,35 @@ const mockOptions = {
 
 describe('HttpApi', () => {
 	function createService() {
-		const logger = mock(
-			{
-				info: jest.fn(),
-				debug: jest.fn(),
+		// const logger = mock(
+		// 	{
+		// 		info: vi.fn(),
+		// 		debug: vi.fn(),
+		// 	},
+		// 	mockOptions
+		// )
+		// const logController = mock(
+		// 	{
+		// 		createLogger: () => logger,
+		// 	},
+		// 	mockOptions
+		// )
+		const registry = mockDeep<Registry>(mockOptions, {
+			// log: logController,
+			surfaces: mock({}, mockOptions),
+			page: mock({}, mockOptions),
+			controls: mock({}, mockOptions),
+			userconfig: {
+				// Force config to return true
+				getKey: () => true,
 			},
-			mockOptions
-		)
-		const logController = mock(
-			{
-				createLogger: () => logger,
-			},
-			mockOptions
-		)
-		const registry = mock(
-			{
-				log: logController,
-				surfaces: mock({}, mockOptions),
-				page: mock({}, mockOptions),
-				controls: mock({}, mockOptions),
-				userconfig: {
-					// Force config to return true
-					getKey: () => true,
+			variables: mock(
+				{
+					custom: mock({}, mockOptions),
 				},
-				variables: mock(
-					{
-						custom: mock({}, mockOptions),
-					},
-					mockOptions
-				),
-			},
-			mockOptions
-		)
+				mockOptions
+			),
+		})
 
 		let router = express.Router()
 		let legacyRouter = express.Router()
@@ -53,13 +53,13 @@ describe('HttpApi', () => {
 		const app = express()
 
 		const appHandler = {
-			set apiRouter(newRouter) {
+			set apiRouter(newRouter: express.Router) {
 				router = newRouter
 			},
-			set legacyApiRouter(newRouter) {
+			set legacyApiRouter(newRouter: express.Router) {
 				legacyRouter = newRouter
 			},
-		}
+		} as any as UIExpress
 
 		app.use(bodyParser.text())
 		app.use(bodyParser.json())
@@ -75,7 +75,7 @@ describe('HttpApi', () => {
 			app,
 			registry,
 			service,
-			logger,
+			// logger,
 		}
 	}
 
@@ -86,7 +86,7 @@ describe('HttpApi', () => {
 					const { app, registry } = createService()
 
 					const mockFn = registry.variables.custom.setValue
-					mockFn.mockReturnValue()
+					mockFn.mockReturnValue(null)
 
 					// Perform the request
 					const res = await supertest(app).get('/set/custom-variable/my-var-name').send()
@@ -100,7 +100,7 @@ describe('HttpApi', () => {
 					const { app, registry } = createService()
 
 					const mockFn = registry.variables.custom.setValue
-					mockFn.mockReturnValue()
+					mockFn.mockReturnValue(null)
 
 					// Perform the request
 					const res = await supertest(app).get('/set/custom-variable/my-var-name?value=123').send()
@@ -133,7 +133,7 @@ describe('HttpApi', () => {
 		describe('rescan', () => {
 			test('ok', async () => {
 				const { app, registry } = createService()
-				registry.surfaces.triggerRefreshDevices.mockResolvedValue()
+				registry.surfaces.triggerRefreshDevices.mockResolvedValue(undefined)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/surfaces/rescan').send()
@@ -168,7 +168,7 @@ describe('HttpApi', () => {
 				const { app, registry } = createService()
 
 				const mockFn = registry.variables.custom.setValue
-				mockFn.mockReturnValue()
+				mockFn.mockReturnValue(null)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/custom-variable/my-var-name/value?value=123').send()
@@ -183,7 +183,7 @@ describe('HttpApi', () => {
 				const { app, registry } = createService()
 
 				const mockFn = registry.variables.custom.setValue
-				mockFn.mockReturnValue()
+				mockFn.mockReturnValue(null)
 
 				// Perform the request
 				const res = await supertest(app)
@@ -329,7 +329,7 @@ describe('HttpApi', () => {
 				mockFn.mockReturnValue({
 					a: 1,
 					b: 'str',
-				})
+				} as any)
 
 				// Perform the request
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
@@ -346,9 +346,9 @@ describe('HttpApi', () => {
 		describe('down', () => {
 			test('no control', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(undefined)
+				registry.page.getControlIdAt.mockReturnValue(null)
 
-				const mockControl = mock({}, mockOptions)
+				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
@@ -428,9 +428,9 @@ describe('HttpApi', () => {
 		describe('up', () => {
 			test('no control', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(undefined)
+				registry.page.getControlIdAt.mockReturnValue(null)
 
-				const mockControl = mock({}, mockOptions)
+				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
@@ -509,14 +509,14 @@ describe('HttpApi', () => {
 
 		describe('press', () => {
 			beforeEach(() => {
-				jest.useFakeTimers()
+				vi.useFakeTimers()
 			})
 
 			test('no control', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(undefined)
+				registry.page.getControlIdAt.mockReturnValue(null)
 
-				const mockControl = mock({}, mockOptions)
+				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
@@ -552,7 +552,7 @@ describe('HttpApi', () => {
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
 				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', true, 'http')
 
-				jest.advanceTimersByTime(100)
+				vi.advanceTimersByTime(100)
 
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(2)
 				expect(registry.controls.pressControl).toHaveBeenLastCalledWith('control123', false, 'http')
@@ -601,9 +601,9 @@ describe('HttpApi', () => {
 		describe('rotate left', () => {
 			test('no control', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(undefined)
+				registry.page.getControlIdAt.mockReturnValue(null)
 
-				const mockControl = mock({}, mockOptions)
+				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
@@ -683,9 +683,9 @@ describe('HttpApi', () => {
 		describe('rotate right', () => {
 			test('no control', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(undefined)
+				registry.page.getControlIdAt.mockReturnValue(null)
 
-				const mockControl = mock({}, mockOptions)
+				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
@@ -765,9 +765,9 @@ describe('HttpApi', () => {
 		describe('set step', () => {
 			test('no control', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(undefined)
+				registry.page.getControlIdAt.mockReturnValue(null)
 
-				const mockControl = mock({}, mockOptions)
+				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
@@ -787,9 +787,9 @@ describe('HttpApi', () => {
 				const { app, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('test')
 
-				const mockControl = mock(
+				const mockControl = mock<ControlButtonNormal>(
 					{
-						stepMakeCurrent: jest.fn(),
+						stepMakeCurrent: vi.fn(),
 					},
 					mockOptions
 				)
@@ -817,9 +817,9 @@ describe('HttpApi', () => {
 				const { app, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('control123')
 
-				const mockControl = mock(
+				const mockControl = mock<ControlButtonNormal>(
 					{
-						stepMakeCurrent: jest.fn(),
+						stepMakeCurrent: vi.fn(),
 					},
 					mockOptions
 				)
@@ -883,7 +883,7 @@ describe('HttpApi', () => {
 		describe('set style', () => {
 			test('no control', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(undefined)
+				registry.page.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3/style').send()
@@ -902,7 +902,7 @@ describe('HttpApi', () => {
 				const { app, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('abc')
 
-				registry.controls.getControl.mockReturnValue({ abc: null })
+				registry.controls.getControl.mockReturnValue({ abc: null } as any)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3/style').send()
@@ -963,9 +963,9 @@ describe('HttpApi', () => {
 				const { app, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('abc')
 
-				const mockControl = mock(
+				const mockControl = mock<ControlButtonNormal>(
 					{
-						styleSetFields: jest.fn(),
+						styleSetFields: vi.fn(),
 					},
 					mockOptions
 				)

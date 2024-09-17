@@ -39,7 +39,6 @@
 		"@types/supertest": "^6.0.2",
 		"@types/uuid": "^10.0.0",
 		"@types/ws": "^8.5.12",
-		"jest-mock-extended": "^3.0.7",
 		"supertest": "^7.0.0",
 		"ts-loader": "^9.5.1",
 		"typescript": "~5.5.4",

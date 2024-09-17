@@ -1,4 +1,6 @@
+import { describe, test, expect } from 'vitest'
 import { executeExpression } from '../../lib/Variables/Util.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 describe('executeExpression', () => {
 	test('basic math', () => {
@@ -47,8 +49,8 @@ describe('executeExpression', () => {
 	})
 
 	test('array variable', () => {
-		const injectedVariableValues = {
-			'$(test:something)': [1, 2, 3],
+		const injectedVariableValues: CompanionVariableValues = {
+			'$(test:something)': [1, 2, 3] as any,
 		}
 
 		const res = executeExpression('$(test:something)[1]', {}, undefined, injectedVariableValues)
@@ -56,8 +58,8 @@ describe('executeExpression', () => {
 	})
 
 	test('object variable', () => {
-		const injectedVariableValues = {
-			'$(test:something)': { a: 1, b: '123' },
+		const injectedVariableValues: CompanionVariableValues = {
+			'$(test:something)': { a: 1, b: '123' } as any,
 		}
 
 		const res = executeExpression('$(test:something)["b"]', {}, undefined, injectedVariableValues)
@@ -85,9 +87,9 @@ describe('executeExpression', () => {
 	})
 
 	test('chained array variable', () => {
-		const injectedVariableValues = {
+		const injectedVariableValues: CompanionVariableValues = {
 			'$(test:something)': '$(another:value)',
-			'$(another:value)': [1, 2, 3],
+			'$(another:value)': [1, 2, 3] as any,
 		}
 
 		const res = executeExpression('join($(test:something), "/")', {}, undefined, injectedVariableValues)

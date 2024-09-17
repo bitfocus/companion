@@ -1,11 +1,12 @@
-import { jest } from '@jest/globals'
+import { describe, it, expect, vi, beforeEach, test } from 'vitest'
 import EventEmitter from 'events'
+import type { createSocket } from 'dgram'
 
-const mockCreateSocket = jest.fn(() => {
+const mockCreateSocket = vi.fn((...args: Parameters<typeof createSocket>): MockSocket => {
 	throw new Error('Not implemented')
 })
 
-jest.unstable_mockModule('dgram', () => ({
+vi.mock('dgram', () => ({
 	Socket: null, // Only needed for types
 	createSocket: mockCreateSocket,
 }))
@@ -14,12 +15,12 @@ const { ServiceSharedUdpManager } = await import('../../lib/Service/SharedUdpMan
 
 class MockSocket extends EventEmitter {
 	// TODO
-	bind = jest.fn((port, cb) => {
+	bind = vi.fn((port, cb) => {
 		if (cb) setImmediate(() => cb())
 	})
 
-	send = jest.fn()
-	close = jest.fn()
+	send = vi.fn()
+	close = vi.fn()
 }
 
 describe('SharedUdpManager', () => {
@@ -34,8 +35,8 @@ describe('SharedUdpManager', () => {
 			const service = new ServiceSharedUdpManager()
 			expect(service.countActivePorts()).toBe(0)
 
-			const messageFn = jest.fn()
-			const errorFn = jest.fn()
+			const messageFn = vi.fn()
+			const errorFn = vi.fn()
 
 			const mockSocket = new MockSocket()
 			mockCreateSocket.mockImplementationOnce(() => mockSocket)
@@ -62,8 +63,8 @@ describe('SharedUdpManager', () => {
 			const service = new ServiceSharedUdpManager()
 			expect(service.countActivePorts()).toBe(0)
 
-			const messageFn = jest.fn()
-			const errorFn = jest.fn()
+			const messageFn = vi.fn()
+			const errorFn = vi.fn()
 
 			const mockSocket = new MockSocket()
 			mockCreateSocket.mockImplementationOnce(() => mockSocket)
@@ -98,8 +99,8 @@ describe('SharedUdpManager', () => {
 			const service = new ServiceSharedUdpManager()
 			expect(service.countActivePorts()).toBe(0)
 
-			const messageFn = jest.fn()
-			const errorFn = jest.fn()
+			const messageFn = vi.fn()
+			const errorFn = vi.fn()
 
 			const mockSocket = new MockSocket()
 			mockCreateSocket.mockImplementationOnce(() => mockSocket)
@@ -132,8 +133,8 @@ describe('SharedUdpManager', () => {
 			const service = new ServiceSharedUdpManager()
 			expect(service.countActivePorts()).toBe(0)
 
-			const messageFn = jest.fn()
-			const errorFn = jest.fn()
+			const messageFn = vi.fn()
+			const errorFn = vi.fn()
 
 			const mockSocket = new MockSocket()
 			mockCreateSocket.mockImplementationOnce(() => mockSocket)
@@ -167,7 +168,7 @@ describe('SharedUdpManager', () => {
 		})
 
 		// Setup a socket
-		const handleId = await service.joinPort('udp4', 1234, defaultOwnerId, jest.fn(), jest.fn())
+		const handleId = await service.joinPort('udp4', 1234, defaultOwnerId, vi.fn(), vi.fn())
 		expect(handleId).toBeTruthy()
 		expect(mockCreateSocket).toHaveBeenCalledTimes(1)
 		expect(mockSocket.bind).toHaveBeenCalledTimes(1)
@@ -215,7 +216,7 @@ describe('SharedUdpManager', () => {
 		test('multiple handles can send', async () => {
 			const { service, mockSocket, handleId } = await setupPort()
 
-			const handleId2 = await service.joinPort('udp4', 1234, defaultOwnerId, jest.fn(), jest.fn())
+			const handleId2 = await service.joinPort('udp4', 1234, defaultOwnerId, vi.fn(), vi.fn())
 			expect(handleId2).toBeTruthy()
 
 			// Make the call
@@ -229,8 +230,8 @@ describe('SharedUdpManager', () => {
 
 	describe('callbacks', () => {
 		async function join(service) {
-			const messageFn = jest.fn()
-			const errorFn = jest.fn()
+			const messageFn = vi.fn()
+			const errorFn = vi.fn()
 
 			const handleId = await service.joinPort('udp4', 1234, defaultOwnerId, messageFn, errorFn)
 			expect(handleId).toBeTruthy()
@@ -317,7 +318,7 @@ describe('SharedUdpManager', () => {
 			const { service, handleId } = await setupPort()
 			expect(service.countActivePorts()).toBe(1)
 
-			const handleId2 = await service.joinPort('udp4', 1234, defaultOwnerId, jest.fn(), jest.fn())
+			const handleId2 = await service.joinPort('udp4', 1234, defaultOwnerId, vi.fn(), vi.fn())
 			expect(handleId2).toBeTruthy()
 
 			// Leave one
@@ -353,7 +354,7 @@ describe('SharedUdpManager', () => {
 			const { service } = await setupPort()
 			expect(service.countActivePorts()).toBe(1)
 
-			const handleId2 = await service.joinPort('udp4', 1234, defaultOwnerId, jest.fn(), jest.fn())
+			const handleId2 = await service.joinPort('udp4', 1234, defaultOwnerId, vi.fn(), vi.fn())
 			expect(handleId2).toBeTruthy()
 
 			// Leave both
@@ -367,7 +368,7 @@ describe('SharedUdpManager', () => {
 
 			const secondOwner = 'second-owner'
 
-			const handleId2 = await service.joinPort('udp4', 1234, secondOwner, jest.fn(), jest.fn())
+			const handleId2 = await service.joinPort('udp4', 1234, secondOwner, vi.fn(), vi.fn())
 			expect(handleId2).toBeTruthy()
 
 			// Leave first
