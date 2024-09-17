@@ -108,8 +108,10 @@ class GraphicsController extends CoreBase {
 	#debouncePendingVariables = debounceFn(
 		() => {
 			const values = this.#pendingVariables
-			this.#pendingVariables = null
-			this.variablesController.values.setVariableValues('internal', values)
+			if (values) {
+				this.#pendingVariables = null
+				this.variablesController.values.setVariableValues('internal', values)
+			}
 		},
 		{
 			wait: 10,
