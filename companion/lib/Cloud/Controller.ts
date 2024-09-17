@@ -90,6 +90,13 @@ export class CloudController extends CoreBase {
 		this.clouddb = clouddb
 		this.cache = cache
 
+		this.data = this.clouddb.getKey('auth', {
+			token: '',
+			user: '',
+			connections: {},
+			cloudActive: false,
+		})
+
 		this.companionId = registry.appInfo.machineId
 		const uuid = this.clouddb.getKey('uuid', undefined)
 		this.#setState({ uuid })
@@ -105,13 +112,6 @@ export class CloudController extends CoreBase {
 		}
 
 		this.#setupRegions()
-
-		this.data = this.clouddb.getKey('auth', {
-			token: '',
-			user: '',
-			connections: {},
-			cloudActive: false,
-		})
 
 		if (this.data.token) {
 			this.#handleCloudRefresh(this.data.token)

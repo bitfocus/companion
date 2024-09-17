@@ -15,7 +15,7 @@ import fs from 'fs-extra'
 import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
 import logger from './Log/Controller.js'
-import { ConfigReleaseDirs } from '@companion-app/shared/Paths.cjs'
+import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 
 const program = new Command()
 

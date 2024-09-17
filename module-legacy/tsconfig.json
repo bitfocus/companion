@@ -11,8 +11,7 @@
 		},
 		"declaration": true,
 		"importHelpers": true,
-		"pretty": true,
-		// "types": ["node", "jest"]
+		"pretty": true
 	},
 	"include": ["src/**/*.ts", "scripts/**/*.ts"],
 	"compileOnSave": false,
