@@ -1416,6 +1416,7 @@ __metadata:
     "@electron/notarize": "npm:^2.5.0"
     "@sentry/electron": "npm:^5.4.0"
     "@types/plist": "npm:^3.0.5"
+    chokidar: "npm:^3.6.0"
     debounce-fn: "npm:^6.0.0"
     electron: "npm:31.6.0"
     electron-builder: "npm:24.13.3"

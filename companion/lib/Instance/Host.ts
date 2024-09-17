@@ -364,7 +364,7 @@ export class ModuleHost {
 			await this.#startQueue
 				.add(async () => {
 					if (config && config.enabled !== false) {
-						this.#logger.info(`Starting connection: "${config.label}"(${connectionId})`)
+						this.#logger.info(`Starting connection: "${config.label}" (${connectionId})`)
 
 						// stop any existing child process
 						await this.#doStopConnectionInner(connectionId, false)

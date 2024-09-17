@@ -5,6 +5,8 @@ import { determinePlatformInfo } from './util.mjs'
 import { generateVersionString } from '../lib.mjs'
 import { fetchNodejs } from '../fetch_nodejs.mjs'
 
+$.verbose = true
+
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }

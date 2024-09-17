@@ -1,3 +1,6 @@
+// suppress fnm reporting node version
+process.env.FNM_LOGLEVEL = 'quiet'
+
 export async function generateVersionString() {
 	return goSilent(async () => {
 		const headHashRaw = await $`git rev-parse --short HEAD`

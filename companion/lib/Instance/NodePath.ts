@@ -14,14 +14,11 @@ export async function getNodeJsPath(runtimeType: string): Promise<string | null>
 	const versionNumber = nodeVersionsJson[runtimeType]
 	if (!versionNumber) return null
 
-	const pathToDir = fileURLToPath(
-		new URL(isPackaged() ? path.join(__dirname, '/node-runtimes') : '../../../.cache/node-runtime', import.meta.url)
-	)
-	const exeName = process.platform === 'win32' ? 'node.exe' : 'bin/node'
+	const pathToDir = isPackaged() ? path.join(__dirname, '/node-runtimes') : '../../../.cache/node-runtime'
 	const nodePath = path.join(
-		pathToDir,
+		isPackaged() ? pathToDir : fileURLToPath(new URL(pathToDir, import.meta.url)),
 		isPackaged() ? runtimeType : `${process.platform}-${process.arch}-${versionNumber}`,
-		exeName
+		process.platform === 'win32' ? 'node.exe' : 'bin/node'
 	)
 
 	// Make sure it exists

@@ -8,6 +8,8 @@ import path from 'node:path'
 import yaml from 'yaml'
 import { determinePlatformInfo } from './util.mjs'
 
+$.verbose = true
+
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
