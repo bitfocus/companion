@@ -7,6 +7,7 @@ import { SocketEventsHandler } from './Wrapper.js'
 import fs from 'fs-extra'
 import ejson from 'ejson'
 import os from 'os'
+import { getNodeJsPath } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { Registry } from '../Registry.js'
 import type { InstanceStatus } from './Status.js'
@@ -373,14 +374,17 @@ export class ModuleHost {
 							return
 						}
 
-						if (moduleInfo.manifest.runtime.type !== 'node18') {
-							this.#logger.error(`Only node18 runtime is supported currently: "${connectionId}"`)
+						const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
+						if (!nodePath) {
+							this.#logger.error(
+								`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${connectionId}"`
+							)
 							return
 						}
 
 						if (moduleInfo.isPackaged && !validApiRange.test(moduleInfo.manifest.runtime.apiVersion)) {
 							this.#logger.error(
-								`Module Api version is too new/old: "${connectionId}" ${moduleInfo.manifest.runtime.apiVersion} ${validApiRange}`
+								`Module Api version is too new/old: "${connectionId}" ${moduleInfo.manifest.runtime.apiVersion} ${validApiRange.format()}`
 							)
 							return
 						}
@@ -415,8 +419,7 @@ export class ModuleHost {
 						}
 
 						const cmd: string[] = [
-							// Future: vary depending on module version
-							// 'node', // For now we can use fork
+							nodePath,
 							inspectPort !== undefined ? `--inspect=${inspectPort}` : undefined,
 							jsPath,
 						].filter((v): v is string => !!v)
@@ -437,7 +440,7 @@ export class ModuleHost {
 							maxRestarts: -1,
 							kill: 5000,
 							cwd: moduleInfo.basePath,
-							fork: true, // Future: temporary until we want multiple node/runtime versions
+							fork: false,
 							stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 						})
 

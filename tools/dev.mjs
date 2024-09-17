@@ -7,6 +7,8 @@ import debounceFn from 'debounce-fn'
 import { fileURLToPath } from 'url'
 import concurrently from 'concurrently'
 import dotenv from 'dotenv'
+import { fetchNodejs } from './fetch_nodejs.mjs'
+import { determinePlatformInfo } from './build/util.mjs'
 
 await $`zx ../tools/build_writefile.mjs`
 
@@ -27,6 +29,13 @@ if (rawDevModulesPath) {
 		process.argv[argvIndex + 1] = devModulesPath
 	}
 }
+
+console.log('Ensuring nodejs binaries are available')
+
+const platformInfo = determinePlatformInfo(undefined)
+await fetchNodejs(platformInfo)
+
+console.log('Building shared-lib')
 
 concurrently([
 	{

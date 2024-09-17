@@ -38,14 +38,15 @@ fi
 set -e
 
 heading "Core"
+corepack enable
 yarn --immutable
 echo
 
-heading "UI"
 if [ -z "$CI" ]; then
+  heading "UI"
   echo "Warning: This next step can take many minutes to run"
   yarn dist:webui
+  echo
 fi
-echo
 
 exit 0
