@@ -7,12 +7,12 @@ import systeminformation from 'systeminformation'
 import Store from 'electron-store'
 import electron, { ipcMain, app, BrowserWindow, dialog } from 'electron'
 import { nanoid } from 'nanoid'
-import respawn from 'respawn'
 import stripAnsi from 'strip-ansi'
 import chokidar from 'chokidar'
 import debounceFn from 'debounce-fn'
 import fileStreamRotator from 'file-stream-rotator'
-import { ConfigReleaseDirs } from './Paths.cjs'
+import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
+import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
@@ -779,17 +779,19 @@ if (!lock) {
 				app.exit(11)
 			}
 
-			child = respawn(
-				() => [
-					// Build a new command string for each start
-					nodeBin,
-					path.join(companionRootPath, 'main.js'),
-					`--machine-id=${machineId}`,
-					`--config-dir=${configDir}`,
-					`--admin-port=${uiConfig.get('http_port')}`,
-					`--admin-address=${uiConfig.get('bind_ip')}`,
-					uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
-				],
+			child = new RespawnMonitor(
+				// @ts-ignore
+				() =>
+					[
+						// Build a new command string for each start
+						nodeBin,
+						path.join(companionRootPath, 'main.js'),
+						`--machine-id=${machineId}`,
+						`--config-dir=${configDir}`,
+						`--admin-port=${uiConfig.get('http_port')}`,
+						`--admin-address=${uiConfig.get('bind_ip')}`,
+						uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
+					].filter((v) => !!v),
 				{
 					name: `Companion process`,
 					env: {
@@ -868,7 +870,7 @@ if (!lock) {
 			child.on('warn', (data) => {
 				customLog(data.toString())
 			})
-			child.on('message', (data) => {
+			child.on('message', (/** @type {any} */ data) => {
 				console.log('Received IPC message', data)
 				if (data.messageType === 'fatal-error') {
 					electron.dialog.showErrorBox(data.title, data.body)

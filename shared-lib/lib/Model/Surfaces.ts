@@ -8,6 +8,11 @@ import type {
 } from '@companion-module/base'
 import { CompanionInputFieldTextInputExtended, EncodeIsVisible2 } from './Options.js'
 
+export interface RowsAndColumns {
+	rows: number
+	columns: number
+}
+
 export interface ClientSurfaceItem {
 	id: string
 	type: string
@@ -17,7 +22,9 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
-	remoteConnectionId: string | null
+
+	size: RowsAndColumns | null
+	offset: RowsAndColumns | null
 }
 
 export interface ClientDevicesListItem {
@@ -30,9 +37,14 @@ export interface ClientDevicesListItem {
 
 export interface SurfaceGroupConfig {
 	name: string
-	last_page: number
-	startup_page: number
+	last_page_id: string
+	startup_page_id: string
 	use_last_page: boolean
+
+	/** @deprecated. replaced by last_page_id */
+	last_page?: number
+	/** @deprecated. replaced by startup_page_id */
+	startup_page?: number
 }
 
 export type SurfacePanelConfig = Record<string, any>

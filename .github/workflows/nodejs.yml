@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: linux-x64-build-cache
+          key: linux-x64-build-cache-${{ hashFiles('.node-version') }}
 
       - name: build & package
         run: |
@@ -128,7 +128,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: linux-arm64-build-cache
+          key: linux-arm64-build-cache-${{ hashFiles('.node-version') }}
 
       - name: build & package
         run: |
@@ -198,7 +198,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: macos-x64-build-cache
+          key: macos-x64-build-cache-${{ hashFiles('.node-version') }}
 
       - name: build & package
         run: |
@@ -267,7 +267,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: macos-arm64-build-cache
+          key: macos-arm64-build-cache-${{ hashFiles('.node-version') }}
 
       - name: yarn update
         run: |
@@ -340,7 +340,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: windows-x64-build-cache
+          key: windows-x64-build-cache-${{ hashFiles('.node-version') }}
 
       - name: build & package
         shell: bash

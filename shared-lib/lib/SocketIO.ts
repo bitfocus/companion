@@ -33,7 +33,7 @@ import type {
 	ClientResetSelection,
 	InstanceRemappings,
 } from './Model/ImportExport.js'
-import type { PageModel } from './Model/PageModel.js'
+import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { FeedbackDefinitionUpdate, InternalFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
@@ -144,7 +144,7 @@ export interface ClientToBackendEventsMap {
 		enabled: boolean
 	) => boolean
 	'controls:action:learn': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
-	'controls:action:duplicate': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
+	'controls:action:duplicate': (controlId: string, stepId: string, setId: string, actionId: string) => string | null
 	'controls:action:remove': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
 	'controls:action:set-delay': (
 		controlId: string,
@@ -189,6 +189,7 @@ export interface ClientToBackendEventsMap {
 	'controls:action-set:remove': (controlId: string, stepId: string, setId: string) => boolean
 
 	'controls:step:add': (controlId: string) => string | false
+	'controls:step:duplicate': (controlId: string, stepId: string) => boolean
 	'controls:step:remove': (controlId: string, stepId: string) => boolean
 	'controls:step:swap': (controlId: string, stepId1: string, stepId2: string) => boolean
 	'controls:step:set-current': (controlId: string, stepId: string) => boolean
@@ -277,8 +278,6 @@ export interface ClientToBackendEventsMap {
 	) => InstanceRemappings
 	'loadsave:control-preview': (location: ControlLocation) => string | null
 	'loadsave:import-full': (config: ClientImportSelection | null) => void
-	'loadsave:reset-page-nav': (pageNumber: number) => 'ok'
-	'loadsave:reset-page-clear': (pageNumber: number) => 'ok'
 
 	'preview:location:subscribe': (location: ControlLocation, subId: string) => WrappedImage
 	'preview:location:unsubscribe': (location: ControlLocation, subId: string) => void
@@ -289,9 +288,14 @@ export interface ClientToBackendEventsMap {
 	) => string | null
 	'preview:button-reference:unsubscribe': (subId: string) => void
 
-	'pages:subscribe': () => Record<number, PageModel | undefined>
+	'pages:subscribe': () => ClientPagesInfo
 	'pages:unsubscribe': () => void
 	'pages:set-name': (pageNumber: number, pageName: string) => void
+	'pages:insert-pages': (beforePageNumber: number, pageNames: string[]) => 'ok' | 'fail'
+	'pages:delete-page': (pageNumber: number) => 'ok' | 'fail'
+	'pages:move-page': (pageId: string, newPageNumber: number) => 'ok' | 'fail'
+	'pages:reset-page-nav': (pageNumber: number) => 'ok'
+	'pages:reset-page-clear': (pageNumber: number) => 'ok'
 
 	'connections:add': (info: { type: string; product: string | undefined }) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
@@ -327,7 +331,7 @@ export interface BackendToClientEventsMap {
 	'learn:remove': (id: string) => void
 
 	set_userconfig_key: (key: keyof UserConfigModel, value: any) => void
-	'pages:update': (page: number, info: PageModel) => void
+	'pages:update': (changes: PageModelChanges) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void
 

@@ -1,7 +1,7 @@
 {
 	"name": "@companion-app/launcher",
 	"description": "Companion",
-	"version": "3.4.0",
+	"version": "3.99.0",
 	"main": "main.js",
 	"license": "MIT",
 	"private": true,
@@ -11,15 +11,14 @@
 		"dev": "electron dev.cjs"
 	},
 	"dependencies": {
+		"@companion-app/shared": "*",
 		"@sentry/electron": "^5.4.0",
-		"chokidar": "^3.6.0",
 		"debounce-fn": "^6.0.0",
 		"electron-store": "^10.0.0",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.2.0",
 		"nanoid": "^5.0.7",
 		"plist": "^3.1.0",
-		"respawn": "*",
 		"semver": "^7.6.3",
 		"strip-ansi": "^7.1.0",
 		"systeminformation": "^5.23.5"
@@ -92,10 +91,6 @@
 			{
 				"from": "../dist",
 				"to": "."
-			},
-			{
-				"from": "../module-legacy/manifests",
-				"to": "./module-legacy/manifests"
 			}
 		]
 	}

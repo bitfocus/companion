@@ -1,13 +1,12 @@
 {
   "name": "@companion-app/workspace",
-  "version": "3.4.0",
+  "version": "3.99.0",
   "packageManager": "yarn@4.4.0",
   "workspaces": [
     "companion",
     "shared-lib",
     "webui",
-    "launcher",
-    "vendor/*"
+    "launcher"
   ],
   "type": "module",
   "scripts": {
@@ -26,7 +25,7 @@
     "lindist": "run dist linux-x64",
     "rpidist": "run dist linux-arm7",
     "format": "prettier --write .",
-    "test": "node --max-old-space-size=4000 --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "test": "vitest",
     "build:writefile": "zx ./tools/build_writefile.mjs",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
@@ -40,10 +39,11 @@
     "chokidar": "^3.6.0",
     "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
-    "jest": "^29.7.0",
     "octokit": "^4.0.2",
     "open": "^10.1.0",
     "prettier": "^3.3.3",
+    "vitest": "^2.1.1",
+    "vitest-mock-extended": "^2.0.2",
     "yaml": "^2.5.1",
     "zx": "^7.2.3"
   },

@@ -9,9 +9,9 @@ const buildFile = fs.readFileSync(path.join(__dirname, '../BUILD')).toString().t
 
 module.exports = {
 	entry: {
-		main: './main.js',
+		main: './dist/main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
-		RenderThread: './lib/Graphics/Thread.js',
+		RenderThread: './dist/Graphics/Thread.js',
 	},
 	mode: 'production',
 	devtool: sentryAuthToken ? 'source-map' : undefined,
@@ -26,19 +26,23 @@ module.exports = {
 	// 	__filename: true,
 	// 	global: false,
 	// },
-	// resolve: {
-	// 	fallback: {
-	// 		// use native node modules
-	// 		fs: false,
-	// 		buffer: false,
-	// 		path: false,
-	// 		stream: false,
-	// 		zlib: false,
-	// 		timers: false,
-	// 		http: false,
-	// 		https: false,
-	// 	},
-	// },
+	resolve: {
+		extensionAlias: {
+			'.js': ['.ts', '.js'],
+			'.mjs': ['.mts', '.mjs'],
+		},
+		// 	fallback: {
+		// 		// use native node modules
+		// 		fs: false,
+		// 		buffer: false,
+		// 		path: false,
+		// 		stream: false,
+		// 		zlib: false,
+		// 		timers: false,
+		// 		http: false,
+		// 		https: false,
+		// 	},
+	},
 	externalsPresets: { node: true },
 	externals: {
 		// Native libs that are needed
