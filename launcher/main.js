@@ -11,7 +11,8 @@ import stripAnsi from 'strip-ansi'
 import chokidar from 'chokidar'
 import debounceFn from 'debounce-fn'
 import fileStreamRotator from 'file-stream-rotator'
-import { ConfigReleaseDirs } from '@companion-app/shared/Paths.cjs'
+import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
+import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
@@ -777,7 +778,6 @@ if (!lock) {
 				app.exit(11)
 			}
 
-			const { RespawnMonitor } = await import('@companion-app/shared/Respawn.js')
 			child = new RespawnMonitor(
 				// @ts-ignore
 				() =>

@@ -1,10 +1,11 @@
-/**
- * @typedef {import('@companion-module/base').CompanionVariableValue} VariableValue
- * @typedef {{
- *   values: Record<string, any>
- *   isComplete: boolean
- * }} ResolverState
- */
+import type { CompanionVariableValue } from '@companion-module/base'
+import type { SomeExpressionNode } from './ExpressionParse.js'
+import type jsep from 'jsep'
+
+interface ResolverState {
+	values: Record<string, any>
+	isComplete: boolean
+}
 
 /**
  *
@@ -13,33 +14,30 @@
  * @param {Record<string, (...args: any[]) => any>} functions
  * @returns {VariableValue | undefined}
  */
-export function ResolveExpression(node, getVariableValue, functions = {}) {
+export function ResolveExpression(
+	node: SomeExpressionNode,
+	getVariableValue: (name: string) => CompanionVariableValue | undefined,
+	functions: Record<string, (...args: any[]) => any> = {}
+): CompanionVariableValue | undefined {
 	if (!node) throw new Error('Invalid expression')
 
-	/** @type {ResolverState} */
-	const resolverState = {
+	const resolverState: ResolverState = {
 		values: {},
 		isComplete: false,
 	}
 
-	/**
-	 * @param {import('jsep').Expression} node
-	 * @returns {any}
-	 */
-	const resolve = (node) => {
-		/** @type {import('jsep').CoreExpression} */
-		// @ts-ignore
-		const coreNode = node
-		switch (coreNode.type) {
+	const resolve = (rawNode: jsep.Expression): any => {
+		const node = rawNode as SomeExpressionNode
+		switch (node.type) {
 			case 'Literal':
-				return coreNode.value
+				return node.value
 
 			case 'UnaryExpression':
-				if (!coreNode.prefix) throw new Error('Unexpected Unary non-prefix')
+				if (!node.prefix) throw new Error('Unexpected Unary non-prefix')
 
-				const arg = resolve(coreNode.argument)
+				const arg = resolve(node.argument)
 
-				switch (coreNode.operator) {
+				switch (node.operator) {
 					case '-':
 						return -arg
 					case '+':
@@ -49,13 +47,13 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 					case '~':
 						return ~arg
 					default:
-						throw new Error(`Unsupported unary operator "${coreNode.operator}"`)
+						throw new Error(`Unsupported unary operator "${node.operator}"`)
 				}
 
 			case 'BinaryExpression': {
-				const left = resolve(coreNode.left)
-				const right = resolve(coreNode.right)
-				switch (coreNode.operator) {
+				const left = resolve(node.left)
+				const right = resolve(node.right)
+				switch (node.operator) {
 					case '+':
 						return Number(left) + Number(right)
 					case '-':
@@ -98,34 +96,31 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 						return Number(left) | Number(right)
 
 					default:
-						throw new Error(`Unsupported binary operator "${coreNode.operator}"`)
+						throw new Error(`Unsupported binary operator "${node.operator}"`)
 				}
 			}
 			case 'CallExpression': {
-				// @ts-ignore
-				const fn = functions[coreNode.callee.name]
-				if (!fn || typeof fn !== 'function') throw new Error(`Unsupported function "${coreNode.callee.name}"`)
-				const args = coreNode.arguments.map((arg) => resolve(arg))
+				// @ts-expect-error name is not typed
+				const fn = functions[node.callee.name]
+				if (!fn || typeof fn !== 'function') throw new Error(`Unsupported function "${node.callee.name}"`)
+				const args = node.arguments.map((arg) => resolve(arg))
 				return fn(...args)
 			}
 			case 'ConditionalExpression':
-				return resolve(coreNode.test) ? resolve(coreNode.consequent) : resolve(coreNode.alternate)
+				return resolve(node.test) ? resolve(node.consequent) : resolve(node.alternate)
 
 			default:
 				switch (node.type) {
 					case 'CompanionVariable': {
 						if (node.name === undefined) throw new Error('Missing variable identifier')
-						// @ts-ignore
 						const value = getVariableValue(node.name)
-						if (value === undefined) throw new Error(`Missing variable value for "${coreNode.name}"`)
+						if (value === undefined) throw new Error(`Missing variable value for "${node.name}"`)
 						return structuredClone(value)
 					}
 					case 'TemplateLiteral': {
 						let result = ''
 
-						// @ts-ignore
 						for (let i = 0; i < node.quasis.length; i++) {
-							// @ts-ignore
 							const quasi = node.quasis[i]
 							if (quasi.type !== 'TemplateElement')
 								throw new Error(`Unsupported type for template element "${quasi.type}"`)
@@ -133,7 +128,6 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 							result += quasi.value.raw
 
 							if (!quasi.tail) {
-								// @ts-ignore
 								const expression = node.expressions[i]
 								result += resolve(expression)
 							}
@@ -143,7 +137,6 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 					}
 					case 'Compound': {
 						let result
-						// @ts-ignore
 						for (const expr of node.body) {
 							result = resolve(expr)
 							if (resolverState.isComplete) return result
@@ -152,16 +145,13 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 					}
 					case 'ArrayExpression': {
 						const vals = []
-						// @ts-ignore
 						for (const elm of node.elements) {
-							vals.push(resolve(elm))
+							if (elm) vals.push(resolve(elm))
 						}
 						return vals
 					}
 					case 'MemberExpression': {
-						// @ts-ignore
 						const object = resolve(node.object)
-						// @ts-ignore
 						const property = resolve(node.property)
 
 						// propogate null
@@ -170,16 +160,12 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 						return object?.[property]
 					}
 					case 'ObjectExpression': {
-						/** @type {Record<any, any>} */
-						const obj = {}
-						// @ts-ignore
+						const obj: Record<any, any> = {}
 						for (const prop of node.properties) {
 							if (prop.type !== 'Property') throw new Error(`Invalid property type in object: ${prop.type}`)
 
-							// @ts-ignore
 							const key = resolve(prop.key)
-							// @ts-ignore
-							const value = resolve(prop.value)
+							const value = prop.value && resolve(prop.value)
 
 							obj[key] = value
 						}
@@ -190,24 +176,19 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 
 						resolverState.isComplete = true
 
-						// @ts-ignore
 						return resolve(node.argument)
 					}
 					case 'AssignmentExpression': {
-						// @ts-ignore
 						const rightValue = resolve(node.right)
 
-						/** @type {any} */
-						const left = node.left
+						const left = node.left as SomeExpressionNode
 						if (left.type === 'Identifier') {
 							const newValue = mutateValueForAssignment(node.operator, resolverState.values[left.name], rightValue)
 
 							resolverState.values[left.name] = newValue
 							return newValue
 						} else if (left.type === 'MemberExpression') {
-							// @ts-ignore
 							const object = resolve(left.object)
-							// @ts-ignore
 							const property = resolve(left.property)
 
 							const newValue = mutateValueForAssignment(node.operator, object[property], rightValue)
@@ -219,9 +200,9 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 						}
 					}
 					case 'UpdateExpression': {
-						/** @type {any} */
-						const arg = node.argument
+						const arg = node.argument as SomeExpressionNode
 						if (arg.type === 'Identifier') {
+							const operator = node.operator
 							switch (node.operator) {
 								case '++':
 									if (node.prefix) {
@@ -236,14 +217,13 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 										return resolverState.values[arg.name]--
 									}
 								default:
-									throw new Error(`Unsupported assignment operator "${coreNode.operator}"`)
+									throw new Error(`Unsupported assignment operator "${operator}"`)
 							}
 						} else if (arg.type === 'MemberExpression') {
-							// @ts-ignore
 							const object = resolve(arg.object)
-							// @ts-ignore
 							const property = resolve(arg.property)
 
+							const operator = node.operator
 							switch (node.operator) {
 								case '++':
 									if (node.prefix) {
@@ -258,20 +238,17 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 										return object[property]--
 									}
 								default:
-									throw new Error(`Unsupported assignment operator "${coreNode.operator}"`)
+									throw new Error(`Unsupported assignment operator "${operator}"`)
 							}
 						} else {
 							throw new Error(`Cannot update ${arg.type}`)
 						}
 					}
 					case 'Identifier': {
-						// @ts-ignore
 						return resolverState.values[node.name]
 					}
 					// case 'Property':
-					// 	// @ts-ignore
 					// 	visitElements(node.key, visitor)
-					// 	// @ts-ignore
 					// 	visitElements(node.value, visitor)
 
 					// 	break
@@ -286,12 +263,8 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 
 /**
  * Mutate a value based on an assignment operator
- * @param {unknown} operator
- * @param {any} leftValue
- * @param {any} rightValue
- * @returns
  */
-function mutateValueForAssignment(operator, leftValue, rightValue) {
+function mutateValueForAssignment(operator: unknown, leftValue: any, rightValue: any): any {
 	switch (operator) {
 		case '=':
 			return rightValue

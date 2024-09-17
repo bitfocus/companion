@@ -1,5 +1,4 @@
-/** @type Array<string> */
-const ConfigReleaseDirs = [
+export const ConfigReleaseDirs: string[] = [
 	'', // Root
 	// The config subfolders that exist.
 	// For each major/minor release, a new entry should be added here,
@@ -11,7 +10,3 @@ const ConfigReleaseDirs = [
 	'v3.5',
 	'v3.99',
 ]
-
-module.exports = {
-	ConfigReleaseDirs,
-}

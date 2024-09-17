@@ -1,10 +1,10 @@
 import jsep from 'jsep'
 import jsepNumbers from '@jsep-plugin/numbers'
-import jsepObject from '@jsep-plugin/object'
-import jsepTemplateLiteral from '@jsep-plugin/template'
+import jsepObject, { ObjectExpression } from '@jsep-plugin/object'
+import jsepTemplateLiteral, { TemplateLiteral } from '@jsep-plugin/template'
 import jsepComments from '@jsep-plugin/comment'
-import { CompanionVariablesPlugin } from './Plugins/CompanionVariables.js'
-import { AssignmentPlugin } from './Plugins/Assignment.js'
+import { CompanionVariableExpression, CompanionVariablesPlugin } from './Plugins/CompanionVariables.js'
+import { AssignmentExpression, AssignmentPlugin, UpdateExpression } from './Plugins/Assignment.js'
 
 // setup plugins
 jsep.plugins.register(jsepNumbers)
@@ -20,11 +20,9 @@ jsep.removeBinaryOp('>>>')
 
 /**
  * Parse an expression into executable nodes
- * @param {string} expression
- * @returns {jsep.Expression}
  */
-export function ParseExpression(expression) {
-	const parsed = jsep(expression)
+export function ParseExpression(expression: string): SomeExpressionNode {
+	const parsed = jsep(expression) as SomeExpressionNode
 
 	fixupExpression(parsed)
 
@@ -33,14 +31,11 @@ export function ParseExpression(expression) {
 
 /**
  * Find all the referenced variables in an expression
- * @param {jsep.Expression} node
- * @returns {string[]}
  */
-export function FindAllReferencedVariables(node) {
+export function FindAllReferencedVariables(node: jsep.Expression): string[] {
 	if (!node) throw new Error('Invalid expression')
 
-	/** @type {string[]} */
-	const referencedVariables = []
+	const referencedVariables: string[] = []
 
 	visitElements(node, (node) => {
 		if (node.type === 'CompanionVariable') {
@@ -54,17 +49,27 @@ export function FindAllReferencedVariables(node) {
 	return referencedVariables
 }
 
+export interface ReturnExpression extends jsep.Expression {
+	type: 'ReturnStatement'
+	argument: jsep.Expression
+}
+
+export type SomeExpressionNode =
+	| jsep.CoreExpression
+	| ObjectExpression
+	| TemplateLiteral
+	| UpdateExpression
+	| AssignmentExpression
+	| CompanionVariableExpression
+	| ReturnExpression
+
 /**
  * Visit each node in the expression tree
- * @param {jsep.Expression} node
- * @param {(node: jsep.Expression) => void} visitor
  */
-function visitElements(node, visitor) {
+function visitElements(node: jsep.Expression, visitor: (node: jsep.Expression) => void): void {
 	visitor(node)
 
-	/** @type {jsep.CoreExpression} */
-	// @ts-ignore
-	const coreNode = node
+	const coreNode: SomeExpressionNode = node as any
 	switch (coreNode.type) {
 		case 'Literal':
 			// No variables
@@ -86,41 +91,47 @@ function visitElements(node, visitor) {
 			visitElements(coreNode.consequent, visitor)
 			visitElements(coreNode.alternate, visitor)
 			break
+		case 'TemplateLiteral':
+			for (const expr of coreNode.expressions) {
+				visitElements(expr, visitor)
+			}
+			break
+		case 'Compound':
+			for (const expr of coreNode.body) {
+				visitElements(expr, visitor)
+			}
+			break
+		case 'CompanionVariable':
+			// No children
+			break
+		case 'ArrayExpression':
+			for (const expr of coreNode.elements) {
+				if (expr) visitElements(expr, visitor)
+			}
+			break
+		case 'MemberExpression':
+			visitElements(coreNode.object, visitor)
+			visitElements(coreNode.property, visitor)
+			break
+		case 'ObjectExpression':
+			for (const prop of coreNode.properties) {
+				visitElements(prop, visitor)
+			}
+			break
+		case 'ReturnStatement':
+		case 'UpdateExpression':
+			visitElements(coreNode.argument, visitor)
+			break
+		case 'AssignmentExpression':
+			visitElements(coreNode.left, visitor)
+			visitElements(coreNode.right, visitor)
+			break
+		case 'Identifier':
+			// console.log(node)
+			// Nothing to do
+			break
 		default:
 			switch (node.type) {
-				case 'TemplateLiteral':
-					// @ts-ignore
-					for (const expr of node.expressions) {
-						visitElements(expr, visitor)
-					}
-					break
-				case 'CompanionVariable':
-					// No children
-					break
-				case 'Compound':
-					// @ts-ignore
-					for (const expr of node.body) {
-						visitElements(expr, visitor)
-					}
-					break
-				case 'ArrayExpression':
-					// @ts-ignore
-					for (const expr of node.elements) {
-						visitElements(expr, visitor)
-					}
-					break
-				case 'MemberExpression':
-					// @ts-ignore
-					visitElements(node.object, visitor)
-					// @ts-ignore
-					visitElements(node.property, visitor)
-					break
-				case 'ObjectExpression':
-					// @ts-ignore
-					for (const prop of node.properties) {
-						visitElements(prop, visitor)
-					}
-					break
 				case 'Property':
 					// @ts-ignore
 					visitElements(node.key, visitor)
@@ -128,60 +139,36 @@ function visitElements(node, visitor) {
 					visitElements(node.value, visitor)
 
 					break
-				case 'ReturnStatement':
-				case 'UpdateExpression':
-					// @ts-ignore
-					visitElements(node.argument, visitor)
-					break
-				case 'AssignmentExpression':
-					// @ts-ignore
-					visitElements(node.left, visitor)
-					// @ts-ignore
-					visitElements(node.right, visitor)
-					break
-				case 'Identifier':
-					// console.log(node)
-					// Nothing to do
-					break
+
 				default:
 					throw new Error(`Unknown node "${node.type}"`)
 			}
 	}
 }
 
-/**
- * @param {jsep.Expression} node
- */
-function fixReturnDetectedAsFunction(node) {
-	if (
-		node.type === 'CallExpression' &&
-		// @ts-ignore
-		node.callee.name === 'return' &&
-		// @ts-ignore
-		node.arguments.length === 1
-	) {
-		node.type = 'ReturnStatement'
+function fixReturnDetectedAsFunction(node: SomeExpressionNode): void {
+	if (node.type === 'CallExpression' && node.callee.name === 'return' && node.arguments.length === 1) {
+		const returnNode = node as any as ReturnExpression
+		returnNode.type = 'ReturnStatement'
 
 		// @ts-ignore
-		node.argument = node.arguments[0]
+		returnNode.argument = returnNode.arguments[0]
 
-		delete node.arguments
-		delete node.callee
+		delete returnNode.arguments
+		delete returnNode.callee
 	}
 }
 
-/**
- *
- * @param {jsep.Expression} rootNode
- */
-function fixupExpression(rootNode) {
-	visitElements(rootNode, (node) => {
+function fixupExpression(rootNode: SomeExpressionNode): void {
+	visitElements(rootNode, (rawNode) => {
+		const node = rawNode as SomeExpressionNode
 		// Accept undefined
 		if (node.type === 'Identifier' && node.name === 'undefined') {
-			node.type = 'Literal'
-			node.raw = 'undefined'
-			node.value = undefined
-			delete node.name
+			const literalNode = node as any as jsep.Literal
+			literalNode.type = 'Literal'
+			literalNode.raw = 'undefined'
+			literalNode.value = undefined as any
+			delete literalNode.name
 
 			return
 		}
@@ -193,7 +180,6 @@ function fixupExpression(rootNode) {
 
 		// Fix up object properties being defined as 'Identifier'
 		if (node.type === 'ObjectExpression') {
-			// @ts-ignore
 			for (const prop of node.properties) {
 				if (prop.key.type === 'Identifier') {
 					prop.key = {
@@ -208,9 +194,7 @@ function fixupExpression(rootNode) {
 		}
 
 		if (node.type === 'Compound' && node.body) {
-			/** @type {jsep.Expression[]} */
-			// @ts-ignore
-			const body = node.body
+			const body: SomeExpressionNode[] = node.body as any[]
 
 			// Fixup return statements detected as a function
 			for (const expr of body) {
@@ -225,14 +209,13 @@ function fixupExpression(rootNode) {
 				if (
 					exprA.type === 'CompanionVariable' &&
 					exprB.type === 'ArrayExpression' &&
-					// @ts-ignore
-					exprB.elements.length === 1
+					exprB.elements.length === 1 &&
+					exprB.elements[0]
 				) {
 					body[i] = {
 						computed: true,
 						type: 'MemberExpression',
 						object: exprA,
-						// @ts-ignore
 						property: exprB.elements[0],
 					}
 
@@ -248,10 +231,11 @@ function fixupExpression(rootNode) {
 				const exprB = body[i + 1]
 
 				if (exprA.type === 'Identifier' && exprA.name === 'return') {
-					exprA.type = 'ReturnStatement'
-					exprA.argument = exprB
+					const exprAReturn = exprA as any as ReturnExpression
+					exprAReturn.type = 'ReturnStatement'
+					exprAReturn.argument = exprB
 
-					delete exprA.name
+					delete exprAReturn.name
 
 					body.splice(i + 1, 1)
 				}
@@ -259,7 +243,7 @@ function fixupExpression(rootNode) {
 
 			// If the compound node contains just a single node now, flatten it
 			if (body.length === 1) {
-				delete node.body
+				delete (node as any).body
 				Object.assign(node, body[0])
 			}
 		}

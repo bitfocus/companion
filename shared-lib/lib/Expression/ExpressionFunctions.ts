@@ -2,8 +2,7 @@ import { pad } from '../Util.js'
 import { JSONPath } from 'jsonpath-plus'
 
 // Note: when adding new functions, make sure to update the docs!
-/** @type {Record<string, (...args: any[]) => any>} */
-export const ExpressionFunctions = {
+export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	// Number operations
 	// TODO: round to fractionals, without fp issues
 	round: (v) => Math.round(v),
@@ -95,7 +94,7 @@ export const ExpressionFunctions = {
 		if (shouldParseInput && typeof value !== 'number' && typeof value !== 'string' && value) {
 			try {
 				return JSON.stringify(value)
-			} catch (/** @type {any} */ e) {
+			} catch (e: any) {
 				// Ignore
 			}
 		}

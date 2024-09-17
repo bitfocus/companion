@@ -17,7 +17,7 @@
 
 import LogController from '../Log/Controller.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { ResolveExpression, VariableValue } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { SplitVariableId } from '../Resources/Util.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
@@ -142,7 +142,7 @@ export function executeExpression(
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
 
-	const getVariableValue = (variableId: string): VariableValue => {
+	const getVariableValue = (variableId: string): CompanionVariableValue => {
 		referencedVariableIds.add(variableId)
 
 		// First check for an injected value
