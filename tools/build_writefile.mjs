@@ -2,6 +2,10 @@
 
 import { generateVersionString } from './lib.mjs'
 
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
+
 const build = await generateVersionString()
 console.log('Writing BUILD:', build)
 

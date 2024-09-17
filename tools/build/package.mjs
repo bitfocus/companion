@@ -5,6 +5,10 @@ import { determinePlatformInfo } from './util.mjs'
 import { generateVersionString } from '../lib.mjs'
 import { fetchNodejs } from '../fetch_nodejs.mjs'
 
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
+
 // Determine some environment info
 const platformInfo = determinePlatformInfo(argv._[0])
 if (platformInfo.nodePlatform) process.env.npm_config_platform = platformInfo.nodePlatform

@@ -8,6 +8,10 @@ import path from 'node:path'
 import yaml from 'yaml'
 import { determinePlatformInfo } from './util.mjs'
 
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
+
 const companionPkgJsonPath = new URL('../../package.json', import.meta.url)
 const companionPkgJsonStr = await fs.readFile(companionPkgJsonPath)
 const companionPkgJson = JSON.parse(companionPkgJsonStr.toString())

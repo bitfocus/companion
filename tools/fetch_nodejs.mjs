@@ -48,9 +48,11 @@ async function fetchSingleVersion(platformInfo, nodeVersion) {
 	const runtimeDir = path.join(cacheRuntimeDir, `${platformInfo.nodePlatform}-${platformInfo.nodeArch}-${nodeVersion}`)
 	if (!(await fs.pathExists(runtimeDir))) {
 		if (isZip) {
-			await $`unzip ${toPosix(tarPath)} -d dist`
-			await fs.remove(runtimeDir)
-			await fs.move(`dist/node-v${nodeVersion}-${platformInfo.runtimePlatform}-${platformInfo.runtimeArch}`, runtimeDir)
+			const tmpDir = path.join(cacheRuntimeDir, 'tmp')
+			await fs.remove(tmpDir)
+			await $`Expand-Archive ${toPosix(tarPath)} -DestinationPath ${toPosix(tmpDir)}`
+			await fs.move(path.join(tmpDir,`node-v${nodeVersion}-${platformInfo.runtimePlatform}-${platformInfo.runtimeArch}`), runtimeDir)
+			await fs.remove(tmpDir)
 			// TODO - can this be simplified and combined into the extract step?
 			await fs.remove(path.join(runtimeDir, 'node_modules/npm'))
 			await fs.remove(path.join(runtimeDir, 'npm'))

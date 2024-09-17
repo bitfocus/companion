@@ -10,6 +10,10 @@ import dotenv from 'dotenv'
 import { fetchNodejs } from './fetch_nodejs.mjs'
 import { determinePlatformInfo } from './build/util.mjs'
 
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
+
 await $`zx ../tools/build_writefile.mjs`
 
 dotenv.config({
