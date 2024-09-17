@@ -22,6 +22,8 @@ export default class Time {
 	 */
 	#internalModule
 
+	#startTime = Date.now()
+
 	/**
 	 *
 	 * @param {import('./Controller.js').default} internalModule
@@ -96,6 +98,10 @@ export default class Time {
 				label: 'UNIX timestamp (S)',
 				name: 'time_unix',
 			},
+			{
+				label: 'Uptime (seconds)',
+				name: 'uptime',
+			},
 		]
 	}
 
@@ -116,6 +122,8 @@ export default class Time {
 		const hhmmss12 = `${hhmm12}:${ss}`
 		const ts = Math.floor(now.getTime() / 1000)
 
+		const uptime = Math.floor((now.getTime() - this.#startTime) / 1000)
+
 		this.#internalModule.setVariables({
 			date_iso: `${year}-${month}-${day}`,
 			date_y: year,
@@ -135,6 +143,8 @@ export default class Time {
 			time_hms_12: hhmmss12,
 			time_hm_12: hhmm12,
 			time_h_12: hh12,
+
+			uptime,
 		})
 	}
 }
