@@ -343,7 +343,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const connectionVariables = variablesStore.variables.get(connection.label)
 
 	const doEdit = () => {
-		if (!moduleInfo || !isEnabled) {
+		if (!moduleInfo) {
 			return
 		}
 

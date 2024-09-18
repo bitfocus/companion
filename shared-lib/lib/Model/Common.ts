@@ -79,7 +79,5 @@ export interface HelpDescription {
 
 export interface ClientEditConnectionConfig {
 	fields: Array<ExtendedInputField & { width: number }>
-	label: string | undefined
 	config: unknown
-	instance_type: string | undefined
 }

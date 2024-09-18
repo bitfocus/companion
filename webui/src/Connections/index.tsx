@@ -125,7 +125,6 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 										showHelp={showHelp}
 										doConfigureConnection={doConfigureConnection}
 										connectionId={selectedConnectionId}
-										connectionStatus={connectionStatus?.[selectedConnectionId]}
 									/>
 								)}
 							</MyErrorBoundary>

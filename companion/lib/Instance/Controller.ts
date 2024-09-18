@@ -442,36 +442,23 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		})
 
 		client.onPromise('connections:edit', async (id) => {
-			let instance = this.instance.moduleHost.getChild(id)
+			// Check if the instance exists
+			const instanceConf = this.#configStore.getConfigForId(id)
+			if (!instanceConf) return null
 
-			if (!instance) {
-				// Maybe instance has just been created and isn't yet ready
+			const instance = this.instance.moduleHost.getChild(id)
+			if (!instance) return null
 
-				// Wait a second then try again
-				await delay(1000)
+			try {
+				// TODO: making types match is messy
+				const fields: any = await instance.requestConfigFields()
 
-				instance = this.instance.moduleHost.getChild(id)
-			}
-
-			if (instance) {
-				try {
-					// TODO: makiing types match is messy
-					const fields: any = await instance.requestConfigFields()
-
-					const instanceConf = this.#configStore.getConfigForId(id)
-
-					return {
-						fields,
-						label: instanceConf?.label,
-						config: instanceConf?.config,
-						instance_type: instanceConf?.instance_type,
-					}
-				} catch (e: any) {
-					this.logger.silly(`Failed to load instance config_fields: ${e.message}`)
-					return null
+				return {
+					fields,
+					config: instanceConf.config,
 				}
-			} else {
-				// Unknown instance
+			} catch (e: any) {
+				this.logger.silly(`Failed to load instance config_fields: ${e.message}`)
 				return null
 			}
 		})
