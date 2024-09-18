@@ -154,14 +154,14 @@ export class DataImportExport extends CoreBase {
 
 			referencedConnectionIds.delete('internal') // Ignore the internal module
 			for (const connectionId of referencedConnectionIds) {
-				instancesExport[connectionId] = this.instance.exportInstance(connectionId, minimalExport) || {}
+				instancesExport[connectionId] = this.instance.exportInstance(connectionId, minimalExport)
 			}
 
 			referencedConnectionLabels.delete('internal') // Ignore the internal module
 			for (const label of referencedConnectionLabels) {
 				const connectionId = this.instance.getIdForLabel(label)
 				if (connectionId) {
-					instancesExport[connectionId] = this.instance.exportInstance(connectionId, minimalExport) || {}
+					instancesExport[connectionId] = this.instance.exportInstance(connectionId, minimalExport)
 				}
 			}
 
@@ -893,10 +893,9 @@ export class DataImportExport extends CoreBase {
 				} else {
 					// Create a new instance
 					const instance_type = this.instance.modules.verifyInstanceTypeIsCurrent(obj.instance_type)
-					const newLabel = this.instance.makeLabelUnique(obj.label)
-					const newId = this.instance.addInstanceWithLabel({ type: instance_type }, newLabel, true)
+					const [newId, newConfig] = this.instance.addInstanceWithLabel({ type: instance_type }, obj.label, true)
 					console.log('created', instance_type, newId)
-					if (newId) {
+					if (newId && newConfig) {
 						this.instance.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null)
 
 						if (!('enabled' in obj) || obj.enabled !== false) {
@@ -905,7 +904,7 @@ export class DataImportExport extends CoreBase {
 
 						instanceIdMap[oldId] = {
 							id: newId,
-							label: newLabel,
+							label: newConfig.label,
 							lastUpgradeIndex: obj.lastUpgradeIndex,
 							oldLabel: obj.label,
 						}
