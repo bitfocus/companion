@@ -93,3 +93,6 @@ typings/
 !.yarn/releases
 !.yarn/sdks
 */.yarn/*
+
+# ignore any previously compiled output of the legacy modules
+/module-legacy/*
