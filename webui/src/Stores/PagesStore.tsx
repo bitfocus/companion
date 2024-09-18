@@ -1,13 +1,16 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { ClientPagesInfo, PageModel, PageModelChanges } from '@companion-app/shared/Model/PageModel.js'
 import { ObservableMap, action, makeObservable, observable } from 'mobx'
 
 export class PagesStoreModel {
+	readonly id: string
+
 	name: string
 
 	readonly controls = observable.map<number, ObservableMap<number, string>>()
 
-	constructor(name: string) {
+	constructor(id: string, name: string) {
+		this.id = id
 		this.name = name
 
 		makeObservable(this, {
@@ -17,92 +20,96 @@ export class PagesStoreModel {
 }
 
 export class PagesStore {
-	readonly store = observable.map<number, PagesStoreModel>()
+	private readonly store = observable.array<PagesStoreModel>()
 
-	public get pageNumbers(): number[] {
-		return Array.from(this.store.keys()).sort((a, b) => a - b)
+	public get(pageNumber: number): PagesStoreModel | undefined {
+		return this.store[pageNumber - 1]
 	}
 
-	public get sortedEntries(): [number, PagesStoreModel][] {
-		const entries = Array.from(this.store.entries())
-		entries.sort((a, b) => a[0] - b[0])
-		return entries
+	public get data(): PagesStoreModel[] {
+		return this.store
+	}
+
+	public get pageCount(): number {
+		return this.store.length
 	}
 
 	public getControlIdAt(pageNumber: number, row: number, column: number): string | undefined {
-		return this.store.get(pageNumber)?.controls?.get(row)?.get(column)
+		return this.get(pageNumber)?.controls?.get(row)?.get(column)
 	}
 
 	public getControlIdAtLocation(location: ControlLocation): string | undefined {
 		return this.getControlIdAt(location.pageNumber, location.row, location.column)
 	}
 
-	public reset = action((newData: Record<number, PageModel | undefined> | null): void => {
+	public reset = action((newData: ClientPagesInfo | null): void => {
 		this.store.clear()
 
 		if (newData) {
-			for (let i = 1; i <= 99; i++) {
-				const pageInfo = newData[i]
+			for (const id of newData.order) {
+				const newPageModel = this.#createModelForPage(id, newData.pages[id])
+				this.store.push(newPageModel)
+			}
+		}
+	})
 
-				const newPageModel = new PagesStoreModel(pageInfo?.name ?? '')
-				if (pageInfo) {
-					for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
-						if (!rowObj) continue
+	public updatePage = action((change: PageModelChanges) => {
+		const existingPagesMap = new Map<string, PagesStoreModel>()
+		for (const pageModel of this.store) {
+			existingPagesMap.set(pageModel.id, pageModel)
+		}
 
-						const newRowObj = observable.map<number, string>()
-						newPageModel.controls.set(Number(row), newRowObj)
+		for (const pageChange of change.changes) {
+			const pageModel = existingPagesMap.get(pageChange.id)
+			if (!pageModel) continue // Should never happen
 
-						for (const [col, controlId] of Object.entries(rowObj)) {
-							if (!controlId) continue
+			if (pageChange.name != null) pageModel.name = pageChange.name
 
-							newRowObj.set(Number(col), controlId)
-						}
-					}
+			for (const controlChange of pageChange.controls) {
+				let rowObj = pageModel.controls.get(controlChange.row)
+				if (!rowObj) {
+					rowObj = observable.map<number, string>()
+					pageModel.controls.set(controlChange.row, rowObj)
 				}
 
-				this.store.set(i, newPageModel)
+				if (!controlChange.controlId) {
+					rowObj.delete(controlChange.column)
+				} else {
+					rowObj.set(controlChange.column, controlChange.controlId)
+				}
+			}
+		}
+		for (const added of change.added) {
+			existingPagesMap.set(added.id, this.#createModelForPage(added.id, added))
+		}
+
+		if (change.updatedOrder) {
+			this.store.clear()
+			for (const id of change.updatedOrder) {
+				const model = existingPagesMap.get(id) ?? this.#createModelForPage(id, undefined)
+				this.store.push(model)
 			}
 		}
 	})
 
-	public updatePage = action((pageNumber: number, pageInfo: PageModel) => {
-		let pageInStore = this.store.get(pageNumber)
-		if (!pageInStore) {
-			pageInStore = new PagesStoreModel(pageInfo.name ?? '')
-			this.store.set(pageNumber, pageInStore)
-		}
+	#createModelForPage(id: string, pageInfo: PageModel | undefined): PagesStoreModel {
+		const newPageModel = new PagesStoreModel(id, pageInfo?.name ?? '')
 
-		pageInStore.name = pageInfo.name ?? ''
+		if (pageInfo) {
+			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
+				if (!rowObj) continue
 
-		const validRowIds = new Set<number>()
-		for (const [row, rowObj] of Object.entries(pageInfo.controls ?? {})) {
-			if (!rowObj) continue
-			validRowIds.add(Number(row))
+				const newRowObj = observable.map<number, string>()
+				newPageModel.controls.set(Number(row), newRowObj)
 
-			let storeRowObj = pageInStore.controls.get(Number(row))
-			if (!storeRowObj) {
-				storeRowObj = observable.map<number, string>()
-				pageInStore.controls.set(Number(row), storeRowObj)
-			}
+				for (const [col, controlId] of Object.entries(rowObj)) {
+					if (!controlId) continue
 
-			const validCols = new Set<number>()
-
-			for (const [col, controlId] of Object.entries(rowObj)) {
-				if (!controlId) continue
-				validCols.add(Number(col))
-
-				storeRowObj.set(Number(col), controlId)
-			}
-
-			// Clear any columns
-			for (const col of storeRowObj.keys()) {
-				if (!validCols.has(col)) storeRowObj.delete(col)
+					newRowObj.set(Number(col), controlId)
+				}
 			}
 		}
 
-		// Remove any rows
-		for (const row of pageInStore.controls.keys()) {
-			if (!validRowIds.has(row)) pageInStore.controls.delete(row)
-		}
-	})
+		return newPageModel
+	}
 }

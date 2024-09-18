@@ -1,13 +1,12 @@
 {
   "name": "@companion-app/workspace",
-  "version": "3.5.0",
+  "version": "3.99.0",
   "packageManager": "yarn@4.4.0",
   "workspaces": [
     "companion",
     "shared-lib",
     "webui",
-    "launcher",
-    "vendor/*"
+    "launcher"
   ],
   "type": "module",
   "scripts": {
@@ -17,7 +16,6 @@
     "dev:debug": "yarn workspace companion dev:debug",
     "dev:webui": "yarn workspace @companion-app/webui dev",
     "build:ts": "yarn workspaces foreach --all run build:ts",
-    "update": "./tools/update.sh",
     "dist:webui": "yarn workspace @companion-app/webui build",
     "dist": "zx ./tools/build/complete.mjs",
     "macdist": "run dist mac-x64",
@@ -26,7 +24,7 @@
     "lindist": "run dist linux-x64",
     "rpidist": "run dist linux-arm7",
     "format": "prettier --write .",
-    "test": "node --max-old-space-size=4000 --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "test": "vitest",
     "build:writefile": "zx ./tools/build_writefile.mjs",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
@@ -36,16 +34,19 @@
     "node": ">=18.16 <19"
   },
   "devDependencies": {
-    "@inquirer/prompts": "^5.5.0",
+    "@inquirer/prompts": "^6.0.1",
+    "@types/ps-tree": "^1.1.6",
     "chokidar": "^3.6.0",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.0.1",
     "dotenv": "^16.4.5",
-    "jest": "^29.7.0",
     "octokit": "^4.0.2",
     "open": "^10.1.0",
     "prettier": "^3.3.3",
+    "typescript": "~5.6.2",
+    "vitest": "^2.1.1",
+    "vitest-mock-extended": "^2.0.2",
     "yaml": "^2.5.1",
-    "zx": "^7.2.3"
+    "zx": "^8.1.7"
   },
   "resolutions": {
     "app-builder-bin": "npm:@julusian/app-builder-bin@4.0.1",

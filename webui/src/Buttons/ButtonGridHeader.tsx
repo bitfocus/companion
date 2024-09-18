@@ -15,12 +15,14 @@ interface ButtonGridHeaderProps {
 	pageNumber: number
 	changePage?: (delta: number) => void
 	setPage?: (page: number) => void
+	newPageAtEnd?: boolean
 }
 
 export const ButtonGridHeader = observer(function ButtonGridHeader({
 	pageNumber,
 	changePage,
 	setPage,
+	newPageAtEnd,
 	children,
 }: React.PropsWithChildren<ButtonGridHeaderProps>) {
 	const { pages: pagesStore } = useContext(RootAppStoreContext)
@@ -43,11 +45,19 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 	}, [changePage])
 
 	const pageOptions = useComputed(() => {
-		return pagesStore.sortedEntries.map(([index, value]) => ({
-			value: index,
-			label: `${index} (${value.name})`,
+		const pageOptions: SelectOption[] = pagesStore.data.map((value, index) => ({
+			value: index + 1,
+			label: `${index + 1} (${value.name})`,
 		}))
-	}, [pagesStore])
+
+		if (newPageAtEnd) {
+			pageOptions.push({
+				value: -1,
+				label: `Insert new page`,
+			})
+		}
+		return pageOptions
+	}, [pagesStore, newPageAtEnd])
 
 	const currentValue: SelectOption | undefined = useMemo(() => {
 		return (

@@ -2,7 +2,7 @@ In the Buttons tab, you can configure the buttons for your Stream Deck.
 
 ![Buttons Page](images/buttons.png?raw=true 'Buttons Page')
 
-The Buttons layout has 99 pages that can be navigated using the grey left/right arrows, or the dropdown box. You can give your pages a unique name by replacing the word _PAGE_ right next to the page number.
+The Buttons layout has numerous pages that can be navigated using the grey left/right arrows, or the dropdown box. You can give your pages a unique name by replacing the word _PAGE_ right next to the page number.
 
 If you hold down the SHIFT key on your keyboard, you can trigger a button directly by clicking on it.
 

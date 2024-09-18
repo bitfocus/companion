@@ -12,4 +12,4 @@ This will recompile the typescript when a file changes
 ### `yarn build`
 
 Builds the library.\
-This gets called when doing an electron build or `yarn update`, so should not be needed often
+This gets called when doing an electron build or during `yarn dev`, so should not be needed often

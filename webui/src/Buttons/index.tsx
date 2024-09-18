@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
-import { faCalculator, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faGift, faPaperPlane, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets/Presets.js'
@@ -15,6 +15,7 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
+import { PagesList } from './Pages.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 
 export const BUTTONS_PAGE_PREFIX = '/buttons'
@@ -50,18 +51,18 @@ interface ButtonsPageProps {
 }
 
 export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPageProps) {
-	const { userConfig, socket } = useContext(RootAppStoreContext)
+	const { userConfig, socket, pages } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
-	const [activeTab, setActiveTab] = useState('presets')
+	const [activeTab, setActiveTab] = useState('pages')
 	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
 	const navigate = useNavigate()
-	const pageNumber = useUrlPageNumber()
+	let pageNumber = useUrlPageNumber()
 	const setPageNumber = useCallback(
 		(pageNumber: number) => {
 			navigateToButtonsPage(navigate, pageNumber)
@@ -95,7 +96,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 		[socket, hotPress]
 	)
 	const clearSelectedButton = useCallback(() => {
-		doChangeTab('presets')
+		doChangeTab('pages')
 	}, [doChangeTab])
 
 	const gridSize = userConfig.properties?.gridSize
@@ -173,7 +174,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 					case 'PageUp':
 						setSelectedButton((selectedButton) => {
 							if (selectedButton) {
-								const newPageNumber = selectedButton.pageNumber >= 99 ? 1 : selectedButton.pageNumber + 1
+								const newPageNumber = selectedButton.pageNumber >= pages.data.length ? 1 : selectedButton.pageNumber + 1
 								setPageNumber(newPageNumber)
 								return {
 									...selectedButton,
@@ -187,7 +188,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 					case 'PageDown':
 						setSelectedButton((selectedButton) => {
 							if (selectedButton) {
-								const newPageNumber = selectedButton.pageNumber <= 1 ? 99 : selectedButton.pageNumber - 1
+								const newPageNumber = selectedButton.pageNumber <= 1 ? pages.data.length : selectedButton.pageNumber - 1
 								setPageNumber(newPageNumber)
 								return {
 									...selectedButton,
@@ -251,7 +252,13 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 		return <></>
 	} else if (pageNumber <= 0) {
 		setTimeout(() => navigateToButtonsPage(navigate, getLastPageNumber()), 0)
-		return <></>
+		// Force the number and let it render
+		pageNumber = 1
+	} else if (pageNumber > pages.pageCount) {
+		const newPageNumber = pages.pageCount
+		setTimeout(() => navigateToButtonsPage(navigate, newPageNumber), 0)
+		// Force the number and let it render
+		pageNumber = newPageNumber
 	}
 
 	return (
@@ -288,6 +295,11 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 							</CNavLink>
 						</CNavItem>
 						<CNavItem>
+							<CNavLink active={activeTab === 'pages'} onClick={() => doChangeTab('pages')}>
+								<FontAwesomeIcon icon={faPaperPlane} /> Pages
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
 							<CNavLink active={activeTab === 'presets'} onClick={() => doChangeTab('presets')}>
 								<FontAwesomeIcon icon={faGift} /> Presets
 							</CNavLink>
@@ -308,6 +320,11 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 										onKeyUp={handleKeyDownInButtons}
 									/>
 								)}
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'pages'}>
+							<MyErrorBoundary>
+								<PagesList setPageNumber={setPageNumber} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane visible={activeTab === 'presets'}>

@@ -8,6 +8,12 @@ import path from 'node:path'
 import yaml from 'yaml'
 import { determinePlatformInfo } from './util.mjs'
 
+$.verbose = true
+
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
+
 const companionPkgJsonPath = new URL('../../package.json', import.meta.url)
 const companionPkgJsonStr = await fs.readFile(companionPkgJsonPath)
 const companionPkgJson = JSON.parse(companionPkgJsonStr.toString())
@@ -111,10 +117,6 @@ for (const name of copyPrebuildsFromDependencies) {
 // Copy fonts
 await fs.mkdirp('dist/assets/Fonts')
 await fs.copy(path.join('assets', 'Fonts'), 'dist/assets/Fonts')
-
-// Copy legacy modules
-await fs.mkdir('dist/module-legacy')
-await fs.copy('module-legacy/manifests', 'dist/module-legacy/manifests')
 
 // Bundle in modules
 await fs.copy('bundled-modules', 'dist/bundled-modules')

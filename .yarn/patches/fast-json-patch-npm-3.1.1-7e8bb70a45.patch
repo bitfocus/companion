@@ -1,0 +1,38 @@
+diff --git a/index.ts b/index.ts
+deleted file mode 100644
+index 10d7278164a7f5491685454a8f483c78702b501b..0000000000000000000000000000000000000000
+--- a/index.ts
++++ /dev/null
+@@ -1,31 +0,0 @@
+-export * from './src/core';
+-export * from './src/duplex';
+-export {
+-    PatchError as JsonPatchError,
+-    _deepClone as deepClone,
+-    escapePathComponent,
+-    unescapePathComponent
+-} from './src/helpers';
+-
+-
+-/**
+- * Default export for backwards compat
+- */
+-
+-import * as core from './src/core';
+-import * as duplex from './src/duplex';
+-import {
+-    PatchError as JsonPatchError,
+-    _deepClone as deepClone,
+-    escapePathComponent,
+-    unescapePathComponent
+-} from './src/helpers';
+-
+-export default {
+-    ...core,
+-    ...duplex,
+-    JsonPatchError,
+-    deepClone,
+-    escapePathComponent,
+-    unescapePathComponent
+-}
+\ No newline at end of file

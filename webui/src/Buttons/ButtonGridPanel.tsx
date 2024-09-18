@@ -1,17 +1,6 @@
-import {
-	CAlert,
-	CButton,
-	CCol,
-	CForm,
-	CFormInput,
-	CFormLabel,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-	CRow,
-} from '@coreui/react'
-import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { KeyReceiver, socketEmitPromise, SocketContext } from '../util.js'
+import { CAlert, CButton, CCol, CRow } from '@coreui/react'
+import React, { useCallback, useContext, useRef } from 'react'
+import { KeyReceiver } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
@@ -21,11 +10,10 @@ import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { GridZoomController } from './GridZoom.js'
-import { CModalExt } from '../Components/CModalExt.js'
+import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
 
 interface ButtonsGridPanelProps {
@@ -66,10 +54,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const setPage = useCallback(
 		(newPage: number) => {
-			const pageNumbers = pages.pageNumbers
-			const newIndex = pageNumbers.findIndex((p) => p === newPage)
-			if (newIndex !== -1) {
-				changePage(Number(newPage))
+			if (newPage >= 1 && newPage <= pages.data.length) {
+				changePage(newPage)
 			}
 		},
 		[changePage, pages]
@@ -77,25 +63,20 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const changePage2 = useCallback(
 		(delta: number) => {
-			const pageNumbers = pages.pageNumbers
-			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber)
-			let newPage = pageNumbers[0]
-			if (currentIndex !== -1) {
-				let newIndex = currentIndex + delta
-				if (newIndex < 0) newIndex += pageNumbers.length
-				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
+			const pageCount = pages.data.length
 
-				newPage = pageNumbers[newIndex]
-			}
+			let newPage = pageNumber + delta
+			if (newPage < 1) newPage += pageCount
+			if (newPage > pageCount) newPage -= pageCount
 
-			if (newPage !== undefined && !isNaN(Number(newPage))) {
-				changePage(Number(newPage))
+			if (!isNaN(newPage)) {
+				changePage(newPage)
 			}
 		},
 		[changePage, pageNumber, pages]
 	)
 
-	const pageInfo = pages.store.get(pageNumber)
+	const pageInfo = pages.get(pageNumber)
 
 	const gridRef = useRef<ButtonInfiniteGridRef>(null)
 	const editRef = useRef<EditPagePropertiesModalRef>(null)
@@ -220,98 +201,3 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		</KeyReceiver>
 	)
 })
-
-interface EditPagePropertiesModalRef {
-	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void
-}
-interface EditPagePropertiesModalProps {
-	// Nothing
-}
-
-const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPagePropertiesModalProps>(
-	function EditPagePropertiesModal(_props, ref) {
-		const socket = useContext(SocketContext)
-		const [pageNumber, setPageNumber] = useState<number | null>(null)
-		const [show, setShow] = useState(false)
-
-		const [pageName, setName] = useState<string | null>(null)
-
-		const buttonRef = useRef<HTMLButtonElement>(null)
-
-		const buttonFocus = () => {
-			if (buttonRef.current) {
-				buttonRef.current.focus()
-			}
-		}
-
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setPageNumber(null), [])
-		const doAction = useCallback(
-			(e: FormEvent) => {
-				if (e) e.preventDefault()
-
-				setPageNumber(null)
-				setShow(false)
-				setName(null)
-
-				if (pageNumber === null) return
-
-				socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName ?? '']).catch((e) => {
-					console.error('Failed to set name', e)
-				})
-			},
-			[pageNumber, pageName]
-		)
-
-		useImperativeHandle(
-			ref,
-			() => ({
-				show(pageNumber, pageInfo) {
-					setName(pageInfo?.name ?? null)
-					setPageNumber(pageNumber)
-					setShow(true)
-
-					// Focus the button asap. It also gets focused once the open is complete
-					setTimeout(buttonFocus, 50)
-				},
-			}),
-			[]
-		)
-
-		const onNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			setName(e.target.value)
-		}, [])
-
-		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
-				<CModalHeader closeButton>
-					<h5>Configure Page {pageNumber}</h5>
-				</CModalHeader>
-				<CModalBody>
-					<CForm onSubmit={doAction}>
-						<CRow className="mb-3">
-							<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
-								Name
-							</CFormLabel>
-							<CCol sm={9}>
-								<CFormInput name="colFormName" type="text" value={pageName || ''} onChange={onNameChange} />
-							</CCol>
-							<CCol sm={12}>
-								<br />
-								<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
-							</CCol>
-						</CRow>
-					</CForm>
-				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Cancel
-					</CButton>
-					<CButton ref={buttonRef} color="primary" onClick={doAction}>
-						Save
-					</CButton>
-				</CModalFooter>
-			</CModalExt>
-		)
-	}
-)

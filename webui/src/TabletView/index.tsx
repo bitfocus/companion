@@ -24,7 +24,7 @@ export const TabletView = observer(function TabletView() {
 		const rawParsedQuery = queryString.parse(queryUrl)
 
 		const pagesStr = Array.isArray(rawParsedQuery.pages) ? rawParsedQuery.pages[0] : rawParsedQuery.pages
-		const pagesRange = rangeParser(pagesStr ?? '').filter((p) => p >= 1 && p <= 99)
+		const pagesRange = rangeParser(pagesStr ?? '').filter((p) => p >= 1)
 
 		if (rawParsedQuery['max_col'] === undefined && rawParsedQuery['cols'])
 			rawParsedQuery['max_col'] = Number(rawParsedQuery['cols']) - 1 + ''
@@ -105,9 +105,13 @@ export const TabletView = observer(function TabletView() {
 	)
 
 	// Compile the list of pages we will be showing
-	const allValidPageNumbers = pagesStore.pageNumbers
-	let validPages = orderedPages.filter((p) => allValidPageNumbers.includes(p))
-	if (validPages.length === 0) validPages = allValidPageNumbers
+	const totalPageCount = pagesStore.data.length
+	let validPages = orderedPages.filter((p) => p >= 1 && p <= totalPageCount)
+	if (validPages.length === 0) {
+		for (let i = 1; i <= totalPageCount; i++) {
+			validPages.push(i)
+		}
+	}
 
 	const gridSize = useMemo(() => {
 		if (!rawGridSize)
@@ -240,7 +244,7 @@ interface PageHeadingProps {
 const PageHeading = observer(function PageHeading({ pagesStore, pageNumber }: PageHeadingProps) {
 	return (
 		<div className="page-heading">
-			<h1>{pagesStore.store.get(pageNumber)?.name}</h1>
+			<h1>{pagesStore.get(pageNumber)?.name}</h1>
 		</div>
 	)
 })

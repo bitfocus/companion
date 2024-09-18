@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { PageModelChanges } from '@companion-app/shared/Model/PageModel.js'
 import { PagesStore } from '../Stores/PagesStore.js'
 
 export function usePagesInfoSubscription(
@@ -28,8 +28,8 @@ export function usePagesInfoSubscription(
 				store.reset(null)
 			})
 
-		const updatePageInfo = (page: number, info: PageModel) => {
-			store.updatePage(page, info)
+		const updatePageInfo = (change: PageModelChanges) => {
+			store.updatePage(change)
 		}
 
 		socket.on('pages:update', updatePageInfo)

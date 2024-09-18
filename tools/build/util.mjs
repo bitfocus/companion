@@ -2,11 +2,14 @@ function expandMissing(info) {
 	return {
 		// Allow some fields to be optional, if they are repeated
 		nodeArch: info.runtimeArch,
+		nodePlatform: info.runtimePlatform,
 		runtimePlatform: info.runtimePlatform,
 		runtimeArch: info.runtimeArch,
 		...info,
 	}
 }
+
+export const toPosix = (str) => str.split(path.sep).join(path.posix.sep)
 
 export function determinePlatformInfo(platform) {
 	if (!platform) {
@@ -30,6 +33,7 @@ export function determinePlatformInfo(platform) {
 		return expandMissing({
 			electronBuilderArgs: ['--x64', '--win'],
 			runtimePlatform: 'win',
+			nodePlatform: 'win32',
 			runtimeArch: 'x64',
 		})
 	} else if (platform === 'linux-x64') {

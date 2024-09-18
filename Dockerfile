@@ -1,4 +1,4 @@
-FROM node:18-bookworm as companion-builder
+FROM node:22-bookworm AS companion-builder
 
 # Installation Prep
 RUN apt-get update && apt-get install -y \
@@ -10,9 +10,6 @@ RUN yarn config set network-timeout 200000 -g
 
 WORKDIR /app
 COPY . /app/
-
-# Install dependencies
-RUN CI=1 ./tools/yarn.sh
 
 # Generate version number file
 RUN yarn build:writefile
@@ -26,7 +23,6 @@ FROM debian:bookworm-slim
 WORKDIR /app
 COPY --from=companion-builder /app/dist	/app/
 COPY --from=companion-builder /app/docker-entrypoint.sh /docker-entrypoint.sh
-COPY --from=companion-builder /app/module-legacy/manifests	/app/module-legacy/manifests
 
 # Install curl for the health check
 RUN apt update && apt install -y \
@@ -43,7 +39,7 @@ RUN apt update && apt install -y \
 RUN useradd -ms /bin/bash companion
 
 # setup path and corepack
-ENV PATH="$PATH:/app/node-runtime/bin"
+ENV PATH="$PATH:/app/node-runtimes/main/bin"
 RUN echo "PATH="${PATH}"" | tee -a /etc/environment
 RUN corepack enable
 
@@ -63,4 +59,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "cur
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
 
 # Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
-CMD ["sh", "-c", "./node-runtime/bin/node ./main.js --admin-address 0.0.0.0 --admin-port 8000 --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev"]
+CMD ["sh", "-c", "./node-runtimes/main/bin/node ./main.js --admin-address 0.0.0.0 --admin-port 8000 --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev"]
