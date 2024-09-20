@@ -6,21 +6,19 @@ import type { Logger } from '../../Log/Controller.js'
  * do the database upgrades to convert from the v4 to the v5 format
  */
 function convertDatabaseToV5(db: DataDatabase, _logger: Logger) {
-
 	if (db.store) {
-        try {
-            const controls = db.store.prepare(`CREATE TABLE IF NOT EXISTS controls (id STRING UNIQUE, value STRING);`)
-            controls.run()
-            const cloud = db.store.prepare(`CREATE TABLE IF NOT EXISTS cloud (id STRING UNIQUE, value STRING);`)
-            cloud.run()
-        }
-        catch (e) {
-            _logger.warn(`Error creating tables`, e)
-        }
+		try {
+			const controls = db.store.prepare(`CREATE TABLE IF NOT EXISTS controls (id STRING UNIQUE, value STRING);`)
+			controls.run()
+			const cloud = db.store.prepare(`CREATE TABLE IF NOT EXISTS cloud (id STRING UNIQUE, value STRING);`)
+			cloud.run()
+		} catch (e) {
+			_logger.warn(`Error creating tables`, e)
+		}
 
-		const batchInsert = function(table: string, heap: any) {
+		const batchInsert = function (table: string, heap: any) {
 			if (heap) {
-				for(const [key, value] of Object.entries(heap)) {
+				for (const [key, value] of Object.entries(heap)) {
 					db.setTableKey(table, key, value)
 				}
 			}
@@ -44,7 +42,7 @@ function convertDatabaseToV5(db: DataDatabase, _logger: Logger) {
 }
 
 function convertImportToV5(obj: any) {
-		return obj
+	return obj
 }
 
 export default {

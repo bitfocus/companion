@@ -45,11 +45,12 @@ export class DataCache extends DataStoreBase {
 	 */
 	protected create(): void {
 		if (this.store) {
-			const create = this.store.prepare(`CREATE TABLE IF NOT EXISTS ${this.defaultTable} (id STRING UNIQUE, value STRING);`)
+			const create = this.store.prepare(
+				`CREATE TABLE IF NOT EXISTS ${this.defaultTable} (id STRING UNIQUE, value STRING);`
+			)
 			try {
 				create.run()
-			}
-			catch (e) {
+			} catch (e) {
 				this.logger.warn(`Error creating table ${this.defaultTable}`)
 			}
 		}

@@ -120,7 +120,7 @@ export abstract class DataStoreBase {
 			this.logger.silly(`Delete key: ${table} - ${key}`)
 
 			try {
-				query.run({id: key})
+				query.run({ id: key })
 			} catch (e) {
 				this.logger.warn(`Error deleting ${key}`, e)
 			}
@@ -160,7 +160,7 @@ export abstract class DataStoreBase {
 
 			try {
 				const rows = query.all()
-				
+
 				if (rows.length > 0) {
 					for (const record of Object.values(rows)) {
 						try {
@@ -195,7 +195,7 @@ export abstract class DataStoreBase {
 			this.logger.silly(`Get table key: ${table} - ${key}`)
 
 			try {
-				const row = query.get({id: key})
+				const row = query.get({ id: key })
 				/** @ts-ignore */
 				if (row && row.value) {
 					try {
@@ -205,8 +205,7 @@ export abstract class DataStoreBase {
 						/** @ts-ignore */
 						out = row.value
 					}
-				}
-				else {
+				} else {
 					this.logger.silly(`Get table key: ${table} - ${key} failover`)
 					this.setTableKey(table, key, defaultValue)
 					out = defaultValue
@@ -216,7 +215,6 @@ export abstract class DataStoreBase {
 			}
 
 			this.setDirty()
-
 		}
 		return out
 	}
@@ -230,7 +228,7 @@ export abstract class DataStoreBase {
 
 		if (this.store) {
 			const query = this.store.prepare(`SELECT id FROM ${this.defaultTable} WHERE id = @id`)
-			row = query.get({id:key})
+			row = query.get({ id: key })
 		}
 
 		return !!row
@@ -251,7 +249,8 @@ export abstract class DataStoreBase {
 	 */
 	private saveBackup(): void {
 		if (this.store) {
-			this.store.backup(`${this.cfgFile}.sqlite.bak`)
+			this.store
+				.backup(`${this.cfgFile}.sqlite.bak`)
 				.then(() => {
 					this.logger.silly('backup complete')
 				})
@@ -262,8 +261,8 @@ export abstract class DataStoreBase {
 	}
 
 	/**
-	* Setup the save cycle interval
-	*/
+	 * Setup the save cycle interval
+	 */
 	private setBackupCycle(): void {
 		if (this.backupCycle) return
 
@@ -298,17 +297,18 @@ export abstract class DataStoreBase {
 	 * @param value - the object to save
 	 */
 	public setTableKey(table: string, key: string, value: any): void {
-
 		if (table.length > 0 && key.length > 0 && value && this.store) {
-			if (typeof value === "object") {
+			if (typeof value === 'object') {
 				value = JSON.stringify(value)
 			}
 
-			const query = this.store.prepare(`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`)
+			const query = this.store.prepare(
+				`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
+			)
 			this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
 
 			try {
-				query.run({id: key, value: value})
+				query.run({ id: key, value: value })
 			} catch (e) {
 				this.logger.warn(`Error updating ${key}`, e)
 			}
