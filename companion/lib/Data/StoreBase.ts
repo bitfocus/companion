@@ -1,11 +1,13 @@
 import fs from 'fs-extra'
 import path from 'path'
-import { cloneDeep } from 'lodash-es'
+import Database, { Database as SQLiteDB } from 'better-sqlite3'
 import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage } from '../Resources/Util.js'
 
+export type DatabaseDefault = Record<string, any>
+
 /**
- * Abstract class to be extended by the flat file DB classes.
+ * Abstract class to be extended by the DB classes.
  * See {@link DataCache} and {@link DataDatabase}
  *
  * @author Håkon Nessjøen <haakon@bitfocus.io>
@@ -25,42 +27,37 @@ import { showErrorMessage } from '../Resources/Util.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class DataStoreBase {
+export abstract class DataStoreBase {
 	protected readonly logger: Logger
-
 	/**
-	 * The full backup file path
+	 * The time to use for the save interval
 	 */
-	private readonly cfgBakFile: string = ''
+	private backupCycle: NodeJS.Timeout | undefined
 	/**
-	 * The full corrupt file path
+	 * The interval to fire a backup to disk when dirty
 	 */
-	private readonly cfgCorruptFile: string = ''
+	private readonly backupInterval: number = 60000
 	/**
 	 * The config directory
 	 */
-	private readonly cfgDir: string = ''
+	public readonly cfgDir: string
 	/**
 	 * The full main file path
 	 */
-	private readonly cfgFile: string = ''
+	protected readonly cfgFile: string
 	/**
-	 * The full temporary file path
+	 * The default table to dumb keys when one isn't specified
 	 */
-	private readonly cfgTmpFile: string = ''
+	protected readonly defaultTable: string
 	/**
-	 * The stored defaults for a new store
-	 */
-	private readonly defaults: object = {}
-	/**
-	 * Flag to tell the <code>saveInternal</code> there's
-	 * changes to save to disk
+	 * Flag to tell the <code>backupInternal</code> there's
+	 * changes to backup to disk
 	 */
 	private dirty = false
 	/**
 	 * Flag if this database was created fresh on this run
 	 */
-	private isFirstRun = false
+	protected isFirstRun = false
 	/**
 	 * Timestamp of last save to disk
 	 */
@@ -68,305 +65,214 @@ export class DataStoreBase {
 	/**
 	 * The name to use for the file and logging
 	 */
-	private readonly name: string = ''
-
+	protected readonly name: string = ''
 	/**
-	 * The time to use for the save interval
+	 * The SQLite database
 	 */
-	private saveCycle: NodeJS.Timeout | undefined
-
-	/**
-	 * The interval to fire a save to disk when dirty
-	 */
-	private readonly saveInterval: number
-
-	/**
-	 * Semaphore while the store is saving to disk
-	 */
-	private saving = false
-
-	/**
-	 * The flat file DB in RAM
-	 */
-	store: Record<string, any> = {}
+	public store: SQLiteDB | undefined
 
 	/**
 	 * This needs to be called in the extending class
 	 * using <code>super(registry, name, saveInterval, defaults, debug)</code>.
 	 * @param configDir - the root config directory
 	 * @param name - the name of the flat file
-	 * @param saveInterval - minimum interval in ms to save to disk
-	 * @param defaults - the default data to use when making a new file
+	 * @param defaultTable - the default table for data
 	 * @param debug - module path to be used in the debugger
 	 */
-	constructor(configDir: string, name: string, saveInterval: number, defaults: object, debug: string) {
+	constructor(configDir: string, name: string, defaultTable: string, debug: string) {
 		this.logger = LogController.createLogger(debug)
 
 		this.cfgDir = configDir
 		this.name = name
-		this.saveInterval = saveInterval
-		this.defaults = defaults
+		this.defaultTable = defaultTable
 
 		this.cfgFile = path.join(this.cfgDir, this.name)
-		this.cfgBakFile = path.join(this.cfgDir, this.name + '.bak')
-		this.cfgCorruptFile = path.join(this.cfgDir, this.name + '.corrupt')
-		this.cfgTmpFile = path.join(this.cfgDir, this.name + '.tmp')
 	}
 
 	/**
-	 * Delete a key/value pair
+	 * Create the database tables
+	 */
+	protected abstract create(): void
+
+	/**
+	 * Close the file because we're existing
+	 */
+	public close(): void {
+		this.store?.close()
+	}
+
+	/**
+	 * Delete a key/value pair from the default table
 	 * @param key - the key to be delete
 	 */
-	deleteKey(key: string): void {
-		this.logger.silly(`${this.name}_del (${key})`)
-		if (key !== undefined) {
-			delete this.store[key]
+	public deleteKey(key: string): void {
+		this.deleteTableKey(this.defaultTable, key)
+	}
+
+	/**
+	 * Delete a key/value pair from a table
+	 * @param table - the table to delete from
+	 * @param key - the key to be delete
+	 */
+	public deleteTableKey(table: string, key: string): void {
+		if (table.length > 0 && key.length > 0 && this.store) {
+			const query = this.store.prepare(`DELETE FROM ${table} WHERE id = @id`)
+			this.logger.silly(`Delete key: ${table} - ${key}`)
+
+			try {
+				query.run({id: key})
+			} catch (e) {
+				this.logger.warn(`Error deleting ${key}`, e)
+			}
+
 			this.setDirty()
 		}
-	}
-
-	/**
-	 * Save the database to file making a `FILE.bak` version then moving it into place
-	 * @param withBackup - can be set to <code>false</code> if the current file should not be moved to `FILE.bak`
-	 */
-	protected async doSave(withBackup = true): Promise<void> {
-		const jsonSave = JSON.stringify(this.store)
-		this.dirty = false
-		this.lastsave = Date.now()
-
-		if (withBackup) {
-			try {
-				const file = await fs.readFile(this.cfgFile, 'utf8')
-
-				if (file.trim().length > 0) {
-					JSON.parse(file) // just want to see if a parse error is thrown so we don't back up a corrupted db
-
-					try {
-						await fs.copy(this.cfgFile, this.cfgBakFile)
-						this.logger.silly(`${this.name}_save: backup written`)
-					} catch (err) {
-						this.logger.silly(`${this.name}_save: Error making backup copy: ${err}`)
-					}
-				}
-			} catch (err) {
-				this.logger.silly(`${this.name}_save: Error checking db file for backup: ${err}`)
-			}
-		}
-
-		try {
-			await fs.writeFile(this.cfgTmpFile, jsonSave)
-		} catch (err) {
-			this.logger.silly(`${this.name}_save: Error saving: ${err}`)
-			throw 'Error saving: ' + err
-		}
-
-		this.logger.silly(`${this.name}_save: written`)
-
-		try {
-			await fs.rename(this.cfgTmpFile, this.cfgFile)
-		} catch (err) {
-			this.logger.silly(`${this.name}_save: Error renaming ${this.name}.tmp: ` + err)
-			throw `Error renaming ${this.name}.tmp: ` + err
-		}
-
-		this.logger.silly(`${this.name}_save: renamed`)
-	}
-
-	/**
-	 * Get the entire database
-	 * @param clone - <code>true</code> if a clone is needed instead of a link
-	 * @returns the database
-	 */
-	getAll(clone = false): Record<string, any> {
-		let out
-		this.logger.silly(`${this.name}_all`)
-
-		if (clone === true) {
-			out = cloneDeep(this.store)
-		} else {
-			out = this.store
-		}
-
-		return out
-	}
-
-	/**
-	 * @returns the directory of the flat file
-	 */
-	getCfgDir(): string {
-		return this.cfgDir
-	}
-
-	/**
-	 * @returns the flat file
-	 */
-	getCfgFile(): string {
-		return this.cfgFile
 	}
 
 	/**
 	 * @returns the 'is first run' flag
 	 */
-	getIsFirstRun(): boolean {
+	public getIsFirstRun(): boolean {
 		return this.isFirstRun
 	}
 
 	/**
-	 * @returns JSON of the database
+	 * Get a value from the default table
+	 * @param key - the to be retrieved
+	 * @param defaultValue  - the default value to use if the key doens't exist
+	 * @returns the value
 	 */
-	getJSON(): string | null {
-		try {
-			return JSON.stringify(this.store)
-		} catch (e) {
-			this.logger.silly(`JSON error: ${e}`)
-			return null
-		}
+	public getKey(key: string, defaultValue?: any): any {
+		return this.getTableKey(this.defaultTable, key, defaultValue)
 	}
 
 	/**
-	 * Get a value from the database
-	 * @param key - the key to be retrieved
-	 * @param defaultValue - the default value to use if the key doesn't exist
-	 * @param clone - <code>true</code> if a clone is needed instead of a link
+	 * Get all rows from a table
+	 * @param table - the table to get from
+	 * @returns the rows
 	 */
-	getKey(key: string, defaultValue?: any, clone = false): any {
-		let out
-		this.logger.silly(`${this.name}_get(${key})`)
+	public getTable(table: string): any {
+		let out = {}
 
-		if (this.store[key] === undefined && defaultValue !== undefined) {
-			this.store[key] = defaultValue
-			this.setDirty()
-		}
+		if (table.length > 0 && this.store) {
+			const query = this.store.prepare(`SELECT id, value FROM ${table}`)
+			this.logger.silly(`Get table: ${table}`)
 
-		if (clone === true) {
-			out = cloneDeep(this.store[key])
-		} else {
-			out = this.store[key]
+			try {
+				const rows = query.all()
+				
+				if (rows.length > 0) {
+					for (const record of Object.values(rows)) {
+						try {
+							/** @ts-ignore */
+							out[record.id] = JSON.parse(record.value)
+						} catch (e) {
+							/** @ts-ignore */
+							out[record.id] = record.value
+						}
+					}
+				}
+			} catch (e) {
+				this.logger.warn(`Error getting ${table}`, e)
+			}
 		}
 
 		return out
 	}
 
 	/**
-	 * Checks if the database has a value
+	 * Get a value from a table
+	 * @param table - the table to get from
+	 * @param key - the key to be retrieved
+	 * @param defaultValue - the default value to use if the key doesn't exist
+	 * @returns the value
+	 */
+	public getTableKey(table: string, key: string, defaultValue?: any): any {
+		let out
+
+		if (table.length > 0 && key.length > 0 && this.store) {
+			const query = this.store.prepare(`SELECT value FROM ${table} WHERE id = @id`)
+			this.logger.silly(`Get table key: ${table} - ${key}`)
+
+			try {
+				const row = query.get({id: key})
+				/** @ts-ignore */
+				if (row && row.value) {
+					try {
+						/** @ts-ignore */
+						out = JSON.parse(row.value)
+					} catch (e) {
+						/** @ts-ignore */
+						out = row.value
+					}
+				}
+				else {
+					this.logger.silly(`Get table key: ${table} - ${key} failover`)
+					this.setTableKey(table, key, defaultValue)
+					out = defaultValue
+				}
+			} catch (e) {
+				this.logger.warn(`Error getting ${key}`, e)
+			}
+
+			this.setDirty()
+
+		}
+		return out
+	}
+
+	/**
+	 * Checks if the main table has a value
 	 * @param key - the key to be checked
 	 */
-	hasKey(key: string): boolean {
-		return this.store[key] !== undefined
-	}
+	public hasKey(key: string): boolean {
+		let row
 
-	/**
-	 * Attempt to load the database from disk
-	 * @access protected
-	 */
-	protected loadSync(): void {
-		if (fs.existsSync(this.cfgFile)) {
-			this.logger.silly(this.cfgFile, 'exists. trying to read')
-
-			try {
-				let data = fs.readFileSync(this.cfgFile, 'utf8')
-
-				if (data.trim().length > 0 || data.startsWith('\0')) {
-					this.store = JSON.parse(data)
-					this.logger.silly('parsed JSON')
-				} else {
-					this.logger.warn(`${this.name} was empty.  Attempting to recover the configuration.`)
-					this.loadBackupSync()
-				}
-			} catch (e) {
-				try {
-					fs.copyFileSync(this.cfgFile, this.cfgCorruptFile)
-					this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
-					fs.rmSync(this.cfgFile)
-				} catch (err) {
-					this.logger.silly(`${this.name}_load`, `Error making or deleting corrupted backup: ${err}`)
-				}
-
-				this.loadBackupSync()
-			}
-		} else if (fs.existsSync(this.cfgBakFile)) {
-			this.logger.warn(`${this.name} is missing.  Attempting to recover the configuration.`)
-			this.loadBackupSync()
-		} else {
-			this.logger.silly(this.cfgFile, `doesn't exist. loading defaults`, this.defaults)
-			this.loadDefaults()
+		if (this.store) {
+			const query = this.store.prepare(`SELECT id FROM ${this.defaultTable} WHERE id = @id`)
+			row = query.get({id:key})
 		}
 
-		this.#setSaveCycle()
+		return !!row
 	}
 
 	/**
-	 * Attempt to load the backup file from disk as a recovery
+	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
-	protected loadBackupSync(): void {
-		if (fs.existsSync(this.cfgBakFile)) {
-			this.logger.silly(this.cfgBakFile, 'exists. trying to read')
-			let data = fs.readFileSync(this.cfgBakFile, 'utf8')
-
-			try {
-				if (data.trim().length > 0 || data.startsWith('\0')) {
-					this.store = JSON.parse(data)
-					this.logger.silly('parsed JSON')
-					this.logger.warn(`${this.name}.bak has been used to recover the configuration.`)
-					this.save(false)
-				} else {
-					this.logger.warn(`${this.name} was empty.  Creating a new db.`)
-					this.loadDefaults()
-				}
-			} catch (e) {
-				showErrorMessage('Error starting companion', 'Could not load database backup  file. Resetting configuration')
-
-				console.error('Could not load database backup file')
-				this.loadDefaults()
-			}
-		} else {
-			showErrorMessage('Error starting companion', 'Could not load database backup  file. Resetting configuration')
-
-			console.error('Could not load database file')
-			this.loadDefaults()
-		}
-	}
+	protected abstract loadDefaults(): void
 
 	/**
-	 * Save the defaults since a file could not be found/loaded/parses
+	 * Load the old file driver and migrate to SQLite
 	 */
-	protected loadDefaults(): void {
-		this.store = cloneDeep(this.defaults)
-		this.isFirstRun = true
-		this.save()
-	}
+	protected abstract migrateFileToSqlite(): void
 
 	/**
-	 * Save the database to file
-	 * @param withBackup - can be set to `false` if the current file should not be moved to `FILE.bak`
+	 * Save a backup of the db
 	 */
-	save(withBackup = true): void {
-		if (this.saving === false) {
-			this.logger.silly(`${this.name}_save: begin`)
-			this.saving = true
-
-			this.doSave(withBackup)
-				.catch((err) => {
-					try {
-						this.logger.error(err)
-					} catch (err2) {
-						this.logger.silly(`${this.name}_save: Error reporting save failure: ${err2}`)
-					}
-				})
+	private saveBackup(): void {
+		if (this.store) {
+			this.store.backup(`${this.cfgFile}.sqlite.bak`)
 				.then(() => {
-					// This will run even if the catch caught an error
-					this.saving = false
+					this.logger.silly('backup complete')
+				})
+				.catch((err) => {
+					this.logger.warn('backup failed', err.message)
 				})
 		}
 	}
 
 	/**
-	 * Execute a save if the database is dirty
-	 */
-	saveImmediate(): void {
-		if (this.dirty === true) {
-			this.save()
-		}
+	* Setup the save cycle interval
+	*/
+	private setBackupCycle(): void {
+		if (this.backupCycle) return
+
+		this.backupCycle = setInterval(() => {
+			// See if the database is dirty and needs to be saved
+			if (Date.now() - this.lastsave > this.backupInterval && this.dirty) {
+				this.saveBackup()
+			}
+		}, this.backupInterval)
 	}
 
 	/**
@@ -377,67 +283,63 @@ export class DataStoreBase {
 	}
 
 	/**
-	 * Save/update a key/value pair to the database
+	 * Save/update a key/value pair to the default table
 	 * @param key - the key to save under
 	 * @param value - the object to save
-	 * @access public
 	 */
-	setKey(key: number | string | string[], value: any): void {
-		this.logger.silly(`${this.name}_set(${key}, ${value})`)
+	public setKey(key: string, value: any): void {
+		this.setTableKey(this.defaultTable, key, value)
+	}
 
-		if (key !== undefined) {
-			if (Array.isArray(key)) {
-				if (key.length > 0) {
-					const keyStr = key.join(':')
-					const lastK = key.pop()
+	/**
+	 * Save/update a key/value pair to a table
+	 * @param table - the table to save in
+	 * @param key - the key to save under
+	 * @param value - the object to save
+	 */
+	public setTableKey(table: string, key: string, value: any): void {
 
-					// Find or create the parent object
-					let dbObj = this.store
-					for (const k of key) {
-						if (!dbObj || typeof dbObj !== 'object') throw new Error(`Unable to set db path: ${keyStr}`)
-						if (!dbObj[k]) dbObj[k] = {}
-						dbObj = dbObj[k]
-					}
-
-					// @ts-ignore
-					dbObj[lastK] = value
-					this.setDirty()
-				}
-			} else {
-				this.store[key] = value
-				this.setDirty()
+		if (table.length > 0 && key.length > 0 && value && this.store) {
+			if (typeof value === "object") {
+				value = JSON.stringify(value)
 			}
+
+			const query = this.store.prepare(`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`)
+			this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
+
+			try {
+				query.run({id: key, value: value})
+			} catch (e) {
+				this.logger.warn(`Error updating ${key}`, e)
+			}
+
+			this.setDirty()
 		}
 	}
 
-	// /**
-	//  * Save/update multiple key/value pairs to the database
-	//  * @access public
-	//  */
-	// setKeys(keyvalueobj) {
-	// 	this.logger.silly(`${this.name}_set_multiple:`)
-
-	// 	if (keyvalueobj !== undefined && typeof keyvalueobj == 'object' && keyvalueobj.length > 0) {
-	// 		for (let key in keyvalueobj) {
-	// 			this.logger.silly(`${this.name}_set(${key}, ${keyvalueobj[key]})`)
-	// 			this.store[key] = keyvalueobj[key]
-	// 		}
-
-	// 		this.setDirty()
-	// 	}
-	// }
-
 	/**
-	 * Setup the save cycle interval
+	 * Attempt to load the database
 	 */
-	#setSaveCycle(): void {
-		if (this.saveCycle) return
+	protected startSQLite(): void {
+		try {
+			this.store = new Database(this.cfgFile + '.sqlite', { fileMustExist: true })
+			this.setBackupCycle()
+		} catch (e) {
+			try {
+				this.store = new Database(this.cfgFile + '.sqlite')
+				this.setBackupCycle()
+				if (fs.existsSync(this.cfgFile)) {
+					this.logger.warn(`Legacy ${this.cfgFile} exists.  Attempting migration to SQLite.`)
+					this.migrateFileToSqlite()
+				} else {
+					this.logger.silly(`${this.cfgFile}.sqlite doesn't exist. loading defaults`)
+					this.loadDefaults()
+				}
+			} catch (e) {
+				showErrorMessage('Error starting companion', 'Could not load or create a database file.')
 
-		this.saveCycle = setInterval(() => {
-			// See if the database is dirty and needs to be saved
-			if (Date.now() - this.lastsave > this.saveInterval && this.dirty) {
-				this.save()
+				console.error('Could not load or create a database file' + e)
 			}
-		}, this.saveInterval)
+		}
 	}
 }

@@ -1,9 +1,9 @@
 import LogController from '../Log/Controller.js'
-import fs from 'fs-extra'
 
 import v1tov2 from './Upgrades/v1tov2.js'
 import v2tov3 from './Upgrades/v2tov3.js'
 import v3tov4 from './Upgrades/v3tov4.js'
+import v4tov5 from './Upgrades/v4tov5.js'
 import { showFatalError } from '../Resources/Util.js'
 import type { DataDatabase } from './Database.js'
 import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModel.js'
@@ -14,6 +14,7 @@ const allUpgrades = [
 	v1tov2, // 15 to 32 key
 	v2tov3, // v3.0
 	v3tov4, // v3.2
+	v4tov5, // v3.5
 ]
 const targetVersion = allUpgrades.length + 1
 
@@ -37,28 +38,12 @@ export function upgradeStartup(db: DataDatabase): void {
 	} else {
 		logger.info(`Upgrading db from version ${currentVersion} to ${targetVersion}`)
 
-		const saveUpgradeCopy = (db: DataDatabase, i: number) => {
-			try {
-				let jsonSave = db.getJSON()
-
-				if (jsonSave) {
-					fs.writeFileSync(`${db.getCfgFile()}.v${i}`, jsonSave)
-				}
-			} catch (err) {
-				logger.warn(`db_save: Error saving upgrade copy: ${err}`)
-			}
-		}
-
 		// run the scripts
 		for (let i = currentVersion; i < targetVersion; i++) {
-			saveUpgradeCopy(db, i)
 			allUpgrades[i - 1].upgradeStartup(db, logger)
 		}
 
 		db.setKey('page_config_version', targetVersion)
-
-		// force a save
-		db.saveImmediate()
 	}
 }
 

@@ -1,4 +1,5 @@
-import { DataStoreBase } from './StoreBase.js'
+import { DatabaseDefault, DataStoreBase } from './StoreBase.js'
+import { DataLegacyCache } from './Legacy/Cache.js'
 
 /**
  * The class that manages the applications's disk cache
@@ -24,18 +25,62 @@ export class DataCache extends DataStoreBase {
 	/**
 	 * The stored defaults for a new cache
 	 */
-	private static Defaults: object = {}
-	/**
-	 * The default minimum interval in ms to save to disk (30000 ms)
-	 */
-	private static SaveInterval: number = 30000
+	static Defaults: DatabaseDefault = {
+		main: {
+			cloud_servers: {},
+		},
+	}
 
 	/**
 	 * @param configDir - the root config directory
 	 */
 	constructor(configDir: string) {
-		super(configDir, 'datacache', DataCache.SaveInterval, DataCache.Defaults, 'Data/Cache')
+		super(configDir, 'datacache', 'main', 'Data/Cache')
 
-		this.loadSync()
+		this.startSQLite()
+	}
+
+	/**
+	 * Create the database tables
+	 */
+	protected create(): void {
+		if (this.store) {
+			const create = this.store.prepare(`CREATE TABLE IF NOT EXISTS ${this.defaultTable} (id STRING UNIQUE, value STRING);`)
+			try {
+				create.run()
+			}
+			catch (e) {
+				this.logger.warn(`Error creating table ${this.defaultTable}`)
+			}
+		}
+	}
+
+	/**
+	 * Save the defaults since a file could not be found/loaded/parsed
+	 */
+	protected loadDefaults(): void {
+		this.create()
+
+		/** @ts-ignore */
+		for (const key of DataCache.Defaults) {
+			this.setKey(key, DataCache.Defaults[key])
+		}
+
+		this.isFirstRun = true
+	}
+
+	/**
+	 * Skip loading migrating the old DB to SQLite
+	 */
+	protected migrateFileToSqlite(): void {
+		this.create()
+
+		const legacyDB = new DataLegacyCache(this.cfgDir)
+
+		const data = legacyDB.getAll()
+
+		for (const [key, value] of Object.entries(data)) {
+			this.setKey(key, value)
+		}
 	}
 }

@@ -129,7 +129,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 		setImmediate(() => {
 			// Setup groups
-			const groupsConfigs = this.db.getKey('surface-groups', {})
+			const groupsConfigs = this.db.getKey('surface_groups', {})
 			for (const groupId of Object.keys(groupsConfigs)) {
 				const newGroup = new SurfaceGroup(
 					this,
@@ -747,7 +747,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	async reset(): Promise<void> {
 		// Each active handler will re-add itself when doing the save as part of its own reset
 		this.db.setKey('deviceconfig', {})
-		this.db.setKey('surface-groups', {})
+		this.db.setKey('surface_groups', {})
 		this.#outboundController.reset()
 
 		// Wait for the surfaces to disconnect before clearing their config
@@ -1102,7 +1102,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	}
 
 	exportAllGroups(clone = true): any {
-		const obj = this.db.getKey('surface-groups', {}) || {}
+		const obj = this.db.getKey('surface_groups', {}) || {}
 		return clone ? cloneDeep(obj) : obj
 	}
 
