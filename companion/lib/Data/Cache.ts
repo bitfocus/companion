@@ -62,9 +62,8 @@ export class DataCache extends DataStoreBase {
 	protected loadDefaults(): void {
 		this.create()
 
-		/** @ts-ignore */
-		for (const key of DataCache.Defaults) {
-			this.setKey(key, DataCache.Defaults[key])
+		for (const [key, value] of Object.entries(DataCache.Defaults)) {
+			this.setKey(key, value)
 		}
 
 		this.isFirstRun = true
