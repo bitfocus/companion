@@ -26,7 +26,7 @@ export class DataDatabase extends DataStoreBase {
 	 * The stored defaults for a new db
 	 */
 	static Defaults: object = {
-		page_config_version: 3,
+		page_config_version: 4,
 	}
 	/**
 	 * The default minimum interval in ms to save to disk (4000 ms)
