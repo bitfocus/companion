@@ -507,7 +507,7 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 				)
 			case 'warning':
 				return (
-					<td className="connection-status-warn" onClick={onClick}>
+					<td className="connection-status-warn hand" onClick={onClick}>
 						{status.level || 'Warning'}
 						<br />
 						{messageStr}
@@ -515,7 +515,7 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 				)
 			case 'error':
 				return (
-					<td className="connection-status-error" onClick={onClick}>
+					<td className="connection-status-error hand" onClick={onClick}>
 						{status.level || 'ERROR'}
 						<br />
 						{messageStr}
@@ -523,7 +523,7 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 				)
 			default:
 				return (
-					<td className="connection-status-error" onClick={onClick}>
+					<td className="connection-status-error hand" onClick={onClick}>
 						Unknown
 						<br />
 						{messageStr}
@@ -532,8 +532,8 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 		}
 	} else {
 		return (
-			<td onClick={onClick}>
-				<p>Disabled</p>
+			<td onClick={onClick} className="hand">
+				Disabled
 			</td>
 		)
 	}
