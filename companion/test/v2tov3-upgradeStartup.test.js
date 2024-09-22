@@ -22,7 +22,7 @@ describe('upgrade', () => {
 			bank_rotate_left_actions: {},
 			bank_rotate_right_actions: {},
 			controls: {},
-			page_config_version: 3,
+			page_config_version: 4,
 		})
 	})
 })
