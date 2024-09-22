@@ -45,10 +45,6 @@ export class DataLegacyStoreBase {
 	 */
 	private readonly cfgFile: string = ''
 	/**
-	 * The stored defaults for a new store
-	 */
-	private readonly defaults: object = {}
-	/**
 	 * The name to use for the file and logging
 	 */
 	private readonly name: string = ''
@@ -77,17 +73,6 @@ export class DataLegacyStoreBase {
 	}
 
 	/**
-	 * Delete a key/value pair
-	 * @param key - the key to be delete
-	 */
-	deleteKey(key: string): void {
-		this.logger.silly(`${this.name}_del (${key})`)
-		if (key !== undefined) {
-			delete this.store[key]
-		}
-	}
-
-	/**
 	 * Get the entire database
 	 * @param clone - <code>true</code> if a clone is needed instead of a link
 	 * @returns the database
@@ -103,32 +88,6 @@ export class DataLegacyStoreBase {
 		}
 
 		return out
-	}
-
-	/**
-	 * @returns the directory of the flat file
-	 */
-	getCfgDir(): string {
-		return this.cfgDir
-	}
-
-	/**
-	 * @returns the flat file
-	 */
-	getCfgFile(): string {
-		return this.cfgFile
-	}
-
-	/**
-	 * @returns JSON of the database
-	 */
-	getJSON(): string | null {
-		try {
-			return JSON.stringify(this.store)
-		} catch (e) {
-			this.logger.silly(`JSON error: ${e}`)
-			return null
-		}
 	}
 
 	/**
@@ -152,14 +111,6 @@ export class DataLegacyStoreBase {
 		}
 
 		return out
-	}
-
-	/**
-	 * Checks if the database has a value
-	 * @param key - the key to be checked
-	 */
-	hasKey(key: string): boolean {
-		return this.store[key] !== undefined
 	}
 
 	/**
@@ -191,11 +142,9 @@ export class DataLegacyStoreBase {
 
 				this.loadBackupSync()
 			}
-		} else if (fs.existsSync(this.cfgBakFile)) {
+		} else {
 			this.logger.warn(`${this.name} is missing.  Attempting to recover the configuration.`)
 			this.loadBackupSync()
-		} else {
-			this.logger.silly(this.cfgFile, `doesn't exist. loading defaults`, this.defaults)
 		}
 	}
 
@@ -224,38 +173,6 @@ export class DataLegacyStoreBase {
 			showErrorMessage('Error starting companion', 'Could not load database backup  file. Resetting configuration')
 
 			console.error('Could not load database file')
-		}
-	}
-
-	/**
-	 * Save/update a key/value pair to the database
-	 * @param key - the key to save under
-	 * @param value - the object to save
-	 * @access public
-	 */
-	setKey(key: number | string | string[], value: any): void {
-		this.logger.silly(`${this.name}_set(${key}, ${value})`)
-
-		if (key !== undefined) {
-			if (Array.isArray(key)) {
-				if (key.length > 0) {
-					const keyStr = key.join(':')
-					const lastK = key.pop()
-
-					// Find or create the parent object
-					let dbObj = this.store
-					for (const k of key) {
-						if (!dbObj || typeof dbObj !== 'object') throw new Error(`Unable to set db path: ${keyStr}`)
-						if (!dbObj[k]) dbObj[k] = {}
-						dbObj = dbObj[k]
-					}
-
-					// @ts-ignore
-					dbObj[lastK] = value
-				}
-			} else {
-				this.store[key] = value
-			}
 		}
 	}
 }
