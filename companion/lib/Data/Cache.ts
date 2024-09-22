@@ -60,8 +60,6 @@ export class DataCache extends DataStoreBase {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		this.create()
-
 		for (const [key, value] of Object.entries(DataCache.Defaults)) {
 			this.setKey(key, value)
 		}

@@ -57,9 +57,6 @@ export class DataDatabase extends DataStoreBase {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		this.create()
-
-		/** @ts-ignore */
 		for (const [key, value] of Object.entries(DataDatabase.Defaults)) {
 			this.setKey(key, value)
 		}

@@ -38,13 +38,25 @@ export abstract class DataStoreBase {
 	 */
 	private readonly backupInterval: number = 60000
 	/**
+	 * The full backup file path
+	 */
+	private readonly cfgBakFile: string
+	/**
+	 * The full corrupt file path
+	 */
+	private readonly cfgCorruptFile: string
+	/**
 	 * The config directory
 	 */
 	public readonly cfgDir: string
 	/**
 	 * The full main file path
 	 */
-	protected readonly cfgFile: string
+	private readonly cfgFile: string
+	/**
+	 * The full main legacy file path
+	 */
+	private readonly cfgLegacyFile: string
 	/**
 	 * The default table to dumb keys when one isn't specified
 	 */
@@ -86,7 +98,10 @@ export abstract class DataStoreBase {
 		this.name = name
 		this.defaultTable = defaultTable
 
-		this.cfgFile = path.join(this.cfgDir, this.name)
+		this.cfgFile = path.join(this.cfgDir, this.name + '.sqlite')
+		this.cfgBakFile = path.join(this.cfgDir, this.name + '.bak')
+		this.cfgCorruptFile = path.join(this.cfgDir, this.name + '.corrupt')
+		this.cfgLegacyFile = path.join(this.cfgDir, this.name)
 	}
 
 	/**
@@ -115,14 +130,14 @@ export abstract class DataStoreBase {
 	 * @param key - the key to be delete
 	 */
 	public deleteTableKey(table: string, key: string): void {
-		if (table.length > 0 && key.length > 0 && this.store) {
-			const query = this.store.prepare(`DELETE FROM ${table} WHERE id = @id`)
+		if (table.length > 0 && key.length > 0) {
+			const query = this.store?.prepare(`DELETE FROM ${table} WHERE id = @id`)
 			this.logger.silly(`Delete key: ${table} - ${key}`)
 
 			try {
-				query.run({ id: key })
-			} catch (e) {
-				this.logger.warn(`Error deleting ${key}`, e)
+				query?.run({ id: key })
+			} catch (e: any) {
+				this.logger.warn(`Error deleting ${table} - ${key}: ${e.message}`)
 			}
 
 			this.setDirty()
@@ -155,7 +170,7 @@ export abstract class DataStoreBase {
 		let out = {}
 
 		if (table.length > 0 && this.store) {
-			const query = this.store.prepare(`SELECT id, value FROM ${table}`)
+			const query = this.store?.prepare(`SELECT id, value FROM ${table}`)
 			this.logger.silly(`Get table: ${table}`)
 
 			try {
@@ -190,12 +205,12 @@ export abstract class DataStoreBase {
 	public getTableKey(table: string, key: string, defaultValue?: any): any {
 		let out
 
-		if (table.length > 0 && key.length > 0 && this.store) {
-			const query = this.store.prepare(`SELECT value FROM ${table} WHERE id = @id`)
+		if (table.length > 0 && key.length > 0) {
+			const query = this.store?.prepare(`SELECT value FROM ${table} WHERE id = @id`)
 			this.logger.silly(`Get table key: ${table} - ${key}`)
 
 			try {
-				const row = query.get({ id: key })
+				const row = query?.get({ id: key })
 				/** @ts-ignore */
 				if (row && row.value) {
 					try {
@@ -210,8 +225,8 @@ export abstract class DataStoreBase {
 					this.setTableKey(table, key, defaultValue)
 					out = defaultValue
 				}
-			} catch (e) {
-				this.logger.warn(`Error getting ${key}`, e)
+			} catch (e: any) {
+				this.logger.warn(`Error getting ${table} - ${key}: ${e.message}`)
 			}
 
 			this.setDirty()
@@ -226,10 +241,8 @@ export abstract class DataStoreBase {
 	public hasKey(key: string): boolean {
 		let row
 
-		if (this.store) {
-			const query = this.store.prepare(`SELECT id FROM ${this.defaultTable} WHERE id = @id`)
-			row = query.get({ id: key })
-		}
+		const query = this.store?.prepare(`SELECT id FROM ${this.defaultTable} WHERE id = @id`)
+		row = query?.get({ id: key })
 
 		return !!row
 	}
@@ -248,16 +261,14 @@ export abstract class DataStoreBase {
 	 * Save a backup of the db
 	 */
 	private saveBackup(): void {
-		if (this.store) {
-			this.store
-				.backup(`${this.cfgFile}.sqlite.bak`)
-				.then(() => {
-					this.logger.silly('backup complete')
-				})
-				.catch((err) => {
-					this.logger.warn('backup failed', err.message)
-				})
-		}
+		this.store
+			?.backup(`${this.cfgBakFile}`)
+			.then(() => {
+				this.logger.debug('backup complete')
+			})
+			.catch((err) => {
+				this.logger.warn('backup failed', err.message)
+			})
 	}
 
 	/**
@@ -297,20 +308,20 @@ export abstract class DataStoreBase {
 	 * @param value - the object to save
 	 */
 	public setTableKey(table: string, key: string, value: any): void {
-		if (table.length > 0 && key.length > 0 && value && this.store) {
+		if (table.length > 0 && key.length > 0 && value) {
 			if (typeof value === 'object') {
 				value = JSON.stringify(value)
 			}
 
-			const query = this.store.prepare(
+			const query = this.store?.prepare(
 				`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
 			)
 			this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
 
 			try {
-				query.run({ id: key, value: value })
-			} catch (e) {
-				this.logger.warn(`Error updating ${key}`, e)
+				query?.run({ id: key, value: value })
+			} catch (e: any) {
+				this.logger.warn(`Error updating ${table} - ${key}: ${e.message}`)
 			}
 
 			this.setDirty()
@@ -318,27 +329,91 @@ export abstract class DataStoreBase {
 	}
 
 	/**
-	 * Attempt to load the database
+	 * Attempt to load the database from disk
+	 * @access protected
 	 */
 	protected startSQLite(): void {
-		try {
-			this.store = new Database(this.cfgFile + '.sqlite', { fileMustExist: true })
-			this.setBackupCycle()
-		} catch (e) {
-			try {
-				this.store = new Database(this.cfgFile + '.sqlite')
-				this.setBackupCycle()
-				if (fs.existsSync(this.cfgFile)) {
-					this.logger.warn(`Legacy ${this.cfgFile} exists.  Attempting migration to SQLite.`)
-					this.migrateFileToSqlite()
-				} else {
-					this.logger.silly(`${this.cfgFile}.sqlite doesn't exist. loading defaults`)
-					this.loadDefaults()
-				}
-			} catch (e) {
-				showErrorMessage('Error starting companion', 'Could not load or create a database file.')
+		if (fs.existsSync(this.cfgFile)) {
+			this.logger.silly(this.cfgFile, 'exists. trying to read')
 
-				console.error('Could not load or create a database file' + e)
+			try {
+				this.store = new Database(this.cfgFile)
+			} catch (e) {
+				try {
+					fs.moveSync(this.cfgFile, this.cfgCorruptFile)
+					this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
+				} catch (err) {
+					this.logger.silly(`${this.name}_load`, `Error making or deleting corrupted backup: ${err}`)
+				}
+
+				this.startSQLiteWithBackup()
+			}
+		} else if (fs.existsSync(this.cfgBakFile)) {
+			this.logger.warn(`${this.name} is missing.  Attempting to recover the configuration.`)
+			this.startSQLiteWithBackup()
+		} else if (fs.existsSync(this.cfgLegacyFile)) {
+			try {
+				this.store = new Database(this.cfgFile)
+				this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
+				this.migrateFileToSqlite()
+			} catch (e: any) {
+				showErrorMessage('Error starting companion', 'Could not load database backup file. Resetting configuration')
+				this.logger.error(e.message)
+				console.error('Could not load database file')
+
+				this.startSQLiteWithDefaults()
+			}
+		} else {
+			this.logger.silly(this.cfgFile, `doesn't exist. loading defaults`)
+			this.startSQLiteWithDefaults()
+		}
+
+		this.setBackupCycle()
+	}
+
+	/**
+	 * Attempt to load the backup file from disk as a recovery
+	 */
+	private startSQLiteWithBackup(): void {
+		if (fs.existsSync(this.cfgBakFile)) {
+			this.logger.silly(this.cfgBakFile, 'exists. trying to read')
+			try {
+				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
+				this.store = new Database(this.cfgFile)
+			} catch (e: any) {
+				showErrorMessage('Error starting companion', 'Could not load database backup file. Resetting configuration')
+				this.logger.error(e.message)
+				console.error('Could not load database backup file')
+
+				fs.rmSync(this.cfgFile)
+				this.startSQLiteWithDefaults()
+			}
+		} else {
+			showErrorMessage('Error starting companion', 'Could not load database backup file. Resetting configuration')
+			console.error('Could not load database file')
+
+			this.startSQLiteWithDefaults()
+		}
+	}
+
+	/**
+	 * Attempt to start a fresh DB and load the defaults
+	 */
+	private startSQLiteWithDefaults(): void {
+		try {
+			if (fs.existsSync(this.cfgFile)) {
+				fs.rmSync(this.cfgFile)
+			}
+		} catch (e: any) {
+		} finally {
+			try {
+				this.store = new Database(this.cfgFile)
+				this.create()
+				this.loadDefaults()
+			} catch (e: any) {
+				showErrorMessage('Error starting companion', 'Could not load or create a database file.')
+				this.logger.error(e.message)
+				console.error('Could not load or create a database file.')
 			}
 		}
 	}
