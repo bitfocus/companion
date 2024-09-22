@@ -264,6 +264,7 @@ export abstract class DataStoreBase {
 		this.store
 			?.backup(`${this.cfgBakFile}`)
 			.then(() => {
+				this.dirty = false
 				this.logger.debug('backup complete')
 			})
 			.catch((err) => {
@@ -278,7 +279,7 @@ export abstract class DataStoreBase {
 		if (this.backupCycle) return
 
 		this.backupCycle = setInterval(() => {
-			// See if the database is dirty and needs to be saved
+			// See if the database is dirty and needs to be backed up
 			if (Date.now() - this.lastsave > this.backupInterval && this.dirty) {
 				this.saveBackup()
 			}
