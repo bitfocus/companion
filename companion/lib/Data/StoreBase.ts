@@ -58,7 +58,7 @@ export abstract class DataStoreBase {
 	 */
 	private readonly cfgLegacyFile: string = ''
 	/**
-	 * The default table to dumb keys when one isn't specified
+	 * The default table to dump keys when one isn't specified
 	 */
 	protected readonly defaultTable: string
 	/**
@@ -230,8 +230,6 @@ export abstract class DataStoreBase {
 			} catch (e: any) {
 				this.logger.warn(`Error getting ${table} - ${key}: ${e.message}`)
 			}
-
-			this.setDirty()
 		}
 		return out
 	}

@@ -12,6 +12,7 @@ import type { ImageResult } from '../Graphics/ImageResult.js'
 import nodeMachineId from 'node-machine-id'
 
 const CLOUD_URL = 'https://api.bitfocus.io/v1'
+const CLOUD_TABLE: string = 'cloud'
 
 function generateMachineId() {
 	try {
@@ -97,7 +98,7 @@ export class CloudController extends CoreBase {
 
 		this.cache = cache
 
-		this.data = this.db.getTableKey('cloud', 'auth', {
+		this.data = this.db.getTableKey(CLOUD_TABLE, 'auth', {
 			token: '',
 			user: '',
 			connections: {},
@@ -105,16 +106,14 @@ export class CloudController extends CoreBase {
 		})
 
 		this.companionId = registry.appInfo.machineId
-		const uuid = this.db.getTableKey('cloud', 'uuid', generateMachineId())
+		const uuid = this.db.getTableKey(CLOUD_TABLE, 'uuid', generateMachineId())
 		this.#setState({ uuid })
 
 		const regions = this.cache.getKey('cloud_servers', {})
 
 		if (regions !== undefined) {
-			for (const region of Object.values(regions)) {
-				/** @ts-ignore */
+			for (const region of Object.values<any>(regions)) {
 				if (region.id && region.label && region.hostname) {
-					/** @ts-ignore */
 					CloudController.availableRegions[region.id] = { host: region.hostname, name: region.label }
 				}
 			}
@@ -323,7 +322,7 @@ export class CloudController extends CoreBase {
 	async #handleCloudRegenerateUUID(_client: ClientSocket): Promise<void> {
 		const newUuid = v4()
 		this.#setState({ uuid: newUuid })
-		this.db.setTableKey('cloud', 'uuid', newUuid)
+		this.db.setTableKey(CLOUD_TABLE, 'uuid', newUuid)
 
 		this.#setState({ cloudActive: false })
 		await delay(1000)
@@ -386,7 +385,7 @@ export class CloudController extends CoreBase {
 			if (responseObject.token !== undefined) {
 				this.data.token = responseObject.token
 				this.data.user = email
-				this.db.setTableKey('cloud', 'auth', this.data)
+				this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 				this.#setState({ authenticated: true, authenticating: false, authenticatedAs: email, error: null })
 				this.#readConnections(this.data.connections)
 			} else {
@@ -409,7 +408,7 @@ export class CloudController extends CoreBase {
 		this.data.token = ''
 		this.data.connections = {}
 		this.data.cloudActive = false
-		this.db.setTableKey('cloud', 'auth', this.data)
+		this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 
 		this.#setState({
 			authenticated: false,
@@ -448,7 +447,7 @@ export class CloudController extends CoreBase {
 
 			if (result.token) {
 				this.data.token = result.token
-				this.db.setTableKey('cloud', 'auth', this.data)
+				this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 				this.#setState({
 					authenticated: true,
 					authenticatedAs: result.customer?.email,
@@ -560,7 +559,7 @@ export class CloudController extends CoreBase {
 
 		this.data.connections[region] = enabled
 
-		this.db.setTableKey('cloud', 'auth', this.data)
+		this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 	}
 
 	/**
@@ -586,7 +585,7 @@ export class CloudController extends CoreBase {
 
 		if (oldState.cloudActive !== newState.cloudActive) {
 			this.data.cloudActive = newState.cloudActive
-			this.db.setTableKey('cloud', 'auth', this.data)
+			this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 
 			if (newState.authenticated) {
 				for (let region in this.#regionInstances) {
