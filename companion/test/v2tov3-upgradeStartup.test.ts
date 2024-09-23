@@ -1,25 +1,45 @@
 import { describe, it, expect } from 'vitest'
-import { DataTestBase } from '../lib/Data/TestBase.js'
-import { DataDatabase } from '../lib/Data/Database.js'
+import { DataStoreBase, DatabaseDefault } from '../lib/Data/StoreBase.js'
 import LogController from '../lib/Log/Controller.js'
 import v2tov3 from '../lib/Data/Upgrades/v2tov3.js'
-import { cloneDeep } from 'lodash-es'
+import { createTables } from '../lib/Data/Schema/v1.js'
 
-function CreateDataDatabase(dbContents: any) {
-	const db = new DataTestBase(DataDatabase.Defaults, 'main', 'Data/Database')
-	// Bypass loading data properly and just set it to our test data
-	for( const [key, value] of Object.entries(dbContents)) {
-		db.setKey(key, value)
-	}
+function CreateDataDatabase() {
+	const db = new DataDatabase()
 	console.log('Got: ')
 	console.log(db.store)
 
 	return db
 }
 
+class DataDatabase extends DataStoreBase {
+	static Defaults: DatabaseDefault = {
+		main: {
+			page_config_version: 3,
+		},
+	}
+	constructor() {
+		super(':memory:', '', 'main', 'Data/Database')
+		this.startSQLite()
+	}
+	protected create(): void {
+		createTables(this.store, this.defaultTable, this.logger)
+	}
+	protected loadDefaults(): void {
+		for (const [key, value] of Object.entries(DataDatabase.Defaults)) {
+			for (const [key2, value2] of Object.entries(value)) {
+				this.setTableKey(key, key2, value2)
+			}
+		}
+
+		this.isFirstRun = true
+	}
+	protected migrateFileToSqlite(): void {}
+}
+
 describe('upgrade', () => {
 	it('empty', () => {
-		const db = CreateDataDatabase(DataDatabase.Defaults)
+		const db = CreateDataDatabase()
 		v2tov3.upgradeStartup(db, LogController.createLogger('test-logger'))
 		expect(db.getTable('main')).toEqual({
 			bank_rotate_left_actions: {},

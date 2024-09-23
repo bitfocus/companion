@@ -1,12 +1,11 @@
 import { DataLegacyCloudDatabase } from '../Legacy/CloudDatabase.js'
-import type { DataDatabase } from '../Database.js'
-import type { DataTestBase } from '../TestBase.js'
+import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 
 /**
  * do the database upgrades to convert from the v4 to the v5 format
  */
-function convertDatabaseToV5(db: DataDatabase | DataTestBase, _logger: Logger) {
+function convertDatabaseToV5(db: DataStoreBase, _logger: Logger) {
 	if (db.store) {
 		try {
 			const controls = db.store.prepare(`CREATE TABLE IF NOT EXISTS controls (id STRING UNIQUE, value STRING);`)

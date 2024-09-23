@@ -1,8 +1,7 @@
 import { cloneDeep } from 'lodash-es'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
-import type { DataDatabase } from '../Database.js'
-import type { DataTestBase } from '../TestBase.js'
+import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 
@@ -13,7 +12,7 @@ function CreateBankControlIdOld(page: string | number, bank: number): string {
 	return `bank:${page}-${bank}`
 }
 
-function addControlIdsToPages(db: DataDatabase | DataTestBase): void {
+function addControlIdsToPages(db: DataStoreBase): void {
 	const controls = db.getKey('controls', {})
 	const pages = db.getKey('page', {})
 
@@ -40,7 +39,7 @@ function addControlIdsToPages(db: DataDatabase | DataTestBase): void {
 /**
  * do the database upgrades to convert from the v3 to the v4 format
  */
-function convertDatabaseToV4(db: DataDatabase | DataTestBase, _logger: Logger) {
+function convertDatabaseToV4(db: DataStoreBase, _logger: Logger) {
 	addControlIdsToPages(db)
 
 	// If xkeys was previously enabled, then preserve the old layout

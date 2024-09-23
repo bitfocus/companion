@@ -40,11 +40,11 @@ export abstract class DataStoreBase {
 	/**
 	 * The full backup file path
 	 */
-	private readonly cfgBakFile: string
+	private readonly cfgBakFile: string = ''
 	/**
 	 * The full corrupt file path
 	 */
-	private readonly cfgCorruptFile: string
+	private readonly cfgCorruptFile: string = ''
 	/**
 	 * The config directory
 	 */
@@ -52,11 +52,11 @@ export abstract class DataStoreBase {
 	/**
 	 * The full main file path
 	 */
-	private readonly cfgFile: string
+	private readonly cfgFile: string = ''
 	/**
 	 * The full main legacy file path
 	 */
-	private readonly cfgLegacyFile: string
+	private readonly cfgLegacyFile: string = ''
 	/**
 	 * The default table to dumb keys when one isn't specified
 	 */
@@ -98,10 +98,12 @@ export abstract class DataStoreBase {
 		this.name = name
 		this.defaultTable = defaultTable
 
-		this.cfgFile = path.join(this.cfgDir, this.name + '.sqlite')
-		this.cfgBakFile = path.join(this.cfgDir, this.name + '.bak')
-		this.cfgCorruptFile = path.join(this.cfgDir, this.name + '.corrupt')
-		this.cfgLegacyFile = path.join(this.cfgDir, this.name)
+		if (configDir != ':memory:') {
+			this.cfgFile = path.join(this.cfgDir, this.name + '.sqlite')
+			this.cfgBakFile = path.join(this.cfgDir, this.name + '.bak')
+			this.cfgCorruptFile = path.join(this.cfgDir, this.name + '.corrupt')
+			this.cfgLegacyFile = path.join(this.cfgDir, this.name)
+		}
 	}
 
 	/**
@@ -334,42 +336,48 @@ export abstract class DataStoreBase {
 	 * @access protected
 	 */
 	protected startSQLite(): void {
-		if (fs.existsSync(this.cfgFile)) {
-			this.logger.silly(this.cfgFile, 'exists. trying to read')
+		if (this.cfgDir == ':memory:') {
+			this.store = new Database(this.cfgDir)
+			this.create()
+			this.loadDefaults()
+		} else {
+			if (fs.existsSync(this.cfgFile)) {
+				this.logger.silly(this.cfgFile, 'exists. trying to read')
 
-			try {
-				this.store = new Database(this.cfgFile)
-			} catch (e) {
 				try {
-					fs.moveSync(this.cfgFile, this.cfgCorruptFile)
-					this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
-				} catch (err) {
-					this.logger.silly(`${this.name}_load`, `Error making or deleting corrupted backup: ${err}`)
+					this.store = new Database(this.cfgFile)
+				} catch (e) {
+					try {
+						fs.moveSync(this.cfgFile, this.cfgCorruptFile)
+						this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
+					} catch (err) {
+						this.logger.silly(`${this.name}_load`, `Error making or deleting corrupted backup: ${err}`)
+					}
+
+					this.startSQLiteWithBackup()
 				}
-
+			} else if (fs.existsSync(this.cfgBakFile)) {
+				this.logger.warn(`${this.name} is missing.  Attempting to recover the configuration.`)
 				this.startSQLiteWithBackup()
-			}
-		} else if (fs.existsSync(this.cfgBakFile)) {
-			this.logger.warn(`${this.name} is missing.  Attempting to recover the configuration.`)
-			this.startSQLiteWithBackup()
-		} else if (fs.existsSync(this.cfgLegacyFile)) {
-			try {
-				this.store = new Database(this.cfgFile)
-				this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
-				this.migrateFileToSqlite()
-			} catch (e: any) {
-				showErrorMessage('Error starting companion', 'Could not load database backup file. Resetting configuration')
-				this.logger.error(e.message)
-				console.error('Could not load database file')
+			} else if (fs.existsSync(this.cfgLegacyFile)) {
+				try {
+					this.store = new Database(this.cfgFile)
+					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
+					this.migrateFileToSqlite()
+				} catch (e: any) {
+					showErrorMessage('Error starting companion', 'Could not load database backup file. Resetting configuration')
+					this.logger.error(e.message)
+					console.error('Could not load database file')
 
+					this.startSQLiteWithDefaults()
+				}
+			} else {
+				this.logger.silly(this.cfgFile, `doesn't exist. loading defaults`)
 				this.startSQLiteWithDefaults()
 			}
-		} else {
-			this.logger.silly(this.cfgFile, `doesn't exist. loading defaults`)
-			this.startSQLiteWithDefaults()
-		}
 
-		this.setBackupCycle()
+			this.setBackupCycle()
+		}
 	}
 
 	/**

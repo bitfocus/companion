@@ -1,6 +1,8 @@
 import { DatabaseDefault, DataStoreBase } from './StoreBase.js'
 import { DataLegacyDatabase } from './Legacy/Database.js'
 import { upgradeStartup } from './Upgrade.js'
+import { createTables as createTablesV1 } from './Schema/v1.js'
+import { createTables as createTablesV5 } from './Schema/v5.js'
 
 /**
  * The class that manages the applications's main database
@@ -47,16 +49,7 @@ export class DataDatabase extends DataStoreBase {
 	 * Create the database tables
 	 */
 	protected create(): void {
-		try {
-			const main = this.store?.prepare(`CREATE TABLE IF NOT EXISTS ${this.defaultTable} (id STRING UNIQUE, value STRING);`)
-			main?.run()
-			const controls = this.store?.prepare(`CREATE TABLE IF NOT EXISTS controls (id STRING UNIQUE, value STRING);`)
-			controls?.run()
-			const cloud = this.store?.prepare(`CREATE TABLE IF NOT EXISTS cloud (id STRING UNIQUE, value STRING);`)
-			cloud?.run()
-		} catch (e: any) {
-			this.logger.warn(`Error creating tables: ${e.message}`)
-		}
+		createTablesV5(this.store, this.defaultTable, this.logger)
 	}
 
 	/**
@@ -76,12 +69,7 @@ export class DataDatabase extends DataStoreBase {
 	 * Load the old file driver and migrate to SQLite
 	 */
 	protected migrateFileToSqlite(): void {
-		try {
-			const create = this.store?.prepare(`CREATE TABLE IF NOT EXISTS ${this.defaultTable} (id STRING UNIQUE, value STRING);`)
-			create?.run()
-		} catch (e: any) {
-			this.logger.warn(`Error creating table ${this.defaultTable}: ${e.message}`)
-		}
+		createTablesV1(this.store, this.defaultTable, this.logger)
 
 		const legacyDB = new DataLegacyDatabase(this.cfgDir)
 
