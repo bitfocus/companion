@@ -300,6 +300,9 @@ export default class FragmentFeedbacks {
 			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
 			if (newParentId && !newParent) return false
 
+			// Ensure the new parent is not a child of the feedback being moved
+			if (newParentId && oldItem.item.findChildById(newParentId)) return false
+
 			// Check if the new parent can hold the feedback being moved
 			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
 
