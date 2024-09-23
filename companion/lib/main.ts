@@ -143,12 +143,20 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	}
 
 	// copy an older db if needed
-	if (configDir !== rootConfigDir && !fs.existsSync(path.join(configDir, 'db'))) {
+	if (
+		configDir !== rootConfigDir &&
+		!fs.existsSync(path.join(configDir, 'db')) &&
+		!fs.existsSync(path.join(configDir, 'db.sqlite'))
+	) {
 		// try and import the non-develop copy. we only need to take `db` for this
 		for (let i = ConfigReleaseDirs.length - 1; i--; i >= 0) {
 			const previousDbPath =
 				i > 0 ? path.join(rootConfigDir, ConfigReleaseDirs[i], 'db') : path.join(rootConfigDir, 'db')
-			if (fs.existsSync(previousDbPath)) {
+			if (fs.existsSync(previousDbPath + '.sqlite')) {
+				// Found the one to copy
+				fs.copyFileSync(previousDbPath + '.sqlite', path.join(configDir, 'db.sqlite'))
+				break
+			} else if (fs.existsSync(previousDbPath)) {
 				// Found the one to copy
 				fs.copyFileSync(previousDbPath, path.join(configDir, 'db'))
 				break

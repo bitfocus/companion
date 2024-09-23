@@ -2,7 +2,6 @@ import fs from 'fs-extra'
 import path from 'path'
 import { cloneDeep } from 'lodash-es'
 import LogController, { Logger } from '../../Log/Controller.js'
-import { showErrorMessage } from '../../Resources/Util.js'
 
 /**
  * Abstract class to be extended by the flat file DB classes.
@@ -128,22 +127,20 @@ export class DataLegacyStoreBase {
 					this.store = JSON.parse(data)
 					this.logger.silly('parsed JSON')
 				} else {
-					this.logger.warn(`${this.name} was empty.  Attempting to recover the configuration.`)
+					this.logger.debug(`${this.name} was empty.  Attempting to recover the configuration.`)
 					this.loadBackupSync()
 				}
 			} catch (e) {
 				try {
 					fs.copyFileSync(this.cfgFile, this.cfgCorruptFile)
-					this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
+					this.logger.debug(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
 					fs.rmSync(this.cfgFile)
-				} catch (err) {
-					this.logger.silly(`${this.name}_load`, `Error making or deleting corrupted backup: ${err}`)
-				}
+				} catch (err) {}
 
 				this.loadBackupSync()
 			}
 		} else {
-			this.logger.warn(`${this.name} is missing.  Attempting to recover the configuration.`)
+			this.logger.debug(`${this.name} is missing.  Attempting to recover the configuration.`)
 			this.loadBackupSync()
 		}
 	}
@@ -160,19 +157,13 @@ export class DataLegacyStoreBase {
 				if (data.trim().length > 0 || data.startsWith('\0')) {
 					this.store = JSON.parse(data)
 					this.logger.silly('parsed JSON')
-					this.logger.warn(`${this.name}.bak has been used to recover the configuration.`)
+					this.logger.debug(`${this.name}.bak has been used to recover the configuration.`)
 				} else {
-					this.logger.warn(`${this.name} was empty.  Creating a new db.`)
+					this.logger.debug(`${this.name}.bak was empty.  Creating a new db.`)
 				}
 			} catch (e) {
-				showErrorMessage('Error starting companion', 'Could not load database backup  file. Resetting configuration')
-
-				console.error('Could not load database backup file')
+				this.logger.debug(`${this.name}.bak Could not load database backup file`)
 			}
-		} else {
-			showErrorMessage('Error starting companion', 'Could not load database backup  file. Resetting configuration')
-
-			console.error('Could not load database file')
 		}
 	}
 }

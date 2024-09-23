@@ -1,11 +1,12 @@
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Util/Constants.js'
 import type { DataDatabase } from '../Database.js'
+import type { DataTestBase } from '../TestBase.js'
 import type { Logger } from '../../Log/Controller.js'
 
 /**
  * do the database upgrades to convert from the v1 to the v2 format
  */
-function convertDatabase15To32(db: DataDatabase, _logger: Logger): void {
+function convertDatabase15To32(db: DataDatabase | DataTestBase, _logger: Logger): void {
 	const oldBankConfig = db.getKey('bank', {})
 	const oldActions = db.getKey('bank_actions', {})
 	const oldReleaseActions = db.getKey('bank_release_actions', {})

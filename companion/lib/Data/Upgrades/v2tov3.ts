@@ -4,6 +4,7 @@ import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Util/Constants.js'
 import type { DataDatabase } from '../Database.js'
+import type { DataTestBase } from '../TestBase.js'
 import type { Logger } from '../../Log/Controller.js'
 
 function convertInstanceToV3(obj: any): any {
@@ -26,7 +27,7 @@ function convertInstanceToV3(obj: any): any {
 	}
 }
 
-function convertInstancesToV3(db: DataDatabase) {
+function convertInstancesToV3(db: DataDatabase | DataTestBase) {
 	if (db.hasKey('instance')) {
 		const instances = db.getKey('instance')
 		// Delete the old internal module, as it is truly internal now
@@ -46,7 +47,7 @@ function CreateBankControlIdOld(page: number, bank: number): string {
 	return `bank:${page}-${bank}`
 }
 
-function convertToControls(db: DataDatabase): void {
+function convertToControls(db: DataDatabase | DataTestBase): void {
 	if (!db.hasKey('controls')) {
 		const oldBankConfig = db.getKey('bank', {})
 		const oldActions = db.getKey('bank_actions', {})
@@ -287,7 +288,7 @@ function convertTriggerToControl(logger: Logger, entry: any, index: number): any
 	return control
 }
 
-function convertSchedulerToControls(db: DataDatabase, logger: Logger) {
+function convertSchedulerToControls(db: DataDatabase | DataTestBase, logger: Logger) {
 	if (db.hasKey('scheduler')) {
 		let controls = db.getKey('controls')
 		let scheduler = db.getKey('scheduler')
@@ -312,7 +313,7 @@ function convertSchedulerToControls(db: DataDatabase, logger: Logger) {
 	}
 }
 
-function convertEmulatorToV3(db: DataDatabase): void {
+function convertEmulatorToV3(db: DataDatabase | DataTestBase): void {
 	if (db.hasKey('userconfig')) {
 		const userconfig = db.getKey('userconfig')
 
@@ -330,7 +331,7 @@ function convertEmulatorToV3(db: DataDatabase): void {
 	}
 }
 
-function convertSurfacesToV3(db: DataDatabase) {
+function convertSurfacesToV3(db: DataDatabase | DataTestBase) {
 	const devices = db.getKey('deviceconfig')
 	if (!devices) return
 
@@ -354,7 +355,7 @@ function convertSurfacesToV3(db: DataDatabase) {
 /**
  * do the database upgrades to convert from the v2 to the v3 format
  */
-function convertDatabaseToV3(db: DataDatabase, logger: Logger): void {
+function convertDatabaseToV3(db: DataDatabase | DataTestBase, logger: Logger): void {
 	convertInstancesToV3(db)
 
 	convertToControls(db)
