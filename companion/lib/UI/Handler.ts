@@ -127,7 +127,7 @@ export class UIHandler {
 
 		this.#socketIOOptions = {
 			allowEIO3: true,
-			maxHttpBufferSize: 100 * 1000 * 1000, // bytes. 100mb matches socket.io v2. while not entirely safe, its what it used to be so is good enough for now
+			maxHttpBufferSize: 500 * 1000 * 1000, // bytes. socket.io v2 used 100mb. while not entirely safe, it is needed by some for their large image heavy setups #3033
 			cors: {
 				// Allow everything
 				// @ts-ignore
