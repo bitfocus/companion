@@ -44,8 +44,15 @@ export interface ModuleInfo {
 export class InstanceModules {
 	readonly #logger = LogController.createLogger('Instance/Modules')
 
+	/**
+	 * The core instance controller
+	 */
+	readonly #instanceController: InstanceController
+
+	/**
+	 * The core interface client
+	 */
 	readonly #io: UIHandler
-	readonly #instance: InstanceController
 
 	/**
 	 * Last module info sent to clients
@@ -69,7 +76,7 @@ export class InstanceModules {
 
 	constructor(io: UIHandler, instance: InstanceController, apiRouter: express.Router) {
 		this.#io = io
-		this.#instance = instance
+		this.#instanceController = instance
 
 		apiRouter.get('/help/module/:moduleId/*path', this.#getHelpAsset)
 	}
@@ -211,7 +218,7 @@ export class InstanceModules {
 			this.#lastModulesJson = newJson
 
 			// restart usages of this module
-			this.#instance.reloadUsesOfModule(reloadedModule.manifest.id)
+			this.#instanceController.reloadUsesOfModule(reloadedModule.manifest.id)
 		} else {
 			this.#logger.info(`Failed to find module in: ${fullpath}`)
 		}
