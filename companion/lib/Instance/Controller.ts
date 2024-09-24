@@ -396,6 +396,12 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 		config.instance_type = this.modules.verifyInstanceTypeIsCurrent(config.instance_type)
 
+		// Seamless fixup old configs
+		if (config.moduleVersionMode === undefined) {
+			config.moduleVersionMode = 'stable'
+			config.moduleVersionId = null
+		}
+
 		if (config.enabled === false) {
 			this.logger.silly("Won't load disabled module " + id + ' (' + config.instance_type + ')')
 			this.status.updateInstanceStatus(id, null, 'Disabled')
