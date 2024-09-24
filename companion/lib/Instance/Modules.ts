@@ -61,33 +61,32 @@ class NewModuleInfo {
 
 	builtinModule: NewModuleVersionInfo | null = null
 
-	devVersions: Record<string, NewModuleVersionInfo | undefined> = {}
+	devModule: NewModuleVersionInfo | null = null
 
 	userVersions: Record<string, NewModuleVersionInfo | undefined> = {}
 
-	useVersion: NewModuleUseVersion | null = null
+	selectedVersion: NewModuleUseVersion | null = null
 
 	constructor(id: string) {
 		this.id = id
 	}
 
 	get allVersions(): NewModuleVersionInfo[] {
-		return compact([...Object.values(this.devVersions), ...Object.values(this.userVersions), this.builtinModule])
+		return compact([this.devModule, ...Object.values(this.userVersions), this.builtinModule])
 	}
 
 	getSelectedVersion(): NewModuleVersionInfo | null {
-		if (!this.useVersion) return null
-		switch (this.useVersion.type) {
+		if (!this.selectedVersion) return null
+		switch (this.selectedVersion.type) {
 			case 'builtin':
 				return this.builtinModule
 			case 'dev':
-				if (!this.useVersion.id) return null
-				return this.devVersions[this.useVersion.id] ?? null
+				return this.devModule
 			case 'user':
-				if (!this.useVersion.id) return null
-				return this.userVersions[this.useVersion.id] ?? null
+				if (!this.selectedVersion.id) return null
+				return this.userVersions[this.selectedVersion.id] ?? null
 			default:
-				assertNever(this.useVersion.type)
+				assertNever(this.selectedVersion.type)
 				return null
 		}
 	}
@@ -199,9 +198,9 @@ export class InstanceModules {
 			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(extraModulePath, true)
 			for (const candidate of candidates) {
 				const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-				moduleInfo.devVersions['dev'] = {
+				moduleInfo.devModule = {
 					...candidate,
-					versionId: 'dev', // TODO - allow multiple
+					versionId: 'dev',
 				}
 			}
 
@@ -249,20 +248,15 @@ export class InstanceModules {
 		for (const [_id, moduleInfo] of allModuleEntries) {
 			if (moduleInfo.replacedByIds.length > 0) continue
 
-			const firstDevVersion = Object.keys(moduleInfo.devVersions)[0]
-			if (firstDevVersion) {
-				// TODO - properly
-				moduleInfo.useVersion = {
-					type: 'dev',
-					id: firstDevVersion,
-				}
+			if (moduleInfo.devModule) {
+				moduleInfo.selectedVersion = { type: 'dev' }
 				continue
 			}
 
 			const firstUserVersion = Object.keys(moduleInfo.userVersions)[0]
 			if (firstUserVersion) {
 				// TODO - properly
-				moduleInfo.useVersion = {
+				moduleInfo.selectedVersion = {
 					type: 'user',
 					id: firstUserVersion,
 				}
@@ -270,7 +264,7 @@ export class InstanceModules {
 			}
 
 			if (moduleInfo.builtinModule) {
-				moduleInfo.useVersion = { type: 'builtin' }
+				moduleInfo.selectedVersion = { type: 'builtin' }
 				continue
 			}
 		}
@@ -278,12 +272,12 @@ export class InstanceModules {
 		// Log the loaded modules
 		for (const id of Array.from(this.#knownModules.keys()).sort()) {
 			const moduleInfo = this.#knownModules.get(id)
-			if (!moduleInfo || !moduleInfo.useVersion) continue
+			if (!moduleInfo || !moduleInfo.selectedVersion) continue
 
 			const moduleVersion = moduleInfo.getSelectedVersion()
 			if (!moduleVersion) continue
 
-			if (moduleInfo.useVersion.type === 'dev') {
+			if (moduleInfo.selectedVersion.type === 'dev') {
 				this.#logger.info(
 					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name} (Overridden${
 						moduleVersion.isPackaged ? ' & Packaged' : ''
@@ -408,11 +402,11 @@ export class InstanceModules {
 			if (moduleVersion) {
 				result[id] = {
 					baseInfo: moduleVersion.display,
-					selectedVersion: translateVersion(moduleVersion, module.useVersion?.type ?? 'builtin'),
+					selectedVersion: translateVersion(moduleVersion, module.selectedVersion?.type ?? 'builtin'),
 					allVersions: compact([
 						module.builtinModule ? translateVersion(module.builtinModule, 'builtin') : undefined,
+						module.devModule ? translateVersion(module.devModule, 'dev') : undefined,
 						...Object.values(module.userVersions).map((ver) => ver && translateVersion(ver, 'user')),
-						...Object.values(module.devVersions).map((ver) => ver && translateVersion(ver, 'dev')),
 					]),
 				}
 			}
