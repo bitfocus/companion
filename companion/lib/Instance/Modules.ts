@@ -23,27 +23,19 @@ import { compact } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import LogController from '../Log/Controller.js'
 import type express from 'express'
-import { assertNever, type ModuleManifest } from '@companion-module/base'
+import { type ModuleManifest } from '@companion-module/base'
 import type {
 	ModuleDisplayInfo,
+	ModuleVersion,
 	NewClientModuleInfo,
 	NewClientModuleVersionInfo,
-	NewModuleUseVersion,
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import { InstanceController } from './Controller.js'
+import semver from 'semver'
 
 const ModulesRoom = 'modules'
-
-export interface ModuleInfo {
-	basePath: string
-	helpPath: string | null
-	display: ModuleDisplayInfo
-	manifest: ModuleManifest
-	isOverride?: boolean
-	isPackaged: boolean
-}
 
 export interface NewModuleVersionInfo {
 	basePath: string
@@ -65,40 +57,42 @@ class NewModuleInfo {
 
 	userVersions: Record<string, NewModuleVersionInfo | undefined> = {}
 
-	selectedVersion: NewModuleUseVersion | null = null
-
 	constructor(id: string) {
 		this.id = id
+	}
+
+	get defaultVersion(): NewModuleVersionInfo | null {
+		if (this.devModule) return this.devModule
+
+		let latest: NewModuleVersionInfo | null = this.builtinModule
+		for (const version of Object.values(this.userVersions)) {
+			if (!version) continue
+			if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
+				latest = version
+			}
+		}
+
+		return latest
 	}
 
 	get allVersions(): NewModuleVersionInfo[] {
 		return compact([this.devModule, ...Object.values(this.userVersions), this.builtinModule])
 	}
 
-	getSelectedVersion(): NewModuleVersionInfo | null {
-		if (!this.selectedVersion) return null
-		switch (this.selectedVersion.type) {
+	getVersion(version: ModuleVersion | null): NewModuleVersionInfo | null {
+		switch (version) {
+			case null:
+				return this.defaultVersion
 			case 'builtin':
 				return this.builtinModule
 			case 'dev':
 				return this.devModule
-			case 'user':
-				if (!this.selectedVersion.id) return null
-				return this.userVersions[this.selectedVersion.id] ?? null
 			default:
-				assertNever(this.selectedVersion.type)
-				return null
+				// If the version number matches the builtin, load that
+				if (this.builtinModule && version === this.builtinModule.versionId) return this.builtinModule
+
+				return this.userVersions[version] ?? null
 		}
-	}
-
-	findVersion(versionId: string | null): NewModuleVersionInfo | null {
-		if (versionId == null) return this.getSelectedVersion()
-
-		for (const moduleVersion of this.allVersions) {
-			if (moduleVersion && moduleVersion.versionId === versionId) return moduleVersion
-		}
-
-		return null
 	}
 }
 
@@ -222,71 +216,27 @@ export class InstanceModules {
 			}
 		}
 
-		// /**
-		//  *
-		//  * @param {[id: string, NewModuleVersionInfo | undefined][]} versions
-		//  * @returns {string | null}
-		//  */
-		// function chooseBestVersion(versions) {
-		// 	const versionStrings = versions.map((ver) => ver[0])
-		// 	if (versionStrings.length <= 1) return versionStrings[0] ?? null
-
-		// 	versionStrings.sort((a, b) => {
-		// 		const a2 = semver.parse(a)
-		// 		if (!a2) return 1
-
-		// 		const b2 = semver.parse(b)
-		// 		if (!b2) return -1
-
-		// 		return a2.compare(b2)
-		// 	})
-
-		// 	return versionStrings[0]
-		// }
-
-		// Choose the version of each to use
-		for (const [_id, moduleInfo] of allModuleEntries) {
-			if (moduleInfo.replacedByIds.length > 0) continue
-
-			if (moduleInfo.devModule) {
-				moduleInfo.selectedVersion = { type: 'dev' }
-				continue
-			}
-
-			const firstUserVersion = Object.keys(moduleInfo.userVersions)[0]
-			if (firstUserVersion) {
-				// TODO - properly
-				moduleInfo.selectedVersion = {
-					type: 'user',
-					id: firstUserVersion,
-				}
-				continue
-			}
-
-			if (moduleInfo.builtinModule) {
-				moduleInfo.selectedVersion = { type: 'builtin' }
-				continue
-			}
-		}
-
 		// Log the loaded modules
 		for (const id of Array.from(this.#knownModules.keys()).sort()) {
 			const moduleInfo = this.#knownModules.get(id)
-			if (!moduleInfo || !moduleInfo.selectedVersion) continue
+			if (!moduleInfo) continue
 
-			const moduleVersion = moduleInfo.getSelectedVersion()
-			if (!moduleVersion) continue
-
-			if (moduleInfo.selectedVersion.type === 'dev') {
+			if (moduleInfo.devModule) {
 				this.#logger.info(
-					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name} (Overridden${
-						moduleVersion.isPackaged ? ' & Packaged' : ''
+					`${moduleInfo.devModule.display.id}: ${moduleInfo.devModule.display.name} (Overridden${
+						moduleInfo.devModule.isPackaged ? ' & Packaged' : ''
 					})`
 				)
-			} else {
-				this.#logger.debug(
-					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name}`
+			}
+			if (moduleInfo.builtinModule) {
+				this.#logger.info(
+					`${moduleInfo.builtinModule.display.id}@${moduleInfo.builtinModule.display.version}: ${moduleInfo.builtinModule.display.name} (Builtin)`
 				)
+			}
+
+			for (const moduleVersion of Object.values(moduleInfo.userVersions)) {
+				if (!moduleVersion) continue
+				this.#logger.info(`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name}`)
 			}
 		}
 	}
@@ -387,7 +337,7 @@ export class InstanceModules {
 
 		function translateVersion(
 			version: NewModuleVersionInfo,
-			type: NewModuleUseVersion['type']
+			type: NewClientModuleVersionInfo['type']
 		): NewClientModuleVersionInfo {
 			return {
 				version: version.versionId,
@@ -398,17 +348,16 @@ export class InstanceModules {
 		}
 
 		for (const [id, module] of this.#knownModules.entries()) {
-			const moduleVersion = module.getSelectedVersion()
-			if (moduleVersion) {
-				result[id] = {
-					baseInfo: moduleVersion.display,
-					selectedVersion: translateVersion(moduleVersion, module.selectedVersion?.type ?? 'builtin'),
-					allVersions: compact([
-						module.builtinModule ? translateVersion(module.builtinModule, 'builtin') : undefined,
-						module.devModule ? translateVersion(module.devModule, 'dev') : undefined,
-						...Object.values(module.userVersions).map((ver) => ver && translateVersion(ver, 'user')),
-					]),
-				}
+			const defaultVersion = module.defaultVersion
+			if (!defaultVersion) continue
+			result[id] = {
+				baseInfo: defaultVersion.display,
+				defaultVersion: translateVersion(defaultVersion, 'builtin'),
+				allVersions: compact([
+					module.builtinModule ? translateVersion(module.builtinModule, 'builtin') : undefined,
+					module.devModule ? translateVersion(module.devModule, 'dev') : undefined,
+					...Object.values(module.userVersions).map((ver) => ver && translateVersion(ver, 'user')),
+				]),
 			}
 		}
 
@@ -418,8 +367,8 @@ export class InstanceModules {
 	/**
 	 *
 	 */
-	getModuleManifest(moduleId: string): ModuleInfo | undefined {
-		return this.#knownModules.get(moduleId)?.getSelectedVersion() ?? undefined
+	getModuleManifest(moduleId: string, version: ModuleVersion | null): NewModuleVersionInfo | undefined {
+		return this.#knownModules.get(moduleId)?.getVersion(version) ?? undefined
 	}
 
 	/**
@@ -427,10 +376,10 @@ export class InstanceModules {
 	 */
 	#getHelpForModule = async (
 		moduleId: string,
-		versionId: string | null
+		versionId: ModuleVersion | null
 	): Promise<[err: string, result: null] | [err: null, result: HelpDescription]> => {
 		try {
-			const moduleInfo = this.#knownModules.get(moduleId)?.findVersion(versionId)
+			const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionId)
 			if (moduleInfo && moduleInfo.helpPath) {
 				const stats = await fs.stat(moduleInfo.helpPath)
 				if (stats.isFile()) {
@@ -470,7 +419,7 @@ export class InstanceModules {
 		// @ts-ignore
 		const file = req.params[0].replace(/\.\.+/g, '')
 
-		const moduleInfo = this.#knownModules.get(moduleId)?.findVersion(versionId === 'current' ? null : versionId) // TODO - better selection
+		const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionId === 'default' ? null : versionId)
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
 			const fullpath = path.join(moduleInfo.basePath, 'companion', file)
 			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig)$/) && fs.existsSync(fullpath)) {

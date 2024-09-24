@@ -12,7 +12,7 @@ import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { Registry } from '../Registry.js'
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { ModuleInfo } from './Modules.js'
+import type { NewModuleVersionInfo } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 
 // This is a messy way to load a package.json, but createRequire, or path.resolve aren't webpack safe
@@ -107,7 +107,8 @@ export class ModuleHost {
 			if (!child.crashed) {
 				child.crashed = setTimeout(() => {
 					const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
-					const moduleInfo = config && this.#registry.instance.modules.getModuleManifest(config.instance_type)
+					const moduleInfo =
+						config && this.#registry.instance.modules.getModuleManifest(config.instance_type, config.moduleVersion)
 
 					// Restart after a short sleep
 					this.queueRestartConnection(child.connectionId, config, moduleInfo)
@@ -345,7 +346,7 @@ export class ModuleHost {
 	async queueRestartConnection(
 		connectionId: string,
 		config: ConnectionConfig | undefined,
-		moduleInfo: ModuleInfo | undefined
+		moduleInfo: NewModuleVersionInfo | undefined
 	): Promise<void> {
 		if (!config || !moduleInfo) return
 

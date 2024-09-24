@@ -2,7 +2,7 @@ import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
 import { ModuleManifest, validateManifest } from '@companion-module/base'
-import type { ModuleInfo, NewModuleVersionInfo } from './Modules.js'
+import type { NewModuleVersionInfo } from './Modules.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 export class InstanceModuleScanner {

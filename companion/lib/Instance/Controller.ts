@@ -33,6 +33,7 @@ import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-a
 import type { ClientSocket } from '../UI/Handler.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { InstanceUserModulesManager } from './UserModulesManager.js'
+import { ModuleVersion } from '@companion-app/shared/Model/ModuleInfo.js'
 
 const InstancesRoom = 'instances'
 
@@ -188,10 +189,10 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	/**
 	 * Add a new instance of a module
 	 */
-	addInstance(data: CreateConnectionData, disabled: boolean): string {
+	addInstance(data: CreateConnectionData, version: ModuleVersion | null, disabled: boolean): string {
 		let module = data.type
 
-		const moduleInfo = this.modules.getModuleManifest(module)
+		const moduleInfo = this.modules.getModuleManifest(module, version)
 		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
 
 		return this.addInstanceWithLabel(data, moduleInfo.display.shortname, disabled)[0]
@@ -238,7 +239,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		const config = this.#configStore.getConfigForId(id)
 		if (!config) return undefined
 
-		const moduleManifest = this.modules.getModuleManifest(config.instance_type)
+		const moduleManifest = this.modules.getModuleManifest(config.instance_type, config.moduleVersion)
 
 		return moduleManifest?.manifest
 	}
@@ -417,7 +418,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		// TODO this could check if anything above changed, or is_being_created
 		this.#configStore.commitChanges([id])
 
-		const moduleInfo = this.modules.getModuleManifest(config.instance_type)
+		const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersion)
 		if (!moduleInfo) {
 			this.logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
 		} else {
@@ -492,7 +493,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		})
 
 		client.onPromise('connections:add', (module) => {
-			const id = this.addInstance(module, false)
+			const id = this.addInstance(module, null, false) // TODO - allos adding specific version?
 			return id
 		})
 

@@ -70,6 +70,7 @@ export class ConnectionConfigStore {
 
 		this.#store[id] = {
 			instance_type: moduleType,
+			moduleVersion: null, // Default to latest
 			sortOrder: highestRank + 1,
 			label: label,
 			isFirstInit: true,

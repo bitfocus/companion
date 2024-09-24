@@ -1,5 +1,7 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
+export type ModuleVersion = 'builtin' | 'dev' | string
+
 export interface ModuleDisplayInfo {
 	id: string
 	name: string
@@ -11,11 +13,6 @@ export interface ModuleDisplayInfo {
 	products: string[]
 	keywords: string[]
 	isLegacy?: boolean
-}
-
-export interface NewModuleUseVersion {
-	type: 'builtin' | 'dev' | 'user'
-	id?: string
 }
 
 export interface NewClientModuleBaseInfo {
@@ -31,7 +28,7 @@ export interface NewClientModuleBaseInfo {
 
 export interface NewClientModuleVersionInfo {
 	version: string
-	type: NewModuleUseVersion['type']
+	type: 'builtin' | 'user' | 'dev'
 	isLegacy: boolean
 	hasHelp: boolean
 }
@@ -39,7 +36,7 @@ export interface NewClientModuleVersionInfo {
 export interface NewClientModuleInfo {
 	baseInfo: NewClientModuleBaseInfo
 
-	selectedVersion: NewClientModuleVersionInfo
+	defaultVersion: Omit<NewClientModuleVersionInfo, 'type'>
 
 	allVersions: NewClientModuleVersionInfo[]
 }
