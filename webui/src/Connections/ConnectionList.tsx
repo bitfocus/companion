@@ -373,7 +373,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			<td onClick={doEdit} className="hand">
 				{moduleInfo ? (
 					<>
-						{moduleInfo.selectedVersion.isLegacy && (
+						{moduleInfo.defaultVersion.isLegacy && (
 							<>
 								<FontAwesomeIcon
 									icon={faExclamationTriangle}

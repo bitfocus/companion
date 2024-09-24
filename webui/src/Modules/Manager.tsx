@@ -19,7 +19,7 @@ export function ModulesManager() {
 						</CNavLink>
 					</CNavItem>
 				</CNav>
-				<CTabContent fade={false}>
+				<CTabContent>
 					<CTabPane data-tab="installed">
 						<MyErrorBoundary>
 							<InstalledModules />

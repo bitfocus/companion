@@ -27,7 +27,8 @@ export interface NewClientModuleBaseInfo {
 }
 
 export interface NewClientModuleVersionInfo {
-	version: string
+	displayName: string
+	version: ModuleVersion
 	type: 'builtin' | 'user' | 'dev'
 	isLegacy: boolean
 	hasHelp: boolean

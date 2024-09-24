@@ -69,7 +69,7 @@ export const HelpModal = observer(
 				<CModalHeader closeButton>
 					<h5>
 						Help for {moduleInfo?.baseInfo?.name || content?.[0]}{' '}
-						{moduleInfo?.selectedVersion?.version ? `v${moduleInfo.selectedVersion?.version}` : ''}
+						{moduleInfo?.defaultVersion?.version ? `v${moduleInfo.defaultVersion?.version}` : ''}
 					</h5>
 				</CModalHeader>
 				<CModalBody>

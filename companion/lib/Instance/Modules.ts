@@ -339,8 +339,13 @@ export class InstanceModules {
 			version: NewModuleVersionInfo,
 			type: NewClientModuleVersionInfo['type']
 		): NewClientModuleVersionInfo {
+			let displayName = `v${version.versionId}`
+			if (type === 'dev') displayName = 'Dev Module'
+			if (type === 'builtin') displayName = `${version.display.isLegacy ? '⚠ ' : ''}v${version.versionId} (System)`
+
 			return {
-				version: version.versionId,
+				version: type === 'user' ? version.versionId : type,
+				displayName: displayName,
 				isLegacy: version.display.isLegacy ?? false,
 				type,
 				hasHelp: !!version.helpPath,

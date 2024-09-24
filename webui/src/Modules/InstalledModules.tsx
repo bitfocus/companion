@@ -190,7 +190,7 @@ function ModuleVersionsList({ moduleFullInfo, showHelpClick, activateModuleVersi
 			<ul className="version-list">
 				{moduleFullInfo.allVersions.map((version, i) => (
 					<li key={i}>
-						{moduleFullInfo.selectedVersion.version === version.version ? (
+						{moduleFullInfo.defaultVersion.version === version.version ? (
 							<CButton color="success" size="sm" disabled>
 								Current
 							</CButton>
