@@ -187,27 +187,19 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	}
 
 	/**
-	 * Add a new instance of a module
-	 */
-	addInstance(data: CreateConnectionData, version: ModuleVersion | null, disabled: boolean): string {
-		let module = data.type
-
-		const moduleInfo = this.modules.getModuleManifest(module, version)
-		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
-
-		return this.addInstanceWithLabel(data, moduleInfo.display.shortname, disabled)[0]
-	}
-
-	/**
 	 * Add a new instance of a module with a predetermined label
 	 */
 	addInstanceWithLabel(
 		data: CreateConnectionData,
 		labelBase: string,
+		version: ModuleVersion | null,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
 		let module = data.type
 		let product = data.product
+
+		const moduleInfo = this.modules.getModuleManifest(module, version)
+		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
 
 		const label = this.#configStore.makeLabelUnique(labelBase)
 
@@ -215,7 +207,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 		this.logger.info('Adding connection ' + module + ' ' + product)
 
-		const [id, config] = this.#configStore.addConnection(module, label, product, disabled)
+		const [id, config] = this.#configStore.addConnection(module, label, product, version, disabled)
 
 		this.#activate_module(id, true)
 
@@ -493,8 +485,8 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		})
 
 		client.onPromise('connections:add', (module) => {
-			const id = this.addInstance(module, null, false) // TODO - allos adding specific version?
-			return id
+			const connectionInfo = this.addInstanceWithLabel(module, module.label, module.version, false)
+			return connectionInfo[0]
 		})
 
 		client.onPromise('connections:set-order', async (connectionIds) => {

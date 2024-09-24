@@ -43,7 +43,7 @@ import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
-import type { ModuleInfoUpdate, NewClientModuleInfo } from './Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, ModuleVersion, NewClientModuleInfo } from './Model/ModuleInfo.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -297,7 +297,12 @@ export interface ClientToBackendEventsMap {
 	'pages:reset-page-nav': (pageNumber: number) => 'ok'
 	'pages:reset-page-clear': (pageNumber: number) => 'ok'
 
-	'connections:add': (info: { type: string; product: string | undefined }) => string
+	'connections:add': (info: {
+		type: string
+		product: string | undefined
+		label: string
+		version: ModuleVersion | null
+	}) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
 	'connections:set-config': (
 		connectionId: string,

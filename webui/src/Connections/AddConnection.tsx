@@ -168,7 +168,17 @@ const AddConnectionModal = observer(
 
 		const doAction = () => {
 			if (!moduleInfo || !connectionLabel || !selectedVersion) return
-			socketEmitPromise(socket, 'connections:add', [{ type: moduleInfo.baseInfo.id, product: moduleInfo.product }])
+			let addVersion: ModuleVersion | null = selectedVersion
+			if (selectedVersion === 'null') addVersion = null
+
+			socketEmitPromise(socket, 'connections:add', [
+				{
+					type: moduleInfo.baseInfo.id,
+					product: moduleInfo.product,
+					label: connectionLabel,
+					version: addVersion,
+				},
+			])
 				.then((id) => {
 					console.log('NEW CONNECTION', id)
 					setShow(false)
