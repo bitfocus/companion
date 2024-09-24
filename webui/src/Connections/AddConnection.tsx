@@ -13,18 +13,13 @@ import {
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { assertNever, ConnectionsContext, PreventDefaultHandler, socketEmitPromise } from '../util.js'
+import { ConnectionsContext, PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
 import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
 import { CModalExt } from '../Components/CModalExt.js'
-import {
-	ModuleVersion,
-	NewClientModuleInfo,
-	NewClientModuleVersionInfo,
-} from '@companion-app/shared/Model/ModuleInfo.js'
-import { compact } from 'lodash-es'
+import { ModuleVersion } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 
@@ -37,45 +32,13 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	showHelp,
 	doConfigureConnection,
 }: AddConnectionsPanelProps) {
-	const { socket, notifier, modules } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 	const [filter, setFilter] = useState('')
 
 	const addRef = useRef<AddConnectionModalRef>(null)
-
-	const addConnectionInner = useCallback(
-		(type: string, product: string | undefined) => {
-			socketEmitPromise(socket, 'connections:add', [{ type: type, product: product }])
-				.then((id) => {
-					setFilter('')
-					console.log('NEW CONNECTION', id)
-					doConfigureConnection(id)
-				})
-				.catch((e) => {
-					notifier.current?.show(`Failed to create connection`, `Failed: ${e}`)
-					console.error('Failed to create connection:', e)
-				})
-		},
-		[socket, notifier, doConfigureConnection]
-	)
-
-	const addConnection = useCallback(
-		(module: ModuleProductInfo) => {
-			addRef.current?.show(module)
-			// if (module.isLegacy) {
-			// 	confirmRef.current?.show(
-			// 		`${module.manufacturer} ${module.product} is outdated`,
-			// 		null, // Passed as param to the thing
-			// 		'Add anyway',
-			// 		() => {
-			// 			addConnectionInner(module.id, module.product)
-			// 		}
-			// 	)
-			// } else {
-			// 	addConnectionInner(module.id, module.product)
-			// }
-		},
-		[addConnectionInner]
-	)
+	const addConnection = useCallback((module: ModuleProductInfo) => {
+		addRef.current?.show(module)
+	}, [])
 
 	let candidates: JSX.Element[] = []
 	try {
@@ -121,7 +84,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 	return (
 		<>
-			<AddConnectionModal ref={addRef} />
+			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} />
 			<div style={{ clear: 'both' }} className="row-heading">
 				<h4>Add connection</h4>
 				<p>
@@ -182,20 +145,24 @@ interface AddConnectionModalRef {
 	show(info: ModuleProductInfo): void
 }
 
+interface AddConnectionModalProps {
+	doConfigureConnection: (connectionId: string) => void
+}
+
 const AddConnectionModal = observer(
-	forwardRef<AddConnectionModalRef>(function AddActionsModal({}, ref) {
+	forwardRef<AddConnectionModalRef, AddConnectionModalProps>(function AddActionsModal({ doConfigureConnection }, ref) {
 		const { socket, notifier } = useContext(RootAppStoreContext)
 		const connections = useContext(ConnectionsContext)
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<ModuleProductInfo | null>(null)
-		const [selectedVersion, setSelectedVersion] = useState<ModuleVersion>('builtin')
+		const [selectedVersion, setSelectedVersion] = useState<ModuleVersion | 'null'>('null')
 		const [connectionLabel, setConnectionLabel] = useState<string>('')
 
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
 			setModuleInfo(null)
-			setSelectedVersion('builtin')
+			setSelectedVersion('null')
 			setConnectionLabel('')
 		}, [])
 
@@ -203,10 +170,12 @@ const AddConnectionModal = observer(
 			if (!moduleInfo || !connectionLabel || !selectedVersion) return
 			socketEmitPromise(socket, 'connections:add', [{ type: moduleInfo.baseInfo.id, product: moduleInfo.product }])
 				.then((id) => {
-					// setFilter('')
-					// console.log('NEW CONNECTION', id)
-					// doConfigureConnection(id)
+					console.log('NEW CONNECTION', id)
 					setShow(false)
+					setTimeout(() => {
+						// Wait a bit to let the server catch up
+						doConfigureConnection(id)
+					}, 1000)
 				})
 				.catch((e) => {
 					notifier.current?.show(`Failed to create connection`, `Failed: ${e}`)
@@ -221,7 +190,7 @@ const AddConnectionModal = observer(
 					setShow(true)
 					setModuleInfo(info)
 
-					setSelectedVersion(info.defaultVersion.version)
+					setSelectedVersion('null')
 					setConnectionLabel(findNextConnectionLabel(connections, info))
 				},
 			}),
@@ -264,6 +233,8 @@ const AddConnectionModal = observer(
 										value={selectedVersion}
 										onChange={(e) => setSelectedVersion(e.currentTarget.value)}
 									>
+										<option value="null">Latest version</option>
+
 										{moduleInfo.allVersions.map((version) => {
 											return (
 												<option key={version.version} value={version.version}>
@@ -271,15 +242,6 @@ const AddConnectionModal = observer(
 													{moduleInfo.defaultVersion.version === version.version ? ' (Default)' : ''}
 												</option>
 											)
-
-											// const vals = getModuleVersionOption(moduleInfo, version)
-											// if (!vals) return null
-
-											// return (
-											// 	<option key={vals.value} value={vals.value}>
-											// 		{vals.label}
-											// 	</option>
-											// )
 										})}
 									</CFormSelect>
 								</CCol>
@@ -322,32 +284,6 @@ const AddConnectionModal = observer(
 		)
 	})
 )
-
-function getModuleVersionOption(
-	info: ModuleProductInfo,
-	version: NewClientModuleVersionInfo
-): { label: string; value: ModuleVersion } | null {
-	switch (version.type) {
-		case 'dev':
-			return {
-				label: `Dev Module${info.defaultVersion.version === 'dev' ? ' (Default)' : ''}`,
-				value: 'dev',
-			}
-
-		case 'builtin':
-			return {
-				label: `${version.isLegacy ? '⚠ ' : ''}${version.version} (System)${info.defaultVersion.version === 'builtin' ? ' (Default)' : ''}`,
-				value: 'builtin',
-			}
-		case 'user':
-			return {
-				label: `${version.version}${info.defaultVersion.version === version.version ? ' (Default)' : ''}`,
-				value: version.version,
-			}
-		default:
-			return null
-	}
-}
 
 function findNextConnectionLabel(
 	connections: Record<string, ClientConnectionConfig>,
