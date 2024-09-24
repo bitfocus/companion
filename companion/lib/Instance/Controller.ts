@@ -421,6 +421,13 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		)
 		if (!moduleInfo) {
 			this.logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
+			if (this.modules.hasModule(config.instance_type)) {
+				// TODO - check level
+				this.status.updateInstanceStatus(id, null, 'Unknown module version')
+			} else {
+				// TODO - check level
+				this.status.updateInstanceStatus(id, null, 'Unknown module')
+			}
 		} else {
 			this.moduleHost.queueRestartConnection(id, config, moduleInfo).catch((e) => {
 				this.logger.error('Configured instance ' + config.instance_type + ' failed to start: ', e)
@@ -469,7 +476,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 			}
 		})
 
-		client.onPromise('connections:set-config', (id, label, config) => {
+		client.onPromise('connections:set-label-and-config', (id, label, config) => {
 			const idUsingLabel = this.getIdForLabel(label)
 			if (idUsingLabel && idUsingLabel !== id) {
 				return 'duplicate label'
@@ -480,6 +487,43 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 			}
 
 			this.setInstanceLabelAndConfig(id, label, config)
+
+			return null
+		})
+
+		client.onPromise('connections:set-label-and-version', (id, label, version) => {
+			const idUsingLabel = this.getIdForLabel(label)
+			if (idUsingLabel && idUsingLabel !== id) {
+				return 'duplicate label'
+			}
+
+			if (!isLabelValid(label)) {
+				return 'invalid label'
+			}
+
+			// TODO - refactor/optimise/tidy this
+
+			this.setInstanceLabelAndConfig(id, label, null)
+
+			const config = this.#configStore.getConfigForId(id)
+			if (!config) return 'no connection'
+
+			const moduleInfo = this.modules.getModuleManifest(config.instance_type, version.mode, version.id)
+			if (!moduleInfo)
+				throw new Error(`Unknown module type or version ${config.instance_type} (${version.mode}:${version.id})`)
+
+			// Update the config
+			config.moduleVersionMode = version.mode
+			config.moduleVersionId = version.id
+			this.#configStore.commitChanges([id])
+
+			console.log('new config', config)
+
+			// Trigger a restart
+			if (config.enabled) {
+				this.enableDisableInstance(id, false)
+				this.enableDisableInstance(id, true)
+			}
 
 			return null
 		})

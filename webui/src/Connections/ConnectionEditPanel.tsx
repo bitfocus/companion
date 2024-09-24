@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { ConnectionsContext, LoadingRetryOrError, socketEmitPromise } from '../util.js'
-import { CRow, CCol, CButton } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSelect } from '@coreui/react'
 import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -12,7 +12,8 @@ import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
-import type { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleVersionInfo, NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ConnectionVersionSelectOptions } from './AddConnection.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -85,6 +86,10 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const [configFields, setConfigFields] = useState<Array<ExtendedInputField & { width: number }> | null>([])
 	const [connectionConfig, setConnectionConfig] = useState<Record<string, any> | null>(null)
 	const [connectionLabel, setConnectionLabel] = useState<string>(connectionInfo.label)
+	const [connectionVersion, setConnectionVersion] = useState<ModuleVersionInfo>({
+		mode: connectionInfo.moduleVersionMode,
+		id: connectionInfo.moduleVersionId,
+	})
 	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
 
 	// Update the in-edit label if the connection label changes
@@ -124,25 +129,55 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 			return
 		}
 
-		socketEmitPromise(socket, 'connections:set-config', [connectionId, newLabel, connectionConfig])
-			.then((err) => {
-				if (err) {
-					if (err === 'invalid label') {
-						setError(`The label "${newLabel}" in not valid`)
-					} else if (err === 'duplicate label') {
-						setError(`The label "${newLabel}" is already in use. Please use a unique label for this connection`)
+		if (!connectionInfo.enabled) {
+			socketEmitPromise(socket, 'connections:set-label-and-version', [connectionId, newLabel, connectionVersion])
+				.then((err) => {
+					if (err) {
+						if (err === 'invalid label') {
+							setError(`The label "${newLabel}" in not valid`)
+						} else if (err === 'duplicate label') {
+							setError(`The label "${newLabel}" is already in use. Please use a unique label for this connection`)
+						} else {
+							setError(`Unable to save connection version: "${err}"`)
+						}
 					} else {
-						setError(`Unable to save connection config: "${err}"`)
+						// Done
+						doCancel()
 					}
-				} else {
-					// Done
-					doCancel()
-				}
-			})
-			.catch((e) => {
-				setError(`Failed to save connection config: ${e}`)
-			})
-	}, [socket, connectionId, invalidFieldNames, connectionLabel, connectionConfig, doCancel])
+				})
+				.catch((e) => {
+					setError(`Failed to save connection config: ${e}`)
+				})
+		} else if (connectionConfig) {
+			socketEmitPromise(socket, 'connections:set-label-and-config', [connectionId, newLabel, connectionConfig])
+				.then((err) => {
+					if (err) {
+						if (err === 'invalid label') {
+							setError(`The label "${newLabel}" in not valid`)
+						} else if (err === 'duplicate label') {
+							setError(`The label "${newLabel}" is already in use. Please use a unique label for this connection`)
+						} else {
+							setError(`Unable to save connection config: "${err}"`)
+						}
+					} else {
+						// Done
+						doCancel()
+					}
+				})
+				.catch((e) => {
+					setError(`Failed to save connection config: ${e}`)
+				})
+		}
+	}, [
+		socket,
+		connectionId,
+		invalidFieldNames,
+		connectionLabel,
+		connectionConfig,
+		doCancel,
+		connectionInfo.enabled,
+		connectionVersion,
+	])
 
 	useEffect(() => {
 		if (connectionId) {
@@ -201,6 +236,23 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						setValue={setConnectionLabel}
 						// isValid={isLabelValid(connectionLabel)}
 					/>
+				</CCol>
+
+				<CCol className={`fieldtype-textinput`} sm={12}>
+					<label>Module Version</label>
+					<CFormSelect
+						name="colFormVersion"
+						value={JSON.stringify(connectionVersion)}
+						onChange={(e) => setConnectionVersion(JSON.parse(e.currentTarget.value))}
+						disabled={connectionInfo.enabled}
+						title={
+							connectionInfo.enabled
+								? 'Connection must be disabled to change version'
+								: 'Select the version of the module to use for this connection'
+						}
+					>
+						<ConnectionVersionSelectOptions moduleInfo={moduleInfo} />
+					</CFormSelect>
 				</CCol>
 
 				{connectionInfo.enabled ? (

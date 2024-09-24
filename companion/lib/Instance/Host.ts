@@ -12,8 +12,8 @@ import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { Registry } from '../Registry.js'
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { NewModuleVersionInfo } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import { SomeModuleVersionInfo } from './Modules.js'
 
 // This is a messy way to load a package.json, but createRequire, or path.resolve aren't webpack safe
 const moduleBasePkgStr = fs
@@ -351,7 +351,7 @@ export class ModuleHost {
 	async queueRestartConnection(
 		connectionId: string,
 		config: ConnectionConfig | undefined,
-		moduleInfo: NewModuleVersionInfo | undefined
+		moduleInfo: SomeModuleVersionInfo | undefined
 	): Promise<void> {
 		if (!config || !moduleInfo) return
 

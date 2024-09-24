@@ -303,10 +303,15 @@ export interface ClientToBackendEventsMap {
 		version: ModuleVersionInfo
 	) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
-	'connections:set-config': (
+	'connections:set-label-and-config': (
 		connectionId: string,
 		newLabel: string,
-		config: Record<string, any> | null
+		config: Record<string, any>
+	) => string | null
+	'connections:set-label-and-version': (
+		connectionId: string,
+		newLabel: string,
+		version: ModuleVersionInfo
 	) => string | null
 	'connections:set-order': (sortedIds: string[]) => void
 	'connections:delete': (connectionId: string) => void

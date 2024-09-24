@@ -19,7 +19,7 @@ import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
 import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
 import { CModalExt } from '../Components/CModalExt.js'
-import { ModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ModuleVersionInfo, NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 
@@ -255,32 +255,7 @@ const AddConnectionModal = observer(
 										value={JSON.stringify(selectedVersion)}
 										onChange={(e) => setSelectedVersion(JSON.parse(e.currentTarget.value))}
 									>
-										{moduleInfo.stableVersion && (
-											<option value={JSON.stringify(moduleInfo.stableVersion.version)}>
-												{moduleInfo.stableVersion.displayName}
-											</option>
-										)}
-										{moduleInfo.prereleaseVersion && (
-											<option value={JSON.stringify(moduleInfo.prereleaseVersion.version)}>
-												{moduleInfo.prereleaseVersion.displayName}
-											</option>
-										)}
-
-										{moduleInfo.releaseVersions.map((version) => {
-											return (
-												<option key={JSON.stringify(version.version)} value={JSON.stringify(version.version)}>
-													{version.displayName}
-												</option>
-											)
-										})}
-
-										{moduleInfo.customVersions.map((version) => {
-											return (
-												<option key={JSON.stringify(version.version)} value={JSON.stringify(version.version)}>
-													{version.displayName}
-												</option>
-											)
-										})}
+										<ConnectionVersionSelectOptions moduleInfo={moduleInfo} />
 									</CFormSelect>
 								</CCol>
 							</CForm>
@@ -322,6 +297,7 @@ const AddConnectionModal = observer(
 	})
 )
 
+// nocommit TODO: this is a copy of the function from companion/lib/Instance/ConnectionConfigStore.ts
 function findNextConnectionLabel(
 	connections: Record<string, ClientConnectionConfig>,
 	info: ModuleProductInfo,
@@ -346,4 +322,38 @@ function findNextConnectionLabel(
 	}
 
 	return label
+}
+
+interface ConnectionVersionSelectOptionsProps {
+	moduleInfo: NewClientModuleInfo
+}
+export function ConnectionVersionSelectOptions({ moduleInfo }: ConnectionVersionSelectOptionsProps) {
+	return (
+		<>
+			{moduleInfo.stableVersion && (
+				<option value={JSON.stringify(moduleInfo.stableVersion.version)}>{moduleInfo.stableVersion.displayName}</option>
+			)}
+			{moduleInfo.prereleaseVersion && (
+				<option value={JSON.stringify(moduleInfo.prereleaseVersion.version)}>
+					{moduleInfo.prereleaseVersion.displayName}
+				</option>
+			)}
+
+			{moduleInfo.releaseVersions.map((version) => {
+				return (
+					<option key={JSON.stringify(version.version)} value={JSON.stringify(version.version)}>
+						{version.displayName}
+					</option>
+				)
+			})}
+
+			{moduleInfo.customVersions.map((version) => {
+				return (
+					<option key={JSON.stringify(version.version)} value={JSON.stringify(version.version)}>
+						{version.displayName}
+					</option>
+				)
+			})}
+		</>
+	)
 }

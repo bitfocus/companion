@@ -434,6 +434,13 @@ export class InstanceModules {
 	}
 
 	/**
+	 *
+	 */
+	hasModule(moduleId: string): boolean {
+		return this.#knownModules.has(moduleId)
+	}
+
+	/**
 	 * Load the help markdown file for a specified moduleId
 	 */
 	#getHelpForModule = async (
