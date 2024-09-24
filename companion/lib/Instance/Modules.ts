@@ -428,7 +428,7 @@ export class InstanceModules {
 	 */
 	#getHelpForModule = async (
 		moduleId: string,
-		versionId: string
+		versionId: string | null
 	): Promise<[err: string, result: null] | [err: null, result: HelpDescription]> => {
 		try {
 			const moduleInfo = this.#knownModules.get(moduleId)?.findVersion(versionId)
