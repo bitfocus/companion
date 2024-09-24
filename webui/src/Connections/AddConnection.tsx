@@ -215,12 +215,19 @@ const AddConnectionModal = observer(
 			[connections]
 		)
 
-		const selectedVersionIsLegacy = false // nocommit TODO
-		// === 'builtin' &&
-		// moduleInfo.allVersions.find((v) => v.type === 'builtin' && v.isLegacy)
+		let selectedVersionIsLegacy = false
+		switch (selectedVersion.mode) {
+			case 'stable':
+				selectedVersionIsLegacy = moduleInfo?.stableVersion?.isLegacy ?? false
+				break
+			case 'specific-version':
+				selectedVersionIsLegacy =
+					moduleInfo?.releaseVersions.find((v) => v.version.id === selectedVersion.id)?.isLegacy ?? false
+				break
+		}
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
 				{moduleInfo && (
 					<>
 						<CModalHeader closeButton>
