@@ -33,7 +33,7 @@ import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-a
 import type { ClientSocket } from '../UI/Handler.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { InstanceUserModulesManager } from './UserModulesManager.js'
-import { ModuleVersion } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 const InstancesRoom = 'instances'
 
@@ -192,13 +192,13 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	addInstanceWithLabel(
 		data: CreateConnectionData,
 		labelBase: string,
-		version: ModuleVersion | null,
+		version: ModuleVersionInfo,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
 		let module = data.type
 		let product = data.product
 
-		const moduleInfo = this.modules.getModuleManifest(module, version)
+		const moduleInfo = this.modules.getModuleManifest(module, version.mode, version.id)
 		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
 
 		const label = this.#configStore.makeLabelUnique(labelBase)
@@ -231,7 +231,11 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		const config = this.#configStore.getConfigForId(id)
 		if (!config) return undefined
 
-		const moduleManifest = this.modules.getModuleManifest(config.instance_type, config.moduleVersion)
+		const moduleManifest = this.modules.getModuleManifest(
+			config.instance_type,
+			config.moduleVersionMode,
+			config.moduleVersionId
+		)
 
 		return moduleManifest?.manifest
 	}
@@ -410,7 +414,11 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		// TODO this could check if anything above changed, or is_being_created
 		this.#configStore.commitChanges([id])
 
-		const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersion)
+		const moduleInfo = this.modules.getModuleManifest(
+			config.instance_type,
+			config.moduleVersionMode,
+			config.moduleVersionId
+		)
 		if (!moduleInfo) {
 			this.logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
 		} else {
@@ -484,8 +492,8 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 			await this.deleteInstance(id)
 		})
 
-		client.onPromise('connections:add', (module) => {
-			const connectionInfo = this.addInstanceWithLabel(module, module.label, module.version, false)
+		client.onPromise('connections:add', (module, label, version) => {
+			const connectionInfo = this.addInstanceWithLabel(module, label, version, false)
 			return connectionInfo[0]
 		})
 

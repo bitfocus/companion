@@ -1,3 +1,4 @@
+import { ModuleVersionMode } from './ModuleInfo.js'
 import type { ExtendedInputField, InternalActionInputField } from './Options.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
@@ -46,6 +47,8 @@ export interface ConnectionStatusEntry {
 export interface ClientConnectionConfig {
 	label: string
 	instance_type: string
+	moduleVersionMode: ModuleVersionMode
+	moduleVersionId: string | null
 	enabled: boolean
 	sortOrder: number
 	hasRecordActionsHandler: boolean

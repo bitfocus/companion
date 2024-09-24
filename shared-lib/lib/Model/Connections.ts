@@ -1,4 +1,4 @@
-import { ModuleVersion } from './ModuleInfo.js'
+import type { ModuleVersionMode } from './ModuleInfo.js'
 
 export interface ConnectionConfig {
 	label: string
@@ -11,5 +11,6 @@ export interface ConnectionConfig {
 	/**
 	 * Which version of the module to use
 	 */
-	moduleVersion: ModuleVersion | null
+	moduleVersionMode: ModuleVersionMode
+	moduleVersionId: string | null
 }

@@ -19,7 +19,7 @@ import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
 import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
 import { CModalExt } from '../Components/CModalExt.js'
-import { ModuleVersion } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 
@@ -120,7 +120,7 @@ function AddConnectionEntry({ module, addConnection, showHelp }: AddConnectionEn
 				Add
 			</CButton>
 			&nbsp;
-			{module.defaultVersion.isLegacy && (
+			{module.stableVersion?.isLegacy && (
 				<>
 					<FontAwesomeIcon
 						icon={faExclamationTriangle}
@@ -156,28 +156,32 @@ const AddConnectionModal = observer(
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<ModuleProductInfo | null>(null)
-		const [selectedVersion, setSelectedVersion] = useState<ModuleVersion | 'null'>('null')
+		const [selectedVersion, setSelectedVersion] = useState<ModuleVersionInfo>({
+			mode: 'stable',
+			id: null,
+		})
 		const [connectionLabel, setConnectionLabel] = useState<string>('')
 
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
 			setModuleInfo(null)
-			setSelectedVersion('null')
+			setSelectedVersion({
+				mode: 'stable',
+				id: null,
+			})
 			setConnectionLabel('')
 		}, [])
 
 		const doAction = () => {
 			if (!moduleInfo || !connectionLabel || !selectedVersion) return
-			let addVersion: ModuleVersion | null = selectedVersion
-			if (selectedVersion === 'null') addVersion = null
 
 			socketEmitPromise(socket, 'connections:add', [
 				{
 					type: moduleInfo.baseInfo.id,
 					product: moduleInfo.product,
-					label: connectionLabel,
-					version: addVersion,
 				},
+				connectionLabel,
+				selectedVersion,
 			])
 				.then((id) => {
 					console.log('NEW CONNECTION', id)
@@ -200,12 +204,20 @@ const AddConnectionModal = observer(
 					setShow(true)
 					setModuleInfo(info)
 
-					setSelectedVersion('null')
+					// TODO - make sure this is a valid selection
+					setSelectedVersion({
+						mode: 'stable',
+						id: null,
+					})
 					setConnectionLabel(findNextConnectionLabel(connections, info))
 				},
 			}),
 			[connections]
 		)
+
+		const selectedVersionIsLegacy = false // nocommit TODO
+		// === 'builtin' &&
+		// moduleInfo.allVersions.find((v) => v.type === 'builtin' && v.isLegacy)
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
@@ -240,16 +252,32 @@ const AddConnectionModal = observer(
 								<CCol sm={8}>
 									<CFormSelect
 										name="colFormVersion"
-										value={selectedVersion}
-										onChange={(e) => setSelectedVersion(e.currentTarget.value)}
+										value={JSON.stringify(selectedVersion)}
+										onChange={(e) => setSelectedVersion(JSON.parse(e.currentTarget.value))}
 									>
-										<option value="null">Latest version</option>
+										{moduleInfo.stableVersion && (
+											<option value={JSON.stringify(moduleInfo.stableVersion.version)}>
+												{moduleInfo.stableVersion.displayName}
+											</option>
+										)}
+										{moduleInfo.prereleaseVersion && (
+											<option value={JSON.stringify(moduleInfo.prereleaseVersion.version)}>
+												{moduleInfo.prereleaseVersion.displayName}
+											</option>
+										)}
 
-										{moduleInfo.allVersions.map((version) => {
+										{moduleInfo.releaseVersions.map((version) => {
 											return (
-												<option key={version.version} value={version.version}>
+												<option key={JSON.stringify(version.version)} value={JSON.stringify(version.version)}>
 													{version.displayName}
-													{moduleInfo.defaultVersion.version === version.version ? ' (Default)' : ''}
+												</option>
+											)
+										})}
+
+										{moduleInfo.customVersions.map((version) => {
+											return (
+												<option key={JSON.stringify(version.version)} value={JSON.stringify(version.version)}>
+													{version.displayName}
 												</option>
 											)
 										})}
@@ -257,24 +285,23 @@ const AddConnectionModal = observer(
 								</CCol>
 							</CForm>
 
-							{selectedVersion === 'builtin' &&
-								moduleInfo.allVersions.find((v) => v.type === 'builtin' && v.isLegacy) && (
-									<>
-										<hr />
-										<CAlert color="warning">
-											<p>
-												This module has not been verified to be compatible with this version of companion. It may be
-												buggy or broken.
-											</p>
-											<p>
-												If this module is broken, please let the module author know on{' '}
-												<a target="_blank" rel="noreferrer" href={moduleInfo.baseInfo.bugUrl}>
-													Github
-												</a>
-											</p>
-										</CAlert>
-									</>
-								)}
+							{selectedVersionIsLegacy && (
+								<>
+									<hr />
+									<CAlert color="warning">
+										<p>
+											This module has not been verified to be compatible with this version of companion. It may be buggy
+											or broken.
+										</p>
+										<p>
+											If this module is broken, please let the module author know on{' '}
+											<a target="_blank" rel="noreferrer" href={moduleInfo.baseInfo.bugUrl}>
+												Github
+											</a>
+										</p>
+									</CAlert>
+								</>
+							)}
 						</CModalBody>
 						<CModalFooter>
 							<CButton color="secondary" onClick={doClose}>

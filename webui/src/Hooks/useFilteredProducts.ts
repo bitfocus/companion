@@ -1,10 +1,6 @@
 import { useComputed } from '../util.js'
 import { go as fuzzySearch } from 'fuzzysort'
-import {
-	NewClientModuleBaseInfo,
-	NewClientModuleInfo,
-	NewClientModuleVersionInfo,
-} from '@companion-app/shared/Model/ModuleInfo.js'
+import { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { useContext } from 'react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 

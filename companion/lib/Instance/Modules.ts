@@ -26,9 +26,9 @@ import type express from 'express'
 import { type ModuleManifest } from '@companion-module/base'
 import type {
 	ModuleDisplayInfo,
-	ModuleVersion,
+	ModuleVersionMode,
 	NewClientModuleInfo,
-	NewClientModuleVersionInfo,
+	NewClientModuleVersionInfo2,
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
@@ -37,61 +37,98 @@ import semver from 'semver'
 
 const ModulesRoom = 'modules'
 
-export interface NewModuleVersionInfo {
+export interface ModuleVersionInfoBase {
 	basePath: string
 	helpPath: string | null
 	display: ModuleDisplayInfo
 	manifest: ModuleManifest
 	isPackaged: boolean
+}
+
+export interface ReleaseModuleVersionInfo extends ModuleVersionInfoBase {
+	type: 'release'
+	releaseType: 'stable' | 'prerelease'
+	versionId: string
+	isBuiltin: boolean
+}
+export interface DevModuleVersionInfo extends ModuleVersionInfoBase {
+	type: 'dev'
+	isPackaged: boolean
+}
+export interface CustomModuleVersionInfo extends ModuleVersionInfoBase {
+	type: 'custom'
 	versionId: string
 }
+export type SomeModuleVersionInfo = ReleaseModuleVersionInfo | DevModuleVersionInfo | CustomModuleVersionInfo
 
 class NewModuleInfo {
 	id: string
 
 	replacedByIds: string[] = []
 
-	builtinModule: NewModuleVersionInfo | null = null
+	// builtinModule: ReleaseModuleVersionInfo | null = null
 
-	devModule: NewModuleVersionInfo | null = null
+	devModule: DevModuleVersionInfo | null = null
 
-	userVersions: Record<string, NewModuleVersionInfo | undefined> = {}
+	releaseVersions: Record<string, ReleaseModuleVersionInfo | undefined> = {}
+	customVersions: Record<string, CustomModuleVersionInfo | undefined> = {}
 
 	constructor(id: string) {
 		this.id = id
 	}
 
-	get defaultVersion(): NewModuleVersionInfo | null {
-		if (this.devModule) return this.devModule
+	// get defaultVersion(): NewModuleVersionInfo | null {
+	// 	if (this.devModule) return this.devModule
 
-		let latest: NewModuleVersionInfo | null = this.builtinModule
-		for (const version of Object.values(this.userVersions)) {
-			if (!version) continue
-			if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
-				latest = version
+	// 	let latest: NewModuleVersionInfo | null = this.builtinModule
+	// 	for (const version of Object.values(this.userVersions)) {
+	// 		if (!version) continue
+	// 		if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
+	// 			latest = version
+	// 		}
+	// 	}
+
+	// 	return latest
+	// }
+
+	// get allVersions(): NewModuleVersionInfo[] {
+	// 	return compact([this.devModule, ...Object.values(this.userVersions), this.builtinModule])
+	// }
+
+	getVersion(versionMode: ModuleVersionMode, versionId: string | null): SomeModuleVersionInfo | null {
+		switch (versionMode) {
+			case 'stable': {
+				if (this.devModule) return this.devModule
+
+				let latest: ReleaseModuleVersionInfo | null = null
+				for (const version of Object.values(this.releaseVersions)) {
+					if (!version || version.releaseType !== 'stable') continue
+					if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
+						latest = version
+					}
+				}
+
+				return latest
 			}
-		}
+			case 'prerelease': {
+				if (this.devModule) return this.devModule
 
-		return latest
-	}
+				let latest: ReleaseModuleVersionInfo | null = null
+				for (const version of Object.values(this.releaseVersions)) {
+					if (!version || version.releaseType !== 'prerelease') continue
+					if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
+						latest = version
+					}
+				}
 
-	get allVersions(): NewModuleVersionInfo[] {
-		return compact([this.devModule, ...Object.values(this.userVersions), this.builtinModule])
-	}
-
-	getVersion(version: ModuleVersion | null): NewModuleVersionInfo | null {
-		switch (version) {
-			case null:
-				return this.defaultVersion
-			case 'builtin':
-				return this.builtinModule
-			case 'dev':
-				return this.devModule
+				return latest
+			}
+			case 'specific-version':
+				return versionId ? (this.releaseVersions[versionId] ?? null) : null
+			case 'custom':
+				return versionId ? (this.customVersions[versionId] ?? null) : null
 			default:
-				// If the version number matches the builtin, load that
-				if (this.builtinModule && version === this.builtinModule.versionId) return this.builtinModule
-
-				return this.userVersions[version] ?? null
+				return null
 		}
 	}
 }
@@ -133,7 +170,7 @@ export class InstanceModules {
 		this.#io = io
 		this.#instanceController = instance
 
-		api_router.get('/help/module/:moduleId/:versionId/*', this.#getHelpAsset)
+		api_router.get('/help/module/:moduleId/:versionMode/:versionId/*', this.#getHelpAsset)
 	}
 
 	/**
@@ -161,11 +198,6 @@ export class InstanceModules {
 			}
 		}
 
-		const searchDirs = [
-			// Paths to look for modules, lowest to highest priority
-			path.resolve(generatePath('bundled-modules')),
-		]
-
 		const legacyCandidates = await this.#moduleScanner.loadInfoForModulesInDir(
 			generatePath('bundled-modules/_legacy'),
 			false
@@ -175,17 +207,32 @@ export class InstanceModules {
 		for (const candidate of legacyCandidates) {
 			candidate.display.isLegacy = true
 			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-			moduleInfo.builtinModule = candidate
-		}
-
-		// Load modules from other folders in order of priority
-		for (const searchDir of searchDirs) {
-			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(searchDir, false)
-			for (const candidate of candidates) {
-				const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-				moduleInfo.builtinModule = candidate
+			moduleInfo.releaseVersions[candidate.display.version] = {
+				...candidate,
+				type: 'release',
+				releaseType: 'stable',
+				versionId: candidate.display.version,
+				isBuiltin: true,
 			}
 		}
+
+		// Load bundled modules
+		const candidates = await this.#moduleScanner.loadInfoForModulesInDir(
+			path.resolve(generatePath('bundled-modules')),
+			false
+		)
+		for (const candidate of candidates) {
+			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
+			moduleInfo.releaseVersions[candidate.display.version] = {
+				...candidate,
+				type: 'release',
+				releaseType: 'stable',
+				versionId: candidate.display.version,
+				isBuiltin: true,
+			}
+		}
+
+		// TODO - search other user dirs
 
 		if (extraModulePath) {
 			this.#logger.info(`Looking for extra modules in: ${extraModulePath}`)
@@ -194,27 +241,28 @@ export class InstanceModules {
 				const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
 				moduleInfo.devModule = {
 					...candidate,
-					versionId: 'dev',
+					type: 'dev',
 				}
 			}
 
 			this.#logger.info(`Found ${candidates.length} extra modules`)
 		}
 
-		// Figure out the redirects. We do this afterwards, to ensure we avoid collisions and circles
-		// TODO - could this have infinite loops?
-		const allModuleEntries = Array.from(this.#knownModules.entries()).sort((a, b) => a[0].localeCompare(b[0]))
-		for (const [id, moduleInfo] of allModuleEntries) {
-			for (const moduleVersion of moduleInfo.allVersions) {
-				if (moduleVersion && Array.isArray(moduleVersion.manifest.legacyIds)) {
-					for (const legacyId of moduleVersion.manifest.legacyIds) {
-						const fromEntry = this.#getOrCreateModuleEntry(legacyId)
-						fromEntry.replacedByIds.push(id)
-					}
-				}
-				// TODO - is there a risk of a legacy module replacing a modern one?
-			}
-		}
+		// nocommit redo this
+		// // Figure out the redirects. We do this afterwards, to ensure we avoid collisions and circles
+		// // TODO - could this have infinite loops?
+		// const allModuleEntries = Array.from(this.#knownModules.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+		// for (const [id, moduleInfo] of allModuleEntries) {
+		// 	for (const moduleVersion of moduleInfo.allVersions) {
+		// 		if (moduleVersion && Array.isArray(moduleVersion.manifest.legacyIds)) {
+		// 			for (const legacyId of moduleVersion.manifest.legacyIds) {
+		// 				const fromEntry = this.#getOrCreateModuleEntry(legacyId)
+		// 				fromEntry.replacedByIds.push(id)
+		// 			}
+		// 		}
+		// 		// TODO - is there a risk of a legacy module replacing a modern one?
+		// 	}
+		// }
 
 		// Log the loaded modules
 		for (const id of Array.from(this.#knownModules.keys()).sort()) {
@@ -228,15 +276,19 @@ export class InstanceModules {
 					})`
 				)
 			}
-			if (moduleInfo.builtinModule) {
+
+			for (const moduleVersion of Object.values(moduleInfo.releaseVersions)) {
+				if (!moduleVersion) continue
 				this.#logger.info(
-					`${moduleInfo.builtinModule.display.id}@${moduleInfo.builtinModule.display.version}: ${moduleInfo.builtinModule.display.name} (Builtin)`
+					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name}${moduleVersion.isBuiltin ? ' (Builtin)' : ''}`
 				)
 			}
 
-			for (const moduleVersion of Object.values(moduleInfo.userVersions)) {
+			for (const moduleVersion of Object.values(moduleInfo.releaseVersions)) {
 				if (!moduleVersion) continue
-				this.#logger.info(`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name}`)
+				this.#logger.info(
+					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name} (Custom)`
+				)
 			}
 		}
 	}
@@ -335,34 +387,35 @@ export class InstanceModules {
 	getModulesJson(): Record<string, NewClientModuleInfo> {
 		const result: Record<string, NewClientModuleInfo> = {}
 
-		function translateVersion(
-			version: NewModuleVersionInfo,
-			type: NewClientModuleVersionInfo['type']
-		): NewClientModuleVersionInfo {
-			let displayName = `v${version.versionId}`
-			if (type === 'dev') displayName = 'Dev Module'
-			if (type === 'builtin') displayName = `${version.display.isLegacy ? '⚠ ' : ''}v${version.versionId} (System)`
-
-			return {
-				version: type === 'user' ? version.versionId : type,
-				displayName: displayName,
-				isLegacy: version.display.isLegacy ?? false,
-				type,
-				hasHelp: !!version.helpPath,
-			}
-		}
-
 		for (const [id, module] of this.#knownModules.entries()) {
-			const defaultVersion = module.defaultVersion
-			if (!defaultVersion) continue
+			// const defaultVersion = module.defaultVersion
+			// if (!defaultVersion) continue
+
+			const stableVersion = module.getVersion('stable', null)
+			const prereleaseVersion = module.getVersion('prerelease', null)
+
+			const baseVersion =
+				stableVersion ??
+				prereleaseVersion ??
+				Object.values(module.releaseVersions)[0] ??
+				Object.values(module.customVersions)[0]
+			if (!baseVersion) continue
+
 			result[id] = {
-				baseInfo: defaultVersion.display,
-				defaultVersion: translateVersion(defaultVersion, 'builtin'),
-				allVersions: compact([
-					module.builtinModule ? translateVersion(module.builtinModule, 'builtin') : undefined,
-					module.devModule ? translateVersion(module.devModule, 'dev') : undefined,
-					...Object.values(module.userVersions).map((ver) => ver && translateVersion(ver, 'user')),
-				]),
+				baseInfo: baseVersion.display,
+
+				stableVersion: translateStableVersion(stableVersion),
+				prereleaseVersion: translatePrereleaseVersion(prereleaseVersion),
+
+				releaseVersions: compact(Object.values(module.releaseVersions)).map(translateReleaseVersion),
+				customVersions: compact(Object.values(module.customVersions)).map(translateCustomVersion),
+
+				// defaultVersion: translateVersion(defaultVersion, 'builtin'),
+				// allVersions: compact([
+				// 	module.builtinModule ? translateVersion(module.builtinModule, 'builtin') : undefined,
+				// 	module.devModule ? translateVersion(module.devModule, 'dev') : undefined,
+				// 	...Object.values(module.userVersions).map((ver) => ver && translateVersion(ver, 'user')),
+				// ]),
 			}
 		}
 
@@ -372,8 +425,12 @@ export class InstanceModules {
 	/**
 	 *
 	 */
-	getModuleManifest(moduleId: string, version: ModuleVersion | null): NewModuleVersionInfo | undefined {
-		return this.#knownModules.get(moduleId)?.getVersion(version) ?? undefined
+	getModuleManifest(
+		moduleId: string,
+		versionMode: ModuleVersionMode,
+		versionId: string | null
+	): SomeModuleVersionInfo | undefined {
+		return this.#knownModules.get(moduleId)?.getVersion(versionMode, versionId) ?? undefined
 	}
 
 	/**
@@ -381,10 +438,11 @@ export class InstanceModules {
 	 */
 	#getHelpForModule = async (
 		moduleId: string,
-		versionId: ModuleVersion | null
+		versionMode: ModuleVersionMode,
+		versionId: string | null
 	): Promise<[err: string, result: null] | [err: null, result: HelpDescription]> => {
 		try {
-			const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionId)
+			const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionMode, versionId)
 			if (moduleInfo && moduleInfo.helpPath) {
 				const stats = await fs.stat(moduleInfo.helpPath)
 				if (stats.isFile()) {
@@ -415,16 +473,17 @@ export class InstanceModules {
 	 * Return a module help asset over http
 	 */
 	#getHelpAsset = (
-		req: express.Request<{ moduleId: string; versionId: string }>,
+		req: express.Request<{ moduleId: string; versionMode: ModuleVersionMode; versionId: string }>,
 		res: express.Response,
 		next: express.NextFunction
 	): void => {
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
 		const versionId = req.params.versionId
+		const versionMode = req.params.versionMode
 		// @ts-ignore
 		const file = req.params[0].replace(/\.\.+/g, '')
 
-		const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionId === 'default' ? null : versionId)
+		const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionMode, versionId)
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
 			const fullpath = path.join(moduleInfo.basePath, 'companion', file)
 			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig)$/) && fs.existsSync(fullpath)) {
@@ -436,5 +495,81 @@ export class InstanceModules {
 
 		// Try next handler
 		next()
+	}
+}
+
+function translateStableVersion(version: SomeModuleVersionInfo | null): NewClientModuleVersionInfo2 | null {
+	if (!version) return null
+	if (version.type === 'dev') {
+		return {
+			displayName: 'Latest Stable (Dev)',
+			isLegacy: false,
+			isBuiltin: false,
+			version: {
+				mode: 'stable',
+				id: null,
+			},
+		}
+	} else if (version.type === 'release') {
+		return {
+			displayName: `Latest Stable (v${version.versionId})`,
+			isLegacy: version.display.isLegacy ?? false,
+			isBuiltin: version.isBuiltin,
+			version: {
+				mode: 'stable',
+				id: null,
+			},
+		}
+	}
+	return null
+}
+
+function translatePrereleaseVersion(version: SomeModuleVersionInfo | null): NewClientModuleVersionInfo2 | null {
+	if (!version) return null
+	if (version.type === 'dev') {
+		return {
+			displayName: 'Latest Prerelease (Dev)',
+			isLegacy: false,
+			isBuiltin: false,
+			version: {
+				mode: 'prerelease',
+				id: null,
+			},
+		}
+	} else if (version.type === 'release') {
+		return {
+			displayName: `Latest Prerelease (v${version.versionId})`,
+			isLegacy: version.display.isLegacy ?? false,
+			isBuiltin: version.isBuiltin,
+			version: {
+				mode: 'prerelease',
+				id: null,
+			},
+		}
+	}
+	return null
+}
+
+function translateReleaseVersion(version: ReleaseModuleVersionInfo): NewClientModuleVersionInfo2 {
+	return {
+		displayName: `v${version.versionId}`,
+		isLegacy: version.display.isLegacy ?? false,
+		isBuiltin: version.isBuiltin,
+		version: {
+			mode: 'specific-version',
+			id: version.versionId,
+		},
+	}
+}
+
+function translateCustomVersion(version: CustomModuleVersionInfo): NewClientModuleVersionInfo2 {
+	return {
+		displayName: `Custom XXX v${version.versionId}`,
+		isLegacy: false,
+		isBuiltin: false,
+		version: {
+			mode: 'custom',
+			id: version.versionId,
+		},
 	}
 }

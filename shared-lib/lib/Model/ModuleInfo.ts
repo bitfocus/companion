@@ -1,6 +1,10 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
-export type ModuleVersion = 'builtin' | 'dev' | string
+export type ModuleVersionMode = 'stable' | 'prerelease' | 'specific-version' | 'custom'
+export interface ModuleVersionInfo {
+	mode: ModuleVersionMode
+	id: string | null // Only used for 'specific-version' and 'custom
+}
 
 export interface ModuleDisplayInfo {
 	id: string
@@ -26,20 +30,28 @@ export interface NewClientModuleBaseInfo {
 	keywords: string[]
 }
 
-export interface NewClientModuleVersionInfo {
+export interface NewClientModuleVersionInfo2 {
 	displayName: string
-	version: ModuleVersion
-	type: 'builtin' | 'user' | 'dev'
 	isLegacy: boolean
-	hasHelp: boolean
+	isBuiltin: boolean
+	version: ModuleVersionInfo
 }
 
 export interface NewClientModuleInfo {
 	baseInfo: NewClientModuleBaseInfo
 
-	defaultVersion: Omit<NewClientModuleVersionInfo, 'type'>
+	// devVersion: NewClientModuleVersionInfo2 | null
 
-	allVersions: NewClientModuleVersionInfo[]
+	stableVersion: NewClientModuleVersionInfo2 | null
+	prereleaseVersion: NewClientModuleVersionInfo2 | null
+
+	releaseVersions: NewClientModuleVersionInfo2[]
+
+	customVersions: NewClientModuleVersionInfo2[]
+
+	// defaultVersion: Omit<NewClientModuleVersionInfo, 'type'>
+
+	// allVersions: NewClientModuleVersionInfo[]
 }
 
 export type ModuleInfoUpdate = ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp
