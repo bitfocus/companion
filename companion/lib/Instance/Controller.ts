@@ -32,6 +32,7 @@ import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import { InstanceUserModulesManager } from './UserModulesManager.js'
 
 const InstancesRoom = 'instances'
 
@@ -58,6 +59,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	readonly status: InstanceStatus
 	readonly moduleHost: ModuleHost
 	readonly modules: InstanceModules
+	readonly userModulesManager: InstanceUserModulesManager
 
 	constructor(registry: Registry) {
 		super(registry, 'Instance/Controller')
@@ -71,6 +73,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.status = new InstanceStatus(registry.io, registry.controls)
 		this.moduleHost = new ModuleHost(registry, this.status, this.#configStore)
 		this.modules = new InstanceModules(registry.io, registry.api_router, this)
+		this.userModulesManager = new InstanceUserModulesManager(this.modules, registry.db, registry.appInfo)
 
 		// Prepare for clients already
 		this.broadcastChanges(this.#configStore.getAllInstanceIds())
@@ -108,6 +111,8 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.logger.silly('instance_init', connectionIds)
 
 		await this.modules.initInstances(extraModulePath)
+
+		await this.userModulesManager.init()
 
 		for (const id of connectionIds) {
 			this.#activate_module(id, false)
@@ -430,6 +435,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
 		this.modules.clientConnect(client)
+		this.userModulesManager.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)

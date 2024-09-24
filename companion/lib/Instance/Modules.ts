@@ -24,7 +24,7 @@ import jsonPatch from 'fast-json-patch'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import LogController from '../Log/Controller.js'
 import type express from 'express'
-import type { ModuleManifest } from '@companion-module/base'
+import { assertNever, type ModuleManifest } from '@companion-module/base'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
@@ -39,6 +39,56 @@ export interface ModuleInfo {
 	manifest: ModuleManifest
 	isOverride?: boolean
 	isPackaged: boolean
+}
+
+export interface NewModuleVersionInfo {
+	basePath: string
+	helpPath: string | null
+	display: ModuleDisplayInfo
+	manifest: ModuleManifest
+	isPackaged: boolean
+}
+
+export interface NewModuleUseVersion {
+	type: 'bundled' | 'legacy' | 'dev' | 'user'
+	id?: string
+}
+
+class NewModuleInfo {
+	id: string
+
+	replacedByIds: string[] = []
+	legacyModule: NewModuleVersionInfo | null = null
+
+	bundledModule: NewModuleVersionInfo | null = null
+
+	devVersions: Record<string, NewModuleVersionInfo | undefined> = {}
+
+	userVersions: Record<string, NewModuleVersionInfo | undefined> = {}
+
+	useVersion: NewModuleUseVersion | null = null
+
+	constructor(id: string) {
+		this.id = id
+	}
+
+	getSelectedVersion(): NewModuleVersionInfo | null {
+		if (!this.useVersion) return null
+		switch (this.useVersion.type) {
+			case 'legacy':
+				return this.legacyModule
+			case 'bundled':
+				return this.bundledModule
+			case 'dev':
+				return this.useVersion.id ? (this.devVersions[this.useVersion.id] ?? null) : null
+			case 'user':
+				return this.useVersion.id ? (this.userVersions[this.useVersion.id] ?? null) : null
+
+			default:
+				assertNever(this.useVersion.type)
+				return null
+		}
+	}
 }
 
 export class InstanceModules {
@@ -62,12 +112,12 @@ export class InstanceModules {
 	/**
 	 * Known module info
 	 */
-	readonly #knownModules = new Map<string, ModuleInfo>()
+	readonly #knownModules = new Map<string, NewModuleInfo>()
 
-	/**
-	 * Module renames
-	 */
-	readonly #moduleRenames = new Map<string, string>()
+	// /**
+	//  * Module renames
+	//  */
+	// readonly #moduleRenames = new Map<string, string>()
 
 	/**
 	 * Module scanner helper
@@ -79,6 +129,18 @@ export class InstanceModules {
 		this.#instanceController = instance
 
 		api_router.get('/help/module/:moduleId/*', this.#getHelpAsset)
+	}
+
+	/**
+	 *
+	 */
+	#getOrCreateModuleEntry(id: string): NewModuleInfo {
+		let moduleInfo = this.#knownModules.get(id)
+		if (!moduleInfo) {
+			moduleInfo = new NewModuleInfo(id)
+			this.#knownModules.set(id, moduleInfo)
+		}
+		return moduleInfo
 	}
 
 	/**
@@ -107,15 +169,16 @@ export class InstanceModules {
 		// Start with 'legacy' candidates
 		for (const candidate of legacyCandidates) {
 			candidate.display.isLegacy = true
-			this.#knownModules.set(candidate.manifest.id, candidate)
+			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
+			moduleInfo.legacyModule = candidate
 		}
 
 		// Load modules from other folders in order of priority
 		for (const searchDir of searchDirs) {
 			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(searchDir, false)
 			for (const candidate of candidates) {
-				// Replace any existing candidate
-				this.#knownModules.set(candidate.manifest.id, candidate)
+				const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
+				moduleInfo.bundledModule = candidate
 			}
 		}
 
@@ -123,53 +186,109 @@ export class InstanceModules {
 			this.#logger.info(`Looking for extra modules in: ${extraModulePath}`)
 			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(extraModulePath, true)
 			for (const candidate of candidates) {
-				// Replace any existing candidate
-				this.#knownModules.set(candidate.manifest.id, {
-					...candidate,
-					isOverride: true,
-				})
+				const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
+				moduleInfo.devVersions['default'] = candidate // TODO - allow multiple
 			}
 
 			this.#logger.info(`Found ${candidates.length} extra modules`)
 		}
 
-		// Figure out the redirects. We do this afterwards, to ensure we avoid collisions and stuff
-		for (const id of Array.from(this.#knownModules.keys()).sort()) {
-			const moduleInfo = this.#knownModules.get(id)
-			if (moduleInfo && Array.isArray(moduleInfo.manifest.legacyIds)) {
-				if (moduleInfo.display.isLegacy) {
-					// Handle legacy modules differently. They should never replace a new style one
-					for (const legacyId of moduleInfo.manifest.legacyIds) {
-						const otherInfo = this.#knownModules.get(legacyId)
-						if (!otherInfo || otherInfo.display.isLegacy) {
-							// Other is not known or is legacy
-							this.#moduleRenames.set(legacyId, id)
-							this.#knownModules.delete(legacyId)
-						}
-					}
-				} else {
-					// These should replace anything
-					for (const legacyId of moduleInfo.manifest.legacyIds) {
-						this.#moduleRenames.set(legacyId, id)
-						this.#knownModules.delete(legacyId)
+		// Figure out the redirects. We do this afterwards, to ensure we avoid collisions and circles
+		// TODO - could this have infinite loops?
+		const allModuleEntries = Array.from(this.#knownModules.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+		for (const [id, moduleInfo] of allModuleEntries) {
+			const allVersions = [
+				...Object.values(moduleInfo.devVersions),
+				...Object.values(moduleInfo.userVersions),
+				moduleInfo.bundledModule,
+				moduleInfo.legacyModule,
+			]
+			for (const moduleVersion of allVersions) {
+				if (moduleVersion && Array.isArray(moduleVersion.manifest.legacyIds)) {
+					for (const legacyId of moduleVersion.manifest.legacyIds) {
+						const fromEntry = this.#getOrCreateModuleEntry(legacyId)
+						fromEntry.replacedByIds.push(id)
 					}
 				}
+				// TODO - is there a risk of a legacy module replacing a modern one?
+			}
+		}
+
+		// /**
+		//  *
+		//  * @param {[id: string, NewModuleVersionInfo | undefined][]} versions
+		//  * @returns {string | null}
+		//  */
+		// function chooseBestVersion(versions) {
+		// 	const versionStrings = versions.map((ver) => ver[0])
+		// 	if (versionStrings.length <= 1) return versionStrings[0] ?? null
+
+		// 	versionStrings.sort((a, b) => {
+		// 		const a2 = semver.parse(a)
+		// 		if (!a2) return 1
+
+		// 		const b2 = semver.parse(b)
+		// 		if (!b2) return -1
+
+		// 		return a2.compare(b2)
+		// 	})
+
+		// 	return versionStrings[0]
+		// }
+
+		// Choose the version of each to use
+		for (const [_id, moduleInfo] of allModuleEntries) {
+			if (moduleInfo.replacedByIds.length > 0) continue
+
+			const firstDevVersion = Object.keys(moduleInfo.devVersions)[0]
+			if (firstDevVersion) {
+				// TODO - properly
+				moduleInfo.useVersion = {
+					type: 'dev',
+					id: firstDevVersion,
+				}
+				continue
+			}
+
+			const firstUserVersion = Object.keys(moduleInfo.userVersions)[0]
+			if (firstUserVersion) {
+				// TODO - properly
+				moduleInfo.useVersion = {
+					type: 'user',
+					id: firstUserVersion,
+				}
+				continue
+			}
+
+			if (moduleInfo.bundledModule) {
+				moduleInfo.useVersion = { type: 'bundled' }
+				continue
+			}
+
+			if (moduleInfo.legacyModule) {
+				moduleInfo.useVersion = { type: 'legacy' }
+				continue
 			}
 		}
 
 		// Log the loaded modules
 		for (const id of Array.from(this.#knownModules.keys()).sort()) {
 			const moduleInfo = this.#knownModules.get(id)
-			if (!moduleInfo) continue
+			if (!moduleInfo || !moduleInfo.useVersion) continue
 
-			if (moduleInfo.isOverride) {
+			const moduleVersion = moduleInfo.getSelectedVersion()
+			if (!moduleVersion) continue
+
+			if (moduleInfo.useVersion.type === 'dev') {
 				this.#logger.info(
-					`${moduleInfo.display.id}@${moduleInfo.display.version}: ${moduleInfo.display.name} (Overridden${
-						moduleInfo.isPackaged ? ' & Packaged' : ''
+					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name} (Overridden${
+						moduleVersion.isPackaged ? ' & Packaged' : ''
 					})`
 				)
 			} else {
-				this.#logger.debug(`${moduleInfo.display.id}@${moduleInfo.display.version}: ${moduleInfo.display.name}`)
+				this.#logger.debug(
+					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name}`
+				)
 			}
 		}
 	}
@@ -180,48 +299,50 @@ export class InstanceModules {
 	async reloadExtraModule(fullpath: string): Promise<void> {
 		this.#logger.info(`Attempting to reload module in: ${fullpath}`)
 
-		const reloadedModule = await this.#moduleScanner.loadInfoForModule(fullpath, true)
-		if (reloadedModule) {
-			this.#logger.info(
-				`Found new module "${reloadedModule.display.id}" v${reloadedModule.display.version} in: ${fullpath}`
-			)
+		// nocommit redo this
 
-			// Replace any existing module
-			this.#knownModules.set(reloadedModule.manifest.id, {
-				...reloadedModule,
-				isOverride: true,
-			})
+		// const reloadedModule = await this.#moduleScanner.loadInfoForModule(fullpath, true)
+		// if (reloadedModule) {
+		// 	this.#logger.info(
+		// 		`Found new module "${reloadedModule.display.id}" v${reloadedModule.display.version} in: ${fullpath}`
+		// 	)
 
-			const newJson = cloneDeep(this.getModulesJson())
+		// 	// Replace any existing module
+		// 	this.#knownModules.set(reloadedModule.manifest.id, {
+		// 		...reloadedModule,
+		// 		isOverride: true,
+		// 	})
 
-			// Now broadcast to any interested clients
-			if (this.#io.countRoomMembers(ModulesRoom) > 0) {
-				const oldObj = this.#lastModulesJson?.[reloadedModule.manifest.id]
-				if (oldObj) {
-					const patch = jsonPatch.compare(oldObj, reloadedModule.display)
-					if (patch.length > 0) {
-						this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
-							type: 'update',
-							id: reloadedModule.manifest.id,
-							patch,
-						})
-					}
-				} else {
-					this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
-						type: 'add',
-						id: reloadedModule.manifest.id,
-						info: reloadedModule.display,
-					})
-				}
-			}
+		// 	const newJson = cloneDeep(this.getModulesJson())
 
-			this.#lastModulesJson = newJson
+		// 	// Now broadcast to any interested clients
+		// 	if (this.#io.countRoomMembers(ModulesRoom) > 0) {
+		// 		const oldObj = this.#lastModulesJson?.[reloadedModule.manifest.id]
+		// 		if (oldObj) {
+		// 			const patch = jsonPatch.compare(oldObj, reloadedModule.display)
+		// 			if (patch.length > 0) {
+		// 				this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
+		// 					type: 'update',
+		// 					id: reloadedModule.manifest.id,
+		// 					patch,
+		// 				})
+		// 			}
+		// 		} else {
+		// 			this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
+		// 				type: 'add',
+		// 				id: reloadedModule.manifest.id,
+		// 				info: reloadedModule.display,
+		// 			})
+		// 		}
+		// 	}
 
-			// restart usages of this module
-			this.#instanceController.reloadUsesOfModule(reloadedModule.manifest.id)
-		} else {
-			this.#logger.info(`Failed to find module in: ${fullpath}`)
-		}
+		// 	this.#lastModulesJson = newJson
+
+		// 	// restart usages of this module
+		// 	this.#instanceController.reloadUsesOfModule(reloadedModule.manifest.id)
+		// } else {
+		// 	this.#logger.info(`Failed to find module in: ${fullpath}`)
+		// }
 	}
 
 	/**
@@ -229,7 +350,12 @@ export class InstanceModules {
 	 * @returns the instance_type that should be used (often the provided parameter)
 	 */
 	verifyInstanceTypeIsCurrent(instance_type: string): string {
-		return this.#moduleRenames.get(instance_type) || instance_type
+		const moduleInfo = this.#knownModules.get(instance_type)
+		if (!moduleInfo || moduleInfo.replacedByIds.length === 0) return instance_type
+
+		// TODO - should this handle deeper references?
+		// TODO - should this choose one of the ids properly?
+		return moduleInfo.replacedByIds[0]
 	}
 
 	/**
@@ -256,7 +382,8 @@ export class InstanceModules {
 		const result: Record<string, ModuleDisplayInfo> = {}
 
 		for (const [id, module] of this.#knownModules.entries()) {
-			if (module) result[id] = module.display
+			const moduleVersion = module.getSelectedVersion()
+			if (moduleVersion) result[id] = moduleVersion.display
 		}
 
 		return result
@@ -266,7 +393,7 @@ export class InstanceModules {
 	 *
 	 */
 	getModuleManifest(moduleId: string): ModuleInfo | undefined {
-		return this.#knownModules.get(moduleId)
+		return this.#knownModules.get(moduleId)?.getSelectedVersion() ?? undefined
 	}
 
 	/**
@@ -276,7 +403,7 @@ export class InstanceModules {
 		moduleId: string
 	): Promise<[err: string, result: null] | [err: null, result: HelpDescription]> => {
 		try {
-			const moduleInfo = this.#knownModules.get(moduleId)
+			const moduleInfo = this.#knownModules.get(moduleId)?.getSelectedVersion() // TODO - better selection
 			if (moduleInfo && moduleInfo.helpPath) {
 				const stats = await fs.stat(moduleInfo.helpPath)
 				if (stats.isFile()) {
@@ -315,7 +442,7 @@ export class InstanceModules {
 		// @ts-ignore
 		const file = req.params[0].replace(/\.\.+/g, '')
 
-		const moduleInfo = this.#knownModules.get(moduleId)
+		const moduleInfo = this.#knownModules.get(moduleId)?.getSelectedVersion() // TODO - better selection
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
 			const fullpath = path.join(moduleInfo.basePath, 'companion', file)
 			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig)$/) && fs.existsSync(fullpath)) {
