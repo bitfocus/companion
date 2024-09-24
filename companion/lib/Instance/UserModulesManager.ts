@@ -4,7 +4,8 @@ import fs from 'fs-extra'
 import type { InstanceModules } from './Modules.js'
 import type { AppInfo } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
-import { DataDatabase } from 'lib/Data/Database.js'
+import { DataDatabase } from '../Data/Database.js'
+import type { UserModuleEntry } from '@companion-app/shared/Model/UserModules.js'
 
 export class InstanceUserModulesManager {
 	readonly #logger = LogController.createLogger('Instance/UserModulesManager')
