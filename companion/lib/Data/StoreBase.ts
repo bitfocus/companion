@@ -2,10 +2,16 @@ import fs from 'fs-extra'
 import path from 'path'
 import Database, { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import LogController, { Logger } from '../Log/Controller.js'
-import { showErrorMessage } from '../Resources/Util.js'
-import type { Registry } from '../Registry.js'
+import { showErrorMessage, showFatalError } from '../Resources/Util.js'
 
 export type DatabaseDefault = Record<string, any>
+
+enum DatabaseStartupState {
+	Normal = 0,
+	Reset = 1,
+	RAM = 2,
+	Fatal = 3,
+}
 
 /**
  * Abstract class to be extended by the DB classes.
@@ -79,6 +85,10 @@ export abstract class DataStoreBase {
 	 * The name to use for the file and logging
 	 */
 	protected readonly name: string = ''
+	/**
+	 * The startup state of the database
+	 */
+	protected startupState: DatabaseStartupState = DatabaseStartupState.Normal
 	/**
 	 * Saved queries
 	 */
@@ -362,10 +372,18 @@ export abstract class DataStoreBase {
 	}
 
 	/**
+	 * Update the startup state to a new state if that new state is higher
+	 * @param newState - the new state
+	 */
+	protected setStartupState(newState: DatabaseStartupState): void {
+		this.startupState = this.startupState > newState ? this.startupState : newState
+	}
+
+	/**
 	 * Attempt to load the database from disk
 	 * @access protected
 	 */
-	protected startSQLite(registry: Registry | undefined): void {
+	protected startSQLite(): void {
 		if (this.cfgDir == ':memory:') {
 			this.store = new Database(this.cfgDir)
 			this.create()
@@ -395,36 +413,46 @@ export abstract class DataStoreBase {
 					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
 					this.migrateFileToSqlite()
 				} catch (e: any) {
-					showErrorMessage('Error starting companion', 'Could not load database backup file. Resetting configuration')
+					this.setStartupState(DatabaseStartupState.Reset)
 					this.logger.error(e.message)
-					console.error('Could not load database file')
-
 					this.startSQLiteWithDefaults()
 				}
 			} else {
 				this.logger.silly(this.cfgFile, `doesn't exist. loading defaults`)
 				this.startSQLiteWithDefaults()
 			}
-
-			this.setBackupCycle()
 		}
 
 		if (!this.store) {
 			try {
 				this.store = new Database(':memory:')
+				this.setStartupState(DatabaseStartupState.RAM)
+				this.create()
+				this.loadDefaults()
+			} catch (e: any) {
+				this.setStartupState(DatabaseStartupState.Fatal)
+			}
+		}
+
+		switch (this.startupState) {
+			case DatabaseStartupState.Fatal:
+				showFatalError('Error starting companion', 'Could not create a functional database.  Exiting...')
+				console.error('Could not create/load database file.  Exiting...')
+				break
+			case DatabaseStartupState.RAM:
 				showErrorMessage(
 					'Error starting companion',
 					'Could not write to database file.  Companion is running in RAM and will not be saved upon exiting.'
 				)
-				console.error('Could not load database file')
-				this.create()
-				this.loadDefaults()
-			} catch (e: any) {
-				showErrorMessage('Error starting companion', 'Could not create a functional database.  Exiting...')
-				console.error('Could not load database file.  Exiting...')
-				registry?.exit(true, false)
-			}
+				console.error('Could not create/load database file.  Running in RAM')
+				break
+			case DatabaseStartupState.Reset:
+				showErrorMessage('Error starting companion', 'Could not load database file. Resetting configuration')
+				console.error('Could not load database file.')
+				break
 		}
+
+		this.setBackupCycle()
 	}
 
 	/**
@@ -437,17 +465,17 @@ export abstract class DataStoreBase {
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
 				this.store = new Database(this.cfgFile)
 			} catch (e: any) {
-				showErrorMessage('Error starting companion', 'Could not load database backup file. Resetting configuration')
+				this.setStartupState(DatabaseStartupState.Reset)
 				this.logger.error(e.message)
-				console.error('Could not load database backup file')
 
-				fs.rmSync(this.cfgFile)
+				try {
+					fs.rmSync(this.cfgFile)
+				} catch (e) {}
+
 				this.startSQLiteWithDefaults()
 			}
 		} else {
-			showErrorMessage('Error starting companion', 'Could not load database backup file. Resetting configuration')
-			console.error('Could not load database file')
-
+			this.setStartupState(DatabaseStartupState.Reset)
 			this.startSQLiteWithDefaults()
 		}
 	}
@@ -467,9 +495,7 @@ export abstract class DataStoreBase {
 				this.create()
 				this.loadDefaults()
 			} catch (e: any) {
-				showErrorMessage('Error starting companion', 'Could not load or create a database file.')
 				this.logger.error(e.message)
-				console.error('Could not load or create a database file.')
 			}
 		}
 	}

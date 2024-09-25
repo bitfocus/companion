@@ -184,7 +184,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		this.api_router = express.Router()
 		this.ui = new UIController(this)
 		this.io = this.ui.io
-		this.db = new DataDatabase(this, this.appInfo.configDir)
+		this.db = new DataDatabase(this.appInfo.configDir)
 		this.data = new DataController(this)
 		this.userconfig = this.data.userconfig
 		LogController.init(this.appInfo, this.ui.io)

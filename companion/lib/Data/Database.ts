@@ -3,7 +3,6 @@ import { DataLegacyDatabase } from './Legacy/Database.js'
 import { upgradeStartup } from './Upgrade.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
 import { createTables as createTablesV5 } from './Schema/v5.js'
-import type { Registry } from '../Registry.js'
 
 /**
  * The class that manages the applications's main database
@@ -38,10 +37,10 @@ export class DataDatabase extends DataStoreBase {
 	/**
 	 * @param configDir - the root config directory
 	 */
-	constructor(registry: Registry, configDir: string) {
+	constructor(configDir: string) {
 		super(configDir, 'db', 'main', 'Data/Database')
 
-		this.startSQLite(registry)
+		this.startSQLite()
 
 		upgradeStartup(this)
 	}

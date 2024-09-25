@@ -1,6 +1,5 @@
 import { DatabaseDefault, DataStoreBase } from './StoreBase.js'
 import { DataLegacyCache } from './Legacy/Cache.js'
-import type { Registry } from '../Registry.js'
 
 /**
  * The class that manages the applications's disk cache
@@ -35,10 +34,10 @@ export class DataCache extends DataStoreBase {
 	/**
 	 * @param configDir - the root config directory
 	 */
-	constructor(registry: Registry, configDir: string) {
+	constructor(configDir: string) {
 		super(configDir, 'cache', 'main', 'Data/Cache')
 
-		this.startSQLite(registry)
+		this.startSQLite()
 	}
 
 	/**
