@@ -12,13 +12,18 @@ import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
-import type { ModuleVersionInfo, NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type {
+	ModuleVersionInfo,
+	NewClientModuleInfo,
+	NewClientModuleVersionInfo2,
+} from '@companion-app/shared/Model/ModuleInfo.js'
 import { ConnectionVersionSelectOptions } from './AddConnection.js'
+import { getModuleVersionInfoForConnection } from './Util.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
 	doConfigureConnection: (connectionId: string | null) => void
-	showHelp: (moduleId: string) => void
+	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 }
 
 export const ConnectionEditPanel = observer(function ConnectionEditPanel({
@@ -68,7 +73,7 @@ interface ConnectionEditPanelInnerProps {
 	connectionInfo: ClientConnectionConfig
 	moduleInfo: NewClientModuleInfo
 	doConfigureConnection: (connectionId: string | null) => void
-	showHelp: (moduleId: string) => void
+	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 }
 
 const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
@@ -94,6 +99,11 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	// Update the in-edit label if the connection label changes
 	useEffect(() => setConnectionLabel(connectionInfo.label), [connectionInfo.label])
+	// Update the in-edit version if the connection version changes
+	useEffect(
+		() => setConnectionVersion({ mode: connectionInfo.moduleVersionMode, id: connectionInfo.moduleVersionId }),
+		[connectionInfo.moduleVersionMode, connectionInfo.moduleVersionId, connectionInfo.enabled]
+	)
 
 	const [configOptions, fieldVisibility] = useOptionsAndIsVisible<ExtendedInputField & { width: number }>(
 		configFields,
@@ -218,12 +228,14 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
+	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo)
+
 	return (
 		<div>
 			<h5>
 				{moduleInfo.baseInfo.shortname ?? connectionInfo.instance_type} configuration
-				{moduleInfo.baseInfo.hasHelp && (
-					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type)}>
+				{moduleVersion?.hasHelp && (
+					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type, moduleVersion)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}

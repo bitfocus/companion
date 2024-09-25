@@ -19,12 +19,17 @@ import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
 import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
 import { CModalExt } from '../Components/CModalExt.js'
-import { ModuleVersionInfo, NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import {
+	ModuleVersionInfo,
+	NewClientModuleInfo,
+	NewClientModuleVersionInfo2,
+} from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import { getModuleVersionInfoForConnection } from './Util.js'
 
 interface AddConnectionsPanelProps {
-	showHelp: (moduleId: string) => void
+	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	doConfigureConnection: (connectionId: string) => void
 }
 
@@ -84,7 +89,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 	return (
 		<>
-			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} />
+			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} showHelp={showHelp} />
 			<div style={{ clear: 'both' }} className="row-heading">
 				<h4>Add connection</h4>
 				<p>
@@ -107,12 +112,17 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 interface AddConnectionEntryProps {
 	module: ModuleProductInfo
 	addConnection(module: ModuleProductInfo): void
-	showHelp(moduleId: string): void
+	showHelp(moduleId: string, moduleVersion: NewClientModuleVersionInfo2): void
 }
 
 function AddConnectionEntry({ module, addConnection, showHelp }: AddConnectionEntryProps) {
 	const addConnectionClick = useCallback(() => addConnection(module), [addConnection, module])
-	const showHelpClick = useCallback(() => showHelp(module.baseInfo.id), [showHelp, module.baseInfo.id])
+	const showVersion: NewClientModuleVersionInfo2 | undefined =
+		module.stableVersion ?? module.prereleaseVersion ?? module.releaseVersions[0]
+	const showHelpClick = useCallback(
+		() => showVersion && showHelp(module.baseInfo.id, showVersion),
+		[showHelp, module.baseInfo.id, showVersion]
+	)
 
 	return (
 		<div key={module.baseInfo.name + module.baseInfo.id}>
@@ -132,7 +142,7 @@ function AddConnectionEntry({ module, addConnection, showHelp }: AddConnectionEn
 				</>
 			)}
 			{module.baseInfo.name}
-			{module.baseInfo.hasHelp && (
+			{showVersion?.hasHelp && (
 				<div className="float_right" onClick={showHelpClick}>
 					<FontAwesomeIcon icon={faQuestionCircle} />
 				</div>
@@ -147,10 +157,14 @@ interface AddConnectionModalRef {
 
 interface AddConnectionModalProps {
 	doConfigureConnection: (connectionId: string) => void
+	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 }
 
 const AddConnectionModal = observer(
-	forwardRef<AddConnectionModalRef, AddConnectionModalProps>(function AddActionsModal({ doConfigureConnection }, ref) {
+	forwardRef<AddConnectionModalRef, AddConnectionModalProps>(function AddActionsModal(
+		{ doConfigureConnection, showHelp },
+		ref
+	) {
 		const { socket, notifier } = useContext(RootAppStoreContext)
 		const connections = useContext(ConnectionsContext)
 
@@ -226,6 +240,11 @@ const AddConnectionModal = observer(
 				break
 		}
 
+		const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, {
+			moduleVersionMode: selectedVersion.mode,
+			moduleVersionId: selectedVersion.id,
+		})
+
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
 				{moduleInfo && (
@@ -255,6 +274,11 @@ const AddConnectionModal = observer(
 
 								<CFormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm">
 									Module Version&nbsp;
+									{moduleVersion?.hasHelp && (
+										<div className="float_right" onClick={() => showHelp(moduleInfo.baseInfo.id, moduleVersion)}>
+											<FontAwesomeIcon icon={faQuestionCircle} />
+										</div>
+									)}
 								</CFormLabel>
 								<CCol sm={8}>
 									<CFormSelect

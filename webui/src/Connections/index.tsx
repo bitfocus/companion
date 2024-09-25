@@ -13,6 +13,7 @@ import { cloneDeep } from 'lodash-es'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
+import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
 	const { socket } = useContext(RootAppStoreContext)
@@ -32,7 +33,10 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		})
 	}, [])
 
-	const showHelp = useCallback((id: string) => helpModalRef.current?.show(id, null), [])
+	const showHelp = useCallback(
+		(id: string, moduleVersion: NewClientModuleVersionInfo2) => helpModalRef.current?.show(id, moduleVersion),
+		[]
+	)
 
 	const doConfigureConnection = useCallback((connectionId: string | null) => {
 		setSelectedConnectionId(connectionId)

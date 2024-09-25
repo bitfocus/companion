@@ -27,6 +27,7 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { getModuleVersionInfoForConnection } from './Util.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -36,7 +37,7 @@ interface VisibleConnectionsState {
 }
 
 interface ConnectionsListProps {
-	showHelp: (connectionId: string) => void
+	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	doConfigureConnection: (connectionId: string | null) => void
 	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
@@ -262,7 +263,7 @@ interface ConnectionsTableRowProps {
 	id: string
 	connection: ClientConnectionConfig
 	connectionStatus: ConnectionStatusEntry | undefined
-	showHelp: (connectionId: string) => void
+	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	showVariables: (label: string) => void
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
@@ -310,7 +311,10 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		})
 	}, [socket, id, isEnabled])
 
-	const doShowHelp = useCallback(() => showHelp(connection.instance_type), [showHelp, connection.instance_type])
+	const doShowHelp = useCallback(
+		() => moduleVersion?.hasHelp && showHelp(connection.instance_type, moduleVersion),
+		[showHelp, connection.instance_type]
+	)
 
 	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label])
 
@@ -356,21 +360,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		if (url) windowLinkOpen({ href: url })
 	}, [moduleInfo])
 
-	let moduleVersion: NewClientModuleVersionInfo2 | null | undefined
-	switch (connection.moduleVersionMode) {
-		case 'stable':
-			moduleVersion = moduleInfo?.stableVersion
-			break
-		case 'prerelease':
-			moduleVersion = moduleInfo?.prereleaseVersion
-			break
-		case 'specific-version':
-			moduleVersion = moduleInfo?.releaseVersions.find((v) => v.version.id === connection.moduleVersionId)
-			break
-		case 'custom':
-			moduleVersion = moduleInfo?.customVersions.find((v) => v.version.id === connection.moduleVersionId)
-			break
-	}
+	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection)
 
 	return (
 		<tr
@@ -435,7 +425,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										onMouseDown={doShowHelp}
 										color="secondary"
 										title="Help"
-										disabled={!moduleInfo?.baseInfo?.hasHelp}
+										disabled={!moduleVersion?.hasHelp}
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>

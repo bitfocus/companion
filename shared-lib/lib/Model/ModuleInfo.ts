@@ -22,7 +22,7 @@ export interface ModuleDisplayInfo {
 export interface NewClientModuleBaseInfo {
 	id: string
 	name: string
-	hasHelp: boolean
+	// hasHelp: boolean
 	bugUrl: string
 	shortname: string
 	manufacturer: string
@@ -35,6 +35,7 @@ export interface NewClientModuleVersionInfo2 {
 	isLegacy: boolean
 	isBuiltin: boolean
 	version: ModuleVersionInfo
+	hasHelp: boolean
 }
 
 export interface NewClientModuleInfo {

@@ -8,13 +8,14 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { CModalExt } from '../Components/CModalExt.js'
 import { socketEmitPromise } from '../util.js'
+import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 
 interface HelpModalProps {
 	// Nothing
 }
 
 export interface HelpModalRef {
-	show(name: string, versionId: string | null): void
+	show(name: string, moduleVersion: NewClientModuleVersionInfo2): void
 }
 
 export const HelpModal = observer(
@@ -22,23 +23,27 @@ export const HelpModal = observer(
 		const { socket, notifier, modules } = useContext(RootAppStoreContext)
 
 		const [content, setContent] = useState<[name: string, description: HelpDescription] | null>(null)
-		const [show, setShow] = useState(false)
+		const [showVersion, setShowVersion] = useState<NewClientModuleVersionInfo2 | null>(null)
 
-		const doClose = useCallback(() => setShow(false), [])
+		const doClose = useCallback(() => setShowVersion(null), [])
 		const onClosed = useCallback(() => setContent(null), [])
 
 		useImperativeHandle(
 			ref,
 			() => ({
-				show(name, versionId) {
-					socketEmitPromise(socket, 'connections:get-help', [name, versionId]).then(([err, result]) => {
+				show(name, moduleVersion) {
+					socketEmitPromise(socket, 'connections:get-help', [
+						name,
+						moduleVersion.version.mode,
+						moduleVersion.version.id,
+					]).then(([err, result]) => {
 						if (err) {
 							notifier.current?.show('Instance help', `Failed to get help text: ${err}`)
 							return
 						}
 						if (result) {
 							setContent([name, result])
-							setShow(true)
+							setShowVersion(moduleVersion)
 						}
 					})
 				},
@@ -65,11 +70,10 @@ export const HelpModal = observer(
 		const moduleInfo = content && modules.modules.get(content[0])
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
+			<CModalExt visible={!!showVersion} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>
-						Help for {moduleInfo?.baseInfo?.name || content?.[0]}{' '}
-						{moduleInfo?.defaultVersion?.version ? `v${moduleInfo.defaultVersion?.version}` : ''}
+						Help for {moduleInfo?.baseInfo?.name || content?.[0]} {showVersion?.displayName}
 					</h5>
 				</CModalHeader>
 				<CModalBody>
