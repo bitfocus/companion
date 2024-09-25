@@ -17,7 +17,7 @@
 
 ### 🐞 MODULE FIXES
 
-- analogway-awj 
+- analogway-awj
 - axeltechnology-cgplus
 - axeltechnology-vjpro
 - axeltechnology-xplayout
