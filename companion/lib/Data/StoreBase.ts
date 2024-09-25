@@ -436,19 +436,19 @@ export abstract class DataStoreBase {
 
 		switch (this.startupState) {
 			case DatabaseStartupState.Fatal:
-				showFatalError('Error starting companion', 'Could not create a functional database.  Exiting...')
-				console.error('Could not create/load database file.  Exiting...')
+				showFatalError('Error starting companion', `Could not create a functional database(${this.name}).  Exiting...`)
+				console.error(`Could not create/load database ${this.name}.  Exiting...`)
 				break
 			case DatabaseStartupState.RAM:
 				showErrorMessage(
 					'Error starting companion',
-					'Could not write to database file.  Companion is running in RAM and will not be saved upon exiting.'
+					`Could not write to database ${this.name}.  Companion is running in RAM and will not be saved upon exiting.`
 				)
-				console.error('Could not create/load database file.  Running in RAM')
+				console.error(`Could not create/load database ${this.name}.  Running in RAM`)
 				break
 			case DatabaseStartupState.Reset:
-				showErrorMessage('Error starting companion', 'Could not load database file. Resetting configuration')
-				console.error('Could not load database file.')
+				showErrorMessage('Error starting companion', `Could not load database ${this.name}. Resetting configuration.`)
+				console.error(`Could not load database ${this.name}.`)
 				break
 		}
 
