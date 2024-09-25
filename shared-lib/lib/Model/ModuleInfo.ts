@@ -33,6 +33,7 @@ export interface NewClientModuleBaseInfo {
 export interface NewClientModuleVersionInfo2 {
 	displayName: string
 	isLegacy: boolean
+	isDev: boolean
 	isBuiltin: boolean
 	version: ModuleVersionInfo
 	hasHelp: boolean
@@ -41,6 +42,7 @@ export interface NewClientModuleVersionInfo2 {
 export interface NewClientModuleInfo {
 	baseInfo: NewClientModuleBaseInfo
 
+	hasDevVersion: boolean
 	// devVersion: NewClientModuleVersionInfo2 | null
 
 	stableVersion: NewClientModuleVersionInfo2 | null

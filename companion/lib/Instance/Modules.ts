@@ -77,24 +77,6 @@ class NewModuleInfo {
 		this.id = id
 	}
 
-	// get defaultVersion(): NewModuleVersionInfo | null {
-	// 	if (this.devModule) return this.devModule
-
-	// 	let latest: NewModuleVersionInfo | null = this.builtinModule
-	// 	for (const version of Object.values(this.userVersions)) {
-	// 		if (!version) continue
-	// 		if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
-	// 			latest = version
-	// 		}
-	// 	}
-
-	// 	return latest
-	// }
-
-	// get allVersions(): NewModuleVersionInfo[] {
-	// 	return compact([this.devModule, ...Object.values(this.userVersions), this.builtinModule])
-	// }
-
 	getVersion(versionMode: ModuleVersionMode, versionId: string | null): SomeModuleVersionInfo | null {
 		switch (versionMode) {
 			case 'stable': {
@@ -388,9 +370,6 @@ export class InstanceModules {
 		const result: Record<string, NewClientModuleInfo> = {}
 
 		for (const [id, module] of this.#knownModules.entries()) {
-			// const defaultVersion = module.defaultVersion
-			// if (!defaultVersion) continue
-
 			const stableVersion = module.getVersion('stable', null)
 			const prereleaseVersion = module.getVersion('prerelease', null)
 
@@ -404,18 +383,13 @@ export class InstanceModules {
 			result[id] = {
 				baseInfo: baseVersion.display,
 
+				hasDevVersion: !!module.devModule,
+
 				stableVersion: translateStableVersion(stableVersion),
 				prereleaseVersion: translatePrereleaseVersion(prereleaseVersion),
 
 				releaseVersions: compact(Object.values(module.releaseVersions)).map(translateReleaseVersion),
 				customVersions: compact(Object.values(module.customVersions)).map(translateCustomVersion),
-
-				// defaultVersion: translateVersion(defaultVersion, 'builtin'),
-				// allVersions: compact([
-				// 	module.builtinModule ? translateVersion(module.builtinModule, 'builtin') : undefined,
-				// 	module.devModule ? translateVersion(module.devModule, 'dev') : undefined,
-				// 	...Object.values(module.userVersions).map((ver) => ver && translateVersion(ver, 'user')),
-				// ]),
 			}
 		}
 
@@ -511,6 +485,7 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 		return {
 			displayName: 'Latest Stable (Dev)',
 			isLegacy: false,
+			isDev: true,
 			isBuiltin: false,
 			hasHelp: version.helpPath !== null,
 			version: {
@@ -522,6 +497,7 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 		return {
 			displayName: `Latest Stable (v${version.versionId})`,
 			isLegacy: version.display.isLegacy ?? false,
+			isDev: false,
 			isBuiltin: version.isBuiltin,
 			hasHelp: version.helpPath !== null,
 			version: {
@@ -539,6 +515,7 @@ function translatePrereleaseVersion(version: SomeModuleVersionInfo | null): NewC
 		return {
 			displayName: 'Latest Prerelease (Dev)',
 			isLegacy: false,
+			isDev: true,
 			isBuiltin: false,
 			hasHelp: version.helpPath !== null,
 			version: {
@@ -550,6 +527,7 @@ function translatePrereleaseVersion(version: SomeModuleVersionInfo | null): NewC
 		return {
 			displayName: `Latest Prerelease (v${version.versionId})`,
 			isLegacy: version.display.isLegacy ?? false,
+			isDev: false,
 			isBuiltin: version.isBuiltin,
 			hasHelp: version.helpPath !== null,
 			version: {
@@ -565,6 +543,7 @@ function translateReleaseVersion(version: ReleaseModuleVersionInfo): NewClientMo
 	return {
 		displayName: `v${version.versionId}`,
 		isLegacy: version.display.isLegacy ?? false,
+		isDev: false,
 		isBuiltin: version.isBuiltin,
 		hasHelp: version.helpPath !== null,
 		version: {
@@ -578,6 +557,7 @@ function translateCustomVersion(version: CustomModuleVersionInfo): NewClientModu
 	return {
 		displayName: `Custom XXX v${version.versionId}`,
 		isLegacy: false,
+		isDev: false,
 		isBuiltin: false,
 		hasHelp: version.helpPath !== null,
 		version: {

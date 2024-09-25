@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { SearchBox } from '../Components/SearchBox.js'
 import { observer } from 'mobx-react-lite'
 import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
@@ -7,8 +7,13 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faRectangleList } from '@fortawesome/free-solid-svg-icons'
 import { HelpModal, HelpModalRef } from '../Connections/HelpModal.js'
-import { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import {
+	ModuleVersionInfo,
+	NewClientModuleInfo,
+	NewClientModuleVersionInfo2,
+} from '@companion-app/shared/Model/ModuleInfo.js'
 import { socketEmitPromise } from '../util.js'
+import { getModuleVersionInfoForConnection } from '../Connections/Util.js'
 
 export const InstalledModules = observer(function InstalledModules() {
 	const { socket } = useContext(RootAppStoreContext)
@@ -56,14 +61,14 @@ export const InstalledModules = observer(function InstalledModules() {
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const module of searchResults) {
-			candidatesObj[module.name] = (
+			candidatesObj[module.baseInfo.id] = (
 				<ModuleEntry
-					key={module.name}
+					key={module.baseInfo.id}
 					module={module}
 					showHelpClick={showHelpClick}
 					activateModuleVersion={activateModuleVersion}
 					setExpanded={changeExpanded}
-					isExpanded={expandedId === module.id}
+					isExpanded={expandedId === module.baseInfo.id}
 				/>
 			)
 		}
@@ -121,16 +126,19 @@ const ModuleEntry = observer(function ModuleEntry({
 }: ModuleEntryProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const moduleFullInfo = modules.modules.get(module.id)
+	const moduleFullInfo = modules.modules.get(module.baseInfo.id)
+
+	const defaultVersion: NewClientModuleVersionInfo2 | undefined =
+		module.stableVersion ?? module.prereleaseVersion ?? module.releaseVersions[0]
 
 	return (
 		<CCard className="module-list-entry">
 			<CCardHeader>
 				<h4>
-					<a href="#" onClick={setExpanded} data-module-id={module.id}>
-						{module.name} - {module.version}
+					<a href="#" onClick={setExpanded} data-module-id={module.baseInfo.id}>
+						{module.baseInfo.name}
 					</a>
-					{module.isLegacy && (
+					{defaultVersion?.isLegacy && (
 						<>
 							&nbsp;
 							<FontAwesomeIcon
@@ -141,7 +149,7 @@ const ModuleEntry = observer(function ModuleEntry({
 							&nbsp;
 						</>
 					)}
-					{moduleFullInfo && moduleFullInfo.allVersions.length > 1 && (
+					{/* {moduleFullInfo && moduleFullInfo.allVersions.length > 1 && (
 						<>
 							&nbsp;
 							<FontAwesomeIcon
@@ -151,15 +159,15 @@ const ModuleEntry = observer(function ModuleEntry({
 							/>
 							&nbsp;
 						</>
-					)}
-					{module.hasHelp && (
-						<div className="float_right" onClick={showHelpClick} data-module-id={module.id}>
+					)} */}
+					{defaultVersion?.hasHelp && (
+						<div className="float_right" onClick={showHelpClick} data-module-id={module.baseInfo.id}>
 							<FontAwesomeIcon icon={faQuestionCircle} />
 						</div>
 					)}
 				</h4>
 			</CCardHeader>
-			<CCollapse show={isExpanded}>
+			<CCollapse visible={isExpanded}>
 				<CCardBody>
 					{moduleFullInfo && (
 						<ModuleVersionsList
@@ -184,54 +192,98 @@ interface ModuleVersionsListProps {
 function ModuleVersionsList({ moduleFullInfo, showHelpClick, activateModuleVersion }: ModuleVersionsListProps) {
 	// if (moduleFullInfo.allVersions.length <= 1) return <></>
 
+	const devVersion: NewClientModuleVersionInfo2 | null = useMemo(() => {
+		if (!moduleFullInfo.hasDevVersion) return null
+
+		return {
+			displayName: 'Dev',
+			isLegacy: false,
+			isDev: true,
+			isBuiltin: false,
+			version: {
+				mode: 'custom',
+				id: 'dev',
+			},
+			hasHelp: false,
+		}
+	}, [moduleFullInfo.hasDevVersion])
+
 	return (
 		<>
 			<h5>Installed versions:</h5>
 			<ul className="version-list">
-				{moduleFullInfo.allVersions.map((version, i) => (
-					<li key={i}>
-						{moduleFullInfo.defaultVersion.version === version.version ? (
-							<CButton color="success" size="sm" disabled>
-								Current
-							</CButton>
-						) : (
-							<CButton
-								color="info"
-								size="sm"
-								disabled={moduleFullInfo.allVersions.length <= 1}
-								onClick={activateModuleVersion}
-								data-module-id={moduleFullInfo.baseInfo.id}
-								data-version-id={version.version}
-							>
-								Activate
-							</CButton>
-						)}
-						&nbsp;
-						{version.version}{' '}
-						{version.isLegacy && (
-							<>
-								&nbsp;
-								<FontAwesomeIcon
-									icon={faExclamationTriangle}
-									color="#ff6600"
-									title="The current version of this module has not been updated for Companion 3.0, and may not work fully"
-								/>
-								&nbsp;
-							</>
-						)}
-						{version.hasHelp && (
-							<div
-								className="float_inline"
-								onClick={showHelpClick}
-								data-module-id={moduleFullInfo.baseInfo.id}
-								data-version-id={version.version}
-							>
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</div>
-						)}
-					</li>
+				{devVersion && (
+					<ModuleVersionRow moduleFullInfo={moduleFullInfo} version={devVersion} showHelpClick={showHelpClick} />
+				)}
+				{moduleFullInfo.releaseVersions.map((version, i) => (
+					<ModuleVersionRow key={i} moduleFullInfo={moduleFullInfo} version={version} showHelpClick={showHelpClick} />
+				))}
+				{moduleFullInfo.customVersions.map((version, i) => (
+					<ModuleVersionRow key={i} moduleFullInfo={moduleFullInfo} version={version} showHelpClick={showHelpClick} />
 				))}
 			</ul>
 		</>
 	)
+}
+
+interface ModuleVersionRowProps {
+	moduleFullInfo: NewClientModuleInfo
+	version: NewClientModuleVersionInfo2
+	showHelpClick: React.MouseEventHandler
+}
+
+function ModuleVersionRow({ moduleFullInfo, version, showHelpClick }: ModuleVersionRowProps) {
+	// const isStable = moduleFullInfo.stableVersion && isSameVersion(moduleFullInfo.stableVersion.version, version.version)
+	// const isPrerelease =
+	// 	moduleFullInfo.prereleaseVersion && isSameVersion(moduleFullInfo.prereleaseVersion.version, version.version)
+
+	return (
+		<li>
+			{/* {moduleFullInfo.defaultVersion.version === version.version ? (
+				<CButton color="success" size="sm" disabled>
+					Current
+				</CButton>
+			) : (
+				<CButton
+					color="info"
+					size="sm"
+					disabled={moduleFullInfo.allVersions.length <= 1}
+					onClick={activateModuleVersion}
+					data-module-id={moduleFullInfo.baseInfo.id}
+					data-version-id={version.version}
+				>
+					Activate
+				</CButton>
+			)}
+			&nbsp; */}
+			{version.displayName}
+			{/* {isStable && <span className="badge badge-success">Latest Stable</span>}
+			{isPrerelease && <span className="badge badge-success">Latest Prerelease</span>} */}
+			{version.isLegacy && (
+				<>
+					&nbsp;
+					<FontAwesomeIcon
+						icon={faExclamationTriangle}
+						color="#ff6600"
+						title="The current version of this module has not been updated for Companion 3.0, and may not work fully"
+					/>
+					&nbsp;
+				</>
+			)}
+			{version.hasHelp && (
+				<div
+					className="float_inline"
+					onClick={showHelpClick}
+					data-module-id={moduleFullInfo.baseInfo.id}
+					data-version-id={version.version}
+				>
+					<FontAwesomeIcon icon={faQuestionCircle} />
+				</div>
+			)}
+		</li>
+	)
+}
+
+function isSameVersion(versionA: ModuleVersionInfo, versionB: ModuleVersionInfo) {
+	return versionA.id === versionB.id && versionA.mode === versionB.mode
 }
