@@ -1,8 +1,9 @@
 import fs from 'fs-extra'
 import path from 'path'
-import Database, { Database as SQLiteDB } from 'better-sqlite3'
+import Database, { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage } from '../Resources/Util.js'
+import type { Registry } from '../Registry.js'
 
 export type DatabaseDefault = Record<string, any>
 
@@ -79,9 +80,13 @@ export abstract class DataStoreBase {
 	 */
 	protected readonly name: string = ''
 	/**
+	 * Saved queries
+	 */
+	private statementCache: Record<string, Statement> = {}
+	/**
 	 * The SQLite database
 	 */
-	public store: SQLiteDB | undefined
+	public store: SQLiteDB
 
 	/**
 	 * This needs to be called in the extending class
@@ -115,7 +120,7 @@ export abstract class DataStoreBase {
 	 * Close the file because we're existing
 	 */
 	public close(): void {
-		this.store?.close()
+		this.store.close()
 	}
 
 	/**
@@ -133,11 +138,20 @@ export abstract class DataStoreBase {
 	 */
 	public deleteTableKey(table: string, key: string): void {
 		if (table.length > 0 && key.length > 0) {
-			const query = this.store?.prepare(`DELETE FROM ${table} WHERE id = @id`)
+			let query: Statement
+			const cacheKey = `delete-${table}`
+
+			if (this.statementCache[cacheKey]) {
+				query = this.statementCache[cacheKey]
+			} else {
+				query = this.store.prepare(`DELETE FROM ${table} WHERE id = @id`)
+				this.statementCache[cacheKey]
+			}
+
 			this.logger.silly(`Delete key: ${table} - ${key}`)
 
 			try {
-				query?.run({ id: key })
+				query.run({ id: key })
 			} catch (e: any) {
 				this.logger.warn(`Error deleting ${table} - ${key}: ${e.message}`)
 			}
@@ -171,8 +185,8 @@ export abstract class DataStoreBase {
 	public getTable(table: string): any {
 		let out = {}
 
-		if (table.length > 0 && this.store) {
-			const query = this.store?.prepare(`SELECT id, value FROM ${table}`)
+		if (table.length > 0) {
+			const query = this.store.prepare(`SELECT id, value FROM ${table}`)
 			this.logger.silly(`Get table: ${table}`)
 
 			try {
@@ -208,11 +222,20 @@ export abstract class DataStoreBase {
 		let out
 
 		if (table.length > 0 && key.length > 0) {
-			const query = this.store?.prepare(`SELECT value FROM ${table} WHERE id = @id`)
+			let query: Statement
+			const cacheKey = `get-${table}`
+
+			if (this.statementCache[cacheKey]) {
+				query = this.statementCache[cacheKey]
+			} else {
+				query = this.store.prepare(`SELECT value FROM ${table} WHERE id = @id`)
+				this.statementCache[cacheKey]
+			}
+
 			this.logger.silly(`Get table key: ${table} - ${key}`)
 
 			try {
-				const row = query?.get({ id: key })
+				const row = query.get({ id: key })
 				/** @ts-ignore */
 				if (row && row.value) {
 					try {
@@ -241,8 +264,8 @@ export abstract class DataStoreBase {
 	public hasKey(key: string): boolean {
 		let row
 
-		const query = this.store?.prepare(`SELECT id FROM ${this.defaultTable} WHERE id = @id`)
-		row = query?.get({ id: key })
+		const query = this.store.prepare(`SELECT id FROM ${this.defaultTable} WHERE id = @id`)
+		row = query.get({ id: key })
 
 		return !!row
 	}
@@ -314,13 +337,22 @@ export abstract class DataStoreBase {
 				value = JSON.stringify(value)
 			}
 
-			const query = this.store?.prepare(
-				`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
-			)
+			let query: Statement
+			const cacheKey = `set-${table}`
+
+			if (this.statementCache[cacheKey]) {
+				query = this.statementCache[cacheKey]
+			} else {
+				query = this.store.prepare(
+					`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
+				)
+				this.statementCache[cacheKey]
+			}
+
 			this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
 
 			try {
-				query?.run({ id: key, value: value })
+				query.run({ id: key, value: value })
 			} catch (e: any) {
 				this.logger.warn(`Error updating ${table} - ${key}: ${e.message}`)
 			}
@@ -333,7 +365,7 @@ export abstract class DataStoreBase {
 	 * Attempt to load the database from disk
 	 * @access protected
 	 */
-	protected startSQLite(): void {
+	protected startSQLite(registry: Registry | undefined): void {
 		if (this.cfgDir == ':memory:') {
 			this.store = new Database(this.cfgDir)
 			this.create()
@@ -375,6 +407,21 @@ export abstract class DataStoreBase {
 			}
 
 			this.setBackupCycle()
+		}
+
+		if (!this.store) {
+			try {
+				this.store = new Database(':memory:')
+				showErrorMessage('Error starting companion', 'Could not write to database file.  Companion is running in RAM and will not be saved upon exiting.')
+				console.error('Could not load database file')
+				this.create()
+				this.loadDefaults()
+			} catch (e: any) {
+				showErrorMessage('Error starting companion', 'Could not create a functional database.  Exiting...')
+				console.error('Could not load database file.  Exiting...')
+				registry?.exit(true, false)
+
+			}
 		}
 	}
 

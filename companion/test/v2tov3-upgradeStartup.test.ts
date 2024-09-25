@@ -20,7 +20,7 @@ class DataDatabase extends DataStoreBase {
 	}
 	constructor() {
 		super(':memory:', '', 'main', 'Data/Database')
-		this.startSQLite()
+		this.startSQLite(undefined)
 	}
 	protected create(): void {
 		createTables(this.store, this.defaultTable, this.logger)

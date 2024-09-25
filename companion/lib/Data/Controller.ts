@@ -12,7 +12,7 @@ export class DataController {
 	readonly metrics: DataMetrics
 
 	constructor(registry: Registry) {
-		this.cache = new DataCache(registry.appInfo.configDir)
+		this.cache = new DataCache(registry, registry.appInfo.configDir)
 		this.userconfig = new DataUserConfig(registry)
 		this.importExport = new DataImportExport(registry)
 		this.metrics = new DataMetrics(registry)
