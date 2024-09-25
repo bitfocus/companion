@@ -412,7 +412,10 @@ export abstract class DataStoreBase {
 		if (!this.store) {
 			try {
 				this.store = new Database(':memory:')
-				showErrorMessage('Error starting companion', 'Could not write to database file.  Companion is running in RAM and will not be saved upon exiting.')
+				showErrorMessage(
+					'Error starting companion',
+					'Could not write to database file.  Companion is running in RAM and will not be saved upon exiting.'
+				)
 				console.error('Could not load database file')
 				this.create()
 				this.loadDefaults()
@@ -420,7 +423,6 @@ export abstract class DataStoreBase {
 				showErrorMessage('Error starting companion', 'Could not create a functional database.  Exiting...')
 				console.error('Could not load database file.  Exiting...')
 				registry?.exit(true, false)
-
 			}
 		}
 	}
