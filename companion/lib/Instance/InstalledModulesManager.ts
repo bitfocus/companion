@@ -12,8 +12,13 @@ import { Readable } from 'node:stream'
 import { ModuleManifest } from '@companion-module/base'
 import * as tarfs from 'tar-fs'
 import { head } from 'lodash-es'
+import { EventEmitter } from 'node:events'
 
-export class InstanceInstalledModulesManager {
+interface InstalledModulesEvents {
+	installed: [moduleDir: string, manifest: ModuleManifest]
+}
+
+export class InstanceInstalledModulesManager extends EventEmitter {
 	readonly #logger = LogController.createLogger('Instance/UserModulesManager')
 
 	/**
@@ -53,6 +58,8 @@ export class InstanceInstalledModulesManager {
 	}
 
 	constructor(modulesManager: InstanceModules, db: DataDatabase, appInfo: AppInfo) {
+		super()
+
 		this.#modulesManager = modulesManager
 		this.#db = db
 		this.#storeModulesDir = path.join(appInfo.configDir, 'store-modules')
@@ -107,9 +114,10 @@ export class InstanceInstalledModulesManager {
 				await fs.rmdir(moduleDir, { recursive: true }).catch(() => null)
 			}
 
-			return 'ok'
+			// Let other interested parties know that a module has been installed
+			this.emit('installed', moduleDir, manifestJson)
 
-			// return null
+			return null
 		})
 	}
 }
