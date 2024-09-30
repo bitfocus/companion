@@ -43,7 +43,7 @@ export function upgradeStartup(db: DataDatabase): void {
 			allUpgrades[i - 1].upgradeStartup(db, logger)
 		}
 
-		db.setKey('page_config_version', targetVersion)
+		//db.setKey('page_config_version', targetVersion)
 	}
 }
 

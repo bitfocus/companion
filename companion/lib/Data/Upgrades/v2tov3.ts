@@ -98,7 +98,11 @@ function convertToControls(db: DataStoreBase): void {
 		db.deleteKey('bank')
 		db.deleteKey('feedbacks')
 		db.deleteKey('bank_action_sets')
+		db.deleteKey('bank_rotate_left_actions')
+		db.deleteKey('bank_rotate_right_actions')
 		db.setKey('controls', newControls)
+
+		db.setKey("page_config_version", 3)
 	}
 
 	// patch v3 pre https://github.com/bitfocus/companion/pull/2187

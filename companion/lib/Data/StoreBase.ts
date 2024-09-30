@@ -281,6 +281,19 @@ export abstract class DataStoreBase {
 	}
 
 	/**
+	 * Import raw data into a table
+	 * @param table - the table to import to
+	 * @param data - the data
+	 */
+	public importTable(table: string, data: any) {
+		if (typeof data === 'object') {
+			for (const [key, value] of Object.entries(data)) {
+				this.setTableKey(table, key, value)
+			}
+		}
+	}
+
+	/**
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected abstract loadDefaults(): void
