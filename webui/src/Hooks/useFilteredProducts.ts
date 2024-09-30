@@ -14,13 +14,19 @@ export function useFilteredProducts(filter: string): ModuleProductInfo[] {
 	const allProducts: ModuleProductInfo[] = useComputed(
 		() =>
 			Array.from(modules.modules.values()).flatMap((module) =>
-				module.baseInfo.products.map((product) => ({ product, ...module }))
+				module.baseInfo.products.map((product) => ({
+					product,
+					...module,
+					// fuzzySearch can't handle arrays, so flatten the array to a string first
+					keywords: module.baseInfo.keywords?.join(';') ?? '',
+				}))
 			),
 		[modules]
 	)
 
 	if (!filter) return allProducts
 
+	// TODO - this is giving low quality results now, need to improve
 	return fuzzySearch(filter, allProducts, {
 		keys: ['product', 'name', 'manufacturer', 'keywords'],
 		threshold: -10_000,

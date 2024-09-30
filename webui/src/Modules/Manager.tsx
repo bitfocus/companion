@@ -5,6 +5,7 @@ import React, { useCallback, useState } from 'react'
 import { MyErrorBoundary } from '../util.js'
 import { InstalledModules } from './InstalledModules.js'
 import { NavLink, useLocation } from 'react-router-dom'
+import { AllModuleVersions } from './AllModuleVersions.js'
 
 export const MODULES_MANAGER_PREFIX = '/modules'
 
@@ -33,15 +34,25 @@ export function ModulesManager() {
 
 			<CNav variant="tabs">
 				<CNavItem>
-					<CNavLink to={`${MODULES_MANAGER_PREFIX}/installed`} as={NavLink}>
-						<FontAwesomeIcon icon={faFloppyDisk} /> Installed
+					<CNavLink to={`${MODULES_MANAGER_PREFIX}/all-installed`} as={NavLink}>
+						<FontAwesomeIcon icon={faFloppyDisk} /> All Installed?
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to={`${MODULES_MANAGER_PREFIX}/all-versions`} as={NavLink}>
+						<FontAwesomeIcon icon={faFloppyDisk} /> All version?
 					</CNavLink>
 				</CNavItem>
 			</CNav>
 			<CTabContent>
-				<CTabPane className={getClassForPane('installed')}>
+				<CTabPane className={getClassForPane('all-installed')}>
 					<MyErrorBoundary>
 						<InstalledModules />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('all-versions')}>
+					<MyErrorBoundary>
+						<AllModuleVersions />
 					</MyErrorBoundary>
 				</CTabPane>
 			</CTabContent>
