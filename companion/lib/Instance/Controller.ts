@@ -32,7 +32,7 @@ import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
-import { InstanceUserModulesManager } from './UserModulesManager.js'
+import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 const InstancesRoom = 'instances'
@@ -60,7 +60,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	readonly status: InstanceStatus
 	readonly moduleHost: ModuleHost
 	readonly modules: InstanceModules
-	readonly userModulesManager: InstanceUserModulesManager
+	readonly userModulesManager: InstanceInstalledModulesManager
 
 	constructor(registry: Registry) {
 		super(registry, 'Instance/Controller')
@@ -74,7 +74,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.status = new InstanceStatus(registry.io, registry.controls)
 		this.moduleHost = new ModuleHost(registry, this.status, this.#configStore)
 		this.modules = new InstanceModules(registry.io, registry.api_router, this)
-		this.userModulesManager = new InstanceUserModulesManager(this.modules, registry.db, registry.appInfo)
+		this.userModulesManager = new InstanceInstalledModulesManager(this.modules, registry.db, registry.appInfo)
 
 		// Prepare for clients already
 		this.broadcastChanges(this.#configStore.getAllInstanceIds())
@@ -108,13 +108,12 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	 * @param extraModulePath - extra directory to search for modules
 	 */
 	async initInstances(extraModulePath: string): Promise<void> {
-		const connectionIds = this.#configStore.getAllInstanceIds()
-		this.logger.silly('instance_init', connectionIds)
+		await this.userModulesManager.init()
 
 		await this.modules.initInstances(extraModulePath)
 
-		await this.userModulesManager.init()
-
+		const connectionIds = this.#configStore.getAllInstanceIds()
+		this.logger.silly('instance_init', connectionIds)
 		for (const id of connectionIds) {
 			this.#activate_module(id, false)
 		}

@@ -357,10 +357,6 @@ export class InstanceModules {
 		})
 
 		client.onPromise('connections:get-help', this.#getHelpForModule)
-
-		client.onPromise('modules:activate-version', (moduleId, versionId) => {
-			// TODO
-		})
 	}
 
 	/**

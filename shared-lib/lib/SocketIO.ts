@@ -321,7 +321,7 @@ export interface ClientToBackendEventsMap {
 		versionMode: ModuleVersionMode,
 		versionId: string | null
 	) => [err: string, result: null] | [err: null, result: HelpDescription]
-	'modules:activate-version': (moduleId: string, versionId: string) => void
+	'modules:install-custom-module': (moduleTar: Uint8Array) => string | null
 
 	'variables:instance-values': (label: string) => CompanionVariableValues | undefined
 
