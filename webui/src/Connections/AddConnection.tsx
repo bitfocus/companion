@@ -1,4 +1,13 @@
-import React, { useContext, useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
+import React, {
+	useContext,
+	useState,
+	useCallback,
+	useRef,
+	forwardRef,
+	useImperativeHandle,
+	useMemo,
+	useEffect,
+} from 'react'
 import {
 	CAlert,
 	CButton,
@@ -27,6 +36,7 @@ import {
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
+import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 
 interface AddConnectionsPanelProps {
 	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
@@ -218,7 +228,7 @@ const AddConnectionModal = observer(
 					setShow(true)
 					setModuleInfo(info)
 
-					// TODO - make sure this is a valid selection
+					// There is a useEffect below that ensures this is valid
 					setSelectedVersion({
 						mode: 'stable',
 						id: null,
@@ -244,6 +254,23 @@ const AddConnectionModal = observer(
 			moduleVersionMode: selectedVersion.mode,
 			moduleVersionId: selectedVersion.id,
 		})
+
+		const versionOptions = useMemo(() => moduleInfo && getConnectionVersionSelectOptions(moduleInfo), [moduleInfo])
+
+		// Ensure the currently selection version is a valid option
+		useEffect(() => {
+			if (!versionOptions) return
+
+			setSelectedVersion((value) => {
+				const valueStr = JSON.stringify(value)
+
+				// Check if value is still valid
+				if (versionOptions.find((v) => v.value === valueStr)) return value
+
+				// It is not, so choose the first option
+				return JSON.parse(versionOptions[0].value)
+			})
+		}, [versionOptions])
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
@@ -286,7 +313,11 @@ const AddConnectionModal = observer(
 										value={JSON.stringify(selectedVersion)}
 										onChange={(e) => setSelectedVersion(JSON.parse(e.currentTarget.value))}
 									>
-										<ConnectionVersionSelectOptions moduleInfo={moduleInfo} />
+										{versionOptions?.map((v) => (
+											<option key={v.value} value={v.value}>
+												{v.label}
+											</option>
+										))}
 									</CFormSelect>
 								</CCol>
 							</CForm>
@@ -355,36 +386,28 @@ function findNextConnectionLabel(
 	return label
 }
 
-interface ConnectionVersionSelectOptionsProps {
-	moduleInfo: NewClientModuleInfo
-}
-export function ConnectionVersionSelectOptions({ moduleInfo }: ConnectionVersionSelectOptionsProps) {
-	return (
-		<>
-			{moduleInfo.stableVersion && (
-				<option value={JSON.stringify(moduleInfo.stableVersion.version)}>{moduleInfo.stableVersion.displayName}</option>
-			)}
-			{moduleInfo.prereleaseVersion && (
-				<option value={JSON.stringify(moduleInfo.prereleaseVersion.version)}>
-					{moduleInfo.prereleaseVersion.displayName}
-				</option>
-			)}
+export function getConnectionVersionSelectOptions(moduleInfo: NewClientModuleInfo): DropdownChoiceInt[] {
+	const choices: DropdownChoiceInt[] = []
 
-			{moduleInfo.releaseVersions.map((version) => {
-				return (
-					<option key={JSON.stringify(version.version)} value={JSON.stringify(version.version)}>
-						{version.displayName}
-					</option>
-				)
-			})}
+	if (moduleInfo.stableVersion)
+		choices.push({
+			value: JSON.stringify(moduleInfo.stableVersion.version),
+			label: moduleInfo.stableVersion.displayName,
+		})
 
-			{moduleInfo.customVersions.map((version) => {
-				return (
-					<option key={JSON.stringify(version.version)} value={JSON.stringify(version.version)}>
-						{version.displayName}
-					</option>
-				)
-			})}
-		</>
-	)
+	if (moduleInfo.prereleaseVersion)
+		choices.push({
+			value: JSON.stringify(moduleInfo.prereleaseVersion.version),
+			label: moduleInfo.prereleaseVersion.displayName,
+		})
+
+	for (const version of moduleInfo.releaseVersions) {
+		choices.push({ value: JSON.stringify(version.version), label: version.displayName })
+	}
+
+	for (const version of moduleInfo.customVersions) {
+		choices.push({ value: JSON.stringify(version.version), label: version.displayName })
+	}
+
+	return choices
 }

@@ -17,7 +17,7 @@ import type {
 	NewClientModuleInfo,
 	NewClientModuleVersionInfo2,
 } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ConnectionVersionSelectOptions } from './AddConnection.js'
+import { getConnectionVersionSelectOptions } from './AddConnection.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
 
 interface ConnectionEditPanelProps {
@@ -263,7 +263,11 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 								: 'Select the version of the module to use for this connection'
 						}
 					>
-						<ConnectionVersionSelectOptions moduleInfo={moduleInfo} />
+						{getConnectionVersionSelectOptions(moduleInfo).map((v) => (
+							<option key={v.value} value={v.value}>
+								{v.label}
+							</option>
+						))}
 					</CFormSelect>
 				</CCol>
 
