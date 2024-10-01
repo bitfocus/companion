@@ -16,7 +16,7 @@ import {
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { socketEmitPromise, useComputed } from '../util.js'
 import { getModuleVersionInfoForConnection } from '../Connections/Util.js'
-import { CAlert } from '@coreui/react'
+import { CAlert, CButton } from '@coreui/react'
 
 export const AllModuleVersions = observer(function InstalledModules() {
 	const { socket, modules } = useContext(RootAppStoreContext)
@@ -38,7 +38,7 @@ export const AllModuleVersions = observer(function InstalledModules() {
 	const [loadError, setLoadError] = useState<string | null>(null)
 
 	const loadModuleFile = useCallback(
-		(e: FormEvent<HTMLInputElement>) => {
+		(e: React.FormEvent<HTMLInputElement>) => {
 			const newFile = e.currentTarget.files?.[0]
 			e.currentTarget.value = null as any
 
@@ -113,6 +113,8 @@ interface ModuleEntryProps {
 }
 
 const ModuleEntry = observer(function ModuleEntry({ moduleInfo }: ModuleEntryProps) {
+	const { socket } = useContext(RootAppStoreContext)
+
 	return (
 		<>
 			{moduleInfo.hasDevVersion && <p>{moduleInfo.baseInfo.id} - DEV</p>}
@@ -126,6 +128,26 @@ const ModuleEntry = observer(function ModuleEntry({ moduleInfo }: ModuleEntryPro
 			{moduleInfo.customVersions.map((v) => (
 				<p>
 					{moduleInfo.baseInfo.id} - custom {v.version.id}
+					<CButton
+						color="danger"
+						size="sm"
+						onClick={() => {
+							// TODO
+							console.log('aaa')
+							if (v.version.id) {
+								socketEmitPromise(
+									socket,
+									'modules:uninstall-custom-module',
+									[moduleInfo.baseInfo.id, v.version.id],
+									20000
+								).catch((e) => {
+									console.error('Failed to uninstall module:', e)
+								})
+							}
+						}}
+					>
+						Remove
+					</CButton>
 				</p>
 			))}
 		</>

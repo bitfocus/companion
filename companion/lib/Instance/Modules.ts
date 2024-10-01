@@ -16,10 +16,8 @@
  */
 
 import fs from 'fs-extra'
-import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
-import { fileURLToPath } from 'url'
-import { compact } from 'lodash-es'
+import { cloneDeep, compact } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import LogController from '../Log/Controller.js'
 import type express from 'express'
@@ -32,8 +30,10 @@ import type {
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
-import { InstanceController } from './Controller.js'
+import type { InstanceController } from './Controller.js'
 import semver from 'semver'
+import jsonPatch from 'fast-json-patch'
+import { ModuleDirs } from './types.js'
 
 const ModulesRoom = 'modules'
 
@@ -148,11 +148,77 @@ export class InstanceModules {
 	 */
 	readonly #moduleScanner = new InstanceModuleScanner()
 
-	constructor(io: UIHandler, api_router: express.Router, instance: InstanceController) {
+	readonly #moduleDirs: ModuleDirs
+
+	constructor(io: UIHandler, api_router: express.Router, instance: InstanceController, moduleDirs: ModuleDirs) {
 		this.#io = io
 		this.#instanceController = instance
+		this.#moduleDirs = moduleDirs
 
 		api_router.get('/help/module/:moduleId/:versionMode/:versionId/*', this.#getHelpAsset)
+	}
+
+	async loadInstalledModule(moduleDir: string, mode: 'custom' | 'release', manifest: ModuleManifest): Promise<void> {
+		this.#logger.info(`New ${mode} module installed: ${manifest.id}`)
+
+		switch (mode) {
+			case 'custom': {
+				const customModule = await this.#moduleScanner.loadInfoForModule(moduleDir, false)
+
+				if (!customModule) throw new Error(`Failed to load custom module. Missing from disk at "${moduleDir}"`)
+				if (customModule?.manifest.id !== manifest.id)
+					throw new Error(`Mismatched module id: ${customModule?.manifest.id} !== ${manifest.id}`)
+
+				// Update the module info
+				const moduleInfo = this.#getOrCreateModuleEntry(manifest.id)
+				moduleInfo.customVersions[customModule.display.version] = {
+					...customModule,
+					type: 'custom',
+					versionId: customModule.display.version,
+				}
+
+				// Notify clients
+				this.#emitModuleUpdate(manifest.id)
+
+				// Ensure any modules using this version are started
+				await this.#instanceController.reloadUsesOfModule(manifest.id, 'custom', manifest.version)
+
+				break
+			}
+			case 'release': {
+				// TODO
+				break
+			}
+			default:
+				this.#logger.info(`Unknown module type: ${mode}`)
+		}
+	}
+
+	async uninstallModule(moduleId: string, mode: 'custom' | 'release', versionId: string): Promise<void> {
+		const moduleInfo = this.#knownModules.get(moduleId)
+		if (!moduleInfo) throw new Error('Module not found when removing version')
+
+		switch (mode) {
+			case 'custom': {
+				delete moduleInfo.customVersions[versionId]
+
+				break
+			}
+			case 'release': {
+				delete moduleInfo.releaseVersions[versionId]
+
+				break
+			}
+			default:
+				this.#logger.info(`Unknown module type: ${mode}`)
+				return
+		}
+
+		// Notify clients
+		this.#emitModuleUpdate(moduleId)
+
+		// Ensure any modules using this version are started
+		await this.#instanceController.reloadUsesOfModule(moduleId, mode, versionId)
 	}
 
 	/**
@@ -172,16 +238,8 @@ export class InstanceModules {
 	 * @param extraModulePath - extra directory to search for modules
 	 */
 	async initInstances(extraModulePath: string): Promise<void> {
-		function generatePath(subpath: string): string {
-			if (isPackaged()) {
-				return path.join(__dirname, subpath)
-			} else {
-				return fileURLToPath(new URL(path.join('../../..', subpath), import.meta.url))
-			}
-		}
-
 		const legacyCandidates = await this.#moduleScanner.loadInfoForModulesInDir(
-			generatePath('bundled-modules/_legacy'),
+			this.#moduleDirs.bundledLegacyModulesDir,
 			false
 		)
 
@@ -199,11 +257,10 @@ export class InstanceModules {
 		}
 
 		// Load bundled modules
-		const candidates = await this.#moduleScanner.loadInfoForModulesInDir(
-			path.resolve(generatePath('bundled-modules')),
-			false
-		)
-		for (const candidate of candidates) {
+		const bundledModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.bundledModulesDir, false)
+		// And moduels from the store
+		const storeModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.storeModulesDir, true)
+		for (const candidate of bundledModules.concat(storeModules)) {
 			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
 			moduleInfo.releaseVersions[candidate.display.version] = {
 				...candidate,
@@ -214,7 +271,16 @@ export class InstanceModules {
 			}
 		}
 
-		// TODO - search other user dirs
+		// Search for custom modules
+		const customModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.customModulesDir, false)
+		for (const customModule of customModules) {
+			const moduleInfo = this.#getOrCreateModuleEntry(customModule.manifest.id)
+			moduleInfo.customVersions[customModule.display.version] = {
+				...customModule,
+				type: 'custom',
+				versionId: customModule.display.version,
+			}
+		}
 
 		if (extraModulePath) {
 			this.#logger.info(`Looking for extra modules in: ${extraModulePath}`)
@@ -295,36 +361,47 @@ export class InstanceModules {
 		// 		isOverride: true,
 		// 	})
 
-		// 	const newJson = cloneDeep(this.getModulesJson())
-
-		// 	// Now broadcast to any interested clients
-		// 	if (this.#io.countRoomMembers(ModulesRoom) > 0) {
-		// 		const oldObj = this.#lastModulesJson?.[reloadedModule.manifest.id]
-		// 		if (oldObj) {
-		// 			const patch = jsonPatch.compare(oldObj, reloadedModule.display)
-		// 			if (patch.length > 0) {
-		// 				this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
-		// 					type: 'update',
-		// 					id: reloadedModule.manifest.id,
-		// 					patch,
-		// 				})
-		// 			}
-		// 		} else {
-		// 			this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
-		// 				type: 'add',
-		// 				id: reloadedModule.manifest.id,
-		// 				info: reloadedModule.display,
-		// 			})
-		// 		}
-		// 	}
-
-		// 	this.#lastModulesJson = newJson
+		// this.#emitModuleUpdate(reloadedModule.manifest.id)
 
 		// 	// restart usages of this module
-		// 	this.#instanceController.reloadUsesOfModule(reloadedModule.manifest.id)
+		// 	await this.#instanceController.reloadUsesOfModule(reloadedModule.manifest.id)
 		// } else {
 		// 	this.#logger.info(`Failed to find module in: ${fullpath}`)
 		// }
+	}
+
+	#emitModuleUpdate = (changedModuleId: string): void => {
+		const newJson = cloneDeep(this.getModulesJson())
+
+		const newObj = newJson[changedModuleId]
+
+		// Now broadcast to any interested clients
+		if (this.#io.countRoomMembers(ModulesRoom) > 0) {
+			const oldObj = this.#lastModulesJson?.[changedModuleId]
+			if (!newObj) {
+				this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
+					type: 'remove',
+					id: changedModuleId,
+				})
+			} else if (oldObj) {
+				const patch = jsonPatch.compare(oldObj, newObj)
+				if (patch.length > 0) {
+					this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
+						type: 'update',
+						id: changedModuleId,
+						patch,
+					})
+				}
+			} else {
+				this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
+					type: 'add',
+					id: changedModuleId,
+					info: newObj,
+				})
+			}
+		}
+
+		this.#lastModulesJson = newJson
 	}
 
 	/**

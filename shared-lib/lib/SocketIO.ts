@@ -322,6 +322,7 @@ export interface ClientToBackendEventsMap {
 		versionId: string | null
 	) => [err: string, result: null] | [err: null, result: HelpDescription]
 	'modules:install-custom-module': (moduleTar: Uint8Array) => string | null
+	'modules:uninstall-custom-module': (moduleId: string, versionId: string) => string | null
 
 	'variables:instance-values': (label: string) => CompanionVariableValues | undefined
 

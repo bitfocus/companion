@@ -57,12 +57,12 @@ export interface NewClientModuleInfo {
 	// allVersions: NewClientModuleVersionInfo[]
 }
 
-export type ModuleInfoUpdate = ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp
+export type ModuleInfoUpdate = ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp | ModuleInfoUpdateRemoveOp
 
-// export interface ModuleInfoUpdateRemoveOp {
-// 	type: 'remove'
-// 	id: string
-// }
+export interface ModuleInfoUpdateRemoveOp {
+	type: 'remove'
+	id: string
+}
 export interface ModuleInfoUpdateAddOp {
 	type: 'add'
 	id: string

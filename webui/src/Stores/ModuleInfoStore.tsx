@@ -30,9 +30,9 @@ export class ModuleInfoStore {
 			case 'add':
 				this.modules.set(change.id, change.info)
 				break
-			// case 'remove':
-			// 	this.modules.delete(change.id)
-			// 	break
+			case 'remove':
+				this.modules.delete(change.id)
+				break
 			case 'update': {
 				const oldObj = this.modules.get(change.id)
 				if (!oldObj) throw new Error(`Got update for unknown module: ${change.id}`)

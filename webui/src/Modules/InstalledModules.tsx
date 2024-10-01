@@ -42,19 +42,6 @@ export const InstalledModules = observer(function InstalledModules() {
 		helpModalRef.current?.show(moduleId, versionId) // TODO - this needs to pass in more data too
 	}, [])
 
-	const activateModuleVersion = useCallback(
-		(e: React.MouseEvent) => {
-			const moduleId = e.currentTarget.getAttribute('data-module-id')
-			const versionId = e.currentTarget.getAttribute('data-version-id')
-			if (!moduleId || !versionId) return
-
-			socketEmitPromise(socket, 'modules:activate-version', [moduleId, versionId]).catch((e) => {
-				console.error('Failed to activate module version', e)
-			})
-		},
-		[socket]
-	)
-
 	let components: JSX.Element[] = []
 	try {
 		const searchResults = useFilteredProducts(filter)
@@ -66,7 +53,6 @@ export const InstalledModules = observer(function InstalledModules() {
 					key={module.baseInfo.id}
 					module={module}
 					showHelpClick={showHelpClick}
-					activateModuleVersion={activateModuleVersion}
 					setExpanded={changeExpanded}
 					isExpanded={expandedId === module.baseInfo.id}
 				/>
@@ -112,7 +98,6 @@ export const InstalledModules = observer(function InstalledModules() {
 interface ModuleEntryProps {
 	module: ModuleProductInfo
 	showHelpClick: React.MouseEventHandler
-	activateModuleVersion: React.MouseEventHandler
 	setExpanded: React.MouseEventHandler
 	isExpanded: boolean
 }
@@ -120,7 +105,6 @@ interface ModuleEntryProps {
 const ModuleEntry = observer(function ModuleEntry({
 	module,
 	showHelpClick,
-	activateModuleVersion,
 	setExpanded,
 	isExpanded,
 }: ModuleEntryProps) {
@@ -169,13 +153,7 @@ const ModuleEntry = observer(function ModuleEntry({
 			</CCardHeader>
 			<CCollapse visible={isExpanded}>
 				<CCardBody>
-					{moduleFullInfo && (
-						<ModuleVersionsList
-							moduleFullInfo={moduleFullInfo}
-							showHelpClick={showHelpClick}
-							activateModuleVersion={activateModuleVersion}
-						/>
-					)}
+					{moduleFullInfo && <ModuleVersionsList moduleFullInfo={moduleFullInfo} showHelpClick={showHelpClick} />}
 					{/* <p>{JSON.stringify(moduleFullInfo)}</p> */}
 				</CCardBody>
 			</CCollapse>
@@ -186,10 +164,9 @@ const ModuleEntry = observer(function ModuleEntry({
 interface ModuleVersionsListProps {
 	moduleFullInfo: NewClientModuleInfo
 	showHelpClick: React.MouseEventHandler
-	activateModuleVersion: React.MouseEventHandler
 }
 
-function ModuleVersionsList({ moduleFullInfo, showHelpClick, activateModuleVersion }: ModuleVersionsListProps) {
+function ModuleVersionsList({ moduleFullInfo, showHelpClick }: ModuleVersionsListProps) {
 	// if (moduleFullInfo.allVersions.length <= 1) return <></>
 
 	const devVersion: NewClientModuleVersionInfo2 | null = useMemo(() => {

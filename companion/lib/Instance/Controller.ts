@@ -33,7 +33,11 @@ import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-a
 import type { ClientSocket } from '../UI/Handler.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
-import { ModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleDirs } from './types.js'
+import path from 'path'
+import { isPackaged } from '../Resources/Util.js'
+import { fileURLToPath } from 'url'
 
 const InstancesRoom = 'instances'
 
@@ -70,11 +74,26 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 		this.#configStore = new ConnectionConfigStore(registry.db, this.broadcastChanges.bind(this))
 
+		function generatePath(subpath: string): string {
+			if (isPackaged()) {
+				return path.join(__dirname, subpath)
+			} else {
+				return fileURLToPath(new URL(path.join('../../..', subpath), import.meta.url))
+			}
+		}
+
+		const moduleDirs: ModuleDirs = {
+			bundledLegacyModulesDir: path.resolve(generatePath('modules')),
+			bundledModulesDir: path.resolve(generatePath('bundled-modules')),
+			storeModulesDir: path.join(registry.appInfo.configDir, 'store-modules'),
+			customModulesDir: path.join(registry.appInfo.configDir, 'custom-modules'),
+		}
+
 		this.definitions = new InstanceDefinitions(registry)
 		this.status = new InstanceStatus(registry.io, registry.controls)
 		this.moduleHost = new ModuleHost(registry, this.status, this.#configStore)
-		this.modules = new InstanceModules(registry.io, registry.api_router, this)
-		this.userModulesManager = new InstanceInstalledModulesManager(this.modules, registry.db, registry.appInfo)
+		this.modules = new InstanceModules(registry.io, registry.api_router, this, moduleDirs)
+		this.userModulesManager = new InstanceInstalledModulesManager(this.modules, registry.db, moduleDirs)
 
 		// Prepare for clients already
 		this.broadcastChanges(this.#configStore.getAllInstanceIds())
@@ -121,7 +140,9 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.emit('connection_added')
 	}
 
-	reloadUsesOfModule(moduleId: string): void {
+	async reloadUsesOfModule(moduleId: string, mode: 'release' | 'custom', versionId: string): Promise<void> {
+		// TODO - use the version!
+
 		// restart usages of this module
 		const { connectionIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleId)
 		for (const id of connectionIds) {

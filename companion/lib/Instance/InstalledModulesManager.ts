@@ -11,14 +11,14 @@ import * as ts from 'tar-stream'
 import { Readable } from 'node:stream'
 import { ModuleManifest } from '@companion-module/base'
 import * as tarfs from 'tar-fs'
-import { head } from 'lodash-es'
-import { EventEmitter } from 'node:events'
+import type { ModuleDirs } from './types.js'
 
 interface InstalledModulesEvents {
-	installed: [moduleDir: string, manifest: ModuleManifest]
+	installed: [moduleDir: string, type: 'custom' | 'release', manifest: ModuleManifest]
+	uninstalled: [moduleId: string, type: 'custom' | 'release', versionId: string]
 }
 
-export class InstanceInstalledModulesManager extends EventEmitter {
+export class InstanceInstalledModulesManager {
 	readonly #logger = LogController.createLogger('Instance/UserModulesManager')
 
 	/**
@@ -43,27 +43,25 @@ export class InstanceInstalledModulesManager extends EventEmitter {
 	 */
 	#store: UserModuleEntry[]
 
-	/**
-	 * The directory store fetched modules will be stored in
-	 */
-	get storeModulesDir(): string {
-		return this.#storeModulesDir
-	}
+	// /**
+	//  * The directory store fetched modules will be stored in
+	//  */
+	// get storeModulesDir(): string {
+	// 	return this.#storeModulesDir
+	// }
 
-	/**
-	 * The directory user loaded modules will be stored in
-	 */
-	get customModulesDir(): string {
-		return this.#customModulesDir
-	}
+	// /**
+	//  * The directory user loaded modules will be stored in
+	//  */
+	// get customModulesDir(): string {
+	// 	return this.#customModulesDir
+	// }
 
-	constructor(modulesManager: InstanceModules, db: DataDatabase, appInfo: AppInfo) {
-		super()
-
+	constructor(modulesManager: InstanceModules, db: DataDatabase, dirs: ModuleDirs) {
 		this.#modulesManager = modulesManager
 		this.#db = db
-		this.#storeModulesDir = path.join(appInfo.configDir, 'store-modules')
-		this.#customModulesDir = path.join(appInfo.configDir, 'custom-modules')
+		this.#storeModulesDir = dirs.storeModulesDir
+		this.#customModulesDir = dirs.customModulesDir
 
 		this.#store = db.getKey('user-modules', [])
 	}
@@ -108,14 +106,35 @@ export class InstanceInstalledModulesManager extends EventEmitter {
 			try {
 				await fs.mkdirp(moduleDir)
 
-				Readable.from(uncompressedData).pipe(tarfs.extract(moduleDir, { strip: 1 }))
+				await new Promise((resolve) => {
+					Readable.from(uncompressedData)
+						.pipe(tarfs.extract(moduleDir, { strip: 1 }))
+						.on('finish', resolve)
+				})
+
+				console.log('extracted to', moduleDir)
 			} catch (e) {
 				// cleanup the dir, just to be sure it doesn't get stranded
-				await fs.rmdir(moduleDir, { recursive: true }).catch(() => null)
+				await fs.rm(moduleDir, { recursive: true }).catch(() => null)
 			}
 
 			// Let other interested parties know that a module has been installed
-			this.emit('installed', moduleDir, manifestJson)
+			await this.#modulesManager.loadInstalledModule(moduleDir, 'custom', manifestJson)
+
+			return null
+		})
+
+		client.onPromise('modules:uninstall-custom-module', async (moduleId, versionId) => {
+			console.log('modules:uninstall-custom-module', moduleId, versionId)
+
+			const moduleDir = path.join(this.#customModulesDir, `${moduleId}-${versionId}`)
+			if (!fs.existsSync(moduleDir)) return `Module ${moduleId} v${versionId} doesn't exist`
+
+			// Stop any usages of the module
+			await this.#modulesManager.uninstallModule(moduleId, 'custom', versionId)
+
+			// Delete the module code
+			await fs.rm(moduleDir, { recursive: true }).catch(() => null)
 
 			return null
 		})
