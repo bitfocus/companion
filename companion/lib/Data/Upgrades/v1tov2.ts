@@ -32,7 +32,7 @@ function convertDatabase15To32(db: DataStoreBase, _logger: Logger): void {
 	db.setKey('bank_release_actions', oldReleaseActions)
 	db.setKey('feedbacks', oldFeedbacks)
 
-	db.setKey("page_config_version", 2)
+	db.setKey('page_config_version', 2)
 }
 
 function convertPage15To32(oldObj: any): any {

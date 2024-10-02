@@ -34,6 +34,9 @@ function addControlIdsToPages(db: DataStoreBase): void {
 			}
 		}
 	}
+
+	db.setKey('controls', controls)
+	db.setKey('page', pages)
 }
 
 /**
@@ -47,6 +50,10 @@ function convertDatabaseToV4(db: DataStoreBase, _logger: Logger) {
 	if (userconfig.xkeys_enable && userconfig.xkeys_legacy_layout === undefined) {
 		userconfig.xkeys_legacy_layout = true
 	}
+
+	db.setKey('surface-groups', {})
+
+	db.setKey('page_config_version', 4)
 }
 
 /**

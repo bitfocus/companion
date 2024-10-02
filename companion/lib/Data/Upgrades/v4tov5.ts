@@ -38,6 +38,8 @@ function convertDatabaseToV5(db: DataStoreBase, _logger: Logger) {
 		const surfaces = db.getKey('surface-groups', {})
 		db.setKey('surface_groups', surfaces)
 		db.deleteKey('surface-groups')
+
+		db.setKey('page_config_version', 5)
 	}
 }
 

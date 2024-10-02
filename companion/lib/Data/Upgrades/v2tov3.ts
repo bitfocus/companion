@@ -53,6 +53,7 @@ function convertToControls(db: DataStoreBase): void {
 		const oldReleaseActions = db.getKey('bank_release_actions', {})
 		const oldRotateLeftActions = db.getKey('bank_rotate_left_actions', {})
 		const oldRotateRightActions = db.getKey('bank_rotate_right_actions', {})
+		const oldDeviceonfig = db.getKey('deviceconfig', {})
 
 		const newSteps: any = {}
 
@@ -95,14 +96,20 @@ function convertToControls(db: DataStoreBase): void {
 			}
 		}
 
+		if (oldDeviceonfig['emulator']) {
+			oldDeviceonfig['emulator:emulator'] = oldDeviceonfig['emulator']
+			oldDeviceonfig['emulator'] = undefined
+		}
+
 		db.deleteKey('bank')
 		db.deleteKey('feedbacks')
 		db.deleteKey('bank_action_sets')
 		db.deleteKey('bank_rotate_left_actions')
 		db.deleteKey('bank_rotate_right_actions')
 		db.setKey('controls', newControls)
+		db.setKey('deviceconfig', oldDeviceonfig)
 
-		db.setKey("page_config_version", 3)
+		db.setKey('page_config_version', 3)
 	}
 
 	// patch v3 pre https://github.com/bitfocus/companion/pull/2187

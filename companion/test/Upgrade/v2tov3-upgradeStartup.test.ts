@@ -1,9 +1,15 @@
-import { describe, it, expect } from 'vitest'
-import { DataStoreBase, DatabaseDefault } from '../../lib/Data/StoreBase.js'
+import { describe, it, expect, vi } from 'vitest'
+import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import LogController from '../../lib/Log/Controller.js'
 import v2tov3 from '../../lib/Data/Upgrades/v2tov3.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import fs from 'fs-extra'
+
+let nano = 0
+
+vi.mock('nanoid', () => {
+	return { nanoid: () => '' + ++nano }
+})
 
 function CreateDataDatabase() {
 	const db = new DataDatabase()
@@ -17,11 +23,6 @@ function CreateDataDatabase() {
 }
 
 class DataDatabase extends DataStoreBase {
-	static Defaults: DatabaseDefault = {
-		main: {
-			page_config_version: 3,
-		},
-	}
 	constructor() {
 		super(':memory:', '', 'main', 'Data/Database')
 		this.startSQLite()

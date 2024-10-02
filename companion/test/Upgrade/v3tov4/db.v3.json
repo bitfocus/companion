@@ -7355,9 +7355,11 @@
 						"action": "button_pressrelease",
 						"options": {
 							"page": 3,
-							"bank": 18
+							"bank": 18,
+							"force": true
 						},
-						"delay": 0
+						"delay": 0,
+						"actionId": "button_pressrelease"
 					}
 				]
 			},
@@ -7401,9 +7403,11 @@
 						"action": "button_pressrelease",
 						"options": {
 							"page": 3,
-							"bank": 19
+							"bank": 19,
+							"force": true
 						},
-						"delay": 0
+						"delay": 0,
+						"actionId": "button_pressrelease"
 					}
 				]
 			},
@@ -7447,9 +7451,11 @@
 						"action": "button_pressrelease",
 						"options": {
 							"page": 3,
-							"bank": 20
+							"bank": 20,
+							"force": true
 						},
-						"delay": 0
+						"delay": 0,
+						"actionId": "button_pressrelease"
 					}
 				]
 			},
@@ -7493,9 +7499,11 @@
 						"action": "button_pressrelease",
 						"options": {
 							"page": 3,
-							"bank": 21
+							"bank": 21,
+							"force": true
 						},
-						"delay": 0
+						"delay": 0,
+						"actionId": "button_pressrelease"
 					}
 				]
 			},
@@ -7578,7 +7586,9 @@
 				"page": 1,
 				"xOffset": 0,
 				"yOffset": 0
-			}
+			},
+			"type": "Emulator",
+			"integrationType": "emulator"
 		}
 	},
 	"instance": {
@@ -7590,8 +7600,9 @@
 				"host": "127.0.0.1",
 				"modelID": "0"
 			},
-			"lastUpgradeIndex": 3,
-			"sortOrder": 0
+			"lastUpgradeIndex": 4,
+			"sortOrder": 0,
+			"isFirstInit": false
 		},
 		"SkQQuDPAA": {
 			"instance_type": "irisdown-countdowntimer",
@@ -7600,7 +7611,9 @@
 			"config": {
 				"host": "127.0.0.1"
 			},
-			"sortOrder": 1
+			"sortOrder": 1,
+			"lastUpgradeIndex": 0,
+			"isFirstInit": false
 		},
 		"CUBzwfGYP": {
 			"instance_type": "shure-wireless",
@@ -7611,10 +7624,12 @@
 				"modelID": "ad4q",
 				"meteringOn": true,
 				"meteringInterval": 5000,
-				"host": "127.0.0.1"
+				"host": "127.0.0.1",
+				"variableFormat": "units"
 			},
 			"lastUpgradeIndex": 0,
-			"sortOrder": 2
+			"sortOrder": 2,
+			"isFirstInit": false
 		}
 	},
 	"page": {
@@ -7932,7 +7947,7 @@
 		"osc_listen_port": 12321,
 		"emberplus_enabled": true,
 		"xkeys_enable": false,
-		"setup_wizard": 22,
+		"setup_wizard": 30,
 		"page_plusminus": false,
 		"remove_topbar": false,
 		"elgato_plugin_enable": false,
@@ -7957,6 +7972,8 @@
 		"https_ext_chain": "",
 		"admin_lockout": false,
 		"admin_timeout": 5,
-		"admin_password": ""
+		"admin_password": "",
+		"usb_hotplug": false,
+		"contour_shuttle_enable": false
 	}
 }
