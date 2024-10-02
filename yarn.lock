@@ -1453,7 +1453,7 @@ __metadata:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@coreui/coreui": "npm:^5.1.2"
-    "@coreui/react": "npm:^5.3.0"
+    "@coreui/react": "patch:@coreui/react@npm%3A5.4.0#~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch"
     "@fontsource/fira-code": "npm:^5.1.0"
     "@fontsource/roboto": "npm:^5.1.0"
     "@fortawesome/fontawesome-svg-core": "npm:^6.6.0"
@@ -1554,7 +1554,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coreui/coreui@npm:^5.1.0, @coreui/coreui@npm:^5.1.2":
+"@coreui/coreui@npm:^5.1.2":
   version: 5.1.2
   resolution: "@coreui/coreui@npm:5.1.2"
   peerDependencies:
@@ -1563,17 +1563,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coreui/react@npm:^5.3.0":
-  version: 5.3.0
-  resolution: "@coreui/react@npm:5.3.0"
+"@coreui/react@npm:5.4.0":
+  version: 5.4.0
+  resolution: "@coreui/react@npm:5.4.0"
   dependencies:
-    "@coreui/coreui": "npm:^5.1.0"
+    "@coreui/coreui": "npm:^5.1.2"
     "@popperjs/core": "npm:^2.11.8"
     prop-types: "npm:^15.8.1"
   peerDependencies:
     react: ">=17"
     react-dom: ">=17"
-  checksum: 10c0/6d7904706e4751a1f2e23f97878294415fdcccee996fc119f629c9c629436c89d612dc3b55b17982fc96a5a2126600bde00c4ae5b7b6d2aa50b0c7c9874d0461
+  checksum: 10c0/0989cb36e2f400110b255ecbf4bfea5ee9d4ff8435a0271c6b67b023d9285b402f0c3eb7d7095f0005d5436ec83f5ffa1efe0c8524af8509c2e0be77797517b0
+  languageName: node
+  linkType: hard
+
+"@coreui/react@patch:@coreui/react@npm%3A5.4.0#~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch":
+  version: 5.4.0
+  resolution: "@coreui/react@patch:@coreui/react@npm%3A5.4.0#~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch::version=5.4.0&hash=56767e"
+  dependencies:
+    "@coreui/coreui": "npm:^5.1.2"
+    "@popperjs/core": "npm:^2.11.8"
+    prop-types: "npm:^15.8.1"
+  peerDependencies:
+    react: ">=17"
+    react-dom: ">=17"
+  checksum: 10c0/d05537106c03eeeb39d1f21a80fa695c82ed12f1235c99475fc8cdbf6f361951d072e5eb80632d39e6c8dab6c8280ce146269b43a2c9d791b41503d5da561dda
   languageName: node
   linkType: hard
 
