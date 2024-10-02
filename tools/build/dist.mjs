@@ -74,6 +74,17 @@ if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x6
 	delete dependencies['utf-8-validate']
 }
 
+const packageResolutions = {
+	// Force the same custom `node-gyp-build` version to allow better cross compiling
+	'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
+}
+// Preserve some resolutions to the dist package.json
+for (const [name, version] of Object.entries(companionPkgJson.resolutions)) {
+	if (name.startsWith('@napi-rs/canvas')) {
+		packageResolutions[name] = version
+	}
+}
+
 const nodeVersion = await fs.readFile('.node-version')
 await fs.writeFile(
 	'dist/package.json',
@@ -85,10 +96,7 @@ await fs.writeFile(
 			main: 'main.js',
 			dependencies: dependencies,
 			engines: { node: nodeVersion.toString().trim() },
-			resolutions: {
-				// Force the same custom `node-gyp-build` version to allow better cross compiling
-				'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
-			},
+			resolutions: packageResolutions,
 			packageManager: companionPkgJson.packageManager,
 		},
 		undefined,
