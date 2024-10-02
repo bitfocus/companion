@@ -66,7 +66,7 @@ if (!fs.existsSync('../webui/build')) {
 	console.warn('Skipping webui build, you may need to run `yarn dist:webui` if changes have been made recently')
 }
 
-console.log('Starting application')
+console.log('Starting typescript watchers')
 
 concurrently([
 	{
@@ -127,7 +127,7 @@ chokidar
 				{
 					after: true,
 					before: false,
-					wait: 100,
+					wait: 1000,
 				}
 			)
 			cachedDebounces[moduleDirName] = fn
@@ -148,8 +148,11 @@ async function start() {
 	})
 }
 
+let canStart = false
 const restart = debounceFn(
 	() => {
+		if (!canStart) return
+
 		if (node) {
 			// Check if process has already exited
 			if (node.exitCode !== null) node = null
@@ -177,7 +180,7 @@ const restart = debounceFn(
 	{
 		after: true,
 		before: false,
-		wait: 100,
+		wait: 1000,
 	}
 )
 
@@ -191,4 +194,9 @@ process.on('SIGTERM', signalHandler)
 process.on('SIGQUIT', signalHandler)
 
 // Trigger a start soon
-setTimeout(() => restart(), 5000)
+setTimeout(() => {
+	console.log('Starting application')
+	canStart = true
+
+	restart()
+}, 3000)
