@@ -30,91 +30,91 @@ export class DataUserConfig extends CoreBase {
 	/**
 	 * The defaults for the user config fields
 	 */
-        static Defaults: UserConfigModel = {
-          setup_wizard: 0,
+    static Defaults: UserConfigModel = {
+		setup_wizard: 0,
 
-          page_direction_flipped: false,
-          page_plusminus: false,
-          remove_topbar: false,
-          show_pressed_border: true,
+		page_direction_flipped: false,
+		page_plusminus: false,
+		remove_topbar: false,
+		show_pressed_border: false,
 
-          xkeys_enable: true,
-          xkeys_legacy_layout: false,
-          elgato_plugin_enable: false,  // Also disables local streamdeck
-          usb_hotplug: true,
-          loupedeck_enable: false,
-          contour_shuttle_enable: false,
-          vec_footpedal_enable: false,
-          blackmagic_controller_enable: false,
-          mystrix_enable: false,
+		xkeys_enable: true,
+		xkeys_legacy_layout: false,
+		elgato_plugin_enable: false, // Also disables local streamdeck
+		usb_hotplug: true,
+		loupedeck_enable: false,
+		contour_shuttle_enable: false,
+		vec_footpedal_enable: false,
+		blackmagic_controller_enable: false,
+		mystrix_enable: false,
 
-          pin_enable: false,
-          link_lockouts: false,
-          pin: '',
-          pin_timeout: 0,
+		pin_enable: false,
+		link_lockouts: false,
+		pin: '',
+		pin_timeout: 0,
 
-          http_api_enabled: true,
-          http_legacy_api_enabled: false,
+		http_api_enabled: true,
+		http_legacy_api_enabled: false,
 
-          tcp_enabled: false,
-          tcp_listen_port: 16759,
-          tcp_legacy_api_enabled: false,
+		tcp_enabled: false,
+		tcp_listen_port: 16759,
+		tcp_legacy_api_enabled: false,
 
-          udp_enabled: false,
-          udp_listen_port: 16759,
-          udp_legacy_api_enabled: false,
+		udp_enabled: false,
+		udp_listen_port: 16759,
+		udp_legacy_api_enabled: false,
 
-          osc_enabled: false,
-          osc_listen_port: 12321,
-          osc_legacy_api_enabled: false,
+		osc_enabled: false,
+		osc_listen_port: 12321,
+		osc_legacy_api_enabled: false,
 
-          rosstalk_enabled: false,
+		rosstalk_enabled: false,
 
-          emberplus_enabled: false,
+		emberplus_enabled: false,
 
-          videohub_panel_enabled: false,
+		videohub_panel_enabled: false,
 
-          artnet_enabled: false,
-          artnet_universe: 1,
-          artnet_channel: 1,
+		artnet_enabled: false,
+		artnet_universe: 1,
+		artnet_channel: 1,
 
-          https_enabled: false,
-          https_port: 8443,
-          https_cert_type: 'self',
-          https_self_cn: '',
-          https_self_expiry: 365,
-          https_self_cert: '',
-          https_self_cert_created: '',
-          https_self_cert_cn: '',
-          https_self_cert_expiry: '',
-          https_self_cert_private: '',
-          https_self_cert_public: '',
-          https_ext_private_key: '',
-          https_ext_certificate: '',
-          https_ext_chain: '',
+		https_enabled: false,
+		https_port: 8443,
+		https_cert_type: 'self',
+		https_self_cn: '',
+		https_self_expiry: 365,
+		https_self_cert: '',
+		https_self_cert_created: '',
+		https_self_cert_cn: '',
+		https_self_cert_expiry: '',
+		https_self_cert_private: '',
+		https_self_cert_public: '',
+		https_ext_private_key: '',
+		https_ext_certificate: '',
+		https_ext_chain: '',
 
-          admin_lockout: false,
-          admin_timeout: 5,
-          admin_password: '',
+		admin_lockout: false,
+		admin_timeout: 5,
+		admin_password: '',
 
-          gridSize: {
-            minColumn: 0,
-            maxColumn: 7,
-            minRow: 0,
-            maxRow: 3,
-          },
-          gridSizeInlineGrow:
-              false,  // TODO: temporary until the styling of growing is better
+		gridSize: {
+			minColumn: 0,
+			maxColumn: 7,
+			minRow: 0,
+			maxRow: 3,
+		},
+		gridSizeInlineGrow: false, // TODO: temporary until the styling of growing is better
 
-          installName: '',
+		installName: '',
 
-          discoveryEnabled: true,
-        } /**
-           * The user configuration settings
-           */
-        #data: UserConfigModel
+		discoveryEnabled: true,
+	}
+	/**
+	 * The user configuration settings
+	 */
+	#data: UserConfigModel
 
-        constructor(registry: Registry) {
+	constructor(registry: Registry) {
 		super(registry, 'Data/UserConfig')
 
 		this.registry.on('http_rebind', (bind_ip) => {
