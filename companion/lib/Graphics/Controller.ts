@@ -38,6 +38,7 @@ export interface GraphicsOptions {
 	page_direction_flipped: boolean
 	page_plusminus: boolean
 	remove_topbar: boolean
+	show_pressed_border: boolean
 }
 
 /**
@@ -121,6 +122,7 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 			page_direction_flipped: this.userconfig.getKey('page_direction_flipped'),
 			page_plusminus: this.userconfig.getKey('page_plusminus'),
 			remove_topbar: this.userconfig.getKey('remove_topbar'),
+			show_pressed_border: this.userconfig.getKey('show_pressed_border'),
 		}
 
 		this.#renderQueue = new ImageWriteQueue(
@@ -325,7 +327,8 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 		} else if (key == 'page_plusminus') {
 			this.#drawOptions.page_plusminus = !!value
 			this.invalidatePageControls()
-		} else if (key == 'remove_topbar') {
+		}
+		else if (key == 'remove_topbar') {
 			this.#drawOptions.remove_topbar = !!value
 			this.logger.silly('Topbar removed')
 			// Delay redrawing to give connections a chance to adjust
@@ -333,6 +336,9 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 				this.instance.moduleHost.resubscribeAllFeedbacks()
 				this.regenerateAll(false)
 			}, 1000)
+		}
+		else if (key == 'show_pressed_border') {
+			this.#drawOptions.show_pressed_border = !!value
 		}
 	}
 

@@ -4,6 +4,7 @@ export interface UserConfigModel {
 	page_direction_flipped: boolean
 	page_plusminus: boolean
 	remove_topbar: boolean
+	show_pressed_border: boolean
 
 	xkeys_enable: boolean
 	xkeys_legacy_layout: boolean
