@@ -2,9 +2,10 @@ import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
 import React, { createContext, useContext, useMemo, useEffect, useCallback, memo } from 'react'
-import Select from 'react-select'
+import Select, { createFilter } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
+import { WindowedMenuList } from 'react-windowed-select'
 
 export const MenuPortalContext = createContext<HTMLElement | null>(null)
 
@@ -181,6 +182,8 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 		options: options,
 		value: isMultiple ? currentValue : currentValue[0],
 		onChange: onChange,
+		filterOption: createFilter({ ignoreAccents: false }),
+		components: { MenuList: WindowedMenuList },
 	}
 
 	const isValidNewOption = useCallback(
