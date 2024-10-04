@@ -1167,6 +1167,7 @@ class DataImportExport extends CoreBase {
 		const fixupFeedbacks = (
 			/** @type {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} */ feedbacks
 		) => {
+			/** @type {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} */
 			const newFeedbacks = []
 			for (const feedback of feedbacks) {
 				const instanceInfo = instanceIdMap[feedback?.instance_id]
