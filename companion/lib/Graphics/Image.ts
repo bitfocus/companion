@@ -20,8 +20,19 @@ import LogController from '../Log/Controller.js'
 import { PNG } from 'pngjs'
 import type { HorizontalAlignment, VerticalAlignment } from '../Resources/Util.js'
 
-const DEFAULT_FONTS =
-	'Companion-sans, Companion-symbols1, Companion-symbols2, Companion-symbols3, Companion-symbols4, Companion-symbols5, Companion-symbols6, Companion-gurmukhi, Companion-simplified-chinese, Companion-emoji'
+const DEFAULT_FONTS = [
+	'Companion-sans',
+	'Companion-symbols1',
+	'Companion-symbols2',
+	'Companion-symbols3',
+	'Companion-symbols4',
+	'Companion-symbols5',
+	'Companion-symbols6',
+	'Companion-gurmukhi',
+	'Companion-simplified-chinese',
+	'Companion-korean',
+	'Companion-emoji',
+].join(', ')
 
 async function pngParse(pngData: string | Buffer): Promise<PNG> {
 	return new Promise((resolve, reject) => {
