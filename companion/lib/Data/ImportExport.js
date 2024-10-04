@@ -1164,20 +1164,27 @@ class DataImportExport extends CoreBase {
 			steps: {},
 		}
 
-		if (control.feedbacks) {
-			/** @type {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} */
+		const fixupFeedbacks = (
+			/** @type {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} */ feedbacks
+		) => {
 			const newFeedbacks = []
-			for (const feedback of control.feedbacks) {
+			for (const feedback of feedbacks) {
 				const instanceInfo = instanceIdMap[feedback?.instance_id]
 				if (feedback && instanceInfo) {
 					newFeedbacks.push({
-						...cloneDeep(feedback),
+						...feedback,
 						instance_id: instanceInfo.id,
 						upgradeIndex: instanceInfo.lastUpgradeIndex,
+						children:
+							feedback.instance_id === 'internal' && feedback.children ? fixupFeedbacks(feedback.children) : undefined,
 					})
 				}
 			}
-			result.feedbacks = newFeedbacks
+			return newFeedbacks
+		}
+
+		if (control.feedbacks) {
+			result.feedbacks = fixupFeedbacks(cloneDeep(control.feedbacks))
 		}
 
 		/** @type {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} */
