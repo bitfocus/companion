@@ -1,5 +1,19 @@
 # Bitfocus Companion
 
+## Companion v3.4.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Use macos 10.15 compatible canvas library
+- Improve dropdown performance
+- Fix ui modals closing immediately
+- Fix logic feedbacks not importing correctly
+- Docker image not fully supporting dev modules
+
+### 🐞 MODULE FIXES
+
+-
+
 ## Companion v3.4.1 - Release Notes
 
 ### 🐞 BUG FIXES
