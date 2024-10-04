@@ -1021,19 +1021,25 @@ export class DataImportExport extends CoreBase {
 			steps: {},
 		}
 
-		if (control.feedbacks) {
+		const fixupFeedbacks = (feedbacks: FeedbackInstance[]) => {
 			const newFeedbacks: FeedbackInstance[] = []
-			for (const feedback of control.feedbacks) {
+			for (const feedback of feedbacks) {
 				const instanceInfo = instanceIdMap[feedback?.instance_id]
 				if (feedback && instanceInfo) {
 					newFeedbacks.push({
-						...cloneDeep(feedback),
+						...feedback,
 						instance_id: instanceInfo.id,
 						upgradeIndex: instanceInfo.lastUpgradeIndex,
+						children:
+							feedback.instance_id === 'internal' && feedback.children ? fixupFeedbacks(feedback.children) : undefined,
 					})
 				}
 			}
-			result.feedbacks = newFeedbacks
+			return newFeedbacks
+		}
+
+		if (control.feedbacks) {
+			result.feedbacks = fixupFeedbacks(cloneDeep(control.feedbacks))
 		}
 
 		const allActions: ActionInstance[] = []
