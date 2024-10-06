@@ -26,6 +26,7 @@ import { CoreBase } from '../Core/Base.js'
 import archiver from 'archiver'
 import path from 'path'
 import fs from 'fs'
+import yaml from 'yaml'
 import zlib from 'node:zlib'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
@@ -64,7 +65,7 @@ import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/M
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
-	if (raw === 'json-gz' || raw === 'json') return raw
+	if (raw === 'json-gz' || raw === 'json' || raw === 'yaml') return raw
 	return undefined
 }
 
@@ -97,6 +98,13 @@ function downloadBlob(
 			'Content-Disposition': `attachment; filename="${filename}"`,
 		})
 		res.end(JSON.stringify(data, undefined, '\t'))
+	} else if (format === 'yaml') {
+		res.status(200)
+		res.set({
+			'Content-Type': 'application/yaml',
+			'Content-Disposition': `attachment; filename="${filename}.yaml"`,
+		})
+		res.end(yaml.stringify(data))
 	} else {
 		next(new Error(`Unknown format: ${format}`))
 	}

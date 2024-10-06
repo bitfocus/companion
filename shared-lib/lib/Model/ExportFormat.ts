@@ -1,1 +1,1 @@
-export type ExportFormat = 'json' | 'json-gz'
+export type ExportFormat = 'json' | 'json-gz' | 'yaml'
