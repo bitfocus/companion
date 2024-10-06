@@ -76,10 +76,8 @@ function downloadBlob(
 	filename: string,
 	format: DownloadFormat | undefined
 ): void {
-	const dataStr = JSON.stringify(data, undefined, '\t')
-
 	if (!format || format === 'json-gz') {
-		zlib.gzip(dataStr, (err, result) => {
+		zlib.gzip(JSON.stringify(data), (err, result) => {
 			if (err) {
 				logger.warn(`Failed to gzip data, retrying uncompressed: ${err}`)
 				downloadBlob(logger, res, next, data, filename, 'json')
@@ -98,7 +96,7 @@ function downloadBlob(
 			'Content-Type': 'application/json',
 			'Content-Disposition': `attachment; filename="${filename}"`,
 		})
-		res.end(dataStr)
+		res.end(JSON.stringify(data, undefined, '\t'))
 	} else {
 		next(new Error(`Unknown format: ${format}`))
 	}
