@@ -56,14 +56,14 @@ import type {
 } from '@companion-app/shared/Model/ImportExport.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
+import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ActionInstance, ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
-type DownloadFormat = 'json-gz' | 'json'
-function parseDownloadFormat(raw: ParsedQs[0]): DownloadFormat | undefined {
+function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 	if (raw === 'json-gz' || raw === 'json') return raw
 	return undefined
 }
@@ -74,7 +74,7 @@ function downloadBlob(
 	next: express.NextFunction,
 	data: SomeExportv4,
 	filename: string,
-	format: DownloadFormat | undefined
+	format: ExportFormat | undefined
 ): void {
 	if (!format || format === 'json-gz') {
 		zlib.gzip(JSON.stringify(data), (err, result) => {
