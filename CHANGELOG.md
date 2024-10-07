@@ -6,13 +6,18 @@
 
 - Use macos 10.15 compatible canvas library
 - Improve dropdown performance
+- Adding page buttons broken
 - Fix ui modals closing immediately
 - Fix logic feedbacks not importing correctly
 - Docker image not fully supporting dev modules
+- Add additional font character sets #3031
 
 ### 🐞 MODULE FIXES
 
--
+- bmd-atem
+- analogway-awj
+- generic-webtable
+- spotify-remote
 
 ## Companion v3.4.1 - Release Notes
 
