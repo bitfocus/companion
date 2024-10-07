@@ -135,7 +135,12 @@ export function ImportExport() {
 							<label className="btn btn-warning btn-file">
 								<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 								Import configuration
-								<input type="file" onChange={loadSnapshot} style={{ display: 'none' }} accept=".companionconfig" />
+								<input
+									type="file"
+									onChange={loadSnapshot}
+									style={{ display: 'none' }}
+									accept=".companionconfig,.companionconfig.yaml"
+								/>
 							</label>
 						</div>
 					</>
