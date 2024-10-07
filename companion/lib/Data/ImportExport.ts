@@ -499,7 +499,8 @@ export class DataImportExport extends CoreBase {
 
 			let rawObject
 			try {
-				rawObject = JSON.parse(dataStr.toString())
+				// YAML parser will handle JSON too
+				rawObject = yaml.parse(dataStr.toString())
 			} catch (e) {
 				return ['File is corrupted or unknown format']
 			}
