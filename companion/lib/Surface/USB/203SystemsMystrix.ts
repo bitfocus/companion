@@ -20,8 +20,8 @@ import LogController, { Logger } from '../../Log/Controller.js'
 import { colorToRgb, RgbColor } from './Util.js'
 import HID from 'node-hid'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { GridSize } from '../Util.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
  * This is an implementation of a simple MIDI device for the 203 Systems Mystrix control surface.

@@ -17,7 +17,7 @@
 import { EventEmitter } from 'events'
 import { XKeys, setupXkeysPanel, Color as XKeysColor } from 'xkeys'
 import LogController, { Logger } from '../../Log/Controller.js'
-import { convertPanelIndexToXY, convertXYToIndexForPanel, GridSize } from '../Util.js'
+import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
 import { LEGACY_BUTTONS_PER_COLUMN, LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Util/Constants.js'
 import {
 	OffsetConfigFields,
@@ -25,7 +25,7 @@ import {
 	RotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { LocalUSBDeviceOptions, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 

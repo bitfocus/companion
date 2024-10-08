@@ -1,5 +1,4 @@
-export type GridSize = { columns: number; rows: number }
-export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0'
+import type { GridSize, SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
  * Convert a coordinate to surface index

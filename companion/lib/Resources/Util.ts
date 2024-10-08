@@ -2,11 +2,11 @@ import { serializeIsVisibleFn } from '@companion-module/base/dist/internal/base.
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import type { SurfaceRotation } from '../Surface/Util.js'
 import type { Registry } from '../Registry.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@companion-app/shared/Model/Options.js'
 import type { CompanionAlignment, CompanionInputFieldBase } from '@companion-module/base'
+import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
  * Combine rgba components to a 32bit value
@@ -264,7 +264,7 @@ export function clamp(val: number, min: number, max: number): number {
 /**
  * Translate rotation to @julusian/image-rs equivalent
  */
-export function translateRotation(rotation: SurfaceRotation | 90 | -90 | 180 | 0 | null): imageRs.RotationMode | null {
+export function translateRotation(rotation: SurfaceRotation | null): imageRs.RotationMode | null {
 	if (rotation === 90 || rotation === 'surface90') return imageRs.RotationMode.CW270
 	if (rotation === -90 || rotation === 'surface-90') return imageRs.RotationMode.CW90
 	if (rotation === 180 || rotation === 'surface180') return imageRs.RotationMode.CW180
@@ -276,7 +276,7 @@ export function translateRotation(rotation: SurfaceRotation | 90 | -90 | 180 | 0
  */
 export async function transformButtonImage(
 	render: ImageResult,
-	rotation: SurfaceRotation | 90 | -90 | 180 | 0 | null,
+	rotation: SurfaceRotation | null,
 	targetWidth: number,
 	targetHeight: number,
 	targetFormat: imageRs.PixelFormat

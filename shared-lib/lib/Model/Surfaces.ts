@@ -8,6 +8,9 @@ import type {
 } from '@companion-module/base'
 import { CompanionInputFieldTextInputExtended, EncodeIsVisible2 } from './Options.js'
 
+export type GridSize = { columns: number; rows: number }
+export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0' | 0 | -90 | 90 | 180
+
 export interface RowsAndColumns {
 	rows: number
 	columns: number
@@ -35,6 +38,20 @@ export interface ClientDevicesListItem {
 	surfaces: ClientSurfaceItem[]
 }
 
+export interface SurfaceConfig {
+	config: SurfacePanelConfig
+	groupConfig: SurfaceGroupConfig
+
+	groupId: string | null
+
+	name?: string
+
+	// Properties defined by the panel/integration, that may not be defined for old configs
+	type: string | undefined
+	integrationType: string | undefined
+	gridSize: GridSize | undefined
+}
+
 export interface SurfaceGroupConfig {
 	name: string
 	last_page_id: string
@@ -47,7 +64,20 @@ export interface SurfaceGroupConfig {
 	startup_page?: number
 }
 
-export type SurfacePanelConfig = Record<string, any>
+export interface SurfacePanelConfig {
+	// defaults from the panel - TODO properly
+	brightness: number
+	rotation: SurfaceRotation
+
+	// companion owned defaults
+	never_lock: boolean
+	xOffset: number
+	yOffset: number
+	groupId: string | null
+
+	// panel custom properties
+	[key: string]: any
+}
 
 export type SurfacesUpdate = SurfacesUpdateRemoveOp | SurfacesUpdateAddOp | SurfacesUpdateUpdateOp
 

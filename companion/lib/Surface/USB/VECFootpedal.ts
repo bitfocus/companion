@@ -19,9 +19,8 @@ import EventEmitter from 'events'
 import vecFootpedal, { VecFootpedalDeviceInfo } from 'vec-footpedal'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import { GridSize } from '../Util.js'
 
 type XYValue = [x: number, y: number]
 interface ModelInfo {
