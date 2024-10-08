@@ -657,7 +657,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 				location: null,
 
 				size: config?.gridSize || null,
-				offset: { columns: config?.xOffset ?? 0, rows: config?.yOffset ?? 0 },
+				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 
 			if (surfaceHandler) {
