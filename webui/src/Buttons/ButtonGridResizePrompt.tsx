@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import React, { useContext } from 'react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExpand } from '@fortawesome/free-solid-svg-icons'
+import { faClose, faExpand } from '@fortawesome/free-solid-svg-icons'
 
 export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt(): React.ReactNode {
 	const { socket, surfaces, userConfig } = useContext(RootAppStoreContext)
@@ -16,9 +16,14 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 		socket.emit('set_userconfig_key', 'gridSize', overflowing.neededBounds)
 	}
 
+	const doDismiss = () => {
+		if (!overflowing) return
+		socket.emit('set_userconfig_key', 'gridSizePromptGrow', false)
+	}
+
 	return (
 		<>
-			<CAlert color="info">
+			<CAlert color="info" onClose={doDismiss} dismissible>
 				You have some surfaces which overflow the current grid bounds
 				<ul>
 					{overflowing.surfaces.map((s) => (
