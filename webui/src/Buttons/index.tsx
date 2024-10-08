@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
-import { faCalculator, faGift, faPaperPlane, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faGift, faLayerGroup, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets/Presets.js'
@@ -296,7 +296,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						</CNavItem>
 						<CNavItem>
 							<CNavLink active={activeTab === 'pages'} onClick={() => doChangeTab('pages')}>
-								<FontAwesomeIcon icon={faPaperPlane} /> Pages
+								<FontAwesomeIcon icon={faLayerGroup} /> Pages
 							</CNavLink>
 						</CNavItem>
 						<CNavItem>

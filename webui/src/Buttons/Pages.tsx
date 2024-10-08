@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faTrash, faPencil, faSort } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faTrash, faPencil, faSort, faShareFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { AddPagesModal, AddPagesModalRef } from './PagesAddModal.js'
@@ -57,7 +57,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 		deleteRef.current?.show(
 			'Delete page?',
 			[
-				`Are you sure you want to delete page ${pageNumber} "${pageName ?? 'PAGE'}"?`,
+				`Are you sure you want to delete Page ${pageNumber}${pageName && pageName !== 'PAGE' ? ', "' + pageName + '"' : ''}?`,
 				'This will delete all controls on the page, and will adjust the page numbers of all following pages',
 			],
 			'Delete',
@@ -70,56 +70,64 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 	}, [])
 
 	return (
-		<CRow>
-			<CCol xs={12}>
-				<GenericConfirmModal ref={deleteRef} />
-				<AddPagesModal ref={addRef} />
-				<EditPagePropertiesModal ref={editRef} />
+		<div>
+			<h5>Pages</h5>
+			<p>
+				You can insert, delete, and re-arrange the order of pages here. You can also give each page a unique name to
+				help you identify its purpose.
+			</p>
+			<CRow>
+				<CCol xs={12}>
+					<GenericConfirmModal ref={deleteRef} />
+					<AddPagesModal ref={addRef} />
+					<EditPagePropertiesModal ref={editRef} />
 
-				<table className="table table-responsive-sm pages-list-table">
-					<thead>
-						<tr>
-							<th></th>
-							<th>NO</th>
-							<th>Name</th>
-							<th>&nbsp;</th>
-						</tr>
-					</thead>
-					<tbody>
-						{pages.data.map((info, id) => (
-							<PageListRow
-								key={id}
-								pageNumber={id + 1}
-								info={info}
-								pageCount={pages.data.length}
-								goToPage={goToPage}
-								configurePage={configurePage}
-								doInsertPage={doInsertPage}
-								doDeletePage={doDeletePage}
-							/>
-						))}
-						<tr>
-							<td></td>
-							<td></td>
-							<td></td>
-							<td style={{ textAlign: 'center' }}>
-								<CButtonGroup>
-									<CButton
-										color="white"
-										size="sm"
-										onClick={doInsertPage}
-										title="Insert page at end"
-										data-page={pages.data.length + 1}
-									>
-										<FontAwesomeIcon icon={faPlus} />
-									</CButton>
-								</CButtonGroup>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</CCol>
-		</CRow>
+					<table className="table table-responsive-sm pages-list-table">
+						<thead>
+							<tr>
+								<th></th>
+								<th style={{ textAlign: 'center' }}>Number</th>
+								<th>Name</th>
+								<th>&nbsp;</th>
+							</tr>
+						</thead>
+						<tbody>
+							{pages.data.map((info, id) => (
+								<PageListRow
+									key={id}
+									pageNumber={id + 1}
+									info={info}
+									pageCount={pages.data.length}
+									goToPage={goToPage}
+									configurePage={configurePage}
+									doInsertPage={doInsertPage}
+									doDeletePage={doDeletePage}
+								/>
+							))}
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td style={{ textAlign: 'center' }}>
+									<CButtonGroup style={{ textAlign: 'center', width: '100%' }}>
+										<CButton
+											color="info"
+											size="sm"
+											onClick={doInsertPage}
+											title="Insert page at end"
+											data-page={pages.data.length + 1}
+										>
+											<FontAwesomeIcon icon={faPlus} />
+											&nbsp;Insert Page
+										</CButton>
+									</CButtonGroup>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</CCol>
+			</CRow>
+		</div>
 	)
 })
 
@@ -196,41 +204,47 @@ const PageListRow = observer(function PageListRow({
 
 	return (
 		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
-			<td ref={drag} className="td-reorder">
+			<td ref={drag} className="td-reorder" style={{ width: 10 }}>
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td style={{ width: 0 }}>
-				<CButton color="primary" variant="ghost" onClick={goToPage} data-page={pageNumber}>
-					{pageNumber}
-				</CButton>
-			</td>
+			<td style={{ width: 80, textAlign: 'center', fontWeight: 'bold' }}>{pageNumber}</td>
 			<td>{info.name ?? ''}</td>
-			<td style={{ width: 0 }}>
+			<td style={{ width: 300 }}>
 				<CButtonGroup>
+					<CButton color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
+						<FontAwesomeIcon icon={faShareFromSquare} />
+						<br></br>
+						Jump to Page
+					</CButton>
 					<CButton
-						color="white"
+						color="secondary"
 						size="sm"
 						onClick={configurePage}
-						title="Edit page"
+						title="Edit page name"
 						data-page={pageNumber}
 						data-page-info={JSON.stringify(info)}
 					>
 						<FontAwesomeIcon icon={faPencil} />
+						<br></br>
+						Edit Name
 					</CButton>
-					<CButton color="white" size="sm" onClick={doInsertPage} title="Insert page before" data-page={pageNumber}>
+					<CButton color="secondary" size="sm" onClick={doInsertPage} title="Insert page above" data-page={pageNumber}>
 						<FontAwesomeIcon icon={faPlus} />
+						<br></br>Insert Above
 					</CButton>
 
 					<CButton
-						color="white"
+						color="secondary"
 						size="sm"
 						onClick={doDeletePage}
-						title="Delete"
+						title="Delete page"
 						data-page={pageNumber}
 						data-name={info.name}
 						disabled={pageCount <= 1}
 					>
-						<FontAwesomeIcon icon={faTrash} />
+						<FontAwesomeIcon color="#d50215" icon={faTrash} />
+						<br></br>
+						Delete Page
 					</CButton>
 				</CButtonGroup>
 			</td>
