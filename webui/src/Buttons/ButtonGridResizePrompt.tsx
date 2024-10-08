@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import React, { useContext } from 'react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faClose, faExpand } from '@fortawesome/free-solid-svg-icons'
+import { faExpand } from '@fortawesome/free-solid-svg-icons'
 
 export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt(): React.ReactNode {
 	const { socket, surfaces, userConfig } = useContext(RootAppStoreContext)
