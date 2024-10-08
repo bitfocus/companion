@@ -4508,15 +4508,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pngjs@npm:^6.0.5":
-  version: 6.0.5
-  resolution: "@types/pngjs@npm:6.0.5"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: 10c0/11979d0690e774046d3a1e8cfc613a6b53a613909d81c93831cf253800e93ba1a2d47950979b523aebd4fc023351b644d7f4aa2dfcc027c70816a2968420e7da
-  languageName: node
-  linkType: hard
-
 "@types/prop-types@npm:*":
   version: 15.7.11
   resolution: "@types/prop-types@npm:15.7.11"
@@ -6397,7 +6388,6 @@ asn1@evs-broadcast/node-asn1:
     "@types/ejson": "npm:^2.2.2"
     "@types/express": "npm:^4.17.21"
     "@types/lodash-es": "npm:^4.17.12"
-    "@types/pngjs": "npm:^6.0.5"
     "@types/semver": "npm:^7.5.8"
     "@types/socketcluster-client": "npm:^19.1.0"
     "@types/supertest": "npm:^6.0.2"
@@ -6429,7 +6419,6 @@ asn1@evs-broadcast/node-asn1:
     p-debounce: "npm:^4.0.0"
     p-queue: "npm:^8.0.1"
     path-to-regexp: "npm:^7.2.0"
-    pngjs: "npm:^7.0.0"
     selfsigned: "npm:^2.4.1"
     semver: "npm:^7.6.3"
     shuttle-control-usb: "npm:^1.5.0"
@@ -11102,13 +11091,6 @@ asn1@evs-broadcast/node-asn1:
     base64-js: "npm:^1.5.1"
     xmlbuilder: "npm:^15.1.1"
   checksum: 10c0/db19ba50faafc4103df8e79bcd6b08004a56db2a9dd30b3e5c8b0ef30398ef44344a674e594d012c8fc39e539a2b72cb58c60a76b4b4401cbbc7c8f6b028d93d
-  languageName: node
-  linkType: hard
-
-"pngjs@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "pngjs@npm:7.0.0"
-  checksum: 10c0/0d4c7a0fd476a9c33df7d0a2a73e1d56537628a668841f6995c2bca070cf30819f9254a64363266bc14ef2fee47659dd3b4f2b18eec7ab65143015139f497b38
   languageName: node
   linkType: hard
 
