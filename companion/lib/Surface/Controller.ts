@@ -299,7 +299,12 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			this.logger.silly(`Reusing config for device ${panel.info.deviceId}`)
 		}
 
-		const surfaceConfig = createOrSanitizeSurfaceHandlerConfig(integrationType, panel, existingSurfaceConfig)
+		const surfaceConfig = createOrSanitizeSurfaceHandlerConfig(
+			integrationType,
+			panel,
+			existingSurfaceConfig,
+			this.userconfig.getKey('gridSize')
+		)
 
 		const handler = new SurfaceHandler(this.registry, panel, surfaceConfig)
 		handler.on('interaction', () => {

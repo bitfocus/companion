@@ -1,5 +1,6 @@
 import type { SurfaceConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel } from './Types.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { cloneDeep } from 'lodash-es'
 
 export const PanelDefaults: SurfacePanelConfig = {
@@ -17,7 +18,8 @@ export const PanelDefaults: SurfacePanelConfig = {
 export function createOrSanitizeSurfaceHandlerConfig(
 	integrationType: string,
 	panel: SurfacePanel,
-	existingConfig: SurfaceConfig | undefined
+	existingConfig: SurfaceConfig | undefined,
+	gridSize: UserConfigGridSize
 ): SurfaceConfig {
 	// Retrieve or create the panel config
 	let panelConfig = existingConfig?.config
@@ -26,12 +28,15 @@ export function createOrSanitizeSurfaceHandlerConfig(
 		if (typeof panel.getDefaultConfig === 'function') {
 			Object.assign(panelConfig, panel.getDefaultConfig())
 		}
+
+		panelConfig.xOffset = Math.max(0, gridSize.minColumn)
+		panelConfig.yOffset = Math.max(0, gridSize.minRow)
 	}
 
 	if (panelConfig.xOffset === undefined || panelConfig.yOffset === undefined) {
 		// Fill in missing default offsets
-		panelConfig.xOffset = 0
-		panelConfig.yOffset = 0
+		panelConfig.xOffset = Math.max(0, gridSize.minColumn)
+		panelConfig.yOffset = Math.max(0, gridSize.minRow)
 	}
 
 	const newConfig: SurfaceConfig = {
