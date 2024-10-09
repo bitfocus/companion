@@ -1,22 +1,13 @@
-import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-	faExclamationTriangle,
-	faFileImport,
-	faQuestionCircle,
-	faRectangleList,
-} from '@fortawesome/free-solid-svg-icons'
+import { faFileImport, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { HelpModal, HelpModalRef } from '../Connections/HelpModal.js'
-import {
-	ModuleVersionInfo,
-	NewClientModuleInfo,
-	NewClientModuleVersionInfo2,
-} from '@companion-app/shared/Model/ModuleInfo.js'
+import { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { socketEmitPromise, useComputed } from '../util.js'
-import { getModuleVersionInfoForConnection } from '../Connections/Util.js'
-import { CAlert, CButton } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup } from '@coreui/react'
+import { NonIdealState } from '../Components/NonIdealState.js'
 
 export const AllModuleVersions = observer(function InstalledModules() {
 	const { socket, modules } = useContext(RootAppStoreContext)
@@ -83,6 +74,24 @@ export const AllModuleVersions = observer(function InstalledModules() {
 		[socket]
 	)
 
+	const [visibleModules, setVisibleConnections] = useState<VisibleAllModulesState>(() => loadVisibility())
+	// Save the config when it changes
+	useEffect(() => {
+		window.localStorage.setItem('modules_manage_visible', JSON.stringify(visibleModules))
+	}, [visibleModules])
+
+	const doToggleVisibility = useCallback((key: keyof VisibleAllModulesState) => {
+		setVisibleConnections((oldConfig) => ({
+			...oldConfig,
+			[key]: !oldConfig[key],
+		}))
+	}, [])
+
+	const doToggleDev = useCallback(() => doToggleVisibility('dev'), [doToggleVisibility])
+	const doToggleBuiltin = useCallback(() => doToggleVisibility('builtin'), [doToggleVisibility])
+	const doToggleRelease = useCallback(() => doToggleVisibility('release'), [doToggleVisibility])
+	const doToggleCustom = useCallback(() => doToggleVisibility('custom'), [doToggleVisibility])
+
 	return (
 		<>
 			<HelpModal ref={helpModalRef} />
@@ -100,56 +109,163 @@ export const AllModuleVersions = observer(function InstalledModules() {
 			</div>
 
 			<div className="module-manager-list2">
-				{allSortedModules.map((m) => (
-					<ModuleEntry key={m.baseInfo.id} moduleInfo={m} />
-				))}
+				<table className="table table-responsive-sm width-100">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th className="fit">
+								<CButtonGroup style={{ float: 'right', margin: 0 }}>
+									<CButton
+										size="sm"
+										color="secondary"
+										style={{
+											backgroundColor: 'white',
+											opacity: visibleModules.dev ? 1 : 0.4,
+											padding: '1px 5px',
+											color: 'black',
+										}}
+										onClick={doToggleDev}
+									>
+										Dev
+									</CButton>
+									<CButton
+										size="sm"
+										color="success"
+										style={{ opacity: visibleModules.builtin ? 1 : 0.4, padding: '1px 5px' }}
+										onClick={doToggleBuiltin}
+									>
+										Builtin
+									</CButton>
+									<CButton
+										color="warning"
+										size="sm"
+										style={{ opacity: visibleModules.release ? 1 : 0.4, padding: '1px 5px' }}
+										onClick={doToggleRelease}
+									>
+										Release
+									</CButton>
+									<CButton
+										color="danger"
+										size="sm"
+										style={{ opacity: visibleModules.custom ? 1 : 0.4, padding: '1px 5px' }}
+										onClick={doToggleCustom}
+									>
+										Custom
+									</CButton>
+								</CButtonGroup>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{!visibleModules.dev && !visibleModules.builtin && !visibleModules.release && !visibleModules.custom && (
+							<tr>
+								<td colSpan={3}>
+									<NonIdealState icon={faQuestionCircle}>
+										You have hidden all types of modules. <br />
+										Unhide some with the filters in the top right.
+									</NonIdealState>
+								</td>
+							</tr>
+						)}
+						{allSortedModules.map((moduleInfo) => (
+							<ModuleEntry key={moduleInfo.baseInfo.id} visibleModules={visibleModules} moduleInfo={moduleInfo} />
+						))}
+					</tbody>
+				</table>
 			</div>
 		</>
 	)
 })
 
 interface ModuleEntryProps {
+	visibleModules: VisibleAllModulesState
 	moduleInfo: NewClientModuleInfo
 }
 
-const ModuleEntry = observer(function ModuleEntry({ moduleInfo }: ModuleEntryProps) {
+const ModuleEntry = observer(function ModuleEntry({ visibleModules, moduleInfo }: ModuleEntryProps) {
 	const { socket } = useContext(RootAppStoreContext)
 
 	return (
 		<>
-			{moduleInfo.hasDevVersion && <p>{moduleInfo.baseInfo.id} - DEV</p>}
+			{visibleModules.dev && moduleInfo.hasDevVersion && (
+				<tr>
+					<td>{moduleInfo.baseInfo.id} - DEV</td>
+					<td>&nbsp;</td>
+				</tr>
+			)}
 
-			{moduleInfo.releaseVersions.map((v) => (
-				<p>
-					{moduleInfo.baseInfo.id} - {v.isBuiltin ? 'builtin' : 'from store'} {v.version.id}
-				</p>
-			))}
+			{moduleInfo.releaseVersions.map((v) => {
+				if (!visibleModules.release && !v.isBuiltin) return null
+				if (!visibleModules.builtin && v.isBuiltin) return null
 
-			{moduleInfo.customVersions.map((v) => (
-				<p>
-					{moduleInfo.baseInfo.id} - custom {v.version.id}
-					<CButton
-						color="danger"
-						size="sm"
-						onClick={() => {
-							// TODO
-							console.log('aaa')
-							if (v.version.id) {
-								socketEmitPromise(
-									socket,
-									'modules:uninstall-custom-module',
-									[moduleInfo.baseInfo.id, v.version.id],
-									20000
-								).catch((e) => {
-									console.error('Failed to uninstall module:', e)
-								})
-							}
-						}}
-					>
-						Remove
-					</CButton>
-				</p>
-			))}
+				return (
+					<tr>
+						<td>
+							{moduleInfo.baseInfo.id} - {v.isBuiltin ? 'builtin' : 'from store'} {v.version.id}
+						</td>
+						<td>&nbsp;</td>
+					</tr>
+				)
+			})}
+
+			{visibleModules.custom &&
+				moduleInfo.customVersions.map((v) => (
+					<tr>
+						<td>
+							{moduleInfo.baseInfo.id} - custom {v.version.id}
+						</td>
+						<td>
+							<CButton
+								color="danger"
+								size="sm"
+								onClick={() => {
+									// TODO
+									console.log('aaa')
+									if (v.version.id) {
+										socketEmitPromise(
+											socket,
+											'modules:uninstall-custom-module',
+											[moduleInfo.baseInfo.id, v.version.id],
+											20000
+										).catch((e) => {
+											console.error('Failed to uninstall module:', e)
+										})
+									}
+								}}
+							>
+								Remove
+							</CButton>
+						</td>
+					</tr>
+				))}
 		</>
 	)
 })
+
+interface VisibleAllModulesState {
+	dev: boolean
+	builtin: boolean
+	release: boolean
+	custom: boolean
+}
+
+function loadVisibility(): VisibleAllModulesState {
+	try {
+		const rawConfig = window.localStorage.getItem('modules_manage_visible')
+		if (rawConfig !== null) {
+			return JSON.parse(rawConfig) ?? {}
+		}
+	} catch (e) {}
+
+	// setup defaults
+	const config: VisibleAllModulesState = {
+		dev: true,
+		builtin: true,
+		release: true,
+		custom: true,
+	}
+
+	window.localStorage.setItem('modules_manage_visible', JSON.stringify(config))
+
+	return config
+}
