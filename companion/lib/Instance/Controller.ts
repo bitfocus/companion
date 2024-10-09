@@ -472,6 +472,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
 		this.modules.clientConnect(client)
+		this.modulesStore.clientConnect(client)
 		this.userModulesManager.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
