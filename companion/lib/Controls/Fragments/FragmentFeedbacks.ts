@@ -246,7 +246,7 @@ export class FragmentFeedbacks {
 	}
 
 	/**
-	 * Move a feedback within the heirarchy
+	 * Move a feedback within the hierarchy
 	 * @param moveFeedbackId the id of the feedback to move
 	 * @param newParentId the target parentId of the feedback
 	 * @param newIndex the target index of the feedback

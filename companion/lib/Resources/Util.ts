@@ -237,7 +237,7 @@ export function parseLineParameters(line: string): ParsedParams {
 /**
  * Checks if parameter is one of the list and returns it if so.
  * If it is not in the list but a trueish value, the defaultVal will be returned.
- * Otherwise returnes null.
+ * Otherwise returns null.
  */
 export function parseStringParamWithBooleanFallback(
 	list: string[],

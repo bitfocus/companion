@@ -338,7 +338,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 						style={{ backgroundColor: 'white' }}
 						content={
 							<>
-								{/* Note: the popover closing due to focus loss stops mouseup/click events propogating */}
+								{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
 								<CButtonGroup vertical>
 									<CButton
 										onMouseDown={doShowHelp}

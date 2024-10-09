@@ -476,7 +476,7 @@ export class ServiceHttpApi extends CoreBase {
 	 */
 	#locationStyle = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
-		this.logger.info(`Got HTTP control syle ${formatLocation(location)} - ${controlId}`)
+		this.logger.info(`Got HTTP control style ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
 			res.status(204).send('No control')

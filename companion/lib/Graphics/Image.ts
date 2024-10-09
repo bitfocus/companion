@@ -370,7 +370,7 @@ export class Image {
 
 	/**
 	 * draws a single line of left aligned text
-	 * the line lenght is not wrapped or limited and may extend beyond the canvas
+	 * the line length is not wrapped or limited and may extend beyond the canvas
 	 * @param x left position where to start the line
 	 * @param y top position where to start the line
 	 * @param text
@@ -523,7 +523,7 @@ export class Image {
 				) ?? 6
 		}
 
-		lineheight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calclulated to match the existing font size / lineheight ratio of the bitmap fonts
+		lineheight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
 
 		// breakup text in pieces
 		let lines = []
@@ -566,7 +566,7 @@ export class Image {
 			// how many chars fit probably in one line
 			let chars = Math.round(w / nWidth)
 
-			diff = w - this.context2d.measureText(substring(text, 0, chars)).width // check our guessed lenght
+			diff = w - this.context2d.measureText(substring(text, 0, chars)).width // check our guessed length
 
 			if (Math.abs(diff) > nWidth) {
 				// we seem to be off by more than one char
@@ -645,7 +645,7 @@ export class Image {
 			// check if remaining text fits in line
 			let { maxCodepoints, ascent, descent } = findLastChar(textArr.slice(lastDrawnByte).join(''))
 
-			//console.log(`check text "${textArr.slice(lastDrawnByte).join('')}" arr=${textArr} lenght=${textArr.length - lastDrawnByte} max=${maxCodepoints}`)
+			//console.log(`check text "${textArr.slice(lastDrawnByte).join('')}" arr=${textArr} length=${textArr.length - lastDrawnByte} max=${maxCodepoints}`)
 			if (maxCodepoints >= textArr.length - lastDrawnByte) {
 				let buf = []
 				for (let i = lastDrawnByte; i < textArr.length; i += 1) {

@@ -55,7 +55,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		for (const [ifname, ifgroup] of Object.entries(interfaces)) {
 			if (!ifgroup) continue
 			for (const ifAddr of ifgroup) {
-				// onlt show non-ipv4 addresses for now
+				// only show non-ipv4 addresses for now
 				if ('IPv4' === ifAddr.family) {
 					console.error(ifname, ifAddr.address)
 				}

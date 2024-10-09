@@ -201,7 +201,7 @@ export abstract class ControlBase<TJson> extends CoreBase {
 	/**
 	 * Execute a press of a control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 * @param force Trigger actions even if already in the state
 	 */
 	abstract pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void

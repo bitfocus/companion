@@ -284,7 +284,7 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Set an opton of an action
+	 * Set an option of an action
 	 */
 	actionSetOption(_stepId: string, _setId: string, id: string, key: string, value: any): boolean {
 		return this.actions.actionSetOption('0', id, key, value)

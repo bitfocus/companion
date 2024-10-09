@@ -262,7 +262,7 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		const panel = await setupXkeysPanel(devicePath)
 
 		try {
-			const deviceId = `xkeys:${panel.info.productId}-${panel.info.unitId}` // TODO - this needs some additional uniqueness to the sufix
+			const deviceId = `xkeys:${panel.info.productId}-${panel.info.unitId}` // TODO - this needs some additional uniqueness to the suffix
 			// (${devicePath.slice(0, -1).slice(-10)})` // This suffix produces `dev/hidraw` on linux, which is not useful.
 
 			const self = new SurfaceUSBXKeys(devicePath, panel, deviceId, options || {})

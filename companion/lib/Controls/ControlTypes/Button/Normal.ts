@@ -295,7 +295,7 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Set an opton of an action
+	 * Set an option of an action
 	 */
 	actionSetOption(stepId: string, setId: string, id: string, key: string, value: any): boolean {
 		const step = this.steps[stepId]
@@ -565,7 +565,7 @@ export class ControlButtonNormal
 	/**
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
@@ -669,7 +669,7 @@ export class ControlButtonNormal
 	/**
 	 * Execute a rotate of this control
 	 * @param direction Whether the control was rotated to the right
-	 * @param surfaceId The surface that intiated this rotate
+	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(direction: boolean, surfaceId: string | undefined): void {
 		const [this_step_id] = this.#validateCurrentStepId()
