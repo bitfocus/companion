@@ -38,6 +38,7 @@ import type { ModuleDirs } from './types.js'
 import path from 'path'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
+import { ModuleStoreService } from './ModuleStore.js'
 
 const InstancesRoom = 'instances'
 
@@ -64,6 +65,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	readonly status: InstanceStatus
 	readonly moduleHost: ModuleHost
 	readonly modules: InstanceModules
+	readonly modulesStore: ModuleStoreService
 	readonly userModulesManager: InstanceInstalledModulesManager
 
 	constructor(registry: Registry) {
@@ -93,6 +95,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.status = new InstanceStatus(registry.io, registry.controls)
 		this.moduleHost = new ModuleHost(registry, this.status, this.#configStore)
 		this.modules = new InstanceModules(registry.io, registry.api_router, this, moduleDirs)
+		this.modulesStore = new ModuleStoreService(registry.io, registry.db)
 		this.userModulesManager = new InstanceInstalledModulesManager(this.modules, registry.db, moduleDirs)
 
 		// Prepare for clients already

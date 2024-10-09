@@ -2,7 +2,6 @@ import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
 import type { InstanceModules } from './Modules.js'
-import type { AppInfo } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import { DataDatabase } from '../Data/Database.js'
 import type { UserModuleEntry } from '@companion-app/shared/Model/UserModules.js'
@@ -12,11 +11,6 @@ import { Readable } from 'node:stream'
 import { ModuleManifest } from '@companion-module/base'
 import * as tarfs from 'tar-fs'
 import type { ModuleDirs } from './types.js'
-
-interface InstalledModulesEvents {
-	installed: [moduleDir: string, type: 'custom' | 'release', manifest: ModuleManifest]
-	uninstalled: [moduleId: string, type: 'custom' | 'release', versionId: string]
-}
 
 export class InstanceInstalledModulesManager {
 	readonly #logger = LogController.createLogger('Instance/UserModulesManager')
@@ -43,20 +37,6 @@ export class InstanceInstalledModulesManager {
 	 */
 	#store: UserModuleEntry[]
 
-	// /**
-	//  * The directory store fetched modules will be stored in
-	//  */
-	// get storeModulesDir(): string {
-	// 	return this.#storeModulesDir
-	// }
-
-	// /**
-	//  * The directory user loaded modules will be stored in
-	//  */
-	// get customModulesDir(): string {
-	// 	return this.#customModulesDir
-	// }
-
 	constructor(modulesManager: InstanceModules, db: DataDatabase, dirs: ModuleDirs) {
 		this.#modulesManager = modulesManager
 		this.#db = db
@@ -78,7 +58,6 @@ export class InstanceInstalledModulesManager {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		// TODO
 		client.onPromise('modules:install-custom-module', async (data) => {
 			console.log('modules:install-custom-module', data)
 
@@ -132,6 +111,21 @@ export class InstanceInstalledModulesManager {
 
 			// Stop any usages of the module
 			await this.#modulesManager.uninstallModule(moduleId, 'custom', versionId)
+
+			// Delete the module code
+			await fs.rm(moduleDir, { recursive: true }).catch(() => null)
+
+			return null
+		})
+
+		client.onPromise('modules:uninstall-store-module', async (moduleId, versionId) => {
+			console.log('modules:uninstall-store-module', moduleId, versionId)
+
+			const moduleDir = path.join(this.#storeModulesDir, `${moduleId}-${versionId}`)
+			if (!fs.existsSync(moduleDir)) return `Module ${moduleId} v${versionId} doesn't exist`
+
+			// Stop any usages of the module
+			await this.#modulesManager.uninstallModule(moduleId, 'release', versionId)
 
 			// Delete the module code
 			await fs.rm(moduleDir, { recursive: true }).catch(() => null)
