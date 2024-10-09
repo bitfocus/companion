@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { ConnectionsContext, LoadingRetryOrError, socketEmitPromise } from '../util.js'
-import { CRow, CCol, CButton, CFormSelect } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSelect, CAlert } from '@coreui/react'
 import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -269,6 +269,11 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 							</option>
 						))}
 					</CFormSelect>
+
+					<br />
+					<CAlert color="warning">
+						Be careful when downgrading the module version. Some features may not be available in older versions.
+					</CAlert>
 				</CCol>
 
 				{connectionInfo.enabled ? (
