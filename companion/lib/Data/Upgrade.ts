@@ -42,8 +42,6 @@ export function upgradeStartup(db: DataDatabase): void {
 		for (let i = currentVersion; i < targetVersion; i++) {
 			allUpgrades[i - 1].upgradeStartup(db, logger)
 		}
-
-		//db.setKey('page_config_version', targetVersion)
 	}
 }
 
