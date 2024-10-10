@@ -738,7 +738,7 @@ export class ControlsController extends CoreBase {
 
 				this.#controls.delete(controlId)
 
-				this.db.setKey(['controls', controlId], undefined)
+				this.db.deleteTableKey('controls', controlId)
 
 				return true
 			}
@@ -1049,7 +1049,7 @@ export class ControlsController extends CoreBase {
 	 */
 	init(): void {
 		// Init all the control classes
-		const config: Record<string, SomeControlModel> = this.db.getKey('controls', {})
+		const config: Record<string, SomeControlModel> = this.db.getTable('controls')
 		for (const [controlId, controlObj] of Object.entries(config)) {
 			if (controlObj && controlObj.type) {
 				const inst = this.#createClassForControl(controlId, 'all', controlObj, false)
@@ -1130,7 +1130,7 @@ export class ControlsController extends CoreBase {
 			control.destroy()
 			this.#controls.delete(controlId)
 
-			this.db.setKey(['controls', controlId], undefined)
+			this.db.deleteTableKey('controls', controlId)
 		}
 
 		const location = this.page.getLocationOfControlId(controlId)
