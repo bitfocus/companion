@@ -26,6 +26,8 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
+import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { getModuleVersionInfoForConnection } from './Util.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -35,7 +37,7 @@ interface VisibleConnectionsState {
 }
 
 interface ConnectionsListProps {
-	showHelp: (connectionId: string) => void
+	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	doConfigureConnection: (connectionId: string | null) => void
 	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
@@ -261,7 +263,7 @@ interface ConnectionsTableRowProps {
 	id: string
 	connection: ClientConnectionConfig
 	connectionStatus: ConnectionStatusEntry | undefined
-	showHelp: (connectionId: string) => void
+	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	showVariables: (label: string) => void
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
@@ -309,7 +311,10 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		})
 	}, [socket, id, isEnabled])
 
-	const doShowHelp = useCallback(() => showHelp(connection.instance_type), [showHelp, connection.instance_type])
+	const doShowHelp = useCallback(
+		() => moduleVersion?.hasHelp && showHelp(connection.instance_type, moduleVersion),
+		[showHelp, connection.instance_type]
+	)
 
 	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label])
 
@@ -351,9 +356,11 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	}
 
 	const openBugUrl = useCallback(() => {
-		const url = moduleInfo?.bugUrl
+		const url = moduleInfo?.baseInfo?.bugUrl
 		if (url) windowLinkOpen({ href: url })
 	}, [moduleInfo])
+
+	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection)
 
 	return (
 		<tr
@@ -373,7 +380,11 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			<td onClick={doEdit} className="hand">
 				{moduleInfo ? (
 					<>
-						{moduleInfo.isLegacy && (
+						{moduleInfo.baseInfo.shortname ?? ''}
+						<br />
+						{moduleInfo.baseInfo.manufacturer ?? ''}
+						<br />
+						{moduleVersion?.isLegacy && (
 							<>
 								<FontAwesomeIcon
 									icon={faExclamationTriangle}
@@ -382,10 +393,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 								/>{' '}
 							</>
 						)}
-						{moduleInfo.shortname ?? ''}
-
-						<br />
-						{moduleInfo.manufacturer ?? ''}
+						{moduleVersion?.displayName}
 					</>
 				) : (
 					connection.instance_type
@@ -417,7 +425,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										onMouseDown={doShowHelp}
 										color="secondary"
 										title="Help"
-										disabled={!moduleInfo?.hasHelp}
+										disabled={!moduleVersion?.hasHelp}
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>
@@ -430,7 +438,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										onMouseDown={openBugUrl}
 										color="secondary"
 										title="Issue Tracker"
-										disabled={!moduleInfo?.bugUrl}
+										disabled={!moduleInfo?.baseInfo?.bugUrl}
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>

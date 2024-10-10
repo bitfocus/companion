@@ -1,16 +1,45 @@
-import React, { useContext, useState, useCallback, useRef } from 'react'
-import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
-import { go as fuzzySearch } from 'fuzzysort'
+import React, {
+	useContext,
+	useState,
+	useCallback,
+	useRef,
+	forwardRef,
+	useImperativeHandle,
+	useMemo,
+	useEffect,
+} from 'react'
+import {
+	CAlert,
+	CButton,
+	CCol,
+	CForm,
+	CFormInput,
+	CFormLabel,
+	CFormSelect,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
+} from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { socketEmitPromise, useComputed } from '../util.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { ConnectionsContext, PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { SearchBox } from '../Components/SearchBox.js'
+import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
+import { CModalExt } from '../Components/CModalExt.js'
+import {
+	ModuleVersionInfo,
+	NewClientModuleInfo,
+	NewClientModuleVersionInfo2,
+} from '@companion-app/shared/Model/ModuleInfo.js'
+import { makeLabelSafe } from '@companion-app/shared/Label.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import { getModuleVersionInfoForConnection } from './Util.js'
+import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 
 interface AddConnectionsPanelProps {
-	showHelp: (moduleId: string) => void
+	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	doConfigureConnection: (connectionId: string) => void
 }
 
@@ -18,94 +47,27 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	showHelp,
 	doConfigureConnection,
 }: AddConnectionsPanelProps) {
-	const { socket, notifier, modules } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 	const [filter, setFilter] = useState('')
 
-	const confirmRef = useRef<GenericConfirmModalRef>(null)
-
-	const addConnectionInner = useCallback(
-		(type: string, product: string | undefined) => {
-			socketEmitPromise(socket, 'connections:add', [{ type: type, product: product }])
-				.then((id) => {
-					setFilter('')
-					console.log('NEW CONNECTION', id)
-					doConfigureConnection(id)
-				})
-				.catch((e) => {
-					notifier.current?.show(`Failed to create connection`, `Failed: ${e}`)
-					console.error('Failed to create connection:', e)
-				})
-		},
-		[socket, notifier, doConfigureConnection]
-	)
-
-	const addConnection = useCallback(
-		(type: string, product: string | undefined, module: Omit<ModuleDisplayInfo, 'keywords'>) => {
-			if (module.isLegacy) {
-				confirmRef.current?.show(
-					`${module.manufacturer} ${product} is outdated`,
-					null, // Passed as param to the thing
-					'Add anyway',
-					() => {
-						addConnectionInner(type, product)
-					}
-				)
-			} else {
-				addConnectionInner(type, product)
-			}
-		},
-		[addConnectionInner]
-	)
-
-	const allProducts = useComputed(
-		() =>
-			Array.from(modules.modules.values()).flatMap((module) =>
-				module.products.map((product) => ({
-					product,
-					...module,
-					// fuzzySearch can't handle arrays, so flatten the array to a string first
-					keywords: module.keywords?.join(';') ?? '',
-				}))
-			),
-		[modules]
-	)
+	const addRef = useRef<AddConnectionModalRef>(null)
+	const addConnection = useCallback((module: ModuleProductInfo) => {
+		addRef.current?.show(module)
+	}, [])
 
 	let candidates: JSX.Element[] = []
 	try {
+		const searchResults = useFilteredProducts(filter)
+
 		const candidatesObj: Record<string, JSX.Element> = {}
-
-		const searchResults = filter
-			? fuzzySearch(filter, allProducts, {
-					keys: ['product', 'name', 'manufacturer', 'keywords'],
-					threshold: -10_000,
-				}).map((x) => x.obj)
-			: allProducts
-
 		for (const module of searchResults) {
-			candidatesObj[module.name] = (
-				<div key={module.name + module.id}>
-					<CButton color="primary" onClick={() => addConnection(module.id, module.product, module)}>
-						Add
-					</CButton>
-					&nbsp;
-					{module.isLegacy && (
-						<>
-							<FontAwesomeIcon
-								icon={faExclamationTriangle}
-								color="#ff6600"
-								size={'xl'}
-								title="This module has not been updated for Companion 3.0, and may not work fully"
-							/>
-							&nbsp;
-						</>
-					)}
-					{module.name}
-					{module.hasHelp && (
-						<div className="float_right" onClick={() => showHelp(module.id)}>
-							<FontAwesomeIcon icon={faQuestionCircle} />
-						</div>
-					)}
-				</div>
+			candidatesObj[module.baseInfo.name] = (
+				<AddConnectionEntry
+					key={module.baseInfo.name}
+					module={module}
+					addConnection={addConnection}
+					showHelp={showHelp}
+				/>
 			)
 		}
 
@@ -135,23 +97,9 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 		)
 	}
 
-	const confirmContent = (
-		<>
-			<p>
-				This module has not been verified to be compatible with this version of companion. It may be buggy or broken.
-			</p>
-			<p>
-				If this module is broken, please let us know in{' '}
-				<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion/issues/2157">
-					this github issue
-				</a>
-			</p>
-		</>
-	)
-
 	return (
 		<>
-			<GenericConfirmModal ref={confirmRef} content={confirmContent} />
+			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} showHelp={showHelp} />
 			<div style={{ clear: 'both' }} className="row-heading">
 				<h4>Add connection</h4>
 				<p>
@@ -162,21 +110,304 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 					</a>{' '}
 					on GitHub
 				</p>
-				<CInputGroup>
-					<CFormInput
-						type="text"
-						placeholder="Search ..."
-						onChange={(e) => setFilter(e.currentTarget.value)}
-						value={filter}
-						style={{ fontSize: '1.2em' }}
-					/>
-					<CButton color="danger" onClick={() => setFilter('')}>
-						<FontAwesomeIcon icon={faTimes} />
-					</CButton>
-				</CInputGroup>
+
+				<SearchBox filter={filter} setFilter={setFilter} />
 				<br />
 			</div>
 			<div id="connection_add_search_results">{candidates}</div>
 		</>
 	)
 })
+
+interface AddConnectionEntryProps {
+	module: ModuleProductInfo
+	addConnection(module: ModuleProductInfo): void
+	showHelp(moduleId: string, moduleVersion: NewClientModuleVersionInfo2): void
+}
+
+function AddConnectionEntry({ module, addConnection, showHelp }: AddConnectionEntryProps) {
+	const addConnectionClick = useCallback(() => addConnection(module), [addConnection, module])
+	const showVersion: NewClientModuleVersionInfo2 | undefined =
+		module.stableVersion ?? module.prereleaseVersion ?? module.releaseVersions[0]
+	const showHelpClick = useCallback(
+		() => showVersion && showHelp(module.baseInfo.id, showVersion),
+		[showHelp, module.baseInfo.id, showVersion]
+	)
+
+	return (
+		<div key={module.baseInfo.name + module.baseInfo.id}>
+			<CButton color="primary" onClick={addConnectionClick}>
+				Add
+			</CButton>
+			&nbsp;
+			{module.stableVersion?.isLegacy && (
+				<>
+					<FontAwesomeIcon
+						icon={faExclamationTriangle}
+						color="#ff6600"
+						size={'xl'}
+						title="This module has not been updated for Companion 3.0, and may not work fully"
+					/>
+					&nbsp;
+				</>
+			)}
+			{module.baseInfo.name}
+			{showVersion?.hasHelp && (
+				<div className="float_right" onClick={showHelpClick}>
+					<FontAwesomeIcon icon={faQuestionCircle} />
+				</div>
+			)}
+		</div>
+	)
+}
+
+interface AddConnectionModalRef {
+	show(info: ModuleProductInfo): void
+}
+
+interface AddConnectionModalProps {
+	doConfigureConnection: (connectionId: string) => void
+	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+}
+
+const AddConnectionModal = observer(
+	forwardRef<AddConnectionModalRef, AddConnectionModalProps>(function AddActionsModal(
+		{ doConfigureConnection, showHelp },
+		ref
+	) {
+		const { socket, notifier } = useContext(RootAppStoreContext)
+		const connections = useContext(ConnectionsContext)
+
+		const [show, setShow] = useState(false)
+		const [moduleInfo, setModuleInfo] = useState<ModuleProductInfo | null>(null)
+		const [selectedVersion, setSelectedVersion] = useState<ModuleVersionInfo>({
+			mode: 'stable',
+			id: null,
+		})
+		const [connectionLabel, setConnectionLabel] = useState<string>('')
+
+		const doClose = useCallback(() => setShow(false), [])
+		const onClosed = useCallback(() => {
+			setModuleInfo(null)
+			setSelectedVersion({
+				mode: 'stable',
+				id: null,
+			})
+			setConnectionLabel('')
+		}, [])
+
+		const doAction = () => {
+			if (!moduleInfo || !connectionLabel || !selectedVersion) return
+
+			socketEmitPromise(socket, 'connections:add', [
+				{
+					type: moduleInfo.baseInfo.id,
+					product: moduleInfo.product,
+				},
+				connectionLabel,
+				selectedVersion,
+			])
+				.then((id) => {
+					console.log('NEW CONNECTION', id)
+					setShow(false)
+					setTimeout(() => {
+						// Wait a bit to let the server catch up
+						doConfigureConnection(id)
+					}, 1000)
+				})
+				.catch((e) => {
+					notifier.current?.show(`Failed to create connection`, `Failed: ${e}`)
+					console.error('Failed to create connection:', e)
+				})
+		}
+
+		useImperativeHandle(
+			ref,
+			() => ({
+				show(info) {
+					setShow(true)
+					setModuleInfo(info)
+
+					// There is a useEffect below that ensures this is valid
+					setSelectedVersion({
+						mode: 'stable',
+						id: null,
+					})
+					setConnectionLabel(findNextConnectionLabel(connections, info))
+				},
+			}),
+			[connections]
+		)
+
+		let selectedVersionIsLegacy = false
+		switch (selectedVersion.mode) {
+			case 'stable':
+				selectedVersionIsLegacy = moduleInfo?.stableVersion?.isLegacy ?? false
+				break
+			case 'specific-version':
+				selectedVersionIsLegacy =
+					moduleInfo?.releaseVersions.find((v) => v.version.id === selectedVersion.id)?.isLegacy ?? false
+				break
+		}
+
+		const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, {
+			moduleVersionMode: selectedVersion.mode,
+			moduleVersionId: selectedVersion.id,
+		})
+
+		const versionOptions = useMemo(() => moduleInfo && getConnectionVersionSelectOptions(moduleInfo), [moduleInfo])
+
+		// Ensure the currently selection version is a valid option
+		useEffect(() => {
+			if (!versionOptions) return
+
+			setSelectedVersion((value) => {
+				const valueStr = JSON.stringify(value)
+
+				// Check if value is still valid
+				if (versionOptions.find((v) => v.value === valueStr)) return value
+
+				// It is not, so choose the first option
+				return JSON.parse(versionOptions[0].value)
+			})
+		}, [versionOptions])
+
+		return (
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
+				{moduleInfo && (
+					<>
+						<CModalHeader closeButton>
+							<h5>
+								Add {moduleInfo.baseInfo.manufacturer} {moduleInfo.product}
+							</h5>
+						</CModalHeader>
+						<CModalBody>
+							<p>
+								It is now possible to load install different versions of modules without updating Companion. Once you
+								have installed different versions of a module, you can choose which one to use for a new connection
+								here.
+							</p>
+							<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
+								<CFormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
+									Label&nbsp;
+								</CFormLabel>
+								<CCol sm={8}>
+									<CFormInput
+										name="colFormLabel"
+										value={connectionLabel}
+										onChange={(e) => setConnectionLabel(e.currentTarget.value)}
+									/>
+								</CCol>
+
+								<CFormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm">
+									Module Version&nbsp;
+									{moduleVersion?.hasHelp && (
+										<div className="float_right" onClick={() => showHelp(moduleInfo.baseInfo.id, moduleVersion)}>
+											<FontAwesomeIcon icon={faQuestionCircle} />
+										</div>
+									)}
+								</CFormLabel>
+								<CCol sm={8}>
+									<CFormSelect
+										name="colFormVersion"
+										value={JSON.stringify(selectedVersion)}
+										onChange={(e) => setSelectedVersion(JSON.parse(e.currentTarget.value))}
+									>
+										{versionOptions?.map((v) => (
+											<option key={v.value} value={v.value}>
+												{v.label}
+											</option>
+										))}
+									</CFormSelect>
+								</CCol>
+							</CForm>
+
+							{selectedVersionIsLegacy && (
+								<>
+									<hr />
+									<CAlert color="warning">
+										<p>
+											This module has not been verified to be compatible with this version of companion. It may be buggy
+											or broken.
+										</p>
+										<p>
+											If this module is broken, please let the module author know on{' '}
+											<a target="_blank" rel="noreferrer" href={moduleInfo.baseInfo.bugUrl}>
+												Github
+											</a>
+										</p>
+									</CAlert>
+								</>
+							)}
+						</CModalBody>
+						<CModalFooter>
+							<CButton color="secondary" onClick={doClose}>
+								Cancel
+							</CButton>
+							<CButton
+								color="primary"
+								onClick={doAction}
+								disabled={!moduleInfo || !connectionLabel || !selectedVersion}
+							>
+								Save
+							</CButton>
+						</CModalFooter>
+					</>
+				)}
+			</CModalExt>
+		)
+	})
+)
+
+// nocommit TODO: this is a copy of the function from companion/lib/Instance/ConnectionConfigStore.ts
+function findNextConnectionLabel(
+	connections: Record<string, ClientConnectionConfig>,
+	info: ModuleProductInfo,
+	ignoreId?: string
+): string {
+	let prefix = info.baseInfo.shortname
+
+	const knownLabels = new Set()
+	for (const [id, obj] of Object.entries(connections)) {
+		if (id !== ignoreId && obj && obj.label) {
+			knownLabels.add(obj.label)
+		}
+	}
+
+	prefix = makeLabelSafe(prefix)
+
+	let label = prefix
+	let i = 1
+	while (knownLabels.has(label)) {
+		// Try the next
+		label = `${prefix}_${++i}`
+	}
+
+	return label
+}
+
+export function getConnectionVersionSelectOptions(moduleInfo: NewClientModuleInfo): DropdownChoiceInt[] {
+	const choices: DropdownChoiceInt[] = []
+
+	if (moduleInfo.stableVersion)
+		choices.push({
+			value: JSON.stringify(moduleInfo.stableVersion.version),
+			label: moduleInfo.stableVersion.displayName,
+		})
+
+	if (moduleInfo.prereleaseVersion)
+		choices.push({
+			value: JSON.stringify(moduleInfo.prereleaseVersion.version),
+			label: moduleInfo.prereleaseVersion.displayName,
+		})
+
+	for (const version of moduleInfo.releaseVersions) {
+		choices.push({ value: JSON.stringify(version.version), label: version.displayName })
+	}
+
+	for (const version of moduleInfo.customVersions) {
+		choices.push({ value: JSON.stringify(version.version), label: version.displayName })
+	}
+
+	return choices
+}

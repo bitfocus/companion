@@ -23,6 +23,7 @@ import {
 	faFileImport,
 	faDollarSign,
 	faTh,
+	faDog,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
@@ -46,6 +47,7 @@ import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionVariables } from './Variables/index.js'
+import { ModulesManager } from './Modules/Manager.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -480,6 +482,11 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
+					<CNavLink to="/modules" as={NavLink}>
+						<FontAwesomeIcon icon={faDog} /> Modules
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
 					<CNavLink to="/log" as={NavLink}>
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
@@ -526,6 +533,11 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				<CTabPane className={getClassForPane('/import-export')}>
 					<MyErrorBoundary>
 						<ImportExport />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/modules')}>
+					<MyErrorBoundary>
+						<ModulesManager />
 					</MyErrorBoundary>
 				</CTabPane>
 				{getClassForPane('/log') !== '' && (
