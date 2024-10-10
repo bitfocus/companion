@@ -109,9 +109,9 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 	return (
 		<CModalExt visible={state.show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 			<CModalHeader closeButton>
-				<h5>Add Pages</h5>
+				<h5>Insert Pages</h5>
 			</CModalHeader>
-			<CModalBody className="shadow-inset">
+			<CModalBody>
 				<table className="table table-responsive-sm">
 					<thead>
 						<tr>
@@ -135,15 +135,16 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 						<tr>
 							<td></td>
 							<td style={{ textAlign: 'left' }}>
-								<CButtonGroup>
+								<CButtonGroup style={{ textAlign: 'center', width: '100%' }}>
 									<CButton
-										color="white"
+										color="info"
 										size="sm"
 										onClick={doInsertPage}
 										title="Add at end"
 										data-page={state.names.length + 1}
 									>
 										<FontAwesomeIcon icon={faPlus} />
+										&nbsp;Insert Page
 									</CButton>
 								</CButtonGroup>
 							</td>
@@ -156,7 +157,7 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 					Cancel
 				</CButton>
 				<CButton color="primary" onClick={doSave}>
-					Add
+					Add {state.names.length && state.names.length > 1 ? `${state.names.length} Pages` : '1 Page'}
 				</CButton>
 			</CModalFooter>
 		</CModalExt>
@@ -178,7 +179,7 @@ function AddPageRow({ index, name, canDelete, changeName, doInsertPage, doDelete
 			<td>
 				<CFormInput type="text" value={name} onChange={changeName} data-page={index} />
 			</td>
-			<td style={{ width: 0 }}>
+			<td style={{ width: 200 }}>
 				<CButtonGroup>
 					{/* <CButton
 						color="info"
@@ -190,19 +191,21 @@ function AddPageRow({ index, name, canDelete, changeName, doInsertPage, doDelete
 					>
 						<FontAwesomeIcon icon={faPencil} />
 					</CButton> */}
-					<CButton color="white" size="sm" onClick={doInsertPage} title="Add page before" data-page={index}>
+					<CButton color="secondary" size="sm" onClick={doInsertPage} title="Insert page above" data-page={index}>
 						<FontAwesomeIcon icon={faPlus} />
+						<br></br>Insert Above
 					</CButton>
 
 					<CButton
-						color="white"
+						color="secondary"
 						size="sm"
 						onClick={doDeletePage}
 						title="Delete"
 						data-page={index}
 						disabled={!canDelete}
 					>
-						<FontAwesomeIcon icon={faTrash} />
+						<FontAwesomeIcon icon={faTrash} color="#d50215" />
+						<br></br>Delete Page
 					</CButton>
 				</CButtonGroup>
 			</td>

@@ -1,5 +1,4 @@
 import {
-	CAlert,
 	CButton,
 	CCol,
 	CForm,
@@ -30,11 +29,11 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 
 		const [pageName, setName] = useState<string | null>(null)
 
-		const buttonRef = useRef<HTMLButtonElement>(null)
+		const inputRef = useRef<HTMLInputElement>(null)
 
-		const buttonFocus = () => {
-			if (buttonRef.current) {
-				buttonRef.current.focus()
+		const inputFocus = () => {
+			if (inputRef.current) {
+				inputRef.current.focus()
 			}
 		}
 
@@ -63,8 +62,8 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 					setPageNumber(pageNumber)
 					setShow(true)
 
-					// Focus the button asap. It also gets focused once the open is complete
-					setTimeout(buttonFocus, 50)
+					// Focus the text area
+					setTimeout(inputFocus, 50)
 				},
 			}),
 			[]
@@ -75,7 +74,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 		}, [])
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={inputFocus}>
 				<CModalHeader closeButton>
 					<h5>Configure Page {pageNumber}</h5>
 				</CModalHeader>
@@ -86,11 +85,13 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 								Name
 							</CFormLabel>
 							<CCol sm={9}>
-								<CFormInput name="colFormName" type="text" value={pageName || ''} onChange={onNameChange} />
-							</CCol>
-							<CCol sm={12}>
-								<br />
-								<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
+								<CFormInput
+									ref={inputRef}
+									name="colFormName"
+									type="text"
+									value={pageName || ''}
+									onChange={onNameChange}
+								/>
 							</CCol>
 						</CRow>
 					</CForm>
@@ -99,7 +100,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton ref={buttonRef} color="primary" onClick={doAction}>
+					<CButton color="primary" onClick={doAction}>
 						Save
 					</CButton>
 				</CModalFooter>
