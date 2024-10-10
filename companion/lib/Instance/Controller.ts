@@ -96,7 +96,12 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.moduleHost = new ModuleHost(registry, this.status, this.#configStore)
 		this.modules = new InstanceModules(registry.io, registry.api_router, this, moduleDirs)
 		this.modulesStore = new ModuleStoreService(registry.io, registry.db)
-		this.userModulesManager = new InstanceInstalledModulesManager(this.modules, registry.db, moduleDirs)
+		this.userModulesManager = new InstanceInstalledModulesManager(
+			this.modules,
+			this.modulesStore,
+			registry.db,
+			moduleDirs
+		)
 
 		// Prepare for clients already
 		this.broadcastChanges(this.#configStore.getAllInstanceIds())

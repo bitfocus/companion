@@ -9,7 +9,7 @@ import { socketEmitPromise, useComputed } from '../util.js'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { NonIdealState } from '../Components/NonIdealState.js'
 
-export const AllModuleVersions = observer(function InstalledModules() {
+export const AllModuleVersions = observer(function AllModuleVersions() {
 	const { socket, modules } = useContext(RootAppStoreContext)
 
 	const helpModalRef = useRef<HelpModalRef>(null)

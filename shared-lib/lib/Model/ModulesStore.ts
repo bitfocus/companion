@@ -13,6 +13,8 @@ export interface ModuleStoreCacheVersionEntry {
 	isPrerelease: boolean
 	releasedAt: number // unix timestamp
 
+	tarUrl: string
+
 	// TODO - more props
 }
 

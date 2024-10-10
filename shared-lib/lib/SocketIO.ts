@@ -324,6 +324,7 @@ export interface ClientToBackendEventsMap {
 	) => [err: string, result: null] | [err: null, result: HelpDescription]
 	'modules:install-custom-module': (moduleTar: Uint8Array) => string | null
 	'modules:uninstall-custom-module': (moduleId: string, versionId: string) => string | null
+	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
 
 	'modules-store:subscribe': () => ModuleStoreCacheStore

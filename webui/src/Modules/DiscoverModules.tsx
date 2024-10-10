@@ -8,10 +8,10 @@ import { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { socketEmitPromise, useComputed } from '../util.js'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { NonIdealState } from '../Components/NonIdealState.js'
-import { ModuleStoreCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
+import { ModuleStoreCacheEntry, ModuleStoreCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
 
 export const DiscoverVersions = observer(function InstalledModules() {
-	const { socket } = useContext(RootAppStoreContext)
+	const { socket, modules } = useContext(RootAppStoreContext)
 
 	const refreshProgress = useRefreshProgress()
 	const moduleStoreCache = useModuleStoreList()
@@ -22,11 +22,11 @@ export const DiscoverVersions = observer(function InstalledModules() {
 		})
 	}, [socket])
 
+	const moduleInfos = Object.values(moduleStoreCache?.modules || {})
+
 	const [refreshError, setLoadError] = useState<string | null>(null)
 	return (
 		<>
-			<p>Use the button below to import a custom build of a module.</p>
-
 			<div>
 				{refreshError ? <CAlert color="warning">{refreshError}</CAlert> : ''}
 
@@ -47,7 +47,68 @@ export const DiscoverVersions = observer(function InstalledModules() {
 				</p>
 			</div>
 
-			<div className="module-manager-list2">TODO</div>
+			<div className="module-manager-list2">
+				{moduleInfos.length === 0 && (
+					<NonIdealState icon={faQuestionCircle}>
+						Click the refresh button to fetch the list of modules.
+						<br /> This requires internet access to retrieve
+					</NonIdealState>
+				)}
+
+				{moduleInfos.map((moduleInfo) => (
+					<ModuleEntry
+						key={moduleInfo.id}
+						moduleInfo={moduleInfo}
+						installedModuleInfo={modules.modules.get(moduleInfo.id)}
+					/>
+				))}
+			</div>
+		</>
+	)
+})
+
+interface ModuleEntryProps {
+	moduleInfo: ModuleStoreCacheEntry
+	installedModuleInfo: NewClientModuleInfo | undefined
+}
+
+const ModuleEntry = observer(function ModuleEntry({ moduleInfo, installedModuleInfo }: ModuleEntryProps) {
+	const { socket } = useContext(RootAppStoreContext)
+
+	const installedVersions = new Set<string>()
+	if (installedModuleInfo) {
+		for (const version of installedModuleInfo.releaseVersions) {
+			if (version.version.id) installedVersions.add(version.version.id)
+		}
+	}
+
+	return (
+		<>
+			<p>
+				{moduleInfo.name} ({moduleInfo.id}) {installedModuleInfo ? 'Installed' : 'Not installed'}
+			</p>
+
+			{moduleInfo.versions.map((v) => {
+				const isInstalled = installedVersions.has(v.id)
+				return (
+					<p key={v.id}>
+						{v.id} - {v.isPrerelease ? 'prerelease' : 'stable'} {new Date(v.releasedAt).toISOString()}
+						<CButton
+							color="primary"
+							disabled={isInstalled}
+							title={isInstalled ? 'Already installed' : ''}
+							onClick={() => {
+								socketEmitPromise(socket, 'modules:install-store-module', [moduleInfo.id, v.id]).catch((err) => {
+									console.error('Failed to install module', err)
+								})
+							}}
+						>
+							Install
+						</CButton>
+					</p>
+				)
+			})}
+			<hr />
 		</>
 	)
 })
