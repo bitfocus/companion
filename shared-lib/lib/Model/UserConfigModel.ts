@@ -66,6 +66,7 @@ export interface UserConfigModel {
 
 	gridSize: UserConfigGridSize
 	gridSizeInlineGrow: boolean
+	gridSizePromptGrow: boolean
 
 	installName: string
 

@@ -21,11 +21,10 @@ import LogController from '../../Log/Controller.js'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
 import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { EmulatorConfig, EmulatorImage, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
 import type { UIHandler, ClientSocket } from '../../UI/Handler.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { GridSize } from '../Util.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 export function EmulatorRoom(id: string): string {

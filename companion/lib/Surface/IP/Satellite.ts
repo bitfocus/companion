@@ -19,7 +19,7 @@ import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
-import { convertXYToIndexForPanel, convertPanelIndexToXY, GridSize } from '../Util.js'
+import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
 	BrightnessConfigField,
 	LegacyRotationConfigField,
@@ -30,7 +30,7 @@ import {
 import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 import type { CompanionVariableValue } from '@companion-module/base'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { Socket } from 'net'
 import type { ImageResult, ImageResultStyle } from '../../Graphics/ImageResult.js'
@@ -40,7 +40,7 @@ export interface SatelliteDeviceInfo {
 	productName: string
 	path: string
 	socket: import('net').Socket
-	gridSize: import('../Util.js').GridSize
+	gridSize: GridSize
 	supportsBrightness: boolean
 	streamBitmapSize: number | null
 	streamColors: string | boolean

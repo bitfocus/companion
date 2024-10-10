@@ -34,7 +34,7 @@
     "node": ">=18.16 <19"
   },
   "devDependencies": {
-    "@inquirer/prompts": "^6.0.1",
+    "@inquirer/prompts": "^7.0.0",
     "@types/ps-tree": "^1.1.6",
     "chokidar": "^3.6.0",
     "concurrently": "^9.0.1",
@@ -43,12 +43,14 @@
     "open": "^10.1.0",
     "prettier": "^3.3.3",
     "typescript": "~5.6.2",
-    "vitest": "^2.1.1",
+    "vitest": "^2.1.2",
     "vitest-mock-extended": "^2.0.2",
     "yaml": "^2.5.1",
-    "zx": "^8.1.7"
+    "zx": "^8.1.9"
   },
   "resolutions": {
+    "@napi-rs/canvas-darwin-arm64": "npm:@julusian/napi-rs-canvas-darwin-arm64@0.1.55-c",
+    "@napi-rs/canvas-darwin-x64": "npm:@julusian/napi-rs-canvas-darwin-x64@0.1.55-c",
     "app-builder-bin": "npm:@julusian/app-builder-bin@4.0.1",
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
     "osc/serialport": "^10.5.0",

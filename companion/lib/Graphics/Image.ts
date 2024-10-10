@@ -15,22 +15,23 @@
  *
  */
 
-import { Canvas, ImageData, SKRSContext2D } from '@napi-rs/canvas'
+import { Canvas, ImageData, Image as CanvasImage, loadImage, SKRSContext2D } from '@napi-rs/canvas'
 import LogController from '../Log/Controller.js'
-import { PNG } from 'pngjs'
 import type { HorizontalAlignment, VerticalAlignment } from '../Resources/Util.js'
 
-const DEFAULT_FONTS =
-	'Companion-sans, Companion-symbols1, Companion-symbols2, Companion-symbols3, Companion-symbols4, Companion-symbols5, Companion-symbols6, Companion-gurmukhi, Companion-simplified-chinese, Companion-emoji'
-
-async function pngParse(pngData: string | Buffer): Promise<PNG> {
-	return new Promise((resolve, reject) => {
-		new PNG().parse(pngData, (err, data) => {
-			if (err) reject(err)
-			else resolve(data)
-		})
-	})
-}
+const DEFAULT_FONTS = [
+	'Companion-sans',
+	'Companion-symbols1',
+	'Companion-symbols2',
+	'Companion-symbols3',
+	'Companion-symbols4',
+	'Companion-symbols5',
+	'Companion-symbols6',
+	'Companion-gurmukhi',
+	'Companion-simplified-chinese',
+	'Companion-korean',
+	'Companion-emoji',
+].join(', ')
 
 type LineOrientation = 'inside' | 'center' | 'outside'
 
@@ -235,25 +236,17 @@ export class Image {
 		valign: VerticalAlignment = 'center',
 		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink' = 1
 	): Promise<void> {
-		let png = await pngParse(data)
+		let png: CanvasImage | undefined
 
-		let imageWidth = png.width
-		let imageHeight = png.height
-
-		// create HTML compatible imageData object
-		const pixelarray = new Uint8ClampedArray(png.data)
-		let imageData
 		try {
-			imageData = new ImageData(pixelarray, imageWidth, imageHeight)
-		} catch (error) {
-			console.log('new ImageData failed', error)
+			png = await loadImage(data)
+		} catch (e) {
+			console.log('Error loading image', e)
 			return
 		}
 
-		// createImageBitmap() works async, so this intermediate canvas is a synchronous workaround
-		const imageCanvas = new Canvas(imageData.width, imageData.height)
-		const imageContext2d = imageCanvas.getContext('2d')
-		imageContext2d.putImageData(imageData, 0, 0)
+		let imageWidth = png.width
+		let imageHeight = png.height
 
 		let calculatedScale = 1
 		let scaledImageWidth = imageWidth
@@ -363,7 +356,7 @@ export class Image {
 		}
 
 		this.context2d.drawImage(
-			imageCanvas,
+			png,
 			source.x,
 			source.y,
 			source.w,

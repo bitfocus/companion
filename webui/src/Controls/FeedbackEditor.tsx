@@ -273,6 +273,8 @@ function FeedbackTableRow({
 			if (item.feedbackId === hoverId || (dragIndex === hoverIndex && dragParentId === hoverParentId)) {
 				return
 			}
+			// Can't move into itself
+			if (item.feedbackId === hoverParentId) return
 
 			if (!checkDragState(item, monitor, hoverId)) return
 
@@ -645,6 +647,9 @@ function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard 
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
+			// Can't move into itself
+			if (item.feedbackId === parentId) return
+
 			moveCard(item.feedbackId, parentId, 0)
 		},
 	})

@@ -20,7 +20,7 @@ if (process.platform === 'darwin') {
 		const plist = require('plist')
 		const semver = require('semver')
 
-		const minimumVersion = '10.15'
+		const minimumVersion = '11.0'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
 		/** @type {any} */

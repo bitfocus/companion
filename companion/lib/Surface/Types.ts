@@ -1,7 +1,6 @@
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
-import type { GridSize } from './Util.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 
 export type SurfacePanelFactory = {

@@ -299,7 +299,11 @@ export interface ClientToBackendEventsMap {
 
 	'connections:add': (info: { type: string; product: string | undefined }) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
-	'connections:set-config': (connectionId: string, newLabel: string, config: Record<string, any>) => string | null
+	'connections:set-config': (
+		connectionId: string,
+		newLabel: string,
+		config: Record<string, any> | null
+	) => string | null
 	'connections:set-order': (sortedIds: string[]) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>

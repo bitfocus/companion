@@ -1,3 +1,4 @@
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { CoreBase } from '../Core/Base.js'
 import type { Registry } from '../Registry.js'
 
@@ -29,7 +30,7 @@ export abstract class ServiceBase extends CoreBase {
 	/**
 	 * The user config setting to track if the module should be enabled/disabled
 	 */
-	protected readonly enableConfig: string | null
+	protected readonly enableConfig: keyof UserConfigModel | null
 	/**
 	 * Flag to track if the module is setup and ready to be enabled
 	 */
@@ -37,7 +38,7 @@ export abstract class ServiceBase extends CoreBase {
 	/**
 	 * The user config setting to track if the module should be enabled/disabled
 	 */
-	protected readonly portConfig: string | null
+	protected readonly portConfig: keyof UserConfigModel | null
 
 	/**
 	 * The port number to use for this service
@@ -52,7 +53,12 @@ export abstract class ServiceBase extends CoreBase {
 	 * @param enableConfig - the key for the userconfig that sets if the module is enabled or disabled
 	 * @param portConfig - the key for the userconfig that sets the service ports
 	 */
-	constructor(registry: Registry, debugNamespace: string, enableConfig: string | null, portConfig: string | null) {
+	constructor(
+		registry: Registry,
+		debugNamespace: string,
+		enableConfig: keyof UserConfigModel | null,
+		portConfig: keyof UserConfigModel | null
+	) {
 		super(registry, debugNamespace)
 
 		this.enableConfig = enableConfig

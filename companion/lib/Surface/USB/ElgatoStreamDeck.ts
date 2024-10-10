@@ -29,11 +29,10 @@ import {
 	LegacyRotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { LcdPosition, StreamDeckLcdSegmentControlDefinition, StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
-import type { GridSize } from '../Util.js'
 
 const setTimeoutPromise = util.promisify(setTimeout)
 

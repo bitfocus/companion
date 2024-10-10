@@ -21,7 +21,7 @@ import { colorToRgb } from './Util.js'
 import { BlackmagicController, openBlackmagicController } from '@blackmagic-controller/node'
 import debounceFn from 'debounce-fn'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type {
 	DrawButtonItem,
@@ -31,7 +31,6 @@ import type {
 	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from '../Types.js'
-import type { GridSize } from '../Util.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { BlackmagicControllerSetButtonColorValue } from '@blackmagic-controller/core'
 

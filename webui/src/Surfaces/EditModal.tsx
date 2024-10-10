@@ -160,6 +160,8 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 				console.log('update surface', key, value)
 				if (surfaceId) {
 					setSurfaceConfig((oldConfig) => {
+						if (!oldConfig) return oldConfig
+
 						const newConfig: SurfacePanelConfig = {
 							...oldConfig,
 							[key]: value,

@@ -44,6 +44,12 @@ export const GridConfig = observer(function GridConfig(props: UserConfigProps) {
 			/>
 
 			<UserConfigSwitchRow userConfig={props} label="Allow expanding in grid view" field="gridSizeInlineGrow" />
+
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Prompt to expand grid when attaching new surface"
+				field="gridSizePromptGrow"
+			/>
 		</>
 	)
 })

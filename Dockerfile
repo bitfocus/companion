@@ -1,17 +1,20 @@
 FROM node:22-bookworm AS companion-builder
 
+RUN corepack enable
+
 # Installation Prep
 RUN apt-get update && apt-get install -y \
     libusb-1.0-0-dev \
     libudev-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN yarn config set network-timeout 200000 -g
+RUN yarn config set httpTimeout 100000
 
 WORKDIR /app
 COPY . /app/
 
 # Generate version number file
+RUN yarn
 RUN yarn build:writefile
 
 # build the application

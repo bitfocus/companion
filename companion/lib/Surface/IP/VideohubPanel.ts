@@ -16,7 +16,7 @@
  */
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
-import { convertPanelIndexToXY, GridSize } from '../Util.js'
+import { convertPanelIndexToXY } from '../Util.js'
 // @ts-ignore
 import VideohubServer from 'videohub-server'
 import {
@@ -25,7 +25,7 @@ import {
 	LockConfigFields,
 	RotationConfigField,
 } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 

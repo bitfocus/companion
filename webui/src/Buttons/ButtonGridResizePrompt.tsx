@@ -16,9 +16,14 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 		socket.emit('set_userconfig_key', 'gridSize', overflowing.neededBounds)
 	}
 
+	const doDismiss = () => {
+		if (!overflowing) return
+		socket.emit('set_userconfig_key', 'gridSizePromptGrow', false)
+	}
+
 	return (
 		<>
-			<CAlert color="info">
+			<CAlert color="info" onClose={doDismiss} dismissible>
 				You have some surfaces which overflow the current grid bounds
 				<ul>
 					{overflowing.surfaces.map((s) => (

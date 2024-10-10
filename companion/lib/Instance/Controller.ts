@@ -15,8 +15,6 @@
  *
  */
 
-import { nanoid } from 'nanoid'
-import { delay } from '../Resources/Util.js'
 import { CoreBase } from '../Core/Base.js'
 import { InstanceDefinitions } from './Definitions.js'
 import { ModuleHost, ConnectionDebugLogRoom } from './Host.js'
@@ -33,6 +31,7 @@ import type { Registry } from '../Registry.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ClientSocket } from '../UI/Handler.js'
+import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 
 const InstancesRoom = 'instances'
 
@@ -53,9 +52,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
 
-	store: { db: Record<string, ConnectionConfig> } = {
-		db: {},
-	}
+	readonly #configStore: ConnectionConfigStore
 
 	readonly definitions: InstanceDefinitions
 	readonly status: InstanceStatus
@@ -68,19 +65,19 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.#variablesController = registry.variables
 		this.#controlsController = registry.controls
 
+		this.#configStore = new ConnectionConfigStore(registry.db, this.broadcastChanges.bind(this))
+
 		this.definitions = new InstanceDefinitions(registry)
 		this.status = new InstanceStatus(registry.io, registry.controls)
-		this.moduleHost = new ModuleHost(registry, this.status)
+		this.moduleHost = new ModuleHost(registry, this.status, this.#configStore)
 		this.modules = new InstanceModules(registry)
 
-		this.store.db = this.db.getKey('instance', {})
-
 		// Prepare for clients already
-		this.commitChanges()
+		this.broadcastChanges(this.#configStore.getAllInstanceIds())
 	}
 
 	getAllInstanceIds(): string[] {
-		return Object.keys(this.store.db)
+		return this.#configStore.getAllInstanceIds()
 	}
 
 	/**
@@ -90,8 +87,8 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		if (event == 'resume') {
 			this.logger.info('Power: Resuming')
 
-			for (const id in this.store.db) {
-				this.activate_module(id)
+			for (const id of this.#configStore.getAllInstanceIds()) {
+				this.#activate_module(id)
 			}
 		} else if (event == 'suspend') {
 			this.logger.info('Power: Suspending')
@@ -107,30 +104,28 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	 * @param extraModulePath - extra directory to search for modules
 	 */
 	async initInstances(extraModulePath: string): Promise<void> {
-		this.logger.silly('instance_init', this.store.db)
+		const connectionIds = this.#configStore.getAllInstanceIds()
+		this.logger.silly('instance_init', connectionIds)
 
 		await this.modules.initInstances(extraModulePath)
 
-		for (const id in this.store.db) {
-			this.activate_module(id, false)
+		for (const id of connectionIds) {
+			this.#activate_module(id, false)
 		}
 
 		this.emit('connection_added')
 	}
 
-	reloadUsesOfModule(module_id: string): void {
+	reloadUsesOfModule(moduleId: string): void {
 		// restart usages of this module
-		let reloadLabels: string[] = []
-		for (const [id, instance_config] of Object.entries(this.store.db)) {
-			if (instance_config && instance_config.instance_type === module_id && instance_config.enabled) {
-				reloadLabels.push(instance_config.label)
-				// Restart it
-				this.enableDisableInstance(id, false)
-				this.enableDisableInstance(id, true)
-			}
+		const { connectionIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleId)
+		for (const id of connectionIds) {
+			// Restart it
+			this.enableDisableInstance(id, false)
+			this.enableDisableInstance(id, true)
 		}
 
-		this.logger.info(`Reloading ${reloadLabels.length} connections: ${reloadLabels.join(', ')}`)
+		this.logger.info(`Reloading ${labels.length} connections: ${labels.join(', ')}`)
 	}
 
 	/**
@@ -142,24 +137,24 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		config: unknown | null,
 		skip_notify_instance = false
 	): void {
-		const entry = this.store.db[id]
-		if (!entry) {
+		const connectionConfig = this.#configStore.getConfigForId(id)
+		if (!connectionConfig) {
 			this.logger.warn(`setInstanceLabelAndConfig id "${id}" does not exist!`)
 			return
 		}
 
 		if (config) {
 			// Mark as definitely been initialised
-			entry.isFirstInit = false
+			connectionConfig.isFirstInit = false
 
 			// Update the config blob
-			entry.config = config
+			connectionConfig.config = config
 		}
 
 		// Rename variables
-		if (newLabel && entry.label != newLabel) {
-			const oldLabel = entry.label
-			entry.label = newLabel
+		if (newLabel && connectionConfig.label != newLabel) {
+			const oldLabel = connectionConfig.label
+			connectionConfig.label = newLabel
 			this.#variablesController.values.connectionLabelRename(oldLabel, newLabel)
 			this.#variablesController.definitions.connectionLabelRename(oldLabel, newLabel)
 			this.#controlsController.renameVariables(oldLabel, newLabel)
@@ -168,7 +163,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 		this.emit('connection_updated', id)
 
-		this.commitChanges()
+		this.#configStore.commitChanges([id])
 
 		const instance = this.instance.moduleHost.getChild(id, true)
 		if (newLabel) {
@@ -177,35 +172,12 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 		const updateInstance = !!newLabel || (config && !skip_notify_instance)
 		if (updateInstance && instance) {
-			instance.updateConfigAndLabel(entry.config, entry.label).catch((e: any) => {
+			instance.updateConfigAndLabel(connectionConfig.config, connectionConfig.label).catch((e: any) => {
 				instance.logger.warn('Error updating instance configuration: ' + e.message)
 			})
 		}
 
-		this.logger.debug(`instance "${entry.label}" configuration updated`)
-	}
-
-	/**
-	 *
-	 */
-	makeLabelUnique(prefix: string, ignoreId?: string): string {
-		const knownLabels = new Set()
-		for (const [id, obj] of Object.entries(this.store.db)) {
-			if (id !== ignoreId && obj && obj.label) {
-				knownLabels.add(obj.label)
-			}
-		}
-
-		prefix = makeLabelSafe(prefix)
-
-		let label = prefix
-		let i = 1
-		while (knownLabels.has(label)) {
-			// Try the next
-			label = `${prefix}_${++i}`
-		}
-
-		return label
+		this.logger.debug(`instance "${connectionConfig.label}" configuration updated`)
 	}
 
 	/**
@@ -217,70 +189,48 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		const moduleInfo = this.modules.getModuleManifest(module)
 		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
 
-		const label = this.makeLabelUnique(moduleInfo.display.shortname)
-
-		return this.addInstanceWithLabel(data, label, disabled)
+		return this.addInstanceWithLabel(data, moduleInfo.display.shortname, disabled)[0]
 	}
 
 	/**
 	 * Add a new instance of a module with a predetermined label
 	 */
-	addInstanceWithLabel(data: CreateConnectionData, label: string, disabled: boolean): string {
+	addInstanceWithLabel(
+		data: CreateConnectionData,
+		labelBase: string,
+		disabled: boolean
+	): [id: string, config: ConnectionConfig] {
 		let module = data.type
 		let product = data.product
 
+		const label = this.#configStore.makeLabelUnique(labelBase)
+
 		if (this.getIdForLabel(label)) throw new Error(`Label "${label}" already in use`)
-
-		// Find the highest rank given to an instance
-		const highestRank =
-			Math.max(
-				0,
-				...Object.values(this.store.db)
-					.map((c) => c.sortOrder)
-					.filter((n) => typeof n === 'number')
-			) || 0
-
-		let id = nanoid()
 
 		this.logger.info('Adding connection ' + module + ' ' + product)
 
-		this.store.db[id] = {
-			instance_type: module,
-			sortOrder: highestRank + 1,
-			label: label,
-			isFirstInit: true,
-			config: {
-				product: product,
-			},
-			lastUpgradeIndex: -1,
-			enabled: !disabled,
-		}
+		const [id, config] = this.#configStore.addConnection(module, label, product, disabled)
 
-		this.activate_module(id, true)
+		this.#activate_module(id, true)
 
 		this.logger.silly('instance_add', id)
-		this.commitChanges()
+		this.#configStore.commitChanges([id])
 
 		this.emit('connection_added', id)
 
-		return id
+		return [id, config]
 	}
 
 	getLabelForInstance(id: string): string | undefined {
-		return this.store.db[id]?.label
+		return this.#configStore.getConfigForId(id)?.label
 	}
 
 	getIdForLabel(label: string): string | undefined {
-		for (const [id, conf] of Object.entries(this.store.db)) {
-			if (conf && conf.label === label) {
-				return id
-			}
-		}
-		return undefined
+		return this.#configStore.getIdFromLabel(label)
 	}
 
 	getManifestForInstance(id: string): ModuleManifest | undefined {
-		const config = this.store.db[id]
+		const config = this.#configStore.getConfigForId(id)
 		if (!config) return undefined
 
 		const moduleManifest = this.modules.getModuleManifest(config.instance_type)
@@ -289,12 +239,14 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	}
 
 	enableDisableInstance(id: string, state: boolean): void {
-		const connectionConfig = this.store.db[id]
+		const connectionConfig = this.#configStore.getConfigForId(id)
 		if (connectionConfig) {
 			const label = connectionConfig.label
 			if (connectionConfig.enabled !== state) {
 				this.logger.info((state ? 'Enable' : 'Disable') + ' instance ' + label)
 				connectionConfig.enabled = state
+
+				this.#configStore.commitChanges([id])
 
 				if (state === false) {
 					this.moduleHost
@@ -311,10 +263,8 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 							this.controls.clearConnectionState(id)
 						})
 				} else {
-					this.activate_module(id)
+					this.#activate_module(id)
 				}
-
-				this.commitChanges()
 			} else {
 				if (state === true) {
 					this.logger.warn(`Attempting to enable connection "${label}" that is already enabled`)
@@ -326,7 +276,13 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	}
 
 	async deleteInstance(id: string): Promise<void> {
-		const label = this.store.db[id]?.label
+		const config = this.#configStore.getConfigForId(id)
+		if (!config) {
+			this.logger.warn(`Can't delete connection "${id}" which does not exist!`)
+			return
+		}
+
+		const label = config.label
 		this.logger.info(`Deleting instance: ${label ?? id}`)
 
 		try {
@@ -336,9 +292,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		}
 
 		this.status.forgetConnectionStatus(id)
-		delete this.store.db[id]
-
-		this.commitChanges()
+		this.#configStore.forgetConnection(id)
 
 		this.emit('connection_deleted', id)
 
@@ -351,7 +305,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 	async deleteAllInstances(): Promise<void> {
 		const ps = []
-		for (const instanceId of Object.keys(this.store.db)) {
+		for (const instanceId of this.#configStore.getAllInstanceIds()) {
 			ps.push(this.deleteInstance(instanceId))
 		}
 
@@ -362,19 +316,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	 * Get information for the metrics system about the current instances
 	 */
 	getInstancesMetrics(): Record<string, number> {
-		const instancesCounts: Record<string, number> = {}
-
-		for (const instance_config of Object.values(this.store.db)) {
-			if (instance_config.instance_type !== 'bitfocus-companion' && instance_config.enabled !== false) {
-				if (instancesCounts[instance_config.instance_type]) {
-					instancesCounts[instance_config.instance_type]++
-				} else {
-					instancesCounts[instance_config.instance_type] = 1
-				}
-			}
-		}
-
-		return instancesCounts
+		return this.#configStore.getInstancesMetrics()
 	}
 
 	/**
@@ -385,11 +327,9 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	}
 
 	/**
-	 * Save the instances config to the db, and inform clients
+	 * Inform clients of changes to the list of connections
 	 */
-	commitChanges(): void {
-		this.db.setKey('instance', this.store.db)
-
+	broadcastChanges(_connectionIds: string[]): void {
 		const newJson = cloneDeep(this.getClientJson())
 
 		// Now broadcast to any interested clients
@@ -406,8 +346,14 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	/**
 	 *
 	 */
-	exportInstance(instanceId: string, minimal = false, clone = true): ExportInstanceFullv4 | ExportInstanceMinimalv4 {
-		const rawObj = this.store.db[instanceId]
+	exportInstance(
+		instanceId: string,
+		minimal = false,
+		clone = true
+	): ExportInstanceFullv4 | ExportInstanceMinimalv4 | undefined {
+		const rawObj = this.#configStore.getConfigForId(instanceId)
+		if (!rawObj) return undefined
+
 		const obj = minimal
 			? {
 					instance_type: rawObj.instance_type,
@@ -422,8 +368,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	}
 
 	exportAll(clone = true): Record<string, ConnectionConfig | undefined> {
-		const obj = this.store.db
-		return clone ? cloneDeep(obj) : obj
+		return this.#configStore.exportAll(clone)
 	}
 
 	/**
@@ -437,14 +382,14 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	 * Get the config object of an instance
 	 */
 	getInstanceConfig(connectionId: string): ConnectionConfig | undefined {
-		return this.store.db[connectionId]
+		return this.#configStore.getConfigForId(connectionId)
 	}
 
 	/**
 	 * Start an instance running
 	 */
-	activate_module(id: string, is_being_created = false): void {
-		const config = this.store.db[id]
+	#activate_module(id: string, is_being_created = false): void {
+		const config = this.#configStore.getConfigForId(id)
 		if (!config) throw new Error('Cannot activate unknown module')
 
 		config.instance_type = this.modules.verifyInstanceTypeIsCurrent(config.instance_type)
@@ -463,6 +408,9 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		if (!is_being_created && safeLabel !== config.label) {
 			this.setInstanceLabelAndConfig(id, safeLabel, null, true)
 		}
+
+		// TODO this could check if anything above changed, or is_being_created
+		this.#configStore.commitChanges([id])
 
 		const moduleInfo = this.modules.getModuleManifest(config.instance_type)
 		if (!moduleInfo) {
@@ -493,36 +441,23 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		})
 
 		client.onPromise('connections:edit', async (id) => {
-			let instance = this.instance.moduleHost.getChild(id)
+			// Check if the instance exists
+			const instanceConf = this.#configStore.getConfigForId(id)
+			if (!instanceConf) return null
 
-			if (!instance) {
-				// Maybe instance has just been created and isn't yet ready
+			const instance = this.instance.moduleHost.getChild(id)
+			if (!instance) return null
 
-				// Wait a second then try again
-				await delay(1000)
+			try {
+				// TODO: making types match is messy
+				const fields: any = await instance.requestConfigFields()
 
-				instance = this.instance.moduleHost.getChild(id)
-			}
-
-			if (instance) {
-				try {
-					// TODO: makiing types match is messy
-					const fields: any = await instance.requestConfigFields()
-
-					const instanceConf = this.store.db[id]
-
-					return {
-						fields,
-						label: instanceConf?.label,
-						config: instanceConf?.config,
-						instance_type: instanceConf?.instance_type,
-					}
-				} catch (e: any) {
-					this.logger.silly(`Failed to load instance config_fields: ${e.message}`)
-					return null
+				return {
+					fields,
+					config: instanceConf.config,
 				}
-			} else {
-				// Unknown instance
+			} catch (e: any) {
+				this.logger.silly(`Failed to load instance config_fields: ${e.message}`)
 				return null
 			}
 		})
@@ -558,31 +493,11 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		client.onPromise('connections:set-order', async (connectionIds) => {
 			if (!Array.isArray(connectionIds)) throw new Error('Expected array of ids')
 
-			// This is a bit naive, but should be sufficient if the client behaves
-
-			// Update the order based on the ids provided
-			connectionIds.forEach((id, index) => {
-				const entry = this.store.db[id]
-				if (entry) entry.sortOrder = index
-			})
-
-			// Make sure all not provided are at the end in their original order
-			const allKnownIds = Object.entries(this.store.db)
-				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-				.map(([id]) => id)
-			let nextIndex = connectionIds.length
-			for (const id of allKnownIds) {
-				if (!connectionIds.includes(id)) {
-					const entry = this.store.db[id]
-					if (entry) entry.sortOrder = nextIndex++
-				}
-			}
-
-			this.commitChanges()
+			this.#configStore.setOrder(connectionIds)
 		})
 
 		client.onPromise('connection-debug:subscribe', (connectionId) => {
-			if (!this.store.db[connectionId]) return false
+			if (!this.#configStore.getConfigForId(connectionId)) return false
 
 			client.join(ConnectionDebugLogRoom(connectionId))
 
@@ -595,22 +510,12 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	}
 
 	getClientJson(): Record<string, ClientConnectionConfig> {
-		const result: Record<string, ClientConnectionConfig> = {}
+		const result = this.#configStore.getPartialClientJson()
 
-		for (const [id, config] of Object.entries(this.store.db)) {
-			result[id] = {
-				instance_type: config.instance_type,
-				label: config.label,
-				enabled: config.enabled,
-				sortOrder: config.sortOrder,
-
-				// Runtime properties
-				hasRecordActionsHandler: false,
-			}
-
+		for (const [id, config] of Object.entries(result)) {
 			const instance = this.moduleHost.getChild(id)
 			if (instance) {
-				result[id].hasRecordActionsHandler = instance.hasRecordActionsHandler
+				config.hasRecordActionsHandler = instance.hasRecordActionsHandler
 			}
 		}
 

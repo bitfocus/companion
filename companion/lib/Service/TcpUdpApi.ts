@@ -4,6 +4,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { RegexRouter } from './RegexRouter.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { Registry } from '../Registry.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 /**
  * Common API command processing for {@link ServiceTcp} and {@link ServiceUdp}.
@@ -39,7 +40,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	/**
 	 * Userconfig key to enable/disable legacy routes
 	 */
-	readonly #legacyRoutesEnableKey: string | null
+	readonly #legacyRoutesEnableKey: keyof UserConfigModel | null
 
 	get router(): RegexRouter {
 		return this.#router
@@ -50,7 +51,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * @param protocolName - the protocol name
 	 * @param legacyRoutesEnableKey - Userconfig key to enable/disable legacy routes
 	 */
-	constructor(registry: Registry, protocolName: string, legacyRoutesEnableKey: string | null) {
+	constructor(registry: Registry, protocolName: string, legacyRoutesEnableKey: keyof UserConfigModel | null) {
 		super(registry, 'Service/Api')
 
 		this.#router = new RegexRouter(() => {

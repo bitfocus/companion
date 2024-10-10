@@ -11,8 +11,9 @@ import { getNodeJsPath } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { Registry } from '../Registry.js'
 import type { InstanceStatus } from './Status.js'
-import { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { ModuleInfo } from './Modules.js'
+import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { ModuleInfo } from './Modules.js'
+import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 
 // This is a messy way to load a package.json, but createRequire, or path.resolve aren't webpack safe
 const moduleBasePkgStr = fs
@@ -68,6 +69,7 @@ export class ModuleHost {
 
 	readonly #registry: Registry
 	readonly #instanceStatus: InstanceStatus
+	readonly #connectionConfigStore: ConnectionConfigStore
 
 	/**
 	 * Queue for starting connections, to limit how many can be starting concurrently
@@ -76,9 +78,10 @@ export class ModuleHost {
 
 	#children: Map<string, ModuleChild>
 
-	constructor(registry: Registry, instanceStatus: InstanceStatus) {
+	constructor(registry: Registry, instanceStatus: InstanceStatus, connectionConfigStore: ConnectionConfigStore) {
 		this.#registry = registry
 		this.#instanceStatus = instanceStatus
+		this.#connectionConfigStore = connectionConfigStore
 
 		const cpuCount = os.cpus().length // An approximation
 		this.#startQueue = new PQueue({ concurrency: Math.max(cpuCount - 1, 1) })
@@ -103,7 +106,7 @@ export class ModuleHost {
 			const sleepDuration = sleepStrategy(child.restartCount)
 			if (!child.crashed) {
 				child.crashed = setTimeout(() => {
-					const config = this.#registry.instance.store.db[child.connectionId]
+					const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
 					const moduleInfo = config && this.#registry.instance.modules.getModuleManifest(config.instance_type)
 
 					// Restart after a short sleep
@@ -161,7 +164,7 @@ export class ModuleHost {
 				this.#logger.debug(`Registered module client "${connectionId}"`)
 
 				// TODO module-lib - can we get this in a cleaner way?
-				const config = this.#registry.instance.store.db[connectionId]
+				const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
 				if (!config) {
 					this.#logger.verbose(`Missing config for instance "${connectionId}"`)
 					forceRestart()
@@ -201,7 +204,7 @@ export class ModuleHost {
 						child.isReady = true
 
 						// Make sure clients are informed about any runtime properties
-						this.#registry.instance.commitChanges()
+						this.#registry.instance.broadcastChanges([child.connectionId])
 
 						// Inform action recorder
 						this.#registry.controls.actionRecorder.connectionAvailabilityChange(connectionId, true)
@@ -341,7 +344,7 @@ export class ModuleHost {
 	 */
 	async queueRestartConnection(
 		connectionId: string,
-		config: ConnectionConfig,
+		config: ConnectionConfig | undefined,
 		moduleInfo: ModuleInfo | undefined
 	): Promise<void> {
 		if (!config || !moduleInfo) return

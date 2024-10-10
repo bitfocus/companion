@@ -48,13 +48,19 @@ import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
-import type { ClientDevicesListItem, ClientSurfaceItem, SurfacesUpdate } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	ClientDevicesListItem,
+	ClientSurfaceItem,
+	SurfaceConfig,
+	SurfacesUpdate,
+} from '@companion-app/shared/Model/Surfaces.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { LocalUSBDeviceOptions, SurfacePanel, SurfacePanelFactory } from './Types.js'
+import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -286,14 +292,21 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	 * Create a `SurfaceHandler` for a `SurfacePanel`
 	 */
 	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): void {
-		const surfaceConfig = this.getDeviceConfig(panel.info.deviceId)
-		if (!surfaceConfig) {
+		const existingSurfaceConfig = this.getDeviceConfig(panel.info.deviceId)
+		if (!existingSurfaceConfig) {
 			this.logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
 		} else {
 			this.logger.silly(`Reusing config for device ${panel.info.deviceId}`)
 		}
 
-		const handler = new SurfaceHandler(this.registry, integrationType, panel, surfaceConfig)
+		const surfaceConfig = createOrSanitizeSurfaceHandlerConfig(
+			integrationType,
+			panel,
+			existingSurfaceConfig,
+			this.userconfig.getKey('gridSize')
+		)
+
+		const handler = new SurfaceHandler(this.registry, panel, surfaceConfig)
 		handler.on('interaction', () => {
 			const groupId = handler.getGroupId() || handler.surfaceId
 			this.#surfacesLastInteraction.set(groupId, Date.now())
@@ -430,6 +443,9 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			for (let surface of this.#surfaceHandlers.values()) {
 				if (surface && surface.surfaceId == id) {
 					surface.setPanelConfig(config)
+
+					setImmediate(() => this.updateDevicesList())
+
 					return surface.getPanelConfig()
 				}
 			}
@@ -616,7 +632,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	 * Get the config object for a surface
 	 * @returns Config object, or undefined
 	 */
-	getDeviceConfig(surfaceId: string): any {
+	getDeviceConfig(surfaceId: string): SurfaceConfig | undefined {
 		const config = this.db.getKey('deviceconfig', {})
 		return config[surfaceId]
 	}
@@ -642,7 +658,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	getDevicesList(): ClientDevicesListItem[] {
 		const translateSurfaceConfig = (
 			id: string,
-			config: Record<string, any>,
+			config: SurfaceConfig,
 			surfaceHandler: SurfaceHandler | null
 		): ClientSurfaceItem => {
 			const surfaceInfo: ClientSurfaceItem = {
@@ -656,8 +672,8 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 				displayName: getSurfaceName(config, id),
 				location: null,
 
-				size: config?.gridSize || null,
-				offset: { columns: config?.xOffset ?? 0, rows: config?.yOffset ?? 0 },
+				size: config.gridSize || null,
+				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 
 			if (surfaceHandler) {

@@ -103,6 +103,7 @@ export class DataUserConfig extends CoreBase {
 			maxRow: 3,
 		},
 		gridSizeInlineGrow: false, // TODO: temporary until the styling of growing is better
+		gridSizePromptGrow: true,
 
 		installName: '',
 
@@ -281,8 +282,7 @@ export class DataUserConfig extends CoreBase {
 	 * @param [clone = false] - <code>true</code> if a clone is needed instead of a link
 	 * @returns the config value
 	 */
-	getKey(key: string, clone = false): any {
-		// @ts-ignore
+	getKey(key: keyof UserConfigModel, clone = false): any {
 		let out = this.#data[key]
 
 		if (clone === true) {
@@ -335,8 +335,7 @@ export class DataUserConfig extends CoreBase {
 	 * Reset a user config to its default
 	 * @param key - the key to reset
 	 */
-	resetKey(key: string): void {
-		// @ts-ignore
+	resetKey(key: keyof UserConfigModel): void {
 		this.setKey(key, DataUserConfig.Defaults[key])
 	}
 
