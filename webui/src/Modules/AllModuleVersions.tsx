@@ -203,7 +203,30 @@ const ModuleEntry = observer(function ModuleEntry({ visibleModules, moduleInfo }
 						<td>
 							{moduleInfo.baseInfo.id} - {v.isBuiltin ? 'builtin' : 'from store'} {v.version.id}
 						</td>
-						<td>&nbsp;</td>
+						<td>
+							{!v.isBuiltin && (
+								<CButton
+									color="danger"
+									size="sm"
+									onClick={() => {
+										// TODO
+										console.log('aaa')
+										if (v.version.id) {
+											socketEmitPromise(
+												socket,
+												'modules:uninstall-store-module',
+												[moduleInfo.baseInfo.id, v.version.id],
+												20000
+											).catch((e) => {
+												console.error('Failed to uninstall module:', e)
+											})
+										}
+									}}
+								>
+									Remove
+								</CButton>
+							)}
+						</td>
 					</tr>
 				)
 			})}

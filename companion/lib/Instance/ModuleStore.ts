@@ -107,6 +107,12 @@ export class ModuleStoreService {
 								releasedAt: new Date('2021-01-02').getTime(),
 								tarUrl: '',
 							},
+							{
+								id: '3.14.1',
+								isPrerelease: false,
+								releasedAt: new Date('2021-01-02').getTime(),
+								tarUrl: 'https://builds.julusian.dev/companion-builds/atem-test-3.14.1.tgz',
+							},
 						],
 					},
 				},

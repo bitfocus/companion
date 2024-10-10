@@ -186,7 +186,28 @@ export class InstanceModules {
 				break
 			}
 			case 'release': {
-				// TODO
+				const storeModule = await this.#moduleScanner.loadInfoForModule(moduleDir, false)
+
+				if (!storeModule) throw new Error(`Failed to load store module. Missing from disk at "${moduleDir}"`)
+				if (storeModule?.manifest.id !== manifest.id)
+					throw new Error(`Mismatched module id: ${storeModule?.manifest.id} !== ${manifest.id}`)
+
+				// Update the module info
+				const moduleInfo = this.#getOrCreateModuleEntry(manifest.id)
+				moduleInfo.releaseVersions[storeModule.display.version] = {
+					...storeModule,
+					type: 'release',
+					versionId: storeModule.display.version,
+					releaseType: 'stable', // TODO - prerelease?
+					isBuiltin: false,
+				}
+
+				// Notify clients
+				this.#emitModuleUpdate(manifest.id)
+
+				// Ensure any modules using this version are started
+				await this.#instanceController.reloadUsesOfModule(manifest.id, 'release', manifest.version)
+
 				break
 			}
 			default:
@@ -258,9 +279,7 @@ export class InstanceModules {
 
 		// Load bundled modules
 		const bundledModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.bundledModulesDir, false)
-		// And moduels from the store
-		const storeModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.storeModulesDir, true)
-		for (const candidate of bundledModules.concat(storeModules)) {
+		for (const candidate of bundledModules) {
 			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
 			moduleInfo.releaseVersions[candidate.display.version] = {
 				...candidate,
@@ -268,6 +287,19 @@ export class InstanceModules {
 				releaseType: 'stable',
 				versionId: candidate.display.version,
 				isBuiltin: true,
+			}
+		}
+
+		// And moduels from the store
+		const storeModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.storeModulesDir, true)
+		for (const candidate of storeModules) {
+			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
+			moduleInfo.releaseVersions[candidate.display.version] = {
+				...candidate,
+				type: 'release',
+				releaseType: 'stable', // TODO - prerelease?
+				versionId: candidate.display.version,
+				isBuiltin: false,
 			}
 		}
 
