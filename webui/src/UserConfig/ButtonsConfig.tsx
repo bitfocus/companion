@@ -27,6 +27,12 @@ export const ButtonsConfig = observer(function ButtonsConfig(props: UserConfigPr
 				field="remove_topbar"
 				inverted
 			/>
+
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Show a border around a button while its pressed - only if the topbar is disabled"
+				field="show_pressed_border"
+			/>
 		</>
 	)
 })

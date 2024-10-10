@@ -30,12 +30,13 @@ export class DataUserConfig extends CoreBase {
 	/**
 	 * The defaults for the user config fields
 	 */
-	static Defaults: UserConfigModel = {
+    static Defaults: UserConfigModel = {
 		setup_wizard: 0,
 
 		page_direction_flipped: false,
 		page_plusminus: false,
 		remove_topbar: false,
+		show_pressed_border: false,
 
 		xkeys_enable: true,
 		xkeys_legacy_layout: false,

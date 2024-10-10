@@ -241,7 +241,7 @@ export class GraphicsRenderer {
 					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
 					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
 
-				GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+				GraphicsRenderer.#drawTopbar(img, showTopbar,options.show_pressed_border, drawStyle, location)
 				return
 			}
 		}
@@ -266,7 +266,7 @@ export class GraphicsRenderer {
 				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 
-			GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+			GraphicsRenderer.#drawTopbar(img, showTopbar, options.show_pressed_border, drawStyle, location)
 			return
 		}
 
@@ -289,20 +289,21 @@ export class GraphicsRenderer {
 		}
 
 		// At last draw Topbar on top
-		GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+		GraphicsRenderer.#drawTopbar(img, showTopbar, options.show_pressed_border, drawStyle, location)
 	}
 
 	/**
 	 * Draw the topbar onto an image for a button
 	 */
 	static #drawTopbar(
-		img: Image,
+		img: Image, 
 		showTopbar: boolean,
+		showPressedBorder: boolean,
 		drawStyle: DrawStyleButtonModel,
 		location: ControlLocation | undefined
 	) {
 		if (!showTopbar) {
-			if (drawStyle.pushed) {
+			if (drawStyle.pushed && showPressedBorder) {
 				img.drawBorder(3, colorButtonYellow)
 			}
 		} else {
