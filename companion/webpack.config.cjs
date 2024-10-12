@@ -51,6 +51,7 @@ module.exports = {
 		'utf-8-validate': 'commonjs2 utf-8-validate',
 		'@serialport/bindings-cpp': 'commonjs2 @serialport/bindings-cpp',
 		'@napi-rs/canvas': 'commonjs2 @napi-rs/canvas',
+		'better-sqlite3': 'commonjs2 better-sqlite3',
 	},
 	experiments: {
 		topLevelAwait: true,
