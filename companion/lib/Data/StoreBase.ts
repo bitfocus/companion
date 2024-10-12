@@ -419,7 +419,6 @@ export abstract class DataStoreBase {
 							fs.moveSync(this.cfgFile, this.cfgCorruptFile)
 							this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
 						} catch (e: any) {
-							fs.rmSync(this.cfgFile)
 							this.logger.error(`${this.name} could not be parsed.  A copy could not be saved.`)
 						}
 					} catch (err) {
@@ -488,17 +487,16 @@ export abstract class DataStoreBase {
 		if (fs.existsSync(this.cfgBakFile)) {
 			this.logger.silly(`${this.cfgBakFile} exists. trying to read`)
 			try {
+				try {
+					fs.rmSync(this.cfgFile)
+				} catch (e) {}
+
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
 				this.store = new Database(this.cfgFile)
 				this.getKey('test')
 			} catch (e: any) {
 				this.setStartupState(DatabaseStartupState.Reset)
 				this.logger.error(e.message)
-
-				try {
-					fs.rmSync(this.cfgFile)
-				} catch (e) {}
-
 				this.startSQLiteWithDefaults()
 			}
 		} else {
