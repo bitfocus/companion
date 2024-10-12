@@ -108,17 +108,16 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 								<td></td>
 								<td></td>
 								<td></td>
-								<td style={{ textAlign: 'center' }}>
-									<CButtonGroup style={{ textAlign: 'center', width: '100%' }}>
+								<td style={{ textAlign: 'right' }}>
+									<CButtonGroup style={{ width: '100%' }}>
 										<CButton
-											color="info"
+											color="warning"
 											size="sm"
 											onClick={doInsertPage}
 											title="Insert page at end"
 											data-page={pages.data.length + 1}
 										>
 											<FontAwesomeIcon icon={faPlus} />
-											&nbsp;Insert Page
 										</CButton>
 									</CButtonGroup>
 								</td>
@@ -209,15 +208,13 @@ const PageListRow = observer(function PageListRow({
 			</td>
 			<td style={{ width: 80, textAlign: 'center', fontWeight: 'bold' }}>{pageNumber}</td>
 			<td>{info.name ?? ''}</td>
-			<td style={{ width: 300 }}>
+			<td style={{ width: 100, textAlign: 'right' }}>
 				<CButtonGroup>
 					<CButton color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
 						<FontAwesomeIcon icon={faShareFromSquare} />
-						<br></br>
-						Jump to Page
 					</CButton>
 					<CButton
-						color="secondary"
+						color="info"
 						size="sm"
 						onClick={configurePage}
 						title="Edit page name"
@@ -225,16 +222,13 @@ const PageListRow = observer(function PageListRow({
 						data-page-info={JSON.stringify(info)}
 					>
 						<FontAwesomeIcon icon={faPencil} />
-						<br></br>
-						Edit Name
 					</CButton>
-					<CButton color="secondary" size="sm" onClick={doInsertPage} title="Insert page above" data-page={pageNumber}>
+					<CButton color="warning" size="sm" onClick={doInsertPage} title="Insert page above" data-page={pageNumber}>
 						<FontAwesomeIcon icon={faPlus} />
-						<br></br>Insert Above
 					</CButton>
 
 					<CButton
-						color="secondary"
+						color="primary"
 						size="sm"
 						onClick={doDeletePage}
 						title="Delete page"
@@ -242,9 +236,7 @@ const PageListRow = observer(function PageListRow({
 						data-name={info.name}
 						disabled={pageCount <= 1}
 					>
-						<FontAwesomeIcon color="#d50215" icon={faTrash} />
-						<br></br>
-						Delete Page
+						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 				</CButtonGroup>
 			</td>
