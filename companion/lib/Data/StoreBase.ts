@@ -115,7 +115,7 @@ export abstract class DataStoreBase {
 
 		if (configDir != ':memory:') {
 			this.cfgFile = path.join(this.cfgDir, this.name + '.sqlite')
-			this.cfgBakFile = path.join(this.cfgDir, this.name + '.bak')
+			this.cfgBakFile = path.join(this.cfgDir, this.name + '.sqlite.bak')
 			this.cfgCorruptFile = path.join(this.cfgDir, this.name + '.corrupt')
 			this.cfgLegacyFile = path.join(this.cfgDir, this.name)
 		}
@@ -213,8 +213,8 @@ export abstract class DataStoreBase {
 						}
 					}
 				}
-			} catch (e) {
-				this.logger.warn(`Error getting ${table}`, e)
+			} catch (e: any) {
+				this.logger.warn(`Error getting ${table}: ${e.message}`)
 			}
 		}
 
@@ -314,7 +314,7 @@ export abstract class DataStoreBase {
 				this.logger.debug('backup complete')
 			})
 			.catch((err) => {
-				this.logger.warn('backup failed', err.message)
+				this.logger.warn(`backup failed: ${err.message}`)
 			})
 	}
 
@@ -400,19 +400,30 @@ export abstract class DataStoreBase {
 		if (this.cfgDir == ':memory:') {
 			this.store = new Database(this.cfgDir)
 			this.create()
+			this.getKey('test')
 			this.loadDefaults()
 		} else {
 			if (fs.existsSync(this.cfgFile)) {
-				this.logger.silly(this.cfgFile, 'exists. trying to read')
+				this.logger.silly(`${this.cfgFile} exists. trying to read`)
 
 				try {
 					this.store = new Database(this.cfgFile)
+					this.getKey('test')
 				} catch (e) {
 					try {
-						fs.moveSync(this.cfgFile, this.cfgCorruptFile)
-						this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
+						try {
+							if (fs.existsSync(this.cfgCorruptFile)) {
+								fs.rmSync(this.cfgCorruptFile)
+							}
+
+							fs.moveSync(this.cfgFile, this.cfgCorruptFile)
+							this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
+						} catch (e: any) {
+							fs.rmSync(this.cfgFile)
+							this.logger.error(`${this.name} could not be parsed.  A copy could not be saved.`)
+						}
 					} catch (err) {
-						this.logger.silly(`${this.name}_load`, `Error making or deleting corrupted backup: ${err}`)
+						this.logger.silly(`${this.name} load Error making or deleting corrupted backup: ${err}`)
 					}
 
 					this.startSQLiteWithBackup()
@@ -425,6 +436,7 @@ export abstract class DataStoreBase {
 					this.store = new Database(this.cfgFile)
 					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
 					this.migrateFileToSqlite()
+					this.getKey('test')
 				} catch (e: any) {
 					this.setStartupState(DatabaseStartupState.Reset)
 					this.logger.error(e.message)
@@ -441,6 +453,7 @@ export abstract class DataStoreBase {
 				this.store = new Database(':memory:')
 				this.setStartupState(DatabaseStartupState.RAM)
 				this.create()
+				this.getKey('test')
 				this.loadDefaults()
 			} catch (e: any) {
 				this.setStartupState(DatabaseStartupState.Fatal)
@@ -473,10 +486,11 @@ export abstract class DataStoreBase {
 	 */
 	private startSQLiteWithBackup(): void {
 		if (fs.existsSync(this.cfgBakFile)) {
-			this.logger.silly(this.cfgBakFile, 'exists. trying to read')
+			this.logger.silly(`${this.cfgBakFile} exists. trying to read`)
 			try {
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
 				this.store = new Database(this.cfgFile)
+				this.getKey('test')
 			} catch (e: any) {
 				this.setStartupState(DatabaseStartupState.Reset)
 				this.logger.error(e.message)
@@ -506,6 +520,7 @@ export abstract class DataStoreBase {
 			try {
 				this.store = new Database(this.cfgFile)
 				this.create()
+				this.getKey('test')
 				this.loadDefaults()
 			} catch (e: any) {
 				this.logger.error(e.message)

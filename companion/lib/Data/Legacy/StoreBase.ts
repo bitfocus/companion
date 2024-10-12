@@ -32,10 +32,6 @@ export class DataLegacyStoreBase {
 	 */
 	private readonly cfgBakFile: string = ''
 	/**
-	 * The full corrupt file path
-	 */
-	private readonly cfgCorruptFile: string = ''
-	/**
 	 * The config directory
 	 */
 	private readonly cfgDir: string = ''
@@ -68,7 +64,6 @@ export class DataLegacyStoreBase {
 
 		this.cfgFile = path.join(this.cfgDir, this.name)
 		this.cfgBakFile = path.join(this.cfgDir, this.name + '.bak')
-		this.cfgCorruptFile = path.join(this.cfgDir, this.name + '.corrupt')
 	}
 
 	/**
@@ -132,9 +127,7 @@ export class DataLegacyStoreBase {
 				}
 			} catch (e) {
 				try {
-					fs.copyFileSync(this.cfgFile, this.cfgCorruptFile)
-					this.logger.debug(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
-					fs.rmSync(this.cfgFile)
+					this.logger.debug(`${this.name} could not be parsed.`)
 				} catch (err) {}
 
 				this.loadBackupSync()
@@ -159,10 +152,12 @@ export class DataLegacyStoreBase {
 					this.logger.silly('parsed JSON')
 					this.logger.debug(`${this.name}.bak has been used to recover the configuration.`)
 				} else {
-					this.logger.debug(`${this.name}.bak was empty.  Creating a new db.`)
+					this.logger.debug(`${this.name}.bak was empty.`)
+					throw new Error(`Could not load legacy ${this.name} file or backup.`)
 				}
 			} catch (e) {
 				this.logger.debug(`${this.name}.bak Could not load database backup file`)
+				throw new Error(`Could not load legacy ${this.name} file or backup.`)
 			}
 		}
 	}

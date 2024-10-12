@@ -30,9 +30,11 @@ function convertDatabaseToV5(db: DataStoreBase, _logger: Logger) {
 		db.deleteKey('controls')
 
 		// Migrate the legacy cloud DB to its new table
-		const clouddb = new DataLegacyCloudDatabase(db.cfgDir)
-		const cloud = clouddb.getAll()
-		batchInsert('cloud', cloud)
+		try {
+			const clouddb = new DataLegacyCloudDatabase(db.cfgDir)
+			const cloud = clouddb.getAll()
+			batchInsert('cloud', cloud)
+		} catch (e: any) {}
 
 		// Move surface-groups to match others
 		const surfaces = db.getKey('surface-groups', {})
