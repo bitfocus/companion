@@ -8,6 +8,7 @@ import { GraphicsController } from './Graphics/Controller.js'
 import { GraphicsPreview } from './Graphics/Preview.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
+import { CloudDatabase } from './Data/CloudDatabase.js'
 import { DataUserConfig } from './Data/UserConfig.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
@@ -71,8 +72,10 @@ export interface RegistryEvents {
  */
 export class Registry extends EventEmitter<RegistryEvents> {
 	/**
-	 * The cloud controller
+	 * The cloud database
 	 */
+	clouddb: CloudDatabase
+
 	cloud: CloudController
 	/**
 	 * The core controls controller
@@ -185,6 +188,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		this.ui = new UIController(this)
 		this.io = this.ui.io
 		this.db = new DataDatabase(this.appInfo.configDir)
+		this.clouddb = new CloudDatabase(this.appInfo.configDir)
 		this.data = new DataController(this)
 		this.userconfig = this.data.userconfig
 		LogController.init(this.appInfo, this.ui.io)
@@ -196,7 +200,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		this.surfaces = new SurfaceController(this)
 		this.instance = new InstanceController(this)
 		this.services = new ServiceController(this)
-		this.cloud = new CloudController(this, this.data.cache)
+		this.cloud = new CloudController(this, this.clouddb, this.data.cache)
 		this.internalModule = new InternalController(this)
 
 		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
@@ -270,8 +274,8 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
 			// Save the db to disk
-			this.db.close()
-			this.data.cache.close()
+			this.db.save()
+			this.data.cache.save()
 
 			try {
 				this.surfaces.quit()

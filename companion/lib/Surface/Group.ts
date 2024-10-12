@@ -113,7 +113,7 @@ export class SurfaceGroup {
 
 			this.#isAutoGroup = true
 		} else {
-			this.groupConfig = this.#db.getKey('surface_groups', {})[this.groupId] || {}
+			this.groupConfig = this.#db.getKey('surface-groups', {})[this.groupId] || {}
 		}
 		// Apply missing defaults
 		this.groupConfig = {
@@ -166,9 +166,9 @@ export class SurfaceGroup {
 	 * Delete this group from the config
 	 */
 	forgetConfig(): void {
-		const groupsConfig = this.#db.getKey('surface_groups', {})
+		const groupsConfig = this.#db.getKey('surface-groups', {})
 		delete groupsConfig[this.groupId]
-		this.#db.setKey('surface_groups', groupsConfig)
+		this.#db.setKey('surface-groups', groupsConfig)
 	}
 
 	/**
@@ -383,9 +383,9 @@ export class SurfaceGroup {
 			const surface = this.surfaceHandlers[0]
 			surface.saveGroupConfig(this.groupConfig)
 		} else {
-			const groupsConfig = this.#db.getKey('surface_groups', {})
+			const groupsConfig = this.#db.getKey('surface-groups', {})
 			groupsConfig[this.groupId] = this.groupConfig
-			this.#db.setKey('surface_groups', groupsConfig)
+			this.#db.setKey('surface-groups', groupsConfig)
 		}
 	}
 }

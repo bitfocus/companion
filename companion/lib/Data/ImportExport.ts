@@ -435,6 +435,14 @@ export class DataImportExport extends CoreBase {
 			}
 
 			try {
+				const _db = this.db.getAll()
+				const out = JSON.stringify(_db)
+				archive.append(out, { name: 'db.ram' })
+			} catch (e) {
+				this.logger.debug(`Support bundle append db: ${e}`)
+			}
+
+			try {
 				const payload = this.registry.ui.update.compilePayload()
 				let out = JSON.stringify(payload)
 				archive.append(out, { name: 'user.json' })
@@ -512,7 +520,6 @@ export class DataImportExport extends CoreBase {
 			if (object.instances) {
 				for (const inst of Object.values(object.instances)) {
 					if (inst) {
-						/** @ts-ignore */
 						inst.lastUpgradeIndex = inst.lastUpgradeIndex ?? -1
 					}
 				}
@@ -576,7 +583,6 @@ export class DataImportExport extends CoreBase {
 
 					for (const [id, trigger] of Object.entries(object.triggers)) {
 						clientObject.triggers[id] = {
-							/** @ts-ignore */
 							name: trigger.options.name,
 						}
 					}

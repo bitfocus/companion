@@ -73,7 +73,7 @@ export abstract class ControlBase<TJson> extends CoreBase {
 		const newJson = this.toJSON(true)
 
 		// Save to db
-		this.db.setTableKey('controls', this.controlId, newJson as any)
+		this.db.setKey(['controls', this.controlId], newJson as any)
 
 		// Now broadcast to any interested clients
 		const roomName = ControlConfigRoom(this.controlId)
