@@ -71,10 +71,10 @@ export class ServiceTcpUdpApi extends CoreBase {
 	}
 
 	#setupLegacyRoutes() {
-		this.#router.addPath('page-set :page(\\d+) :surfaceId', (match) => {
+		this.#router.addPath('page-set :page :surfaceId', (match) => {
 			this.#checkLegacyRouteAllowed()
 
-			const page = parseInt(match.page)
+			const page = Number(match.page)
 			const surfaceId = match.surfaceId
 
 			const pageId = this.page.getPageInfo(page)?.id
@@ -105,7 +105,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			return `If ${surfaceId} is connected`
 		})
 
-		this.#router.addPath('bank-press :page(\\d+) :bank(\\d+)', (match) => {
+		this.#router.addPath('bank-press :page :bank', (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -123,7 +123,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}, 20)
 		})
 
-		this.#router.addPath('bank-down :page(\\d+) :bank(\\d+)', (match) => {
+		this.#router.addPath('bank-down :page :bank', (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -136,7 +136,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('bank-up :page(\\d+) :bank(\\d+)', (match) => {
+		this.#router.addPath('bank-up :page :bank', (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -149,13 +149,13 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('bank-step :page(\\d+) :bank(\\d+) :step(\\d+)', (match) => {
+		this.#router.addPath('bank-step :page :bank :step', (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) throw new ApiMessageError('Page/bank out of range')
 
-			const step = parseInt(match.step)
+			const step = Number(match.step)
 
 			this.logger.info(`Got bank-step (trigger) ${controlId} ${step}`)
 
@@ -167,7 +167,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			if (!control.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
 		})
 
-		this.#router.addPath('style bank :page(\\d+) :bank(\\d+) text{ :text}?', (match) => {
+		this.#router.addPath('style bank :page :bank text{ :text}', (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -184,7 +184,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('style bank :page(\\d+) :bank(\\d+) bgcolor #:color([a-f\\d]+)', (match) => {
+		this.#router.addPath('style bank :page :bank bgcolor #:color', (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -202,7 +202,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('style bank :page(\\d+) :bank(\\d+) color #:color([a-f\\d]+)', (match) => {
+		this.#router.addPath('style bank :page :bank color #:color', (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -235,40 +235,34 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	#setupNewRoutes() {
 		// surface pages
-		this.#router.addPath('surface :surfaceId page-set :page(\\d+)', this.#surfaceSetPage)
+		this.#router.addPath('surface :surfaceId page-set :page', this.#surfaceSetPage)
 		this.#router.addPath('surface :surfaceId page-up', this.#surfacePageUp)
 		this.#router.addPath('surface :surfaceId page-down', this.#surfacePageDown)
 
 		// control by location
-		this.#router.addPath('location :page(\\d+)/:row(\\d+)/:column(\\d+) press', this.#locationPress)
-		this.#router.addPath('location :page(\\d+)/:row(\\d+)/:column(\\d+) down', this.#locationDown)
-		this.#router.addPath('location :page(\\d+)/:row(\\d+)/:column(\\d+) up', this.#locationUp)
-		this.#router.addPath('location :page(\\d+)/:row(\\d+)/:column(\\d+) rotate-left', this.#locationRotateLeft)
-		this.#router.addPath('location :page(\\d+)/:row(\\d+)/:column(\\d+) rotate-right', this.#locationRotateRight)
-		this.#router.addPath('location :page(\\d+)/:row(\\d+)/:column(\\d+) set-step :step(\\d+)', this.#locationSetStep)
+		this.#router.addPath('location :page/:row/:column press', this.#locationPress)
+		this.#router.addPath('location :page/:row/:column down', this.#locationDown)
+		this.#router.addPath('location :page/:row/:column up', this.#locationUp)
+		this.#router.addPath('location :page/:row/:column rotate-left', this.#locationRotateLeft)
+		this.#router.addPath('location :page/:row/:column rotate-right', this.#locationRotateRight)
+		this.#router.addPath('location :page/:row/:column set-step :step', this.#locationSetStep)
 
-		this.#router.addPath('location :page(\\d+)/:row(\\d+)/:column(\\d+) style text{ :text}?', this.#locationStyleText)
-		this.#router.addPath(
-			'location :page(\\d+)/:row(\\d+)/:column(\\d+) style color :color(.+)',
-			this.#locationStyleColor
-		)
-		this.#router.addPath(
-			'location :page(\\d+)/:row(\\d+)/:column(\\d+) style bgcolor :bgcolor(.+)',
-			this.#locationStyleBgcolor
-		)
+		this.#router.addPath('location :page/:row/:column style text{ :text}', this.#locationStyleText)
+		this.#router.addPath('location :page/:row/:column style color :color', this.#locationStyleColor)
+		this.#router.addPath('location :page/:row/:column style bgcolor :bgcolor', this.#locationStyleBgcolor)
 
 		// surfaces
 		this.#router.addPath('surfaces rescan', this.#surfacesRescan)
 
 		// custom variables
-		this.#router.addPath('custom-variable :name set-value :value(.*)', this.#customVariableSetValue)
+		this.#router.addPath('custom-variable :name set-value {:value}', this.#customVariableSetValue)
 	}
 
 	/**
 	 * Perform surface set to page
 	 */
 	#surfaceSetPage = (match: Record<string, string>): string => {
-		const page = parseInt(match.page)
+		const page = Number(match.page)
 		const surfaceId = match.surfaceId
 
 		const pageId = this.page.getPageInfo(page)?.id
@@ -375,7 +369,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * Set control step
 	 */
 	#locationSetStep = (match: Record<string, string>): void => {
-		const step = parseInt(match.step)
+		const step = Number(match.step)
 		const { location, controlId } = this.#locationParse(match)
 
 		this.logger.info(`Got location set-step at ${formatLocation(location)} (${controlId}) to ${step}`)
@@ -471,7 +465,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * Perform custom variable set value
 	 */
 	#customVariableSetValue = (match: Record<string, string>): void => {
-		const result = this.variablesController.custom.setValue(match.name, match.value)
+		const result = this.variablesController.custom.setValue(match.name, match.value ?? '')
 		if (result) {
 			throw new ApiMessageError(result)
 		}
@@ -486,6 +480,10 @@ export class ServiceTcpUdpApi extends CoreBase {
 			row: Number(match.row),
 			column: Number(match.column),
 		}
+
+		if (isNaN(location.pageNumber) || isNaN(location.row) || isNaN(location.column))
+			// Match previous behaviour
+			throw new ApiMessageError('Syntax error')
 
 		const controlId = this.registry.page.getControlIdAt(location)
 
