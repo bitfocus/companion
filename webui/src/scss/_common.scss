@@ -91,6 +91,25 @@ th {
 	}
 }
 
+.table-header-buttons {
+	float: right;
+	margin: 0;
+
+	button {
+		padding: 1px 5px;
+		opacity: 0.4;
+
+		&.active {
+			opacity: 1;
+		}
+
+		&.btn-secondary {
+			background-color: white;
+			color: black;
+		}
+	}
+}
+
 code {
 	font-family: 'Fira Code', monospace;
 	font-size: 1.05em;

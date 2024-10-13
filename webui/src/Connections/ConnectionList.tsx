@@ -1,4 +1,4 @@
-import React, { RefObject, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { RefObject, useCallback, useContext, useEffect, useRef } from 'react'
 import { CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
 import { ConnectionsContext, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -15,7 +15,6 @@ import {
 	faEllipsisV,
 	faPlug,
 } from '@fortawesome/free-solid-svg-icons'
-
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { useDrag, useDrop } from 'react-dnd'
@@ -26,6 +25,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
+import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -62,24 +62,12 @@ export function ConnectionsList({
 		variablesModalRef.current?.show(connectionId)
 	}, [])
 
-	const [visibleConnections, setVisibleConnections] = useState<VisibleConnectionsState>(() => loadVisibility())
-
-	// Save the config when it changes
-	useEffect(() => {
-		window.localStorage.setItem('connections_visible', JSON.stringify(visibleConnections))
-	}, [visibleConnections])
-
-	const doToggleVisibility = useCallback((key: keyof VisibleConnectionsState) => {
-		setVisibleConnections((oldConfig) => ({
-			...oldConfig,
-			[key]: !oldConfig[key],
-		}))
-	}, [])
-
-	const doToggleDisabled = useCallback(() => doToggleVisibility('disabled'), [doToggleVisibility])
-	const doToggleOk = useCallback(() => doToggleVisibility('ok'), [doToggleVisibility])
-	const doToggleWarning = useCallback(() => doToggleVisibility('warning'), [doToggleVisibility])
-	const doToggleError = useCallback(() => doToggleVisibility('error'), [doToggleVisibility])
+	const visibleConnections = useTableVisibilityHelper<VisibleConnectionsState>('connections_visible', {
+		disabled: true,
+		ok: true,
+		warning: true,
+		error: true,
+	})
 
 	const moveRow = useCallback(
 		(itemId: string, targetId: string) => {
@@ -110,14 +98,14 @@ export function ConnectionsList({
 		.map(([id, connection]) => {
 			const status = connectionStatus?.[id]
 
-			if (!visibleConnections.disabled && connection.enabled === false) {
+			if (!visibleConnections.visiblity.disabled && connection.enabled === false) {
 				return undefined
 			} else if (status) {
-				if (!visibleConnections.ok && status.category === 'good') {
+				if (!visibleConnections.visiblity.ok && status.category === 'good') {
 					return undefined
-				} else if (!visibleConnections.warning && status.category === 'warning') {
+				} else if (!visibleConnections.visiblity.warning && status.category === 'warning') {
 					return undefined
-				} else if (!visibleConnections.error && status.category === 'error') {
+				} else if (!visibleConnections.visiblity.error && status.category === 'error') {
 					return undefined
 				}
 			}
@@ -160,44 +148,11 @@ export function ConnectionsList({
 						<th>Label</th>
 						<th>Module</th>
 						<th colSpan={3} className="fit">
-							<CButtonGroup style={{ float: 'right', margin: 0 }}>
-								<CButton
-									size="sm"
-									color="secondary"
-									style={{
-										backgroundColor: 'white',
-										opacity: visibleConnections.disabled ? 1 : 0.4,
-										padding: '1px 5px',
-										color: 'black',
-									}}
-									onClick={doToggleDisabled}
-								>
-									Disabled
-								</CButton>
-								<CButton
-									size="sm"
-									color="success"
-									style={{ opacity: visibleConnections.ok ? 1 : 0.4, padding: '1px 5px' }}
-									onClick={doToggleOk}
-								>
-									OK
-								</CButton>
-								<CButton
-									color="warning"
-									size="sm"
-									style={{ opacity: visibleConnections.warning ? 1 : 0.4, padding: '1px 5px' }}
-									onClick={doToggleWarning}
-								>
-									Warning
-								</CButton>
-								<CButton
-									color="danger"
-									size="sm"
-									style={{ opacity: visibleConnections.error ? 1 : 0.4, padding: '1px 5px' }}
-									onClick={doToggleError}
-								>
-									Error
-								</CButton>
+							<CButtonGroup className="table-header-buttons">
+								<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
+								<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
+								<VisibilityButton {...visibleConnections} keyId="warning" color="warning" label="Warning" />
+								<VisibilityButton {...visibleConnections} keyId="error" color="danger" label="Error" />
 							</CButtonGroup>
 						</th>
 					</tr>
@@ -227,27 +182,6 @@ export function ConnectionsList({
 			</table>
 		</div>
 	)
-}
-
-function loadVisibility(): VisibleConnectionsState {
-	try {
-		const rawConfig = window.localStorage.getItem('connections_visible')
-		if (rawConfig !== null) {
-			return JSON.parse(rawConfig) ?? {}
-		}
-	} catch (e) {}
-
-	// setup defaults
-	const config: VisibleConnectionsState = {
-		disabled: true,
-		ok: true,
-		warning: true,
-		error: true,
-	}
-
-	window.localStorage.setItem('connections_visible', JSON.stringify(config))
-
-	return config
 }
 
 interface ConnectionDragItem {
