@@ -2,7 +2,6 @@ import LogController, { Logger } from '../Log/Controller.js'
 import PQueue from 'p-queue'
 import { nanoid } from 'nanoid'
 import path from 'path'
-import semver from 'semver'
 import { SocketEventsHandler } from './Wrapper.js'
 import fs from 'fs-extra'
 import ejson from 'ejson'
@@ -14,20 +13,7 @@ import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleInfo } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
-
-// This is a messy way to load a package.json, but createRequire, or path.resolve aren't webpack safe
-const moduleBasePkgStr = fs
-	.readFileSync(new URL('../../../node_modules/@companion-module/base/package.json', import.meta.url))
-	.toString()
-const moduleBasePkg = JSON.parse(moduleBasePkgStr)
-
-const moduleVersion = semver.parse(moduleBasePkg.version)
-if (!moduleVersion)
-	throw new Error(`Failed to parse @companion-module/base version as semver: ${moduleBasePkg.version}`)
-const additionalVersions = moduleVersion.major === 1 ? '~0.6 ||' : '' // Allow 0.6, as it is compatible with 1.0, but semver made the jump necessary
-const validApiRange = new semver.Range(
-	`${additionalVersions} ${moduleVersion.major} <= ${moduleVersion.major}.${moduleVersion.minor}` // allow patch versions of the same minor
-)
+import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 
 /**
  * A backoff sleep strategy
@@ -125,7 +111,7 @@ export class ModuleHost {
 		const initHandler = (msg: Record<string, any>): void => {
 			if (msg.direction === 'call' && msg.name === 'register' && msg.callbackId && msg.payload) {
 				const { apiVersion, connectionId, verificationToken } = ejson.parse(msg.payload)
-				if (!child.skipApiVersionCheck && !validApiRange.test(apiVersion)) {
+				if (!child.skipApiVersionCheck && !isModuleApiVersionCompatible(apiVersion)) {
 					this.#logger.debug(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`)
 					this.#registry.io.emitToRoom(
 						debugLogRoom,
@@ -385,9 +371,9 @@ export class ModuleHost {
 							return
 						}
 
-						if (moduleInfo.isPackaged && !validApiRange.test(moduleInfo.manifest.runtime.apiVersion)) {
+						if (moduleInfo.isPackaged && !isModuleApiVersionCompatible(moduleInfo.manifest.runtime.apiVersion)) {
 							this.#logger.error(
-								`Module Api version is too new/old: "${connectionId}" ${moduleInfo.manifest.runtime.apiVersion} ${validApiRange.format()}`
+								`Module Api version is too new/old: "${connectionId}" ${moduleInfo.manifest.runtime.apiVersion}`
 							)
 							return
 						}
