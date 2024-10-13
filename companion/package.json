@@ -99,7 +99,8 @@
 		"winston": "^3.15.0",
 		"workerpool": "^9.2.0",
 		"ws": "^8.18.0",
-		"xkeys": "^3.1.2"
+		"xkeys": "^3.1.2",
+		"yaml": "^2.6.0"
 	},
 	"collective": {
 		"type": "donorbox",
