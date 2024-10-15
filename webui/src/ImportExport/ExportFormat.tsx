@@ -11,11 +11,11 @@ const formatOptions: DropdownChoice[] = [
 	},
 	{
 		id: 'json',
-		label: 'Uncompressed (JSON)',
+		label: 'JSON (Standard)',
 	},
 	{
 		id: 'yaml',
-		label: 'YAML (more human readable)',
+		label: 'YAML (More human readable)',
 	},
 ]
 
