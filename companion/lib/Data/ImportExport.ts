@@ -69,6 +69,23 @@ function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 	return undefined
 }
 
+/**
+ * Replacer that splits "png64" values into multiple lines.
+ *
+ * These are base64 encoded PNGs and can get very long. A length of 60 characters is used to allow
+ * for indentation in the YAML.
+ *
+ * @param {string} key - The key of the value being processed.
+ * @param {string} value - The value to be processed.
+ * @returns {string} The modified value or the original value if the conditions are not met.
+ */
+function splitLongPng64Values(key: string, value: string): string {
+	if (key === 'png64' && typeof value === 'string' && value.length > 60) {
+		return btoa(atob(value)).replace(/(.{60})/g, '$1\n') + '\n'
+	}
+	return value
+}
+
 function downloadBlob(
 	logger: Logger,
 	res: express.Response,
@@ -104,7 +121,7 @@ function downloadBlob(
 			'Content-Type': 'application/yaml',
 			'Content-Disposition': `attachment; filename="${filename}.yaml"`,
 		})
-		res.end(yaml.stringify(data))
+		res.end(yaml.stringify(data, splitLongPng64Values))
 	} else {
 		next(new Error(`Unknown format: ${format}`))
 	}
