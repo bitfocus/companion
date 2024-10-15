@@ -6711,6 +6711,7 @@ asn1@evs-broadcast/node-asn1:
     workerpool: "npm:^9.2.0"
     ws: "npm:^8.18.0"
     xkeys: "npm:^3.1.2"
+    yaml: "npm:^2.6.0"
   languageName: unknown
   linkType: soft
 

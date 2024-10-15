@@ -26,6 +26,7 @@ import { CoreBase } from '../Core/Base.js'
 import archiver from 'archiver'
 import path from 'path'
 import fs from 'fs'
+import yaml from 'yaml'
 import zlib from 'node:zlib'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
@@ -56,15 +57,15 @@ import type {
 } from '@companion-app/shared/Model/ImportExport.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
+import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ActionInstance, ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
-type DownloadFormat = 'json-gz' | 'json'
-function parseDownloadFormat(raw: ParsedQs[0]): DownloadFormat | undefined {
-	if (raw === 'json-gz' || raw === 'json') return raw
+function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
+	if (raw === 'json-gz' || raw === 'json' || raw === 'yaml') return raw
 	return undefined
 }
 
@@ -74,12 +75,10 @@ function downloadBlob(
 	next: express.NextFunction,
 	data: SomeExportv4,
 	filename: string,
-	format: DownloadFormat | undefined
+	format: ExportFormat | undefined
 ): void {
-	const dataStr = JSON.stringify(data, undefined, '\t')
-
 	if (!format || format === 'json-gz') {
-		zlib.gzip(dataStr, (err, result) => {
+		zlib.gzip(JSON.stringify(data), (err, result) => {
 			if (err) {
 				logger.warn(`Failed to gzip data, retrying uncompressed: ${err}`)
 				downloadBlob(logger, res, next, data, filename, 'json')
@@ -98,7 +97,14 @@ function downloadBlob(
 			'Content-Type': 'application/json',
 			'Content-Disposition': `attachment; filename="${filename}"`,
 		})
-		res.end(dataStr)
+		res.end(JSON.stringify(data, undefined, '\t'))
+	} else if (format === 'yaml') {
+		res.status(200)
+		res.set({
+			'Content-Type': 'application/yaml',
+			'Content-Disposition': `attachment; filename="${filename}.yaml"`,
+		})
+		res.end(yaml.stringify(data))
 	} else {
 		next(new Error(`Unknown format: ${format}`))
 	}
@@ -493,7 +499,8 @@ export class DataImportExport extends CoreBase {
 
 			let rawObject
 			try {
-				rawObject = JSON.parse(dataStr.toString())
+				// YAML parser will handle JSON too
+				rawObject = yaml.parse(dataStr.toString())
 			} catch (e) {
 				return ['File is corrupted or unknown format']
 			}
