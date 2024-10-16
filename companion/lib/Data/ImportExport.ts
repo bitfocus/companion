@@ -354,7 +354,7 @@ export class DataImportExport extends CoreBase {
 			const filename = req.query.filename
 				? encodeURI(`${req.query.filename}.companionconfig`)
 				: encodeURI(`${os.hostname()}_custom-config_${getTimestamp()}.companionconfig`)
-		
+
 			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
 
