@@ -16,6 +16,7 @@ export interface ClientExportSelection {
 	customVariables: boolean
 	connections: boolean
 	surfaces: boolean
+	userconfig: boolean
 	format: ExportFormat
 	filename?: string
 }
@@ -25,6 +26,7 @@ export interface ClientImportSelection {
 	customVariables: boolean
 	surfaces: boolean
 	triggers: boolean
+	userconfig: boolean
 }
 
 export interface ClientPageInfo {
@@ -44,6 +46,7 @@ export interface ClientImportObject {
 	customVariables: boolean
 	surfaces: boolean
 	triggers: boolean | Record<string, { name: string }>
+	userconfig: boolean
 	oldPageNumber?: number
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>

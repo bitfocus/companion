@@ -285,6 +285,7 @@ export class ImportExportController {
 				customVariables: 'custom_variables' in object,
 				surfaces: 'surfaces' in object,
 				triggers: 'triggers' in object,
+				userconfig: 'userconfig' in object,
 			}
 
 			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
@@ -370,6 +371,11 @@ export class ImportExportController {
 
 				// Destroy old stuff
 				await this.#reset(undefined, !config || config.buttons)
+
+				// import userconfig
+				if (!config || config.userconfig) {
+					this.userconfig.setKeys(data.userconfig || {})
+				}
 
 				// import custom variables
 				if (!config || config.customVariables) {
