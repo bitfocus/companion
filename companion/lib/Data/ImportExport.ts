@@ -351,8 +351,10 @@ export class DataImportExport extends CoreBase {
 			// @ts-expect-error
 			const exp = generateCustomExport(req.query)
 
-			const filename = encodeURI(`${os.hostname()}_custom-config_${getTimestamp()}.companionconfig`)
-
+			const filename = req.query.filename
+				? encodeURI(`${req.query.filename}.companionconfig`)
+				: encodeURI(`${os.hostname()}_custom-config_${getTimestamp()}.companionconfig`)
+		
 			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
 

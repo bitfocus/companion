@@ -1,5 +1,5 @@
 import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import { CButton, CForm, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CForm, CFormCheck, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { PreventDefaultHandler } from '../util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
@@ -120,7 +120,7 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 	return (
 		<div>
 			<h5>Export Options</h5>
-			<p>Please select the components you'd like to export.</p>
+			<p>Please select the components you'd like to export:</p>
 			<div className="indent3">
 				<CFormCheck
 					id="wizard_connections"
@@ -170,9 +170,13 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 					label='Settings'
 				/>
 			</div> */}
-
+			<br></br>
 			<div>
 				<SelectExportFormat value={config.format} setValue={(val) => setValue('format', val)} label="File format" />
+			</div>
+			<br></br>
+			<div>
+				<CFormInput onChange={(e) => setValue('filename', e.currentTarget.value)} label="File name (Optional)" />
 			</div>
 		</div>
 	)
