@@ -40,7 +40,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	#variableValues: VariableValueData = {}
 
 	getVariableValue(label: string, name: string): CompanionVariableValue | undefined {
-		if (label === 'internal' && name.substring(0, 6) == 'custom_') {
+		if (label === 'internal' && name.substring(0, 7) == 'custom_') {
 			label = 'custom'
 			name = name.substring(7)
 		}

@@ -68,7 +68,7 @@ export function parseVariablesInString(
 		let connectionLabel = matches[1]
 		let variableId = matches[2]
 
-		if (connectionLabel === 'internal' && variableId.substring(0, 6) === 'custom_') {
+		if (connectionLabel === 'internal' && variableId.substring(0, 7) === 'custom_') {
 			connectionLabel = 'custom'
 			variableId = variableId.substring(7)
 		}
