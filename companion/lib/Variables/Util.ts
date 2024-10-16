@@ -156,7 +156,11 @@ export function executeExpression(
 		if (value === undefined) {
 			// No value, lookup the raw value
 			const [connectionLabel, variableName] = SplitVariableId(variableId)
-			value = rawVariableValues[connectionLabel]?.[variableName]
+			if (connectionLabel == 'internal' && variableName.substring(0, 7) === 'custom_') {
+				value = rawVariableValues['custom']?.[variableName.substring(7)]
+			} else {
+				value = rawVariableValues[connectionLabel]?.[variableName]
+			}
 		}
 
 		// If its a string, make sure any references to other variables are resolved
