@@ -19,7 +19,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 			surfaces: true,
 			triggers: true,
 			customVariables: true,
-			// userconfig: true,
+			userconfig: true,
 			format: ExportFormatDefault,
 		})
 
@@ -69,7 +69,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 						surfaces: true,
 						triggers: true,
 						customVariables: true,
-						// userconfig: true,
+						userconfig: true,
 						format: ExportFormatDefault,
 					})
 
@@ -163,13 +163,13 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 					label="Surfaces"
 				/>
 			</div>
-			{/* <div className="indent3">
+			<div className="indent3">
 				<CFormCheck
 					checked={config.userconfig}
 					onChange={(e) => setValue('userconfig', e.currentTarget.checked)}
-					label='Settings'
+					label="Settings"
 				/>
-			</div> */}
+			</div>
 
 			<div>
 				<SelectExportFormat value={config.format} setValue={(val) => setValue('format', val)} label="File format" />

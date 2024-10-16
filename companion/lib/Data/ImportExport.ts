@@ -344,6 +344,10 @@ export class DataImportExport extends CoreBase {
 				exp.surfaceGroups = this.surfaces.exportAllGroups(false)
 			}
 
+			if (!config || !isFalsey(config.userconfig)) {
+				exp.userconfig = this.userconfig.getAll(false)
+			}
+
 			return exp
 		}
 
@@ -548,6 +552,7 @@ export class DataImportExport extends CoreBase {
 				customVariables: 'custom_variables' in object,
 				surfaces: 'surfaces' in object,
 				triggers: 'triggers' in object,
+				userconfig: 'userconfig' in object,
 			}
 
 			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
@@ -633,6 +638,11 @@ export class DataImportExport extends CoreBase {
 
 				// Destroy old stuff
 				await this.#reset(undefined, !config || config.buttons)
+
+				// import userconfig
+				if (!config || config.userconfig) {
+					this.userconfig.setKeys(data.userconfig || {})
+				}
 
 				// import custom variables
 				if (!config || config.customVariables) {
