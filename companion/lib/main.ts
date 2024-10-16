@@ -40,6 +40,7 @@ program
 	.option('--extra-module-path <string>', 'Search an extra directory for modules to load')
 	.option('--machine-id <string>', 'Unique id for this installation')
 	.option('--log-level <string>', 'Log level to output to console')
+	.option('--disable-admin-password', 'Disables password lockout for the admin UI')
 
 program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const options = program.opts()
@@ -196,6 +197,10 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		.ready(options.extraModulePath, adminIp, options.adminPort)
 		.then(() => {
 			console.log('Started')
+
+			if (options.disableAdminPassword || process.env.DISABLE_ADMIN_PASSWORD) {
+				registry.userconfig.setKey('admin_lockout', false)
+			}
 		})
 		.catch((e) => {
 			console.error(`Startup failed: ${e} ${e.stack}`)
