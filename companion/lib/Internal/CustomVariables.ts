@@ -238,7 +238,7 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			return action
 		} else if (action.action === 'custom_variable_set_via_jsonpath') {
 			action.action = 'custom_variable_set_expression'
-			action.options.expression = `jsonpath($(internal:custom_${action.options.jsonResultDataVariable}), "${action.options.jsonPath?.replaceAll('"', '\\"')}")`
+			action.options.expression = `jsonpath($(custom:${action.options.jsonResultDataVariable}), "${action.options.jsonPath?.replaceAll('"', '\\"')}")`
 
 			action.options.name = action.options.targetVariable
 

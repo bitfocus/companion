@@ -150,7 +150,7 @@ In some scenarios it can be beneficial to have nested variables. This is not sup
 
 Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax.
 
-eg `parseVariables('$(internal:custom_$(internal:custom_b))')`
+eg `parseVariables('$(custom:$(custom:b))')`
 
 ##### Bool operations
 

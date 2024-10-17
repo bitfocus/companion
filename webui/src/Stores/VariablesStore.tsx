@@ -102,6 +102,8 @@ export class VariablesStore {
 			definitions.push(...this.variableDefinitionsForLabel(label))
 		}
 
+		definitions.push(...this.customVariableDefinitions.get())
+
 		return definitions
 	})
 
@@ -112,8 +114,8 @@ export class VariablesStore {
 		for (const [id, info] of this.customVariables) {
 			definitions.push({
 				label: info.description,
-				connectionLabel: 'internal',
-				name: `custom_${id}`,
+				connectionLabel: 'custom',
+				name: id,
 			})
 		}
 
@@ -122,10 +124,6 @@ export class VariablesStore {
 
 	public variableDefinitionsForLabel = (label: string): VariableDefinitionExt[] => {
 		const definitions: VariableDefinitionExt[] = []
-
-		if (label === 'internal') {
-			definitions.push(...this.customVariableDefinitions.get())
-		}
 
 		// Module variables
 		const variables = this.variables.get(label)
