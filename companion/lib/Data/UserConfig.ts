@@ -277,6 +277,22 @@ export class DataUserConfig extends CoreBase {
 	}
 
 	/**
+	 * Get the config settings
+	 * @param {boolean} [clone = false] - <code>true</code> if a clone is needed instead of a link
+	 * @returns {UserConfigModel} the config values
+	 * @access public
+	 */
+	getAll(clone = false): UserConfigModel {
+		let out = this.#data
+
+		if (clone === true) {
+			out = cloneDeep(out)
+		}
+
+		return out
+	}
+
+	/**
 	 * Get a specific use config setting
 	 * @param key
 	 * @param [clone = false] - <code>true</code> if a clone is needed instead of a link
