@@ -894,7 +894,12 @@ export class DataImportExport extends CoreBase {
 				} else {
 					// Create a new instance
 					const instance_type = this.instance.modules.verifyInstanceTypeIsCurrent(obj.instance_type)
-					const [newId, newConfig] = this.instance.addInstanceWithLabel({ type: instance_type }, obj.label, true)
+					const [newId, newConfig] = this.instance.addInstanceWithLabel(
+						{ type: instance_type },
+						obj.label,
+						{ mode: 'stable', id: null }, // Always create using the latest stable
+						true
+					)
 					console.log('created', instance_type, newId)
 					if (newId && newConfig) {
 						this.instance.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null)

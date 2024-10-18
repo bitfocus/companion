@@ -30,10 +30,15 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 
 		const connectionInfo = connectionsContext[id]
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
-		const compactName = moduleInfo?.name?.replace(/\;.*/, '...')
+		const compactName = moduleInfo?.baseInfo?.name?.replace(/\;.*/, '...')
 
 		return (
-			<CButton title={moduleInfo?.name} key={id} color="primary" onClick={() => setConnectionAndCategory([id, null])}>
+			<CButton
+				title={moduleInfo?.baseInfo?.name}
+				key={id}
+				color="primary"
+				onClick={() => setConnectionAndCategory([id, null])}
+			>
 				<h6>{connectionInfo?.label ?? id}</h6> <small>{compactName ?? '?'}</small>
 			</CButton>
 		)
