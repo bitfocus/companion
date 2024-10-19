@@ -26,12 +26,13 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 				userConfig={props}
 				label={
 					<>
-						Enable connected Streamdecks
+						Enable direct connection to Streamdecks
 						<br />
 						When disabled support for the Elgato software Plugin will be enabled
 					</>
 				}
 				requiresRestart
+				inverted
 				field="elgato_plugin_enable"
 			/>
 			<UserConfigSwitchRow userConfig={props} label="Enable connected X-keys" requiresRestart field="xkeys_enable" />
