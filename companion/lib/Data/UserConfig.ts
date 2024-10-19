@@ -106,6 +106,8 @@ export class DataUserConfig extends CoreBase {
 		gridSizePromptGrow: true,
 
 		installName: '',
+		default_export_filename:
+			'$(internal:hostname)_custom-config_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
 
 		discoveryEnabled: true,
 	}

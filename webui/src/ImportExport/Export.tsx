@@ -1,9 +1,10 @@
-import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState, useContext } from 'react'
 import { CButton, CForm, CFormCheck, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { PreventDefaultHandler } from '../util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface ExportWizardModalProps {}
 export interface ExportWizardModalRef {
@@ -21,6 +22,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 			customVariables: true,
 			// userconfig: true,
 			format: ExportFormatDefault,
+			filename: '',
 		})
 
 		const doClose = useCallback(() => {
@@ -58,7 +60,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 				[key]: value,
 			}))
 		}
-
+		const { userConfig } = useContext(RootAppStoreContext)
 		useImperativeHandle(
 			ref,
 			() => ({
@@ -71,6 +73,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 						customVariables: true,
 						// userconfig: true,
 						format: ExportFormatDefault,
+						filename: userConfig.properties?.default_export_filename,
 					})
 
 					setShow(true)
@@ -117,6 +120,7 @@ interface ExportOptionsStepProps {
 }
 
 function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
+	const { userConfig } = useContext(RootAppStoreContext)
 	return (
 		<div>
 			<h5>Export Options</h5>
@@ -176,7 +180,11 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 			</div>
 			<br></br>
 			<div>
-				<CFormInput onChange={(e) => setValue('filename', e.currentTarget.value)} label="File name (Optional)" />
+				<CFormInput
+					onChange={(e) => setValue('filename', e.currentTarget.value)}
+					defaultValue={String(userConfig.properties?.default_export_filename)}
+					label="File name"
+				/>
 			</div>
 		</div>
 	)
