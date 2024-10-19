@@ -83,6 +83,7 @@
 		"p-debounce": "^4.0.0",
 		"p-queue": "^8.0.1",
 		"path-to-regexp": "^8.2.0",
+		"segfault-raub": "^2.3.0",
 		"selfsigned": "^2.4.1",
 		"semver": "^7.6.3",
 		"shuttle-control-usb": "^1.5.0",

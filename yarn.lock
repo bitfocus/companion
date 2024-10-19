@@ -5440,6 +5440,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"addon-tools-raub@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "addon-tools-raub@npm:8.0.0"
+  dependencies:
+    node-gyp: "npm:latest"
+  peerDependencies:
+    node-addon-api: ^8.0.0
+  peerDependenciesMeta:
+    node-addon-api:
+      optional: true
+  checksum: 10c0/3c1709ec437dc7857dd97870af54cd3f13e5d8ee5ba0fdc36ed15f379fea62e35a63fbebf146a89031d5b3577ca44dad1031341fbee8ae09612e69f4a3c23729
+  languageName: node
+  linkType: hard
+
 "ag-auth@npm:^2.1.0":
   version: 2.1.0
   resolution: "ag-auth@npm:2.1.0"
@@ -6690,6 +6704,7 @@ asn1@evs-broadcast/node-asn1:
     p-debounce: "npm:^4.0.0"
     p-queue: "npm:^8.0.1"
     path-to-regexp: "npm:^8.2.0"
+    segfault-raub: "npm:^2.3.0"
     selfsigned: "npm:^2.4.1"
     semver: "npm:^7.6.3"
     shuttle-control-usb: "npm:^1.5.0"
@@ -12634,6 +12649,16 @@ asn1@evs-broadcast/node-asn1:
   version: 5.2.0
   resolution: "screenfull@npm:5.2.0"
   checksum: 10c0/86fd49983e2edc153ee2e674a570c711cb0961a9cacca659309f79636ccc8ca8a0b830ea4dacdae7403a8bb7ba6affd5bcdce053aa97782961247a49bfd2ba68
+  languageName: node
+  linkType: hard
+
+"segfault-raub@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "segfault-raub@npm:2.3.0"
+  dependencies:
+    addon-tools-raub: "npm:^8.0.0"
+    node-gyp: "npm:latest"
+  checksum: 10c0/26a3a684d20398710c6dbfb92b79e083b18519271daacd9b49151f0bfa44dcdd4abd0bda04af3bb50bfbfbfa7fde3fcf2c29b6a65d986dc788aa4b8b65aba50b
   languageName: node
   linkType: hard
 

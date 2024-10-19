@@ -3,6 +3,9 @@
 // Setup some fixes before loading any imports
 import './Util/FixImports.js'
 
+// Setup segfault handler
+import 'segfault-raub'
+
 // Setup logging before anything else runs
 import './Log/Controller.js'
 
