@@ -262,10 +262,10 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			})
 		}
 
-		for (const [id, info] of customVariables.customVariables) {
+		for (const [id] of customVariables.customVariables) {
 			choices.push({
 				id,
-				label: `${info.description} (internal:custom_${id})`,
+				label: id,
 			})
 		}
 
