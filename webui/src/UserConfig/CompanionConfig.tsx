@@ -9,7 +9,12 @@ export const CompanionConfig = observer(function CompanionConfig(props: UserConf
 		<>
 			<UserConfigHeadingRow label="Installation Settings" />
 			<UserConfigTextInputRow userConfig={props} label="Installation Name" field="installName" />
-			<UserConfigTextInputRow userConfig={props} label="Default Export File Name" field="default_export_filename" />
+			<UserConfigTextInputRow
+				userConfig={props}
+				useVariables={true}
+				label="Default Export File Name"
+				field="default_export_filename"
+			/>
 		</>
 	)
 })
