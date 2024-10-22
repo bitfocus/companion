@@ -54,7 +54,7 @@
 		"@julusian/image-rs": "^1.1.1",
 		"@julusian/jpeg-turbo": "^2.2.0",
 		"@loupedeck/node": "^1.2.0",
-		"@napi-rs/canvas": "0.1.56",
+		"@napi-rs/canvas": "0.1.58",
 		"@sentry/node": "^8.35.0",
 		"archiver": "^7.0.1",
 		"better-sqlite3": "^11.5.0",
