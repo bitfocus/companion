@@ -54,7 +54,7 @@
 		"@julusian/image-rs": "^1.1.1",
 		"@julusian/jpeg-turbo": "^2.1.0",
 		"@loupedeck/node": "^1.1.2",
-		"@napi-rs/canvas": "0.1.56",
+		"@napi-rs/canvas": "0.1.58",
 		"@sentry/node": "^8.28.0",
 		"archiver": "^7.0.1",
 		"body-parser": "^1.20.3",

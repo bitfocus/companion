@@ -48,8 +48,8 @@
     "zx": "^7.2.3"
   },
   "resolutions": {
-    "@napi-rs/canvas-darwin-arm64": "npm:@julusian/napi-rs-canvas-darwin-arm64@0.1.55-c",
-    "@napi-rs/canvas-darwin-x64": "npm:@julusian/napi-rs-canvas-darwin-x64@0.1.55-c",
+    "@napi-rs/canvas-darwin-arm64": "npm:@julusian/napi-rs-canvas-darwin-arm64@0.1.58-c",
+    "@napi-rs/canvas-darwin-x64": "npm:@julusian/napi-rs-canvas-darwin-x64@0.1.58-c",
     "app-builder-bin": "npm:@julusian/app-builder-bin@4.0.1",
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
     "osc/serialport": "^10.5.0",
