@@ -1,5 +1,13 @@
 .float_right {
 	float: right;
+}
+
+.float_inline {
+	display: inline;
+}
+
+.float_right,
+.float_inline {
 	cursor: pointer;
 	cursor: hand;
 

@@ -8,6 +8,7 @@ interface WindowLinkOpenProps {
 	href: string
 	sameWindow?: boolean
 	title?: string
+	className?: string
 }
 
 export function WindowLinkOpen({
@@ -15,12 +16,14 @@ export function WindowLinkOpen({
 	href,
 	sameWindow = false,
 	title,
+	className,
 }: React.PropsWithChildren<WindowLinkOpenProps>) {
 	return (
 		<div
 			onClick={() => windowLinkOpen({ href, sameWindow })}
 			style={{ display: 'inline-block', cursor: 'pointer' }}
 			title={title}
+			className={className}
 		>
 			{children}
 		</div>

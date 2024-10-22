@@ -23,6 +23,7 @@ import {
 	faFileImport,
 	faDollarSign,
 	faTh,
+	faJedi,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
@@ -46,6 +47,7 @@ import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionVariables } from './Variables/index.js'
+import { MODULES_PAGE_PREFIX, ModulesPage } from './Modules/index.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -445,6 +447,11 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 		<CContainer fluid className="fadeIn">
 			<CNav variant="tabs">
 				<CNavItem>
+					<CNavLink to={MODULES_PAGE_PREFIX} as={NavLink}>
+						<FontAwesomeIcon icon={faJedi} /> Modules
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
 					<CNavLink to="/connections" as={NavLink}>
 						<FontAwesomeIcon icon={faPlug} /> Connections
 					</CNavLink>
@@ -493,6 +500,11 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				)}
 			</CNav>
 			<CTabContent>
+				<CTabPane className={getClassForPane(MODULES_PAGE_PREFIX)}>
+					<MyErrorBoundary>
+						<ModulesPage />
+					</MyErrorBoundary>
+				</CTabPane>
 				<CTabPane className={getClassForPane('/connections')}>
 					<MyErrorBoundary>
 						<ConnectionsPage />

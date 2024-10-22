@@ -36,6 +36,7 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+
 export const TRIGGERS_PAGE_PREFIX = '/triggers'
 
 function useSelectedTriggerId(): string | null {

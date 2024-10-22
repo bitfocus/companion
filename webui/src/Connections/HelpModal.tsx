@@ -7,31 +7,45 @@ import { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { CModalExt } from '../Components/CModalExt.js'
+import { socketEmitPromise } from '../util.js'
+import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 
 interface HelpModalProps {
 	// Nothing
 }
 
 export interface HelpModalRef {
-	show(name: string, description: HelpDescription): void
+	show(name: string, moduleVersion: NewClientModuleVersionInfo2): void
 }
 
 export const HelpModal = observer(
 	forwardRef<HelpModalRef, HelpModalProps>(function HelpModal(_props, ref) {
-		const { modules } = useContext(RootAppStoreContext)
+		const { socket, notifier, modules } = useContext(RootAppStoreContext)
 
 		const [content, setContent] = useState<[name: string, description: HelpDescription] | null>(null)
-		const [show, setShow] = useState(false)
+		const [showVersion, setShowVersion] = useState<NewClientModuleVersionInfo2 | null>(null)
 
-		const doClose = useCallback(() => setShow(false), [])
+		const doClose = useCallback(() => setShowVersion(null), [])
 		const onClosed = useCallback(() => setContent(null), [])
 
 		useImperativeHandle(
 			ref,
 			() => ({
-				show(name, description) {
-					setContent([name, description])
-					setShow(true)
+				show(name, moduleVersion) {
+					socketEmitPromise(socket, 'connections:get-help', [
+						name,
+						moduleVersion.version.mode,
+						moduleVersion.version.id,
+					]).then(([err, result]) => {
+						if (err) {
+							notifier.current?.show('Connection help', `Failed to get help text: ${err}`)
+							return
+						}
+						if (result) {
+							setContent([name, result])
+							setShowVersion(moduleVersion)
+						}
+					})
 				},
 			}),
 			[]
@@ -56,10 +70,10 @@ export const HelpModal = observer(
 		const moduleInfo = content && modules.modules.get(content[0])
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
+			<CModalExt visible={!!showVersion} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>
-						Help for {moduleInfo?.name || content?.[0]} {moduleInfo?.version ? `v${moduleInfo.version}` : ''}
+						Help for {moduleInfo?.baseInfo?.name || content?.[0]} {showVersion?.displayName}
 					</h5>
 				</CModalHeader>
 				<CModalBody>

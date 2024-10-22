@@ -192,8 +192,8 @@ export abstract class DataStoreBase {
 	 * @param table - the table to get from
 	 * @returns the rows
 	 */
-	public getTable(table: string): any {
-		let out = {}
+	public getTable(table: string): Record<string, any> {
+		let out: Record<string, any> = {}
 
 		if (table.length > 0) {
 			const query = this.store.prepare(`SELECT id, value FROM ${table}`)

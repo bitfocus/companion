@@ -123,7 +123,6 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		fs.symlinkSync(v30Dir, developDir, process.platform === 'win32' ? 'junction' : undefined)
 	}
 
-	// develop should use subfolder. This should be disabled when ready for mass testing
 	const rootConfigDir = configDir
 	configDir = path.join(configDir, ConfigReleaseDirs[ConfigReleaseDirs.length - 1])
 
@@ -194,7 +193,9 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 	}
 
-	const registry = new Registry(configDir, machineId)
+	const modulesDir = path.join(rootConfigDir, 'modules')
+
+	const registry = new Registry(configDir, modulesDir, machineId)
 
 	registry
 		.ready(options.extraModulePath, adminIp, options.adminPort)

@@ -1,16 +1,19 @@
-import React, { useContext, useState, useCallback, useRef } from 'react'
-import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
-import { go as fuzzySearch } from 'fuzzysort'
+import React, { useContext, useState, useCallback, useRef, useMemo } from 'react'
+import { CAlert, CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { socketEmitPromise, useComputed } from '../util.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { SearchBox } from '../Components/SearchBox.js'
+import { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { AddConnectionModal, AddConnectionModalRef } from './AddConnectionModal.js'
+import { useModuleStoreList } from '../Modules/DiscoverModulesPanel.js'
+import { ModuleStoreListCacheStore, ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
+import { go as fuzzySearch } from 'fuzzysort'
+import { useComputed } from '../util.js'
 
 interface AddConnectionsPanelProps {
-	showHelp: (moduleId: string) => void
+	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	doConfigureConnection: (connectionId: string) => void
 }
 
@@ -18,94 +21,29 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	showHelp,
 	doConfigureConnection,
 }: AddConnectionsPanelProps) {
-	const { socket, notifier, modules } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 	const [filter, setFilter] = useState('')
 
-	const confirmRef = useRef<GenericConfirmModalRef>(null)
+	const moduleStore = useModuleStoreList()
 
-	const addConnectionInner = useCallback(
-		(type: string, product: string | undefined) => {
-			socketEmitPromise(socket, 'connections:add', [{ type: type, product: product }])
-				.then((id) => {
-					setFilter('')
-					console.log('NEW CONNECTION', id)
-					doConfigureConnection(id)
-				})
-				.catch((e) => {
-					notifier.current?.show(`Failed to create connection`, `Failed: ${e}`)
-					console.error('Failed to create connection:', e)
-				})
-		},
-		[socket, notifier, doConfigureConnection]
-	)
-
-	const addConnection = useCallback(
-		(type: string, product: string | undefined, module: Omit<ModuleDisplayInfo, 'keywords'>) => {
-			if (module.isLegacy) {
-				confirmRef.current?.show(
-					`${module.manufacturer} ${product} is outdated`,
-					null, // Passed as param to the thing
-					'Add anyway',
-					() => {
-						addConnectionInner(type, product)
-					}
-				)
-			} else {
-				addConnectionInner(type, product)
-			}
-		},
-		[addConnectionInner]
-	)
-
-	const allProducts = useComputed(
-		() =>
-			Array.from(modules.modules.values()).flatMap((module) =>
-				module.products.map((product) => ({
-					product,
-					...module,
-					// fuzzySearch can't handle arrays, so flatten the array to a string first
-					keywords: module.keywords?.join(';') ?? '',
-				}))
-			),
-		[modules]
-	)
+	const addRef = useRef<AddConnectionModalRef>(null)
+	const addConnection = useCallback((moduleInfo: AddConnectionProduct) => {
+		addRef.current?.show(moduleInfo)
+	}, [])
 
 	let candidates: JSX.Element[] = []
 	try {
+		const searchResults = useFilteredStoreAndOtherProducts(moduleStore, filter)
+
 		const candidatesObj: Record<string, JSX.Element> = {}
-
-		const searchResults = filter
-			? fuzzySearch(filter, allProducts, {
-					keys: ['product', 'name', 'manufacturer', 'keywords'],
-					threshold: -10_000,
-				}).map((x) => x.obj)
-			: allProducts
-
-		for (const module of searchResults) {
-			candidatesObj[module.name] = (
-				<div key={module.name + module.id}>
-					<CButton color="primary" onClick={() => addConnection(module.id, module.product, module)}>
-						Add
-					</CButton>
-					&nbsp;
-					{module.isLegacy && (
-						<>
-							<FontAwesomeIcon
-								icon={faExclamationTriangle}
-								color="#ff6600"
-								size={'xl'}
-								title="This module has not been updated for Companion 3.0, and may not work fully"
-							/>
-							&nbsp;
-						</>
-					)}
-					{module.name}
-					{module.hasHelp && (
-						<div className="float_right" onClick={() => showHelp(module.id)}>
-							<FontAwesomeIcon icon={faQuestionCircle} />
-						</div>
-					)}
-				</div>
+		for (const moduleInfo of searchResults) {
+			candidatesObj[moduleInfo.name] = (
+				<AddConnectionEntry
+					key={moduleInfo.name}
+					moduleInfo={moduleInfo}
+					addConnection={addConnection}
+					showHelp={showHelp}
+				/>
 			)
 		}
 
@@ -135,23 +73,9 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 		)
 	}
 
-	const confirmContent = (
-		<>
-			<p>
-				This module has not been verified to be compatible with this version of companion. It may be buggy or broken.
-			</p>
-			<p>
-				If this module is broken, please let us know in{' '}
-				<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion/issues/2157">
-					this github issue
-				</a>
-			</p>
-		</>
-	)
-
 	return (
 		<>
-			<GenericConfirmModal ref={confirmRef} content={confirmContent} />
+			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} showHelp={showHelp} />
 			<div style={{ clear: 'both' }} className="row-heading">
 				<h4>Add connection</h4>
 				<p>
@@ -162,21 +86,154 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 					</a>{' '}
 					on GitHub
 				</p>
-				<CInputGroup>
-					<CFormInput
-						type="text"
-						placeholder="Search ..."
-						onChange={(e) => setFilter(e.currentTarget.value)}
-						value={filter}
-						style={{ fontSize: '1.2em' }}
-					/>
-					<CButton color="danger" onClick={() => setFilter('')}>
-						<FontAwesomeIcon icon={faTimes} />
-					</CButton>
-				</CInputGroup>
+
+				<SearchBox filter={filter} setFilter={setFilter} />
 				<br />
 			</div>
 			<div id="connection_add_search_results">{candidates}</div>
 		</>
 	)
 })
+
+interface AddConnectionEntryProps {
+	moduleInfo: AddConnectionProduct
+	addConnection(module: AddConnectionProduct): void
+	showHelp(moduleId: string, moduleVersion: NewClientModuleVersionInfo2): void
+}
+
+function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnectionEntryProps) {
+	const addConnectionClick = useCallback(() => addConnection(moduleInfo), [addConnection, moduleInfo])
+	const showVersion: NewClientModuleVersionInfo2 | undefined =
+		moduleInfo.installedInfo?.stableVersion ??
+		moduleInfo.installedInfo?.prereleaseVersion ??
+		moduleInfo.installedInfo?.installedVersions?.[0]
+	const showHelpClick = useCallback(
+		() => showVersion && showHelp(moduleInfo.id, showVersion),
+		[showHelp, moduleInfo.id, showVersion]
+	)
+
+	return (
+		<div>
+			<CButton color="primary" onClick={addConnectionClick}>
+				{moduleInfo.installedInfo ? 'Add' : 'Install'}
+			</CButton>
+			&nbsp;
+			{moduleInfo.installedInfo?.stableVersion?.isLegacy && (
+				<>
+					<FontAwesomeIcon
+						icon={faExclamationTriangle}
+						color="#ff6600"
+						size={'xl'}
+						title="This module has not been updated for Companion 3.0, and may not work fully"
+					/>
+					&nbsp;
+				</>
+			)}
+			{moduleInfo.name}
+			{showVersion?.hasHelp && (
+				<div className="float_right" onClick={showHelpClick}>
+					<FontAwesomeIcon icon={faQuestionCircle} />
+				</div>
+			)}
+		</div>
+	)
+}
+
+function useFilteredStoreAndOtherProducts(
+	moduleStoreCache: ModuleStoreListCacheStore | null,
+	filter: string
+): AddConnectionProduct[] {
+	const { modules } = useContext(RootAppStoreContext)
+
+	const allProducts: AddConnectionProduct[] = useComputed(() => {
+		const allProducts: Record<string, AddConnectionProduct> = {}
+
+		// Start with all installed modules
+		for (const moduleInfo of modules.modules.values()) {
+			for (const product of moduleInfo.baseInfo.products) {
+				const key = `${moduleInfo.baseInfo.id}-${product}`
+				allProducts[key] = {
+					id: moduleInfo.baseInfo.id,
+
+					installedInfo: moduleInfo,
+					storeInfo: null,
+
+					product,
+					keywords: moduleInfo.baseInfo.keywords?.join(';') ?? '',
+					name: moduleInfo.baseInfo.name,
+					manufacturer: moduleInfo.baseInfo.manufacturer,
+					shortname: moduleInfo.baseInfo.shortname,
+				}
+			}
+		}
+
+		// Add in the store modules
+		if (moduleStoreCache) {
+			for (const moduleInfo of Object.values(moduleStoreCache.modules)) {
+				for (const product of moduleInfo.products) {
+					const key = `${moduleInfo.id}-${product}`
+
+					const installedInfo = allProducts[key]
+					if (installedInfo) {
+						installedInfo.storeInfo = moduleInfo
+					} else {
+						allProducts[key] = {
+							id: moduleInfo.id,
+
+							installedInfo: null,
+							storeInfo: moduleInfo,
+
+							product,
+							keywords: moduleInfo.keywords?.join(';') ?? '',
+							name: moduleInfo.name,
+							manufacturer: moduleInfo.manufacturer,
+							shortname: moduleInfo.shortname,
+						}
+					}
+				}
+			}
+		}
+
+		return Object.values(allProducts)
+	}, [modules, moduleStoreCache])
+
+	if (!filter) return allProducts //.map((p) => p.info)
+
+	return fuzzySearch(filter, allProducts, {
+		keys: ['product', 'name', 'manufacturer', 'keywords'] satisfies Array<keyof AddConnectionProduct>,
+		threshold: -10_000,
+	}).map((x) => x.obj)
+
+	// const allProducts: ModuleStoreListCacheEntry[] = useMemo(
+	// 	() =>
+	// 		Object.values(moduleStoreCache?.modules ?? {}).flatMap((moduleInfo) =>
+	// 			moduleInfo.products.map((product) => ({
+	// 				product,
+	// 				...moduleInfo,
+	// 				// fuzzySearch can't handle arrays, so flatten the array to a string first
+	// 				keywordsStr: moduleInfo.keywords?.join(';') ?? '',
+	// 			}))
+	// 		),
+	// 	[moduleStoreCache?.modules]
+	// )
+
+	// if (!filter) return allProducts
+
+	// return fuzzySearch(filter, allProducts, {
+	// 	keys: ['product', 'name', 'manufacturer', 'keywordsStr'],
+	// 	threshold: -10_000,
+	// }).map((x) => x.obj)
+}
+
+export interface AddConnectionProduct {
+	id: string
+
+	installedInfo: NewClientModuleInfo | null
+	storeInfo: ModuleStoreListCacheEntry | null
+
+	product: string
+	keywords: string
+	name: string
+	manufacturer: string
+	shortname: string
+}

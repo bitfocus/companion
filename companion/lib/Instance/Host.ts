@@ -9,9 +9,10 @@ import os from 'os'
 import { getNodeJsPath } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { InstanceModules, ModuleInfo } from './Modules.js'
+import type { InstanceModules } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import type { SomeModuleVersionInfo } from './Types.js'
 
 /**
  * A backoff sleep strategy
@@ -95,7 +96,9 @@ export class ModuleHost {
 			if (!child.crashed) {
 				child.crashed = setTimeout(() => {
 					const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
-					const moduleInfo = config && this.#modules.getModuleManifest(config.instance_type)
+					const moduleInfo =
+						config &&
+						this.#modules.getModuleManifest(config.instance_type, config.moduleVersionMode, config.moduleVersionId)
 
 					// Restart after a short sleep
 					this.queueRestartConnection(child.connectionId, config, moduleInfo)
@@ -324,7 +327,7 @@ export class ModuleHost {
 	async queueRestartConnection(
 		connectionId: string,
 		config: ConnectionConfig | undefined,
-		moduleInfo: ModuleInfo | undefined
+		moduleInfo: SomeModuleVersionInfo | undefined
 	): Promise<void> {
 		if (!config || !moduleInfo) return
 

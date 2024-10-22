@@ -42,8 +42,9 @@ import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
-import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
+import type { ModuleInfoUpdate, ModuleVersionInfo, ModuleVersionMode, NewClientModuleInfo } from './Model/ModuleInfo.js'
+import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -80,7 +81,7 @@ export interface ClientToBackendEventsMap {
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'custom-variables:subscribe': () => CustomVariablesModel
 	'custom-variables:unsubscribe': () => void
-	'modules:subscribe': () => Record<string, ModuleDisplayInfo>
+	'modules:subscribe': () => Record<string, NewClientModuleInfo>
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
@@ -309,17 +310,42 @@ export interface ClientToBackendEventsMap {
 	'pages:reset-page-nav': (pageNumber: number) => 'ok'
 	'pages:reset-page-clear': (pageNumber: number) => 'ok'
 
-	'connections:add': (info: { type: string; product: string | undefined }) => string
+	'connections:add': (
+		info: { type: string; product: string | undefined },
+		label: string,
+		version: ModuleVersionInfo
+	) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
-	'connections:set-config': (
+	'connections:set-label-and-config': (
 		connectionId: string,
 		newLabel: string,
-		config: Record<string, any> | null
+		config: Record<string, any>
+	) => string | null
+	'connections:set-label-and-version': (
+		connectionId: string,
+		newLabel: string,
+		version: ModuleVersionInfo
 	) => string | null
 	'connections:set-order': (sortedIds: string[]) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
-	'connections:get-help': (id: string) => [err: string, result: null] | [err: null, result: HelpDescription]
+	'connections:get-help': (
+		id: string,
+		versionMode: ModuleVersionMode,
+		versionId: string | null
+	) => [err: string, result: null] | [err: null, result: HelpDescription]
+	'modules:install-custom-module': (moduleTar: Uint8Array) => string | null
+	'modules:uninstall-custom-module': (moduleId: string, versionId: string) => string | null
+	'modules:install-store-module:latest': (moduleId: string) => string | null
+	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
+	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
+
+	'modules-store:list:subscribe': () => ModuleStoreListCacheStore
+	'modules-store:list:unsubscribe': () => void
+	'modules-store:list:refresh': () => void
+	'modules-store:info:subscribe': (moduleId: string) => ModuleStoreModuleInfoStore | null
+	'modules-store:info:unsubscribe': (moduleId: string) => void
+	'modules-store:info:refresh': (moduleId: string) => void
 
 	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
 
@@ -376,6 +402,11 @@ export interface BackendToClientEventsMap {
 	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
 
 	'surfaces:discovery:update': (update: SurfacesDiscoveryUpdate) => void
+
+	'modules-store:list:data': (data: ModuleStoreListCacheStore) => void
+	'modules-store:list:progress': (percent: number) => void
+	'modules-store:info:data': (moduleId: string, data: ModuleStoreModuleInfoStore) => void
+	'modules-store:info:progress': (moduleId: string, percent: number) => void
 
 	'emulator:images': (newImages: EmulatorImage[] | EmulatorImageCache) => void
 	'emulator:config': (patch: JsonPatchOperation[] | EmulatorConfig) => void

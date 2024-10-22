@@ -248,7 +248,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 					'Ignored'
 				)}
 			</td>
-			<td>{snapshotModule ? snapshotModule.name : `Unknown module (${connection.instance_type})`}</td>
+			<td>{snapshotModule ? snapshotModule.baseInfo.name : `Unknown module (${connection.instance_type})`}</td>
 			<td>{connection.label}</td>
 		</tr>
 	)

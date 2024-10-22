@@ -1,3 +1,5 @@
+import type { ModuleVersionMode } from './ModuleInfo.js'
+
 export interface ConnectionConfig {
 	label: string
 	config: unknown
@@ -6,11 +8,18 @@ export interface ConnectionConfig {
 	instance_type: string
 	enabled: boolean
 	sortOrder: number
+	/**
+	 * Which version of the module to use
+	 */
+	moduleVersionMode: ModuleVersionMode
+	moduleVersionId: string | null
 }
 
 export interface ClientConnectionConfig {
 	label: string
 	instance_type: string
+	moduleVersionMode: ModuleVersionMode
+	moduleVersionId: string | null
 	enabled: boolean
 	sortOrder: number
 	hasRecordActionsHandler: boolean

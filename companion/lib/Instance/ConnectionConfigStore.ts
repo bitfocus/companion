@@ -4,6 +4,7 @@ import { DataDatabase } from '../Data/Database.js'
 import { nanoid } from 'nanoid'
 import { cloneDeep } from 'lodash-es'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
+import { ModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 export class ConnectionConfigStore {
 	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
@@ -54,6 +55,7 @@ export class ConnectionConfigStore {
 		moduleType: string,
 		label: string,
 		product: string | undefined,
+		moduleVersion: ModuleVersionInfo,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
 		// Find the highest rank given to an instance
@@ -69,6 +71,8 @@ export class ConnectionConfigStore {
 
 		this.#store[id] = {
 			instance_type: moduleType,
+			moduleVersionMode: moduleVersion.mode,
+			moduleVersionId: moduleVersion?.id || null,
 			sortOrder: highestRank + 1,
 			label: label,
 			isFirstInit: true,
@@ -101,6 +105,8 @@ export class ConnectionConfigStore {
 
 			result[id] = {
 				instance_type: config.instance_type,
+				moduleVersionMode: config.moduleVersionMode,
+				moduleVersionId: config.moduleVersionId,
 				label: config.label,
 				enabled: config.enabled,
 				sortOrder: config.sortOrder,
