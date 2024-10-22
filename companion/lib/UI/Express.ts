@@ -129,7 +129,7 @@ export class UIExpress {
 		this.app.use(webuiServer)
 
 		// Handle all unknown urls as accessing index.html
-		this.app.get('*', (req, res, next) => {
+		this.app.get('*all', (req, res, next) => {
 			req.url = '/index.html'
 			return webuiServer(req, res, next)
 		})

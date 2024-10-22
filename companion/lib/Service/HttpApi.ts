@@ -48,10 +48,8 @@ export class ServiceHttpApi extends CoreBase {
 		super(registry, 'Service/HttpApi')
 
 		this.#express = express
-		// @ts-ignore
-		this.#apiRouter = new Express.Router()
-		// @ts-ignore
-		this.#legacyApiRouter = new Express.Router()
+		this.#apiRouter = Express.Router()
+		this.#legacyApiRouter = Express.Router()
 
 		this.#apiRouter.use((_req, res, next) => {
 			// Check that the API is enabled
@@ -76,7 +74,7 @@ export class ServiceHttpApi extends CoreBase {
 	}
 
 	#setupLegacyHttpRoutes() {
-		this.#legacyApiRouter.options('/press/bank/*', (_req, res, _next) => {
+		this.#legacyApiRouter.options('/press/bank/*any', (_req, res, _next) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -85,7 +83,7 @@ export class ServiceHttpApi extends CoreBase {
 			return res.send(200)
 		})
 
-		this.#legacyApiRouter.get('/press/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})', (req, res) => {
+		this.#legacyApiRouter.get('/press/bank/:page/:bank', (req, res) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -111,7 +109,7 @@ export class ServiceHttpApi extends CoreBase {
 			return res.send('ok')
 		})
 
-		this.#legacyApiRouter.get('/press/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})/:direction(down|up)', (req, res) => {
+		this.#legacyApiRouter.get('/press/bank/:page/:bank/:direction', (req, res) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -132,7 +130,9 @@ export class ServiceHttpApi extends CoreBase {
 				}
 
 				this.registry.controls.pressControl(controlId, true, 'http')
-			} else {
+
+				return res.send('ok')
+			} else if (req.params.direction == 'up') {
 				this.logger.info(`Got HTTP /press/bank/ (UP) page ${req.params.page} button ${req.params.bank}`)
 
 				const controlId = this.registry.page.getControlIdAtOldBankIndex(
@@ -146,9 +146,12 @@ export class ServiceHttpApi extends CoreBase {
 				}
 
 				this.registry.controls.pressControl(controlId, false, 'http')
-			}
 
-			return res.send('ok')
+				return res.send('ok')
+			} else {
+				res.status(404)
+				return res.send('Invalid direction')
+			}
 		})
 
 		this.#legacyApiRouter.get('/rescan', (_req, res) => {
@@ -169,7 +172,7 @@ export class ServiceHttpApi extends CoreBase {
 			)
 		})
 
-		this.#legacyApiRouter.get('/style/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})', (req, res) => {
+		this.#legacyApiRouter.get('/style/bank/:page/:bank', (req, res) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -276,19 +279,13 @@ export class ServiceHttpApi extends CoreBase {
 
 	#setupNewHttpRoutes() {
 		// controls by location
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/press', this.#locationPress)
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/down', this.#locationDown)
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/up', this.#locationUp)
-		this.#apiRouter.post(
-			'/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/rotate-left',
-			this.#locationRotateLeft
-		)
-		this.#apiRouter.post(
-			'/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/rotate-right',
-			this.#locationRotateRight
-		)
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/step', this.#locationStep)
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/style', this.#locationStyle)
+		this.#apiRouter.post('/location/:page/:row/:column/press', this.#locationPress)
+		this.#apiRouter.post('/location/:page/:row/:column/down', this.#locationDown)
+		this.#apiRouter.post('/location/:page/:row/:column/up', this.#locationUp)
+		this.#apiRouter.post('/location/:page/:row/:column/rotate-left', this.#locationRotateLeft)
+		this.#apiRouter.post('/location/:page/:row/:column/rotate-right', this.#locationRotateRight)
+		this.#apiRouter.post('/location/:page/:row/:column/step', this.#locationStep)
+		this.#apiRouter.post('/location/:page/:row/:column/style', this.#locationStyle)
 
 		// custom variables
 		this.#apiRouter
@@ -300,7 +297,7 @@ export class ServiceHttpApi extends CoreBase {
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
 
 		// Finally, default all unhandled to 404
-		this.#apiRouter.use('*', (_req, res) => {
+		this.#apiRouter.use((_req, res) => {
 			res.status(404).send('')
 		})
 	}

@@ -65,7 +65,7 @@ describe('HttpApi', () => {
 		app.use(bodyParser.json())
 		app.use('/api', (r, s, n) => router(r, s, n))
 		app.use((r, s, n) => legacyRouter(r, s, n))
-		app.get('*', (_req, res, _next) => {
+		app.get('*any', (_req, res, _next) => {
 			res.status(421).send('')
 		})
 
@@ -387,40 +387,55 @@ describe('HttpApi', () => {
 
 			test('bad page', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/down').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/down').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/down').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -469,40 +484,55 @@ describe('HttpApi', () => {
 
 			test('bad page', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/up').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/up').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/up').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -560,40 +590,55 @@ describe('HttpApi', () => {
 
 			test('bad page', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/press').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/press').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/press').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -642,40 +687,55 @@ describe('HttpApi', () => {
 
 			test('bad page', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/rotate-left').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/rotate-left').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/rotate-left').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -724,40 +784,55 @@ describe('HttpApi', () => {
 
 			test('bad page', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/rotate-right').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/rotate-right').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/rotate-right').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -842,40 +917,55 @@ describe('HttpApi', () => {
 
 			test('bad page', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/step').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/step').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/step').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -922,40 +1012,55 @@ describe('HttpApi', () => {
 
 			test('bad page', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/style').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/style').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/style').send()
-				expect(res.status).toBe(404)
+				expect(res.status).toBe(204)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 

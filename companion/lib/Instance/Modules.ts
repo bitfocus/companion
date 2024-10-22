@@ -65,7 +65,7 @@ export class InstanceModules extends CoreBase {
 	constructor(registry: Registry) {
 		super(registry, 'Instance/Modules')
 
-		this.registry.api_router.get('/help/module/:moduleId/*', this.#getHelpAsset)
+		this.registry.api_router.get('/help/module/:moduleId/*path', this.#getHelpAsset)
 	}
 
 	/**
@@ -294,13 +294,12 @@ export class InstanceModules extends CoreBase {
 	 * Return a module help asset over http
 	 */
 	#getHelpAsset = (
-		req: express.Request<{ moduleId: string }>,
+		req: express.Request<{ moduleId: string; path: string[] }>,
 		res: express.Response,
 		next: express.NextFunction
 	): void => {
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
-		// @ts-ignore
-		const file = req.params[0].replace(/\.\.+/g, '')
+		const file = req.params.path?.join('/')?.replace(/\.\.+/g, '')
 
 		const moduleInfo = this.#knownModules.get(moduleId)
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
