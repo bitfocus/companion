@@ -74,17 +74,23 @@ export class ServiceHttpApi extends CoreBase {
 	}
 
 	#setupLegacyHttpRoutes() {
-		this.#legacyApiRouter.options('/press/bank/*any', (_req, res, _next) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.options('/press/bank/*any', (_req, res, _next): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
-			return res.send(200)
+			res.send(200)
 		})
 
-		this.#legacyApiRouter.get('/press/bank/:page/:bank', (req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/press/bank/:page/:bank', (req, res): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -106,11 +112,14 @@ export class ServiceHttpApi extends CoreBase {
 				this.registry.controls.pressControl(controlId, false, 'http')
 			}, 20)
 
-			return res.send('ok')
+			res.send('ok')
 		})
 
-		this.#legacyApiRouter.get('/press/bank/:page/:bank/:direction', (req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/press/bank/:page/:bank/:direction', (req, res): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -131,7 +140,7 @@ export class ServiceHttpApi extends CoreBase {
 
 				this.registry.controls.pressControl(controlId, true, 'http')
 
-				return res.send('ok')
+				res.send('ok')
 			} else if (req.params.direction == 'up') {
 				this.logger.info(`Got HTTP /press/bank/ (UP) page ${req.params.page} button ${req.params.bank}`)
 
@@ -147,15 +156,18 @@ export class ServiceHttpApi extends CoreBase {
 
 				this.registry.controls.pressControl(controlId, false, 'http')
 
-				return res.send('ok')
+				res.send('ok')
 			} else {
 				res.status(404)
-				return res.send('Invalid direction')
+				res.send('Invalid direction')
 			}
 		})
 
-		this.#legacyApiRouter.get('/rescan', (_req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/rescan', async (_req, res): Promise<void> => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -172,8 +184,11 @@ export class ServiceHttpApi extends CoreBase {
 			)
 		})
 
-		this.#legacyApiRouter.get('/style/bank/:page/:bank', (req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/style/bank/:page/:bank', (req, res): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -257,11 +272,14 @@ export class ServiceHttpApi extends CoreBase {
 				control.styleSetFields(newFields)
 			}
 
-			return res.send('ok')
+			res.send('ok')
 		})
 
-		this.#legacyApiRouter.get('/set/custom-variable/:name', (req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/set/custom-variable/:name', (req, res): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -270,9 +288,9 @@ export class ServiceHttpApi extends CoreBase {
 			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value}`)
 			const result = this.registry.variables.custom.setValue(req.params.name, String(req.query.value))
 			if (result) {
-				return res.send(result)
+				res.send(result)
 			} else {
-				return res.send('ok')
+				res.send('ok')
 			}
 		})
 	}
