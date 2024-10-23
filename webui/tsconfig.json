@@ -10,9 +10,9 @@
 		"module": "Node16",
 		"moduleResolution": "Node16",
 		"jsx": "react",
-		"allowJs": true,
+		// "allowJs": true,
 		// "checkJs": true,
-		"strictPropertyInitialization": false,
+		"strictPropertyInitialization": true,
 
 		"target": "ESNext",
 		"noImplicitAny": true,

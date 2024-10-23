@@ -2,7 +2,7 @@ import type { ClientEventDefinition } from '@companion-app/shared/Model/Common.j
 import { action, makeObservable, observable } from 'mobx'
 
 export class EventDefinitionsStore {
-	private definitions_: Record<string, ClientEventDefinition | undefined>
+	private definitions_: Record<string, ClientEventDefinition | undefined> = {}
 
 	constructor() {
 		makeObservable<EventDefinitionsStore, 'definitions_'>(this, {

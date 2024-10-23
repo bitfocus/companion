@@ -88,7 +88,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 					console.error('Failed to load event definitions', e)
 				})
 		}
-	}, [socket])
+	}, [socket, rootStore])
 
 	const activeLearnRequestsReady = useActiveLearnRequests(socket, rootStore.activeLearns)
 
