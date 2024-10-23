@@ -3,7 +3,6 @@ import { socketEmitPromise } from '../util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-	faLock,
 	faPlus,
 	faQuestion,
 	faStar,
@@ -148,7 +147,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 		<tr>
 			<td>
 				{installedInfo ? (
-					<ModuleUninstallButton moduleId={moduleId} versionId={versionId} isBuiltin={installedInfo.isBuiltin} />
+					<ModuleUninstallButton moduleId={moduleId} versionId={versionId} />
 				) : (
 					<ModuleInstallButton
 						moduleId={moduleId}
@@ -160,6 +159,9 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				{versionId}
+				{isLatestStable && <FontAwesomeIcon icon={faStar} title="Latest stable" />}
+				{isLatestPrerelease && <FontAwesomeIcon icon={faQuestion} title="Latest prerelease" />}
+
 				{storeInfo?.isPrerelease && <FontAwesomeIcon icon={faQuestion} title="Prerelease" />}
 				{storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
 			</td>
@@ -171,9 +173,6 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 				)}
 			</td>
 			<td>
-				{isLatestStable && <FontAwesomeIcon icon={faStar} title="Latest stable" />}
-				{isLatestPrerelease && <FontAwesomeIcon icon={faQuestion} title="Latest prerelease" />}
-
 				<ModuleVersionUsageIcon
 					moduleId={moduleId}
 					moduleVersionMode="specific-version"
@@ -200,10 +199,9 @@ function LastUpdatedTimestamp({ releasedAt }: { releasedAt: number | undefined }
 interface ModuleUninstallButtonProps {
 	moduleId: string
 	versionId: string
-	isBuiltin: boolean
 }
 
-function ModuleUninstallButton({ moduleId, versionId, isBuiltin }: ModuleUninstallButtonProps) {
+function ModuleUninstallButton({ moduleId, versionId }: ModuleUninstallButtonProps) {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
@@ -225,10 +223,6 @@ function ModuleUninstallButton({ moduleId, versionId, isBuiltin }: ModuleUninsta
 				setIsRunningInstallOrUninstall(false)
 			})
 	}, [socket, moduleId, versionId])
-
-	if (isBuiltin) {
-		return <FontAwesomeIcon className="disabled" icon={faLock} title="Version cannot be removed" />
-	}
 
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall} onClick={doRemove}>

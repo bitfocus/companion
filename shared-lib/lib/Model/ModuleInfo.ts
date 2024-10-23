@@ -34,7 +34,6 @@ export interface NewClientModuleVersionInfo2 {
 	displayName: string
 	isLegacy: boolean
 	isDev: boolean
-	isBuiltin: boolean
 	version: ModuleVersionInfo
 	hasHelp: boolean
 }

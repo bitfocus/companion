@@ -18,8 +18,7 @@ import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableV
 
 interface VisibleModulesState {
 	dev: boolean
-	builtin: boolean
-	store: boolean
+	installed: boolean
 }
 
 interface ModulesListProps {
@@ -43,8 +42,7 @@ export const ModulesList = observer(function ModulesList({
 
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
 		dev: true,
-		builtin: true,
-		store: true,
+		installed: true,
 	})
 
 	const [filter, setFilter] = useState('')
@@ -57,17 +55,7 @@ export const ModulesList = observer(function ModulesList({
 		for (const moduleInfo of searchResults) {
 			let isVisible = false
 			if (moduleInfo.hasDevVersion && visibleModules.visiblity.dev) isVisible = true
-
-			const [hasBuiltin, hasStore] = moduleInfo.installedVersions.reduce(
-				([builtin, release], v) => {
-					if (v.isBuiltin) return [true, release]
-					if (!v.isBuiltin) return [builtin, true]
-					return [builtin, release]
-				},
-				[false, false]
-			)
-			if (hasBuiltin && visibleModules.visiblity.builtin) isVisible = true
-			if (hasStore && visibleModules.visiblity.store) isVisible = true
+			if (moduleInfo.installedVersions.length > 0 && visibleModules.visiblity.installed) isVisible = true
 
 			if (!isVisible) continue
 
@@ -128,8 +116,7 @@ export const ModulesList = observer(function ModulesList({
 						<th colSpan={3} className="fit">
 							<CButtonGroup className="table-header-buttons">
 								<VisibilityButton {...visibleModules} keyId="dev" color="secondary" label="Dev" />
-								<VisibilityButton {...visibleModules} keyId="builtin" color="success" label="Builtin" />
-								<VisibilityButton {...visibleModules} keyId="store" color="warning" label="Store" />
+								<VisibilityButton {...visibleModules} keyId="installed" color="warning" label="Installed" />
 							</CButtonGroup>
 						</th>
 					</tr>

@@ -86,7 +86,6 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 			displayName: 'Latest Stable (Dev)',
 			isLegacy: false,
 			isDev: true,
-			isBuiltin: false,
 			hasHelp: version.helpPath !== null,
 			version: {
 				mode: 'stable',
@@ -99,7 +98,6 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 			displayName: `Latest Stable (v${version.versionId})`,
 			isLegacy: version.display.isLegacy ?? false,
 			isDev: false,
-			isBuiltin: version.isBuiltin,
 			hasHelp: version.helpPath !== null,
 			version: {
 				mode: 'stable',
@@ -118,7 +116,6 @@ function translatePrereleaseVersion(version: SomeModuleVersionInfo | null): NewC
 			displayName: 'Latest Prerelease (Dev)',
 			isLegacy: false,
 			isDev: true,
-			isBuiltin: false,
 			hasHelp: version.helpPath !== null,
 			version: {
 				mode: 'prerelease',
@@ -131,7 +128,6 @@ function translatePrereleaseVersion(version: SomeModuleVersionInfo | null): NewC
 			displayName: `Latest Prerelease (v${version.versionId})`,
 			isLegacy: version.display.isLegacy ?? false,
 			isDev: false,
-			isBuiltin: version.isBuiltin,
 			hasHelp: version.helpPath !== null,
 			version: {
 				mode: 'prerelease',
@@ -148,7 +144,6 @@ function translateReleaseVersion(version: ReleaseModuleVersionInfo): NewClientMo
 		displayName: `v${version.versionId}`,
 		isLegacy: version.display.isLegacy ?? false,
 		isDev: false,
-		isBuiltin: version.isBuiltin,
 		hasHelp: version.helpPath !== null,
 		version: {
 			mode: 'specific-version',
