@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { ConnectionsContext, DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
+import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -355,10 +355,9 @@ const FeedbackEditor = observer(function FeedbackEditor({
 }: FeedbackEditorProps) {
 	const service = useControlFeedbackService(serviceFactory, feedback)
 
-	const { feedbackDefinitions } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
+	const { connections, feedbackDefinitions } = useContext(RootAppStoreContext)
 
-	const connectionInfo = connectionsContext[feedback.instance_id]
+	const connectionInfo = connections.getInfo(feedback.instance_id)
 	const connectionLabel = connectionInfo?.label ?? feedback.instance_id
 
 	const feedbackSpec = feedbackDefinitions.connections.get(feedback.instance_id)?.get(feedback.type)

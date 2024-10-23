@@ -9,7 +9,6 @@ import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import type {
 	ClientToBackendEventsMap,
 	BackendToClientEventsMap,
@@ -22,8 +21,6 @@ import { DropTargetMonitor, XYCoord } from 'react-dnd'
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
 export const SocketContext = React.createContext<CompanionSocketType>(null as any) // TODO - fix this
-
-export const ConnectionsContext = React.createContext<Record<string, ClientConnectionConfig>>({})
 
 type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
 

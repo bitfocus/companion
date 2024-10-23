@@ -1,7 +1,6 @@
 import { CButton, CCard, CCardBody, CCollapse, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { ConnectionsContext, useComputed } from '../util.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import { useComputed } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionActionDefinitions } from '../Stores/ActionDefinitionsStore.js'
@@ -20,7 +19,6 @@ export interface AddActionsModalRef {
 export const AddActionsModal = observer(
 	forwardRef<AddActionsModalRef, AddActionsModalProps>(function AddActionsModal({ addAction }, ref) {
 		const { recentlyAddedActions, actionDefinitions } = useContext(RootAppStoreContext)
-		const connections = useContext(ConnectionsContext)
 
 		const [show, setShow] = useState(false)
 
@@ -80,7 +78,6 @@ export const AddActionsModal = observer(
 						<ConnectionCollapse
 							key={connectionId}
 							connectionId={connectionId}
-							connectionInfo={connections[connectionId]}
 							items={actions}
 							itemName="actions"
 							expanded={!!filter || expanded[connectionId]}
@@ -115,7 +112,6 @@ export const AddFeedbacksModal = observer(
 		ref
 	) {
 		const { feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
-		const connections = useContext(ConnectionsContext)
 
 		const [show, setShow] = useState(false)
 
@@ -174,7 +170,6 @@ export const AddFeedbacksModal = observer(
 						<ConnectionCollapse
 							key={connectionId}
 							connectionId={connectionId}
-							connectionInfo={connections[connectionId]}
 							items={items}
 							itemName="feedbacks"
 							expanded={!!filter || expanded[connectionId]}
@@ -203,7 +198,6 @@ interface ConnectionItem {
 
 interface ConnectionCollapseProps {
 	connectionId: string
-	connectionInfo: ClientConnectionConfig | undefined
 	items: ConnectionActionDefinitions | ConnectionFeedbackDefinitions | undefined
 	itemName: string
 	expanded: boolean
@@ -213,9 +207,8 @@ interface ConnectionCollapseProps {
 	doAdd: (itemId: string) => void
 }
 
-function ConnectionCollapse({
+const ConnectionCollapse = observer(function ConnectionCollapse({
 	connectionId,
-	connectionInfo,
 	items,
 	itemName,
 	expanded,
@@ -224,6 +217,10 @@ function ConnectionCollapse({
 	doToggle,
 	doAdd,
 }: ConnectionCollapseProps) {
+	const { connections } = useContext(RootAppStoreContext)
+
+	const connectionInfo = connections.getInfo(connectionId)
+
 	const doToggle2 = useCallback(() => doToggle(connectionId), [doToggle, connectionId])
 
 	const allValues: ConnectionItem[] = useComputed(() => {
@@ -278,7 +275,7 @@ function ConnectionCollapse({
 			</CCard>
 		)
 	}
-}
+})
 
 interface AddRowProps {
 	info: ConnectionItem

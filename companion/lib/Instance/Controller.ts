@@ -20,13 +20,16 @@ import { InstanceDefinitions } from './Definitions.js'
 import { ModuleHost, ConnectionDebugLogRoom } from './Host.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
-import jsonPatch from 'fast-json-patch'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type {
+	ClientConnectionConfig,
+	ClientConnectionsUpdate,
+	ConnectionConfig,
+} from '@companion-app/shared/Model/Connections.js'
 import type { Registry } from '../Registry.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-app/shared/Model/ExportModel.js'
@@ -329,18 +332,35 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	/**
 	 * Inform clients of changes to the list of connections
 	 */
-	broadcastChanges(_connectionIds: string[]): void {
-		const newJson = cloneDeep(this.getClientJson())
+	broadcastChanges(connectionIds: string[]): void {
+		const newJson = this.getClientJson()
 
-		// Now broadcast to any interested clients
-		if (this.io.countRoomMembers(InstancesRoom) > 0) {
-			const patch = jsonPatch.compare(this.#lastClientJson || {}, newJson || {})
-			if (patch.length > 0) {
-				this.io.emitToRoom(InstancesRoom, `connections:patch`, patch)
+		const changes: ClientConnectionsUpdate[] = []
+
+		if (!this.#lastClientJson) {
+			this.#lastClientJson = cloneDeep(newJson)
+
+			for (const connectionId of Object.keys(newJson)) {
+				changes.push({ type: 'update', id: connectionId, info: newJson[connectionId] })
+			}
+		} else {
+			for (const connectionId of connectionIds) {
+				if (!newJson[connectionId]) {
+					delete this.#lastClientJson[connectionId]
+
+					changes.push({ type: 'remove', id: connectionId })
+				} else {
+					this.#lastClientJson[connectionId] = cloneDeep(newJson[connectionId])
+
+					changes.push({ type: 'update', id: connectionId, info: newJson[connectionId] })
+				}
 			}
 		}
 
-		this.#lastClientJson = newJson
+		// Now broadcast to any interested clients
+		if (this.io.countRoomMembers(InstancesRoom) > 0) {
+			this.io.emitToRoom(InstancesRoom, `connections:patch`, changes)
+		}
 	}
 
 	/**

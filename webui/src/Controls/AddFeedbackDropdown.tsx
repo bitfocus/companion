@@ -1,5 +1,5 @@
 import React, { useCallback, useContext } from 'react'
-import { ConnectionsContext, useComputed } from '../util.js'
+import { useComputed } from '../util.js'
 import Select, { createFilter } from 'react-select'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -42,16 +42,15 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 	booleanOnly,
 	addPlaceholder,
 }: AddFeedbackDropdownProps) {
-	const { feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
+	const { connections, feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
-	const connectionsContext = useContext(ConnectionsContext)
 
 	const options = useComputed(() => {
 		const options: Array<AddFeedbackOption | AddFeedbackGroup> = []
 		for (const [connectionId, instanceFeedbacks] of feedbackDefinitions.connections.entries()) {
 			for (const [feedbackId, feedback] of instanceFeedbacks.entries()) {
 				if (!booleanOnly || feedback.type === 'boolean') {
-					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+					const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 					const optionLabel = `${connectionLabel}: ${feedback.label}`
 					options.push({
 						isRecent: false,
@@ -69,7 +68,7 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 				const [connectionId, feedbackId] = feedbackType.split(':', 2)
 				const feedbackInfo = feedbackDefinitions.connections.get(connectionId)?.get(feedbackId)
 				if (feedbackInfo) {
-					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+					const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 					const optionLabel = `${connectionLabel}: ${feedbackInfo.label}`
 					recents.push({
 						isRecent: true,
@@ -87,7 +86,7 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 		})
 
 		return options
-	}, [feedbackDefinitions, connectionsContext, booleanOnly, recentlyAddedFeedbacks.recentIds])
+	}, [feedbackDefinitions, connections, booleanOnly, recentlyAddedFeedbacks.recentIds])
 
 	const innerChange = useCallback(
 		(e: AddFeedbackOption | null) => {

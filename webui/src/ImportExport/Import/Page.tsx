@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
-import { ConnectionsContext, MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
+import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
 import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import {
@@ -221,13 +221,10 @@ const ImportRemapRow = observer(function ImportRemapRow({
 	instanceRemap,
 	setInstanceRemap,
 }: ImportRemapRowProps) {
-	const { modules } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
+	const { connections, modules } = useContext(RootAppStoreContext)
 
 	const snapshotModule = modules.modules.get(instance.instance_type)
-	const currentInstances = Object.entries(connectionsContext).filter(
-		([_id, inst]) => inst.instance_type === instance.instance_type
-	)
+	const currentInstances = connections.getAllOfType(instance.instance_type)
 
 	const onChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => setInstanceRemap(id, e.currentTarget.value),

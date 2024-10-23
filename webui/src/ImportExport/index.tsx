@@ -1,6 +1,6 @@
 import React, { FormEvent, useCallback, useContext, useRef, useState } from 'react'
-import { ConnectionsContext, SocketContext, socketEmitPromise } from '../util.js'
-
+import { socketEmitPromise } from '../util.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { CAlert, CButton, CCallout } from '@coreui/react'
@@ -8,10 +8,10 @@ import { ResetWizardModal, ResetWizardModalRef } from './Reset.js'
 import { ExportWizardModal, ExportWizardModalRef } from './Export.js'
 import { ImportWizard } from './Import/index.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
+import { observer } from 'mobx-react-lite'
 
-export function ImportExport() {
-	const socket = useContext(SocketContext)
-	const connectionsContext = useContext(ConnectionsContext)
+export const ImportExport = observer(function ImportExport() {
+	const { socket, connections } = useContext(RootAppStoreContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -63,7 +63,7 @@ export function ImportExport() {
 								const candidateIds = []
 								let matchingLabelId = ''
 
-								for (const [otherId, otherObj] of Object.entries(connectionsContext)) {
+								for (const [otherId, otherObj] of connections.connections.entries()) {
 									if (otherObj.instance_type === obj.instance_type) {
 										candidateIds.push(otherId)
 										if (otherObj.label === obj.label) {
@@ -92,7 +92,7 @@ export function ImportExport() {
 			}
 			fr.readAsArrayBuffer(newFile)
 		},
-		[socket, connectionsContext]
+		[socket, connections]
 	)
 
 	if (importInfo) {
@@ -159,4 +159,4 @@ export function ImportExport() {
 			</CCallout>
 		</>
 	)
-}
+})

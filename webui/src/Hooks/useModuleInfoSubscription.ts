@@ -20,10 +20,6 @@ export function useModuleInfoSubscription(socket: CompanionSocketType, store: Mo
 				console.error('Failed to load modules list', e)
 			})
 
-		// const updateFeedbackDefinitions = (change: FeedbackDefinitionUpdate) => {
-		// 	store.applyChanges(change)
-		// }
-
 		const patchModules = (change: ModuleInfoUpdate) => {
 			store.applyChange(change)
 		}

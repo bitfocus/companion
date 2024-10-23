@@ -5,7 +5,6 @@ import type {
 	AppUpdateInfo,
 	AppVersionInfo,
 	ClientBonjourService,
-	ClientConnectionConfig,
 	ClientEditConnectionConfig,
 	ClientEventDefinition,
 	ConnectionStatusEntry,
@@ -44,6 +43,7 @@ import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRec
 import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
+import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -351,7 +351,7 @@ export interface BackendToClientEventsMap {
 	'action-recorder:session-list': (newSessions: JsonPatchOperation[]) => void
 	[selectedSessionId: `action-recorder:session:update:${string}`]: (patch: JsonPatchOperation[]) => void
 
-	'connections:patch': (patch: JsonPatchOperation[] | false) => void
+	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void

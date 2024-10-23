@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components/index.js'
-import { ConnectionsContext, useComputed } from '../util.js'
+import { useComputed } from '../util.js'
 import TimePicker from 'react-time-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
@@ -94,7 +94,7 @@ interface InternalInstanceIdDropdownProps {
 	filterActionsRecorder: boolean | undefined
 }
 
-function InternalInstanceIdDropdown({
+const InternalInstanceIdDropdown = observer(function InternalInstanceIdDropdown({
 	label,
 	includeAll,
 	value,
@@ -103,21 +103,21 @@ function InternalInstanceIdDropdown({
 	multiple,
 	filterActionsRecorder,
 }: Readonly<InternalInstanceIdDropdownProps>) {
-	const context = useContext(ConnectionsContext)
+	const { connections } = useContext(RootAppStoreContext)
 
-	const choices = useMemo(() => {
+	const choices = useComputed(() => {
 		const instance_choices = []
 		if (includeAll) {
 			instance_choices.push({ id: 'all', label: 'All Instances' })
 		}
 
-		for (const [id, config] of Object.entries(context)) {
+		for (const [id, config] of connections.connections.entries()) {
 			if (filterActionsRecorder && !config.hasRecordActionsHandler) continue
 
 			instance_choices.push({ id, label: config.label ?? id })
 		}
 		return instance_choices
-	}, [context, includeAll, filterActionsRecorder])
+	}, [connections, includeAll, filterActionsRecorder])
 
 	return (
 		<DropdownInputField
@@ -129,7 +129,7 @@ function InternalInstanceIdDropdown({
 			setValue={setValue}
 		/>
 	)
-}
+})
 
 interface InternalPageDropdownProps {
 	label: React.ReactNode

@@ -11,7 +11,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { NumberInputField, TextInputField } from '../Components/index.js'
-import { ConnectionsContext, DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
+import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -232,8 +232,7 @@ const ActionTableRow = observer(function ActionTableRow({
 	readonly,
 	panelCollapseHelper,
 }: ActionTableRowProps): JSX.Element | null {
-	const connectionsContext = useContext(ConnectionsContext)
-	const { actionDefinitions } = useContext(RootAppStoreContext)
+	const { actionDefinitions, connections } = useContext(RootAppStoreContext)
 
 	const service = useControlActionService(serviceFactory, action)
 
@@ -318,7 +317,7 @@ const ActionTableRow = observer(function ActionTableRow({
 		return null
 	}
 
-	const connectionInfo = connectionsContext[action.instance]
+	const connectionInfo = connections.getInfo(action.instance)
 	// const module = instance ? modules[instance.instance_type] : undefined
 	const connectionLabel = connectionInfo?.label ?? action.instance
 

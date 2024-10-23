@@ -43,14 +43,6 @@ export interface ConnectionStatusEntry {
 	message: string | undefined
 }
 
-export interface ClientConnectionConfig {
-	label: string
-	instance_type: string
-	enabled: boolean
-	sortOrder: number
-	hasRecordActionsHandler: boolean
-}
-
 export interface ClientBonjourService {
 	subId: string
 	fqdn: string

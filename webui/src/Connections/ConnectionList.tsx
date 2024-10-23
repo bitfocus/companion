@@ -1,6 +1,6 @@
-import React, { RefObject, useCallback, useContext, useEffect, useRef } from 'react'
+import React, { RefObject, useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
-import { ConnectionsContext, socketEmitPromise, SocketContext } from '../util.js'
+import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faSort,
@@ -20,12 +20,13 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { useDrag, useDrop } from 'react-dnd'
 import { windowLinkOpen } from '../Helpers/Window.js'
 import classNames from 'classnames'
-import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -41,19 +42,13 @@ interface ConnectionsListProps {
 	selectedConnectionId: string | null
 }
 
-export function ConnectionsList({
+export const ConnectionsList = observer(function ConnectionsList({
 	showHelp,
 	doConfigureConnection,
 	connectionStatus,
 	selectedConnectionId,
 }: ConnectionsListProps) {
-	const socket = useContext(SocketContext)
-	const connectionsContext = useContext(ConnectionsContext)
-
-	const connectionsRef = useRef<Record<string, ClientConnectionConfig>>()
-	useEffect(() => {
-		connectionsRef.current = connectionsContext
-	}, [connectionsContext])
+	const { connections, socket } = useContext(RootAppStoreContext)
 
 	const deleteModalRef = useRef<GenericConfirmModalRef>(null)
 	const variablesModalRef = useRef<ConnectionVariablesModalRef>(null)
@@ -71,29 +66,27 @@ export function ConnectionsList({
 
 	const moveRow = useCallback(
 		(itemId: string, targetId: string) => {
-			if (connectionsRef.current) {
-				const rawIds = Object.entries(connectionsRef.current)
-					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-					.map(([id]) => id)
+			const rawIds = Array.from(connections.connections.entries())
+				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+				.map(([id]) => id)
 
-				const itemIndex = rawIds.indexOf(itemId)
-				const targetIndex = rawIds.indexOf(targetId)
-				if (itemIndex === -1 || targetIndex === -1) return
+			const itemIndex = rawIds.indexOf(itemId)
+			const targetIndex = rawIds.indexOf(targetId)
+			if (itemIndex === -1 || targetIndex === -1) return
 
-				const newIds = rawIds.filter((id) => id !== itemId)
-				newIds.splice(targetIndex, 0, itemId)
+			const newIds = rawIds.filter((id) => id !== itemId)
+			newIds.splice(targetIndex, 0, itemId)
 
-				socketEmitPromise(socket, 'connections:set-order', [newIds]).catch((e) => {
-					console.error('Reorder failed', e)
-				})
-			}
+			socketEmitPromise(socket, 'connections:set-order', [newIds]).catch((e) => {
+				console.error('Reorder failed', e)
+			})
 		},
-		[socket]
+		[socket, connections]
 	)
 
 	let visibleCount = 0
 
-	const rows = Object.entries(connectionsContext)
+	const rows = Array.from(connections.connections.entries())
 		.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
 		.map(([id, connection]) => {
 			const status = connectionStatus?.[id]
@@ -127,7 +120,7 @@ export function ConnectionsList({
 				/>
 			)
 		})
-	const hiddenCount = Object.keys(connectionsContext).length - visibleCount
+	const hiddenCount = connections.count - visibleCount
 
 	return (
 		<div>
@@ -167,7 +160,7 @@ export function ConnectionsList({
 							</td>
 						</tr>
 					)}
-					{Object.keys(connectionsContext).length === 0 && (
+					{connections.count === 0 && (
 						<tr>
 							<td colSpan={4}>
 								<NonIdealState icon={faPlug}>
@@ -182,7 +175,7 @@ export function ConnectionsList({
 			</table>
 		</div>
 	)
-}
+})
 
 interface ConnectionDragItem {
 	id: string

@@ -1,9 +1,8 @@
-import { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ConnectionConfig, ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { DataDatabase } from '../Data/Database.js'
 // import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
 import { cloneDeep } from 'lodash-es'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 
 export class ConnectionConfigStore {

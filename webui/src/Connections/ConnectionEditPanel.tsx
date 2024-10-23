@@ -1,12 +1,12 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { ConnectionsContext, LoadingRetryOrError, socketEmitPromise } from '../util.js'
+import { LoadingRetryOrError, socketEmitPromise } from '../util.js'
 import { CRow, CCol, CButton } from '@coreui/react'
 import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -25,10 +25,9 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 	doConfigureConnection,
 	showHelp,
 }: ConnectionEditPanelProps) {
-	const { modules } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
+	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const connectionInfo: ClientConnectionConfig | undefined = connectionsContext[connectionId]
+	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)
 
 	const moduleInfo = connectionInfo && modules.modules.get(connectionInfo.instance_type)
 
