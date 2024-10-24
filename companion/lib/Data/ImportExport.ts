@@ -177,7 +177,7 @@ export class DataImportExport extends CoreBase {
 		//Parse variables and generate filename based on export type
 		const generateFilename = (filename: string, exportType: string, fileExt: string): string => {
 			//If the user isn't using their default file name, don't append any extra info in file name since it was a manual choice
-			const useDefault = filename == this.userconfig.getKey('default_export_filename') ? true : false
+			const useDefault = filename == this.userconfig.getKey('default_export_filename')
 			const parsedName = this.variablesController.values.parseVariables(filename, null).text
 
 			return parsedName && parsedName !== 'undefined'
