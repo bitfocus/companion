@@ -431,6 +431,9 @@ export class ControlTrigger
 					case 'timeofday':
 						eventStrings.push(this.#timerEvents.getTimeOfDayDescription(event))
 						break
+					case 'specificDate':
+						eventStrings.push(this.#timerEvents.getSpecificDateDescription(event))
+						break
 					case 'sun_event':
 						eventStrings.push(this.#timerEvents.getSunDescription(event))
 						break
@@ -538,6 +541,9 @@ export class ControlTrigger
 				case 'timeofday':
 					this.#timerEvents.setTimeOfDay(event.id, event.options)
 					break
+				case 'specificDate':
+					this.#timerEvents.setSpecificDate(event.id, event.options)
+					break
 				case 'sun_event':
 					this.#timerEvents.setSun(event.id, event.options)
 					break
@@ -596,6 +602,9 @@ export class ControlTrigger
 				break
 			case 'timeofday':
 				this.#timerEvents.clearTimeOfDay(event.id)
+				break
+			case 'specificDate':
+				this.#timerEvents.clearSpecificDate(event.id)
 				break
 			case 'sun_event':
 				this.#timerEvents.clearSun(event.id)

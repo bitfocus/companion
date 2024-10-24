@@ -16,6 +16,7 @@ export type IsVisibleFunction = Required<CompanionInputFieldBase>['isVisible']
 
 export type InternalInputFieldType =
 	| 'internal:time'
+	| 'internal:date'
 	| 'internal:variable'
 	| 'internal:custom_variable'
 	| 'internal:trigger'
@@ -29,6 +30,9 @@ export interface CompanionInputFieldBaseExtended extends Omit<CompanionInputFiel
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
 	type: 'internal:time'
+}
+export interface InternalInputFieldDate extends CompanionInputFieldBaseExtended {
+	type: 'internal:date'
 }
 export interface InternalInputFieldVariable extends CompanionInputFieldBaseExtended {
 	type: 'internal:variable'
@@ -65,6 +69,7 @@ export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended 
 
 export type InternalInputField =
 	| EncodeIsVisible2<InternalInputFieldTime>
+	| EncodeIsVisible2<InternalInputFieldDate>
 	| EncodeIsVisible2<InternalInputFieldVariable>
 	| EncodeIsVisible2<InternalInputFieldCustomVariable>
 	| EncodeIsVisible2<InternalInputFieldTrigger>

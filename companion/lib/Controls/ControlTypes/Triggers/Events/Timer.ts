@@ -13,6 +13,11 @@ interface TimeOfDayEvent {
 	time: Record<string, any>
 	nextExecute: number | null
 }
+interface SpecificDateEvent {
+	id: string
+	date: Record<string, any>
+	nextExecute: number | null
+}
 interface SunEvent {
 	id: string
 	params: Record<string, any>
@@ -85,6 +90,11 @@ export class TriggersEventTimer {
 	 * Enabled time of day events
 	 */
 	#timeOfDayEvents: TimeOfDayEvent[] = []
+
+	/**
+	 * Enabled time of day events
+	 */
+	#specificDateEvents: SpecificDateEvent[] = []
 
 	/**
 	 * Enable sun based events
@@ -196,6 +206,31 @@ export class TriggersEventTimer {
 		}
 
 		return `<strong>${day_str}</strong>, ${event.options.time}`
+	}
+
+	/**
+	 * Get a description for a time of day event
+	 */
+	getSpecificDateDescription(event: EventInstance): string {
+		const date_str = event.options.date ? dayjs(event.options.date).format('YYYY-MM-DD') : 'Unknown'
+		const time_str = event.options.time ? event.options.time : 'Unknown'
+
+		return `<strong>Once</strong>, on ${date_str} at ${time_str}`
+	}
+
+	/**
+	 * Calculate the next unix time that an specificDate event should execute at
+	 * @param date - date details for specificDate event
+	 */
+	#getSpecificDateExecuteTime(date: Record<string, any>): number | null {
+		if (typeof date !== 'object' || !date.date || !date.time) return null
+
+		const res = new Date(dayjs(date.date).format('YYYY-MM-DD') + 'T' + date.time)
+
+		// if specific date is in the past, ignore
+		const now = new Date()
+		if (res < now) return null
+		return res.getTime()
 	}
 
 	/**
@@ -353,6 +388,14 @@ export class TriggersEventTimer {
 			}
 		}
 
+		for (const date of this.#specificDateEvents) {
+			// check if this date should cause an execution
+			if (date.nextExecute && date.nextExecute <= nowTime) {
+				execute = true
+				date.nextExecute = this.#getSpecificDateExecuteTime(date)
+			}
+		}
+
 		for (const sun of this.#sunEvents) {
 			// check if this sun event should cause an execution
 			if (sun.nextExecute && sun.nextExecute <= nowTime) {
@@ -431,6 +474,27 @@ export class TriggersEventTimer {
 	 */
 	clearTimeOfDay(id: string): void {
 		this.#timeOfDayEvents = this.#timeOfDayEvents.filter((tod) => tod.id !== id)
+	}
+
+	/**
+	 * Add a specificDate event listener
+	 */
+	setSpecificDate(id: string, date: Record<string, any>): void {
+		this.clearSpecificDate(id)
+
+		this.#specificDateEvents.push({
+			id,
+			date,
+			nextExecute: this.#getSpecificDateExecuteTime(date),
+		})
+	}
+
+	/**
+	 * Remove a specificDate event listener
+	 * @param id Id of the event
+	 */
+	clearSpecificDate(id: string): void {
+		this.#specificDateEvents = this.#specificDateEvents.filter((date) => date.id !== id)
 	}
 
 	/**
