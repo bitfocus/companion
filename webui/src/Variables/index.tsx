@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { useComputed } from '../util.js'
 import { VariablesTable } from '../Components/VariablesTable.js'
-import { CustomVariablesList } from '../Buttons/CustomVariablesList.js'
+import { CustomVariablesList } from './CustomVariablesList.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -57,6 +57,10 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 					Internal
 				</CButton>
 			)
+		}
+
+		if (label === 'custom') {
+			return ''
 		}
 
 		const connectionId = connectionsLabelMap.get(label)
