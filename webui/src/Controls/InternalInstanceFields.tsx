@@ -2,6 +2,7 @@ import React, { useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components/index.js'
 import { ConnectionsContext, useComputed } from '../util.js'
 import TimePicker from 'react-time-picker'
+import DatePicker from 'react-date-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -78,6 +79,8 @@ export function InternalInstanceField(
 			)
 		case 'internal:time':
 			return <InternalTimePicker label={label} disabled={readonly} value={value} setValue={setValue} />
+		case 'internal:date':
+			return <InternalDatePicker label={label} disabled={readonly} value={value} setValue={setValue} />
 		default:
 			// Use fallback
 			return null
@@ -459,6 +462,35 @@ function InternalTimePicker({ label, value, setValue, disabled }: InternalTimePi
 				onChange={setValue}
 				className={''}
 				openClockOnFocus={false}
+			/>
+		</>
+	)
+}
+
+interface InternalDatePickerProps {
+	label: React.ReactNode
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+}
+
+function InternalDatePicker({ label, value, setValue, disabled }: InternalDatePickerProps) {
+	return (
+		<>
+			{label ? <CFormLabel>{label}</CFormLabel> : null}
+			<DatePicker
+				disabled={disabled}
+				format="yyyy-M-dd"
+				minDate={new Date()}
+				required
+				value={value}
+				onChange={setValue}
+				className={''}
+				showLeadingZeros={true}
+				calendarIcon={null}
+				yearPlaceholder="yyyy"
+				monthPlaceholder="mm"
+				dayPlaceholder="dd"
 			/>
 		</>
 	)
