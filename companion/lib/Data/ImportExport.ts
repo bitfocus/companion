@@ -174,6 +174,17 @@ export class DataImportExport extends CoreBase {
 			return instancesExport
 		}
 
+		//Parse variables and generate filename based on export type
+		const generateFilename = (filename: string, exportType: string, fileExt: string): string => {
+			//If the user isn't using their default file name, don't append any extra info in file name since it was a manual choice
+			const useDefault = filename == this.userconfig.getKey('default_export_filename')
+			const parsedName = this.variablesController.values.parseVariables(filename, null).text
+
+			return parsedName && parsedName !== 'undefined'
+				? encodeURI(`${parsedName}${exportType && useDefault ? '_' + exportType : ''}.${fileExt}`)
+				: encodeURI(`${os.hostname()}_${getTimestamp()}_${exportType}.${fileExt}`)
+		}
+
 		const generate_export_for_triggers = (triggerControls: ControlTrigger[]): ExportTriggersListv4 => {
 			const triggersExport: ExportTriggerContentv4 = {}
 			const referencedConnectionIds = new Set<string>()
@@ -204,7 +215,7 @@ export class DataImportExport extends CoreBase {
 			const triggerControls = this.controls.getAllTriggers()
 			const exp = generate_export_for_triggers(triggerControls)
 
-			const filename = encodeURI(`${os.hostname()}_trigger_list_${getTimestamp()}.companionconfig`)
+			const filename = generateFilename(String(req.query.filename), 'trigger_list', 'companionconfig')
 
 			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
@@ -214,11 +225,8 @@ export class DataImportExport extends CoreBase {
 			if (control) {
 				const exp = generate_export_for_triggers([control])
 
-				const filename = encodeURI(
-					`${os.hostname()}_trigger_${control.options.name
-						.toLowerCase()
-						.replace(/\W/, '')}_${getTimestamp()}.companionconfig`
-				)
+				const triggerName = control.options.name.toLowerCase().replace(/\W/, '')
+				const filename = generateFilename(String(req.query.filename), `trigger_${triggerName}`, 'companionconfig')
 
 				downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 			} else {
@@ -253,7 +261,7 @@ export class DataImportExport extends CoreBase {
 					oldPageNumber: page,
 				}
 
-				const filename = encodeURI(`${os.hostname()}_page${page}_${getTimestamp()}.companionconfig`)
+				const filename = generateFilename(String(req.query.filename), `page${page}`, 'companionconfig')
 
 				downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 			}
@@ -351,7 +359,7 @@ export class DataImportExport extends CoreBase {
 			// @ts-expect-error
 			const exp = generateCustomExport(req.query)
 
-			const filename = encodeURI(`${os.hostname()}_custom-config_${getTimestamp()}.companionconfig`)
+			const filename = generateFilename(String(req.query.filename), '', 'companionconfig')
 
 			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
@@ -359,7 +367,11 @@ export class DataImportExport extends CoreBase {
 		this.registry.api_router.get('/export/full', (req, res, next) => {
 			const exp = generateCustomExport(null)
 
-			const filename = encodeURI(`${os.hostname()}full-config_${getTimestamp()}.companionconfig`)
+			const filename = generateFilename(
+				String(this.userconfig.getKey('default_export_filename')),
+				'full_config',
+				'companionconfig'
+			)
 
 			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
@@ -367,7 +379,11 @@ export class DataImportExport extends CoreBase {
 		this.registry.api_router.get('/export/log', (_req, res, _next) => {
 			const logs = LogController.getAllLines()
 
-			const filename = encodeURI(`${os.hostname()}_companion_log_${getTimestamp()}.csv`)
+			const filename = generateFilename(
+				String(this.userconfig.getKey('default_export_filename')),
+				'companion_log',
+				'csv'
+			)
 
 			res.status(200)
 			res.set({
@@ -397,7 +413,12 @@ export class DataImportExport extends CoreBase {
 			})
 
 			//set the archive name
-			res.attachment(os.hostname() + '_companion-config_' + getTimestamp() + '.zip')
+			const filename = generateFilename(
+				String(this.userconfig.getKey('default_export_filename')),
+				'companion-config',
+				'zip'
+			)
+			res.attachment(filename)
 
 			//this is the streaming magic
 			archive.pipe(res)
