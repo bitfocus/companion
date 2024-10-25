@@ -21,7 +21,7 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 		const [data, setData] = useState<string | null>(null)
 		const [show, setShow] = useState(false)
 		const [format, setFormat] = useState(ExportFormatDefault)
-		const [filename, setFilename] = useState(String(userConfig.properties?.default_export_filename))
+		const [filename, setFilename] = useState<string>('')
 
 		const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -60,6 +60,9 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 				show(url) {
 					setData(url)
 					setShow(true)
+
+					// Reset to default filename each time modal is opened
+					setFilename(String(userConfig.properties?.default_export_filename))
 
 					// Focus the button asap. It also gets focused once the open is complete
 					setTimeout(buttonFocus, 50)
