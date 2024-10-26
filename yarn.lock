@@ -6672,7 +6672,6 @@ asn1@evs-broadcast/node-asn1:
     type-fest: "npm:^4.26.1"
     typescript: "npm:~5.6.3"
     usb: "npm:2.14.0"
-    utf-8-validate: "npm:^6.0.4"
     uuid: "npm:^10.0.0"
     vec-footpedal: "npm:^2.0.1"
     videohub-server: "npm:^0.3.0"
@@ -14175,16 +14174,6 @@ asn1@evs-broadcast/node-asn1:
   peerDependencies:
     react: ^16.8.0  || ^17 || ^18
   checksum: 10c0/2204d8c95109302bdaaa51a66bf216f3dba750f1d2795c20ecba75ba1c44a070a253935d537ef536514ab6e363bcc02ccc78b5ad63576ff8d880d577cf3fc48f
-  languageName: node
-  linkType: hard
-
-"utf-8-validate@npm:^6.0.4":
-  version: 6.0.4
-  resolution: "utf-8-validate@npm:6.0.4"
-  dependencies:
-    node-gyp: "npm:latest"
-    node-gyp-build: "npm:^4.3.0"
-  checksum: 10c0/f7042d94aec6ca02461b64e725bdc7262266610dbb787331e5bbd49374ef6f75fe9900600df3fc63d97906c23614a965c8989b4bf95d70bf35dc617da99215e7
   languageName: node
   linkType: hard
 

@@ -71,7 +71,6 @@ for (const name of neededDependencies) {
 if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x64') {
 	// These have no prebuilds available
 	delete dependencies['bufferutil']
-	delete dependencies['utf-8-validate']
 }
 
 const packageResolutions = {

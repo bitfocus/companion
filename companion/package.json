@@ -93,7 +93,6 @@
 		"systeminformation": "^5.23.5",
 		"type-fest": "^4.26.1",
 		"usb": "2.14.0",
-		"utf-8-validate": "^6.0.4",
 		"uuid": "^10.0.0",
 		"vec-footpedal": "^2.0.1",
 		"videohub-server": "^0.3.0",

@@ -48,7 +48,6 @@ module.exports = {
 		// Native libs that are needed
 		usb: 'commonjs2 usb',
 		bufferutil: 'commonjs2 bufferutil',
-		'utf-8-validate': 'commonjs2 utf-8-validate',
 		'@serialport/bindings-cpp': 'commonjs2 @serialport/bindings-cpp',
 		'@napi-rs/canvas': 'commonjs2 @napi-rs/canvas',
 		'better-sqlite3': 'commonjs2 better-sqlite3',
