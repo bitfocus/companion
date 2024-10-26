@@ -32,14 +32,14 @@ import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { Socket } from 'net'
 import type { ImageResult, ImageResultStyle } from '../../Graphics/ImageResult.js'
+import type { SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
 	productName: string
 	path: string
-	socket: import('net').Socket
+	socket: SatelliteSocketWrapper
 	gridSize: GridSize
 	supportsBrightness: boolean
 	streamBitmapSize: number | null
@@ -145,7 +145,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	readonly deviceId: string
-	readonly socket: Socket
+	readonly socket: SatelliteSocketWrapper
 
 	constructor(deviceInfo: SatelliteDeviceInfo, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
