@@ -39,7 +39,7 @@ export interface SatelliteSocketWrapper {
 }
 
 export interface SatelliteInitSocketResult {
-	processMessage(data: Buffer): void
+	processMessage(data: string): void
 	cleanupDevices(): number
 }
 
@@ -225,7 +225,7 @@ export class ServiceSatelliteApi extends CoreBase {
 		let receivebuffer = ''
 		return {
 			processMessage: (data) => {
-				receivebuffer += data.toString()
+				receivebuffer += data
 
 				let i = 0,
 					line = '',

@@ -5,7 +5,7 @@ import type { Registry } from '../Registry.js'
 import { ServiceSatelliteApi } from './SatelliteApi.js'
 
 /**
- * Class providing the Satellite/Remote Surface api.
+ * Class providing the Satellite/Remote Surface api over tcp.
  *
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
@@ -24,15 +24,15 @@ import { ServiceSatelliteApi } from './SatelliteApi.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class ServiceSatellite extends ServiceBase {
+export class ServiceSatelliteTcp extends ServiceBase {
 	readonly #api: ServiceSatelliteApi
 
-	server: net.Server | undefined = undefined
+	#server: net.Server | undefined = undefined
 
 	readonly #clients = new Set<Socket>()
 
 	constructor(registry: Registry) {
-		super(registry, 'Service/Satellite', null, null)
+		super(registry, 'Service/SatelliteTcp', null, null)
 
 		this.#api = new ServiceSatelliteApi(registry)
 
@@ -42,9 +42,9 @@ export class ServiceSatellite extends ServiceBase {
 	}
 
 	listen() {
-		this.server = net.createServer((socket) => {
+		this.#server = net.createServer((socket) => {
 			const name = socket.remoteAddress + ':' + socket.remotePort
-			const socketLogger = LogController.createLogger(`Service/Satellite/${name}`)
+			const socketLogger = LogController.createLogger(`Service/SatelliteTcp/${name}`)
 
 			this.#clients.add(socket)
 
@@ -75,23 +75,23 @@ export class ServiceSatellite extends ServiceBase {
 
 			socket.on('close', doCleanup)
 
-			socket.on('data', processMessage)
+			socket.on('data', (data) => processMessage(data.toString()))
 		})
-		this.server.on('error', (e) => {
+		this.#server.on('error', (e) => {
 			this.logger.debug(`listen-socket error: ${e}`)
 		})
 
 		try {
-			this.server.listen(this.port)
+			this.#server.listen(this.port)
 		} catch (e) {
-			this.logger.debug(`ERROR opening port this.port for companion satellite devices`)
+			this.logger.debug(`ERROR opening tcp port ${this.port} for companion satellite devices`)
 		}
 	}
 
 	close(): void {
-		if (this.server) {
-			this.server.close()
-			this.server = undefined
+		if (this.#server) {
+			this.#server.close()
+			this.#server = undefined
 		}
 
 		// Disconnect all clients

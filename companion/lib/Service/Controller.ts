@@ -7,7 +7,7 @@ import { ServiceHttps } from './Https.js'
 import { ServiceOscListener } from './OscListener.js'
 import { ServiceOscSender } from './OscSender.js'
 import { ServiceRosstalk } from './Rosstalk.js'
-import { ServiceSatellite } from './Satellite.js'
+import { ServiceSatelliteTcp } from './SatelliteTcp.js'
 import { ServiceSharedUdpManager } from './SharedUdpManager.js'
 import { ServiceSurfaceDiscovery } from './SurfaceDiscovery.js'
 import { ServiceTcp } from './Tcp.js'
@@ -15,6 +15,7 @@ import { ServiceUdp } from './Udp.js'
 import { ServiceVideohubPanel } from './VideohubPanel.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
+import { ServiceSatelliteWebsocket } from './SatelliteWebsocket.js'
 
 /**
  * Class that manages all of the services.
@@ -46,7 +47,8 @@ export class ServiceController {
 	readonly emberplus: ServiceEmberPlus
 	readonly artnet: ServiceArtnet
 	readonly rosstalk: ServiceRosstalk
-	readonly satellite: ServiceSatellite
+	readonly satelliteTcp: ServiceSatelliteTcp
+	readonly satelliteWebsocket: ServiceSatelliteWebsocket
 	readonly elgatoPlugin: ServiceElgatoPlugin
 	readonly videohubPanel: ServiceVideohubPanel
 	readonly bonjourDiscovery: ServiceBonjourDiscovery
@@ -63,7 +65,8 @@ export class ServiceController {
 		this.emberplus = new ServiceEmberPlus(registry)
 		this.artnet = new ServiceArtnet(registry)
 		this.rosstalk = new ServiceRosstalk(registry)
-		this.satellite = new ServiceSatellite(registry)
+		this.satelliteTcp = new ServiceSatelliteTcp(registry)
+		this.satelliteWebsocket = new ServiceSatelliteWebsocket(registry)
 		this.elgatoPlugin = new ServiceElgatoPlugin(registry)
 		this.videohubPanel = new ServiceVideohubPanel(registry)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(registry)
@@ -85,7 +88,8 @@ export class ServiceController {
 		this.oscListener.updateUserConfig(key, value)
 		this.oscSender.updateUserConfig(key, value)
 		this.rosstalk.updateUserConfig(key, value)
-		this.satellite.updateUserConfig(key, value)
+		this.satelliteTcp.updateUserConfig(key, value)
+		this.satelliteWebsocket.updateUserConfig(key, value)
 		this.tcp.updateUserConfig(key, value)
 		this.udp.updateUserConfig(key, value)
 		this.videohubPanel.updateUserConfig(key, value)

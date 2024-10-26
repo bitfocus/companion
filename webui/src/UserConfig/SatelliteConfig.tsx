@@ -11,8 +11,13 @@ export const SatelliteConfig = observer(function SatelliteConfig(_props: UserCon
 			<UserConfigHeadingRow label="Satellite" />
 
 			<UserConfigStaticTextRow
-				label={<InlineHelp help="You can't change this value.">Satellite Listen Port</InlineHelp>}
+				label={<InlineHelp help="You can't change this value.">Satellite TCP Listen Port</InlineHelp>}
 				text={16622}
+			/>
+
+			<UserConfigStaticTextRow
+				label={<InlineHelp help="You can't change this value.">Satellite Websocket Listen Port</InlineHelp>}
+				text={16623}
 			/>
 		</>
 	)

@@ -53,7 +53,7 @@ RUN mkdir $COMPANION_CONFIG_BASEDIR && chown companion:companion $COMPANION_CONF
 
 USER companion
 # Export ports for web, Satellite API and WebSocket (Elgato Plugin)
-EXPOSE 8000 16622 28492
+EXPOSE 8000 16622 16623 28492
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 
