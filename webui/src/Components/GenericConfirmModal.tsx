@@ -58,7 +58,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 		let content: JSX.Element | JSX.Element[] | string = props.content ?? ''
 		if (data?.message) {
 			if (Array.isArray(data.message)) {
-				content = data.message.map((line) => <p>{line}</p>)
+				content = data.message.map((line, i) => <p key={i}>{line}</p>)
 			} else {
 				content = <p>{data.message}</p>
 			}
