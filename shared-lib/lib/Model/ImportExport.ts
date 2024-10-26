@@ -16,8 +16,8 @@ export interface ClientExportSelection {
 	customVariables: boolean
 	connections: boolean
 	surfaces: boolean
-
 	format: ExportFormat
+	filename?: string
 }
 
 export interface ClientImportSelection {

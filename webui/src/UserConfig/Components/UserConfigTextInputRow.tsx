@@ -8,11 +8,13 @@ interface UserConfigTextInputRowProps {
 	userConfig: UserConfigProps
 	label: string | React.ReactNode
 	field: keyof UserConfigModel
+	useVariables?: boolean
 }
 export const UserConfigTextInputRow = observer(function UserConfigTextInputRow({
 	userConfig,
 	label,
 	field,
+	useVariables,
 }: UserConfigTextInputRowProps) {
 	return (
 		<tr>
@@ -21,6 +23,7 @@ export const UserConfigTextInputRow = observer(function UserConfigTextInputRow({
 				<TextInputField
 					value={String(userConfig.config[field])}
 					setValue={(value) => userConfig.setValue(field, value)}
+					useVariables={useVariables}
 				/>
 			</td>
 			<td>

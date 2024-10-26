@@ -1,9 +1,11 @@
-import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState, useContext } from 'react'
 import { CButton, CForm, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { PreventDefaultHandler } from '../util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { TextInputField } from '../Components/TextInputField.js'
 
 interface ExportWizardModalProps {}
 export interface ExportWizardModalRef {
@@ -12,6 +14,8 @@ export interface ExportWizardModalRef {
 
 export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardModalProps>(
 	function ExportWizardModal(_props, ref) {
+		const { userConfig } = useContext(RootAppStoreContext)
+
 		const [show, setShow] = useState(false)
 		const [config, setConfig] = useState<ClientExportSelection>({
 			connections: true,
@@ -21,6 +25,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 			customVariables: true,
 			// userconfig: true,
 			format: ExportFormatDefault,
+			filename: userConfig.properties?.default_export_filename,
 		})
 
 		const doClose = useCallback(() => {
@@ -71,6 +76,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 						customVariables: true,
 						// userconfig: true,
 						format: ExportFormatDefault,
+						filename: userConfig.properties?.default_export_filename,
 					})
 
 					setShow(true)
@@ -117,10 +123,11 @@ interface ExportOptionsStepProps {
 }
 
 function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
+	const updateProp = useCallback((val: string) => setValue('filename', val), [setValue])
 	return (
 		<div>
 			<h5>Export Options</h5>
-			<p>Please select the components you'd like to export.</p>
+			<p>Please select the components you'd like to export:</p>
 			<div className="indent3">
 				<CFormCheck
 					id="wizard_connections"
@@ -170,9 +177,11 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 					label='Settings'
 				/>
 			</div> */}
-
-			<div>
+			<div style={{ paddingTop: '1em' }}>
 				<SelectExportFormat value={config.format} setValue={(val) => setValue('format', val)} label="File format" />
+			</div>
+			<div style={{ paddingTop: '1em' }}>
+				<TextInputField value={String(config.filename)} setValue={updateProp} label="File name" useVariables={true} />
 			</div>
 		</div>
 	)
