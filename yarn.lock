@@ -1455,7 +1455,7 @@ __metadata:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@coreui/coreui": "npm:^5.1.2"
-    "@coreui/react": "patch:@coreui/react@npm%3A5.4.0#~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch"
+    "@coreui/react": "patch:@coreui/react@patch%3A@coreui/react@npm%253A5.4.0%23~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch%3A%3Aversion=5.4.0&hash=56767e#~/.yarn/patches/@coreui-react-patch-c088eb466e.patch"
     "@fontsource/fira-code": "npm:^5.1.0"
     "@fontsource/roboto": "npm:^5.1.0"
     "@fortawesome/fontawesome-svg-core": "npm:^6.6.0"
@@ -1580,7 +1580,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coreui/react@patch:@coreui/react@npm%3A5.4.0#~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch":
+"@coreui/react@patch:@coreui/react@npm%3A5.4.0#~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch::version=5.4.0&hash=56767e":
   version: 5.4.0
   resolution: "@coreui/react@patch:@coreui/react@npm%3A5.4.0#~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch::version=5.4.0&hash=56767e"
   dependencies:
@@ -1591,6 +1591,20 @@ __metadata:
     react: ">=17"
     react-dom: ">=17"
   checksum: 10c0/d05537106c03eeeb39d1f21a80fa695c82ed12f1235c99475fc8cdbf6f361951d072e5eb80632d39e6c8dab6c8280ce146269b43a2c9d791b41503d5da561dda
+  languageName: node
+  linkType: hard
+
+"@coreui/react@patch:@coreui/react@patch%3A@coreui/react@npm%253A5.4.0%23~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch%3A%3Aversion=5.4.0&hash=56767e#~/.yarn/patches/@coreui-react-patch-c088eb466e.patch":
+  version: 5.4.0
+  resolution: "@coreui/react@patch:@coreui/react@patch%3A@coreui/react@npm%253A5.4.0%23~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch%3A%3Aversion=5.4.0&hash=56767e#~/.yarn/patches/@coreui-react-patch-c088eb466e.patch::version=5.4.0&hash=1e1beb"
+  dependencies:
+    "@coreui/coreui": "npm:^5.1.2"
+    "@popperjs/core": "npm:^2.11.8"
+    prop-types: "npm:^15.8.1"
+  peerDependencies:
+    react: ">=17"
+    react-dom: ">=17"
+  checksum: 10c0/5ef9fd38df76d2692d8cfb6fdd62f0efcfcafc7f71a8c33c5f84aca20209026521292202ffbb1dcafb770f170390f7a8af5a51c8b478bcdda2c1b7a2610936a4
   languageName: node
   linkType: hard
 
