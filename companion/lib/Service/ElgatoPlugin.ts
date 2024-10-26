@@ -8,6 +8,7 @@ import imageRs from '@julusian/image-rs'
 import { transformButtonImage } from '../Resources/Util.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { Registry } from '../Registry.js'
+import type { IncomingMessage } from 'http'
 
 /**
  * Class providing the Elgato Plugin service.
@@ -299,9 +300,8 @@ export class ServiceElgatoPlugin extends ServiceBase {
 	/**
 	 * Set up a new socket connection
 	 */
-	#processIncoming(socket: WebSocket): void {
-		// @ts-ignore
-		const remoteAddress = socket.remoteAddress
+	#processIncoming(socket: WebSocket, req: IncomingMessage): void {
+		const remoteAddress = req.socket.remoteAddress ?? 'unknown'
 
 		this.logger.silly(`New connection from ${remoteAddress}`)
 

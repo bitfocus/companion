@@ -50,9 +50,8 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 					this.logger.debug(`listen-socket error: ${e}`)
 				})
 
-				this.#server.on('connection', (socket) => {
-					// @ts-expect-error This works but isn't in the types.. TODO: verify this
-					const name = socket.remoteAddress + ':' + socket.remotePort
+				this.#server.on('connection', (socket, req) => {
+					const name = req.socket.remoteAddress + ':' + req.socket.remotePort
 					const socketLogger = LogController.createLogger(`Service/SatelliteWs/${name}`)
 
 					let lastReceived = Date.now()
@@ -63,8 +62,7 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 					})
 
 					const { processMessage, cleanupDevices } = this.#api.initSocket(socketLogger, {
-						// @ts-expect-error The property exists but not in the types
-						remoteAddress: socket.remoteAddress,
+						remoteAddress: req.socket.remoteAddress,
 						destroy: () => socket.terminate(),
 						write: (data) => socket.send(data),
 					})
