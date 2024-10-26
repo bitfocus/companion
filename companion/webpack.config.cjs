@@ -52,7 +52,6 @@ module.exports = {
 		'@serialport/bindings-cpp': 'commonjs2 @serialport/bindings-cpp',
 		'@napi-rs/canvas': 'commonjs2 @napi-rs/canvas',
 		'better-sqlite3': 'commonjs2 better-sqlite3',
-		'segfault-raub': 'commonjs2 segfault-raub',
 	},
 	experiments: {
 		topLevelAwait: true,

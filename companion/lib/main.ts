@@ -4,7 +4,7 @@
 import './Util/FixImports.js'
 
 // Setup segfault handler
-import 'segfault-raub'
+import '@julusian/segfault-raub'
 
 // Setup logging before anything else runs
 import './Log/Controller.js'

@@ -117,7 +117,12 @@ await fs.writeFile(
 )
 
 // Copy prebuilds
-const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo', 'node-hid', '@julusian/image-rs']
+const copyPrebuildsFromDependencies = [
+	'@julusian/jpeg-turbo',
+	'node-hid',
+	'@julusian/image-rs',
+	'@julusian/segfault-raub',
+]
 for (const name of copyPrebuildsFromDependencies) {
 	await fs.mkdirp('dist/prebuilds')
 	await fs.copy(path.join('node_modules', name, 'prebuilds'), 'dist/prebuilds')
