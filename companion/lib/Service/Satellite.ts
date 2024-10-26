@@ -284,6 +284,8 @@ export class ServiceSatellite extends ServiceBase {
 			this.server.close()
 			this.server = undefined
 		}
+
+		// TODO - this should disconnect all clients
 	}
 
 	/**

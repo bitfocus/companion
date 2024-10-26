@@ -43,7 +43,7 @@ export class ServiceTcp extends ServiceTcpBase {
 			const bank = xyToOldBankIndex(location.column, location.row)
 
 			/** TODO: remove legacy 'bank' from this response */
-			if (this.clients.length > 0 && bank !== null) {
+			if (this.clients.size > 0 && bank !== null) {
 				const color = decimalToRgb(bgcolor)
 				const response = {
 					type: 'bank_bg_change',
