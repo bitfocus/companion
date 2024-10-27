@@ -401,24 +401,24 @@ const ActionTableRow = observer(function ActionTableRow({
 							</div>
 						)}
 
-						{connectionsWithSameType.length > 1 && (
-							<div className="cell-connection">
-								<DropdownInputField
-									label="Connection"
-									choices={connectionsWithSameType
-										.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
-										.map((connection) => {
-											const [id, info] = connection
-											return { id, label: info.label }
-										})}
-									multiple={false}
-									value={action.instance}
-									setValue={service.setConnection}
-								></DropdownInputField>
-							</div>
-						)}
+						<div className="cell-left-main">
+							{connectionsWithSameType.length > 1 && (
+								<div className="option-field">
+									<DropdownInputField
+										label="Connection"
+										choices={connectionsWithSameType
+											.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
+											.map((connection) => {
+												const [id, info] = connection
+												return { id, label: info.label }
+											})}
+										multiple={false}
+										value={action.instance}
+										setValue={service.setConnection}
+									></DropdownInputField>
+								</div>
+							)}
 
-						<div className="cell-delay">
 							<CForm onSubmit={PreventDefaultHandler}>
 								<label>Delay</label>
 								<CInputGroup>
