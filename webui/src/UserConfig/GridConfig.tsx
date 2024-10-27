@@ -35,12 +35,12 @@ export const GridConfig = observer(function GridConfig(props: UserConfigProps) {
 				}
 			/>
 			<UserConfigStaticTextRow
-				label={<em>Current minimum</em>}
-				text={`${props.config.gridSize.minRow} rows x ${props.config.gridSize.minColumn} columns`}
+				label={<em>Current grid rows</em>}
+				text={`${props.config.gridSize.minRow} to ${props.config.gridSize.maxRow}`}
 			/>
 			<UserConfigStaticTextRow
-				label={<em>Current maximums</em>}
-				text={`${props.config.gridSize.maxRow} rows x ${props.config.gridSize.maxColumn} columns`}
+				label={<em>Current grid columns</em>}
+				text={`${props.config.gridSize.minColumn} to ${props.config.gridSize.maxColumn}`}
 			/>
 
 			<UserConfigSwitchRow userConfig={props} label="Allow expanding in grid view" field="gridSizeInlineGrow" />
