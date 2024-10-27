@@ -54,6 +54,6 @@
     "app-builder-bin": "npm:@julusian/app-builder-bin@4.0.1",
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
     "osc/serialport": "^12.0.0",
-    "react-select": "npm:@julusian/react-select@^5.8.1-1"
+    "react-select": "npm:@julusian/react-select@^5.8.1-3"
   }
 }

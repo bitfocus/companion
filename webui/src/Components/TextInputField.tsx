@@ -316,6 +316,7 @@ const VariablesSelect = observer(function VariablesSelect({
 				components={multiline ? CustomMultilineSelectComponents : CustomSelectComponents}
 				backspaceRemovesValue={false}
 				filterOption={createFilter({ ignoreAccents: false })}
+				openMenuOnArrows={false}
 			/>
 		</VariablesSelectContext.Provider>
 	)
