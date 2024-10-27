@@ -548,6 +548,17 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
+		client.onPromise('controls:action:set-connection', (controlId, stepId, setId, id, connectionId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsActions) {
+				return control.actionSetConnection(stepId, setId, id, connectionId)
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
+			}
+		})
+
 		client.onPromise('controls:action:set-delay', (controlId, stepId, setId, id, delay) => {
 			const control = this.getControl(controlId)
 			if (!control) return false

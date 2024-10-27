@@ -313,6 +313,35 @@ export class FragmentActions {
 	}
 
 	/**
+	 * Set the connection of an action
+	 * @param setId the action_set id
+	 * @param id the action id
+	 * @param connectionId the id of the new connection
+	 */
+	actionSetConnection(setId: string, id: string, connectionId: string): boolean {
+		if (connectionId == '') return false
+		const action_set = this.action_sets[setId]
+		if (action_set) {
+			for (const action of action_set) {
+				if (action && action.id === id) {
+					// remove action from old instance
+					this.cleanupAction(action)
+					// change instance
+					action.instance = connectionId
+					// subscribe action at new instance
+					this.#actionSubscribe(action)
+
+					this.#commitChange(false)
+
+					return true
+				}
+			}
+		}
+
+		return false
+	}
+
+	/**
 	 * Set the delay of an action
 	 * @param setId the action_set id
 	 * @param id the action id

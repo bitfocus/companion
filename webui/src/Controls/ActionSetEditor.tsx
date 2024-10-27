@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { NumberInputField, TextInputField } from '../Components/index.js'
+import { DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
 import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
@@ -31,6 +31,7 @@ import {
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import classNames from 'classnames'
+import { DropdownChoiceInt } from 'src/LocalVariableDefinitions.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -320,6 +321,7 @@ const ActionTableRow = observer(function ActionTableRow({
 	const connectionInfo = connections.getInfo(action.instance)
 	// const module = instance ? modules[instance.instance_type] : undefined
 	const connectionLabel = connectionInfo?.label ?? action.instance
+	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
 	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
 
@@ -397,6 +399,21 @@ const ActionTableRow = observer(function ActionTableRow({
 						{showButtonPreview && (
 							<div className="cell-button-preview">
 								<OptionButtonPreview location={location} options={action.options} />
+							</div>
+						)}
+
+						{connectionsWithSameType.length > 1 && (
+							<div className="cell-connection">
+								<DropdownInputField
+									label="Connection"
+									choices={connectionsWithSameType.map((connection) => {
+										const [id, info] = connection
+										return { id, label: info.label }
+									})}
+									multiple={false}
+									value={action.instance}
+									setValue={service.setConnection}
+								></DropdownInputField>
 							</div>
 						)}
 
