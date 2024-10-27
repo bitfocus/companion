@@ -585,7 +585,7 @@ export class SocketEventsHandler {
 	/**
 	 * Send a message to the module 'debug' log page
 	 */
-	#sendToModuleLog(level: LogLevel, message: string): void {
+	#sendToModuleLog(level: LogLevel | 'system', message: string): void {
 		const debugLogRoom = ConnectionDebugLogRoom(this.connectionId)
 		if (this.#registry.io.countRoomMembers(debugLogRoom) > 0) {
 			this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, level, message)
@@ -599,6 +599,8 @@ export class SocketEventsHandler {
 		// this.logger.silly(`Updating status`)
 
 		this.#instanceStatus.updateInstanceStatus(this.connectionId, msg.status, msg.message)
+
+		this.#sendToModuleLog('system', `Status: ${msg.status} - ${msg.message}`)
 	}
 
 	/**
