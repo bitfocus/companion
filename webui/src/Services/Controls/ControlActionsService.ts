@@ -9,7 +9,7 @@ export interface IActionEditorService {
 	setValue: (actionId: string, action: ActionInstance | undefined, key: string, val: any) => void
 	performDelete: (actionId: string) => void
 	performDuplicate: (actionId: string) => void
-	setConnection: (actionId: string, connectionId: string | number) => void | undefined
+	setConnection: (actionId: string, connectionId: string | number) => void
 	setDelay: (actionId: string, delay: number) => void
 	moveCard: (dragStepId: string, dragSetId: string | number, dragIndex: number, dropIndex: number) => void
 	performLearn: ((actionId: string) => void) | undefined
@@ -21,7 +21,7 @@ export interface IActionEditorActionService {
 	setValue: (key: string, val: any) => void
 	performDelete: () => void
 	performDuplicate: () => void
-	setConnection: (connectionId: string | number) => void | undefined
+	setConnection: (connectionId: string | number) => void
 	setDelay: (delay: number) => void
 	performLearn: (() => void) | undefined
 	setEnabled: ((enabled: boolean) => void) | undefined
@@ -164,7 +164,9 @@ export function useActionRecorderActionService(sessionId: string): IActionEditor
 				)
 			},
 
-			setConnection: undefined,
+			setConnection: (_actionId: string, _connectionId: string | number) => {
+				// Not implemented in action recorder
+			},
 
 			setDelay: (actionId: string, delay: number) => {
 				socketEmitPromise(socket, 'action-recorder:session:action-delay', [sessionId, actionId, delay]).catch((e) => {
@@ -208,7 +210,7 @@ export function useControlActionService(
 			setValue: (key: string, val: any) => serviceFactory.setValue(actionId, actionRef.current, key, val),
 			performDelete: () => serviceFactory.performDelete(actionId),
 			performDuplicate: () => serviceFactory.performDuplicate(actionId),
-			setConnection: (connectionId: string) => serviceFactory.setConnection(actionId, connectionId),
+			setConnection: (connectionId: string | number) => serviceFactory.setConnection(actionId, connectionId),
 			setDelay: (delay: number) => serviceFactory.setDelay(actionId, delay),
 			performLearn: serviceFactory.performLearn ? () => serviceFactory.performLearn?.(actionId) : undefined,
 			setEnabled: serviceFactory.setEnabled

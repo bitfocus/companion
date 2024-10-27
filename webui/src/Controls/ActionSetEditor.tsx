@@ -31,7 +31,6 @@ import {
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import classNames from 'classnames'
-import { DropdownChoiceInt } from 'src/LocalVariableDefinitions.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
