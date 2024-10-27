@@ -45,3 +45,6 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="0b33", ATTRS{idProduct}=="0030", MODE:="666
 # vec footpedal
 SUBSYSTEM=="usb", ATTRS{idVendor}=="05f3", ATTRS{idProduct}=="00ff", MODE:="666", GROUP="companion"
 KERNEL=="hidraw*", ATTRS{idVendor}=="05f3", ATTRS{idProduct}=="00ff", MODE:="666", GROUP="companion"
+
+# blackmagic panels
+KERNEL=="hidraw*", ATTRS{idVendor}=="1edb", ATTRS{idProduct}=="bef0", MODE:="660", GROUP="companion"
