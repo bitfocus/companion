@@ -269,6 +269,30 @@ describe('resolver', function () {
 			const result = resolve(parse("[1, 'c', null][1]"))
 			expect(result).toEqual('c')
 		})
+
+		it('array get beyond end - inline access', () => {
+			const getVariable = (id) => {
+				switch (id) {
+					case 'my:var':
+						return [1, 2, 3]
+				}
+			}
+
+			const result = resolve(parse('$(my:var)[42] === undefined'), getVariable)
+			expect(result).toEqual(true)
+		})
+
+		it('array get beyond end - intermediate var', () => {
+			const getVariable = (id) => {
+				switch (id) {
+					case 'my:var':
+						return [1, 2, 3]
+				}
+			}
+
+			const result = resolve(parse('let a = $(my:var);a[42] === undefined'), getVariable)
+			expect(result).toEqual(true)
+		})
 	})
 
 	describe('return', () => {

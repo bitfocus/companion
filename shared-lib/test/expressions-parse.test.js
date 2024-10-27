@@ -636,6 +636,58 @@ describe('parser', () => {
 			})
 		})
 
+		it('from variable with comparison', () => {
+			const res = ParseExpression2("$(my:variable)['d'] === undefined")
+
+			// nocommit - update this
+			expect(res).toEqual({
+				expr: {
+					type: 'BinaryExpression',
+					operator: '===',
+					left: {
+						computed: true,
+						object: {
+							name: 'my:variable',
+							type: 'CompanionVariable',
+						},
+						property: {
+							raw: "'d'",
+							type: 'Literal',
+							value: 'd',
+						},
+						type: 'MemberExpression',
+					},
+					right: {
+						raw: 'undefined',
+						type: 'Literal',
+						value: undefined,
+					},
+				},
+				variableIds: ['my:variable'],
+			})
+		})
+
+		it('from variable with brackets', () => {
+			const res = ParseExpression2("($(my:variable)['d'])")
+
+			expect(res).toEqual({
+				expr: {
+					computed: true,
+					object: {
+						name: 'my:variable',
+						type: 'CompanionVariable',
+					},
+					property: {
+						raw: "'d'",
+						type: 'Literal',
+						value: 'd',
+					},
+					type: 'MemberExpression',
+				},
+				variableIds: ['my:variable'],
+			})
+		})
+
 		it('chained', () => {
 			const res = ParseExpression2("{}['b']['c']['d']")
 
