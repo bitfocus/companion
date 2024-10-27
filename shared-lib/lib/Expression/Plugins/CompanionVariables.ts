@@ -21,6 +21,9 @@ export const CompanionVariablesPlugin: jsep.IPlugin = {
 					}
 
 					this.index = end + 1
+
+					// Make sure any 'property' access on the variable gets gobbled as part of this node
+					env.node = this.gobbleTokenProperty(env.node)
 				}
 			}
 		})
