@@ -8,12 +8,12 @@ dotenv.config()
 
 $.verbose = false
 
-if (argv._.length < 2) {
-	console.log('Needs branch to update')
+if (argv._.length < 1) {
+	console.log('Usage: yarn zx tools/backport_module_changes.mjs stable-3.x')
 	process.exit(1)
 }
 
-const oldRev = argv._[1]
+const oldRev = argv._[0]
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN })
 
