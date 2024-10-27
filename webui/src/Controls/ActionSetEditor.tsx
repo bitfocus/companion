@@ -406,10 +406,12 @@ const ActionTableRow = observer(function ActionTableRow({
 							<div className="cell-connection">
 								<DropdownInputField
 									label="Connection"
-									choices={connectionsWithSameType.map((connection) => {
-										const [id, info] = connection
-										return { id, label: info.label }
-									})}
+									choices={connectionsWithSameType
+										.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
+										.map((connection) => {
+											const [id, info] = connection
+											return { id, label: info.label }
+										})}
 									multiple={false}
 									value={action.instance}
 									setValue={service.setConnection}
