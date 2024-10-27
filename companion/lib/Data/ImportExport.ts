@@ -665,8 +665,22 @@ export class DataImportExport extends CoreBase {
 
 				if (data.pages && (!config || config.buttons)) {
 					// Import pages
-					for (const [pageNumber, pageInfo] of Object.entries(data.pages)) {
-						doPageImport(pageInfo, Number(pageNumber), instanceIdMap)
+					for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
+						if (!pageInfo) continue
+
+						const pageNumber = Number(pageNumber0)
+						if (isNaN(pageNumber)) {
+							this.logger.warn(`Invalid page number: ${pageNumber0}`)
+							continue
+						}
+
+						// Ensure the page exists
+						const insertPageCount = pageNumber - this.page.getPageCount()
+						if (insertPageCount > 0) {
+							this.page.insertPages(this.page.getPageCount() + 1, new Array(insertPageCount).fill('Page'))
+						}
+
+						doPageImport(pageInfo, pageNumber, instanceIdMap)
 					}
 				}
 
@@ -694,48 +708,40 @@ export class DataImportExport extends CoreBase {
 			topage: number,
 			instanceIdMap: InstanceAppliedRemappings
 		): void => {
-			// Cleanup the old page
-			const discardedControlIds = this.page.resetPage(topage)
-			for (const controlId of discardedControlIds) {
-				this.controls.deleteControl(controlId)
+			{
+				// Ensure the configured grid size is large enough for the import
+				const requiredSize = pageInfo.gridSize || find_smallest_grid_for_page(pageInfo)
+				const currentSize = this.userconfig.getKey('gridSize')
+				const updatedSize: Partial<UserConfigGridSize> = {}
+				if (currentSize.minColumn > requiredSize.minColumn) updatedSize.minColumn = Number(requiredSize.minColumn)
+				if (currentSize.maxColumn < requiredSize.maxColumn) updatedSize.maxColumn = Number(requiredSize.maxColumn)
+				if (currentSize.minRow > requiredSize.minRow) updatedSize.minRow = Number(requiredSize.minRow)
+				if (currentSize.maxRow < requiredSize.maxRow) updatedSize.maxRow = Number(requiredSize.maxRow)
+
+				if (Object.keys(updatedSize).length > 0) {
+					this.userconfig.setKey('gridSize', {
+						...currentSize,
+						...updatedSize,
+					})
+				}
 			}
 
-			if (pageInfo) {
-				{
-					// Ensure the configured grid size is large enough for the import
-					const requiredSize = pageInfo.gridSize || find_smallest_grid_for_page(pageInfo)
-					const currentSize = this.userconfig.getKey('gridSize')
-					const updatedSize: Partial<UserConfigGridSize> = {}
-					if (currentSize.minColumn > requiredSize.minColumn) updatedSize.minColumn = Number(requiredSize.minColumn)
-					if (currentSize.maxColumn < requiredSize.maxColumn) updatedSize.maxColumn = Number(requiredSize.maxColumn)
-					if (currentSize.minRow > requiredSize.minRow) updatedSize.minRow = Number(requiredSize.minRow)
-					if (currentSize.maxRow < requiredSize.maxRow) updatedSize.maxRow = Number(requiredSize.maxRow)
+			// Import the new page
+			this.page.setPageName(topage, pageInfo.name)
 
-					if (Object.keys(updatedSize).length > 0) {
-						this.userconfig.setKey('gridSize', {
-							...currentSize,
-							...updatedSize,
-						})
-					}
-				}
+			// Import the controls
+			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
+				for (const [column, control] of Object.entries(rowObj)) {
+					if (control) {
+						// Import the control
+						const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
 
-				// Import the new page
-				this.page.setPageName(topage, pageInfo.name)
-
-				// Import the controls
-				for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
-					for (const [column, control] of Object.entries(rowObj)) {
-						if (control) {
-							// Import the control
-							const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
-
-							const location: ControlLocation = {
-								pageNumber: Number(topage),
-								column: Number(column),
-								row: Number(row),
-							}
-							this.controls.importControl(location, fixedControlObj)
+						const location: ControlLocation = {
+							pageNumber: Number(topage),
+							column: Number(column),
+							row: Number(row),
 						}
+						this.controls.importControl(location, fixedControlObj)
 					}
 				}
 			}
@@ -776,6 +782,12 @@ export class DataImportExport extends CoreBase {
 
 				// Setup the new instances
 				const instanceIdMap = this.#importInstances(data.instances, instanceRemapping)
+
+				// Cleanup the old page
+				const discardedControlIds = this.page.resetPage(topage)
+				for (const controlId of discardedControlIds) {
+					this.controls.deleteControl(controlId)
+				}
 
 				doPageImport(pageInfo, topage, instanceIdMap)
 
@@ -916,7 +928,6 @@ export class DataImportExport extends CoreBase {
 					// Create a new instance
 					const instance_type = this.instance.modules.verifyInstanceTypeIsCurrent(obj.instance_type)
 					const [newId, newConfig] = this.instance.addInstanceWithLabel({ type: instance_type }, obj.label, true)
-					console.log('created', instance_type, newId)
 					if (newId && newConfig) {
 						this.instance.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null)
 
