@@ -397,6 +397,19 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
+		client.onPromise('controls:feedback:set-connection', (controlId, feedbackId, connectionId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackSetConnection(feedbackId, connectionId)
+			} else {
+				throw new Error(
+					`Trying to set connection of feedback ${feedbackId} to ${connectionId} but control ${controlId} does not support feedbacks`
+				)
+			}
+		})
+
 		client.onPromise('controls:feedback:set-inverted', (controlId, id, isInverted) => {
 			const control = this.getControl(controlId)
 			if (!control) return false

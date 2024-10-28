@@ -225,6 +225,20 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
+	 * Set the connection instance of this feedback
+	 */
+	setInstance(instanceId: string | number): void {
+		const instance = `${instanceId}`
+
+		// first unsubscribe feedback from old instance
+		this.cleanup()
+		// next change instance
+		this.#data.instance_id = instance
+		// last subscribe to new instance
+		this.subscribe(true, instance)
+	}
+
+	/**
 	 * Set whether this feedback is inverted
 	 */
 	setInverted(isInverted: boolean): void {

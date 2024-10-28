@@ -359,6 +359,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 	const connectionInfo = connections.getInfo(feedback.instance_id)
 	const connectionLabel = connectionInfo?.label ?? feedback.instance_id
+	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
 	const feedbackSpec = feedbackDefinitions.connections.get(feedback.instance_id)?.get(feedback.type)
 
@@ -510,8 +511,24 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						</div>
 					)}
 
-					{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
-						<div className="cell-left-main">
+					<div className="cell-left-main">
+						{connectionsWithSameType.length > 1 && (
+							<div className="option-field">
+								<DropdownInputField
+									label="Connection"
+									choices={connectionsWithSameType
+										.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
+										.map((connection) => {
+											const [id, info] = connection
+											return { id, label: info.label }
+										})}
+									multiple={false}
+									value={feedback.instance_id}
+									setValue={service.setConnection}
+								></DropdownInputField>
+							</div>
+						)}
+						{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
 							<MyErrorBoundary>
 								<CForm onSubmit={PreventDefaultHandler}>
 									<div style={{ paddingLeft: 20 }}>
@@ -527,8 +544,8 @@ const FeedbackEditor = observer(function FeedbackEditor({
 									</div>
 								</CForm>
 							</MyErrorBoundary>
-						</div>
-					)}
+						)}
+					</div>
 
 					{!booleanOnly && (
 						<>
