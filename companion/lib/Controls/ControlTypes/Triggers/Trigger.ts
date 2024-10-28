@@ -270,6 +270,13 @@ export class ControlTrigger
 	}
 
 	/**
+	 * Set the connection of an action
+	 */
+	actionSetConnection(_stepId: string, _setId: string, id: string, connectionId: string): boolean {
+		return this.actions.actionSetConnection('0', id, connectionId)
+	}
+
+	/**
 	 * Set the delay of an action
 	 */
 	actionSetDelay(_stepId: string, _setId: string, id: string, delay: number): boolean {

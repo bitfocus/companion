@@ -511,7 +511,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 					)}
 
 					{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
-						<div className="cell-invert">
+						<div className="cell-left-main">
 							<MyErrorBoundary>
 								<CForm onSubmit={PreventDefaultHandler}>
 									<div style={{ paddingLeft: 20 }}>

@@ -271,6 +271,18 @@ export class ControlButtonNormal
 	}
 
 	/**
+	 * Set the connection of an action
+	 */
+	actionSetConnection(stepId: string, setId: string, id: string, connectionId: string): boolean {
+		const step = this.steps[stepId]
+		if (step) {
+			return step.actionSetConnection(setId, id, connectionId)
+		} else {
+			return false
+		}
+	}
+
+	/**
 	 * Set the delay of an action
 	 */
 	actionSetDelay(stepId: string, setId: string, id: string, delay: number): boolean {

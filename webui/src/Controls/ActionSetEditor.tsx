@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { NumberInputField, TextInputField } from '../Components/index.js'
+import { DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
 import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
@@ -320,6 +320,7 @@ const ActionTableRow = observer(function ActionTableRow({
 	const connectionInfo = connections.getInfo(action.instance)
 	// const module = instance ? modules[instance.instance_type] : undefined
 	const connectionLabel = connectionInfo?.label ?? action.instance
+	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
 	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
 
@@ -400,7 +401,24 @@ const ActionTableRow = observer(function ActionTableRow({
 							</div>
 						)}
 
-						<div className="cell-delay">
+						<div className="cell-left-main">
+							{connectionsWithSameType.length > 1 && (
+								<div className="option-field">
+									<DropdownInputField
+										label="Connection"
+										choices={connectionsWithSameType
+											.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
+											.map((connection) => {
+												const [id, info] = connection
+												return { id, label: info.label }
+											})}
+										multiple={false}
+										value={action.instance}
+										setValue={service.setConnection}
+									></DropdownInputField>
+								</div>
+							)}
+
 							<CForm onSubmit={PreventDefaultHandler}>
 								<label>Delay</label>
 								<CInputGroup>
