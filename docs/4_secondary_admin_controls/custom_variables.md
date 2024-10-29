@@ -20,4 +20,4 @@ For each Custom variable, you can see and set:
 - **Startup value** The value to use for the variable upon restarting Companion
 - **Persist value** Whether to persist the current value to be used upon startup. This will increase disk IO.
 
-_For backwards compatibility, all custom variables will also parse under the legacy `$(internal:custom_counter)` scheme.  This use is depcreated and expected to be removed in a future Companion release._
+_For backwards compatibility, all custom variables will also parse under the legacy `$(internal:custom_counter)` scheme.  This use is deprecated and expected to be removed in a future Companion release._
