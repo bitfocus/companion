@@ -6,18 +6,18 @@ The key difference is that their values are set by you. This can be done either 
 
 ![Custom Variables View](images/custom-variables.png?raw=true 'Custom Variables View')
 
-All custom variables will appear with `internal` as the connection label, and their names begin with a `custom_` prefix.
+All custom variables will appear with `custom` as the connection label.
 
 ```
-                           +------- custom prefix
-                           |
-connection label----+      |       +--------------variable name
-                    |      |       |
-                    v      v       v
-            $(internal:custom_counter)
+connection label----+      +--------------variable name
+                    |      |
+                    v      v
+               $(custom:counter)
 ```
 
 For each Custom variable, you can see and set:
 - **Current value** The current value of the variable
 - **Startup value** The value to use for the variable upon restarting Companion
 - **Persist value** Whether to persist the current value to be used upon startup. This will increase disk IO.
+
+_For backwards compatibility, all custom variables will also parse under the legacy `$(internal:custom_counter)` scheme.  This use is deprecated and expected to be removed in a future Companion release._

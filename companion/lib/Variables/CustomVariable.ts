@@ -27,9 +27,8 @@ import type { DataDatabase } from '../Data/Database.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 
-const custom_variable_prefix = `custom_`
-
 const CustomVariablesRoom = 'custom-variables'
+const CUSTOM_LABEL = 'custom'
 
 export class VariablesCustomVariable {
 	readonly #logger = LogController.createLogger('Variables/CustomVariable')
@@ -168,9 +167,9 @@ export class VariablesCustomVariable {
 		if (Object.keys(this.#custom_variables).length > 0) {
 			const newValues: Record<string, CompanionVariableValue> = {}
 			for (const [name, info] of Object.entries(this.#custom_variables)) {
-				newValues[`${custom_variable_prefix}${name}`] = info.defaultValue || ''
+				newValues[name] = info.defaultValue || ''
 			}
-			this.#variableValues.setVariableValues('internal', newValues)
+			this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 		}
 	}
 
@@ -181,11 +180,11 @@ export class VariablesCustomVariable {
 		const newValues: Record<string, CompanionVariableValue | undefined> = {}
 		// Mark the current variables as to be deleted
 		for (const name of Object.keys(this.#custom_variables || {})) {
-			newValues[`${custom_variable_prefix}${name}`] = undefined
+			newValues[name] = undefined
 		}
 		// Determine the initial values of the variables
 		for (const [name, info] of Object.entries(custom_variables || {})) {
-			newValues[`${custom_variable_prefix}${name}`] = info.defaultValue || ''
+			newValues[name] = info.defaultValue || ''
 		}
 
 		const namesBefore = Object.keys(this.#custom_variables)
@@ -194,7 +193,7 @@ export class VariablesCustomVariable {
 		this.#doSave()
 
 		// apply the default values
-		this.#variableValues.setVariableValues('internal', newValues)
+		this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 			const changes: CustomVariableUpdate[] = []
@@ -258,8 +257,7 @@ export class VariablesCustomVariable {
 		this.#custom_variables[name].persistCurrentValue = !!persistent
 
 		if (this.#custom_variables[name].persistCurrentValue) {
-			const fullname = `${custom_variable_prefix}${name}`
-			const value = this.#variableValues.getVariableValue('internal', fullname)
+			const value = this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 
 			this.#custom_variables[name].defaultValue = value ?? ''
 		}
@@ -336,8 +334,7 @@ export class VariablesCustomVariable {
 	 * Get the value of a custom variable
 	 */
 	getValue(name: string): CompanionVariableValue | undefined {
-		const fullname = `${custom_variable_prefix}${name}`
-		return this.#variableValues.getVariableValue('internal', fullname)
+		return this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 	}
 
 	/**
@@ -360,9 +357,8 @@ export class VariablesCustomVariable {
 	 * Helper for setting the value of a custom variable
 	 */
 	#setValueInner(name: string, value: CompanionVariableValue | undefined): void {
-		const fullname = `${custom_variable_prefix}${name}`
-		this.#variableValues.setVariableValues('internal', {
-			[fullname]: value,
+		this.#variableValues.setVariableValues(CUSTOM_LABEL, {
+			[name]: value,
 		})
 
 		this.#persistCustomVariableValue(name, value)
@@ -384,8 +380,7 @@ export class VariablesCustomVariable {
 	 */
 	syncValueToDefault(name: string): void {
 		if (this.#custom_variables[name]) {
-			const fullname = `${custom_variable_prefix}${name}`
-			const value = this.#variableValues.getVariableValue('internal', fullname)
+			const value = this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 			this.#logger.silly(`Set default value "${name}":${value}`)
 			this.#custom_variables[name].defaultValue = value ?? ''
 

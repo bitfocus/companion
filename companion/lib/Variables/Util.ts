@@ -65,8 +65,14 @@ export function parseVariablesInString(
 		}
 
 		const fullId = matches[0]
-		const connectionLabel = matches[1]
-		const variableId = matches[2]
+		let connectionLabel = matches[1]
+		let variableId = matches[2]
+
+		if (connectionLabel === 'internal' && variableId.substring(0, 7) === 'custom_') {
+			connectionLabel = 'custom'
+			variableId = variableId.substring(7)
+		}
+
 		referencedVariableIds.push(`${connectionLabel}:${variableId}`)
 
 		let cachedValue = cachedVariableValues[fullId]
@@ -150,7 +156,11 @@ export function executeExpression(
 		if (value === undefined) {
 			// No value, lookup the raw value
 			const [connectionLabel, variableName] = SplitVariableId(variableId)
-			value = rawVariableValues[connectionLabel]?.[variableName]
+			if (connectionLabel == 'internal' && variableName.substring(0, 7) === 'custom_') {
+				value = rawVariableValues['custom']?.[variableName.substring(7)]
+			} else {
+				value = rawVariableValues[connectionLabel]?.[variableName]
+			}
 		}
 
 		// If its a string, make sure any references to other variables are resolved
