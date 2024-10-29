@@ -332,14 +332,14 @@ export class ControlWithActions extends ControlBase {
 	 * Reorder an action in the list or move between sets
 	 * @param {string} _dragStepId
 	 * @param {string} _dragSetId the action_set id to remove from
-	 * @param {number} _dragIndex the index of the action to move
+	 * @param {string} _dragActionId the id of the action to move
 	 * @param {string} _dropStepId
 	 * @param {string} _dropSetId the target action_set of the action
 	 * @param {number} _dropIndex the target index of the action
 	 * @returns {boolean} success
 	 * @access public
 	 */
-	actionReorder(_dragStepId, _dragSetId, _dragIndex, _dropStepId, _dropSetId, _dropIndex) {
+	actionReorder(_dragStepId, _dragSetId, _dragActionId, _dropStepId, _dropSetId, _dropIndex) {
 		throw new Error('Not implemented')
 	}
 

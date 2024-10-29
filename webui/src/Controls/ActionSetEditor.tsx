@@ -161,6 +161,7 @@ export function ActionsList({
 					))}
 				<ActionRowDropPlaceholder
 					dragId={dragId}
+					setId={setId}
 					actionCount={actions ? actions.length : 0}
 					moveCard={actionsService.moveCard}
 				/>
@@ -170,19 +171,23 @@ export function ActionsList({
 }
 
 interface ActionRowDropPlaceholderProps {
+	setId: string | number
 	dragId: string
 	actionCount: number
-	moveCard: (stepId: string, setId: string | number, index: number, targetIndex: number) => void
+	moveCard: (stepId: string, setId: string | number, actionId: string, targetIndex: number) => void
 }
 
-function ActionRowDropPlaceholder({ dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
+function ActionRowDropPlaceholder({ setId, dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
 	const [isDragging, drop] = useDrop<ActionTableRowDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
-			moveCard(item.stepId, item.setId, item.index, 0)
+			moveCard(item.stepId, item.setId, item.actionId, 0)
+
+			item.setId = setId
+			item.index = 0
 		},
 	})
 
@@ -268,7 +273,7 @@ const ActionTableRow = observer(function ActionTableRow({
 			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
-			serviceFactory.moveCard(item.stepId, item.setId, item.index, index)
+			serviceFactory.moveCard(item.stepId, item.setId, item.actionId, index)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,

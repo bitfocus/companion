@@ -303,18 +303,20 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	 * Reorder an action in the list or move between sets
 	 * @param {string} dragStepId
 	 * @param {string} dragSetId the action_set id to remove from
-	 * @param {number} dragIndex the index of the action to move
+	 * @param {string} dragActionId the id of the action to move
 	 * @param {string} dropStepId
 	 * @param {string} dropSetId the target action_set of the action
 	 * @param {number} dropIndex the target index of the action
 	 * @returns {boolean} success
 	 * @access public
 	 */
-	actionReorder(dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex) {
+	actionReorder(dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex) {
 		const fromSet = this.steps[dragStepId]?.action_sets?.[dragSetId]
 		const toSet = this.steps[dropStepId]?.action_sets?.[dropSetId]
 		if (fromSet && toSet) {
-			dragIndex = clamp(dragIndex, 0, fromSet.length)
+			const dragIndex = fromSet.findIndex((a) => a.id === dragActionId)
+			if (dragIndex === -1) return false
+
 			dropIndex = clamp(dropIndex, 0, toSet.length)
 
 			toSet.splice(dropIndex, 0, ...fromSet.splice(dragIndex, 1))

@@ -391,17 +391,19 @@ export default class ControlTrigger extends ControlBase {
 	 * Reorder an action in the list or move between sets
 	 * @param {string} _dragStepId
 	 * @param {string} _dragSetId the action_set id to remove from
-	 * @param {number} dragIndex the index of the action to move
+	 * @param {string} dragActionId the id of the action to move
 	 * @param {string} _dropStepId
 	 * @param {string} _dropSetId the target action_set of the action
 	 * @param {number} dropIndex the target index of the action
 	 * @returns {boolean} success
 	 * @access public
 	 */
-	actionReorder(_dragStepId, _dragSetId, dragIndex, _dropStepId, _dropSetId, dropIndex) {
+	actionReorder(_dragStepId, _dragSetId, dragActionId, _dropStepId, _dropSetId, dropIndex) {
 		const set = this.actions.action_sets['0']
 		if (set) {
-			dragIndex = clamp(dragIndex, 0, set.length)
+			const dragIndex = set.findIndex((a) => a.id === dragActionId)
+			if (dragIndex === -1) return false
+
 			dropIndex = clamp(dropIndex, 0, set.length)
 
 			set.splice(dropIndex, 0, ...set.splice(dragIndex, 1))

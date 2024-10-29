@@ -593,12 +593,12 @@ class ControlsController extends CoreBase {
 		})
 		client.onPromise(
 			'controls:action:reorder',
-			(controlId, dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex) => {
+			(controlId, dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex) => {
 				const control = this.getControl(controlId)
 				if (!control) return false
 
 				if (control.supportsActions) {
-					return control.actionReorder(dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex)
+					return control.actionReorder(dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex)
 				} else {
 					throw new Error(`Control "${controlId}" does not support actions`)
 				}
