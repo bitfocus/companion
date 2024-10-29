@@ -294,7 +294,7 @@ export class ControlTrigger
 	 * Reorder an action in the list or move between sets
 	 * @param _dragStepId
 	 * @param _dragSetId the action_set id to remove from
-	 * @param dragIndex the index of the action to move
+	 * @param dragActionId the id of the action to move
 	 * @param _dropStepId
 	 * @param _dropSetId the target action_set of the action
 	 * @param dropIndex the target index of the action
@@ -302,14 +302,16 @@ export class ControlTrigger
 	actionReorder(
 		_dragStepId: string,
 		_dragSetId: string,
-		dragIndex: number,
+		dragActionId: string,
 		_dropStepId: string,
 		_dropSetId: string,
 		dropIndex: number
 	): boolean {
 		const set = this.actions.action_sets['0']
 		if (set) {
-			dragIndex = clamp(dragIndex, 0, set.length)
+			const dragIndex = set.findIndex((a) => a.id === dragActionId)
+			if (dragIndex === -1) return false
+
 			dropIndex = clamp(dropIndex, 0, set.length)
 
 			set.splice(dropIndex, 0, ...set.splice(dragIndex, 1))

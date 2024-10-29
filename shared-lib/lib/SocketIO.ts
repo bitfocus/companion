@@ -172,10 +172,10 @@ export interface ClientToBackendEventsMap {
 		controlId: string,
 		dragStepId: string,
 		dragSetId: string,
-		dragIndex: number,
+		dragActionId: string,
 		stepId: string,
 		setId: string,
-		hoverIndex: number
+		dropIndex: number
 	) => boolean
 	'controls:action:add': (
 		controlId: string,
@@ -231,7 +231,7 @@ export interface ClientToBackendEventsMap {
 	) => void
 	'action-recorder:session:discard-actions': (sessionId: string) => void
 	'action-recorder:session:set-connections': (sessionId: string, connectionIds: string[]) => void
-	'action-recorder:session:action-reorder': (sessionId: string, dragIndex: number, dropIndex: number) => void
+	'action-recorder:session:action-reorder': (sessionId: string, actionId: string, dropIndex: number) => void
 	'action-recorder:session:action-set-value': (sessionId: string, actionId: string, key: string, value: any) => void
 	'action-recorder:session:action-delay': (sessionId: string, actionId: string, delay: number) => void
 	'action-recorder:session:action-delete': (sessionId: string, actionId: string) => void

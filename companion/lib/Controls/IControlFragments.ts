@@ -170,7 +170,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	actionReorder(
 		dragStepId: string,
 		dragSetId: string,
-		dragIndex: number,
+		dragActionId: string,
 		dropStepId: string,
 		dropSetId: string,
 		dropIndex: number
