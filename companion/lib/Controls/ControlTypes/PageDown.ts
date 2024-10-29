@@ -108,7 +108,7 @@ export class ControlButtonPageDown
 	/**
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {

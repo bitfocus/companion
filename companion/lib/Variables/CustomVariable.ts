@@ -380,7 +380,7 @@ export class VariablesCustomVariable {
 	}
 
 	/**
-	 * Propogate the current value of a custom variable to be the new default value
+	 * Propagate the current value of a custom variable to be the new default value
 	 */
 	syncValueToDefault(name: string): void {
 		if (this.#custom_variables[name]) {

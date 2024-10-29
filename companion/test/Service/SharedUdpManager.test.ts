@@ -107,7 +107,7 @@ describe('SharedUdpManager', () => {
 
 			mockSocket.bind.mockImplementation(() => {
 				setImmediate(() => {
-					// Emit an erorr instead
+					// Emit an error instead
 					mockSocket.emit('error', new Error('Bind Error'))
 				})
 			})

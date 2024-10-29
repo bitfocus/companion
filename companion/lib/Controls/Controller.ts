@@ -1007,7 +1007,7 @@ export class ControlsController extends CoreBase {
 			return false
 		}
 
-		// Delete old control at the coordintae
+		// Delete old control at the coordinate
 		const oldControlId = this.page.getControlIdAt(location)
 		if (oldControlId) {
 			this.deleteControl(oldControlId)
@@ -1089,7 +1089,7 @@ export class ControlsController extends CoreBase {
 	 * Execute a press of a control
 	 * @param controlId Id of the control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
@@ -1109,7 +1109,7 @@ export class ControlsController extends CoreBase {
 	 * Execute rotation of a control
 	 * @param controlId Id of the control
 	 * @param direction Whether the control is rotated to the right
-	 * @param surfaceId The surface that intiated this rotate
+	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(controlId: string, direction: boolean, surfaceId: string | undefined): boolean {
 		const control = this.getControl(controlId)
