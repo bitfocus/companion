@@ -21,14 +21,9 @@ import { isEqual } from 'lodash-es'
 import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 
-async function getNetworkAndHostnameVariables() {
-	// TODO - review/refactor this
-
-	/** @type {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} */
-	const definitions = []
+async function getHostnameVariables() {
 	/** @type { import('@companion-module/base').CompanionVariableValues} */
 	const values = {}
-	let allIps = ''
 
 	try {
 		values['hostname'] = os.hostname()
@@ -38,6 +33,18 @@ async function getNetworkAndHostnameVariables() {
 	} catch (e) {
 		// TODO
 	}
+
+	return values
+}
+
+async function getNetworkVariables() {
+	// TODO - review/refactor this
+
+	/** @type {import('../Instance/Wrapper.js').VariableDefinitionTmp[]} */
+	const definitions = []
+	/** @type { import('@companion-module/base').CompanionVariableValues} */
+	const values = {}
+	let allIps = ''
 
 	try {
 		const networkInterfaces = os.networkInterfaces()
@@ -112,16 +119,46 @@ export default class System {
 		// })
 
 		// Update interfaces on an interval, but also soon after launch
-		setInterval(() => this.#updateNetworkAndHostnameVariables(), 30000)
-		setTimeout(() => this.#updateNetworkAndHostnameVariables(), 5000)
+		setInterval(() => this.#updateNetworkVariables(), 30000)
+		setTimeout(() => this.#updateNetworkVariables(), 5000)
+
+		setTimeout(
+			() =>
+				this.#updateHostnameVariablesAtStartup().catch((e) => {
+					this.#logger.error(`Failed to update hostname variables: ${e}`)
+				}),
+			5000
+		)
 	}
 
-	#updateNetworkAndHostnameVariablesRunning = false
-	#updateNetworkAndHostnameVariables() {
-		if (this.#updateNetworkAndHostnameVariablesRunning) return
-		this.#updateNetworkAndHostnameVariablesRunning = true
+	async #updateHostnameVariablesAtStartup() {
+		let latestVariables = await getHostnameVariables()
+		this.#internalModule.setVariables(latestVariables)
 
-		getNetworkAndHostnameVariables()
+		const updateVariables = () => {
+			getHostnameVariables()
+				.then((newVariables) => {
+					if (Object.keys(newVariables).length > 1 && !isEqual(newVariables, latestVariables)) {
+						latestVariables = newVariables
+						this.#internalModule.setVariables(newVariables)
+					}
+				})
+				.catch((e) => {
+					this.#logger.error(`Failed to update hostname variables: ${e}`)
+				})
+		}
+
+		// Run a couple more times just in case one failed
+		setTimeout(() => updateVariables(), 30000)
+		setTimeout(() => updateVariables(), 60000)
+	}
+
+	#updateNetworkVariablesRunning = false
+	#updateNetworkVariables() {
+		if (this.#updateNetworkVariablesRunning) return
+		this.#updateNetworkVariablesRunning = true
+
+		getNetworkVariables()
 			.then((info) => {
 				if (!isEqual(info.definitions, this.#interfacesDefinitions)) {
 					this.#interfacesDefinitions = info.definitions
@@ -137,7 +174,7 @@ export default class System {
 				this.#logger.error(`Failed to update network and hostname variables: ${e}`)
 			})
 			.finally(() => {
-				this.#updateNetworkAndHostnameVariablesRunning = false
+				this.#updateNetworkVariablesRunning = false
 			})
 	}
 
