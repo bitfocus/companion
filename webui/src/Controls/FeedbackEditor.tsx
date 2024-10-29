@@ -269,14 +269,15 @@ function FeedbackTableRow({
 			const hoverParentId = parentId
 			const hoverIndex = index
 			const hoverId = feedback.id
+
+			if (!checkDragState(item, monitor, hoverId)) return
+
 			// Don't replace items with themselves
 			if (item.feedbackId === hoverId || (dragIndex === hoverIndex && dragParentId === hoverParentId)) {
 				return
 			}
 			// Can't move into itself
 			if (item.feedbackId === hoverParentId) return
-
-			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(item.feedbackId, hoverParentId, hoverIndex)

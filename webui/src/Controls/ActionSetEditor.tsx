@@ -265,12 +265,13 @@ const ActionTableRow = observer(function ActionTableRow({
 			const dragIndex = item.index
 			const hoverIndex = index
 			const hoverId = action.id
+
+			if (!checkDragState(item, monitor, hoverId)) return
+
 			// Don't replace items with themselves
 			if (item.actionId === hoverId || (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId)) {
 				return
 			}
-
-			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(item.stepId, item.setId, item.actionId, index)
