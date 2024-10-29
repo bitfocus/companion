@@ -1,5 +1,27 @@
 # Bitfocus Companion
 
+## Companion v3.4.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Surface overflow fixup ignoring surface offsets
+- Fix logic feedbacks not importing in triggers (#3087)
+- Enable connected Streamdecks field inverted in ui
+- Fix some expression parsing bugs
+- Arrow up/down keys not moving cursor in multiline expressions
+- Dragging actions between groups misbehaving
+- Only update hostname variables only at startup
+- Update canvas lib to resolve memory leaks
+- Add linux udev rules for blackmagic atem micro panel
+
+### 🐞 MODULE FIXES
+
+- analogway-awj
+- analogway-picturall
+- google-sheets
+- monteiro-pptvideo
+- studiocoast-vmix
+
 ## Companion v3.4.2 - Release Notes
 
 ### 🐞 BUG FIXES
