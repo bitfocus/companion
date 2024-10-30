@@ -114,6 +114,7 @@ export interface ClientToBackendEventsMap {
 	'controls:feedback:learn': (controlId: string, feedbackId: string) => boolean
 	'controls:feedback:duplicate': (controlId: string, feedbackId: string) => boolean
 	'controls:feedback:remove': (controlId: string, feedbackId: string) => boolean
+	'controls:feedback:set-connection': (controlId: string, feedbackId: string, connectionId: string | number) => boolean
 	'controls:feedback:set-inverted': (controlId: string, feedbackId: string, isInverted: boolean) => boolean
 	'controls:feedback:set-option': (controlId: string, feedbackId: string, key: string, val: any) => boolean
 	'controls:feedback:move': (

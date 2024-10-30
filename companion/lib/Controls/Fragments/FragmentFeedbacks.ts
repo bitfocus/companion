@@ -321,6 +321,24 @@ export class FragmentFeedbacks {
 	}
 
 	/**
+	 * Set a new connection instance for a feedback
+	 * @param id the id of the feedback
+	 * @param connectionId the id of the new connection
+	 */
+	feedbackSetConnection(id: string, connectionId: string | number): boolean {
+		const feedback = this.#feedbacks.findById(id)
+		if (feedback) {
+			feedback.setInstance(connectionId)
+
+			this.#commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
 	 * Set whether a boolean feedback should be inverted
 	 * @param id the id of the feedback
 	 * @param isInverted the new value
