@@ -22,7 +22,7 @@
 	"engines": {
 		"npm": "please-use-yarn",
 		"yarn": "^4.4",
-		"node": ">=22.8 <23"
+		"node": ">=22.11 <23"
 	},
 	"author": "Bitfocus AS",
 	"license": "MIT",
