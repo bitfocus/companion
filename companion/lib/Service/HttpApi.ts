@@ -312,9 +312,7 @@ export class ServiceHttpApi extends CoreBase {
 			.post(this.#customVariableSetValue)
 			.get(this.#customVariableGetValue)
 		// Module variables
-		this.#apiRouter
-		.route('/variable/:module/:name/value')
-		.get(this.#ModuleVariableGetValue)
+		this.#apiRouter.route('/variable/:module/:name/value').get(this.#ModuleVariableGetValue)
 
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
