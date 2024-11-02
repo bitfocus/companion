@@ -29,6 +29,7 @@ import { InternalSystem } from './Internal/System.js'
 import { InternalTime } from './Internal/Time.js'
 import { InternalTriggers } from './Internal/Triggers.js'
 import { InternalVariables } from './Internal/Variables.js'
+import { ImportExportController } from './ImportExport/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
@@ -139,6 +140,8 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	 */
 	internalModule: InternalController
 
+	importExport: ImportExportController
+
 	metrics: DataMetrics
 
 	/**
@@ -222,6 +225,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			this.page
 		)
 		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
+		this.importExport = new ImportExportController(this)
 
 		this.internalModule.addFragments(
 			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
@@ -250,6 +254,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			this.instance.clientConnect(client)
 			this.cloud.clientConnect(client)
 			this.services.clientConnect(client)
+			this.importExport.clientConnect(client)
 		})
 
 		this.variables.values.on('variables_changed', (all_changed_variables_set) => {

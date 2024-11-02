@@ -18,7 +18,7 @@
 const FILE_VERSION = 4
 
 import os from 'os'
-import { upgradeImport } from './Upgrade.js'
+import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
 import { getTimestamp, isFalsey } from '../Resources/Util.js'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
@@ -159,7 +159,7 @@ const find_smallest_grid_for_page = (pageInfo: ExportPageContentv4): UserConfigG
 	return gridSize
 }
 
-export class DataImportExport extends CoreBase {
+export class ImportExportController extends CoreBase {
 	/**
 	 * If there is a current import task that clients should be aware of, this will be set
 	 */
