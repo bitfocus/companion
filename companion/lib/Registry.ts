@@ -57,7 +57,7 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
 }
 
 export interface RegistryEvents {
-	http_rebind: [bind_ip: string, http_port: number]
+	_tmp: [null]
 }
 
 /**
@@ -133,7 +133,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The core user config manager
 	 */
-	userconfig: DataUserConfig
+	readonly userconfig: DataUserConfig
 
 	/**
 	 * The 'internal' module
@@ -147,7 +147,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The 'data' controller
 	 */
-	data: DataController
+	readonly data: DataController
 
 	/**
 	 * The 'ui' controller
@@ -187,25 +187,28 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			pkgInfo: pkgInfo,
 		}
 
+		this.#logger.debug('constructing core modules')
+
 		this.ui = new UIController(this)
 		this.io = this.ui.io
+		LogController.init(this.appInfo, this.ui.io)
+
 		this.db = new DataDatabase(this.appInfo.configDir)
+		this.data = new DataController(this)
+		this.userconfig = this.data.userconfig
 	}
 
 	/**
 	 * Startup the application
 	 * @param extraModulePath - extra directory to search for modules
-	 * @param bind_ip
-	 * @param http_port
+	 * @param bindIp
+	 * @param bindPort
 	 */
-	async ready(extraModulePath: string, bind_ip: string, http_port: number) {
+	async ready(extraModulePath: string, bindIp: string, bindPort: number) {
 		this.#logger.debug('launching core modules')
 
 		this.ui.init()
 
-		this.data = new DataController(this)
-		this.userconfig = this.data.userconfig
-		LogController.init(this.appInfo, this.ui.io)
 		this.page = new PageController(this)
 		this.controls = new ControlsController(this)
 		this.variables = new VariablesController(this.db, this.io)
@@ -240,8 +243,6 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			new InternalVariables(this.internalModule, this.variables.values)
 		)
 		this.internalModule.init()
-
-		this.on('http_rebind', (...args) => this.ui.server.rebindHttp(...args))
 
 		this.ui.io.on('clientConnect', (client) => {
 			LogController.clientConnect(client)
@@ -278,7 +279,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		await this.instance.initInstances(extraModulePath)
 
 		// Instances are loaded, start up http
-		this.rebindHttp(bind_ip, http_port)
+		this.rebindHttp(bindIp, bindPort)
 
 		// Startup has completed, run triggers
 		this.controls.triggers.emit('startup')
@@ -360,13 +361,15 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * Rebind the http server to an ip and port (https will update to the same ip if running)
 	 */
-	rebindHttp(bind_ip: string, http_port: number): void {
+	rebindHttp(bindIp: string, bindPort: number): void {
 		// ensure the port looks reasonable
-		if (http_port < 1024 || http_port > 65535) {
-			http_port = 8000
+		if (bindPort < 1024 || bindPort > 65535) {
+			bindPort = 8000
 		}
 
-		this.emit('http_rebind', bind_ip, http_port)
+		this.ui.server.rebindHttp(bindIp, bindPort)
+		this.userconfig.updateBindIp(bindIp)
+		this.services.https.updateBindIp(bindIp)
 	}
 }
 

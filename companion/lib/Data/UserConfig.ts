@@ -118,13 +118,6 @@ export class DataUserConfig extends CoreBase {
 	constructor(registry: Registry) {
 		super(registry, 'Data/UserConfig')
 
-		this.registry.on('http_rebind', (bind_ip) => {
-			if (this.#data !== undefined && DataUserConfig.Defaults.https_self_cn == this.#data.https_self_cn) {
-				this.setKey('https_self_cn', bind_ip)
-			}
-			DataUserConfig.Defaults.https_self_cn = bind_ip
-		})
-
 		this.#data = this.db.getKey('userconfig', cloneDeep(DataUserConfig.Defaults))
 
 		this.#populateMissingForExistingDb()
@@ -397,5 +390,12 @@ export class DataUserConfig extends CoreBase {
 
 			this.db.setKey('userconfig', this.#data)
 		}
+	}
+
+	updateBindIp(bindIp: string): void {
+		if (this.#data !== undefined && DataUserConfig.Defaults.https_self_cn == this.#data.https_self_cn) {
+			this.setKey('https_self_cn', bindIp)
+		}
+		DataUserConfig.Defaults.https_self_cn = bindIp
 	}
 }
