@@ -101,7 +101,7 @@ export class UIUpdate {
 				this.#logger.debug(`fresh update data received ${JSON.stringify(body)}`)
 				this.#latestUpdateData = body as AppUpdateInfo
 
-				this.#ioController.emit('app-update-info', this.#latestUpdateData)
+				this.#ioController.emitToAll('app-update-info', this.#latestUpdateData)
 			})
 			.catch((e) => {
 				this.#logger.verbose('update server said something unexpected!', e)

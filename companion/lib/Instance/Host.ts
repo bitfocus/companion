@@ -73,6 +73,8 @@ export class ModuleHost {
 		this.#startQueue = new PQueue({ concurrency: Math.max(cpuCount - 1, 1) })
 
 		this.#children = new Map()
+
+		registry.graphics.on('resubscribeFeedbacks', () => this.resubscribeAllFeedbacks())
 	}
 
 	/**

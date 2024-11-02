@@ -106,13 +106,6 @@ export class CoreBase<TEvents extends EventMap<TEvents> = never> extends EventEm
 	}
 
 	/**
-	 * The core page controller
-	 */
-	protected get preview() {
-		return this.registry.preview
-	}
-
-	/**
 	 * The core service controller
 	 */
 	protected get services(): ServiceController {

@@ -18,6 +18,7 @@ import { UIController } from './UI/Controller.js'
 import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
+import { DataMetrics } from './Data/Metrics.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
@@ -128,6 +129,8 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	 */
 	internalModule: InternalController
 
+	metrics: DataMetrics
+
 	/**
 	 * The 'data' controller
 	 */
@@ -190,14 +193,28 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		LogController.init(this.appInfo, this.ui.io)
 		this.page = new PageController(this)
 		this.controls = new ControlsController(this)
-		this.graphics = new GraphicsController(this)
 		this.variables = new VariablesController(this.db, this.io)
+		this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
 		this.preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
 		this.surfaces = new SurfaceController(this)
 		this.instance = new InstanceController(this)
 		this.services = new ServiceController(this)
 		this.cloud = new CloudController(this, this.data.cache)
 		this.internalModule = new InternalController(this)
+		this.metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
+
+		this.ui.io.on('clientConnect', (client) => {
+			LogController.clientConnect(client)
+			this.ui.clientConnect(client)
+			this.data.clientConnect(client)
+			this.page.clientConnect(client)
+			this.controls.clientConnect(client)
+			this.preview.clientConnect(client)
+			this.surfaces.clientConnect(client)
+			this.instance.clientConnect(client)
+			this.cloud.clientConnect(client)
+			this.services.clientConnect(client)
+		})
 
 		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
 			this.internalModule.variablesChanged(all_changed_variables_set)
@@ -208,7 +225,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		})
 
 		// old 'modules_loaded' events
-		this.data.metrics.startCycle()
+		this.metrics.startCycle()
 
 		this.controls.init()
 		this.controls.verifyConnectionIds()

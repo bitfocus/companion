@@ -354,7 +354,7 @@ export class CloudRegion {
 				// Disabled cloud
 				if (this.state.enabled && this.#cloud.state.authenticated) {
 					this.state = newState
-					this.#io.emit('cloud_region_state', this.#id, newState)
+					this.#io.emitToAll('cloud_region_state', this.#id, newState)
 					this.destroy()
 					abortState = true // already set state
 				}
@@ -368,7 +368,7 @@ export class CloudRegion {
 
 		if (!abortState) {
 			if (!isEqual(newState, this.state)) {
-				this.#io.emit('cloud_region_state', this.#id, newState)
+				this.#io.emitToAll('cloud_region_state', this.#id, newState)
 			}
 
 			this.state = newState

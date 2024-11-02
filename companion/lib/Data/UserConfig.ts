@@ -365,7 +365,7 @@ export class DataUserConfig extends CoreBase {
 		}
 
 		this.logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
-		this.io.emit('set_userconfig_key', key, value)
+		this.io.emitToAll('set_userconfig_key', key, value)
 		setImmediate(() => {
 			// give the change a chance to be pushed to the ui first
 			this.graphics.updateUserConfig(key, value)

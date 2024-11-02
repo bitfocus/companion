@@ -15,7 +15,7 @@ export class UIController {
 		this.server = new UIServer(this.express.app)
 		registry.on('http_rebind', this.server.rebindHttp.bind(this.server))
 
-		this.io = new UIHandler(registry, this.server)
+		this.io = new UIHandler(registry.appInfo, this.server)
 		this.update = new UIUpdate(registry.appInfo, this.io)
 	}
 

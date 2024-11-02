@@ -494,13 +494,13 @@ export class DataImportExport extends CoreBase {
 		if (this.#currentImportTask) throw new Error('Another operation is in progress')
 
 		this.#currentImportTask = newTaskType
-		this.io.emit('load-save:task', this.#currentImportTask)
+		this.io.emitToAll('load-save:task', this.#currentImportTask)
 
 		try {
 			return await executeFn()
 		} finally {
 			this.#currentImportTask = null
-			this.io.emit('load-save:task', this.#currentImportTask)
+			this.io.emitToAll('load-save:task', this.#currentImportTask)
 		}
 	}
 

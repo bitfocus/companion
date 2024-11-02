@@ -17,9 +17,10 @@
 
 import { Server as SocketIOServer, Server, Socket } from 'socket.io'
 import LogController, { Logger } from '../Log/Controller.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo } from '../Registry.js'
 import type { Server as HttpServer } from 'http'
 import type { Server as HttpsServer } from 'https'
+import { EventEmitter } from 'events'
 
 type IOListenEvents = import('@companion-app/shared/SocketIO.js').ClientToBackendEventsListenMap
 type IOEmitEvents = import('@companion-app/shared/SocketIO.js').BackendToClientEventsMap
@@ -109,10 +110,14 @@ export class ClientSocket {
 	}
 }
 
-export class UIHandler {
+interface UIHandlerEvents {
+	clientConnect: [client: ClientSocket]
+}
+
+export class UIHandler extends EventEmitter<UIHandlerEvents> {
 	readonly #logger = LogController.createLogger('UI/Handler')
 
-	readonly #registry: Registry
+	readonly #appInfo: AppInfo
 
 	/**
 	 * Socket.IO Server options
@@ -122,8 +127,10 @@ export class UIHandler {
 	readonly #httpIO: IOServerType
 	#httpsIO: IOServerType | undefined
 
-	constructor(registry: Registry, http: HttpServer) {
-		this.#registry = registry
+	constructor(appInfo: AppInfo, http: HttpServer) {
+		super()
+
+		this.#appInfo = appInfo
 
 		this.#socketIOOptions = {
 			allowEIO3: true,
@@ -151,21 +158,12 @@ export class UIHandler {
 
 		client.onPromise('app-version-info', () => {
 			return {
-				appVersion: this.#registry.appInfo.appVersion,
-				appBuild: this.#registry.appInfo.appBuild,
+				appVersion: this.#appInfo.appVersion,
+				appBuild: this.#appInfo.appBuild,
 			}
 		})
 
-		LogController.clientConnect(client)
-		this.#registry.ui?.clientConnect(client)
-		this.#registry.data?.clientConnect(client)
-		this.#registry.page.clientConnect(client)
-		this.#registry.controls.clientConnect(client)
-		this.#registry.preview.clientConnect(client)
-		this.#registry.surfaces.clientConnect(client)
-		this.#registry.instance.clientConnect(client)
-		this.#registry.cloud?.clientConnect(client)
-		this.#registry.services.clientConnect(client)
+		this.emit('clientConnect', client)
 
 		client.on('disconnect', () => {
 			this.#logger.debug('socket ' + client.id + ' disconnected')
@@ -175,7 +173,7 @@ export class UIHandler {
 	/**
 	 * Send a message to all connected clients
 	 */
-	emit<T extends keyof IOEmitEvents>(event: T, ...args: Parameters<IOEmitEvents[T]>): void {
+	emitToAll<T extends keyof IOEmitEvents>(event: T, ...args: Parameters<IOEmitEvents[T]>): void {
 		this.#httpIO.emit(event, ...args)
 
 		if (this.#httpsIO) {

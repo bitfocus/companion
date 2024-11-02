@@ -579,7 +579,7 @@ export class CloudController extends CoreBase {
 		}
 
 		if (!isEqual(newState, this.state)) {
-			this.io.emit('cloud_state', newState)
+			this.io.emitToAll('cloud_state', newState)
 			this.state = newState
 		}
 
