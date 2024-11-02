@@ -65,7 +65,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	/**
 	 * The config of this button
 	 */
-	options: TOptions
+	options!: TOptions
 
 	/**
 	 * Whether this button has delayed actions running

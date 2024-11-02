@@ -102,6 +102,7 @@ export class SocketEventsHandler {
 		this.#deps = deps
 
 		this.connectionId = connectionId
+		this.#label = connectionId // Give a default label until init is called
 		this.#expectsLabelUpdates = range1_2_0OrLater.test(apiVersion)
 
 		const funcs: IpcEventHandlers<ModuleToHostEventsV0> = {

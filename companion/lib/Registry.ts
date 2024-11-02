@@ -87,11 +87,11 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The cloud controller
 	 */
-	#cloud: CloudController
+	#cloud!: CloudController
 	/**
 	 * The core controls controller
 	 */
-	controls: ControlsController
+	controls!: ControlsController
 	/**
 	 * The core database library
 	 */
@@ -99,11 +99,11 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The core graphics controller
 	 */
-	graphics: GraphicsController
+	graphics!: GraphicsController
 	/**
 	 * The core instance controller
 	 */
-	instance: InstanceController
+	instance!: InstanceController
 	/**
 	 * The core interface client
 	 */
@@ -115,19 +115,19 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The core page controller
 	 */
-	page: PageController
+	page!: PageController
 	/**
 	 * The core page controller
 	 */
-	#preview: GraphicsPreview
+	#preview!: GraphicsPreview
 	/**
 	 * The core service controller
 	 */
-	services: ServiceController
+	services!: ServiceController
 	/**
 	 * The core device controller
 	 */
-	surfaces: SurfaceController
+	surfaces!: SurfaceController
 	/**
 	 * The core user config manager
 	 */
@@ -136,11 +136,11 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The 'internal' module
 	 */
-	internalModule: InternalController
+	internalModule!: InternalController
 
-	#importExport: ImportExportController
+	#importExport!: ImportExportController
 
-	#metrics: DataMetrics
+	#metrics!: DataMetrics
 
 	/**
 	 * The 'data' controller
@@ -157,7 +157,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	 */
 	readonly internalApiRouter = express.Router()
 
-	variables: VariablesController
+	variables!: VariablesController
 
 	readonly appInfo: AppInfo
 

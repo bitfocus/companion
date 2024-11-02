@@ -198,6 +198,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.panel = panel
 		this.#surfaceConfig = surfaceConfig
 
+		this.#currentPageId = this.#page.getFirstPageId()
+
 		// Setup logger to use the name
 		this.#recreateLogger()
 

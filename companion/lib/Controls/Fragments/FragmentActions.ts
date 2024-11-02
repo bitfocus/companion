@@ -33,7 +33,7 @@ export class FragmentActions {
 
 	/**
 	 */
-	options: ActionStepOptions
+	options!: ActionStepOptions
 
 	/**
 	 * Commit changes to the database and disk

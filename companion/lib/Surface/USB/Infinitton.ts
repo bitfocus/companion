@@ -97,6 +97,7 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 				this.emit('remove')
 			})
 		} catch (e) {
+			// @ts-expect-error May not be defined yet
 			if (this.#infinitton) {
 				this.#infinitton.close()
 			}

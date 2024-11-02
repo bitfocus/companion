@@ -96,7 +96,7 @@ export abstract class DataStoreBase {
 	/**
 	 * The SQLite database
 	 */
-	public store: SQLiteDB
+	public store!: SQLiteDB
 
 	/**
 	 * This needs to be called in the extending class

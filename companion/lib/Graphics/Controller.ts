@@ -104,7 +104,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Generated pincode bitmaps
 	 */
-	#pincodeBuffersCache: Omit<PincodeBitmaps, 'code'> | null
+	#pincodeBuffersCache: Omit<PincodeBitmaps, 'code'> | null = null
 
 	#pendingVariables: CompanionVariableValues | null = null
 	/**
