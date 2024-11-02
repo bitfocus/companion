@@ -56,6 +56,8 @@ type SomeControlModel = SomeButtonModel | TriggerModel
  * disclosing the source code of your own applications.
  */
 export class ControlsController extends CoreBase {
+	readonly #registry: Registry
+
 	/**
 	 * Actions runner
 	 */
@@ -83,6 +85,8 @@ export class ControlsController extends CoreBase {
 
 	constructor(registry: Registry) {
 		super(registry, 'Controls/Controller')
+
+		this.#registry = registry
 
 		this.actions = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
@@ -732,7 +736,7 @@ export class ControlsController extends CoreBase {
 		client.onPromise('triggers:create', () => {
 			const controlId = CreateTriggerControlId(nanoid())
 
-			const newControl = new ControlTrigger(this.registry, this.triggers, controlId, null, false)
+			const newControl = new ControlTrigger(this.#registry, this.triggers, controlId, null, false)
 			this.#controls.set(controlId, newControl)
 
 			// Add trigger to the end of the list
@@ -941,19 +945,19 @@ export class ControlsController extends CoreBase {
 		const controlObj2 = typeof controlObj === 'object' ? controlObj : null
 		if (category === 'all' || category === 'button') {
 			if (controlObj2?.type === 'button' || (controlType === 'button' && !controlObj2)) {
-				return new ControlButtonNormal(this.registry, controlId, controlObj2, isImport)
+				return new ControlButtonNormal(this.#registry, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
-				return new ControlButtonPageNumber(this.registry, controlId, controlObj2, isImport)
+				return new ControlButtonPageNumber(this.#registry, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {
-				return new ControlButtonPageUp(this.registry, controlId, controlObj2, isImport)
+				return new ControlButtonPageUp(this.#registry, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagedown' || (controlType === 'pagedown' && !controlObj2)) {
-				return new ControlButtonPageDown(this.registry, controlId, controlObj2, isImport)
+				return new ControlButtonPageDown(this.#registry, controlId, controlObj2, isImport)
 			}
 		}
 
 		if (category === 'all' || category === 'trigger') {
 			if (controlObj2?.type === 'trigger' || (controlType === 'trigger' && !controlObj2)) {
-				return new ControlTrigger(this.registry, this.triggers, controlId, controlObj2, isImport)
+				return new ControlTrigger(this.#registry, this.triggers, controlId, controlObj2, isImport)
 			}
 		}
 

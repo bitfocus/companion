@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import LogController, { Logger } from '../Log/Controller.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo, Registry } from '../Registry.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -34,12 +34,11 @@ type EventMap<T> = Record<keyof T, any[]> | [never]
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class CoreBase<TEvents extends EventMap<TEvents> = never> extends EventEmitter<TEvents> {
+export abstract class CoreBase<TEvents extends EventMap<TEvents> = never> extends EventEmitter<TEvents> {
 	/**
 	 * The application core
-	 * TODO: make protected/private
 	 */
-	readonly registry: Registry
+	readonly #registry: Registry
 
 	/**
 	 * The logger for this class
@@ -55,88 +54,92 @@ export class CoreBase<TEvents extends EventMap<TEvents> = never> extends EventEm
 	constructor(registry: Registry, debugNamespace: string) {
 		super()
 
-		this.registry = registry
+		this.#registry = registry
 
 		this.logger = LogController.createLogger(debugNamespace)
+	}
+
+	protected get appInfo(): AppInfo {
+		return this.#registry.appInfo
 	}
 
 	/**
 	 * The core controls controller
 	 * TODO: make protected/private
 	 */
-	get controls(): ControlsController {
-		return this.registry.controls
+	protected get controls(): ControlsController {
+		return this.#registry.controls
 	}
 
 	/**
 	 * The core database library
 	 */
 	protected get db(): DataDatabase {
-		return this.registry.db
+		return this.#registry.db
 	}
 
 	/**
 	 * The core graphics controller
 	 */
 	protected get graphics(): GraphicsController {
-		return this.registry.graphics
+		return this.#registry.graphics
 	}
 
 	/**
 	 * The core instance controller
 	 */
 	protected get instance(): InstanceController {
-		return this.registry.instance
+		return this.#registry.instance
 	}
 
 	/**
 	 * The core interface client
 	 * TODO: make protected/private
 	 */
-	get io(): UIHandler {
-		return this.registry.io
+	protected get io(): UIHandler {
+		return this.#registry.io
 	}
 
 	/**
 	 * The core page controller
 	 * TODO: make protected/private
 	 */
-	get page() {
-		return this.registry.page
+	protected get page() {
+		return this.#registry.page
 	}
 
 	/**
 	 * The core service controller
 	 */
 	protected get services(): ServiceController {
-		return this.registry.services
+		return this.#registry.services
 	}
 
 	/**
 	 * The core device controller
 	 */
 	protected get surfaces(): SurfaceController {
-		return this.registry.surfaces
+		return this.#registry.surfaces
 	}
 
 	/**
 	 * The core user config manager
 	 */
 	protected get userconfig(): DataUserConfig {
-		return this.registry.userconfig
+		return this.#registry.userconfig
 	}
 
 	/**
 	 * The internal module
 	 */
 	protected get internalModule(): InternalController {
-		return this.registry.internalModule
+		return this.#registry.internalModule
 	}
 
 	/**
 	 * The variables controller
 	 */
 	protected get variablesController(): VariablesController {
-		return this.registry.variables
+		return this.#registry.variables
 	}
 }

@@ -488,8 +488,8 @@ export class ControlButtonNormal
 		}
 
 		const actions = new FragmentActions(
-			this.registry.internalModule,
-			this.registry.instance.moduleHost,
+			this.internalModule,
+			this.instance.moduleHost,
 			this.controlId,
 			this.commitChange.bind(this)
 		)
@@ -523,7 +523,7 @@ export class ControlButtonNormal
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
 		ReferencesVisitors.visitControlReferences(
-			this.registry.internalModule,
+			this.internalModule,
 			visitor,
 			this.feedbacks.baseStyle,
 			allActions,

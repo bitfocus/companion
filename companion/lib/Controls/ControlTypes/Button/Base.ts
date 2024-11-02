@@ -327,7 +327,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		// Fix up references
 		const changed = ReferencesVisitors.fixupControlReferences(
-			this.registry.internalModule,
+			this.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			this.feedbacks.baseStyle,
 			allActions,
