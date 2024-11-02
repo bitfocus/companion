@@ -308,7 +308,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		this.controls.init()
 		this.controls.verifyConnectionIds()
 		this.variables.custom.init()
-		this.internalModule.init()
+		this.internalModule.firstUpdate()
 		this.graphics.regenerateAll(false)
 
 		// We are ready to start the instances/connections

@@ -79,6 +79,10 @@ export class InternalController {
 		this.#regenerateActions()
 		this.#regenerateFeedbacks()
 		this.regenerateVariables()
+	}
+
+	firstUpdate(): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		// Find all the feedbacks on controls
 		const allControls = this.#controlsController.getAllControls()
