@@ -17,7 +17,6 @@
 
 import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
-import { CoreBase } from '../Core/Base.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { cloneDeep } from 'lodash-es'
@@ -26,9 +25,10 @@ import { InstanceModuleScanner } from './ModuleScanner.js'
 import type express from 'express'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import type { Registry } from '../Registry.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
+import LogController from '../Log/Controller.js'
+import type { InstanceController } from './Controller.js'
 
 const ModulesRoom = 'modules'
 
@@ -41,7 +41,12 @@ export interface ModuleInfo {
 	isPackaged: boolean
 }
 
-export class InstanceModules extends CoreBase {
+export class InstanceModules {
+	readonly #logger = LogController.createLogger('Instance/Modules')
+
+	readonly #io: UIHandler
+	readonly #instance: InstanceController
+
 	/**
 	 * Last module info sent to clients
 	 */
@@ -62,10 +67,11 @@ export class InstanceModules extends CoreBase {
 	 */
 	readonly #moduleScanner = new InstanceModuleScanner()
 
-	constructor(registry: Registry) {
-		super(registry, 'Instance/Modules')
+	constructor(io: UIHandler, instance: InstanceController, apiRouter: express.Router) {
+		this.#io = io
+		this.#instance = instance
 
-		this.registry.api_router.get('/help/module/:moduleId/*path', this.#getHelpAsset)
+		apiRouter.get('/help/module/:moduleId/*path', this.#getHelpAsset)
 	}
 
 	/**
@@ -107,7 +113,7 @@ export class InstanceModules extends CoreBase {
 		}
 
 		if (extraModulePath) {
-			this.logger.info(`Looking for extra modules in: ${extraModulePath}`)
+			this.#logger.info(`Looking for extra modules in: ${extraModulePath}`)
 			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(extraModulePath, true)
 			for (const candidate of candidates) {
 				// Replace any existing candidate
@@ -117,7 +123,7 @@ export class InstanceModules extends CoreBase {
 				})
 			}
 
-			this.logger.info(`Found ${candidates.length} extra modules`)
+			this.#logger.info(`Found ${candidates.length} extra modules`)
 		}
 
 		// Figure out the redirects. We do this afterwards, to ensure we avoid collisions and stuff
@@ -150,13 +156,13 @@ export class InstanceModules extends CoreBase {
 			if (!moduleInfo) continue
 
 			if (moduleInfo.isOverride) {
-				this.logger.info(
+				this.#logger.info(
 					`${moduleInfo.display.id}@${moduleInfo.display.version}: ${moduleInfo.display.name} (Overridden${
 						moduleInfo.isPackaged ? ' & Packaged' : ''
 					})`
 				)
 			} else {
-				this.logger.debug(`${moduleInfo.display.id}@${moduleInfo.display.version}: ${moduleInfo.display.name}`)
+				this.#logger.debug(`${moduleInfo.display.id}@${moduleInfo.display.version}: ${moduleInfo.display.name}`)
 			}
 		}
 	}
@@ -165,11 +171,11 @@ export class InstanceModules extends CoreBase {
 	 * Reload modules from developer path
 	 */
 	async reloadExtraModule(fullpath: string): Promise<void> {
-		this.logger.info(`Attempting to reload module in: ${fullpath}`)
+		this.#logger.info(`Attempting to reload module in: ${fullpath}`)
 
 		const reloadedModule = await this.#moduleScanner.loadInfoForModule(fullpath, true)
 		if (reloadedModule) {
-			this.logger.info(
+			this.#logger.info(
 				`Found new module "${reloadedModule.display.id}" v${reloadedModule.display.version} in: ${fullpath}`
 			)
 
@@ -182,19 +188,19 @@ export class InstanceModules extends CoreBase {
 			const newJson = cloneDeep(this.getModulesJson())
 
 			// Now broadcast to any interested clients
-			if (this.io.countRoomMembers(ModulesRoom) > 0) {
+			if (this.#io.countRoomMembers(ModulesRoom) > 0) {
 				const oldObj = this.#lastModulesJson?.[reloadedModule.manifest.id]
 				if (oldObj) {
 					const patch = jsonPatch.compare(oldObj, reloadedModule.display)
 					if (patch.length > 0) {
-						this.io.emitToRoom(ModulesRoom, `modules:patch`, {
+						this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
 							type: 'update',
 							id: reloadedModule.manifest.id,
 							patch,
 						})
 					}
 				} else {
-					this.io.emitToRoom(ModulesRoom, `modules:patch`, {
+					this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
 						type: 'add',
 						id: reloadedModule.manifest.id,
 						info: reloadedModule.display,
@@ -205,9 +211,9 @@ export class InstanceModules extends CoreBase {
 			this.#lastModulesJson = newJson
 
 			// restart usages of this module
-			this.instance.reloadUsesOfModule(reloadedModule.manifest.id)
+			this.#instance.reloadUsesOfModule(reloadedModule.manifest.id)
 		} else {
-			this.logger.info(`Failed to find module in: ${fullpath}`)
+			this.#logger.info(`Failed to find module in: ${fullpath}`)
 		}
 	}
 
@@ -276,16 +282,16 @@ export class InstanceModules extends CoreBase {
 						},
 					]
 				} else {
-					this.logger.silly(`Error loading help for ${moduleId}`, moduleInfo.helpPath)
-					this.logger.silly('Not a file')
+					this.#logger.silly(`Error loading help for ${moduleId}`, moduleInfo.helpPath)
+					this.#logger.silly('Not a file')
 					return ['nofile', null]
 				}
 			} else {
 				return ['nofile', null]
 			}
 		} catch (err) {
-			this.logger.silly(`Error loading help for ${moduleId}`)
-			this.logger.silly(err)
+			this.#logger.silly(`Error loading help for ${moduleId}`)
+			this.#logger.silly(err)
 			return ['nofile', null]
 		}
 	}

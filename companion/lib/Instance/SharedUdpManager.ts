@@ -19,13 +19,13 @@ import LogController, { Logger } from '../Log/Controller.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class ServiceSharedUdpManager {
+export class InstanceSharedUdpManager {
 	// /**
 	//  * The logger for this class
 	//  */
 	// #logger = LogController.createLogger(`Service/SharedUdpManager`)
 
-	#sockets = new Map<string, ServiceSharedUdpPort>()
+	#sockets = new Map<string, InstanceSharedUdpPort>()
 
 	/**
 	 * Count the number of active ports
@@ -41,14 +41,14 @@ export class ServiceSharedUdpManager {
 		family: 'udp4' | 'udp6',
 		portNumber: number,
 		ownerId: string,
-		messageHandler: ServiceSharedUdpMember['messageHandler'],
-		errorHandler: ServiceSharedUdpMember['errorHandler']
+		messageHandler: InstanceSharedUdpMember['messageHandler'],
+		errorHandler: InstanceSharedUdpMember['errorHandler']
 	): Promise<string> {
 		const socketId = createSocketId(family, portNumber)
 
 		let socket = this.#sockets.get(socketId)
 		if (!socket) {
-			socket = new ServiceSharedUdpPort(family, portNumber, () => {
+			socket = new InstanceSharedUdpPort(family, portNumber, () => {
 				// Remove socket from the store, if it is the 'current' socket handler
 				const newSocket = this.#sockets.get(socketId)
 				if (newSocket === socket) {
@@ -114,7 +114,7 @@ export class ServiceSharedUdpManager {
 		socket.socket.send(message, port, address)
 	}
 
-	#findSocket(ownerId: string, handleId: string): ServiceSharedUdpPort | undefined {
+	#findSocket(ownerId: string, handleId: string): InstanceSharedUdpPort | undefined {
 		for (const socket of this.#sockets.values()) {
 			if (socket.members.find((m) => m.ownerId === ownerId && m.handleId === handleId)) {
 				return socket
@@ -128,13 +128,13 @@ function createSocketId(type: 'udp4' | 'udp6', portNumber: number): string {
 	return `${type}-${portNumber}`
 }
 
-class ServiceSharedUdpPort {
+class InstanceSharedUdpPort {
 	/**
 	 * The logger for this class
 	 */
 	#logger: Logger
 
-	members: ServiceSharedUdpMember[] = []
+	members: InstanceSharedUdpMember[] = []
 	readonly socket: Socket
 	readonly waitForBind: Promise<void>
 
@@ -188,7 +188,7 @@ class ServiceSharedUdpPort {
 	}
 }
 
-interface ServiceSharedUdpMember {
+interface InstanceSharedUdpMember {
 	ownerId: string
 	handleId: string
 	messageHandler: (message: Buffer, rInfo: import('dgram').RemoteInfo) => void

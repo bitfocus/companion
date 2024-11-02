@@ -1,6 +1,5 @@
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
-import { CoreBase } from '../Core/Base.js'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import { ControlButtonNormal } from '../Controls/ControlTypes/Button/Normal.js'
 import jsonPatch from 'fast-json-patch'
@@ -14,14 +13,17 @@ import type {
 } from '@companion-app/shared/Model/Presets.js'
 import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
-import type { Registry } from '../Registry.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionPresetAction, CompanionPresetDefinition } from '@companion-module/base'
+import LogController from '../Log/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { VariablesValues } from '../Variables/Values.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -47,7 +49,14 @@ const FeedbacksRoom = 'feedback-definitions'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class InstanceDefinitions extends CoreBase {
+export class InstanceDefinitions {
+	readonly #logger = LogController.createLogger('Instance/Definitions')
+
+	readonly #io: UIHandler
+	readonly #controlsController: ControlsController
+	readonly #graphicsController: GraphicsController
+	readonly #variablesValuesController: VariablesValues
+
 	/**
 	 * The action definitions
 	 */
@@ -61,8 +70,16 @@ export class InstanceDefinitions extends CoreBase {
 	 */
 	#presetDefinitions: Record<string, Record<string, PresetDefinition>> = {}
 
-	constructor(registry: Registry) {
-		super(registry, 'Instance/Definitions')
+	constructor(
+		io: UIHandler,
+		controls: ControlsController,
+		graphics: GraphicsController,
+		variablesValues: VariablesValues
+	) {
+		this.#io = io
+		this.#controlsController = controls
+		this.#graphicsController = graphics
+		this.#variablesValuesController = variablesValues
 	}
 
 	/**
@@ -120,20 +137,20 @@ export class InstanceDefinitions extends CoreBase {
 				if (style.text) {
 					if (style.textExpression) {
 						try {
-							const parseResult = this.variablesController.values.executeExpression(style.text, null)
+							const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
 							style.text = parseResult.value + ''
 						} catch (e) {
-							this.logger.error(`Expression parse error: ${e}`)
+							this.#logger.error(`Expression parse error: ${e}`)
 
 							style.text = 'ERR'
 						}
 					} else {
-						const parseResult = this.variablesController.values.parseVariables(style.text, null)
+						const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
 						style.text = parseResult.text
 					}
 				}
 
-				const render = await this.graphics.drawPreview(style)
+				const render = await this.#graphicsController.drawPreview(style)
 				if (render) {
 					return render.asDataUrl
 				} else {
@@ -239,21 +256,21 @@ export class InstanceDefinitions extends CoreBase {
 	 */
 	forgetConnection(connectionId: string): void {
 		delete this.#presetDefinitions[connectionId]
-		if (this.io.countRoomMembers(PresetsRoom) > 0) {
-			this.io.emitToRoom(PresetsRoom, 'presets:update', connectionId, null)
+		if (this.#io.countRoomMembers(PresetsRoom) > 0) {
+			this.#io.emitToRoom(PresetsRoom, 'presets:update', connectionId, null)
 		}
 
 		delete this.#actionDefinitions[connectionId]
-		if (this.io.countRoomMembers(ActionsRoom) > 0) {
-			this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+		if (this.#io.countRoomMembers(ActionsRoom) > 0) {
+			this.#io.emitToRoom(ActionsRoom, 'action-definitions:update', {
 				type: 'forget-connection',
 				connectionId,
 			})
 		}
 
 		delete this.#feedbackDefinitions[connectionId]
-		if (this.io.countRoomMembers(FeedbacksRoom) > 0) {
-			this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+		if (this.#io.countRoomMembers(FeedbacksRoom) > 0) {
+			this.#io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
 				type: 'forget-connection',
 				connectionId,
 			})
@@ -341,7 +358,7 @@ export class InstanceDefinitions extends CoreBase {
 			}))
 		}
 
-		this.controls.importControl(location, result)
+		this.#controlsController.importControl(location, result)
 
 		return true
 	}
@@ -353,9 +370,9 @@ export class InstanceDefinitions extends CoreBase {
 		const lastActionDefinitions = this.#actionDefinitions[connectionId]
 		this.#actionDefinitions[connectionId] = cloneDeep(actionDefinitions)
 
-		if (this.io.countRoomMembers(ActionsRoom) > 0) {
+		if (this.#io.countRoomMembers(ActionsRoom) > 0) {
 			if (!lastActionDefinitions) {
-				this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+				this.#io.emitToRoom(ActionsRoom, 'action-definitions:update', {
 					type: 'add-connection',
 					connectionId,
 
@@ -364,7 +381,7 @@ export class InstanceDefinitions extends CoreBase {
 			} else {
 				const diff = diffObjects(lastActionDefinitions, actionDefinitions || {})
 				if (diff) {
-					this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+					this.#io.emitToRoom(ActionsRoom, 'action-definitions:update', {
 						type: 'update-connection',
 						connectionId,
 
@@ -382,9 +399,9 @@ export class InstanceDefinitions extends CoreBase {
 		const lastFeedbackDefinitions = this.#feedbackDefinitions[connectionId]
 		this.#feedbackDefinitions[connectionId] = cloneDeep(feedbackDefinitions)
 
-		if (this.io.countRoomMembers(FeedbacksRoom) > 0) {
+		if (this.#io.countRoomMembers(FeedbacksRoom) > 0) {
 			if (!lastFeedbackDefinitions) {
-				this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+				this.#io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
 					type: 'add-connection',
 					connectionId,
 
@@ -393,7 +410,7 @@ export class InstanceDefinitions extends CoreBase {
 			} else {
 				const diff = diffObjects(lastFeedbackDefinitions, feedbackDefinitions || {})
 				if (diff) {
-					this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+					this.#io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
 						type: 'update-connection',
 						connectionId,
 
@@ -471,7 +488,7 @@ export class InstanceDefinitions extends CoreBase {
 					}
 				}
 			} catch (e) {
-				this.logger.warn(`${label} gave invalid preset "${id}": ${e}`)
+				this.#logger.warn(`${label} gave invalid preset "${id}": ${e}`)
 			}
 		}
 
@@ -515,7 +532,7 @@ export class InstanceDefinitions extends CoreBase {
 	 */
 	updateVariablePrefixesForLabel(connectionId: string, labelTo: string): void {
 		if (this.#presetDefinitions[connectionId] !== undefined) {
-			this.logger.silly('Updating presets for connection ' + labelTo)
+			this.#logger.silly('Updating presets for connection ' + labelTo)
 			this.#updateVariablePrefixesAndStoreDefinitions(connectionId, labelTo, this.#presetDefinitions[connectionId])
 		}
 	}
@@ -552,15 +569,15 @@ export class InstanceDefinitions extends CoreBase {
 		const lastPresetDefinitions = this.#presetDefinitions[connectionId]
 		this.#presetDefinitions[connectionId] = cloneDeep(presets)
 
-		if (this.io.countRoomMembers(PresetsRoom) > 0) {
+		if (this.#io.countRoomMembers(PresetsRoom) > 0) {
 			const newSimplifiedPresets = this.#simplifyPresetsForUi(presets)
 			if (!lastPresetDefinitions) {
-				this.io.emitToRoom(PresetsRoom, 'presets:update', connectionId, newSimplifiedPresets)
+				this.#io.emitToRoom(PresetsRoom, 'presets:update', connectionId, newSimplifiedPresets)
 			} else {
 				const lastSimplifiedPresets = this.#simplifyPresetsForUi(lastPresetDefinitions)
 				const patch = jsonPatch.compare(lastSimplifiedPresets, newSimplifiedPresets)
 				if (patch.length > 0) {
-					this.io.emitToRoom(PresetsRoom, 'presets:update', connectionId, patch)
+					this.#io.emitToRoom(PresetsRoom, 'presets:update', connectionId, patch)
 				}
 			}
 		}

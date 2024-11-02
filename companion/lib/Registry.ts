@@ -30,6 +30,7 @@ import { InternalTime } from './Internal/Time.js'
 import { InternalTriggers } from './Internal/Triggers.js'
 import { InternalVariables } from './Internal/Variables.js'
 import { ImportExportController } from './ImportExport/Controller.js'
+import { ServiceOscSender } from './Service/OscSender.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
@@ -214,18 +215,28 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		this.variables = new VariablesController(this.db, this.io)
 		this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
 		this.preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
-		this.surfaces = new SurfaceController(this)
-		this.instance = new InstanceController(this)
-		this.metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
-		this.services = new ServiceController(this)
-		this.cloud = new CloudController(
-			this.appInfo,
+		this.surfaces = new SurfaceController(
 			this.db,
-			this.data.cache,
+			{
+				controls: this.controls,
+				graphics: this.graphics,
+				page: this.page,
+				userconfig: this.userconfig,
+				variables: this.variables,
+			},
+			this.io
+		)
+
+		const oscSender = new ServiceOscSender(this)
+		this.instance = new InstanceController(
+			this.io,
+			this.db,
+			this.api_router,
 			this.controls,
 			this.graphics,
-			this.io,
-			this.page
+			this.page,
+			this.variables,
+			oscSender
 		)
 		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
 		this.importExport = new ImportExportController(this)
@@ -243,6 +254,18 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			new InternalVariables(this.internalModule, this.variables.values)
 		)
 		this.internalModule.init()
+
+		this.metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
+		this.services = new ServiceController(this, oscSender)
+		this.cloud = new CloudController(
+			this.appInfo,
+			this.db,
+			this.data.cache,
+			this.controls,
+			this.graphics,
+			this.io,
+			this.page
+		)
 
 		this.ui.io.on('clientConnect', (client) => {
 			LogController.clientConnect(client)

@@ -2,16 +2,14 @@ import LogController, { Logger } from '../Log/Controller.js'
 import PQueue from 'p-queue'
 import { nanoid } from 'nanoid'
 import path from 'path'
-import { SocketEventsHandler } from './Wrapper.js'
+import { InstanceModuleWrapperDependencies, SocketEventsHandler } from './Wrapper.js'
 import fs from 'fs-extra'
 import ejson from 'ejson'
 import os from 'os'
 import { getNodeJsPath } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import type { Registry } from '../Registry.js'
-import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { ModuleInfo } from './Modules.js'
+import type { InstanceModules, ModuleInfo } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 
@@ -53,8 +51,8 @@ interface ModuleChild {
 export class ModuleHost {
 	readonly #logger = LogController.createLogger('Instance/ModuleHost')
 
-	readonly #registry: Registry
-	readonly #instanceStatus: InstanceStatus
+	readonly #deps: InstanceModuleWrapperDependencies
+	readonly #modules: InstanceModules
 	readonly #connectionConfigStore: ConnectionConfigStore
 
 	/**
@@ -64,17 +62,19 @@ export class ModuleHost {
 
 	#children: Map<string, ModuleChild>
 
-	constructor(registry: Registry, instanceStatus: InstanceStatus, connectionConfigStore: ConnectionConfigStore) {
-		this.#registry = registry
-		this.#instanceStatus = instanceStatus
+	constructor(
+		deps: InstanceModuleWrapperDependencies,
+		modules: InstanceModules,
+		connectionConfigStore: ConnectionConfigStore
+	) {
+		this.#deps = deps
+		this.#modules = modules
 		this.#connectionConfigStore = connectionConfigStore
 
 		const cpuCount = os.cpus().length // An approximation
 		this.#startQueue = new PQueue({ concurrency: Math.max(cpuCount - 1, 1) })
 
 		this.#children = new Map()
-
-		registry.graphics.on('resubscribeFeedbacks', () => this.resubscribeAllFeedbacks())
 	}
 
 	/**
@@ -95,7 +95,7 @@ export class ModuleHost {
 			if (!child.crashed) {
 				child.crashed = setTimeout(() => {
 					const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
-					const moduleInfo = config && this.#registry.instance.modules.getModuleManifest(config.instance_type)
+					const moduleInfo = config && this.#modules.getModuleManifest(config.instance_type)
 
 					// Restart after a short sleep
 					this.queueRestartConnection(child.connectionId, config, moduleInfo)
@@ -115,7 +115,7 @@ export class ModuleHost {
 				const { apiVersion, connectionId, verificationToken } = ejson.parse(msg.payload)
 				if (!child.skipApiVersionCheck && !isModuleApiVersionCompatible(apiVersion)) {
 					this.#logger.debug(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`)
-					this.#registry.io.emitToRoom(
+					this.#deps.io.emitToRoom(
 						debugLogRoom,
 						debugLogRoom,
 						'error',
@@ -139,13 +139,7 @@ export class ModuleHost {
 				}
 
 				// Bind the event listeners
-				child.handler = new SocketEventsHandler(
-					this.#registry,
-					this.#instanceStatus,
-					child.monitor,
-					connectionId,
-					apiVersion
-				)
+				child.handler = new SocketEventsHandler(this.#deps, child.monitor, connectionId, apiVersion)
 
 				// Register successful
 				// child.doWorkTask = registerResult.doWorkTask
@@ -176,7 +170,7 @@ export class ModuleHost {
 				// TODO module-lib - start pings
 
 				// Init module
-				this.#instanceStatus.updateInstanceStatus(connectionId, 'initializing', null)
+				this.#deps.instanceStatus.updateInstanceStatus(connectionId, 'initializing', null)
 
 				child.handler
 					.init(config)
@@ -191,15 +185,12 @@ export class ModuleHost {
 						// mark child as ready to receive
 						child.isReady = true
 
-						// Make sure clients are informed about any runtime properties
-						this.#registry.instance.broadcastChanges([child.connectionId])
-
 						// Inform action recorder
-						this.#registry.controls.actionRecorder.connectionAvailabilityChange(connectionId, true)
+						this.#deps.controls.actionRecorder.connectionAvailabilityChange(connectionId, true)
 					})
 					.catch((e) => {
 						this.#logger.warn(`Instance "${config.label || child.connectionId}" failed to init: ${e} ${e?.stack}`)
-						this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', `Failed to init: ${e} ${e?.stack}`)
+						this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', `Failed to init: ${e} ${e?.stack}`)
 
 						forceRestart()
 					})
@@ -313,7 +304,7 @@ export class ModuleHost {
 			}
 
 			// mark connection as disabled
-			this.#instanceStatus.updateInstanceStatus(connectionId, null, 'Disabled')
+			this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Disabled')
 		}
 	}
 
@@ -436,7 +427,7 @@ export class ModuleHost {
 						})
 
 						const debugLogRoom = ConnectionDebugLogRoom(connectionId)
-						this.#registry.io.emitToRoom(
+						this.#deps.io.emitToRoom(
 							debugLogRoom,
 							debugLogRoom,
 							'system',
@@ -448,29 +439,29 @@ export class ModuleHost {
 							child.handler?.cleanup()
 
 							this.#logger.debug(`Connection "${config.label}" started`)
-							this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection started **')
+							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection started **')
 						})
 						monitor.on('stop', () => {
 							child.isReady = false
 							child.handler?.cleanup()
 
-							this.#instanceStatus.updateInstanceStatus(
+							this.#deps.instanceStatus.updateInstanceStatus(
 								connectionId,
 								child.crashed ? 'crashed' : null,
 								child.crashed ? '' : 'Stopped'
 							)
 							this.#logger.debug(`Connection "${config.label}" stopped`)
-							this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection stopped **')
+							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection stopped **')
 
-							this.#registry.controls.actionRecorder.connectionAvailabilityChange(connectionId, false)
+							this.#deps.controls.actionRecorder.connectionAvailabilityChange(connectionId, false)
 						})
 						monitor.on('crash', () => {
 							child.isReady = false
 							child.handler?.cleanup()
 
-							this.#instanceStatus.updateInstanceStatus(connectionId, null, 'Crashed')
+							this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Crashed')
 							this.#logger.debug(`Connection "${config.label}" crashed`)
-							this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')
+							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')
 						})
 						monitor.on('stdout', (data) => {
 							if (!moduleInfo.isPackaged) {
@@ -478,14 +469,14 @@ export class ModuleHost {
 								child.logger.verbose(`stdout: ${data.toString()}`)
 							}
 
-							if (this.#registry.io.countRoomMembers(debugLogRoom) > 0) {
-								this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'console', data.toString())
+							if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
+								this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'console', data.toString())
 							}
 						})
 						monitor.on('stderr', (data) => {
 							child.logger.verbose(`stderr: ${data.toString()}`)
-							if (this.#registry.io.countRoomMembers(debugLogRoom) > 0) {
-								this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', data.toString())
+							if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
+								this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', data.toString())
 							}
 						})
 
