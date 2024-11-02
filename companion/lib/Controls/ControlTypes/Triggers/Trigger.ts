@@ -25,8 +25,8 @@ import type {
 import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { Registry } from '../../../Registry.js'
-import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
 
 /**
  * Class for an interval trigger.
@@ -147,24 +147,24 @@ export class ControlTrigger
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(
-		registry: Registry,
+		deps: ControlDependencies,
 		eventBus: TriggerEvents,
 		controlId: string,
 		storage: TriggerModel | null,
 		isImport: boolean
 	) {
-		super(registry, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
+		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
 		this.actions = new FragmentActions(
-			registry.internalModule,
-			registry.instance.moduleHost,
+			deps.internalModule,
+			deps.instance.moduleHost,
 			controlId,
 			this.commitChange.bind(this)
 		)
 		this.feedbacks = new FragmentFeedbacks(
-			registry.instance.definitions,
-			registry.internalModule,
-			registry.instance.moduleHost,
+			deps.instance.definitions,
+			deps.internalModule,
+			deps.instance.moduleHost,
 			controlId,
 			this.commitChange.bind(this),
 			this.triggerRedraw.bind(this),
@@ -358,7 +358,7 @@ export class ControlTrigger
 		if (actions) {
 			this.logger.silly('found actions')
 
-			this.controls.actions.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
+			this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
 				surfaceId: this.controlId,
 			})
 		}
@@ -396,7 +396,7 @@ export class ControlTrigger
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
 		ReferencesVisitors.visitControlReferences(
-			this.internalModule,
+			this.deps.internalModule,
 			visitor,
 			undefined,
 			allActions,
@@ -527,7 +527,7 @@ export class ControlTrigger
 
 		// Fix up references
 		const changed = ReferencesVisitors.fixupControlReferences(
-			this.internalModule,
+			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
 			allActions,
@@ -706,18 +706,18 @@ export class ControlTrigger
 	#sendTriggerJsonChange(): void {
 		const newJson = cloneDeep(this.toTriggerJSON())
 
-		if (this.io.countRoomMembers(TriggersListRoom) > 0) {
+		if (this.deps.io.countRoomMembers(TriggersListRoom) > 0) {
 			if (this.#lastSentTriggerJson) {
 				const patch = jsonPatch.compare(this.#lastSentTriggerJson || {}, newJson || {})
 				if (patch.length > 0) {
-					this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+					this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
 						type: 'update',
 						controlId: this.controlId,
 						patch,
 					})
 				}
 			} else {
-				this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+				this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
 					type: 'add',
 					controlId: this.controlId,
 					info: newJson,
@@ -746,8 +746,8 @@ export class ControlTrigger
 
 		super.destroy()
 
-		if (this.io.countRoomMembers(TriggersListRoom) > 0) {
-			this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+		if (this.deps.io.countRoomMembers(TriggersListRoom) > 0) {
+			this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
 				type: 'remove',
 				controlId: this.controlId,
 			})

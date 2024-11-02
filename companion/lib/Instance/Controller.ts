@@ -40,7 +40,7 @@ import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
-import type express from 'express'
+import express from 'express'
 
 const InstancesRoom = 'instances'
 
@@ -71,6 +71,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly moduleHost: ModuleHost
 	readonly modules: InstanceModules
 	readonly sharedUdpManager: InstanceSharedUdpManager
+
+	readonly connectionApiRouter = express.Router()
 
 	constructor(
 		io: UIHandler,
@@ -114,6 +116,17 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		)
 
 		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())
+
+		this.connectionApiRouter.use('/:label', (req, res, _next) => {
+			const label = req.params.label
+			const connectionId = this.getIdForLabel(label) || label
+			const instance = this.moduleHost.getChild(connectionId)
+			if (instance) {
+				instance.executeHttpRequest(req, res)
+			} else {
+				res.status(404).send(JSON.stringify({ status: 404, message: 'Not Found' }))
+			}
+		})
 
 		// Prepare for clients already
 		this.broadcastChanges(this.#configStore.getAllInstanceIds())

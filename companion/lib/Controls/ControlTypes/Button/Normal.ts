@@ -17,8 +17,8 @@ import type {
 	NormalButtonSteps,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import type { Registry } from '../../../Registry.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
 
 /**
  * Class for the stepped button control.
@@ -68,8 +68,8 @@ export class ControlButtonNormal
 	 */
 	#surfaceHoldState = new Map<string, SurfaceHoldState>()
 
-	constructor(registry: Registry, controlId: string, storage: NormalButtonModel | null, isImport: boolean) {
-		super(registry, controlId, `Controls/Button/Normal/${controlId}`)
+	constructor(deps: ControlDependencies, controlId: string, storage: NormalButtonModel | null, isImport: boolean) {
+		super(deps, controlId, `Controls/Button/Normal/${controlId}`)
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
@@ -488,8 +488,8 @@ export class ControlButtonNormal
 		}
 
 		const actions = new FragmentActions(
-			this.internalModule,
-			this.instance.moduleHost,
+			this.deps.internalModule,
+			this.deps.instance.moduleHost,
 			this.controlId,
 			this.commitChange.bind(this)
 		)
@@ -523,7 +523,7 @@ export class ControlButtonNormal
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
 		ReferencesVisitors.visitControlReferences(
-			this.internalModule,
+			this.deps.internalModule,
 			visitor,
 			this.feedbacks.baseStyle,
 			allActions,
@@ -637,7 +637,7 @@ export class ControlButtonNormal
 					if (actions) {
 						this.logger.silly('found actions')
 
-						this.controls.actions.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
+						this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
 							surfaceId,
 						})
 					}
@@ -686,7 +686,7 @@ export class ControlButtonNormal
 
 				const enabledActions = actions.filter((act) => !act.disabled)
 
-				this.controls.actions.runMultipleActions(enabledActions, this.controlId, this.options.relativeDelay, {
+				this.deps.actionRunner.runMultipleActions(enabledActions, this.controlId, this.options.relativeDelay, {
 					surfaceId,
 				})
 			}

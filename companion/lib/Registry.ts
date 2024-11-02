@@ -31,6 +31,7 @@ import { InternalTriggers } from './Internal/Triggers.js'
 import { InternalVariables } from './Internal/Variables.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
+import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
@@ -86,7 +87,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The cloud controller
 	 */
-	cloud: CloudController
+	#cloud: CloudController
 	/**
 	 * The core controls controller
 	 */
@@ -118,7 +119,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The core page controller
 	 */
-	preview: GraphicsPreview
+	#preview: GraphicsPreview
 	/**
 	 * The core service controller
 	 */
@@ -127,10 +128,6 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	 * The core device controller
 	 */
 	surfaces: SurfaceController
-	/**
-	 * The modules' event emitter interface
-	 */
-	system: EventEmitter
 	/**
 	 * The core user config manager
 	 */
@@ -141,14 +138,14 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	 */
 	internalModule: InternalController
 
-	importExport: ImportExportController
+	#importExport: ImportExportController
 
-	metrics: DataMetrics
+	#metrics: DataMetrics
 
 	/**
 	 * The 'data' controller
 	 */
-	readonly data: DataController
+	readonly #data: DataController
 
 	/**
 	 * The 'ui' controller
@@ -158,7 +155,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * Express Router for /int api endpoints
 	 */
-	readonly api_router = express.Router()
+	readonly internalApiRouter = express.Router()
 
 	variables: VariablesController
 
@@ -190,13 +187,13 @@ export class Registry extends EventEmitter<RegistryEvents> {
 
 		this.#logger.debug('constructing core modules')
 
-		this.ui = new UIController(this)
+		this.ui = new UIController(this.appInfo, this.internalApiRouter)
 		this.io = this.ui.io
 		LogController.init(this.appInfo, this.ui.io)
 
 		this.db = new DataDatabase(this.appInfo.configDir)
-		this.data = new DataController(this)
-		this.userconfig = this.data.userconfig
+		this.#data = new DataController(this)
+		this.userconfig = this.#data.userconfig
 	}
 
 	/**
@@ -210,11 +207,13 @@ export class Registry extends EventEmitter<RegistryEvents> {
 
 		this.ui.init()
 
+		const controlEvents = new EventEmitter<ControlCommonEvents>()
+
 		this.page = new PageController(this)
-		this.controls = new ControlsController(this)
+		this.controls = new ControlsController(this, controlEvents)
 		this.variables = new VariablesController(this.db, this.io)
 		this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
-		this.preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
+		this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
 		this.surfaces = new SurfaceController(
 			this.db,
 			{
@@ -231,17 +230,19 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		this.instance = new InstanceController(
 			this.io,
 			this.db,
-			this.api_router,
+			this.internalApiRouter,
 			this.controls,
 			this.graphics,
 			this.page,
 			this.variables,
 			oscSender
 		)
+		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
+
 		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
-		this.importExport = new ImportExportController(
+		this.#importExport = new ImportExportController(
 			this.appInfo,
-			this.api_router,
+			this.internalApiRouter,
 			this.io,
 			this.controls,
 			this.graphics,
@@ -267,12 +268,12 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		)
 		this.internalModule.init()
 
-		this.metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
-		this.services = new ServiceController(this, oscSender)
-		this.cloud = new CloudController(
+		this.#metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
+		this.services = new ServiceController(this, oscSender, controlEvents)
+		this.#cloud = new CloudController(
 			this.appInfo,
 			this.db,
-			this.data.cache,
+			this.#data.cache,
 			this.controls,
 			this.graphics,
 			this.io,
@@ -282,27 +283,27 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		this.ui.io.on('clientConnect', (client) => {
 			LogController.clientConnect(client)
 			this.ui.clientConnect(client)
-			this.data.clientConnect(client)
+			this.#data.clientConnect(client)
 			this.page.clientConnect(client)
 			this.controls.clientConnect(client)
-			this.preview.clientConnect(client)
+			this.#preview.clientConnect(client)
 			this.surfaces.clientConnect(client)
 			this.instance.clientConnect(client)
-			this.cloud.clientConnect(client)
+			this.#cloud.clientConnect(client)
 			this.services.clientConnect(client)
-			this.importExport.clientConnect(client)
+			this.#importExport.clientConnect(client)
 		})
 
 		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
 			this.internalModule.variablesChanged(all_changed_variables_set)
 			this.controls.onVariablesChanged(all_changed_variables_set)
 			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-			this.preview.onVariablesChanged(all_changed_variables_set)
+			this.#preview.onVariablesChanged(all_changed_variables_set)
 			this.surfaces.onVariablesChanged(all_changed_variables_set)
 		})
 
 		// old 'modules_loaded' events
-		this.metrics.startCycle()
+		this.#metrics.startCycle()
 
 		this.controls.init()
 		this.controls.verifyConnectionIds()
@@ -365,7 +366,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 
 			// Save the db to disk
 			this.db.close()
-			this.data.cache.close()
+			this.#data.cache.close()
 
 			try {
 				this.surfaces.quit()

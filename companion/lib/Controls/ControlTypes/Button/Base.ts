@@ -11,10 +11,10 @@ import type {
 } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
-import type { Registry } from '../../../Registry.js'
-import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
-import { CompanionVariableValues } from '@companion-module/base'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type { ControlDependencies } from '../../ControlDependencies.js'
 
 /**
  * Abstract class for a editable button control.
@@ -87,13 +87,13 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 */
 	steps: Record<string, FragmentActions> = {}
 
-	constructor(registry: Registry, controlId: string, debugNamespace: string) {
-		super(registry, controlId, debugNamespace)
+	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+		super(deps, controlId, debugNamespace)
 
 		this.feedbacks = new FragmentFeedbacks(
-			registry.instance.definitions,
-			registry.internalModule,
-			registry.instance.moduleHost,
+			deps.instance.definitions,
+			deps.internalModule,
+			deps.instance.moduleHost,
 			controlId,
 			this.commitChange.bind(this),
 			this.triggerRedraw.bind(this),
@@ -122,7 +122,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		// Figure out the combined status
 		let status: ButtonStatus = 'good'
 		for (const connectionId of connectionIds) {
-			const connectionStatus = this.instance.getConnectionStatus(connectionId)
+			const connectionStatus = this.deps.instance.getConnectionStatus(connectionId)
 			if (connectionStatus) {
 				// TODO - can this be made simpler
 				switch (connectionStatus.category) {
@@ -205,7 +205,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Get the size of the bitmap render of this control
 	 */
 	getBitmapSize(): { width: number; height: number } | null {
-		return GetButtonBitmapSize(this.userconfig, this.feedbacks.baseStyle)
+		return GetButtonBitmapSize(this.deps.userconfig, this.feedbacks.baseStyle)
 	}
 
 	/**
@@ -218,7 +218,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		if (style.text) {
 			// Block out the button text
 			const injectedVariableValues: CompanionVariableValues = {}
-			const location = this.page.getLocationOfControlId(this.controlId)
+			const location = this.deps.page.getLocationOfControlId(this.controlId)
 			if (location) {
 				// Ensure we don't enter into an infinite loop
 				// TODO - legacy location variables?
@@ -227,7 +227,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 			if (style.textExpression) {
 				try {
-					const parseResult = this.variablesController.values.executeExpression(
+					const parseResult = this.deps.variables.values.executeExpression(
 						style.text,
 						location,
 						undefined,
@@ -242,7 +242,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 					this.last_draw_variables = null
 				}
 			} else {
-				const parseResult = this.variablesController.values.parseVariables(style.text, location, injectedVariableValues)
+				const parseResult = this.deps.variables.values.parseVariables(style.text, location, injectedVariableValues)
 				style.text = parseResult.text
 				this.last_draw_variables = parseResult.variableIds.length > 0 ? new Set(parseResult.variableIds) : null
 			}
@@ -327,7 +327,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		// Fix up references
 		const changed = ReferencesVisitors.fixupControlReferences(
-			this.internalModule,
+			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			this.feedbacks.baseStyle,
 			allActions,
@@ -371,9 +371,10 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		if (this.pushed !== wasPushed) {
 			// TODO - invalidate feedbacks?
 
-			const location = this.page.getLocationOfControlId(this.controlId)
+			const location = this.deps.page.getLocationOfControlId(this.controlId)
 			if (location) {
-				this.services.emberplus.updateButtonState(location, this.pushed, surfaceId)
+				this.deps.events.emit('updateButtonState', location, this.pushed, surfaceId)
+				// this.deps.services.emberplus.updateButtonState(location, this.pushed, surfaceId)
 			}
 
 			this.triggerRedraw()

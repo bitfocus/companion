@@ -10,8 +10,8 @@ import type {
 	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../IControlFragments.js'
-import type { Registry } from '../../Registry.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlDependencies } from '../ControlDependencies.js'
 
 /**
  * Class for a pagedown button control.
@@ -62,8 +62,8 @@ export class ControlButtonPageDown
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(registry: Registry, controlId: string, storage: PageDownButtonModel | null, isImport: boolean) {
-		super(registry, controlId, 'Controls/Button/Pagedown')
+	constructor(deps: ControlDependencies, controlId: string, storage: PageDownButtonModel | null, isImport: boolean) {
+		super(deps, controlId, 'Controls/Button/Pagedown')
 
 		if (!storage) {
 			// New control
@@ -112,7 +112,7 @@ export class ControlButtonPageDown
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {
-			this.surfaces.devicePageDown(surfaceId)
+			this.deps.surfaces.devicePageDown(surfaceId)
 		}
 	}
 

@@ -15,6 +15,8 @@ import { ServiceVideohubPanel } from './VideohubPanel.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import { ServiceSatelliteWebsocket } from './SatelliteWebsocket.js'
+import type { EventEmitter } from 'events'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
 /**
  * Class that manages all of the services.
@@ -53,7 +55,7 @@ export class ServiceController {
 	readonly bonjourDiscovery: ServiceBonjourDiscovery
 	readonly surfaceDiscovery: ServiceSurfaceDiscovery
 
-	constructor(registry: Registry, oscSender: ServiceOscSender) {
+	constructor(registry: Registry, oscSender: ServiceOscSender, controlEvents: EventEmitter<ControlCommonEvents>) {
 		this.httpApi = new ServiceHttpApi(registry, registry.ui.express)
 		this.https = new ServiceHttps(registry, registry.ui.express)
 		this.oscSender = oscSender
@@ -69,6 +71,10 @@ export class ServiceController {
 		this.videohubPanel = new ServiceVideohubPanel(registry)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(registry)
 		this.surfaceDiscovery = new ServiceSurfaceDiscovery(registry)
+
+		controlEvents.on('updateButtonState', (location, pushed, surfaceId) => {
+			this.emberplus.updateButtonState(location, pushed, surfaceId)
+		})
 	}
 
 	/**
