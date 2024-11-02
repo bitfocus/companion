@@ -205,7 +205,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Get the size of the bitmap render of this control
 	 */
 	getBitmapSize(): { width: number; height: number } | null {
-		return GetButtonBitmapSize(this.registry, this.feedbacks.baseStyle)
+		return GetButtonBitmapSize(this.userconfig, this.feedbacks.baseStyle)
 	}
 
 	/**

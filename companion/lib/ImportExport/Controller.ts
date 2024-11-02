@@ -22,7 +22,6 @@ import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
 import { getTimestamp, isFalsey } from '../Resources/Util.js'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
-import { CoreBase } from '../Core/Base.js'
 import archiver from 'archiver'
 import path from 'path'
 import fs from 'fs'
@@ -46,7 +45,7 @@ import type {
 	SomeExportv4,
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo } from '../Registry.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type {
 	ClientExportSelection,
@@ -55,7 +54,7 @@ import type {
 	ClientResetSelection,
 	ConnectionRemappings,
 } from '@companion-app/shared/Model/ImportExport.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
@@ -63,6 +62,15 @@ import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel
 import type { ActionInstance, ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { InternalController } from '../Internal/Controller.js'
+import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 
 function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 	if (raw === 'json-gz' || raw === 'json' || raw === 'yaml') return raw
@@ -159,14 +167,48 @@ const find_smallest_grid_for_page = (pageInfo: ExportPageContentv4): UserConfigG
 	return gridSize
 }
 
-export class ImportExportController extends CoreBase {
+export class ImportExportController {
+	readonly #logger = LogController.createLogger('ImportExport/Controller')
+
+	readonly #appInfo: AppInfo
+	readonly #io: UIHandler
+	readonly #controlsController: ControlsController
+	readonly #graphicsController: GraphicsController
+	readonly #instancesController: InstanceController
+	readonly #internalModule: InternalController
+	readonly #pagesController: PageController
+	readonly #surfacesController: SurfaceController
+	readonly #userConfigController: DataUserConfig
+	readonly #variablesController: VariablesController
+
 	/**
 	 * If there is a current import task that clients should be aware of, this will be set
 	 */
 	#currentImportTask: 'reset' | 'import' | null = null
 
-	constructor(registry: Registry) {
-		super(registry, 'Data/ImportExport')
+	constructor(
+		appInfo: AppInfo,
+		apiRouter: express.Router,
+		io: UIHandler,
+		controls: ControlsController,
+		graphics: GraphicsController,
+		instance: InstanceController,
+		internalModule: InternalController,
+		page: PageController,
+		surfaces: SurfaceController,
+		userconfig: DataUserConfig,
+		variablesController: VariablesController
+	) {
+		this.#appInfo = appInfo
+		this.#io = io
+		this.#controlsController = controls
+		this.#graphicsController = graphics
+		this.#instancesController = instance
+		this.#internalModule = internalModule
+		this.#pagesController = page
+		this.#surfacesController = surfaces
+		this.#userConfigController = userconfig
+		this.#variablesController = variablesController
 
 		const generate_export_for_referenced_instances = (
 			referencedConnectionIds: Set<string>,
@@ -177,14 +219,14 @@ export class ImportExportController extends CoreBase {
 
 			referencedConnectionIds.delete('internal') // Ignore the internal module
 			for (const connectionId of referencedConnectionIds) {
-				instancesExport[connectionId] = this.instance.exportInstance(connectionId, minimalExport)
+				instancesExport[connectionId] = this.#instancesController.exportInstance(connectionId, minimalExport)
 			}
 
 			referencedConnectionLabels.delete('internal') // Ignore the internal module
 			for (const label of referencedConnectionLabels) {
-				const connectionId = this.instance.getIdForLabel(label)
+				const connectionId = this.#instancesController.getIdForLabel(label)
 				if (connectionId) {
-					instancesExport[connectionId] = this.instance.exportInstance(connectionId, minimalExport)
+					instancesExport[connectionId] = this.#instancesController.exportInstance(connectionId, minimalExport)
 				}
 			}
 
@@ -194,8 +236,8 @@ export class ImportExportController extends CoreBase {
 		//Parse variables and generate filename based on export type
 		const generateFilename = (filename: string, exportType: string, fileExt: string): string => {
 			//If the user isn't using their default file name, don't append any extra info in file name since it was a manual choice
-			const useDefault = filename == this.userconfig.getKey('default_export_filename')
-			const parsedName = this.variablesController.values.parseVariables(filename, null).text
+			const useDefault = filename == this.#userConfigController.getKey('default_export_filename')
+			const parsedName = this.#variablesController.values.parseVariables(filename, null).text
 
 			return parsedName && parsedName !== 'undefined'
 				? encodeURI(`${parsedName}${exportType && useDefault ? '_' + exportType : ''}.${fileExt}`)
@@ -228,35 +270,35 @@ export class ImportExportController extends CoreBase {
 			}
 		}
 
-		this.registry.api_router.get('/export/triggers/all', (req, res, next) => {
-			const triggerControls = this.controls.getAllTriggers()
+		apiRouter.get('/export/triggers/all', (req, res, next) => {
+			const triggerControls = this.#controlsController.getAllTriggers()
 			const exp = generate_export_for_triggers(triggerControls)
 
 			const filename = generateFilename(String(req.query.filename), 'trigger_list', 'companionconfig')
 
-			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
 
-		this.registry.api_router.get('/export/triggers/single/:id', (req, res, next) => {
-			const control = this.controls.getTrigger(req.params.id)
+		apiRouter.get('/export/triggers/single/:id', (req, res, next) => {
+			const control = this.#controlsController.getTrigger(req.params.id)
 			if (control) {
 				const exp = generate_export_for_triggers([control])
 
 				const triggerName = control.options.name.toLowerCase().replace(/\W/, '')
 				const filename = generateFilename(String(req.query.filename), `trigger_${triggerName}`, 'companionconfig')
 
-				downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+				downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 			} else {
 				next()
 			}
 		})
 
-		this.registry.api_router.get('/export/page/:page', (req, res, next) => {
+		apiRouter.get('/export/page/:page', (req, res, next) => {
 			const page = Number(req.params.page)
 			if (isNaN(page)) {
 				next()
 			} else {
-				const pageInfo = this.page.getPageInfo(page, true)
+				const pageInfo = this.#pagesController.getPageInfo(page, true)
 				if (!pageInfo) throw new Error(`Page "${page}" not found!`)
 
 				const referencedConnectionIds = new Set<string>()
@@ -280,7 +322,7 @@ export class ImportExportController extends CoreBase {
 
 				const filename = generateFilename(String(req.query.filename), `page${page}`, 'companionconfig')
 
-				downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+				downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 			}
 		})
 
@@ -292,12 +334,12 @@ export class ImportExportController extends CoreBase {
 			const pageExport: ExportPageContentv4 = {
 				name: pageInfo.name,
 				controls: {},
-				gridSize: this.userconfig.getKey('gridSize'),
+				gridSize: this.#userConfigController.getKey('gridSize'),
 			}
 
 			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 				for (const [column, controlId] of Object.entries(rowObj)) {
-					const control = this.controls.getControl(controlId)
+					const control = this.#controlsController.getControl(controlId)
 					if (controlId && control && control.type !== 'trigger') {
 						if (!pageExport.controls[Number(row)]) pageExport.controls[Number(row)] = {}
 						pageExport.controls[Number(row)][Number(column)] = control.toJSON(false)
@@ -317,7 +359,7 @@ export class ImportExportController extends CoreBase {
 				type: 'full',
 			}
 
-			const rawControls = this.controls.getAllControls()
+			const rawControls = this.#controlsController.getAllControls()
 
 			const referencedConnectionIds = new Set<string>()
 			const referencedConnectionLabels = new Set<string>()
@@ -325,7 +367,7 @@ export class ImportExportController extends CoreBase {
 			if (!config || !isFalsey(config.buttons)) {
 				exp.pages = {}
 
-				const pageInfos = this.page.getAll()
+				const pageInfos = this.#pagesController.getAll()
 				for (const [pageNumber, rawPageInfo] of Object.entries(pageInfos)) {
 					exp.pages[Number(pageNumber)] = generatePageExportInfo(
 						rawPageInfo,
@@ -351,11 +393,11 @@ export class ImportExportController extends CoreBase {
 			}
 
 			if (!config || !isFalsey(config.customVariables)) {
-				exp.custom_variables = this.variablesController.custom.getDefinitions()
+				exp.custom_variables = this.#variablesController.custom.getDefinitions()
 			}
 
 			if (!config || !isFalsey(config.connections)) {
-				exp.instances = this.instance.exportAll(false)
+				exp.instances = this.#instancesController.exportAll(false)
 			} else {
 				exp.instances = generate_export_for_referenced_instances(
 					referencedConnectionIds,
@@ -365,39 +407,39 @@ export class ImportExportController extends CoreBase {
 			}
 
 			if (!config || !isFalsey(config.surfaces)) {
-				exp.surfaces = this.surfaces.exportAll(false)
-				exp.surfaceGroups = this.surfaces.exportAllGroups(false)
+				exp.surfaces = this.#surfacesController.exportAll(false)
+				exp.surfaceGroups = this.#surfacesController.exportAllGroups(false)
 			}
 
 			return exp
 		}
 
-		this.registry.api_router.get('/export/custom', (req, res, next) => {
+		apiRouter.get('/export/custom', (req, res, next) => {
 			// @ts-expect-error
 			const exp = generateCustomExport(req.query)
 
 			const filename = generateFilename(String(req.query.filename), '', 'companionconfig')
 
-			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
 
-		this.registry.api_router.get('/export/full', (req, res, next) => {
+		apiRouter.get('/export/full', (req, res, next) => {
 			const exp = generateCustomExport(null)
 
 			const filename = generateFilename(
-				String(this.userconfig.getKey('default_export_filename')),
+				String(this.#userConfigController.getKey('default_export_filename')),
 				'full_config',
 				'companionconfig'
 			)
 
-			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
 
-		this.registry.api_router.get('/export/log', (_req, res, _next) => {
+		apiRouter.get('/export/log', (_req, res, _next) => {
 			const logs = LogController.getAllLines()
 
 			const filename = generateFilename(
-				String(this.userconfig.getKey('default_export_filename')),
+				String(this.#userConfigController.getKey('default_export_filename')),
 				'companion_log',
 				'csv'
 			)
@@ -416,7 +458,7 @@ export class ImportExportController extends CoreBase {
 			res.end(csvOut)
 		})
 
-		this.registry.api_router.get('/export/support', (_req, res, _next) => {
+		apiRouter.get('/export/support', (_req, res, _next) => {
 			// Export support zip
 			const archive = archiver('zip', { zlib: { level: 9 } })
 
@@ -426,12 +468,12 @@ export class ImportExportController extends CoreBase {
 
 			//on stream closed we can end the request
 			archive.on('end', () => {
-				this.logger.debug(`Support export wrote ${+archive.pointer()} bytes`)
+				this.#logger.debug(`Support export wrote ${+archive.pointer()} bytes`)
 			})
 
 			//set the archive name
 			const filename = generateFilename(
-				String(this.userconfig.getKey('default_export_filename')),
+				String(this.#userConfigController.getKey('default_export_filename')),
 				'companion-config',
 				'zip'
 			)
@@ -443,7 +485,7 @@ export class ImportExportController extends CoreBase {
 			archive.glob(
 				'*',
 				{
-					cwd: this.registry.appInfo.configDir,
+					cwd: this.#appInfo.configDir,
 					nodir: true,
 					ignore: [
 						'cloud', // Ignore companion-cloud credentials
@@ -453,7 +495,7 @@ export class ImportExportController extends CoreBase {
 			)
 
 			// Add the logs if found
-			const logsDir = path.join(this.registry.appInfo.configDir, '../logs')
+			const logsDir = path.join(this.#appInfo.configDir, '../logs')
 			if (fs.existsSync(logsDir)) {
 				archive.glob(
 					'*',
@@ -479,11 +521,11 @@ export class ImportExportController extends CoreBase {
 			}
 
 			try {
-				const payload = this.registry.ui.update.compilePayload()
+				const payload = compileUpdatePayload(this.#appInfo)
 				let out = JSON.stringify(payload)
 				archive.append(out, { name: 'user.json' })
 			} catch (e) {
-				this.logger.debug(`Support bundle append user: ${e}`)
+				this.#logger.debug(`Support bundle append user: ${e}`)
 			}
 
 			archive.finalize()
@@ -494,13 +536,13 @@ export class ImportExportController extends CoreBase {
 		if (this.#currentImportTask) throw new Error('Another operation is in progress')
 
 		this.#currentImportTask = newTaskType
-		this.io.emitToAll('load-save:task', this.#currentImportTask)
+		this.#io.emitToAll('load-save:task', this.#currentImportTask)
 
 		try {
 			return await executeFn()
 		} finally {
 			this.#currentImportTask = null
-			this.io.emitToAll('load-save:task', this.#currentImportTask)
+			this.#io.emitToAll('load-save:task', this.#currentImportTask)
 		}
 	}
 
@@ -592,7 +634,7 @@ export class ImportExportController extends CoreBase {
 				if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
 
 				clientObject.instances[instanceId] = {
-					instance_type: this.instance.modules.verifyInstanceTypeIsCurrent(instance.instance_type),
+					instance_type: this.#instancesController.modules.verifyInstanceTypeIsCurrent(instance.instance_type),
 					label: instance.label,
 					sortOrder: instance.sortOrder,
 				}
@@ -647,7 +689,7 @@ export class ImportExportController extends CoreBase {
 			const controlObj = importPage.controls?.[location.row]?.[location.column]
 			if (!controlObj) return null
 
-			const res = await this.graphics.drawPreview({
+			const res = await this.#graphicsController.drawPreview({
 				...controlObj.style,
 				style: controlObj.type,
 			})
@@ -674,7 +716,7 @@ export class ImportExportController extends CoreBase {
 
 				// import custom variables
 				if (!config || config.customVariables) {
-					this.variablesController.custom.replaceDefinitions(data.custom_variables || {})
+					this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
 				}
 
 				// Always Import instances
@@ -687,14 +729,17 @@ export class ImportExportController extends CoreBase {
 
 						const pageNumber = Number(pageNumber0)
 						if (isNaN(pageNumber)) {
-							this.logger.warn(`Invalid page number: ${pageNumber0}`)
+							this.#logger.warn(`Invalid page number: ${pageNumber0}`)
 							continue
 						}
 
 						// Ensure the page exists
-						const insertPageCount = pageNumber - this.page.getPageCount()
+						const insertPageCount = pageNumber - this.#pagesController.getPageCount()
 						if (insertPageCount > 0) {
-							this.page.insertPages(this.page.getPageCount() + 1, new Array(insertPageCount).fill('Page'))
+							this.#pagesController.insertPages(
+								this.#pagesController.getPageCount() + 1,
+								new Array(insertPageCount).fill('Page')
+							)
 						}
 
 						doPageImport(pageInfo, pageNumber, instanceIdMap)
@@ -702,20 +747,20 @@ export class ImportExportController extends CoreBase {
 				}
 
 				if (!config || config.surfaces) {
-					this.surfaces.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
+					this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
 				}
 
 				if (!config || config.triggers) {
 					for (const [id, trigger] of Object.entries(data.triggers || {})) {
 						const controlId = CreateTriggerControlId(id)
 						const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-						this.controls.importTrigger(controlId, fixedControlObj)
+						this.#controlsController.importTrigger(controlId, fixedControlObj)
 					}
 				}
 
 				// trigger startup triggers to run
 				setImmediate(() => {
-					this.controls.triggers.emit('startup')
+					this.#controlsController.triggers.emit('startup')
 				})
 			})
 		})
@@ -728,7 +773,7 @@ export class ImportExportController extends CoreBase {
 			{
 				// Ensure the configured grid size is large enough for the import
 				const requiredSize = pageInfo.gridSize || find_smallest_grid_for_page(pageInfo)
-				const currentSize = this.userconfig.getKey('gridSize')
+				const currentSize = this.#userConfigController.getKey('gridSize')
 				const updatedSize: Partial<UserConfigGridSize> = {}
 				if (currentSize.minColumn > requiredSize.minColumn) updatedSize.minColumn = Number(requiredSize.minColumn)
 				if (currentSize.maxColumn < requiredSize.maxColumn) updatedSize.maxColumn = Number(requiredSize.maxColumn)
@@ -736,7 +781,7 @@ export class ImportExportController extends CoreBase {
 				if (currentSize.maxRow < requiredSize.maxRow) updatedSize.maxRow = Number(requiredSize.maxRow)
 
 				if (Object.keys(updatedSize).length > 0) {
-					this.userconfig.setKey('gridSize', {
+					this.#userConfigController.setKey('gridSize', {
 						...currentSize,
 						...updatedSize,
 					})
@@ -744,7 +789,7 @@ export class ImportExportController extends CoreBase {
 			}
 
 			// Import the new page
-			this.page.setPageName(topage, pageInfo.name)
+			this.#pagesController.setPageName(topage, pageInfo.name)
 
 			// Import the controls
 			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
@@ -758,7 +803,7 @@ export class ImportExportController extends CoreBase {
 							column: Number(column),
 							row: Number(row),
 						}
-						this.controls.importControl(location, fixedControlObj)
+						this.#controlsController.importControl(location, fixedControlObj)
 					}
 				}
 			}
@@ -771,11 +816,11 @@ export class ImportExportController extends CoreBase {
 
 				if (topage === -1) {
 					// Add a new page at the end
-					const currentPageCount = this.page.getPageCount()
+					const currentPageCount = this.#pagesController.getPageCount()
 					topage = currentPageCount + 1
-					this.page.insertPages(topage, ['Importing Page'])
+					this.#pagesController.insertPages(topage, ['Importing Page'])
 				} else {
-					const oldPageInfo = this.page.getPageInfo(topage, false)
+					const oldPageInfo = this.#pagesController.getPageInfo(topage, false)
 					if (!oldPageInfo) throw new Error('Invalid target page')
 				}
 
@@ -801,9 +846,9 @@ export class ImportExportController extends CoreBase {
 				const instanceIdMap = this.#importInstances(data.instances, instanceRemapping)
 
 				// Cleanup the old page
-				const discardedControlIds = this.page.resetPage(topage)
+				const discardedControlIds = this.#pagesController.resetPage(topage)
 				for (const controlId of discardedControlIds) {
-					this.controls.deleteControl(controlId)
+					this.#controlsController.deleteControl(controlId)
 				}
 
 				doPageImport(pageInfo, topage, instanceIdMap)
@@ -827,10 +872,10 @@ export class ImportExportController extends CoreBase {
 
 				// Remove existing triggers
 				if (replaceExisting) {
-					const controls = this.controls.getAllControls()
+					const controls = this.#controlsController.getAllControls()
 					for (const [controlId, control] of controls.entries()) {
 						if (control.type === 'trigger') {
-							this.controls.deleteControl(controlId)
+							this.#controlsController.deleteControl(controlId)
 						}
 					}
 				}
@@ -844,10 +889,10 @@ export class ImportExportController extends CoreBase {
 
 					let controlId = CreateTriggerControlId(id)
 					// If trigger already exists, generate a new id
-					if (this.controls.getControl(controlId)) controlId = CreateTriggerControlId(nanoid())
+					if (this.#controlsController.getControl(controlId)) controlId = CreateTriggerControlId(nanoid())
 
 					const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-					this.controls.importTrigger(controlId, fixedControlObj)
+					this.#controlsController.importTrigger(controlId, fixedControlObj)
 				}
 
 				// Report the used remap to the ui, for future imports
@@ -862,53 +907,53 @@ export class ImportExportController extends CoreBase {
 	}
 
 	async #reset(config: ClientResetSelection | undefined, skipNavButtons = false): Promise<'ok'> {
-		const controls = this.controls.getAllControls()
+		const controls = this.#controlsController.getAllControls()
 
 		if (!config || config.buttons) {
 			for (const [controlId, control] of controls.entries()) {
 				if (control.type !== 'trigger') {
-					this.controls.deleteControl(controlId)
+					this.#controlsController.deleteControl(controlId)
 				}
 			}
 
 			// Reset page 1
-			this.page.resetPage(1) // Note: controls were already deleted above
+			this.#pagesController.resetPage(1) // Note: controls were already deleted above
 			if (!skipNavButtons) {
-				this.page.createPageDefaultNavButtons(1)
+				this.#pagesController.createPageDefaultNavButtons(1)
 			}
 
 			// Delete other pages
-			const pageCount = this.page.getPageCount()
+			const pageCount = this.#pagesController.getPageCount()
 			for (let pageNumber = pageCount; pageNumber >= 2; pageNumber--) {
-				this.page.deletePage(pageNumber) // Note: controls were already deleted above
+				this.#pagesController.deletePage(pageNumber) // Note: controls were already deleted above
 			}
 
 			// reset the size
-			this.userconfig.resetKey('gridSize')
+			this.#userConfigController.resetKey('gridSize')
 		}
 
 		if (!config || config.connections) {
-			await this.instance.deleteAllInstances()
+			await this.#instancesController.deleteAllInstances()
 		}
 
 		if (!config || config.surfaces) {
-			await this.surfaces.reset()
+			await this.#surfacesController.reset()
 		}
 
 		if (!config || config.triggers) {
 			for (const [controlId, control] of controls.entries()) {
 				if (control.type === 'trigger') {
-					this.controls.deleteControl(controlId)
+					this.#controlsController.deleteControl(controlId)
 				}
 			}
 		}
 
 		if (!config || config.customVariables) {
-			this.variablesController.custom.reset()
+			this.#variablesController.custom.reset()
 		}
 
 		if (!config || config.userconfig) {
-			this.userconfig.reset()
+			this.#userConfigController.reset()
 		}
 
 		return 'ok'
@@ -929,7 +974,7 @@ export class ImportExportController extends CoreBase {
 				if (!obj) continue
 
 				const remapId = instanceRemapping[oldId]
-				const remapConfig = remapId ? this.instance.getInstanceConfig(remapId) : undefined
+				const remapConfig = remapId ? this.#instancesController.getInstanceConfig(remapId) : undefined
 				if (remapId === '_ignore') {
 					// Ignore
 					instanceIdMap[oldId] = { id: '_ignore', label: 'Ignore' }
@@ -943,13 +988,17 @@ export class ImportExportController extends CoreBase {
 					}
 				} else {
 					// Create a new instance
-					const instance_type = this.instance.modules.verifyInstanceTypeIsCurrent(obj.instance_type)
-					const [newId, newConfig] = this.instance.addInstanceWithLabel({ type: instance_type }, obj.label, true)
+					const instance_type = this.#instancesController.modules.verifyInstanceTypeIsCurrent(obj.instance_type)
+					const [newId, newConfig] = this.#instancesController.addInstanceWithLabel(
+						{ type: instance_type },
+						obj.label,
+						true
+					)
 					if (newId && newConfig) {
-						this.instance.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null)
+						this.#instancesController.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null)
 
 						if (!('enabled' in obj) || obj.enabled !== false) {
-							this.instance.enableDisableInstance(newId, true)
+							this.#instancesController.enableDisableInstance(newId, true)
 						}
 
 						instanceIdMap[oldId] = {
@@ -1033,7 +1082,7 @@ export class ImportExportController extends CoreBase {
 		}
 
 		ReferencesVisitors.fixupControlReferences(
-			this.internalModule,
+			this.#internalModule,
 			{
 				connectionLabels: connectionLabelRemap,
 				connectionIds: connectionIdRemap,
@@ -1126,7 +1175,7 @@ export class ImportExportController extends CoreBase {
 		}
 
 		ReferencesVisitors.fixupControlReferences(
-			this.internalModule,
+			this.#internalModule,
 			{
 				connectionLabels: connectionLabelRemap,
 				connectionIds: connectionIdRemap,

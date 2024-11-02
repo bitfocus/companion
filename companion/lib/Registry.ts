@@ -239,7 +239,19 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			oscSender
 		)
 		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
-		this.importExport = new ImportExportController(this)
+		this.importExport = new ImportExportController(
+			this.appInfo,
+			this.api_router,
+			this.io,
+			this.controls,
+			this.graphics,
+			this.instance,
+			this.internalModule,
+			this.page,
+			this.surfaces,
+			this.userconfig,
+			this.variables
+		)
 
 		this.internalModule.addFragments(
 			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
