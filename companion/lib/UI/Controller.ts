@@ -13,8 +13,6 @@ export class UIController {
 	constructor(registry: Registry) {
 		this.express = new UIExpress(registry)
 		this.server = new UIServer(this.express.app)
-		registry.on('http_rebind', this.server.rebindHttp.bind(this.server))
-
 		this.io = new UIHandler(registry.appInfo, this.server)
 		this.update = new UIUpdate(registry.appInfo, this.io)
 	}
@@ -24,5 +22,9 @@ export class UIController {
 	 */
 	clientConnect(client: ClientSocket): void {
 		this.update.clientConnect(client)
+	}
+
+	init() {
+		this.update.init()
 	}
 }

@@ -47,7 +47,8 @@ export class UIServer extends HttpServer {
 				} else {
 					this.#logger.error(e)
 				}
-			}).listen(http_port, bind_ip, () => {
+			})
+			this.listen(http_port, bind_ip, () => {
 				const address0 = this.address()
 				const address = typeof address0 === 'object' ? address0 : undefined
 

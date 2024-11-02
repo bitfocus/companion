@@ -37,7 +37,9 @@ export class UIUpdate {
 		this.#logger.silly('loading update')
 		this.#appInfo = appInfo
 		this.#ioController = ioController
+	}
 
+	init() {
 		// Make a request now
 		this.#requestUpdate()
 		setInterval(

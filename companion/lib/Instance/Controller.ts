@@ -263,7 +263,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 							this.definitions.forgetConnection(id)
 							this.#variablesController.values.forgetConnection(id, label)
 							this.#variablesController.definitions.forgetConnection(id, label)
-							this.controls.clearConnectionState(id)
+							this.#controlsController.clearConnectionState(id)
 						})
 				} else {
 					this.#activate_module(id)
@@ -303,7 +303,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.definitions.forgetConnection(id)
 		this.#variablesController.values.forgetConnection(id, label)
 		this.#variablesController.definitions.forgetConnection(id, label)
-		this.controls.forgetConnection(id)
+		this.#controlsController.forgetConnection(id)
 	}
 
 	async deleteAllInstances(): Promise<void> {

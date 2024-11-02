@@ -15,69 +15,73 @@
  *
  */
 
-import { CoreBase } from '../Core/Base.js'
-import { InternalActionRecorder } from './ActionRecorder.js'
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
-import { InternalInstance } from './Instance.js'
-import { InternalTime } from './Time.js'
-import { InternalControls } from './Controls.js'
-import { InternalCustomVariables } from './CustomVariables.js'
-import { InternalSurface } from './Surface.js'
-import { InternalSystem } from './System.js'
-import { InternalTriggers } from './Triggers.js'
-import { InternalVariables } from './Variables.js'
 import { cloneDeep } from 'lodash-es'
-import { InternalPage } from './Page.js'
 import { ParseInternalControlReference } from './Util.js'
-import type { Registry } from '../Registry.js'
 import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { FragmentFeedbackInstance } from '../Controls/Fragments/FragmentFeedbackInstance.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
-import type { NewFeedbackValue } from '../Controls/Controller.js'
+import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
 import type { VariablesCache } from '../Variables/Util.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { InstanceDefinitions } from '../Instance/Definitions.js'
+import type { PageController } from '../Page/Controller.js'
+import LogController from '../Log/Controller.js'
 
-export class InternalController extends CoreBase {
-	readonly #feedbacks = new Map<string, import('./Types.js').FeedbackInstanceExt>()
+export class InternalController {
+	readonly #logger = LogController.createLogger('Internal/Controller')
 
-	readonly #buildingBlocksFragment: InternalBuildingBlocks
+	readonly #controlsController: ControlsController
+	readonly #pageController: PageController
+	readonly #instanceDefinitions: InstanceDefinitions
+	readonly #variablesController: VariablesController
 
-	readonly fragments: InternalModuleFragment[]
+	readonly #feedbacks = new Map<string, FeedbackInstanceExt>()
 
-	constructor(registry: Registry) {
-		super(registry, 'Internal/Controller')
+	readonly #buildingBlocksFragment = new InternalBuildingBlocks()
+	readonly #fragments: InternalModuleFragment[]
 
-		this.#buildingBlocksFragment = new InternalBuildingBlocks()
+	#initialized = false
 
-		this.fragments = [
-			new InternalActionRecorder(this, registry.controls.actionRecorder, registry.page),
-			this.#buildingBlocksFragment,
-			new InternalInstance(this, registry.instance),
-			new InternalTime(this),
-			new InternalControls(this, registry.graphics, registry.controls, registry.page, registry.variables.values),
-			new InternalCustomVariables(this, registry.variables),
-			new InternalPage(this, registry.page),
-			new InternalSurface(this, registry.surfaces, registry.controls, registry.page),
-			new InternalSystem(this, registry),
-			new InternalTriggers(this, registry.controls),
-			new InternalVariables(this, registry.variables.values),
-		]
+	constructor(
+		controlsController: ControlsController,
+		pageController: PageController,
+		instanceDefinitions: InstanceDefinitions,
+		variablesController: VariablesController
+	) {
+		this.#controlsController = controlsController
+		this.#pageController = pageController
+		this.#instanceDefinitions = instanceDefinitions
+		this.#variablesController = variablesController
+
+		// More get added from elsewhere
+		this.#fragments = [this.#buildingBlocksFragment]
+	}
+
+	addFragments(...fragments: InternalModuleFragment[]): void {
+		if (this.#initialized) throw new Error(`InternalController has been initialized`)
+
+		this.#fragments.push(...fragments)
+	}
+
+	init(): void {
+		if (this.#initialized) throw new Error(`InternalController already initialized`)
+		this.#initialized = true
 
 		// Set everything up
 		this.#regenerateActions()
 		this.#regenerateFeedbacks()
 		this.regenerateVariables()
-	}
 
-	init(): void {
 		// Find all the feedbacks on controls
-		const allControls = this.registry.controls.getAllControls()
+		const allControls = this.#controlsController.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			// Discover feedbacks to process
 			if (control.supportsFeedbacks) {
@@ -111,7 +115,7 @@ export class InternalController extends CoreBase {
 		}
 
 		// Make all variables values
-		for (const fragment of this.fragments) {
+		for (const fragment of this.#fragments) {
 			if ('updateVariables' in fragment && typeof fragment.updateVariables === 'function') {
 				fragment.updateVariables()
 			}
@@ -125,7 +129,9 @@ export class InternalController extends CoreBase {
 	 * @returns Updated action if any changes were made
 	 */
 	actionUpgrade(action: ActionInstance, controlId: string): ActionInstance | undefined {
-		for (const fragment of this.fragments) {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
+		for (const fragment of this.#fragments) {
 			if ('actionUpgrade' in fragment && typeof fragment.actionUpgrade === 'function') {
 				try {
 					const newAction = fragment.actionUpgrade(action, controlId)
@@ -135,7 +141,7 @@ export class InternalController extends CoreBase {
 						return newAction
 					}
 				} catch (e: any) {
-					this.logger.silly(
+					this.#logger.silly(
 						`Action upgrade failed: ${JSON.stringify(action)}(${controlId}) - ${e?.message ?? e} ${e?.stack}`
 					)
 				}
@@ -151,7 +157,9 @@ export class InternalController extends CoreBase {
 	 * @returns Updated feedback if any changes were made
 	 */
 	feedbackUpgrade(feedback: FeedbackInstance, controlId: string): FeedbackInstance | undefined {
-		for (const fragment of this.fragments) {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
+		for (const fragment of this.#fragments) {
 			if ('feedbackUpgrade' in fragment && typeof fragment.feedbackUpgrade === 'function') {
 				try {
 					const newFeedback = fragment.feedbackUpgrade(feedback, controlId)
@@ -161,7 +169,7 @@ export class InternalController extends CoreBase {
 						return newFeedback
 					}
 				} catch (e: any) {
-					this.logger.silly(
+					this.#logger.silly(
 						`Feedback upgrade failed: ${JSON.stringify(feedback)}(${controlId}) - ${e?.message ?? e} ${e?.stack}`
 					)
 				}
@@ -175,10 +183,12 @@ export class InternalController extends CoreBase {
 	 * A feedback has changed, and state should be updated
 	 */
 	feedbackUpdate(feedback: FeedbackInstance, controlId: string): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		if (feedback.instance_id !== 'internal') throw new Error(`Feedback is not for internal instance`)
 		if (feedback.disabled) return
 
-		const location = this.page.getLocationOfControlId(controlId)
+		const location = this.#pageController.getLocationOfControlId(controlId)
 
 		const cloned: FeedbackInstanceExt = {
 			...cloneDeep(feedback),
@@ -188,7 +198,7 @@ export class InternalController extends CoreBase {
 		}
 		this.#feedbacks.set(feedback.id, cloned)
 
-		this.registry.controls.updateFeedbackValues('internal', [
+		this.#controlsController.updateFeedbackValues('internal', [
 			{
 				id: feedback.id,
 				controlId: controlId,
@@ -200,16 +210,18 @@ export class InternalController extends CoreBase {
 	 * A feedback has been deleted
 	 */
 	feedbackDelete(feedback: FeedbackInstance): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		if (feedback.instance_id !== 'internal') throw new Error(`Feedback is not for internal instance`)
 
 		this.#feedbacks.delete(feedback.id)
 
-		for (const fragment of this.fragments) {
+		for (const fragment of this.#fragments) {
 			if ('forgetFeedback' in fragment && typeof fragment.forgetFeedback === 'function') {
 				try {
 					fragment.forgetFeedback(feedback)
 				} catch (e: any) {
-					this.logger.silly(`Feedback forget failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
+					this.#logger.silly(`Feedback forget failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 				}
 			}
 		}
@@ -218,13 +230,13 @@ export class InternalController extends CoreBase {
 	 * Get an updated value for a feedback
 	 */
 	#feedbackGetValue(feedback: FeedbackInstanceExt): any {
-		for (const fragment of this.fragments) {
+		for (const fragment of this.#fragments) {
 			if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
 				let value: ReturnType<Required<InternalModuleFragment>['executeFeedback']> | undefined
 				try {
 					value = fragment.executeFeedback(feedback)
 				} catch (e: any) {
-					this.logger.silly(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
+					this.#logger.silly(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 				}
 
 				if (value && typeof value === 'object' && 'referencedVariables' in value) {
@@ -251,6 +263,8 @@ export class InternalController extends CoreBase {
 		rawFeedbacks: FeedbackInstance[],
 		feedbacks: FragmentFeedbackInstance[]
 	): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		const internalActions = actions.filter((a) => a.instance === 'internal')
 
 		const simpleInternalFeedbacks: FeedbackForVisitor[] = []
@@ -269,7 +283,7 @@ export class InternalController extends CoreBase {
 			})
 		}
 
-		for (const fragment of this.fragments) {
+		for (const fragment of this.#fragments) {
 			if ('visitReferences' in fragment && typeof fragment.visitReferences === 'function') {
 				fragment.visitReferences(visitor, internalActions, simpleInternalFeedbacks)
 			}
@@ -280,7 +294,9 @@ export class InternalController extends CoreBase {
 	 * Run a single internal action
 	 */
 	executeAction(action: ActionInstance, extras: RunActionExtras): void {
-		for (const fragment of this.fragments) {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
+		for (const fragment of this.#fragments) {
 			if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
 				try {
 					if (fragment.executeAction(action, extras)) {
@@ -288,7 +304,7 @@ export class InternalController extends CoreBase {
 						return
 					}
 				} catch (e: any) {
-					this.logger.warn(
+					this.#logger.warn(
 						`Action execute failed: ${JSON.stringify(action)}(${JSON.stringify(extras)}) - ${e?.message ?? e} ${
 							e?.stack
 						}`
@@ -302,6 +318,8 @@ export class InternalController extends CoreBase {
 	 * Execute a logic feedback
 	 */
 	executeLogicFeedback(feedback: FeedbackInstance, childValues: boolean[]): boolean {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)
 	}
 
@@ -309,12 +327,16 @@ export class InternalController extends CoreBase {
 	 * Set internal variable values
 	 */
 	setVariables(variables: Record<string, CompanionVariableValue | undefined>): void {
-		this.registry.variables.values.setVariableValues('internal', variables)
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
+		this.#variablesController.values.setVariableValues('internal', variables)
 	}
 	/**
 	 * Recheck all feedbacks of specified types
 	 */
 	checkFeedbacks(...types: string[]): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		const typesSet = new Set(types)
 
 		const newValues: NewFeedbackValue[] = []
@@ -329,12 +351,14 @@ export class InternalController extends CoreBase {
 			}
 		}
 
-		this.registry.controls.updateFeedbackValues('internal', newValues)
+		this.#controlsController.updateFeedbackValues('internal', newValues)
 	}
 	/**
 	 * Recheck all feedbacks of specified id
 	 */
 	checkFeedbacksById(...ids: string[]): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		const newValues: NewFeedbackValue[] = []
 
 		for (const id of ids) {
@@ -348,12 +372,14 @@ export class InternalController extends CoreBase {
 			}
 		}
 
-		this.registry.controls.updateFeedbackValues('internal', newValues)
+		this.#controlsController.updateFeedbackValues('internal', newValues)
 	}
 	#regenerateActions(): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		let actions: Record<string, ActionDefinition> = {}
 
-		for (const fragment of this.fragments) {
+		for (const fragment of this.#fragments) {
 			if ('getActionDefinitions' in fragment && typeof fragment.getActionDefinitions === 'function') {
 				for (const [id, action] of Object.entries(fragment.getActionDefinitions())) {
 					actions[id] = {
@@ -365,12 +391,14 @@ export class InternalController extends CoreBase {
 			}
 		}
 
-		this.registry.instance.definitions.setActionDefinitions('internal', actions)
+		this.#instanceDefinitions.setActionDefinitions('internal', actions)
 	}
 	#regenerateFeedbacks(): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		let feedbacks: Record<string, FeedbackDefinition> = {}
 
-		for (const fragment of this.fragments) {
+		for (const fragment of this.#fragments) {
 			if ('getFeedbackDefinitions' in fragment && typeof fragment.getFeedbackDefinitions === 'function') {
 				for (const [id, feedback] of Object.entries(fragment.getFeedbackDefinitions())) {
 					feedbacks[id] = {
@@ -383,23 +411,27 @@ export class InternalController extends CoreBase {
 			}
 		}
 
-		this.registry.instance.definitions.setFeedbackDefinitions('internal', feedbacks)
+		this.#instanceDefinitions.setFeedbackDefinitions('internal', feedbacks)
 	}
 	regenerateVariables(): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		const variables = []
 
-		for (const fragment of this.fragments) {
+		for (const fragment of this.#fragments) {
 			if ('getVariableDefinitions' in fragment && typeof fragment.getVariableDefinitions === 'function') {
 				variables.push(...fragment.getVariableDefinitions())
 			}
 		}
 
-		this.registry.variables.definitions.setVariableDefinitions('internal', variables)
+		this.#variablesController.definitions.setVariableDefinitions('internal', variables)
 	}
 
 	variablesChanged(all_changed_variables_set: Set<string>): void {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		// Inform all fragments
-		for (const fragment of this.fragments) {
+		for (const fragment of this.#fragments) {
 			if ('variablesChanged' in fragment && typeof fragment.variablesChanged === 'function') {
 				fragment.variablesChanged(all_changed_variables_set)
 			}
@@ -421,7 +453,7 @@ export class InternalController extends CoreBase {
 			})
 		}
 
-		this.registry.controls.updateFeedbackValues('internal', newValues)
+		this.#controlsController.updateFeedbackValues('internal', newValues)
 	}
 
 	/**
@@ -436,11 +468,13 @@ export class InternalController extends CoreBase {
 		extras: RunActionExtras | FeedbackInstanceExt,
 		injectedVariableValues?: VariablesCache
 	): ParseVariablesResult {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
 			...injectedVariableValues,
 		}
-		return this.variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
+		return this.#variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
 	}
 
 	/**
@@ -457,11 +491,13 @@ export class InternalController extends CoreBase {
 		requiredType?: string,
 		injectedVariableValues?: CompanionVariableValues
 	): { value: boolean | number | string | undefined; variableIds: Set<string> } {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
 			...injectedVariableValues,
 		}
-		return this.variablesController.values.executeExpression(
+		return this.#variablesController.values.executeExpression(
 			str,
 			extras.location,
 			requiredType,
@@ -480,11 +516,13 @@ export class InternalController extends CoreBase {
 		location: ControlLocation | null
 		referencedVariables: string[]
 	} {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
 		const injectedVariableValues = 'id' in extras ? undefined : this.#getInjectedVariablesForLocation(extras)
 
 		return ParseInternalControlReference(
-			this.logger,
-			this.variablesController.values,
+			this.#logger,
+			this.#variablesController.values,
 			extras.location,
 			options,
 			useVariableFields,

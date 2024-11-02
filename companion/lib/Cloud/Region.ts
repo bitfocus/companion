@@ -159,7 +159,7 @@ export class CloudRegion {
 				token: this.#cloud.data.token,
 				uuid: this.#cloud.state.uuid,
 				companionId: this.#cloud.companionId,
-				version: this.#cloud.registry.appInfo.appBuild,
+				version: this.#cloud.appInfo.appBuild,
 			})
 			this.#logger.debug('Login ok')
 

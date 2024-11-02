@@ -19,6 +19,16 @@ import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
+import { InternalActionRecorder } from './Internal/ActionRecorder.js'
+import { InternalControls } from './Internal/Controls.js'
+import { InternalCustomVariables } from './Internal/CustomVariables.js'
+import { InternalInstance } from './Internal/Instance.js'
+import { InternalPage } from './Internal/Page.js'
+import { InternalSurface } from './Internal/Surface.js'
+import { InternalSystem } from './Internal/System.js'
+import { InternalTime } from './Internal/Time.js'
+import { InternalTriggers } from './Internal/Triggers.js'
+import { InternalVariables } from './Internal/Variables.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
@@ -82,7 +92,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The core database library
 	 */
-	db: DataDatabase
+	readonly db: DataDatabase
 	/**
 	 * The core graphics controller
 	 */
@@ -94,7 +104,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The core interface client
 	 */
-	io: UIHandler
+	readonly io: UIHandler
 	/**
 	 * The logger
 	 */
@@ -139,12 +149,12 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The 'ui' controller
 	 */
-	ui: UIController
+	readonly ui: UIController
 
 	/**
 	 * Express Router for /int api endpoints
 	 */
-	api_router: express.Router
+	readonly api_router = express.Router()
 
 	variables: VariablesController
 
@@ -173,6 +183,10 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			appBuild: buildNumber,
 			pkgInfo: pkgInfo,
 		}
+
+		this.ui = new UIController(this)
+		this.io = this.ui.io
+		this.db = new DataDatabase(this.appInfo.configDir)
 	}
 
 	/**
@@ -184,10 +198,8 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	async ready(extraModulePath: string, bind_ip: string, http_port: number) {
 		this.#logger.debug('launching core modules')
 
-		this.api_router = express.Router()
-		this.ui = new UIController(this)
-		this.io = this.ui.io
-		this.db = new DataDatabase(this.appInfo.configDir)
+		this.ui.init()
+
 		this.data = new DataController(this)
 		this.userconfig = this.data.userconfig
 		LogController.init(this.appInfo, this.ui.io)
@@ -198,10 +210,34 @@ export class Registry extends EventEmitter<RegistryEvents> {
 		this.preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
 		this.surfaces = new SurfaceController(this)
 		this.instance = new InstanceController(this)
-		this.services = new ServiceController(this)
-		this.cloud = new CloudController(this, this.data.cache)
-		this.internalModule = new InternalController(this)
 		this.metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
+		this.services = new ServiceController(this)
+		this.cloud = new CloudController(
+			this.appInfo,
+			this.db,
+			this.data.cache,
+			this.controls,
+			this.graphics,
+			this.io,
+			this.page
+		)
+		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
+
+		this.internalModule.addFragments(
+			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
+			new InternalInstance(this.internalModule, this.instance),
+			new InternalTime(this.internalModule),
+			new InternalControls(this.internalModule, this.graphics, this.controls, this.page, this.variables.values),
+			new InternalCustomVariables(this.internalModule, this.variables),
+			new InternalPage(this.internalModule, this.page),
+			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
+			new InternalSystem(this.internalModule, this),
+			new InternalTriggers(this.internalModule, this.controls),
+			new InternalVariables(this.internalModule, this.variables.values)
+		)
+		this.internalModule.init()
+
+		this.on('http_rebind', (...args) => this.ui.server.rebindHttp(...args))
 
 		this.ui.io.on('clientConnect', (client) => {
 			LogController.clientConnect(client)
