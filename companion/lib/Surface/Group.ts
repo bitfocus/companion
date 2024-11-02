@@ -213,9 +213,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Perform page-down for this surface group
-	 * @returns {void}
 	 */
-	doPageDown() {
+	doPageDown(): void {
 		if (this.#userconfig.getKey('page_direction_flipped') === true) {
 			this.#increasePage()
 		} else {
@@ -234,7 +233,6 @@ export class SurfaceGroup {
 
 	/**
 	 * Get the current page of this surface group
-	 * @returns {string}
 	 */
 	getCurrentPageId(): string {
 		return this.#currentPageId

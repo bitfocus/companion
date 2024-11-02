@@ -602,9 +602,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 	/**
 	 * XKeys: Draw additional pages color information
-	 * @returns {void}
 	 */
-	#xkeysDrawPages() {
+	#xkeysDrawPages(): void {
 		if (!this.panel || !this.panel.drawColor) return
 
 		const pageNumber = this.#page.getPageNumber(this.#currentPageId)

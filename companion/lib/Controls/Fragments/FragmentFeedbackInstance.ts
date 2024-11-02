@@ -489,8 +489,6 @@ export class FragmentFeedbackInstance {
 
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
-	 * @returns {Promise<void>[]}
-	 * @access protected
 	 */
 	postProcessImport(): Promise<void>[] {
 		const ps: Promise<void>[] = []

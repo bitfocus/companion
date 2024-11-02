@@ -1321,7 +1321,6 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 	/**
 	 * Is pin lock enabled
-	 * @returns {boolean}
 	 */
 	isPinLockEnabled(): boolean {
 		return !!this.userconfig.getKey('pin_enable')
