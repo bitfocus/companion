@@ -5,12 +5,12 @@ import { TrySplitVariableId } from '../../Resources/Util.js'
  */
 export class VisitorReferencesUpdater {
 	/**
-	 * Instance label remapping
+	 * connection label remapping
 	 */
 	readonly connectionLabelsRemap: Record<string, string> | undefined
 
 	/**
-	 * Instance id remapping
+	 * connection id remapping
 	 */
 	readonly connectionIdRemap: Record<string, string> | undefined
 
@@ -41,9 +41,9 @@ export class VisitorReferencesUpdater {
 	}
 
 	/**
-	 * Visit an instance id property
+	 * Visit a connection id property
 	 */
-	visitInstanceId(obj: Record<string, any>, propName: string | number, feedbackId?: string) {
+	visitConnectionId(obj: Record<string, any>, propName: string | number, feedbackId?: string) {
 		if (!this.connectionIdRemap) return
 
 		const oldId = obj[propName]
@@ -55,14 +55,14 @@ export class VisitorReferencesUpdater {
 		}
 	}
 	/**
-	 * Visit an instance id array property
+	 * Visit a connection id array property
 	 */
-	visitInstanceIdArray(obj: Record<string, any>, propName: string, feedbackId?: string) {
+	visitConnectionIdArray(obj: Record<string, any>, propName: string, feedbackId?: string) {
 		if (!this.connectionIdRemap) return
 
 		const array = obj[propName]
 		for (let i = 0; i < array.length; i++) {
-			this.visitInstanceId(array, i, feedbackId)
+			this.visitConnectionId(array, i, feedbackId)
 		}
 	}
 

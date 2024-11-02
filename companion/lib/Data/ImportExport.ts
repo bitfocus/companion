@@ -53,7 +53,7 @@ import type {
 	ClientImportObject,
 	ClientPageInfo,
 	ClientResetSelection,
-	InstanceRemappings,
+	ConnectionRemappings,
 } from '@companion-app/shared/Model/ImportExport.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
@@ -809,7 +809,7 @@ export class DataImportExport extends CoreBase {
 				doPageImport(pageInfo, topage, instanceIdMap)
 
 				// Report the used remap to the ui, for future imports
-				const instanceRemap2: InstanceRemappings = {}
+				const instanceRemap2: ConnectionRemappings = {}
 				for (const [id, obj] of Object.entries(instanceIdMap)) {
 					instanceRemap2[id] = obj.id
 				}
@@ -851,7 +851,7 @@ export class DataImportExport extends CoreBase {
 				}
 
 				// Report the used remap to the ui, for future imports
-				const instanceRemap2: InstanceRemappings = {}
+				const instanceRemap2: ConnectionRemappings = {}
 				for (const [id, obj] of Object.entries(instanceIdMap)) {
 					instanceRemap2[id] = obj.id
 				}
@@ -916,7 +916,7 @@ export class DataImportExport extends CoreBase {
 
 	#importInstances(
 		instances: ExportInstancesv4 | undefined,
-		instanceRemapping: InstanceRemappings
+		instanceRemapping: ConnectionRemappings
 	): InstanceAppliedRemappings {
 		const instanceIdMap: InstanceAppliedRemappings = {}
 

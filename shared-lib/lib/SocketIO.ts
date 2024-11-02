@@ -30,7 +30,7 @@ import type {
 	ClientImportObject,
 	ClientImportSelection,
 	ClientResetSelection,
-	InstanceRemappings,
+	ConnectionRemappings,
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
@@ -278,12 +278,16 @@ export interface ClientToBackendEventsMap {
 	'loadsave:prepare-import': (rawFile: string | ArrayBuffer) => [err: null, config: ClientImportObject] | [err: string]
 	'loadsave:abort': () => boolean
 	'loadsave:reset': (config: ClientResetSelection) => 'ok'
-	'loadsave:import-page': (toPage: number, fromPage: number, instanceRemap: InstanceRemappings) => InstanceRemappings
+	'loadsave:import-page': (
+		toPage: number,
+		fromPage: number,
+		connectionRemap: ConnectionRemappings
+	) => ConnectionRemappings
 	'loadsave:import-triggers': (
 		selectedTriggers: string[],
-		instanceRemap: InstanceRemappings,
+		connectionRemap: ConnectionRemappings,
 		doReplace: boolean
-	) => InstanceRemappings
+	) => ConnectionRemappings
 	'loadsave:control-preview': (location: ControlLocation) => string | null
 	'loadsave:import-full': (config: ClientImportSelection | null) => void
 
@@ -317,7 +321,7 @@ export interface ClientToBackendEventsMap {
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 	'connections:get-help': (id: string) => [err: string, result: null] | [err: null, result: HelpDescription]
 
-	'variables:instance-values': (label: string) => CompanionVariableValues | undefined
+	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
 
 	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
 	'presets:unsubscribe': () => void

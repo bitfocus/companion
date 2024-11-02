@@ -5,12 +5,12 @@ import { TrySplitVariableId } from '../../Resources/Util.js'
  */
 export class VisitorReferencesCollector {
 	/**
-	 * Referenced instance labels
+	 * Referenced connection labels
 	 */
 	readonly connecionLabels: Set<string>
 
 	/**
-	 * Referenced instance ids
+	 * Referenced connection ids
 	 */
 	readonly connectionIds: Set<string>
 
@@ -20,15 +20,15 @@ export class VisitorReferencesCollector {
 	}
 
 	/**
-	 * Visit an instance id property
+	 * Visit a connection id property
 	 */
-	visitInstanceId(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
+	visitConnectionId(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
 		this.connectionIds.add(obj[propName])
 	}
 	/**
-	 * Visit an instance id array property
+	 * Visit a connection id array property
 	 */
-	visitInstanceIdArray(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
+	visitConnectionIdArray(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
 		for (const id of obj[propName]) {
 			this.connectionIds.add(id)
 		}

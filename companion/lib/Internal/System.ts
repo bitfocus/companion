@@ -163,10 +163,7 @@ export class InternalSystem implements InternalModuleFragment {
 			})
 	}
 
-	/**
-	 * @returns {import('../Instance/Wrapper.js').VariableDefinitionTmp[]}
-	 */
-	getVariableDefinitions() {
+	getVariableDefinitions(): VariableDefinitionTmp[] {
 		return [
 			{
 				label: 'System: Hostname',

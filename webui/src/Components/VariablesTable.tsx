@@ -38,7 +38,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 		if (!label) return
 
 		const doPoll = () => {
-			socketEmitPromise(socket, 'variables:instance-values', [label])
+			socketEmitPromise(socket, 'variables:connection-values', [label])
 				.then((values) => {
 					setVariableValues(values || {})
 				})

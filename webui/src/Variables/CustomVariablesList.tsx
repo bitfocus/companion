@@ -44,7 +44,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 	useEffect(() => {
 		const doPoll = () => {
-			socketEmitPromise(socket, 'variables:instance-values', ['custom'])
+			socketEmitPromise(socket, 'variables:connection-values', ['custom'])
 				.then((values) => {
 					setVariableValues(values || {})
 				})

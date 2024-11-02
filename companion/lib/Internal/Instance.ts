@@ -374,7 +374,7 @@ export class InternalInstance implements InternalModuleFragment {
 		for (const action of actions) {
 			try {
 				if (action.action === 'instance_control') {
-					visitor.visitInstanceId(action.options, 'instance_id')
+					visitor.visitConnectionId(action.options, 'instance_id')
 				}
 			} catch (e) {
 				//Ignore
@@ -384,10 +384,10 @@ export class InternalInstance implements InternalModuleFragment {
 			try {
 				if (feedback.type === 'instance_status') {
 					if (feedback.options.instance_id !== 'all') {
-						visitor.visitInstanceId(feedback.options, 'instance_id', feedback.id)
+						visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)
 					}
 				} else if (feedback.type === 'instance_custom_state') {
-					visitor.visitInstanceId(feedback.options, 'instance_id', feedback.id)
+					visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)
 				}
 			} catch (e) {
 				//Ignore

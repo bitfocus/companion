@@ -2,7 +2,7 @@ import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@co
 import { faCalculator, faGift, faLayerGroup, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
-import { InstancePresets } from './Presets/Presets.js'
+import { ConnectionPresets } from './Presets/Presets.js'
 import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
@@ -329,7 +329,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						</CTabPane>
 						<CTabPane visible={activeTab === 'presets'}>
 							<MyErrorBoundary>
-								<InstancePresets resetToken={tabResetToken} />
+								<ConnectionPresets resetToken={tabResetToken} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane visible={activeTab === 'action-recorder'}>

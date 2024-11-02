@@ -7,23 +7,23 @@ import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject
-	instanceRemap: Record<string, string | undefined>
-	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
+	connectionRemap: Record<string, string | undefined>
+	setConnectionRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 }
 
-export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }: ImportTriggersTabProps) {
+export function ImportTriggersTab({ snapshot, connectionRemap, setConnectionRemap }: ImportTriggersTabProps) {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const [selectedTriggers, setSelectedTriggers] = useState<string[]>([])
 
-	const setInstanceRemap2 = useCallback(
+	const setConnectionRemap2 = useCallback(
 		(fromId: string, toId: string) => {
-			setInstanceRemap((oldRemap) => ({
+			setConnectionRemap((oldRemap) => ({
 				...oldRemap,
 				[fromId]: toId,
 			}))
 		},
-		[setInstanceRemap]
+		[setConnectionRemap]
 	)
 
 	const selectAllTriggers = useCallback(
@@ -54,12 +54,12 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }:
 
 			console.log('import', selectedTriggers, doReplace, e.currentTarget.getAttribute('data-replace'))
 
-			socketEmitPromise(socket, 'loadsave:import-triggers', [selectedTriggers, instanceRemap, doReplace])
+			socketEmitPromise(socket, 'loadsave:import-triggers', [selectedTriggers, connectionRemap, doReplace])
 				.then((res) => {
 					notifier.current?.show(`Import successful`, `Triggers were imported successfully`, 10000)
 					console.log('remap response', res)
 					if (res) {
-						setInstanceRemap(res)
+						setConnectionRemap(res)
 					}
 				})
 				.catch((e) => {
@@ -67,7 +67,7 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }:
 					console.error('import failed', e)
 				})
 		},
-		[socket, notifier, selectedTriggers, instanceRemap, setInstanceRemap]
+		[socket, notifier, selectedTriggers, connectionRemap, setConnectionRemap]
 	)
 
 	return (
@@ -94,7 +94,7 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }:
 				</tbody>
 			</table>
 
-			<ImportRemap snapshot={snapshot} instanceRemap={instanceRemap} setInstanceRemap={setInstanceRemap2} />
+			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 
 			<div>
 				<CButtonGroup style={{ float: 'right' }}>

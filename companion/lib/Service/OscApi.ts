@@ -169,9 +169,8 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform surfaces rescan
-	 * @returns {void}
 	 */
-	#surfacesRescan = () => {
+	#surfacesRescan = (): void => {
 		this.logger.info('Got OSC surface rescan')
 		this.registry.surfaces.triggerRefreshDevices().catch(() => {
 			this.logger.debug('Scan failed')

@@ -135,7 +135,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		client.onPromise('variables:instance-values', (label) => {
+		client.onPromise('variables:connection-values', (label) => {
 			return this.#variableValues[label]
 		})
 	}

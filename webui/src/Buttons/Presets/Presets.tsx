@@ -10,11 +10,11 @@ import { PresetsButtonList } from './PresetsButtonList.js'
 import { PresetsConnectionList } from './PresetsConnectionList.js'
 import { PresetsCategoryList } from './PresetsCategoryList.js'
 
-interface InstancePresetsProps {
+interface ConnectionPresetsProps {
 	resetToken: string
 }
 
-export const InstancePresets = observer(function InstancePresets({ resetToken }: InstancePresetsProps) {
+export const ConnectionPresets = observer(function ConnectionPresets({ resetToken }: ConnectionPresetsProps) {
 	const { socket, modules, connections } = useContext(RootAppStoreContext)
 
 	const [connectionAndCategory, setConnectionAndCategory] = useState<

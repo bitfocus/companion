@@ -36,7 +36,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		(id: string) => {
 			socketEmitPromise(socket, 'connections:get-help', [id]).then(([err, result]) => {
 				if (err) {
-					notifier.current?.show('Instance help', `Failed to get help text: ${err}`)
+					notifier.current?.show('Connection help', `Failed to get help text: ${err}`)
 					return
 				}
 				if (result) {

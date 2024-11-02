@@ -336,12 +336,12 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]) {
 		for (const action of actions) {
 			if (action.action === 'action_recorder_set_connections') {
-				visitor.visitInstanceIdArray(action.options, 'connections')
+				visitor.visitConnectionIdArray(action.options, 'connections')
 			}
 		}
 		for (const feedback of feedbacks) {
 			if (feedback.type === 'action_recorder_check_connections') {
-				visitor.visitInstanceIdArray(feedback.options, 'connections', feedback.id)
+				visitor.visitConnectionIdArray(feedback.options, 'connections', feedback.id)
 			}
 		}
 	}
