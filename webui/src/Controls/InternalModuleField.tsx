@@ -9,7 +9,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CFormLabel } from '@coreui/react'
 
-export function InternalInstanceField(
+export function InternalModuleField(
 	label: React.ReactNode,
 	option: InternalInputField,
 	isLocatedInGrid: boolean,
@@ -18,9 +18,9 @@ export function InternalInstanceField(
 	setValue: (value: any) => void
 ): JSX.Element | null {
 	switch (option.type) {
-		case 'internal:instance_id':
+		case 'internal:connection_id':
 			return (
-				<InternalInstanceIdDropdown
+				<InternalConnectionIdDropdown
 					label={label}
 					disabled={readonly}
 					value={value}
@@ -87,7 +87,7 @@ export function InternalInstanceField(
 	}
 }
 
-interface InternalInstanceIdDropdownProps {
+interface InternalConnectionIdDropdownProps {
 	label: React.ReactNode
 	includeAll: boolean | undefined
 	value: any
@@ -97,7 +97,7 @@ interface InternalInstanceIdDropdownProps {
 	filterActionsRecorder: boolean | undefined
 }
 
-const InternalInstanceIdDropdown = observer(function InternalInstanceIdDropdown({
+const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropdown({
 	label,
 	includeAll,
 	value,
@@ -105,21 +105,21 @@ const InternalInstanceIdDropdown = observer(function InternalInstanceIdDropdown(
 	disabled,
 	multiple,
 	filterActionsRecorder,
-}: Readonly<InternalInstanceIdDropdownProps>) {
+}: Readonly<InternalConnectionIdDropdownProps>) {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const choices = useComputed(() => {
-		const instance_choices = []
+		const connectionChoices = []
 		if (includeAll) {
-			instance_choices.push({ id: 'all', label: 'All Instances' })
+			connectionChoices.push({ id: 'all', label: 'All Connections' })
 		}
 
 		for (const [id, config] of connections.connections.entries()) {
 			if (filterActionsRecorder && !config.hasRecordActionsHandler) continue
 
-			instance_choices.push({ id, label: config.label ?? id })
+			connectionChoices.push({ id, label: config.label ?? id })
 		}
-		return instance_choices
+		return connectionChoices
 	}, [connections, includeAll, filterActionsRecorder])
 
 	return (

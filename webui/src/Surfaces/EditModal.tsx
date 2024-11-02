@@ -14,8 +14,8 @@ import { LoadingRetryOrError, socketEmitPromise, PreventDefaultHandler, useCompu
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalPageIdDropdown } from '../Controls/InternalInstanceFields.js'
-import { InternalCustomVariableDropdown } from '../Controls/InternalInstanceFields.js'
+import { InternalPageIdDropdown } from '../Controls/InternalModuleField.js'
+import { InternalCustomVariableDropdown } from '../Controls/InternalModuleField.js'
 import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
 import {
 	ClientDevicesListItem,

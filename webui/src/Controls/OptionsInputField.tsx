@@ -7,7 +7,7 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '../Components/index.js'
-import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields.jsx'
+import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
@@ -207,17 +207,11 @@ export function OptionsInputField({
 			break
 		}
 		default:
-			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
+			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (isInternal) {
 				control =
-					InternalInstanceField(
-						<OptionLabel option={option} />,
-						option,
-						isLocatedInGrid,
-						!!readonly,
-						value,
-						setValue2
-					) ?? undefined
+					InternalModuleField(<OptionLabel option={option} />, option, isLocatedInGrid, !!readonly, value, setValue2) ??
+					undefined
 			}
 			// Use default below
 			break

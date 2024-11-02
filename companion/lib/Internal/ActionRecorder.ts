@@ -91,7 +91,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 						],
 					},
 					{
-						type: 'internal:instance_id',
+						type: 'internal:connection_id',
 						label: 'Connections',
 						id: 'connections',
 						multiple: true,
@@ -267,7 +267,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 				showInvert: true,
 				options: [
 					{
-						type: 'internal:instance_id',
+						type: 'internal:connection_id',
 						label: 'Connections',
 						id: 'connections',
 						multiple: true,

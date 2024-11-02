@@ -115,7 +115,7 @@ export class InternalInstance implements InternalModuleFragment {
 				description: undefined,
 				options: [
 					{
-						type: 'internal:instance_id',
+						type: 'internal:connection_id',
 						label: 'Connection',
 						id: 'instance_id',
 						multiple: false,
@@ -147,7 +147,7 @@ export class InternalInstance implements InternalModuleFragment {
 				showInvert: false,
 				options: [
 					{
-						type: 'internal:instance_id',
+						type: 'internal:connection_id',
 						label: 'Connection or All',
 						id: 'instance_id',
 						includeAll: true,
@@ -214,7 +214,7 @@ export class InternalInstance implements InternalModuleFragment {
 				showInvert: true,
 				options: [
 					{
-						type: 'internal:instance_id',
+						type: 'internal:connection_id',
 						label: 'Connection',
 						id: 'instance_id',
 						includeAll: false,
