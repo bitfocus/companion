@@ -197,8 +197,10 @@ const VariablesTableRow = observer(function VariablesTableRow({
 								backgroundColor: 'rgba(0,0,200,0.1)',
 								color: 'rgba(0,0,200,1)',
 								fontWeight: 'normal',
-								padding: '1px 3px',
 								fontSize: 14,
+								padding: '4px',
+								lineHeight: '2em',
+								borderRadius: '6px',
 							}}
 							title={value}
 						>

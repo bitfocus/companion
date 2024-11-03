@@ -210,12 +210,12 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 					</CButton>
 					{!hasNoVariables && panelCollapseHelper.canExpandAll() && (
 						<CButton color="secondary" onClick={panelCollapseHelper.setAllExpanded} title="Expand all">
-							<FontAwesomeIcon icon={faExpandArrowsAlt} /> Expand
+							<FontAwesomeIcon icon={faExpandArrowsAlt} /> Expand All
 						</CButton>
 					)}
 					{!hasNoVariables && panelCollapseHelper.canCollapseAll() && (
 						<CButton color="secondary" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all">
-							<FontAwesomeIcon icon={faCompressArrowsAlt} /> Collapse
+							<FontAwesomeIcon icon={faCompressArrowsAlt} /> Collapse All
 						</CButton>
 					)}
 				</CButtonGroup>
@@ -236,7 +236,15 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 				</CButton>
 			</CInputGroup>
 
-			<table className="table variables-table">
+			<table className="table table-responsive-sm variables-table">
+				<thead>
+					<tr>
+						<th>&nbsp;</th>
+						<th>Variable</th>
+						<th>Value</th>
+						<th>&nbsp;</th>
+					</tr>
+				</thead>
 				<tbody>
 					{!hasNoVariables && errorMsg && (
 						<tr>
@@ -278,7 +286,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 					)}
 				</tbody>
 			</table>
-
+			<br></br>
 			<h5>Create custom variable</h5>
 			<div>
 				<CForm onSubmit={doCreateNew}>
@@ -385,64 +393,85 @@ function CustomVariableRow({
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td style={{ paddingRight: 0 }}>
+			<td style={{ verticalAlign: 'middle' }}>
+				<span className="variable-style">$({fullname})</span>
+				<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
+					<CButton size="sm" title="Copy variable name">
+						<FontAwesomeIcon icon={faCopy} />
+					</CButton>
+				</CopyToClipboard>
+			</td>
+			<td style={{ verticalAlign: 'middle' }}>
+				{isCollapsed && (
+					<>
+						<code
+							style={{
+								backgroundColor: 'rgba(0,0,200,0.1)',
+								color: 'rgba(0,0,200,1)',
+								fontWeight: 'normal',
+								fontSize: 14,
+								padding: '4px',
+								lineHeight: '2em',
+								borderRadius: '6px',
+							}}
+							title={value}
+						>
+							{value?.length > 100 ? `${value.substring(0, 100)}...` : value}
+						</code>
+					</>
+				)}
+				{!isCollapsed && (
+					<>
+						<div className="cell-values">
+							<CForm onSubmit={PreventDefaultHandler}>
+								<TextInputField
+									label="Current value: "
+									value={value ?? ''}
+									setValue={(val) => setCurrentValue(name, val)}
+									style={{ marginBottom: '0.5rem' }}
+								/>
+								<CheckboxInputField
+									label="Persist current value"
+									value={info.persistCurrentValue}
+									setValue={(val) => setPersistenceValue(name, val)}
+									helpText="If enabled, the current value will be saved and restored when Companion restarts."
+									inline={true}
+								/>
+								<br></br>
+								<TextInputField
+									label="Startup value: "
+									disabled={!!info.persistCurrentValue}
+									value={info.defaultValue + ''}
+									setValue={(val) => setStartupValue(name, val)}
+								/>
+							</CForm>
+						</div>
+					</>
+				)}
+			</td>
+			<td style={{ paddingRight: 0, paddingLeft: '2.5em', verticalAlign: 'middle' }}>
 				<div className="editor-grid">
 					<div className="cell-header">
-						<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
-							<span className="variable-style">$({fullname})</span>
-						</CopyToClipboard>
-						<CButtonGroup className="right" size={isCollapsed ? 'sm' : undefined}>
+						<CButtonGroup className="right">
 							{isCollapsed ? (
-								<CButton onClick={doExpand} title="Expand variable view">
+								<CButton onClick={doExpand} size="sm" title="Expand variable view">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							) : (
-								<CButton onClick={doCollapse} title="Collapse variable view">
+								<CButton onClick={doCollapse} size="sm" title="Collapse variable view">
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
-							<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
-								<CButton>
+							<CopyToClipboard text={`${value?.length > 0 ? value : ' '}`} onCopy={onCopied}>
+								<CButton size="sm" title="Copy current variable value">
 									<FontAwesomeIcon icon={faCopy} />
 								</CButton>
 							</CopyToClipboard>
-							<CButton onClick={() => doDelete(name)}>
+							<CButton onClick={() => doDelete(name)} size="sm" title="Delete custom variable">
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 						</CButtonGroup>
 					</div>
-
-					{!isCollapsed && (
-						<>
-							<div className="cell-options">
-								<CForm onSubmit={PreventDefaultHandler}>
-									<CheckboxInputField
-										label="Persist value"
-										value={info.persistCurrentValue}
-										setValue={(val) => setPersistenceValue(name, val)}
-										helpText="If enabled, the current value will be saved and restored when Companion restarts."
-									/>
-								</CForm>
-							</div>
-
-							<div className="cell-values">
-								<CForm onSubmit={PreventDefaultHandler}>
-									<TextInputField
-										label="Current value: "
-										value={value ?? ''}
-										setValue={(val) => setCurrentValue(name, val)}
-									/>
-
-									<TextInputField
-										label="Startup value: "
-										disabled={!!info.persistCurrentValue}
-										value={info.defaultValue + ''}
-										setValue={(val) => setStartupValue(name, val)}
-									/>
-								</CForm>
-							</div>
-						</>
-					)}
 				</div>
 			</td>
 		</tr>
