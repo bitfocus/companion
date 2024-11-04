@@ -24,8 +24,4 @@ export class UIController {
 	clientConnect(client: ClientSocket): void {
 		this.update.clientConnect(client)
 	}
-
-	init() {
-		this.update.init()
-	}
 }

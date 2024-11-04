@@ -39,7 +39,7 @@ export class UIUpdate {
 		this.#ioController = ioController
 	}
 
-	init() {
+	startCycle() {
 		// Make a request now
 		this.#requestUpdate()
 		setInterval(

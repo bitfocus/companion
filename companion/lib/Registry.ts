@@ -58,10 +58,6 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
 	process.exit(1)
 }
 
-export interface RegistryEvents {
-	_tmp: [null]
-}
-
 /**
  * The core controller that sets up all the controllers needed
  * for the app.
@@ -83,7 +79,7 @@ export interface RegistryEvents {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class Registry extends EventEmitter<RegistryEvents> {
+export class Registry {
 	/**
 	 * The cloud controller
 	 */
@@ -167,8 +163,6 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	 * @param machineId - the machine uuid
 	 */
 	constructor(configDir: string, machineId: string) {
-		super()
-
 		if (!configDir) throw new Error(`Missing configDir`)
 		if (!machineId) throw new Error(`Missing machineId`)
 
@@ -204,8 +198,6 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	 */
 	async ready(extraModulePath: string, bindIp: string, bindPort: number) {
 		this.#logger.debug('launching core modules')
-
-		this.ui.init()
 
 		const controlEvents = new EventEmitter<ControlCommonEvents>()
 
@@ -304,6 +296,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 
 		// old 'modules_loaded' events
 		this.#metrics.startCycle()
+		this.ui.update.startCycle()
 
 		this.controls.init()
 		this.controls.verifyConnectionIds()
