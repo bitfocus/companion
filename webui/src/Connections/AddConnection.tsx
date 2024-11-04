@@ -78,14 +78,25 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} showHelp={showHelp} />
 			<div style={{ clear: 'both' }} className="row-heading">
 				<h4>Add connection</h4>
-				<p>
-					Companion currently supports {modules.count} different things, and the list grows every day. If you can't find
-					the device you're looking for, please{' '}
-					<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
-						add a request
-					</a>{' '}
-					on GitHub
-				</p>
+				{modules.storeList.size > 0 ? (
+					<p>
+						Companion currently supports over {modules.storeList.size} different things, and the list grows every day.
+						If you can't find the device you're looking for, please{' '}
+						<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
+							add a request
+						</a>{' '}
+						on GitHub
+					</p>
+				) : (
+					<p>
+						Companion currently hundreds of different things, and the list grows every day. If you have an active
+						internet connection you can search for and install modules to support additional devices. Otherwise you can
+						install download and load in a module bundle from the website.
+						<a target="_new" href="https://user.bitfocus.io/download">
+							the website
+						</a>{' '}
+					</p>
+				)}
 
 				<div className="refresh-and-last-updated">
 					<RefreshModulesList />
