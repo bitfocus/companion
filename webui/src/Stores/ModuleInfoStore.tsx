@@ -3,16 +3,24 @@ import type { ModuleInfoUpdate, NewClientModuleInfo } from '@companion-app/share
 import { assertNever } from '../util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
+import { ModuleStoreListCacheEntry, ModuleStoreListCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
 
 export class ModuleInfoStore {
 	// TODO - should this be more granular/observable?
 	readonly modules = observable.map<string, NewClientModuleInfo>()
 
+	readonly storeUpdateInfo: Omit<ModuleStoreListCacheStore, 'modules'> = observable.object({
+		lastUpdated: 0,
+		lastUpdateAttempt: 0,
+		updateWarning: null,
+	})
+	readonly storeList = observable.map<string, ModuleStoreListCacheEntry>()
+
 	public get count() {
 		return this.modules.size
 	}
 
-	public reset = action((newData: Record<string, NewClientModuleInfo | undefined> | null) => {
+	public resetModules = action((newData: Record<string, NewClientModuleInfo | undefined> | null) => {
 		this.modules.clear()
 
 		if (newData) {
@@ -24,7 +32,7 @@ export class ModuleInfoStore {
 		}
 	})
 
-	public applyChange = action((change: ModuleInfoUpdate) => {
+	public applyModuleChange = action((change: ModuleInfoUpdate) => {
 		const changeType = change.type
 		switch (change.type) {
 			case 'add':
@@ -46,5 +54,14 @@ export class ModuleInfoStore {
 				assertNever(change)
 				break
 		}
+	})
+
+	public updateStoreInfo = action((storeInfo: ModuleStoreListCacheStore) => {
+		this.storeUpdateInfo.lastUpdated = storeInfo.lastUpdated
+		this.storeUpdateInfo.lastUpdateAttempt = storeInfo.lastUpdateAttempt
+		this.storeUpdateInfo.updateWarning = storeInfo.updateWarning
+
+		// TODO - is this too agressive?
+		this.storeList.replace(storeInfo.modules)
 	})
 }

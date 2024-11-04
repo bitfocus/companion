@@ -1,9 +1,9 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { faExternalLink, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
-import { socketEmitPromise } from '../util.js'
+import { socketEmitPromise, useComputed } from '../util.js'
 import { CAlert, CButton } from '@coreui/react'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
@@ -11,8 +11,9 @@ import { SearchBox } from '../Components/SearchBox.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { WindowLinkOpen } from '../Helpers/Window.js'
-import { ModuleStoreListCacheEntry, ModuleStoreListCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
+import { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
+import { ObservableMap } from 'mobx'
 
 interface DiscoverModulesPanelProps {
 	doManageModule: (moduleId: string) => void
@@ -21,9 +22,7 @@ interface DiscoverModulesPanelProps {
 export const DiscoverModulesPanel = observer(function DiscoverModulesPanel({
 	doManageModule,
 }: DiscoverModulesPanelProps) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
-
-	const moduleStoreCache = useModuleStoreList()
+	const { socket, notifier, modules } = useContext(RootAppStoreContext)
 
 	const doInstallLatestModule = useCallback((moduleId: string) => {
 		socketEmitPromise(socket, 'modules:install-store-module:latest', [moduleId])
@@ -42,7 +41,7 @@ export const DiscoverModulesPanel = observer(function DiscoverModulesPanel({
 
 	let candidates: JSX.Element[] = []
 	try {
-		const searchResults = useFilteredStoreProducts(moduleStoreCache, filter)
+		const searchResults = useFilteredStoreProducts(modules.storeList, filter)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
@@ -82,7 +81,7 @@ export const DiscoverModulesPanel = observer(function DiscoverModulesPanel({
 		)
 	}
 
-	const storeModuleCount = Object.values(moduleStoreCache?.modules || {}).length
+	const storeModuleCount = modules.storeList.size
 
 	return (
 		<>
@@ -99,10 +98,12 @@ export const DiscoverModulesPanel = observer(function DiscoverModulesPanel({
 
 				<div className="refresh-and-last-updated">
 					<RefreshModulesList />
-					<LastUpdatedTimestamp timestamp={moduleStoreCache?.lastUpdated} />
+					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 				</div>
 
-				{moduleStoreCache?.updateWarning && <CAlert color="danger">{moduleStoreCache.updateWarning}</CAlert>}
+				{modules.storeUpdateInfo.updateWarning && (
+					<CAlert color="danger">{modules.storeUpdateInfo.updateWarning}</CAlert>
+				)}
 
 				<br />
 
@@ -186,49 +187,13 @@ const StoreModuleEntry = observer(function StoreModuleEntry({
 	)
 })
 
-export function useModuleStoreList(): ModuleStoreListCacheStore | null {
-	// TODO - this needs to subscribe, even when this is not visible...
-
-	const { socket } = useContext(RootAppStoreContext)
-
-	const [moduleStoreCache, setModuleStoreCache] = useState<ModuleStoreListCacheStore | null>(null)
-
-	useEffect(() => {
-		let destroyed = false
-
-		const updateCache = (data: ModuleStoreListCacheStore) => {
-			if (destroyed) return
-			setModuleStoreCache(data)
-		}
-
-		socketEmitPromise(socket, 'modules-store:list:subscribe', [])
-			.then(updateCache)
-			.catch((err) => {
-				console.error('Failed to subscribe to module store', err)
-			})
-
-		socket.on('modules-store:list:data', updateCache)
-
-		return () => {
-			destroyed = true
-			socket.off('modules-store:list:data', updateCache)
-
-			socketEmitPromise(socket, 'modules-store:list:unsubscribe', []).catch((err) => {
-				console.error('Failed to unsubscribe to module store', err)
-			})
-		}
-	}, [socket])
-
-	return moduleStoreCache
-}
-
 function useFilteredStoreProducts(
-	moduleStoreCache: ModuleStoreListCacheStore | null,
+	storeList: ObservableMap<string, ModuleStoreListCacheEntry>,
 	filter: string
 ): ModuleStoreListCacheEntry[] {
-	const allProducts: ModuleStoreListCacheEntry[] = useMemo(
+	const allProducts: ModuleStoreListCacheEntry[] = useComputed(
 		() =>
-			Object.values(moduleStoreCache?.modules ?? {}).flatMap((moduleInfo) =>
+			Array.from(storeList.values()).flatMap((moduleInfo) =>
 				moduleInfo.products.map((product) => ({
 					product,
 					...moduleInfo,
@@ -236,7 +201,7 @@ function useFilteredStoreProducts(
 					keywordsStr: moduleInfo.keywords?.join(';') ?? '',
 				}))
 			),
-		[moduleStoreCache?.modules]
+		[storeList]
 	)
 
 	if (!filter) return allProducts

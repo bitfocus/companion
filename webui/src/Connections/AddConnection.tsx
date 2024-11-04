@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback, useRef, useMemo } from 'react'
+import React, { useContext, useState, useCallback, useRef } from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -7,10 +7,12 @@ import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
 import { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { AddConnectionModal, AddConnectionModalRef } from './AddConnectionModal.js'
-import { useModuleStoreList } from '../Modules/DiscoverModulesPanel.js'
-import { ModuleStoreListCacheStore, ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
+import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import { useComputed } from '../util.js'
+import { ObservableMap } from 'mobx'
+import { RefreshModulesList } from '../Modules/RefreshModulesList.js'
+import { LastUpdatedTimestamp } from '../Modules/LastUpdatedTimestamp.js'
 
 interface AddConnectionsPanelProps {
 	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
@@ -24,8 +26,6 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	const { modules } = useContext(RootAppStoreContext)
 	const [filter, setFilter] = useState('')
 
-	const moduleStore = useModuleStoreList()
-
 	const addRef = useRef<AddConnectionModalRef>(null)
 	const addConnection = useCallback((moduleInfo: AddConnectionProduct) => {
 		addRef.current?.show(moduleInfo)
@@ -33,7 +33,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 	let candidates: JSX.Element[] = []
 	try {
-		const searchResults = useFilteredStoreAndOtherProducts(moduleStore, filter)
+		const searchResults = useFilteredStoreAndOtherProducts(modules.storeList, filter)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
@@ -86,6 +86,11 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 					</a>{' '}
 					on GitHub
 				</p>
+
+				<div className="refresh-and-last-updated">
+					<RefreshModulesList />
+					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+				</div>
 
 				<SearchBox filter={filter} setFilter={setFilter} />
 				<br />
@@ -140,7 +145,7 @@ function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnecti
 }
 
 function useFilteredStoreAndOtherProducts(
-	moduleStoreCache: ModuleStoreListCacheStore | null,
+	moduleStoreCache: ObservableMap<string, ModuleStoreListCacheEntry>,
 	filter: string
 ): AddConnectionProduct[] {
 	const { modules } = useContext(RootAppStoreContext)
@@ -169,7 +174,7 @@ function useFilteredStoreAndOtherProducts(
 
 		// Add in the store modules
 		if (moduleStoreCache) {
-			for (const moduleInfo of Object.values(moduleStoreCache.modules)) {
+			for (const moduleInfo of moduleStoreCache.values()) {
 				for (const product of moduleInfo.products) {
 					const key = `${moduleInfo.id}-${product}`
 

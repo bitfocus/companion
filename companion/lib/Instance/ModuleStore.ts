@@ -124,9 +124,9 @@ export class ModuleStoreService {
 	}
 
 	async fetchLatestModuleVersionInfo(moduleId: string): Promise<ModuleStoreModuleInfoVersion | null> {
-		// Get the cached module info
-		const moduleInfo = this.#getCacheEntryForModule(moduleId)
-		if (!moduleInfo) return null
+		// // Get the cached module info
+		// const moduleInfo = this.#getCacheEntryForModule(moduleId)
+		// if (!moduleInfo) return null
 
 		// Assume nothing is cached, as there may be no versions
 		const versionData = await this.#refreshStoreInfoData(moduleId)

@@ -160,18 +160,18 @@ export class InstanceModules {
 			}
 		}
 
-		// Load bundled modules
-		const bundledModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.bundledModulesDir, false)
-		for (const candidate of bundledModules) {
-			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-			moduleInfo.installedVersions[candidate.display.version] = {
-				...candidate,
-				type: 'release',
-				releaseType: 'stable',
-				versionId: candidate.display.version,
-				isBuiltin: true,
-			}
-		}
+		// // Load bundled modules
+		// const bundledModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.bundledModulesDir, false)
+		// for (const candidate of bundledModules) {
+		// 	const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
+		// 	moduleInfo.installedVersions[candidate.display.version] = {
+		// 		...candidate,
+		// 		type: 'release',
+		// 		releaseType: 'stable',
+		// 		versionId: candidate.display.version,
+		// 		isBuiltin: true,
+		// 	}
+		// }
 
 		// And modules from the store
 		const storeModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.installedModulesDir, true)

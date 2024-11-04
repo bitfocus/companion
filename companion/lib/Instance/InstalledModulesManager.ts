@@ -61,7 +61,7 @@ export class InstanceInstalledModulesManager {
 	 */
 	clientConnect(client: ClientSocket): void {
 		client.onPromise('modules:install-custom-module', async (data) => {
-			this.#logger.debug('modules:install-custom-module', data)
+			// this.#logger.debug('modules:install-custom-module', data)
 
 			if (!(data instanceof Uint8Array)) return 'Invalid data. Expected UInt8Array'
 

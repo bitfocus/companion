@@ -1,4 +1,4 @@
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 
 export function getModuleVersionInfoForConnection(

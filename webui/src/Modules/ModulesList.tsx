@@ -11,7 +11,7 @@ import { Tuck } from '../Components/Tuck.js'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { SearchBox } from '../Components/SearchBox.js'
 import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
-import { ImportCustomModule } from './ImportCustomModule.js'
+import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
 
 interface VisibleModulesState {
@@ -109,7 +109,16 @@ export const ModulesList = observer(function ModulesList({
 
 			<p>Here you can view and manage the modules you have installed.</p>
 
-			<ImportCustomModule />
+			<CAlert color="info">
+				The module system is currently in development.
+				<br />
+				You can get the latest offline module bundle from{' '}
+				<a href="https://codeload.github.com/bitfocus/companion-bundled-modules/tar.gz/refs/heads/main" target="_new">
+					GitHub here
+				</a>
+			</CAlert>
+
+			<ImportModules />
 
 			<SearchBox filter={filter} setFilter={setFilter} />
 
