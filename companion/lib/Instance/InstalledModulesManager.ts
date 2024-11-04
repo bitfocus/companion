@@ -8,6 +8,7 @@ import * as ts from 'tar-stream'
 import { Readable } from 'node:stream'
 import { ModuleManifest } from '@companion-module/base'
 import * as tarfs from 'tar-fs'
+import type { ModuleDirs } from './Types.js'
 import type { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import { promisify } from 'util'
@@ -41,16 +42,11 @@ export class InstanceInstalledModulesManager {
 	 */
 	readonly #modulesDir: string
 
-	constructor(
-		appInfo: AppInfo,
-		modulesManager: InstanceModules,
-		modulesStore: ModuleStoreService,
-		installedModulesDir: string
-	) {
+	constructor(appInfo: AppInfo, modulesManager: InstanceModules, modulesStore: ModuleStoreService, dirs: ModuleDirs) {
 		this.#appInfo = appInfo
 		this.#modulesManager = modulesManager
 		this.#modulesStore = modulesStore
-		this.#modulesDir = installedModulesDir
+		this.#modulesDir = dirs.installedModulesDir
 	}
 
 	/**
