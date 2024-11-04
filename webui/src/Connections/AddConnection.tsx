@@ -1,7 +1,7 @@
 import React, { useContext, useState, useCallback, useRef } from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faExclamationTriangle, faPlug, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
@@ -13,6 +13,9 @@ import { useComputed } from '../util.js'
 import { ObservableMap } from 'mobx'
 import { RefreshModulesList } from '../Modules/RefreshModulesList.js'
 import { LastUpdatedTimestamp } from '../Modules/LastUpdatedTimestamp.js'
+import { ModuleInfoStore } from '../Stores/ModuleInfoStore.js'
+import { NonIdealState } from '../Components/NonIdealState.js'
+import { Link } from 'react-router-dom'
 
 interface AddConnectionsPanelProps {
 	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
@@ -31,9 +34,11 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 		addRef.current?.show(moduleInfo)
 	}, [])
 
+	const allProducts = useAllConnectionProducts(modules)
+
 	let candidates: JSX.Element[] = []
 	try {
-		const searchResults = useFilteredStoreAndOtherProducts(modules.storeList, filter)
+		const searchResults = filterProducts(allProducts, filter)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
@@ -106,7 +111,22 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 				<SearchBox filter={filter} setFilter={setFilter} />
 				<br />
 			</div>
-			<div id="connection_add_search_results">{candidates}</div>
+			<div id="connection_add_search_results">
+				{candidates}
+
+				{candidates.length === 0 && allProducts.length > 0 && (
+					<NonIdealState icon={faPlug}>No modules match your search.</NonIdealState>
+				)}
+
+				{candidates.length === 0 && allProducts.length === 0 && (
+					<NonIdealState icon={faPlug}>
+						No modules are installed.
+						<br />
+						Make sure you have an active internet connection, or load a module bundle into the{' '}
+						<Link to="/modules">Modules tab</Link>
+					</NonIdealState>
+				)}
+			</div>
 		</>
 	)
 })
@@ -155,13 +175,8 @@ function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnecti
 	)
 }
 
-function useFilteredStoreAndOtherProducts(
-	moduleStoreCache: ObservableMap<string, ModuleStoreListCacheEntry>,
-	filter: string
-): AddConnectionProduct[] {
-	const { modules } = useContext(RootAppStoreContext)
-
-	const allProducts: AddConnectionProduct[] = useComputed(() => {
+function useAllConnectionProducts(modules: ModuleInfoStore): AddConnectionProduct[] {
+	return useComputed(() => {
 		const allProducts: Record<string, AddConnectionProduct> = {}
 
 		// Start with all installed modules
@@ -184,61 +199,41 @@ function useFilteredStoreAndOtherProducts(
 		}
 
 		// Add in the store modules
-		if (moduleStoreCache) {
-			for (const moduleInfo of moduleStoreCache.values()) {
-				for (const product of moduleInfo.products) {
-					const key = `${moduleInfo.id}-${product}`
+		for (const moduleInfo of modules.storeList.values()) {
+			for (const product of moduleInfo.products) {
+				const key = `${moduleInfo.id}-${product}`
 
-					const installedInfo = allProducts[key]
-					if (installedInfo) {
-						installedInfo.storeInfo = moduleInfo
-					} else {
-						allProducts[key] = {
-							id: moduleInfo.id,
+				const installedInfo = allProducts[key]
+				if (installedInfo) {
+					installedInfo.storeInfo = moduleInfo
+				} else {
+					allProducts[key] = {
+						id: moduleInfo.id,
 
-							installedInfo: null,
-							storeInfo: moduleInfo,
+						installedInfo: null,
+						storeInfo: moduleInfo,
 
-							product,
-							keywords: moduleInfo.keywords?.join(';') ?? '',
-							name: moduleInfo.name,
-							manufacturer: moduleInfo.manufacturer,
-							shortname: moduleInfo.shortname,
-						}
+						product,
+						keywords: moduleInfo.keywords?.join(';') ?? '',
+						name: moduleInfo.name,
+						manufacturer: moduleInfo.manufacturer,
+						shortname: moduleInfo.shortname,
 					}
 				}
 			}
 		}
 
 		return Object.values(allProducts)
-	}, [modules, moduleStoreCache])
+	}, [modules])
+}
 
+function filterProducts(allProducts: AddConnectionProduct[], filter: string): AddConnectionProduct[] {
 	if (!filter) return allProducts //.map((p) => p.info)
 
 	return fuzzySearch(filter, allProducts, {
 		keys: ['product', 'name', 'manufacturer', 'keywords'] satisfies Array<keyof AddConnectionProduct>,
 		threshold: -10_000,
 	}).map((x) => x.obj)
-
-	// const allProducts: ModuleStoreListCacheEntry[] = useMemo(
-	// 	() =>
-	// 		Object.values(moduleStoreCache?.modules ?? {}).flatMap((moduleInfo) =>
-	// 			moduleInfo.products.map((product) => ({
-	// 				product,
-	// 				...moduleInfo,
-	// 				// fuzzySearch can't handle arrays, so flatten the array to a string first
-	// 				keywordsStr: moduleInfo.keywords?.join(';') ?? '',
-	// 			}))
-	// 		),
-	// 	[moduleStoreCache?.modules]
-	// )
-
-	// if (!filter) return allProducts
-
-	// return fuzzySearch(filter, allProducts, {
-	// 	keys: ['product', 'name', 'manufacturer', 'keywordsStr'],
-	// 	threshold: -10_000,
-	// }).map((x) => x.obj)
 }
 
 export interface AddConnectionProduct {
