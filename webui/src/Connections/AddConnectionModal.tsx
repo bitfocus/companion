@@ -13,7 +13,7 @@ import {
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { ConnectionsContext, PreventDefaultHandler, socketEmitPromise } from '../util.js'
+import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
@@ -23,7 +23,7 @@ import {
 	NewClientModuleVersionInfo2,
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import type { AddConnectionProduct } from './AddConnection.js'
@@ -43,8 +43,7 @@ export const AddConnectionModal = observer(
 		{ doConfigureConnection, showHelp },
 		ref
 	) {
-		const { socket, notifier } = useContext(RootAppStoreContext)
-		const connections = useContext(ConnectionsContext)
+		const { socket, notifier, connections } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<AddConnectionProduct | null>(null)
@@ -103,7 +102,7 @@ export const AddConnectionModal = observer(
 						mode: 'stable',
 						id: null,
 					})
-					setConnectionLabel(findNextConnectionLabel(connections, info.shortname))
+					setConnectionLabel(findNextConnectionLabel(connections.connections, info.shortname))
 				},
 			}),
 			[connections]
@@ -235,14 +234,14 @@ export const AddConnectionModal = observer(
 
 // nocommit TODO: this is a copy of the function from companion/lib/Instance/ConnectionConfigStore.ts
 function findNextConnectionLabel(
-	connections: Record<string, ClientConnectionConfig>,
+	connections: ReadonlyMap<string, ClientConnectionConfig>,
 	shortname: string,
 	ignoreId?: string
 ): string {
 	let prefix = shortname
 
 	const knownLabels = new Set()
-	for (const [id, obj] of Object.entries(connections)) {
+	for (const [id, obj] of connections) {
 		if (id !== ignoreId && obj && obj.label) {
 			knownLabels.add(obj.label)
 		}

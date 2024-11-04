@@ -1,11 +1,9 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CPopover } from '@coreui/react'
-import { ConnectionsContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEyeSlash, faQuestionCircle, faBug, faEllipsisV, faPlug } from '@fortawesome/free-solid-svg-icons'
 import { windowLinkOpen } from '../Helpers/Window.js'
 import classNames from 'classnames'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
@@ -34,12 +32,6 @@ export const ModulesList = observer(function ModulesList({
 	selectedModuleId,
 }: ModulesListProps) {
 	const { modules } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
-
-	const connectionsRef = useRef<Record<string, ClientConnectionConfig>>()
-	useEffect(() => {
-		connectionsRef.current = connectionsContext
-	}, [connectionsContext])
 
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
 		dev: true,

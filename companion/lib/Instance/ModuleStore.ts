@@ -1,13 +1,11 @@
 import LogController from '../Log/Controller.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type {
-	ModuleStoreListCacheEntry,
 	ModuleStoreListCacheStore,
 	ModuleStoreModuleInfoStore,
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
 import type { DataCache } from '../Data/Cache.js'
-import { cloneDeep } from 'lodash-es'
 import semver from 'semver'
 
 const ModuleStoreListRoom = 'module-store:list'
@@ -152,11 +150,13 @@ export class ModuleStoreService {
 				this.#io.emit('modules-store:list:progress', 0)
 
 				// Simulate a delay
-				await new Promise((resolve) => setTimeout(resolve, 1000))
+				// await new Promise((resolve) => setTimeout(resolve, 1000))
 				this.#io.emit('modules-store:list:progress', 0.2)
-				await new Promise((resolve) => setTimeout(resolve, 2000))
+				const req = await fetch(
+					'https://raw.githubusercontent.com/Julusian/companion-module-repository-poc/refs/heads/main/json/_all.json'
+				)
+				const jsonData: any = await req.json()
 				this.#io.emit('modules-store:list:progress', 0.6)
-				await new Promise((resolve) => setTimeout(resolve, 2000))
 
 				// TODO - fetch and transform this from the api once it exists
 				this.#listStore = {
@@ -164,7 +164,7 @@ export class ModuleStoreService {
 					lastUpdateAttempt: Date.now(),
 					updateWarning: null,
 
-					modules: cloneDeep(tmpStoreListData),
+					modules: jsonData,
 				}
 			})
 			.catch((e) => {
@@ -203,9 +203,13 @@ export class ModuleStoreService {
 			this.#io.emit('modules-store:info:progress', moduleId, 0)
 
 			// Simulate a delay
-			await new Promise((resolve) => setTimeout(resolve, 1000))
+			// await new Promise((resolve) => setTimeout(resolve, 1000))
 			this.#io.emit('modules-store:info:progress', moduleId, 0.2)
-			await new Promise((resolve) => setTimeout(resolve, 1000))
+			const req = await fetch(
+				`https://raw.githubusercontent.com/Julusian/companion-module-repository-poc/refs/heads/main/json/${moduleId}.json`
+			)
+			const jsonData: any = await req.json()
+			this.#io.emit('modules-store:info:progress', moduleId, 0.6)
 
 			data = {
 				id: moduleId,
@@ -213,7 +217,7 @@ export class ModuleStoreService {
 				lastUpdateAttempt: Date.now(),
 				updateWarning: null,
 
-				versions: cloneDeep(tmpStoreVersionsData),
+				versions: jsonData.versions,
 			}
 		} catch (e: any) {
 			// This could be on an always offline system
@@ -257,85 +261,3 @@ function getLatestModuleVersionInfo(versions: ModuleStoreModuleInfoVersion[]): M
 		return latest
 	}, null)
 }
-
-const tmpStoreListData: Record<string, ModuleStoreListCacheEntry> = {
-	'bmd-atem': {
-		id: 'bmd-atem',
-		name: 'Blackmagic: ATEM',
-		shortname: 'atem',
-		manufacturer: 'Blackmagic Design',
-		products: ['ATEM'],
-		keywords: ['blackmagic', 'atem', 'switcher'],
-
-		storeUrl: 'https://bitfocus.io/connections/bmd-atem',
-		githubUrl: 'https://github.com/bitfocus/companion-module-bmd-atem',
-
-		deprecationReason: null,
-	},
-}
-for (let i = 0; i < 20; i++) {
-	tmpStoreListData[`test-module-${i}`] = {
-		id: `test-module-${i}`,
-		name: `Test Module ${i}`,
-		shortname: 'test',
-		manufacturer: 'Test Manufacturer',
-		products: ['Test Product'],
-		keywords: ['test', 'module'],
-
-		storeUrl: 'https://bitfocus.io/connections/test',
-		githubUrl: null,
-
-		deprecationReason: null,
-	}
-}
-
-const tmpStoreVersionsData: ModuleStoreModuleInfoVersion[] = [
-	{
-		id: '5.4.3',
-		isPrerelease: false,
-		releasedAt: new Date('2021-01-01').getTime(),
-		tarUrl: 'https://builds.julusian.dev/companion-builds/pkg%20(2).tgz',
-		apiVersion: '2.0.0',
-		deprecationReason: null,
-	},
-	{
-		id: '5.4.2',
-		isPrerelease: true,
-		releasedAt: new Date('2021-01-01').getTime(),
-		tarUrl: 'https://builds.julusian.dev/companion-builds/pkg%20(2).tgz',
-		apiVersion: '1.12.0',
-		deprecationReason: null,
-	},
-	{
-		id: '5.4.1',
-		isPrerelease: true,
-		releasedAt: new Date('2021-01-01').getTime(),
-		tarUrl: 'https://builds.julusian.dev/companion-builds/pkg%20(2).tgz',
-		apiVersion: '1.11.1',
-		deprecationReason: null,
-	},
-	{
-		id: '3.14.0',
-		isPrerelease: false,
-		releasedAt: new Date('2021-01-02').getTime(),
-		tarUrl: null,
-		apiVersion: '1.0.0',
-		deprecationReason: null,
-	},
-	{
-		id: '3.14.1',
-		isPrerelease: false,
-		releasedAt: new Date('2021-01-02').getTime(),
-		tarUrl: 'https://builds.julusian.dev/companion-builds/atem-test-3.14.1.tgz',
-		apiVersion: '1.0.0',
-		deprecationReason: null,
-	},
-	{
-		id: '3.13.0',
-		isPrerelease: false,
-		releasedAt: new Date('2021-01-02').getTime(),
-		tarUrl: null,
-		apiVersion: '0.5.0',
-		deprecationReason: null,
-	},
-]
