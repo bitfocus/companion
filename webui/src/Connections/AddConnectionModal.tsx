@@ -120,31 +120,6 @@ export const AddConnectionModal = observer(
 				break
 		}
 
-		const moduleVersion = getModuleVersionInfoForConnection(moduleInfo?.installedInfo, {
-			moduleVersionMode: selectedVersion.mode,
-			moduleVersionId: selectedVersion.id,
-		})
-
-		const versionOptions = useMemo(
-			() => moduleInfo?.installedInfo && getConnectionVersionSelectOptions(moduleInfo.installedInfo),
-			[moduleInfo]
-		)
-
-		// Ensure the currently selection version is a valid option
-		useEffect(() => {
-			if (!versionOptions) return
-
-			setSelectedVersion((value) => {
-				const valueStr = JSON.stringify(value)
-
-				// Check if value is still valid
-				if (versionOptions.find((v) => v.value === valueStr)) return value
-
-				// It is not, so choose the first option
-				return JSON.parse(versionOptions[0].value)
-			})
-		}, [versionOptions])
-
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
 				{moduleInfo && (
@@ -182,17 +157,11 @@ export const AddConnectionModal = observer(
 									{!!moduleStoreInfo && <ModuleVersionsRefresh moduleId={moduleInfo.id} />}
 								</CFormLabel>
 								<CCol sm={8}>
-									<CFormSelect
-										name="colFormVersion"
-										value={JSON.stringify(selectedVersion)}
-										onChange={(e) => setSelectedVersion(JSON.parse(e.currentTarget.value))}
-									>
-										{versionOptions?.map((v) => (
-											<option key={v.value} value={v.value}>
-												{v.label}
-											</option>
-										))}
-									</CFormSelect>
+									<ModuleVersionPicker
+										moduleInfo={moduleInfo}
+										selectedVersion={selectedVersion}
+										setSelectedVersion={setSelectedVersion}
+									/>
 								</CCol>
 							</CForm>
 
@@ -294,6 +263,79 @@ const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ moduleId
 	}
 })
 
+interface ModuleVersionPickerProps {
+	moduleInfo: AddConnectionProduct | null
+	selectedVersion: ModuleVersionInfo
+	setSelectedVersion: React.Dispatch<React.SetStateAction<ModuleVersionInfo>>
+}
+
+const ModuleVersionPicker = observer(function ModuleVersionPicker({
+	moduleInfo,
+	selectedVersion,
+	setSelectedVersion,
+}: ModuleVersionPickerProps) {
+	const versionChoices = useMemo(() => {
+		const choices: DropdownChoiceInt[] = []
+
+		if (moduleInfo?.installedInfo) {
+			if (moduleInfo.installedInfo.stableVersion)
+				choices.push({
+					value: JSON.stringify(moduleInfo.installedInfo.stableVersion.version),
+					label: moduleInfo.installedInfo.stableVersion.displayName,
+				})
+
+			if (moduleInfo.installedInfo.prereleaseVersion)
+				choices.push({
+					value: JSON.stringify(moduleInfo.installedInfo.prereleaseVersion.version),
+					label: moduleInfo.installedInfo.prereleaseVersion.displayName,
+				})
+
+			for (const version of moduleInfo.installedInfo.installedVersions) {
+				choices.push({ value: JSON.stringify(version.version), label: version.displayName })
+			}
+		}
+
+		return choices
+	}, [moduleInfo])
+
+	// const moduleVersion = getModuleVersionInfoForConnection(moduleInfo?.installedInfo, {
+	// 	moduleVersionMode: selectedVersion.mode,
+	// 	moduleVersionId: selectedVersion.id,
+	// })
+
+	// Ensure the currently selection version is a valid option
+	useEffect(() => {
+		if (!versionChoices || versionChoices.length === 0) return
+
+		setSelectedVersion((value) => {
+			const valueStr = JSON.stringify(value)
+
+			// Check if value is still valid
+			if (versionChoices.find((v) => v.value === valueStr)) return value
+
+			// It is not, so choose the first option
+			return JSON.parse(versionChoices[0].value)
+		})
+	}, [versionChoices])
+
+	return (
+		<CFormSelect
+			name="colFormVersion"
+			value={JSON.stringify(selectedVersion)}
+			onChange={(e) => setSelectedVersion(JSON.parse(e.currentTarget.value))}
+		>
+			{versionChoices?.map((v) => (
+				<option key={v.value} value={v.value}>
+					{v.label}
+				</option>
+			))}
+		</CFormSelect>
+	)
+})
+
+/**
+ * @deprecated move this
+ */
 export function getConnectionVersionSelectOptions(moduleInfo: NewClientModuleInfo): DropdownChoiceInt[] {
 	const choices: DropdownChoiceInt[] = []
 
