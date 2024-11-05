@@ -241,8 +241,6 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 					<tr>
 						<th>&nbsp;</th>
 						<th>Variable</th>
-						<th>Value</th>
-						<th>&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -393,85 +391,99 @@ function CustomVariableRow({
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td style={{ verticalAlign: 'middle' }}>
-				<span className="variable-style">$({fullname})</span>
-				<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
-					<CButton size="sm" title="Copy variable name">
-						<FontAwesomeIcon icon={faCopy} />
-					</CButton>
-				</CopyToClipboard>
-			</td>
-			<td style={{ verticalAlign: 'middle' }}>
-				{isCollapsed && (
-					<>
-						<code
-							style={{
-								backgroundColor: 'rgba(0,0,200,0.1)',
-								color: 'rgba(0,0,200,1)',
-								fontWeight: 'normal',
-								fontSize: 14,
-								padding: '4px',
-								lineHeight: '2em',
-								borderRadius: '6px',
-							}}
-							title={value}
-						>
-							{value?.length > 100 ? `${value.substring(0, 100)}...` : value}
-						</code>
-					</>
-				)}
-				{!isCollapsed && (
-					<>
-						<div className="cell-values">
-							<CForm onSubmit={PreventDefaultHandler}>
-								<TextInputField
-									label="Current value: "
-									value={value ?? ''}
-									setValue={(val) => setCurrentValue(name, val)}
-									style={{ marginBottom: '0.5rem' }}
-								/>
-								<CheckboxInputField
-									label="Persist current value"
-									value={info.persistCurrentValue}
-									setValue={(val) => setPersistenceValue(name, val)}
-									helpText="If enabled, the current value will be saved and restored when Companion restarts."
-									inline={true}
-								/>
-								<br></br>
-								<TextInputField
-									label="Startup value: "
-									disabled={!!info.persistCurrentValue}
-									value={info.defaultValue + ''}
-									setValue={(val) => setStartupValue(name, val)}
-								/>
-							</CForm>
-						</div>
-					</>
-				)}
-			</td>
-			<td style={{ paddingRight: 0, paddingLeft: '2.5em', verticalAlign: 'middle' }}>
+			<td>
 				<div className="editor-grid">
 					<div className="cell-header">
-						<CButtonGroup className="right">
-							{isCollapsed ? (
-								<CButton onClick={doExpand} size="sm" title="Expand variable view">
-									<FontAwesomeIcon icon={faExpandArrowsAlt} />
-								</CButton>
-							) : (
-								<CButton onClick={doCollapse} size="sm" title="Collapse variable view">
-									<FontAwesomeIcon icon={faCompressArrowsAlt} />
-								</CButton>
-							)}
-							<CopyToClipboard text={`${value?.length > 0 ? value : ' '}`} onCopy={onCopied}>
-								<CButton size="sm" title="Copy current variable value">
-									<FontAwesomeIcon icon={faCopy} />
+						<div className="cell-header-item">
+							<span className="variable-style">$({fullname})</span>
+							<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
+								<CButton size="sm" title="Copy variable name">
+									<FontAwesomeIcon icon={faCopy} color="#d50215" />
 								</CButton>
 							</CopyToClipboard>
-							<CButton onClick={() => doDelete(name)} size="sm" title="Delete custom variable">
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>
-						</CButtonGroup>
+						</div>
+						<div className="cell-header-item">
+							{isCollapsed && value?.length > 0 && (
+								<>
+									<code
+										style={{
+											backgroundColor: 'rgba(0,0,200,0.1)',
+											color: 'rgba(0,0,200,1)',
+											fontWeight: 'normal',
+											fontSize: 14,
+											padding: '4px',
+											lineHeight: '2em',
+											borderRadius: '6px',
+										}}
+										title={value}
+									>
+										{value?.length > 100 ? `${value.substring(0, 100)}...` : value}
+									</code>
+									<CopyToClipboard text={`${value?.length > 0 ? value : ' '}`} onCopy={onCopied}>
+										<CButton size="sm" title="Copy current variable value">
+											<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
+										</CButton>
+									</CopyToClipboard>
+								</>
+							)}
+							{isCollapsed && value?.length === 0 && (
+								<>
+									<span style={{ fontWeight: 'normal' }}>(empty)</span>
+								</>
+							)}
+						</div>
+						<div className="cell-header-item">
+							<CButtonGroup style={{ float: 'inline-end' }}>
+								{isCollapsed ? (
+									<CButton onClick={doExpand} size="sm" title="Expand variable view">
+										<FontAwesomeIcon icon={faExpandArrowsAlt} />
+									</CButton>
+								) : (
+									<CButton onClick={doCollapse} size="sm" title="Collapse variable view">
+										<FontAwesomeIcon icon={faCompressArrowsAlt} />
+									</CButton>
+								)}
+
+								<CButton onClick={() => doDelete(name)} size="sm" title="Delete custom variable">
+									<FontAwesomeIcon icon={faTrash} />
+								</CButton>
+							</CButtonGroup>
+						</div>
 					</div>
+					{!isCollapsed && (
+						<>
+							<div className="cell-fields">
+								<div className="cell-options">
+									<CForm onSubmit={PreventDefaultHandler}>
+										<CheckboxInputField
+											label="Persist value"
+											value={info.persistCurrentValue}
+											setValue={(val) => setPersistenceValue(name, val)}
+											helpText="If enabled, variable value will be saved and restored when Companion restarts."
+											inline={true}
+										/>
+									</CForm>
+								</div>
+								<div className="cell-values">
+									<CForm onSubmit={PreventDefaultHandler}>
+										<TextInputField
+											label="Current value: "
+											value={value ?? ''}
+											setValue={(val) => setCurrentValue(name, val)}
+											style={{ marginBottom: '0.5rem' }}
+										/>
+
+										<TextInputField
+											label="Startup value: "
+											disabled={!!info.persistCurrentValue}
+											value={info.defaultValue + ''}
+											setValue={(val) => setStartupValue(name, val)}
+										/>
+									</CForm>
+								</div>
+							</div>
+						</>
+					)}
 				</div>
 			</td>
 		</tr>
