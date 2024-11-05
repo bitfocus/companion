@@ -179,7 +179,7 @@ const StoreModuleEntry = observer(function StoreModuleEntry({
 				<FontAwesomeIcon icon={faExternalLink} />
 			</WindowLinkOpen>
 			{!!moduleInfo.githubUrl && (
-				<WindowLinkOpen className="float_right" title="Open Store Page" href={moduleInfo.githubUrl}>
+				<WindowLinkOpen className="float_right" title="Open GitHub Page" href={moduleInfo.githubUrl}>
 					<FontAwesomeIcon icon={faGithub} />
 				</WindowLinkOpen>
 			)}

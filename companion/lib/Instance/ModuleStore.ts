@@ -147,16 +147,16 @@ export class ModuleStoreService {
 
 		Promise.resolve()
 			.then(async () => {
-				this.#io.emit('modules-store:list:progress', 0)
+				this.#io.emitToAll('modules-store:list:progress', 0)
 
 				// Simulate a delay
 				// await new Promise((resolve) => setTimeout(resolve, 1000))
-				this.#io.emit('modules-store:list:progress', 0.2)
+				this.#io.emitToAll('modules-store:list:progress', 0.2)
 				const req = await fetch(
 					'https://raw.githubusercontent.com/Julusian/companion-module-repository-poc/refs/heads/main/json/_all.json'
 				)
 				const jsonData: any = await req.json()
-				this.#io.emit('modules-store:list:progress', 0.6)
+				this.#io.emitToAll('modules-store:list:progress', 0.6)
 
 				// TODO - fetch and transform this from the api once it exists
 				this.#listStore = {
@@ -164,7 +164,12 @@ export class ModuleStoreService {
 					lastUpdateAttempt: Date.now(),
 					updateWarning: null,
 
-					modules: jsonData,
+					modules: Object.fromEntries(
+						Object.entries(jsonData).map(([id, data]: [id: string, data: any]) => [
+							id,
+							{ ...data, name: data.manufacturer + ': ' + data.products.join('; ') }, // Match what the on disk scanner generates
+						])
+					),
 				}
 			})
 			.catch((e) => {
@@ -180,7 +185,7 @@ export class ModuleStoreService {
 
 				// Update clients
 				this.#io.emitToRoom(ModuleStoreListRoom, 'modules-store:list:data', this.#listStore)
-				this.#io.emit('modules-store:list:progress', 1)
+				this.#io.emitToAll('modules-store:list:progress', 1)
 
 				this.#isRefreshingStoreData = false
 
@@ -200,16 +205,16 @@ export class ModuleStoreService {
 
 		let data: ModuleStoreModuleInfoStore
 		try {
-			this.#io.emit('modules-store:info:progress', moduleId, 0)
+			this.#io.emitToAll('modules-store:info:progress', moduleId, 0)
 
 			// Simulate a delay
-			// await new Promise((resolve) => setTimeout(resolve, 1000))
-			this.#io.emit('modules-store:info:progress', moduleId, 0.2)
+			await new Promise((resolve) => setTimeout(resolve, 1000))
+			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.2)
 			const req = await fetch(
 				`https://raw.githubusercontent.com/Julusian/companion-module-repository-poc/refs/heads/main/json/${moduleId}.json`
 			)
 			const jsonData: any = await req.json()
-			this.#io.emit('modules-store:info:progress', moduleId, 0.6)
+			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.6)
 
 			data = {
 				id: moduleId,
@@ -243,7 +248,7 @@ export class ModuleStoreService {
 
 		// Update clients
 		this.#io.emitToRoom(ModuleStoreInfoRoom(moduleId), 'modules-store:info:data', moduleId, data)
-		this.#io.emit('modules-store:info:progress', moduleId, 1)
+		this.#io.emitToAll('modules-store:info:progress', moduleId, 1)
 
 		this.#isRefreshingStoreInfo.delete(moduleId)
 

@@ -12,7 +12,7 @@ import {
 	CModalHeader,
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faQuestionCircle, faRefresh, faSync } from '@fortawesome/free-solid-svg-icons'
 import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -174,11 +174,12 @@ export const AddConnectionModal = observer(
 
 								<CFormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm">
 									Module Version&nbsp;
-									{moduleVersion?.hasHelp && (
+									{/* {moduleVersion?.hasHelp && (
 										<div className="float_right" onClick={() => showHelp(moduleInfo.id, moduleVersion)}>
 											<FontAwesomeIcon icon={faQuestionCircle} />
 										</div>
-									)}
+									)} */}
+									{!!moduleStoreInfo && <ModuleVersionsRefresh moduleId={moduleInfo.id} />}
 								</CFormLabel>
 								<CCol sm={8}>
 									<CFormSelect
@@ -258,6 +259,40 @@ function findNextConnectionLabel(
 
 	return label
 }
+
+interface ModuleVersionsRefreshProps {
+	moduleId: string | null
+}
+const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ moduleId }: ModuleVersionsRefreshProps) {
+	const { socket, moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
+
+	const refreshProgress = (moduleId ? moduleStoreRefreshProgress.get(moduleId) : null) ?? 1
+
+	const doRefreshModules = useCallback(() => {
+		if (!moduleId) return
+		socketEmitPromise(socket, 'modules-store:info:refresh', [moduleId]).catch((err) => {
+			console.error('Failed to refresh module info', err)
+		})
+	}, [moduleId])
+
+	if (refreshProgress === 1) {
+		return (
+			<div className="float_right" onClick={doRefreshModules}>
+				<FontAwesomeIcon icon={faSync} title="Refresh module info" />
+			</div>
+		)
+	} else {
+		return (
+			<div className="float_right">
+				<FontAwesomeIcon
+					icon={faSync}
+					spin={true}
+					title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
+				/>
+			</div>
+		)
+	}
+})
 
 export function getConnectionVersionSelectOptions(moduleInfo: NewClientModuleInfo): DropdownChoiceInt[] {
 	const choices: DropdownChoiceInt[] = []

@@ -1,7 +1,7 @@
 import React, { useContext, useState, useCallback, useRef } from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationTriangle, faPlug, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faExclamationTriangle, faExternalLink, faPlug, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
@@ -10,12 +10,14 @@ import { AddConnectionModal, AddConnectionModalRef } from './AddConnectionModal.
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import { useComputed } from '../util.js'
-import { ObservableMap } from 'mobx'
 import { RefreshModulesList } from '../Modules/RefreshModulesList.js'
 import { LastUpdatedTimestamp } from '../Modules/LastUpdatedTimestamp.js'
 import { ModuleInfoStore } from '../Stores/ModuleInfoStore.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Link } from 'react-router-dom'
+import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
+import { WindowLinkOpen } from '../Helpers/Window.js'
+import { faGithub } from '@fortawesome/free-brands-svg-icons'
 
 interface AddConnectionsPanelProps {
 	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
@@ -34,11 +36,16 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 		addRef.current?.show(moduleInfo)
 	}, [])
 
+	const typeFilter = useTableVisibilityHelper('connections-add-type-filter', {
+		available: true,
+	})
+
 	const allProducts = useAllConnectionProducts(modules)
+	const typeProducts = allProducts.filter((p) => !!p.installedInfo || typeFilter.visiblity.available)
 
 	let candidates: JSX.Element[] = []
 	try {
-		const searchResults = filterProducts(allProducts, filter)
+		const searchResults = filterProducts(typeProducts, filter)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
@@ -78,6 +85,14 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 		)
 	}
 
+	const includeStoreModules = useCallback(
+		(e: React.MouseEvent) => {
+			e.preventDefault()
+			typeFilter.toggleVisibility('available', true)
+		},
+		[typeFilter]
+	)
+
 	return (
 		<>
 			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} showHelp={showHelp} />
@@ -108,6 +123,16 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 				</div>
 
+				<div className="table-header-buttons">
+					<VisibilityButton
+						{...typeFilter}
+						keyId="available"
+						color="info"
+						label="Available"
+						title="Available to be installed from the store"
+					/>
+				</div>
+
 				<SearchBox filter={filter} setFilter={setFilter} />
 				<br />
 			</div>
@@ -115,7 +140,15 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 				{candidates}
 
 				{candidates.length === 0 && allProducts.length > 0 && (
-					<NonIdealState icon={faPlug}>No modules match your search.</NonIdealState>
+					<NonIdealState icon={faPlug}>
+						No modules match your search.
+						<br />
+						{!typeFilter.visiblity.available && (
+							<a href="#" onClick={includeStoreModules}>
+								Click here to include modules from the store
+							</a>
+						)}
+					</NonIdealState>
 				)}
 
 				{candidates.length === 0 && allProducts.length === 0 && (
@@ -166,6 +199,17 @@ function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnecti
 				</>
 			)}
 			{moduleInfo.name}
+			{/* // TODO: align in columns? */}
+			{!!moduleInfo.storeInfo && (
+				<WindowLinkOpen className="float_right" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
+					<FontAwesomeIcon icon={faExternalLink} />
+				</WindowLinkOpen>
+			)}
+			{!!moduleInfo.storeInfo?.githubUrl && (
+				<WindowLinkOpen className="float_right" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
+					<FontAwesomeIcon icon={faGithub} />
+				</WindowLinkOpen>
+			)}
 			{showVersion?.hasHelp && (
 				<div className="float_right" onClick={showHelpClick}>
 					<FontAwesomeIcon icon={faQuestionCircle} />
