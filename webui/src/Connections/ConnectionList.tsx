@@ -1,5 +1,5 @@
 import React, { RefObject, useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
+import { CButton, CButtonGroup, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -439,7 +439,11 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 					</InlineHelp>
 				)
 			case 'error':
-				return (
+				return status?.level === 'Connecting' ? (
+					<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
+						<CSpinner color="warning"></CSpinner>
+					</InlineHelp>
+				) : (
 					<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
 						<FontAwesomeIcon icon={faTriangleExclamation} color={'#d50215'} size="2xl" />
 					</InlineHelp>
