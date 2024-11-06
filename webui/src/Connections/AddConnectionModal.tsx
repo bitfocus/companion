@@ -12,7 +12,7 @@ import {
 	CModalHeader,
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuestionCircle, faRefresh, faSync } from '@fortawesome/free-solid-svg-icons'
+import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -24,9 +24,8 @@ import {
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { getModuleVersionInfoForConnection } from './Util.js'
 import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
-import type { AddConnectionProduct } from './AddConnection.js'
+import type { AddConnectionProduct } from './AddConnectionPanel.js'
 import { useModuleStoreInfo } from '../Modules/ModuleManagePanel.js'
 
 export interface AddConnectionModalRef {

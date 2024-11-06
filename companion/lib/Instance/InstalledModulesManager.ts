@@ -54,6 +54,10 @@ export class InstanceInstalledModulesManager {
 	 */
 	async init() {
 		await fs.mkdirp(this.#modulesDir)
+		await fs.writeFile(
+			path.join(this.#modulesDir, 'README.md'),
+			'This directory contains installed modules\r\nDo not modify unless you know what you are doing'
+		)
 	}
 
 	/**

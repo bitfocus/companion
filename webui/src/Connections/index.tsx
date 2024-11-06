@@ -3,7 +3,7 @@ import React, { memo, useCallback, useContext, useEffect, useRef, useState } fro
 import { HelpModal, HelpModalRef } from './HelpModal.js'
 import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { ConnectionsList } from './ConnectionList.js'
-import { AddConnectionsPanel } from './AddConnection.js'
+import { AddConnectionsPanel } from './AddConnectionPanel.js'
 import { ConnectionEditPanel } from './ConnectionEditPanel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'

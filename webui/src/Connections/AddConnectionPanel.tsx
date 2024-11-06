@@ -42,6 +42,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 	const allProducts = useAllConnectionProducts(modules)
 	const typeProducts = allProducts.filter((p) => !!p.installedInfo || typeFilter.visiblity.available)
+	console.log(allProducts, typeProducts)
 
 	let candidates: JSX.Element[] = []
 	try {
