@@ -214,11 +214,13 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 				this.commitChanges([sessionId])
 			}
 		})
-		client.onPromise('action-recorder:session:action-reorder', (sessionId, oldIndex, newIndex) => {
+		client.onPromise('action-recorder:session:action-reorder', (sessionId, actionId, newIndex) => {
 			if (!this.#currentSession || this.#currentSession.id !== sessionId)
 				throw new Error(`Invalid session: ${sessionId}`)
 
-			oldIndex = clamp(oldIndex, 0, this.#currentSession.actions.length)
+			const oldIndex = this.#currentSession.actions.findIndex((a) => a.id === actionId)
+			if (oldIndex === -1) throw new Error(`Invalid action: ${actionId}`)
+
 			newIndex = clamp(newIndex, 0, this.#currentSession.actions.length)
 			this.#currentSession.actions.splice(newIndex, 0, ...this.#currentSession.actions.splice(oldIndex, 1))
 

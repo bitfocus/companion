@@ -39,7 +39,7 @@ export class SurfaceUSB203SystemsMystrix extends EventEmitter<SurfacePanelEvents
 	/**
 	 * Last drawn colours, to allow resending when app launched or other off sync situations
 	 */
-	#lastColours: RgbColor[][]
+	#lastColours: RgbColor[][] = []
 
 	/**
 	 * Device is active or not

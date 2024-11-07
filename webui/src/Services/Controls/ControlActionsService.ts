@@ -11,7 +11,7 @@ export interface IActionEditorService {
 	performDuplicate: (actionId: string) => void
 	setConnection: (actionId: string, connectionId: string | number) => void
 	setDelay: (actionId: string, delay: number) => void
-	moveCard: (dragStepId: string, dragSetId: string | number, dragIndex: number, dropIndex: number) => void
+	moveCard: (dragStepId: string, dragSetId: string | number, dragActionId: string, dropIndex: number) => void
 	performLearn: ((actionId: string) => void) | undefined
 	setEnabled: ((actionId: string, enabled: boolean) => void) | undefined
 	setHeadline: ((actionId: string, headline: string) => void) | undefined
@@ -47,12 +47,12 @@ export function useControlActionsEditorService(
 				)
 			},
 
-			moveCard: (dragStepId: string, dragSetId: string | number, dragIndex: number, dropIndex: number) => {
+			moveCard: (dragStepId: string, dragSetId: string | number, dragActionId: string, dropIndex: number) => {
 				socketEmitPromise(socket, 'controls:action:reorder', [
 					controlId,
 					dragStepId,
 					dragSetId + '',
-					dragIndex,
+					dragActionId,
 					stepId,
 					setId + '',
 					dropIndex,
@@ -148,8 +148,8 @@ export function useActionRecorderActionService(sessionId: string): IActionEditor
 			addAction: (_actionType: string) => {
 				// Not supported
 			},
-			moveCard: (_dragStepId: string, _dragSetId: string | number, dragIndex: number, dropIndex: number) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragIndex, dropIndex]).catch(
+			moveCard: (_dragStepId: string, _dragSetId: string | number, dragActionId: string, dropIndex: number) => {
+				socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragActionId, dropIndex]).catch(
 					(e) => {
 						console.error(e)
 					}

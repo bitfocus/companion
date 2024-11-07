@@ -255,14 +255,14 @@ const VariablesSelect = observer(function VariablesSelect({
 		const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPositionRef.current)
 		if (openIndex === -1) return
 
-		// Propogate the new value
+		// Propagate the new value
 		storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPositionRef.current))
 
 		// This doesn't work properly, it causes the cursor to get a bit confused on where it is but avoids the glitch of setSelectionRange
 		// if (inputRef.current)
 		// 	inputRef.current.setRangeText(`$(${variable.value})`, openIndex, cursorPositionRef.current, 'end')
 
-		// Update the selection after mutating the value. This needs to be defered, although this causes a 'glitch' in the drawing
+		// Update the selection after mutating the value. This needs to be deferred, although this causes a 'glitch' in the drawing
 		// It needs to be delayed, so that react can re-render first
 		const newSelection = openIndex + variable.value.length + 3
 		setTimeout(() => {

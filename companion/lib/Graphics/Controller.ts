@@ -18,7 +18,6 @@
 import { LRUCache } from 'lru-cache'
 import { GlobalFonts } from '@napi-rs/canvas'
 import { GraphicsRenderer } from './Renderer.js'
-import { CoreBase } from '../Core/Base.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import type { ImageResult } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
@@ -27,10 +26,15 @@ import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import debounceFn from 'debounce-fn'
-import type { Registry } from '../Registry.js'
 import type { CompanionButtonStyleProps, CompanionVariableValues } from '@companion-module/base'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { EventEmitter } from 'events'
+import LogController from '../Log/Controller.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { PageController } from '../Page/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { VariablesValues } from '../Variables/Values.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
@@ -53,9 +57,17 @@ function generateFontUrl(fontFilename: string): string {
 
 interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
+	resubscribeFeedbacks: []
 }
 
-export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
+export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
+	readonly #logger = LogController.createLogger('Graphics/Controller')
+
+	readonly #controlsController: ControlsController
+	readonly #pagesController: PageController
+	readonly #userConfigController: DataUserConfig
+	readonly #variableValuesController: VariablesValues
+
 	/**
 	 * Cached UserConfig values that affect button rendering
 	 */
@@ -80,11 +92,11 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 			maxWorkers: 6,
 			workerType: 'thread',
 			onCreateWorker: () => {
-				this.logger.info('Render worker created')
+				this.#logger.info('Render worker created')
 				return undefined
 			},
 			onTerminateWorker: () => {
-				this.logger.info('Render worker terminated')
+				this.#logger.info('Render worker terminated')
 			},
 		}
 	)
@@ -92,7 +104,7 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 	/**
 	 * Generated pincode bitmaps
 	 */
-	#pincodeBuffersCache: Omit<PincodeBitmaps, 'code'> | null
+	#pincodeBuffersCache: Omit<PincodeBitmaps, 'code'> | null = null
 
 	#pendingVariables: CompanionVariableValues | null = null
 	/**
@@ -103,7 +115,7 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 			const values = this.#pendingVariables
 			if (values) {
 				this.#pendingVariables = null
-				this.variablesController.values.setVariableValues('internal', values)
+				this.#variableValuesController.setVariableValues('internal', values)
 			}
 		},
 		{
@@ -112,22 +124,32 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 		}
 	)
 
-	constructor(registry: Registry) {
-		super(registry, 'Graphics/Controller')
+	constructor(
+		controlsController: ControlsController,
+		pagesController: PageController,
+		userConfigController: DataUserConfig,
+		variableValuesController: VariablesValues
+	) {
+		super()
+
+		this.#controlsController = controlsController
+		this.#pagesController = pagesController
+		this.#userConfigController = userConfigController
+		this.#variableValuesController = variableValuesController
 
 		this.setMaxListeners(0)
 
 		this.#drawOptions = {
-			page_direction_flipped: this.userconfig.getKey('page_direction_flipped'),
-			page_plusminus: this.userconfig.getKey('page_plusminus'),
-			remove_topbar: this.userconfig.getKey('remove_topbar'),
+			page_direction_flipped: this.#userConfigController.getKey('page_direction_flipped'),
+			page_plusminus: this.#userConfigController.getKey('page_plusminus'),
+			remove_topbar: this.#userConfigController.getKey('remove_topbar'),
 		}
 
 		this.#renderQueue = new ImageWriteQueue(
-			this.logger,
+			this.#logger,
 			async (_id: string, location: ControlLocation, skipInvalidation: boolean) => {
 				try {
-					const gridSize = this.userconfig.getKey('gridSize')
+					const gridSize = this.#userConfigController.getKey('gridSize')
 					const locationIsInBounds =
 						location &&
 						gridSize &&
@@ -136,8 +158,8 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 						location.row <= gridSize.maxRow &&
 						location.row >= gridSize.minRow
 
-					const controlId = this.page.getControlIdAt(location)
-					const control = controlId ? this.controls.getControl(controlId) : undefined
+					const controlId = this.#pagesController.getControlIdAt(location)
+					const control = controlId ? this.#controlsController.getControl(controlId) : undefined
 					const buttonStyle = control?.getDrawStyle() ?? undefined
 
 					if (location && locationIsInBounds) {
@@ -169,7 +191,7 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
-						const pagename = this.page.getPageName(location.pageNumber)
+						const pagename = this.#pagesController.getPageName(location.pageNumber)
 
 						// Check if the image is already present in the render cache and if so, return it
 						let keyLocation: ControlLocation | undefined
@@ -202,13 +224,13 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 						this.emit('button_drawn', location, render)
 					}
 				} catch (e) {
-					this.logger.warn(`drawButtonImage failed: ${e}`)
+					this.#logger.warn(`drawButtonImage failed: ${e}`)
 				}
 			},
 			5
 		) // TODO - dynamic limit
 
-		this.logger.info('Loading fonts')
+		this.#logger.info('Loading fonts')
 
 		GlobalFonts.registerFromPath(generateFontUrl('Arimo-Regular.ttf'), 'Companion-sans')
 		GlobalFonts.registerFromPath(generateFontUrl('NotoSansMono-wdth-wght.ttf'), 'Companion-mono')
@@ -224,7 +246,7 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 		GlobalFonts.registerFromPath(generateFontUrl('NotoColorEmoji-compat.ttf'), 'Companion-emoji')
 		GlobalFonts.registerFromPath(generateFontUrl('pf_tempesta_seven.ttf'), '5x7')
 
-		this.logger.info('Fonts loaded')
+		this.#logger.info('Fonts loaded')
 	}
 
 	/**
@@ -273,7 +295,7 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 	 * Redraw the page controls on every page
 	 */
 	invalidatePageControls(): void {
-		const allControls = this.controls.getAllControls()
+		const allControls = this.#controlsController.getAllControls()
 		for (const control of Object.values(allControls)) {
 			if (control.type === 'pageup' || control.type === 'pagedown') {
 				this.invalidateControl(control.controlId)
@@ -328,10 +350,10 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 			this.invalidatePageControls()
 		} else if (key == 'remove_topbar') {
 			this.#drawOptions.remove_topbar = !!value
-			this.logger.silly('Topbar removed')
+			this.#logger.silly('Topbar removed')
 			// Delay redrawing to give connections a chance to adjust
 			setTimeout(() => {
-				this.instance.moduleHost.resubscribeAllFeedbacks()
+				this.emit('resubscribeFeedbacks')
 				this.regenerateAll(false)
 			}, 1000)
 		}
@@ -341,7 +363,7 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 	 * Regenerate the render of a control
 	 */
 	invalidateControl(controlId: string): void {
-		const location = this.page.getLocationOfControlId(controlId)
+		const location = this.#pagesController.getLocationOfControlId(controlId)
 		if (location) {
 			this.invalidateButton(location)
 		}
@@ -359,9 +381,9 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 	 * @param skipInvalidation whether to skip reporting invalidations of each button
 	 */
 	regenerateAll(skipInvalidation = false): void {
-		const pageCount = this.page.getPageCount()
+		const pageCount = this.#pagesController.getPageCount()
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
-			const populatedLocations = this.page.getAllPopulatedLocationsOnPage(pageNumber)
+			const populatedLocations = this.#pagesController.getAllPopulatedLocationsOnPage(pageNumber)
 			for (const location of populatedLocations) {
 				this.#drawAndCacheButton(location, skipInvalidation)
 			}
@@ -380,7 +402,7 @@ export class GraphicsController extends CoreBase<GraphicsControllerEvents> {
 	 * Discard any renders for controls that are outside of the valid grid bounds
 	 */
 	discardAllOutOfBoundsControls(): void {
-		const { minColumn, maxColumn, minRow, maxRow } = this.userconfig.getKey('gridSize')
+		const { minColumn, maxColumn, minRow, maxRow } = this.#userConfigController.getKey('gridSize')
 
 		for (const page of this.#renderCache.values()) {
 			for (const row of page.keys()) {

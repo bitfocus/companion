@@ -118,13 +118,6 @@ export class DataUserConfig extends CoreBase {
 	constructor(registry: Registry) {
 		super(registry, 'Data/UserConfig')
 
-		this.registry.on('http_rebind', (bind_ip) => {
-			if (this.#data !== undefined && DataUserConfig.Defaults.https_self_cn == this.#data.https_self_cn) {
-				this.setKey('https_self_cn', bind_ip)
-			}
-			DataUserConfig.Defaults.https_self_cn = bind_ip
-		})
-
 		this.#data = this.db.getKey('userconfig', cloneDeep(DataUserConfig.Defaults))
 
 		this.#populateMissingForExistingDb()
@@ -365,7 +358,7 @@ export class DataUserConfig extends CoreBase {
 		}
 
 		this.logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
-		this.io.emit('set_userconfig_key', key, value)
+		this.io.emitToAll('set_userconfig_key', key, value)
 		setImmediate(() => {
 			// give the change a chance to be pushed to the ui first
 			this.graphics.updateUserConfig(key, value)
@@ -397,5 +390,12 @@ export class DataUserConfig extends CoreBase {
 
 			this.db.setKey('userconfig', this.#data)
 		}
+	}
+
+	updateBindIp(bindIp: string): void {
+		if (this.#data !== undefined && DataUserConfig.Defaults.https_self_cn == this.#data.https_self_cn) {
+			this.setKey('https_self_cn', bindIp)
+		}
+		DataUserConfig.Defaults.https_self_cn = bindIp
 	}
 }

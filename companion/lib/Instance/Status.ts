@@ -136,7 +136,7 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 		const patch = jsonPatch.compare(this.#instanceStatuses || {}, newObj || {})
 		if (patch.length > 0) {
 			// TODO - make this be a subscription with a dedicated room
-			this.#io.emit(`connections:patch-statuses`, patch)
+			this.#io.emitToAll(`connections:patch-statuses`, patch)
 		}
 
 		this.#instanceStatuses = newObj

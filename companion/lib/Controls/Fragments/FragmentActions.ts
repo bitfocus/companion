@@ -33,7 +33,7 @@ export class FragmentActions {
 
 	/**
 	 */
-	options: ActionStepOptions
+	options!: ActionStepOptions
 
 	/**
 	 * Commit changes to the database and disk
@@ -368,7 +368,7 @@ export class FragmentActions {
 	}
 
 	/**
-	 * Set an opton of an action
+	 * Set an option of an action
 	 * @param setId the action_set id
 	 * @param id the action id
 	 * @param key the desired option to set

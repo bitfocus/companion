@@ -169,11 +169,10 @@ export class ServiceOscApi extends CoreBase {
 
 	/**
 	 * Perform surfaces rescan
-	 * @returns {void}
 	 */
-	#surfacesRescan = () => {
+	#surfacesRescan = (): void => {
 		this.logger.info('Got OSC surface rescan')
-		this.registry.surfaces.triggerRefreshDevices().catch(() => {
+		this.surfaces.triggerRefreshDevices().catch(() => {
 			this.logger.debug('Scan failed')
 		})
 	}
@@ -188,7 +187,7 @@ export class ServiceOscApi extends CoreBase {
 			column: Number(match.column),
 		}
 
-		const controlId = this.registry.page.getControlIdAt(location)
+		const controlId = this.page.getControlIdAt(location)
 
 		return {
 			location,
@@ -204,12 +203,12 @@ export class ServiceOscApi extends CoreBase {
 		this.logger.info(`Got OSC control press ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.registry.controls.pressControl(controlId, true, 'osc')
+		this.controls.pressControl(controlId, true, 'osc')
 
 		setTimeout(() => {
 			this.logger.info(`Auto releasing OSC control press ${formatLocation(location)} - ${controlId}`)
 
-			this.registry.controls.pressControl(controlId, false, 'osc')
+			this.controls.pressControl(controlId, false, 'osc')
 		}, 20)
 	}
 
@@ -221,7 +220,7 @@ export class ServiceOscApi extends CoreBase {
 		this.logger.info(`Got OSC control down ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.registry.controls.pressControl(controlId, true, 'osc')
+		this.controls.pressControl(controlId, true, 'osc')
 	}
 
 	/**
@@ -232,7 +231,7 @@ export class ServiceOscApi extends CoreBase {
 		this.logger.info(`Got OSC control up ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.registry.controls.pressControl(controlId, false, 'osc')
+		this.controls.pressControl(controlId, false, 'osc')
 	}
 
 	/**
@@ -243,7 +242,7 @@ export class ServiceOscApi extends CoreBase {
 		this.logger.info(`Got OSC control rotate left ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.registry.controls.rotateControl(controlId, false, 'osc')
+		this.controls.rotateControl(controlId, false, 'osc')
 	}
 
 	/**
@@ -254,7 +253,7 @@ export class ServiceOscApi extends CoreBase {
 		this.logger.info(`Got OSC control rotate right ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.registry.controls.rotateControl(controlId, true, 'osc')
+		this.controls.rotateControl(controlId, true, 'osc')
 	}
 
 	/**
@@ -363,6 +362,6 @@ export class ServiceOscApi extends CoreBase {
 		this.logger.debug(`Got HTTP custom variable set value name "${variableName}" to value "${variableValue}"`)
 		if (variableValue === undefined) return
 
-		this.registry.variables.custom.setValue(variableName, variableValue.toString())
+		this.variablesController.custom.setValue(variableName, variableValue.toString())
 	}
 }

@@ -170,7 +170,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	actionReorder(
 		dragStepId: string,
 		dragSetId: string,
-		dragIndex: number,
+		dragActionId: string,
 		dropStepId: string,
 		dropSetId: string,
 		dropIndex: number
@@ -197,7 +197,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	actionSetDelay(stepId: string, setId: string, id: string, delay: number): boolean
 
 	/**
-	 * Set an opton of an action
+	 * Set an option of an action
 	 */
 	actionSetOption(stepId: string, setId: string, id: string, key: string, value: any): boolean
 
@@ -302,7 +302,7 @@ export interface ControlWithActionSets extends ControlBase<any> {
 	/**
 	 * Execute a rotate of this control
 	 * @param direction Whether the control was rotated to the right
-	 * @param surfaceId The surface that intiated this rotate
+	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(direction: boolean, surfaceId: string | undefined): void
 }

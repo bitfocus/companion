@@ -99,18 +99,18 @@ export class ServiceHttpApi extends CoreBase {
 
 			this.logger.info(`Got HTTP /press/bank/ (trigger) page ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.registry.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+			const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
 				return
 			}
 
-			this.registry.controls.pressControl(controlId, true, 'http')
+			this.controls.pressControl(controlId, true, 'http')
 
 			setTimeout(() => {
 				this.logger.info(`Auto releasing HTTP /press/bank/ page ${req.params.page} button ${req.params.bank}`)
-				this.registry.controls.pressControl(controlId, false, 'http')
+				this.controls.pressControl(controlId, false, 'http')
 			}, 20)
 
 			res.send('ok')
@@ -129,33 +129,27 @@ export class ServiceHttpApi extends CoreBase {
 			if (req.params.direction == 'down') {
 				this.logger.info(`Got HTTP /press/bank/ (DOWN) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.registry.page.getControlIdAtOldBankIndex(
-					Number(req.params.page),
-					Number(req.params.bank)
-				)
+				const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
 					return
 				}
 
-				this.registry.controls.pressControl(controlId, true, 'http')
+				this.controls.pressControl(controlId, true, 'http')
 
 				res.send('ok')
 			} else if (req.params.direction == 'up') {
 				this.logger.info(`Got HTTP /press/bank/ (UP) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.registry.page.getControlIdAtOldBankIndex(
-					Number(req.params.page),
-					Number(req.params.bank)
-				)
+				const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
 					return
 				}
 
-				this.registry.controls.pressControl(controlId, false, 'http')
+				this.controls.pressControl(controlId, false, 'http')
 
 				res.send('ok')
 			} else {
@@ -175,7 +169,7 @@ export class ServiceHttpApi extends CoreBase {
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.info('Got HTTP /rescan')
-			return this.registry.surfaces.triggerRefreshDevices().then(
+			return this.surfaces.triggerRefreshDevices().then(
 				() => {
 					res.send('ok')
 				},
@@ -197,14 +191,14 @@ export class ServiceHttpApi extends CoreBase {
 
 			this.logger.info(`Got HTTP /style/bank ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.registry.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+			const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
 				return
 			}
 
-			const control = this.registry.controls.getControl(controlId)
+			const control = this.controls.getControl(controlId)
 
 			if (!control || !control.supportsStyle) {
 				res.status(404)
@@ -287,7 +281,7 @@ export class ServiceHttpApi extends CoreBase {
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value}`)
-			const result = this.registry.variables.custom.setValue(req.params.name, String(req.query.value))
+			const result = this.variablesController.custom.setValue(req.params.name, String(req.query.value))
 			if (result) {
 				res.send(result)
 			} else {
@@ -328,7 +322,7 @@ export class ServiceHttpApi extends CoreBase {
 	 */
 	#surfacesRescan = (_req: express.Request, res: express.Response): void => {
 		this.logger.info('Got HTTP surface rescan')
-		this.registry.surfaces.triggerRefreshDevices().then(
+		this.surfaces.triggerRefreshDevices().then(
 			() => {
 				res.send('ok')
 			},
@@ -348,7 +342,7 @@ export class ServiceHttpApi extends CoreBase {
 			column: Number(req.params.column),
 		}
 
-		const controlId = this.registry.page.getControlIdAt(location)
+		const controlId = this.page.getControlIdAt(location)
 
 		return {
 			location,
@@ -368,12 +362,12 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.pressControl(controlId, true, 'http')
+		this.controls.pressControl(controlId, true, 'http')
 
 		setTimeout(() => {
 			this.logger.info(`Auto releasing HTTP control press ${formatLocation(location)} - ${controlId}`)
 
-			this.registry.controls.pressControl(controlId, false, 'http')
+			this.controls.pressControl(controlId, false, 'http')
 		}, 20)
 
 		res.send('ok')
@@ -391,7 +385,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.pressControl(controlId, true, 'http')
+		this.controls.pressControl(controlId, true, 'http')
 
 		res.send('ok')
 	}
@@ -408,7 +402,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.pressControl(controlId, false, 'http')
+		this.controls.pressControl(controlId, false, 'http')
 
 		res.send('ok')
 	}
@@ -425,7 +419,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.rotateControl(controlId, false, 'http')
+		this.controls.rotateControl(controlId, false, 'http')
 
 		res.send('ok')
 	}
@@ -442,7 +436,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.rotateControl(controlId, true, 'http')
+		this.controls.rotateControl(controlId, true, 'http')
 
 		res.send('ok')
 	}
@@ -479,14 +473,14 @@ export class ServiceHttpApi extends CoreBase {
 	 */
 	#locationStyle = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
-		this.logger.info(`Got HTTP control syle ${formatLocation(location)} - ${controlId}`)
+		this.logger.info(`Got HTTP control style ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
 			res.status(204).send('No control')
 			return
 		}
 
-		const control = this.registry.controls.getControl(controlId)
+		const control = this.controls.getControl(controlId)
 		if (!control || !control.supportsStyle) {
 			res.status(204).send('No control')
 			return
@@ -570,7 +564,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		const result = this.registry.variables.custom.setValue(variableName, variableValue)
+		const result = this.variablesController.custom.setValue(variableName, variableValue)
 		if (result) {
 			res.status(404).send('Not found')
 		} else {
@@ -586,7 +580,7 @@ export class ServiceHttpApi extends CoreBase {
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
 
-		const result = this.registry.variables.custom.getValue(variableName)
+		const result = this.variablesController.custom.getValue(variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {

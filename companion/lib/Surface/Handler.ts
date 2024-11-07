@@ -36,8 +36,7 @@ import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { Registry } from '../Registry.js'
-import type { DrawButtonItem, SurfacePanel } from './Types.js'
+import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { PanelDefaults } from './Config.js'
 
@@ -178,21 +177,28 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 	readonly panel: SurfacePanel
 
-	constructor(registry: Registry, panel: SurfacePanel, surfaceConfig: SurfaceConfig) {
+	constructor(
+		surfaceController: SurfaceController,
+		deps: SurfaceHandlerDependencies,
+		panel: SurfacePanel,
+		surfaceConfig: SurfaceConfig
+	) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/Handler/${panel.info.deviceId}`)
 		this.#logger.silly('loading for ' + panel.info.devicePath)
 
-		this.#controls = registry.controls
-		this.#graphics = registry.graphics
-		this.#page = registry.page
-		this.#surfaces = registry.surfaces
-		this.#userconfig = registry.userconfig
-		this.#variables = registry.variables
+		this.#surfaces = surfaceController
+		this.#controls = deps.controls
+		this.#graphics = deps.graphics
+		this.#page = deps.page
+		this.#userconfig = deps.userconfig
+		this.#variables = deps.variables
 
 		this.panel = panel
 		this.#surfaceConfig = surfaceConfig
+
+		this.#currentPageId = this.#page.getFirstPageId()
 
 		// Setup logger to use the name
 		this.#recreateLogger()
@@ -602,9 +608,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 	/**
 	 * XKeys: Draw additional pages color information
-	 * @returns {void}
 	 */
-	#xkeysDrawPages() {
+	#xkeysDrawPages(): void {
 		if (!this.panel || !this.panel.drawColor) return
 
 		const pageNumber = this.#page.getPageNumber(this.#currentPageId)

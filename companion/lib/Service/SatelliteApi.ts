@@ -220,7 +220,7 @@ export class ServiceSatelliteApi extends CoreBase {
 	initSocket(socketLogger: Logger, socket: SatelliteSocketWrapper): SatelliteInitSocketResult {
 		socketLogger.info(`new connection`)
 
-		socket.write(`BEGIN CompanionVersion=${this.registry.appInfo.appBuild} ApiVersion=${API_VERSION}\n`)
+		socket.write(`BEGIN CompanionVersion=${this.appInfo.appBuild} ApiVersion=${API_VERSION}\n`)
 
 		let receivebuffer = ''
 		return {

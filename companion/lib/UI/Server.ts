@@ -30,32 +30,33 @@ export class UIServer extends HttpServer {
 	/**
 	 *
 	 */
-	rebindHttp(bind_ip: string, http_port: number) {
+	rebindHttp(bindIp: string, bindPort: number) {
 		if (this !== undefined && this.close !== undefined) {
 			this.close()
 		}
 		try {
 			this.on('error', (e: any) => {
 				if (e.code == 'EADDRNOTAVAIL') {
-					this.#logger.error(`Failed to bind to: ${bind_ip}`)
+					this.#logger.error(`Failed to bind to: ${bindIp}`)
 					sendOverIpc({
 						messageType: 'http-bind-status',
 						appStatus: 'Error',
-						appURL: `${bind_ip} unavailable. Select another IP`,
+						appURL: `${bindIp} unavailable. Select another IP`,
 						appLaunch: null,
 					})
 				} else {
 					this.#logger.error(e)
 				}
-			}).listen(http_port, bind_ip, () => {
+			})
+			this.listen(bindPort, bindIp, () => {
 				const address0 = this.address()
 				const address = typeof address0 === 'object' ? address0 : undefined
 
 				this.#logger.info(`new url: http://${address?.address}:${address?.port}/`)
 
-				let ip = bind_ip == '0.0.0.0' ? '127.0.0.1' : bind_ip
+				let ip = bindIp == '0.0.0.0' ? '127.0.0.1' : bindIp
 				let url = `http://${ip}:${address?.port}/`
-				let info = bind_ip == '0.0.0.0' ? `All Interfaces: e.g. ${url}` : url
+				let info = bindIp == '0.0.0.0' ? `All Interfaces: e.g. ${url}` : url
 				sendOverIpc({
 					messageType: 'http-bind-status',
 					appStatus: 'Running',

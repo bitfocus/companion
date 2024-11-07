@@ -10,21 +10,21 @@ import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject
-	instanceRemap: Record<string, string | undefined>
-	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
+	connectionRemap: Record<string, string | undefined>
+	setConnectionRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 }
 
-export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: ImportFullWizardProps) {
+export function ImportFullWizard({ snapshot, connectionRemap, setConnectionRemap }: ImportFullWizardProps) {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const doSinglePageImport = useCallback(
-		(fromPage: number, toPage: number, instanceRemap: Record<string, string | undefined>) => {
-			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, instanceRemap])
+		(fromPage: number, toPage: number, connectionRemap: Record<string, string | undefined>) => {
+			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, connectionRemap])
 				.then((res) => {
 					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
 					console.log('remap response', res)
 					if (res) {
-						setInstanceRemap(res)
+						setConnectionRemap(res)
 					}
 				})
 				.catch((e) => {
@@ -32,7 +32,7 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 					console.error('import failed', e)
 				})
 		},
-		[socket, notifier, setInstanceRemap]
+		[socket, notifier, setConnectionRemap]
 	)
 
 	const [activeTab, setActiveTab] = useState<'full' | 'buttons' | 'triggers'>('full')
@@ -75,8 +75,8 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 						{snapshot.controls ? (
 							<ImportPageWizard
 								snapshot={snapshot}
-								instanceRemap={instanceRemap}
-								setInstanceRemap={setInstanceRemap}
+								connectionRemap={connectionRemap}
+								setConnectionRemap={setConnectionRemap}
 								doImport={doSinglePageImport}
 							/>
 						) : (
@@ -89,8 +89,8 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 						{snapshot.triggers ? (
 							<ImportTriggersTab
 								snapshot={snapshot}
-								instanceRemap={instanceRemap}
-								setInstanceRemap={setInstanceRemap}
+								connectionRemap={connectionRemap}
+								setConnectionRemap={setConnectionRemap}
 							/>
 						) : (
 							''

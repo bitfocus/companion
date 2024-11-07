@@ -333,7 +333,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		if (this.socket !== undefined) {
 			this.socket.write(`KEYS-CLEAR DEVICEID=${this.deviceId}\n`)
 		} else {
-			this.#logger.debug('trying to emit to nonexistant socket: ', this.deviceId)
+			this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
 		}
 	}
 
@@ -347,7 +347,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			for (const variable of allChangedVariables.values()) {
 				if (!outputVariable.lastReferencedVariables.has(variable)) continue
 
-				// There is a change, recalcuate and send the value
+				// There is a change, recalculate and send the value
 
 				this.#triggerOutputVariable(name, outputVariable)
 				break
@@ -381,7 +381,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 						const base64Value = Buffer.from(expressionResult?.toString() ?? '').toString('base64')
 						this.socket.write(`VARIABLE-VALUE DEVICEID=${this.deviceId} VARIABLE="${name}" VALUE="${base64Value}"\n`)
 					} else {
-						this.#logger.debug('trying to emit to nonexistant socket: ', this.deviceId)
+						this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
 					}
 				},
 				{

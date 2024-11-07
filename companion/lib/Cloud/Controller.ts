@@ -1,15 +1,19 @@
 import { isEqual } from 'lodash-es'
-import { CoreBase } from '../Core/Base.js'
 import { CloudRegion, RegionInfo } from './Region.js'
 import { v4 } from 'uuid'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { delay } from '../Resources/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import nodeMachineId from 'node-machine-id'
+import LogController from '../Log/Controller.js'
+import type { DataDatabase } from '../Data/Database.js'
+import type { PageController } from '../Page/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 
 const CLOUD_URL = 'https://api.bitfocus.io/v1'
 const CLOUD_TABLE: string = 'cloud'
@@ -45,7 +49,17 @@ function generateMachineId() {
  * disclosing the source code of your own applications.
  */
 
-export class CloudController extends CoreBase {
+export class CloudController {
+	readonly #logger = LogController.createLogger('Cloud/Controller')
+
+	readonly appInfo: AppInfo
+	readonly #db: DataDatabase
+	readonly #cache: DataCache
+	readonly controls: ControlsController
+	readonly #graphics: GraphicsController
+	readonly io: UIHandler
+	readonly page: PageController
+
 	/**
 	 * A clist of known cloud regions
 	 */
@@ -91,25 +105,35 @@ export class CloudController extends CoreBase {
 		canActivate: false,
 	}
 
-	readonly cache: DataCache
+	constructor(
+		appInfo: AppInfo,
+		db: DataDatabase,
+		cache: DataCache,
+		controls: ControlsController,
+		graphics: GraphicsController,
+		io: UIHandler,
+		page: PageController
+	) {
+		this.appInfo = appInfo
+		this.#db = db
+		this.#cache = cache
+		this.controls = controls
+		this.#graphics = graphics
+		this.io = io
+		this.page = page
 
-	constructor(registry: Registry, cache: DataCache) {
-		super(registry, 'Cloud/Controller')
-
-		this.cache = cache
-
-		this.data = this.db.getTableKey(CLOUD_TABLE, 'auth', {
+		this.data = this.#db.getTableKey(CLOUD_TABLE, 'auth', {
 			token: '',
 			user: '',
 			connections: {},
 			cloudActive: false,
 		})
 
-		this.companionId = registry.appInfo.machineId
-		const uuid = this.db.getTableKey(CLOUD_TABLE, 'uuid', generateMachineId())
+		this.companionId = appInfo.machineId
+		const uuid = this.#db.getTableKey(CLOUD_TABLE, 'uuid', generateMachineId())
 		this.#setState({ uuid })
 
-		const regions = this.cache.getKey('cloud_servers', {})
+		const regions = this.#cache.getKey('cloud_servers', {})
 
 		if (regions !== undefined) {
 			for (const region of Object.values<any>(regions)) {
@@ -137,7 +161,7 @@ export class CloudController extends CoreBase {
 		// Ping every second, if someone is watching
 		setInterval(this.#timerTick.bind(this), 1000)
 
-		this.graphics.on('button_drawn', this.#updateBank.bind(this))
+		this.#graphics.on('button_drawn', this.#updateBank.bind(this))
 
 		this.#updateAllBanks()
 
@@ -165,7 +189,7 @@ export class CloudController extends CoreBase {
 			try {
 				this.#regionInstances[region].destroy()
 			} catch (e: any) {
-				this.logger.silly(`couldn't destroy region ${region}: ${e.message}`)
+				this.#logger.silly(`couldn't destroy region ${region}: ${e.message}`)
 			}
 		}
 	}
@@ -250,12 +274,12 @@ export class CloudController extends CoreBase {
 			}).then(async (response) => response.json())
 
 			const result: any = responseBody
-			this.logger.silly('Cloud setup: ', result)
+			this.#logger.silly('Cloud setup: ', result)
 
 			if (result.regions) {
 				const regions = result.regions
 
-				this.cache.setKey('cloud_servers', regions)
+				this.#cache.setKey('cloud_servers', regions)
 
 				CloudController.availableRegions = {}
 
@@ -304,14 +328,14 @@ export class CloudController extends CoreBase {
 						}
 					}
 				} catch (e: any) {
-					this.logger.silly(e.message)
+					this.#logger.silly(e.message)
 				}
 
 				this.#setState({ regions: newRegions })
 				this.#readConnections(this.data.connections)
 			}
 		} catch (e) {
-			this.logger.silly('Cloud infrastructure error: ', e)
+			this.#logger.silly('Cloud infrastructure error: ', e)
 		}
 	}
 
@@ -322,7 +346,7 @@ export class CloudController extends CoreBase {
 	async #handleCloudRegenerateUUID(_client: ClientSocket): Promise<void> {
 		const newUuid = v4()
 		this.#setState({ uuid: newUuid })
-		this.db.setTableKey(CLOUD_TABLE, 'uuid', newUuid)
+		this.#db.setTableKey(CLOUD_TABLE, 'uuid', newUuid)
 
 		this.#setState({ cloudActive: false })
 		await delay(1000)
@@ -381,11 +405,11 @@ export class CloudController extends CoreBase {
 		}
 
 		try {
-			this.logger.silly('Cloud result: ', responseObject)
+			this.#logger.silly('Cloud result: ', responseObject)
 			if (responseObject.token !== undefined) {
 				this.data.token = responseObject.token
 				this.data.user = email
-				this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+				this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 				this.#setState({ authenticated: true, authenticating: false, authenticatedAs: email, error: null })
 				this.#readConnections(this.data.connections)
 			} else {
@@ -393,7 +417,7 @@ export class CloudController extends CoreBase {
 				this.destroy()
 			}
 		} catch (e: any) {
-			this.logger.error(`Cloud error: ${e.message}`)
+			this.#logger.error(`Cloud error: ${e.message}`)
 			this.#setState({ authenticated: false, authenticating: false, error: JSON.stringify(e) })
 			this.destroy()
 		}
@@ -408,7 +432,7 @@ export class CloudController extends CoreBase {
 		this.data.token = ''
 		this.data.connections = {}
 		this.data.cloudActive = false
-		this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+		this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 
 		this.#setState({
 			authenticated: false,
@@ -443,11 +467,11 @@ export class CloudController extends CoreBase {
 				body: '{}',
 			}).then(async (response) => response.json())
 
-			this.logger.silly('Cloud result: ', result)
+			this.#logger.silly('Cloud result: ', result)
 
 			if (result.token) {
 				this.data.token = result.token
-				this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+				this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 				this.#setState({
 					authenticated: true,
 					authenticatedAs: result.customer?.email,
@@ -464,7 +488,7 @@ export class CloudController extends CoreBase {
 				})
 			}
 		} catch (e: any) {
-			this.logger.error(`Cloud refresh error: ${e.message}`)
+			this.#logger.error(`Cloud refresh error: ${e.message}`)
 			this.#setState({
 				authenticated: false,
 				authenticating: false,
@@ -480,7 +504,7 @@ export class CloudController extends CoreBase {
 	 * @param client - the cloud connection
 	 */
 	#handleCloudStateRequest(client: ClientSocket): void {
-		this.logger.silly('handleCloudStateRequest')
+		this.#logger.silly('handleCloudStateRequest')
 		client.emit('cloud_state', this.state)
 	}
 
@@ -490,7 +514,7 @@ export class CloudController extends CoreBase {
 	 * @param newState - the new state
 	 */
 	#handleCloudStateSet(_client: ClientSocket, newState: Partial<CloudControllerState>): void {
-		this.logger.silly('handleCloudStateSet', newState)
+		this.#logger.silly('handleCloudStateSet', newState)
 		this.#setState({ ...newState })
 	}
 
@@ -500,7 +524,7 @@ export class CloudController extends CoreBase {
 	 * @param region - the region to process
 	 */
 	#handleCloudRegionStateRequest(client: ClientSocket, region: string): void {
-		this.logger.silly(`handleCloudregionStateRequest: ${region}`)
+		this.#logger.silly(`handleCloudregionStateRequest: ${region}`)
 		if (this.#regionInstances[region] !== undefined) {
 			client.emit('cloud_region_state', region, this.#regionInstances[region].state)
 		}
@@ -513,7 +537,7 @@ export class CloudController extends CoreBase {
 	 * @param newState - the new state
 	 */
 	#handleCloudRegionStateSet(_client: ClientSocket, region: string, newState: object): void {
-		this.logger.silly(`handleCloudRegionStateSet: ${region}`, newState)
+		this.#logger.silly(`handleCloudRegionStateSet: ${region}`, newState)
 		if (this.#regionInstances[region] !== undefined) {
 			this.#regionInstances[region].setState({ ...newState, cloudActive: this.state.cloudActive })
 		}
@@ -536,10 +560,10 @@ export class CloudController extends CoreBase {
 	 * @param connections - the region enable information
 	 */
 	#readConnections(connections: { [region: string]: boolean }): void {
-		this.logger.silly('READ CONNECTIONS', connections)
+		this.#logger.silly('READ CONNECTIONS', connections)
 		if (connections) {
 			for (let region in connections) {
-				this.logger.silly(`Has region: ${region}`, region in this.#regionInstances)
+				this.#logger.silly(`Has region: ${region}`, region in this.#regionInstances)
 				if (this.#regionInstances[region]) {
 					this.#regionInstances[region].setState({ enabled: connections[region], cloudActive: this.state.cloudActive })
 				}
@@ -559,7 +583,7 @@ export class CloudController extends CoreBase {
 
 		this.data.connections[region] = enabled
 
-		this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+		this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 	}
 
 	/**
@@ -579,13 +603,13 @@ export class CloudController extends CoreBase {
 		}
 
 		if (!isEqual(newState, this.state)) {
-			this.io.emit('cloud_state', newState)
+			this.io.emitToAll('cloud_state', newState)
 			this.state = newState
 		}
 
 		if (oldState.cloudActive !== newState.cloudActive) {
 			this.data.cloudActive = newState.cloudActive
-			this.db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+			this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
 
 			if (newState.authenticated) {
 				for (let region in this.#regionInstances) {
@@ -632,7 +656,7 @@ export class CloudController extends CoreBase {
 				})
 			}
 		} catch (e: any) {
-			this.logger.silly(e.message)
+			this.#logger.silly(e.message)
 		}
 	}
 

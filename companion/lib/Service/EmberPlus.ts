@@ -326,17 +326,12 @@ export class ServiceEmberPlus extends ServiceBase {
 									EmberModel.ParameterType.String,
 									'version',
 									undefined,
-									this.registry.appInfo.appVersion
+									this.appInfo.appVersion
 								)
 							),
 							3: new EmberModel.NumberedTreeNodeImpl(
 								3,
-								new EmberModel.ParameterImpl(
-									EmberModel.ParameterType.String,
-									'build',
-									undefined,
-									this.registry.appInfo.appBuild
-								)
+								new EmberModel.ParameterImpl(EmberModel.ParameterType.String, 'build', undefined, this.appInfo.appBuild)
 							),
 						}),
 						1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),

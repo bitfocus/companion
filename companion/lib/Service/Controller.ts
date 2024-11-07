@@ -8,7 +8,6 @@ import { ServiceOscListener } from './OscListener.js'
 import { ServiceOscSender } from './OscSender.js'
 import { ServiceRosstalk } from './Rosstalk.js'
 import { ServiceSatelliteTcp } from './SatelliteTcp.js'
-import { ServiceSharedUdpManager } from './SharedUdpManager.js'
 import { ServiceSurfaceDiscovery } from './SurfaceDiscovery.js'
 import { ServiceTcp } from './Tcp.js'
 import { ServiceUdp } from './Udp.js'
@@ -16,6 +15,8 @@ import { ServiceVideohubPanel } from './VideohubPanel.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import { ServiceSatelliteWebsocket } from './SatelliteWebsocket.js'
+import type { EventEmitter } from 'events'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
 /**
  * Class that manages all of the services.
@@ -52,13 +53,12 @@ export class ServiceController {
 	readonly elgatoPlugin: ServiceElgatoPlugin
 	readonly videohubPanel: ServiceVideohubPanel
 	readonly bonjourDiscovery: ServiceBonjourDiscovery
-	readonly sharedUdpManager: ServiceSharedUdpManager
 	readonly surfaceDiscovery: ServiceSurfaceDiscovery
 
-	constructor(registry: Registry) {
+	constructor(registry: Registry, oscSender: ServiceOscSender, controlEvents: EventEmitter<ControlCommonEvents>) {
 		this.httpApi = new ServiceHttpApi(registry, registry.ui.express)
 		this.https = new ServiceHttps(registry, registry.ui.express)
-		this.oscSender = new ServiceOscSender(registry)
+		this.oscSender = oscSender
 		this.oscListener = new ServiceOscListener(registry)
 		this.tcp = new ServiceTcp(registry)
 		this.udp = new ServiceUdp(registry)
@@ -70,8 +70,11 @@ export class ServiceController {
 		this.elgatoPlugin = new ServiceElgatoPlugin(registry)
 		this.videohubPanel = new ServiceVideohubPanel(registry)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(registry)
-		this.sharedUdpManager = new ServiceSharedUdpManager()
 		this.surfaceDiscovery = new ServiceSurfaceDiscovery(registry)
+
+		controlEvents.on('updateButtonState', (location, pushed, surfaceId) => {
+			this.emberplus.updateButtonState(location, pushed, surfaceId)
+		})
 	}
 
 	/**

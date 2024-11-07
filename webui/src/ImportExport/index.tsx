@@ -139,7 +139,7 @@ export const ImportExport = observer(function ImportExport() {
 									type="file"
 									onChange={loadSnapshot}
 									style={{ display: 'none' }}
-									accept=".companionconfig,.companionconfig.yaml"
+									accept=".companionconfig,.yaml"
 								/>
 							</label>
 						</div>

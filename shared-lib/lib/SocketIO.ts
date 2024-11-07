@@ -30,7 +30,7 @@ import type {
 	ClientImportObject,
 	ClientImportSelection,
 	ClientResetSelection,
-	InstanceRemappings,
+	ConnectionRemappings,
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
@@ -114,6 +114,7 @@ export interface ClientToBackendEventsMap {
 	'controls:feedback:learn': (controlId: string, feedbackId: string) => boolean
 	'controls:feedback:duplicate': (controlId: string, feedbackId: string) => boolean
 	'controls:feedback:remove': (controlId: string, feedbackId: string) => boolean
+	'controls:feedback:set-connection': (controlId: string, feedbackId: string, connectionId: string | number) => boolean
 	'controls:feedback:set-inverted': (controlId: string, feedbackId: string, isInverted: boolean) => boolean
 	'controls:feedback:set-option': (controlId: string, feedbackId: string, key: string, val: any) => boolean
 	'controls:feedback:move': (
@@ -172,10 +173,10 @@ export interface ClientToBackendEventsMap {
 		controlId: string,
 		dragStepId: string,
 		dragSetId: string,
-		dragIndex: number,
+		dragActionId: string,
 		stepId: string,
 		setId: string,
-		hoverIndex: number
+		dropIndex: number
 	) => boolean
 	'controls:action:add': (
 		controlId: string,
@@ -231,7 +232,7 @@ export interface ClientToBackendEventsMap {
 	) => void
 	'action-recorder:session:discard-actions': (sessionId: string) => void
 	'action-recorder:session:set-connections': (sessionId: string, connectionIds: string[]) => void
-	'action-recorder:session:action-reorder': (sessionId: string, dragIndex: number, dropIndex: number) => void
+	'action-recorder:session:action-reorder': (sessionId: string, actionId: string, dropIndex: number) => void
 	'action-recorder:session:action-set-value': (sessionId: string, actionId: string, key: string, value: any) => void
 	'action-recorder:session:action-delay': (sessionId: string, actionId: string, delay: number) => void
 	'action-recorder:session:action-delete': (sessionId: string, actionId: string) => void
@@ -277,12 +278,16 @@ export interface ClientToBackendEventsMap {
 	'loadsave:prepare-import': (rawFile: string | ArrayBuffer) => [err: null, config: ClientImportObject] | [err: string]
 	'loadsave:abort': () => boolean
 	'loadsave:reset': (config: ClientResetSelection) => 'ok'
-	'loadsave:import-page': (toPage: number, fromPage: number, instanceRemap: InstanceRemappings) => InstanceRemappings
+	'loadsave:import-page': (
+		toPage: number,
+		fromPage: number,
+		connectionRemap: ConnectionRemappings
+	) => ConnectionRemappings
 	'loadsave:import-triggers': (
 		selectedTriggers: string[],
-		instanceRemap: InstanceRemappings,
+		connectionRemap: ConnectionRemappings,
 		doReplace: boolean
-	) => InstanceRemappings
+	) => ConnectionRemappings
 	'loadsave:control-preview': (location: ControlLocation) => string | null
 	'loadsave:import-full': (config: ClientImportSelection | null) => void
 
@@ -316,7 +321,7 @@ export interface ClientToBackendEventsMap {
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 	'connections:get-help': (id: string) => [err: string, result: null] | [err: null, result: HelpDescription]
 
-	'variables:instance-values': (label: string) => CompanionVariableValues | undefined
+	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
 
 	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
 	'presets:unsubscribe': () => void

@@ -11,7 +11,7 @@ vi.mock('dgram', () => ({
 	createSocket: mockCreateSocket,
 }))
 
-const { ServiceSharedUdpManager } = await import('../../lib/Service/SharedUdpManager')
+const { InstanceSharedUdpManager } = await import('../../lib/Instance/SharedUdpManager')
 
 class MockSocket extends EventEmitter {
 	// TODO
@@ -32,7 +32,7 @@ describe('SharedUdpManager', () => {
 
 	describe('join', () => {
 		test('create socket ok', async () => {
-			const service = new ServiceSharedUdpManager()
+			const service = new InstanceSharedUdpManager()
 			expect(service.countActivePorts()).toBe(0)
 
 			const messageFn = vi.fn()
@@ -60,7 +60,7 @@ describe('SharedUdpManager', () => {
 		})
 
 		test('bind throws error', async () => {
-			const service = new ServiceSharedUdpManager()
+			const service = new InstanceSharedUdpManager()
 			expect(service.countActivePorts()).toBe(0)
 
 			const messageFn = vi.fn()
@@ -96,7 +96,7 @@ describe('SharedUdpManager', () => {
 		})
 
 		test('bind emit error', async () => {
-			const service = new ServiceSharedUdpManager()
+			const service = new InstanceSharedUdpManager()
 			expect(service.countActivePorts()).toBe(0)
 
 			const messageFn = vi.fn()
@@ -107,7 +107,7 @@ describe('SharedUdpManager', () => {
 
 			mockSocket.bind.mockImplementation(() => {
 				setImmediate(() => {
-					// Emit an erorr instead
+					// Emit an error instead
 					mockSocket.emit('error', new Error('Bind Error'))
 				})
 			})
@@ -130,7 +130,7 @@ describe('SharedUdpManager', () => {
 		})
 
 		test('second join', async () => {
-			const service = new ServiceSharedUdpManager()
+			const service = new InstanceSharedUdpManager()
 			expect(service.countActivePorts()).toBe(0)
 
 			const messageFn = vi.fn()
@@ -158,7 +158,7 @@ describe('SharedUdpManager', () => {
 	})
 
 	async function setupPort() {
-		const service = new ServiceSharedUdpManager()
+		const service = new InstanceSharedUdpManager()
 		expect(service.countActivePorts()).toBe(0)
 
 		const mockSocket = new MockSocket()

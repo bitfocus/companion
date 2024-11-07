@@ -14,22 +14,22 @@ interface ImportWizardProps {
 export function ImportWizard({ importInfo, clearImport }: ImportWizardProps) {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
-	const [snapshot, instanceRemap0] = importInfo
+	const [snapshot, connectionRemap0] = importInfo
 
-	const [instanceRemap, setInstanceRemap] = useState(instanceRemap0)
+	const [connectionRemap, setConnectionRemap] = useState(connectionRemap0)
 	useEffect(() => {
-		setInstanceRemap(instanceRemap0)
-	}, [instanceRemap0])
+		setConnectionRemap(connectionRemap0)
+	}, [connectionRemap0])
 
 	const doSinglePageImport = useCallback(
-		(fromPage: number, toPage: number, instanceRemap: Record<string, string | undefined>) => {
-			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, instanceRemap])
+		(fromPage: number, toPage: number, connectionRemap: Record<string, string | undefined>) => {
+			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, connectionRemap])
 				.then((_res) => {
 					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
 					clearImport()
 					// console.log('remap response', res)
 					// if (res) {
-					// 	setInstanceRemap(res)
+					// 	setConnectionRemap(res)
 					// }
 				})
 				.catch((e) => {
@@ -52,12 +52,16 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps) {
 			{snapshot.type === 'page' ? (
 				<ImportPageWizard
 					snapshot={snapshot}
-					instanceRemap={instanceRemap}
-					setInstanceRemap={setInstanceRemap}
+					connectionRemap={connectionRemap}
+					setConnectionRemap={setConnectionRemap}
 					doImport={doSinglePageImport}
 				/>
 			) : (
-				<ImportFullWizard snapshot={snapshot} instanceRemap={instanceRemap} setInstanceRemap={setInstanceRemap} />
+				<ImportFullWizard
+					snapshot={snapshot}
+					connectionRemap={connectionRemap}
+					setConnectionRemap={setConnectionRemap}
+				/>
 			)}
 		</>
 	)

@@ -15,7 +15,6 @@
  *
  */
 
-import { CoreBase } from '../Core/Base.js'
 import { InstanceDefinitions } from './Definitions.js'
 import { ModuleHost, ConnectionDebugLogRoom } from './Host.js'
 import { InstanceStatus } from './Status.js'
@@ -30,11 +29,18 @@ import type {
 	ClientConnectionsUpdate,
 	ConnectionConfig,
 } from '@companion-app/shared/Model/Connections.js'
-import type { Registry } from '../Registry.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-app/shared/Model/ExportModel.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import { EventEmitter } from 'events'
+import LogController from '../Log/Controller.js'
+import { InstanceSharedUdpManager } from './SharedUdpManager.js'
+import type { ServiceOscSender } from '../Service/OscSender.js'
+import type { DataDatabase } from '../Data/Database.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import express from 'express'
 
 const InstancesRoom = 'instances'
 
@@ -49,31 +55,78 @@ interface InstanceControllerEvents {
 	connection_deleted: [connectionId: string]
 }
 
-export class InstanceController extends CoreBase<InstanceControllerEvents> {
-	#lastClientJson: Record<string, ClientConnectionConfig> | null = null
+export class InstanceController extends EventEmitter<InstanceControllerEvents> {
+	readonly #logger = LogController.createLogger('Instance/Controller')
 
+	readonly #io: UIHandler
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
 
 	readonly #configStore: ConnectionConfigStore
 
+	#lastClientJson: Record<string, ClientConnectionConfig> | null = null
+
 	readonly definitions: InstanceDefinitions
 	readonly status: InstanceStatus
 	readonly moduleHost: ModuleHost
 	readonly modules: InstanceModules
+	readonly sharedUdpManager: InstanceSharedUdpManager
 
-	constructor(registry: Registry) {
-		super(registry, 'Instance/Controller')
+	readonly connectionApiRouter = express.Router()
 
-		this.#variablesController = registry.variables
-		this.#controlsController = registry.controls
+	constructor(
+		io: UIHandler,
+		db: DataDatabase,
+		apiRouter: express.Router,
+		controls: ControlsController,
+		graphics: GraphicsController,
+		page: PageController,
+		variables: VariablesController,
+		oscSender: ServiceOscSender
+	) {
+		super()
 
-		this.#configStore = new ConnectionConfigStore(registry.db, this.broadcastChanges.bind(this))
+		this.#io = io
+		this.#variablesController = variables
+		this.#controlsController = controls
 
-		this.definitions = new InstanceDefinitions(registry)
-		this.status = new InstanceStatus(registry.io, registry.controls)
-		this.moduleHost = new ModuleHost(registry, this.status, this.#configStore)
-		this.modules = new InstanceModules(registry)
+		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
+
+		this.sharedUdpManager = new InstanceSharedUdpManager()
+		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
+		this.status = new InstanceStatus(io, controls)
+		this.modules = new InstanceModules(io, this, apiRouter)
+		this.moduleHost = new ModuleHost(
+			{
+				controls: controls,
+				io: io,
+				variables: variables,
+				page: page,
+				oscSender: oscSender,
+
+				instanceDefinitions: this.definitions,
+				instanceStatus: this.status,
+				sharedUdpManager: this.sharedUdpManager,
+				setConnectionConfig: (connectionId, config) => {
+					this.setInstanceLabelAndConfig(connectionId, null, config, true)
+				},
+			},
+			this.modules,
+			this.#configStore
+		)
+
+		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())
+
+		this.connectionApiRouter.use('/:label', (req, res, _next) => {
+			const label = req.params.label
+			const connectionId = this.getIdForLabel(label) || label
+			const instance = this.moduleHost.getChild(connectionId)
+			if (instance) {
+				instance.executeHttpRequest(req, res)
+			} else {
+				res.status(404).send(JSON.stringify({ status: 404, message: 'Not Found' }))
+			}
+		})
 
 		// Prepare for clients already
 		this.broadcastChanges(this.#configStore.getAllInstanceIds())
@@ -88,16 +141,16 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	 */
 	powerStatusChange(event: string): void {
 		if (event == 'resume') {
-			this.logger.info('Power: Resuming')
+			this.#logger.info('Power: Resuming')
 
 			for (const id of this.#configStore.getAllInstanceIds()) {
 				this.#activate_module(id)
 			}
 		} else if (event == 'suspend') {
-			this.logger.info('Power: Suspending')
+			this.#logger.info('Power: Suspending')
 
 			this.moduleHost.queueStopAllConnections().catch((e) => {
-				this.logger.debug(`Error suspending instances: ${e?.message ?? e}`)
+				this.#logger.debug(`Error suspending instances: ${e?.message ?? e}`)
 			})
 		}
 	}
@@ -108,7 +161,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	 */
 	async initInstances(extraModulePath: string): Promise<void> {
 		const connectionIds = this.#configStore.getAllInstanceIds()
-		this.logger.silly('instance_init', connectionIds)
+		this.#logger.silly('instance_init', connectionIds)
 
 		await this.modules.initInstances(extraModulePath)
 
@@ -128,7 +181,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 			this.enableDisableInstance(id, true)
 		}
 
-		this.logger.info(`Reloading ${labels.length} connections: ${labels.join(', ')}`)
+		this.#logger.info(`Reloading ${labels.length} connections: ${labels.join(', ')}`)
 	}
 
 	/**
@@ -142,7 +195,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	): void {
 		const connectionConfig = this.#configStore.getConfigForId(id)
 		if (!connectionConfig) {
-			this.logger.warn(`setInstanceLabelAndConfig id "${id}" does not exist!`)
+			this.#logger.warn(`setInstanceLabelAndConfig id "${id}" does not exist!`)
 			return
 		}
 
@@ -168,9 +221,9 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 		this.#configStore.commitChanges([id])
 
-		const instance = this.instance.moduleHost.getChild(id, true)
+		const instance = this.moduleHost.getChild(id, true)
 		if (newLabel) {
-			this.instance.moduleHost.updateChildLabel(id, newLabel)
+			this.moduleHost.updateChildLabel(id, newLabel)
 		}
 
 		const updateInstance = !!newLabel || (config && !skip_notify_instance)
@@ -180,7 +233,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 			})
 		}
 
-		this.logger.debug(`instance "${connectionConfig.label}" configuration updated`)
+		this.#logger.debug(`instance "${connectionConfig.label}" configuration updated`)
 	}
 
 	/**
@@ -210,13 +263,13 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 		if (this.getIdForLabel(label)) throw new Error(`Label "${label}" already in use`)
 
-		this.logger.info('Adding connection ' + module + ' ' + product)
+		this.#logger.info('Adding connection ' + module + ' ' + product)
 
 		const [id, config] = this.#configStore.addConnection(module, label, product, disabled)
 
 		this.#activate_module(id, true)
 
-		this.logger.silly('instance_add', id)
+		this.#logger.silly('instance_add', id)
 		this.#configStore.commitChanges([id])
 
 		this.emit('connection_added', id)
@@ -246,7 +299,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		if (connectionConfig) {
 			const label = connectionConfig.label
 			if (connectionConfig.enabled !== state) {
-				this.logger.info((state ? 'Enable' : 'Disable') + ' instance ' + label)
+				this.#logger.info((state ? 'Enable' : 'Disable') + ' instance ' + label)
 				connectionConfig.enabled = state
 
 				this.#configStore.commitChanges([id])
@@ -255,7 +308,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 					this.moduleHost
 						.queueStopConnection(id)
 						.catch((e) => {
-							this.logger.warn(`Error disabling instance ${label}: ` + e)
+							this.#logger.warn(`Error disabling instance ${label}: ` + e)
 						})
 						.then(() => {
 							this.status.updateInstanceStatus(id, null, 'Disabled')
@@ -263,16 +316,16 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 							this.definitions.forgetConnection(id)
 							this.#variablesController.values.forgetConnection(id, label)
 							this.#variablesController.definitions.forgetConnection(id, label)
-							this.controls.clearConnectionState(id)
+							this.#controlsController.clearConnectionState(id)
 						})
 				} else {
 					this.#activate_module(id)
 				}
 			} else {
 				if (state === true) {
-					this.logger.warn(`Attempting to enable connection "${label}" that is already enabled`)
+					this.#logger.warn(`Attempting to enable connection "${label}" that is already enabled`)
 				} else {
-					this.logger.warn(`Attempting to disable connection "${label}" that is already disabled`)
+					this.#logger.warn(`Attempting to disable connection "${label}" that is already disabled`)
 				}
 			}
 		}
@@ -281,17 +334,17 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 	async deleteInstance(id: string): Promise<void> {
 		const config = this.#configStore.getConfigForId(id)
 		if (!config) {
-			this.logger.warn(`Can't delete connection "${id}" which does not exist!`)
+			this.#logger.warn(`Can't delete connection "${id}" which does not exist!`)
 			return
 		}
 
 		const label = config.label
-		this.logger.info(`Deleting instance: ${label ?? id}`)
+		this.#logger.info(`Deleting instance: ${label ?? id}`)
 
 		try {
 			await this.moduleHost.queueStopConnection(id)
 		} catch (e) {
-			this.logger.debug(`Error while deleting instance "${label ?? id}": `, e)
+			this.#logger.debug(`Error while deleting instance "${label ?? id}": `, e)
 		}
 
 		this.status.forgetConnectionStatus(id)
@@ -303,7 +356,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		this.definitions.forgetConnection(id)
 		this.#variablesController.values.forgetConnection(id, label)
 		this.#variablesController.definitions.forgetConnection(id, label)
-		this.controls.forgetConnection(id)
+		this.#controlsController.forgetConnection(id)
 	}
 
 	async deleteAllInstances(): Promise<void> {
@@ -358,8 +411,8 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		}
 
 		// Now broadcast to any interested clients
-		if (this.io.countRoomMembers(InstancesRoom) > 0) {
-			this.io.emitToRoom(InstancesRoom, `connections:patch`, changes)
+		if (this.#io.countRoomMembers(InstancesRoom) > 0) {
+			this.#io.emitToRoom(InstancesRoom, `connections:patch`, changes)
 		}
 	}
 
@@ -415,7 +468,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 		config.instance_type = this.modules.verifyInstanceTypeIsCurrent(config.instance_type)
 
 		if (config.enabled === false) {
-			this.logger.silly("Won't load disabled module " + id + ' (' + config.instance_type + ')')
+			this.#logger.silly("Won't load disabled module " + id + ' (' + config.instance_type + ')')
 			this.status.updateInstanceStatus(id, null, 'Disabled')
 			return
 		} else {
@@ -434,10 +487,10 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 
 		const moduleInfo = this.modules.getModuleManifest(config.instance_type)
 		if (!moduleInfo) {
-			this.logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
+			this.#logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
 		} else {
 			this.moduleHost.queueRestartConnection(id, config, moduleInfo).catch((e) => {
-				this.logger.error('Configured instance ' + config.instance_type + ' failed to start: ', e)
+				this.#logger.error('Configured instance ' + config.instance_type + ' failed to start: ', e)
 			})
 		}
 	}
@@ -465,7 +518,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 			const instanceConf = this.#configStore.getConfigForId(id)
 			if (!instanceConf) return null
 
-			const instance = this.instance.moduleHost.getChild(id)
+			const instance = this.moduleHost.getChild(id)
 			if (!instance) return null
 
 			try {
@@ -477,7 +530,7 @@ export class InstanceController extends CoreBase<InstanceControllerEvents> {
 					config: instanceConf.config,
 				}
 			} catch (e: any) {
-				this.logger.silly(`Failed to load instance config_fields: ${e.message}`)
+				this.#logger.silly(`Failed to load instance config_fields: ${e.message}`)
 				return null
 			}
 		})

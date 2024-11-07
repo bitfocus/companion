@@ -485,7 +485,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			// Match previous behaviour
 			throw new ApiMessageError('Syntax error')
 
-		const controlId = this.registry.page.getControlIdAt(location)
+		const controlId = this.page.getControlIdAt(location)
 
 		return {
 			location,

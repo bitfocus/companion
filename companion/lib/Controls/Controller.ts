@@ -21,19 +21,14 @@ import type { ClientTriggerData, TriggerModel } from '@companion-app/shared/Mode
 import type { SomeControl } from './IControlFragments.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { EventEmitter } from 'events'
+import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
 
 type SomeControlModel = SomeButtonModel | TriggerModel
-
-// type SomeRealControl =
-// 	| ControlTrigger
-// 	| ControlButtonNormal
-// 	| ControlButtonPageDown
-// 	| ControlButtonPageNumber
-// 	| ControlButtonPageUp
 
 /**
  * The class that manages the controls
@@ -56,10 +51,13 @@ type SomeControlModel = SomeButtonModel | TriggerModel
  * disclosing the source code of your own applications.
  */
 export class ControlsController extends CoreBase {
+	readonly #registry: Registry
+	readonly #controlEvents: EventEmitter<ControlCommonEvents>
+
 	/**
 	 * Actions runner
 	 */
-	readonly actions: ActionRunner
+	readonly actionRunner: ActionRunner
 
 	/**
 	 * Actions recorder
@@ -81,12 +79,32 @@ export class ControlsController extends CoreBase {
 	 */
 	readonly #activeLearnRequests = new Set<string>()
 
-	constructor(registry: Registry) {
+	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
 		super(registry, 'Controls/Controller')
 
-		this.actions = new ActionRunner(registry)
+		this.#registry = registry
+		this.#controlEvents = controlEvents
+
+		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
 		this.triggers = new TriggerEvents()
+	}
+
+	#createControlDependencies(): ControlDependencies {
+		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
+		return {
+			db: this.#registry.db,
+			io: this.#registry.ui.io,
+			graphics: this.#registry.graphics,
+			surfaces: this.#registry.surfaces,
+			page: this.#registry.page,
+			internalModule: this.#registry.internalModule,
+			instance: this.#registry.instance,
+			variables: this.#registry.variables,
+			userconfig: this.#registry.userconfig,
+			actionRunner: this.actionRunner,
+			events: this.#controlEvents,
+		}
 	}
 
 	/**
@@ -397,6 +415,19 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
+		client.onPromise('controls:feedback:set-connection', (controlId, feedbackId, connectionId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackSetConnection(feedbackId, connectionId)
+			} else {
+				throw new Error(
+					`Trying to set connection of feedback ${feedbackId} to ${connectionId} but control ${controlId} does not support feedbacks`
+				)
+			}
+		})
+
 		client.onPromise('controls:feedback:set-inverted', (controlId, id, isInverted) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
@@ -582,12 +613,12 @@ export class ControlsController extends CoreBase {
 		})
 		client.onPromise(
 			'controls:action:reorder',
-			(controlId, dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex) => {
+			(controlId, dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex) => {
 				const control = this.getControl(controlId)
 				if (!control) return false
 
 				if (control.supportsActions) {
-					return control.actionReorder(dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex)
+					return control.actionReorder(dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex)
 				} else {
 					throw new Error(`Control "${controlId}" does not support actions`)
 				}
@@ -719,7 +750,7 @@ export class ControlsController extends CoreBase {
 		client.onPromise('triggers:create', () => {
 			const controlId = CreateTriggerControlId(nanoid())
 
-			const newControl = new ControlTrigger(this.registry, this.triggers, controlId, null, false)
+			const newControl = new ControlTrigger(this.#createControlDependencies(), this.triggers, controlId, null, false)
 			this.#controls.set(controlId, newControl)
 
 			// Add trigger to the end of the list
@@ -928,19 +959,19 @@ export class ControlsController extends CoreBase {
 		const controlObj2 = typeof controlObj === 'object' ? controlObj : null
 		if (category === 'all' || category === 'button') {
 			if (controlObj2?.type === 'button' || (controlType === 'button' && !controlObj2)) {
-				return new ControlButtonNormal(this.registry, controlId, controlObj2, isImport)
+				return new ControlButtonNormal(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
-				return new ControlButtonPageNumber(this.registry, controlId, controlObj2, isImport)
+				return new ControlButtonPageNumber(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {
-				return new ControlButtonPageUp(this.registry, controlId, controlObj2, isImport)
+				return new ControlButtonPageUp(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagedown' || (controlType === 'pagedown' && !controlObj2)) {
-				return new ControlButtonPageDown(this.registry, controlId, controlObj2, isImport)
+				return new ControlButtonPageDown(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			}
 		}
 
 		if (category === 'all' || category === 'trigger') {
 			if (controlObj2?.type === 'trigger' || (controlType === 'trigger' && !controlObj2)) {
-				return new ControlTrigger(this.registry, this.triggers, controlId, controlObj2, isImport)
+				return new ControlTrigger(this.#createControlDependencies(), this.triggers, controlId, controlObj2, isImport)
 			}
 		}
 
@@ -1007,7 +1038,7 @@ export class ControlsController extends CoreBase {
 			return false
 		}
 
-		// Delete old control at the coordintae
+		// Delete old control at the coordinate
 		const oldControlId = this.page.getControlIdAt(location)
 		if (oldControlId) {
 			this.deleteControl(oldControlId)
@@ -1089,7 +1120,7 @@ export class ControlsController extends CoreBase {
 	 * Execute a press of a control
 	 * @param controlId Id of the control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
@@ -1109,7 +1140,7 @@ export class ControlsController extends CoreBase {
 	 * Execute rotation of a control
 	 * @param controlId Id of the control
 	 * @param direction Whether the control is rotated to the right
-	 * @param surfaceId The surface that intiated this rotate
+	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(controlId: string, direction: boolean, surfaceId: string | undefined): boolean {
 		const control = this.getControl(controlId)

@@ -8,6 +8,7 @@ export interface IFeedbackEditorService {
 	moveCard: (dragId: string, hoverParentId: string | null, hoverIndex: number) => void
 
 	setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, value: any) => void
+	setConnection: (feedbackId: string, connectionId: string | number) => void
 	setInverted: (feedbackId: string, inverted: boolean) => void
 	performDelete: (feedbackId: string) => void
 	performDuplicate: (feedbackId: string) => void
@@ -20,6 +21,7 @@ export interface IFeedbackEditorService {
 
 export interface IFeedbackEditorFeedbackService {
 	setValue: (key: string, value: any) => void
+	setConnection: (connectionId: string | number) => void
 	setInverted: (inverted: boolean) => void
 	performDelete: () => void
 	performDuplicate: () => void
@@ -64,6 +66,14 @@ export function useControlFeedbacksEditorService(
 						console.error(`Set-option failed: ${e}`)
 					})
 				}
+			},
+
+			setConnection: (feedbackId: string, connectionId: string | number) => {
+				socketEmitPromise(socket, 'controls:feedback:set-connection', [controlId, feedbackId, connectionId]).catch(
+					(e) => {
+						console.error(`Set-connection failed: ${e}`)
+					}
+				)
 			},
 
 			setInverted: (feedbackId: string, isInverted: boolean) => {
@@ -138,6 +148,7 @@ export function useControlFeedbackService(
 	return useMemo(
 		() => ({
 			setValue: (key: string, val: any) => serviceFactory.setValue(feedbackId, feedbackRef.current, key, val),
+			setConnection: (connectionId: string | number) => serviceFactory.setConnection(feedbackId, connectionId),
 			setInverted: (isInverted: boolean) => serviceFactory.setInverted(feedbackId, isInverted),
 			performDelete: () => serviceFactory.performDelete(feedbackId),
 			performDuplicate: () => serviceFactory.performDuplicate(feedbackId),

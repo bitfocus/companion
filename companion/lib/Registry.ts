@@ -18,6 +18,20 @@ import { UIController } from './UI/Controller.js'
 import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
+import { DataMetrics } from './Data/Metrics.js'
+import { InternalActionRecorder } from './Internal/ActionRecorder.js'
+import { InternalControls } from './Internal/Controls.js'
+import { InternalCustomVariables } from './Internal/CustomVariables.js'
+import { InternalInstance } from './Internal/Instance.js'
+import { InternalPage } from './Internal/Page.js'
+import { InternalSurface } from './Internal/Surface.js'
+import { InternalSystem } from './Internal/System.js'
+import { InternalTime } from './Internal/Time.js'
+import { InternalTriggers } from './Internal/Triggers.js'
+import { InternalVariables } from './Internal/Variables.js'
+import { ImportExportController } from './ImportExport/Controller.js'
+import { ServiceOscSender } from './Service/OscSender.js'
+import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo = JSON.parse(pkgInfoStr.toString())
@@ -44,10 +58,6 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
 	process.exit(1)
 }
 
-export interface RegistryEvents {
-	http_rebind: [bind_ip: string, http_port: number]
-}
-
 /**
  * The core controller that sets up all the controllers needed
  * for the app.
@@ -69,31 +79,31 @@ export interface RegistryEvents {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class Registry extends EventEmitter<RegistryEvents> {
+export class Registry {
 	/**
 	 * The cloud controller
 	 */
-	cloud: CloudController
+	#cloud!: CloudController
 	/**
 	 * The core controls controller
 	 */
-	controls: ControlsController
+	controls!: ControlsController
 	/**
 	 * The core database library
 	 */
-	db: DataDatabase
+	readonly db: DataDatabase
 	/**
 	 * The core graphics controller
 	 */
-	graphics: GraphicsController
+	graphics!: GraphicsController
 	/**
 	 * The core instance controller
 	 */
-	instance: InstanceController
+	instance!: InstanceController
 	/**
 	 * The core interface client
 	 */
-	io: UIHandler
+	readonly io: UIHandler
 	/**
 	 * The logger
 	 */
@@ -101,49 +111,49 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * The core page controller
 	 */
-	page: PageController
+	page!: PageController
 	/**
 	 * The core page controller
 	 */
-	preview: GraphicsPreview
+	#preview!: GraphicsPreview
 	/**
 	 * The core service controller
 	 */
-	services: ServiceController
+	services!: ServiceController
 	/**
 	 * The core device controller
 	 */
-	surfaces: SurfaceController
-	/**
-	 * The modules' event emitter interface
-	 */
-	system: EventEmitter
+	surfaces!: SurfaceController
 	/**
 	 * The core user config manager
 	 */
-	userconfig: DataUserConfig
+	readonly userconfig: DataUserConfig
 
 	/**
 	 * The 'internal' module
 	 */
-	internalModule: InternalController
+	internalModule!: InternalController
+
+	#importExport!: ImportExportController
+
+	#metrics!: DataMetrics
 
 	/**
 	 * The 'data' controller
 	 */
-	data: DataController
+	readonly #data: DataController
 
 	/**
 	 * The 'ui' controller
 	 */
-	ui: UIController
+	readonly ui: UIController
 
 	/**
 	 * Express Router for /int api endpoints
 	 */
-	api_router: express.Router
+	readonly internalApiRouter = express.Router()
 
-	variables: VariablesController
+	variables!: VariablesController
 
 	readonly appInfo: AppInfo
 
@@ -153,8 +163,6 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	 * @param machineId - the machine uuid
 	 */
 	constructor(configDir: string, machineId: string) {
-		super()
-
 		if (!configDir) throw new Error(`Missing configDir`)
 		if (!machineId) throw new Error(`Missing machineId`)
 
@@ -170,57 +178,137 @@ export class Registry extends EventEmitter<RegistryEvents> {
 			appBuild: buildNumber,
 			pkgInfo: pkgInfo,
 		}
+
+		this.#logger.debug('constructing core modules')
+
+		this.ui = new UIController(this.appInfo, this.internalApiRouter)
+		this.io = this.ui.io
+		LogController.init(this.appInfo, this.ui.io)
+
+		this.db = new DataDatabase(this.appInfo.configDir)
+		this.#data = new DataController(this)
+		this.userconfig = this.#data.userconfig
 	}
 
 	/**
 	 * Startup the application
 	 * @param extraModulePath - extra directory to search for modules
-	 * @param bind_ip
-	 * @param http_port
+	 * @param bindIp
+	 * @param bindPort
 	 */
-	async ready(extraModulePath: string, bind_ip: string, http_port: number) {
+	async ready(extraModulePath: string, bindIp: string, bindPort: number) {
 		this.#logger.debug('launching core modules')
 
-		this.api_router = express.Router()
-		this.ui = new UIController(this)
-		this.io = this.ui.io
-		this.db = new DataDatabase(this.appInfo.configDir)
-		this.data = new DataController(this)
-		this.userconfig = this.data.userconfig
-		LogController.init(this.appInfo, this.ui.io)
+		const controlEvents = new EventEmitter<ControlCommonEvents>()
+
 		this.page = new PageController(this)
-		this.controls = new ControlsController(this)
-		this.graphics = new GraphicsController(this)
+		this.controls = new ControlsController(this, controlEvents)
 		this.variables = new VariablesController(this.db, this.io)
-		this.preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
-		this.surfaces = new SurfaceController(this)
-		this.instance = new InstanceController(this)
-		this.services = new ServiceController(this)
-		this.cloud = new CloudController(this, this.data.cache)
-		this.internalModule = new InternalController(this)
+		this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
+		this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
+		this.surfaces = new SurfaceController(
+			this.db,
+			{
+				controls: this.controls,
+				graphics: this.graphics,
+				page: this.page,
+				userconfig: this.userconfig,
+				variables: this.variables,
+			},
+			this.io
+		)
+
+		const oscSender = new ServiceOscSender(this)
+		this.instance = new InstanceController(
+			this.io,
+			this.db,
+			this.internalApiRouter,
+			this.controls,
+			this.graphics,
+			this.page,
+			this.variables,
+			oscSender
+		)
+		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
+
+		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
+		this.#importExport = new ImportExportController(
+			this.appInfo,
+			this.internalApiRouter,
+			this.io,
+			this.controls,
+			this.graphics,
+			this.instance,
+			this.internalModule,
+			this.page,
+			this.surfaces,
+			this.userconfig,
+			this.variables
+		)
+
+		this.internalModule.addFragments(
+			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
+			new InternalInstance(this.internalModule, this.instance),
+			new InternalTime(this.internalModule),
+			new InternalControls(this.internalModule, this.graphics, this.controls, this.page, this.variables.values),
+			new InternalCustomVariables(this.internalModule, this.variables),
+			new InternalPage(this.internalModule, this.page),
+			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
+			new InternalSystem(this.internalModule, this),
+			new InternalTriggers(this.internalModule, this.controls),
+			new InternalVariables(this.internalModule, this.variables.values)
+		)
+		this.internalModule.init()
+
+		this.#metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
+		this.services = new ServiceController(this, oscSender, controlEvents)
+		this.#cloud = new CloudController(
+			this.appInfo,
+			this.db,
+			this.#data.cache,
+			this.controls,
+			this.graphics,
+			this.io,
+			this.page
+		)
+
+		this.ui.io.on('clientConnect', (client) => {
+			LogController.clientConnect(client)
+			this.ui.clientConnect(client)
+			this.#data.clientConnect(client)
+			this.page.clientConnect(client)
+			this.controls.clientConnect(client)
+			this.#preview.clientConnect(client)
+			this.surfaces.clientConnect(client)
+			this.instance.clientConnect(client)
+			this.#cloud.clientConnect(client)
+			this.services.clientConnect(client)
+			this.#importExport.clientConnect(client)
+		})
 
 		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
 			this.internalModule.variablesChanged(all_changed_variables_set)
 			this.controls.onVariablesChanged(all_changed_variables_set)
 			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-			this.preview.onVariablesChanged(all_changed_variables_set)
+			this.#preview.onVariablesChanged(all_changed_variables_set)
 			this.surfaces.onVariablesChanged(all_changed_variables_set)
 		})
 
 		// old 'modules_loaded' events
-		this.data.metrics.startCycle()
+		this.#metrics.startCycle()
+		this.ui.update.startCycle()
 
 		this.controls.init()
 		this.controls.verifyConnectionIds()
 		this.variables.custom.init()
-		this.internalModule.init()
+		this.internalModule.firstUpdate()
 		this.graphics.regenerateAll(false)
 
 		// We are ready to start the instances/connections
 		await this.instance.initInstances(extraModulePath)
 
 		// Instances are loaded, start up http
-		this.rebindHttp(bind_ip, http_port)
+		this.rebindHttp(bindIp, bindPort)
 
 		// Startup has completed, run triggers
 		this.controls.triggers.emit('startup')
@@ -271,7 +359,7 @@ export class Registry extends EventEmitter<RegistryEvents> {
 
 			// Save the db to disk
 			this.db.close()
-			this.data.cache.close()
+			this.#data.cache.close()
 
 			try {
 				this.surfaces.quit()
@@ -302,13 +390,15 @@ export class Registry extends EventEmitter<RegistryEvents> {
 	/**
 	 * Rebind the http server to an ip and port (https will update to the same ip if running)
 	 */
-	rebindHttp(bind_ip: string, http_port: number): void {
+	rebindHttp(bindIp: string, bindPort: number): void {
 		// ensure the port looks reasonable
-		if (http_port < 1024 || http_port > 65535) {
-			http_port = 8000
+		if (bindPort < 1024 || bindPort > 65535) {
+			bindPort = 8000
 		}
 
-		this.emit('http_rebind', bind_ip, http_port)
+		this.ui.server.rebindHttp(bindIp, bindPort)
+		this.userconfig.updateBindIp(bindIp)
+		this.services.https.updateBindIp(bindIp)
 	}
 }
 

@@ -43,11 +43,12 @@ export function GridStep({ rows, columns, setValue }: GridStepProps) {
 				<h5>Button Grid Size</h5>
 				<p>
 					By default Companion makes a grid of buttons sized for the Stream Deck XL. This can be made larger (or
-					smaller) to accomodate individual surfaces of any size, such as an X-Keys XKE-128 (8 rows x 16 columns).
+					smaller) to accommodate individual surfaces of any size, such as an X-Keys XKE-128 (8 rows x 16 columns).
 				</p>
 				<p>
 					The grid can also be enlarged to group multiple control surfaces together to create a larger control surface.
-					For example, to accomodate two Stream Deck XL's side-by-side you can set the grid size as 4 rows x 16 columns.
+					For example, to accommodate two Stream Deck XL's side-by-side you can set the grid size as 4 rows x 16
+					columns.
 				</p>
 			</CCol>
 

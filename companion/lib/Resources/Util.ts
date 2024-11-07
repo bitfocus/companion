@@ -2,11 +2,11 @@ import { serializeIsVisibleFn } from '@companion-module/base/dist/internal/base.
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import type { Registry } from '../Registry.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@companion-app/shared/Model/Options.js'
 import type { CompanionAlignment, CompanionInputFieldBase } from '@companion-module/base'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
  * Combine rgba components to a 32bit value
@@ -237,7 +237,7 @@ export function parseLineParameters(line: string): ParsedParams {
 /**
  * Checks if parameter is one of the list and returns it if so.
  * If it is not in the list but a trueish value, the defaultVal will be returned.
- * Otherwise returnes null.
+ * Otherwise returns null.
  */
 export function parseStringParamWithBooleanFallback(
 	list: string[],
@@ -356,12 +356,12 @@ export function isPackaged(): boolean {
  * Get the size of the bitmap for a button
  */
 export function GetButtonBitmapSize(
-	registry: Registry,
+	userConfig: DataUserConfig,
 	style: ButtonStyleProperties
 ): { width: number; height: number } {
 	let removeTopBar = !style.show_topbar
 	if (style.show_topbar === 'default' || style.show_topbar === undefined) {
-		removeTopBar = registry.userconfig.getKey('remove_topbar') === true
+		removeTopBar = userConfig.getKey('remove_topbar') === true
 	}
 
 	if (removeTopBar) {

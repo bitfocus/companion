@@ -9,9 +9,9 @@ import type {
 	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../IControlFragments.js'
-import type { Registry } from '../../Registry.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import { PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ControlDependencies } from '../ControlDependencies.js'
 
 /**
  * Class for a pagenum button control.
@@ -62,8 +62,8 @@ export class ControlButtonPageNumber
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(registry: Registry, controlId: string, storage: PageNumberButtonModel | null, isImport: boolean) {
-		super(registry, controlId, 'Controls/Button/PageNumber')
+	constructor(deps: ControlDependencies, controlId: string, storage: PageNumberButtonModel | null, isImport: boolean) {
+		super(deps, controlId, 'Controls/Button/PageNumber')
 
 		if (!storage) {
 			// New control
@@ -109,11 +109,11 @@ export class ControlButtonPageNumber
 	/**
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {
-			this.surfaces.devicePageSet(surfaceId, this.page.getFirstPageId())
+			this.deps.surfaces.devicePageSet(surfaceId, this.deps.page.getFirstPageId())
 		}
 	}
 
