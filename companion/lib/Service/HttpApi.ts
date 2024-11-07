@@ -305,8 +305,9 @@ export class ServiceHttpApi extends CoreBase {
 			.route('/custom-variable/:name/value')
 			.post(this.#customVariableSetValue)
 			.get(this.#customVariableGetValue)
+
 		// Module variables
-		this.#apiRouter.route('/variable/:label/:name/value').get(this.#ModuleVariableGetValue)
+		this.#apiRouter.route('/variable/:label/:name/value').get(this.#moduleVariableGetValue)
 
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
@@ -594,13 +595,13 @@ export class ServiceHttpApi extends CoreBase {
 	/**
 	 * Retrieve any module variable value
 	 */
-	#ModuleVariableGetValue = (req: express.Request, res: express.Response): void => {
-		const ConnectionLabel = req.params.label
+	#moduleVariableGetValue = (req: express.Request, res: express.Response): void => {
+		const connectionLabel = req.params.label
 		const variableName = req.params.name
 
-		this.logger.debug(`Got HTTP module variable get value name "${ConnectionLabel}-${variableName}"`)
+		this.logger.debug(`Got HTTP module variable get value name "${connectionLabel}:${variableName}"`)
 
-		const result = this.registry.variables.values.getVariableValue(ConnectionLabel, variableName)
+		const result = this.variablesController.values.getVariableValue(connectionLabel, variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {

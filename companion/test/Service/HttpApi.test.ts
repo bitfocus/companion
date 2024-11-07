@@ -42,6 +42,7 @@ describe('HttpApi', () => {
 			variables: mock(
 				{
 					custom: mock({}, mockOptions),
+					values: mock({}, mockOptions),
 				},
 				mockOptions
 			),
@@ -1183,124 +1184,124 @@ describe('HttpApi', () => {
 		describe('get value', () => {
 			test('no value', async () => {
 				const { app, registry } = createService()
-	
-					const mockFn = registry.variables.values.getVariableValue
-					mockFn.mockReturnValue(undefined)
-	
-					// Perform the request
-					const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
-					expect(res.status).toBe(404)
-					expect(res.text).toBe('Not found')
-	
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('ConnectionLabel-variableName')
-				})
-	
-				test('value empty string', async () => {
-					const { app, registry } = createService()
-	
-					const mockFn = registry.variables.values.getVariableValue
-					mockFn.mockReturnValue('')
-	
-					// Perform the request
-					const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
-					expect(res.status).toBe(200)
-					expect(res.text).toBe('')
-	
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('ConnectionLabel-variableName')
-				})
-				test('value proper string', async () => {
-					const { app, registry } = createService()
-	
-					const mockFn = registry.variables.values.getVariableValue
-					mockFn.mockReturnValue('something 123')
-	
-					// Perform the request
-					const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
-					expect(res.status).toBe(200)
-					expect(res.text).toBe('something 123')
-	
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('ConnectionLabel-variableName')
-				})
-	
-				test('value zero number', async () => {
-					const { app, registry } = createService()
-	
-					const mockFn = registry.variables.values.getVariableValue
-					mockFn.mockReturnValue(0)
-	
-					// Perform the request
-					const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
-					expect(res.status).toBe(200)
-					expect(res.text).toBe('0')
-	
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('ConnectionLabel-variableName')
-				})
-	
-				test('value real number', async () => {
-					const { app, registry } = createService()
-	
-					const mockFn = registry.variables.values.getVariableValue
-					mockFn.mockReturnValue(455.8)
-	
-					// Perform the request
-					const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
-					expect(res.status).toBe(200)
-					expect(res.text).toBe('455.8')
-	
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('ConnectionLabel-variableName')
-				})
-	
-				test('value false', async () => {
-					const { app, registry } = createService()
-	
-					const mockFn = registry.variables.values.getVariableValue
-					mockFn.mockReturnValue(false)
-	
-					// Perform the request
-					const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
-					expect(res.status).toBe(200)
-					expect(res.text).toBe('false')
-	
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('ConnectionLabel-variableName')
-				})
-	
-				test('value true', async () => {
-					const { app, registry } = createService()
-	
-					const mockFn = registry.variables.values.getVariableValue
-					mockFn.mockReturnValue(true)
-	
-					// Perform the request
-					const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
-					expect(res.status).toBe(200)
-					expect(res.text).toBe('true')
-	
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('ConnectionLabel-variableName')
-				})
-				test('value object', async () => {
-					const { app, registry } = createService()
-	
-					const mockFn = registry.variables.values.getVariableValue
-					mockFn.mockReturnValue({
-						a: 1,
-						b: 'str',
-					} as any)
-	
-					// Perform the request
-					const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
-					expect(res.status).toBe(200)
-					expect(res.text).toBe('{"a":1,"b":"str"}')
-	
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('ConnectionLabel-variableName')
-				})
+
+				const mockFn = registry.variables.values.getVariableValue
+				mockFn.mockReturnValue(undefined)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
+				expect(res.status).toBe(404)
+				expect(res.text).toBe('Not found')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+
+			test('value empty string', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.variables.values.getVariableValue
+				mockFn.mockReturnValue('')
+
+				// Perform the request
+				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+			test('value proper string', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.variables.values.getVariableValue
+				mockFn.mockReturnValue('something 123')
+
+				// Perform the request
+				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('something 123')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+
+			test('value zero number', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.variables.values.getVariableValue
+				mockFn.mockReturnValue(0)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('0')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+
+			test('value real number', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.variables.values.getVariableValue
+				mockFn.mockReturnValue(455.8)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('455.8')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+
+			test('value false', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.variables.values.getVariableValue
+				mockFn.mockReturnValue(false)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('false')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+
+			test('value true', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.variables.values.getVariableValue
+				mockFn.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('true')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+			test('value object', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.variables.values.getVariableValue
+				mockFn.mockReturnValue({
+					a: 1,
+					b: 'str',
+				} as any)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('{"a":1,"b":"str"}')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
 		})
 	})
 })
