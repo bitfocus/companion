@@ -411,7 +411,7 @@ export interface BackendToClientEventsMap {
 	'modules-store:list:progress': (percent: number) => void
 	'modules-store:info:data': (moduleId: string, data: ModuleStoreModuleInfoStore) => void
 	'modules-store:info:progress': (moduleId: string, percent: number) => void
-	'modules:bundle-import:progress': (sessionId: string, percent: number) => void
+	'modules:bundle-import:progress': (sessionId: string, percent: number | null) => void
 
 	'emulator:images': (newImages: EmulatorImage[] | EmulatorImageCache) => void
 	'emulator:config': (patch: JsonPatchOperation[] | EmulatorConfig) => void

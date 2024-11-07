@@ -1,8 +1,18 @@
 import { nanoid } from 'nanoid'
 import crypto from 'crypto'
 
+const TIMEOUT_DURATION = 5000 // time before upload session is considered inactive and killed
+
 export class MultipartUploader {
 	#session: MultipartUploaderSession | null = null
+
+	#inactiveTimeout: NodeJS.Timeout | null = null
+
+	#sessionTimeoutCallback: (sessionId: string) => void
+
+	constructor(sessionTimeoutCallback: (sessionId: string) => void) {
+		this.#sessionTimeoutCallback = sessionTimeoutCallback
+	}
 
 	initSession(name: string, size: number, checksum: string): string | null {
 		if (this.#session) return null
@@ -16,9 +26,24 @@ export class MultipartUploader {
 			data: new Uint8Array(size),
 
 			filledBytes: 0,
+			lastChunkTime: Date.now(),
 		}
 
-		// TODO - setup timeout
+		if (!this.#inactiveTimeout) {
+			this.#inactiveTimeout = setInterval(() => {
+				if (!this.#session) {
+					clearInterval(this.#inactiveTimeout!)
+					this.#inactiveTimeout = null
+					return
+				}
+
+				if (Date.now() - this.#session.lastChunkTime > TIMEOUT_DURATION) {
+					const sessionId = this.#session.id
+					this.#session = null
+					this.#sessionTimeoutCallback(sessionId)
+				}
+			}, 1000)
+		}
 
 		return sessionId
 	}
@@ -28,6 +53,7 @@ export class MultipartUploader {
 
 		this.#session.data.set(data, offset)
 		this.#session.filledBytes += data.length
+		this.#session.lastChunkTime = Date.now()
 
 		return Math.min(1, this.#session.filledBytes / this.#session.size)
 	}
@@ -35,12 +61,18 @@ export class MultipartUploader {
 	completeSession(sessionId: string): Uint8Array | null {
 		if (!this.#session || this.#session.id !== sessionId) return null
 
-		const checksum = crypto.createHash('sha-1').update(this.#session.data).digest('hex')
-		if (checksum !== this.#session.checksum) throw new Error('Checksum mismatch')
-
-		const data = this.#session.data
+		const session = this.#session
 		this.#session = null
-		return data
+
+		if (this.#inactiveTimeout) {
+			clearInterval(this.#inactiveTimeout)
+			this.#inactiveTimeout = null
+		}
+
+		const checksum = crypto.createHash('sha-1').update(session.data).digest('hex')
+		if (checksum !== session.checksum) throw new Error('Checksum mismatch')
+
+		return session.data
 	}
 
 	cancelSession(sessionId: string): boolean {
@@ -52,11 +84,12 @@ export class MultipartUploader {
 }
 
 interface MultipartUploaderSession {
-	id: string
-	name: string
-	size: number
-	checksum: string
-	data: Uint8Array
+	readonly id: string
+	readonly name: string
+	readonly size: number
+	readonly checksum: string
+	readonly data: Uint8Array
 
 	filledBytes: number
+	lastChunkTime: number
 }

@@ -45,7 +45,10 @@ export class InstanceInstalledModulesManager {
 	 */
 	readonly #modulesDir: string
 
-	readonly #multipartUploader = new MultipartUploader()
+	readonly #multipartUploader = new MultipartUploader((sessionId) => {
+		this.#logger.info(`Module upload session "${sessionId}" timed out`)
+		this.#io.emitToAll('modules:bundle-import:progress', sessionId, null)
+	})
 
 	constructor(
 		appInfo: AppInfo,
@@ -159,6 +162,11 @@ export class InstanceInstalledModulesManager {
 
 			return true
 		})
+		client.onPromise('modules:bundle-import:cancel', async (sessionId) => {
+			this.#logger.silly(`Canel module bundle upload ${sessionId}`)
+
+			this.#multipartUploader.cancelSession(sessionId)
+		})
 		client.onPromise('modules:bundle-import:complete', async (sessionId) => {
 			this.#logger.silly(`Attempt module bundle complete ${sessionId}`)
 
@@ -172,12 +180,6 @@ export class InstanceInstalledModulesManager {
 			// Upload is complete, now load it
 
 			throw new Error('Not implemented')
-		})
-
-		client.onPromise('modules:bundle-import:cancel', async (sessionId) => {
-			this.#logger.silly(`Canel module bundle upload ${sessionId}`)
-
-			this.#multipartUploader.cancelSession(sessionId)
 		})
 	}
 
