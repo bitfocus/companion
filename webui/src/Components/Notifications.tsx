@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'r
 import { nanoid } from 'nanoid'
 
 export interface NotificationsManagerRef {
-	show(title: string, message: string, duration?: number, stickyId?: string): string
+	show(title: string, message: string, duration?: number | null, stickyId?: string): string
 	close(messageId: string): void
 }
 

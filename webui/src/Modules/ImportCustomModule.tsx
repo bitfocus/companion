@@ -5,16 +5,30 @@ import { socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { CAlert } from '@coreui/react'
 
+const NOTIFICATION_ID_IMPORT = 'import_module_bundle'
+
 export function ImportModules() {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
-	const [importBundleProgress, setImportBundleProgress] = useState<number | null>(null)
+	// const [importBundleProgress, setImportBundleProgress] = useState<number | null>(null)
 	useEffect(() => {
-		setImportBundleProgress(null)
+		// setImportBundleProgress(null)
+		notifier.current?.close(NOTIFICATION_ID_IMPORT)
 
-		const onProgress = (_sessionId: string, progress: number) => {
-			setImportBundleProgress(progress)
+		const onProgress = (_sessionId: string, progress: number | null) => {
+			// setImportBundleProgress(progress)
 			console.log('import progress', progress)
+
+			if (progress === null) {
+				notifier.current?.close(NOTIFICATION_ID_IMPORT)
+			} else {
+				notifier.current?.show(
+					'Importing module bundle...',
+					`${Math.round(progress * 100)}% complete`,
+					null,
+					NOTIFICATION_ID_IMPORT
+				)
+			}
 		}
 
 		socket.on('modules:bundle-import:progress', onProgress)
@@ -22,7 +36,7 @@ export function ImportModules() {
 		return () => {
 			socket.off('modules:bundle-import:progress', onProgress)
 		}
-	}, [socket])
+	}, [socket, notifier])
 
 	const [importError, setImportError] = useState<string | null>(null)
 
@@ -104,6 +118,8 @@ export function ImportModules() {
 
 				Promise.resolve()
 					.then(async () => {
+						notifier.current?.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
+
 						const hashBuffer = await window.crypto.subtle.digest('sha-1', buffer)
 						const hashText = Array.from(new Uint8Array(hashBuffer))
 							.map((byte) => byte.toString(16).padStart(2, '0'))
@@ -129,37 +145,18 @@ export function ImportModules() {
 						console.log('uploading complete, starting load')
 						const success = await socketEmitPromise(socket, 'modules:bundle-import:complete', [sessionId])
 						if (!success) throw new Error(`Failed to import`)
+
+						notifier.current?.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
 					})
 					.catch((e) => {
 						console.error('failed', e)
+
+						notifier.current?.show('Importing module bundle...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
 					})
-
-				// TODO - upload this in chunks, as the file is too large and hits the max websocket message size
-				// socketEmitPromise(socket, 'modules:install-custom-module', [new Uint8Array(fr.result)], 20000)
-				// 	.then((failureReason) => {
-				// 		if (failureReason) {
-				// 			console.error('Failed to install module', failureReason)
-
-				// 			notifier.current?.show('Failed to install module', failureReason, 5000)
-				// 		}
-
-				// 		setImportError(null)
-				// 		// if (err) {
-				// 		// 	setImportError(err || 'Failed to prepare')
-				// 		// } else {
-				// 		// 	// const mode = config.type === 'page' ? 'import_page' : 'import_full'
-				// 		// 	// modalRef.current.show(mode, config, initialRemap)
-				// 		// 	// setImportInfo([config, initialRemap])
-				// 		// }
-				// 	})
-				// 	.catch((e) => {
-				// 		setImportError('Failed to load module bundle to import')
-				// 		console.error('Failed to load module bundle to import:', e)
-				// 	})
 			}
 			fr.readAsArrayBuffer(newFile)
 		},
-		[socket]
+		[socket, notifier]
 	)
 
 	return (
