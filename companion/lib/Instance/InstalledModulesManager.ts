@@ -2,7 +2,7 @@ import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
 import type { InstanceModules } from './Modules.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import zlib from 'node:zlib'
 import * as ts from 'tar-stream'
 import { Readable } from 'node:stream'
@@ -13,6 +13,7 @@ import type { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import { promisify } from 'util'
 import { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
+import { MultipartUploader } from '../Resources/MultipartUploader.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -26,6 +27,8 @@ export class InstanceInstalledModulesManager {
 	readonly #logger = LogController.createLogger('Instance/UserModulesManager')
 
 	readonly #appInfo: AppInfo
+
+	readonly #io: UIHandler
 
 	/**
 	 * The modules manager. To be notified when a module is installed or uninstalled
@@ -42,8 +45,17 @@ export class InstanceInstalledModulesManager {
 	 */
 	readonly #modulesDir: string
 
-	constructor(appInfo: AppInfo, modulesManager: InstanceModules, modulesStore: ModuleStoreService, dirs: ModuleDirs) {
+	readonly #multipartUploader = new MultipartUploader()
+
+	constructor(
+		appInfo: AppInfo,
+		io: UIHandler,
+		modulesManager: InstanceModules,
+		modulesStore: ModuleStoreService,
+		dirs: ModuleDirs
+	) {
 		this.#appInfo = appInfo
+		this.#io = io
 		this.#modulesManager = modulesManager
 		this.#modulesStore = modulesStore
 		this.#modulesDir = dirs.installedModulesDir
@@ -126,6 +138,46 @@ export class InstanceInstalledModulesManager {
 
 		client.onPromise('modules:uninstall-store-module', async (moduleId, versionId) => {
 			return this.#uninstallModule(moduleId, versionId)
+		})
+
+		client.onPromise('modules:bundle-import:start', async (name, size, checksum) => {
+			this.#logger.info(`Starting upload of module bundle ${name} (${size} bytes)`)
+			const sessionId = this.#multipartUploader.initSession(name, size, checksum)
+			if (sessionId === null) return null
+
+			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0) // TODO
+
+			return sessionId
+		})
+		client.onPromise('modules:bundle-import:chunk', async (sessionId, offset, data) => {
+			this.#logger.silly(`Upload module bundle chunk ${sessionId} (@${offset} = ${data.length} bytes)`)
+
+			const progress = this.#multipartUploader.addChunk(sessionId, offset, data)
+			if (progress === null) return false
+
+			this.#io.emitToAll('modules:bundle-import:progress', sessionId, progress / 2) // TODO
+
+			return true
+		})
+		client.onPromise('modules:bundle-import:complete', async (sessionId) => {
+			this.#logger.silly(`Attempt module bundle complete ${sessionId}`)
+
+			const data = this.#multipartUploader.completeSession(sessionId)
+			if (data === null) return false
+
+			this.#logger.info(`Importing module bundle ${sessionId} (${data.length} bytes)`)
+
+			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0.5) // TODO
+
+			// Upload is complete, now load it
+
+			throw new Error('Not implemented')
+		})
+
+		client.onPromise('modules:bundle-import:cancel', async (sessionId) => {
+			this.#logger.silly(`Canel module bundle upload ${sessionId}`)
+
+			this.#multipartUploader.cancelSession(sessionId)
 		})
 	}
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { socketEmitPromise } from '../util.js'
@@ -7,6 +7,22 @@ import { CAlert } from '@coreui/react'
 
 export function ImportModules() {
 	const { socket, notifier } = useContext(RootAppStoreContext)
+
+	const [importBundleProgress, setImportBundleProgress] = useState<number | null>(null)
+	useEffect(() => {
+		setImportBundleProgress(null)
+
+		const onProgress = (_sessionId: string, progress: number) => {
+			setImportBundleProgress(progress)
+			console.log('import progress', progress)
+		}
+
+		socket.on('modules:bundle-import:progress', onProgress)
+
+		return () => {
+			socket.off('modules:bundle-import:progress', onProgress)
+		}
+	}, [socket])
 
 	const [importError, setImportError] = useState<string | null>(null)
 
@@ -83,6 +99,41 @@ export function ImportModules() {
 				}
 
 				setImportError(null)
+				const buffer = new Uint8Array(fr.result)
+				console.log('start import...', buffer)
+
+				Promise.resolve()
+					.then(async () => {
+						const hashBuffer = await window.crypto.subtle.digest('sha-1', buffer)
+						const hashText = Array.from(new Uint8Array(hashBuffer))
+							.map((byte) => byte.toString(16).padStart(2, '0'))
+							.join('')
+
+						console.log('starting upload', hashText)
+
+						const sessionId = await socketEmitPromise(socket, 'modules:bundle-import:start', [
+							'test',
+							buffer.length,
+							hashText,
+						])
+						if (!sessionId) throw new Error('Failed to start upload')
+
+						const bytesPerChunk = 1024 * 1024 * 1 // 1MB
+						for (let offset = 0; offset < buffer.length; offset += bytesPerChunk) {
+							console.log('uploading chunk', offset)
+							const chunk = buffer.slice(offset, offset + bytesPerChunk)
+							const success = await socketEmitPromise(socket, 'modules:bundle-import:chunk', [sessionId, offset, chunk])
+							if (!success) throw new Error(`Failed to upload chunk ${offset}`)
+						}
+
+						console.log('uploading complete, starting load')
+						const success = await socketEmitPromise(socket, 'modules:bundle-import:complete', [sessionId])
+						if (!success) throw new Error(`Failed to import`)
+					})
+					.catch((e) => {
+						console.error('failed', e)
+					})
+
 				// TODO - upload this in chunks, as the file is too large and hits the max websocket message size
 				// socketEmitPromise(socket, 'modules:install-custom-module', [new Uint8Array(fr.result)], 20000)
 				// 	.then((failureReason) => {

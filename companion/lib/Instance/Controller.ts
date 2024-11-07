@@ -142,7 +142,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#configStore
 		)
 		this.modulesStore = new ModuleStoreService(io, cache)
-		this.userModulesManager = new InstanceInstalledModulesManager(appInfo, this.modules, this.modulesStore, moduleDirs)
+		this.userModulesManager = new InstanceInstalledModulesManager(
+			appInfo,
+			io,
+			this.modules,
+			this.modulesStore,
+			moduleDirs
+		)
 
 		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())
 

@@ -339,6 +339,10 @@ export interface ClientToBackendEventsMap {
 	'modules:install-store-module:latest': (moduleId: string) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
+	'modules:bundle-import:start': (name: string, size: number, checksum: string) => string | null
+	'modules:bundle-import:chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
+	'modules:bundle-import:complete': (sessionId: string) => boolean
+	'modules:bundle-import:cancel': (sessionId: string) => void
 
 	'modules-store:list:subscribe': () => ModuleStoreListCacheStore
 	'modules-store:list:unsubscribe': () => void
@@ -407,6 +411,7 @@ export interface BackendToClientEventsMap {
 	'modules-store:list:progress': (percent: number) => void
 	'modules-store:info:data': (moduleId: string, data: ModuleStoreModuleInfoStore) => void
 	'modules-store:info:progress': (moduleId: string, percent: number) => void
+	'modules:bundle-import:progress': (sessionId: string, percent: number) => void
 
 	'emulator:images': (newImages: EmulatorImage[] | EmulatorImageCache) => void
 	'emulator:config': (patch: JsonPatchOperation[] | EmulatorConfig) => void
