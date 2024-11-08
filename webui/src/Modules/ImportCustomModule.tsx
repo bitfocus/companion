@@ -20,7 +20,7 @@ export function ImportModules() {
 			console.log('import progress', progress)
 
 			if (progress === null) {
-				notifier.current?.close(NOTIFICATION_ID_IMPORT)
+				notifier.current?.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
 			} else {
 				notifier.current?.show(
 					'Importing module bundle...',
@@ -145,8 +145,6 @@ export function ImportModules() {
 						console.log('uploading complete, starting load')
 						const success = await socketEmitPromise(socket, 'modules:bundle-import:complete', [sessionId])
 						if (!success) throw new Error(`Failed to import`)
-
-						notifier.current?.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
 					})
 					.catch((e) => {
 						console.error('failed', e)

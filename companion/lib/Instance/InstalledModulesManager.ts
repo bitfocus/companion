@@ -106,7 +106,7 @@ export class InstanceInstalledModulesManager {
 				return `Module ${manifestJson.id} v${manifestJson.version} already exists`
 			}
 
-			return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, false)
+			return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, false, null)
 		})
 
 		client.onPromise('modules:uninstall-custom-module', async (moduleId, versionId) => {
@@ -145,10 +145,14 @@ export class InstanceInstalledModulesManager {
 
 		client.onPromise('modules:bundle-import:start', async (name, size, checksum) => {
 			this.#logger.info(`Starting upload of module bundle ${name} (${size} bytes)`)
+
+			const MAX_SIZE = 1024 * 1024 * 500 // 500MB
+			if (size > MAX_SIZE) throw new Error('Module bundle too large to upload')
+
 			const sessionId = this.#multipartUploader.initSession(name, size, checksum)
 			if (sessionId === null) return null
 
-			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0) // TODO
+			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0)
 
 			return sessionId
 		})
@@ -158,7 +162,7 @@ export class InstanceInstalledModulesManager {
 			const progress = this.#multipartUploader.addChunk(sessionId, offset, data)
 			if (progress === null) return false
 
-			this.#io.emitToAll('modules:bundle-import:progress', sessionId, progress / 2) // TODO
+			this.#io.emitToAll('modules:bundle-import:progress', sessionId, progress / 2)
 
 			return true
 		})
@@ -175,11 +179,58 @@ export class InstanceInstalledModulesManager {
 
 			this.#logger.info(`Importing module bundle ${sessionId} (${data.length} bytes)`)
 
-			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0.5) // TODO
+			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0.5)
 
 			// Upload is complete, now load it
+			Promise.resolve()
+				.then(async () => {
+					const decompressedData = await gunzipP(data)
+					if (!decompressedData) {
+						this.#logger.error(`Failed to decompress module data`)
+						throw new Error('Failed to decompress data')
+					}
 
-			throw new Error('Not implemented')
+					const moduleInfos = await listModuleDirsInTar(decompressedData)
+					this.#logger.info(`Module bundle contains ${moduleInfos.length} modules`)
+					if (moduleInfos.length === 0) {
+						this.#logger.warn(`No modules found in bundle`)
+						throw new Error('No modules found in bundle')
+					}
+
+					let completed = 0
+					for (const moduleInfo of moduleInfos) {
+						try {
+							const moduleDir = path.join(
+								this.#modulesDir,
+								`${moduleInfo.manifestJson.id}-${moduleInfo.manifestJson.version}`
+							)
+							if (!fs.existsSync(moduleDir)) {
+								await this.#installModuleFromTarBuffer(
+									moduleDir,
+									moduleInfo.manifestJson,
+									decompressedData,
+									false, // TODO - define from manifest?
+									moduleInfo.subDir
+								)
+							}
+						} catch (e) {
+							this.#logger.warn(`Failed to install module from bundle`, e)
+						}
+
+						completed++
+						this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0.5 + completed / moduleInfos.length / 2)
+
+						if (completed % 10 === 0) await new Promise((resolve) => setTimeout(resolve, 10)) // Ensure cpu time is given to other tasks
+					}
+
+					this.#io.emitToAll('modules:bundle-import:progress', sessionId, null)
+				})
+				.catch((e) => {
+					this.#logger.error(`Failed to import module bundle`, e)
+					this.#io.emitToAll('modules:bundle-import:progress', sessionId, null) // TODO - report failure?
+				})
+
+			return true
 		})
 	}
 
@@ -250,21 +301,41 @@ export class InstanceInstalledModulesManager {
 			return 'Module manifest does not match requested module'
 		}
 
-		return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, versionInfo.isPrerelease)
+		return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, versionInfo.isPrerelease, null)
 	}
 
 	async #installModuleFromTarBuffer(
 		moduleDir: string,
 		manifestJson: ModuleManifest,
 		uncompressedData: Buffer,
-		isPrerelease: boolean
+		isPrerelease: boolean,
+		subdirName: string | null
 	): Promise<string | null> {
 		try {
 			await fs.mkdirp(moduleDir)
 
 			await new Promise((resolve, reject) => {
 				Readable.from(uncompressedData)
-					.pipe(tarfs.extract(moduleDir, { strip: 1 }))
+					.pipe(
+						tarfs.extract(
+							moduleDir,
+							subdirName
+								? {
+										// Only extract files inside the subdir, without the prefix
+										strip: 1,
+										ignore: (_name, header) => !header || header.name === '',
+										map: (header) => {
+											if (header.name.startsWith(subdirName + '/')) {
+												header.name = header.name.slice(subdirName.length + 1)
+											} else {
+												header.name = '' // Ignore
+											}
+											return header
+										},
+									}
+								: { strip: 1 }
+						)
+					)
 					.on('finish', resolve)
 					.on('error', reject)
 			})
@@ -359,6 +430,86 @@ async function extractManifestFromTar(tarData: Buffer): Promise<ModuleManifest |
 		extract.on('finish', () => {
 			// all entries read, if a value hasn't been resolved then the manifest wasn't found
 			resolve(null)
+		})
+
+		extract.on('error', (err) => {
+			reject(err)
+
+			extract.destroy()
+		})
+
+		Readable.from(tarData).pipe(extract)
+	})
+}
+
+interface ListModuleDirsInfo {
+	subDir: string
+	manifestJson: ModuleManifest
+}
+async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[]> {
+	return new Promise<ListModuleDirsInfo[]>((resolve, reject) => {
+		const extract = ts.extract()
+
+		const moduleInfos: ListModuleDirsInfo[] = []
+
+		let rootDir = '' // Determine the root directory of the tarball
+
+		extract.on('entry', (header, stream, next) => {
+			if (!rootDir) {
+				// The first entry must be the root directory, we can use that to know what to trim off the other filenames
+				// if (header.type !== 'directory') throw new Error('expected first entry to be a directory')
+				// TODO: throwing here is BAD, and goes uncaught, we need to make sure that doesn't happen
+
+				rootDir = header.type === 'directory' ? header.name : ''
+			}
+
+			const filename = rootDir && header.name.startsWith(rootDir) ? header.name.slice(rootDir.length) : header.name
+
+			const suffix = '/companion/manifest.json'
+			if (filename.endsWith(suffix)) {
+				// collect the module names
+				const moduleDirName = filename.slice(0, -suffix.length)
+				if (!moduleDirName.includes('/')) {
+					let dataBuffers: Buffer[] = []
+
+					stream.on('end', () => {
+						// The file we need has been found
+						const manifestStr = Buffer.concat(dataBuffers).toString('utf8')
+
+						try {
+							moduleInfos.push({
+								subDir: moduleDirName,
+								manifestJson: JSON.parse(manifestStr),
+							})
+						} catch (e) {
+							// Ignore
+							// reject(e)
+						}
+
+						next() // ready for next entry
+					})
+
+					stream.on('data', (data) => {
+						dataBuffers.push(data)
+					})
+
+					return
+				}
+			}
+
+			// Skip the content
+			stream.on('end', () => {
+				next() // ready for next entry
+			})
+
+			stream.resume() // just auto drain the stream
+		})
+
+		extract.on('finish', () => {
+			// all files read
+			resolve(moduleInfos)
+
+			extract.destroy()
 		})
 
 		extract.on('error', (err) => {
