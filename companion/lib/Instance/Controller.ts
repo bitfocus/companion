@@ -114,7 +114,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const moduleDirs: ModuleDirs = {
 			bundledLegacyModulesDir: path.resolve(generatePath('modules')),
 			bundledModulesDir: path.resolve(generatePath('bundled-modules')),
-			installedModulesDir: path.join(appInfo.modulesDir, 'store'),
+			installedModulesDir: appInfo.modulesDir,
 		}
 
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))

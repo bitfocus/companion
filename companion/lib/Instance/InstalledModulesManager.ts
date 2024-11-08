@@ -70,8 +70,8 @@ export class InstanceInstalledModulesManager {
 	async init() {
 		await fs.mkdirp(this.#modulesDir)
 		await fs.writeFile(
-			path.join(this.#modulesDir, 'README.md'),
-			'This directory contains installed modules\r\nDo not modify unless you know what you are doing'
+			path.join(this.#modulesDir, 'README'),
+			'This directory contains installed modules\r\nDo not modify unless you know what you are doing\n'
 		)
 	}
 
