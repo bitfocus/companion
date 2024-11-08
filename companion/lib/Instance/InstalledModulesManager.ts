@@ -18,6 +18,7 @@ import { MultipartUploader } from '../Resources/MultipartUploader.js'
 const gunzipP = promisify(zlib.gunzip)
 
 const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 10 // 50MB
+const MAX_MODULE_BUNDLE_TAR_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
 /**
  * This class manages the installed modules for an instance
@@ -146,8 +147,7 @@ export class InstanceInstalledModulesManager {
 		client.onPromise('modules:bundle-import:start', async (name, size, checksum) => {
 			this.#logger.info(`Starting upload of module bundle ${name} (${size} bytes)`)
 
-			const MAX_SIZE = 1024 * 1024 * 500 // 500MB
-			if (size > MAX_SIZE) throw new Error('Module bundle too large to upload')
+			if (size > MAX_MODULE_BUNDLE_TAR_SIZE) throw new Error('Module bundle too large to upload')
 
 			const sessionId = this.#multipartUploader.initSession(name, size, checksum)
 			if (sessionId === null) return null
