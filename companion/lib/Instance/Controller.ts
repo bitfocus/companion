@@ -207,12 +207,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.emit('connection_added')
 	}
 
-	async reloadUsesOfModule(moduleId: string, mode: 'release' | 'dev', versionId: string | null): Promise<void> {
-		// TODO - use the version!
-
+	async reloadUsesOfModule(moduleId: string, versionId: string): Promise<void> {
 		// restart usages of this module
 		const { connectionIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleId)
 		for (const id of connectionIds) {
+			// Skip any that we know are not using this version
+			const config = this.#configStore.getConfigForId(id)
+			if (config && config.moduleVersionId !== versionId) continue
+
 			// Restart it
 			this.enableDisableInstance(id, false)
 			this.enableDisableInstance(id, true)
@@ -284,6 +286,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	): [id: string, config: ConnectionConfig] {
 		let module = data.type
 		let product = data.product
+
+		// nocommit - install first if needed
 
 		if (versionId === null) {
 			// Get the latest version
@@ -615,12 +619,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			const config = this.#configStore.getConfigForId(id)
 			if (!config) return 'no connection'
 
-			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
-			if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
+			// Don't validate the version, as it might not yet be installed
+			// const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
 
 			// Update the config
 			config.moduleVersionId = versionId
 			this.#configStore.commitChanges([id])
+
+			// Install the module if needed
+			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			if (!moduleInfo) {
+				// nocommit - trigger install of module
+			}
 
 			console.log('new config', config)
 

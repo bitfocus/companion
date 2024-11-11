@@ -93,7 +93,7 @@ export const AddConnectionModal = observer(
 			[connections]
 		)
 
-		const versionChoices = useConnectionVersionSelectOptions(moduleInfo?.id, moduleInfo?.installedInfo, false, true)
+		const versionChoices = useConnectionVersionSelectOptions(moduleInfo?.id, moduleInfo?.installedInfo, false)
 
 		// Ensure the currently selection version is a valid option
 		const defaultVersionId = moduleInfo?.installedInfo?.devVersion
@@ -104,8 +104,6 @@ export const AddConnectionModal = observer(
 
 			setSelectedVersion((value) => {
 				const valueStr = value
-
-				console.log('check default', versionChoices, value)
 
 				// Check if value is still valid
 				if (versionChoices.find((v) => v.value === valueStr)) return value

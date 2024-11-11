@@ -102,7 +102,7 @@ export class InstanceModules {
 		this.#emitModuleUpdate(manifest.id)
 
 		// Ensure any modules using this version are started
-		await this.#instanceController.reloadUsesOfModule(manifest.id, 'release', manifest.version)
+		await this.#instanceController.reloadUsesOfModule(manifest.id, manifest.version)
 	}
 
 	/**
@@ -121,7 +121,7 @@ export class InstanceModules {
 		this.#emitModuleUpdate(moduleId)
 
 		// Ensure any modules using this version are started
-		await this.#instanceController.reloadUsesOfModule(moduleId, 'release', versionId)
+		await this.#instanceController.reloadUsesOfModule(moduleId, versionId)
 	}
 
 	/**
@@ -183,19 +183,19 @@ export class InstanceModules {
 			}
 		}
 
-		// if (extraModulePath) {
-		// 	this.#logger.info(`Looking for extra modules in: ${extraModulePath}`)
-		// 	const candidates = await this.#moduleScanner.loadInfoForModulesInDir(extraModulePath, true)
-		// 	for (const candidate of candidates) {
-		// 		const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-		// 		moduleInfo.devModule = {
-		// 			...candidate,
-		// 			type: 'dev',
-		// 		}
-		// 	}
+		if (extraModulePath) {
+			this.#logger.info(`Looking for extra modules in: ${extraModulePath}`)
+			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(extraModulePath, true)
+			for (const candidate of candidates) {
+				const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
+				moduleInfo.devModule = {
+					...candidate,
+					type: 'dev',
+				}
+			}
 
-		// 	this.#logger.info(`Found ${candidates.length} extra modules`)
-		// }
+			this.#logger.info(`Found ${candidates.length} extra modules`)
+		}
 
 		// nocommit redo this
 		// // Figure out the redirects. We do this afterwards, to ensure we avoid collisions and circles
@@ -264,7 +264,7 @@ export class InstanceModules {
 			this.#emitModuleUpdate(reloadedModule.manifest.id)
 
 			// restart usages of this module
-			await this.#instanceController.reloadUsesOfModule(reloadedModule.manifest.id, 'dev', null)
+			await this.#instanceController.reloadUsesOfModule(reloadedModule.manifest.id, 'dev')
 		} else {
 			this.#logger.info(`Failed to find module in: ${fullpath}`)
 
@@ -283,7 +283,7 @@ export class InstanceModules {
 				this.#emitModuleUpdate(changedModuleId)
 
 				// restart usages of this module
-				await this.#instanceController.reloadUsesOfModule(changedModuleId, 'dev', null)
+				await this.#instanceController.reloadUsesOfModule(changedModuleId, 'dev')
 			}
 		}
 	}

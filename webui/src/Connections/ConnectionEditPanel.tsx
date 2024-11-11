@@ -259,7 +259,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 								: 'Select the version of the module to use for this connection'
 						}
 					>
-						{useConnectionVersionSelectOptions(moduleInfo.baseInfo.id, moduleInfo, true, false).map((v) => (
+						{useConnectionVersionSelectOptions(moduleInfo.baseInfo.id, moduleInfo, true).map((v) => (
 							<option key={v.value} value={v.value}>
 								{v.label}
 							</option>
@@ -313,13 +313,12 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 export function useConnectionVersionSelectOptions(
 	moduleId: string | undefined,
 	installedInfo: NewClientModuleInfo | null | undefined,
-	includePrerelease: boolean,
-	includeStoreLatest: boolean
+	includePrerelease: boolean
 ): DropdownChoiceInt[] {
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
 
-	const latestStableVersion = includeStoreLatest && getLatestVersion(moduleStoreInfo?.versions, false)
-	const latestPrereleaseVersion = includeStoreLatest && getLatestVersion(moduleStoreInfo?.versions, true)
+	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
+	const latestPrereleaseVersion = getLatestVersion(moduleStoreInfo?.versions, true)
 
 	return useMemo(() => {
 		const choices: DropdownChoiceInt[] = []

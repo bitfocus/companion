@@ -320,7 +320,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 								/>{' '}
 							</>
 						)}
-						{moduleVersion?.displayName}
+						{moduleVersion?.displayName ?? connection.moduleVersionId}
 					</>
 				) : (
 					connection.instance_type
@@ -332,7 +332,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					<div>
 						<CFormSwitch
 							className="connection-enabled-switch"
-							disabled={!moduleInfo}
+							disabled={!moduleInfo || !moduleVersion}
 							color="success"
 							checked={isEnabled}
 							onChange={doToggleEnabled}
