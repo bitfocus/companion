@@ -6,18 +6,12 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface ModuleVersionUsageIconProps {
 	moduleId: string
-	moduleVersionMode: 'specific-version' | 'custom'
-	moduleVersionId: string | null
-	isLatestStable: boolean
-	isLatestPrerelease: boolean
+	moduleVersionId: string
 }
 
 export const ModuleVersionUsageIcon = observer(function ModuleVersionUsageIcon({
 	moduleId,
-	moduleVersionMode,
 	moduleVersionId,
-	isLatestStable,
-	isLatestPrerelease,
 }: ModuleVersionUsageIconProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
@@ -26,10 +20,6 @@ export const ModuleVersionUsageIcon = observer(function ModuleVersionUsageIcon({
 		if (connection.instance_type !== moduleId) continue
 
 		if (moduleVersionId && connection.moduleVersionId === moduleVersionId) {
-			matchingConnections++
-		} else if (connection.moduleVersionMode === 'stable' && isLatestStable) {
-			matchingConnections++
-		} else if (connection.moduleVersionMode === 'prerelease' && isLatestPrerelease) {
 			matchingConnections++
 		}
 	}

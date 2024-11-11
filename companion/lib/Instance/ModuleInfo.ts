@@ -49,7 +49,7 @@ export class InstanceModuleInfo {
 		return {
 			baseInfo: baseVersion.display,
 
-			hasDevVersion: !!this.devModule,
+			devVersion: translateStableVersion(this.devModule),
 
 			stableVersion: translateStableVersion(stableVersion),
 			prereleaseVersion: translateStableVersion(prereleaseVersion),
@@ -73,7 +73,7 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 		}
 	} else if (version.type === 'release') {
 		return {
-			displayName: `Latest Stable (v${version.versionId})`,
+			displayName: `Latest ${version.isPrerelease ? 'Prerelease' : 'Stable'} (v${version.versionId})`,
 			isLegacy: version.display.isLegacy ?? false,
 			isDev: false,
 			isBuiltin: version.isBuiltin,

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback, forwardRef, useImperativeHandle, useMemo, useEffect } from 'react'
+import React, { useContext, useState, useCallback, forwardRef, useImperativeHandle, useEffect } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -20,11 +20,8 @@ import { CModalExt } from '../Components/CModalExt.js'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import type { AddConnectionProduct } from './AddConnectionPanel.js'
-import { useModuleStoreInfo } from '../Modules/ModuleManagePanel.js'
-import { toJS } from 'mobx'
-import semver from 'semver'
+import { useConnectionVersionSelectOptions } from './ConnectionEditPanel.js'
 
 export interface AddConnectionModalRef {
 	show(info: AddConnectionProduct): void
@@ -40,14 +37,14 @@ export const AddConnectionModal = observer(
 		{ doConfigureConnection, showHelp },
 		ref
 	) {
-		const { socket, notifier, connections } = useContext(RootAppStoreContext)
+		const { socket, notifier, connections, modules } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<AddConnectionProduct | null>(null)
 		const [selectedVersion, setSelectedVersion] = useState<string | null>(null)
 		const [connectionLabel, setConnectionLabel] = useState<string>('')
 
-		const moduleStoreInfo = useModuleStoreInfo(moduleInfo?.id)
+		const isModuleOnStore = !!moduleInfo && !!modules.storeList.get(moduleInfo?.id)
 
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
@@ -96,6 +93,30 @@ export const AddConnectionModal = observer(
 			[connections]
 		)
 
+		const versionChoices = useConnectionVersionSelectOptions(moduleInfo?.id, moduleInfo?.installedInfo, false, true)
+
+		// Ensure the currently selection version is a valid option
+		const defaultVersionId = moduleInfo?.installedInfo?.devVersion
+			? 'dev'
+			: moduleInfo?.installedInfo?.stableVersion?.versionId
+		useEffect(() => {
+			if (!versionChoices || versionChoices.length === 0) return
+
+			setSelectedVersion((value) => {
+				const valueStr = value
+
+				console.log('check default', versionChoices, value)
+
+				// Check if value is still valid
+				if (versionChoices.find((v) => v.value === valueStr)) return value
+
+				// It is not, so choose the first option
+				if (defaultVersionId) return defaultVersionId
+				if (versionChoices.length === 0) return null
+				return String(versionChoices[0].value)
+			})
+		}, [versionChoices, defaultVersionId])
+
 		const selectedVersionIsLegacy =
 			moduleInfo?.installedInfo?.installedVersions.find((v) => v.versionId === selectedVersion)?.isLegacy ?? false
 
@@ -133,14 +154,21 @@ export const AddConnectionModal = observer(
 											<FontAwesomeIcon icon={faQuestionCircle} />
 										</div>
 									)} */}
-									{!!moduleStoreInfo && <ModuleVersionsRefresh moduleId={moduleInfo.id} />}
+									{isModuleOnStore && <ModuleVersionsRefresh moduleId={moduleInfo.id} />}
 								</CFormLabel>
 								<CCol sm={8}>
-									<ModuleVersionPicker
-										moduleInfo={moduleInfo}
-										selectedVersion={selectedVersion}
-										setSelectedVersion={setSelectedVersion}
-									/>
+									<CFormSelect
+										name="colFormVersion"
+										value={selectedVersion as string}
+										onChange={(e) => setSelectedVersion(e.currentTarget.value)}
+									>
+										{versionChoices.map((v) => (
+											<option key={v.value} value={v.value}>
+												{v.label}
+											</option>
+										))}
+										{!versionChoices.length && <option value={null as any}>Loading...</option>}
+									</CFormSelect>
 								</CCol>
 							</CForm>
 
@@ -169,7 +197,7 @@ export const AddConnectionModal = observer(
 							<CButton
 								color="primary"
 								onClick={doAction}
-								disabled={!moduleInfo || !connectionLabel || !selectedVersion}
+								disabled={!moduleInfo || !connectionLabel || !selectedVersion || !versionChoices.length}
 							>
 								Add
 							</CButton>
@@ -240,83 +268,4 @@ const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ moduleId
 			</div>
 		)
 	}
-})
-
-interface ModuleVersionPickerProps {
-	moduleInfo: AddConnectionProduct | null
-	selectedVersion: string | null
-	setSelectedVersion: React.Dispatch<React.SetStateAction<string | null>>
-}
-
-const ModuleVersionPicker = observer(function ModuleVersionPicker({
-	moduleInfo,
-	selectedVersion,
-	setSelectedVersion,
-}: ModuleVersionPickerProps) {
-	const versionChoices = useMemo(() => {
-		const choices: DropdownChoiceInt[] = []
-
-		console.log(toJS(moduleInfo?.installedInfo))
-
-		if (moduleInfo?.installedInfo) {
-			for (const version of moduleInfo.installedInfo.installedVersions) {
-				if (version.isPrerelease) continue
-
-				let label = version.displayName
-				if (moduleInfo.installedInfo.stableVersion?.versionId === version.versionId) {
-					label += ' (Latest stable)'
-				}
-
-				choices.push({ value: version.versionId, label })
-			}
-		}
-
-		if (moduleInfo?.storeInfo) {
-			// TODO - this
-			// for (const version of moduleInfo.storeInfo.versions) {
-			// }
-		}
-
-		choices.sort((a, b) => semver.compare(String(b.value), String(a.value)))
-
-		// Add dev version if available to the top
-		if (moduleInfo?.installedInfo?.hasDevVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
-
-		return choices
-	}, [moduleInfo])
-
-	// const moduleVersion = getModuleVersionInfoForConnection(moduleInfo?.installedInfo, {
-	// 	moduleVersionMode: selectedVersion.mode,
-	// 	moduleVersionId: selectedVersion.id,
-	// })
-
-	// Ensure the currently selection version is a valid option
-	useEffect(() => {
-		if (!versionChoices || versionChoices.length === 0) return
-
-		setSelectedVersion((value) => {
-			const valueStr = value
-
-			// Check if value is still valid
-			if (versionChoices.find((v) => v.value === valueStr)) return value
-
-			// It is not, so choose the first option
-			if (versionChoices.length === 0) return null
-			return String(versionChoices[0].value)
-		})
-	}, [versionChoices])
-
-	return (
-		<CFormSelect
-			name="colFormVersion"
-			value={JSON.stringify(selectedVersion)}
-			onChange={(e) => setSelectedVersion(e.currentTarget.value)}
-		>
-			{versionChoices?.map((v) => (
-				<option key={v.value} value={v.value}>
-					{v.label}
-				</option>
-			))}
-		</CFormSelect>
-	)
 })

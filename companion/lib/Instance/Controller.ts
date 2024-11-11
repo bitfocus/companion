@@ -285,13 +285,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		let module = data.type
 		let product = data.product
 
-		const moduleInfo = this.modules.getModuleManifest(module, versionId)
-		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
-
 		if (versionId === null) {
 			// Get the latest version
 			versionId = this.modules.getLatestVersionOfModule(module)
 		}
+
+		const moduleInfo = this.modules.getModuleManifest(module, versionId)
+		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
 
 		const label = this.#configStore.makeLabelUnique(labelBase)
 

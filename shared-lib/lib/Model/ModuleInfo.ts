@@ -37,7 +37,7 @@ export interface NewClientModuleVersionInfo2 {
 export interface NewClientModuleInfo {
 	baseInfo: NewClientModuleBaseInfo
 
-	hasDevVersion: boolean
+	devVersion: NewClientModuleVersionInfo2 | null
 
 	stableVersion: NewClientModuleVersionInfo2 | null
 	prereleaseVersion: NewClientModuleVersionInfo2 | null

@@ -48,7 +48,7 @@ export const ModulesList = observer(function ModulesList({
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
 			let isVisible = false
-			if (moduleInfo.hasDevVersion && visibleModules.visiblity.dev) isVisible = true
+			if (moduleInfo.devVersion && visibleModules.visiblity.dev) isVisible = true
 
 			const [hasBuiltin, hasStore] = moduleInfo.installedVersions.reduce(
 				([builtin, release], v) => {

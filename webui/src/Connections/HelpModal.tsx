@@ -32,11 +32,7 @@ export const HelpModal = observer(
 			ref,
 			() => ({
 				show(name, moduleVersion) {
-					socketEmitPromise(socket, 'connections:get-help', [
-						name,
-						moduleVersion.version.mode,
-						moduleVersion.version.id,
-					]).then(([err, result]) => {
+					socketEmitPromise(socket, 'connections:get-help', [name, moduleVersion.versionId]).then(([err, result]) => {
 						if (err) {
 							notifier.current?.show('Connection help', `Failed to get help text: ${err}`)
 							return

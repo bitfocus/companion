@@ -287,7 +287,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		if (url) windowLinkOpen({ href: url })
 	}, [moduleInfo])
 
-	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection)
+	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection.moduleVersionId)
 
 	return (
 		<tr

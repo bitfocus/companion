@@ -174,13 +174,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 				{isLatestStable && <FontAwesomeIcon icon={faStar} title="Latest stable" />}
 				{isLatestPrerelease && <FontAwesomeIcon icon={faQuestion} title="Latest prerelease" />}
 
-				<ModuleVersionUsageIcon
-					moduleId={moduleId}
-					moduleVersionMode="specific-version"
-					moduleVersionId={versionId}
-					isLatestStable={isLatestStable}
-					isLatestPrerelease={isLatestPrerelease}
-				/>
+				<ModuleVersionUsageIcon moduleId={moduleId} moduleVersionId={versionId} />
 			</td>
 		</tr>
 	)

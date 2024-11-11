@@ -264,7 +264,7 @@ const VariablesSelect = observer(function VariablesSelect({
 
 		// Update the selection after mutating the value. This needs to be deferred, although this causes a 'glitch' in the drawing
 		// It needs to be delayed, so that react can re-render first
-		const newSelection = openIndex + variable.value.length + 3
+		const newSelection = openIndex + String(variable.value).length + 3
 		setTimeout(() => {
 			if (inputRef.current) inputRef.current.setSelectionRange(newSelection, newSelection)
 		}, 0)

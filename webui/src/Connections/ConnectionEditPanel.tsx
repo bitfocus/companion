@@ -16,6 +16,9 @@ import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companio
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import semver from 'semver'
+import { useModuleStoreInfo } from '../Modules/ModuleManagePanel.js'
+import { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
+import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -247,8 +250,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					<label>Module Version</label>
 					<CFormSelect
 						name="colFormVersion"
-						value={JSON.stringify(connectionVersion)}
-						onChange={(e) => setConnectionVersion(JSON.parse(e.currentTarget.value))}
+						value={connectionVersion as string}
+						onChange={(e) => setConnectionVersion(e.currentTarget.value)}
 						disabled={connectionInfo.enabled}
 						title={
 							connectionInfo.enabled
@@ -256,7 +259,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 								: 'Select the version of the module to use for this connection'
 						}
 					>
-						{getConnectionVersionSelectOptions(moduleInfo).map((v) => (
+						{useConnectionVersionSelectOptions(moduleInfo.baseInfo.id, moduleInfo, true, false).map((v) => (
 							<option key={v.value} value={v.value}>
 								{v.label}
 							</option>
@@ -307,18 +310,79 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	)
 })
 
-function getConnectionVersionSelectOptions(moduleInfo: NewClientModuleInfo): DropdownChoiceInt[] {
-	const choices: DropdownChoiceInt[] = []
+export function useConnectionVersionSelectOptions(
+	moduleId: string | undefined,
+	installedInfo: NewClientModuleInfo | null | undefined,
+	includePrerelease: boolean,
+	includeStoreLatest: boolean
+): DropdownChoiceInt[] {
+	const moduleStoreInfo = useModuleStoreInfo(moduleId)
 
-	for (const version of moduleInfo.installedVersions) {
-		choices.push({ value: version.versionId, label: version.displayName })
+	const latestStableVersion = includeStoreLatest && getLatestVersion(moduleStoreInfo?.versions, false)
+	const latestPrereleaseVersion = includeStoreLatest && getLatestVersion(moduleStoreInfo?.versions, true)
+
+	return useMemo(() => {
+		const choices: DropdownChoiceInt[] = []
+
+		const listedVersions = new Set<string>()
+		if (installedInfo) {
+			for (const version of installedInfo.installedVersions) {
+				if (!includePrerelease && version.isPrerelease) continue
+
+				let label = version.displayName
+				if (installedInfo.stableVersion?.versionId === version.versionId) {
+					label += ' (Latest stable)'
+				}
+
+				choices.push({ value: version.versionId, label })
+				listedVersions.add(version.versionId)
+			}
+		}
+
+		if (
+			latestStableVersion &&
+			!listedVersions.has(latestStableVersion.id) &&
+			(!installedInfo?.stableVersion ||
+				semver.compare(latestStableVersion.id, installedInfo.stableVersion.versionId) > 0)
+		) {
+			choices.push({ value: latestStableVersion.id, label: `v${latestStableVersion.id} (Install latest stable)` })
+		}
+
+		if (
+			includePrerelease &&
+			latestPrereleaseVersion &&
+			!listedVersions.has(latestPrereleaseVersion.id) &&
+			(!installedInfo?.prereleaseVersion ||
+				semver.compare(latestPrereleaseVersion.id, installedInfo.prereleaseVersion.versionId) > 0)
+		) {
+			choices.push({
+				value: latestPrereleaseVersion.id,
+				label: `v${latestPrereleaseVersion.id} (Install latest prerelease)`,
+			})
+		}
+
+		choices.sort((a, b) => semver.compare(String(b.value), String(a.value)))
+
+		if (installedInfo?.devVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
+
+		return choices
+	}, [installedInfo, latestStableVersion, latestPrereleaseVersion, includePrerelease])
+}
+
+function getLatestVersion(
+	versions: ModuleStoreModuleInfoVersion[] | undefined,
+	isPrerelease: boolean
+): ModuleStoreModuleInfoVersion | null {
+	let latest: ModuleStoreModuleInfoVersion | null = null
+	for (const version of versions || []) {
+		if (!version || version.isPrerelease !== isPrerelease) continue
+		if (!isModuleApiVersionCompatible(version.apiVersion) || version.deprecationReason) continue
+		if (!latest || semver.compare(version.id, latest.id) > 0) {
+			latest = version
+		}
 	}
 
-	choices.sort((a, b) => semver.compare(String(b.value), String(a.value)))
-
-	if (moduleInfo.hasDevVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
-
-	return choices
+	return latest
 }
 
 interface ConnectionEditPanelConfigFieldsProps {
