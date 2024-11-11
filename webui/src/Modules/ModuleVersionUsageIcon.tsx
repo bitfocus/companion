@@ -25,11 +25,7 @@ export const ModuleVersionUsageIcon = observer(function ModuleVersionUsageIcon({
 	for (const connection of connections.connections.values()) {
 		if (connection.instance_type !== moduleId) continue
 
-		if (
-			connection.moduleVersionMode === moduleVersionMode &&
-			moduleVersionId &&
-			connection.moduleVersionId === moduleVersionId
-		) {
+		if (moduleVersionId && connection.moduleVersionId === moduleVersionId) {
 			matchingConnections++
 		} else if (connection.moduleVersionMode === 'stable' && isLatestStable) {
 			matchingConnections++

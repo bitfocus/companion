@@ -42,7 +42,6 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import express from 'express'
 import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
-import type { ModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleDirs } from './Types.js'
 import path from 'path'
 import { isPackaged } from '../Resources/Util.js'
@@ -280,14 +279,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	addInstanceWithLabel(
 		data: CreateConnectionData,
 		labelBase: string,
-		version: ModuleVersionInfo,
+		versionId: string | null,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
 		let module = data.type
 		let product = data.product
 
-		const moduleInfo = this.modules.getModuleManifest(module, version.mode, version.id)
+		const moduleInfo = this.modules.getModuleManifest(module, versionId)
 		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
+
+		if (versionId === null) {
+			// Get the latest version
+			versionId = this.modules.getLatestVersionOfModule(module)
+		}
 
 		const label = this.#configStore.makeLabelUnique(labelBase)
 
@@ -295,7 +299,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.#logger.info('Adding connection ' + module + ' ' + product)
 
-		const [id, config] = this.#configStore.addConnection(module, label, product, version, disabled)
+		const [id, config] = this.#configStore.addConnection(module, label, product, versionId, disabled)
 
 		this.#activate_module(id, true)
 
@@ -319,11 +323,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const config = this.#configStore.getConfigForId(id)
 		if (!config) return undefined
 
-		const moduleManifest = this.modules.getModuleManifest(
-			config.instance_type,
-			config.moduleVersionMode,
-			config.moduleVersionId
-		)
+		const moduleManifest = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
 
 		return moduleManifest?.manifest
 	}
@@ -502,9 +502,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		config.instance_type = this.modules.verifyInstanceTypeIsCurrent(config.instance_type)
 
 		// Seamless fixup old configs
-		if (config.moduleVersionMode === undefined) {
-			config.moduleVersionMode = 'stable'
-			config.moduleVersionId = null
+		if (config.moduleVersionId === undefined) {
+			config.moduleVersionId = this.modules.getLatestVersionOfModule(config.instance_type)
 		}
 
 		if (config.enabled === false) {
@@ -525,11 +524,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// TODO this could check if anything above changed, or is_being_created
 		this.#configStore.commitChanges([id])
 
-		const moduleInfo = this.modules.getModuleManifest(
-			config.instance_type,
-			config.moduleVersionMode,
-			config.moduleVersionId
-		)
+		const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
 		if (!moduleInfo) {
 			this.#logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
 			if (this.modules.hasModule(config.instance_type)) {
@@ -603,7 +598,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return null
 		})
 
-		client.onPromise('connections:set-label-and-version', (id, label, version) => {
+		client.onPromise('connections:set-label-and-version', (id, label, versionId) => {
 			const idUsingLabel = this.getIdForLabel(label)
 			if (idUsingLabel && idUsingLabel !== id) {
 				return 'duplicate label'
@@ -620,13 +615,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			const config = this.#configStore.getConfigForId(id)
 			if (!config) return 'no connection'
 
-			const moduleInfo = this.modules.getModuleManifest(config.instance_type, version.mode, version.id)
-			if (!moduleInfo)
-				throw new Error(`Unknown module type or version ${config.instance_type} (${version.mode}:${version.id})`)
+			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
 
 			// Update the config
-			config.moduleVersionMode = version.mode
-			config.moduleVersionId = version.id
+			config.moduleVersionId = versionId
 			this.#configStore.commitChanges([id])
 
 			console.log('new config', config)

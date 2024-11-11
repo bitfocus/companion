@@ -18,8 +18,8 @@ export interface ModuleVersionInfoBase {
 
 export interface ReleaseModuleVersionInfo extends ModuleVersionInfoBase {
 	type: 'release'
-	releaseType: 'stable' | 'prerelease'
 	versionId: string
+	isPrerelease: boolean
 	isBuiltin: boolean
 }
 export interface DevModuleVersionInfo extends ModuleVersionInfoBase {

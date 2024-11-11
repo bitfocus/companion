@@ -1,9 +1,4 @@
-import type {
-	ModuleVersionMode,
-	NewClientModuleInfo,
-	NewClientModuleVersionInfo2,
-	NewClientModuleVersionInfo2Ext,
-} from '@companion-app/shared/Model/ModuleInfo.js'
+import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { DevModuleVersionInfo, ReleaseModuleVersionInfo, SomeModuleVersionInfo } from './Types.js'
 import semver from 'semver'
 import { compact } from 'lodash-es'
@@ -24,44 +19,29 @@ export class InstanceModuleInfo {
 		this.id = id
 	}
 
-	getVersion(versionMode: ModuleVersionMode, versionId: string | null): SomeModuleVersionInfo | null {
-		switch (versionMode) {
-			case 'stable': {
-				if (this.devModule) return this.devModule
+	getVersion(versionId: string | null): SomeModuleVersionInfo | null {
+		if (versionId === 'dev') return this.devModule
 
-				let latest: ReleaseModuleVersionInfo | null = null
-				for (const version of Object.values(this.installedVersions)) {
-					if (!version || version.releaseType !== 'stable') continue
-					if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
-						latest = version
-					}
-				}
+		if (versionId === null) return null // TODO - is this correct?
 
-				return latest
+		return this.installedVersions[versionId] ?? null
+	}
+
+	getLatestVersion(isPrerelease: boolean): ReleaseModuleVersionInfo | null {
+		let latest: ReleaseModuleVersionInfo | null = null
+		for (const version of Object.values(this.installedVersions)) {
+			if (!version || version.isPrerelease !== isPrerelease) continue
+			if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
+				latest = version
 			}
-			case 'prerelease': {
-				if (this.devModule) return this.devModule
-
-				let latest: ReleaseModuleVersionInfo | null = null
-				for (const version of Object.values(this.installedVersions)) {
-					if (!version || version.releaseType !== 'prerelease') continue
-					if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
-						latest = version
-					}
-				}
-
-				return latest
-			}
-			case 'specific-version':
-				return versionId ? (this.installedVersions[versionId] ?? null) : null
-			default:
-				return null
 		}
+
+		return latest
 	}
 
 	toClientJson(): NewClientModuleInfo | null {
-		const stableVersion = this.getVersion('stable', null)
-		const prereleaseVersion = this.getVersion('prerelease', null)
+		const stableVersion = this.getLatestVersion(false)
+		const prereleaseVersion = this.getLatestVersion(true)
 
 		const baseVersion = stableVersion ?? prereleaseVersion ?? Object.values(this.installedVersions)[0]
 		if (!baseVersion) return null
@@ -72,26 +52,23 @@ export class InstanceModuleInfo {
 			hasDevVersion: !!this.devModule,
 
 			stableVersion: translateStableVersion(stableVersion),
-			prereleaseVersion: translatePrereleaseVersion(prereleaseVersion),
+			prereleaseVersion: translateStableVersion(prereleaseVersion),
 
 			installedVersions: compact(Object.values(this.installedVersions)).map(translateReleaseVersion),
 		}
 	}
 }
 
-function translateStableVersion(version: SomeModuleVersionInfo | null): NewClientModuleVersionInfo2Ext | null {
+function translateStableVersion(version: SomeModuleVersionInfo | null): NewClientModuleVersionInfo2 | null {
 	if (!version) return null
 	if (version.type === 'dev') {
 		return {
-			displayName: 'Latest Stable (Dev)',
+			displayName: 'Dev',
 			isLegacy: false,
 			isDev: true,
 			isBuiltin: false,
+			isPrerelease: false,
 			hasHelp: version.helpPath !== null,
-			version: {
-				mode: 'stable',
-				id: null,
-			},
 			versionId: 'dev',
 		}
 	} else if (version.type === 'release') {
@@ -101,42 +78,7 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 			isDev: false,
 			isBuiltin: version.isBuiltin,
 			hasHelp: version.helpPath !== null,
-			version: {
-				mode: 'stable',
-				id: null,
-			},
-			versionId: version.versionId,
-		}
-	}
-	return null
-}
-
-function translatePrereleaseVersion(version: SomeModuleVersionInfo | null): NewClientModuleVersionInfo2Ext | null {
-	if (!version) return null
-	if (version.type === 'dev') {
-		return {
-			displayName: 'Latest Prerelease (Dev)',
-			isLegacy: false,
-			isDev: true,
-			isBuiltin: false,
-			hasHelp: version.helpPath !== null,
-			version: {
-				mode: 'prerelease',
-				id: null,
-			},
-			versionId: 'dev',
-		}
-	} else if (version.type === 'release') {
-		return {
-			displayName: `Latest Prerelease (v${version.versionId})`,
-			isLegacy: version.display.isLegacy ?? false,
-			isDev: false,
-			isBuiltin: version.isBuiltin,
-			hasHelp: version.helpPath !== null,
-			version: {
-				mode: 'prerelease',
-				id: null,
-			},
+			isPrerelease: version.isPrerelease,
 			versionId: version.versionId,
 		}
 	}
@@ -149,10 +91,8 @@ function translateReleaseVersion(version: ReleaseModuleVersionInfo): NewClientMo
 		isLegacy: version.display.isLegacy ?? false,
 		isDev: false,
 		isBuiltin: version.isBuiltin,
+		isPrerelease: version.isPrerelease,
 		hasHelp: version.helpPath !== null,
-		version: {
-			mode: 'specific-version',
-			id: version.versionId,
-		},
+		versionId: version.versionId,
 	}
 }

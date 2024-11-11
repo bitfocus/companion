@@ -992,7 +992,7 @@ export class ImportExportController {
 					const [newId, newConfig] = this.#instancesController.addInstanceWithLabel(
 						{ type: instance_type },
 						obj.label,
-						{ mode: 'stable', id: null }, // Always create using the latest stable
+						null, // Always create using the latest stable
 						true
 					)
 					if (newId && newConfig) {

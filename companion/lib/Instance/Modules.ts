@@ -21,7 +21,7 @@ import { cloneDeep } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import type express from 'express'
 import { type ModuleManifest } from '@companion-module/base'
-import type { ModuleVersionMode, NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import LogController from '../Log/Controller.js'
@@ -72,7 +72,7 @@ export class InstanceModules {
 		this.#instanceController = instance
 		this.#moduleDirs = moduleDirs
 
-		apiRouter.get('/help/module/:moduleId/:versionMode/:versionId/*path', this.#getHelpAsset)
+		apiRouter.get('/help/module/:moduleId/:versionId/*path', this.#getHelpAsset)
 	}
 
 	/**
@@ -95,7 +95,6 @@ export class InstanceModules {
 			...loadedModuleInfo,
 			type: 'release',
 			versionId: loadedModuleInfo.display.version,
-			releaseType: loadedModuleInfo.isPrerelease ? 'prerelease' : 'stable',
 			isBuiltin: false,
 		}
 
@@ -154,7 +153,6 @@ export class InstanceModules {
 			moduleInfo.installedVersions[candidate.display.version] = {
 				...candidate,
 				type: 'release',
-				releaseType: 'stable',
 				versionId: candidate.display.version,
 				isBuiltin: true,
 			}
@@ -180,7 +178,6 @@ export class InstanceModules {
 			moduleInfo.installedVersions[candidate.display.version] = {
 				...candidate,
 				type: 'release',
-				releaseType: candidate.isPrerelease ? 'prerelease' : 'stable',
 				versionId: candidate.display.version,
 				isBuiltin: false,
 			}
@@ -340,6 +337,13 @@ export class InstanceModules {
 		return moduleInfo.replacedByIds[0]
 	}
 
+	getLatestVersionOfModule(instance_type: string): string | null {
+		const moduleInfo = this.#knownModules.get(instance_type)
+		if (!moduleInfo) return null
+
+		return moduleInfo.getLatestVersion(false)?.versionId ?? null
+	}
+
 	/**
 	 * Setup a new socket client's events
 	 */
@@ -376,12 +380,8 @@ export class InstanceModules {
 	/**
 	 * Get the manifest for a module
 	 */
-	getModuleManifest(
-		moduleId: string,
-		versionMode: ModuleVersionMode,
-		versionId: string | null
-	): SomeModuleVersionInfo | undefined {
-		return this.#knownModules.get(moduleId)?.getVersion(versionMode, versionId) ?? undefined
+	getModuleManifest(moduleId: string, versionId: string | null): SomeModuleVersionInfo | undefined {
+		return this.#knownModules.get(moduleId)?.getVersion(versionId) ?? undefined
 	}
 
 	/**
@@ -396,11 +396,10 @@ export class InstanceModules {
 	 */
 	#getHelpForModule = async (
 		moduleId: string,
-		versionMode: ModuleVersionMode,
 		versionId: string | null
 	): Promise<[err: string, result: null] | [err: null, result: HelpDescription]> => {
 		try {
-			const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionMode, versionId)
+			const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionId)
 			if (moduleInfo && moduleInfo.helpPath) {
 				const stats = await fs.stat(moduleInfo.helpPath)
 				if (stats.isFile()) {
@@ -431,16 +430,15 @@ export class InstanceModules {
 	 * Return a module help asset over http
 	 */
 	#getHelpAsset = (
-		req: express.Request<{ moduleId: string; versionMode: ModuleVersionMode; versionId: string; path: string[] }>,
+		req: express.Request<{ moduleId: string; versionId: string; path: string[] }>,
 		res: express.Response,
 		next: express.NextFunction
 	): void => {
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
 		const versionId = req.params.versionId
-		const versionMode = req.params.versionMode
 		const file = req.params.path?.join('/')?.replace(/\.\.+/g, '')
 
-		const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionMode, versionId)
+		const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionId)
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
 			const fullpath = path.join(moduleInfo.basePath, 'companion', file)
 			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig)$/) && fs.existsSync(fullpath)) {

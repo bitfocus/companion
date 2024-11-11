@@ -37,9 +37,9 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 	const allVersionsSet = new Set<string>()
 	const installedModuleVersions = new Map<string, NewClientModuleVersionInfo2>()
 	for (const version of moduleInfo.installedVersions) {
-		if (version.version.id) {
-			installedModuleVersions.set(version.version.id, version)
-			allVersionsSet.add(version.version.id)
+		if (version.versionId) {
+			installedModuleVersions.set(version.versionId, version)
+			allVersionsSet.add(version.versionId)
 		}
 	}
 	const storeModuleVersions = new Map<string, ModuleStoreModuleInfoVersion>()

@@ -43,7 +43,7 @@ import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRec
 import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
-import type { ModuleInfoUpdate, ModuleVersionInfo, ModuleVersionMode, NewClientModuleInfo } from './Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, NewClientModuleInfo } from './Model/ModuleInfo.js'
 import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
 export interface ClientToBackendEventsMap {
@@ -313,7 +313,7 @@ export interface ClientToBackendEventsMap {
 	'connections:add': (
 		info: { type: string; product: string | undefined },
 		label: string,
-		version: ModuleVersionInfo
+		versionId: string | null
 	) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
 	'connections:set-label-and-config': (
@@ -324,14 +324,13 @@ export interface ClientToBackendEventsMap {
 	'connections:set-label-and-version': (
 		connectionId: string,
 		newLabel: string,
-		version: ModuleVersionInfo
+		versionId: string | null
 	) => string | null
 	'connections:set-order': (sortedIds: string[]) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 	'connections:get-help': (
 		id: string,
-		versionMode: ModuleVersionMode,
 		versionId: string | null
 	) => [err: string, result: null] | [err: null, result: HelpDescription]
 	'modules:install-custom-module': (moduleTar: Uint8Array) => string | null

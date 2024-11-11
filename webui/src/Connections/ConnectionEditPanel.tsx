@@ -12,13 +12,10 @@ import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
-import type {
-	ModuleVersionInfo,
-	NewClientModuleInfo,
-	NewClientModuleVersionInfo2,
-} from '@companion-app/shared/Model/ModuleInfo.js'
-import { getConnectionVersionSelectOptions } from './AddConnectionModal.js'
+import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
+import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
+import semver from 'semver'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -90,18 +87,15 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const [configFields, setConfigFields] = useState<Array<ExtendedInputField & { width: number }> | null>([])
 	const [connectionConfig, setConnectionConfig] = useState<Record<string, any> | null>(null)
 	const [connectionLabel, setConnectionLabel] = useState<string>(connectionInfo.label)
-	const [connectionVersion, setConnectionVersion] = useState<ModuleVersionInfo>({
-		mode: connectionInfo.moduleVersionMode,
-		id: connectionInfo.moduleVersionId,
-	})
+	const [connectionVersion, setConnectionVersion] = useState<string | null>(connectionInfo.moduleVersionId)
 	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
 
 	// Update the in-edit label if the connection label changes
 	useEffect(() => setConnectionLabel(connectionInfo.label), [connectionInfo.label])
 	// Update the in-edit version if the connection version changes
 	useEffect(
-		() => setConnectionVersion({ mode: connectionInfo.moduleVersionMode, id: connectionInfo.moduleVersionId }),
-		[connectionInfo.moduleVersionMode, connectionInfo.moduleVersionId, connectionInfo.enabled]
+		() => setConnectionVersion(connectionInfo.moduleVersionId),
+		[connectionInfo.moduleVersionId, connectionInfo.enabled]
 	)
 
 	const [configOptions, fieldVisibility] = useOptionsAndIsVisible<ExtendedInputField & { width: number }>(
@@ -227,7 +221,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
-	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo)
+	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo.moduleVersionId)
 
 	return (
 		<div>
@@ -312,6 +306,20 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		</div>
 	)
 })
+
+function getConnectionVersionSelectOptions(moduleInfo: NewClientModuleInfo): DropdownChoiceInt[] {
+	const choices: DropdownChoiceInt[] = []
+
+	for (const version of moduleInfo.installedVersions) {
+		choices.push({ value: version.versionId, label: version.displayName })
+	}
+
+	choices.sort((a, b) => semver.compare(String(b.value), String(a.value)))
+
+	if (moduleInfo.hasDevVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
+
+	return choices
+}
 
 interface ConnectionEditPanelConfigFieldsProps {
 	connectionConfig: Record<string, any> | null

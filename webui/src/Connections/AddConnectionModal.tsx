@@ -17,16 +17,14 @@ import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
-import {
-	ModuleVersionInfo,
-	NewClientModuleInfo,
-	NewClientModuleVersionInfo2,
-} from '@companion-app/shared/Model/ModuleInfo.js'
+import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import type { AddConnectionProduct } from './AddConnectionPanel.js'
 import { useModuleStoreInfo } from '../Modules/ModuleManagePanel.js'
+import { toJS } from 'mobx'
+import semver from 'semver'
 
 export interface AddConnectionModalRef {
 	show(info: AddConnectionProduct): void
@@ -46,10 +44,7 @@ export const AddConnectionModal = observer(
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<AddConnectionProduct | null>(null)
-		const [selectedVersion, setSelectedVersion] = useState<ModuleVersionInfo>({
-			mode: 'stable',
-			id: null,
-		})
+		const [selectedVersion, setSelectedVersion] = useState<string | null>(null)
 		const [connectionLabel, setConnectionLabel] = useState<string>('')
 
 		const moduleStoreInfo = useModuleStoreInfo(moduleInfo?.id)
@@ -57,10 +52,7 @@ export const AddConnectionModal = observer(
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
 			setModuleInfo(null)
-			setSelectedVersion({
-				mode: 'stable',
-				id: null,
-			})
+			setSelectedVersion(null)
 			setConnectionLabel('')
 		}, [])
 
@@ -97,27 +89,15 @@ export const AddConnectionModal = observer(
 					setModuleInfo(info)
 
 					// There is a useEffect below that ensures this is valid
-					setSelectedVersion({
-						mode: 'stable',
-						id: null,
-					})
+					setSelectedVersion(null)
 					setConnectionLabel(findNextConnectionLabel(connections.connections, info.shortname))
 				},
 			}),
 			[connections]
 		)
 
-		let selectedVersionIsLegacy = false
-		switch (selectedVersion.mode) {
-			case 'stable':
-				selectedVersionIsLegacy = moduleInfo?.installedInfo?.stableVersion?.isLegacy ?? false
-				break
-			case 'specific-version':
-				selectedVersionIsLegacy =
-					moduleInfo?.installedInfo?.installedVersions.find((v) => v.version.id === selectedVersion.id)?.isLegacy ??
-					false
-				break
-		}
+		const selectedVersionIsLegacy =
+			moduleInfo?.installedInfo?.installedVersions.find((v) => v.versionId === selectedVersion)?.isLegacy ?? false
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
@@ -264,8 +244,8 @@ const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ moduleId
 
 interface ModuleVersionPickerProps {
 	moduleInfo: AddConnectionProduct | null
-	selectedVersion: ModuleVersionInfo
-	setSelectedVersion: React.Dispatch<React.SetStateAction<ModuleVersionInfo>>
+	selectedVersion: string | null
+	setSelectedVersion: React.Dispatch<React.SetStateAction<string | null>>
 }
 
 const ModuleVersionPicker = observer(function ModuleVersionPicker({
@@ -276,23 +256,31 @@ const ModuleVersionPicker = observer(function ModuleVersionPicker({
 	const versionChoices = useMemo(() => {
 		const choices: DropdownChoiceInt[] = []
 
+		console.log(toJS(moduleInfo?.installedInfo))
+
 		if (moduleInfo?.installedInfo) {
-			if (moduleInfo.installedInfo.stableVersion)
-				choices.push({
-					value: JSON.stringify(moduleInfo.installedInfo.stableVersion.version),
-					label: moduleInfo.installedInfo.stableVersion.displayName,
-				})
-
-			if (moduleInfo.installedInfo.prereleaseVersion)
-				choices.push({
-					value: JSON.stringify(moduleInfo.installedInfo.prereleaseVersion.version),
-					label: moduleInfo.installedInfo.prereleaseVersion.displayName,
-				})
-
 			for (const version of moduleInfo.installedInfo.installedVersions) {
-				choices.push({ value: JSON.stringify(version.version), label: version.displayName })
+				if (version.isPrerelease) continue
+
+				let label = version.displayName
+				if (moduleInfo.installedInfo.stableVersion?.versionId === version.versionId) {
+					label += ' (Latest stable)'
+				}
+
+				choices.push({ value: version.versionId, label })
 			}
 		}
+
+		if (moduleInfo?.storeInfo) {
+			// TODO - this
+			// for (const version of moduleInfo.storeInfo.versions) {
+			// }
+		}
+
+		choices.sort((a, b) => semver.compare(String(b.value), String(a.value)))
+
+		// Add dev version if available to the top
+		if (moduleInfo?.installedInfo?.hasDevVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
 
 		return choices
 	}, [moduleInfo])
@@ -307,13 +295,14 @@ const ModuleVersionPicker = observer(function ModuleVersionPicker({
 		if (!versionChoices || versionChoices.length === 0) return
 
 		setSelectedVersion((value) => {
-			const valueStr = JSON.stringify(value)
+			const valueStr = value
 
 			// Check if value is still valid
 			if (versionChoices.find((v) => v.value === valueStr)) return value
 
 			// It is not, so choose the first option
-			return JSON.parse(versionChoices[0].value)
+			if (versionChoices.length === 0) return null
+			return String(versionChoices[0].value)
 		})
 	}, [versionChoices])
 
@@ -321,7 +310,7 @@ const ModuleVersionPicker = observer(function ModuleVersionPicker({
 		<CFormSelect
 			name="colFormVersion"
 			value={JSON.stringify(selectedVersion)}
-			onChange={(e) => setSelectedVersion(JSON.parse(e.currentTarget.value))}
+			onChange={(e) => setSelectedVersion(e.currentTarget.value)}
 		>
 			{versionChoices?.map((v) => (
 				<option key={v.value} value={v.value}>
@@ -331,28 +320,3 @@ const ModuleVersionPicker = observer(function ModuleVersionPicker({
 		</CFormSelect>
 	)
 })
-
-/**
- * @deprecated move this
- */
-export function getConnectionVersionSelectOptions(moduleInfo: NewClientModuleInfo): DropdownChoiceInt[] {
-	const choices: DropdownChoiceInt[] = []
-
-	if (moduleInfo.stableVersion)
-		choices.push({
-			value: JSON.stringify(moduleInfo.stableVersion.version),
-			label: moduleInfo.stableVersion.displayName,
-		})
-
-	if (moduleInfo.prereleaseVersion)
-		choices.push({
-			value: JSON.stringify(moduleInfo.prereleaseVersion.version),
-			label: moduleInfo.prereleaseVersion.displayName,
-		})
-
-	for (const version of moduleInfo.installedVersions) {
-		choices.push({ value: JSON.stringify(version.version), label: version.displayName })
-	}
-
-	return choices
-}

@@ -96,9 +96,7 @@ export class ModuleHost {
 			if (!child.crashed) {
 				child.crashed = setTimeout(() => {
 					const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
-					const moduleInfo =
-						config &&
-						this.#modules.getModuleManifest(config.instance_type, config.moduleVersionMode, config.moduleVersionId)
+					const moduleInfo = config && this.#modules.getModuleManifest(config.instance_type, config.moduleVersionId)
 
 					// Restart after a short sleep
 					this.queueRestartConnection(child.connectionId, config, moduleInfo)
