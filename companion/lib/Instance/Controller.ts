@@ -42,10 +42,6 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import express from 'express'
 import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
-import type { ModuleDirs } from './Types.js'
-import path from 'path'
-import { isPackaged } from '../Resources/Util.js'
-import { fileURLToPath } from 'url'
 import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
@@ -102,26 +98,12 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController = variables
 		this.#controlsController = controls
 
-		function generatePath(subpath: string): string {
-			if (isPackaged()) {
-				return path.join(__dirname, subpath)
-			} else {
-				return fileURLToPath(new URL(path.join('../../..', subpath), import.meta.url))
-			}
-		}
-
-		const moduleDirs: ModuleDirs = {
-			bundledLegacyModulesDir: path.resolve(generatePath('modules')),
-			bundledModulesDir: path.resolve(generatePath('bundled-modules')),
-			installedModulesDir: appInfo.modulesDir,
-		}
-
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
 		this.status = new InstanceStatus(io, controls)
-		this.modules = new InstanceModules(io, this, apiRouter, moduleDirs)
+		this.modules = new InstanceModules(io, this, apiRouter, appInfo.modulesDir)
 		this.moduleHost = new ModuleHost(
 			{
 				controls: controls,
@@ -146,7 +128,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			io,
 			this.modules,
 			this.modulesStore,
-			moduleDirs
+			appInfo.modulesDir
 		)
 
 		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())

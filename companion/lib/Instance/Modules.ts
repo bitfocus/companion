@@ -27,7 +27,7 @@ import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import LogController from '../Log/Controller.js'
 import type { InstanceController } from './Controller.js'
 import jsonPatch from 'fast-json-patch'
-import type { ModuleDirs, SomeModuleVersionInfo } from './Types.js'
+import type { SomeModuleVersionInfo } from './Types.js'
 import { InstanceModuleInfo } from './ModuleInfo.js'
 
 const ModulesRoom = 'modules'
@@ -65,12 +65,12 @@ export class InstanceModules {
 	 */
 	readonly #moduleScanner = new InstanceModuleScanner()
 
-	readonly #moduleDirs: ModuleDirs
+	readonly #installedModulesDir: string
 
-	constructor(io: UIHandler, instance: InstanceController, apiRouter: express.Router, moduleDirs: ModuleDirs) {
+	constructor(io: UIHandler, instance: InstanceController, apiRouter: express.Router, installedModulesDir: string) {
 		this.#io = io
 		this.#instanceController = instance
-		this.#moduleDirs = moduleDirs
+		this.#installedModulesDir = installedModulesDir
 
 		apiRouter.get('/help/module/:moduleId/:versionId/*path', this.#getHelpAsset)
 	}
@@ -95,7 +95,6 @@ export class InstanceModules {
 			...loadedModuleInfo,
 			type: 'release',
 			versionId: loadedModuleInfo.display.version,
-			isBuiltin: false,
 		}
 
 		// Notify clients
@@ -141,45 +140,14 @@ export class InstanceModules {
 	 * @param extraModulePath - extra directory to search for modules
 	 */
 	async initInstances(extraModulePath: string): Promise<void> {
-		const legacyCandidates = await this.#moduleScanner.loadInfoForModulesInDir(
-			this.#moduleDirs.bundledLegacyModulesDir,
-			false
-		)
-
-		// Start with 'legacy' candidates
-		for (const candidate of legacyCandidates) {
-			candidate.display.isLegacy = true
-			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-			moduleInfo.installedVersions[candidate.display.version] = {
-				...candidate,
-				type: 'release',
-				versionId: candidate.display.version,
-				isBuiltin: true,
-			}
-		}
-
-		// // Load bundled modules
-		// const bundledModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.bundledModulesDir, false)
-		// for (const candidate of bundledModules) {
-		// 	const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-		// 	moduleInfo.installedVersions[candidate.display.version] = {
-		// 		...candidate,
-		// 		type: 'release',
-		// 		releaseType: 'stable',
-		// 		versionId: candidate.display.version,
-		// 		isBuiltin: true,
-		// 	}
-		// }
-
-		// And modules from the store
-		const storeModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#moduleDirs.installedModulesDir, true)
+		// Add modules from the installed modules directory
+		const storeModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#installedModulesDir, true)
 		for (const candidate of storeModules) {
 			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
 			moduleInfo.installedVersions[candidate.display.version] = {
 				...candidate,
 				type: 'release',
 				versionId: candidate.display.version,
-				isBuiltin: false,
 			}
 		}
 
@@ -220,7 +188,7 @@ export class InstanceModules {
 
 			if (moduleInfo.devModule) {
 				this.#logger.info(
-					`${moduleInfo.devModule.display.id}: ${moduleInfo.devModule.display.name} (Overridden${
+					`${moduleInfo.devModule.display.id}: ${moduleInfo.devModule.display.name} (Dev${
 						moduleInfo.devModule.isPackaged ? ' & Packaged' : ''
 					})`
 				)
@@ -228,16 +196,7 @@ export class InstanceModules {
 
 			for (const moduleVersion of Object.values(moduleInfo.installedVersions)) {
 				if (!moduleVersion) continue
-				this.#logger.info(
-					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name}${moduleVersion.isBuiltin ? ' (Builtin)' : ''}`
-				)
-			}
-
-			for (const moduleVersion of Object.values(moduleInfo.installedVersions)) {
-				if (!moduleVersion) continue
-				this.#logger.info(
-					`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name} (Custom)`
-				)
+				this.#logger.info(`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name}`)
 			}
 		}
 	}

@@ -8,7 +8,6 @@ import * as ts from 'tar-stream'
 import { Readable } from 'node:stream'
 import { ModuleManifest } from '@companion-module/base'
 import * as tarfs from 'tar-fs'
-import type { ModuleDirs } from './Types.js'
 import type { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import { promisify } from 'util'
@@ -56,13 +55,13 @@ export class InstanceInstalledModulesManager {
 		io: UIHandler,
 		modulesManager: InstanceModules,
 		modulesStore: ModuleStoreService,
-		dirs: ModuleDirs
+		installedModulesDir: string
 	) {
 		this.#appInfo = appInfo
 		this.#io = io
 		this.#modulesManager = modulesManager
 		this.#modulesStore = modulesStore
-		this.#modulesDir = dirs.installedModulesDir
+		this.#modulesDir = installedModulesDir
 	}
 
 	/**

@@ -29,7 +29,6 @@ export interface NewClientModuleVersionInfo2 {
 	isLegacy: boolean
 	isDev: boolean
 	isPrerelease: boolean
-	isBuiltin: boolean
 	hasHelp: boolean
 	versionId: string
 }
