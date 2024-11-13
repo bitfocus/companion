@@ -52,7 +52,6 @@
 			"entitlements": "entitlements.mac.plist",
 			"entitlementsInherit": "entitlements.mac.plist"
 		},
-		"afterPack": "fix-bundled-modules.cjs",
 		"afterSign": "notarize.cjs",
 		"win": {
 			"target": "nsis"
