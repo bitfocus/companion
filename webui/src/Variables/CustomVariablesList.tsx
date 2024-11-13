@@ -210,12 +210,12 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 					</CButton>
 					{!hasNoVariables && panelCollapseHelper.canExpandAll() && (
 						<CButton color="secondary" onClick={panelCollapseHelper.setAllExpanded} title="Expand all">
-							<FontAwesomeIcon icon={faExpandArrowsAlt} /> Expand
+							<FontAwesomeIcon icon={faExpandArrowsAlt} /> Expand All
 						</CButton>
 					)}
 					{!hasNoVariables && panelCollapseHelper.canCollapseAll() && (
 						<CButton color="secondary" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all">
-							<FontAwesomeIcon icon={faCompressArrowsAlt} /> Collapse
+							<FontAwesomeIcon icon={faCompressArrowsAlt} /> Collapse All
 						</CButton>
 					)}
 				</CButtonGroup>
@@ -236,7 +236,13 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 				</CButton>
 			</CInputGroup>
 
-			<table className="table variables-table">
+			<table className="table table-responsive-sm variables-table">
+				<thead>
+					<tr>
+						<th>&nbsp;</th>
+						<th>Variable</th>
+					</tr>
+				</thead>
 				<tbody>
 					{!hasNoVariables && errorMsg && (
 						<tr>
@@ -278,7 +284,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 					)}
 				</tbody>
 			</table>
-
+			<br></br>
 			<h5>Create custom variable</h5>
 			<div>
 				<CForm onSubmit={doCreateNew}>
@@ -385,61 +391,96 @@ function CustomVariableRow({
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td style={{ paddingRight: 0 }}>
+			<td>
 				<div className="editor-grid">
 					<div className="cell-header">
-						<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
+						<div className="cell-header-item">
 							<span className="variable-style">$({fullname})</span>
-						</CopyToClipboard>
-						<CButtonGroup className="right" size={isCollapsed ? 'sm' : undefined}>
-							{isCollapsed ? (
-								<CButton onClick={doExpand} title="Expand variable view">
-									<FontAwesomeIcon icon={faExpandArrowsAlt} />
-								</CButton>
-							) : (
-								<CButton onClick={doCollapse} title="Collapse variable view">
-									<FontAwesomeIcon icon={faCompressArrowsAlt} />
-								</CButton>
-							)}
 							<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
-								<CButton>
-									<FontAwesomeIcon icon={faCopy} />
+								<CButton size="sm" title="Copy variable name">
+									<FontAwesomeIcon icon={faCopy} color="#d50215" />
 								</CButton>
 							</CopyToClipboard>
-							<CButton onClick={() => doDelete(name)}>
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>
-						</CButtonGroup>
-					</div>
+						</div>
+						<div className="cell-header-item">
+							{isCollapsed && value?.length > 0 && (
+								<>
+									<code
+										style={{
+											backgroundColor: 'rgba(0,0,200,0.1)',
+											color: 'rgba(0,0,200,1)',
+											fontWeight: 'normal',
+											fontSize: 14,
+											padding: '4px',
+											lineHeight: '2em',
+											borderRadius: '6px',
+										}}
+										title={value}
+									>
+										{value?.length > 100 ? `${value.substring(0, 100)}...` : value}
+									</code>
+									<CopyToClipboard text={`${value?.length > 0 ? value : ' '}`} onCopy={onCopied}>
+										<CButton size="sm" title="Copy current variable value">
+											<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
+										</CButton>
+									</CopyToClipboard>
+								</>
+							)}
+							{isCollapsed && value?.length === 0 && (
+								<>
+									<span style={{ fontWeight: 'normal' }}>(empty)</span>
+								</>
+							)}
+						</div>
+						<div className="cell-header-item">
+							<CButtonGroup style={{ float: 'inline-end' }}>
+								{isCollapsed ? (
+									<CButton onClick={doExpand} size="sm" title="Expand variable view">
+										<FontAwesomeIcon icon={faExpandArrowsAlt} />
+									</CButton>
+								) : (
+									<CButton onClick={doCollapse} size="sm" title="Collapse variable view">
+										<FontAwesomeIcon icon={faCompressArrowsAlt} />
+									</CButton>
+								)}
 
+								<CButton onClick={() => doDelete(name)} size="sm" title="Delete custom variable">
+									<FontAwesomeIcon icon={faTrash} />
+								</CButton>
+							</CButtonGroup>
+						</div>
+					</div>
 					{!isCollapsed && (
 						<>
-							<div className="cell-options">
-								<CForm onSubmit={PreventDefaultHandler}>
-									<CheckboxInputField
-										label="Persist value"
-										value={info.persistCurrentValue}
-										setValue={(val) => setPersistenceValue(name, val)}
-										helpText="If enabled, the current value will be saved and restored when Companion restarts."
-									/>
-								</CForm>
-							</div>
+							<div className="cell-fields">
+								<div className="cell-options">
+									<CForm onSubmit={PreventDefaultHandler}>
+										<CheckboxInputField
+											label="Persist value"
+											value={info.persistCurrentValue}
+											setValue={(val) => setPersistenceValue(name, val)}
+											helpText="If enabled, variable value will be saved and restored when Companion restarts."
+											inline={true}
+										/>
+									</CForm>
+								</div>
+								<div className="cell-values">
+									<CForm onSubmit={PreventDefaultHandler}>
+										<TextInputField
+											label="Current value: "
+											value={value ?? ''}
+											setValue={(val) => setCurrentValue(name, val)}
+											style={{ marginBottom: '0.5rem' }}
+										/>
 
-							<div className="cell-values">
-								<CForm onSubmit={PreventDefaultHandler}>
-									<TextInputField
-										label="Current value: "
-										value={value ?? ''}
-										setValue={(val) => setCurrentValue(name, val)}
-									/>
-
-									<TextInputField
-										label="Startup value: "
-										disabled={!!info.persistCurrentValue}
-										value={info.defaultValue + ''}
-										setValue={(val) => setStartupValue(name, val)}
-									/>
-								</CForm>
+										<TextInputField
+											label="Startup value: "
+											disabled={!!info.persistCurrentValue}
+											value={info.defaultValue + ''}
+											setValue={(val) => setStartupValue(name, val)}
+										/>
+									</CForm>
+								</div>
 							</div>
 						</>
 					)}

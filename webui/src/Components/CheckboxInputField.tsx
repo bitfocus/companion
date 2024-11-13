@@ -1,6 +1,8 @@
 import React, { useEffect, useCallback } from 'react'
 import { CFormCheck, CFormLabel } from '@coreui/react'
 import { InlineHelp } from './InlineHelp.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleQuestion } from '@fortawesome/free-solid-svg-icons'
 
 interface CheckboxInputFieldProps {
 	tooltip?: string
@@ -10,6 +12,7 @@ interface CheckboxInputFieldProps {
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	helpText?: string
+	inline?: boolean
 }
 
 export function CheckboxInputField({
@@ -20,6 +23,7 @@ export function CheckboxInputField({
 	setValid,
 	disabled,
 	helpText,
+	inline,
 }: CheckboxInputFieldProps) {
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
@@ -38,14 +42,35 @@ export function CheckboxInputField({
 		<>
 			<>
 				{helpText ? (
-					<InlineHelp help={helpText}>{label ? <CFormLabel>{label}</CFormLabel> : ''}</InlineHelp>
+					<InlineHelp help={helpText}>
+						{label ? (
+							<CFormLabel>
+								{label} <FontAwesomeIcon size="sm" icon={faCircleQuestion} />
+							</CFormLabel>
+						) : (
+							''
+						)}
+					</InlineHelp>
 				) : label ? (
 					<>{label ? <CFormLabel>{label}</CFormLabel> : ''}</>
 				) : (
 					''
 				)}
 			</>
-			<div className="form-check">
+			<div
+				className="form-check"
+				style={
+					inline
+						? {
+								display: 'inline-block',
+								verticalAlign: 'middle',
+								marginLeft: '1em',
+								paddingBottom: '.5em',
+								paddingTop: '.3em',
+							}
+						: {}
+				}
+			>
 				<CFormCheck
 					type="checkbox"
 					disabled={disabled}
