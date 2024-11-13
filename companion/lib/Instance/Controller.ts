@@ -125,6 +125,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.modulesStore = new ModuleStoreService(io, cache)
 		this.userModulesManager = new InstanceInstalledModulesManager(
 			appInfo,
+			db,
 			io,
 			this.modules,
 			this.modulesStore,
@@ -266,26 +267,24 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		versionId: string | null,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
-		let module = data.type
+		let moduleId = data.type
 		let product = data.product
 
-		// nocommit - install first if needed
-
 		if (versionId === null) {
-			// Get the latest version
-			versionId = this.modules.getLatestVersionOfModule(module)
+			// Get the latest installed version
+			versionId = this.modules.getLatestVersionOfModule(moduleId)
 		}
 
-		const moduleInfo = this.modules.getModuleManifest(module, versionId)
-		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
+		// Ensure the requested module and version is installed
+		this.userModulesManager.ensureModuleIsInstalled(moduleId, versionId)
 
 		const label = this.#configStore.makeLabelUnique(labelBase)
 
 		if (this.getIdForLabel(label)) throw new Error(`Label "${label}" already in use`)
 
-		this.#logger.info('Adding connection ' + module + ' ' + product)
+		this.#logger.info('Adding connection ' + moduleId + ' ' + product)
 
-		const [id, config] = this.#configStore.addConnection(module, label, product, versionId, disabled)
+		const [id, config] = this.#configStore.addConnection(moduleId, label, product, versionId, disabled)
 
 		this.#activate_module(id, true)
 

@@ -2,6 +2,7 @@ import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companio
 import type { DevModuleVersionInfo, ReleaseModuleVersionInfo, SomeModuleVersionInfo } from './Types.js'
 import semver from 'semver'
 import { compact } from 'lodash-es'
+import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 
 /**
  * Information about a module
@@ -31,6 +32,7 @@ export class InstanceModuleInfo {
 		let latest: ReleaseModuleVersionInfo | null = null
 		for (const version of Object.values(this.installedVersions)) {
 			if (!version || version.isPrerelease !== isPrerelease) continue
+			if (!isModuleApiVersionCompatible(version.manifest.runtime.apiVersion)) continue
 			if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
 				latest = version
 			}

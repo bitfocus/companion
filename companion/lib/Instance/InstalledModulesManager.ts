@@ -11,8 +11,9 @@ import * as tarfs from 'tar-fs'
 import type { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import { promisify } from 'util'
-import { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
+import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
+import type { DataDatabase } from '../Data/Database.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -27,6 +28,8 @@ export class InstanceInstalledModulesManager {
 	readonly #logger = LogController.createLogger('Instance/UserModulesManager')
 
 	readonly #appInfo: AppInfo
+
+	readonly #db: DataDatabase
 
 	readonly #io: UIHandler
 
@@ -52,12 +55,14 @@ export class InstanceInstalledModulesManager {
 
 	constructor(
 		appInfo: AppInfo,
+		db: DataDatabase,
 		io: UIHandler,
 		modulesManager: InstanceModules,
 		modulesStore: ModuleStoreService,
 		installedModulesDir: string
 	) {
 		this.#appInfo = appInfo
+		this.#db = db
 		this.#io = io
 		this.#modulesManager = modulesManager
 		this.#modulesStore = modulesStore
@@ -73,6 +78,50 @@ export class InstanceInstalledModulesManager {
 			path.join(this.#modulesDir, 'README'),
 			'This directory contains installed modules\r\nDo not modify unless you know what you are doing\n'
 		)
+	}
+
+	#modulesBeingInstalled = new Set<string>()
+	ensureModuleIsInstalled(moduleId: string, versionId: string | null) {
+		this.#logger.debug(`Ensuring module "${moduleId}" is installed`)
+
+		if (this.#modulesManager.getModuleManifest(moduleId, versionId)) {
+			this.#logger.silly(`Module "${moduleId}" is already installed`)
+			return
+		}
+
+		// TODO - track as pending install, and write some retry logic
+
+		const installingModuleId = `${moduleId}-${versionId ?? 'latest'}`
+		if (this.#modulesBeingInstalled.has(installingModuleId)) {
+			this.#logger.info(`Module "${moduleId}" v${versionId ?? 'latest'} is already being installed`)
+			return
+		}
+		this.#modulesBeingInstalled.add(installingModuleId)
+
+		this.#logger.info(`Queuing install of module "${moduleId}" v${versionId ?? 'latest'}`)
+
+		this.#modulesStore
+			.fetchModuleVersionInfo(moduleId, versionId, true)
+			.then(async (versionInfo) => {
+				if (!versionInfo) {
+					this.#logger.warn(`Module "${moduleId}" v${versionId ?? 'latest'} does not exist in the store`)
+					return
+				}
+
+				await this.#installModuleVersionFromStore(moduleId, versionInfo)
+
+				if (!versionId) {
+					// nocommit TODO - check if any uses of the module have a `null` versionId, and set them to this version
+					throw new Error('Method not implemented.')
+				}
+			})
+			.catch((e) => {
+				this.#logger.error(`Failed to install module "${moduleId}" v${versionId ?? 'latest'}`, e)
+			})
+			.finally(() => {
+				// Mark as no longer being installed
+				this.#modulesBeingInstalled.delete(installingModuleId)
+			})
 	}
 
 	/**
@@ -128,7 +177,7 @@ export class InstanceInstalledModulesManager {
 		client.onPromise('modules:install-store-module:latest', async (moduleId) => {
 			this.#logger.info(`Installing latest version of module ${moduleId}`)
 
-			const versionInfo = await this.#modulesStore.fetchLatestModuleVersionInfo(moduleId)
+			const versionInfo = await this.#modulesStore.fetchModuleVersionInfo(moduleId, null, true)
 			if (!versionInfo) {
 				this.#logger.warn(`Unable to install latest version of ${moduleId}, it is not known in the store`)
 				return `Latest version of module "${moduleId}" not found`

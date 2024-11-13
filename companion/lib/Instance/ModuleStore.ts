@@ -7,6 +7,7 @@ import type {
 } from '@companion-app/shared/Model/ModulesStore.js'
 import type { DataCache } from '../Data/Cache.js'
 import semver from 'semver'
+import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 
 const ModuleStoreListRoom = 'module-store:list'
 const ModuleStoreInfoRoom = (moduleId: string) => `module-store:info:${moduleId}`
@@ -15,6 +16,7 @@ const CacheStoreListKey = 'module_store_list'
 const CacheStoreModuleTable = 'module_store'
 
 const SUBSCRIBE_REFRESH_INTERVAL = 1000 * 60 * 60 * 6 // Update when a user subscribes to the data, if older than 6 hours
+const LATEST_MODULE_INFO_CACHE_DURATION = 1000 * 60 * 60 * 6 // Cache the latest module info for 6 hours
 
 export class ModuleStoreService {
 	readonly #logger = LogController.createLogger('Instance/ModuleStoreService')
@@ -123,16 +125,24 @@ export class ModuleStoreService {
 		return moduleInfo.versions.find((v) => v.id === versionId) ?? null
 	}
 
-	async fetchLatestModuleVersionInfo(moduleId: string): Promise<ModuleStoreModuleInfoVersion | null> {
-		// // Get the cached module info
-		// const moduleInfo = this.#getCacheEntryForModule(moduleId)
-		// if (!moduleInfo) return null
+	async fetchModuleVersionInfo(
+		moduleId: string,
+		versionId: string | null,
+		onlyCompatible: boolean
+	): Promise<ModuleStoreModuleInfoVersion | null> {
+		// Use the cached module info
+		let moduleInfo = this.#getCacheEntryForModule(moduleId)
+		if (!moduleInfo || moduleInfo.lastUpdated < Date.now() - LATEST_MODULE_INFO_CACHE_DURATION) {
+			// Assume nothing is cached, as there may be no versions
+			moduleInfo = await this.#refreshStoreInfoData(moduleId)
+			if (!moduleInfo) return null
+		}
 
-		// Assume nothing is cached, as there may be no versions
-		const versionData = await this.#refreshStoreInfoData(moduleId)
-		if (!versionData) return null
-
-		return getLatestModuleVersionInfo(versionData.versions)
+		if (versionId) {
+			return moduleInfo.versions.find((v) => v.id === versionId) ?? null
+		} else {
+			return getLatestModuleVersionInfo(moduleInfo.versions, onlyCompatible)
+		}
 	}
 
 	#isRefreshingStoreData = false
@@ -199,6 +209,7 @@ export class ModuleStoreService {
 			this.#logger.debug(`Skipping refreshing store info for module "${moduleId}", already in progress`)
 			return null
 		}
+		// nocommit - create a promise using Promise.withResolvers, store it in the map and return it in the guard above
 		this.#isRefreshingStoreInfo.add(moduleId)
 
 		this.#logger.debug(`Refreshing store info for module "${moduleId}"`)
@@ -258,9 +269,14 @@ export class ModuleStoreService {
 	}
 }
 
-function getLatestModuleVersionInfo(versions: ModuleStoreModuleInfoVersion[]): ModuleStoreModuleInfoVersion | null {
+function getLatestModuleVersionInfo(
+	versions: ModuleStoreModuleInfoVersion[],
+	onlyCompatible: boolean
+): ModuleStoreModuleInfoVersion | null {
 	return versions.reduce<ModuleStoreModuleInfoVersion | null>((latest, version) => {
 		if (!version.tarUrl) return latest
+		if (version.deprecationReason) return latest
+		if (onlyCompatible && !isModuleApiVersionCompatible(version.apiVersion)) return latest
 		if (!latest) return version
 		if (semver.gt(version.id, latest.id)) return version
 		return latest

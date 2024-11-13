@@ -245,14 +245,14 @@ const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ moduleId
 	const doRefreshModules = useCallback(() => {
 		if (!moduleId) return
 		socketEmitPromise(socket, 'modules-store:info:refresh', [moduleId]).catch((err) => {
-			console.error('Failed to refresh module info', err)
+			console.error('Failed to refresh module versions', err)
 		})
 	}, [moduleId])
 
 	if (refreshProgress === 1) {
 		return (
 			<div className="float_right" onClick={doRefreshModules}>
-				<FontAwesomeIcon icon={faSync} title="Refresh module info" />
+				<FontAwesomeIcon icon={faSync} title="Refresh module versions" />
 			</div>
 		)
 	} else {

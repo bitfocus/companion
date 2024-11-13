@@ -310,11 +310,7 @@ export interface ClientToBackendEventsMap {
 	'pages:reset-page-nav': (pageNumber: number) => 'ok'
 	'pages:reset-page-clear': (pageNumber: number) => 'ok'
 
-	'connections:add': (
-		info: { type: string; product: string | undefined },
-		label: string,
-		versionId: string | null
-	) => string
+	'connections:add': (info: { type: string; product: string | undefined }, label: string, versionId: string) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
 	'connections:set-label-and-config': (
 		connectionId: string,
