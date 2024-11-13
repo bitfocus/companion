@@ -447,11 +447,6 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 		<CContainer fluid className="fadeIn">
 			<CNav variant="tabs">
 				<CNavItem>
-					<CNavLink to={MODULES_PAGE_PREFIX} as={NavLink}>
-						<FontAwesomeIcon icon={faJedi} /> Modules
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
 					<CNavLink to="/connections" as={NavLink}>
 						<FontAwesomeIcon icon={faPlug} /> Connections
 					</CNavLink>
@@ -477,13 +472,18 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/settings" as={NavLink}>
-						<FontAwesomeIcon icon={faCog} /> Settings
+					<CNavLink to="/import-export" as={NavLink}>
+						<FontAwesomeIcon icon={faFileImport} /> Import / Export
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/import-export" as={NavLink}>
-						<FontAwesomeIcon icon={faFileImport} /> Import / Export
+					<CNavLink to={MODULES_PAGE_PREFIX} as={NavLink}>
+						<FontAwesomeIcon icon={faJedi} /> Modules
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/settings" as={NavLink}>
+						<FontAwesomeIcon icon={faCog} /> Settings
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
@@ -500,11 +500,6 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				)}
 			</CNav>
 			<CTabContent>
-				<CTabPane className={getClassForPane(MODULES_PAGE_PREFIX)}>
-					<MyErrorBoundary>
-						<ModulesPage />
-					</MyErrorBoundary>
-				</CTabPane>
 				<CTabPane className={getClassForPane('/connections')}>
 					<MyErrorBoundary>
 						<ConnectionsPage />
@@ -530,14 +525,19 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 						<ConnectionVariables />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/settings')}>
-					<MyErrorBoundary>
-						<UserConfig />
-					</MyErrorBoundary>
-				</CTabPane>
 				<CTabPane className={getClassForPane('/import-export')}>
 					<MyErrorBoundary>
 						<ImportExport />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane(MODULES_PAGE_PREFIX)}>
+					<MyErrorBoundary>
+						<ModulesPage />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/settings')}>
+					<MyErrorBoundary>
+						<UserConfig />
 					</MyErrorBoundary>
 				</CTabPane>
 				{getClassForPane('/log') !== '' && (
