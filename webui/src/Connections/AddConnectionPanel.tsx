@@ -5,19 +5,16 @@ import { faExclamationTriangle, faExternalLink, faPlug, faQuestionCircle } from 
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
-import { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { AddConnectionModal, AddConnectionModalRef } from './AddConnectionModal.js'
-import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
-import { go as fuzzySearch } from 'fuzzysort'
-import { useComputed } from '../util.js'
 import { RefreshModulesList } from '../Modules/RefreshModulesList.js'
 import { LastUpdatedTimestamp } from '../Modules/LastUpdatedTimestamp.js'
-import { ModuleInfoStore } from '../Stores/ModuleInfoStore.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Link } from 'react-router-dom'
 import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
 import { WindowLinkOpen } from '../Helpers/Window.js'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
+import { filterProducts, FuzzyProduct, useAllConnectionProducts } from '../Hooks/useFilteredProducts.js'
 
 interface AddConnectionsPanelProps {
 	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
@@ -32,7 +29,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	const [filter, setFilter] = useState('')
 
 	const addRef = useRef<AddConnectionModalRef>(null)
-	const addConnection = useCallback((moduleInfo: AddConnectionProduct) => {
+	const addConnection = useCallback((moduleInfo: FuzzyProduct) => {
 		addRef.current?.show(moduleInfo)
 	}, [])
 
@@ -42,7 +39,6 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 	const allProducts = useAllConnectionProducts(modules)
 	const typeProducts = allProducts.filter((p) => !!p.installedInfo || typeFilter.visiblity.available)
-	console.log(allProducts, typeProducts)
 
 	let candidates: JSX.Element[] = []
 	try {
@@ -166,8 +162,8 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 })
 
 interface AddConnectionEntryProps {
-	moduleInfo: AddConnectionProduct
-	addConnection(module: AddConnectionProduct): void
+	moduleInfo: FuzzyProduct
+	addConnection(module: FuzzyProduct): void
 	showHelp(moduleId: string, moduleVersion: NewClientModuleVersionInfo2): void
 }
 
@@ -218,78 +214,4 @@ function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnecti
 			)}
 		</div>
 	)
-}
-
-function useAllConnectionProducts(modules: ModuleInfoStore): AddConnectionProduct[] {
-	return useComputed(() => {
-		const allProducts: Record<string, AddConnectionProduct> = {}
-
-		// Start with all installed modules
-		for (const moduleInfo of modules.modules.values()) {
-			for (const product of moduleInfo.baseInfo.products) {
-				const key = `${moduleInfo.baseInfo.id}-${product}`
-				allProducts[key] = {
-					id: moduleInfo.baseInfo.id,
-
-					installedInfo: moduleInfo,
-					storeInfo: null,
-
-					product,
-					keywords: moduleInfo.baseInfo.keywords?.join(';') ?? '',
-					name: moduleInfo.baseInfo.name,
-					manufacturer: moduleInfo.baseInfo.manufacturer,
-					shortname: moduleInfo.baseInfo.shortname,
-				}
-			}
-		}
-
-		// Add in the store modules
-		for (const moduleInfo of modules.storeList.values()) {
-			for (const product of moduleInfo.products) {
-				const key = `${moduleInfo.id}-${product}`
-
-				const installedInfo = allProducts[key]
-				if (installedInfo) {
-					installedInfo.storeInfo = moduleInfo
-				} else {
-					allProducts[key] = {
-						id: moduleInfo.id,
-
-						installedInfo: null,
-						storeInfo: moduleInfo,
-
-						product,
-						keywords: moduleInfo.keywords?.join(';') ?? '',
-						name: moduleInfo.name,
-						manufacturer: moduleInfo.manufacturer,
-						shortname: moduleInfo.shortname,
-					}
-				}
-			}
-		}
-
-		return Object.values(allProducts)
-	}, [modules])
-}
-
-function filterProducts(allProducts: AddConnectionProduct[], filter: string): AddConnectionProduct[] {
-	if (!filter) return allProducts //.map((p) => p.info)
-
-	return fuzzySearch(filter, allProducts, {
-		keys: ['product', 'name', 'manufacturer', 'keywords'] satisfies Array<keyof AddConnectionProduct>,
-		threshold: -10_000,
-	}).map((x) => x.obj)
-}
-
-export interface AddConnectionProduct {
-	id: string
-
-	installedInfo: NewClientModuleInfo | null
-	storeInfo: ModuleStoreListCacheEntry | null
-
-	product: string
-	keywords: string
-	name: string
-	manufacturer: string
-	shortname: string
 }

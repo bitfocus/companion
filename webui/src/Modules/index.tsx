@@ -4,13 +4,13 @@ import { HelpModal, HelpModalRef } from '../Connections/HelpModal.js'
 import { MyErrorBoundary } from '../util.js'
 import { ModulesList } from './ModulesList.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faJedi } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
-import { DiscoverModulesPanel } from './DiscoverModulesPanel.js'
 import { ModuleManagePanel } from './ModuleManagePanel.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { NonIdealState } from '../Components/NonIdealState.js'
 
 export const MODULES_PAGE_PREFIX = '/modules'
 
@@ -39,12 +39,12 @@ export const ModulesPage = memo(function ConnectionsPage() {
 	const helpModalRef = useRef<HelpModalRef>(null)
 
 	const selectedModuleId = useSelectedModuleId()
-	const activeTab = selectedModuleId ? 'manage' : 'discover'
+	const activeTab = selectedModuleId ? 'manage' : 'placeholder'
 	const navigate = useNavigate()
 
 	// Ensure the selected module is valid
 	useEffect(() => {
-		if (selectedModuleId && !modules.modules.has(selectedModuleId)) {
+		if (selectedModuleId && !modules.modules.has(selectedModuleId) && !modules.storeList.has(selectedModuleId)) {
 			navigateToModulePage(navigate, null)
 		}
 	}, [navigate, modules, selectedModuleId])
@@ -68,8 +68,8 @@ export const ModulesPage = memo(function ConnectionsPage() {
 				<div className="secondary-panel-inner">
 					<CNav variant="tabs">
 						<CNavItem>
-							<CNavLink active={activeTab === 'discover'} onClick={() => navigateToModulePage(navigate, null)}>
-								<FontAwesomeIcon icon={faPlus} /> Discover modules
+							<CNavLink active={activeTab === 'placeholder'} onClick={() => navigateToModulePage(navigate, null)}>
+								Select a module
 							</CNavLink>
 						</CNavItem>
 						<CNavItem
@@ -83,9 +83,9 @@ export const ModulesPage = memo(function ConnectionsPage() {
 						</CNavItem>
 					</CNav>
 					<CTabContent className="remove075right">
-						<CTabPane role="tabpanel" aria-labelledby="discover-tab" visible={activeTab === 'discover'}>
+						<CTabPane role="tabpanel" aria-labelledby="placeholder-tab" visible={activeTab === 'placeholder'}>
 							<MyErrorBoundary>
-								<DiscoverModulesPanel doManageModule={doManageModule} />
+								<NonIdealState text="Select a module to manage" icon={faJedi} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane role="tabpanel" aria-labelledby="manage-tab" visible={activeTab === 'manage'}>

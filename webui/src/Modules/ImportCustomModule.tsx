@@ -63,7 +63,7 @@ export function ImportModules() {
 				}
 
 				setImportError(null)
-				socketEmitPromise(socket, 'modules:install-custom-module', [new Uint8Array(fr.result)], 20000)
+				socketEmitPromise(socket, 'modules:install-module-tar', [new Uint8Array(fr.result)], 20000)
 					.then((failureReason) => {
 						if (failureReason) {
 							console.error('Failed to install module', failureReason)

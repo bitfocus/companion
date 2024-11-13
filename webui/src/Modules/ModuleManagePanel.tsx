@@ -3,14 +3,17 @@ import { socketEmitPromise } from '../util.js'
 import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import type {
+	NewClientModuleBaseInfo,
+	NewClientModuleInfo,
+	NewClientModuleVersionInfo2,
+} from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
 import { WindowLinkOpen } from '../Helpers/Window.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { use } from 'marked'
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 
@@ -27,7 +30,7 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({
 }: ModuleManagePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(moduleId)
+	const moduleInfo = modules.modules.get(moduleId)?.baseInfo ?? modules.storeList.get(moduleId)
 
 	if (!moduleInfo) {
 		return (
@@ -51,7 +54,7 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({
 
 interface ModuleManagePanelInnerProps {
 	moduleId: string
-	moduleInfo: NewClientModuleInfo
+	moduleInfo: NewClientModuleBaseInfo
 	doManageModule: (moduleId: string | null) => void
 	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 }
@@ -70,7 +73,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	return (
 		<div>
 			<h5>
-				Manage {moduleInfo.baseInfo.name}
+				Manage {moduleInfo.name}
 				{/* {moduleVersion?.hasHelp && (
 					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type, moduleVersion)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />

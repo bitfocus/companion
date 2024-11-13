@@ -10,13 +10,16 @@ import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { SearchBox } from '../Components/SearchBox.js'
-import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
+import { useAllConnectionProducts, filterProducts, FuzzyProduct } from '../Hooks/useFilteredProducts.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
+import { RefreshModulesList } from './RefreshModulesList.js'
+import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 
 interface VisibleModulesState {
 	dev: boolean
 	installed: boolean
+	available: boolean
 }
 
 interface ModulesListProps {
@@ -35,30 +38,45 @@ export const ModulesList = observer(function ModulesList({
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
 		dev: true,
 		installed: true,
+		available: false,
 	})
 
 	const [filter, setFilter] = useState('')
 
+	const allProducts = useAllConnectionProducts(modules)
+	const typeProducts = allProducts.filter((p) => {
+		let isVisible = false
+		if (p.installedInfo) {
+			if (p.installedInfo.devVersion && visibleModules.visiblity.dev) isVisible = true
+			if (p.installedInfo.installedVersions.length > 0 && visibleModules.visiblity.installed) isVisible = true
+		}
+		if (p.storeInfo && visibleModules.visiblity.available) isVisible = true
+
+		return isVisible
+	})
+
+	const includeStoreModules = useCallback(
+		(e: React.MouseEvent) => {
+			e.preventDefault()
+			visibleModules.toggleVisibility('available', true)
+		},
+		[visibleModules]
+	)
+
 	let components: JSX.Element[] = []
 	try {
-		const searchResults = useFilteredProducts(filter)
+		const searchResults = filterProducts(typeProducts, filter)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
-			let isVisible = false
-			if (moduleInfo.devVersion && visibleModules.visiblity.dev) isVisible = true
-			if (moduleInfo.installedVersions.length > 0 && visibleModules.visiblity.installed) isVisible = true
-
-			if (!isVisible) continue
-
-			candidatesObj[moduleInfo.baseInfo.id] = (
+			candidatesObj[moduleInfo.id] = (
 				<ModulesListRow
-					key={moduleInfo.baseInfo.id}
-					id={moduleInfo.baseInfo.id}
+					key={moduleInfo.id}
+					id={moduleInfo.id}
 					moduleInfo={moduleInfo}
 					showHelp={showHelp}
 					doManageModule={doManageModule}
-					isSelected={moduleInfo.baseInfo.id === selectedModuleId}
+					isSelected={moduleInfo.id === selectedModuleId}
 				/>
 			)
 		}
@@ -89,13 +107,18 @@ export const ModulesList = observer(function ModulesList({
 		)
 	}
 
-	const hiddenCount = modules.modules.size - components.length
+	const hiddenCount = new Set(allProducts.map((p) => p.id)).size - new Set(typeProducts.map((p) => p.id)).size
 
 	return (
 		<div>
 			<h4>Manage Modules</h4>
 
-			<p>Here you can view and manage the modules you have installed.</p>
+			<p>
+				Here you can view and manage the modules you have installed.
+				<br />
+				If you have an active internet connection, you can search for and install modules to support additional devices.
+				If you can't find the device you're looking for, please add a request on GitHub
+			</p>
 
 			<CAlert color="info">
 				The module system is currently in development.
@@ -108,6 +131,11 @@ export const ModulesList = observer(function ModulesList({
 
 			<ImportModules />
 
+			<div className="refresh-and-last-updated">
+				<RefreshModulesList />
+				<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+			</div>
+
 			<SearchBox filter={filter} setFilter={setFilter} />
 
 			<table className="table-tight table-responsive-sm">
@@ -118,6 +146,7 @@ export const ModulesList = observer(function ModulesList({
 							<CButtonGroup className="table-header-buttons">
 								<VisibilityButton {...visibleModules} keyId="dev" color="secondary" label="Dev" />
 								<VisibilityButton {...visibleModules} keyId="installed" color="warning" label="Installed" />
+								<VisibilityButton {...visibleModules} keyId="available" color="primary" label="Available" />
 							</CButtonGroup>
 						</th>
 					</tr>
@@ -128,17 +157,34 @@ export const ModulesList = observer(function ModulesList({
 						<tr>
 							<td colSpan={4} style={{ padding: '10px 5px' }}>
 								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-								<strong>{hiddenCount} Modules are hidden</strong>
+								<strong>{hiddenCount} Modules are ignored</strong>
 							</td>
 						</tr>
 					)}
-					{modules.modules.size === 0 && (
+
+					{modules.modules.size === 0 && !visibleModules.visiblity.available && (
 						<tr>
 							<td colSpan={4}>
 								<NonIdealState icon={faPlug}>
 									You don't have any modules installed yet. <br />
 									Try adding something from the list <span className="d-xl-none">below</span>
 									<span className="d-none d-xl-inline">to the right</span>.
+								</NonIdealState>
+							</td>
+						</tr>
+					)}
+
+					{components.length === 0 && allProducts.length > 0 && !!filter && !visibleModules.visiblity.available && (
+						<tr>
+							<td colSpan={4}>
+								<NonIdealState icon={faPlug}>
+									No modules match your search.
+									<br />
+									{!visibleModules.visiblity.available && (
+										<a href="#" onClick={includeStoreModules}>
+											Click here to include modules from the store
+										</a>
+									)}
 								</NonIdealState>
 							</td>
 						</tr>
@@ -151,7 +197,7 @@ export const ModulesList = observer(function ModulesList({
 
 interface ModulesListRowProps {
 	id: string
-	moduleInfo: ModuleProductInfo
+	moduleInfo: FuzzyProduct
 	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	doManageModule: (moduleId: string | null) => void
 	isSelected: boolean
@@ -177,7 +223,7 @@ const ModulesListRow = observer(function ModulesListRow({
 	}
 
 	const openBugUrl = useCallback(() => {
-		const url = moduleInfo?.baseInfo?.bugUrl
+		const url = moduleInfo?.bugUrl
 		if (url) windowLinkOpen({ href: url })
 	}, [moduleInfo])
 
@@ -190,7 +236,7 @@ const ModulesListRow = observer(function ModulesListRow({
 			})}
 		>
 			<td onClick={doEdit} className="hand">
-				{moduleInfo.baseInfo.name ?? ''}
+				{moduleInfo.name}
 
 				{/* {moduleInfo.installedVersions.?.isLegacy && (
 					<>
@@ -230,7 +276,7 @@ const ModulesListRow = observer(function ModulesListRow({
 										onMouseDown={openBugUrl}
 										color="secondary"
 										title="Issue Tracker"
-										disabled={!moduleInfo?.baseInfo?.bugUrl}
+										disabled={!moduleInfo?.bugUrl}
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>

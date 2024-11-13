@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faQuestion, faSync, faToiletsPortable, faTrash, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { NewClientModuleBaseInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreModuleInfoStore, ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
@@ -17,7 +17,7 @@ import relativeTime from 'dayjs/plugin/relativeTime.js'
 dayjs.extend(relativeTime)
 
 interface ModuleVersionsTableProps {
-	moduleInfo: NewClientModuleInfo
+	moduleInfo: NewClientModuleBaseInfo
 	moduleStoreInfo: ModuleStoreModuleInfoStore | null
 }
 
@@ -25,9 +25,12 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 	moduleInfo,
 	moduleStoreInfo,
 }: ModuleVersionsTableProps) {
+	const { modules } = useContext(RootAppStoreContext)
+	const moduleInstalledInfo = modules.modules.get(moduleInfo.id)
+
 	const allVersionsSet = new Set<string>()
 	const installedModuleVersions = new Map<string, NewClientModuleVersionInfo2>()
-	for (const version of moduleInfo.installedVersions) {
+	for (const version of moduleInstalledInfo?.installedVersions ?? []) {
 		if (version.versionId) {
 			installedModuleVersions.set(version.versionId, version)
 			allVersionsSet.add(version.versionId)
@@ -41,14 +44,11 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 
 	const allVersionNumbers = Array.from(allVersionsSet).sort((a, b) => semver.compare(b, a))
 
-	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(
-		`modules_visible_versions:${moduleInfo.baseInfo.id}`,
-		{
-			availableStable: true,
-			availableDeprecated: false,
-			availablePrerelease: false,
-		}
-	)
+	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(`modules_visible_versions:${moduleInfo.id}`, {
+		availableStable: true,
+		availableDeprecated: false,
+		availablePrerelease: false,
+	})
 
 	return (
 		<table className="table-tight table-responsive-sm">
@@ -86,7 +86,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 					return (
 						<ModuleVersionRow
 							key={versionId}
-							moduleId={moduleInfo.baseInfo.id}
+							moduleId={moduleInfo.id}
 							versionId={versionId}
 							storeInfo={storeInfo}
 							installedInfo={installedInfo}

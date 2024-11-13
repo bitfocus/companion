@@ -1,51 +1,79 @@
 import { useComputed } from '../util.js'
 import { go as fuzzySearch } from 'fuzzysort'
-import { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { useContext } from 'react'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import type { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
+import type { ModuleInfoStore } from '../Stores/ModuleInfoStore.js'
 
-export interface ModuleProductInfo extends NewClientModuleInfo {
-	product: string
+export function useAllConnectionProducts(modules: ModuleInfoStore): FuzzyProduct[] {
+	return useComputed(() => {
+		const allProducts: Record<string, FuzzyProduct> = {}
+
+		// Start with all installed modules
+		for (const moduleInfo of modules.modules.values()) {
+			for (const product of moduleInfo.baseInfo.products) {
+				const key = `${moduleInfo.baseInfo.id}-${product}`
+				allProducts[key] = {
+					id: moduleInfo.baseInfo.id,
+
+					installedInfo: moduleInfo,
+					storeInfo: null,
+
+					product,
+					keywords: moduleInfo.baseInfo.keywords?.join(';') ?? '',
+					name: moduleInfo.baseInfo.name,
+					manufacturer: moduleInfo.baseInfo.manufacturer,
+					shortname: moduleInfo.baseInfo.shortname,
+				}
+			}
+		}
+
+		// Add in the store modules
+		for (const moduleInfo of modules.storeList.values()) {
+			for (const product of moduleInfo.products) {
+				const key = `${moduleInfo.id}-${product}`
+
+				const installedInfo = allProducts[key]
+				if (installedInfo) {
+					installedInfo.storeInfo = moduleInfo
+				} else {
+					allProducts[key] = {
+						id: moduleInfo.id,
+
+						installedInfo: null,
+						storeInfo: moduleInfo,
+
+						product,
+						keywords: moduleInfo.keywords?.join(';') ?? '',
+						name: moduleInfo.name,
+						manufacturer: moduleInfo.manufacturer,
+						shortname: moduleInfo.shortname,
+					}
+				}
+			}
+		}
+
+		return Object.values(allProducts)
+	}, [modules])
 }
 
-interface FuzzyProduct {
-	info: ModuleProductInfo
+export function filterProducts(allProducts: FuzzyProduct[], filter: string): FuzzyProduct[] {
+	if (!filter) return allProducts //.map((p) => p.info)
+
+	return fuzzySearch(filter, allProducts, {
+		keys: ['product', 'name', 'manufacturer', 'keywords'] satisfies Array<keyof FuzzyProduct>,
+		threshold: -10_000,
+	}).map((x) => x.obj)
+}
+
+export interface FuzzyProduct {
+	id: string
+
+	installedInfo: NewClientModuleInfo | null
+	storeInfo: ModuleStoreListCacheEntry | null
 
 	product: string
 	keywords: string
 	name: string
 	manufacturer: string
-}
-
-export function useFilteredProducts(filter: string): ModuleProductInfo[] {
-	const { modules } = useContext(RootAppStoreContext)
-
-	const allProducts: FuzzyProduct[] = useComputed(
-		() =>
-			Array.from(modules.modules.values()).flatMap((moduleInfo) =>
-				moduleInfo.baseInfo.products.map(
-					(product) =>
-						({
-							info: {
-								...moduleInfo,
-								product,
-							},
-
-							product,
-							// fuzzySearch can't handle arrays, so flatten the array to a string first
-							keywords: moduleInfo.baseInfo.keywords?.join(';') ?? '',
-							name: moduleInfo.baseInfo.name,
-							manufacturer: moduleInfo.baseInfo.manufacturer,
-						}) satisfies FuzzyProduct
-				)
-			),
-		[modules]
-	)
-
-	if (!filter) return allProducts.map((p) => p.info)
-
-	return fuzzySearch(filter, allProducts, {
-		keys: ['product', 'name', 'manufacturer', 'keywords'] satisfies Array<keyof FuzzyProduct>,
-		threshold: -10_000,
-	}).map((x) => x.obj.info)
+	shortname: string
 }

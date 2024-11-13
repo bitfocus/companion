@@ -329,9 +329,7 @@ export interface ClientToBackendEventsMap {
 		id: string,
 		versionId: string | null
 	) => [err: string, result: null] | [err: null, result: HelpDescription]
-	'modules:install-custom-module': (moduleTar: Uint8Array) => string | null
-	'modules:uninstall-custom-module': (moduleId: string, versionId: string) => string | null
-	'modules:install-store-module:latest': (moduleId: string) => string | null
+	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:bundle-import:start': (name: string, size: number, checksum: string) => string | null

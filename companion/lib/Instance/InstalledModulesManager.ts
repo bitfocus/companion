@@ -128,8 +128,8 @@ export class InstanceInstalledModulesManager {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		client.onPromise('modules:install-custom-module', async (data) => {
-			// this.#logger.debug('modules:install-custom-module', data)
+		client.onPromise('modules:install-module-tar', async (data) => {
+			// this.#logger.debug('modules:install-module-tar', data)
 
 			if (!(data instanceof Uint8Array)) return 'Invalid data. Expected UInt8Array'
 
@@ -158,10 +158,6 @@ export class InstanceInstalledModulesManager {
 			return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, false, null)
 		})
 
-		client.onPromise('modules:uninstall-custom-module', async (moduleId, versionId) => {
-			return this.#uninstallModule(moduleId, versionId)
-		})
-
 		client.onPromise('modules:install-store-module', async (moduleId, moduleVersion) => {
 			this.#logger.info(`Installing ${moduleId} v${moduleVersion} from store`)
 
@@ -174,19 +170,19 @@ export class InstanceInstalledModulesManager {
 			return this.#installModuleVersionFromStore(moduleId, versionInfo)
 		})
 
-		client.onPromise('modules:install-store-module:latest', async (moduleId) => {
-			this.#logger.info(`Installing latest version of module ${moduleId}`)
+		// client.onPromise('modules:install-store-module:latest', async (moduleId) => {
+		// 	this.#logger.info(`Installing latest version of module ${moduleId}`)
 
-			const versionInfo = await this.#modulesStore.fetchModuleVersionInfo(moduleId, null, true)
-			if (!versionInfo) {
-				this.#logger.warn(`Unable to install latest version of ${moduleId}, it is not known in the store`)
-				return `Latest version of module "${moduleId}" not found`
-			}
+		// 	const versionInfo = await this.#modulesStore.fetchModuleVersionInfo(moduleId, null, true)
+		// 	if (!versionInfo) {
+		// 		this.#logger.warn(`Unable to install latest version of ${moduleId}, it is not known in the store`)
+		// 		return `Latest version of module "${moduleId}" not found`
+		// 	}
 
-			this.#logger.info(`Installing ${moduleId} v${versionInfo} from store`)
+		// 	this.#logger.info(`Installing ${moduleId} v${versionInfo} from store`)
 
-			return this.#installModuleVersionFromStore(moduleId, versionInfo)
-		})
+		// 	return this.#installModuleVersionFromStore(moduleId, versionInfo)
+		// })
 
 		client.onPromise('modules:uninstall-store-module', async (moduleId, versionId) => {
 			return this.#uninstallModule(moduleId, versionId)
