@@ -2,15 +2,7 @@ import React, { useCallback, useContext, useState } from 'react'
 import { socketEmitPromise } from '../util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-	faPlus,
-	faQuestion,
-	faStar,
-	faSync,
-	faToiletsPortable,
-	faTrash,
-	faWarning,
-} from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faQuestion, faSync, faToiletsPortable, faTrash, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
@@ -98,10 +90,6 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 							versionId={versionId}
 							storeInfo={storeInfo}
 							installedInfo={installedInfo}
-							isLatestStable={!!moduleInfo.stableVersion && moduleInfo.stableVersion.versionId === versionId}
-							isLatestPrerelease={
-								!!moduleInfo.prereleaseVersion && moduleInfo.prereleaseVersion.versionId === versionId
-							}
 						/>
 					)
 				})}
@@ -129,8 +117,6 @@ interface ModuleVersionRowProps {
 	versionId: string
 	installedInfo: NewClientModuleVersionInfo2 | undefined
 	storeInfo: ModuleStoreModuleInfoVersion | undefined
-	isLatestStable: boolean
-	isLatestPrerelease: boolean
 }
 
 const ModuleVersionRow = observer(function ModuleVersionRow({
@@ -138,8 +124,6 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 	versionId,
 	installedInfo,
 	storeInfo,
-	isLatestStable,
-	isLatestPrerelease,
 }: ModuleVersionRowProps) {
 	if (!storeInfo && !installedInfo) return null // Should never happen
 
@@ -170,10 +154,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 				)}
 			</td>
 			<td>
-				{isLatestStable && <FontAwesomeIcon icon={faStar} title="Latest stable" />}
-				{isLatestPrerelease && <FontAwesomeIcon icon={faQuestion} title="Latest prerelease" />}
-
-				<ModuleVersionUsageIcon moduleId={moduleId} moduleVersionId={versionId} />
+				<ModuleVersionUsageIcon moduleId={moduleId} moduleVersionId={versionId} isInstalled={!!installedInfo} />
 			</td>
 		</tr>
 	)

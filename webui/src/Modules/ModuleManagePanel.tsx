@@ -8,6 +8,11 @@ import { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesS
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
+import { WindowLinkOpen } from '../Helpers/Window.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { use } from 'marked'
+import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
+import { faGithub } from '@fortawesome/free-brands-svg-icons'
 
 interface ModuleManagePanelProps {
 	moduleId: string
@@ -57,7 +62,10 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	doManageModule,
 	showHelp,
 }: ModuleManagePanelInnerProps) {
+	const { modules } = useContext(RootAppStoreContext)
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
+
+	const moduleStoreBaseInfo = modules.storeList.get(moduleId)
 
 	return (
 		<div>
@@ -68,6 +76,16 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)} */}
+				{!!moduleStoreBaseInfo && (
+					<WindowLinkOpen className="float_right" title="Open Store Page" href={moduleStoreBaseInfo.storeUrl}>
+						<FontAwesomeIcon icon={faExternalLink} />
+					</WindowLinkOpen>
+				)}
+				{!!moduleStoreBaseInfo?.githubUrl && (
+					<WindowLinkOpen className="float_right" title="Open GitHub Page" href={moduleStoreBaseInfo.githubUrl}>
+						<FontAwesomeIcon icon={faGithub} />
+					</WindowLinkOpen>
+				)}
 			</h5>
 
 			<div className="refresh-and-last-updated">
