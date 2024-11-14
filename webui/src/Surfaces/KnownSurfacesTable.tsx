@@ -212,7 +212,7 @@ interface SurfaceRowProps {
 	noBorder: boolean
 }
 
-function SurfaceRow({
+const SurfaceRow = observer(function SurfaceRow({
 	surface,
 	index,
 	updateName,
@@ -275,4 +275,4 @@ function SurfaceRow({
 			</td>
 		</tr>
 	)
-}
+})

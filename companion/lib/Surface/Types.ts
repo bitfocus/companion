@@ -33,6 +33,7 @@ export interface SurfacePanelInfo {
 	type: string
 	configFields: CompanionSurfaceConfigField[]
 	location?: string
+	firmwareUpdateVersionsUrl?: string
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 }
 

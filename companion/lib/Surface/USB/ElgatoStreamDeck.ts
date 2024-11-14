@@ -75,6 +75,7 @@ const LATEST_SDS_FIRMWARE_VERSIONS: Record<string, string> = {
 	ENCODER_LD_2: '1.01.006',
 }
 const SDS_UPDATE_TOOL_URL = 'https://bitfocus.io/?elgato-sds-firmware-updater'
+const SDS_UPDATE_VERSIONS_URL = 'https://builds.julusian.dev/builds/sds-test.json'
 
 export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
@@ -117,6 +118,10 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			configFields: getConfigFields(this.#streamDeck),
 			deviceId: '', // set in #init()
 			location: undefined, // set later
+		}
+
+		if (this.#streamDeck.MODEL === DeviceModelId.STUDIO) {
+			this.info.firmwareUpdateVersionsUrl = SDS_UPDATE_VERSIONS_URL
 		}
 
 		const allRowValues = this.#streamDeck.CONTROLS.map((control) => control.row)

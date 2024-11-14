@@ -62,6 +62,7 @@ import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
+import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -133,6 +134,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	readonly #outboundController: SurfaceOutboundController
 
+	readonly #firmwareUpdates: SurfaceFirmwareUpdateCheck
+
 	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies, io: UIHandler) {
 		super()
 
@@ -141,6 +144,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#io = io
 
 		this.#outboundController = new SurfaceOutboundController(this, db, io)
+		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.updateDevicesList())
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
 
@@ -343,22 +347,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#attachSurfaceToGroup(handler)
 
 		// Perform an update check in the background
-		setTimeout(() => {
-			const firmwareUpdatesBefore = panel.info.hasFirmwareUpdates
-			panel
-				.checkForFirmwareUpdates?.()
-				.then(() => {
-					if (isEqual(firmwareUpdatesBefore, panel.info.hasFirmwareUpdates)) return
-
-					this.#logger.info(`Firmware updates change for surface "${handler.surfaceId}"`)
-
-					// Inform ui of the updates
-					this.updateDevicesList()
-				})
-				.catch((e) => {
-					this.#logger.warn(`Failed to check for firmware updates for surface "${handler.surfaceId}": ${e}`)
-				})
-		}, 0)
+		this.#firmwareUpdates.triggerCheckSurfaceForUpdates(handler)
 	}
 
 	/**
