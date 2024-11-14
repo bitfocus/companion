@@ -93,14 +93,14 @@
 	.editor-grid {
 		display: grid;
 		grid-template-columns: 1fr;
-		grid-template-rows: .25fr 1fr;
+		grid-template-rows: 0.25fr 1fr;
 		column-gap: 10px;
 
 		.cell-header {
 			grid-column: 1/4;
 			font-weight: bold;
 			display: grid;
-			grid-template-columns: 1fr 1fr .25fr;
+			grid-template-columns: 1fr 1fr 0.25fr;
 		}
 
 		.cell-header-item {
@@ -110,8 +110,8 @@
 		.cell-fields {
 			grid-column: 1/4;
 			display: grid;
-			grid-template-columns: 1fr 1fr .25fr;
-			grid-template-rows:1fr;
+			grid-template-columns: 1fr 1fr 0.25fr;
+			grid-template-rows: 1fr;
 		}
 
 		.cell-options {
