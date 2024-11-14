@@ -69,10 +69,8 @@ function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] 
  */
 const LATEST_SDS_FIRMWARE_VERSIONS: Record<string, string> = {
 	AP2: '1.05.009',
-	ENCODER_AP2_1: '1.01.012',
-	ENCODER_AP2_2: '1.01.012',
-	ENCODER_LD_1: '1.01.006',
-	ENCODER_LD_2: '1.01.006',
+	ENCODER_AP2: '1.01.012',
+	ENCODER_LD: '1.01.006',
 }
 const SDS_UPDATE_TOOL_URL = 'https://bitfocus.io/?elgato-sds-firmware-updater'
 const SDS_UPDATE_VERSIONS_URL = 'https://builds.julusian.dev/builds/sds-test.json'
