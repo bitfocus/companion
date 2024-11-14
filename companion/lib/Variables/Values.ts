@@ -40,11 +40,16 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	#variableValues: VariableValueData = {}
 
 	getVariableValue(label: string, name: string): CompanionVariableValue | undefined {
+		if (label === 'internal' && name.substring(0, 7) == 'custom_') {
+			label = 'custom'
+			name = name.substring(7)
+		}
+
 		return this.#variableValues[label]?.[name]
 	}
 
 	getCustomVariableValue(name: string): CompanionVariableValue | undefined {
-		return this.getVariableValue('internal', `custom_${name}`)
+		return this.getVariableValue('custom', name)
 	}
 
 	/**
@@ -130,7 +135,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		client.onPromise('variables:instance-values', (label) => {
+		client.onPromise('variables:connection-values', (label) => {
 			return this.#variableValues[label]
 		})
 	}

@@ -28,7 +28,6 @@ import type {
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
 } from '@companion-module/base/dist/host-api/api.js'
-import type { Registry } from '../Registry.js'
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
@@ -42,21 +41,39 @@ import type {
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
-import { PresetDefinitionTmp } from './Definitions.js'
+import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import type { InstanceDefinitions, PresetDefinitionTmp } from './Definitions.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { UIHandler } from '../UI/Handler.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import type { ServiceOscSender } from '../Service/OscSender.js'
+import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
 type Monitor = any // TODO
+
+export interface InstanceModuleWrapperDependencies {
+	readonly controls: ControlsController
+	readonly io: UIHandler
+	readonly variables: VariablesController
+	readonly page: PageController
+	readonly oscSender: ServiceOscSender
+
+	readonly instanceDefinitions: InstanceDefinitions
+	readonly instanceStatus: InstanceStatus
+	readonly sharedUdpManager: InstanceSharedUdpManager
+
+	readonly setConnectionConfig: (connectionId: string, config: unknown) => void
+}
 
 export class SocketEventsHandler {
 	logger: Logger
 
 	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
 
-	readonly #registry: Registry
-
-	readonly #instanceStatus: InstanceStatus
+	readonly #deps: InstanceModuleWrapperDependencies
 
 	readonly connectionId: string
 
@@ -76,22 +93,16 @@ export class SocketEventsHandler {
 	 */
 	#unsubListeners: () => void
 
-	constructor(
-		registry: Registry,
-		instanceStatus: InstanceStatus,
-		monitor: Monitor,
-		connectionId: string,
-		apiVersion0: string
-	) {
+	constructor(deps: InstanceModuleWrapperDependencies, monitor: Monitor, connectionId: string, apiVersion0: string) {
 		this.logger = LogController.createLogger(`Instance/Wrapper/${connectionId}`)
 
 		const apiVersion = semver.parse(apiVersion0)
 		if (!apiVersion) throw new Error(`Failed to parse apiVersion "${apiVersion0}"`)
 
-		this.#registry = registry
-		this.#instanceStatus = instanceStatus
+		this.#deps = deps
 
 		this.connectionId = connectionId
+		this.#label = connectionId // Give a default label until init is called
 		this.#expectsLabelUpdates = range1_2_0OrLater.test(apiVersion)
 
 		const funcs: IpcEventHandlers<ModuleToHostEventsV0> = {
@@ -167,7 +178,7 @@ export class SocketEventsHandler {
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
 		config.lastUpgradeIndex = msg.newUpgradeIndex
-		this.#registry.instance.setInstanceLabelAndConfig(this.connectionId, null, msg.updatedConfig, true)
+		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig)
 	}
 
 	/**
@@ -209,7 +220,7 @@ export class SocketEventsHandler {
 		const allFeedbacks: Record<string, ModuleFeedbackInstance> = {}
 
 		// Find all the feedbacks on controls
-		const allControls = this.#registry.controls.getAllControls()
+		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			const controlFeedbacks =
 				control.supportsFeedbacks && control.feedbacks.getFlattenedFeedbackInstances(this.connectionId)
@@ -267,7 +278,7 @@ export class SocketEventsHandler {
 	#getAllActionInstances(): Record<string, ModuleActionInstance> {
 		const allActions: Record<string, ModuleActionInstance> = {}
 
-		const allControls = this.#registry.controls.getAllControls()
+		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			if (control.supportsActions) {
 				const actions = control.getAllActions()
@@ -310,7 +321,7 @@ export class SocketEventsHandler {
 		if (feedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
 		if (feedback.disabled) return
 
-		const control = this.#registry.controls.getControl(controlId)
+		const control = this.#deps.controls.getControl(controlId)
 
 		await this.#ipcWrapper.sendWithCb('updateFeedbacks', {
 			feedbacks: {
@@ -340,9 +351,9 @@ export class SocketEventsHandler {
 	): Promise<CompanionOptionValues | undefined | void> {
 		if (feedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
 
-		const control = this.#registry.controls.getControl(controlId)
+		const control = this.#deps.controls.getControl(controlId)
 
-		const feedbackSpec = this.#registry.instance.definitions.getFeedbackDefinition(this.connectionId, feedback.type)
+		const feedbackSpec = this.#deps.instanceDefinitions.getFeedbackDefinition(this.connectionId, feedback.type)
 		const learnTimeout = feedbackSpec?.learnTimeout
 
 		try {
@@ -432,7 +443,7 @@ export class SocketEventsHandler {
 	): Promise<CompanionOptionValues | undefined | void> {
 		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
 
-		const actionSpec = this.#registry.instance.definitions.getActionDefinition(this.connectionId, action.action)
+		const actionSpec = this.#deps.instanceDefinitions.getActionDefinition(this.connectionId, action.action)
 		const learnTimeout = actionSpec?.learnTimeout
 
 		try {
@@ -512,7 +523,7 @@ export class SocketEventsHandler {
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
-		this.#registry.services.sharedUdpManager.leaveAllFromOwner(this.connectionId)
+		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 	}
 
 	/**
@@ -585,10 +596,10 @@ export class SocketEventsHandler {
 	/**
 	 * Send a message to the module 'debug' log page
 	 */
-	#sendToModuleLog(level: LogLevel, message: string): void {
+	#sendToModuleLog(level: LogLevel | 'system', message: string): void {
 		const debugLogRoom = ConnectionDebugLogRoom(this.connectionId)
-		if (this.#registry.io.countRoomMembers(debugLogRoom) > 0) {
-			this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, level, message)
+		if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
+			this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, level, message)
 		}
 	}
 
@@ -598,7 +609,9 @@ export class SocketEventsHandler {
 	async #handleSetStatus(msg: SetStatusMessage): Promise<void> {
 		// this.logger.silly(`Updating status`)
 
-		this.#instanceStatus.updateInstanceStatus(this.connectionId, msg.status, msg.message)
+		this.#deps.instanceStatus.updateInstanceStatus(this.connectionId, msg.status, msg.message)
+
+		this.#sendToModuleLog('system', `Status: ${msg.status} - ${msg.message}`)
 	}
 
 	/**
@@ -618,7 +631,7 @@ export class SocketEventsHandler {
 			}
 		}
 
-		this.#registry.instance.definitions.setActionDefinitions(this.connectionId, actions)
+		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, actions)
 	}
 
 	/**
@@ -641,14 +654,14 @@ export class SocketEventsHandler {
 			}
 		}
 
-		this.#registry.instance.definitions.setFeedbackDefinitions(this.connectionId, feedbacks)
+		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, feedbacks)
 	}
 
 	/**
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
-		this.#registry.controls.updateFeedbackValues(this.connectionId, msg.values)
+		this.#deps.controls.updateFeedbackValues(this.connectionId, msg.values)
 	}
 
 	/**
@@ -662,7 +675,7 @@ export class SocketEventsHandler {
 			variables[variable.id] = variable.value
 		}
 
-		this.#registry.variables.values.setVariableValues(this.#label, variables)
+		this.#deps.variables.values.setVariableValues(this.#label, variables)
 	}
 
 	/**
@@ -690,7 +703,7 @@ export class SocketEventsHandler {
 			}
 		}
 
-		this.#registry.variables.definitions.setVariableDefinitions(this.#label, newVariables)
+		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
 			const variables: Record<string, CompanionVariableValue | undefined> = {}
@@ -698,7 +711,7 @@ export class SocketEventsHandler {
 				variables[variable.id] = variable.value
 			}
 
-			this.#registry.variables.values.setVariableValues(this.#label, variables)
+			this.#deps.variables.values.setVariableValues(this.#label, variables)
 		}
 
 		if (invalidIds.length > 0) {
@@ -720,7 +733,7 @@ export class SocketEventsHandler {
 				presets[preset.id] = preset
 			}
 
-			this.#registry.instance.definitions.setPresetDefinitions(this.connectionId, this.#label, presets)
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, this.#label, presets)
 		} catch (e: any) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
@@ -733,14 +746,14 @@ export class SocketEventsHandler {
 	 */
 	async #handleSaveConfig(msg: SaveConfigMessage): Promise<void> {
 		// Save config, but do not automatically call this module's updateConfig again
-		this.#registry.instance.setInstanceLabelAndConfig(this.connectionId, null, msg.config, true)
+		this.#deps.setConnectionConfig(this.connectionId, msg.config)
 	}
 
 	/**
 	 * Handle sending an osc message from the child process
 	 */
 	async #handleSendOsc(msg: SendOscMessage): Promise<void> {
-		this.#registry.services.oscSender.send(msg.host, msg.port, msg.path, msg.args)
+		this.#deps.oscSender.send(msg.host, msg.port, msg.path, msg.args)
 	}
 
 	/**
@@ -750,8 +763,8 @@ export class SocketEventsHandler {
 		msg: ParseVariablesInStringMessage
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
-			const location = msg.controlId ? this.#registry.page.getLocationOfControlId(msg.controlId) : null
-			const result = this.#registry.variables.values.parseVariables(msg.text, location)
+			const location = msg.controlId ? this.#deps.page.getLocationOfControlId(msg.controlId) : null
+			const result = this.#deps.variables.values.parseVariables(msg.text, location)
 
 			return {
 				text: result.text,
@@ -772,7 +785,7 @@ export class SocketEventsHandler {
 		if (isNaN(delay) || delay < 0) delay = 0
 
 		try {
-			this.#registry.controls.actionRecorder.receiveAction(
+			this.#deps.controls.actionRecorder.receiveAction(
 				this.connectionId,
 				msg.actionId,
 				msg.options,
@@ -789,7 +802,7 @@ export class SocketEventsHandler {
 	 */
 	async #handleSetCustomVariable(msg: SetCustomVariableMessage): Promise<void> {
 		try {
-			this.#registry.variables.custom.setValue(msg.customVariableId, msg.value)
+			this.#deps.variables.custom.setValue(msg.customVariableId, msg.value)
 		} catch (e: any) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}
@@ -804,7 +817,7 @@ export class SocketEventsHandler {
 
 			for (const feedback of Object.values(msg.updatedFeedbacks)) {
 				if (feedback) {
-					const control = this.#registry.controls.getControl(feedback.controlId)
+					const control = this.#deps.controls.getControl(feedback.controlId)
 					const found =
 						control?.supportsFeedbacks &&
 						control.feedbacks.feedbackReplace(
@@ -825,7 +838,7 @@ export class SocketEventsHandler {
 
 			for (const action of Object.values(msg.updatedActions)) {
 				if (action) {
-					const control = this.#registry.controls.getControl(action.controlId)
+					const control = this.#deps.controls.getControl(action.controlId)
 					const found =
 						control?.supportsActions &&
 						control.actionReplace(
@@ -861,7 +874,7 @@ export class SocketEventsHandler {
 	 *
 	 */
 	async #handleSharedUdpSocketJoin(msg: SharedUdpSocketMessageJoin): Promise<string> {
-		const handleId = await this.#registry.services.sharedUdpManager.joinPort(
+		const handleId = await this.#deps.sharedUdpManager.joinPort(
 			msg.family,
 			msg.portNumber,
 			this.connectionId,
@@ -887,19 +900,13 @@ export class SocketEventsHandler {
 	 *
 	 */
 	async #handleSharedUdpSocketLeave(msg: SharedUdpSocketMessageLeave): Promise<void> {
-		this.#registry.services.sharedUdpManager.leavePort(this.connectionId, msg.handleId)
+		this.#deps.sharedUdpManager.leavePort(this.connectionId, msg.handleId)
 	}
 	/**
 	 *
 	 */
 	async #handleSharedUdpSocketSend(msg: SharedUdpSocketMessageSend): Promise<void> {
-		this.#registry.services.sharedUdpManager.sendOnPort(
-			this.connectionId,
-			msg.handleId,
-			msg.address,
-			msg.port,
-			msg.message
-		)
+		this.#deps.sharedUdpManager.sendOnPort(this.connectionId, msg.handleId, msg.address, msg.port, msg.message)
 	}
 }
 

@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { ConnectionsContext, DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
+import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -269,12 +269,15 @@ function FeedbackTableRow({
 			const hoverParentId = parentId
 			const hoverIndex = index
 			const hoverId = feedback.id
+
+			if (!checkDragState(item, monitor, hoverId)) return
+
 			// Don't replace items with themselves
 			if (item.feedbackId === hoverId || (dragIndex === hoverIndex && dragParentId === hoverParentId)) {
 				return
 			}
-
-			if (!checkDragState(item, monitor, hoverId)) return
+			// Can't move into itself
+			if (item.feedbackId === hoverParentId) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(item.feedbackId, hoverParentId, hoverIndex)
@@ -353,11 +356,11 @@ const FeedbackEditor = observer(function FeedbackEditor({
 }: FeedbackEditorProps) {
 	const service = useControlFeedbackService(serviceFactory, feedback)
 
-	const { feedbackDefinitions } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
+	const { connections, feedbackDefinitions } = useContext(RootAppStoreContext)
 
-	const connectionInfo = connectionsContext[feedback.instance_id]
+	const connectionInfo = connections.getInfo(feedback.instance_id)
 	const connectionLabel = connectionInfo?.label ?? feedback.instance_id
+	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
 	const feedbackSpec = feedbackDefinitions.connections.get(feedback.instance_id)?.get(feedback.type)
 
@@ -509,8 +512,24 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						</div>
 					)}
 
-					{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
-						<div className="cell-invert">
+					<div className="cell-left-main">
+						{connectionsWithSameType.length > 1 && (
+							<div className="option-field">
+								<DropdownInputField
+									label="Connection"
+									choices={connectionsWithSameType
+										.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
+										.map((connection) => {
+											const [id, info] = connection
+											return { id, label: info.label }
+										})}
+									multiple={false}
+									value={feedback.instance_id}
+									setValue={service.setConnection}
+								></DropdownInputField>
+							</div>
+						)}
+						{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
 							<MyErrorBoundary>
 								<CForm onSubmit={PreventDefaultHandler}>
 									<div style={{ paddingLeft: 20 }}>
@@ -526,8 +545,8 @@ const FeedbackEditor = observer(function FeedbackEditor({
 									</div>
 								</CForm>
 							</MyErrorBoundary>
-						</div>
-					)}
+						)}
+					</div>
 
 					{!booleanOnly && (
 						<>
@@ -645,6 +664,9 @@ function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard 
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
+			// Can't move into itself
+			if (item.feedbackId === parentId) return
+
 			moveCard(item.feedbackId, parentId, 0)
 		},
 	})

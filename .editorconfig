@@ -6,5 +6,5 @@ insert_final_newline = true
 
 [*.{js,json,yml,ts,tsx,jsx,cjs,mjs}]
 charset = utf-8
-indent_style = space
+indent_style = tab
 indent_size = 2

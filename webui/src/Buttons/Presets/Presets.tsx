@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CRow } from '@coreui/react'
-import { ConnectionsContext, LoadingRetryOrError, socketEmitPromise, applyPatchOrReplaceSubObject } from '../../util.js'
+import { LoadingRetryOrError, socketEmitPromise, applyPatchOrReplaceSubObject } from '../../util.js'
 import { nanoid } from 'nanoid'
 import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
@@ -10,13 +10,12 @@ import { PresetsButtonList } from './PresetsButtonList.js'
 import { PresetsConnectionList } from './PresetsConnectionList.js'
 import { PresetsCategoryList } from './PresetsCategoryList.js'
 
-interface InstancePresetsProps {
+interface ConnectionPresetsProps {
 	resetToken: string
 }
 
-export const InstancePresets = observer(function InstancePresets({ resetToken }: InstancePresetsProps) {
-	const { socket, modules } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
+export const ConnectionPresets = observer(function ConnectionPresets({ resetToken }: ConnectionPresetsProps) {
+	const { socket, modules, connections } = useContext(RootAppStoreContext)
 
 	const [connectionAndCategory, setConnectionAndCategory] = useState<
 		[connectionId: string | null, category: string | null]
@@ -77,7 +76,7 @@ export const InstancePresets = observer(function InstancePresets({ resetToken }:
 	}
 
 	if (connectionAndCategory[0]) {
-		const connectionInfo = connectionsContext[connectionAndCategory[0]]
+		const connectionInfo = connections.getInfo(connectionAndCategory[0])
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 
 		const presets = presetsMap[connectionAndCategory[0]] ?? {}

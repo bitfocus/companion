@@ -1,20 +1,15 @@
-import React, { useCallback, useContext, ChangeEvent, RefObject, useMemo } from 'react'
-import {
-	ConnectionsContext,
-	socketEmitPromise,
-	SocketContext,
-	LoadingRetryOrError,
-	PreventDefaultHandler,
-} from '../../util.js'
+import React, { useCallback, useContext, ChangeEvent, RefObject } from 'react'
+import { socketEmitPromise, LoadingRetryOrError, PreventDefaultHandler, useComputed } from '../../util.js'
 import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch, CCallout } from '@coreui/react'
 import { DropdownInputField } from '../../Components/index.js'
 import { ActionsList } from '../../Controls/ActionSetEditor.js'
 import { usePanelCollapseHelperLite } from '../../Helpers/CollapseHelper.js'
-import type { DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
@@ -23,9 +18,13 @@ interface RecorderSessionHeadingProps {
 	doFinish: () => void
 }
 
-export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }: RecorderSessionHeadingProps) {
-	const socket = useContext(SocketContext)
-	const connections = useContext(ConnectionsContext)
+export const RecorderSessionHeading = observer(function RecorderSessionHeading({
+	confirmRef,
+	sessionId,
+	sessionInfo,
+	doFinish,
+}: RecorderSessionHeadingProps) {
+	const { connections, socket } = useContext(RootAppStoreContext)
 
 	const doClearActions = useCallback(() => {
 		socketEmitPromise(socket, 'action-recorder:session:discard-actions', [sessionId]).catch((e) => {
@@ -76,10 +75,10 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 		[socket, sessionId]
 	)
 
-	const connectionsWhichCanRecord = useMemo(() => {
-		const result = []
+	const connectionsWhichCanRecord = useComputed(() => {
+		const result: DropdownChoice[] = []
 
-		for (const [id, info] of Object.entries(connections)) {
+		for (const [id, info] of connections.connections.entries()) {
 			if (info.hasRecordActionsHandler) {
 				result.push({
 					id,
@@ -133,7 +132,8 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 			</CForm>
 		</>
 	)
-}
+})
+
 interface RecorderSessionProps {
 	sessionId: string
 	sessionInfo: RecordSessionInfo | null

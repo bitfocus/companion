@@ -113,7 +113,7 @@ export class SurfaceGroup {
 
 			this.#isAutoGroup = true
 		} else {
-			this.groupConfig = this.#db.getKey('surface-groups', {})[this.groupId] || {}
+			this.groupConfig = this.#db.getKey('surface_groups', {})[this.groupId] || {}
 		}
 		// Apply missing defaults
 		this.groupConfig = {
@@ -166,9 +166,9 @@ export class SurfaceGroup {
 	 * Delete this group from the config
 	 */
 	forgetConfig(): void {
-		const groupsConfig = this.#db.getKey('surface-groups', {})
+		const groupsConfig = this.#db.getKey('surface_groups', {})
 		delete groupsConfig[this.groupId]
-		this.#db.setKey('surface-groups', groupsConfig)
+		this.#db.setKey('surface_groups', groupsConfig)
 	}
 
 	/**
@@ -213,9 +213,8 @@ export class SurfaceGroup {
 
 	/**
 	 * Perform page-down for this surface group
-	 * @returns {void}
 	 */
-	doPageDown() {
+	doPageDown(): void {
 		if (this.#userconfig.getKey('page_direction_flipped') === true) {
 			this.#increasePage()
 		} else {
@@ -234,7 +233,6 @@ export class SurfaceGroup {
 
 	/**
 	 * Get the current page of this surface group
-	 * @returns {string}
 	 */
 	getCurrentPageId(): string {
 		return this.#currentPageId
@@ -383,9 +381,9 @@ export class SurfaceGroup {
 			const surface = this.surfaceHandlers[0]
 			surface.saveGroupConfig(this.groupConfig)
 		} else {
-			const groupsConfig = this.#db.getKey('surface-groups', {})
+			const groupsConfig = this.#db.getKey('surface_groups', {})
 			groupsConfig[this.groupId] = this.groupConfig
-			this.#db.setKey('surface-groups', groupsConfig)
+			this.#db.setKey('surface_groups', groupsConfig)
 		}
 	}
 }

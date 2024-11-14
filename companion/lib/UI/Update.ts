@@ -15,12 +15,12 @@
  *
  */
 
-import os from 'os'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import type { UIHandler } from './Handler.js'
 import type { ClientSocket } from './Handler.js'
 import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
+import { compileUpdatePayload } from './UpdatePayload.js'
 
 export class UIUpdate {
 	readonly #logger = LogController.createLogger('UI/Update')
@@ -37,7 +37,9 @@ export class UIUpdate {
 		this.#logger.silly('loading update')
 		this.#appInfo = appInfo
 		this.#ioController = ioController
+	}
 
+	startCycle() {
 		// Make a request now
 		this.#requestUpdate()
 		setInterval(
@@ -61,37 +63,12 @@ export class UIUpdate {
 	}
 
 	/**
-	 * Compile update payload
-	 */
-	compilePayload() {
-		const x = new Date()
-		const offset = -x.getTimezoneOffset()
-		const off = (offset >= 0 ? '+' : '-') + offset / 60
-
-		return {
-			// Information about the computer asking for a update. This way
-			// we can filter out certain kinds of OS/versions if there
-			// is known bugs etc.
-			app_name: 'companion',
-			app_build: this.#appInfo.appBuild,
-			app_version: this.#appInfo.appVersion,
-			arch: os.arch(),
-			tz: off,
-			cpus: os.cpus(),
-			platform: os.platform(),
-			release: os.release(),
-			type: os.type(),
-			id: this.#appInfo.machineId,
-		}
-	}
-
-	/**
 	 * Perform the update request
 	 */
 	#requestUpdate(): void {
 		fetch('https://updates.bitfocus.io/updates', {
 			method: 'POST',
-			body: JSON.stringify(this.compilePayload()),
+			body: JSON.stringify(compileUpdatePayload(this.#appInfo)),
 			headers: {
 				'Content-Type': 'application/json',
 			},
@@ -101,7 +78,7 @@ export class UIUpdate {
 				this.#logger.debug(`fresh update data received ${JSON.stringify(body)}`)
 				this.#latestUpdateData = body as AppUpdateInfo
 
-				this.#ioController.emit('app-update-info', this.#latestUpdateData)
+				this.#ioController.emitToAll('app-update-info', this.#latestUpdateData)
 			})
 			.catch((e) => {
 				this.#logger.verbose('update server said something unexpected!', e)

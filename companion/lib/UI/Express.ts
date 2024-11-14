@@ -24,7 +24,6 @@ import fs from 'fs'
 import serveZip from 'express-serve-zip'
 import { fileURLToPath } from 'url'
 import bodyParser from 'body-parser'
-import type { Registry } from '../Registry.js'
 
 /**
  * Create a zip serve app
@@ -64,8 +63,9 @@ export class UIExpress {
 	readonly app = Express()
 	#apiRouter = Express.Router()
 	#legacyApiRouter = Express.Router()
+	#connectionApiRouter = Express.Router()
 
-	constructor(registry: Registry) {
+	constructor(internalApiRouter: Express.Router) {
 		this.app.use(cors())
 
 		this.app.use((_req, res, next) => {
@@ -82,21 +82,13 @@ export class UIExpress {
 		// parse text/plain
 		this.app.use(bodyParser.text())
 
-		this.app.use('/int', registry.api_router, (_req, res) => {
+		this.app.use('/int', internalApiRouter, (_req, res) => {
 			res.status(404)
 			res.send('Not found')
 		})
 
-		this.app.use('/instance/:label', (req, res, _next) => {
-			const label = req.params.label
-			const connectionId = registry.instance.getIdForLabel(label) || label
-			const instance = registry.instance.moduleHost.getChild(connectionId)
-			if (instance) {
-				instance.executeHttpRequest(req, res)
-			} else {
-				res.status(404).send(JSON.stringify({ status: 404, message: 'Not Found' }))
-			}
-		})
+		// Use the router #connectionApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
+		this.app.use('/instance', (r, s, n) => this.#connectionApiRouter(r, s, n))
 
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use('/api', (r, s, n) => this.#apiRouter(r, s, n))
@@ -129,7 +121,7 @@ export class UIExpress {
 		this.app.use(webuiServer)
 
 		// Handle all unknown urls as accessing index.html
-		this.app.get('*', (req, res, next) => {
+		this.app.get('*all', (req, res, next) => {
 			req.url = '/index.html'
 			return webuiServer(req, res, next)
 		})
@@ -147,5 +139,12 @@ export class UIExpress {
 	 */
 	set legacyApiRouter(router: Express.Router) {
 		this.#legacyApiRouter = router
+	}
+
+	/**
+	 * Set a new router as the connectionApiRouter
+	 */
+	set connectionApiRouter(router: Express.Router) {
+		this.#connectionApiRouter = router
 	}
 }

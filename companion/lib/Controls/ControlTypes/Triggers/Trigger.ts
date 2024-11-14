@@ -25,8 +25,8 @@ import type {
 import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { Registry } from '../../../Registry.js'
-import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
 
 /**
  * Class for an interval trigger.
@@ -147,24 +147,24 @@ export class ControlTrigger
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(
-		registry: Registry,
+		deps: ControlDependencies,
 		eventBus: TriggerEvents,
 		controlId: string,
 		storage: TriggerModel | null,
 		isImport: boolean
 	) {
-		super(registry, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
+		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
 		this.actions = new FragmentActions(
-			registry.internalModule,
-			registry.instance.moduleHost,
+			deps.internalModule,
+			deps.instance.moduleHost,
 			controlId,
 			this.commitChange.bind(this)
 		)
 		this.feedbacks = new FragmentFeedbacks(
-			registry.instance.definitions,
-			registry.internalModule,
-			registry.instance.moduleHost,
+			deps.instance.definitions,
+			deps.internalModule,
+			deps.instance.moduleHost,
 			controlId,
 			this.commitChange.bind(this),
 			this.triggerRedraw.bind(this),
@@ -270,6 +270,13 @@ export class ControlTrigger
 	}
 
 	/**
+	 * Set the connection of an action
+	 */
+	actionSetConnection(_stepId: string, _setId: string, id: string, connectionId: string): boolean {
+		return this.actions.actionSetConnection('0', id, connectionId)
+	}
+
+	/**
 	 * Set the delay of an action
 	 */
 	actionSetDelay(_stepId: string, _setId: string, id: string, delay: number): boolean {
@@ -277,7 +284,7 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Set an opton of an action
+	 * Set an option of an action
 	 */
 	actionSetOption(_stepId: string, _setId: string, id: string, key: string, value: any): boolean {
 		return this.actions.actionSetOption('0', id, key, value)
@@ -287,7 +294,7 @@ export class ControlTrigger
 	 * Reorder an action in the list or move between sets
 	 * @param _dragStepId
 	 * @param _dragSetId the action_set id to remove from
-	 * @param dragIndex the index of the action to move
+	 * @param dragActionId the id of the action to move
 	 * @param _dropStepId
 	 * @param _dropSetId the target action_set of the action
 	 * @param dropIndex the target index of the action
@@ -295,14 +302,16 @@ export class ControlTrigger
 	actionReorder(
 		_dragStepId: string,
 		_dragSetId: string,
-		dragIndex: number,
+		dragActionId: string,
 		_dropStepId: string,
 		_dropSetId: string,
 		dropIndex: number
 	): boolean {
 		const set = this.actions.action_sets['0']
 		if (set) {
-			dragIndex = clamp(dragIndex, 0, set.length)
+			const dragIndex = set.findIndex((a) => a.id === dragActionId)
+			if (dragIndex === -1) return false
+
 			dropIndex = clamp(dropIndex, 0, set.length)
 
 			set.splice(dropIndex, 0, ...set.splice(dragIndex, 1))
@@ -349,7 +358,7 @@ export class ControlTrigger
 		if (actions) {
 			this.logger.silly('found actions')
 
-			this.controls.actions.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
+			this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
 				surfaceId: this.controlId,
 			})
 		}
@@ -387,7 +396,7 @@ export class ControlTrigger
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
 		ReferencesVisitors.visitControlReferences(
-			this.internalModule,
+			this.deps.internalModule,
 			visitor,
 			undefined,
 			allActions,
@@ -430,6 +439,9 @@ export class ControlTrigger
 						break
 					case 'timeofday':
 						eventStrings.push(this.#timerEvents.getTimeOfDayDescription(event))
+						break
+					case 'specificDate':
+						eventStrings.push(this.#timerEvents.getSpecificDateDescription(event))
 						break
 					case 'sun_event':
 						eventStrings.push(this.#timerEvents.getSunDescription(event))
@@ -515,7 +527,7 @@ export class ControlTrigger
 
 		// Fix up references
 		const changed = ReferencesVisitors.fixupControlReferences(
-			this.internalModule,
+			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
 			allActions,
@@ -537,6 +549,9 @@ export class ControlTrigger
 					break
 				case 'timeofday':
 					this.#timerEvents.setTimeOfDay(event.id, event.options)
+					break
+				case 'specificDate':
+					this.#timerEvents.setSpecificDate(event.id, event.options)
 					break
 				case 'sun_event':
 					this.#timerEvents.setSun(event.id, event.options)
@@ -596,6 +611,9 @@ export class ControlTrigger
 				break
 			case 'timeofday':
 				this.#timerEvents.clearTimeOfDay(event.id)
+				break
+			case 'specificDate':
+				this.#timerEvents.clearSpecificDate(event.id)
 				break
 			case 'sun_event':
 				this.#timerEvents.clearSun(event.id)
@@ -688,18 +706,18 @@ export class ControlTrigger
 	#sendTriggerJsonChange(): void {
 		const newJson = cloneDeep(this.toTriggerJSON())
 
-		if (this.io.countRoomMembers(TriggersListRoom) > 0) {
+		if (this.deps.io.countRoomMembers(TriggersListRoom) > 0) {
 			if (this.#lastSentTriggerJson) {
 				const patch = jsonPatch.compare(this.#lastSentTriggerJson || {}, newJson || {})
 				if (patch.length > 0) {
-					this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+					this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
 						type: 'update',
 						controlId: this.controlId,
 						patch,
 					})
 				}
 			} else {
-				this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+				this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
 					type: 'add',
 					controlId: this.controlId,
 					info: newJson,
@@ -728,8 +746,8 @@ export class ControlTrigger
 
 		super.destroy()
 
-		if (this.io.countRoomMembers(TriggersListRoom) > 0) {
-			this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+		if (this.deps.io.countRoomMembers(TriggersListRoom) > 0) {
+			this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
 				type: 'remove',
 				controlId: this.controlId,
 			})

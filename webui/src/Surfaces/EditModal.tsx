@@ -14,8 +14,8 @@ import { LoadingRetryOrError, socketEmitPromise, PreventDefaultHandler, useCompu
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalPageIdDropdown } from '../Controls/InternalInstanceFields.js'
-import { InternalCustomVariableDropdown } from '../Controls/InternalInstanceFields.js'
+import { InternalPageIdDropdown } from '../Controls/InternalModuleField.js'
+import { InternalCustomVariableDropdown } from '../Controls/InternalModuleField.js'
 import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
 import {
 	ClientDevicesListItem,
@@ -160,6 +160,8 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 				console.log('update surface', key, value)
 				if (surfaceId) {
 					setSurfaceConfig((oldConfig) => {
+						if (!oldConfig) return oldConfig
+
 						const newConfig: SurfacePanelConfig = {
 							...oldConfig,
 							[key]: value,

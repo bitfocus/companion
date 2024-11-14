@@ -71,7 +71,17 @@ for (const name of neededDependencies) {
 if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x64') {
 	// These have no prebuilds available
 	delete dependencies['bufferutil']
-	delete dependencies['utf-8-validate']
+}
+
+const packageResolutions = {
+	// Force the same custom `node-gyp-build` version to allow better cross compiling
+	'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
+}
+// Preserve some resolutions to the dist package.json
+for (const [name, version] of Object.entries(companionPkgJson.resolutions)) {
+	if (name.startsWith('@napi-rs/canvas')) {
+		packageResolutions[name] = version
+	}
 }
 
 const nodeVersion = await fs.readFile('.node-version')
@@ -85,10 +95,7 @@ await fs.writeFile(
 			main: 'main.js',
 			dependencies: dependencies,
 			engines: { node: nodeVersion.toString().trim() },
-			resolutions: {
-				// Force the same custom `node-gyp-build` version to allow better cross compiling
-				'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
-			},
+			resolutions: packageResolutions,
 			packageManager: companionPkgJson.packageManager,
 		},
 		undefined,
@@ -109,7 +116,12 @@ await fs.writeFile(
 )
 
 // Copy prebuilds
-const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo', 'node-hid', '@julusian/image-rs']
+const copyPrebuildsFromDependencies = [
+	'@julusian/jpeg-turbo',
+	'node-hid',
+	'@julusian/image-rs',
+	'@julusian/segfault-raub',
+]
 for (const name of copyPrebuildsFromDependencies) {
 	await fs.mkdirp('dist/prebuilds')
 	await fs.copy(path.join('node_modules', name, 'prebuilds'), 'dist/prebuilds')

@@ -48,7 +48,7 @@ async function fetchSingleVersion(platformInfo, nodeVersion) {
 	const runtimeDir = path.join(cacheRuntimeDir, `${platformInfo.nodePlatform}-${platformInfo.nodeArch}-${nodeVersion}`)
 	if (!(await fs.pathExists(runtimeDir))) {
 		if (isZip) {
-			const tmpDir = path.join(cacheRuntimeDir, 'tmp')
+			const tmpDir = path.join(cacheRuntimeDir, `tmp-${nodeVersion}`)
 			await fs.remove(tmpDir)
 			await $`Expand-Archive ${toPosix(tarPath)} -DestinationPath ${toPosix(tmpDir)}`
 			await fs.move(

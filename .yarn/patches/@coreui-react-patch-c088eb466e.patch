@@ -1,0 +1,53 @@
+diff --git a/dist/esm/components/popover/CPopover.js b/dist/esm/components/popover/CPopover.js
+index 09f2b8cb8bcfc8855251659f2376914b19b5aa1d..73c5c211c6899239d8847c1facfb53180a49f989 100644
+--- a/dist/esm/components/popover/CPopover.js
++++ b/dist/esm/components/popover/CPopover.js
+@@ -47,7 +47,24 @@ var CPopover = forwardRef(function (_a, ref) {
+     }, [visible]);
+     useEffect(function () {
+         if (_visible) {
+-            setMounted(true);
++            setMounted(true);           
++        }
++        return function () {
++            if (popoverRef.current) {
++                popoverRef.current.classList.remove('show');
++                onHide && onHide();
++                executeAfterTransition(function () {
++                    if (popoverRef.current) {
++                        popoverRef.current.style.display = 'none';
++                    }
++                    destroyPopper();
++                    setMounted(false);
++                }, popoverRef.current);
++            }
++        };
++    }, [_visible]);
++    useEffect(function () {
++        if (mounted) {
+             if (popoverRef.current) {
+                 popoverRef.current.classList.remove('fade', 'show');
+                 destroyPopper();
+@@ -64,20 +81,8 @@ var CPopover = forwardRef(function (_a, ref) {
+                 }
+             }, _delay.show);
+         }
+-        return function () {
+-            if (popoverRef.current) {
+-                popoverRef.current.classList.remove('show');
+-                onHide && onHide();
+-                executeAfterTransition(function () {
+-                    if (popoverRef.current) {
+-                        popoverRef.current.style.display = 'none';
+-                    }
+-                    destroyPopper();
+-                    setMounted(false);
+-                }, popoverRef.current);
+-            }
+-        };
+-    }, [_visible]);
++    }, [mounted]);
++
+     return (React.createElement(React.Fragment, null,
+         React.cloneElement(children, __assign(__assign(__assign(__assign(__assign({}, (_visible && {
+             'aria-describedby': uID.current,

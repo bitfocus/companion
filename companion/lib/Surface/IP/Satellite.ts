@@ -19,7 +19,7 @@ import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
-import { convertXYToIndexForPanel, convertPanelIndexToXY, GridSize } from '../Util.js'
+import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
 	BrightnessConfigField,
 	LegacyRotationConfigField,
@@ -30,17 +30,17 @@ import {
 import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 import type { CompanionVariableValue } from '@companion-module/base'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { Socket } from 'net'
 import type { ImageResult, ImageResultStyle } from '../../Graphics/ImageResult.js'
+import type { SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
 	productName: string
 	path: string
-	socket: import('net').Socket
-	gridSize: import('../Util.js').GridSize
+	socket: SatelliteSocketWrapper
+	gridSize: GridSize
 	supportsBrightness: boolean
 	streamBitmapSize: number | null
 	streamColors: string | boolean
@@ -145,7 +145,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	readonly deviceId: string
-	readonly socket: Socket
+	readonly socket: SatelliteSocketWrapper
 
 	constructor(deviceInfo: SatelliteDeviceInfo, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
@@ -333,7 +333,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		if (this.socket !== undefined) {
 			this.socket.write(`KEYS-CLEAR DEVICEID=${this.deviceId}\n`)
 		} else {
-			this.#logger.debug('trying to emit to nonexistant socket: ', this.deviceId)
+			this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
 		}
 	}
 
@@ -347,7 +347,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			for (const variable of allChangedVariables.values()) {
 				if (!outputVariable.lastReferencedVariables.has(variable)) continue
 
-				// There is a change, recalcuate and send the value
+				// There is a change, recalculate and send the value
 
 				this.#triggerOutputVariable(name, outputVariable)
 				break
@@ -381,7 +381,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 						const base64Value = Buffer.from(expressionResult?.toString() ?? '').toString('base64')
 						this.socket.write(`VARIABLE-VALUE DEVICEID=${this.deviceId} VARIABLE="${name}" VALUE="${base64Value}"\n`)
 					} else {
-						this.#logger.debug('trying to emit to nonexistant socket: ', this.deviceId)
+						this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
 					}
 				},
 				{

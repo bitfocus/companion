@@ -1,11 +1,11 @@
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Util/Constants.js'
-import type { DataDatabase } from '../Database.js'
+import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 
 /**
  * do the database upgrades to convert from the v1 to the v2 format
  */
-function convertDatabase15To32(db: DataDatabase, _logger: Logger): void {
+function convertDatabase15To32(db: DataStoreBase, _logger: Logger): void {
 	const oldBankConfig = db.getKey('bank', {})
 	const oldActions = db.getKey('bank_actions', {})
 	const oldReleaseActions = db.getKey('bank_release_actions', {})
@@ -26,6 +26,13 @@ function convertDatabase15To32(db: DataDatabase, _logger: Logger): void {
 		oldReleaseActions[page] = res.release_actions
 		oldFeedbacks[page] = res.feedbacks
 	}
+
+	db.setKey('bank', oldBankConfig)
+	db.setKey('bank_actions', oldActions)
+	db.setKey('bank_release_actions', oldReleaseActions)
+	db.setKey('feedbacks', oldFeedbacks)
+
+	db.setKey('page_config_version', 2)
 }
 
 function convertPage15To32(oldObj: any): any {
@@ -48,19 +55,27 @@ function convertPage15To32(oldObj: any): any {
 		result.config[bank] = {}
 		result.actions[bank] = []
 		result.release_actions[bank] = []
-		result.feedbacks[bank] = []
+		//result.feedbacks[bank] = []
 	}
 
 	// copy across the old buttons
 	for (let oldBank = 1; oldBank <= 12; oldBank++) {
 		const newBank = from12to32(oldBank)
 
-		result.config[newBank] = oldPageConfig[oldBank]
-		upgradeBankStyle(result.config[newBank])
+		if (oldPageConfig[oldBank]) {
+			result.config[newBank] = oldPageConfig[oldBank]
+			upgradeBankStyle(result.config[newBank])
+		}
 
-		result.actions[newBank] = oldPageActions[oldBank]
-		result.release_actions[newBank] = oldPageReleaseActions[oldBank]
-		result.feedbacks[newBank] = oldPageFeedbacks[oldBank]
+		if (oldPageActions[oldBank]) {
+			result.actions[newBank] = oldPageActions[oldBank]
+		}
+		if (oldPageReleaseActions[oldBank]) {
+			result.release_actions[newBank] = oldPageReleaseActions[oldBank]
+		}
+		if (oldPageFeedbacks[oldBank]) {
+			result.feedbacks[newBank] = oldPageFeedbacks[oldBank]
+		}
 	}
 
 	// Add navigation keys
@@ -144,7 +159,7 @@ function from12to32(key: number): number {
 
 	if (res >= 32) {
 		console.debug('assert: old config had bigger pages than expected')
-		return 31
+		return 32
 	}
 	return res
 }

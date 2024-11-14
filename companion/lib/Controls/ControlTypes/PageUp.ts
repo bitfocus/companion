@@ -10,8 +10,8 @@ import type {
 	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../IControlFragments.js'
-import type { Registry } from '../../Registry.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlDependencies } from '../ControlDependencies.js'
 
 /**
  * Class for a pageup button control.
@@ -62,8 +62,8 @@ export class ControlButtonPageUp
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(registry: Registry, controlId: string, storage: PageUpButtonModel | null, isImport: boolean) {
-		super(registry, controlId, 'Controls/Button/PageUp')
+	constructor(deps: ControlDependencies, controlId: string, storage: PageUpButtonModel | null, isImport: boolean) {
+		super(deps, controlId, 'Controls/Button/PageUp')
 
 		if (!storage) {
 			// New control
@@ -108,11 +108,11 @@ export class ControlButtonPageUp
 	/**
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined) {
 		if (pressed && surfaceId) {
-			this.surfaces.devicePageUp(surfaceId)
+			this.deps.surfaces.devicePageUp(surfaceId)
 		}
 	}
 

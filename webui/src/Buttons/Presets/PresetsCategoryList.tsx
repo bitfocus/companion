@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,7 +8,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
 interface PresetsCategoryListProps {
 	presets: Record<string, UIPresetDefinition>
-	connectionInfo: ClientConnectionConfig
+	connectionInfo: ClientConnectionConfig | undefined
 	moduleInfo: ModuleDisplayInfo | undefined
 	selectedConnectionId: string
 	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void

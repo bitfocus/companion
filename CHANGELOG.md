@@ -1,5 +1,77 @@
 # Bitfocus Companion
 
+## Companion v3.4.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Surface overflow fixup ignoring surface offsets
+- Fix logic feedbacks not importing in triggers (#3087)
+- Enable connected Streamdecks field inverted in ui
+- Fix some expression parsing bugs
+- Arrow up/down keys not moving cursor in multiline expressions
+- Dragging actions between groups misbehaving
+- Only update hostname variables only at startup
+- Update canvas lib to resolve memory leaks
+- Add linux udev rules for blackmagic atem micro panel
+
+### 🐞 MODULE FIXES
+
+- analogway-awj
+- analogway-picturall
+- google-sheets
+- monteiro-pptvideo
+- studiocoast-vmix
+
+## Companion v3.4.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Use macos 10.15 compatible canvas library
+- Improve dropdown performance
+- Adding page buttons broken
+- Fix ui modals closing immediately
+- Fix logic feedbacks not importing correctly
+- Docker image not fully supporting dev modules
+- Add additional font character sets #3031
+
+### 🐞 MODULE FIXES
+
+- bmd-atem
+- analogway-awj
+- generic-webtable
+- spotify-remote
+
+## Companion v3.4.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Forget streamdeck studios when resetting config #3034
+- Remove emulators when resetting config #3034
+- Add additional font character sets #3031
+- Debounce updating variables from button drawing
+- Variables for connections not being removed when removing connection
+- Bugs when dragging feedbacks #3037
+- Default DB to current version
+- Use macos 10.15 compatible canvas library
+- Reject trying to drag feedback into a child of itself #3037
+- Update depedencies
+
+### 🐞 MODULE FIXES
+
+- analogway-awj
+- axeltechnology-cgplus
+- axeltechnology-vjpro
+- axeltechnology-xplayout
+- axeltechnology-xradio
+- axeltechnology-youplay
+- bmd-ultimatte
+- figure53-qlab-advance
+- generic-swp08
+- obs-studio
+- riedel-rrcs
+- samsung-smarttv
+- sennheiser-digital6000
+
 ## Companion v3.4.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS

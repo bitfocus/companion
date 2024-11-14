@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 h4 {
 	font-weight: bold;
 }
@@ -91,6 +93,25 @@ th {
 	}
 }
 
+.table-header-buttons {
+	float: right;
+	margin: 0;
+
+	button {
+		padding: 1px 5px;
+		opacity: 0.4;
+
+		&.active {
+			opacity: 1;
+		}
+
+		&.btn-secondary {
+			background-color: white;
+			color: black;
+		}
+	}
+}
+
 code {
 	font-family: 'Fira Code', monospace;
 	font-size: 1.05em;
@@ -112,7 +133,7 @@ code {
 }
 
 .btn-danger:hover {
-	background-color: darken($primary, 5%);
+	background-color: color.adjust($primary, $lightness: -5%, $space: hsl);
 	color: #eee;
 	animation: blinker 0.3s linear infinite;
 }
@@ -171,7 +192,7 @@ code {
 }
 
 .btn-secondary {
-	background-color: lighten($secondary, 15%);
+	background-color: color.adjust($secondary, $lightness: 15%, $space: hsl);
 }
 .btn-danger,
 .btn-success,

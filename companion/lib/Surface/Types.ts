@@ -1,8 +1,12 @@
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
-import type { GridSize } from './Util.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
 
 export type SurfacePanelFactory = {
 	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
@@ -58,4 +62,27 @@ export interface SurfacePanelEvents {
 
 	/** @deprecated */
 	'xkeys-subscribePage': [pageCount: number]
+}
+
+export interface SurfaceHandlerDependencies {
+	/**
+	 * The core controls controller
+	 */
+	readonly controls: ControlsController
+	/**
+	 * The core graphics controller
+	 */
+	readonly graphics: GraphicsController
+	/**
+	 * The core page controller
+	 */
+	readonly page: PageController
+	/**
+	 * The core user config manager
+	 */
+	readonly userconfig: DataUserConfig
+	/**
+	 * The core variable controller
+	 */
+	readonly variables: VariablesController
 }

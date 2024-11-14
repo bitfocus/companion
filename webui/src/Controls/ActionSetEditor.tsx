@@ -9,9 +9,9 @@ import {
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { NumberInputField, TextInputField } from '../Components/index.js'
-import { ConnectionsContext, DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
+import React, { memo, useCallback, useContext, useDeferredValue, useMemo, useRef, useState } from 'react'
+import { DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
+import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -161,6 +161,7 @@ export function ActionsList({
 					))}
 				<ActionRowDropPlaceholder
 					dragId={dragId}
+					setId={setId}
 					actionCount={actions ? actions.length : 0}
 					moveCard={actionsService.moveCard}
 				/>
@@ -170,23 +171,33 @@ export function ActionsList({
 }
 
 interface ActionRowDropPlaceholderProps {
+	setId: string | number
 	dragId: string
 	actionCount: number
-	moveCard: (stepId: string, setId: string | number, index: number, targetIndex: number) => void
+	moveCard: (stepId: string, setId: string | number, actionId: string, targetIndex: number) => void
 }
 
-function ActionRowDropPlaceholder({ dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
+function ActionRowDropPlaceholder({ setId, dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
 	const [isDragging, drop] = useDrop<ActionTableRowDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
-			moveCard(item.stepId, item.setId, item.index, 0)
+			moveCard(item.stepId, item.setId, item.actionId, 0)
+
+			item.setId = setId
+			item.index = 0
 		},
 	})
 
-	if (!isDragging || actionCount > 0) return null
+	// Defer the isDragging value to ensure dragend doesn't fire prematurely
+	// See https://github.com/bitfocus/companion/issues/3115
+	// https://bugs.webkit.org/show_bug.cgi?id=134212
+	// https://issues.chromium.org/issues/41150279
+	const isDraggingDeferred = useDeferredValue(isDragging)
+
+	if (!isDraggingDeferred || actionCount > 0) return null
 
 	return (
 		<tr ref={drop} className={'actionlist-dropzone'}>
@@ -232,8 +243,7 @@ const ActionTableRow = observer(function ActionTableRow({
 	readonly,
 	panelCollapseHelper,
 }: ActionTableRowProps): JSX.Element | null {
-	const connectionsContext = useContext(ConnectionsContext)
-	const { actionDefinitions } = useContext(RootAppStoreContext)
+	const { actionDefinitions, connections } = useContext(RootAppStoreContext)
 
 	const service = useControlActionService(serviceFactory, action)
 
@@ -260,15 +270,16 @@ const ActionTableRow = observer(function ActionTableRow({
 			const dragIndex = item.index
 			const hoverIndex = index
 			const hoverId = action.id
+
+			if (!checkDragState(item, monitor, hoverId)) return
+
 			// Don't replace items with themselves
 			if (item.actionId === hoverId || (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId)) {
 				return
 			}
 
-			if (!checkDragState(item, monitor, hoverId)) return
-
 			// Time to actually perform the action
-			serviceFactory.moveCard(item.stepId, item.setId, item.index, index)
+			serviceFactory.moveCard(item.stepId, item.setId, item.actionId, index)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -318,9 +329,10 @@ const ActionTableRow = observer(function ActionTableRow({
 		return null
 	}
 
-	const connectionInfo = connectionsContext[action.instance]
+	const connectionInfo = connections.getInfo(action.instance)
 	// const module = instance ? modules[instance.instance_type] : undefined
 	const connectionLabel = connectionInfo?.label ?? action.instance
+	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
 	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
 
@@ -401,7 +413,24 @@ const ActionTableRow = observer(function ActionTableRow({
 							</div>
 						)}
 
-						<div className="cell-delay">
+						<div className="cell-left-main">
+							{connectionsWithSameType.length > 1 && (
+								<div className="option-field">
+									<DropdownInputField
+										label="Connection"
+										choices={connectionsWithSameType
+											.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
+											.map((connection) => {
+												const [id, info] = connection
+												return { id, label: info.label }
+											})}
+										multiple={false}
+										value={action.instance}
+										setValue={service.setConnection}
+									></DropdownInputField>
+								</div>
+							)}
+
 							<CForm onSubmit={PreventDefaultHandler}>
 								<label>Delay</label>
 								<CInputGroup>

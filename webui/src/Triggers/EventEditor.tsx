@@ -136,12 +136,13 @@ function EventsTableRow({
 			const dragIndex = item.index
 			const hoverIndex = index
 			const hoverId = event.id
+
+			if (!checkDragState(item, monitor, hoverId)) return
+
 			// Don't replace items with themselves
 			if (dragIndex === hoverIndex) {
 				return
 			}
-
-			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(dragIndex, hoverIndex)

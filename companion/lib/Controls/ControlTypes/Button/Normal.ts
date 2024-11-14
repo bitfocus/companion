@@ -17,8 +17,8 @@ import type {
 	NormalButtonSteps,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import type { Registry } from '../../../Registry.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
 
 /**
  * Class for the stepped button control.
@@ -68,8 +68,8 @@ export class ControlButtonNormal
 	 */
 	#surfaceHoldState = new Map<string, SurfaceHoldState>()
 
-	constructor(registry: Registry, controlId: string, storage: NormalButtonModel | null, isImport: boolean) {
-		super(registry, controlId, `Controls/Button/Normal/${controlId}`)
+	constructor(deps: ControlDependencies, controlId: string, storage: NormalButtonModel | null, isImport: boolean) {
+		super(deps, controlId, `Controls/Button/Normal/${controlId}`)
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
@@ -227,7 +227,7 @@ export class ControlButtonNormal
 	actionReorder(
 		dragStepId: string,
 		dragSetId: string,
-		dragIndex: number,
+		dragActionId: string,
 		dropStepId: string,
 		dropSetId: string,
 		dropIndex: number
@@ -235,7 +235,9 @@ export class ControlButtonNormal
 		const fromSet = this.steps[dragStepId]?.action_sets?.[dragSetId]
 		const toSet = this.steps[dropStepId]?.action_sets?.[dropSetId]
 		if (fromSet && toSet) {
-			dragIndex = clamp(dragIndex, 0, fromSet.length)
+			const dragIndex = fromSet.findIndex((a) => a.id === dragActionId)
+			if (dragIndex === -1) return false
+
 			dropIndex = clamp(dropIndex, 0, toSet.length)
 
 			toSet.splice(dropIndex, 0, ...fromSet.splice(dragIndex, 1))
@@ -271,6 +273,18 @@ export class ControlButtonNormal
 	}
 
 	/**
+	 * Set the connection of an action
+	 */
+	actionSetConnection(stepId: string, setId: string, id: string, connectionId: string): boolean {
+		const step = this.steps[stepId]
+		if (step) {
+			return step.actionSetConnection(setId, id, connectionId)
+		} else {
+			return false
+		}
+	}
+
+	/**
 	 * Set the delay of an action
 	 */
 	actionSetDelay(stepId: string, setId: string, id: string, delay: number): boolean {
@@ -283,7 +297,7 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Set an opton of an action
+	 * Set an option of an action
 	 */
 	actionSetOption(stepId: string, setId: string, id: string, key: string, value: any): boolean {
 		const step = this.steps[stepId]
@@ -474,8 +488,8 @@ export class ControlButtonNormal
 		}
 
 		const actions = new FragmentActions(
-			this.registry.internalModule,
-			this.registry.instance.moduleHost,
+			this.deps.internalModule,
+			this.deps.instance.moduleHost,
 			this.controlId,
 			this.commitChange.bind(this)
 		)
@@ -509,7 +523,7 @@ export class ControlButtonNormal
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
 		ReferencesVisitors.visitControlReferences(
-			this.registry.internalModule,
+			this.deps.internalModule,
 			visitor,
 			this.feedbacks.baseStyle,
 			allActions,
@@ -553,7 +567,7 @@ export class ControlButtonNormal
 	/**
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
@@ -623,7 +637,7 @@ export class ControlButtonNormal
 					if (actions) {
 						this.logger.silly('found actions')
 
-						this.controls.actions.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
+						this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
 							surfaceId,
 						})
 					}
@@ -657,7 +671,7 @@ export class ControlButtonNormal
 	/**
 	 * Execute a rotate of this control
 	 * @param direction Whether the control was rotated to the right
-	 * @param surfaceId The surface that intiated this rotate
+	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(direction: boolean, surfaceId: string | undefined): void {
 		const [this_step_id] = this.#validateCurrentStepId()
@@ -672,7 +686,7 @@ export class ControlButtonNormal
 
 				const enabledActions = actions.filter((act) => !act.disabled)
 
-				this.controls.actions.runMultipleActions(enabledActions, this.controlId, this.options.relativeDelay, {
+				this.deps.actionRunner.runMultipleActions(enabledActions, this.controlId, this.options.relativeDelay, {
 					surfaceId,
 				})
 			}
@@ -749,18 +763,16 @@ export class ControlButtonNormal
 		const newStepId = `${max + 1}`
 		this.steps[newStepId] = newStep
 
-		this.commitChange(true)
+		// Treat it as an import, to make any ids unique
+		newStep.postProcessImport().catch((e) => {
+			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
+		})
 
 		// Ensure the ui knows which step is current
 		this.sendRuntimePropsChange()
 
 		// Save the change, and perform a draw
 		this.commitChange(true)
-
-		// Treat it as an import, to make any ids unique
-		newStep.postProcessImport().catch((e) => {
-			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
-		})
 
 		return true
 	}

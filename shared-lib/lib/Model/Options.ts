@@ -16,10 +16,11 @@ export type IsVisibleFunction = Required<CompanionInputFieldBase>['isVisible']
 
 export type InternalInputFieldType =
 	| 'internal:time'
+	| 'internal:date'
 	| 'internal:variable'
 	| 'internal:custom_variable'
 	| 'internal:trigger'
-	| 'internal:instance_id'
+	| 'internal:connection_id'
 	| 'internal:surface_serial'
 	| 'internal:page'
 // export type CompanionInputFieldTypeExtended = CompanionInputFieldBase['type']
@@ -29,6 +30,9 @@ export interface CompanionInputFieldBaseExtended extends Omit<CompanionInputFiel
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
 	type: 'internal:time'
+}
+export interface InternalInputFieldDate extends CompanionInputFieldBaseExtended {
+	type: 'internal:date'
 }
 export interface InternalInputFieldVariable extends CompanionInputFieldBaseExtended {
 	type: 'internal:variable'
@@ -43,8 +47,8 @@ export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtend
 	includeSelf?: boolean
 	default?: string
 }
-export interface InternalInputFieldInstanceId extends CompanionInputFieldBaseExtended {
-	type: 'internal:instance_id'
+export interface InternalInputFieldConnectionId extends CompanionInputFieldBaseExtended {
+	type: 'internal:connection_id'
 	multiple: boolean
 	includeAll?: boolean
 	filterActionsRecorder?: boolean
@@ -65,10 +69,11 @@ export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended 
 
 export type InternalInputField =
 	| EncodeIsVisible2<InternalInputFieldTime>
+	| EncodeIsVisible2<InternalInputFieldDate>
 	| EncodeIsVisible2<InternalInputFieldVariable>
 	| EncodeIsVisible2<InternalInputFieldCustomVariable>
 	| EncodeIsVisible2<InternalInputFieldTrigger>
-	| EncodeIsVisible2<InternalInputFieldInstanceId>
+	| EncodeIsVisible2<InternalInputFieldConnectionId>
 	| EncodeIsVisible2<InternalInputFieldSurfaceSerial>
 	| EncodeIsVisible2<InternalInputFieldPage>
 

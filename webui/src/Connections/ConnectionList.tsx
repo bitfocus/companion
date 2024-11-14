@@ -1,6 +1,6 @@
-import React, { RefObject, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
-import { ConnectionsContext, socketEmitPromise, SocketContext } from '../util.js'
+import React, { RefObject, useCallback, useContext, useRef } from 'react'
+import { CButton, CButtonGroup, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
+import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faSort,
@@ -14,18 +14,22 @@ import {
 	faTrash,
 	faEllipsisV,
 	faPlug,
+	faTriangleExclamation,
+	faPowerOff,
 } from '@fortawesome/free-solid-svg-icons'
-
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { windowLinkOpen } from '../Helpers/Window.js'
 import classNames from 'classnames'
-import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
+import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -41,19 +45,13 @@ interface ConnectionsListProps {
 	selectedConnectionId: string | null
 }
 
-export function ConnectionsList({
+export const ConnectionsList = observer(function ConnectionsList({
 	showHelp,
 	doConfigureConnection,
 	connectionStatus,
 	selectedConnectionId,
 }: ConnectionsListProps) {
-	const socket = useContext(SocketContext)
-	const connectionsContext = useContext(ConnectionsContext)
-
-	const connectionsRef = useRef<Record<string, ClientConnectionConfig>>()
-	useEffect(() => {
-		connectionsRef.current = connectionsContext
-	}, [connectionsContext])
+	const { connections, socket } = useContext(RootAppStoreContext)
 
 	const deleteModalRef = useRef<GenericConfirmModalRef>(null)
 	const variablesModalRef = useRef<ConnectionVariablesModalRef>(null)
@@ -62,62 +60,48 @@ export function ConnectionsList({
 		variablesModalRef.current?.show(connectionId)
 	}, [])
 
-	const [visibleConnections, setVisibleConnections] = useState<VisibleConnectionsState>(() => loadVisibility())
-
-	// Save the config when it changes
-	useEffect(() => {
-		window.localStorage.setItem('connections_visible', JSON.stringify(visibleConnections))
-	}, [visibleConnections])
-
-	const doToggleVisibility = useCallback((key: keyof VisibleConnectionsState) => {
-		setVisibleConnections((oldConfig) => ({
-			...oldConfig,
-			[key]: !oldConfig[key],
-		}))
-	}, [])
-
-	const doToggleDisabled = useCallback(() => doToggleVisibility('disabled'), [doToggleVisibility])
-	const doToggleOk = useCallback(() => doToggleVisibility('ok'), [doToggleVisibility])
-	const doToggleWarning = useCallback(() => doToggleVisibility('warning'), [doToggleVisibility])
-	const doToggleError = useCallback(() => doToggleVisibility('error'), [doToggleVisibility])
+	const visibleConnections = useTableVisibilityHelper<VisibleConnectionsState>('connections_visible', {
+		disabled: true,
+		ok: true,
+		warning: true,
+		error: true,
+	})
 
 	const moveRow = useCallback(
 		(itemId: string, targetId: string) => {
-			if (connectionsRef.current) {
-				const rawIds = Object.entries(connectionsRef.current)
-					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-					.map(([id]) => id)
+			const rawIds = Array.from(connections.connections.entries())
+				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+				.map(([id]) => id)
 
-				const itemIndex = rawIds.indexOf(itemId)
-				const targetIndex = rawIds.indexOf(targetId)
-				if (itemIndex === -1 || targetIndex === -1) return
+			const itemIndex = rawIds.indexOf(itemId)
+			const targetIndex = rawIds.indexOf(targetId)
+			if (itemIndex === -1 || targetIndex === -1) return
 
-				const newIds = rawIds.filter((id) => id !== itemId)
-				newIds.splice(targetIndex, 0, itemId)
+			const newIds = rawIds.filter((id) => id !== itemId)
+			newIds.splice(targetIndex, 0, itemId)
 
-				socketEmitPromise(socket, 'connections:set-order', [newIds]).catch((e) => {
-					console.error('Reorder failed', e)
-				})
-			}
+			socketEmitPromise(socket, 'connections:set-order', [newIds]).catch((e) => {
+				console.error('Reorder failed', e)
+			})
 		},
-		[socket]
+		[socket, connections]
 	)
 
 	let visibleCount = 0
 
-	const rows = Object.entries(connectionsContext)
+	const rows = Array.from(connections.connections.entries())
 		.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
 		.map(([id, connection]) => {
 			const status = connectionStatus?.[id]
 
-			if (!visibleConnections.disabled && connection.enabled === false) {
+			if (!visibleConnections.visiblity.disabled && connection.enabled === false) {
 				return undefined
 			} else if (status) {
-				if (!visibleConnections.ok && status.category === 'good') {
+				if (!visibleConnections.visiblity.ok && status.category === 'good') {
 					return undefined
-				} else if (!visibleConnections.warning && status.category === 'warning') {
+				} else if (!visibleConnections.visiblity.warning && status.category === 'warning') {
 					return undefined
-				} else if (!visibleConnections.error && status.category === 'error') {
+				} else if (!visibleConnections.visiblity.error && status.category === 'error') {
 					return undefined
 				}
 			}
@@ -139,7 +123,7 @@ export function ConnectionsList({
 				/>
 			)
 		})
-	const hiddenCount = Object.keys(connectionsContext).length - visibleCount
+	const hiddenCount = connections.count - visibleCount
 
 	return (
 		<div>
@@ -160,44 +144,11 @@ export function ConnectionsList({
 						<th>Label</th>
 						<th>Module</th>
 						<th colSpan={3} className="fit">
-							<CButtonGroup style={{ float: 'right', margin: 0 }}>
-								<CButton
-									size="sm"
-									color="secondary"
-									style={{
-										backgroundColor: 'white',
-										opacity: visibleConnections.disabled ? 1 : 0.4,
-										padding: '1px 5px',
-										color: 'black',
-									}}
-									onClick={doToggleDisabled}
-								>
-									Disabled
-								</CButton>
-								<CButton
-									size="sm"
-									color="success"
-									style={{ opacity: visibleConnections.ok ? 1 : 0.4, padding: '1px 5px' }}
-									onClick={doToggleOk}
-								>
-									OK
-								</CButton>
-								<CButton
-									color="warning"
-									size="sm"
-									style={{ opacity: visibleConnections.warning ? 1 : 0.4, padding: '1px 5px' }}
-									onClick={doToggleWarning}
-								>
-									Warning
-								</CButton>
-								<CButton
-									color="danger"
-									size="sm"
-									style={{ opacity: visibleConnections.error ? 1 : 0.4, padding: '1px 5px' }}
-									onClick={doToggleError}
-								>
-									Error
-								</CButton>
+							<CButtonGroup className="table-header-buttons">
+								<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
+								<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
+								<VisibilityButton {...visibleConnections} keyId="warning" color="warning" label="Warning" />
+								<VisibilityButton {...visibleConnections} keyId="error" color="danger" label="Error" />
 							</CButtonGroup>
 						</th>
 					</tr>
@@ -207,12 +158,12 @@ export function ConnectionsList({
 					{hiddenCount > 0 && (
 						<tr>
 							<td colSpan={4} style={{ padding: '10px 5px' }}>
-								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
+								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 								<strong>{hiddenCount} Connections are hidden</strong>
 							</td>
 						</tr>
 					)}
-					{Object.keys(connectionsContext).length === 0 && (
+					{connections.count === 0 && (
 						<tr>
 							<td colSpan={4}>
 								<NonIdealState icon={faPlug}>
@@ -227,28 +178,7 @@ export function ConnectionsList({
 			</table>
 		</div>
 	)
-}
-
-function loadVisibility(): VisibleConnectionsState {
-	try {
-		const rawConfig = window.localStorage.getItem('connections_visible')
-		if (rawConfig !== null) {
-			return JSON.parse(rawConfig) ?? {}
-		}
-	} catch (e) {}
-
-	// setup defaults
-	const config: VisibleConnectionsState = {
-		disabled: true,
-		ok: true,
-		warning: true,
-		error: true,
-	}
-
-	window.localStorage.setItem('connections_visible', JSON.stringify(config))
-
-	return config
-}
+})
 
 interface ConnectionDragItem {
 	id: string
@@ -343,7 +273,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const connectionVariables = variablesStore.variables.get(connection.label)
 
 	const doEdit = () => {
-		if (!moduleInfo || !isEnabled) {
+		if (!moduleInfo) {
 			return
 		}
 
@@ -391,7 +321,9 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					connection.instance_type
 				)}
 			</td>
-			<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} onClick={doEdit} />
+			<td className="hand" onClick={doEdit}>
+				<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} />
+			</td>
 			<td className="action-buttons">
 				<div style={{ display: 'flex' }}>
 					<div>
@@ -411,7 +343,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 						style={{ backgroundColor: 'white' }}
 						content={
 							<>
-								{/* Note: the popover closing due to focus loss stops mouseup/click events propogating */}
+								{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
 								<CButtonGroup vertical>
 									<CButton
 										onMouseDown={doShowHelp}
@@ -487,10 +419,9 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 interface ModuleStatusCallProps {
 	isEnabled: boolean
 	status: ConnectionStatusEntry | undefined
-	onClick?: () => void
 }
 
-function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps) {
+function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 	if (isEnabled) {
 		const messageStr =
 			!!status &&
@@ -500,41 +431,32 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 
 		switch (status?.category) {
 			case 'good':
-				return (
-					<td className="hand" onClick={onClick}>
-						<FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" />
-					</td>
-				)
+				return <FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" />
 			case 'warning':
 				return (
-					<td className="connection-status-warn" onClick={onClick}>
-						{status.level || 'Warning'}
-						<br />
-						{messageStr}
-					</td>
+					<InlineHelp help={`${status.level ?? 'Warning'}${messageStr ? ': ' + messageStr : ''}`}>
+						<FontAwesomeIcon icon={faTriangleExclamation} color={'#fab92c'} size="2xl" />
+					</InlineHelp>
 				)
 			case 'error':
-				return (
-					<td className="connection-status-error" onClick={onClick}>
-						{status.level || 'ERROR'}
-						<br />
-						{messageStr}
-					</td>
+				return status?.level === 'Connecting' ? (
+					<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
+						<CSpinner color="warning"></CSpinner>
+					</InlineHelp>
+				) : (
+					<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
+						<FontAwesomeIcon icon={faTriangleExclamation} color={'#d50215'} size="2xl" />
+					</InlineHelp>
 				)
+
 			default:
 				return (
-					<td className="connection-status-error" onClick={onClick}>
-						Unknown
-						<br />
-						{messageStr}
-					</td>
+					<InlineHelp help={`Unknown${messageStr ? ': ' + messageStr : ''}`}>
+						<FontAwesomeIcon icon={faTriangleExclamation} color={'#fab92c'} size="2xl" />
+					</InlineHelp>
 				)
 		}
 	} else {
-		return (
-			<td onClick={onClick}>
-				<p>Disabled</p>
-			</td>
-		)
+		return <FontAwesomeIcon icon={faPowerOff} color={'gray'} size="2xl" />
 	}
 }

@@ -18,12 +18,17 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { cloneDeep } from 'lodash-es'
 import { LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
-import { GridSize, rotateXYForPanel, unrotateXYForPanel } from './Util.js'
+import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController, { Logger } from '../Log/Controller.js'
-import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	SurfaceGroupConfig,
+	GridSize,
+	SurfaceConfig,
+	SurfacePanelConfig,
+} from '@companion-app/shared/Model/Surfaces.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
@@ -31,9 +36,9 @@ import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { Registry } from '../Registry.js'
-import { DrawButtonItem, SurfacePanel } from './Types.js'
-import { CompanionVariableValue } from '@companion-module/base'
+import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel } from './Types.js'
+import type { CompanionVariableValue } from '@companion-module/base'
+import { PanelDefaults } from './Config.js'
 
 const PINCODE_NUMBER_POSITIONS: [number, number][] = [
 	// 0
@@ -85,18 +90,6 @@ interface SurfaceHandlerEvents {
 }
 
 export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
-	static PanelDefaults = {
-		// defaults from the panel - TODO properly
-		brightness: 100,
-		rotation: 0,
-
-		// companion owned defaults
-		never_lock: false,
-		xOffset: 0,
-		yOffset: 0,
-		groupId: null,
-	}
-
 	/**
 	 * Currently pressed buttons, and what they are keeping pressed
 	 */
@@ -130,7 +123,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Config for this surface
 	 */
-	#surfaceConfig: Record<string, any>
+	#surfaceConfig: SurfaceConfig
 
 	/**
 	 * Xkeys: How many pages of colours it has asked for
@@ -185,25 +178,27 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	readonly panel: SurfacePanel
 
 	constructor(
-		registry: Registry,
-		integrationType: string,
+		surfaceController: SurfaceController,
+		deps: SurfaceHandlerDependencies,
 		panel: SurfacePanel,
-		surfaceConfig: Record<string, any> | undefined
+		surfaceConfig: SurfaceConfig
 	) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/Handler/${panel.info.deviceId}`)
 		this.#logger.silly('loading for ' + panel.info.devicePath)
 
-		this.#controls = registry.controls
-		this.#graphics = registry.graphics
-		this.#page = registry.page
-		this.#surfaces = registry.surfaces
-		this.#userconfig = registry.userconfig
-		this.#variables = registry.variables
+		this.#surfaces = surfaceController
+		this.#controls = deps.controls
+		this.#graphics = deps.graphics
+		this.#page = deps.page
+		this.#userconfig = deps.userconfig
+		this.#variables = deps.variables
 
 		this.panel = panel
-		this.#surfaceConfig = surfaceConfig ?? {}
+		this.#surfaceConfig = surfaceConfig
+
+		this.#currentPageId = this.#page.getFirstPageId()
 
 		// Setup logger to use the name
 		this.#recreateLogger()
@@ -225,39 +220,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [3, 4]
 		}
-
-		// Persist the type in the db for use when it is disconnected
-		this.#surfaceConfig.type = this.panel.info.type || 'Unknown'
-		this.#surfaceConfig.integrationType = integrationType
-		this.#surfaceConfig.gridSize = this.panel.gridSize
-
-		if (!this.#surfaceConfig.config) {
-			this.#surfaceConfig.config = cloneDeep(SurfaceHandler.PanelDefaults)
-			if (typeof this.panel.getDefaultConfig === 'function') {
-				Object.assign(this.#surfaceConfig.config, this.panel.getDefaultConfig())
-			}
-		}
-
-		if (this.#surfaceConfig.config.xOffset === undefined || this.#surfaceConfig.config.yOffset === undefined) {
-			// Fill in missing default offsets
-			this.#surfaceConfig.config.xOffset = 0
-			this.#surfaceConfig.config.yOffset = 0
-		}
-
-		if (!this.#surfaceConfig.groupConfig) {
-			// Fill in the new field based on previous behaviour:
-			// If a page had been chosen, then it would start on that
-			const use_last_page = this.#surfaceConfig.config.use_last_page ?? this.#surfaceConfig.config.page === undefined
-			this.#surfaceConfig.groupConfig = {
-				page: this.#surfaceConfig.page,
-				startup_page: this.#surfaceConfig.config.page,
-				use_last_page: use_last_page,
-			}
-		}
-		// Forget old values
-		delete this.#surfaceConfig.config.use_last_page
-		delete this.#surfaceConfig.config.page
-		delete this.#surfaceConfig.page
 
 		if (this.#surfaceConfig.config.never_lock) {
 			// if device can't be locked, then make sure it isnt already locked
@@ -646,9 +608,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 	/**
 	 * XKeys: Draw additional pages color information
-	 * @returns {void}
 	 */
-	#xkeysDrawPages() {
+	#xkeysDrawPages(): void {
 		if (!this.panel || !this.panel.drawColor) return
 
 		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
@@ -686,7 +647,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			startup_page_id: this.#page.getFirstPageId(),
 		}
 		this.#surfaceConfig.groupId = null
-		this.setPanelConfig(cloneDeep(SurfaceHandler.PanelDefaults))
+		this.setPanelConfig(cloneDeep(PanelDefaults))
 	}
 
 	/**
@@ -708,7 +669,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Get the full config blob for this surface
 	 */
-	getFullConfig(): any {
+	getFullConfig(): SurfaceConfig {
 		return this.#surfaceConfig
 	}
 
@@ -725,7 +686,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Update the panel configuration
 	 */
-	setPanelConfig(newconfig: any): void {
+	setPanelConfig(newconfig: SurfacePanelConfig): void {
 		let redraw = false
 		if (
 			newconfig.xOffset != this.#surfaceConfig.config.xOffset ||
@@ -812,8 +773,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		// delete this.panel
 
 		if (purge && surfaceId) {
-			this.#surfaceConfig = {}
-
 			this.emit('configUpdated', undefined)
 		}
 	}

@@ -183,37 +183,52 @@ describe('OscApi', () => {
 
 			test('bad page', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1a/2/3/down')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2a/3/down')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3a/down')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -258,37 +273,52 @@ describe('OscApi', () => {
 
 			test('bad page', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1a/2/3/up')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2a/3/up')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3a/up')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -339,37 +369,52 @@ describe('OscApi', () => {
 
 			test('bad page', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1a/2/3/press')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2a/3/press')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3a/press')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -411,37 +456,52 @@ describe('OscApi', () => {
 
 			test('bad page', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1a/2/3/rotate-left')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2a/3/rotate-left')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3a/rotate-left')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -483,37 +543,52 @@ describe('OscApi', () => {
 
 			test('bad page', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1a/2/3/rotate-right')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2a/3/rotate-right')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3a/rotate-right')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -606,7 +681,7 @@ describe('OscApi', () => {
 
 			test('bad page', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 
 				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
@@ -614,12 +689,17 @@ describe('OscApi', () => {
 				// Perform the request
 				router.processMessage('/location/1a/2/3/step', { args: [{ value: 2 }] })
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: NaN,
+					row: 2,
+					column: 3,
+				})
 			})
 
 			test('bad row', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 
 				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
@@ -627,12 +707,17 @@ describe('OscApi', () => {
 				// Perform the request
 				router.processMessage('/location/1/2a/3/step', { args: [{ value: 2 }] })
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: NaN,
+					column: 3,
+				})
 			})
 
 			test('bad column', async () => {
 				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.page.getControlIdAt.mockReturnValue(null)
 
 				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
 				registry.controls.getControl.mockReturnValue(mockControl)
@@ -640,7 +725,12 @@ describe('OscApi', () => {
 				// Perform the request
 				router.processMessage('/location/1/2/3a/step', { args: [{ value: 2 }] })
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: NaN,
+				})
 			})
 		})
 

@@ -7,11 +7,15 @@ export const ExportFormatDefault: ExportFormat = 'json-gz'
 const formatOptions: DropdownChoice[] = [
 	{
 		id: 'json-gz',
-		label: 'Compressed',
+		label: 'Compressed (Default)',
 	},
 	{
 		id: 'json',
-		label: 'Uncompressed',
+		label: 'JSON (Standard)',
+	},
+	{
+		id: 'yaml',
+		label: 'YAML (More human readable)',
 	},
 ]
 

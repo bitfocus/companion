@@ -1,9 +1,9 @@
 import { cloneDeep } from 'lodash-es'
-import { CoreBase } from '../Core/Base.js'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
-import type { Registry } from '../Registry.js'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import LogController, { Logger } from '../Log/Controller.js'
+import type { ControlDependencies } from './ControlDependencies.js'
 
 /**
  * Get Socket.io room to use for changes to a control config
@@ -32,8 +32,11 @@ export function ControlConfigRoom(controlId: string): string {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export abstract class ControlBase<TJson> extends CoreBase {
+export abstract class ControlBase<TJson> {
 	abstract readonly type: string
+
+	protected readonly logger: Logger
+	protected readonly deps: ControlDependencies
 
 	/**
 	 * The last sent config json object
@@ -52,9 +55,9 @@ export abstract class ControlBase<TJson> extends CoreBase {
 
 	readonly controlId: string
 
-	constructor(registry: Registry, controlId: string, debugNamespace: string) {
-		super(registry, debugNamespace)
-
+	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+		this.logger = LogController.createLogger(debugNamespace)
+		this.deps = deps
 		this.controlId = controlId
 	}
 
@@ -73,15 +76,15 @@ export abstract class ControlBase<TJson> extends CoreBase {
 		const newJson = this.toJSON(true)
 
 		// Save to db
-		this.db.setKey(['controls', this.controlId], newJson as any)
+		this.deps.db.setTableKey('controls', this.controlId, newJson as any)
 
 		// Now broadcast to any interested clients
 		const roomName = ControlConfigRoom(this.controlId)
 
-		if (this.io.countRoomMembers(roomName) > 0) {
+		if (this.deps.io.countRoomMembers(roomName) > 0) {
 			const patch = jsonPatch.compare(this.#lastSentConfigJson || {}, newJson || {})
 			if (patch.length > 0) {
-				this.io.emitToRoom(roomName, `controls:config-${this.controlId}`, patch)
+				this.deps.io.emitToRoom(roomName, `controls:config-${this.controlId}`, patch)
 			}
 		}
 
@@ -95,9 +98,9 @@ export abstract class ControlBase<TJson> extends CoreBase {
 	destroy(): void {
 		// Inform clients
 		const roomName = ControlConfigRoom(this.controlId)
-		if (this.io.countRoomMembers(roomName) > 0) {
-			this.io.emitToRoom(roomName, `controls:config-${this.controlId}`, false)
-			this.io.emitToRoom(roomName, `controls:runtime-${this.controlId}`, false)
+		if (this.deps.io.countRoomMembers(roomName) > 0) {
+			this.deps.io.emitToRoom(roomName, `controls:config-${this.controlId}`, false)
+			this.deps.io.emitToRoom(roomName, `controls:runtime-${this.controlId}`, false)
 		}
 	}
 
@@ -137,10 +140,10 @@ export abstract class ControlBase<TJson> extends CoreBase {
 		// Now broadcast to any interested clients
 		const roomName = ControlConfigRoom(this.controlId)
 
-		if (this.io.countRoomMembers(roomName) > 0) {
+		if (this.deps.io.countRoomMembers(roomName) > 0) {
 			const patch = jsonPatch.compare(this.#lastSentRuntimeJson || {}, newJson || {})
 			if (patch.length > 0) {
-				this.io.emitToRoom(roomName, `controls:runtime-${this.controlId}`, patch)
+				this.deps.io.emitToRoom(roomName, `controls:runtime-${this.controlId}`, patch)
 			}
 		}
 
@@ -173,7 +176,7 @@ export abstract class ControlBase<TJson> extends CoreBase {
 
 			this.#pendingDraw = true
 			setImmediate(() => {
-				this.graphics.invalidateControl(this.controlId)
+				this.deps.graphics.invalidateControl(this.controlId)
 				this.#pendingDraw = false
 			})
 		},
@@ -201,7 +204,7 @@ export abstract class ControlBase<TJson> extends CoreBase {
 	/**
 	 * Execute a press of a control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that intiated this press
+	 * @param surfaceId The surface that initiated this press
 	 * @param force Trigger actions even if already in the state
 	 */
 	abstract pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void

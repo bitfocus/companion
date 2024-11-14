@@ -1036,13 +1036,13 @@ export class InternalControls implements InternalModuleFragment {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
-			this.#controlsController.actions.abortControlDelayed(theControlId, action.options.unlatch)
+			this.#controlsController.actionRunner.abortControlDelayed(theControlId, action.options.unlatch)
 			return true
 		} else if (action.action === 'panic_page') {
 			const { thePage } = this.#fetchPage(action.options, extras)
 			if (thePage === null) return true
 
-			this.#controlsController.actions.abortPageDelayed(
+			this.#controlsController.actionRunner.abortPageDelayed(
 				thePage,
 				action.options.ignoreSelf && extras.location ? [extras.location] : undefined
 			)
@@ -1052,12 +1052,12 @@ export class InternalControls implements InternalModuleFragment {
 			if (controlId === 'self') controlId = extras.controlId
 
 			if (controlId && ParseControlId(controlId)?.type === 'trigger') {
-				this.#controlsController.actions.abortControlDelayed(controlId, false)
+				this.#controlsController.actionRunner.abortControlDelayed(controlId, false)
 			}
 
 			return true
 		} else if (action.action === 'panic') {
-			this.#controlsController.actions.abortAllDelayed()
+			this.#controlsController.actionRunner.abortAllDelayed()
 			return true
 		} else if (action.action == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)

@@ -7,13 +7,6 @@ interface ResolverState {
 	isComplete: boolean
 }
 
-/**
- *
- * @param {import('jsep').Expression} node
- * @param {(name: string) => VariableValue | undefined} getVariableValue
- * @param {Record<string, (...args: any[]) => any>} functions
- * @returns {VariableValue | undefined}
- */
 export function ResolveExpression(
 	node: SomeExpressionNode,
 	getVariableValue: (name: string) => CompanionVariableValue | undefined,

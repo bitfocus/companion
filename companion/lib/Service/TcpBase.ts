@@ -27,7 +27,7 @@ export abstract class ServiceTcpBase extends ServiceBase {
 	/**
 	 * This stored client sockets
 	 */
-	protected clients: Array<Socket> = []
+	protected readonly clients = new Set<Socket>()
 
 	/**
 	 * Start the service if it is not already running
@@ -47,16 +47,16 @@ export abstract class ServiceTcpBase extends ServiceBase {
 					}
 
 					client.on('end', () => {
-						this.clients.splice(this.clients.indexOf(client), 1)
+						this.clients.delete(client)
 						this.logger.debug('Client disconnected: ' + clientInfo.name)
 					})
 
 					client.on('error', () => {
-						this.clients.splice(this.clients.indexOf(client), 1)
+						this.clients.delete(client)
 						this.logger.error('Client errored/died: ' + clientInfo.name)
 					})
 
-					this.clients.push(client)
+					this.clients.add(client)
 
 					this.logger.debug('Client connected: ' + clientInfo.name)
 
@@ -79,6 +79,15 @@ export abstract class ServiceTcpBase extends ServiceBase {
 			this.server.close()
 			this.server = undefined
 		}
+
+		this.clients.forEach((socket) => {
+			try {
+				socket.destroy()
+			} catch (e) {
+				// Ignore failure
+			}
+		})
+		this.clients.clear()
 	}
 
 	/**

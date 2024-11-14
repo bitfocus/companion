@@ -26,7 +26,7 @@ import {
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
-import { convertPanelIndexToXY, GridSize } from '../Util.js'
+import { convertPanelIndexToXY } from '../Util.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
 import {
@@ -35,7 +35,7 @@ import {
 	RotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import { ImageResult } from '../../Graphics/ImageResult.js'
 

@@ -38,7 +38,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 		if (!label) return
 
 		const doPoll = () => {
-			socketEmitPromise(socket, 'variables:instance-values', [label])
+			socketEmitPromise(socket, 'variables:connection-values', [label])
 				.then((values) => {
 					setVariableValues(values || {})
 				})
@@ -112,7 +112,6 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 						<th>Variable</th>
 						<th>Description</th>
 						<th>Value</th>
-						<th>&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -167,7 +166,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 	const lines = displayValue.split('\\n')
 	lines.forEach((l, i) => {
 		elms.push(l)
-		if (i <= lines.length - 1) {
+		if (i <= lines.length - 2) {
 			elms.push(<br key={i} />)
 		}
 	})
@@ -180,7 +179,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 				</span>
 				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
 					<CButton size="sm" title="Copy variable name">
-						<FontAwesomeIcon icon={faCopy} />
+						<FontAwesomeIcon icon={faCopy} color="#d50215" />
 					</CButton>
 				</CopyToClipboard>
 			</td>
@@ -192,18 +191,28 @@ const VariablesTableRow = observer(function VariablesTableRow({
 					valueRaw === null ? (
 						'(empty)'
 					) : (
-						<code
-							style={{
-								backgroundColor: 'rgba(0,0,200,0.1)',
-								color: 'rgba(0,0,200,1)',
-								fontWeight: 'normal',
-								padding: '1px 3px',
-								fontSize: 14,
-							}}
-							title={value}
-						>
-							{elms}
-						</code>
+						<div style={{ display: 'inline' }}>
+							<code
+								style={{
+									backgroundColor: 'rgba(0,0,200,0.1)',
+									color: 'rgba(0,0,200,1)',
+									fontWeight: 'normal',
+									fontSize: 14,
+									padding: '4px',
+									lineHeight: '2em',
+									borderRadius: '6px',
+								}}
+								title={value}
+							>
+								{elms}
+							</code>
+
+							<CopyToClipboard text={value} onCopy={onCopied}>
+								<CButton size="sm" title="Copy variable value">
+									<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
+								</CButton>
+							</CopyToClipboard>
+						</div>
 					)
 				}
 				{value == compactValue ? (
@@ -217,13 +226,6 @@ const VariablesTableRow = observer(function VariablesTableRow({
 						Less
 					</a>
 				)}
-			</td>
-			<td>
-				<CopyToClipboard text={value} onCopy={onCopied}>
-					<CButton size="sm" title="Copy variable value">
-						<FontAwesomeIcon icon={faCopy} />
-					</CButton>
-				</CopyToClipboard>
 			</td>
 		</tr>
 	)

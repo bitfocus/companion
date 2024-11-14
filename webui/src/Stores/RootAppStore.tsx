@@ -12,6 +12,7 @@ import type { TriggersListStore } from './TriggersListStore.js'
 import type { SurfacesStore } from './SurfacesStore.js'
 import type { UserConfigStore } from './UserConfigStore.js'
 import type { VariablesStore } from './VariablesStore.js'
+import type { ConnectionsStore } from './ConnectionsStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -20,6 +21,7 @@ export interface RootAppStore {
 	readonly notifier: React.RefObject<NotificationsManagerRef> // TODO - this is not good
 
 	readonly modules: ModuleInfoStore
+	readonly connections: ConnectionsStore
 
 	/** Currently running 'learn' callbacks */
 	readonly activeLearns: ObservableSet<string>

@@ -43,18 +43,25 @@ import { SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
-import { CoreBase } from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
-import type { ClientDevicesListItem, ClientSurfaceItem, SurfacesUpdate } from '@companion-app/shared/Model/Surfaces.js'
-import type { Registry } from '../Registry.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type {
+	ClientDevicesListItem,
+	ClientSurfaceItem,
+	SurfaceConfig,
+	SurfacesUpdate,
+} from '@companion-app/shared/Model/Surfaces.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type { LocalUSBDeviceOptions, SurfacePanel, SurfacePanelFactory } from './Types.js'
+import type { LocalUSBDeviceOptions, SurfaceHandlerDependencies, SurfacePanel, SurfacePanelFactory } from './Types.js'
+import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
+import { EventEmitter } from 'events'
+import LogController from '../Log/Controller.js'
+import type { DataDatabase } from '../Data/Database.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -76,7 +83,13 @@ export interface SurfaceControllerEvents {
 	'group-delete': [surfaceId: string]
 }
 
-export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
+export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
+	readonly #logger = LogController.createLogger('Surface/Controller')
+
+	readonly #db: DataDatabase
+	readonly #handlerDependencies: SurfaceHandlerDependencies
+	readonly #io: UIHandler
+
 	/**
 	 * The last sent json object
 	 */
@@ -120,22 +133,26 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 	readonly #outboundController: SurfaceOutboundController
 
-	constructor(registry: Registry) {
-		super(registry, 'Surface/Controller')
+	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies, io: UIHandler) {
+		super()
 
-		this.#outboundController = new SurfaceOutboundController(this, registry.db, registry.io)
+		this.#db = db
+		this.#handlerDependencies = handlerDependencies
+		this.#io = io
 
-		this.#surfacesAllLocked = !!this.userconfig.getKey('link_lockouts')
+		this.#outboundController = new SurfaceOutboundController(this, db, io)
+
+		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
 
 		setImmediate(() => {
 			// Setup groups
-			const groupsConfigs = this.db.getKey('surface-groups', {})
+			const groupsConfigs = this.#db.getKey('surface_groups', {})
 			for (const groupId of Object.keys(groupsConfigs)) {
 				const newGroup = new SurfaceGroup(
 					this,
-					this.db,
-					this.page,
-					this.userconfig,
+					this.#db,
+					this.#handlerDependencies.page,
+					this.#handlerDependencies.userconfig,
 					groupId,
 					null,
 					this.isPinLockEnabled()
@@ -144,7 +161,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			}
 
 			// Setup defined emulators
-			const instances = this.db.getKey('deviceconfig', {}) || {}
+			const instances = this.#db.getKey('deviceconfig', {}) || {}
 			for (const id of Object.keys(instances)) {
 				// If the id starts with 'emulator:' then re-add it
 				if (id.startsWith('emulator:')) {
@@ -154,7 +171,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 			// Initial search for USB devices
 			this.#refreshDevices().catch(() => {
-				this.logger.warn('Initial USB scan failed')
+				this.#logger.warn('Initial USB scan failed')
 			})
 			this.#outboundController.init()
 
@@ -165,12 +182,12 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 		this.triggerRefreshDevicesEvent = this.triggerRefreshDevicesEvent.bind(this)
 
-		const runHotplug = this.userconfig.getKey('usb_hotplug')
+		const runHotplug = this.#handlerDependencies.userconfig.getKey('usb_hotplug')
 		if (runHotplug) {
 			try {
 				usb.on('attach', this.triggerRefreshDevicesEvent)
 			} catch (e) {
-				this.logger.error(`Failed to enable usb hotplug: ${e}`)
+				this.#logger.error(`Failed to enable usb hotplug: ${e}`)
 			}
 			this.#runningUsbHotplug = true
 		}
@@ -201,7 +218,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 					this.#runningUsbHotplug = true
 				}
 			} catch (e) {
-				this.logger.warn(`Failed to enable/disable usb hotplug: ${e}`)
+				this.#logger.warn(`Failed to enable/disable usb hotplug: ${e}`)
 			}
 		} else if (key === 'pin_enable' || key === 'pin_timeout') {
 			this.#startStopLockoutTimer()
@@ -221,10 +238,10 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 		}
 
 		// Start new timer
-		const timeout = Number(this.userconfig.getKey('pin_timeout')) * 1000
-		if (!isNaN(timeout) && timeout > 0 && !!this.userconfig.getKey('pin_enable')) {
+		const timeout = Number(this.#handlerDependencies.userconfig.getKey('pin_timeout')) * 1000
+		if (!isNaN(timeout) && timeout > 0 && !!this.#handlerDependencies.userconfig.getKey('pin_enable')) {
 			this.#surfaceLockoutTimer = setInterval(() => {
-				if (this.userconfig.getKey('link_lockouts')) {
+				if (this.#handlerDependencies.userconfig.getKey('link_lockouts')) {
 					if (this.#surfacesAllLocked) return
 
 					let doLockout = false
@@ -262,7 +279,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 	triggerRefreshDevicesEvent(): void {
 		this.triggerRefreshDevices().catch((e) => {
-			this.logger.warn(`Hotplug device refresh failed: ${e}`)
+			this.#logger.warn(`Hotplug device refresh failed: ${e}`)
 		})
 	}
 
@@ -277,7 +294,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			throw new Error(`Emulator "${id}" already exists!`)
 		}
 
-		this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.io, id))
+		this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#io, id))
 
 		if (!skipUpdate) this.updateDevicesList()
 	}
@@ -286,14 +303,21 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	 * Create a `SurfaceHandler` for a `SurfacePanel`
 	 */
 	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): void {
-		const surfaceConfig = this.getDeviceConfig(panel.info.deviceId)
-		if (!surfaceConfig) {
-			this.logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
+		const existingSurfaceConfig = this.getDeviceConfig(panel.info.deviceId)
+		if (!existingSurfaceConfig) {
+			this.#logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
 		} else {
-			this.logger.silly(`Reusing config for device ${panel.info.deviceId}`)
+			this.#logger.silly(`Reusing config for device ${panel.info.deviceId}`)
 		}
 
-		const handler = new SurfaceHandler(this.registry, integrationType, panel, surfaceConfig)
+		const surfaceConfig = createOrSanitizeSurfaceHandlerConfig(
+			integrationType,
+			panel,
+			existingSurfaceConfig,
+			this.#handlerDependencies.userconfig.getKey('gridSize')
+		)
+
+		const handler = new SurfaceHandler(this, this.#handlerDependencies, panel, surfaceConfig)
 		handler.on('interaction', () => {
 			const groupId = handler.getGroupId() || handler.surfaceId
 			this.#surfacesLastInteraction.set(groupId, Date.now())
@@ -305,7 +329,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			const groupId = handler.getGroupId() || handler.surfaceId
 			this.#surfacesLastInteraction.set(groupId, Date.now())
 
-			if (this.userconfig.getKey('link_lockouts')) {
+			if (this.#handlerDependencies.userconfig.getKey('link_lockouts')) {
 				this.setAllLocked(false)
 			} else {
 				this.setSurfaceOrGroupLocked(groupId, false)
@@ -406,10 +430,10 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			}
 
 			// Find a disconnected surface
-			const configs = this.db.getKey('deviceconfig', {})
+			const configs = this.#db.getKey('deviceconfig', {})
 			if (configs[id]) {
 				configs[id].name = name
-				this.db.setKey('deviceconfig', configs)
+				this.#db.setKey('deviceconfig', configs)
 				this.updateDevicesList()
 				return
 			}
@@ -430,6 +454,9 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			for (let surface of this.#surfaceHandlers.values()) {
 				if (surface && surface.surfaceId == id) {
 					surface.setPanelConfig(config)
+
+					setImmediate(() => this.updateDevicesList())
+
 					return surface.getPanelConfig()
 				}
 			}
@@ -480,9 +507,9 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 			const newGroup = new SurfaceGroup(
 				this,
-				this.db,
-				this.page,
-				this.userconfig,
+				this.#db,
+				this.#handlerDependencies.page,
+				this.#handlerDependencies.userconfig,
 				groupId,
 				null,
 				this.isPinLockEnabled()
@@ -563,8 +590,8 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 		} else {
 			let isLocked = false
 			if (this.isPinLockEnabled()) {
-				const timeout = Number(this.userconfig.getKey('pin_timeout')) * 1000
-				if (this.userconfig.getKey('link_lockouts')) {
+				const timeout = Number(this.#handlerDependencies.userconfig.getKey('pin_timeout')) * 1000
+				if (this.#handlerDependencies.userconfig.getKey('link_lockouts')) {
 					isLocked = this.#surfacesAllLocked
 				} else if (timeout && !isNaN(timeout)) {
 					isLocked = this.#isSurfaceGroupTimedOut(surfaceGroupId, timeout)
@@ -580,9 +607,9 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 			const newGroup = new SurfaceGroup(
 				this,
-				this.db,
-				this.page,
-				this.userconfig,
+				this.#db,
+				this.#handlerDependencies.page,
+				this.#handlerDependencies.userconfig,
 				surfaceGroupId,
 				!rawSurfaceGroupId ? surfaceHandler : null,
 				isLocked
@@ -616,8 +643,8 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	 * Get the config object for a surface
 	 * @returns Config object, or undefined
 	 */
-	getDeviceConfig(surfaceId: string): any {
-		const config = this.db.getKey('deviceconfig', {})
+	getDeviceConfig(surfaceId: string): SurfaceConfig | undefined {
+		const config = this.#db.getKey('deviceconfig', {})
 		return config[surfaceId]
 	}
 
@@ -626,7 +653,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	 * @returns Already had config
 	 */
 	setDeviceConfig(surfaceId: string, surfaceConfig: any | undefined): boolean {
-		const config = this.db.getKey('deviceconfig', {})
+		const config = this.#db.getKey('deviceconfig', {})
 		const exists = !!config[surfaceId]
 
 		if (surfaceConfig) {
@@ -635,14 +662,14 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			delete config[surfaceId]
 		}
 
-		this.db.setKey('deviceconfig', config)
+		this.#db.setKey('deviceconfig', config)
 		return exists
 	}
 
 	getDevicesList(): ClientDevicesListItem[] {
 		const translateSurfaceConfig = (
 			id: string,
-			config: Record<string, any>,
+			config: SurfaceConfig,
 			surfaceHandler: SurfaceHandler | null
 		): ClientSurfaceItem => {
 			const surfaceInfo: ClientSurfaceItem = {
@@ -656,8 +683,8 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 				displayName: getSurfaceName(config, id),
 				location: null,
 
-				size: config?.gridSize || null,
-				offset: { columns: config?.xOffset ?? 0, rows: config?.yOffset ?? 0 },
+				size: config.gridSize || null,
+				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 
 			if (surfaceHandler) {
@@ -719,7 +746,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 		}
 
 		// Add any automatic groups for offline surfaces
-		const config: Record<string, any> = this.db.getKey('deviceconfig', {})
+		const config: Record<string, any> = this.#db.getKey('deviceconfig', {})
 		for (const [surfaceId, surface] of Object.entries(config)) {
 			if (mappedSurfaceId.has(surfaceId)) continue
 
@@ -746,8 +773,8 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 
 	async reset(): Promise<void> {
 		// Each active handler will re-add itself when doing the save as part of its own reset
-		this.db.setKey('deviceconfig', {})
-		this.db.setKey('surface-groups', {})
+		this.#db.setKey('deviceconfig', {})
+		this.#db.setKey('surface_groups', {})
 		this.#outboundController.reset()
 
 		// Wait for the surfaces to disconnect before clearing their config
@@ -760,7 +787,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	updateDevicesList(): void {
 		const newJsonArr = cloneDeep(this.getDevicesList())
 
-		const hasSubscribers = this.io.countRoomMembers(SurfacesRoom) > 0
+		const hasSubscribers = this.#io.countRoomMembers(SurfacesRoom) > 0
 
 		const newJson: Record<string, ClientDevicesListItem> = {}
 		for (const surface of newJsonArr) {
@@ -805,7 +832,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 				}
 			}
 
-			this.io.emitToRoom(SurfacesRoom, `surfaces:update`, changes)
+			this.#io.emitToRoom(SurfacesRoom, `surfaces:update`, changes)
 		}
 		this.#lastSentJson = newJson
 	}
@@ -820,7 +847,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			this.#runningRefreshDevices = true
 
 			let streamDeckSoftwareRunning = false
-			const streamdeckDisabled = !!this.userconfig.getKey('elgato_plugin_enable')
+			const streamdeckDisabled = !!this.#handlerDependencies.userconfig.getKey('elgato_plugin_enable')
 
 			try {
 				// Make sure we don't try to take over stream deck devices when the stream deck application
@@ -829,7 +856,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 					const list = await findProcess('name', 'Stream Deck')
 					if (typeof list === 'object' && list.length > 0) {
 						streamDeckSoftwareRunning = true
-						this.logger.silly('Elgato software detected, ignoring stream decks')
+						this.#logger.silly('Elgato software detected, ignoring stream decks')
 					}
 				}
 			} catch (e) {
@@ -837,10 +864,10 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			}
 
 			// Now do the scan
-			const scanForLoupedeck = !!this.userconfig.getKey('loupedeck_enable')
-			this.logger.silly('scanForLoupedeck', scanForLoupedeck)
+			const scanForLoupedeck = !!this.#handlerDependencies.userconfig.getKey('loupedeck_enable')
+			this.#logger.silly('scanForLoupedeck', scanForLoupedeck)
 			const ignoreStreamDeck = streamDeckSoftwareRunning || streamdeckDisabled
-			this.logger.silly('USB: checking devices')
+			this.#logger.silly('USB: checking devices')
 
 			try {
 				await Promise.allSettled([
@@ -865,15 +892,15 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
 										deviceInfo.productId === vecFootpedal.pids.FOOTPEDAL
 									) {
-										if (this.userconfig.getKey('vec_footpedal_enable')) {
+										if (this.#handlerDependencies.userconfig.getKey('vec_footpedal_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'vec-footpedal', SurfaceUSBVECFootpedal)
 										}
 									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
-										if (this.userconfig.getKey('xkeys_enable')) {
+										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
 											await this.#addDevice(
 												deviceInfo.path,
 												{
-													useLegacyLayout: !!this.userconfig.getKey('xkeys_legacy_layout'),
+													useLegacyLayout: !!this.#handlerDependencies.userconfig.getKey('xkeys_legacy_layout'),
 												},
 												'xkeys',
 												SurfaceUSBXKeys
@@ -885,7 +912,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V1 ||
 											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V2)
 									) {
-										if (this.userconfig.getKey('contour_shuttle_enable')) {
+										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
 										}
 									} else if (
@@ -896,7 +923,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 									) {
 										await this.#addDevice(deviceInfo.path, {}, 'framework-macropad', SurfaceUSBFrameworkMacropad)
 									} else if (
-										this.userconfig.getKey('blackmagic_controller_enable') &&
+										this.#handlerDependencies.userconfig.getKey('blackmagic_controller_enable') &&
 										getBlackmagicControllerDeviceInfo(deviceInfo)
 									) {
 										await this.#addDevice(deviceInfo.path, {}, 'blackmagic-controller', SurfaceUSBBlackmagicController)
@@ -906,7 +933,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 										deviceInfo.usagePage === 0xff00 && // rawhid interface
 										deviceInfo.usage === 0x01
 									) {
-										if (this.userconfig.getKey('mystrix_enable')) {
+										if (this.#handlerDependencies.userconfig.getKey('mystrix_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
 										}
 									}
@@ -918,7 +945,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 						? listLoupedecks().then((deviceInfos) =>
 								Promise.allSettled(
 									deviceInfos.map(async (deviceInfo) => {
-										this.logger.info('found loupedeck', deviceInfo)
+										this.#logger.info('found loupedeck', deviceInfo)
 										if (!this.#surfaceHandlers.has(deviceInfo.path)) {
 											if (
 												deviceInfo.model === LoupedeckModelId.LoupedeckLive ||
@@ -940,7 +967,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 						: null,
 				])
 
-				this.logger.silly('USB: done')
+				this.#logger.silly('USB: done')
 
 				if (streamdeckDisabled) {
 					return 'Ignoring Stream Decks devices as the plugin has been enabled'
@@ -950,7 +977,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 					return undefined
 				}
 			} catch (e) {
-				this.logger.silly('USB: scan failed ' + e)
+				this.#logger.silly('USB: scan failed ' + e)
 				throw 'Scan failed'
 			}
 		} finally {
@@ -1012,7 +1039,12 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	addElgatoPluginDevice(devicePath: string, socket: ServiceElgatoPluginSocket): SurfaceIPElgatoPlugin {
 		this.removeDevice(devicePath)
 
-		const device = new SurfaceIPElgatoPlugin(this.controls, this.page, devicePath, socket)
+		const device = new SurfaceIPElgatoPlugin(
+			this.#handlerDependencies.controls,
+			this.#handlerDependencies.page,
+			devicePath,
+			socket
+		)
 
 		this.#createSurfaceHandler(devicePath, 'elgato-plugin', device)
 
@@ -1032,7 +1064,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	) {
 		this.removeDevice(devicePath)
 
-		this.logger.silly('add device ' + devicePath)
+		this.#logger.silly('add device ' + devicePath)
 
 		if (!skipHidAccessCheck) {
 			// Check if we have access to the device
@@ -1040,7 +1072,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 				const devicetest = new HID.HID(devicePath)
 				devicetest.close()
 			} catch (e) {
-				this.logger.error(
+				this.#logger.error(
 					`Found "${type}" device, but no access. Please quit any other applications using the device, and try again.`
 				)
 				return
@@ -1061,7 +1093,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 				this.updateDevicesList()
 			})
 		} catch (e) {
-			this.logger.error(`Failed to add "${type}" device: ${e}`)
+			this.#logger.error(`Failed to add "${type}" device: ${e}`)
 
 			// Failed, remove the placeholder
 			this.#surfaceHandlers.delete(devicePath)
@@ -1078,7 +1110,12 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			...injectedVariableValues,
 		}
 
-		return this.variablesController.values.executeExpression(str, undefined, undefined, injectedVariableValuesComplete)
+		return this.#handlerDependencies.variables.values.executeExpression(
+			str,
+			undefined,
+			undefined,
+			injectedVariableValuesComplete
+		)
 	}
 
 	/**
@@ -1097,12 +1134,12 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	}
 
 	exportAll(clone = true): any {
-		const obj = this.db.getKey('deviceconfig', {}) || {}
+		const obj = this.#db.getKey('deviceconfig', {}) || {}
 		return clone ? cloneDeep(obj) : obj
 	}
 
 	exportAllGroups(clone = true): any {
-		const obj = this.db.getKey('surface-groups', {}) || {}
+		const obj = this.#db.getKey('surface_groups', {}) || {}
 		return clone ? cloneDeep(obj) : obj
 	}
 
@@ -1114,7 +1151,15 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 			let group = this.#getGroupForId(id, true)
 			if (!group) {
 				// Group does not exist
-				group = new SurfaceGroup(this, this.db, this.page, this.userconfig, id, null, this.isPinLockEnabled())
+				group = new SurfaceGroup(
+					this,
+					this.#db,
+					this.#handlerDependencies.page,
+					this.#handlerDependencies.userconfig,
+					id,
+					null,
+					this.isPinLockEnabled()
+				)
 				this.#surfaceGroups.set(id, group)
 			}
 
@@ -1160,7 +1205,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	removeDevice(devicePath: string, purge = false): void {
 		const surfaceHandler = this.#surfaceHandlers.get(devicePath)
 		if (surfaceHandler) {
-			this.logger.silly('remove device ' + devicePath)
+			this.#logger.silly('remove device ' + devicePath)
 
 			const surfaceId = surfaceHandler.surfaceId
 
@@ -1298,17 +1343,16 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 					this.#attachSurfaceToGroup(surface)
 				}
 			} catch (e) {
-				this.logger.warn('Could not reattach a surface')
+				this.#logger.warn('Could not reattach a surface')
 			}
 		}
 	}
 
 	/**
 	 * Is pin lock enabled
-	 * @returns {boolean}
 	 */
 	isPinLockEnabled(): boolean {
-		return !!this.userconfig.getKey('pin_enable')
+		return !!this.#handlerDependencies.userconfig.getKey('pin_enable')
 	}
 
 	/**
@@ -1349,7 +1393,7 @@ export class SurfaceController extends CoreBase<SurfaceControllerEvents> {
 	setSurfaceOrGroupLocked(surfaceOrGroupId: string, locked: boolean, looseIdMatching = false): void {
 		if (!this.isPinLockEnabled()) return
 
-		if (this.userconfig.getKey('link_lockouts')) {
+		if (this.#handlerDependencies.userconfig.getKey('link_lockouts')) {
 			this.setAllLocked(locked)
 		} else {
 			this.#surfacesAllLocked = false

@@ -21,7 +21,7 @@ import type { ActionRecorder } from '../Controls/ActionRecorder.js'
 import type { PageController } from '../Page/Controller.js'
 import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
@@ -91,7 +91,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 						],
 					},
 					{
-						type: 'internal:instance_id',
+						type: 'internal:connection_id',
 						label: 'Connections',
 						id: 'connections',
 						multiple: true,
@@ -267,7 +267,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 				showInvert: true,
 				options: [
 					{
-						type: 'internal:instance_id',
+						type: 'internal:connection_id',
 						label: 'Connections',
 						id: 'connections',
 						multiple: true,
@@ -336,20 +336,17 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]) {
 		for (const action of actions) {
 			if (action.action === 'action_recorder_set_connections') {
-				visitor.visitInstanceIdArray(action.options, 'connections')
+				visitor.visitConnectionIdArray(action.options, 'connections')
 			}
 		}
 		for (const feedback of feedbacks) {
 			if (feedback.type === 'action_recorder_check_connections') {
-				visitor.visitInstanceIdArray(feedback.options, 'connections', feedback.id)
+				visitor.visitConnectionIdArray(feedback.options, 'connections', feedback.id)
 			}
 		}
 	}
 
-	/**
-	 * @returns {import('../Instance/Wrapper.js').VariableDefinitionTmp[]}
-	 */
-	getVariableDefinitions() {
+	getVariableDefinitions(): VariableDefinitionTmp[] {
 		return [
 			{
 				label: 'Actions Recorder: Action count',

@@ -22,8 +22,8 @@ interface DebugConfig {
 }
 
 const LogsOnDiskInfoLine: DebugLogLine = {
-	level: 'debug',
-	message: 'Only recent lines are shown here, nothing is persisted',
+	level: 'system',
+	message: 'Starting log. Only lines generated since opening the page are shown here',
 }
 
 export function ConnectionDebug() {

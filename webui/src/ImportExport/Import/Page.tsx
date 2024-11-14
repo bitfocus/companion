@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
-import { ConnectionsContext, MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
+import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
 import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import {
@@ -22,15 +22,15 @@ import { useGridZoom } from '../../Buttons/GridZoom.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject
-	instanceRemap: Record<string, string | undefined>
-	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
-	doImport: (importPageNumber: number, pageNumber: number, instanceRemap: Record<string, string | undefined>) => void
+	connectionRemap: Record<string, string | undefined>
+	setConnectionRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
+	doImport: (importPageNumber: number, pageNumber: number, connectionRemap: Record<string, string | undefined>) => void
 }
 
 export const ImportPageWizard = observer(function ImportPageWizard({
 	snapshot,
-	instanceRemap,
-	setInstanceRemap,
+	connectionRemap,
+	setConnectionRemap,
 	doImport,
 }: ImportPageWizardProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
@@ -44,19 +44,19 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 		changePage: changeImportPage,
 	} = usePagePicker(pages, 1)
 
-	const setInstanceRemap2 = useCallback(
+	const setConnectionRemap2 = useCallback(
 		(fromId: string, toId: string) => {
-			setInstanceRemap((oldRemap) => ({
+			setConnectionRemap((oldRemap) => ({
 				...oldRemap,
 				[fromId]: toId,
 			}))
 		},
-		[setInstanceRemap]
+		[setConnectionRemap]
 	)
 
 	const doImport2 = useCallback(() => {
-		doImport(importPageNumber, pageNumber, instanceRemap)
-	}, [doImport, importPageNumber, pageNumber, instanceRemap])
+		doImport(importPageNumber, pageNumber, connectionRemap)
+	}, [doImport, importPageNumber, pageNumber, connectionRemap])
 
 	const destinationGridSize = userConfig.properties?.gridSize
 
@@ -147,7 +147,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 			</CCol>
 			<CCol xs={12}>
 				<MyErrorBoundary>
-					<ImportRemap snapshot={snapshot} instanceRemap={instanceRemap} setInstanceRemap={setInstanceRemap2} />
+					<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 				</MyErrorBoundary>
 			</CCol>
 
@@ -162,12 +162,12 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 
 interface ImportRemapProps {
 	snapshot: ClientImportObject
-	instanceRemap: Record<string, string | undefined>
-	setInstanceRemap: (fromId: string, toId: string) => void
+	connectionRemap: Record<string, string | undefined>
+	setConnectionRemap: (fromId: string, toId: string) => void
 }
 
-export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: ImportRemapProps) {
-	const sortedInstances = useMemo(() => {
+export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: ImportRemapProps) {
+	const sortedConnections = useMemo(() => {
 		if (!snapshot.instances) return []
 
 		return Object.entries(snapshot.instances)
@@ -188,18 +188,18 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: Impor
 					</tr>
 				</thead>
 				<tbody>
-					{sortedInstances.length === 0 && (
+					{sortedConnections.length === 0 && (
 						<tr>
 							<td colSpan={3}>No connections</td>
 						</tr>
 					)}
-					{sortedInstances.map(([key, instance]) => (
+					{sortedConnections.map(([key, connection]) => (
 						<ImportRemapRow
 							key={key}
 							id={key}
-							instance={instance}
-							instanceRemap={instanceRemap}
-							setInstanceRemap={setInstanceRemap}
+							connection={connection}
+							connectionRemap={connectionRemap}
+							setConnectionRemap={setConnectionRemap}
 						/>
 					))}
 				</tbody>
@@ -210,40 +210,37 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: Impor
 
 interface ImportRemapRowProps {
 	id: string
-	instance: ClientImportObjectInstance
-	instanceRemap: Record<string, string | undefined>
-	setInstanceRemap: (fromId: string, toId: string) => void
+	connection: ClientImportObjectInstance
+	connectionRemap: Record<string, string | undefined>
+	setConnectionRemap: (fromId: string, toId: string) => void
 }
 
 const ImportRemapRow = observer(function ImportRemapRow({
 	id,
-	instance,
-	instanceRemap,
-	setInstanceRemap,
+	connection,
+	connectionRemap,
+	setConnectionRemap,
 }: ImportRemapRowProps) {
-	const { modules } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
+	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const snapshotModule = modules.modules.get(instance.instance_type)
-	const currentInstances = Object.entries(connectionsContext).filter(
-		([_id, inst]) => inst.instance_type === instance.instance_type
-	)
+	const snapshotModule = modules.modules.get(connection.instance_type)
+	const currentConnections = connections.getAllOfType(connection.instance_type)
 
 	const onChange = useCallback(
-		(e: React.ChangeEvent<HTMLSelectElement>) => setInstanceRemap(id, e.currentTarget.value),
-		[setInstanceRemap]
+		(e: React.ChangeEvent<HTMLSelectElement>) => setConnectionRemap(id, e.currentTarget.value),
+		[setConnectionRemap]
 	)
 
 	return (
 		<tr>
 			<td>
 				{snapshotModule ? (
-					<CFormSelect value={instanceRemap[id] ?? ''} onChange={onChange}>
+					<CFormSelect value={connectionRemap[id] ?? ''} onChange={onChange}>
 						<option value="_new">[ Create new connection ]</option>
 						<option value="_ignore">[ Ignore ]</option>
-						{currentInstances.map(([id, inst]) => (
+						{currentConnections.map(([id, conn]) => (
 							<option key={id} value={id}>
-								{inst.label}
+								{conn.label}
 							</option>
 						))}
 					</CFormSelect>
@@ -251,8 +248,8 @@ const ImportRemapRow = observer(function ImportRemapRow({
 					'Ignored'
 				)}
 			</td>
-			<td>{snapshotModule ? snapshotModule.name : `Unknown module (${instance.instance_type})`}</td>
-			<td>{instance.label}</td>
+			<td>{snapshotModule ? snapshotModule.name : `Unknown module (${connection.instance_type})`}</td>
+			<td>{connection.label}</td>
 		</tr>
 	)
 })

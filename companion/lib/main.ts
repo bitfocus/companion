@@ -3,6 +3,9 @@
 // Setup some fixes before loading any imports
 import './Util/FixImports.js'
 
+// Setup segfault handler
+import '@julusian/segfault-raub'
+
 // Setup logging before anything else runs
 import './Log/Controller.js'
 
@@ -40,6 +43,7 @@ program
 	.option('--extra-module-path <string>', 'Search an extra directory for modules to load')
 	.option('--machine-id <string>', 'Unique id for this installation')
 	.option('--log-level <string>', 'Log level to output to console')
+	.option('--disable-admin-password', 'Disables password lockout for the admin UI')
 
 program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const options = program.opts()
@@ -51,7 +55,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		for (const [ifname, ifgroup] of Object.entries(interfaces)) {
 			if (!ifgroup) continue
 			for (const ifAddr of ifgroup) {
-				// onlt show non-ipv4 addresses for now
+				// only show non-ipv4 addresses for now
 				if ('IPv4' === ifAddr.family) {
 					console.error(ifname, ifAddr.address)
 				}
@@ -143,12 +147,20 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	}
 
 	// copy an older db if needed
-	if (configDir !== rootConfigDir && !fs.existsSync(path.join(configDir, 'db'))) {
+	if (
+		configDir !== rootConfigDir &&
+		!fs.existsSync(path.join(configDir, 'db')) &&
+		!fs.existsSync(path.join(configDir, 'db.sqlite'))
+	) {
 		// try and import the non-develop copy. we only need to take `db` for this
 		for (let i = ConfigReleaseDirs.length - 1; i--; i >= 0) {
 			const previousDbPath =
 				i > 0 ? path.join(rootConfigDir, ConfigReleaseDirs[i], 'db') : path.join(rootConfigDir, 'db')
-			if (fs.existsSync(previousDbPath)) {
+			if (fs.existsSync(previousDbPath + '.sqlite')) {
+				// Found the one to copy
+				fs.copyFileSync(previousDbPath + '.sqlite', path.join(configDir, 'db.sqlite'))
+				break
+			} else if (fs.existsSync(previousDbPath)) {
 				// Found the one to copy
 				fs.copyFileSync(previousDbPath, path.join(configDir, 'db'))
 				break
@@ -188,6 +200,10 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		.ready(options.extraModulePath, adminIp, options.adminPort)
 		.then(() => {
 			console.log('Started')
+
+			if (options.disableAdminPassword || process.env.DISABLE_ADMIN_PASSWORD) {
+				registry.userconfig.setKey('admin_lockout', false)
+			}
 		})
 		.catch((e) => {
 			console.error(`Startup failed: ${e} ${e.stack}`)

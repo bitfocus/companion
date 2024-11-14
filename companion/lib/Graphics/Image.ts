@@ -15,22 +15,23 @@
  *
  */
 
-import { Canvas, ImageData, SKRSContext2D } from '@napi-rs/canvas'
+import { Canvas, ImageData, Image as CanvasImage, loadImage, SKRSContext2D } from '@napi-rs/canvas'
 import LogController from '../Log/Controller.js'
-import { PNG } from 'pngjs'
 import type { HorizontalAlignment, VerticalAlignment } from '../Resources/Util.js'
 
-const DEFAULT_FONTS =
-	'Companion-sans, Companion-symbols1, Companion-symbols2, Companion-symbols3, Companion-symbols4, Companion-symbols5, Companion-symbols6, Companion-gurmukhi, Companion-simplified-chinese, Companion-emoji'
-
-async function pngParse(pngData: string | Buffer): Promise<PNG> {
-	return new Promise((resolve, reject) => {
-		new PNG().parse(pngData, (err, data) => {
-			if (err) reject(err)
-			else resolve(data)
-		})
-	})
-}
+const DEFAULT_FONTS = [
+	'Companion-sans',
+	'Companion-symbols1',
+	'Companion-symbols2',
+	'Companion-symbols3',
+	'Companion-symbols4',
+	'Companion-symbols5',
+	'Companion-symbols6',
+	'Companion-gurmukhi',
+	'Companion-simplified-chinese',
+	'Companion-korean',
+	'Companion-emoji',
+].join(', ')
 
 type LineOrientation = 'inside' | 'center' | 'outside'
 
@@ -235,25 +236,17 @@ export class Image {
 		valign: VerticalAlignment = 'center',
 		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink' = 1
 	): Promise<void> {
-		let png = await pngParse(data)
+		let png: CanvasImage | undefined
 
-		let imageWidth = png.width
-		let imageHeight = png.height
-
-		// create HTML compatible imageData object
-		const pixelarray = new Uint8ClampedArray(png.data)
-		let imageData
 		try {
-			imageData = new ImageData(pixelarray, imageWidth, imageHeight)
-		} catch (error) {
-			console.log('new ImageData failed', error)
+			png = await loadImage(data)
+		} catch (e) {
+			console.log('Error loading image', e)
 			return
 		}
 
-		// createImageBitmap() works async, so this intermediate canvas is a synchronous workaround
-		const imageCanvas = new Canvas(imageData.width, imageData.height)
-		const imageContext2d = imageCanvas.getContext('2d')
-		imageContext2d.putImageData(imageData, 0, 0)
+		let imageWidth = png.width
+		let imageHeight = png.height
 
 		let calculatedScale = 1
 		let scaledImageWidth = imageWidth
@@ -363,7 +356,7 @@ export class Image {
 		}
 
 		this.context2d.drawImage(
-			imageCanvas,
+			png,
 			source.x,
 			source.y,
 			source.w,
@@ -377,7 +370,7 @@ export class Image {
 
 	/**
 	 * draws a single line of left aligned text
-	 * the line lenght is not wrapped or limited and may extend beyond the canvas
+	 * the line length is not wrapped or limited and may extend beyond the canvas
 	 * @param x left position where to start the line
 	 * @param y top position where to start the line
 	 * @param text
@@ -530,7 +523,7 @@ export class Image {
 				) ?? 6
 		}
 
-		lineheight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calclulated to match the existing font size / lineheight ratio of the bitmap fonts
+		lineheight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
 
 		// breakup text in pieces
 		let lines = []
@@ -573,7 +566,7 @@ export class Image {
 			// how many chars fit probably in one line
 			let chars = Math.round(w / nWidth)
 
-			diff = w - this.context2d.measureText(substring(text, 0, chars)).width // check our guessed lenght
+			diff = w - this.context2d.measureText(substring(text, 0, chars)).width // check our guessed length
 
 			if (Math.abs(diff) > nWidth) {
 				// we seem to be off by more than one char
@@ -652,7 +645,7 @@ export class Image {
 			// check if remaining text fits in line
 			let { maxCodepoints, ascent, descent } = findLastChar(textArr.slice(lastDrawnByte).join(''))
 
-			//console.log(`check text "${textArr.slice(lastDrawnByte).join('')}" arr=${textArr} lenght=${textArr.length - lastDrawnByte} max=${maxCodepoints}`)
+			//console.log(`check text "${textArr.slice(lastDrawnByte).join('')}" arr=${textArr} length=${textArr.length - lastDrawnByte} max=${maxCodepoints}`)
 			if (maxCodepoints >= textArr.length - lastDrawnByte) {
 				let buf = []
 				for (let i = lastDrawnByte; i < textArr.length; i += 1) {

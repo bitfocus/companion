@@ -20,7 +20,7 @@ import Infinitton from 'infinitton-idisplay'
 import { translateRotation } from '../../Resources/Util.js'
 import { EventEmitter } from 'events'
 import LogController, { Logger } from '../../Log/Controller.js'
-import { convertPanelIndexToXY, convertXYToIndexForPanel, GridSize } from '../Util.js'
+import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,
@@ -28,7 +28,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 const configFields: CompanionSurfaceConfigField[] = [
@@ -97,6 +97,7 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 				this.emit('remove')
 			})
 		} catch (e) {
+			// @ts-expect-error May not be defined yet
 			if (this.#infinitton) {
 				this.#infinitton.close()
 			}

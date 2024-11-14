@@ -63,6 +63,21 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 			},
 		],
 	},
+	specificDate: {
+		name: 'Once on Specific Date & Time',
+		options: [
+			{
+				id: 'date',
+				label: 'Date',
+				type: 'internal:date',
+			},
+			{
+				id: 'time',
+				label: 'Time',
+				type: 'internal:time',
+			},
+		],
+	},
 	sun_event: {
 		name: 'On Sunrise/Sunset',
 		options: [

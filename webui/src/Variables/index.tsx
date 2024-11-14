@@ -1,26 +1,18 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { ConnectionsContext } from '../util.js'
+import { useComputed } from '../util.js'
 import { VariablesTable } from '../Components/VariablesTable.js'
-import { CustomVariablesList } from '../Buttons/CustomVariablesList.js'
+import { CustomVariablesList } from './CustomVariablesList.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
-export const ConnectionVariables = function ConnectionVariables() {
-	const connectionsContext = useContext(ConnectionsContext)
+export const ConnectionVariables = observer(function ConnectionVariables() {
+	const { connections } = useContext(RootAppStoreContext)
 
 	const [connectionId, setConnectionId] = useState<string | null>(null)
 	const [showCustom, setShowCustom] = useState(false)
-
-	const connectionsLabelMap: ReadonlyMap<string, string> = useMemo(() => {
-		const labelMap = new Map<string, string>()
-		for (const [connectionId, connectionInfo] of Object.entries(connectionsContext)) {
-			labelMap.set(connectionInfo.label, connectionId)
-		}
-		return labelMap
-	}, [connectionsContext])
 
 	// Reset selection on resetToken change
 	// useEffect(() => {
@@ -30,34 +22,33 @@ export const ConnectionVariables = function ConnectionVariables() {
 	if (showCustom) {
 		return <CustomVariablesList setShowCustom={setShowCustom} />
 	} else if (connectionId) {
-		let connectionLabel = connectionsContext[connectionId]?.label
+		let connectionLabel = connections.getLabel(connectionId) ?? '?'
 		if (connectionId === 'internal') connectionLabel = 'internal'
 
 		return <VariablesList selectedConnectionLabel={connectionLabel} setConnectionId={setConnectionId} />
 	} else {
-		return (
-			<VariablesConnectionList
-				setConnectionId={setConnectionId}
-				setShowCustom={setShowCustom}
-				connectionsLabelMap={connectionsLabelMap}
-			/>
-		)
+		return <VariablesConnectionList setConnectionId={setConnectionId} setShowCustom={setShowCustom} />
 	}
-}
+})
 
 interface VariablesConnectionListProps {
 	setConnectionId: (connectionId: string | null) => void
 	setShowCustom: (show: boolean) => void
-	connectionsLabelMap: ReadonlyMap<string, string>
 }
 
 const VariablesConnectionList = observer(function VariablesConnectionList({
 	setConnectionId,
 	setShowCustom,
-	connectionsLabelMap,
 }: VariablesConnectionListProps) {
-	const { modules, variablesStore } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
+	const { connections, modules, variablesStore } = useContext(RootAppStoreContext)
+
+	const connectionsLabelMap: ReadonlyMap<string, string> = useComputed(() => {
+		const labelMap = new Map<string, string>()
+		for (const [connectionId, connectionInfo] of connections.connections.entries()) {
+			labelMap.set(connectionInfo.label, connectionId)
+		}
+		return labelMap
+	}, [connections])
 
 	const options = variablesStore.connectionLabelsWithDefinitions.get().map((label) => {
 		if (label === 'internal') {
@@ -68,8 +59,12 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 			)
 		}
 
+		if (label === 'custom') {
+			return ''
+		}
+
 		const connectionId = connectionsLabelMap.get(label)
-		const connectionInfo = connectionId ? connectionsContext[connectionId] : undefined
+		const connectionInfo = connectionId ? connections.connections.get(connectionId) : undefined
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 		const compactName = moduleInfo?.name?.replace(/\;.*/, '...')
 

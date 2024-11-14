@@ -15,6 +15,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
+ * @author Cole Bewley <cole.bewley@kjrh.com>
  * @since 1.2.0
  * @copyright 2022 Bitfocus AS
  * @license
@@ -48,10 +49,8 @@ export class ServiceHttpApi extends CoreBase {
 		super(registry, 'Service/HttpApi')
 
 		this.#express = express
-		// @ts-ignore
-		this.#apiRouter = new Express.Router()
-		// @ts-ignore
-		this.#legacyApiRouter = new Express.Router()
+		this.#apiRouter = Express.Router()
+		this.#legacyApiRouter = Express.Router()
 
 		this.#apiRouter.use((_req, res, next) => {
 			// Check that the API is enabled
@@ -76,17 +75,23 @@ export class ServiceHttpApi extends CoreBase {
 	}
 
 	#setupLegacyHttpRoutes() {
-		this.#legacyApiRouter.options('/press/bank/*', (_req, res, _next) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.options('/press/bank/*any', (_req, res, _next): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
-			return res.send(200)
+			res.send(200)
 		})
 
-		this.#legacyApiRouter.get('/press/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})', (req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/press/bank/:page/:bank', (req, res): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -94,25 +99,28 @@ export class ServiceHttpApi extends CoreBase {
 
 			this.logger.info(`Got HTTP /press/bank/ (trigger) page ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.registry.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+			const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
 				return
 			}
 
-			this.registry.controls.pressControl(controlId, true, 'http')
+			this.controls.pressControl(controlId, true, 'http')
 
 			setTimeout(() => {
 				this.logger.info(`Auto releasing HTTP /press/bank/ page ${req.params.page} button ${req.params.bank}`)
-				this.registry.controls.pressControl(controlId, false, 'http')
+				this.controls.pressControl(controlId, false, 'http')
 			}, 20)
 
-			return res.send('ok')
+			res.send('ok')
 		})
 
-		this.#legacyApiRouter.get('/press/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})/:direction(down|up)', (req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/press/bank/:page/:bank/:direction', (req, res): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -121,45 +129,47 @@ export class ServiceHttpApi extends CoreBase {
 			if (req.params.direction == 'down') {
 				this.logger.info(`Got HTTP /press/bank/ (DOWN) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.registry.page.getControlIdAtOldBankIndex(
-					Number(req.params.page),
-					Number(req.params.bank)
-				)
+				const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
 					return
 				}
 
-				this.registry.controls.pressControl(controlId, true, 'http')
-			} else {
+				this.controls.pressControl(controlId, true, 'http')
+
+				res.send('ok')
+			} else if (req.params.direction == 'up') {
 				this.logger.info(`Got HTTP /press/bank/ (UP) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.registry.page.getControlIdAtOldBankIndex(
-					Number(req.params.page),
-					Number(req.params.bank)
-				)
+				const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
 					return
 				}
 
-				this.registry.controls.pressControl(controlId, false, 'http')
-			}
+				this.controls.pressControl(controlId, false, 'http')
 
-			return res.send('ok')
+				res.send('ok')
+			} else {
+				res.status(404)
+				res.send('Invalid direction')
+			}
 		})
 
-		this.#legacyApiRouter.get('/rescan', (_req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/rescan', async (_req, res): Promise<void> => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.info('Got HTTP /rescan')
-			return this.registry.surfaces.triggerRefreshDevices().then(
+			return this.surfaces.triggerRefreshDevices().then(
 				() => {
 					res.send('ok')
 				},
@@ -169,8 +179,11 @@ export class ServiceHttpApi extends CoreBase {
 			)
 		})
 
-		this.#legacyApiRouter.get('/style/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})', (req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/style/bank/:page/:bank', (req, res): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -178,14 +191,14 @@ export class ServiceHttpApi extends CoreBase {
 
 			this.logger.info(`Got HTTP /style/bank ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.registry.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+			const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
 				return
 			}
 
-			const control = this.registry.controls.getControl(controlId)
+			const control = this.controls.getControl(controlId)
 
 			if (!control || !control.supportsStyle) {
 				res.status(404)
@@ -254,41 +267,38 @@ export class ServiceHttpApi extends CoreBase {
 				control.styleSetFields(newFields)
 			}
 
-			return res.send('ok')
+			res.send('ok')
 		})
 
-		this.#legacyApiRouter.get('/set/custom-variable/:name', (req, res) => {
-			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
+		this.#legacyApiRouter.get('/set/custom-variable/:name', (req, res): void => {
+			if (!this.#isLegacyRouteAllowed()) {
+				res.status(403).send()
+				return
+			}
 
 			res.header('Access-Control-Allow-Origin', '*')
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value}`)
-			const result = this.registry.variables.custom.setValue(req.params.name, String(req.query.value))
+			const result = this.variablesController.custom.setValue(req.params.name, String(req.query.value))
 			if (result) {
-				return res.send(result)
+				res.send(result)
 			} else {
-				return res.send('ok')
+				res.send('ok')
 			}
 		})
 	}
 
 	#setupNewHttpRoutes() {
 		// controls by location
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/press', this.#locationPress)
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/down', this.#locationDown)
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/up', this.#locationUp)
-		this.#apiRouter.post(
-			'/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/rotate-left',
-			this.#locationRotateLeft
-		)
-		this.#apiRouter.post(
-			'/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/rotate-right',
-			this.#locationRotateRight
-		)
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/step', this.#locationStep)
-		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/style', this.#locationStyle)
+		this.#apiRouter.post('/location/:page/:row/:column/press', this.#locationPress)
+		this.#apiRouter.post('/location/:page/:row/:column/down', this.#locationDown)
+		this.#apiRouter.post('/location/:page/:row/:column/up', this.#locationUp)
+		this.#apiRouter.post('/location/:page/:row/:column/rotate-left', this.#locationRotateLeft)
+		this.#apiRouter.post('/location/:page/:row/:column/rotate-right', this.#locationRotateRight)
+		this.#apiRouter.post('/location/:page/:row/:column/step', this.#locationStep)
+		this.#apiRouter.post('/location/:page/:row/:column/style', this.#locationStyle)
 
 		// custom variables
 		this.#apiRouter
@@ -296,11 +306,14 @@ export class ServiceHttpApi extends CoreBase {
 			.post(this.#customVariableSetValue)
 			.get(this.#customVariableGetValue)
 
+		// Module variables
+		this.#apiRouter.route('/variable/:label/:name/value').get(this.#moduleVariableGetValue)
+
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
 
 		// Finally, default all unhandled to 404
-		this.#apiRouter.use('*', (_req, res) => {
+		this.#apiRouter.use((_req, res) => {
 			res.status(404).send('')
 		})
 	}
@@ -310,7 +323,7 @@ export class ServiceHttpApi extends CoreBase {
 	 */
 	#surfacesRescan = (_req: express.Request, res: express.Response): void => {
 		this.logger.info('Got HTTP surface rescan')
-		this.registry.surfaces.triggerRefreshDevices().then(
+		this.surfaces.triggerRefreshDevices().then(
 			() => {
 				res.send('ok')
 			},
@@ -330,7 +343,7 @@ export class ServiceHttpApi extends CoreBase {
 			column: Number(req.params.column),
 		}
 
-		const controlId = this.registry.page.getControlIdAt(location)
+		const controlId = this.page.getControlIdAt(location)
 
 		return {
 			location,
@@ -350,12 +363,12 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.pressControl(controlId, true, 'http')
+		this.controls.pressControl(controlId, true, 'http')
 
 		setTimeout(() => {
 			this.logger.info(`Auto releasing HTTP control press ${formatLocation(location)} - ${controlId}`)
 
-			this.registry.controls.pressControl(controlId, false, 'http')
+			this.controls.pressControl(controlId, false, 'http')
 		}, 20)
 
 		res.send('ok')
@@ -373,7 +386,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.pressControl(controlId, true, 'http')
+		this.controls.pressControl(controlId, true, 'http')
 
 		res.send('ok')
 	}
@@ -390,7 +403,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.pressControl(controlId, false, 'http')
+		this.controls.pressControl(controlId, false, 'http')
 
 		res.send('ok')
 	}
@@ -407,7 +420,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.rotateControl(controlId, false, 'http')
+		this.controls.rotateControl(controlId, false, 'http')
 
 		res.send('ok')
 	}
@@ -424,7 +437,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.registry.controls.rotateControl(controlId, true, 'http')
+		this.controls.rotateControl(controlId, true, 'http')
 
 		res.send('ok')
 	}
@@ -461,14 +474,14 @@ export class ServiceHttpApi extends CoreBase {
 	 */
 	#locationStyle = (req: express.Request, res: express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
-		this.logger.info(`Got HTTP control syle ${formatLocation(location)} - ${controlId}`)
+		this.logger.info(`Got HTTP control style ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
 			res.status(204).send('No control')
 			return
 		}
 
-		const control = this.registry.controls.getControl(controlId)
+		const control = this.controls.getControl(controlId)
 		if (!control || !control.supportsStyle) {
 			res.status(204).send('No control')
 			return
@@ -552,7 +565,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		const result = this.registry.variables.custom.setValue(variableName, variableValue)
+		const result = this.variablesController.custom.setValue(variableName, variableValue)
 		if (result) {
 			res.status(404).send('Not found')
 		} else {
@@ -568,7 +581,27 @@ export class ServiceHttpApi extends CoreBase {
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
 
-		const result = this.registry.variables.custom.getValue(variableName)
+		const result = this.variablesController.custom.getValue(variableName)
+		if (result === undefined) {
+			res.status(404).send('Not found')
+		} else {
+			if (typeof result === 'number') {
+				res.send(result + '')
+			} else {
+				res.send(result)
+			}
+		}
+	}
+	/**
+	 * Retrieve any module variable value
+	 */
+	#moduleVariableGetValue = (req: express.Request, res: express.Response): void => {
+		const connectionLabel = req.params.label
+		const variableName = req.params.name
+
+		this.logger.debug(`Got HTTP module variable get value name "${connectionLabel}:${variableName}"`)
+
+		const result = this.variablesController.values.getVariableValue(connectionLabel, variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {

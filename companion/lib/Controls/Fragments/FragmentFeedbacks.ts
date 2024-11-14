@@ -246,7 +246,7 @@ export class FragmentFeedbacks {
 	}
 
 	/**
-	 * Move a feedback within the heirarchy
+	 * Move a feedback within the hierarchy
 	 * @param moveFeedbackId the id of the feedback to move
 	 * @param newParentId the target parentId of the feedback
 	 * @param newIndex the target index of the feedback
@@ -260,6 +260,9 @@ export class FragmentFeedbacks {
 		} else {
 			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
 			if (newParentId && !newParent) return false
+
+			// Ensure the new parent is not a child of the feedback being moved
+			if (newParentId && oldItem.item.findChildById(newParentId)) return false
 
 			// Check if the new parent can hold the feedback being moved
 			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
@@ -308,6 +311,24 @@ export class FragmentFeedbacks {
 		const feedback = this.#feedbacks.findById(id)
 		if (feedback) {
 			feedback.setOption(key, value)
+
+			this.#commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
+	 * Set a new connection instance for a feedback
+	 * @param id the id of the feedback
+	 * @param connectionId the id of the new connection
+	 */
+	feedbackSetConnection(id: string, connectionId: string | number): boolean {
+		const feedback = this.#feedbacks.findById(id)
+		if (feedback) {
+			feedback.setInstance(connectionId)
 
 			this.#commitChange()
 

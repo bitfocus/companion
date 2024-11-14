@@ -16,24 +16,34 @@
  */
 
 import crypto from 'crypto'
-import { CoreBase } from '../Core/Base.js'
-import type { Registry } from '../Registry.js'
+import LogController from '../Log/Controller.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { AppInfo } from '../Registry.js'
 
-export class DataMetrics extends CoreBase {
-	constructor(registry: Registry) {
-		super(registry, 'Data/Metrics')
+export class DataMetrics {
+	readonly #logger = LogController.createLogger('Data/Metrics')
+
+	readonly #appInfo: AppInfo
+	readonly #surfacesController: SurfaceController
+	readonly #instancesController: InstanceController
+
+	constructor(appInfo: AppInfo, surfacesController: SurfaceController, instancesController: InstanceController) {
+		this.#appInfo = appInfo
+		this.#surfacesController = surfacesController
+		this.#instancesController = instancesController
 	}
 
 	/**
 	 * Run reporting cycle
 	 */
 	#cycle() {
-		this.logger.silly('cycle')
+		this.#logger.silly('cycle')
 
 		const relevantDevices: string[] = []
 
 		try {
-			const surfaceGroups = this.surfaces.getDevicesList()
+			const surfaceGroups = this.#surfacesController.getDevicesList()
 			for (const surfaceGroup of surfaceGroups) {
 				if (!surfaceGroup.surfaces) continue
 
@@ -51,11 +61,11 @@ export class DataMetrics extends CoreBase {
 			// don't care
 		}
 
-		const instanceCount = this.instance.getInstancesMetrics()
+		const instanceCount = this.#instancesController.getInstancesMetrics()
 
 		try {
 			const payload = {
-				i: this.registry.appInfo.machineId,
+				i: this.#appInfo.machineId,
 				r: process.uptime(),
 				m: instanceCount,
 				d: relevantDevices,

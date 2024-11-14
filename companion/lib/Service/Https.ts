@@ -43,11 +43,6 @@ export class ServiceHttps extends ServiceBase {
 
 		this.port = 8443
 
-		this.registry.on('http_rebind', (bindIP) => {
-			this.#bindIP = bindIP
-			this.restartModule()
-		})
-
 		//Delay service start just to let everything sync up
 		setTimeout(() => this.init(), 5000)
 	}
@@ -157,6 +152,11 @@ export class ServiceHttps extends ServiceBase {
 			this.logger.silly(`Couldn't bind to port ${this.port}: ${e}`)
 			this.#server = undefined
 		}
+	}
+
+	updateBindIp(bindIp: string): void {
+		this.#bindIP = bindIp
+		this.restartModule()
 	}
 
 	/**

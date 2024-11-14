@@ -1,41 +1,51 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, socketEmitPromise } from '../util.js'
-import { CRow, CCol, CButton, CFormSwitch, CFormLabel } from '@coreui/react'
-import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
+import { CRow, CCol, CButton } from '@coreui/react'
+import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import sanitizeHtml from 'sanitize-html'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField.js'
-import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
-import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
+import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { ConnectionEditField } from './ConnectionEditField.js'
+import { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
-	connectionStatus: ConnectionStatusEntry | undefined
 	doConfigureConnection: (connectionId: string | null) => void
 	showHelp: (moduleId: string) => void
 }
 
-export function ConnectionEditPanel({
+export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 	connectionId,
-	connectionStatus,
 	doConfigureConnection,
 	showHelp,
 }: ConnectionEditPanelProps) {
-	console.log('status', connectionStatus)
+	const { connections, modules } = useContext(RootAppStoreContext)
 
-	if (!connectionStatus || !connectionStatus.level || connectionStatus.level === 'crashed') {
+	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)
+
+	const moduleInfo = connectionInfo && modules.modules.get(connectionInfo.instance_type)
+
+	if (!connectionInfo) {
 		return (
 			<CRow className="edit-connection">
 				<CCol xs={12}>
-					<p>Waiting for connection to start...</p>
+					<p>Connection not found</p>
 				</CCol>
-				<LoadingRetryOrError dataReady={false} />
+			</CRow>
+		)
+	}
+	if (!moduleInfo) {
+		return (
+			<CRow className="edit-connection">
+				<CCol xs={12}>
+					<p>Module not found</p>
+				</CCol>
 			</CRow>
 		)
 	}
@@ -43,33 +53,41 @@ export function ConnectionEditPanel({
 	return (
 		<ConnectionEditPanelInner
 			connectionId={connectionId}
+			connectionInfo={connectionInfo}
+			moduleInfo={moduleInfo}
 			doConfigureConnection={doConfigureConnection}
 			showHelp={showHelp}
 		/>
 	)
-}
+})
 
 interface ConnectionEditPanelInnerProps {
 	connectionId: string
+	connectionInfo: ClientConnectionConfig
+	moduleInfo: ModuleDisplayInfo
 	doConfigureConnection: (connectionId: string | null) => void
 	showHelp: (moduleId: string) => void
 }
 
 const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	connectionId,
+	connectionInfo,
+	moduleInfo,
 	doConfigureConnection,
 	showHelp,
 }: ConnectionEditPanelInnerProps) {
-	const { socket, modules } = useContext(RootAppStoreContext)
+	const { socket } = useContext(RootAppStoreContext)
 
 	const [error, setError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const [configFields, setConfigFields] = useState<Array<ExtendedInputField & { width: number }> | null>([])
 	const [connectionConfig, setConnectionConfig] = useState<Record<string, any> | null>(null)
-	const [connectionLabel, setConnectionLabel] = useState<string | null>(null)
-	const [connectionType, setConnectionType] = useState<string | null>(null)
+	const [connectionLabel, setConnectionLabel] = useState<string>(connectionInfo.label)
 	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
+
+	// Update the in-edit label if the connection label changes
+	useEffect(() => setConnectionLabel(connectionInfo.label), [connectionInfo.label])
 
 	const [configOptions, fieldVisibility] = useOptionsAndIsVisible<ExtendedInputField & { width: number }>(
 		configFields,
@@ -100,7 +118,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 		const newLabel = connectionLabel?.trim()
 
-		if (!newLabel || !isLabelValid(newLabel) || invalidFieldNames.length > 0 || !connectionConfig) {
+		if (!newLabel || !isLabelValid(newLabel) || invalidFieldNames.length > 0) {
 			setError(`Some config fields are not valid: ${invalidFieldNames.join(', ')}`)
 			return
 		}
@@ -130,17 +148,21 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 			socketEmitPromise(socket, 'connections:edit', [connectionId])
 				.then((res) => {
 					if (res) {
-						const validFields: Record<string, boolean> = {}
-						for (const field of res.fields) {
-							// Real validation status gets generated when the editor components first mount
-							validFields[field.id] = true
+						if (res.fields) {
+							const validFields: Record<string, boolean> = {}
+							for (const field of res.fields) {
+								// Real validation status gets generated when the editor components first mount
+								validFields[field.id] = true
+							}
+
+							setConfigFields(res.fields)
+							setValidFields(validFields)
+						} else {
+							setConfigFields(null)
+							setValidFields(null)
 						}
 
-						setConfigFields(res.fields)
-						setConnectionLabel(res.label ?? null)
-						setConnectionType(res.instance_type ?? null)
 						setConnectionConfig(res.config as any)
-						setValidFields(validFields)
 					} else {
 						setError(`Connection config unavailable`)
 					}
@@ -153,7 +175,6 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		return () => {
 			setError(null)
 			setConfigFields(null)
-			setConnectionLabel(null)
 			setConnectionConfig(null)
 			setValidFields(null)
 		}
@@ -161,80 +182,41 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
-	const setValue = useCallback((key: string, value: any) => {
-		console.log('set value', key, value)
-
-		setConnectionConfig((oldConfig) => ({
-			...oldConfig,
-			[key]: value,
-		}))
-	}, [])
-	const setValid = useCallback((key: string, isValid: boolean) => {
-		console.log('set valid', key, isValid)
-
-		setValidFields((oldValid) => ({
-			...oldValid,
-			[key]: isValid,
-		}))
-	}, [])
-
-	const moduleInfo = connectionType ? modules.modules.get(connectionType) : undefined
-	const dataReady = !!connectionConfig && !!configFields && !!validFields
 	return (
 		<div>
 			<h5>
-				{moduleInfo?.shortname ?? connectionType} configuration
-				{moduleInfo?.hasHelp && (
-					<div className="float_right" onClick={() => connectionType && showHelp(connectionType)}>
+				{moduleInfo.shortname ?? connectionInfo.instance_type} configuration
+				{moduleInfo.hasHelp && (
+					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}
 			</h5>
 			<CRow className="edit-connection">
-				<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} autoRetryAfter={2} />
-				{connectionId && dataReady && (
-					<>
-						<CCol className={`fieldtype-textinput`} sm={12}>
-							<label>Label</label>
-							<TextInputField
-								value={connectionLabel ?? ''}
-								setValue={setConnectionLabel}
-								// isValid={isLabelValid(connectionLabel)}
-							/>
-						</CCol>
+				<CCol className={`fieldtype-textinput`} sm={12}>
+					<label>Label</label>
+					<TextInputField
+						value={connectionLabel ?? ''}
+						setValue={setConnectionLabel}
+						// isValid={isLabelValid(connectionLabel)}
+					/>
+				</CCol>
 
-						{configOptions.map((field, i) => {
-							return (
-								<CCol
-									key={i}
-									className={`fieldtype-${field.type}`}
-									sm={field.width}
-									style={{ display: fieldVisibility[field.id] === false ? 'none' : undefined }}
-								>
-									<ConfigField
-										label={
-											<>
-												{field.label}
-												{field.tooltip && (
-													<FontAwesomeIcon
-														style={{ marginLeft: '5px' }}
-														icon={faQuestionCircle}
-														title={field.tooltip}
-													/>
-												)}
-											</>
-										}
-										definition={field}
-										value={connectionConfig[field.id]}
-										// valid={validFields[field.id] ?? false}
-										setValue={setValue}
-										setValid={setValid}
-										connectionId={connectionId}
-									/>
-								</CCol>
-							)
-						})}
-					</>
+				{connectionInfo.enabled ? (
+					<ConnectionEditPanelConfigFields
+						connectionConfig={connectionConfig}
+						configOptions={configFields === null ? null : configOptions}
+						fieldVisibility={fieldVisibility}
+						setConnectionConfig={setConnectionConfig}
+						setValidFields={setValidFields}
+						connectionId={connectionId}
+						error={error}
+						doRetryConfigLoad={doRetryConfigLoad}
+					/>
+				) : (
+					<CCol xs={12}>
+						<p>Connection config cannot be edited while disabled</p>
+					</CCol>
 				)}
 			</CRow>
 
@@ -243,9 +225,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					<CButton
 						color="success"
 						className="me-md-1"
-						disabled={
-							!validFields || invalidFieldNames.length > 0 || !connectionLabel || !isLabelValid(connectionLabel)
-						}
+						disabled={invalidFieldNames.length > 0 || !connectionLabel || !isLabelValid(connectionLabel)}
 						onClick={doSave}
 					>
 						Save
@@ -260,142 +240,83 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	)
 })
 
-interface ConfigFieldProps {
-	label: React.ReactNode
-	setValue: (key: string, value: any) => void
-	setValid: (key: string, valid: boolean) => void
-	definition: ExtendedInputField | ExtendedConfigField
-	value: any
+interface ConnectionEditPanelConfigFieldsProps {
+	connectionConfig: Record<string, any> | null
+	configOptions: Array<ExtendedInputField & { width: number }> | null
+	fieldVisibility: Record<string, boolean | undefined>
+	setConnectionConfig: React.Dispatch<React.SetStateAction<Record<string, any>>>
+	setValidFields: React.Dispatch<React.SetStateAction<Record<string, boolean | undefined> | null>>
 	connectionId: string
+	error: string | null
+	doRetryConfigLoad: () => void
 }
 
-function ConfigField({ label, setValue, setValid, definition, value, connectionId }: ConfigFieldProps) {
-	const id = definition.id
-	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
-	const setValid2 = useCallback((valid: boolean) => setValid(id, valid), [setValid, id])
+function ConnectionEditPanelConfigFields({
+	connectionConfig,
+	configOptions,
+	fieldVisibility,
+	setConnectionConfig,
+	setValidFields,
+	connectionId,
+	error,
+	doRetryConfigLoad,
+}: ConnectionEditPanelConfigFieldsProps) {
+	const setValue = useCallback(
+		(key: string, value: any) => {
+			console.log('set value', key, value)
 
-	const fieldType = definition.type
-	switch (definition.type) {
-		case 'static-text': {
-			let control: React.ReactNode = ''
-			if (definition.value && definition.value != definition.label) {
-				const descriptionHtml = {
-					__html: sanitizeHtml(definition.value ?? '', {
-						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-						disallowedTagsMode: 'escape',
-					}),
-				}
+			setConnectionConfig((oldConfig) => ({
+				...oldConfig,
+				[key]: value,
+			}))
+		},
+		[setConnectionConfig]
+	)
+	const setValid = useCallback(
+		(key: string, isValid: boolean) => {
+			console.log('set valid', key, isValid)
 
-				control = <p title={definition.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
-			}
+			setValidFields((oldValid) => ({
+				...oldValid,
+				[key]: isValid,
+			}))
+		},
+		[setValidFields]
+	)
 
-			if (!!label) {
-				return (
-					<>
-						<CFormLabel>{label}</CFormLabel>
-						{control}
-					</>
-				)
-			}
-
-			return control
-		}
-		case 'textinput':
-			return (
-				<TextInputField
-					label={label}
-					value={value}
-					regex={definition.regex}
-					required={definition.required}
-					setValue={setValue2}
-					setValid={setValid2}
-				/>
-			)
-		case 'number':
-			return (
-				<NumberInputField
-					label={label}
-					required={definition.required}
-					min={definition.min}
-					max={definition.max}
-					step={definition.step}
-					range={definition.range}
-					value={value}
-					setValue={setValue2}
-					setValid={setValid2}
-				/>
-			)
-		case 'checkbox':
-			return (
-				<div style={{ marginRight: 40, marginTop: 2 }}>
-					{label ? <CFormLabel>{label}</CFormLabel> : ''}
-					<CFormSwitch
-						color="success"
-						checked={value}
-						size="xl"
-						title={definition.tooltip} // nocommit: this needs fixing
-						onChange={() => {
-							setValue2(!value)
-							//setValid2(true)
-						}}
-					/>
-				</div>
-			)
-		case 'dropdown':
-			return (
-				<DropdownInputField
-					label={label}
-					choices={definition.choices}
-					allowCustom={definition.allowCustom}
-					minChoicesForSearch={definition.minChoicesForSearch}
-					regex={definition.regex}
-					value={value}
-					setValue={setValue2}
-					setValid={setValid2}
-					multiple={false}
-				/>
-			)
-		case 'multidropdown':
-			return (
-				<DropdownInputField
-					label={label}
-					choices={definition.choices}
-					allowCustom={definition.allowCustom}
-					minSelection={definition.minSelection}
-					minChoicesForSearch={definition.minChoicesForSearch}
-					maxSelection={definition.maxSelection}
-					regex={definition.regex}
-					value={value}
-					setValue={setValue2}
-					setValid={setValid2}
-					multiple={true}
-				/>
-			)
-		case 'colorpicker': {
-			return (
-				<ColorInputField
-					label={label}
-					value={value}
-					setValue={setValue2}
-					setValid={setValid2}
-					enableAlpha={definition.enableAlpha ?? false}
-					returnType={definition.returnType ?? 'number'}
-					presetColors={definition.presetColors}
-				/>
-			)
-			break
-		}
-		case 'bonjour-device':
-			return (
-				<BonjourDeviceInputField
-					label={label}
-					value={value}
-					setValue={setValue2}
-					connectionId={connectionId}
-					queryId={definition.id}
-				/>
-			)
-		default:
-			return <p>Unknown field "{fieldType}"</p>
+	if (!configOptions || !connectionConfig) {
+		return <LoadingRetryOrError error={error} dataReady={false} doRetry={doRetryConfigLoad} autoRetryAfter={2} />
 	}
+
+	return (
+		<>
+			{configOptions.map((field, i) => {
+				return (
+					<CCol
+						key={i}
+						className={`fieldtype-${field.type}`}
+						sm={field.width}
+						style={{ display: fieldVisibility[field.id] === false ? 'none' : undefined }}
+					>
+						<ConnectionEditField
+							label={
+								<>
+									{field.label}
+									{field.tooltip && (
+										<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={field.tooltip} />
+									)}
+								</>
+							}
+							definition={field}
+							value={connectionConfig[field.id]}
+							// valid={validFields[field.id] ?? false}
+							setValue={setValue}
+							setValid={setValid}
+							connectionId={connectionId}
+						/>
+					</CCol>
+				)
+			})}
+		</>
+	)
 }

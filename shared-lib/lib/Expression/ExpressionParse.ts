@@ -201,30 +201,6 @@ function fixupExpression(rootNode: SomeExpressionNode): void {
 				fixReturnDetectedAsFunction(expr)
 			}
 
-			// Fix up a $(my:var)[1]
-			for (let i = 0; i + 1 < body.length; i++) {
-				const exprA = body[i]
-				const exprB = body[i + 1]
-
-				if (
-					exprA.type === 'CompanionVariable' &&
-					exprB.type === 'ArrayExpression' &&
-					exprB.elements.length === 1 &&
-					exprB.elements[0]
-				) {
-					body[i] = {
-						computed: true,
-						type: 'MemberExpression',
-						object: exprA,
-						property: exprB.elements[0],
-					}
-
-					// delete node.body
-
-					body.splice(i + 1, 1)
-				}
-			}
-
 			// Combine a return identifier with the expression that follows
 			for (let i = 0; i + 1 < body.length; i++) {
 				const exprA = body[i]

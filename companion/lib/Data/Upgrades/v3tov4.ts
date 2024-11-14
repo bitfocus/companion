@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash-es'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
-import type { DataDatabase } from '../Database.js'
+import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 
@@ -12,7 +12,7 @@ function CreateBankControlIdOld(page: string | number, bank: number): string {
 	return `bank:${page}-${bank}`
 }
 
-function addControlIdsToPages(db: DataDatabase): void {
+function addControlIdsToPages(db: DataStoreBase): void {
 	const controls = db.getKey('controls', {})
 	const pages = db.getKey('page', {})
 
@@ -34,12 +34,15 @@ function addControlIdsToPages(db: DataDatabase): void {
 			}
 		}
 	}
+
+	db.setKey('controls', controls)
+	db.setKey('page', pages)
 }
 
 /**
  * do the database upgrades to convert from the v3 to the v4 format
  */
-function convertDatabaseToV4(db: DataDatabase, _logger: Logger) {
+function convertDatabaseToV4(db: DataStoreBase, _logger: Logger) {
 	addControlIdsToPages(db)
 
 	// If xkeys was previously enabled, then preserve the old layout
@@ -47,6 +50,10 @@ function convertDatabaseToV4(db: DataDatabase, _logger: Logger) {
 	if (userconfig.xkeys_enable && userconfig.xkeys_legacy_layout === undefined) {
 		userconfig.xkeys_legacy_layout = true
 	}
+
+	db.setKey('surface-groups', {})
+
+	db.setKey('page_config_version', 4)
 }
 
 /**

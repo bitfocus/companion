@@ -44,7 +44,6 @@ export interface InternalModuleFragment {
 
 	/**
 	 * Get an updated value for a feedback
-	 * @returns {boolean | void}
 	 */
 	executeFeedback?: (
 		feedback: FeedbackInstanceExt

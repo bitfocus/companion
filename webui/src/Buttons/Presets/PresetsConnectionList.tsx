@@ -1,6 +1,5 @@
 import React, { useContext } from 'react'
 import { CButton, CCallout } from '@coreui/react'
-import { ConnectionsContext } from '../../util.js'
 import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -15,20 +14,19 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	presets,
 	setConnectionAndCategory,
 }: PresetsConnectionListProps) {
-	const { modules } = useContext(RootAppStoreContext)
-	const connectionsContext = useContext(ConnectionsContext)
+	const { modules, connections } = useContext(RootAppStoreContext)
 
 	// Sort the connections by the same order as the connections list
 	const sortedPresets = Object.entries(presets).sort(
 		([a], [b]) =>
-			(connectionsContext[a].sortOrder ?? Number.POSITIVE_INFINITY) -
-			(connectionsContext[b].sortOrder ?? Number.POSITIVE_INFINITY)
+			(connections.getInfo(a)?.sortOrder ?? Number.POSITIVE_INFINITY) -
+			(connections.getInfo(b)?.sortOrder ?? Number.POSITIVE_INFINITY)
 	)
 
 	const options = sortedPresets.map(([id, vals]) => {
 		if (!vals || Object.values(vals).length === 0) return ''
 
-		const connectionInfo = connectionsContext[id]
+		const connectionInfo = connections.getInfo(id)
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 		const compactName = moduleInfo?.name?.replace(/\;.*/, '...')
 

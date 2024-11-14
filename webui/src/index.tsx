@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === 'development') {
 import 'intersection-observer'
 
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import io from 'socket.io-client'
 
@@ -53,7 +53,8 @@ if (window.location.hash && window.location.hash.includes('debug_socket')) {
 	})
 }
 
-ReactDOM.render(
+const root = createRoot(document.getElementById('root')!)
+root.render(
 	<React.StrictMode>
 		<SocketContext.Provider value={socket}>
 			<BrowserRouter>
@@ -81,6 +82,5 @@ ReactDOM.render(
 				</Routes>
 			</BrowserRouter>
 		</SocketContext.Provider>
-	</React.StrictMode>,
-	document.getElementById('root')
+	</React.StrictMode>
 )

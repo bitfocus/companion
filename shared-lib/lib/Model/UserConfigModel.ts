@@ -66,8 +66,10 @@ export interface UserConfigModel {
 
 	gridSize: UserConfigGridSize
 	gridSizeInlineGrow: boolean
+	gridSizePromptGrow: boolean
 
 	installName: string
+	default_export_filename: string
 
 	/** Whether to run the mdns  */
 	discoveryEnabled: boolean

@@ -150,7 +150,7 @@ In some scenarios it can be beneficial to have nested variables. This is not sup
 
 Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax.
 
-eg `parseVariables('$(internal:custom_$(internal:custom_b))')`
+eg `parseVariables('$(custom:$(custom:b))')`
 
 ##### Bool operations
 
@@ -178,7 +178,7 @@ You can see examples of how to use this at: https://jsonpath.com/
 
 Parse a string of json into an object.
 
-If this enounters invalid input, it will return null instead of throwing an error.
+If this encounters invalid input, it will return null instead of throwing an error.
 
 eg: `jsonparse('{"a":1}')` will be an object `{ a: 1 }`
 
@@ -186,7 +186,7 @@ eg: `jsonparse('{"a":1}')` will be an object `{ a: 1 }`
 
 Convert an object into a json string.
 
-If this enounters invalid input, it will return null instead of throwing an error.
+If this encounters invalid input, it will return null instead of throwing an error.
 
 eg: `jsonstringify({ a: 1 })` will be a string containing `{"a":1}`
 

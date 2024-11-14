@@ -23,7 +23,7 @@ import {
 	LoupedeckDisplayId,
 	openLoupedeck,
 } from '@loupedeck/node'
-import { convertPanelIndexToXY, GridSize } from '../Util.js'
+import { convertPanelIndexToXY } from '../Util.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
@@ -35,7 +35,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import { colorToRgb } from './Util.js'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 

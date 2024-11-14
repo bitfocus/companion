@@ -1,5 +1,8 @@
-import { DataStoreBase } from './StoreBase.js'
+import { DatabaseDefault, DataStoreBase } from './StoreBase.js'
+import { DataLegacyDatabase } from './Legacy/Database.js'
 import { upgradeStartup } from './Upgrade.js'
+import { createTables as createTablesV1 } from './Schema/v1.js'
+import { createTables as createTablesV5 } from './Schema/v5.js'
 
 /**
  * The class that manages the applications's main database
@@ -25,22 +28,55 @@ export class DataDatabase extends DataStoreBase {
 	/**
 	 * The stored defaults for a new db
 	 */
-	static Defaults: object = {
-		page_config_version: 3,
+	static Defaults: DatabaseDefault = {
+		main: {
+			page_config_version: 5,
+		},
 	}
-	/**
-	 * The default minimum interval in ms to save to disk (4000 ms)
-	 */
-	private static SaveInterval: number = 4000
 
 	/**
 	 * @param configDir - the root config directory
 	 */
 	constructor(configDir: string) {
-		super(configDir, 'db', DataDatabase.SaveInterval, DataDatabase.Defaults, 'Data/Database')
+		super(configDir, 'db', 'main', 'Data/Database')
 
-		this.loadSync()
+		this.startSQLite()
 
 		upgradeStartup(this)
+	}
+
+	/**
+	 * Create the database tables
+	 */
+	protected create(): void {
+		createTablesV5(this.store, this.defaultTable, this.logger)
+	}
+
+	/**
+	 * Save the defaults since a file could not be found/loaded/parsed
+	 */
+	protected loadDefaults(): void {
+		for (const [key, value] of Object.entries(DataDatabase.Defaults)) {
+			for (const [key2, value2] of Object.entries(value)) {
+				this.setTableKey(key, key2, value2)
+			}
+		}
+
+		this.isFirstRun = true
+	}
+
+	/**
+	 * Load the old file driver and migrate to SQLite
+	 */
+	protected migrateFileToSqlite(): void {
+		createTablesV1(this.store, this.defaultTable, this.logger)
+
+		const legacyDB = new DataLegacyDatabase(this.cfgDir)
+
+		const data = legacyDB.getAll()
+
+		for (const [key, value] of Object.entries(data)) {
+			this.setKey(key, value)
+		}
 	}
 }

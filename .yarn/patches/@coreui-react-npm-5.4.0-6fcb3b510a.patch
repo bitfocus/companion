@@ -1,0 +1,31 @@
+diff --git a/dist/esm/components/modal/CModal.js b/dist/esm/components/modal/CModal.js
+index 58f4c61c71168a624a9c0d79318dad9993e3d2aa..315befe3e56de29738642d573253833085d87409 100644
+--- a/dist/esm/components/modal/CModal.js
++++ b/dist/esm/components/modal/CModal.js
+@@ -30,14 +30,14 @@ var CModal = forwardRef(function (_a, ref) {
+         var _a;
+         if (_visible) {
+             activeElementRef.current = document.activeElement;
+-            document.addEventListener('mouseup', handleClickOutside);
++            document.addEventListener('mousedown', handleMouseDown);
+             document.addEventListener('keydown', handleKeyDown);
+         }
+         else {
+             (_a = activeElementRef.current) === null || _a === void 0 ? void 0 : _a.focus();
+         }
+         return function () {
+-            document.removeEventListener('mouseup', handleClickOutside);
++            document.removeEventListener('mousedown', handleMouseDown);
+             document.removeEventListener('keydown', handleKeyDown);
+         };
+     }, [_visible]);
+@@ -85,6 +85,9 @@ var CModal = forwardRef(function (_a, ref) {
+             handleDismiss();
+         }
+     };
++    var handleMouseDown = function (event) {
++        document.addEventListener('mouseup', function () { handleClickOutside(event) }, { once: true })
++      }
+     var handleKeyDown = function (event) {
+         if (event.key === 'Escape' && keyboard) {
+             handleDismiss();

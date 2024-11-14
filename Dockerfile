@@ -1,17 +1,20 @@
 FROM node:22-bookworm AS companion-builder
 
+RUN corepack enable
+
 # Installation Prep
 RUN apt-get update && apt-get install -y \
     libusb-1.0-0-dev \
     libudev-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN yarn config set network-timeout 200000 -g
+RUN yarn config set httpTimeout 100000
 
 WORKDIR /app
 COPY . /app/
 
 # Generate version number file
+RUN yarn
 RUN yarn build:writefile
 
 # build the application
@@ -50,7 +53,7 @@ RUN mkdir $COMPANION_CONFIG_BASEDIR && chown companion:companion $COMPANION_CONF
 
 USER companion
 # Export ports for web, Satellite API and WebSocket (Elgato Plugin)
-EXPOSE 8000 16622 28492
+EXPOSE 8000 16622 16623 28492
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 

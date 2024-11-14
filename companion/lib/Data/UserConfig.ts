@@ -103,8 +103,10 @@ export class DataUserConfig extends CoreBase {
 			maxRow: 3,
 		},
 		gridSizeInlineGrow: false, // TODO: temporary until the styling of growing is better
+		gridSizePromptGrow: true,
 
 		installName: '',
+		default_export_filename: '$(internal:hostname)_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
 
 		discoveryEnabled: true,
 	}
@@ -115,13 +117,6 @@ export class DataUserConfig extends CoreBase {
 
 	constructor(registry: Registry) {
 		super(registry, 'Data/UserConfig')
-
-		this.registry.on('http_rebind', (bind_ip) => {
-			if (this.#data !== undefined && DataUserConfig.Defaults.https_self_cn == this.#data.https_self_cn) {
-				this.setKey('https_self_cn', bind_ip)
-			}
-			DataUserConfig.Defaults.https_self_cn = bind_ip
-		})
 
 		this.#data = this.db.getKey('userconfig', cloneDeep(DataUserConfig.Defaults))
 
@@ -281,8 +276,7 @@ export class DataUserConfig extends CoreBase {
 	 * @param [clone = false] - <code>true</code> if a clone is needed instead of a link
 	 * @returns the config value
 	 */
-	getKey(key: string, clone = false): any {
-		// @ts-ignore
+	getKey(key: keyof UserConfigModel, clone = false): any {
 		let out = this.#data[key]
 
 		if (clone === true) {
@@ -335,8 +329,7 @@ export class DataUserConfig extends CoreBase {
 	 * Reset a user config to its default
 	 * @param key - the key to reset
 	 */
-	resetKey(key: string): void {
-		// @ts-ignore
+	resetKey(key: keyof UserConfigModel): void {
 		this.setKey(key, DataUserConfig.Defaults[key])
 	}
 
@@ -365,7 +358,7 @@ export class DataUserConfig extends CoreBase {
 		}
 
 		this.logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
-		this.io.emit('set_userconfig_key', key, value)
+		this.io.emitToAll('set_userconfig_key', key, value)
 		setImmediate(() => {
 			// give the change a chance to be pushed to the ui first
 			this.graphics.updateUserConfig(key, value)
@@ -397,5 +390,12 @@ export class DataUserConfig extends CoreBase {
 
 			this.db.setKey('userconfig', this.#data)
 		}
+	}
+
+	updateBindIp(bindIp: string): void {
+		if (this.#data !== undefined && DataUserConfig.Defaults.https_self_cn == this.#data.https_self_cn) {
+			this.setKey('https_self_cn', bindIp)
+		}
+		DataUserConfig.Defaults.https_self_cn = bindIp
 	}
 }

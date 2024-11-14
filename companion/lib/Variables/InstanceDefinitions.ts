@@ -52,7 +52,7 @@ export class VariablesInstanceDefinitions {
 	}
 
 	connectionLabelRename(labelFrom: string, labelTo: string): void {
-		// Update the instance definitions
+		// Update the connection variable definitions
 		const oldDefinitions = this.#variableDefinitions[labelFrom]
 		if (oldDefinitions) {
 			const definitions = (this.#variableDefinitions[labelTo] = oldDefinitions)
@@ -84,10 +84,10 @@ export class VariablesInstanceDefinitions {
 	}
 
 	/**
-	 * Set the variable definitions for an instance
+	 * Set the variable definitions for a connection
 	 */
-	setVariableDefinitions(instance_label: string, variables: VariableDefinitionTmp[]): void {
-		this.#logger.silly('got instance variable definitions for ' + instance_label)
+	setVariableDefinitions(connectionLabel: string, variables: VariableDefinitionTmp[]): void {
+		this.#logger.silly('got connection variable definitions for ' + connectionLabel)
 
 		const variablesObj: ModuleVariableDefinitions = {}
 		for (const variable of variables || []) {
@@ -99,12 +99,12 @@ export class VariablesInstanceDefinitions {
 			variablesObj[variable.name] = newVarObj
 		}
 
-		const variablesBefore = this.#variableDefinitions[instance_label]
-		this.#variableDefinitions[instance_label] = variablesObj
+		const variablesBefore = this.#variableDefinitions[connectionLabel]
+		this.#variableDefinitions[connectionLabel] = variablesObj
 
 		if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
 			if (!variablesBefore) {
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
+				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', connectionLabel, {
 					type: 'set',
 					variables: variablesObj,
 				})
@@ -112,7 +112,7 @@ export class VariablesInstanceDefinitions {
 				const patch = jsonPatch.compare(variablesBefore, variablesObj || {})
 
 				if (patch.length > 0) {
-					this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
+					this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', connectionLabel, {
 						type: 'patch',
 						patch: patch,
 					})

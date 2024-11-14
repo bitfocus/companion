@@ -248,7 +248,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 						{(!config || config.type === undefined) && (
 							<MyErrorBoundary>
 								{' '}
-								<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
+								<CDropdown className="" style={{ display: 'inline-block', marginRight: -4, position: 'inherit' }}>
 									<CButtonGroup>
 										{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
 										<CButton color="danger" onClick={() => setButtonType('button')}>

@@ -16,8 +16,8 @@ export interface ClientExportSelection {
 	customVariables: boolean
 	connections: boolean
 	surfaces: boolean
-
 	format: ExportFormat
+	filename?: string
 }
 
 export interface ClientImportSelection {
@@ -48,4 +48,4 @@ export interface ClientImportObject {
 	pages?: Record<number, ClientPageInfo>
 }
 
-export type InstanceRemappings = Record<string, string | undefined>
+export type ConnectionRemappings = Record<string, string | undefined>

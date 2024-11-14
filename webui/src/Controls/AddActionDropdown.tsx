@@ -1,5 +1,5 @@
 import React, { useCallback, useContext } from 'react'
-import { ConnectionsContext, useComputed } from '../util.js'
+import { useComputed } from '../util.js'
 import Select, { createFilter } from 'react-select'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { observer } from 'mobx-react-lite'
@@ -38,15 +38,14 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 	onSelect,
 	placeholder,
 }: AddActionDropdownProps) {
-	const { actionDefinitions, recentlyAddedActions } = useContext(RootAppStoreContext)
+	const { actionDefinitions, connections, recentlyAddedActions } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
-	const connectionsContext = useContext(ConnectionsContext)
 
 	const options = useComputed(() => {
 		const options: Array<AddActionOption | AddActionGroup> = []
 		for (const [connectionId, connectionActions] of actionDefinitions.connections.entries()) {
 			for (const [actionId, action] of connectionActions.entries()) {
-				const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 				const optionLabel = `${connectionLabel}: ${action.label}`
 				options.push({
 					isRecent: false,
@@ -63,7 +62,7 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 				const [connectionId, actionId] = actionType.split(':', 2)
 				const actionInfo = actionDefinitions.connections.get(connectionId)?.get(actionId)
 				if (actionInfo) {
-					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+					const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 					const optionLabel = `${connectionLabel}: ${actionInfo.label}`
 					recents.push({
 						isRecent: true,
@@ -80,7 +79,7 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 		})
 
 		return options
-	}, [actionDefinitions, connectionsContext, recentlyAddedActions.recentIds])
+	}, [actionDefinitions, connections, recentlyAddedActions.recentIds])
 
 	const innerChange = useCallback(
 		(e: AddActionOption | null) => {

@@ -20,7 +20,7 @@ if (process.platform === 'darwin') {
 		const plist = require('plist')
 		const semver = require('semver')
 
-		const minimumVersion = '10.15'
+		const minimumVersion = '11.0'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
 		/** @type {any} */
@@ -597,7 +597,7 @@ if (!lock) {
 
 	function showConfigFolder() {
 		try {
-			electron.shell.showItemInFolder(path.join(configDir, 'db'))
+			electron.shell.showItemInFolder(thisDbPath)
 		} catch (e) {
 			electron.dialog.showErrorBox('File Error', 'Could not open config directory.')
 		}
@@ -779,6 +779,15 @@ if (!lock) {
 				app.exit(11)
 			}
 
+			let disableAdminPassword = false
+			const args = process.argv
+
+			args.forEach((value, index) => {
+				if (value == '--disable-admin-password') {
+					disableAdminPassword = true
+				}
+			})
+
 			child = new RespawnMonitor(
 				// @ts-ignore
 				() =>
@@ -791,6 +800,7 @@ if (!lock) {
 						`--admin-port=${uiConfig.get('http_port')}`,
 						`--admin-address=${uiConfig.get('bind_ip')}`,
 						uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
+						disableAdminPassword || process.env.DISABLE_ADMIN_PASSWORD ? `--disable-admin-password` : undefined,
 					].filter((v) => !!v),
 				{
 					name: `Companion process`,
