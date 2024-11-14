@@ -119,4 +119,18 @@ export class SurfacesStore {
 			surfaces: overflowingSurfaces,
 		}
 	}
+
+	public countFirmwareUpdates(): number {
+		let count = 0
+
+		for (const group of this.store.values()) {
+			for (const surface of group.surfaces) {
+				if (surface.hasFirmwareUpdates) {
+					count++
+				}
+			}
+		}
+
+		return count
+	}
 }

@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCog, faFolderOpen, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCircleUp, faCog, faFolderOpen, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
@@ -11,6 +11,7 @@ import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
+import { WindowLinkOpen } from '../Helpers/Window.js'
 
 export const KnownSurfacesTable = observer(function SurfacesPage() {
 	const { surfaces, socket } = useContext(RootAppStoreContext)
@@ -236,7 +237,17 @@ function SurfaceRow({
 			<td>
 				<TextInputField value={surface.name} setValue={updateName2} />
 			</td>
-			<td>{surface.type}</td>
+			<td>
+				{surface.type}
+				{!!surface.hasFirmwareUpdates && (
+					<>
+						{' '}
+						<WindowLinkOpen href={surface.hasFirmwareUpdates.updaterDownloadUrl}>
+							<FontAwesomeIcon icon={faCircleUp} title="Firmware update is available" />
+						</WindowLinkOpen>
+					</>
+				)}
+			</td>
 			<td>{surface.isConnected ? surface.location || 'Local' : 'Offline'}</td>
 			<td className="text-right">
 				{surface.isConnected ? (

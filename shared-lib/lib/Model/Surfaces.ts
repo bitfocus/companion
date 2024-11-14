@@ -16,6 +16,10 @@ export interface RowsAndColumns {
 	columns: number
 }
 
+export interface SurfaceFirmwareUpdateInfo {
+	updaterDownloadUrl: string
+}
+
 export interface ClientSurfaceItem {
 	id: string
 	type: string
@@ -25,6 +29,8 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
+
+	hasFirmwareUpdates: SurfaceFirmwareUpdateInfo | null
 
 	size: RowsAndColumns | null
 	offset: RowsAndColumns | null

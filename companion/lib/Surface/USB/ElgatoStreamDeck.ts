@@ -33,6 +33,7 @@ import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/share
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { LcdPosition, StreamDeckLcdSegmentControlDefinition, StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
+import { SemVer } from 'semver'
 
 const setTimeoutPromise = util.promisify(setTimeout)
 
@@ -62,6 +63,18 @@ function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] 
 
 	return fields
 }
+
+/**
+ * The latest firmware versions for the SDS at the time this was last updated
+ */
+const LATEST_SDS_FIRMWARE_VERSIONS: Record<string, string> = {
+	AP2: '1.05.009',
+	ENCODER_AP2_1: '1.01.012',
+	ENCODER_AP2_2: '1.01.012',
+	ENCODER_LD_1: '1.01.006',
+	ENCODER_LD_2: '1.01.006',
+}
+const SDS_UPDATE_TOOL_URL = 'https://bitfocus.io/?elgato-sds-firmware-updater'
 
 export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
@@ -336,6 +349,41 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 		return self
 	}
 
+	async checkForFirmwareUpdates(latestVersions?: Record<string, string>): Promise<void> {
+		// If no versions are provided, use the latest known versions for the SDS
+		if (!latestVersions && this.#streamDeck.MODEL === DeviceModelId.STUDIO)
+			latestVersions = LATEST_SDS_FIRMWARE_VERSIONS
+
+		// If no versions are provided, we can't know that there are updates
+		if (!latestVersions) {
+			this.info.hasFirmwareUpdates = undefined
+			return
+		}
+
+		let hasUpdate = false
+
+		const currentVersions = await this.#streamDeck.getAllFirmwareVersions()
+
+		for (const [key, targetVersion] of Object.entries(latestVersions)) {
+			const currentVersion = parseVersion(currentVersions[key])
+			const latestVersion = parseVersion(targetVersion)
+
+			if (currentVersion && latestVersion && latestVersion.compare(currentVersion) > 0) {
+				this.#logger.info(`Firmware update available for ${key}: ${currentVersion} -> ${latestVersion}`)
+				hasUpdate = true
+				break
+			}
+		}
+
+		if (hasUpdate) {
+			this.info.hasFirmwareUpdates = {
+				updaterDownloadUrl: SDS_UPDATE_TOOL_URL,
+			}
+		} else {
+			this.info.hasFirmwareUpdates = undefined
+		}
+	}
+
 	/**
 	 * Process the information from the GUI and what is saved in database
 	 * @returns false when nothing happens
@@ -380,4 +428,13 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 	draw(x: number, y: number, render: ImageResult): void {
 		this.#writeQueue.queue(`${x}_${y}`, x, y, render)
 	}
+}
+
+function parseVersion(rawVersion: string): SemVer | null {
+	// These versions are not semver, but can hopefully be safely cooerced into it
+
+	const parts = rawVersion.split('.')
+	if (parts.length !== 3) return null
+
+	return new SemVer(`${parseInt(parts[0])}.${parseInt(parts[1])}.${parseInt(parts[2])}`)
 }

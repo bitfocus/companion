@@ -19,7 +19,7 @@
 import findProcess from 'find-process'
 import HID from 'node-hid'
 import jsonPatch from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
@@ -341,6 +341,24 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		// Update the group to have the new surface
 		this.#attachSurfaceToGroup(handler)
+
+		// Perform an update check in the background
+		setTimeout(() => {
+			const firmwareUpdatesBefore = panel.info.hasFirmwareUpdates
+			panel
+				.checkForFirmwareUpdates?.()
+				.then(() => {
+					if (isEqual(firmwareUpdatesBefore, panel.info.hasFirmwareUpdates)) return
+
+					this.#logger.info(`Firmware updates change for surface "${handler.surfaceId}"`)
+
+					// Inform ui of the updates
+					this.updateDevicesList()
+				})
+				.catch((e) => {
+					this.#logger.warn(`Failed to check for firmware updates for surface "${handler.surfaceId}": ${e}`)
+				})
+		}, 0)
 	}
 
 	/**
@@ -682,6 +700,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+				hasFirmwareUpdates: null,
 
 				size: config.gridSize || null,
 				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
@@ -693,6 +712,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
+				surfaceInfo.hasFirmwareUpdates = surfaceHandler.panel.info.hasFirmwareUpdates || null
 			}
 
 			return surfaceInfo
