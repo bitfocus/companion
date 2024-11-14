@@ -266,7 +266,7 @@ export class CloudController {
 			if (process.env.NODE_ENV !== 'production') url.searchParams.append('testing', 'true')
 
 			const responseBody = await fetch(url, {
-				method: 'POST',
+				method: 'GET',
 				headers: {
 					accept: 'application/json',
 					'content-type': 'application/json',
@@ -386,7 +386,6 @@ export class CloudController {
 				body: JSON.stringify({ email, password }),
 			}).then(async (response) => response.json())
 		} catch (e: any) {
-			console.log('res', e)
 			if (e.response?.statusCode >= 400 && e.response?.statusCode < 500) {
 				this.#setState({
 					authenticated: false,
