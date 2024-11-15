@@ -7,7 +7,7 @@ on:
     - cron: '43 5 * * 0'
 
 env:
-  COMPANION_BRANCH: master
+  COMPANION_BRANCH: main
 
 permissions:
   contents: write
