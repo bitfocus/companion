@@ -17,6 +17,7 @@ import type {
 } from '@companion-app/shared/SocketIO.js'
 import { computed } from 'mobx'
 import { DropTargetMonitor, XYCoord } from 'react-dnd'
+import type { ReadonlyDeep } from 'type-fest'
 
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
@@ -138,6 +139,34 @@ export function sandbox(serializedFn: string): (...args: any[]) => any {
 		// log error and gracefully exit
 		console.log(`Sandbox: ${error}`)
 		return () => true
+	}
+}
+
+/**
+ * Deeply freeze an object
+ * Note: This is done in place
+ */
+export function deepFreeze<T>(object: ReadonlyDeep<T> | Readonly<T> | T): ReadonlyDeep<T> {
+	// Based on https://github.com/anatoliygatt/deep-freeze-node/blob/master/lib/deep-freeze.js
+
+	Object.freeze(object)
+	if (typeof object === 'object') {
+		deepFreezeInner(object)
+	}
+
+	return object as ReadonlyDeep<T>
+}
+function deepFreezeInner(object: any): void {
+	Object.freeze(object)
+
+	for (const propertyKey in object) {
+		if (Object.prototype.hasOwnProperty.call(object, propertyKey)) {
+			const property = object[propertyKey]
+			if (typeof property !== 'object' || !(property instanceof Object) || Object.isFrozen(property)) {
+				continue
+			}
+			deepFreezeInner(property)
+		}
 	}
 }
 
