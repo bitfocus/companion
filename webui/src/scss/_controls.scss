@@ -10,10 +10,19 @@
 	}
 
 	input[type='checkbox']:checked {
-		background: 0 0 var(--companion-img-check) no-repeat;
+		background: 0 0 url('/img/check.svg');
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
 	}
 	input[type='checkbox']:disabled {
 		background: #eee;
+	}
+	input[type='checkbox']:indeterminate {
+		background: 0 0 url('/img/indeterminate.svg');
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
 	}
 }
 
