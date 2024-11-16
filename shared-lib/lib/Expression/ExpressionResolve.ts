@@ -59,8 +59,12 @@ export function ResolveExpression(
 						return Number(left) % Number(right)
 					case '^':
 						return Number(left) ^ Number(right)
+					case '**':
+						return Number(left) ** Number(right)
 					case '||':
 						return left || right
+					case '??':
+						return left ?? right
 					case '&&':
 						return left && right
 					case '>>':
@@ -285,8 +289,10 @@ function mutateValueForAssignment(operator: unknown, leftValue: any, rightValue:
 			return Number(leftValue) | Number(rightValue)
 		case '||=':
 			return leftValue || rightValue
+		case '??=':
+			return leftValue ?? rightValue
 		case '&&=':
-			return leftValue || rightValue
+			return leftValue && rightValue
 		default:
 			throw new Error(`Unsupported assignment operator "${operator}"`)
 	}
