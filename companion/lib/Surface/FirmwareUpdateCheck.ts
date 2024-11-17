@@ -82,7 +82,7 @@ export class SurfaceFirmwareUpdateCheck {
 	}
 
 	/**
-	 * Fetch the pauload for a specific url, either from cache or from the server
+	 * Fetch the payload for a specific url, either from cache or from the server
 	 * @param url The url to fetch the payload from
 	 * @param skipCache Whether to skip the cache and always fetch a new payload
 	 * @returns The payload, or null if it could not be fetched
