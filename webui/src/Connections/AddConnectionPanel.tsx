@@ -181,7 +181,7 @@ function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnecti
 	return (
 		<div>
 			<CButton color="primary" onClick={addConnectionClick}>
-				{moduleInfo.installedInfo ? 'Add' : 'Install'}
+				Add
 			</CButton>
 			&nbsp;
 			{moduleInfo.installedInfo?.stableVersion?.isLegacy && (

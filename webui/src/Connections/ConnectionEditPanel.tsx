@@ -263,7 +263,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 								{connectionInfo.moduleVersionId} (Missing)
 							</option>
 						)}
-						{useConnectionVersionSelectOptions(moduleInfo?.baseInfo?.id, moduleInfo, true).map((v) => (
+						{useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true).map((v) => (
 							<option key={v.value} value={v.value}>
 								{v.label}
 							</option>
