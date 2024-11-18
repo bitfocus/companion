@@ -1,6 +1,6 @@
 import React, { RefObject, useCallback, useContext, useRef } from 'react'
 import { CAlert, CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
-import { socketEmitPromise } from '../util.js'
+import { socketEmitPromise, useComputed } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faSort,
@@ -476,13 +476,47 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 }
 
 const MissingVersionsWarning = observer(function MissingVersionsWarning() {
-	// TODO - condition & behaviour
+	const { socket, connections, modules } = useContext(RootAppStoreContext)
+
+	const missingCount = useComputed(() => {
+		let count = 0
+
+		for (const connection of connections.connections.values()) {
+			if (connection.moduleVersionId === null) {
+				count++
+				continue
+			}
+
+			const module = modules.modules.get(connection.instance_type)
+			if (!module) {
+				count++
+				continue
+			}
+
+			// check for version
+			if (module.devVersion && connection.moduleVersionId === 'dev') continue
+			if (module.installedVersions.find((v) => v.versionId === connection.moduleVersionId)) continue
+
+			// Not found
+			count++
+		}
+
+		return count
+	}, [connections, modules])
+
+	const doInstallAllMissing = useCallback(() => {
+		socketEmitPromise(socket, 'modules:install-all-missing', []).catch((e) => {
+			console.error('Install all missing failed', e)
+		})
+	}, [socket])
+
+	if (missingCount === 0) return null
 
 	return (
 		<CAlert color="info">
 			Some modules are missing version information.
 			<br />
-			<CButton color="info" onClick={() => null}>
+			<CButton color="info" onClick={doInstallAllMissing}>
 				<FontAwesomeIcon icon={faDownload} />
 				&nbsp;Install missing versions
 			</CButton>

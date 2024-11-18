@@ -222,6 +222,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo.moduleVersionId)
 	const isModuleOnStore = !!modules.storeList.get(connectionInfo.instance_type)
 
+	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true)
+
 	return (
 		<div>
 			<h5>
@@ -258,12 +260,13 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 								: 'Select the version of the module to use for this connection'
 						}
 					>
-						{!connectionVersionExists && (
-							<option value={connectionInfo.moduleVersionId as string}>
-								{connectionInfo.moduleVersionId} (Missing)
-							</option>
-						)}
-						{useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true).map((v) => (
+						{!connectionVersionExists &&
+							!moduleVersionChoices.find((v) => v.value === connectionInfo.moduleVersionId) && (
+								<option value={connectionInfo.moduleVersionId as string}>
+									{connectionInfo.moduleVersionId} (Missing)
+								</option>
+							)}
+						{moduleVersionChoices.map((v) => (
 							<option key={v.value} value={v.value}>
 								{v.label}
 							</option>

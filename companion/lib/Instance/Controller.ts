@@ -129,7 +129,12 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			io,
 			this.modules,
 			this.modulesStore,
-			appInfo.modulesDir
+			this.#configStore,
+			appInfo.modulesDir,
+			(connectionId) => {
+				this.enableDisableInstance(connectionId, false)
+				this.enableDisableInstance(connectionId, true)
+			}
 		)
 
 		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())
@@ -582,6 +587,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		client.onPromise('connections:set-label-and-version', (id, label, versionId) => {
+			this.#logger.info('Setting label and version', id, label, versionId)
 			const idUsingLabel = this.getIdForLabel(label)
 			if (idUsingLabel && idUsingLabel !== id) {
 				return 'duplicate label'
@@ -609,12 +615,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			// Install the module if needed
 			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
 			if (!moduleInfo) {
-				// nocommit - trigger install of module
+				this.userModulesManager.ensureModuleIsInstalled(config.instance_type, versionId)
 			}
 
-			console.log('new config', config)
-
-			// Trigger a restart
+			// Trigger a restart (or as much as possible)
 			if (config.enabled) {
 				this.enableDisableInstance(id, false)
 				this.enableDisableInstance(id, true)

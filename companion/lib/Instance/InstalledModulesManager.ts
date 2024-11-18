@@ -14,6 +14,7 @@ import { promisify } from 'util'
 import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import type { DataDatabase } from '../Data/Database.js'
+import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -29,7 +30,7 @@ export class InstanceInstalledModulesManager {
 
 	readonly #appInfo: AppInfo
 
-	readonly #db: DataDatabase
+	// readonly #db: DataDatabase
 
 	readonly #io: UIHandler
 
@@ -44,6 +45,11 @@ export class InstanceInstalledModulesManager {
 	readonly #modulesStore: ModuleStoreService
 
 	/**
+	 * The config store of the connections
+	 */
+	readonly #configStore: ConnectionConfigStore
+
+	/**
 	 * Absolute path for storing store modules on disk
 	 */
 	readonly #modulesDir: string
@@ -53,20 +59,26 @@ export class InstanceInstalledModulesManager {
 		this.#io.emitToAll('modules:bundle-import:progress', sessionId, null)
 	})
 
+	readonly #restartConnection: (connectionId: string) => void
+
 	constructor(
 		appInfo: AppInfo,
-		db: DataDatabase,
+		_db: DataDatabase,
 		io: UIHandler,
 		modulesManager: InstanceModules,
 		modulesStore: ModuleStoreService,
-		installedModulesDir: string
+		configStore: ConnectionConfigStore,
+		installedModulesDir: string,
+		restartConnection: (connectionId: string) => void
 	) {
 		this.#appInfo = appInfo
-		this.#db = db
+		// this.#db = db
 		this.#io = io
 		this.#modulesManager = modulesManager
 		this.#modulesStore = modulesStore
+		this.#configStore = configStore
 		this.#modulesDir = installedModulesDir
+		this.#restartConnection = restartConnection
 	}
 
 	/**
@@ -89,7 +101,7 @@ export class InstanceInstalledModulesManager {
 			return
 		}
 
-		// TODO - track as pending install, and write some retry logic
+		// Future: track as pending install in the db, and write some retry logic
 
 		const installingModuleId = `${moduleId}-${versionId ?? 'latest'}`
 		if (this.#modulesBeingInstalled.has(installingModuleId)) {
@@ -111,8 +123,23 @@ export class InstanceInstalledModulesManager {
 				await this.#installModuleVersionFromStore(moduleId, versionInfo)
 
 				if (!versionId) {
-					// nocommit TODO - check if any uses of the module have a `null` versionId, and set them to this version
-					throw new Error('Method not implemented.')
+					const changedConnectionIds: string[] = []
+					for (const connectionId of this.#configStore.getAllInstanceIds()) {
+						const config = this.#configStore.getConfigForId(connectionId)
+						if (!config) continue
+
+						if (config.instance_type !== moduleId) continue
+						if (config.moduleVersionId !== null) continue
+
+						config.moduleVersionId = versionInfo.id
+						changedConnectionIds.push(connectionId)
+
+						// If enabled, restart it
+						if (config.enabled) this.#restartConnection(connectionId)
+					}
+
+					// Save the changes
+					this.#configStore.commitChanges(changedConnectionIds)
 				}
 			})
 			.catch((e) => {
@@ -128,6 +155,17 @@ export class InstanceInstalledModulesManager {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
+		client.onPromise('modules:install-all-missing', async () => {
+			this.#logger.debug('modules:install-all-missing')
+
+			for (const connectionId of this.#configStore.getAllInstanceIds()) {
+				const config = this.#configStore.getConfigForId(connectionId)
+				if (!config) continue
+
+				this.ensureModuleIsInstalled(config.instance_type, config.moduleVersionId)
+			}
+		})
+
 		client.onPromise('modules:install-module-tar', async (data) => {
 			// this.#logger.debug('modules:install-module-tar', data)
 

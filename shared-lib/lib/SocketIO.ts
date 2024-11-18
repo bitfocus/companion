@@ -329,6 +329,7 @@ export interface ClientToBackendEventsMap {
 		id: string,
 		versionId: string | null
 	) => [err: string, result: null] | [err: null, result: HelpDescription]
+	'modules:install-all-missing': () => void
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
