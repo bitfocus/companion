@@ -274,13 +274,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 
 	const connectionVariables = variablesStore.variables.get(connection.label)
 
-	const doEdit = () => {
-		if (!moduleInfo) {
-			return
-		}
-
-		configureConnection(id)
-	}
+	const doEdit = useCallback(() => configureConnection(id), [id])
 
 	const openBugUrl = useCallback(() => {
 		const url = moduleInfo?.baseInfo?.bugUrl

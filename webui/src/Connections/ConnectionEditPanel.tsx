@@ -46,15 +46,6 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 			</CRow>
 		)
 	}
-	if (!moduleInfo) {
-		return (
-			<CRow className="edit-connection">
-				<CCol xs={12}>
-					<p>Module not found</p>
-				</CCol>
-			</CRow>
-		)
-	}
 
 	return (
 		<ConnectionEditPanelInner
@@ -70,7 +61,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 interface ConnectionEditPanelInnerProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig
-	moduleInfo: NewClientModuleInfo
+	moduleInfo: NewClientModuleInfo | undefined
 	doConfigureConnection: (connectionId: string | null) => void
 	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 }
@@ -125,6 +116,9 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		setConfigFields([])
 	}, [doConfigureConnection])
 
+	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, connectionInfo.moduleVersionId)
+	const connectionShouldBeRunning = connectionInfo.enabled && connectionVersionExists
+
 	const doSave = useCallback(() => {
 		setError(null)
 
@@ -135,7 +129,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 			return
 		}
 
-		if (!connectionInfo.enabled) {
+		if (!connectionShouldBeRunning) {
 			socketEmitPromise(socket, 'connections:set-label-and-version', [connectionId, newLabel, connectionVersion])
 				.then((err) => {
 					if (err) {
@@ -181,7 +175,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		connectionLabel,
 		connectionConfig,
 		doCancel,
-		connectionInfo.enabled,
+		connectionShouldBeRunning,
 		connectionVersion,
 	])
 
@@ -229,7 +223,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	return (
 		<div>
 			<h5>
-				{moduleInfo.baseInfo.shortname ?? connectionInfo.instance_type} configuration
+				{moduleInfo?.baseInfo?.shortname ?? connectionInfo.instance_type} configuration
 				{moduleVersion?.hasHelp && (
 					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type, moduleVersion)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
@@ -252,14 +246,19 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						name="colFormVersion"
 						value={connectionVersion as string}
 						onChange={(e) => setConnectionVersion(e.currentTarget.value)}
-						disabled={connectionInfo.enabled}
+						disabled={connectionShouldBeRunning}
 						title={
-							connectionInfo.enabled
+							connectionShouldBeRunning
 								? 'Connection must be disabled to change version'
 								: 'Select the version of the module to use for this connection'
 						}
 					>
-						{useConnectionVersionSelectOptions(moduleInfo.baseInfo.id, moduleInfo, true).map((v) => (
+						{!connectionVersionExists && (
+							<option value={connectionInfo.moduleVersionId as string}>
+								{connectionInfo.moduleVersionId} (Missing)
+							</option>
+						)}
+						{useConnectionVersionSelectOptions(moduleInfo?.baseInfo?.id, moduleInfo, true).map((v) => (
 							<option key={v.value} value={v.value}>
 								{v.label}
 							</option>
@@ -272,7 +271,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					</CAlert>
 				</CCol>
 
-				{connectionInfo.enabled ? (
+				{connectionShouldBeRunning ? (
 					<ConnectionEditPanelConfigFields
 						connectionConfig={connectionConfig}
 						configOptions={configFields === null ? null : configOptions}
@@ -366,6 +365,16 @@ export function useConnectionVersionSelectOptions(
 
 		return choices
 	}, [installedInfo, latestStableVersion, latestPrereleaseVersion, includePrerelease])
+}
+
+export function doesConnectionVersionExist(
+	moduleInfo: NewClientModuleInfo | undefined,
+	versionId: string | null
+): boolean {
+	if (versionId === null) return false
+	if (versionId === 'dev') return !!moduleInfo?.devVersion
+
+	return !!moduleInfo?.installedVersions.find((v) => v.versionId === versionId)
 }
 
 function getLatestVersion(
