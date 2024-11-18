@@ -59,6 +59,7 @@ export class ConnectionConfigStore {
 		label: string,
 		product: string | undefined,
 		moduleVersionId: string | null,
+		updatePolicy: ConnectionUpdatePolicy,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
 		// Find the highest rank given to an instance
@@ -75,7 +76,7 @@ export class ConnectionConfigStore {
 		this.#store[id] = {
 			instance_type: moduleType,
 			moduleVersionId: moduleVersionId,
-			updatePolicy: moduleVersionId ? ConnectionUpdatePolicy.Stable : ConnectionUpdatePolicy.Manual, // TODO - when prerelease
+			updatePolicy: updatePolicy,
 			sortOrder: highestRank + 1,
 			label: label,
 			isFirstInit: true,

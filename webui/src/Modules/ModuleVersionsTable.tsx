@@ -224,7 +224,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 
 	const doInstall = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
-		socketEmitPromise(socket, 'modules:install-store-module', [moduleId, versionId])
+		socketEmitPromise(socket, 'modules:install-store-module', [moduleId, versionId], 30000)
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to install module', failureReason)

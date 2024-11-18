@@ -24,10 +24,11 @@ import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import type {
+import {
 	ClientConnectionConfig,
 	ClientConnectionsUpdate,
 	ConnectionConfig,
+	ConnectionUpdatePolicy,
 } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-app/shared/Model/ExportModel.js'
@@ -270,6 +271,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		data: CreateConnectionData,
 		labelBase: string,
 		versionId: string | null,
+		updatePolicy: ConnectionUpdatePolicy,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
 		let moduleId = data.type
@@ -289,7 +291,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.#logger.info('Adding connection ' + moduleId + ' ' + product)
 
-		const [id, config] = this.#configStore.addConnection(moduleId, label, product, versionId, disabled)
+		const [id, config] = this.#configStore.addConnection(moduleId, label, product, versionId, updatePolicy, disabled)
 
 		this.#activate_module(id, true)
 
@@ -637,7 +639,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		client.onPromise('connections:add', (module, label, version) => {
-			const connectionInfo = this.addInstanceWithLabel(module, label, version, false)
+			const connectionInfo = this.addInstanceWithLabel(module, label, version, ConnectionUpdatePolicy.Stable, false)
 			return connectionInfo[0]
 		})
 
