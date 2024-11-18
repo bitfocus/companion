@@ -18,12 +18,12 @@ import { CModalExt } from '../Components/CModalExt.js'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { AddConnectionProduct } from './AddConnectionPanel.js'
 import { useConnectionVersionSelectOptions } from './ConnectionEditPanel.js'
 import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
+import type { FuzzyProduct } from '../Hooks/useFilteredProducts.js'
 
 export interface AddConnectionModalRef {
-	show(info: AddConnectionProduct): void
+	show(info: FuzzyProduct): void
 }
 
 interface AddConnectionModalProps {
@@ -39,7 +39,7 @@ export const AddConnectionModal = observer(
 		const { socket, notifier, connections, modules } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
-		const [moduleInfo, setModuleInfo] = useState<AddConnectionProduct | null>(null)
+		const [moduleInfo, setModuleInfo] = useState<FuzzyProduct | null>(null)
 		const [selectedVersion, setSelectedVersion] = useState<string | null>(null)
 		const [connectionLabel, setConnectionLabel] = useState<string>('')
 

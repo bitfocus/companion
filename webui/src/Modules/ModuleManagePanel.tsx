@@ -3,11 +3,7 @@ import { socketEmitPromise } from '../util.js'
 import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type {
-	NewClientModuleBaseInfo,
-	NewClientModuleInfo,
-	NewClientModuleVersionInfo2,
-} from '@companion-app/shared/Model/ModuleInfo.js'
+import type { NewClientModuleBaseInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
