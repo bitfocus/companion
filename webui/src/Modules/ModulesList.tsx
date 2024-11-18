@@ -141,8 +141,8 @@ export const ModulesList = observer(function ModulesList({
 			<table className="table-tight table-responsive-sm">
 				<thead>
 					<tr>
-						<th>Module</th>
-						<th colSpan={3} className="fit">
+						<th>
+							Module
 							<CButtonGroup className="table-header-buttons">
 								<VisibilityButton {...visibleModules} keyId="dev" color="secondary" label="Dev" />
 								<VisibilityButton {...visibleModules} keyId="installed" color="warning" label="Installed" />
@@ -248,51 +248,6 @@ const ModulesListRow = observer(function ModulesListRow({
 					</>
 				)}
 				{moduleVersion?.displayName} */}
-			</td>
-			<td className="action-buttons">
-				<div style={{ display: 'flex' }}>
-					<CPopover
-						trigger="focus"
-						placement="right"
-						style={{ backgroundColor: 'white' }}
-						content={
-							<>
-								{/* Note: the popover closing due to focus loss stops mouseup/click events propogating */}
-								<CButtonGroup vertical>
-									<CButton
-										onMouseDown={doShowHelp}
-										color="secondary"
-										title="Help"
-										// disabled={!moduleVersion?.hasHelp}
-										style={{ textAlign: 'left' }}
-									>
-										<Tuck>
-											<FontAwesomeIcon icon={faQuestionCircle} />
-										</Tuck>
-										Help
-									</CButton>
-
-									<CButton
-										onMouseDown={openBugUrl}
-										color="secondary"
-										title="Issue Tracker"
-										disabled={!moduleInfo?.bugUrl}
-										style={{ textAlign: 'left' }}
-									>
-										<Tuck>
-											<FontAwesomeIcon icon={faBug} />
-										</Tuck>
-										Known issues
-									</CButton>
-								</CButtonGroup>
-							</>
-						}
-					>
-						<CButton color="secondary" style={{ padding: '3px 16px' }} onClick={(e) => e.currentTarget.focus()}>
-							<FontAwesomeIcon icon={faEllipsisV} />
-						</CButton>
-					</CPopover>
-				</div>
 			</td>
 		</tr>
 	)

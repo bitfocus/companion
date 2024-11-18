@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useState } from 'react'
 import { socketEmitPromise } from '../util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faQuestion, faSync, faToiletsPortable, faTrash, faWarning } from '@fortawesome/free-solid-svg-icons'
+import { faAsterisk, faPlus, faSync, faToiletsPortable, faTrash, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { NewClientModuleBaseInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
@@ -60,7 +60,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 						<CButtonGroup className="table-header-buttons">
 							<VisibilityButton {...visibleVersions} keyId="availableStable" color="success" label="Stable" />
 							<VisibilityButton {...visibleVersions} keyId="availablePrerelease" color="warning" label="Prerelease" />
-							<VisibilityButton {...visibleVersions} keyId="availableDeprecated" color="danger" label="Deprecated" />
+							<VisibilityButton {...visibleVersions} keyId="availableDeprecated" color="primary" label="Deprecated" />
 						</CButtonGroup>
 					</th>
 				</tr>
@@ -143,8 +143,8 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				{versionId}
-				{storeInfo?.isPrerelease && <FontAwesomeIcon icon={faQuestion} title="Prerelease" />}
-				{storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
+				{storeInfo?.isPrerelease && <FontAwesomeIcon className="pad-left" icon={faAsterisk} title="Prerelease" />}
+				{storeInfo?.deprecationReason && <FontAwesomeIcon className="pad-left" icon={faWarning} title="Deprecated" />}
 			</td>
 			<td>
 				{!!storeInfo && (
@@ -248,7 +248,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 		return (
 			<FontAwesomeIcon
 				icon={faWarning}
-				className="disabled"
+				className="disabled button-size"
 				title="Module is not compatible with this version of Companion"
 			/>
 		)

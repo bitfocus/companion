@@ -16,7 +16,7 @@ export function SearchBox({ filter, setFilter }: SearchBoxProps) {
 	const clearFilter = useCallback(() => setFilter(''), [setFilter])
 
 	return (
-		<CInputGroup>
+		<CInputGroup className="searchbox">
 			<CFormInput
 				type="text"
 				placeholder="Search ..."

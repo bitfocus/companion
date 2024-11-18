@@ -158,7 +158,7 @@ export function ImportModules() {
 	)
 
 	return (
-		<div>
+		<div className="import-module">
 			<label className="btn btn-warning btn-file">
 				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 				Import module package
