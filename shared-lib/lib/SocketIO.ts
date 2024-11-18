@@ -42,7 +42,7 @@ import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
-import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
+import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import type { ModuleInfoUpdate, NewClientModuleInfo } from './Model/ModuleInfo.js'
 import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
@@ -320,7 +320,8 @@ export interface ClientToBackendEventsMap {
 	'connections:set-label-and-version': (
 		connectionId: string,
 		newLabel: string,
-		versionId: string | null
+		versionId: string | null,
+		updatePolicy: ConnectionUpdatePolicy | null
 	) => string | null
 	'connections:set-order': (sortedIds: string[]) => void
 	'connections:delete': (connectionId: string) => void

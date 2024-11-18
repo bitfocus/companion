@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -83,6 +83,9 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const [connectionConfig, setConnectionConfig] = useState<Record<string, any> | null>(null)
 	const [connectionLabel, setConnectionLabel] = useState<string>(connectionInfo.label)
 	const [connectionVersion, setConnectionVersion] = useState<string | null>(connectionInfo.moduleVersionId)
+	const [connectionUpdatePolicy, setConnectionUpdatePolicy] = useState<ConnectionUpdatePolicy | null>(
+		connectionInfo.updatePolicy
+	)
 	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
 
 	// Update the in-edit label if the connection label changes
@@ -91,6 +94,10 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	useEffect(
 		() => setConnectionVersion(connectionInfo.moduleVersionId),
 		[connectionInfo.moduleVersionId, connectionInfo.enabled]
+	)
+	useEffect(
+		() => setConnectionUpdatePolicy(connectionInfo.updatePolicy),
+		[connectionInfo.updatePolicy, connectionInfo.enabled]
 	)
 
 	const [configOptions, fieldVisibility] = useOptionsAndIsVisible<ExtendedInputField & { width: number }>(
@@ -131,7 +138,12 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		}
 
 		if (!connectionShouldBeRunning) {
-			socketEmitPromise(socket, 'connections:set-label-and-version', [connectionId, newLabel, connectionVersion])
+			socketEmitPromise(socket, 'connections:set-label-and-version', [
+				connectionId,
+				newLabel,
+				connectionVersion,
+				connectionUpdatePolicy,
+			])
 				.then((err) => {
 					if (err) {
 						if (err === 'invalid label') {
@@ -178,6 +190,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		doCancel,
 		connectionShouldBeRunning,
 		connectionVersion,
+		connectionUpdatePolicy,
 	])
 
 	useEffect(() => {
@@ -247,7 +260,9 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 				<CCol className={`fieldtype-textinput`} sm={12}>
 					<label>
 						Module Version&nbsp;
-						{isModuleOnStore && <ModuleVersionsRefresh moduleId={connectionInfo.instance_type} />}
+						{isModuleOnStore && !connectionShouldBeRunning && (
+							<ModuleVersionsRefresh moduleId={connectionInfo.instance_type} />
+						)}
 					</label>
 					<CFormSelect
 						name="colFormVersion"
@@ -272,8 +287,25 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 							</option>
 						))}
 					</CFormSelect>
+				</CCol>
 
-					<br />
+				<CCol className={`fieldtype-textinput`} sm={12}>
+					<label>
+						Update Policy
+						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title="How to check for updates" />
+					</label>
+					<CFormSelect
+						name="colFormUpdatePolicy"
+						value={connectionUpdatePolicy as string}
+						onChange={(e) => setConnectionUpdatePolicy(e.currentTarget.value as ConnectionUpdatePolicy)}
+					>
+						<option value="manual">Manual</option>
+						<option value="stable">Stable</option>
+						<option value="prerelease">Stable and Prerelease</option>
+					</CFormSelect>
+				</CCol>
+
+				<CCol className={`fieldtype-textinput`} sm={12}>
 					<CAlert color="warning">
 						Be careful when downgrading the module version. Some features may not be available in older versions.
 					</CAlert>
@@ -385,7 +417,7 @@ export function doesConnectionVersionExist(
 	return !!moduleInfo?.installedVersions.find((v) => v.versionId === versionId)
 }
 
-function getLatestVersion(
+export function getLatestVersion(
 	versions: ModuleStoreModuleInfoVersion[] | undefined,
 	isPrerelease: boolean
 ): ModuleStoreModuleInfoVersion | null {

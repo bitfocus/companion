@@ -7,15 +7,23 @@ export interface ConnectionConfig {
 	enabled: boolean
 	sortOrder: number
 	moduleVersionId: string | null
+	updatePolicy: ConnectionUpdatePolicy // TODO - upgrade script
 }
 
 export interface ClientConnectionConfig {
 	label: string
 	instance_type: string
 	moduleVersionId: string | null
+	updatePolicy: ConnectionUpdatePolicy
 	enabled: boolean
 	sortOrder: number
 	hasRecordActionsHandler: boolean
+}
+
+export enum ConnectionUpdatePolicy {
+	Manual = 'manual',
+	Stable = 'stable',
+	Prerelease = 'prerelease',
 }
 
 export type ClientConnectionsUpdate = ClientConnectionsUpdateUpdateOp | ClientConnectionsUpdateRemoveOp

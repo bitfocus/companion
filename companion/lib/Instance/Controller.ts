@@ -586,7 +586,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return null
 		})
 
-		client.onPromise('connections:set-label-and-version', (id, label, versionId) => {
+		client.onPromise('connections:set-label-and-version', (id, label, versionId, updatePolicy) => {
 			this.#logger.info('Setting label and version', id, label, versionId)
 			const idUsingLabel = this.getIdForLabel(label)
 			if (idUsingLabel && idUsingLabel !== id) {
@@ -610,6 +610,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// Update the config
 			config.moduleVersionId = versionId
+			if (updatePolicy) config.updatePolicy = updatePolicy
 			this.#configStore.commitChanges([id])
 
 			// Install the module if needed

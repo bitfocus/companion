@@ -30,6 +30,7 @@ import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableV
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
+import { UpdateConnectionToLatestButton } from './UpdateConnectionToLatestButton.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -318,6 +319,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 							</>
 						)}
 						{moduleVersion?.displayName ?? connection.moduleVersionId}
+						<UpdateConnectionToLatestButton connection={connection} />
 					</>
 				) : (
 					connection.instance_type
