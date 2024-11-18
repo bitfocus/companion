@@ -1,13 +1,11 @@
 import React, { useCallback, useContext, useState } from 'react'
-import { CAlert, CButton, CButtonGroup, CPopover } from '@coreui/react'
+import { CAlert, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEyeSlash, faQuestionCircle, faBug, faEllipsisV, faPlug } from '@fortawesome/free-solid-svg-icons'
-import { windowLinkOpen } from '../Helpers/Window.js'
+import { faEyeSlash, faPlug } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
-import { Tuck } from '../Components/Tuck.js'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { SearchBox } from '../Components/SearchBox.js'
 import { useAllConnectionProducts, filterProducts, FuzzyProduct } from '../Hooks/useFilteredProducts.js'
@@ -17,7 +15,6 @@ import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 
 interface VisibleModulesState {
-	dev: boolean
 	installed: boolean
 	available: boolean
 }
@@ -36,7 +33,6 @@ export const ModulesList = observer(function ModulesList({
 	const { modules } = useContext(RootAppStoreContext)
 
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
-		dev: true,
 		installed: true,
 		available: false,
 	})
@@ -47,7 +43,6 @@ export const ModulesList = observer(function ModulesList({
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {
-			if (p.installedInfo.devVersion && visibleModules.visiblity.dev) isVisible = true
 			if (p.installedInfo.installedVersions.length > 0 && visibleModules.visiblity.installed) isVisible = true
 		}
 		if (p.storeInfo && visibleModules.visiblity.available) isVisible = true
@@ -144,7 +139,6 @@ export const ModulesList = observer(function ModulesList({
 						<th>
 							Module
 							<CButtonGroup className="table-header-buttons">
-								<VisibilityButton {...visibleModules} keyId="dev" color="secondary" label="Dev" />
 								<VisibilityButton {...visibleModules} keyId="installed" color="warning" label="Installed" />
 								<VisibilityButton {...visibleModules} keyId="available" color="primary" label="Available" />
 							</CButtonGroup>
@@ -222,10 +216,10 @@ const ModulesListRow = observer(function ModulesListRow({
 		doManageModule(id)
 	}
 
-	const openBugUrl = useCallback(() => {
-		const url = moduleInfo?.bugUrl
-		if (url) windowLinkOpen({ href: url })
-	}, [moduleInfo])
+	// const openBugUrl = useCallback(() => {
+	// 	const url = moduleInfo?.bugUrl
+	// 	if (url) windowLinkOpen({ href: url })
+	// }, [moduleInfo])
 
 	// const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection)
 
