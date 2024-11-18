@@ -4,7 +4,7 @@ import { HelpModal, HelpModalRef } from '../Connections/HelpModal.js'
 import { MyErrorBoundary } from '../util.js'
 import { ModulesList } from './ModulesList.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCog, faJedi } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleManagePanel } from './ModuleManagePanel.js'
@@ -85,7 +85,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 					<CTabContent className="remove075right">
 						<CTabPane role="tabpanel" aria-labelledby="placeholder-tab" visible={activeTab === 'placeholder'}>
 							<MyErrorBoundary>
-								<NonIdealState text="Select a module to manage" icon={faJedi} />
+								<NonIdealState text="Select a module to manage" icon={faPuzzlePiece} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane role="tabpanel" aria-labelledby="manage-tab" visible={activeTab === 'manage'}>
