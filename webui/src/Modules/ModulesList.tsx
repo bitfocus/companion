@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useState } from 'react'
 import { CAlert, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEyeSlash, faPlug } from '@fortawesome/free-solid-svg-icons'
+import { faEyeSlash, faPlug, faWarning } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -17,6 +17,7 @@ import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 interface VisibleModulesState {
 	installed: boolean
 	available: boolean
+	availableDeprecated: boolean
 }
 
 interface ModulesListProps {
@@ -35,6 +36,7 @@ export const ModulesList = observer(function ModulesList({
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
 		installed: true,
 		available: false,
+		availableDeprecated: false,
 	})
 
 	const [filter, setFilter] = useState('')
@@ -45,7 +47,12 @@ export const ModulesList = observer(function ModulesList({
 		if (p.installedInfo) {
 			if (p.installedInfo.installedVersions.length > 0 && visibleModules.visiblity.installed) isVisible = true
 		}
-		if (p.storeInfo && visibleModules.visiblity.available) isVisible = true
+		if (
+			p.storeInfo &&
+			visibleModules.visiblity.available &&
+			(visibleModules.visiblity.availableDeprecated || !p.storeInfo.deprecationReason) // only show deprecated ones when the flag is enabled
+		)
+			isVisible = true
 
 		return isVisible
 	})
@@ -139,8 +146,9 @@ export const ModulesList = observer(function ModulesList({
 						<th>
 							Module
 							<CButtonGroup className="table-header-buttons">
-								<VisibilityButton {...visibleModules} keyId="installed" color="warning" label="Installed" />
-								<VisibilityButton {...visibleModules} keyId="available" color="primary" label="Available" />
+								<VisibilityButton {...visibleModules} keyId="installed" color="success" label="Installed" />
+								<VisibilityButton {...visibleModules} keyId="available" color="warning" label="Available" />
+								<VisibilityButton {...visibleModules} keyId="availableDeprecated" color="primary" label="Deprecated" />
 							</CButtonGroup>
 						</th>
 					</tr>
@@ -230,6 +238,8 @@ const ModulesListRow = observer(function ModulesListRow({
 			})}
 		>
 			<td onClick={doEdit} className="hand">
+				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
+
 				{moduleInfo.name}
 
 				{/* {moduleInfo.installedVersions.?.isLegacy && (
