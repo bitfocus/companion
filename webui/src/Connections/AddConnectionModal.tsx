@@ -11,8 +11,6 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -22,6 +20,7 @@ import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { AddConnectionProduct } from './AddConnectionPanel.js'
 import { useConnectionVersionSelectOptions } from './ConnectionEditPanel.js'
+import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 
 export interface AddConnectionModalRef {
 	show(info: AddConnectionProduct): void
@@ -233,37 +232,3 @@ function findNextConnectionLabel(
 
 	return label
 }
-
-interface ModuleVersionsRefreshProps {
-	moduleId: string | null
-}
-const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ moduleId }: ModuleVersionsRefreshProps) {
-	const { socket, moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
-
-	const refreshProgress = (moduleId ? moduleStoreRefreshProgress.get(moduleId) : null) ?? 1
-
-	const doRefreshModules = useCallback(() => {
-		if (!moduleId) return
-		socketEmitPromise(socket, 'modules-store:info:refresh', [moduleId]).catch((err) => {
-			console.error('Failed to refresh module versions', err)
-		})
-	}, [moduleId])
-
-	if (refreshProgress === 1) {
-		return (
-			<div className="float_right" onClick={doRefreshModules}>
-				<FontAwesomeIcon icon={faSync} title="Refresh module versions" />
-			</div>
-		)
-	} else {
-		return (
-			<div className="float_right">
-				<FontAwesomeIcon
-					icon={faSync}
-					spin={true}
-					title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
-				/>
-			</div>
-		)
-	}
-})

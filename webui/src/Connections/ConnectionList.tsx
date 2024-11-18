@@ -1,5 +1,5 @@
 import React, { RefObject, useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -14,6 +14,7 @@ import {
 	faTrash,
 	faEllipsisV,
 	faPlug,
+	faDownload,
 } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -132,6 +133,8 @@ export const ConnectionsList = observer(function ConnectionsList({
 				When you want to control devices or software with Companion, you need to add a connection to let Companion know
 				how to communicate with whatever you want to control.
 			</p>
+
+			<MissingVersionsWarning />
 
 			<GenericConfirmModal ref={deleteModalRef} />
 			<ConnectionVariablesModal ref={variablesModalRef} />
@@ -445,8 +448,12 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 			case 'error':
 				return (
 					<td className="connection-status-error hand" onClick={onClick}>
-						{status.level || 'ERROR'}
-						<br />
+						{status.level !== 'system' && (
+							<>
+								{status.level || 'ERROR'}
+								<br />
+							</>
+						)}
 						{messageStr}
 					</td>
 				)
@@ -467,3 +474,18 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 		)
 	}
 }
+
+const MissingVersionsWarning = observer(function MissingVersionsWarning() {
+	// TODO - condition & behaviour
+
+	return (
+		<CAlert color="info">
+			Some modules are missing version information.
+			<br />
+			<CButton color="info" onClick={() => null}>
+				<FontAwesomeIcon icon={faDownload} />
+				&nbsp;Install missing versions
+			</CButton>
+		</CAlert>
+	)
+})

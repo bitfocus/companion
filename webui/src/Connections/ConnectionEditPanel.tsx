@@ -19,6 +19,7 @@ import semver from 'semver'
 import { useModuleStoreInfo } from '../Modules/ModuleManagePanel.js'
 import { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -73,7 +74,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	doConfigureConnection,
 	showHelp,
 }: ConnectionEditPanelInnerProps) {
-	const { socket } = useContext(RootAppStoreContext)
+	const { socket, modules } = useContext(RootAppStoreContext)
 
 	const [error, setError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
@@ -219,6 +220,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo.moduleVersionId)
+	const isModuleOnStore = !!modules.storeList.get(connectionInfo.instance_type)
 
 	return (
 		<div>
@@ -241,7 +243,10 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 				</CCol>
 
 				<CCol className={`fieldtype-textinput`} sm={12}>
-					<label>Module Version</label>
+					<label>
+						Module Version&nbsp;
+						{isModuleOnStore && <ModuleVersionsRefresh moduleId={connectionInfo.instance_type} />}
+					</label>
 					<CFormSelect
 						name="colFormVersion"
 						value={connectionVersion as string}

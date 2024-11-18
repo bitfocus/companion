@@ -513,11 +513,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (!moduleInfo) {
 			this.#logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
 			if (this.modules.hasModule(config.instance_type)) {
-				// TODO - check level
-				this.status.updateInstanceStatus(id, null, 'Unknown module version')
+				this.status.updateInstanceStatus(id, 'system', 'Unknown module version')
 			} else {
-				// TODO - check level
-				this.status.updateInstanceStatus(id, null, 'Unknown module')
+				this.status.updateInstanceStatus(id, 'system', 'Unknown module')
 			}
 		} else {
 			this.moduleHost.queueRestartConnection(id, config, moduleInfo).catch((e) => {
