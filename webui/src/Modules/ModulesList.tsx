@@ -45,12 +45,12 @@ export const ModulesList = observer(function ModulesList({
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {
-			if (p.installedInfo.installedVersions.length > 0 && visibleModules.visiblity.installed) isVisible = true
+			if (p.installedInfo.installedVersions.length > 0 && visibleModules.visibility.installed) isVisible = true
 		}
 		if (
 			p.storeInfo &&
-			visibleModules.visiblity.available &&
-			(visibleModules.visiblity.availableDeprecated || !p.storeInfo.deprecationReason) // only show deprecated ones when the flag is enabled
+			visibleModules.visibility.available &&
+			(visibleModules.visibility.availableDeprecated || !p.storeInfo.deprecationReason) // only show deprecated ones when the flag is enabled
 		)
 			isVisible = true
 
@@ -164,7 +164,7 @@ export const ModulesList = observer(function ModulesList({
 						</tr>
 					)}
 
-					{modules.modules.size === 0 && !visibleModules.visiblity.available && (
+					{modules.modules.size === 0 && !visibleModules.visibility.available && (
 						<tr>
 							<td colSpan={4}>
 								<NonIdealState icon={faPlug}>
@@ -176,13 +176,13 @@ export const ModulesList = observer(function ModulesList({
 						</tr>
 					)}
 
-					{components.length === 0 && allProducts.length > 0 && !!filter && !visibleModules.visiblity.available && (
+					{components.length === 0 && allProducts.length > 0 && !!filter && !visibleModules.visibility.available && (
 						<tr>
 							<td colSpan={4}>
 								<NonIdealState icon={faPlug}>
 									No modules match your search.
 									<br />
-									{!visibleModules.visiblity.available && (
+									{!visibleModules.visibility.available && (
 										<a href="#" onClick={includeStoreModules}>
 											Click here to include modules from the store
 										</a>

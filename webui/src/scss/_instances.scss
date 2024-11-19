@@ -100,28 +100,37 @@
 
 	.editor-grid {
 		display: grid;
-		grid-template-columns: 0.7fr auto 1fr;
-		grid-template-rows: auto auto auto 1fr;
+		grid-template-columns: 1fr;
+		grid-template-rows: 0.25fr 1fr;
 		column-gap: 10px;
 
 		.cell-header {
+			grid-column: 1/4;
 			font-weight: bold;
+			display: grid;
+			grid-template-columns: 1fr 1fr 0.25fr;
+		}
+
+		.cell-header-item {
 			grid-row: 1;
-			grid-column: 1 / 4;
+		}
+
+		.cell-fields {
+			grid-column: 1/4;
+			display: grid;
+			grid-template-columns: 1fr 1fr 0.25fr;
+			grid-template-rows: 1fr;
 		}
 
 		.cell-options {
-			grid-row: 3;
-			grid-column: 1;
-
+			padding: 1px 3px 0px 3px;
 			// @include media-breakpoint-up('sm') {
 			// 	width: 70%;
 			// }
 		}
 
 		.cell-values {
-			grid-row: 2 / 5;
-			grid-column: 3;
+			padding: 1px 3px 0px 3px;
 		}
 	}
 }

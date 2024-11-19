@@ -71,14 +71,14 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 					const installedInfo = installedModuleVersions.get(versionId)
 					if (storeInfo) {
 						// Hide based on visibility settings
-						if (storeInfo.deprecationReason && !visibleVersions.visiblity.availableDeprecated) return null
-						if (storeInfo.isPrerelease && !visibleVersions.visiblity.availablePrerelease) return null
+						if (storeInfo.deprecationReason && !visibleVersions.visibility.availableDeprecated) return null
+						if (storeInfo.isPrerelease && !visibleVersions.visibility.availablePrerelease) return null
 
 						if (
 							!storeInfo.deprecationReason &&
 							!storeInfo.isPrerelease &&
 							!installedInfo &&
-							!visibleVersions.visiblity.availableStable
+							!visibleVersions.visibility.availableStable
 						)
 							return null
 					}

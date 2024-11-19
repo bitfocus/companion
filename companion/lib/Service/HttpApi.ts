@@ -15,6 +15,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
+ * @author Cole Bewley <cole.bewley@kjrh.com>
  * @since 1.2.0
  * @copyright 2022 Bitfocus AS
  * @license
@@ -305,6 +306,9 @@ export class ServiceHttpApi extends CoreBase {
 			.post(this.#customVariableSetValue)
 			.get(this.#customVariableGetValue)
 
+		// Module variables
+		this.#apiRouter.route('/variable/:label/:name/value').get(this.#moduleVariableGetValue)
+
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
 
@@ -578,6 +582,26 @@ export class ServiceHttpApi extends CoreBase {
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
 
 		const result = this.variablesController.custom.getValue(variableName)
+		if (result === undefined) {
+			res.status(404).send('Not found')
+		} else {
+			if (typeof result === 'number') {
+				res.send(result + '')
+			} else {
+				res.send(result)
+			}
+		}
+	}
+	/**
+	 * Retrieve any module variable value
+	 */
+	#moduleVariableGetValue = (req: express.Request, res: express.Response): void => {
+		const connectionLabel = req.params.label
+		const variableName = req.params.name
+
+		this.logger.debug(`Got HTTP module variable get value name "${connectionLabel}:${variableName}"`)
+
+		const result = this.variablesController.values.getVariableValue(connectionLabel, variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {

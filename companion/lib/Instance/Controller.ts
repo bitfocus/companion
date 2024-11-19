@@ -666,7 +666,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const result = this.#configStore.getPartialClientJson()
 
 		for (const [id, config] of Object.entries(result)) {
-			const instance = this.moduleHost.getChild(id)
+			const instance = this.moduleHost.getChild(id, true)
 			if (instance) {
 				config.hasRecordActionsHandler = instance.hasRecordActionsHandler
 			}

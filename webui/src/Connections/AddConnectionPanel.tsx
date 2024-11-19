@@ -38,7 +38,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	})
 
 	const allProducts = useAllConnectionProducts(modules)
-	const typeProducts = allProducts.filter((p) => !!p.installedInfo || typeFilter.visiblity.available)
+	const typeProducts = allProducts.filter((p) => !!p.installedInfo || typeFilter.visibility.available)
 
 	let candidates: JSX.Element[] = []
 	try {
@@ -140,7 +140,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 					<NonIdealState icon={faPlug}>
 						No modules match your search.
 						<br />
-						{!typeFilter.visiblity.available && (
+						{!typeFilter.visibility.available && (
 							<a href="#" onClick={includeStoreModules}>
 								Click here to include modules from the store
 							</a>

@@ -1,5 +1,5 @@
 import React, { RefObject, useCallback, useContext, useRef } from 'react'
-import { CAlert, CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
 import { socketEmitPromise, useComputed } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -15,6 +15,8 @@ import {
 	faEllipsisV,
 	faPlug,
 	faDownload,
+	faTriangleExclamation,
+	faPowerOff,
 } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -31,6 +33,7 @@ import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.
 import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { UpdateConnectionToLatestButton } from './UpdateConnectionToLatestButton.js'
+import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -95,14 +98,14 @@ export const ConnectionsList = observer(function ConnectionsList({
 		.map(([id, connection]) => {
 			const status = connectionStatus?.[id]
 
-			if (!visibleConnections.visiblity.disabled && connection.enabled === false) {
+			if (!visibleConnections.visibility.disabled && connection.enabled === false) {
 				return undefined
 			} else if (status) {
-				if (!visibleConnections.visiblity.ok && status.category === 'good') {
+				if (!visibleConnections.visibility.ok && status.category === 'good') {
 					return undefined
-				} else if (!visibleConnections.visiblity.warning && status.category === 'warning') {
+				} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
 					return undefined
-				} else if (!visibleConnections.visiblity.error && status.category === 'error') {
+				} else if (!visibleConnections.visibility.error && status.category === 'error') {
 					return undefined
 				}
 			}
@@ -161,7 +164,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 					{hiddenCount > 0 && (
 						<tr>
 							<td colSpan={4} style={{ padding: '10px 5px' }}>
-								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
+								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 								<strong>{hiddenCount} Connections are hidden</strong>
 							</td>
 						</tr>
@@ -325,7 +328,9 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					connection.instance_type
 				)}
 			</td>
-			<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} onClick={doEdit} />
+			<td className="hand" onClick={doEdit}>
+				<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} />
+			</td>
 			<td className="action-buttons">
 				<div style={{ display: 'flex' }}>
 					<div>
@@ -421,10 +426,9 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 interface ModuleStatusCallProps {
 	isEnabled: boolean
 	status: ConnectionStatusEntry | undefined
-	onClick?: () => void
 }
 
-function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps) {
+function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 	if (isEnabled) {
 		const messageStr =
 			!!status &&
@@ -434,46 +438,44 @@ function ModuleStatusCall({ isEnabled, status, onClick }: ModuleStatusCallProps)
 
 		switch (status?.category) {
 			case 'good':
-				return (
-					<td className="hand" onClick={onClick}>
-						<FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" />
-					</td>
-				)
+				return <FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" />
 			case 'warning':
 				return (
-					<td className="connection-status-warn hand" onClick={onClick}>
-						{status.level || 'Warning'}
-						<br />
-						{messageStr}
-					</td>
+					<InlineHelp help={`${status.level ?? 'Warning'}${messageStr ? ': ' + messageStr : ''}`}>
+						<FontAwesomeIcon icon={faTriangleExclamation} color={'#fab92c'} size="2xl" />
+					</InlineHelp>
 				)
 			case 'error':
-				return (
-					<td className="connection-status-error hand" onClick={onClick}>
-						{status.level !== 'system' && (
-							<>
-								{status.level || 'ERROR'}
-								<br />
-							</>
-						)}
-						{messageStr}
-					</td>
-				)
+				switch (status.level) {
+					case 'system':
+						return (
+							<InlineHelp help={messageStr || 'Unknown error'}>
+								<FontAwesomeIcon icon={faTriangleExclamation} color={'#d50215'} size="2xl" />
+							</InlineHelp>
+						)
+					case 'Connecting':
+						return (
+							<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
+								<CSpinner color="warning"></CSpinner>
+							</InlineHelp>
+						)
+					default:
+						return (
+							<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
+								<FontAwesomeIcon icon={faTriangleExclamation} color={'#d50215'} size="2xl" />
+							</InlineHelp>
+						)
+				}
+
 			default:
 				return (
-					<td className="connection-status-error hand" onClick={onClick}>
-						Unknown
-						<br />
-						{messageStr}
-					</td>
+					<InlineHelp help={`Unknown${messageStr ? ': ' + messageStr : ''}`}>
+						<FontAwesomeIcon icon={faTriangleExclamation} color={'#fab92c'} size="2xl" />
+					</InlineHelp>
 				)
 		}
 	} else {
-		return (
-			<td onClick={onClick} className="hand">
-				Disabled
-			</td>
-		)
+		return <FontAwesomeIcon icon={faPowerOff} color={'gray'} size="2xl" />
 	}
 }
 

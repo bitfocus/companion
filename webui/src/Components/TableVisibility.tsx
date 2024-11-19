@@ -5,7 +5,7 @@ import React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 
 export interface TableVisibilityHelper<T extends Record<string, boolean>> {
-	visiblity: T
+	visibility: T
 	toggleVisibility: (key: keyof T, forceState?: boolean) => void
 }
 
@@ -13,13 +13,15 @@ export function useTableVisibilityHelper<T extends Record<string, any>>(
 	localStorageKey: string,
 	defaultValue: T
 ): TableVisibilityHelper<T> {
-	const [visiblity, setVisibility] = useState<T>(() => {
+	const [visibility, setVisibility] = useState<T>(() => {
 		try {
 			const rawConfig = window.localStorage.getItem(localStorageKey)
 			if (rawConfig !== null) {
 				return JSON.parse(rawConfig) ?? {}
 			}
-		} catch (e) {}
+		} catch (e) {
+			console.error('Failed to parse localStorage item', e)
+		}
 
 		// setup defaults
 		window.localStorage.setItem(localStorageKey, JSON.stringify(defaultValue))
@@ -27,20 +29,23 @@ export function useTableVisibilityHelper<T extends Record<string, any>>(
 		return cloneDeep(defaultValue)
 	})
 
-	const toggleVisibility = useCallback((key: keyof T, forceState?: boolean) => {
-		setVisibility((oldConfig) => ({
-			...oldConfig,
-			[key]: typeof forceState === 'boolean' ? forceState : !oldConfig[key],
-		}))
-	}, [])
+	const toggleVisibility = useCallback(
+		(key: keyof T, forceState?: boolean) => {
+			setVisibility((oldConfig) => ({
+				...oldConfig,
+				[key]: typeof forceState === 'boolean' ? forceState : !oldConfig[key],
+			}))
+		},
+		[setVisibility]
+	)
 
 	// Save the config when it changes
 	useEffect(() => {
-		window.localStorage.setItem(localStorageKey, JSON.stringify(visiblity))
-	}, [localStorageKey, visiblity])
+		window.localStorage.setItem(localStorageKey, JSON.stringify(visibility))
+	}, [localStorageKey, visibility])
 
 	return {
-		visiblity,
+		visibility,
 		toggleVisibility,
 	}
 }
@@ -57,7 +62,7 @@ export function VisibilityButton<T extends Record<string, any>>({
 	color,
 	label,
 	title,
-	visiblity,
+	visibility,
 	toggleVisibility,
 }: VisibilityButtonProps<T>) {
 	const doToggle = useCallback(() => toggleVisibility(keyId), [keyId, toggleVisibility])
@@ -66,7 +71,7 @@ export function VisibilityButton<T extends Record<string, any>>({
 		<CButton
 			size="sm"
 			color={color}
-			className={classNames({ active: visiblity[keyId] })}
+			className={classNames({ active: visibility[keyId] })}
 			onClick={doToggle}
 			title={title}
 		>

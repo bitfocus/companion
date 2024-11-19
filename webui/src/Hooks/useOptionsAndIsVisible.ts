@@ -1,7 +1,8 @@
 import type { ExtendedInputField, InternalInputField, IsVisibleFunction } from '@companion-app/shared/Model/Options.js'
 import { useMemo, useEffect, useState } from 'react'
-import { sandbox } from '../util.js'
+import { deepFreeze, sandbox } from '../util.js'
 import type { CompanionOptionValues } from '@companion-module/base'
+import { cloneDeep } from 'lodash-es'
 
 interface IsVisibleFunctionEntry {
 	fn: IsVisibleFunction
@@ -25,7 +26,7 @@ export function useOptionsAndIsVisible<
 				if (typeof option.isVisibleFn === 'string') {
 					isVisibleFns[option.id] = {
 						fn: sandbox(option.isVisibleFn),
-						data: option.isVisibleData,
+						data: deepFreeze(option.isVisibleData),
 					}
 				}
 			} catch (e) {
@@ -43,7 +44,7 @@ export function useOptionsAndIsVisible<
 			for (const [id, entry] of Object.entries(isVisibleFns)) {
 				try {
 					if (entry && typeof entry.fn === 'function') {
-						visibility[id] = entry.fn(optionValues, entry.data)
+						visibility[id] = entry.fn(cloneDeep(optionValues), entry.data)
 					}
 				} catch (e) {
 					console.error('Failed to check visibility', e)

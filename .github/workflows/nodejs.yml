@@ -26,6 +26,11 @@ jobs:
 
           yarn build:ts
 
+      - name: Check types (shared-lib)
+        run: |
+          cd shared-lib
+          yarn check-types
+
       - name: Check types (server)
         run: |
           cd companion
