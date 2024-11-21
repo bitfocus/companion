@@ -66,11 +66,11 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 		const connectionId = connectionsLabelMap.get(label)
 		const connectionInfo = connectionId ? connections.connections.get(connectionId) : undefined
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
-		const compactName = moduleInfo?.name?.replace(/\;.*/, '...')
+		const compactName = moduleInfo?.baseInfo?.name?.replace(/\;.*/, '...')
 
 		return (
 			<CButton
-				title={moduleInfo?.name}
+				title={moduleInfo?.baseInfo?.name}
 				key={connectionId}
 				color="primary"
 				onClick={() => setConnectionId(connectionId ?? null)}

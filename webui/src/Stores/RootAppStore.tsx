@@ -1,5 +1,5 @@
 import React from 'react'
-import type { ObservableSet } from 'mobx'
+import type { ObservableMap, ObservableSet } from 'mobx'
 import type { NotificationsManagerRef } from '../Components/Notifications.js'
 import type { RecentlyUsedIdsStore } from './RecentlyUsedIdsStore.js'
 import type { CompanionSocketType } from '../util.js'
@@ -40,4 +40,6 @@ export interface RootAppStore {
 	readonly triggersList: TriggersListStore
 
 	readonly userConfig: UserConfigStore
+
+	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
 }

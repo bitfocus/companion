@@ -34,6 +34,7 @@ export interface ClientPageInfo {
 export interface ClientImportObjectInstance {
 	label: string
 	instance_type: string
+	moduleVersionId: string | null
 	sortOrder?: number
 }
 export interface ClientImportObject {

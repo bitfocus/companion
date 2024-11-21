@@ -1,8 +1,8 @@
 import { DropdownChoiceId } from '@companion-module/base'
 
 export interface DropdownChoiceInt {
-	value: string
-	label: DropdownChoiceId
+	value: DropdownChoiceId
+	label: string
 }
 
 export const ControlLocalVariables: DropdownChoiceInt[] = [

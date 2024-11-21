@@ -1,6 +1,6 @@
 import React, { RefObject, useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
-import { socketEmitPromise } from '../util.js'
+import { CAlert, CButton, CButtonGroup, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
+import { socketEmitPromise, useComputed } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faSort,
@@ -14,6 +14,7 @@ import {
 	faTrash,
 	faEllipsisV,
 	faPlug,
+	faDownload,
 	faTriangleExclamation,
 	faPowerOff,
 } from '@fortawesome/free-solid-svg-icons'
@@ -29,6 +30,9 @@ import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { getModuleVersionInfoForConnection } from './Util.js'
+import { UpdateConnectionToLatestButton } from './UpdateConnectionToLatestButton.js'
 import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface VisibleConnectionsState {
@@ -39,7 +43,7 @@ interface VisibleConnectionsState {
 }
 
 interface ConnectionsListProps {
-	showHelp: (connectionId: string) => void
+	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	doConfigureConnection: (connectionId: string | null) => void
 	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
@@ -134,6 +138,8 @@ export const ConnectionsList = observer(function ConnectionsList({
 				how to communicate with whatever you want to control.
 			</p>
 
+			<MissingVersionsWarning />
+
 			<GenericConfirmModal ref={deleteModalRef} />
 			<ConnectionVariablesModal ref={variablesModalRef} />
 
@@ -191,7 +197,7 @@ interface ConnectionsTableRowProps {
 	id: string
 	connection: ClientConnectionConfig
 	connectionStatus: ConnectionStatusEntry | undefined
-	showHelp: (connectionId: string) => void
+	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
 	showVariables: (label: string) => void
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
@@ -239,7 +245,10 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		})
 	}, [socket, id, isEnabled])
 
-	const doShowHelp = useCallback(() => showHelp(connection.instance_type), [showHelp, connection.instance_type])
+	const doShowHelp = useCallback(
+		() => moduleVersion?.hasHelp && showHelp(connection.instance_type, moduleVersion),
+		[showHelp, connection.instance_type]
+	)
 
 	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label])
 
@@ -272,18 +281,14 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 
 	const connectionVariables = variablesStore.variables.get(connection.label)
 
-	const doEdit = () => {
-		if (!moduleInfo) {
-			return
-		}
-
-		configureConnection(id)
-	}
+	const doEdit = useCallback(() => configureConnection(id), [id])
 
 	const openBugUrl = useCallback(() => {
-		const url = moduleInfo?.bugUrl
+		const url = moduleInfo?.baseInfo?.bugUrl
 		if (url) windowLinkOpen({ href: url })
 	}, [moduleInfo])
+
+	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection.moduleVersionId)
 
 	return (
 		<tr
@@ -303,7 +308,11 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			<td onClick={doEdit} className="hand">
 				{moduleInfo ? (
 					<>
-						{moduleInfo.isLegacy && (
+						{moduleInfo.baseInfo.shortname ?? ''}
+						<br />
+						{moduleInfo.baseInfo.manufacturer ?? ''}
+						<br />
+						{moduleVersion?.isLegacy && (
 							<>
 								<FontAwesomeIcon
 									icon={faExclamationTriangle}
@@ -312,10 +321,8 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 								/>{' '}
 							</>
 						)}
-						{moduleInfo.shortname ?? ''}
-
-						<br />
-						{moduleInfo.manufacturer ?? ''}
+						{moduleVersion?.displayName ?? connection.moduleVersionId}
+						<UpdateConnectionToLatestButton connection={connection} />
 					</>
 				) : (
 					connection.instance_type
@@ -329,7 +336,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					<div>
 						<CFormSwitch
 							className="connection-enabled-switch"
-							disabled={!moduleInfo}
+							disabled={!moduleInfo || !moduleVersion}
 							color="success"
 							checked={isEnabled}
 							onChange={doToggleEnabled}
@@ -349,7 +356,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										onMouseDown={doShowHelp}
 										color="secondary"
 										title="Help"
-										disabled={!moduleInfo?.hasHelp}
+										disabled={!moduleVersion?.hasHelp}
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>
@@ -362,7 +369,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										onMouseDown={openBugUrl}
 										color="secondary"
 										title="Issue Tracker"
-										disabled={!moduleInfo?.bugUrl}
+										disabled={!moduleInfo?.baseInfo?.bugUrl}
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>
@@ -439,15 +446,26 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 					</InlineHelp>
 				)
 			case 'error':
-				return status?.level === 'Connecting' ? (
-					<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
-						<CSpinner color="warning"></CSpinner>
-					</InlineHelp>
-				) : (
-					<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
-						<FontAwesomeIcon icon={faTriangleExclamation} color={'#d50215'} size="2xl" />
-					</InlineHelp>
-				)
+				switch (status.level) {
+					case 'system':
+						return (
+							<InlineHelp help={messageStr || 'Unknown error'}>
+								<FontAwesomeIcon icon={faTriangleExclamation} color={'#d50215'} size="2xl" />
+							</InlineHelp>
+						)
+					case 'Connecting':
+						return (
+							<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
+								<CSpinner color="warning"></CSpinner>
+							</InlineHelp>
+						)
+					default:
+						return (
+							<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
+								<FontAwesomeIcon icon={faTriangleExclamation} color={'#d50215'} size="2xl" />
+							</InlineHelp>
+						)
+				}
 
 			default:
 				return (
@@ -460,3 +478,52 @@ function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 		return <FontAwesomeIcon icon={faPowerOff} color={'gray'} size="2xl" />
 	}
 }
+
+const MissingVersionsWarning = observer(function MissingVersionsWarning() {
+	const { socket, connections, modules } = useContext(RootAppStoreContext)
+
+	const missingCount = useComputed(() => {
+		let count = 0
+
+		for (const connection of connections.connections.values()) {
+			if (connection.moduleVersionId === null) {
+				count++
+				continue
+			}
+
+			const module = modules.modules.get(connection.instance_type)
+			if (!module) {
+				count++
+				continue
+			}
+
+			// check for version
+			if (module.devVersion && connection.moduleVersionId === 'dev') continue
+			if (module.installedVersions.find((v) => v.versionId === connection.moduleVersionId)) continue
+
+			// Not found
+			count++
+		}
+
+		return count
+	}, [connections, modules])
+
+	const doInstallAllMissing = useCallback(() => {
+		socketEmitPromise(socket, 'modules:install-all-missing', []).catch((e) => {
+			console.error('Install all missing failed', e)
+		})
+	}, [socket])
+
+	if (missingCount === 0) return null
+
+	return (
+		<CAlert color="info">
+			Some modules are missing version information.
+			<br />
+			<CButton color="info" onClick={doInstallAllMissing}>
+				<FontAwesomeIcon icon={faDownload} />
+				&nbsp;Install missing versions
+			</CButton>
+		</CAlert>
+	)
+})

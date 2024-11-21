@@ -13,17 +13,48 @@ export interface ModuleDisplayInfo {
 	isLegacy?: boolean
 }
 
-export type ModuleInfoUpdate = ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp
+export interface NewClientModuleBaseInfo {
+	id: string
+	name: string
+	// hasHelp: boolean
+	bugUrl: string
+	shortname: string
+	manufacturer: string
+	products: string[]
+	keywords: string[]
+}
 
-// export interface ModuleInfoUpdateRemoveOp {
-// 	type: 'remove'
-// 	id: string
-// }
+export interface NewClientModuleVersionInfo2 {
+	displayName: string
+	isLegacy: boolean
+	isDev: boolean
+	isPrerelease: boolean
+	hasHelp: boolean
+	versionId: string
+}
+
+export interface NewClientModuleInfo {
+	baseInfo: NewClientModuleBaseInfo
+
+	devVersion: NewClientModuleVersionInfo2 | null
+
+	stableVersion: NewClientModuleVersionInfo2 | null
+	prereleaseVersion: NewClientModuleVersionInfo2 | null
+
+	installedVersions: NewClientModuleVersionInfo2[]
+}
+
+export type ModuleInfoUpdate = ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp | ModuleInfoUpdateRemoveOp
+
+export interface ModuleInfoUpdateRemoveOp {
+	type: 'remove'
+	id: string
+}
 export interface ModuleInfoUpdateAddOp {
 	type: 'add'
 	id: string
 
-	info: ModuleDisplayInfo
+	info: NewClientModuleInfo
 }
 export interface ModuleInfoUpdateUpdateOp {
 	type: 'update'

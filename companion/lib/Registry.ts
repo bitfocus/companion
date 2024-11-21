@@ -32,9 +32,10 @@ import { InternalVariables } from './Internal/Variables.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
+import type { PackageJson } from 'type-fest'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
-const pkgInfo = JSON.parse(pkgInfoStr.toString())
+const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
 
 let buildNumber: string
 try {
@@ -160,9 +161,10 @@ export class Registry {
 	/**
 	 * Create a new application <code>Registry</code>
 	 * @param configDir - the configuration path
+	 * @param modulesDir - the path for storing modules
 	 * @param machineId - the machine uuid
 	 */
-	constructor(configDir: string, machineId: string) {
+	constructor(configDir: string, modulesDir: string, machineId: string) {
 		if (!configDir) throw new Error(`Missing configDir`)
 		if (!machineId) throw new Error(`Missing machineId`)
 
@@ -173,8 +175,9 @@ export class Registry {
 
 		this.appInfo = {
 			configDir: configDir,
+			modulesDir: modulesDir,
 			machineId: machineId,
-			appVersion: pkgInfo.version,
+			appVersion: pkgInfo.version!,
 			appBuild: buildNumber,
 			pkgInfo: pkgInfo,
 		}
@@ -220,8 +223,10 @@ export class Registry {
 
 		const oscSender = new ServiceOscSender(this)
 		this.instance = new InstanceController(
+			this.appInfo,
 			this.io,
 			this.db,
+			this.#data.cache,
 			this.internalApiRouter,
 			this.controls,
 			this.graphics,
@@ -403,9 +408,12 @@ export class Registry {
 }
 
 export interface AppInfo {
+	/** The current config directory */
 	configDir: string
+	/** The base directory for storing installed modules */
+	modulesDir: string
 	machineId: string
 	appVersion: string
 	appBuild: string
-	pkgInfo: string
+	pkgInfo: PackageJson
 }

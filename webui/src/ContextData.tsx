@@ -26,6 +26,8 @@ import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 import { useOutboundSurfacesSubscription } from './Hooks/useOutboundSurfacesSubscription.js'
 import { ConnectionsStore } from './Stores/ConnectionsStore.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
+import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStoreRefreshProgress.js'
+import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -60,6 +62,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			triggersList: new TriggersListStore(),
 
 			userConfig: new UserConfigStore(),
+
+			moduleStoreRefreshProgress: observable.map(),
 		} satisfies RootAppStore
 	}, [socket])
 
@@ -68,6 +72,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.actionDefinitions)
 	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.feedbackDefinitions)
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
+	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
@@ -76,6 +81,10 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(socket, rootStore.surfaces)
 	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
+	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(
+		socket,
+		rootStore.moduleStoreRefreshProgress
+	)
 
 	useEffect(() => {
 		if (socket) {
@@ -95,6 +104,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const steps: boolean[] = [
 		loadedEventDefinitions,
 		moduleInfoReady,
+		moduleStoreReady,
 		connectionsReady,
 		variablesReady,
 		actionDefinitionsReady,
@@ -106,6 +116,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		pagesReady,
 		triggersListReady,
 		activeLearnRequestsReady,
+		moduleStoreProgressReady,
 	]
 	const completedSteps = steps.filter((s) => !!s)
 

@@ -3,7 +3,7 @@ import React, { memo, useCallback, useContext, useEffect, useRef, useState } fro
 import { HelpModal, HelpModalRef } from './HelpModal.js'
 import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { ConnectionsList } from './ConnectionList.js'
-import { AddConnectionsPanel } from './AddConnection.js'
+import { AddConnectionsPanel } from './AddConnectionPanel.js'
 import { ConnectionEditPanel } from './ConnectionEditPanel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
@@ -13,9 +13,10 @@ import { cloneDeep } from 'lodash-es'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
+import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { socket } = useContext(RootAppStoreContext)
 
 	const helpModalRef = useRef<HelpModalRef>(null)
 
@@ -33,18 +34,8 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 	}, [])
 
 	const showHelp = useCallback(
-		(id: string) => {
-			socketEmitPromise(socket, 'connections:get-help', [id]).then(([err, result]) => {
-				if (err) {
-					notifier.current?.show('Connection help', `Failed to get help text: ${err}`)
-					return
-				}
-				if (result) {
-					helpModalRef.current?.show(id, result)
-				}
-			})
-		},
-		[socket, notifier]
+		(id: string, moduleVersion: NewClientModuleVersionInfo2) => helpModalRef.current?.show(id, moduleVersion),
+		[]
 	)
 
 	const doConfigureConnection = useCallback((connectionId: string | null) => {
