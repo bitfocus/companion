@@ -29,7 +29,7 @@
 	"devDependencies": {
 		"@sentry/webpack-plugin": "^2.22.6",
 		"@types/archiver": "^6.0.3",
-		"@types/better-sqlite3": "^7.6.11",
+		"@types/better-sqlite3": "^7.6.12",
 		"@types/cors": "^2.8.17",
 		"@types/ejson": "^2.2.2",
 		"@types/express": "^5.0.0",
@@ -40,14 +40,14 @@
 		"@types/uuid": "^10.0.0",
 		"@types/ws": "^8.5.13",
 		"supertest": "^7.0.0",
-		"typescript": "~5.6.3",
+		"typescript": "~5.7.2",
 		"webpack": "^5.96.1",
 		"webpack-cli": "^5.1.4"
 	},
 	"dependencies": {
 		"@blackmagic-controller/node": "^0.1.0",
 		"@companion-app/shared": "*",
-		"@companion-module/base": "^1.11.1",
+		"@companion-module/base": "^1.11.2",
 		"@elgato-stream-deck/node": "^7.1.1",
 		"@elgato-stream-deck/tcp": "^7.1.1",
 		"@julusian/bonjour-service": "^1.3.0-2",
@@ -56,14 +56,14 @@
 		"@julusian/segfault-raub": "^2.3.1",
 		"@loupedeck/node": "^1.2.0",
 		"@napi-rs/canvas": "^0.1.62",
-		"@sentry/node": "^8.38.0",
+		"@sentry/node": "^8.40.0",
 		"archiver": "^7.0.1",
 		"better-sqlite3": "^11.5.0",
 		"body-parser": "^1.20.3",
 		"bufferutil": "^4.0.8",
 		"colord": "^2.9.3",
 		"commander": "^12.1.0",
-		"csv-stringify": "^6.5.1",
+		"csv-stringify": "^6.5.2",
 		"dayjs": "^1.11.13",
 		"debounce-fn": "^6.0.0",
 		"ejson": "^2.2.3",
@@ -100,7 +100,7 @@
 		"workerpool": "^9.2.0",
 		"ws": "^8.18.0",
 		"xkeys": "^3.1.2",
-		"yaml": "^2.6.0"
+		"yaml": "^2.6.1"
 	},
 	"collective": {
 		"type": "donorbox",

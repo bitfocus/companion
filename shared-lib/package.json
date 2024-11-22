@@ -18,7 +18,7 @@
     "@jsep-plugin/object": "^1.2.2",
     "@jsep-plugin/template": "^1.0.5",
     "jsep": "^1.4.0",
-    "jsonpath-plus": "^10.1.0",
+    "jsonpath-plus": "^10.2.0",
     "ps-tree": "^1.2.0",
     "semver": "^7.6.3"
   },
@@ -26,10 +26,10 @@
     "build": "run build:ts",
     "build:ts": "tsc",
     "dev": "tsc --watch",
-		"check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/semver": "^7.5.8",
-    "typescript": "~5.6.3"
+    "typescript": "~5.7.2"
   }
 }
