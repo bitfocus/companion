@@ -10,7 +10,7 @@ import { TriggersEventMisc } from './Events/Misc.js'
 import { clamp } from '../../../Resources/Util.js'
 import { TriggersEventVariables } from './Events/Variable.js'
 import { nanoid } from 'nanoid'
-import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
@@ -22,7 +22,7 @@ import type {
 	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
+import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'

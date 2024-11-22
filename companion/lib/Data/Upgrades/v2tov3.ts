@@ -2,7 +2,7 @@ import { ControlTrigger } from '../../Controls/ControlTypes/Triggers/Trigger.js'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
-import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Util/Constants.js'
+import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Resources/Constants.js'
 import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 

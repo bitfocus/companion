@@ -3,14 +3,14 @@ import { cloneDeep } from 'lodash-es'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
 import { clamp } from '../../../Resources/Util.js'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
-import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
 	ControlWithSteps,
 	ControlWithoutEvents,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
+import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type {
 	NormalButtonModel,
 	NormalButtonOptions,

@@ -1,5 +1,5 @@
 import { VisitorReferencesUpdater } from './ReferencesUpdater.js'
-import { visitEventOptions } from '../../Resources/EventDefinitions.js'
+import { visitEventOptions } from '../EventDefinitions.js'
 import { visitFeedbackInstance } from './FeedbackInstanceVisitor.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
