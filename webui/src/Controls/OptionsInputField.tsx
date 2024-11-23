@@ -70,9 +70,11 @@ export function OptionsInputField({
 
 			let localVariables: DropdownChoiceInt[] | undefined
 			if (features.local) {
-				localVariables = ControlLocalVariables
-				if (isInternal && isAction) {
-					localVariables = InternalActionLocalVariables
+				if (isLocatedInGrid) {
+					localVariables = ControlLocalVariables
+					if (isInternal && isAction) {
+						localVariables = InternalActionLocalVariables
+					}
 				}
 			}
 
