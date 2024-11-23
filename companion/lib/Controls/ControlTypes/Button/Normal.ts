@@ -639,6 +639,7 @@ export class ControlButtonNormal
 
 						this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
 							surfaceId,
+							eventVariables: {},
 						})
 					}
 				}
@@ -688,6 +689,7 @@ export class ControlButtonNormal
 
 				this.deps.actionRunner.runMultipleActions(enabledActions, this.controlId, this.options.relativeDelay, {
 					surfaceId,
+					eventVariables: {},
 				})
 			}
 		}

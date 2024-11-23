@@ -7,6 +7,7 @@ import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { CompanionVariableValues } from '@companion-module/base'
 
 /**
  * Helper for ControlTypes with feedbacks
@@ -122,8 +123,8 @@ export class FragmentFeedbacks {
 	/**
 	 * Get the value from all feedbacks as a single boolean
 	 */
-	checkValueAsBoolean(): boolean {
-		return this.#feedbacks.getBooleanValue()
+	checkValueAsBoolean(eventVariables: CompanionVariableValues): boolean {
+		return this.#feedbacks.getBooleanValue(eventVariables)
 	}
 
 	/**

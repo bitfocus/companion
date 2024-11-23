@@ -5,6 +5,7 @@ import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
+import type { CompanionVariableValues } from '@companion-module/base'
 
 export class FragmentFeedbackList {
 	readonly #instanceDefinitions: InstanceDefinitions
@@ -62,7 +63,7 @@ export class FragmentFeedbackList {
 	/**
 	 * Get the value of this feedback as a boolean
 	 */
-	getBooleanValue(): boolean {
+	getBooleanValue(eventVariables: CompanionVariableValues): boolean {
 		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
 
 		let result = true
@@ -70,13 +71,13 @@ export class FragmentFeedbackList {
 		for (const feedback of this.#feedbacks) {
 			if (feedback.disabled) continue
 
-			result = result && feedback.getBooleanValue()
+			result = result && feedback.getBooleanValue(eventVariables)
 		}
 
 		return result
 	}
 
-	getChildBooleanValues(): boolean[] {
+	getChildBooleanValues(eventVariables: CompanionVariableValues): boolean[] {
 		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
 
 		const values: boolean[] = []
@@ -84,7 +85,7 @@ export class FragmentFeedbackList {
 		for (const feedback of this.#feedbacks) {
 			if (feedback.disabled) continue
 
-			values.push(feedback.getBooleanValue())
+			values.push(feedback.getBooleanValue(eventVariables))
 		}
 
 		return values
@@ -368,7 +369,7 @@ export class FragmentFeedbackList {
 
 			const definition = feedback.getDefinition()
 			if (definition?.type === 'boolean') {
-				const booleanValue = feedback.getBooleanValue()
+				const booleanValue = feedback.getBooleanValue({})
 				if (booleanValue) {
 					style = {
 						...style,

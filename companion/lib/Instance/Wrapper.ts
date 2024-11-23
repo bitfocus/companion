@@ -36,6 +36,7 @@ import type {
 	CompanionInputFieldBase,
 	CompanionOptionValues,
 	CompanionVariableValue,
+	CompanionVariableValues,
 	LogLevel,
 } from '@companion-module/base'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
@@ -926,6 +927,11 @@ export interface RunActionExtras {
 	controlId: string
 	surfaceId: string | undefined
 	location: ControlLocation | undefined
+	/**
+	 * Any temporary `$(event:XXX)` variables for this invocation.
+	 * These should be defined without the `$(event:` prefix/wrapping.
+	 */
+	eventVariables: CompanionVariableValues | undefined
 }
 
 export interface VariableDefinitionTmp {

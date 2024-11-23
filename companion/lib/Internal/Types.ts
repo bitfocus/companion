@@ -2,7 +2,11 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { VisitorReferencesCollector } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
-import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
+import type {
+	CompanionFeedbackButtonStyleResult,
+	CompanionOptionValues,
+	CompanionVariableValues,
+} from '@companion-module/base'
 import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
@@ -12,6 +16,7 @@ export interface FeedbackInstanceExt extends FeedbackInstance {
 	controlId: string
 	location: ControlLocation | undefined
 	referencedVariables: string[] | null
+	eventVariables: CompanionVariableValues | undefined
 }
 
 export type InternalVisitor = VisitorReferencesCollector | VisitorReferencesUpdater

@@ -8,7 +8,7 @@ import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { CompanionButtonStyleProps } from '@companion-module/base'
+import type { CompanionButtonStyleProps, CompanionVariableValues } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
@@ -129,7 +129,7 @@ export class FragmentFeedbackInstance {
 	/**
 	 * Get the value of this feedback as a boolean
 	 */
-	getBooleanValue(): boolean {
+	getBooleanValue(eventVariables: CompanionVariableValues): boolean {
 		if (this.#data.disabled) return false
 
 		const definition = this.getDefinition()
@@ -138,15 +138,22 @@ export class FragmentFeedbackInstance {
 		// Special case to handle the internal 'logic' operators, which need to be executed live
 		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
-			const childValues = this.#children.getChildBooleanValues()
+			const childValues = this.#children.getChildBooleanValues(eventVariables)
 
 			return this.#internalModule.executeLogicFeedback(this.asFeedbackInstance(), childValues)
 		}
 
-		if (typeof this.#cachedValue === 'boolean') {
-			if (definition.showInvert && this.#data.isInverted) return !this.#cachedValue
+		let value = this.#cachedValue
 
-			return this.#cachedValue
+		if (this.connectionId === 'internal' && Object.keys(eventVariables).length > 0) {
+			// If we have event variables, we need to execute the feedback instead of using the cached copy
+			this.#internalModule.executeFeedback(this.asFeedbackInstance(), this.#controlId, eventVariables)
+		}
+
+		if (typeof value === 'boolean') {
+			if (definition.showInvert && this.#data.isInverted) return !value
+
+			return value
 		} else {
 			// An invalid value is falsey, it probably means that the feedback has no value
 			return false

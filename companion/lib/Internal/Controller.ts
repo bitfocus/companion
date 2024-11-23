@@ -199,6 +199,7 @@ export class InternalController {
 			controlId,
 			location,
 			referencedVariables: null,
+			eventVariables: undefined,
 		}
 		this.#feedbacks.set(feedback.id, cloned)
 
@@ -325,6 +326,45 @@ export class InternalController {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)
+	}
+
+	/**
+	 * Execute a boolean feedback with event variables
+	 */
+	executeFeedback(
+		feedback: FeedbackInstance,
+		controlId: string,
+		eventVariables: CompanionVariableValues
+	): boolean | undefined {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
+		const location = this.#pageController.getLocationOfControlId(controlId)
+		const wrappedFeedback: FeedbackInstanceExt = {
+			...feedback,
+			controlId,
+			location,
+			referencedVariables: null, // Not used
+			eventVariables,
+		}
+
+		for (const fragment of this.#fragments) {
+			if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
+				let value: ReturnType<Required<InternalModuleFragment>['executeFeedback']> | undefined
+				try {
+					value = fragment.executeFeedback(wrappedFeedback)
+				} catch (e: any) {
+					this.#logger.silly(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
+				}
+
+				if (value && typeof value === 'object' && 'referencedVariables' in value) {
+					return value.value
+				} else if (value !== undefined) {
+					return Boolean(value)
+				}
+			}
+		}
+
+		return undefined
 	}
 
 	/**
@@ -476,6 +516,7 @@ export class InternalController {
 
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			...('eventVariables' in extras ? this.#getInjectedEventVariables(extras.eventVariables) : {}),
 			...injectedVariableValues,
 		}
 		return this.#variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
@@ -499,6 +540,7 @@ export class InternalController {
 
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			...('eventVariables' in extras ? this.#getInjectedEventVariables(extras.eventVariables) : {}),
 			...injectedVariableValues,
 		}
 		return this.#variablesController.values.executeExpression(
@@ -542,5 +584,20 @@ export class InternalController {
 			// Doesn't need to be reactive, it's only for an action
 			'$(this:surface_id)': extras.surfaceId,
 		}
+	}
+
+	/**
+	 * Variables to inject based on an internal action
+	 */
+	#getInjectedEventVariables(extras: CompanionVariableValues | undefined): CompanionVariableValues {
+		const wrappedVariables: CompanionVariableValues = {}
+
+		if (extras) {
+			for (const [key, value] of Object.entries(extras)) {
+				wrappedVariables[`$(event:${key})`] = value
+			}
+		}
+
+		return wrappedVariables
 	}
 }

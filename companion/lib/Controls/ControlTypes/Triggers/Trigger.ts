@@ -27,6 +27,7 @@ import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 /**
  * Class for an interval trigger.
@@ -337,6 +338,8 @@ export class ControlTrigger
 	 * @param isTest Whether this is a 'test' execution from the ui and should skip condition checks
 	 */
 	executeActions(nowTime: number, isTest = false): void {
+		const eventVariables: CompanionVariableValues = {} // Future: these should come from somewhere
+
 		if (isTest) {
 			this.logger.debug(`Test Execute ${this.options.name}`)
 		} else {
@@ -344,7 +347,7 @@ export class ControlTrigger
 
 			// Ensure the condition passes when it is not part of the event
 			if (!this.events.some((event) => event.type.startsWith('condition_'))) {
-				const conditionPasses = this.feedbacks.checkValueAsBoolean()
+				const conditionPasses = this.feedbacks.checkValueAsBoolean(eventVariables)
 				if (!conditionPasses) return
 			}
 
@@ -360,6 +363,7 @@ export class ControlTrigger
 
 			this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
 				surfaceId: this.controlId,
+				eventVariables,
 			})
 		}
 	}
@@ -761,7 +765,7 @@ export class ControlTrigger
 	triggerRedraw = debounceFn(
 		() => {
 			try {
-				const newStatus = this.feedbacks.checkValueAsBoolean()
+				const newStatus = this.feedbacks.checkValueAsBoolean({})
 				const runOnTrue = this.events.some((event) => event.enabled && event.type === 'condition_true')
 				const runOnFalse = this.events.some((event) => event.enabled && event.type === 'condition_false')
 				if (
