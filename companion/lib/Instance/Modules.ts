@@ -95,6 +95,7 @@ export class InstanceModules {
 			...loadedModuleInfo,
 			type: 'release',
 			versionId: loadedModuleInfo.display.version,
+			isPackaged: true,
 		}
 
 		// Notify clients
@@ -148,6 +149,7 @@ export class InstanceModules {
 				...candidate,
 				type: 'release',
 				versionId: candidate.display.version,
+				isPackaged: true,
 			}
 		}
 
@@ -159,6 +161,7 @@ export class InstanceModules {
 				moduleInfo.devModule = {
 					...candidate,
 					type: 'dev',
+					isBeta: false,
 				}
 			}
 
@@ -218,6 +221,7 @@ export class InstanceModules {
 			moduleInfo.devModule = {
 				...reloadedModule,
 				type: 'dev',
+				isBeta: false,
 			}
 
 			this.#emitModuleUpdate(reloadedModule.manifest.id)

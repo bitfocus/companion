@@ -6,17 +6,19 @@ export interface ModuleVersionInfoBase {
 	helpPath: string | null
 	display: ModuleDisplayInfo
 	manifest: ModuleManifest
-	isPackaged: boolean // TODO - is this needed?
-	isBeta: boolean // TODO - is this needed?
+	isPackaged: boolean
+	isBeta: boolean
 }
 
 export interface ReleaseModuleVersionInfo extends ModuleVersionInfoBase {
 	type: 'release'
 	versionId: string
 	isBeta: boolean
+	isPackaged: true
 }
 export interface DevModuleVersionInfo extends ModuleVersionInfoBase {
 	type: 'dev'
 	isPackaged: boolean
+	isBeta: false
 }
 export type SomeModuleVersionInfo = ReleaseModuleVersionInfo | DevModuleVersionInfo
