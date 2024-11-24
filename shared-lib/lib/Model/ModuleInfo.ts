@@ -28,7 +28,7 @@ export interface NewClientModuleVersionInfo2 {
 	displayName: string
 	isLegacy: boolean
 	isDev: boolean
-	isPrerelease: boolean
+	isBeta: boolean
 	hasHelp: boolean
 	versionId: string
 }
@@ -39,7 +39,7 @@ export interface NewClientModuleInfo {
 	devVersion: NewClientModuleVersionInfo2 | null
 
 	stableVersion: NewClientModuleVersionInfo2 | null
-	prereleaseVersion: NewClientModuleVersionInfo2 | null
+	betaVersion: NewClientModuleVersionInfo2 | null
 
 	installedVersions: NewClientModuleVersionInfo2[]
 }

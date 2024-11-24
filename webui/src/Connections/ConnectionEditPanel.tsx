@@ -301,7 +301,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					>
 						<option value="manual">Manual</option>
 						<option value="stable">Stable</option>
-						<option value="prerelease">Stable and Prerelease</option>
+						<option value="beta">Stable and Beta</option>
 					</CFormSelect>
 				</CCol>
 
@@ -352,12 +352,12 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 export function useConnectionVersionSelectOptions(
 	moduleId: string | undefined,
 	installedInfo: NewClientModuleInfo | null | undefined,
-	includePrerelease: boolean
+	includeBeta: boolean
 ): DropdownChoiceInt[] {
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
-	const latestPrereleaseVersion = getLatestVersion(moduleStoreInfo?.versions, true)
+	const latestBetaVersionn = getLatestVersion(moduleStoreInfo?.versions, true)
 
 	return useMemo(() => {
 		const choices: DropdownChoiceInt[] = []
@@ -365,7 +365,7 @@ export function useConnectionVersionSelectOptions(
 		const listedVersions = new Set<string>()
 		if (installedInfo) {
 			for (const version of installedInfo.installedVersions) {
-				if (!includePrerelease && version.isPrerelease) continue
+				if (!includeBeta && version.isBeta) continue
 
 				let label = version.displayName
 				if (installedInfo.stableVersion?.versionId === version.versionId) {
@@ -387,15 +387,14 @@ export function useConnectionVersionSelectOptions(
 		}
 
 		if (
-			includePrerelease &&
-			latestPrereleaseVersion &&
-			!listedVersions.has(latestPrereleaseVersion.id) &&
-			(!installedInfo?.prereleaseVersion ||
-				semver.compare(latestPrereleaseVersion.id, installedInfo.prereleaseVersion.versionId) > 0)
+			includeBeta &&
+			latestBetaVersionn &&
+			!listedVersions.has(latestBetaVersionn.id) &&
+			(!installedInfo?.betaVersion || semver.compare(latestBetaVersionn.id, installedInfo.betaVersion.versionId) > 0)
 		) {
 			choices.push({
-				value: latestPrereleaseVersion.id,
-				label: `v${latestPrereleaseVersion.id} (Install latest prerelease)`,
+				value: latestBetaVersionn.id,
+				label: `v${latestBetaVersionn.id} (Install latest beta)`,
 			})
 		}
 
@@ -404,7 +403,7 @@ export function useConnectionVersionSelectOptions(
 		if (installedInfo?.devVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
 
 		return choices
-	}, [installedInfo, latestStableVersion, latestPrereleaseVersion, includePrerelease])
+	}, [installedInfo, latestStableVersion, latestBetaVersionn, includeBeta])
 }
 
 export function doesConnectionVersionExist(
@@ -419,11 +418,11 @@ export function doesConnectionVersionExist(
 
 export function getLatestVersion(
 	versions: ModuleStoreModuleInfoVersion[] | undefined,
-	isPrerelease: boolean
+	isBeta: boolean
 ): ModuleStoreModuleInfoVersion | null {
 	let latest: ModuleStoreModuleInfoVersion | null = null
 	for (const version of versions || []) {
-		if (!version || version.isPrerelease !== isPrerelease) continue
+		if (!version || (version.releaseChannel === 'beta') !== isBeta) continue
 		if (!isModuleApiVersionCompatible(version.apiVersion) || version.deprecationReason) continue
 		if (!latest || semver.compare(version.id, latest.id) > 0) {
 			latest = version

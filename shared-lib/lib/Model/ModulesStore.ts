@@ -42,7 +42,7 @@ export interface ModuleStoreModuleInfoStore {
 }
 export interface ModuleStoreModuleInfoVersion {
 	id: string
-	isPrerelease: boolean
+	releaseChannel: 'stable' | 'beta'
 	releasedAt: number // unix timestamp
 
 	tarUrl: string | null

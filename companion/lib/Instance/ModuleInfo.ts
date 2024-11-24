@@ -28,10 +28,10 @@ export class InstanceModuleInfo {
 		return this.installedVersions[versionId] ?? null
 	}
 
-	getLatestVersion(isPrerelease: boolean): ReleaseModuleVersionInfo | null {
+	getLatestVersion(isBeta: boolean): ReleaseModuleVersionInfo | null {
 		let latest: ReleaseModuleVersionInfo | null = null
 		for (const version of Object.values(this.installedVersions)) {
-			if (!version || version.isPrerelease !== isPrerelease) continue
+			if (!version || version.isBeta !== isBeta) continue
 			if (!isModuleApiVersionCompatible(version.manifest.runtime.apiVersion)) continue
 			if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
 				latest = version
@@ -43,9 +43,9 @@ export class InstanceModuleInfo {
 
 	toClientJson(): NewClientModuleInfo | null {
 		const stableVersion = this.getLatestVersion(false)
-		const prereleaseVersion = this.getLatestVersion(true)
+		const betaVersion = this.getLatestVersion(true)
 
-		const baseVersion = stableVersion ?? prereleaseVersion ?? Object.values(this.installedVersions)[0]
+		const baseVersion = stableVersion ?? betaVersion ?? Object.values(this.installedVersions)[0]
 		if (!baseVersion) return null
 
 		return {
@@ -54,7 +54,7 @@ export class InstanceModuleInfo {
 			devVersion: translateStableVersion(this.devModule),
 
 			stableVersion: translateStableVersion(stableVersion),
-			prereleaseVersion: translateStableVersion(prereleaseVersion),
+			betaVersion: translateStableVersion(betaVersion),
 
 			installedVersions: compact(Object.values(this.installedVersions)).map(translateReleaseVersion),
 		}
@@ -68,17 +68,17 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 			displayName: 'Dev',
 			isLegacy: false,
 			isDev: true,
-			isPrerelease: false,
+			isBeta: false,
 			hasHelp: version.helpPath !== null,
 			versionId: 'dev',
 		}
 	} else if (version.type === 'release') {
 		return {
-			displayName: `Latest ${version.isPrerelease ? 'Prerelease' : 'Stable'} (v${version.versionId})`,
+			displayName: `Latest ${version.isBeta ? 'Beta' : 'Stable'} (v${version.versionId})`,
 			isLegacy: version.display.isLegacy ?? false,
 			isDev: false,
 			hasHelp: version.helpPath !== null,
-			isPrerelease: version.isPrerelease,
+			isBeta: version.isBeta,
 			versionId: version.versionId,
 		}
 	}
@@ -90,7 +90,7 @@ function translateReleaseVersion(version: ReleaseModuleVersionInfo): NewClientMo
 		displayName: `v${version.versionId}`,
 		isLegacy: version.display.isLegacy ?? false,
 		isDev: false,
-		isPrerelease: version.isPrerelease,
+		isBeta: version.isBeta,
 		hasHelp: version.helpPath !== null,
 		versionId: version.versionId,
 	}

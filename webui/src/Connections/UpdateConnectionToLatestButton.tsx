@@ -28,7 +28,7 @@ const UpdateConnectionToLatestButtonInner = observer(function ModuleVersionInfoI
 	const moduleStoreInfo = useModuleStoreInfo(connection.instance_type) // TODO - put these into a central store, to minimise the impact
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
-	const latestPrereleaseVersion = getLatestVersion(moduleStoreInfo?.versions, true)
+	const latestBetaVersion = getLatestVersion(moduleStoreInfo?.versions, true)
 
 	let latestVersion: string | null = connection.moduleVersionId
 
@@ -38,11 +38,11 @@ const UpdateConnectionToLatestButtonInner = observer(function ModuleVersionInfoI
 	}
 
 	if (
-		connection.updatePolicy === 'prerelease' &&
-		latestPrereleaseVersion &&
-		(!latestVersion || semver.gt(latestPrereleaseVersion.id, latestVersion))
+		connection.updatePolicy === 'beta' &&
+		latestBetaVersion &&
+		(!latestVersion || semver.gt(latestBetaVersion.id, latestVersion))
 	) {
-		latestVersion = latestPrereleaseVersion.id
+		latestVersion = latestBetaVersion.id
 	}
 
 	if (!latestVersion || latestVersion === connection.moduleVersionId) return null

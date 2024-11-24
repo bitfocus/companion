@@ -83,7 +83,7 @@ export class InstanceModuleScanner {
 				display: moduleDisplay,
 				isPackaged: isPackaged,
 				// @ts-expect-error Not in manifest schema yet
-				isPrerelease: manifestJson.isPrerelease || false,
+				isBeta: manifestJson.releaseChannel === 'beta',
 			}
 
 			this.#logger.silly(`found module ${moduleDisplay.id}@${moduleDisplay.version}`)

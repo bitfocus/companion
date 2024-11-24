@@ -23,7 +23,7 @@ export interface ClientConnectionConfig {
 export enum ConnectionUpdatePolicy {
 	Manual = 'manual',
 	Stable = 'stable',
-	Prerelease = 'prerelease',
+	Beta = 'beta',
 }
 
 export type ClientConnectionsUpdate = ClientConnectionsUpdateUpdateOp | ClientConnectionsUpdateRemoveOp

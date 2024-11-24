@@ -47,7 +47,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(`modules_visible_versions:${moduleInfo.id}`, {
 		availableStable: true,
 		availableDeprecated: false,
-		availablePrerelease: false,
+		availableBeta: false,
 	})
 
 	return (
@@ -59,7 +59,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 					<th colSpan={3} className="fit">
 						<CButtonGroup className="table-header-buttons">
 							<VisibilityButton {...visibleVersions} keyId="availableStable" color="success" label="Stable" />
-							<VisibilityButton {...visibleVersions} keyId="availablePrerelease" color="warning" label="Prerelease" />
+							<VisibilityButton {...visibleVersions} keyId="availableBeta" color="warning" label="Beta" />
 							<VisibilityButton {...visibleVersions} keyId="availableDeprecated" color="primary" label="Deprecated" />
 						</CButtonGroup>
 					</th>
@@ -72,11 +72,11 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 					if (storeInfo) {
 						// Hide based on visibility settings
 						if (storeInfo.deprecationReason && !visibleVersions.visibility.availableDeprecated) return null
-						if (storeInfo.isPrerelease && !visibleVersions.visibility.availablePrerelease) return null
+						if (storeInfo.releaseChannel === 'beta' && !visibleVersions.visibility.availableBeta) return null
 
 						if (
 							!storeInfo.deprecationReason &&
-							!storeInfo.isPrerelease &&
+							storeInfo.releaseChannel === 'stable' &&
 							!installedInfo &&
 							!visibleVersions.visibility.availableStable
 						)
@@ -109,7 +109,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 interface VisibleVersionsState {
 	availableStable: boolean
 	availableDeprecated: boolean
-	availablePrerelease: boolean
+	availableBeta: boolean
 }
 
 interface ModuleVersionRowProps {
@@ -143,7 +143,9 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				{versionId}
-				{storeInfo?.isPrerelease && <FontAwesomeIcon className="pad-left" icon={faAsterisk} title="Prerelease" />}
+				{storeInfo?.releaseChannel === 'beta' && (
+					<FontAwesomeIcon className="pad-left" icon={faAsterisk} title="Beta" />
+				)}
 				{storeInfo?.deprecationReason && <FontAwesomeIcon className="pad-left" icon={faWarning} title="Deprecated" />}
 			</td>
 			<td>
