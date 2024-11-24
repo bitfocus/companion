@@ -193,7 +193,7 @@ export class InstanceInstalledModulesManager {
 				return `Module ${manifestJson.id} v${manifestJson.version} already exists`
 			}
 
-			return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, false, null)
+			return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, null)
 		})
 
 		client.onPromise('modules:install-store-module', async (moduleId, moduleVersion) => {
@@ -291,7 +291,6 @@ export class InstanceInstalledModulesManager {
 									moduleDir,
 									moduleInfo.manifestJson,
 									decompressedData,
-									false, // TODO - define from manifest?
 									moduleInfo.subDir
 								)
 							}
@@ -383,14 +382,13 @@ export class InstanceInstalledModulesManager {
 			return 'Module manifest does not match requested module'
 		}
 
-		return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, versionInfo.isPrerelease, null)
+		return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, null)
 	}
 
 	async #installModuleFromTarBuffer(
 		moduleDir: string,
 		manifestJson: ModuleManifest,
 		uncompressedData: Buffer,
-		isPrerelease: boolean,
 		subdirName: string | null
 	): Promise<string | null> {
 		try {
@@ -427,9 +425,6 @@ export class InstanceInstalledModulesManager {
 			// cleanup the dir, just to be sure it doesn't get stranded
 			await fs.rm(moduleDir, { recursive: true }).catch(() => null)
 		}
-
-		// If the module is a prerelease, create a file to indicate that
-		if (isPrerelease) await fs.writeFile(path.join(moduleDir, '.is-prerelease'), '')
 
 		this.#logger.info(`Installed module ${manifestJson.id} v${manifestJson.version}`)
 

@@ -61,10 +61,8 @@ export class InstanceModuleScanner {
 			validateManifest(manifestJson)
 
 			const helpPath = path.join(fullpath, 'companion/HELP.md')
-			const isPrereleasePath = path.join(fullpath, '.is-prerelease')
 
 			const hasHelp = await fs.pathExists(helpPath)
-			const isPrerelease = await fs.pathExists(isPrereleasePath)
 
 			const moduleDisplay: ModuleDisplayInfo = {
 				id: manifestJson.id,
@@ -84,7 +82,8 @@ export class InstanceModuleScanner {
 				helpPath: hasHelp ? helpPath : null,
 				display: moduleDisplay,
 				isPackaged: isPackaged,
-				isPrerelease: isPrerelease,
+				// @ts-expect-error Not in manifest schema yet
+				isPrerelease: manifestJson.isPrerelease || false,
 			}
 
 			this.#logger.silly(`found module ${moduleDisplay.id}@${moduleDisplay.version}`)
