@@ -12,7 +12,7 @@ import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.j
 import type { InstanceModules } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import type { SomeModuleVersionInfo } from './Types.js'
+import type { ModuleVersionInfo } from './Types.js'
 
 /**
  * A backoff sleep strategy
@@ -325,7 +325,7 @@ export class ModuleHost {
 	async queueRestartConnection(
 		connectionId: string,
 		config: ConnectionConfig | undefined,
-		moduleInfo: SomeModuleVersionInfo | undefined
+		moduleInfo: ModuleVersionInfo | undefined
 	): Promise<void> {
 		if (!config || !moduleInfo) return
 

@@ -8,14 +8,14 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { CModalExt } from '../Components/CModalExt.js'
 import { socketEmitPromise } from '../util.js'
-import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 interface HelpModalProps {
 	// Nothing
 }
 
 export interface HelpModalRef {
-	show(name: string, moduleVersion: NewClientModuleVersionInfo2): void
+	show(name: string, moduleVersion: ClientModuleVersionInfo): void
 }
 
 export const HelpModal = observer(
@@ -23,7 +23,7 @@ export const HelpModal = observer(
 		const { socket, notifier, modules } = useContext(RootAppStoreContext)
 
 		const [content, setContent] = useState<[name: string, description: HelpDescription] | null>(null)
-		const [showVersion, setShowVersion] = useState<NewClientModuleVersionInfo2 | null>(null)
+		const [showVersion, setShowVersion] = useState<ClientModuleVersionInfo | null>(null)
 
 		const doClose = useCallback(() => setShowVersion(null), [])
 		const onClosed = useCallback(() => setContent(null), [])
@@ -69,7 +69,7 @@ export const HelpModal = observer(
 			<CModalExt visible={!!showVersion} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>
-						Help for {moduleInfo?.baseInfo?.name || content?.[0]} {showVersion?.displayName}
+						Help for {moduleInfo?.display?.name || content?.[0]} {showVersion?.displayName}
 					</h5>
 				</CModalHeader>
 				<CModalBody>

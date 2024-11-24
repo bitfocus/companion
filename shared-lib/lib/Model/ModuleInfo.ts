@@ -3,19 +3,6 @@ import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 export interface ModuleDisplayInfo {
 	id: string
 	name: string
-	version: string
-	hasHelp: boolean
-	bugUrl: string
-	shortname: string
-	manufacturer: string
-	products: string[]
-	keywords: string[]
-	isLegacy?: boolean
-}
-
-export interface NewClientModuleBaseInfo {
-	id: string
-	name: string
 	// hasHelp: boolean
 	bugUrl: string
 	shortname: string
@@ -24,7 +11,7 @@ export interface NewClientModuleBaseInfo {
 	keywords: string[]
 }
 
-export interface NewClientModuleVersionInfo2 {
+export interface ClientModuleVersionInfo {
 	displayName: string
 	isLegacy: boolean
 	isBeta: boolean
@@ -32,15 +19,15 @@ export interface NewClientModuleVersionInfo2 {
 	versionId: string
 }
 
-export interface NewClientModuleInfo {
-	baseInfo: NewClientModuleBaseInfo
+export interface ClientModuleInfo {
+	display: ModuleDisplayInfo
 
-	devVersion: NewClientModuleVersionInfo2 | null
+	devVersion: ClientModuleVersionInfo | null
 
-	stableVersion: NewClientModuleVersionInfo2 | null
-	betaVersion: NewClientModuleVersionInfo2 | null
+	stableVersion: ClientModuleVersionInfo | null
+	betaVersion: ClientModuleVersionInfo | null
 
-	installedVersions: NewClientModuleVersionInfo2[]
+	installedVersions: ClientModuleVersionInfo[]
 }
 
 export type ModuleInfoUpdate = ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp | ModuleInfoUpdateRemoveOp
@@ -53,7 +40,7 @@ export interface ModuleInfoUpdateAddOp {
 	type: 'add'
 	id: string
 
-	info: NewClientModuleInfo
+	info: ClientModuleInfo
 }
 export interface ModuleInfoUpdateUpdateOp {
 	type: 'update'

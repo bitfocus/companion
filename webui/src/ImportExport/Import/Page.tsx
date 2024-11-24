@@ -226,7 +226,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 	const storeInfo = modules.storeList.get(connection.instance_type)
 	const moduleInfo = modules.modules.get(connection.instance_type)
 
-	const moduleManifest = moduleInfo?.baseInfo ?? storeInfo
+	const moduleManifest = moduleInfo?.display ?? storeInfo
 
 	const currentConnections = connections.getAllOfType(connection.instance_type)
 

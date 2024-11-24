@@ -21,13 +21,13 @@ import { cloneDeep } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import type express from 'express'
 import { type ModuleManifest } from '@companion-module/base'
-import type { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import LogController from '../Log/Controller.js'
 import type { InstanceController } from './Controller.js'
 import jsonPatch from 'fast-json-patch'
-import type { SomeModuleVersionInfo } from './Types.js'
+import type { ModuleVersionInfo } from './Types.js'
 import { InstanceModuleInfo } from './ModuleInfo.js'
 
 const ModulesRoom = 'modules'
@@ -48,7 +48,7 @@ export class InstanceModules {
 	/**
 	 * Last module info sent to clients
 	 */
-	#lastModulesJson: Record<string, NewClientModuleInfo> | null = null
+	#lastModulesJson: Record<string, ClientModuleInfo> | null = null
 
 	/**
 	 * Known module info
@@ -91,9 +91,8 @@ export class InstanceModules {
 
 		// Update the module info
 		const moduleInfo = this.#getOrCreateModuleEntry(manifest.id)
-		moduleInfo.installedVersions[loadedModuleInfo.display.version] = {
+		moduleInfo.installedVersions[loadedModuleInfo.versionId] = {
 			...loadedModuleInfo,
-			versionId: loadedModuleInfo.display.version,
 			isPackaged: true,
 		}
 
@@ -144,9 +143,8 @@ export class InstanceModules {
 		const storeModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#installedModulesDir, true)
 		for (const candidate of storeModules) {
 			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-			moduleInfo.installedVersions[candidate.display.version] = {
+			moduleInfo.installedVersions[candidate.versionId] = {
 				...candidate,
-				versionId: candidate.display.version,
 				isPackaged: true,
 			}
 		}
@@ -197,7 +195,7 @@ export class InstanceModules {
 
 			for (const moduleVersion of Object.values(moduleInfo.installedVersions)) {
 				if (!moduleVersion) continue
-				this.#logger.info(`${moduleVersion.display.id}@${moduleVersion.display.version}: ${moduleVersion.display.name}`)
+				this.#logger.info(`${moduleVersion.display.id}@${moduleVersion.versionId}: ${moduleVersion.display.name}`)
 			}
 		}
 	}
@@ -210,9 +208,7 @@ export class InstanceModules {
 
 		const reloadedModule = await this.#moduleScanner.loadInfoForModule(fullpath, true)
 		if (reloadedModule) {
-			this.#logger.info(
-				`Found new module "${reloadedModule.display.id}" v${reloadedModule.display.version} in: ${fullpath}`
-			)
+			this.#logger.info(`Found new module ${reloadedModule.display.id}@${reloadedModule.versionId} in: ${fullpath}`)
 
 			// Replace any existing module
 			const moduleInfo = this.#getOrCreateModuleEntry(reloadedModule.manifest.id)
@@ -325,8 +321,8 @@ export class InstanceModules {
 	/**
 	 * Get display version of module infos
 	 */
-	getModulesJson(): Record<string, NewClientModuleInfo> {
-		const result: Record<string, NewClientModuleInfo> = {}
+	getModulesJson(): Record<string, ClientModuleInfo> {
+		const result: Record<string, ClientModuleInfo> = {}
 
 		for (const [id, moduleInfo] of this.#knownModules.entries()) {
 			const clientModuleInfo = moduleInfo.toClientJson()
@@ -341,7 +337,7 @@ export class InstanceModules {
 	/**
 	 * Get the manifest for a module
 	 */
-	getModuleManifest(moduleId: string, versionId: string | null): SomeModuleVersionInfo | undefined {
+	getModuleManifest(moduleId: string, versionId: string | null): ModuleVersionInfo | undefined {
 		return this.#knownModules.get(moduleId)?.getVersion(versionId) ?? undefined
 	}
 

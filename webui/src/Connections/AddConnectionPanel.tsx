@@ -5,7 +5,7 @@ import { faExclamationTriangle, faExternalLink, faPlug, faQuestionCircle } from 
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
-import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { AddConnectionModal, AddConnectionModalRef } from './AddConnectionModal.js'
 import { RefreshModulesList } from '../Modules/RefreshModulesList.js'
 import { LastUpdatedTimestamp } from '../Modules/LastUpdatedTimestamp.js'
@@ -17,7 +17,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { filterProducts, FuzzyProduct, useAllConnectionProducts } from '../Hooks/useFilteredProducts.js'
 
 interface AddConnectionsPanelProps {
-	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 	doConfigureConnection: (connectionId: string) => void
 }
 
@@ -164,12 +164,12 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 interface AddConnectionEntryProps {
 	moduleInfo: FuzzyProduct
 	addConnection(module: FuzzyProduct): void
-	showHelp(moduleId: string, moduleVersion: NewClientModuleVersionInfo2): void
+	showHelp(moduleId: string, moduleVersion: ClientModuleVersionInfo): void
 }
 
 function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnectionEntryProps) {
 	const addConnectionClick = useCallback(() => addConnection(moduleInfo), [addConnection, moduleInfo])
-	const showVersion: NewClientModuleVersionInfo2 | undefined =
+	const showVersion: ClientModuleVersionInfo | undefined =
 		moduleInfo.installedInfo?.stableVersion ??
 		moduleInfo.installedInfo?.betaVersion ??
 		moduleInfo.installedInfo?.installedVersions?.[0]

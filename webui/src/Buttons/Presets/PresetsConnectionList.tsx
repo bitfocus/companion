@@ -28,11 +28,11 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 
 		const connectionInfo = connections.getInfo(id)
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
-		const compactName = moduleInfo?.baseInfo?.name?.replace(/\;.*/, '...')
+		const compactName = moduleInfo?.display?.name?.replace(/\;.*/, '...')
 
 		return (
 			<CButton
-				title={moduleInfo?.baseInfo?.name}
+				title={moduleInfo?.display?.name}
 				key={id}
 				color="primary"
 				onClick={() => setConnectionAndCategory([id, null])}

@@ -6,7 +6,7 @@ import classNames from 'classnames'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
-import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { SearchBox } from '../Components/SearchBox.js'
 import { useAllConnectionProducts, filterProducts, FuzzyProduct } from '../Hooks/useFilteredProducts.js'
 import { ImportModules } from './ImportCustomModule.js'
@@ -21,7 +21,7 @@ interface VisibleModulesState {
 }
 
 interface ModulesListProps {
-	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (connectionId: string, moduleVersion: ClientModuleVersionInfo) => void
 	doManageModule: (connectionId: string | null) => void
 	selectedModuleId: string | null
 }
@@ -200,7 +200,7 @@ export const ModulesList = observer(function ModulesList({
 interface ModulesListRowProps {
 	id: string
 	moduleInfo: FuzzyProduct
-	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (connectionId: string, moduleVersion: ClientModuleVersionInfo) => void
 	doManageModule: (moduleId: string | null) => void
 	isSelected: boolean
 }

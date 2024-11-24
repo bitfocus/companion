@@ -12,7 +12,7 @@ import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
-import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import semver from 'semver'
@@ -24,7 +24,7 @@ import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 interface ConnectionEditPanelProps {
 	connectionId: string
 	doConfigureConnection: (connectionId: string | null) => void
-	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
 export const ConnectionEditPanel = observer(function ConnectionEditPanel({
@@ -62,9 +62,9 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 interface ConnectionEditPanelInnerProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig
-	moduleInfo: NewClientModuleInfo | undefined
+	moduleInfo: ClientModuleInfo | undefined
 	doConfigureConnection: (connectionId: string | null) => void
-	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
 const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
@@ -240,7 +240,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	return (
 		<div>
 			<h5>
-				{moduleInfo?.baseInfo?.shortname ?? connectionInfo.instance_type} configuration
+				{moduleInfo?.display?.shortname ?? connectionInfo.instance_type} configuration
 				{moduleVersion?.hasHelp && (
 					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type, moduleVersion)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
@@ -351,7 +351,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 export function useConnectionVersionSelectOptions(
 	moduleId: string | undefined,
-	installedInfo: NewClientModuleInfo | null | undefined,
+	installedInfo: ClientModuleInfo | null | undefined,
 	includeBeta: boolean
 ): DropdownChoiceInt[] {
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
@@ -407,7 +407,7 @@ export function useConnectionVersionSelectOptions(
 }
 
 export function doesConnectionVersionExist(
-	moduleInfo: NewClientModuleInfo | undefined,
+	moduleInfo: ClientModuleInfo | undefined,
 	versionId: string | null
 ): boolean {
 	if (versionId === null) return false

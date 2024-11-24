@@ -1,5 +1,5 @@
-import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
-import type { SomeModuleVersionInfo } from './Types.js'
+import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleVersionInfo } from './Types.js'
 import semver from 'semver'
 import { compact } from 'lodash-es'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
@@ -12,15 +12,15 @@ export class InstanceModuleInfo {
 
 	replacedByIds: string[] = []
 
-	devModule: SomeModuleVersionInfo | null = null
+	devModule: ModuleVersionInfo | null = null
 
-	installedVersions: Record<string, SomeModuleVersionInfo | undefined> = {}
+	installedVersions: Record<string, ModuleVersionInfo | undefined> = {}
 
 	constructor(id: string) {
 		this.id = id
 	}
 
-	getVersion(versionId: string | null): SomeModuleVersionInfo | null {
+	getVersion(versionId: string | null): ModuleVersionInfo | null {
 		if (versionId === 'dev') return this.devModule
 
 		if (versionId === null) return null // TODO - is this correct?
@@ -28,12 +28,12 @@ export class InstanceModuleInfo {
 		return this.installedVersions[versionId] ?? null
 	}
 
-	getLatestVersion(isBeta: boolean): SomeModuleVersionInfo | null {
-		let latest: SomeModuleVersionInfo | null = null
+	getLatestVersion(isBeta: boolean): ModuleVersionInfo | null {
+		let latest: ModuleVersionInfo | null = null
 		for (const version of Object.values(this.installedVersions)) {
 			if (!version || version.isBeta !== isBeta) continue
 			if (!isModuleApiVersionCompatible(version.manifest.runtime.apiVersion)) continue
-			if (!latest || semver.compare(version.display.version, latest.display.version) > 0) {
+			if (!latest || semver.compare(version.versionId, latest.versionId) > 0) {
 				latest = version
 			}
 		}
@@ -41,7 +41,7 @@ export class InstanceModuleInfo {
 		return latest
 	}
 
-	toClientJson(): NewClientModuleInfo | null {
+	toClientJson(): ClientModuleInfo | null {
 		const stableVersion = this.getLatestVersion(false)
 		const betaVersion = this.getLatestVersion(true)
 
@@ -49,7 +49,7 @@ export class InstanceModuleInfo {
 		if (!baseVersion) return null
 
 		return {
-			baseInfo: baseVersion.display,
+			display: baseVersion.display,
 
 			devVersion: translateStableVersion(this.devModule),
 
@@ -61,7 +61,7 @@ export class InstanceModuleInfo {
 	}
 }
 
-function translateStableVersion(version: SomeModuleVersionInfo | null): NewClientModuleVersionInfo2 | null {
+function translateStableVersion(version: ModuleVersionInfo | null): ClientModuleVersionInfo | null {
 	if (!version) return null
 	if (version.versionId === 'dev') {
 		return {
@@ -74,7 +74,7 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 	} else {
 		return {
 			displayName: `Latest ${version.isBeta ? 'Beta' : 'Stable'} (v${version.versionId})`,
-			isLegacy: version.display.isLegacy ?? false,
+			isLegacy: version.isLegacy,
 			hasHelp: version.helpPath !== null,
 			isBeta: version.isBeta,
 			versionId: version.versionId,
@@ -82,10 +82,10 @@ function translateStableVersion(version: SomeModuleVersionInfo | null): NewClien
 	}
 }
 
-function translateReleaseVersion(version: SomeModuleVersionInfo): NewClientModuleVersionInfo2 {
+function translateReleaseVersion(version: ModuleVersionInfo): ClientModuleVersionInfo {
 	return {
 		displayName: `v${version.versionId}`,
-		isLegacy: version.display.isLegacy ?? false,
+		isLegacy: version.isLegacy,
 		isBeta: version.isBeta,
 		hasHelp: version.helpPath !== null,
 		versionId: version.versionId,

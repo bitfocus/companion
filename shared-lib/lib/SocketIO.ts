@@ -43,7 +43,7 @@ import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRec
 import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
-import type { ModuleInfoUpdate, NewClientModuleInfo } from './Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, ClientModuleInfo } from './Model/ModuleInfo.js'
 import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
 export interface ClientToBackendEventsMap {
@@ -81,7 +81,7 @@ export interface ClientToBackendEventsMap {
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'custom-variables:subscribe': () => CustomVariablesModel
 	'custom-variables:unsubscribe': () => void
-	'modules:subscribe': () => Record<string, NewClientModuleInfo>
+	'modules:subscribe': () => Record<string, ClientModuleInfo>
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void

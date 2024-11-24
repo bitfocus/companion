@@ -6,7 +6,7 @@ import { ModulesList } from './ModulesList.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
-import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleManagePanel } from './ModuleManagePanel.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -50,7 +50,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 	}, [navigate, modules, selectedModuleId])
 
 	const showHelp = useCallback(
-		(id: string, moduleVersion: NewClientModuleVersionInfo2) => helpModalRef.current?.show(id, moduleVersion),
+		(id: string, moduleVersion: ClientModuleVersionInfo) => helpModalRef.current?.show(id, moduleVersion),
 		[]
 	)
 

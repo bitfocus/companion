@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAsterisk, faPlus, faSync, faToiletsPortable, faTrash, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { NewClientModuleBaseInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleDisplayInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreModuleInfoStore, ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
@@ -17,7 +17,7 @@ import relativeTime from 'dayjs/plugin/relativeTime.js'
 dayjs.extend(relativeTime)
 
 interface ModuleVersionsTableProps {
-	moduleInfo: NewClientModuleBaseInfo
+	moduleInfo: ModuleDisplayInfo
 	moduleStoreInfo: ModuleStoreModuleInfoStore | null
 }
 
@@ -29,7 +29,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 	const moduleInstalledInfo = modules.modules.get(moduleInfo.id)
 
 	const allVersionsSet = new Set<string>()
-	const installedModuleVersions = new Map<string, NewClientModuleVersionInfo2>()
+	const installedModuleVersions = new Map<string, ClientModuleVersionInfo>()
 	for (const version of moduleInstalledInfo?.installedVersions ?? []) {
 		if (version.versionId) {
 			installedModuleVersions.set(version.versionId, version)
@@ -115,7 +115,7 @@ interface VisibleVersionsState {
 interface ModuleVersionRowProps {
 	moduleId: string
 	versionId: string
-	installedInfo: NewClientModuleVersionInfo2 | undefined
+	installedInfo: ClientModuleVersionInfo | undefined
 	storeInfo: ModuleStoreModuleInfoVersion | undefined
 }
 

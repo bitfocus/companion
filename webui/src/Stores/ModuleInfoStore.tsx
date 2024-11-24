@@ -1,5 +1,5 @@
 import { action, observable } from 'mobx'
-import type { ModuleInfoUpdate, NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { assertNever } from '../util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
@@ -7,7 +7,7 @@ import { ModuleStoreListCacheEntry, ModuleStoreListCacheStore } from '@companion
 
 export class ModuleInfoStore {
 	// TODO - should this be more granular/observable?
-	readonly modules = observable.map<string, NewClientModuleInfo>()
+	readonly modules = observable.map<string, ClientModuleInfo>()
 
 	readonly storeUpdateInfo: Omit<ModuleStoreListCacheStore, 'modules'> = observable.object({
 		lastUpdated: 0,
@@ -20,7 +20,7 @@ export class ModuleInfoStore {
 		return this.modules.size
 	}
 
-	public resetModules = action((newData: Record<string, NewClientModuleInfo | undefined> | null) => {
+	public resetModules = action((newData: Record<string, ClientModuleInfo | undefined> | null) => {
 		this.modules.clear()
 
 		if (newData) {

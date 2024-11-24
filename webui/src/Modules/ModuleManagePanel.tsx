@@ -3,7 +3,7 @@ import { socketEmitPromise } from '../util.js'
 import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { NewClientModuleBaseInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleDisplayInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
@@ -16,7 +16,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons'
 interface ModuleManagePanelProps {
 	moduleId: string
 	doManageModule: (moduleId: string | null) => void
-	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
 export const ModuleManagePanel = observer(function ModuleManagePanel({
@@ -26,7 +26,7 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({
 }: ModuleManagePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(moduleId)?.baseInfo ?? modules.storeList.get(moduleId)
+	const moduleInfo = modules.modules.get(moduleId)?.display ?? modules.storeList.get(moduleId)
 
 	if (!moduleInfo) {
 		return (
@@ -50,9 +50,9 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({
 
 interface ModuleManagePanelInnerProps {
 	moduleId: string
-	moduleInfo: NewClientModuleBaseInfo
+	moduleInfo: ModuleDisplayInfo
 	doManageModule: (moduleId: string | null) => void
-	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
 const ModuleManagePanelInner = observer(function ModuleManagePanelInner({

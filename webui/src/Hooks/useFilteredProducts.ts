@@ -1,6 +1,6 @@
 import { useComputed } from '../util.js'
 import { go as fuzzySearch } from 'fuzzysort'
-import type { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import type { ModuleInfoStore } from '../Stores/ModuleInfoStore.js'
 
@@ -10,19 +10,19 @@ export function useAllConnectionProducts(modules: ModuleInfoStore): FuzzyProduct
 
 		// Start with all installed modules
 		for (const moduleInfo of modules.modules.values()) {
-			for (const product of moduleInfo.baseInfo.products) {
-				const key = `${moduleInfo.baseInfo.id}-${product}`
+			for (const product of moduleInfo.display.products) {
+				const key = `${moduleInfo.display.id}-${product}`
 				allProducts[key] = {
-					id: moduleInfo.baseInfo.id,
+					id: moduleInfo.display.id,
 
 					installedInfo: moduleInfo,
 					storeInfo: null,
 
 					product,
-					keywords: moduleInfo.baseInfo.keywords?.join(';') ?? '',
-					name: moduleInfo.baseInfo.name,
-					manufacturer: moduleInfo.baseInfo.manufacturer,
-					shortname: moduleInfo.baseInfo.shortname,
+					keywords: moduleInfo.display.keywords?.join(';') ?? '',
+					name: moduleInfo.display.name,
+					manufacturer: moduleInfo.display.manufacturer,
+					shortname: moduleInfo.display.shortname,
 				}
 			}
 		}
@@ -68,7 +68,7 @@ export function filterProducts(allProducts: FuzzyProduct[], filter: string): Fuz
 export interface FuzzyProduct {
 	id: string
 
-	installedInfo: NewClientModuleInfo | null
+	installedInfo: ClientModuleInfo | null
 	storeInfo: ModuleStoreListCacheEntry | null
 
 	product: string

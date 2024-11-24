@@ -30,7 +30,7 @@ import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { UpdateConnectionToLatestButton } from './UpdateConnectionToLatestButton.js'
 import { InlineHelp } from '../Components/InlineHelp.js'
@@ -43,7 +43,7 @@ interface VisibleConnectionsState {
 }
 
 interface ConnectionsListProps {
-	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (connectionId: string, moduleVersion: ClientModuleVersionInfo) => void
 	doConfigureConnection: (connectionId: string | null) => void
 	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
@@ -197,7 +197,7 @@ interface ConnectionsTableRowProps {
 	id: string
 	connection: ClientConnectionConfig
 	connectionStatus: ConnectionStatusEntry | undefined
-	showHelp: (connectionId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (connectionId: string, moduleVersion: ClientModuleVersionInfo) => void
 	showVariables: (label: string) => void
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
@@ -284,7 +284,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const doEdit = useCallback(() => configureConnection(id), [id])
 
 	const openBugUrl = useCallback(() => {
-		const url = moduleInfo?.baseInfo?.bugUrl
+		const url = moduleInfo?.display?.bugUrl
 		if (url) windowLinkOpen({ href: url })
 	}, [moduleInfo])
 
@@ -308,9 +308,9 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			<td onClick={doEdit} className="hand">
 				{moduleInfo ? (
 					<>
-						{moduleInfo.baseInfo.shortname ?? ''}
+						{moduleInfo.display.shortname ?? ''}
 						<br />
-						{moduleInfo.baseInfo.manufacturer ?? ''}
+						{moduleInfo.display.manufacturer ?? ''}
 						<br />
 						{moduleVersion?.isLegacy && (
 							<>
@@ -369,7 +369,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										onMouseDown={openBugUrl}
 										color="secondary"
 										title="Issue Tracker"
-										disabled={!moduleInfo?.baseInfo?.bugUrl}
+										disabled={!moduleInfo?.display?.bugUrl}
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>

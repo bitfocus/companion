@@ -15,7 +15,7 @@ import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
-import { NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { useConnectionVersionSelectOptions } from './ConnectionEditPanel.js'
@@ -28,7 +28,7 @@ export interface AddConnectionModalRef {
 
 interface AddConnectionModalProps {
 	doConfigureConnection: (connectionId: string) => void
-	showHelp: (moduleId: string, moduleVersion: NewClientModuleVersionInfo2) => void
+	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
 export const AddConnectionModal = observer(
