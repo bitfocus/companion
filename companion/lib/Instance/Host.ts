@@ -465,7 +465,7 @@ export class ModuleHost {
 							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')
 						})
 						monitor.on('stdout', (data) => {
-							if (!moduleInfo.isPackaged) {
+							if (moduleInfo.versionId === 'dev') {
 								// Only show stdout for modules which are being developed
 								child.logger.verbose(`stdout: ${data.toString()}`)
 							}

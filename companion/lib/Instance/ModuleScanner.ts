@@ -2,7 +2,7 @@ import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
 import { ModuleManifest, validateManifest } from '@companion-module/base'
-import type { ModuleVersionInfoBase } from './Types.js'
+import type { SomeModuleVersionInfo } from './Types.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 export class InstanceModuleScanner {
@@ -14,11 +14,11 @@ export class InstanceModuleScanner {
 	 * @param searchDir - Path to search for modules
 	 * @param checkForPackaged - Whether to check for a packaged version
 	 */
-	async loadInfoForModulesInDir(searchDir: string, checkForPackaged: boolean): Promise<ModuleVersionInfoBase[]> {
+	async loadInfoForModulesInDir(searchDir: string, checkForPackaged: boolean): Promise<SomeModuleVersionInfo[]> {
 		if (await fs.pathExists(searchDir)) {
 			const candidates = await fs.readdir(searchDir)
 
-			const ps: Promise<ModuleVersionInfoBase | undefined>[] = []
+			const ps: Promise<SomeModuleVersionInfo | undefined>[] = []
 
 			for (const candidate of candidates) {
 				const candidatePath = path.join(searchDir, candidate)
@@ -37,7 +37,7 @@ export class InstanceModuleScanner {
 	 * @param fullpath - Fullpath to the module
 	 * @param checkForPackaged - Whether to check for a packaged version
 	 */
-	async loadInfoForModule(fullpath: string, checkForPackaged: boolean): Promise<ModuleVersionInfoBase | undefined> {
+	async loadInfoForModule(fullpath: string, checkForPackaged: boolean): Promise<SomeModuleVersionInfo | undefined> {
 		try {
 			let isPackaged = false
 			const pkgDir = path.join(fullpath, 'pkg')
@@ -76,7 +76,8 @@ export class InstanceModuleScanner {
 				keywords: manifestJson.keywords,
 			}
 
-			const moduleManifestExt: ModuleVersionInfoBase = {
+			const moduleManifestExt: SomeModuleVersionInfo = {
+				versionId: manifestJson.version,
 				manifest: manifestJson,
 				basePath: path.resolve(fullpath),
 				helpPath: hasHelp ? helpPath : null,

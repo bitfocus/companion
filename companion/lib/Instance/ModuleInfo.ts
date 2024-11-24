@@ -1,5 +1,5 @@
 import type { NewClientModuleInfo, NewClientModuleVersionInfo2 } from '@companion-app/shared/Model/ModuleInfo.js'
-import type { DevModuleVersionInfo, ReleaseModuleVersionInfo, SomeModuleVersionInfo } from './Types.js'
+import type { SomeModuleVersionInfo } from './Types.js'
 import semver from 'semver'
 import { compact } from 'lodash-es'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
@@ -12,9 +12,9 @@ export class InstanceModuleInfo {
 
 	replacedByIds: string[] = []
 
-	devModule: DevModuleVersionInfo | null = null
+	devModule: SomeModuleVersionInfo | null = null
 
-	installedVersions: Record<string, ReleaseModuleVersionInfo | undefined> = {}
+	installedVersions: Record<string, SomeModuleVersionInfo | undefined> = {}
 
 	constructor(id: string) {
 		this.id = id
@@ -28,8 +28,8 @@ export class InstanceModuleInfo {
 		return this.installedVersions[versionId] ?? null
 	}
 
-	getLatestVersion(isBeta: boolean): ReleaseModuleVersionInfo | null {
-		let latest: ReleaseModuleVersionInfo | null = null
+	getLatestVersion(isBeta: boolean): SomeModuleVersionInfo | null {
+		let latest: SomeModuleVersionInfo | null = null
 		for (const version of Object.values(this.installedVersions)) {
 			if (!version || version.isBeta !== isBeta) continue
 			if (!isModuleApiVersionCompatible(version.manifest.runtime.apiVersion)) continue
@@ -63,33 +63,29 @@ export class InstanceModuleInfo {
 
 function translateStableVersion(version: SomeModuleVersionInfo | null): NewClientModuleVersionInfo2 | null {
 	if (!version) return null
-	if (version.type === 'dev') {
+	if (version.versionId === 'dev') {
 		return {
 			displayName: 'Dev',
 			isLegacy: false,
-			isDev: true,
 			isBeta: false,
 			hasHelp: version.helpPath !== null,
 			versionId: 'dev',
 		}
-	} else if (version.type === 'release') {
+	} else {
 		return {
 			displayName: `Latest ${version.isBeta ? 'Beta' : 'Stable'} (v${version.versionId})`,
 			isLegacy: version.display.isLegacy ?? false,
-			isDev: false,
 			hasHelp: version.helpPath !== null,
 			isBeta: version.isBeta,
 			versionId: version.versionId,
 		}
 	}
-	return null
 }
 
-function translateReleaseVersion(version: ReleaseModuleVersionInfo): NewClientModuleVersionInfo2 {
+function translateReleaseVersion(version: SomeModuleVersionInfo): NewClientModuleVersionInfo2 {
 	return {
 		displayName: `v${version.versionId}`,
 		isLegacy: version.display.isLegacy ?? false,
-		isDev: false,
 		isBeta: version.isBeta,
 		hasHelp: version.helpPath !== null,
 		versionId: version.versionId,

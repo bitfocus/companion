@@ -93,7 +93,6 @@ export class InstanceModules {
 		const moduleInfo = this.#getOrCreateModuleEntry(manifest.id)
 		moduleInfo.installedVersions[loadedModuleInfo.display.version] = {
 			...loadedModuleInfo,
-			type: 'release',
 			versionId: loadedModuleInfo.display.version,
 			isPackaged: true,
 		}
@@ -147,7 +146,6 @@ export class InstanceModules {
 			const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
 			moduleInfo.installedVersions[candidate.display.version] = {
 				...candidate,
-				type: 'release',
 				versionId: candidate.display.version,
 				isPackaged: true,
 			}
@@ -160,7 +158,7 @@ export class InstanceModules {
 				const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
 				moduleInfo.devModule = {
 					...candidate,
-					type: 'dev',
+					versionId: 'dev',
 					isBeta: false,
 				}
 			}
@@ -220,7 +218,7 @@ export class InstanceModules {
 			const moduleInfo = this.#getOrCreateModuleEntry(reloadedModule.manifest.id)
 			moduleInfo.devModule = {
 				...reloadedModule,
-				type: 'dev',
+				versionId: 'dev',
 				isBeta: false,
 			}
 
