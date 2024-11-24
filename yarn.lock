@@ -4884,6 +4884,9 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/64f87d209bd2edf1a7d029a922a246ef0dcfb19e623b95714e2c074195a61ed4fe4d67d0c3c6dc33239ef7d18902fcb70df7f7e85cfbd92a6bf25d087ce531fd
+  languageName: node
+  linkType: hard
+
 "@types/tedious@npm:^4.0.14":
   version: 4.0.14
   resolution: "@types/tedious@npm:4.0.14"
@@ -6699,7 +6702,7 @@ asn1@evs-broadcast/node-asn1:
     systeminformation: "npm:^5.23.5"
     tar-fs: "npm:^3.0.6"
     tar-stream: "npm:^3.1.7"
-    type-fest: "npm:^4.26.1"
+    type-fest: "npm:^4.27.0"
     typescript: "npm:~5.6.3"
     usb: "npm:2.14.0"
     uuid: "npm:^11.0.3"
