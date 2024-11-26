@@ -18,7 +18,7 @@
 		"electron-store": "^10.0.0",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.2.0",
-		"nanoid": "^5.0.8",
+		"nanoid": "^5.0.9",
 		"plist": "^3.1.0",
 		"semver": "^7.6.3",
 		"strip-ansi": "^7.1.0",
@@ -27,7 +27,7 @@
 	"devDependencies": {
 		"@electron/notarize": "^2.5.0",
 		"@types/plist": "^3.0.5",
-		"electron": "33.2.0",
+		"electron": "33.2.1",
 		"electron-builder": "24.13.3",
 		"electron-reloader": "^1.2.3"
 	},

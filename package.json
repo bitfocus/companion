@@ -1,7 +1,7 @@
 {
   "name": "@companion-app/workspace",
   "version": "3.5.0",
-  "packageManager": "yarn@4.5.1",
+  "packageManager": "yarn@4.5.3",
   "workspaces": [
     "companion",
     "shared-lib",
@@ -41,12 +41,12 @@
     "dotenv": "^16.4.5",
     "octokit": "^4.0.2",
     "open": "^10.1.0",
-    "prettier": "^3.3.3",
+    "prettier": "^3.4.1",
     "typescript": "~5.7.2",
-    "vitest": "^2.1.5",
+    "vitest": "^2.1.6",
     "vitest-mock-extended": "^2.0.2",
     "yaml": "^2.6.1",
-    "zx": "^8.2.2"
+    "zx": "^8.2.4"
   },
   "resolutions": {
     "app-builder-bin": "npm:@julusian/app-builder-bin@4.0.1",
