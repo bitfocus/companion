@@ -111,7 +111,7 @@ export class InternalController {
 
 			// Discover actions to process
 			if (control.supportsActions) {
-				const actions = control.getAllActions()
+				const actions = control.getFlattenedActionInstances()
 
 				for (const action of actions) {
 					if (action.instance === 'internal') {

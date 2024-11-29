@@ -215,7 +215,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	/**
 	 * Get all the actions on this control
 	 */
-	getAllActions(): ActionInstance[]
+	getFlattenedActionInstances(): ActionInstance[]
 
 	/**
 	 * Mark the button as having pending delayed actions

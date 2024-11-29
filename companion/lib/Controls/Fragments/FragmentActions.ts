@@ -536,34 +536,35 @@ export class FragmentActions {
 		return actions
 	}
 
-	// /**
-	//  * Get all the feedback instances
-	//  * @param {string=} onlyConnectionId Optionally, only for a specific connection
-	//  * @returns {Omit<FeedbackInstance, 'children'>[]}
-	//  */
-	// getFlattenedFeedbackInstances(onlyConnectionId) {
-	// 	/** @type {FeedbackInstance[]} */
-	// 	const instances = []
+	/**
+	 * Get all the action instances
+	 * @param onlyConnectionId Optionally, only for a specific connection
+	 * @returns {}
+	 */
+	getFlattenedActionInstances(onlyConnectionId?: string): Omit<ActionInstance, 'children'>[] {
+		const instances: ActionInstance[] = []
 
-	// 	const extractInstances = (/** @type {FeedbackInstance[]} */ feedbacks) => {
-	// 		for (const feedback of feedbacks) {
-	// 			if (!onlyConnectionId || onlyConnectionId === feedback.instance_id) {
-	// 				instances.push({
-	// 					...feedback,
-	// 					children: undefined,
-	// 				})
-	// 			}
+		const extractInstances = (actions: ActionInstance[]) => {
+			for (const action of actions) {
+				if (!onlyConnectionId || onlyConnectionId === action.instance) {
+					instances.push({
+						...action,
+						children: undefined,
+					})
+				}
 
-	// 			if (feedback.children) {
-	// 				extractInstances(feedback.children)
-	// 			}
-	// 		}
-	// 	}
+				if (action.children) {
+					extractInstances(action.children)
+				}
+			}
+		}
 
-	// 	extractInstances(this.#feedbacks.asFeedbackInstances())
+		for (const list of this.#actions.values()) {
+			extractInstances(list.asActionInstances())
+		}
 
-	// 	return instances
-	// }
+		return instances
+	}
 
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation

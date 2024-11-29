@@ -14,6 +14,8 @@ export interface InternalActionDefinition
 	extends SetOptional<Omit<ActionDefinition, 'options'>, 'hasLearn' | 'learnTimeout'> {
 	showButtonPreview?: boolean
 	options: InternalActionInputField[]
+
+	// supportsChildActions?: boolean
 }
 
 export interface ClientActionDefinition extends InternalActionDefinition {}

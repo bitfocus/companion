@@ -281,7 +281,7 @@ export class SocketEventsHandler {
 		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			if (control.supportsActions) {
-				const actions = control.getAllActions()
+				const actions = control.getFlattenedActionInstances()
 
 				for (const action of actions) {
 					if (action.instance == this.connectionId) {

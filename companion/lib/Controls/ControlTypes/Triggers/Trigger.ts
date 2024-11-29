@@ -378,8 +378,8 @@ export class ControlTrigger
 	/**
 	 * Get all the actions on this control
 	 */
-	getAllActions(): ActionInstance[] {
-		return this.actions.getAllActionInstances()
+	getFlattenedActionInstances(): ActionInstance[] {
+		return this.actions.getFlattenedActionInstances()
 	}
 
 	/**

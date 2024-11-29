@@ -185,12 +185,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	/**
 	 * Get all the actions on this control
 	 */
-	getAllActions(): ActionInstance[] {
+	getFlattenedActionInstances(): ActionInstance[] {
 		const actions: ActionInstance[] = []
 
 		for (const step of Object.values(this.steps)) {
 			if (!step) continue
-			actions.push(...step.getAllActionInstances())
+			actions.push(...step.getFlattenedActionInstances())
 		}
 
 		return actions
