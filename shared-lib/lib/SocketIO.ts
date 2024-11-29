@@ -169,19 +169,21 @@ export interface ClientToBackendEventsMap {
 		key: string,
 		val: any
 	) => boolean
-	'controls:action:reorder': (
+	'controls:action:move': (
 		controlId: string,
 		dragStepId: string,
 		dragSetId: string,
 		dragActionId: string,
-		stepId: string,
-		setId: string,
-		dropIndex: number
+		hoverStepId: string,
+		hoverSetId: string,
+		hoverParentId: string | null,
+		hoverIndex: number
 	) => boolean
 	'controls:action:add': (
 		controlId: string,
 		stepId: string,
 		setId: string,
+		parentId: string | null,
 		connectionId: string,
 		actionType: string
 	) => boolean

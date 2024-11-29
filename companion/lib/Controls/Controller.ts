@@ -491,14 +491,14 @@ export class ControlsController extends CoreBase {
 			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
 		})
 
-		client.onPromise('controls:action:add', (controlId, stepId, setId, connectionId, actionId) => {
+		client.onPromise('controls:action:add', (controlId, stepId, setId, parentId, connectionId, actionId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsActions) {
 				const actionItem = this.instance.definitions.createActionItem(connectionId, actionId)
 				if (actionItem) {
-					return control.actionAdd(stepId, setId, actionItem)
+					return control.actionAdd(stepId, setId, actionItem, parentId)
 				} else {
 					return false
 				}
@@ -612,13 +612,21 @@ export class ControlsController extends CoreBase {
 			}
 		})
 		client.onPromise(
-			'controls:action:reorder',
-			(controlId, dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex) => {
+			'controls:action:move',
+			(controlId, dragStepId, dragSetId, dragActionId, hoverStepId, hoverSetId, hoverParentId, hoverIndex) => {
 				const control = this.getControl(controlId)
 				if (!control) return false
 
 				if (control.supportsActions) {
-					return control.actionReorder(dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex)
+					return control.actionMoveTo(
+						dragStepId,
+						dragSetId,
+						dragActionId,
+						hoverStepId,
+						hoverSetId,
+						hoverParentId,
+						hoverIndex
+					)
 				} else {
 					throw new Error(`Control "${controlId}" does not support actions`)
 				}

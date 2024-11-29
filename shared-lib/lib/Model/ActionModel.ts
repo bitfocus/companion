@@ -7,6 +7,8 @@ export interface ActionInstance {
 	delay: number
 	disabled?: boolean
 	upgradeIndex?: number
+
+	children?: ActionInstance[]
 }
 
 export interface ActionStepOptions {

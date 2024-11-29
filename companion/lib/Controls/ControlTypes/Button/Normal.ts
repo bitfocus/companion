@@ -137,10 +137,10 @@ export class ControlButtonNormal
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(stepId: string, setId: string, actionItem: ActionInstance): boolean {
+	actionAdd(stepId: string, setId: string, actionItem: ActionInstance, parentId: string | null): boolean {
 		const step = this.steps[stepId]
 		if (step) {
-			return step.actionAdd(setId, actionItem)
+			return step.actionAdd(setId, actionItem, parentId)
 		} else {
 			return false
 		}
@@ -152,10 +152,10 @@ export class ControlButtonNormal
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(stepId: string, setId: string, newActions: ActionInstance[]): boolean {
+	actionAppend(stepId: string, setId: string, newActions: ActionInstance[], parentId: string | null): boolean {
 		const step = this.steps[stepId]
 		if (step) {
-			return step.actionAppend(setId, newActions)
+			return step.actionAppend(setId, newActions, parentId)
 		} else {
 			return false
 		}
@@ -224,13 +224,14 @@ export class ControlButtonNormal
 	/**
 	 * Reorder an action in the list or move between sets
 	 */
-	actionReorder(
+	actionMoveTo(
 		dragStepId: string,
 		dragSetId: string,
 		dragActionId: string,
-		dropStepId: string,
-		dropSetId: string,
-		dropIndex: number
+		hoverStepId: string,
+		hoverSetId: string,
+		hoverParentId: string | null,
+		hoverIndex: number
 	): boolean {
 		const fromSet = this.steps[dragStepId]?.action_sets?.[dragSetId]
 		const toSet = this.steps[dropStepId]?.action_sets?.[dropSetId]
@@ -517,7 +518,7 @@ export class ControlButtonNormal
 			foundConnectionIds.add(feedback.connectionId)
 		}
 		for (const action of allActions) {
-			foundConnectionIds.add(action.instance)
+			foundConnectionIds.add(action.connectionId)
 		}
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
@@ -755,7 +756,7 @@ export class ControlButtonNormal
 		const stepToCopy = this.steps[stepId]
 		if (!stepToCopy) return false
 
-		const newStep = this.#getNewStepValue(cloneDeep(stepToCopy.action_sets), cloneDeep(stepToCopy.options))
+		const newStep = this.#getNewStepValue(cloneDeep(stepToCopy.asActionStepModel()), cloneDeep(stepToCopy.options))
 
 		// add one after the last
 		const max = Math.max(...existingKeys)
@@ -892,7 +893,7 @@ export class ControlButtonNormal
 		const stepsJson: NormalButtonSteps = {}
 		for (const [id, step] of Object.entries(this.steps)) {
 			stepsJson[id] = {
-				action_sets: step.action_sets,
+				action_sets: step.asActionStepModel(),
 				options: step.options,
 			}
 		}

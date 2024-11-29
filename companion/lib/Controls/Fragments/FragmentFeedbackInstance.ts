@@ -518,7 +518,7 @@ export class FragmentFeedbackInstance {
 	 * Replace portions of the feedback with an updated version
 	 */
 	replaceProps(
-		newProps: Pick<FeedbackInstance, 'id' | 'type' | 'style' | 'options' | 'isInverted'>,
+		newProps: Pick<FeedbackInstance, 'type' | 'style' | 'options' | 'isInverted'>,
 		skipNotifyModule = false
 	): void {
 		this.#data.type = newProps.type // || newProps.feedbackId

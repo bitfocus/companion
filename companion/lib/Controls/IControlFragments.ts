@@ -129,7 +129,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(stepId: string, setId: string, actionItem: ActionInstance): boolean
+	actionAdd(stepId: string, setId: string, actionItem: ActionInstance, parentId: string | null): boolean
 
 	/**
 	 * Append some actions to this button
@@ -137,7 +137,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(stepId: string, setId: string, newActions: ActionInstance[]): boolean
+	actionAppend(stepId: string, setId: string, newActions: ActionInstance[], parentId: string | null): boolean
 
 	/**
 	 * Duplicate an action on this control
@@ -167,13 +167,14 @@ export interface ControlWithActions extends ControlBase<any> {
 	/**
 	 * Reorder an action in the list or move between sets
 	 */
-	actionReorder(
+	actionMoveTo(
 		dragStepId: string,
 		dragSetId: string,
 		dragActionId: string,
-		dropStepId: string,
-		dropSetId: string,
-		dropIndex: number
+		hoverStepId: string,
+		hoverSetId: string,
+		hoverParentId: string | null,
+		hoverIndex: number
 	): boolean
 
 	/**

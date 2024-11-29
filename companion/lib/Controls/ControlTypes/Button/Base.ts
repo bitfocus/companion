@@ -110,12 +110,9 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		// Find all the connections referenced by the button
 		const connectionIds = new Set<string>()
 		for (const step of Object.values(this.steps)) {
-			for (const actions of Object.values(step.action_sets)) {
-				if (!actions) continue
-				for (const action of actions) {
-					if (action.disabled) continue
-					connectionIds.add(action.instance)
-				}
+			for (const action of step.getAllActions()) {
+				if (action.disabled) continue
+				connectionIds.add(action.connectionId)
 			}
 		}
 
@@ -192,10 +189,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		const actions: ActionInstance[] = []
 
 		for (const step of Object.values(this.steps)) {
-			for (const set of Object.values(step.action_sets)) {
-				if (!set) continue
-				actions.push(...set)
-			}
+			if (!step) continue
+			actions.push(...step.getAllActionInstances())
 		}
 
 		return actions

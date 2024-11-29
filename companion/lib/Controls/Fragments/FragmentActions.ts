@@ -1,9 +1,10 @@
-import { cloneDeep } from 'lodash-es'
-import { nanoid } from 'nanoid'
 import LogController, { Logger } from '../../Log/Controller.js'
 import type { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
+import { FragmentActionList } from './FragmentActionList.js'
+import type { FragmentActionInstance } from './FragmentActionInstance.js'
+import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 
 /**
  * Helper for ControlTypes with actions
@@ -29,7 +30,7 @@ export class FragmentActions {
 	/**
 	 * The action-sets on this button
 	 */
-	action_sets: ActionSetsModel = {}
+	#actions: Map<string | number, FragmentActionList> = new Map()
 
 	/**
 	 */
@@ -44,11 +45,13 @@ export class FragmentActions {
 	 * The logger
 	 */
 	readonly #logger: Logger
+	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #internalModule: InternalController
 	readonly #moduleHost: ModuleHost
 	readonly #controlId: string
 
 	constructor(
+		instanceDefinitions: InstanceDefinitions,
 		internalModule: InternalController,
 		moduleHost: ModuleHost,
 		controlId: string,
@@ -56,27 +59,67 @@ export class FragmentActions {
 	) {
 		this.#logger = LogController.createLogger(`Controls/Fragments/Actions/${controlId}`)
 
+		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
+
+		this.#actions.set(0, new FragmentActionList(instanceDefinitions, internalModule, moduleHost, controlId, null))
 
 		this.#controlId = controlId
 		this.#commitChange = commitChange
 	}
 
 	/**
+	 * Initialise from storage
+	 * @param actions
+	 * @param skipSubscribe Whether to skip calling subscribe for the new feedbacks
+	 * @param isCloned Whether this is a cloned instance
+	 */
+	loadStorage(actions: ActionSetsModel, skipSubscribe?: boolean, isCloned?: boolean) {
+		for (const list of this.#actions.values()) {
+			list.cleanup()
+		}
+
+		this.#actions.clear()
+
+		for (const [key, value] of Object.entries(actions)) {
+			if (!value) continue
+
+			const newList = new FragmentActionList(
+				this.#instanceDefinitions,
+				this.#internalModule,
+				this.#moduleHost,
+				this.#controlId,
+				null
+			)
+			newList.loadStorage(value, !!skipSubscribe, !!isCloned)
+			this.#actions.set(key, newList)
+		}
+	}
+
+	/**
 	 * Add an action to this control
 	 */
-	actionAdd(setId: string, actionItem: ActionInstance): boolean {
-		const action_set = this.action_sets[setId]
-		if (!action_set) {
+	actionAdd(setId: string, actionItem: ActionInstance, parentId: string | null): boolean {
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) {
 			// cant implicitly create a set
 			this.#logger.silly(`Missing set ${this.#controlId}:${setId}`)
 			return false
 		}
 
-		action_set.push(actionItem)
+		let newAction: FragmentActionInstance
+		if (parentId) {
+			const parent = actionSet.findById(parentId)
+			if (!parent) throw new Error(`Failed to find parent action ${parentId} when adding child action`)
 
-		this.#actionSubscribe(actionItem)
+			newAction = parent.addChild(actionItem)
+		} else {
+			newAction = actionSet.addAction(actionItem)
+		}
+
+		// Inform relevant module
+		newAction.subscribe(true)
 
 		this.#commitChange(false)
 		return true
@@ -87,20 +130,32 @@ export class FragmentActions {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(setId: string, newActions: ActionInstance[]): boolean {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			// Add new actions
-			for (const action of newActions) {
-				action_set.push(action)
-
-				this.#actionSubscribe(action)
-			}
-
-			this.#commitChange(false)
-
-			return true
+	actionAppend(setId: string, newActions: ActionInstance[], parentId: string | null): boolean {
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) {
+			// cant implicitly create a set
+			this.#logger.silly(`Missing set ${this.#controlId}:${setId}`)
+			return false
 		}
+
+		if (newActions.length === 0) return true
+
+		let newActionInstances: FragmentActionInstance[]
+		if (parentId) {
+			const parent = actionSet.findById(parentId)
+			if (!parent) throw new Error(`Failed to find parent action ${parentId} when adding child action`)
+
+			newActionInstances = newActions.map((actionItem) => parent.addChild(actionItem))
+		} else {
+			newActionInstances = newActions.map((actionItem) => actionSet.addAction(actionItem))
+		}
+
+		for (const action of newActionInstances) {
+			// Inform relevant module
+			action.subscribe(true)
+		}
+
+		this.#commitChange(false)
 
 		return false
 	}
@@ -109,18 +164,12 @@ export class FragmentActions {
 	 * Clear/remove all the actions in a set on this control
 	 */
 	actionClearSet(setId: string, skipCommit = false): boolean {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			for (const action of action_set) {
-				this.cleanupAction(action)
-			}
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-			this.action_sets[setId] = []
+		actionSet.cleanup()
 
-			if (!skipCommit) this.#commitChange()
-
-			return true
-		}
+		if (!skipCommit) this.#commitChange()
 
 		return false
 	}
@@ -129,73 +178,49 @@ export class FragmentActions {
 	 * Duplicate an action on this control
 	 */
 	actionDuplicate(setId: string, id: string): string | null {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			const index = action_set.findIndex((act) => act.id === id)
-			if (index !== -1) {
-				const actionItem = cloneDeep(action_set[index])
-				actionItem.id = nanoid()
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return null
 
-				action_set.splice(index + 1, 0, actionItem)
+		const newAction = actionSet.duplicateAction(id)
+		if (!newAction) return null
 
-				this.#actionSubscribe(actionItem)
+		this.#commitChange(false)
 
-				this.#commitChange(false)
-
-				return actionItem.id
-			}
-		}
-
-		return null
+		return newAction.id
 	}
 
 	/**
 	 * Enable or disable an action
 	 */
 	actionEnabled(setId: string, id: string, enabled: boolean): boolean {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			for (const action of action_set) {
-				if (action && action.id === id) {
-					if (!action.options) action.options = {}
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-					action.disabled = !enabled
+		const action = actionSet.findById(id)
+		if (!action) return false
 
-					// Inform relevant module
-					if (!action.disabled) {
-						this.#actionSubscribe(action)
-					} else {
-						this.cleanupAction(action)
-					}
+		action.setEnabled(enabled)
 
-					this.#commitChange(false)
+		this.#commitChange(false)
 
-					return true
-				}
-			}
-		}
-
-		return false
+		return true
 	}
 
 	/**
 	 * Set action headline
 	 */
 	actionHeadline(setId: string, id: string, headline: string): boolean {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			for (const action of action_set) {
-				if (action && action.id === id) {
-					action.headline = headline
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-					this.#commitChange(false)
+		const action = actionSet.findById(id)
+		if (!action) return false
 
-					return true
-				}
-			}
-		}
+		action.setHeadline(headline)
 
-		return false
+		this.#commitChange(false)
+
+		return true
 	}
 
 	/**
@@ -204,27 +229,22 @@ export class FragmentActions {
 	 * @param id the id of the action
 	 */
 	async actionLearn(setId: string, id: string): Promise<boolean> {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			const action = action_set.find((act) => act.id === id)
-			if (action) {
-				const instance = this.#moduleHost.getChild(action.instance)
-				if (instance) {
-					const newOptions = await instance.actionLearnValues(action, this.#controlId)
-					if (newOptions) {
-						const newAction: ActionInstance = {
-							...action,
-							options: newOptions,
-						}
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-						// It may not still exist, so do a replace through the usual flow
-						return this.actionReplace(newAction)
-					}
-				}
-			}
-		}
+		const action = actionSet.findById(id)
+		if (!action) return false
 
-		return false
+		const changed = await action.learnOptions()
+		if (!changed) return false
+
+		// Time has passed due to the `await`
+		// So the action may not still exist, meaning we should find it again to be sure
+		const actionAfter = actionSet.findById(id)
+		if (!actionAfter) return false
+
+		this.#commitChange(true)
+		return true
 	}
 
 	/**
@@ -233,53 +253,68 @@ export class FragmentActions {
 	 * @param id the id of the action
 	 */
 	actionRemove(setId: string, id: string): boolean {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			const index = action_set.findIndex((act) => act.id === id)
-			if (index !== -1) {
-				const action = action_set[index]
-				action_set.splice(index, 1)
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-				this.cleanupAction(action)
+		if (!actionSet.removeAction(id)) return false
 
-				this.#commitChange(false)
+		this.#commitChange(false)
 
-				return true
-			}
-		}
-
-		return false
+		return true
 	}
 
 	/**
 	 * Replace a action with an updated version
 	 */
 	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
-		for (const action_set of Object.values(this.action_sets)) {
-			if (!action_set) continue
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-			for (const action of action_set) {
-				// Replace the new action in place
-				if (action.id === newProps.id) {
-					action.action = newProps.action // || newProps.actionId nocommit
-					action.options = newProps.options
+		const action = actionSet.findById(newProps.id)
+		if (!action) return false
 
-					delete action.upgradeIndex
+		action.replaceProps(newProps, skipNotifyModule)
 
-					// Inform relevant module
-					if (!skipNotifyModule) {
-						this.#actionSubscribe(action)
-					}
+		this.#commitChange(false)
 
-					this.#commitChange(false)
-
-					return true
-				}
-			}
-		}
-
-		return false
+		return true
 	}
+
+	// 	/**
+	// 	 * Move a feedback within the heirarchy
+	// 	 * @param {string } moveFeedbackId the id of the feedback to move
+	// 	 * @param {string | null} newParentId the target parentId of the feedback
+	// 	 * @param {number} newIndex the target index of the feedback
+	// 	 * @returns {boolean}
+	// 	 * @access public
+	// 	 */
+	// 	feedbackMoveTo(moveFeedbackId, newParentId, newIndex) {
+	// 		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
+	// 		if (!oldItem) return false
+
+	// 		if (oldItem.parent.id === newParentId) {
+	// 			oldItem.parent.moveFeedback(oldItem.index, newIndex)
+	// 		} else {
+	// 			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
+	// 			if (newParentId && !newParent) return false
+
+	// 			// Check if the new parent can hold the feedback being moved
+	// 			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
+
+	// 			const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
+	// 			if (!poppedFeedback) return false
+
+	// 			if (newParent) {
+	// 				newParent.pushChild(poppedFeedback, newIndex)
+	// 			} else {
+	// 				this.#feedbacks.pushFeedback(poppedFeedback, newIndex)
+	// 			}
+	// 		}
+
+	// 		this.#commitChange()
+
+	// 		return true
+	// }
 
 	/**
 	 * Replace all the actions in a set
@@ -287,29 +322,14 @@ export class FragmentActions {
 	 * @param newActions actions to populate
 	 */
 	actionReplaceAll(setId: string, newActions: ActionInstance[]): boolean {
-		const oldActionSet = this.action_sets[setId]
-		if (oldActionSet) {
-			// Remove the old actions
-			for (const action of oldActionSet) {
-				this.cleanupAction(action)
-			}
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-			const newActionSet: ActionInstance[] = []
-			this.action_sets[setId] = newActionSet
+		actionSet.loadStorage(newActions, false, false)
 
-			// Add new actions
-			for (const action of newActions) {
-				newActionSet.push(action)
+		this.#commitChange(false)
 
-				this.#actionSubscribe(action)
-			}
-
-			this.#commitChange(false)
-
-			return true
-		}
-
-		return false
+		return true
 	}
 
 	/**
@@ -320,25 +340,18 @@ export class FragmentActions {
 	 */
 	actionSetConnection(setId: string, id: string, connectionId: string): boolean {
 		if (connectionId == '') return false
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			for (const action of action_set) {
-				if (action && action.id === id) {
-					// remove action from old instance
-					this.cleanupAction(action)
-					// change instance
-					action.instance = connectionId
-					// subscribe action at new instance
-					this.#actionSubscribe(action)
 
-					this.#commitChange(false)
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-					return true
-				}
-			}
-		}
+		const action = actionSet.findById(id)
+		if (!action) return false
 
-		return false
+		action.setInstance(connectionId)
+
+		this.#commitChange()
+
+		return true
 	}
 
 	/**
@@ -348,23 +361,17 @@ export class FragmentActions {
 	 * @param delay the desired delay
 	 */
 	actionSetDelay(setId: string, id: string, delay: number): boolean {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			for (const action of action_set) {
-				if (action && action.id === id) {
-					delay = Number(delay)
-					if (isNaN(delay)) delay = 0
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-					action.delay = delay
+		const action = actionSet.findById(id)
+		if (!action) return false
 
-					this.#commitChange(false)
+		action.setDelay(delay)
 
-					return true
-				}
-			}
-		}
+		this.#commitChange(false)
 
-		return false
+		return true
 	}
 
 	/**
@@ -375,52 +382,17 @@ export class FragmentActions {
 	 * @param value the new value of the option
 	 */
 	actionSetOption(setId: string, id: string, key: string, value: any): boolean {
-		const action_set = this.action_sets[setId]
-		if (action_set) {
-			for (const action of action_set) {
-				if (action && action.id === id) {
-					if (!action.options) action.options = {}
+		const actionSet = this.#actions.get(setId)
+		if (!actionSet) return false
 
-					action.options[key] = value
+		const action = actionSet.findById(id)
+		if (!action) return false
 
-					// Inform relevant module
-					this.#actionSubscribe(action)
+		action.setOption(key, value)
 
-					this.#commitChange(false)
+		this.#commitChange(false)
 
-					return true
-				}
-			}
-		}
-
-		return false
-	}
-
-	/**
-	 * Inform the instance of an updated action
-	 */
-	#actionSubscribe(action: ActionInstance): void {
-		if (!action.disabled) {
-			const instance = this.#moduleHost.getChild(action.instance, true)
-			if (instance) {
-				instance.actionUpdate(action, this.#controlId).catch((e) => {
-					this.#logger.silly(`action_update to connection failed: ${e.message}`)
-				})
-			}
-		}
-	}
-
-	/**
-	 * Inform the instance of a removed action
-	 */
-	cleanupAction(action: ActionInstance): void {
-		// Inform relevant module
-		const instance = this.#moduleHost.getChild(action.instance, true)
-		if (instance) {
-			instance.actionDelete(action).catch((e) => {
-				this.#logger.silly(`action_delete to connection failed: ${e.message}`)
-			})
-		}
+		return true
 	}
 
 	/**
@@ -428,13 +400,11 @@ export class FragmentActions {
 	 */
 	destroy(): void {
 		// Inform modules of action cleanup
-		for (const action_set of Object.values(this.action_sets)) {
-			if (!action_set) continue
-
-			for (const action of action_set) {
-				this.cleanupAction(action)
-			}
+		for (const list of this.#actions.values()) {
+			list.cleanup()
 		}
+
+		this.#actions.clear()
 	}
 
 	/**
@@ -443,21 +413,10 @@ export class FragmentActions {
 	forgetConnection(connectionId: string): boolean {
 		let changed = false
 
-		// Cleanup any actions
-		for (const [setId, action_set] of Object.entries(this.action_sets)) {
-			if (!action_set) continue
-
-			const newActions = []
-			for (const action of action_set) {
-				if (action.instance === connectionId) {
-					this.cleanupAction(action)
-					changed = true
-				} else {
-					newActions.push(action)
-				}
+		for (const list of this.#actions.values()) {
+			if (list.forgetForConnection(connectionId)) {
+				changed = true
 			}
-
-			this.action_sets[setId] = newActions
 		}
 
 		return changed
@@ -466,46 +425,65 @@ export class FragmentActions {
 	/**
 	 * Get all the actions contained here
 	 */
-	getAllActions(): ActionInstance[] {
-		const actions: ActionInstance[] = []
+	getAllActionInstances(): ActionInstance[] {
+		return Array.from(this.#actions.values()).flatMap((list) => list.asActionInstances())
+	}
 
-		for (const action_set of Object.values(this.action_sets)) {
-			if (!action_set) continue
-			actions.push(...action_set)
+	/**
+	 * Get all the actions contained here
+	 */
+	getAllActions(): FragmentActionInstance[] {
+		return Array.from(this.#actions.values()).flatMap((list) => list.getAllActions())
+	}
+
+	asActionStepModel(): ActionSetsModel {
+		const actions: ActionSetsModel = {}
+
+		for (const [key, list] of this.#actions) {
+			actions[key] = list.asActionInstances()
 		}
 
 		return actions
 	}
 
+	// /**
+	//  * Get all the feedback instances
+	//  * @param {string=} onlyConnectionId Optionally, only for a specific connection
+	//  * @returns {Omit<FeedbackInstance, 'children'>[]}
+	//  */
+	// getFlattenedFeedbackInstances(onlyConnectionId) {
+	// 	/** @type {FeedbackInstance[]} */
+	// 	const instances = []
+
+	// 	const extractInstances = (/** @type {FeedbackInstance[]} */ feedbacks) => {
+	// 		for (const feedback of feedbacks) {
+	// 			if (!onlyConnectionId || onlyConnectionId === feedback.instance_id) {
+	// 				instances.push({
+	// 					...feedback,
+	// 					children: undefined,
+	// 				})
+	// 			}
+
+	// 			if (feedback.children) {
+	// 				extractInstances(feedback.children)
+	// 			}
+	// 		}
+	// 	}
+
+	// 	extractInstances(this.#feedbacks.asFeedbackInstances())
+
+	// 	return instances
+	// }
+
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	async postProcessImport(): Promise<void> {
-		const ps: Promise<any>[] = []
-
-		for (const action_set of Object.values(this.action_sets)) {
-			if (!action_set) continue
-			for (let i = 0; i < action_set.length; i++) {
-				const action = action_set[i]
-				action.id = nanoid()
-
-				if (action.instance === 'internal') {
-					const newAction = this.#internalModule.actionUpgrade(action, this.#controlId)
-					if (newAction) {
-						action_set[i] = newAction
-					}
-				} else {
-					const instance = this.#moduleHost.getChild(action.instance, true)
-					if (instance) {
-						ps.push(instance.actionUpdate(action, this.#controlId))
-					}
-				}
+		await Promise.all(Array.from(this.#actions.values()).flatMap((actionSet) => actionSet.postProcessImport())).catch(
+			(e) => {
+				this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
 			}
-		}
-
-		await Promise.all(ps).catch((e) => {
-			this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
-		})
+		)
 	}
 
 	/**
@@ -516,15 +494,10 @@ export class FragmentActions {
 	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
 		let changed = false
 
-		// Clean out actions
-		for (const [setId, existing_set] of Object.entries(this.action_sets)) {
-			if (!existing_set) continue
-
-			const lengthBefore = existing_set.length
-			const filtered_set = (this.action_sets[setId] = existing_set.filter(
-				(action) => !!action && knownConnectionIds.has(action.instance)
-			))
-			changed = changed || filtered_set.length !== lengthBefore
+		for (const list of this.#actions.values()) {
+			if (list.verifyConnectionIds(knownConnectionIds)) {
+				changed = true
+			}
 		}
 
 		return changed

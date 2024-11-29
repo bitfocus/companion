@@ -156,6 +156,7 @@ export class ControlTrigger
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
 		this.actions = new FragmentActions(
+			deps.instance.definitions,
 			deps.internalModule,
 			deps.instance.moduleHost,
 			controlId,
@@ -177,9 +178,6 @@ export class ControlTrigger
 		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this))
 
 		this.options = cloneDeep(ControlTrigger.DefaultOptions)
-		this.actions.action_sets = {
-			0: [],
-		}
 		this.events = []
 
 		if (!storage) {
@@ -193,7 +191,7 @@ export class ControlTrigger
 			if (storage.type !== 'trigger') throw new Error(`Invalid type given to ControlTriggerInterval: "${storage.type}"`)
 
 			this.options = storage.options || this.options
-			this.actions.action_sets = storage.action_sets || this.actions.action_sets
+			this.actions.loadStorage(storage.action_sets || {}, true, isImport)
 			this.feedbacks.loadStorage(storage.condition || [], true, isImport)
 			this.events = storage.events || this.events
 
@@ -209,15 +207,15 @@ export class ControlTrigger
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance): boolean {
-		return this.actions.actionAdd('0', actionItem)
+	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance, parentId: string | null): boolean {
+		return this.actions.actionAdd('0', actionItem, parentId)
 	}
 
 	/**
 	 * Append some actions to this button
 	 */
-	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[]): boolean {
-		return this.actions.actionAppend('0', newActions)
+	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[], parentId: string | null): boolean {
+		return this.actions.actionAppend('0', newActions, parentId)
 	}
 
 	/**
@@ -299,13 +297,14 @@ export class ControlTrigger
 	 * @param _dropSetId the target action_set of the action
 	 * @param dropIndex the target index of the action
 	 */
-	actionReorder(
+	actionMoveTo(
 		_dragStepId: string,
 		_dragSetId: string,
 		dragActionId: string,
-		_dropStepId: string,
-		_dropSetId: string,
-		dropIndex: number
+		_hoverStepId: string,
+		_hoverSetId: string,
+		hoverParentId: string | null,
+		hoverIndex: number
 	): boolean {
 		const set = this.actions.action_sets['0']
 		if (set) {
@@ -368,13 +367,7 @@ export class ControlTrigger
 	 * Get all the actions on this control
 	 */
 	getAllActions(): ActionInstance[] {
-		const actions: ActionInstance[] = []
-
-		for (const set of Object.values(this.actions.action_sets)) {
-			if (set) actions.push(...set)
-		}
-
-		return actions
+		return this.actions.getAllActionInstances()
 	}
 
 	/**
@@ -390,7 +383,7 @@ export class ControlTrigger
 			foundConnectionIds.add(feedback.connectionId)
 		}
 		for (const action of allActions) {
-			foundConnectionIds.add(action.instance)
+			foundConnectionIds.add(action.connectionId)
 		}
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
