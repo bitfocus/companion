@@ -40,21 +40,27 @@ export function useControlActionsEditorService(
 		() => ({
 			addAction: (actionType: string) => {
 				const [connectionId, actionId] = actionType.split(':', 2)
-				socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId + '', connectionId, actionId]).catch(
-					(e) => {
-						console.error('Failed to add control action', e)
-					}
-				)
+				socketEmitPromise(socket, 'controls:action:add', [
+					controlId,
+					stepId,
+					setId + '',
+					null, // TODO - parentId
+					connectionId,
+					actionId,
+				]).catch((e) => {
+					console.error('Failed to add control action', e)
+				})
 			},
 
 			moveCard: (dragStepId: string, dragSetId: string | number, dragActionId: string, dropIndex: number) => {
-				socketEmitPromise(socket, 'controls:action:reorder', [
+				socketEmitPromise(socket, 'controls:action:move', [
 					controlId,
 					dragStepId,
 					dragSetId + '',
 					dragActionId,
 					stepId,
 					setId + '',
+					null, // TODO - hoverParentId
 					dropIndex,
 				]).catch((e) => {
 					console.error('Failed to reorder control actions', e)
