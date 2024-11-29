@@ -72,7 +72,6 @@ export const EmulatorList = observer(function EmulatorList() {
 
 						{emulators.length === 0 && (
 							<CCol sm={4}>
-								nocommit: change this
 								<CWidgetStatsA title="No Emulators have been created">
 									You can create one in the Surfaces tab
 								</CWidgetStatsA>

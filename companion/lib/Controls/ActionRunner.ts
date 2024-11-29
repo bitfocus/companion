@@ -105,8 +105,6 @@ export class ActionRunner extends CoreBase {
 	 * Run a single action
 	 */
 	#runAction(action: FragmentActionInstance, extras: RunActionExtras): void {
-		// nocommit TODO - execute children
-
 		if (action.connectionId === 'internal') {
 			this.internalModule.executeAction(action.asActionInstance(), extras)
 		} else {
