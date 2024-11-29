@@ -391,19 +391,7 @@ export class ControlButtonNormal
 			// Only valid when both are numbers
 			if (isNaN(newSetId) || isNaN(oldSetId)) return false
 
-			// Ensure old set exists
-			if (!step.action_sets[oldSetId]) return false
-
-			// Ensure new set doesnt already exist
-			if (step.action_sets[newSetId]) return false
-
-			step.action_sets[newSetId] = step.action_sets[oldSetId]
-			delete step.action_sets[oldSetId]
-
-			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(Number(oldSetId))
-			if (runWhileHeldIndex !== -1) {
-				step.options.runWhileHeld[runWhileHeldIndex] = Number(newSetId)
-			}
+			if (!step.actionSetRename(oldSetId, newSetId)) return false
 
 			this.commitChange(false)
 
@@ -489,6 +477,7 @@ export class ControlButtonNormal
 		}
 
 		const actions = new FragmentActions(
+			this.deps.instance.definitions,
 			this.deps.internalModule,
 			this.deps.instance.moduleHost,
 			this.controlId,
@@ -496,7 +485,7 @@ export class ControlButtonNormal
 		)
 
 		actions.options = options
-		actions.action_sets = action_sets
+		actions.loadStorage(action_sets, true, !!existingActions)
 
 		return actions
 	}
@@ -527,8 +516,9 @@ export class ControlButtonNormal
 			this.deps.internalModule,
 			visitor,
 			this.feedbacks.baseStyle,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			[]
 		)
@@ -634,13 +624,18 @@ export class ControlButtonNormal
 				}
 
 				const runActionSet = (set_id: string | number): void => {
-					const actions = step.action_sets[set_id]
+					const actions = step.getActionSet(set_id)
 					if (actions) {
 						this.logger.silly('found actions')
 
-						this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
-							surfaceId,
-						})
+						this.deps.actionRunner.runMultipleActions(
+							actions.getAllActions(),
+							this.controlId,
+							this.options.relativeDelay,
+							{
+								surfaceId,
+							}
+						)
 					}
 				}
 
@@ -681,13 +676,11 @@ export class ControlButtonNormal
 		if (step) {
 			const action_set_id = direction ? 'rotate_right' : 'rotate_left'
 
-			const actions = step.action_sets[action_set_id]
+			const actions = step.getActionSet(action_set_id)
 			if (actions) {
 				this.logger.silly('found actions')
 
-				const enabledActions = actions.filter((act) => !act.disabled)
-
-				this.deps.actionRunner.runMultipleActions(enabledActions, this.controlId, this.options.relativeDelay, {
+				this.deps.actionRunner.runMultipleActions(actions.getAllActions(), this.controlId, this.options.relativeDelay, {
 					surfaceId,
 				})
 			}

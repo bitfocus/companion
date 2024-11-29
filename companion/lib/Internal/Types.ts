@@ -25,6 +25,15 @@ export interface FeedbackForVisitor {
 	options: CompanionOptionValues
 }
 
+/**
+ * A minimal representation of a action, for visiting internal actions.
+ */
+export interface ActionForVisitor {
+	id: string
+	action: string
+	options: CompanionOptionValues
+}
+
 export interface InternalModuleFragment {
 	getActionDefinitions?: () => Record<string, InternalActionDefinition>
 
@@ -54,7 +63,7 @@ export interface InternalModuleFragment {
 	/**
 	 *
 	 */
-	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]): void
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void
 
 	getVariableDefinitions?: () => VariableDefinitionTmp[]
 	updateVariables?: () => void

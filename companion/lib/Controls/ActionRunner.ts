@@ -1,8 +1,8 @@
 import { CoreBase } from '../Core/Base.js'
 import type { Registry } from '../Registry.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { FragmentActionInstance } from './Fragments/FragmentActionInstance.js'
 
 /**
  * Class to handle execution of actions.
@@ -104,13 +104,15 @@ export class ActionRunner extends CoreBase {
 	/**
 	 * Run a single action
 	 */
-	#runAction(action: ActionInstance, extras: RunActionExtras): void {
-		if (action.instance === 'internal') {
-			this.internalModule.executeAction(action, extras)
+	#runAction(action: FragmentActionInstance, extras: RunActionExtras): void {
+		// nocommit TODO - execute children
+
+		if (action.connectionId === 'internal') {
+			this.internalModule.executeAction(action.asActionInstance(), extras)
 		} else {
-			const instance = this.instance.moduleHost.getChild(action.instance)
+			const instance = this.instance.moduleHost.getChild(action.connectionId)
 			if (instance) {
-				instance.actionRun(action, extras).catch((e) => {
+				instance.actionRun(action.asActionInstance(), extras).catch((e) => {
 					this.logger.silly(`Error executing action for ${instance.connectionId}: ${e.message ?? e}`)
 				})
 			} else {
@@ -133,7 +135,7 @@ export class ActionRunner extends CoreBase {
 	 * Run multiple actions
 	 */
 	runMultipleActions(
-		actions0: ActionInstance[],
+		actions0: FragmentActionInstance[],
 		controlId: string,
 		relative_delay: boolean,
 		extras: Omit<RunActionExtras, 'controlId' | 'location'>
@@ -148,15 +150,12 @@ export class ActionRunner extends CoreBase {
 		const effective_delays: Record<string, number> = {}
 		let tmp_delay = 0
 		for (const action of actions) {
-			let this_delay = !action.delay ? 0 : Number(action.delay)
-			if (isNaN(this_delay)) this_delay = 0
-
 			if (relative_delay) {
 				// Relative delay: each action's delay adds to the next.
-				tmp_delay += this_delay
+				tmp_delay += action.delay
 			} else {
 				// Absolute delay: each delay is its own.
-				tmp_delay = this_delay
+				tmp_delay = action.delay
 			}
 
 			// Create the property .effective_delay. Don't change the user's .delay property.

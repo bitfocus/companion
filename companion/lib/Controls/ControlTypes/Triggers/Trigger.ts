@@ -306,21 +306,23 @@ export class ControlTrigger
 		hoverParentId: string | null,
 		hoverIndex: number
 	): boolean {
-		const set = this.actions.action_sets['0']
-		if (set) {
-			const dragIndex = set.findIndex((a) => a.id === dragActionId)
-			if (dragIndex === -1) return false
+		return this.actions.actionMoveTo('0', dragActionId, '0', hoverParentId, hoverIndex)
 
-			dropIndex = clamp(dropIndex, 0, set.length)
+		// const actions = this.actions.getActionSet('0')
+		// if (!actions) return false
 
-			set.splice(dropIndex, 0, ...set.splice(dragIndex, 1))
+		// actions.moveAction(dragActionId, hoverParentId, hoverIndex)
 
-			this.commitChange(false)
+		// const dragIndex = set.findIndex((a) => a.id === dragActionId)
+		// if (dragIndex === -1) return false
 
-			return true
-		}
+		// dropIndex = clamp(dropIndex, 0, set.length)
 
-		return false
+		// set.splice(dropIndex, 0, ...set.splice(dragIndex, 1))
+
+		// this.commitChange(false)
+
+		// return true
 	}
 
 	/**
@@ -353,11 +355,11 @@ export class ControlTrigger
 			this.#sendTriggerJsonChange()
 		}
 
-		const actions = this.actions.action_sets['0']
+		const actions = this.actions.getActionSet('0')
 		if (actions) {
 			this.logger.silly('found actions')
 
-			this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
+			this.deps.actionRunner.runMultipleActions(actions.getAllActions(), this.controlId, this.options.relativeDelay, {
 				surfaceId: this.controlId,
 			})
 		}
@@ -392,8 +394,9 @@ export class ControlTrigger
 			this.deps.internalModule,
 			visitor,
 			undefined,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			this.events
 		)
@@ -415,7 +418,7 @@ export class ControlTrigger
 		const obj: TriggerModel = {
 			type: this.type,
 			options: this.options,
-			action_sets: this.actions.action_sets,
+			action_sets: this.actions.asActionStepModel(),
 			condition: this.feedbacks.getAllFeedbackInstances(),
 			events: this.events,
 		}
@@ -523,8 +526,9 @@ export class ControlTrigger
 			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			this.events,
 			true

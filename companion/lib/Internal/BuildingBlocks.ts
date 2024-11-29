@@ -17,8 +17,7 @@
 
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import LogController from '../Log/Controller.js'
-import type { FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionForVisitor, FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
 import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
@@ -96,7 +95,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
 }

@@ -1089,6 +1089,7 @@ export class ImportExportController {
 			allActions,
 			result.condition || [],
 			[],
+			[],
 			result.events || [],
 			false
 		)
@@ -1181,6 +1182,7 @@ export class ImportExportController {
 			result.style,
 			allActions,
 			result.feedbacks || [],
+			[],
 			[],
 			[],
 			false

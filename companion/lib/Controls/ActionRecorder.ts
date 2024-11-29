@@ -395,7 +395,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 		if (mode === 'append') {
 			if (control.supportsActions) {
-				if (!control.actionAppend(stepId, setId, this.#currentSession.actions)) throw new Error('Unknown set')
+				if (!control.actionAppend(stepId, setId, this.#currentSession.actions, null)) throw new Error('Unknown set')
 			} else {
 				throw new Error('Not supported by control')
 			}

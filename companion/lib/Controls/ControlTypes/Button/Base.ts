@@ -325,8 +325,9 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			this.feedbacks.baseStyle,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			[],
 			true

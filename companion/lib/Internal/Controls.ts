@@ -26,6 +26,7 @@ import type {
 	InternalModuleFragment,
 	InternalVisitor,
 	ExecuteFeedbackResultWithReferences,
+	ActionForVisitor,
 } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { InternalController } from './Controller.js'
@@ -1130,7 +1131,7 @@ export class InternalControls implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		for (const action of actions) {
 			try {
 				// any expression/variables fields are handled by generic options visitor

@@ -18,7 +18,13 @@
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
 import { cloneDeep } from 'lodash-es'
 import { ParseInternalControlReference } from './Util.js'
-import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	ActionForVisitor,
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { FragmentFeedbackInstance } from '../Controls/Fragments/FragmentFeedbackInstance.js'
@@ -34,6 +40,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { PageController } from '../Page/Controller.js'
 import LogController from '../Log/Controller.js'
+import type { FragmentActionInstance } from '../Controls/Fragments/FragmentActionInstance.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -263,13 +270,12 @@ export class InternalController {
 	 */
 	visitReferences(
 		visitor: InternalVisitor,
-		actions: ActionInstance[],
+		rawActions: ActionInstance[],
+		actions: FragmentActionInstance[],
 		rawFeedbacks: FeedbackInstance[],
 		feedbacks: FragmentFeedbackInstance[]
 	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-
-		const internalActions = actions.filter((a) => a.instance === 'internal')
 
 		const simpleInternalFeedbacks: FeedbackForVisitor[] = []
 
@@ -287,9 +293,24 @@ export class InternalController {
 			})
 		}
 
+		const simpleInternalActions: ActionForVisitor[] = []
+		for (const action of rawActions) {
+			if (action.instance !== 'internal') continue
+			simpleInternalActions.push(action)
+		}
+		for (const action of actions) {
+			if (action.connectionId !== 'internal') continue
+			const actionInstance = action.asActionInstance()
+			simpleInternalActions.push({
+				id: actionInstance.id,
+				action: actionInstance.action,
+				options: action.rawOptions, // Ensure the options is not a copy/clone
+			})
+		}
+
 		for (const fragment of this.#fragments) {
 			if ('visitReferences' in fragment && typeof fragment.visitReferences === 'function') {
-				fragment.visitReferences(visitor, internalActions, simpleInternalFeedbacks)
+				fragment.visitReferences(visitor, simpleInternalActions, simpleInternalFeedbacks)
 			}
 		}
 	}

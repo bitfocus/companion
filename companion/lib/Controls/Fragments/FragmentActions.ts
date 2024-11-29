@@ -125,6 +125,29 @@ export class FragmentActions {
 		return true
 	}
 
+	getActionSet(setId: string | number): FragmentActionList | undefined {
+		return this.#actions.get(setId)
+	}
+
+	actionSetRename(oldSetId: number, newSetId: number): boolean {
+		// Ensure old set exists
+		const oldSet = this.#actions.get(oldSetId)
+		if (!oldSet) return false
+
+		// Ensure new set doesnt already exist
+		if (this.#actions.has(newSetId)) return false
+
+		this.#actions.set(newSetId, oldSet)
+		this.#actions.delete(oldSetId)
+
+		const runWhileHeldIndex = this.options.runWhileHeld.indexOf(Number(oldSetId))
+		if (runWhileHeldIndex !== -1) {
+			this.options.runWhileHeld[runWhileHeldIndex] = Number(newSetId)
+		}
+
+		return true
+	}
+
 	/**
 	 * Append some actions to this button
 	 * @param setId the action_set id to update
@@ -280,41 +303,39 @@ export class FragmentActions {
 		return true
 	}
 
-	// 	/**
-	// 	 * Move a feedback within the heirarchy
-	// 	 * @param {string } moveFeedbackId the id of the feedback to move
-	// 	 * @param {string | null} newParentId the target parentId of the feedback
-	// 	 * @param {number} newIndex the target index of the feedback
-	// 	 * @returns {boolean}
-	// 	 * @access public
-	// 	 */
-	// 	feedbackMoveTo(moveFeedbackId, newParentId, newIndex) {
-	// 		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
-	// 		if (!oldItem) return false
-
-	// 		if (oldItem.parent.id === newParentId) {
-	// 			oldItem.parent.moveFeedback(oldItem.index, newIndex)
-	// 		} else {
-	// 			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
-	// 			if (newParentId && !newParent) return false
-
-	// 			// Check if the new parent can hold the feedback being moved
-	// 			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
-
-	// 			const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
-	// 			if (!poppedFeedback) return false
-
-	// 			if (newParent) {
-	// 				newParent.pushChild(poppedFeedback, newIndex)
-	// 			} else {
-	// 				this.#feedbacks.pushFeedback(poppedFeedback, newIndex)
-	// 			}
-	// 		}
-
-	// 		this.#commitChange()
-
-	// 		return true
-	// }
+	/**
+	 * Move an action within the heirarchy
+	 * @param moveActionId the id of the action to move
+	 * @param newParentId the target parentId of the action
+	 * @param newIndex the target index of the action
+	 */
+	actionMoveTo(
+		fromSetId: string,
+		moveActionId: string,
+		newSetId: string,
+		newParentId: string | null,
+		newIndex: number
+	): boolean {
+		// 		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
+		// 		if (!oldItem) return false
+		// 		if (oldItem.parent.id === newParentId) {
+		// 			oldItem.parent.moveFeedback(oldItem.index, newIndex)
+		// 		} else {
+		// 			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
+		// 			if (newParentId && !newParent) return false
+		// 			// Check if the new parent can hold the feedback being moved
+		// 			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
+		// 			const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
+		// 			if (!poppedFeedback) return false
+		// 			if (newParent) {
+		// 				newParent.pushChild(poppedFeedback, newIndex)
+		// 			} else {
+		// 				this.#feedbacks.pushFeedback(poppedFeedback, newIndex)
+		// 			}
+		// 		}
+		// 		this.#commitChange()
+		// 		return true
+	}
 
 	/**
 	 * Replace all the actions in a set

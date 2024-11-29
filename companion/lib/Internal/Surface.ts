@@ -19,7 +19,13 @@ import { combineRgb, CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
-import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	ActionForVisitor,
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
 import type { InternalController } from './Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
@@ -657,7 +663,7 @@ export class InternalSurface implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// actions page_variable handled by generic options visitor
 		// actions controller_variable handled by generic options visitor
 	}

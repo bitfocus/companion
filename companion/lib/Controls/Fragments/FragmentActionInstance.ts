@@ -8,6 +8,7 @@ import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import { visitActionInstance } from '../../Resources/Visitors/ActionInstanceVisitor.js'
 
 export class FragmentActionInstance {
 	/**
@@ -37,6 +38,11 @@ export class FragmentActionInstance {
 
 	get disabled(): boolean {
 		return !!this.#data.disabled
+	}
+
+	get delay(): number {
+		if (isNaN(this.#data.delay) || this.#data.delay < 0) return 0
+		return this.#data.delay || 0
 	}
 
 	/**
@@ -378,7 +384,6 @@ export class FragmentActionInstance {
 	 * Visit any references in the current action
 	 */
 	visitReferences(visitor: InternalVisitor): void {
-		// visitActionInstance(visitor, this.#data)
-		// nocommit - does this need anything?
+		visitActionInstance(visitor, this.#data)
 	}
 }
