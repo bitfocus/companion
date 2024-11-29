@@ -1039,41 +1039,15 @@ export class ImportExportController {
 			events: control.events,
 		}
 
-		const fixupCondition = (feedbacks: FeedbackInstance[]) => {
-			const newFeedbacks: FeedbackInstance[] = []
-			for (const feedback of feedbacks) {
-				const instanceInfo = instanceIdMap[feedback?.instance_id]
-				if (feedback && instanceInfo) {
-					newFeedbacks.push({
-						...feedback,
-						instance_id: instanceInfo.id,
-						upgradeIndex: instanceInfo.lastUpgradeIndex,
-						children:
-							feedback.instance_id === 'internal' && feedback.children ? fixupCondition(feedback.children) : undefined,
-					})
-				}
-			}
-			return newFeedbacks
-		}
-
 		if (control.condition) {
-			result.condition = fixupCondition(cloneDeep(control.condition))
+			result.condition = fixupFeedbacksRecursive(instanceIdMap, cloneDeep(control.condition))
 		}
 
 		const allActions: ActionInstance[] = []
 		if (control.action_sets) {
 			for (const [setId, action_set] of Object.entries(control.action_sets)) {
-				const newActions: ActionInstance[] = []
-				for (const action of action_set as any) {
-					const instanceInfo = instanceIdMap[action?.instance]
-					if (action && instanceInfo) {
-						newActions.push({
-							...cloneDeep(action),
-							instance: instanceInfo.id,
-							upgradeIndex: instanceInfo.lastUpgradeIndex,
-						})
-					}
-				}
+				const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
+
 				result.action_sets[setId] = newActions
 				allActions.push(...newActions)
 			}
@@ -1125,25 +1099,8 @@ export class ImportExportController {
 			steps: {},
 		}
 
-		const fixupFeedbacks = (feedbacks: FeedbackInstance[]) => {
-			const newFeedbacks: FeedbackInstance[] = []
-			for (const feedback of feedbacks) {
-				const instanceInfo = instanceIdMap[feedback?.instance_id]
-				if (feedback && instanceInfo) {
-					newFeedbacks.push({
-						...feedback,
-						instance_id: instanceInfo.id,
-						upgradeIndex: instanceInfo.lastUpgradeIndex,
-						children:
-							feedback.instance_id === 'internal' && feedback.children ? fixupFeedbacks(feedback.children) : undefined,
-					})
-				}
-			}
-			return newFeedbacks
-		}
-
 		if (control.feedbacks) {
-			result.feedbacks = fixupFeedbacks(cloneDeep(control.feedbacks))
+			result.feedbacks = fixupFeedbacksRecursive(instanceIdMap, cloneDeep(control.feedbacks))
 		}
 
 		const allActions: ActionInstance[] = []
@@ -1156,17 +1113,8 @@ export class ImportExportController {
 				}
 
 				for (const [setId, action_set] of Object.entries<any>(step.action_sets)) {
-					const newActions: ActionInstance[] = []
-					for (const action of action_set) {
-						const instanceInfo = instanceIdMap[action?.instance]
-						if (action && instanceInfo) {
-							newActions.push({
-								...cloneDeep(action),
-								instance: instanceInfo.id,
-								upgradeIndex: instanceInfo.lastUpgradeIndex,
-							})
-						}
-					}
+					const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
+
 					newStepSets[setId] = newActions
 					allActions.push(...newActions)
 				}
@@ -1200,4 +1148,42 @@ type InstanceAppliedRemappings = Record<
 type ClientPendingImport = {
 	object: ExportFullv4 | ExportPageModelv4
 	timeout: null
+}
+
+function fixupFeedbacksRecursive(instanceIdMap: InstanceAppliedRemappings, feedbacks: FeedbackInstance[]) {
+	const newFeedbacks: FeedbackInstance[] = []
+	for (const feedback of feedbacks) {
+		const instanceInfo = instanceIdMap[feedback?.instance_id]
+		if (feedback && instanceInfo) {
+			newFeedbacks.push({
+				...feedback,
+				instance_id: instanceInfo.id,
+				upgradeIndex: instanceInfo.lastUpgradeIndex,
+				children:
+					feedback.instance_id === 'internal' && feedback.children
+						? fixupFeedbacksRecursive(instanceIdMap, feedback.children)
+						: undefined,
+			})
+		}
+	}
+	return newFeedbacks
+}
+
+function fixupActionsRecursive(instanceIdMap: InstanceAppliedRemappings, actions: ActionInstance[]) {
+	const newActions: ActionInstance[] = []
+	for (const action of actions) {
+		const instanceInfo = instanceIdMap[action?.instance]
+		if (action && instanceInfo) {
+			newActions.push({
+				...action,
+				instance: instanceInfo.id,
+				upgradeIndex: instanceInfo.lastUpgradeIndex,
+				children:
+					action.instance === 'internal' && action.children
+						? fixupActionsRecursive(instanceIdMap, action.children)
+						: undefined,
+			})
+		}
+	}
+	return newActions
 }
