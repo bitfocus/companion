@@ -85,7 +85,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	/**
 	 * Steps on this button
 	 */
-	steps: Record<string, FragmentActions> = {}
+	protected steps: Record<string, FragmentActions> = {}
 
 	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
 		super(deps, controlId, debugNamespace)

@@ -85,6 +85,9 @@ export class FragmentActions {
 		for (const [key, value] of Object.entries(actions)) {
 			if (!value) continue
 
+			const keyNumber = Number(key)
+			const keySafe = isNaN(keyNumber) ? key : keyNumber
+
 			const newList = new FragmentActionList(
 				this.#instanceDefinitions,
 				this.#internalModule,
@@ -93,7 +96,7 @@ export class FragmentActions {
 				null
 			)
 			newList.loadStorage(value, !!skipSubscribe, !!isCloned)
-			this.#actions.set(key, newList)
+			this.#actions.set(keySafe, newList)
 		}
 	}
 
@@ -127,6 +130,102 @@ export class FragmentActions {
 
 	getActionSet(setId: string | number): FragmentActionList | undefined {
 		return this.#actions.get(setId)
+	}
+
+	getActionSetIds(): Array<string | number> {
+		return Array.from(this.#actions.keys())
+	}
+
+	setupRotaryActionSets(ensureCreated: boolean, skipCommit?: boolean): void {
+		if (ensureCreated) {
+			// ensure they exist
+			if (!this.#actions.has('rotate_left'))
+				this.#actions.set(
+					'rotate_left',
+					new FragmentActionList(
+						this.#instanceDefinitions,
+						this.#internalModule,
+						this.#moduleHost,
+						this.#controlId,
+						null
+					)
+				)
+			if (!this.#actions.has('rotate_right'))
+				this.#actions.set(
+					'rotate_right',
+					new FragmentActionList(
+						this.#instanceDefinitions,
+						this.#internalModule,
+						this.#moduleHost,
+						this.#controlId,
+						null
+					)
+				)
+		} else {
+			// remove the sets
+			const rotateLeftSet = this.#actions.get('rotate_left')
+			const rotateRightSet = this.#actions.get('rotate_right')
+
+			if (rotateLeftSet) {
+				rotateLeftSet.cleanup()
+				this.#actions.delete('rotate_left')
+			}
+			if (rotateRightSet) {
+				rotateRightSet.cleanup()
+				this.#actions.delete('rotate_right')
+			}
+		}
+
+		if (!skipCommit) this.#commitChange()
+	}
+
+	actionSetAdd(): number {
+		const existingKeys = Array.from(this.#actions.keys())
+			.map((k) => Number(k))
+			.filter((k) => !isNaN(k))
+		if (existingKeys.length === 0) {
+			// add the default '1000' set
+			this.#actions.set(
+				1000,
+				new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId, null)
+			)
+
+			this.#commitChange(true)
+
+			return 1000
+		} else {
+			// add one after the last
+			const max = Math.max(...existingKeys)
+			const newIndex = Math.floor(max / 1000) * 1000 + 1000
+
+			this.#actions.set(
+				newIndex,
+				new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId, null)
+			)
+
+			this.#commitChange(false)
+
+			return newIndex
+		}
+	}
+
+	actionSetRemove(setId: number): boolean {
+		const setToRemove = this.#actions.get(setId)
+		if (!setToRemove) return false
+
+		// Inform modules of the change
+		setToRemove.cleanup()
+
+		// Forget the step from the options
+		this.options.runWhileHeld = this.options.runWhileHeld.filter((id) => id !== Number(setId))
+
+		// Assume it exists
+		this.#actions.delete(setId)
+
+		// Save the change, and perform a draw
+		this.#commitChange(false)
+
+		return true
 	}
 
 	actionSetRename(oldSetId: number, newSetId: number): boolean {
@@ -179,20 +278,6 @@ export class FragmentActions {
 		}
 
 		this.#commitChange(false)
-
-		return false
-	}
-
-	/**
-	 * Clear/remove all the actions in a set on this control
-	 */
-	actionClearSet(setId: string, skipCommit = false): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
-
-		actionSet.cleanup()
-
-		if (!skipCommit) this.#commitChange()
 
 		return false
 	}
@@ -290,51 +375,35 @@ export class FragmentActions {
 	 * Replace a action with an updated version
 	 */
 	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
+		for (const actionSet of this.#actions.values()) {
+			const action = actionSet.findById(newProps.id)
+			if (!action) return false
 
-		const action = actionSet.findById(newProps.id)
-		if (!action) return false
+			action.replaceProps(newProps, skipNotifyModule)
 
-		action.replaceProps(newProps, skipNotifyModule)
+			this.#commitChange(false)
 
-		this.#commitChange(false)
+			return true
+		}
 
-		return true
+		return false
 	}
 
 	/**
-	 * Move an action within the heirarchy
-	 * @param moveActionId the id of the action to move
-	 * @param newParentId the target parentId of the action
-	 * @param newIndex the target index of the action
+	 * Find a child feedback by id
 	 */
-	actionMoveTo(
-		fromSetId: string,
-		moveActionId: string,
-		newSetId: string,
-		newParentId: string | null,
-		newIndex: number
-	): boolean {
-		// 		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
-		// 		if (!oldItem) return false
-		// 		if (oldItem.parent.id === newParentId) {
-		// 			oldItem.parent.moveFeedback(oldItem.index, newIndex)
-		// 		} else {
-		// 			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
-		// 			if (newParentId && !newParent) return false
-		// 			// Check if the new parent can hold the feedback being moved
-		// 			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
-		// 			const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
-		// 			if (!poppedFeedback) return false
-		// 			if (newParent) {
-		// 				newParent.pushChild(poppedFeedback, newIndex)
-		// 			} else {
-		// 				this.#feedbacks.pushFeedback(poppedFeedback, newIndex)
-		// 			}
-		// 		}
-		// 		this.#commitChange()
-		// 		return true
+	findChildById(setId: string | number, id: string): FragmentActionInstance | undefined {
+		return this.#actions.get(setId)?.findById(id)
+	}
+
+	/**
+	 * Find the index of a child feedback, and the parent list
+	 */
+	findParentAndIndex(
+		setId: string | number,
+		id: string
+	): { parent: FragmentActionList; index: number; item: FragmentActionInstance } | undefined {
+		return this.#actions.get(setId)?.findParentAndIndex(id)
 	}
 
 	/**

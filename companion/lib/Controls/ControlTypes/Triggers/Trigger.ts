@@ -306,23 +306,33 @@ export class ControlTrigger
 		hoverParentId: string | null,
 		hoverIndex: number
 	): boolean {
-		return this.actions.actionMoveTo('0', dragActionId, '0', hoverParentId, hoverIndex)
+		const oldItem = this.actions.findParentAndIndex('0', dragActionId)
+		if (!oldItem) return false
 
-		// const actions = this.actions.getActionSet('0')
-		// if (!actions) return false
+		const set = this.actions.getActionSet('0')
+		if (!set) return false
 
-		// actions.moveAction(dragActionId, hoverParentId, hoverIndex)
+		const newParent = hoverParentId ? set?.findById(hoverParentId) : null
+		if (hoverParentId && !newParent) return false
 
-		// const dragIndex = set.findIndex((a) => a.id === dragActionId)
-		// if (dragIndex === -1) return false
+		// Ensure the new parent is not a child of the action being moved
+		if (hoverParentId && oldItem.item.findChildById(hoverParentId)) return false
 
-		// dropIndex = clamp(dropIndex, 0, set.length)
+		// Check if the new parent can hold the action being moved
+		if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
 
-		// set.splice(dropIndex, 0, ...set.splice(dragIndex, 1))
+		const poppedAction = oldItem.parent.popAction(oldItem.index)
+		if (!poppedAction) return false
 
-		// this.commitChange(false)
+		if (newParent) {
+			newParent.pushChild(poppedAction, hoverIndex)
+		} else {
+			set.pushAction(poppedAction, hoverIndex)
+		}
 
-		// return true
+		this.commitChange(false)
+
+		return true
 	}
 
 	/**

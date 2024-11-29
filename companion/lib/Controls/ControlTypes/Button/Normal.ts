@@ -1,7 +1,6 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep } from 'lodash-es'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
-import { clamp } from '../../../Resources/Util.js'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
@@ -233,22 +232,47 @@ export class ControlButtonNormal
 		hoverParentId: string | null,
 		hoverIndex: number
 	): boolean {
-		const fromSet = this.steps[dragStepId]?.action_sets?.[dragSetId]
-		const toSet = this.steps[dropStepId]?.action_sets?.[dropSetId]
-		if (fromSet && toSet) {
-			const dragIndex = fromSet.findIndex((a) => a.id === dragActionId)
-			if (dragIndex === -1) return false
+		const oldStep = this.steps[dragStepId]
+		if (!oldStep) return false
 
-			dropIndex = clamp(dropIndex, 0, toSet.length)
+		const oldItem = oldStep.findParentAndIndex(dragSetId, dragActionId)
+		if (!oldItem) return false
 
-			toSet.splice(dropIndex, 0, ...fromSet.splice(dragIndex, 1))
+		if (dragStepId === hoverStepId && dragSetId === hoverSetId) {
+			oldItem.parent.moveAction(oldItem.index, hoverIndex)
 
-			this.commitChange()
+			this.commitChange(false)
+
+			return true
+		} else {
+			const newStep = this.steps[hoverStepId]
+			if (!newStep) return false
+
+			const newSet = newStep.getActionSet(hoverSetId)
+			if (!newSet) return false
+
+			const newParent = hoverParentId ? newSet?.findById(hoverParentId) : null
+			if (hoverParentId && !newParent) return false
+
+			// Ensure the new parent is not a child of the action being moved
+			if (hoverParentId && oldItem.item.findChildById(hoverParentId)) return false
+
+			// Check if the new parent can hold the action being moved
+			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
+
+			const poppedAction = oldItem.parent.popAction(oldItem.index)
+			if (!poppedAction) return false
+
+			if (newParent) {
+				newParent.pushChild(poppedAction, hoverIndex)
+			} else {
+				newSet.pushAction(poppedAction, hoverIndex)
+			}
+
+			this.commitChange(false)
 
 			return true
 		}
-
-		return false
 	}
 
 	/**
@@ -315,23 +339,7 @@ export class ControlButtonNormal
 	actionSetAdd(stepId: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
-			let redraw = false
-
-			const existingKeys = Object.keys(step.action_sets)
-				.map((k) => Number(k))
-				.filter((k) => !isNaN(k))
-			if (existingKeys.length === 0) {
-				// add the default '1000' set
-				step.action_sets['1000'] = []
-				redraw = true
-			} else {
-				// add one after the last
-				const max = Math.max(...existingKeys)
-				const newIndex = Math.floor(max / 1000) * 1000 + 1000
-				step.action_sets[newIndex] = []
-			}
-
-			this.commitChange(redraw)
+			step.actionSetAdd()
 
 			return true
 		}
@@ -349,34 +357,9 @@ export class ControlButtonNormal
 		if (isNaN(setId)) return false
 
 		const step = this.steps[stepId]
-		if (step) {
-			const oldKeys = Object.keys(step.action_sets)
+		if (!step) return false
 
-			if (oldKeys.length > 1) {
-				const action_set = step.action_sets[setId]
-				if (action_set) {
-					// Inform modules of the change
-					for (const action of action_set) {
-						step.cleanupAction(action)
-					}
-
-					// Forget the step from the options
-					step.options.runWhileHeld = step.options.runWhileHeld.filter((id) => id !== Number(setId))
-
-					// Assume it exists
-					delete step.action_sets[setId]
-
-					// Save the change, and perform a draw
-					this.commitChange(false)
-
-					return true
-				}
-			}
-
-			return false
-		}
-
-		return false
+		return step.actionSetRemove(setId)
 	}
 
 	/**
@@ -411,7 +394,7 @@ export class ControlButtonNormal
 			if (isNaN(setId)) return false
 
 			// Ensure set exists
-			if (!step.action_sets[setId]) return false
+			if (!step.getActionSet(setId)) return false
 
 			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(setId)
 			if (runWhileHeld && runWhileHeldIndex === -1) {
@@ -538,17 +521,7 @@ export class ControlButtonNormal
 		// Check if rotary_actions should be added/remove
 		if (key === 'rotaryActions') {
 			for (const step of Object.values(this.steps)) {
-				if (value) {
-					// ensure they exist
-					step.action_sets.rotate_left = step.action_sets.rotate_left || []
-					step.action_sets.rotate_right = step.action_sets.rotate_right || []
-				} else {
-					// remove the sets
-					step.actionClearSet('rotate_left', true)
-					step.actionClearSet('rotate_right', true)
-					delete step.action_sets.rotate_left
-					delete step.action_sets.rotate_right
-				}
+				step.setupRotaryActionSets(!!value, true)
 			}
 		}
 
@@ -615,7 +588,8 @@ export class ControlButtonNormal
 				if (!pressed && pressedDuration) {
 					// find the correct set to execute on up
 
-					const setIds = Object.keys(step.action_sets)
+					const setIds = step
+						.getActionSetIds()
 						.map((id) => Number(id))
 						.filter((id) => !isNaN(id) && id < pressedDuration)
 					if (setIds.length) {
