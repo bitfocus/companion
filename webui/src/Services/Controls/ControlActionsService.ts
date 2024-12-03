@@ -4,14 +4,20 @@ import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 export interface IActionEditorService {
-	addAction: (actionType: string) => void
+	addAction: (actionType: string, parentId: string | null) => void
 
 	setValue: (actionId: string, action: ActionInstance | undefined, key: string, val: any) => void
 	performDelete: (actionId: string) => void
 	performDuplicate: (actionId: string) => void
 	setConnection: (actionId: string, connectionId: string | number) => void
 	setDelay: (actionId: string, delay: number) => void
-	moveCard: (dragStepId: string, dragSetId: string | number, dragActionId: string, dropIndex: number) => void
+	moveCard: (
+		dragStepId: string,
+		dragSetId: string | number,
+		dragActionId: string,
+		dropParentId: string | null,
+		dropIndex: number
+	) => void
 	performLearn: ((actionId: string) => void) | undefined
 	setEnabled: ((actionId: string, enabled: boolean) => void) | undefined
 	setHeadline: ((actionId: string, headline: string) => void) | undefined
@@ -38,13 +44,13 @@ export function useControlActionsEditorService(
 
 	return useMemo(
 		() => ({
-			addAction: (actionType: string) => {
+			addAction: (actionType: string, parentId: string | null) => {
 				const [connectionId, actionId] = actionType.split(':', 2)
 				socketEmitPromise(socket, 'controls:action:add', [
 					controlId,
 					stepId,
 					setId + '',
-					null, // TODO - parentId
+					parentId,
 					connectionId,
 					actionId,
 				]).catch((e) => {
@@ -52,7 +58,13 @@ export function useControlActionsEditorService(
 				})
 			},
 
-			moveCard: (dragStepId: string, dragSetId: string | number, dragActionId: string, dropIndex: number) => {
+			moveCard: (
+				dragStepId: string,
+				dragSetId: string | number,
+				dragActionId: string,
+				dropParentId: string | null,
+				dropIndex: number
+			) => {
 				socketEmitPromise(socket, 'controls:action:move', [
 					controlId,
 					dragStepId,
@@ -60,7 +72,7 @@ export function useControlActionsEditorService(
 					dragActionId,
 					stepId,
 					setId + '',
-					null, // TODO - hoverParentId
+					dropParentId,
 					dropIndex,
 				]).catch((e) => {
 					console.error('Failed to reorder control actions', e)
@@ -151,10 +163,16 @@ export function useActionRecorderActionService(sessionId: string): IActionEditor
 
 	return useMemo(
 		() => ({
-			addAction: (_actionType: string) => {
+			addAction: (_actionType: string, _parentId: string | null) => {
 				// Not supported
 			},
-			moveCard: (_dragStepId: string, _dragSetId: string | number, dragActionId: string, dropIndex: number) => {
+			moveCard: (
+				_dragStepId: string,
+				_dragSetId: string | number,
+				dragActionId: string,
+				_dropParentId: string | null,
+				dropIndex: number
+			) => {
 				socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragActionId, dropIndex]).catch(
 					(e) => {
 						console.error(e)

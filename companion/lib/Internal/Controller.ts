@@ -52,7 +52,7 @@ export class InternalController {
 
 	readonly #feedbacks = new Map<string, FeedbackInstanceExt>()
 
-	readonly #buildingBlocksFragment = new InternalBuildingBlocks()
+	readonly #buildingBlocksFragment: InternalBuildingBlocks
 	readonly #fragments: InternalModuleFragment[]
 
 	#initialized = false
@@ -69,6 +69,7 @@ export class InternalController {
 		this.#variablesController = variablesController
 
 		// More get added from elsewhere
+		this.#buildingBlocksFragment = new InternalBuildingBlocks(this.#controlsController.actionRunner)
 		this.#fragments = [this.#buildingBlocksFragment]
 	}
 

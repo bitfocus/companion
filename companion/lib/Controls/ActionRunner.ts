@@ -140,6 +140,8 @@ export class ActionRunner extends CoreBase {
 	): void {
 		const actions = actions0.filter((act) => !act.disabled)
 
+		console.log('run', actions)
+
 		if (actions.length === 0) {
 			return
 		}

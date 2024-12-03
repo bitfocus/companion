@@ -603,7 +603,7 @@ export class ControlButtonNormal
 						this.logger.silly('found actions')
 
 						this.deps.actionRunner.runMultipleActions(
-							actions.getAllActions(),
+							actions.getActions(),
 							this.controlId,
 							this.options.relativeDelay,
 							{
@@ -654,7 +654,7 @@ export class ControlButtonNormal
 			if (actions) {
 				this.logger.silly('found actions')
 
-				this.deps.actionRunner.runMultipleActions(actions.getAllActions(), this.controlId, this.options.relativeDelay, {
+				this.deps.actionRunner.runMultipleActions(actions.getActions(), this.controlId, this.options.relativeDelay, {
 					surfaceId,
 				})
 			}
