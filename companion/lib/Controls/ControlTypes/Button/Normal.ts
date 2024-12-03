@@ -238,7 +238,7 @@ export class ControlButtonNormal
 		const oldItem = oldStep.findParentAndIndex(dragSetId, dragActionId)
 		if (!oldItem) return false
 
-		if (dragStepId === hoverStepId && dragSetId === hoverSetId) {
+		if (dragStepId === hoverStepId && dragSetId === hoverSetId && oldItem.parent.id === hoverParentId) {
 			oldItem.parent.moveAction(oldItem.index, hoverIndex)
 
 			this.commitChange(false)
