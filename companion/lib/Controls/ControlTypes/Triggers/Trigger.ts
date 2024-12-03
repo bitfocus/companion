@@ -376,6 +376,7 @@ export class ControlTrigger
 			this.#actionRunner
 				.runActions(actions.asActionInstances(), this.options.relativeDelay, {
 					surfaceId: this.controlId,
+					location: undefined,
 				})
 				.catch((e) => {
 					this.logger.error(`Failed to run actions: ${e.message}`)

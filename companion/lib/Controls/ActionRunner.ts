@@ -50,9 +50,8 @@ export class ActionRunner extends CoreBase {
 	 */
 	async runMultipleActions(
 		actions0: ActionInstance[],
-		controlId: string,
 		_relative_delay: boolean,
-		extras: Omit<RunActionExtras, 'controlId' | 'location'>
+		extras: RunActionExtras
 	): Promise<void> {
 		const actions = actions0.filter((act) => !act.disabled)
 
@@ -76,19 +75,12 @@ export class ActionRunner extends CoreBase {
 		// 	effective_delays[action.id] = tmp_delay
 		// }
 
-		const location = this.page.getLocationOfControlId(controlId)
-		const extra2: RunActionExtras = {
-			...(extras || {}),
-			location,
-			controlId,
-		}
-
 		// Run all the actions in parallel
 		await Promise.all(
 			actions.map(async (action) => {
 				this.logger.silly('Running action', action)
 
-				await this.#runAction(action, extra2).catch((e) => {
+				await this.#runAction(action, extras).catch((e) => {
 					this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
 				})
 			})
@@ -155,7 +147,7 @@ export class ControlActionRunner {
 	async runActions(
 		actions: ActionInstance[],
 		relative_delay: boolean,
-		extras: Omit<RunActionExtras, 'controlId' | 'location' | 'abortDelayed'>
+		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed'>
 	): Promise<void> {
 		const controller = new AbortController()
 
@@ -168,8 +160,9 @@ export class ControlActionRunner {
 		}
 
 		return this.#actionRunner
-			.runMultipleActions(actions, this.#controlId, relative_delay, {
+			.runMultipleActions(actions, relative_delay, {
 				...extras,
+				controlId: this.#controlId,
 				abortDelayed: controller.signal,
 			})
 			.finally(() => {

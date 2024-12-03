@@ -133,11 +133,9 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 
 				if (extras.abortDelayed.aborted) return true
 
-				await this.#actionRunner
-					.runMultipleActions(action.children ?? [], extras.controlId, false, extras)
-					.catch((e) => {
-						this.#logger.error(`Failed to run actions: ${e.message}`)
-					})
+				await this.#actionRunner.runMultipleActions(action.children ?? [], false, extras).catch((e) => {
+					this.#logger.error(`Failed to run actions: ${e.message}`)
+				})
 
 				return true
 			})

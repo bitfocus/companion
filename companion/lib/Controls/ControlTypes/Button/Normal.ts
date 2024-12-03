@@ -585,6 +585,8 @@ export class ControlButtonNormal
 			if (step) {
 				let action_set_id: string | number = pressed ? 'down' : 'up'
 
+				const location = this.deps.page.getLocationOfControlId(this.controlId)
+
 				if (!pressed && pressedDuration) {
 					// find the correct set to execute on up
 
@@ -604,6 +606,7 @@ export class ControlButtonNormal
 
 						this.actionRunner.runActions(actions.asActionInstances(), this.options.relativeDelay, {
 							surfaceId,
+							location,
 						})
 					}
 				}
@@ -649,8 +652,11 @@ export class ControlButtonNormal
 			if (actions) {
 				this.logger.silly('found actions')
 
+				const location = this.deps.page.getLocationOfControlId(this.controlId)
+
 				this.actionRunner.runActions(actions.asActionInstances(), this.options.relativeDelay, {
 					surfaceId,
+					location,
 				})
 			}
 		}
