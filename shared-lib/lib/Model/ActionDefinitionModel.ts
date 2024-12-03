@@ -15,7 +15,7 @@ export interface InternalActionDefinition
 	showButtonPreview?: boolean
 	options: InternalActionInputField[]
 
-	// supportsChildActions?: boolean
+	supportsChildActions?: boolean
 }
 
 export interface ClientActionDefinition extends InternalActionDefinition {}
