@@ -120,16 +120,27 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, _extras: RunActionExtras): boolean {
+	executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean {
 		if (action.action === 'action_group') {
-			const delay = Number(action.options.delay)
-			if (!isNaN(delay) && delay > 0) {
-				// Apply the delay
-				// await new Promise((resolve) => setTimeout(resolve, delay))
-			}
+			return Promise.resolve().then(async () => {
+				if (extras.abortDelayed.aborted) return true
 
-			console.log('exec test')
-			return true
+				const delay = Number(action.options.delay)
+				if (!isNaN(delay) && delay > 0) {
+					// Apply the delay
+					await new Promise((resolve) => setTimeout(resolve, delay))
+				}
+
+				if (extras.abortDelayed.aborted) return true
+
+				await this.#actionRunner
+					.runMultipleActions(action.children ?? [], extras.controlId, false, extras)
+					.catch((e) => {
+						this.#logger.error(`Failed to run actions: ${e.message}`)
+					})
+
+				return true
+			})
 		} else {
 			return false
 		}

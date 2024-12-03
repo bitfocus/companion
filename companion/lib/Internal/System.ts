@@ -237,7 +237,7 @@ export class InternalSystem implements InternalModuleFragment {
 		return actions
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
+	async executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> {
 		if (action.action === 'exec') {
 			if (action.options.path) {
 				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.path, extras).text

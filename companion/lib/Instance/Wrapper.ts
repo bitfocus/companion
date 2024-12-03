@@ -926,6 +926,7 @@ export interface RunActionExtras {
 	controlId: string
 	surfaceId: string | undefined
 	location: ControlLocation | undefined
+	abortDelayed: AbortSignal
 }
 
 export interface VariableDefinitionTmp {

@@ -124,7 +124,11 @@ export interface ControlWithoutFeedbacks extends ControlBase<any> {
 export interface ControlWithActions extends ControlBase<any> {
 	readonly supportsActions: true
 
-	readonly has_actions_running: boolean
+	/**
+	 * Abort pending delayed actions for a control
+	 * @param skip_up Mark button as released
+	 */
+	abortDelayedActions(skip_up: boolean): void
 
 	/**
 	 * Add an action to this control
@@ -216,13 +220,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * Get all the actions on this control
 	 */
 	getFlattenedActionInstances(): ActionInstance[]
-
-	/**
-	 * Mark the button as having pending delayed actions
-	 * @param running Whether any delayed actions are pending
-	 * @param skip_up Mark the button as released, skipping the release actions
-	 */
-	setActionsRunning(running: boolean, skip_up: boolean): void
 }
 
 export interface ControlWithoutActions extends ControlBase<any> {

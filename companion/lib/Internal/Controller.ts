@@ -319,13 +319,13 @@ export class InternalController {
 	/**
 	 * Run a single internal action
 	 */
-	executeAction(action: ActionInstance, extras: RunActionExtras): void {
+	async executeAction(action: ActionInstance, extras: RunActionExtras): Promise<void> {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		for (const fragment of this.#fragments) {
 			if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
 				try {
-					if (fragment.executeAction(action, extras)) {
+					if (await fragment.executeAction(action, extras)) {
 						// It was handled, so break
 						return
 					}

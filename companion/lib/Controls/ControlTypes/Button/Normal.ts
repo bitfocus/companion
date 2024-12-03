@@ -602,14 +602,9 @@ export class ControlButtonNormal
 					if (actions) {
 						this.logger.silly('found actions')
 
-						this.deps.actionRunner.runMultipleActions(
-							actions.getActions(),
-							this.controlId,
-							this.options.relativeDelay,
-							{
-								surfaceId,
-							}
-						)
+						this.actionRunner.runActions(actions.asActionInstances(), this.options.relativeDelay, {
+							surfaceId,
+						})
 					}
 				}
 
@@ -654,7 +649,7 @@ export class ControlButtonNormal
 			if (actions) {
 				this.logger.silly('found actions')
 
-				this.deps.actionRunner.runMultipleActions(actions.getActions(), this.controlId, this.options.relativeDelay, {
+				this.actionRunner.runActions(actions.asActionInstances(), this.options.relativeDelay, {
 					surfaceId,
 				})
 			}

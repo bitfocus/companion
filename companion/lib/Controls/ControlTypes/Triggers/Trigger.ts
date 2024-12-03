@@ -27,6 +27,7 @@ import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import { ControlActionRunner } from '../../ActionRunner.js'
 
 /**
  * Class for an interval trigger.
@@ -131,10 +132,7 @@ export class ControlTrigger
 	 */
 	readonly #variablesEvents: TriggersEventVariables
 
-	/**
-	 * Whether this button has delayed actions running
-	 */
-	has_actions_running: boolean = false
+	readonly #actionRunner: ControlActionRunner
 
 	readonly actions: FragmentActions
 	readonly feedbacks: FragmentFeedbacks
@@ -154,6 +152,8 @@ export class ControlTrigger
 		isImport: boolean
 	) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
+
+		this.#actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
 
 		this.actions = new FragmentActions(
 			deps.instance.definitions,
@@ -202,6 +202,10 @@ export class ControlTrigger
 		setImmediate(() => {
 			this.#setupEvents()
 		})
+	}
+
+	abortDelayedActions(_skip_up: boolean): void {
+		this.#actionRunner.abortAll()
 	}
 
 	/**
@@ -369,9 +373,13 @@ export class ControlTrigger
 		if (actions) {
 			this.logger.silly('found actions')
 
-			this.deps.actionRunner.runMultipleActions(actions.getActions(), this.controlId, this.options.relativeDelay, {
-				surfaceId: this.controlId,
-			})
+			this.#actionRunner
+				.runActions(actions.asActionInstances(), this.options.relativeDelay, {
+					surfaceId: this.controlId,
+				})
+				.catch((e) => {
+					this.logger.error(`Failed to run actions: ${e.message}`)
+				})
 		}
 	}
 
@@ -599,16 +607,6 @@ export class ControlTrigger
 		} else {
 			this.#stopEvent(event)
 		}
-	}
-
-	/**
-	 * Mark the button as having pending delayed actions
-	 * @param running Whether any delayed actions are pending
-	 * @param skip_up Mark the button as released, skipping the release actions
-	 * @access public
-	 */
-	setActionsRunning(_running: boolean, _skip_up: boolean) {
-		// Nothing to do
 	}
 
 	#stopEvent(event: EventInstance): void {

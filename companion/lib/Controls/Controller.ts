@@ -90,6 +90,17 @@ export class ControlsController extends CoreBase {
 		this.triggers = new TriggerEvents()
 	}
 
+	/**
+	 * Abort all delayed actions across all controls
+	 */
+	abortAllDelayedActions(): void {
+		for (const control of this.#controls.values()) {
+			if (control.supportsActions) {
+				control.abortDelayedActions(false)
+			}
+		}
+	}
+
 	#createControlDependencies(): ControlDependencies {
 		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
 		return {

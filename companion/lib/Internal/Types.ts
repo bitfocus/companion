@@ -41,7 +41,7 @@ export interface InternalModuleFragment {
 	 * Run a single internal action
 	 * @returns Whether the action was handled
 	 */
-	executeAction?(action: ActionInstance, extras: RunActionExtras): boolean
+	executeAction?(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean
 
 	/**
 	 * Perform an upgrade for an action
