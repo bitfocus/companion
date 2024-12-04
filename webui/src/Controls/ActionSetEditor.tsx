@@ -568,7 +568,7 @@ const ActionTableRow = observer(function ActionTableRow({
 						{action.instance === 'internal' && actionSpec?.supportsChildActions && (
 							<div
 								className={classNames('cell-children', {
-									'hide-top-gap': actionOptions.length > 0 && (action.children ?? []).length > 0,
+									// 'hide-top-gap': actionOptions.length > 0 && (action.children ?? []).length > 0,
 								})}
 							>
 								<CForm onSubmit={PreventDefaultHandler}>
