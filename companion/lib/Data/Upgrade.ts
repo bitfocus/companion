@@ -43,10 +43,10 @@ export function upgradeStartup(db: DataDatabase): void {
 		// run the scripts
 		for (let i = currentVersion; i < targetVersion; i++) {
 			allUpgrades[i - 1].upgradeStartup(db, logger)
-		}
 
-		// Record that the upgrade has been done
-		db.setKey('page_config_version', targetVersion)
+			// Record that the upgrade has been done
+			db.setKey('page_config_version', i)
+		}
 	}
 
 	// Debug: uncomment to force the upgrade to run again

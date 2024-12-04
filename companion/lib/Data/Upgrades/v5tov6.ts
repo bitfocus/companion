@@ -1,5 +1,6 @@
 import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
+import { nanoid } from 'nanoid'
 
 /**
  * do the database upgrades to convert from the v4 to the v5 format
@@ -10,49 +11,83 @@ function convertDatabaseToV6(db: DataStoreBase, _logger: Logger) {
 	const controls = db.getTable('controls')
 
 	for (const [controlId, control] of Object.entries(controls)) {
-		// TODO
+		// Note - this doesn't need to consider 'children', as they are not used in the v5 format
+
+		const relativeDelay = control?.options?.relativeDelay
+		if (relativeDelay !== undefined) delete control.options.relativeDelay
+
+		// Button controls
+		for (const step of Object.values<any>(control.steps || {})) {
+			for (const [setId, set] of Object.entries<any>(step.action_sets || {})) {
+				step.action_sets[setId] = convertActionsDelay(set, relativeDelay)
+			}
+		}
+
+		// Triggers
+		for (const [setId, set] of Object.entries<any>(control.action_sets || {})) {
+			control.action_sets[setId] = convertActionsDelay(set, relativeDelay)
+		}
+
+		db.setTableKey('controls', controlId, control)
 	}
-
-	// throw new Error('Not implemented')
-	// 	try {
-	// 		const controls = db.store.prepare(`CREATE TABLE IF NOT EXISTS controls (id STRING UNIQUE, value STRING);`)
-	// 		controls.run()
-	// 		const cloud = db.store.prepare(`CREATE TABLE IF NOT EXISTS cloud (id STRING UNIQUE, value STRING);`)
-	// 		cloud.run()
-	// 	} catch (e) {
-	// 		_logger.warn(`Error creating tables`, e)
-	// 	}
-
-	// 	const batchInsert = function (table: string, heap: any) {
-	// 		if (heap) {
-	// 			for (const [key, value] of Object.entries(heap)) {
-	// 				db.setTableKey(table, key, value)
-	// 			}
-	// 		}
-	// 	}
-
-	// 	// Move controls to their new table
-	// 	const controls = db.getKey('controls')
-	// 	batchInsert('controls', controls)
-	// 	db.deleteKey('controls')
-
-	// 	// Migrate the legacy cloud DB to its new table
-	// 	try {
-	// 		const clouddb = new DataLegacyCloudDatabase(db.cfgDir)
-	// 		const cloud = clouddb.getAll()
-	// 		batchInsert('cloud', cloud)
-	// 	} catch (e: any) {}
-
-	// 	// Move surface-groups to match others
-	// 	const surfaces = db.getKey('surface-groups', {})
-	// 	db.setKey('surface_groups', surfaces)
-	// 	db.deleteKey('surface-groups')
-
-	// 	db.setKey('page_config_version', 5)
 }
 
 function convertImportToV6(obj: any) {
+	// TODO - process with convertActionsDelay
+
 	return obj
+}
+
+function convertActionsDelay(actions: any[], relativeDelays: boolean | undefined) {
+	const newActions: any[] = []
+
+	if (relativeDelays) {
+		let currentParent = newActions
+
+		for (const action of actions) {
+			const delay = Number(action.delay)
+			delete action.delay
+
+			if (!delay || isNaN(delay)) {
+				currentParent.push(action)
+			} else {
+				let newParent: any[] = [action]
+				currentParent.push({
+					id: nanoid(),
+					instance: 'internal',
+					action: 'action_group',
+					options: {
+						delay: delay,
+					},
+
+					children: newParent,
+				})
+				currentParent = newParent
+			}
+		}
+	} else {
+		for (const action of actions) {
+			const delay = Number(action.delay)
+			delete action.delay
+
+			if (!delay || isNaN(delay)) {
+				newActions.push(action)
+			} else {
+				newActions.push({
+					id: nanoid(),
+					instance: 'internal',
+					action: 'action_group',
+					options: {
+						delay: delay,
+					},
+
+					children: [action],
+				})
+			}
+		}
+	}
+
+	return newActions
 }
 
 export default {
