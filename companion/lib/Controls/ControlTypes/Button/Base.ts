@@ -49,9 +49,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	/**
 	 * The defaults options for a button
 	 */
-	static DefaultOptions: ButtonOptionsBase = {
-		relativeDelay: false,
-	}
+	static DefaultOptions: ButtonOptionsBase = {}
 
 	/**
 	 * The feedbacks fragment

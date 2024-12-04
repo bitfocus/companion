@@ -601,17 +601,6 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:action:set-delay', (controlId, stepId, setId, id, delay) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActions) {
-				return control.actionSetDelay(stepId, setId, id, delay)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
-
 		client.onPromise('controls:action:set-option', (controlId, stepId, setId, id, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false

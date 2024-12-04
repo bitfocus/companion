@@ -445,26 +445,6 @@ export class FragmentActions {
 	}
 
 	/**
-	 * Set the delay of an action
-	 * @param setId the action_set id
-	 * @param id the action id
-	 * @param delay the desired delay
-	 */
-	actionSetDelay(setId: string, id: string, delay: number): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
-
-		const action = actionSet.findById(id)
-		if (!action) return false
-
-		action.setDelay(delay)
-
-		this.#commitChange(false)
-
-		return true
-	}
-
-	/**
 	 * Set an option of an action
 	 * @param setId the action_set id
 	 * @param id the action id

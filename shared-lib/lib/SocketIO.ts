@@ -154,13 +154,6 @@ export interface ClientToBackendEventsMap {
 		actionId: string,
 		connectionId: string
 	) => boolean
-	'controls:action:set-delay': (
-		controlId: string,
-		stepId: string,
-		setId: string,
-		actionId: string,
-		delay: number
-	) => boolean
 	'controls:action:set-option': (
 		controlId: string,
 		stepId: string,

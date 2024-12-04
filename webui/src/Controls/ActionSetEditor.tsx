@@ -1,4 +1,4 @@
-import { CButton, CForm, CInputGroup, CInputGroupText, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useDeferredValue, useMemo, useRef, useState } from 'react'
-import { DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
+import { DropdownInputField, TextInputField } from '../Components/index.js'
 import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
@@ -534,23 +534,9 @@ const ActionTableRow = observer(function ActionTableRow({
 										multiple={false}
 										value={action.instance}
 										setValue={service.setConnection}
-									></DropdownInputField>
+									/>
 								</div>
 							)}
-
-							<CForm onSubmit={PreventDefaultHandler}>
-								<label>Delay</label>
-								<CInputGroup>
-									<NumberInputField
-										min={0}
-										step={10}
-										disabled={readonly}
-										value={action.delay}
-										setValue={service.setDelay}
-									/>
-									<CInputGroupText>ms</CInputGroupText>
-								</CInputGroup>
-							</CForm>
 						</div>
 
 						<div className="cell-actions">

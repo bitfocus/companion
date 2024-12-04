@@ -48,11 +48,7 @@ export class ActionRunner extends CoreBase {
 	/**
 	 * Run multiple actions
 	 */
-	async runMultipleActions(
-		actions0: ActionInstance[],
-		_relative_delay: boolean,
-		extras: RunActionExtras
-	): Promise<void> {
+	async runMultipleActions(actions0: ActionInstance[], extras: RunActionExtras): Promise<void> {
 		const actions = actions0.filter((act) => !act.disabled)
 
 		if (actions.length === 0) {
@@ -146,7 +142,6 @@ export class ControlActionRunner {
 
 	async runActions(
 		actions: ActionInstance[],
-		relative_delay: boolean,
 		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed'>
 	): Promise<void> {
 		const controller = new AbortController()
@@ -160,7 +155,7 @@ export class ControlActionRunner {
 		}
 
 		return this.#actionRunner
-			.runMultipleActions(actions, relative_delay, {
+			.runMultipleActions(actions, {
 				...extras,
 				controlId: this.#controlId,
 				abortDelayed: controller.signal,

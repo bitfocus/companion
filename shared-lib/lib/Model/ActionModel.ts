@@ -4,7 +4,6 @@ export interface ActionInstance {
 	headline?: string
 	action: string
 	options: Record<string, any>
-	delay: number
 	disabled?: boolean
 	upgradeIndex?: number
 

@@ -197,11 +197,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	actionSetConnection(stepId: string, setId: string, id: string, connectionId: string): boolean
 
 	/**
-	 * Set the delay of an action
-	 */
-	actionSetDelay(stepId: string, setId: string, id: string, delay: number): boolean
-
-	/**
 	 * Set an option of an action
 	 */
 	actionSetOption(stepId: string, setId: string, id: string, key: string, value: any): boolean

@@ -310,18 +310,6 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Set the delay of an action
-	 */
-	actionSetDelay(stepId: string, setId: string, id: string, delay: number): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionSetDelay(setId, id, delay)
-		} else {
-			return false
-		}
-	}
-
-	/**
 	 * Set an option of an action
 	 */
 	actionSetOption(stepId: string, setId: string, id: string, key: string, value: any): boolean {
@@ -604,7 +592,7 @@ export class ControlButtonNormal
 					if (actions) {
 						this.logger.silly('found actions')
 
-						this.actionRunner.runActions(actions.asActionInstances(), this.options.relativeDelay, {
+						this.actionRunner.runActions(actions.asActionInstances(), {
 							surfaceId,
 							location,
 						})
@@ -654,7 +642,7 @@ export class ControlButtonNormal
 
 				const location = this.deps.page.getLocationOfControlId(this.controlId)
 
-				this.actionRunner.runActions(actions.asActionInstances(), this.options.relativeDelay, {
+				this.actionRunner.runActions(actions.asActionInstances(), {
 					surfaceId,
 					location,
 				})

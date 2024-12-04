@@ -79,7 +79,6 @@ export class ControlTrigger
 		name: 'New Trigger',
 		enabled: false,
 		sortOrder: 0,
-		relativeDelay: false,
 	}
 
 	/**
@@ -279,13 +278,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Set the delay of an action
-	 */
-	actionSetDelay(_stepId: string, _setId: string, id: string, delay: number): boolean {
-		return this.actions.actionSetDelay('0', id, delay)
-	}
-
-	/**
 	 * Set an option of an action
 	 */
 	actionSetOption(_stepId: string, _setId: string, id: string, key: string, value: any): boolean {
@@ -374,7 +366,7 @@ export class ControlTrigger
 			this.logger.silly('found actions')
 
 			this.#actionRunner
-				.runActions(actions.asActionInstances(), this.options.relativeDelay, {
+				.runActions(actions.asActionInstances(), {
 					surfaceId: this.controlId,
 					location: undefined,
 				})

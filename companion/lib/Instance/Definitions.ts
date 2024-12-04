@@ -175,7 +175,6 @@ export class InstanceDefinitions {
 				action: actionId,
 				instance: connectionId,
 				options: {},
-				delay: 0,
 			}
 
 			if (definition.options !== undefined && definition.options.length > 0) {
@@ -334,14 +333,17 @@ export class InstanceDefinitions {
 				result.steps[i] = newStep
 
 				for (const [set, actions_set] of Object.entries(definition.steps[i].action_sets)) {
-					newStep.action_sets[set] = actions_set.map((action: PresetActionInstance) => ({
-						id: nanoid(),
-						instance: connectionId,
-						action: action.action,
-						options: cloneDeep(action.options ?? {}),
-						delay: action.delay ?? 0,
-						headline: action.headline,
-					}))
+					newStep.action_sets[set] = actions_set.map(
+						(action: PresetActionInstance) =>
+							({
+								id: nanoid(),
+								instance: connectionId,
+								action: action.action,
+								options: cloneDeep(action.options ?? {}),
+								delay: action.delay ?? 0,
+								headline: action.headline,
+							}) satisfies ActionInstance
+					)
 				}
 			}
 		}

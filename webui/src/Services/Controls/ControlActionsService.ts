@@ -10,7 +10,6 @@ export interface IActionEditorService {
 	performDelete: (actionId: string) => void
 	performDuplicate: (actionId: string) => void
 	setConnection: (actionId: string, connectionId: string | number) => void
-	setDelay: (actionId: string, delay: number) => void
 	moveCard: (
 		dragStepId: string,
 		dragSetId: string | number,
@@ -28,7 +27,6 @@ export interface IActionEditorActionService {
 	performDelete: () => void
 	performDuplicate: () => void
 	setConnection: (connectionId: string | number) => void
-	setDelay: (delay: number) => void
 	performLearn: (() => void) | undefined
 	setEnabled: ((enabled: boolean) => void) | undefined
 	setHeadline: ((headline: string) => void) | undefined
@@ -104,14 +102,6 @@ export function useControlActionsEditorService(
 				]).catch((e) => {
 					console.error('Failed to set control action connection', e)
 				})
-			},
-
-			setDelay: (actionId: string, delay: number) => {
-				socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId + '', actionId, delay]).catch(
-					(e) => {
-						console.error('Failed to set control action delay', e)
-					}
-				)
 			},
 
 			performDelete: (actionId: string) => {
@@ -235,7 +225,6 @@ export function useControlActionService(
 			performDelete: () => serviceFactory.performDelete(actionId),
 			performDuplicate: () => serviceFactory.performDuplicate(actionId),
 			setConnection: (connectionId: string | number) => serviceFactory.setConnection(actionId, connectionId),
-			setDelay: (delay: number) => serviceFactory.setDelay(actionId, delay),
 			performLearn: serviceFactory.performLearn ? () => serviceFactory.performLearn?.(actionId) : undefined,
 			setEnabled: serviceFactory.setEnabled
 				? (enabled: boolean) => serviceFactory.setEnabled?.(actionId, enabled)

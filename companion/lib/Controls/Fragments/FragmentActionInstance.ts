@@ -40,11 +40,6 @@ export class FragmentActionInstance {
 		return !!this.#data.disabled
 	}
 
-	get delay(): number {
-		if (isNaN(this.#data.delay) || this.#data.delay < 0) return 0
-		return this.#data.delay || 0
-	}
-
 	/**
 	 * Get the id of the connection this action belongs to
 	 */
@@ -195,18 +190,6 @@ export class FragmentActionInstance {
 		this.#data.instance = instance
 		// last subscribe to new instance
 		this.subscribe(true, instance)
-	}
-
-	/**
-	 * Set the delay of the action
-	 */
-	setDelay(delay: number): void {
-		delay = Number(delay)
-		if (isNaN(delay)) delay = 0
-
-		this.#data.delay = delay
-
-		// Don't need to resubscribe
 	}
 
 	/**
