@@ -17,13 +17,18 @@
 
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import debounceFn from 'debounce-fn'
-import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalModuleFragment,
+	InternalVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+} from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { InternalController } from './Controller.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export class InternalTriggers implements InternalModuleFragment {
 	readonly #controlsController: ControlsController

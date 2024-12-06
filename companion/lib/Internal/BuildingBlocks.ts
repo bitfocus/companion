@@ -17,9 +17,13 @@
 
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import LogController from '../Log/Controller.js'
-import type { FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	FeedbackForVisitor,
+	InternalModuleFragment,
+	InternalVisitor,
+	InternalFeedbackDefinition,
+} from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')

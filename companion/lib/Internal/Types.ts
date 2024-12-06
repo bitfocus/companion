@@ -3,10 +3,11 @@ import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel
 import type { VisitorReferencesCollector } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import type { SetOptional } from 'type-fest'
+import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 
 export interface FeedbackInstanceExt extends FeedbackInstance {
 	controlId: string
@@ -64,3 +65,10 @@ export interface ExecuteFeedbackResultWithReferences {
 	referencedVariables: string[]
 	value: any
 }
+
+export type InternalActionDefinition = SetOptional<ActionDefinition, 'hasLearn' | 'learnTimeout' | 'showButtonPreview'>
+
+export type InternalFeedbackDefinition = SetOptional<
+	FeedbackDefinition,
+	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildFeedbacks'
+>

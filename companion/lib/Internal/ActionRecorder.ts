@@ -19,11 +19,16 @@ import LogController from '../Log/Controller.js'
 import type { InternalController } from './Controller.js'
 import type { ActionRecorder } from '../Controls/ActionRecorder.js'
 import type { PageController } from '../Page/Controller.js'
-import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalModuleFragment,
+	InternalVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+} from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export class InternalActionRecorder implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/ActionRecorder')

@@ -1,5 +1,4 @@
 import type { CompanionButtonStyleProps } from '@companion-module/base'
-import type { SetOptional } from 'type-fest'
 import type { ObjectsDiff } from './Common.js'
 import type { InternalFeedbackInputField } from './Options.js'
 
@@ -12,13 +11,12 @@ export interface FeedbackDefinition {
 	hasLearn: boolean
 	learnTimeout: number | undefined
 	showInvert: boolean
+
+	showButtonPreview: boolean
+	supportsChildFeedbacks: boolean
 }
 
-export interface InternalFeedbackDefinition extends SetOptional<FeedbackDefinition, 'hasLearn' | 'learnTimeout'> {
-	showButtonPreview?: boolean
-
-	supportsChildFeedbacks?: boolean
-}
+export type ClientFeedbackDefinition = FeedbackDefinition
 
 export type FeedbackDefinitionUpdate =
 	| FeedbackDefinitionUpdateForgetConnection
@@ -33,9 +31,9 @@ export interface FeedbackDefinitionUpdateAddConnection {
 	type: 'add-connection'
 	connectionId: string
 
-	feedbacks: Record<string, InternalFeedbackDefinition | undefined>
+	feedbacks: Record<string, ClientFeedbackDefinition | undefined>
 }
-export interface FeedbackDefinitionUpdateUpdateConnection extends ObjectsDiff<InternalFeedbackDefinition> {
+export interface FeedbackDefinitionUpdateUpdateConnection extends ObjectsDiff<ClientFeedbackDefinition> {
 	type: 'update-connection'
 	connectionId: string
 }

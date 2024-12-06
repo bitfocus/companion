@@ -21,7 +21,7 @@ import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/Collapse
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
@@ -569,7 +569,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 })
 
 interface FeedbackManageStylesProps {
-	feedbackSpec: InternalFeedbackDefinition | undefined
+	feedbackSpec: ClientFeedbackDefinition | undefined
 	feedback: FeedbackInstance
 	setSelectedStyleProps: (keys: string[]) => void
 }
@@ -600,7 +600,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }:
 }
 
 interface FeedbackStylesProps {
-	feedbackSpec: InternalFeedbackDefinition | undefined
+	feedbackSpec: ClientFeedbackDefinition | undefined
 	feedback: FeedbackInstance
 	setStylePropsValue: (key: string, value: any) => void
 }

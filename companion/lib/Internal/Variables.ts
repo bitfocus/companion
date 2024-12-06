@@ -18,10 +18,15 @@
 import LogController from '../Log/Controller.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
-import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalModuleFragment,
+	InternalVisitor,
+	InternalFeedbackDefinition,
+} from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
