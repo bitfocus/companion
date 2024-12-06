@@ -24,9 +24,9 @@ import type {
 	FeedbackInstanceExt,
 	InternalModuleFragment,
 	InternalVisitor,
+	InternalFeedbackDefinition,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',

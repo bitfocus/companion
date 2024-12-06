@@ -1,6 +1,5 @@
-import type { SetOptional } from 'type-fest'
 import type { InternalActionInputField } from './Options.js'
-import { ObjectsDiff } from './Common.js'
+import type { ObjectsDiff } from './Common.js'
 
 export interface ActionDefinition {
 	label: string
@@ -8,17 +7,12 @@ export interface ActionDefinition {
 	options: InternalActionInputField[]
 	hasLearn: boolean
 	learnTimeout: number | undefined
+
+	showButtonPreview: boolean
+	supportsChildActions: boolean
 }
 
-export interface InternalActionDefinition
-	extends SetOptional<Omit<ActionDefinition, 'options'>, 'hasLearn' | 'learnTimeout'> {
-	showButtonPreview?: boolean
-	options: InternalActionInputField[]
-
-	supportsChildActions?: boolean
-}
-
-export interface ClientActionDefinition extends InternalActionDefinition {}
+export interface ClientActionDefinition extends ActionDefinition {}
 
 export type ActionDefinitionUpdate =
 	| ActionDefinitionUpdateForgetConnection

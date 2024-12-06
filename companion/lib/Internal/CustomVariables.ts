@@ -17,12 +17,17 @@
 
 import { SplitVariableId } from '../Resources/Util.js'
 import LogController from '../Log/Controller.js'
-import type { ActionForVisitor, FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	FeedbackForVisitor,
+	InternalModuleFragment,
+	InternalVisitor,
+	InternalActionDefinition,
+	ActionForVisitor,
+} from './Types.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 
 export class InternalCustomVariables implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/CustomVariables')

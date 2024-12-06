@@ -25,11 +25,11 @@ import type {
 	FeedbackInstanceExt,
 	InternalModuleFragment,
 	InternalVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
 } from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export class InternalActionRecorder implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/ActionRecorder')

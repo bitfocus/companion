@@ -27,6 +27,8 @@ import type {
 	InternalVisitor,
 	ExecuteFeedbackResultWithReferences,
 	ActionForVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
 } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { InternalController } from './Controller.js'
@@ -37,8 +39,6 @@ import type { VariablesValues } from '../Variables/Values.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 

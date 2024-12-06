@@ -25,6 +25,8 @@ import type {
 	FeedbackInstanceExt,
 	InternalModuleFragment,
 	InternalVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
 } from './Types.js'
 import type { InternalController } from './Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -32,8 +34,6 @@ import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [

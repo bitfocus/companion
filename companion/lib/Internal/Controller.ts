@@ -412,6 +412,7 @@ export class InternalController {
 						...action,
 						hasLearn: action.hasLearn ?? false,
 						learnTimeout: action.learnTimeout,
+						showButtonPreview: action.showButtonPreview ?? false,
 					}
 				}
 			}
@@ -432,6 +433,9 @@ export class InternalController {
 						showInvert: feedback.showInvert ?? false,
 						hasLearn: feedback.hasLearn ?? false,
 						learnTimeout: feedback.learnTimeout,
+
+						showButtonPreview: feedback.showButtonPreview ?? false,
+						supportsChildFeedbacks: feedback.supportsChildFeedbacks ?? false,
 					}
 				}
 			}

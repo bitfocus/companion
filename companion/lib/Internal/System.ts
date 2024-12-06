@@ -22,12 +22,17 @@ import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { ActionForVisitor, FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	ActionForVisitor,
+	FeedbackForVisitor,
+	InternalActionDefinition,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
 import type { Registry } from '../Registry.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 
 async function getHostnameVariables() {
 	const values: CompanionVariableValues = {}
