@@ -88,13 +88,18 @@ export class FragmentActionInstance {
 		if (data.instance === 'internal' && data.children) {
 			for (const [groupId, actions] of Object.entries(data.children)) {
 				if (!actions) continue
-				const childGroup = this.#getOrCreateActionGroup(groupId)
-				childGroup.loadStorage(actions, true, isCloned)
+
+				try {
+					const childGroup = this.#getOrCreateActionGroup(groupId)
+					childGroup.loadStorage(actions, true, isCloned)
+				} catch (e: any) {
+					this.#logger.error(`Error loading child action group: ${e.message}`)
+				}
 			}
 		}
 	}
 
-	#getOrCreateActionGroup(groupId: string) {
+	#getOrCreateActionGroup(groupId: string): FragmentActionList {
 		const existing = this.#children.get(groupId)
 		if (existing) return existing
 

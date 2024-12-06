@@ -2,7 +2,7 @@ import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 import { nanoid } from 'nanoid'
 import { cloneDeep } from 'lodash-es'
-import type { ExportPageContentv4, ExportPageModelv4, SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
+import type { ExportPageContentv4, SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 import type {
 	ExportFullv6,
 	ExportPageContentv6,
