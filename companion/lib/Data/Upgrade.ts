@@ -6,7 +6,7 @@ import v3tov4 from './Upgrades/v3tov4.js'
 import v4tov5 from './Upgrades/v4tov5.js'
 import { showFatalError } from '../Resources/Util.js'
 import type { DataDatabase } from './Database.js'
-import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModel.js'
+import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import v5tov6 from './Upgrades/v5tov6.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
@@ -56,7 +56,7 @@ export function upgradeStartup(db: DataDatabase): void {
 /**
  * Upgrade an exported page or full configuration to the latest format
  */
-export function upgradeImport(obj: any): SomeExportv4 {
+export function upgradeImport(obj: any): SomeExportv6 {
 	const currentVersion = obj.version || 1
 
 	for (let i = currentVersion; i < targetVersion; i++) {

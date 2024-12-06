@@ -1,6 +1,15 @@
 import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 import { nanoid } from 'nanoid'
+import { cloneDeep } from 'lodash-es'
+import type { ExportPageContentv4, ExportPageModelv4, SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
+import type {
+	ExportFullv6,
+	ExportPageContentv6,
+	ExportPageModelv6,
+	ExportTriggersListv6,
+	SomeExportv6,
+} from '@companion-app/shared/Model/ExportModel.js'
 
 /**
  * do the database upgrades to convert from the v4 to the v5 format
@@ -32,10 +41,64 @@ function convertDatabaseToV6(db: DataStoreBase, _logger: Logger) {
 	}
 }
 
-function convertImportToV6(obj: any) {
-	// TODO - process with convertActionsDelay
+function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
+	if (obj.type == 'full') {
+		const newObj: ExportFullv6 = { ...cloneDeep(obj), version: 6 }
 
-	return obj
+		if (newObj.pages) {
+			for (const page of Object.values(newObj.pages)) {
+				convertPageActionsDelays(page)
+			}
+		}
+
+		return newObj
+	} else if (obj.type == 'page') {
+		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 6 }
+
+		convertPageActionsDelays(newObj.page)
+
+		return newObj
+	} else if (obj.type == 'trigger_list') {
+		const newObj: ExportTriggersListv6 = { ...cloneDeep(obj), version: 6 }
+
+		for (const trigger of Object.values<any>(newObj.triggers)) {
+			for (const [id, action_set] of Object.entries<any>(trigger.action_sets)) {
+				trigger.action_sets[id] = convertActionsDelay(action_set, trigger.options?.relativeDelay)
+			}
+
+			if (trigger.options) {
+				delete trigger.options?.relativeDelay
+			}
+		}
+
+		return newObj
+	} else {
+		// No change
+		return obj
+	}
+}
+
+function convertPageActionsDelays(page: ExportPageContentv4): ExportPageContentv6 {
+	for (const row of Object.values(page.controls)) {
+		if (!row) continue
+		for (const control of Object.values(row)) {
+			if (!control?.steps) continue
+
+			for (const step of Object.values<any>(control.steps)) {
+				if (!step?.action_sets) continue
+				for (const [setId, set] of Object.entries<any>(step.action_sets)) {
+					if (!set) continue
+					step.action_sets[setId] = convertActionsDelay(set, control.options?.relativeDelay)
+				}
+			}
+
+			if (control.options) {
+				delete control.options.relativeDelay
+			}
+		}
+	}
+
+	return page
 }
 
 function convertActionsDelay(actions: any[], relativeDelays: boolean | undefined) {
