@@ -33,6 +33,8 @@ export class ActionRunner extends CoreBase {
 	 * Run a single action
 	 */
 	async #runAction(action: ActionInstance, extras: RunActionExtras): Promise<void> {
+		this.logger.silly('Running action', action)
+
 		if (action.instance === 'internal') {
 			await this.internalModule.executeAction(action, extras)
 		} else {
@@ -48,23 +50,33 @@ export class ActionRunner extends CoreBase {
 	/**
 	 * Run multiple actions
 	 */
-	async runMultipleActions(actions0: ActionInstance[], extras: RunActionExtras): Promise<void> {
+	async runMultipleActions(
+		actions0: ActionInstance[],
+		extras: RunActionExtras,
+		executeSequential = false
+	): Promise<void> {
 		const actions = actions0.filter((act) => !act.disabled)
+		if (actions.length === 0) return
 
-		if (actions.length === 0) {
-			return
-		}
+		if (executeSequential) {
+			// Future: abort on error?
+			// Future: listen to extras.abortDelayed?
 
-		// Run all the actions in parallel
-		await Promise.all(
-			actions.map(async (action) => {
-				this.logger.silly('Running action', action)
-
+			for (const action of actions) {
 				await this.#runAction(action, extras).catch((e) => {
 					this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
 				})
-			})
-		)
+			}
+		} else {
+			// Run all the actions in parallel
+			await Promise.all(
+				actions.map(async (action) =>
+					this.#runAction(action, extras).catch((e) => {
+						this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
+					})
+				)
+			)
+		}
 	}
 }
 
