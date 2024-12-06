@@ -151,8 +151,6 @@ export class FragmentActionList {
 			!!isCloned
 		)
 
-		// TODO - verify that the action matches this.#booleanOnly?
-
 		this.#actions.push(newAction)
 
 		return newAction

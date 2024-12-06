@@ -1,5 +1,10 @@
 import LogController, { Logger } from '../../Log/Controller.js'
-import type { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type {
+	ActionInstance,
+	ActionOwner,
+	ActionSetsModel,
+	ActionStepOptions,
+} from '@companion-app/shared/Model/ActionModel.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { FragmentActionList } from './FragmentActionList.js'
@@ -103,7 +108,7 @@ export class FragmentActions {
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(setId: string, actionItem: ActionInstance, parentId: string | null): boolean {
+	actionAdd(setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) {
 			// cant implicitly create a set
@@ -112,11 +117,11 @@ export class FragmentActions {
 		}
 
 		let newAction: FragmentActionInstance
-		if (parentId) {
-			const parent = actionSet.findById(parentId)
-			if (!parent) throw new Error(`Failed to find parent action ${parentId} when adding child action`)
+		if (ownerId) {
+			const parent = actionSet.findById(ownerId.parentActionId)
+			if (!parent) throw new Error(`Failed to find parent action ${ownerId.parentActionId} when adding child action`)
 
-			newAction = parent.addChild(actionItem)
+			newAction = parent.addChild(ownerId.childGroup, actionItem)
 		} else {
 			newAction = actionSet.addAction(actionItem)
 		}
@@ -252,7 +257,7 @@ export class FragmentActions {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(setId: string, newActions: ActionInstance[], parentId: string | null): boolean {
+	actionAppend(setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) {
 			// cant implicitly create a set
@@ -263,9 +268,9 @@ export class FragmentActions {
 		if (newActions.length === 0) return true
 
 		let newActionInstances: FragmentActionInstance[]
-		if (parentId) {
-			const parent = actionSet.findById(parentId)
-			if (!parent) throw new Error(`Failed to find parent action ${parentId} when adding child action`)
+		if (ownerId) {
+			const parent = actionSet.findById(ownerId.parentActionId)
+			if (!parent) throw new Error(`Failed to find parent action ${ownerId.parentActionId} when adding child action`)
 
 			newActionInstances = newActions.map((actionItem) => parent.addChild(actionItem))
 		} else {
@@ -534,7 +539,11 @@ export class FragmentActions {
 				}
 
 				if (action.children) {
-					extractInstances(action.children)
+					for (const actions of Object.values(action.children)) {
+						if (!actions) continue
+
+						extractInstances(actions)
+					}
 				}
 			}
 		}

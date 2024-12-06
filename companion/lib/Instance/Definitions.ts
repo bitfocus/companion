@@ -613,7 +613,9 @@ function convertActionsDelay(
 						delay: delay,
 					},
 
-					children: newParent,
+					children: {
+						default: newParent,
+					},
 				})
 				currentParent = newParent
 			}
@@ -633,7 +635,9 @@ function convertActionsDelay(
 						delay: delay,
 					},
 
-					children: [toActionInstance(action, connectionId)],
+					children: {
+						default: [toActionInstance(action, connectionId)],
+					},
 				})
 			}
 		}

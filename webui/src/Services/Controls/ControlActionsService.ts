@@ -48,7 +48,7 @@ export function useControlActionsEditorService(
 					controlId,
 					stepId,
 					setId + '',
-					parentId,
+					parentId ? { parentActionId: parentId, childGroup: 'default' } : null,
 					connectionId,
 					actionId,
 				]).catch((e) => {
@@ -70,7 +70,7 @@ export function useControlActionsEditorService(
 					dragActionId,
 					stepId,
 					setId + '',
-					dropParentId,
+					dropParentId ? { parentActionId: dropParentId, childGroup: 'default' } : null,
 					dropIndex,
 				]).catch((e) => {
 					console.error('Failed to reorder control actions', e)

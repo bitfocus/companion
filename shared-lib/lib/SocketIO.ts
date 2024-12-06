@@ -44,6 +44,7 @@ import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/Act
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
+import type { ActionOwner } from './Model/ActionModel.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -169,14 +170,14 @@ export interface ClientToBackendEventsMap {
 		dragActionId: string,
 		hoverStepId: string,
 		hoverSetId: string,
-		hoverParentId: string | null,
+		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	) => boolean
 	'controls:action:add': (
 		controlId: string,
 		stepId: string,
 		setId: string,
-		parentId: string | null,
+		ownerId: ActionOwner | null,
 		connectionId: string,
 		actionType: string
 	) => boolean

@@ -27,7 +27,7 @@ export class FragmentActionInstance {
 
 	readonly #data: Omit<ActionInstance, 'children'>
 
-	#children: FragmentActionList
+	#children = new Map<string, FragmentActionList>()
 
 	/**
 	 * Get the id of this action instance
@@ -97,6 +97,17 @@ export class FragmentActionInstance {
 		}
 	}
 
+	#getOrCreateActionGroup(groupId: string) {
+		const existing = this.#children.get(groupId)
+		if (existing) return existing
+
+		// Check what names are allowed
+		const definition = this.connectionId === 'internal' && this.getDefinition()
+		if (!definition) throw new Error('Action cannot accept children.')
+
+		throw new Error('Method not implemented.')
+	}
+
 	/**
 	 * Get this action as a `ActionInstance`
 	 */
@@ -126,7 +137,9 @@ export class FragmentActionInstance {
 			})
 		}
 
-		this.#children.cleanup()
+		for (const actionGroup of this.#children.values()) {
+			actionGroup.cleanup()
+		}
 	}
 
 	/**
@@ -151,7 +164,9 @@ export class FragmentActionInstance {
 		}
 
 		if (recursive) {
-			this.#children.subscribe(recursive, onlyConnectionId)
+			for (const actionGroup of this.#children.values()) {
+				actionGroup.subscribe(recursive, onlyConnectionId)
+			}
 		}
 	}
 
@@ -248,10 +263,12 @@ export class FragmentActionInstance {
 	/**
 	 * Add a child action to this action
 	 */
-	addChild(action: ActionInstance): FragmentActionInstance {
+	addChild(groupId: string, action: ActionInstance): FragmentActionInstance {
 		if (this.connectionId !== 'internal') {
 			throw new Error('Only internal actions can have children')
 		}
+
+		const actionGroup = this.#getOrCreateActionGroup(groupId)
 
 		return this.#children.addAction(action)
 	}
@@ -304,14 +321,26 @@ export class FragmentActionInstance {
 	 * Recursively get all the actions
 	 */
 	getAllChildren(): FragmentActionInstance[] {
-		return this.#children.getAllActions()
+		const actions: FragmentActionInstance[] = []
+
+		for (const actionGroup of this.#children.values()) {
+			actions.push(...actionGroup.getAllActions())
+		}
+
+		return actions
 	}
 
 	/**
 	 * Cleanup and forget any children belonging to the given connection
 	 */
 	forgetChildrenForConnection(connectionId: string): boolean {
-		return this.#children.forgetForConnection(connectionId)
+		let changed = false
+		for (const actionGroup of this.#children.values()) {
+			if (actionGroup.forgetForConnection(connectionId)) {
+				changed = true
+			}
+		}
+		return changed
 	}
 
 	/**
@@ -319,7 +348,13 @@ export class FragmentActionInstance {
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
 	verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
-		return this.#children.verifyConnectionIds(knownConnectionIds)
+		let changed = false
+		for (const actionGroup of this.#children.values()) {
+			if (actionGroup.verifyConnectionIds(knownConnectionIds)) {
+				changed = true
+			}
+		}
+		return changed
 	}
 
 	/**
@@ -344,7 +379,9 @@ export class FragmentActionInstance {
 			}
 		}
 
-		ps.push(...this.#children.postProcessImport())
+		for (const childGroup of this.#children.values()) {
+			ps.push(...childGroup.postProcessImport())
+		}
 
 		return ps
 	}

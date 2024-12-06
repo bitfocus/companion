@@ -7,7 +7,11 @@ export interface ActionInstance {
 	disabled?: boolean
 	upgradeIndex?: number
 
-	children?: ActionInstance[]
+	/**
+	 * Some internal actions can have children, one or more set of them
+	 * For this first iteration, there can only be one set
+	 */
+	children?: Record<'default', ActionInstance[] | undefined>
 }
 
 export interface ActionStepOptions {
@@ -27,3 +31,8 @@ export type ActionSetsModel = Record<string | number, ActionInstance[] | undefin
 // }
 
 // export type ActionSetId = 'down' | 'up' | 'rotate_left' | 'rotate_right' | number
+
+export interface ActionOwner {
+	parentActionId: string
+	childGroup: string
+}

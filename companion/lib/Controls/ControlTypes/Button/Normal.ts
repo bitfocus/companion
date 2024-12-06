@@ -15,7 +15,12 @@ import type {
 	NormalButtonOptions,
 	NormalButtonSteps,
 } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type {
+	ActionInstance,
+	ActionOwner,
+	ActionSetsModel,
+	ActionStepOptions,
+} from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 
@@ -136,10 +141,10 @@ export class ControlButtonNormal
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(stepId: string, setId: string, actionItem: ActionInstance, parentId: string | null): boolean {
+	actionAdd(stepId: string, setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
 		const step = this.steps[stepId]
 		if (step) {
-			return step.actionAdd(setId, actionItem, parentId)
+			return step.actionAdd(setId, actionItem, ownerId)
 		} else {
 			return false
 		}
@@ -151,10 +156,10 @@ export class ControlButtonNormal
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(stepId: string, setId: string, newActions: ActionInstance[], parentId: string | null): boolean {
+	actionAppend(stepId: string, setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
 		const step = this.steps[stepId]
 		if (step) {
-			return step.actionAppend(setId, newActions, parentId)
+			return step.actionAppend(setId, newActions, ownerId)
 		} else {
 			return false
 		}
@@ -229,7 +234,7 @@ export class ControlButtonNormal
 		dragActionId: string,
 		hoverStepId: string,
 		hoverSetId: string,
-		hoverParentId: string | null,
+		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	): boolean {
 		const oldStep = this.steps[dragStepId]
@@ -251,11 +256,11 @@ export class ControlButtonNormal
 			const newSet = newStep.getActionSet(hoverSetId)
 			if (!newSet) return false
 
-			const newParent = hoverParentId ? newSet?.findById(hoverParentId) : null
-			if (hoverParentId && !newParent) return false
+			const newParent = hoverOwnerId ? newSet?.findById(hoverOwnerId.parentActionId) : null
+			if (hoverOwnerId && !newParent) return false
 
 			// Ensure the new parent is not a child of the action being moved
-			if (hoverParentId && oldItem.item.findChildById(hoverParentId)) return false
+			if (hoverOwnerId && oldItem.item.findChildById(hoverOwnerId.parentActionId)) return false
 
 			// Check if the new parent can hold the action being moved
 			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false

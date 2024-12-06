@@ -35,9 +35,11 @@ import classNames from 'classnames'
 function findAllActionIdsDeep(actions: ActionInstance[]): string[] {
 	const result: string[] = actions.map((f) => f.id)
 
-	for (const feedback of actions) {
-		if (feedback.children) {
-			result.push(...findAllActionIdsDeep(feedback.children))
+	for (const action of actions) {
+		if (!action.children) continue
+		for (const actionGroup of Object.values(action.children)) {
+			if (!actionGroup) continue
+			result.push(...findAllActionIdsDeep(actionGroup))
 		}
 	}
 
@@ -575,7 +577,7 @@ const ActionTableRow = observer(function ActionTableRow({
 									<InlineActionList
 										controlId={controlId}
 										heading={null}
-										actions={action.children ?? []}
+										actions={action.children?.['default'] ?? []}
 										location={location}
 										stepId={stepId}
 										setId={setId}

@@ -1174,14 +1174,21 @@ function fixupActionsRecursive(instanceIdMap: InstanceAppliedRemappings, actions
 	for (const action of actions) {
 		const instanceInfo = instanceIdMap[action?.instance]
 		if (action && instanceInfo) {
+			let newChildren: Record<string, ActionInstance[]> | undefined
+			if (action.instance === 'internal' && action.children) {
+				newChildren = {}
+				for (const [group, actions] of Object.entries(action.children)) {
+					if (!actions) continue
+
+					newChildren[group] = fixupActionsRecursive(instanceIdMap, actions)
+				}
+			}
+
 			newActions.push({
 				...action,
 				instance: instanceInfo.id,
 				upgradeIndex: instanceInfo.lastUpgradeIndex,
-				children:
-					action.instance === 'internal' && action.children
-						? fixupActionsRecursive(instanceIdMap, action.children)
-						: undefined,
+				children: newChildren,
 			})
 		}
 	}

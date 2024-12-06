@@ -1,7 +1,7 @@
 import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
 import type { FragmentFeedbacks } from './Fragments/FragmentFeedbacks.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionOwner } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
@@ -133,7 +133,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(stepId: string, setId: string, actionItem: ActionInstance, parentId: string | null): boolean
+	actionAdd(stepId: string, setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean
 
 	/**
 	 * Append some actions to this button
@@ -141,7 +141,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(stepId: string, setId: string, newActions: ActionInstance[], parentId: string | null): boolean
+	actionAppend(stepId: string, setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean
 
 	/**
 	 * Duplicate an action on this control
@@ -177,7 +177,7 @@ export interface ControlWithActions extends ControlBase<any> {
 		dragActionId: string,
 		hoverStepId: string,
 		hoverSetId: string,
-		hoverParentId: string | null,
+		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	): boolean
 

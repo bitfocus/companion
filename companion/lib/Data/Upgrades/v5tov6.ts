@@ -60,7 +60,9 @@ function convertActionsDelay(actions: any[], relativeDelays: boolean | undefined
 						delay: delay,
 					},
 
-					children: newParent,
+					children: {
+						default: newParent,
+					},
 				})
 				currentParent = newParent
 			}
@@ -81,7 +83,9 @@ function convertActionsDelay(actions: any[], relativeDelays: boolean | undefined
 						delay: delay,
 					},
 
-					children: [action],
+					children: {
+						default: [action],
+					},
 				})
 			}
 		}
