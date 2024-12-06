@@ -75,7 +75,10 @@ export interface ExecuteFeedbackResultWithReferences {
 	value: any
 }
 
-export type InternalActionDefinition = SetOptional<ActionDefinition, 'hasLearn' | 'learnTimeout' | 'showButtonPreview'>
+export type InternalActionDefinition = SetOptional<
+	ActionDefinition,
+	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildActionGroups'
+>
 
 export type InternalFeedbackDefinition = SetOptional<
 	FeedbackDefinition,

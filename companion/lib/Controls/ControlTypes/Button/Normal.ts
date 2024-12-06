@@ -243,7 +243,12 @@ export class ControlButtonNormal
 		const oldItem = oldStep.findParentAndIndex(dragSetId, dragActionId)
 		if (!oldItem) return false
 
-		if (dragStepId === hoverStepId && dragSetId === hoverSetId && oldItem.parent.id === hoverParentId) {
+		if (
+			dragStepId === hoverStepId &&
+			dragSetId === hoverSetId &&
+			oldItem.parent.ownerId?.parentActionId === hoverOwnerId?.parentActionId &&
+			oldItem.parent.ownerId?.childGroup === hoverOwnerId?.childGroup
+		) {
 			oldItem.parent.moveAction(oldItem.index, hoverIndex)
 
 			this.commitChange(false)
@@ -263,13 +268,13 @@ export class ControlButtonNormal
 			if (hoverOwnerId && oldItem.item.findChildById(hoverOwnerId.parentActionId)) return false
 
 			// Check if the new parent can hold the action being moved
-			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
+			if (newParent && !newParent.canAcceptChild(hoverOwnerId!.childGroup, oldItem.item)) return false
 
 			const poppedAction = oldItem.parent.popAction(oldItem.index)
 			if (!poppedAction) return false
 
 			if (newParent) {
-				newParent.pushChild(poppedAction, hoverIndex)
+				newParent.pushChild(poppedAction, hoverOwnerId!.childGroup, hoverIndex)
 			} else {
 				newSet.pushAction(poppedAction, hoverIndex)
 			}

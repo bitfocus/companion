@@ -412,7 +412,9 @@ export class InternalController {
 						...action,
 						hasLearn: action.hasLearn ?? false,
 						learnTimeout: action.learnTimeout,
+
 						showButtonPreview: action.showButtonPreview ?? false,
+						supportsChildActionGroups: action.supportsChildActionGroups ?? [],
 					}
 				}
 			}

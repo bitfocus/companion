@@ -102,7 +102,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildActions: true,
+				supportsChildActionGroups: ['default'],
 			},
 		}
 	}

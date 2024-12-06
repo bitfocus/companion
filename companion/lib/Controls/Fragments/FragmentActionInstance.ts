@@ -85,15 +85,12 @@ export class FragmentActionInstance {
 			this.#data.id = nanoid()
 		}
 
-		this.#children = new FragmentActionList(
-			this.#instanceDefinitions,
-			this.#internalModule,
-			this.#moduleHost,
-			this.#controlId,
-			this.id
-		)
 		if (data.instance === 'internal' && data.children) {
-			this.#children.loadStorage(data.children, true, isCloned)
+			for (const [groupId, actions] of Object.entries(data.children)) {
+				if (!actions) continue
+				const childGroup = this.#getOrCreateActionGroup(groupId)
+				childGroup.loadStorage(actions, true, isCloned)
+			}
 		}
 	}
 
@@ -105,17 +102,37 @@ export class FragmentActionInstance {
 		const definition = this.connectionId === 'internal' && this.getDefinition()
 		if (!definition) throw new Error('Action cannot accept children.')
 
-		throw new Error('Method not implemented.')
+		if (!definition.supportsChildActionGroups.includes(groupId)) {
+			throw new Error('Action cannot accept children in this group.')
+		}
+
+		const childGroup = new FragmentActionList(
+			this.#instanceDefinitions,
+			this.#internalModule,
+			this.#moduleHost,
+			this.#controlId,
+			{ parentActionId: this.id, childGroup: groupId }
+		)
+		this.#children.set(groupId, childGroup)
+
+		return childGroup
 	}
 
 	/**
 	 * Get this action as a `ActionInstance`
 	 */
 	asActionInstance(): ActionInstance {
-		return {
-			...this.#data,
-			children: this.connectionId === 'internal' ? this.#children.asActionInstances() : undefined,
+		const actionInstance: ActionInstance = { ...this.#data }
+
+		if (this.connectionId === 'internal') {
+			actionInstance.children = {}
+
+			for (const [groupId, actionGroup] of this.#children) {
+				actionInstance.children[groupId] = actionGroup.asActionInstances()
+			}
 		}
+
+		return actionInstance
 	}
 
 	/**
@@ -248,7 +265,11 @@ export class FragmentActionInstance {
 	 * Find a child action by id
 	 */
 	findChildById(id: string): FragmentActionInstance | undefined {
-		return this.#children.findById(id)
+		for (const actionGroup of this.#children.values()) {
+			const result = actionGroup.findById(id)
+			if (result) return result
+		}
+		return undefined
 	}
 
 	/**
@@ -257,7 +278,11 @@ export class FragmentActionInstance {
 	findParentAndIndex(
 		id: string
 	): { parent: FragmentActionList; index: number; item: FragmentActionInstance } | undefined {
-		return this.#children.findParentAndIndex(id)
+		for (const actionGroup of this.#children.values()) {
+			const result = actionGroup.findParentAndIndex(id)
+			if (result) return result
+		}
+		return undefined
 	}
 
 	/**
@@ -269,52 +294,63 @@ export class FragmentActionInstance {
 		}
 
 		const actionGroup = this.#getOrCreateActionGroup(groupId)
-
-		return this.#children.addAction(action)
+		return actionGroup.addAction(action)
 	}
 
 	/**
 	 * Remove a child action
 	 */
 	removeChild(id: string): boolean {
-		return this.#children.removeAction(id)
+		for (const actionGroup of this.#children.values()) {
+			if (actionGroup.removeAction(id)) return true
+		}
+		return false
 	}
 
 	/**
 	 * Duplicate a child action
 	 */
 	duplicateChild(id: string): FragmentActionInstance | undefined {
-		return this.#children.duplicateAction(id)
+		for (const actionGroup of this.#children.values()) {
+			const newAction = actionGroup.duplicateAction(id)
+			if (newAction) return newAction
+		}
+		return undefined
 	}
 
-	/**
-	 * Reorder a action in the list
-	 */
-	moveChild(oldIndex: number, newIndex: number): void {
-		return this.#children.moveAction(oldIndex, newIndex)
-	}
+	// /**
+	//  * Reorder a action in the list
+	//  */
+	// moveChild(groupId: string, oldIndex: number, newIndex: number): void {
+	// 	const actionGroup = this.#children.get(groupId)
+	// 	if (!actionGroup) return
 
-	/**
-	 * Pop a child action from the list
-	 * Note: this is used when moving a action to a different parent. Lifecycle is not managed
-	 */
-	popChild(index: number): FragmentActionInstance | undefined {
-		return this.#children.popAction(index)
-	}
+	// 	return actionGroup.moveAction(oldIndex, newIndex)
+	// }
+
+	// /**
+	//  * Pop a child action from the list
+	//  * Note: this is used when moving a action to a different parent. Lifecycle is not managed
+	//  */
+	// popChild(index: number): FragmentActionInstance | undefined {
+	// 	return this.#children.popAction(index)
+	// }
 
 	/**
 	 * Push a child action to the list
 	 * Note: this is used when moving a action from a different parent. Lifecycle is not managed
 	 */
-	pushChild(action: FragmentActionInstance, index: number): void {
-		return this.#children.pushAction(action, index)
+	pushChild(action: FragmentActionInstance, groupId: string, index: number): void {
+		const actionGroup = this.#getOrCreateActionGroup(groupId)
+		return actionGroup.pushAction(action, index)
 	}
 
 	/**
 	 * Check if this list can accept a specified child
 	 */
-	canAcceptChild(action: FragmentActionInstance): boolean {
-		return this.#children.canAcceptAction(action)
+	canAcceptChild(groupId: string, action: FragmentActionInstance): boolean {
+		const actionGroup = this.#getOrCreateActionGroup(groupId)
+		return actionGroup.canAcceptAction(action)
 	}
 
 	/**

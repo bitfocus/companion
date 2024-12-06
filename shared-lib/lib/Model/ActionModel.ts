@@ -9,9 +9,8 @@ export interface ActionInstance {
 
 	/**
 	 * Some internal actions can have children, one or more set of them
-	 * For this first iteration, there can only be one set
 	 */
-	children?: Record<'default', ActionInstance[] | undefined>
+	children?: Record<string, ActionInstance[] | undefined>
 }
 
 export interface ActionStepOptions {

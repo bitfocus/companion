@@ -435,20 +435,20 @@ export class FragmentFeedbackInstance {
 		return this.#children.duplicateFeedback(id)
 	}
 
-	/**
-	 * Reorder a feedback in the list
-	 */
-	moveChild(oldIndex: number, newIndex: number): void {
-		return this.#children.moveFeedback(oldIndex, newIndex)
-	}
+	// /**
+	//  * Reorder a feedback in the list
+	//  */
+	// moveChild(oldIndex: number, newIndex: number): void {
+	// 	return this.#children.moveFeedback(oldIndex, newIndex)
+	// }
 
-	/**
-	 * Pop a child feedback from the list
-	 * Note: this is used when moving a feedback to a different parent. Lifecycle is not managed
-	 */
-	popChild(index: number): FragmentFeedbackInstance | undefined {
-		return this.#children.popFeedback(index)
-	}
+	// /**
+	//  * Pop a child feedback from the list
+	//  * Note: this is used when moving a feedback to a different parent. Lifecycle is not managed
+	//  */
+	// popChild(index: number): FragmentFeedbackInstance | undefined {
+	// 	return this.#children.popFeedback(index)
+	// }
 
 	/**
 	 * Push a child feedback to the list

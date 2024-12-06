@@ -272,7 +272,7 @@ export class FragmentActions {
 			const parent = actionSet.findById(ownerId.parentActionId)
 			if (!parent) throw new Error(`Failed to find parent action ${ownerId.parentActionId} when adding child action`)
 
-			newActionInstances = newActions.map((actionItem) => parent.addChild(actionItem))
+			newActionInstances = newActions.map((actionItem) => parent.addChild(ownerId.childGroup, actionItem))
 		} else {
 			newActionInstances = newActions.map((actionItem) => actionSet.addAction(actionItem))
 		}

@@ -3,7 +3,7 @@ import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionOwner } from '@companion-app/shared/Model/ActionModel.js'
 
 export class FragmentActionList {
 	readonly #instanceDefinitions: InstanceDefinitions
@@ -15,12 +15,12 @@ export class FragmentActionList {
 	 */
 	readonly #controlId: string
 
-	readonly #id: string | null
+	readonly #ownerId: ActionOwner | null
 
 	#actions: FragmentActionInstance[] = []
 
-	get id(): string | null {
-		return this.#id
+	get ownerId(): ActionOwner | null {
+		return this.#ownerId
 	}
 
 	constructor(
@@ -28,13 +28,13 @@ export class FragmentActionList {
 		internalModule: InternalController,
 		moduleHost: ModuleHost,
 		controlId: string,
-		id: string | null
+		ownerId: ActionOwner | null
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
-		this.#id = id
+		this.#ownerId = ownerId
 	}
 
 	/**

@@ -25,7 +25,7 @@ import type {
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionOwner } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 
@@ -210,15 +210,15 @@ export class ControlTrigger
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance, parentId: string | null): boolean {
-		return this.actions.actionAdd('0', actionItem, parentId)
+	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
+		return this.actions.actionAdd('0', actionItem, ownerId)
 	}
 
 	/**
 	 * Append some actions to this button
 	 */
-	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[], parentId: string | null): boolean {
-		return this.actions.actionAppend('0', newActions, parentId)
+	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
+		return this.actions.actionAppend('0', newActions, ownerId)
 	}
 
 	/**
@@ -299,7 +299,7 @@ export class ControlTrigger
 		dragActionId: string,
 		_hoverStepId: string,
 		_hoverSetId: string,
-		hoverParentId: string | null,
+		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	): boolean {
 		const oldItem = this.actions.findParentAndIndex('0', dragActionId)
@@ -308,20 +308,20 @@ export class ControlTrigger
 		const set = this.actions.getActionSet('0')
 		if (!set) return false
 
-		const newParent = hoverParentId ? set?.findById(hoverParentId) : null
-		if (hoverParentId && !newParent) return false
+		const newParent = hoverOwnerId ? set?.findById(hoverOwnerId.parentActionId) : null
+		if (hoverOwnerId && !newParent) return false
 
 		// Ensure the new parent is not a child of the action being moved
-		if (hoverParentId && oldItem.item.findChildById(hoverParentId)) return false
+		if (hoverOwnerId && oldItem.item.findChildById(hoverOwnerId.parentActionId)) return false
 
 		// Check if the new parent can hold the action being moved
-		if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
+		if (newParent && !newParent.canAcceptChild(hoverOwnerId!.childGroup, oldItem.item)) return false
 
 		const poppedAction = oldItem.parent.popAction(oldItem.index)
 		if (!poppedAction) return false
 
 		if (newParent) {
-			newParent.pushChild(poppedAction, hoverIndex)
+			newParent.pushChild(poppedAction, hoverOwnerId!.childGroup, hoverIndex)
 		} else {
 			set.pushAction(poppedAction, hoverIndex)
 		}
