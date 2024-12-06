@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { SocketContext, socketEmitPromise } from '../util.js'
 import { nanoid } from 'nanoid'
 import { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
@@ -12,14 +12,14 @@ import { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Commo
 export function useButtonRenderCache(location: ControlLocation, disable = false) {
 	const socket = useContext(SocketContext)
 
-	const subId = useMemo(() => nanoid(), [])
-
 	// TODO - should these be managed a bit more centrally, and batched? It is likely that lots of subscribe/unsubscribe calls will happen at once (changing page/scrolling)
 
 	const [imageState, setImageState] = useState<WrappedImage>({ image: null, isUsed: false })
 
 	useEffect(() => {
 		if (disable) return
+
+		const subId = nanoid()
 
 		let terminated = false
 
@@ -59,7 +59,7 @@ export function useButtonRenderCache(location: ControlLocation, disable = false)
 
 			socket.off('preview:location:render', changeHandler)
 		}
-	}, [socket, subId, location.pageNumber, location.row, location.column, disable])
+	}, [socket, location.pageNumber, location.row, location.column, disable])
 
 	return imageState
 }
