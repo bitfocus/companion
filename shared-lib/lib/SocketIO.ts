@@ -35,7 +35,7 @@ import type {
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
-import type { FeedbackDefinitionUpdate, InternalFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
+import type { FeedbackDefinitionUpdate, ClientFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
@@ -89,7 +89,7 @@ export interface ClientToBackendEventsMap {
 	'action-definitions:unsubscribe': () => void
 	'feedback-definitions:subscribe': () => Record<
 		string,
-		Record<string, InternalFeedbackDefinition | undefined> | undefined
+		Record<string, ClientFeedbackDefinition | undefined> | undefined
 	>
 	'feedback-definitions:unsubscribe': () => void
 	'variable-definitions:subscribe': () => AllVariableDefinitions
