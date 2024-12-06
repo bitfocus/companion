@@ -55,22 +55,6 @@ export class ActionRunner extends CoreBase {
 			return
 		}
 
-		// // Handle whether the delays are absolute or relative.
-		// const effective_delays: Record<string, number> = {}
-		// let tmp_delay = 0
-		// for (const action of actions) {
-		// 	if (relative_delay) {
-		// 		// Relative delay: each action's delay adds to the next.
-		// 		tmp_delay += action.delay
-		// 	} else {
-		// 		// Absolute delay: each delay is its own.
-		// 		tmp_delay = action.delay
-		// 	}
-
-		// 	// Create the property .effective_delay. Don't change the user's .delay property.
-		// 	effective_delays[action.id] = tmp_delay
-		// }
-
 		// Run all the actions in parallel
 		await Promise.all(
 			actions.map(async (action) => {
@@ -81,45 +65,6 @@ export class ActionRunner extends CoreBase {
 				})
 			})
 		)
-
-		// let has_delayed = false
-		// for (const action of actions) {
-		// 	const delay_time = effective_delays[action.id] === undefined ? 0 : effective_delays[action.id]
-
-		// 	this.logger.silly('Running action', action)
-
-		// 	// is this a timedelayed action?
-		// 	if (delay_time > 0) {
-		// 		has_delayed = true
-		// 		const timer = setTimeout(() => {
-		// 			this.#runAction(action, extra2).catch((e) => {
-		// 				this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
-		// 			})
-
-		// 			this.#timers_running.delete(timer)
-
-		// 			// Stop timer-indication
-		// 			const hasAnotherTimer = Array.from(this.#timers_running.values()).find((v) => v === controlId)
-		// 			if (hasAnotherTimer === undefined) {
-		// 				this.#setControlIsRunning(controlId, false)
-		// 			}
-		// 		}, delay_time)
-
-		// 		this.#timers_running.set(timer, controlId)
-		// 	}
-
-		// 	// or is it immediate
-		// 	else {
-		// 		this.#runAction(action, extra2).catch((e) => {
-		// 			this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
-		// 		})
-		// 	}
-		// }
-
-		// if (has_delayed) {
-		// 	// Start timer-indication
-		// 	this.#setControlIsRunning(controlId, true)
-		// }
 	}
 }
 
