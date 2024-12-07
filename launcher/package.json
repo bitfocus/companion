@@ -25,10 +25,9 @@
 		"systeminformation": "^5.23.5"
 	},
 	"devDependencies": {
-		"@electron/notarize": "^2.5.0",
 		"@types/plist": "^3.0.5",
 		"electron": "33.2.1",
-		"electron-builder": "24.13.3",
+		"electron-builder": "26.0.0-alpha.7",
 		"electron-reloader": "^1.2.3"
 	},
 	"build": {
@@ -53,7 +52,6 @@
 			"entitlementsInherit": "entitlements.mac.plist"
 		},
 		"afterPack": "fix-bundled-modules.cjs",
-		"afterSign": "notarize.cjs",
 		"win": {
 			"target": "nsis"
 		},
@@ -91,7 +89,11 @@
 		"extraResources": [
 			{
 				"from": "../dist",
-				"to": "."
+				"to": ".",
+				"filter": [
+					"**/*",
+					"!.yarn"
+				]
 			}
 		]
 	}
