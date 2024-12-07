@@ -27,7 +27,7 @@
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
-		"@sentry/webpack-plugin": "^2.22.6",
+		"@sentry/webpack-plugin": "^2.22.7",
 		"@types/archiver": "^6.0.3",
 		"@types/better-sqlite3": "^7.6.12",
 		"@types/cors": "^2.8.17",
@@ -41,7 +41,7 @@
 		"@types/ws": "^8.5.13",
 		"supertest": "^7.0.0",
 		"typescript": "~5.7.2",
-		"webpack": "^5.97.0",
+		"webpack": "^5.97.1",
 		"webpack-cli": "^5.1.4"
 	},
 	"dependencies": {
@@ -58,7 +58,7 @@
 		"@napi-rs/canvas": "^0.1.65",
 		"@sentry/node": "^8.42.0",
 		"archiver": "^7.0.1",
-		"better-sqlite3": "^11.6.0",
+		"better-sqlite3": "^11.7.0",
 		"body-parser": "^1.20.3",
 		"bufferutil": "^4.0.8",
 		"colord": "^2.9.3",
@@ -90,7 +90,7 @@
 		"socket.io": "^4.8.1",
 		"socketcluster-client": "^19.2.3",
 		"supports-color": "^9.4.0",
-		"systeminformation": "^5.23.5",
+		"systeminformation": "^5.23.6",
 		"type-fest": "^4.30.0",
 		"usb": "2.14.0",
 		"uuid": "^11.0.3",

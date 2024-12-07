@@ -22,11 +22,11 @@
 		"plist": "^3.1.0",
 		"semver": "^7.6.3",
 		"strip-ansi": "^7.1.0",
-		"systeminformation": "^5.23.5"
+		"systeminformation": "^5.23.6"
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
-		"electron": "33.2.1",
+		"electron": "33.3.0",
 		"electron-builder": "26.0.0-alpha.7",
 		"electron-reloader": "^1.2.3"
 	},

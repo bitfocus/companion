@@ -34,7 +34,7 @@
     "node": ">=18.16 <19"
   },
   "devDependencies": {
-    "@inquirer/prompts": "^7.1.0",
+    "@inquirer/prompts": "^7.2.0",
     "@types/ps-tree": "^1.1.6",
     "chokidar": "^3.6.0",
     "concurrently": "^9.1.0",
