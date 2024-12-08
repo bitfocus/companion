@@ -2,6 +2,7 @@ import { CoreBase } from '../Core/Base.js'
 import { parseColorToNumber, rgb } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { RegexRouter } from './RegexRouter.js'
+import { Bank, Location, Page, VariableName } from './RoutePatterns.js'
 import type { Registry } from '../Registry.js'
 import type { OscReceivedMessage } from 'osc'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -50,94 +51,106 @@ export class ServiceOscApi extends CoreBase {
 	}
 
 	#setupLegacyOscRoutes(): void {
-		this.#router.addPath('/press/bank/:page/:bank', (match: Record<string, string>, message: OscReceivedMessage) => {
-			if (!this.#isLegacyRouteAllowed()) return
+		this.#router.addRoute(
+			`/press/bank/${Page}/${Bank}`,
+			(match: Record<string, string>, message: OscReceivedMessage) => {
+				if (!this.#isLegacyRouteAllowed()) return
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
-			if (!controlId) return
+				const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+				if (!controlId) return
 
-			if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == 1) {
-				this.logger.info(`Got /press/bank/ (press) for ${controlId}`)
-				this.controls.pressControl(controlId, true, undefined)
-			} else if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == 0) {
-				this.logger.info(`Got /press/bank/ (release) for ${controlId}`)
-				this.controls.pressControl(controlId, false, undefined)
-			} else {
-				this.logger.info(`Got /press/bank/ (trigger)${controlId}`)
-				this.controls.pressControl(controlId, true, undefined)
-
-				setTimeout(() => {
-					this.logger.info(`Auto releasing /press/bank/ (trigger)${controlId}`)
+				if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == 1) {
+					this.logger.info(`Got /press/bank/ (press) for ${controlId}`)
+					this.controls.pressControl(controlId, true, undefined)
+				} else if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == 0) {
+					this.logger.info(`Got /press/bank/ (release) for ${controlId}`)
 					this.controls.pressControl(controlId, false, undefined)
-				}, 20)
+				} else {
+					this.logger.info(`Got /press/bank/ (trigger)${controlId}`)
+					this.controls.pressControl(controlId, true, undefined)
+
+					setTimeout(() => {
+						this.logger.info(`Auto releasing /press/bank/ (trigger)${controlId}`)
+						this.controls.pressControl(controlId, false, undefined)
+					}, 20)
+				}
 			}
-		})
+		)
 
-		this.#router.addPath('/style/bgcolor/:page/:bank', (match: Record<string, string>, message: OscReceivedMessage) => {
-			if (!this.#isLegacyRouteAllowed()) return
+		this.#router.addRoute(
+			`/style/bgcolor/${Page}/${Bank}`,
+			(match: Record<string, string>, message: OscReceivedMessage) => {
+				if (!this.#isLegacyRouteAllowed()) return
 
-			if (message.args.length > 2) {
-				const r = message.args[0].value
-				const g = message.args[1].value
-				const b = message.args[2].value
-				if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
-					if (!controlId) return
+				if (message.args.length > 2) {
+					const r = message.args[0].value
+					const g = message.args[1].value
+					const b = message.args[2].value
+					if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
+						const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+						if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/bgcolor for ${controlId}`)
-						control.styleSetFields({ bgcolor: rgb(r, g, b) })
-					} else {
-						this.logger.info(`Got /style/bgcolor for unknown control: ${controlId}`)
+						const control = this.controls.getControl(controlId)
+						if (control && control.supportsStyle) {
+							this.logger.info(`Got /style/bgcolor for ${controlId}`)
+							control.styleSetFields({ bgcolor: rgb(r, g, b) })
+						} else {
+							this.logger.info(`Got /style/bgcolor for unknown control: ${controlId}`)
+						}
 					}
 				}
 			}
-		})
+		)
 
-		this.#router.addPath('/style/color/:page/:bank', (match: Record<string, string>, message: OscReceivedMessage) => {
-			if (!this.#isLegacyRouteAllowed()) return
+		this.#router.addRoute(
+			`/style/color/${Page}/${Bank}`,
+			(match: Record<string, string>, message: OscReceivedMessage) => {
+				if (!this.#isLegacyRouteAllowed()) return
 
-			if (message.args.length > 2) {
-				const r = message.args[0].value
-				const g = message.args[1].value
-				const b = message.args[2].value
-				if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
-					if (!controlId) return
+				if (message.args.length > 2) {
+					const r = message.args[0].value
+					const g = message.args[1].value
+					const b = message.args[2].value
+					if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
+						const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+						if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/color for ${controlId}`)
-						control.styleSetFields({ color: rgb(r, g, b) })
-					} else {
-						this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						const control = this.controls.getControl(controlId)
+						if (control && control.supportsStyle) {
+							this.logger.info(`Got /style/color for ${controlId}`)
+							control.styleSetFields({ color: rgb(r, g, b) })
+						} else {
+							this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						}
 					}
 				}
 			}
-		})
+		)
 
-		this.#router.addPath('/style/text/:page/:bank', (match: Record<string, string>, message: OscReceivedMessage) => {
-			if (!this.#isLegacyRouteAllowed()) return
+		this.#router.addRoute(
+			`/style/text/${Page}/${Bank}`,
+			(match: Record<string, string>, message: OscReceivedMessage) => {
+				if (!this.#isLegacyRouteAllowed()) return
 
-			if (message.args.length > 0) {
-				const text = message.args[0].value
-				if (typeof text === 'string') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
-					if (!controlId) return
+				if (message.args.length > 0) {
+					const text = message.args[0].value
+					if (typeof text === 'string') {
+						const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+						if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/text for ${controlId}`)
-						control.styleSetFields({ text: text })
-					} else {
-						this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						const control = this.controls.getControl(controlId)
+						if (control && control.supportsStyle) {
+							this.logger.info(`Got /style/text for ${controlId}`)
+							control.styleSetFields({ text: text })
+						} else {
+							this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						}
 					}
 				}
 			}
-		})
+		)
 
-		this.#router.addPath('/rescan', (_match: Record<string, string>, _message: OscReceivedMessage) => {
+		this.#router.addRoute('/rescan', (_match: Record<string, string>, _message: OscReceivedMessage) => {
 			if (!this.#isLegacyRouteAllowed()) return
 
 			this.logger.info('Got /rescan 1')
@@ -149,22 +162,22 @@ export class ServiceOscApi extends CoreBase {
 
 	#setupNewOscRoutes() {
 		// controls by location
-		this.#router.addPath('/location/:page/:row/:column/press', this.#locationPress)
-		this.#router.addPath('/location/:page/:row/:column/down', this.#locationDown)
-		this.#router.addPath('/location/:page/:row/:column/up', this.#locationUp)
-		this.#router.addPath('/location/:page/:row/:column/rotate-left', this.#locationRotateLeft)
-		this.#router.addPath('/location/:page/:row/:column/rotate-right', this.#locationRotateRight)
-		this.#router.addPath('/location/:page/:row/:column/step', this.#locationStep)
+		this.#router.addRoute(`/location/${Location}/press`, this.#locationPress)
+		this.#router.addRoute(`/location/${Location}/down`, this.#locationDown)
+		this.#router.addRoute(`/location/${Location}/up`, this.#locationUp)
+		this.#router.addRoute(`/location/${Location}/rotate-left`, this.#locationRotateLeft)
+		this.#router.addRoute(`/location/${Location}/rotate-right`, this.#locationRotateRight)
+		this.#router.addRoute(`/location/${Location}/step`, this.#locationStep)
 
-		this.#router.addPath('/location/:page/:row/:column/style/text', this.#locationSetStyleText)
-		this.#router.addPath('/location/:page/:row/:column/style/color', this.#locationSetStyleColor)
-		this.#router.addPath('/location/:page/:row/:column/style/bgcolor', this.#locationSetStyleBgcolor)
+		this.#router.addRoute(`/location/${Location}/style/text`, this.#locationSetStyleText)
+		this.#router.addRoute(`/location/${Location}/style/color`, this.#locationSetStyleColor)
+		this.#router.addRoute(`/location/${Location}/style/bgcolor`, this.#locationSetStyleBgcolor)
 
 		// custom variables
-		this.#router.addPath('/custom-variable/:name/value', this.#customVariableSetValue)
+		this.#router.addRoute(`/custom-variable/${VariableName}/value`, this.#customVariableSetValue)
 
 		// surfaces
-		this.#router.addPath('/surfaces/rescan', this.#surfacesRescan)
+		this.#router.addRoute('/surfaces/rescan', this.#surfacesRescan)
 	}
 
 	/**
