@@ -26,6 +26,15 @@ export interface FeedbackForVisitor {
 	options: CompanionOptionValues
 }
 
+/**
+ * A minimal representation of a action, for visiting internal actions.
+ */
+export interface ActionForVisitor {
+	id: string
+	action: string
+	options: CompanionOptionValues
+}
+
 export interface InternalModuleFragment {
 	getActionDefinitions?: () => Record<string, InternalActionDefinition>
 
@@ -33,7 +42,7 @@ export interface InternalModuleFragment {
 	 * Run a single internal action
 	 * @returns Whether the action was handled
 	 */
-	executeAction?(action: ActionInstance, extras: RunActionExtras): boolean
+	executeAction?(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean
 
 	/**
 	 * Perform an upgrade for an action
@@ -55,7 +64,7 @@ export interface InternalModuleFragment {
 	/**
 	 *
 	 */
-	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]): void
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void
 
 	getVariableDefinitions?: () => VariableDefinitionTmp[]
 	updateVariables?: () => void
@@ -66,7 +75,10 @@ export interface ExecuteFeedbackResultWithReferences {
 	value: any
 }
 
-export type InternalActionDefinition = SetOptional<ActionDefinition, 'hasLearn' | 'learnTimeout' | 'showButtonPreview'>
+export type InternalActionDefinition = SetOptional<
+	ActionDefinition,
+	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildActionGroups'
+>
 
 export type InternalFeedbackDefinition = SetOptional<
 	FeedbackDefinition,

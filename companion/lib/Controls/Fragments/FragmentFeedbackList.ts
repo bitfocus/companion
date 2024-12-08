@@ -128,6 +128,7 @@ export class FragmentFeedbackList {
 		for (const feedback of this.#feedbacks) {
 			feedback.cleanup()
 		}
+		this.#feedbacks = []
 	}
 
 	/**

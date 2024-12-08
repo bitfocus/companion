@@ -26,6 +26,7 @@ import type {
 	InternalModuleFragment,
 	InternalVisitor,
 	ExecuteFeedbackResultWithReferences,
+	ActionForVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
 } from './Types.js'
@@ -1036,28 +1037,41 @@ export class InternalControls implements InternalModuleFragment {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
-			this.#controlsController.actionRunner.abortControlDelayed(theControlId, action.options.unlatch)
+			const control = this.#controlsController.getControl(theControlId)
+			if (control && control.supportsActions) {
+				control.abortDelayedActions(action.options.unlatch)
+			}
+
 			return true
 		} else if (action.action === 'panic_page') {
 			const { thePage } = this.#fetchPage(action.options, extras)
 			if (thePage === null) return true
 
-			this.#controlsController.actionRunner.abortPageDelayed(
-				thePage,
-				action.options.ignoreSelf && extras.location ? [extras.location] : undefined
-			)
+			const controlIdsOnPage = this.#pagesController.getAllControlIdsOnPage(thePage)
+			for (const controlId of controlIdsOnPage) {
+				if (action.options.ignoreSelf && controlId === extras.controlId) continue
+
+				const control = this.#controlsController.getControl(controlId)
+				if (control && control.supportsActions) {
+					control.abortDelayedActions(false)
+				}
+			}
+
 			return true
 		} else if (action.action === 'panic_trigger') {
 			let controlId = action.options.trigger_id
 			if (controlId === 'self') controlId = extras.controlId
 
 			if (controlId && ParseControlId(controlId)?.type === 'trigger') {
-				this.#controlsController.actionRunner.abortControlDelayed(controlId, false)
+				const control = this.#controlsController.getControl(controlId)
+				if (control && control.supportsActions) {
+					control.abortDelayedActions(false)
+				}
 			}
 
 			return true
 		} else if (action.action === 'panic') {
-			this.#controlsController.actionRunner.abortAllDelayed()
+			this.#controlsController.abortAllDelayedActions()
 			return true
 		} else if (action.action == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
@@ -1130,7 +1144,7 @@ export class InternalControls implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		for (const action of actions) {
 			try {
 				// any expression/variables fields are handled by generic options visitor

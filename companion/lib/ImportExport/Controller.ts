@@ -15,7 +15,7 @@
  *
  */
 
-const FILE_VERSION = 4
+const FILE_VERSION = 6
 
 import os from 'os'
 import { upgradeImport } from '../Data/Upgrade.js'
@@ -35,14 +35,14 @@ import { nanoid } from 'nanoid'
 import type express from 'express'
 import type { ParsedQs } from 'qs'
 import type {
-	ExportControlv4,
-	ExportFullv4,
-	ExportInstancesv4,
-	ExportPageContentv4,
-	ExportPageModelv4,
-	ExportTriggerContentv4,
-	ExportTriggersListv4,
-	SomeExportv4,
+	ExportControlv6,
+	ExportFullv6,
+	ExportInstancesv6,
+	ExportPageContentv6,
+	ExportPageModelv6,
+	ExportTriggerContentv6,
+	ExportTriggersListv6,
+	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { AppInfo } from '../Registry.js'
@@ -98,7 +98,7 @@ function downloadBlob(
 	logger: Logger,
 	res: express.Response,
 	next: express.NextFunction,
-	data: SomeExportv4,
+	data: SomeExportv6,
 	filename: string,
 	format: ExportFormat | undefined
 ): void {
@@ -135,7 +135,7 @@ function downloadBlob(
 	}
 }
 
-const find_smallest_grid_for_page = (pageInfo: ExportPageContentv4): UserConfigGridSize => {
+const find_smallest_grid_for_page = (pageInfo: ExportPageContentv6): UserConfigGridSize => {
 	const gridSize: UserConfigGridSize = {
 		minColumn: 0,
 		maxColumn: 7,
@@ -214,8 +214,8 @@ export class ImportExportController {
 			referencedConnectionIds: Set<string>,
 			referencedConnectionLabels: Set<string>,
 			minimalExport = false
-		): ExportInstancesv4 => {
-			const instancesExport: ExportInstancesv4 = {}
+		): ExportInstancesv6 => {
+			const instancesExport: ExportInstancesv6 = {}
 
 			referencedConnectionIds.delete('internal') // Ignore the internal module
 			for (const connectionId of referencedConnectionIds) {
@@ -244,8 +244,8 @@ export class ImportExportController {
 				: encodeURI(`${os.hostname()}_${getTimestamp()}_${exportType}.${fileExt}`)
 		}
 
-		const generate_export_for_triggers = (triggerControls: ControlTrigger[]): ExportTriggersListv4 => {
-			const triggersExport: ExportTriggerContentv4 = {}
+		const generate_export_for_triggers = (triggerControls: ControlTrigger[]): ExportTriggersListv6 => {
+			const triggersExport: ExportTriggerContentv6 = {}
 			const referencedConnectionIds = new Set<string>()
 			const referencedConnectionLabels = new Set<string>()
 			for (const control of triggerControls) {
@@ -312,7 +312,7 @@ export class ImportExportController {
 				)
 
 				// Export file protocol version
-				const exp: ExportPageModelv4 = {
+				const exp: ExportPageModelv6 = {
 					version: FILE_VERSION,
 					type: 'page',
 					page: pageExport,
@@ -330,8 +330,8 @@ export class ImportExportController {
 			pageInfo: PageModel,
 			referencedConnectionIds: Set<string>,
 			referencedConnectionLabels: Set<string>
-		): ExportPageContentv4 => {
-			const pageExport: ExportPageContentv4 = {
+		): ExportPageContentv6 => {
+			const pageExport: ExportPageContentv6 = {
 				name: pageInfo.name,
 				controls: {},
 				gridSize: this.#userConfigController.getKey('gridSize'),
@@ -352,9 +352,9 @@ export class ImportExportController {
 			return pageExport
 		}
 
-		const generateCustomExport = (config: ClientExportSelection | null): ExportFullv4 => {
+		const generateCustomExport = (config: ClientExportSelection | null): ExportFullv6 => {
 			// Export file protocol version
-			const exp: ExportFullv4 = {
+			const exp: ExportFullv6 = {
 				version: FILE_VERSION,
 				type: 'full',
 			}
@@ -378,7 +378,7 @@ export class ImportExportController {
 			}
 
 			if (!config || !isFalsey(config.triggers)) {
-				const triggersExport: ExportTriggerContentv4 = {}
+				const triggersExport: ExportTriggerContentv6 = {}
 				for (const control of rawControls.values()) {
 					if (control.type === 'trigger') {
 						const parsedId = ParseControlId(control.controlId)
@@ -610,7 +610,7 @@ export class ImportExportController {
 					version: FILE_VERSION,
 					triggers: object.triggers,
 					instances: object.instances,
-				} satisfies ExportFullv4
+				} satisfies ExportFullv6
 			}
 
 			// Store the object on the client
@@ -639,7 +639,7 @@ export class ImportExportController {
 				}
 			}
 
-			function simplifyPageForClient(pageInfo: ExportPageContentv4): ClientPageInfo {
+			function simplifyPageForClient(pageInfo: ExportPageContentv6): ClientPageInfo {
 				return {
 					name: pageInfo.name,
 					gridSize: find_smallest_grid_for_page(pageInfo),
@@ -764,7 +764,7 @@ export class ImportExportController {
 		})
 
 		const doPageImport = (
-			pageInfo: ExportPageContentv4,
+			pageInfo: ExportPageContentv6,
 			topage: number,
 			instanceIdMap: InstanceAppliedRemappings
 		): void => {
@@ -960,7 +960,7 @@ export class ImportExportController {
 	}
 
 	#importInstances(
-		instances: ExportInstancesv4 | undefined,
+		instances: ExportInstancesv6 | undefined,
 		instanceRemapping: ConnectionRemappings
 	): InstanceAppliedRemappings {
 		const instanceIdMap: InstanceAppliedRemappings = {}
@@ -1019,7 +1019,7 @@ export class ImportExportController {
 		return instanceIdMap
 	}
 
-	#fixupTriggerControl(control: ExportTriggerContentv4, instanceIdMap: InstanceAppliedRemappings): TriggerModel {
+	#fixupTriggerControl(control: ExportTriggerContentv6, instanceIdMap: InstanceAppliedRemappings): TriggerModel {
 		// Future: this does not feel durable
 
 		const connectionLabelRemap: Record<string, string> = {}
@@ -1041,41 +1041,15 @@ export class ImportExportController {
 			events: control.events,
 		}
 
-		const fixupCondition = (feedbacks: FeedbackInstance[]) => {
-			const newFeedbacks: FeedbackInstance[] = []
-			for (const feedback of feedbacks) {
-				const instanceInfo = instanceIdMap[feedback?.instance_id]
-				if (feedback && instanceInfo) {
-					newFeedbacks.push({
-						...feedback,
-						instance_id: instanceInfo.id,
-						upgradeIndex: instanceInfo.lastUpgradeIndex,
-						children:
-							feedback.instance_id === 'internal' && feedback.children ? fixupCondition(feedback.children) : undefined,
-					})
-				}
-			}
-			return newFeedbacks
-		}
-
 		if (control.condition) {
-			result.condition = fixupCondition(cloneDeep(control.condition))
+			result.condition = fixupFeedbacksRecursive(instanceIdMap, cloneDeep(control.condition))
 		}
 
 		const allActions: ActionInstance[] = []
 		if (control.action_sets) {
 			for (const [setId, action_set] of Object.entries(control.action_sets)) {
-				const newActions: ActionInstance[] = []
-				for (const action of action_set as any) {
-					const instanceInfo = instanceIdMap[action?.instance]
-					if (action && instanceInfo) {
-						newActions.push({
-							...cloneDeep(action),
-							instance: instanceInfo.id,
-							upgradeIndex: instanceInfo.lastUpgradeIndex,
-						})
-					}
-				}
+				const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
+
 				result.action_sets[setId] = newActions
 				allActions.push(...newActions)
 			}
@@ -1091,6 +1065,7 @@ export class ImportExportController {
 			allActions,
 			result.condition || [],
 			[],
+			[],
 			result.events || [],
 			false
 		)
@@ -1098,7 +1073,7 @@ export class ImportExportController {
 		return result
 	}
 
-	#fixupControl(control: ExportControlv4, instanceIdMap: InstanceAppliedRemappings): SomeButtonModel {
+	#fixupControl(control: ExportControlv6, instanceIdMap: InstanceAppliedRemappings): SomeButtonModel {
 		// Future: this does not feel durable
 
 		if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
@@ -1126,25 +1101,8 @@ export class ImportExportController {
 			steps: {},
 		}
 
-		const fixupFeedbacks = (feedbacks: FeedbackInstance[]) => {
-			const newFeedbacks: FeedbackInstance[] = []
-			for (const feedback of feedbacks) {
-				const instanceInfo = instanceIdMap[feedback?.instance_id]
-				if (feedback && instanceInfo) {
-					newFeedbacks.push({
-						...feedback,
-						instance_id: instanceInfo.id,
-						upgradeIndex: instanceInfo.lastUpgradeIndex,
-						children:
-							feedback.instance_id === 'internal' && feedback.children ? fixupFeedbacks(feedback.children) : undefined,
-					})
-				}
-			}
-			return newFeedbacks
-		}
-
 		if (control.feedbacks) {
-			result.feedbacks = fixupFeedbacks(cloneDeep(control.feedbacks))
+			result.feedbacks = fixupFeedbacksRecursive(instanceIdMap, cloneDeep(control.feedbacks))
 		}
 
 		const allActions: ActionInstance[] = []
@@ -1157,17 +1115,8 @@ export class ImportExportController {
 				}
 
 				for (const [setId, action_set] of Object.entries<any>(step.action_sets)) {
-					const newActions: ActionInstance[] = []
-					for (const action of action_set) {
-						const instanceInfo = instanceIdMap[action?.instance]
-						if (action && instanceInfo) {
-							newActions.push({
-								...cloneDeep(action),
-								instance: instanceInfo.id,
-								upgradeIndex: instanceInfo.lastUpgradeIndex,
-							})
-						}
-					}
+					const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
+
 					newStepSets[setId] = newActions
 					allActions.push(...newActions)
 				}
@@ -1185,6 +1134,7 @@ export class ImportExportController {
 			result.feedbacks || [],
 			[],
 			[],
+			[],
 			false
 		)
 
@@ -1198,6 +1148,51 @@ type InstanceAppliedRemappings = Record<
 >
 
 type ClientPendingImport = {
-	object: ExportFullv4 | ExportPageModelv4
+	object: ExportFullv6 | ExportPageModelv6
 	timeout: null
+}
+
+function fixupFeedbacksRecursive(instanceIdMap: InstanceAppliedRemappings, feedbacks: FeedbackInstance[]) {
+	const newFeedbacks: FeedbackInstance[] = []
+	for (const feedback of feedbacks) {
+		const instanceInfo = instanceIdMap[feedback?.instance_id]
+		if (feedback && instanceInfo) {
+			newFeedbacks.push({
+				...feedback,
+				instance_id: instanceInfo.id,
+				upgradeIndex: instanceInfo.lastUpgradeIndex,
+				children:
+					feedback.instance_id === 'internal' && feedback.children
+						? fixupFeedbacksRecursive(instanceIdMap, feedback.children)
+						: undefined,
+			})
+		}
+	}
+	return newFeedbacks
+}
+
+function fixupActionsRecursive(instanceIdMap: InstanceAppliedRemappings, actions: ActionInstance[]) {
+	const newActions: ActionInstance[] = []
+	for (const action of actions) {
+		const instanceInfo = instanceIdMap[action?.instance]
+		if (action && instanceInfo) {
+			let newChildren: Record<string, ActionInstance[]> | undefined
+			if (action.instance === 'internal' && action.children) {
+				newChildren = {}
+				for (const [group, actions] of Object.entries(action.children)) {
+					if (!actions) continue
+
+					newChildren[group] = fixupActionsRecursive(instanceIdMap, actions)
+				}
+			}
+
+			newActions.push({
+				...action,
+				instance: instanceInfo.id,
+				upgradeIndex: instanceInfo.lastUpgradeIndex,
+				children: newChildren,
+			})
+		}
+	}
+	return newActions
 }

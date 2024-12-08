@@ -175,7 +175,6 @@ export class InstanceDefinitions {
 				action: actionId,
 				instance: connectionId,
 				options: {},
-				delay: 0,
 			}
 
 			if (definition.options !== undefined && definition.options.length > 0) {
@@ -309,7 +308,6 @@ export class InstanceDefinitions {
 		const result: NormalButtonModel = {
 			type: 'button',
 			options: {
-				relativeDelay: definition.options?.relativeDelay ?? false,
 				rotaryActions: definition.options?.rotaryActions ?? false,
 				stepAutoProgress: definition.options?.stepAutoProgress ?? true,
 			},
@@ -334,14 +332,7 @@ export class InstanceDefinitions {
 				result.steps[i] = newStep
 
 				for (const [set, actions_set] of Object.entries(definition.steps[i].action_sets)) {
-					newStep.action_sets[set] = actions_set.map((action: PresetActionInstance) => ({
-						id: nanoid(),
-						instance: connectionId,
-						action: action.action,
-						options: cloneDeep(action.options ?? {}),
-						delay: action.delay ?? 0,
-						headline: action.headline,
-					}))
+					newStep.action_sets[set] = convertActionsDelay(actions_set, connectionId, definition.options?.relativeDelay)
 				}
 			}
 		}
@@ -461,11 +452,10 @@ export class InstanceDefinitions {
 											const setActions: CompanionPresetAction[] = Array.isArray(set) ? set : set.actions
 											if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
 
-											// @ts-ignore
-											action_sets[setId] = setActions.map((act) => ({
+											action_sets[setId as any] = setActions.map((act) => ({
 												action: act.actionId,
 												options: act.options,
-												delay: act.delay,
+												delay: act.delay ?? 0,
 												headline: act.headline,
 											}))
 										}
@@ -586,4 +576,72 @@ export class InstanceDefinitions {
 
 export type PresetDefinitionTmp = CompanionPresetDefinition & {
 	id: string
+}
+
+function toActionInstance(action: PresetActionInstance, connectionId: string): ActionInstance {
+	return {
+		id: nanoid(),
+		instance: connectionId,
+		action: action.action,
+		options: cloneDeep(action.options ?? {}),
+		headline: action.headline,
+	}
+}
+
+function convertActionsDelay(
+	actions: PresetActionInstance[],
+	connectionId: string,
+	relativeDelays: boolean | undefined
+) {
+	const newActions: ActionInstance[] = []
+
+	if (relativeDelays) {
+		let currentParent = newActions
+
+		for (const action of actions) {
+			const delay = Number(action.delay)
+
+			if (!delay || isNaN(delay)) {
+				currentParent.push(toActionInstance(action, connectionId))
+			} else {
+				let newParent: ActionInstance[] = [toActionInstance(action, connectionId)]
+				currentParent.push({
+					id: nanoid(),
+					instance: 'internal',
+					action: 'action_group',
+					options: {
+						delay: delay,
+					},
+
+					children: {
+						default: newParent,
+					},
+				})
+				currentParent = newParent
+			}
+		}
+	} else {
+		for (const action of actions) {
+			const delay = Number(action.delay)
+
+			if (!delay || isNaN(delay)) {
+				newActions.push(toActionInstance(action, connectionId))
+			} else {
+				newActions.push({
+					id: nanoid(),
+					instance: 'internal',
+					action: 'action_group',
+					options: {
+						delay: delay,
+					},
+
+					children: {
+						default: [toActionInstance(action, connectionId)],
+					},
+				})
+			}
+		}
+	}
+
+	return newActions
 }
