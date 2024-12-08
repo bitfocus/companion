@@ -59,7 +59,6 @@
 		"@sentry/node": "^8.42.0",
 		"archiver": "^7.0.1",
 		"better-sqlite3": "^11.7.0",
-		"body-parser": "^1.20.3",
 		"bufferutil": "^4.0.8",
 		"colord": "^2.9.3",
 		"commander": "^12.1.0",

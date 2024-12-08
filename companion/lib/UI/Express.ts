@@ -23,7 +23,6 @@ import fs from 'fs'
 // @ts-ignore
 import serveZip from 'express-serve-zip'
 import { fileURLToPath } from 'url'
-import bodyParser from 'body-parser'
 
 /**
  * Create a zip serve app
@@ -74,13 +73,13 @@ export class UIExpress {
 		})
 
 		// parse application/x-www-form-urlencoded
-		this.app.use(bodyParser.urlencoded({ extended: false }))
+		this.app.use(Express.urlencoded({ extended: false }))
 
 		// parse application/json
-		this.app.use(bodyParser.json())
+		this.app.use(Express.json())
 
 		// parse text/plain
-		this.app.use(bodyParser.text())
+		this.app.use(Express.text())
 
 		this.app.use('/int', internalApiRouter, (_req, res) => {
 			res.status(404)
