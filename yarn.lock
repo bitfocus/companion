@@ -1547,51 +1547,51 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/core@npm:7.1.1":
-  version: 7.1.1
-  resolution: "@elgato-stream-deck/core@npm:7.1.1"
+"@elgato-stream-deck/core@npm:7.1.2":
+  version: 7.1.2
+  resolution: "@elgato-stream-deck/core@npm:7.1.2"
   dependencies:
     eventemitter3: "npm:^5.0.1"
     tslib: "npm:^2.7.0"
-  checksum: 10c0/a9b72a336a8af57eb20697b6bbfed27a8f47fbedbfb0d7d5ce7956998707224c2f888c79756433b9522914758376919b61759330037f4fde084663c70f939ef9
+  checksum: 10c0/cb6ec04d659ee8ed75f98859681f8267854f867775247d03b12c0e2fa99a78bea59381676d75d1b7333f9421766d970f6afef9ccb62e724d5d80e5bdad267816
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/node-lib@npm:7.1.1":
-  version: 7.1.1
-  resolution: "@elgato-stream-deck/node-lib@npm:7.1.1"
+"@elgato-stream-deck/node-lib@npm:7.1.2":
+  version: 7.1.2
+  resolution: "@elgato-stream-deck/node-lib@npm:7.1.2"
   dependencies:
     jpeg-js: "npm:^0.4.4"
     tslib: "npm:^2.6.3"
   peerDependencies:
     "@julusian/jpeg-turbo": ^1.1.2 || ^2.0.0
-  checksum: 10c0/63df7832d2b673882c506ec46a3e2a05f81b4f0def8e50005ced7869277af53b9b7782d922d8fa15e39fe8e977e066d2ea2a753811517e1cca8c6b6757272bb7
+  checksum: 10c0/4755dddaa383d7047dafe7605e23706b8a901ff88af29945247247cbd8383616a4a8ed298f4af9c6ac7ce06db76cb038d479ff958dec6ddf3b18a443036304a7
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/node@npm:^7.1.1":
-  version: 7.1.1
-  resolution: "@elgato-stream-deck/node@npm:7.1.1"
+"@elgato-stream-deck/node@npm:^7.1.2":
+  version: 7.1.2
+  resolution: "@elgato-stream-deck/node@npm:7.1.2"
   dependencies:
-    "@elgato-stream-deck/core": "npm:7.1.1"
-    "@elgato-stream-deck/node-lib": "npm:7.1.1"
+    "@elgato-stream-deck/core": "npm:7.1.2"
+    "@elgato-stream-deck/node-lib": "npm:7.1.2"
     eventemitter3: "npm:^5.0.1"
     node-hid: "npm:^3.1.0"
     tslib: "npm:^2.7.0"
-  checksum: 10c0/b6b67c890a91490c69be731ac093e39633266bce5053afe39fab9146d684c1b4f5377040a3527fd7e5687411862e8fb8eeb6b7aae6c0d3b13c856b6e0a52b9a8
+  checksum: 10c0/6dad81a6b3f3eab2936966f71f00a244c9f18bf558f5d735f6b779e2d4f720069332394bbc418d635b19b5799991ada7ee23b455cc8ebc0c1146529cbd9243cf
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/tcp@npm:^7.1.1":
-  version: 7.1.1
-  resolution: "@elgato-stream-deck/tcp@npm:7.1.1"
+"@elgato-stream-deck/tcp@npm:^7.1.2":
+  version: 7.1.2
+  resolution: "@elgato-stream-deck/tcp@npm:7.1.2"
   dependencies:
-    "@elgato-stream-deck/core": "npm:7.1.1"
-    "@elgato-stream-deck/node-lib": "npm:7.1.1"
+    "@elgato-stream-deck/core": "npm:7.1.2"
+    "@elgato-stream-deck/node-lib": "npm:7.1.2"
     "@julusian/bonjour-service": "npm:^1.3.0-2"
     eventemitter3: "npm:^5.0.1"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/f7f5e3ae9c5323cfe0147883ebda823844f9e631c0ef0a78f92c85c167f9b8979fbe0037686720d5384aafb3581b3d6e86269633922f644bb87cb840a5b53471
+  checksum: 10c0/d3b7fa2afe01fe2d5f01fab9913aec47f0a49b459cadc38f18c880a435ecae783746613ef3a4b49e36921c097dbccfe7dba6141c04d2d5a69144d3f92ef72501
   languageName: node
   linkType: hard
 
@@ -6762,8 +6762,8 @@ asn1@evs-broadcast/node-asn1:
     "@blackmagic-controller/node": "npm:^0.1.0"
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:^1.11.2"
-    "@elgato-stream-deck/node": "npm:^7.1.1"
-    "@elgato-stream-deck/tcp": "npm:^7.1.1"
+    "@elgato-stream-deck/node": "npm:^7.1.2"
+    "@elgato-stream-deck/tcp": "npm:^7.1.2"
     "@julusian/bonjour-service": "npm:^1.3.0-2"
     "@julusian/image-rs": "npm:^1.1.1"
     "@julusian/jpeg-turbo": "npm:^2.2.0"
