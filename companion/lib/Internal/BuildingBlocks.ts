@@ -15,24 +15,28 @@
  *
  */
 
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import LogController from '../Log/Controller.js'
 import type {
 	FeedbackForVisitor,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalFeedbackDefinition,
+	InternalActionDefinition,
+	ActionForVisitor,
 } from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
 
-	// #internalModule
+	readonly #actionRunner: ActionRunner
 
-	// constructor(internalModule) {
-	// 	this.#internalModule = internalModule
-	// }
+	constructor(actionRunner: ActionRunner) {
+		this.#actionRunner = actionRunner
+	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
@@ -81,6 +85,40 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
+		return {
+			action_group: {
+				label: 'Action Group',
+				description: 'Execute a group of actions',
+				options: [
+					{
+						type: 'number',
+						label: 'Delay (ms)',
+						id: 'delay',
+						default: 0,
+						min: 0,
+						max: 3600 * 1000,
+					},
+					{
+						type: 'dropdown',
+						label: 'Execution mode',
+						id: 'execution_mode',
+						default: 'parallel',
+						choices: [
+							{ id: 'parallel', label: 'Parallel' },
+							{ id: 'sequential', label: 'Sequential' },
+						],
+						tooltip:
+							'Using "Sequential" will run the actions one after the other, waiting for each to complete before starting the next. This doesn\'t work for all modules.',
+					},
+				],
+				hasLearn: false,
+				learnTimeout: undefined,
+				supportsChildActionGroups: ['default'],
+			},
+		}
+	}
+
 	/**
 	 * Execute a logic feedback
 	 */
@@ -100,7 +138,35 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean {
+		if (action.action === 'action_group') {
+			return Promise.resolve().then(async () => {
+				if (extras.abortDelayed.aborted) return true
+
+				const executeSequential = action.options.execution_mode === 'sequential'
+
+				const delay = Number(action.options.delay)
+				if (!isNaN(delay) && delay > 0) {
+					// Apply the delay
+					await new Promise((resolve) => setTimeout(resolve, delay))
+				}
+
+				if (extras.abortDelayed.aborted) return true
+
+				await this.#actionRunner
+					.runMultipleActions(action.children?.['default'] ?? [], extras, executeSequential)
+					.catch((e) => {
+						this.#logger.error(`Failed to run actions: ${e.message}`)
+					})
+
+				return true
+			})
+		} else {
+			return false
+		}
+	}
+
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
 }

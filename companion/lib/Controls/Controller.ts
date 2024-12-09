@@ -90,6 +90,17 @@ export class ControlsController extends CoreBase {
 		this.triggers = new TriggerEvents()
 	}
 
+	/**
+	 * Abort all delayed actions across all controls
+	 */
+	abortAllDelayedActions(): void {
+		for (const control of this.#controls.values()) {
+			if (control.supportsActions) {
+				control.abortDelayedActions(false)
+			}
+		}
+	}
+
 	#createControlDependencies(): ControlDependencies {
 		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
 		return {
@@ -491,14 +502,14 @@ export class ControlsController extends CoreBase {
 			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
 		})
 
-		client.onPromise('controls:action:add', (controlId, stepId, setId, connectionId, actionId) => {
+		client.onPromise('controls:action:add', (controlId, stepId, setId, parentId, connectionId, actionId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsActions) {
 				const actionItem = this.instance.definitions.createActionItem(connectionId, actionId)
 				if (actionItem) {
-					return control.actionAdd(stepId, setId, actionItem)
+					return control.actionAdd(stepId, setId, actionItem, parentId)
 				} else {
 					return false
 				}
@@ -590,17 +601,6 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:action:set-delay', (controlId, stepId, setId, id, delay) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActions) {
-				return control.actionSetDelay(stepId, setId, id, delay)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
-
 		client.onPromise('controls:action:set-option', (controlId, stepId, setId, id, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
@@ -612,13 +612,21 @@ export class ControlsController extends CoreBase {
 			}
 		})
 		client.onPromise(
-			'controls:action:reorder',
-			(controlId, dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex) => {
+			'controls:action:move',
+			(controlId, dragStepId, dragSetId, dragActionId, hoverStepId, hoverSetId, hoverParentId, hoverIndex) => {
 				const control = this.getControl(controlId)
 				if (!control) return false
 
 				if (control.supportsActions) {
-					return control.actionReorder(dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex)
+					return control.actionMoveTo(
+						dragStepId,
+						dragSetId,
+						dragActionId,
+						hoverStepId,
+						hoverSetId,
+						hoverParentId,
+						hoverIndex
+					)
 				} else {
 					throw new Error(`Control "${controlId}" does not support actions`)
 				}

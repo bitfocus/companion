@@ -1,6 +1,4 @@
-import { ControlTrigger } from '../../Controls/ControlTypes/Triggers/Trigger.js'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Resources/Constants.js'
 import type { DataStoreBase } from '../StoreBase.js'
@@ -127,7 +125,12 @@ function convertTriggerToControl(logger: Logger, entry: any, index: number): any
 	const actions: any[] = []
 	const control: any = {
 		type: 'trigger',
-		options: cloneDeep(ControlTrigger.DefaultOptions),
+		options: {
+			name: 'New Trigger',
+			enabled: false,
+			sortOrder: 0,
+			relativeDelay: false,
+		},
 		action_sets: { 0: actions },
 		condition: [],
 		events: [],

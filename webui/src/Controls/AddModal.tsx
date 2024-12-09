@@ -3,11 +3,12 @@ import React, { forwardRef, useCallback, useContext, useImperativeHandle, useSta
 import { useComputed } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { ConnectionActionDefinitions } from '../Stores/ActionDefinitionsStore.js'
-import { ConnectionFeedbackDefinitions } from '../Stores/FeedbackDefinitionsStore.js'
 import { capitalize } from 'lodash-es'
 import { CModalExt } from '../Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
+import { ObservableMap } from 'mobx'
+import { ClientActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void
@@ -196,9 +197,11 @@ interface ConnectionItem {
 	description: string | undefined
 }
 
-interface ConnectionCollapseProps {
+type TDefBase = ClientActionDefinition | ClientFeedbackDefinition
+
+interface ConnectionCollapseProps<TDef> {
 	connectionId: string
-	items: ConnectionActionDefinitions | ConnectionFeedbackDefinitions | undefined
+	items: ObservableMap<string, TDef> | undefined
 	itemName: string
 	expanded: boolean
 	filter: string
@@ -207,7 +210,7 @@ interface ConnectionCollapseProps {
 	doAdd: (itemId: string) => void
 }
 
-const ConnectionCollapse = observer(function ConnectionCollapse({
+const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDefBase>({
 	connectionId,
 	items,
 	itemName,
@@ -216,7 +219,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse({
 	booleanOnly,
 	doToggle,
 	doAdd,
-}: ConnectionCollapseProps) {
+}: ConnectionCollapseProps<TDef>) {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const connectionInfo = connections.getInfo(connectionId)
@@ -248,7 +251,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse({
 
 	searchResults.sort((a, b) => a.label.localeCompare(b.label))
 
-	if (!items || Object.keys(items).length === 0) {
+	if (!items || items.size === 0) {
 		// Hide card if there are no actions which match
 		return null
 	} else {

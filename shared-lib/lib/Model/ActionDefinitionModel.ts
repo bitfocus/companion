@@ -9,6 +9,7 @@ export interface ActionDefinition {
 	learnTimeout: number | undefined
 
 	showButtonPreview: boolean
+	supportsChildActionGroups: string[]
 }
 
 export interface ClientActionDefinition extends ActionDefinition {}
