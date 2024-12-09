@@ -899,10 +899,10 @@ export default class ControlButtonNormal extends ButtonControlBase {
 		newStep.postProcessImport().catch((e) => {
 			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
 		})
-		
+
 		// Ensure the ui knows which step is current
 		this.sendRuntimePropsChange()
-		
+
 		// Save the change, and perform a draw
 		this.commitChange(true)
 
