@@ -70,16 +70,58 @@ export class ActionRunner extends CoreBase {
 				})
 			}
 		} else {
-			// Run all the actions in parallel
-			await Promise.all(
-				actions.map(async (action) =>
-					this.#runAction(action, extras).catch((e) => {
-						this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
+			const groupedActions = this.#splitActionsAroundWaits(actions)
+
+			for (const { waitAction, actions } of groupedActions) {
+				if (extras.abortDelayed.aborted) break
+
+				if (waitAction) {
+					// Perform the wait action
+					await this.#runAction(waitAction, extras).catch((e) => {
+						this.logger.silly(`Error executing action for ${waitAction.instance}: ${e.message ?? e}`)
 					})
-				)
-			)
+				}
+
+				if (actions.length > 0) {
+					// Run all the actions in parallel
+					await Promise.all(
+						actions.map(async (action) =>
+							this.#runAction(action, extras).catch((e) => {
+								this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
+							})
+						)
+					)
+				}
+			}
 		}
 	}
+
+	#splitActionsAroundWaits(actions: ActionInstance[]): GroupedActionInstances[] {
+		const groupedActions: GroupedActionInstances[] = [
+			{
+				waitAction: undefined,
+				actions: [],
+			},
+		]
+
+		for (const action of actions) {
+			if (action.action === 'wait') {
+				groupedActions.push({
+					waitAction: action,
+					actions: [],
+				})
+			} else {
+				groupedActions[groupedActions.length - 1].actions.push(action)
+			}
+		}
+
+		return groupedActions
+	}
+}
+
+interface GroupedActionInstances {
+	waitAction: ActionInstance | undefined
+	actions: ActionInstance[]
 }
 
 export class ControlActionRunner {

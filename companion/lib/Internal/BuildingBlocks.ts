@@ -108,6 +108,20 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				learnTimeout: undefined,
 				supportsChildActionGroups: ['default'],
 			},
+			wait: {
+				label: 'Wait',
+				description: 'Wait for a specified amount of time',
+				options: [
+					{
+						type: 'textinput',
+						label: 'Time (ms)',
+						id: 'time',
+						default: '1000',
+					},
+				],
+				hasLearn: false,
+				learnTimeout: undefined,
+			},
 		}
 	}
 
@@ -131,7 +145,19 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	}
 
 	executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean {
-		if (action.action === 'action_group') {
+		if (action.action === 'wait') {
+			return Promise.resolve().then(async () => {
+				if (extras.abortDelayed.aborted) return true
+
+				const delay = Number(action.options.time)
+				if (!isNaN(delay) && delay > 0) {
+					// Perform the wait
+					await new Promise((resolve) => setTimeout(resolve, delay))
+				}
+
+				return true
+			})
+		} else if (action.action === 'action_group') {
 			return Promise.resolve().then(async () => {
 				if (extras.abortDelayed.aborted) return true
 
