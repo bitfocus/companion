@@ -98,10 +98,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 						default: 'burst',
 						choices: [
 							{ id: 'burst', label: 'Burst' },
-							{ id: 'in-order', label: 'In order' },
+							{ id: 'sequential', label: 'Sequential' },
 						],
 						tooltip:
-							'Using "In order" will run the actions one after the other, waiting for each to complete before starting the next. This doesn\'t work for all modules.',
+							'Using "Sequential" will run the actions one after the other, waiting for each to complete before starting the next. This doesn\'t work for all modules.',
 					},
 				],
 				hasLearn: false,
@@ -161,18 +161,12 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 			return Promise.resolve().then(async () => {
 				if (extras.abortDelayed.aborted) return true
 
-				const executeInOrder = action.options.execution_mode === 'in-order'
-
-				// const delay = Number(action.options.delay)
-				// if (!isNaN(delay) && delay > 0) {
-				// 	// Apply the delay
-				// 	await new Promise((resolve) => setTimeout(resolve, delay))
-				// }
+				const executeSequential = action.options.execution_mode === 'sequential'
 
 				if (extras.abortDelayed.aborted) return true
 
 				await this.#actionRunner
-					.runMultipleActions(action.children?.['default'] ?? [], extras, executeInOrder)
+					.runMultipleActions(action.children?.['default'] ?? [], extras, executeSequential)
 					.catch((e) => {
 						this.#logger.error(`Failed to run actions: ${e.message}`)
 					})
