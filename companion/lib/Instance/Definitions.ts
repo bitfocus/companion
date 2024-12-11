@@ -593,55 +593,85 @@ function convertActionsDelay(
 	connectionId: string,
 	relativeDelays: boolean | undefined
 ) {
-	const newActions: ActionInstance[] = []
-
 	if (relativeDelays) {
-		let currentParent = newActions
+		const newActions: ActionInstance[] = []
 
 		for (const action of actions) {
 			const delay = Number(action.delay)
 
-			if (!delay || isNaN(delay)) {
-				currentParent.push(toActionInstance(action, connectionId))
-			} else {
-				let newParent: ActionInstance[] = [toActionInstance(action, connectionId)]
-				currentParent.push({
-					id: nanoid(),
-					instance: 'internal',
-					action: 'action_group',
-					options: {
-						delay: delay,
-					},
-
-					children: {
-						default: newParent,
-					},
-				})
-				currentParent = newParent
-			}
-		}
-	} else {
-		for (const action of actions) {
-			const delay = Number(action.delay)
-
-			if (!delay || isNaN(delay)) {
-				newActions.push(toActionInstance(action, connectionId))
-			} else {
+			// Add the wait action
+			if (!isNaN(delay) && delay > 0) {
 				newActions.push({
 					id: nanoid(),
 					instance: 'internal',
-					action: 'action_group',
+					action: 'wait',
 					options: {
-						delay: delay,
-					},
-
-					children: {
-						default: [toActionInstance(action, connectionId)],
+						time: delay,
 					},
 				})
 			}
+
+			newActions.push(toActionInstance(action, connectionId))
+		}
+
+		return newActions
+	} else {
+		let currentDelay = 0
+		let currentDelayGroupChildren: any[] = []
+
+		let delayGroups: any[] = [wrapActionsInGroup(currentDelayGroupChildren)]
+
+		for (const action of actions) {
+			const delay = Number(action.delay)
+
+			if (!isNaN(delay) && delay >= 0 && delay !== currentDelay) {
+				// action has different delay to the last one
+				if (delay > currentDelay) {
+					// delay is greater than the last one, translate it to a relative delay
+					currentDelayGroupChildren.push(createWaitAction(delay - currentDelay))
+				} else {
+					// delay is less than the last one, preserve the weird order
+					currentDelayGroupChildren = []
+					if (delay > 0) currentDelayGroupChildren.push(createWaitAction(delay))
+					delayGroups.push(wrapActionsInGroup(currentDelayGroupChildren))
+				}
+
+				currentDelay = delay
+			}
+
+			currentDelayGroupChildren.push(toActionInstance(action, connectionId))
+		}
+
+		if (delayGroups.length > 1) {
+			// Weird delay ordering was found, preserve it
+			return delayGroups
+		} else {
+			// Order was incrementing, don't add the extra group layer
+			return currentDelayGroupChildren
 		}
 	}
+}
 
-	return newActions
+function wrapActionsInGroup(actions: any[]): any {
+	return {
+		id: nanoid(),
+		instance: 'internal',
+		action: 'action_group',
+		options: {
+			execution_mode: 'burst',
+		},
+		children: {
+			default: actions,
+		},
+	}
+}
+function createWaitAction(delay: number): any {
+	return {
+		id: nanoid(),
+		instance: 'internal',
+		action: 'wait',
+		options: {
+			time: delay,
+		},
+	}
 }
