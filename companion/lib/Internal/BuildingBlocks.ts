@@ -92,24 +92,16 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				description: 'Execute a group of actions',
 				options: [
 					{
-						type: 'number',
-						label: 'Delay (ms)',
-						id: 'delay',
-						default: 0,
-						min: 0,
-						max: 3600 * 1000,
-					},
-					{
 						type: 'dropdown',
 						label: 'Execution mode',
 						id: 'execution_mode',
-						default: 'parallel',
+						default: 'burst',
 						choices: [
-							{ id: 'parallel', label: 'Parallel' },
-							{ id: 'sequential', label: 'Sequential' },
+							{ id: 'burst', label: 'Burst' },
+							{ id: 'in-order', label: 'In order' },
 						],
 						tooltip:
-							'Using "Sequential" will run the actions one after the other, waiting for each to complete before starting the next. This doesn\'t work for all modules.',
+							'Using "In order" will run the actions one after the other, waiting for each to complete before starting the next. This doesn\'t work for all modules.',
 					},
 				],
 				hasLearn: false,
@@ -143,18 +135,18 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 			return Promise.resolve().then(async () => {
 				if (extras.abortDelayed.aborted) return true
 
-				const executeSequential = action.options.execution_mode === 'sequential'
+				const executeInOrder = action.options.execution_mode === 'in-order'
 
-				const delay = Number(action.options.delay)
-				if (!isNaN(delay) && delay > 0) {
-					// Apply the delay
-					await new Promise((resolve) => setTimeout(resolve, delay))
-				}
+				// const delay = Number(action.options.delay)
+				// if (!isNaN(delay) && delay > 0) {
+				// 	// Apply the delay
+				// 	await new Promise((resolve) => setTimeout(resolve, delay))
+				// }
 
 				if (extras.abortDelayed.aborted) return true
 
 				await this.#actionRunner
-					.runMultipleActions(action.children?.['default'] ?? [], extras, executeSequential)
+					.runMultipleActions(action.children?.['default'] ?? [], extras, executeInOrder)
 					.catch((e) => {
 						this.#logger.error(`Failed to run actions: ${e.message}`)
 					})

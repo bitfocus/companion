@@ -58,11 +58,13 @@ export class ActionRunner extends CoreBase {
 		const actions = actions0.filter((act) => !act.disabled)
 		if (actions.length === 0) return
 
+		if (extras.abortDelayed.aborted) return
+
 		if (executeSequential) {
 			// Future: abort on error?
-			// Future: listen to extras.abortDelayed?
 
 			for (const action of actions) {
+				if (extras.abortDelayed.aborted) break
 				await this.#runAction(action, extras).catch((e) => {
 					this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
 				})
