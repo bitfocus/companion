@@ -2,9 +2,21 @@ import { CoreBase } from '../Core/Base.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { RegexRouter } from './RegexRouter.js'
+import { Bank, Element, Location, Page, VariableName } from './RoutePatterns.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { Registry } from '../Registry.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+
+const SurfaceId = `(?<surfaceId>${Element})`
+const Step = `(?<step>${Element})`
+
+const MatchAnyCharactersIfSpacePrecedes = '(?<= ).*'
+const MatchZeroCharactersIfNoSpacePrecedes = '(?<! )'
+const TextRequiringPrecedingSpace = `(?<text>${MatchAnyCharactersIfSpacePrecedes}|${MatchZeroCharactersIfNoSpacePrecedes})`
+
+const VariableValue = `(?<value>.*)`
+
+const Color = `(?<color>${Element})`
 
 /**
  * Common API command processing for {@link ServiceTcp} and {@link ServiceUdp}.
@@ -71,7 +83,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	}
 
 	#setupLegacyRoutes() {
-		this.#router.addPath('page-set :page :surfaceId', (match) => {
+		this.#router.addRoute(`page-set ${Page} ${SurfaceId}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const page = Number(match.page)
@@ -85,7 +97,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			return `If ${surfaceId} is connected`
 		})
 
-		this.#router.addPath('page-up :surfaceId', (match) => {
+		this.#router.addRoute(`page-up ${SurfaceId}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const surfaceId = match.surfaceId
@@ -95,7 +107,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			return `If ${surfaceId} is connected`
 		})
 
-		this.#router.addPath('page-down :surfaceId', (match) => {
+		this.#router.addRoute(`page-down ${SurfaceId}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const surfaceId = match.surfaceId
@@ -105,7 +117,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			return `If ${surfaceId} is connected`
 		})
 
-		this.#router.addPath('bank-press :page :bank', (match) => {
+		this.#router.addRoute(`bank-press ${Page} ${Bank}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -123,7 +135,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}, 20)
 		})
 
-		this.#router.addPath('bank-down :page :bank', (match) => {
+		this.#router.addRoute(`bank-down ${Page} ${Bank}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -136,7 +148,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('bank-up :page :bank', (match) => {
+		this.#router.addRoute(`bank-up ${Page} ${Bank}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -149,7 +161,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('bank-step :page :bank :step', (match) => {
+		this.#router.addRoute(`bank-step ${Page} ${Bank} ${Step}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -167,7 +179,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			if (!control.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
 		})
 
-		this.#router.addPath('style bank :page :bank text{ *text}', (match) => {
+		this.#router.addRoute(`style bank ${Page} ${Bank} text ?${TextRequiringPrecedingSpace}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -184,7 +196,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('style bank :page :bank bgcolor #:color', (match) => {
+		this.#router.addRoute(`style bank ${Page} ${Bank} bgcolor #${Color}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -202,7 +214,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('style bank :page :bank color #:color', (match) => {
+		this.#router.addRoute(`style bank ${Page} ${Bank} color #${Color}`, (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -220,7 +232,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			}
 		})
 
-		this.#router.addPath('rescan', async () => {
+		this.#router.addRoute('rescan', async () => {
 			this.#checkLegacyRouteAllowed()
 
 			this.logger.debug('Rescanning USB')
@@ -235,27 +247,27 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 	#setupNewRoutes() {
 		// surface pages
-		this.#router.addPath('surface :surfaceId page-set :page', this.#surfaceSetPage)
-		this.#router.addPath('surface :surfaceId page-up', this.#surfacePageUp)
-		this.#router.addPath('surface :surfaceId page-down', this.#surfacePageDown)
+		this.#router.addRoute(`surface ${SurfaceId} page-set ${Page}`, this.#surfaceSetPage)
+		this.#router.addRoute(`surface ${SurfaceId} page-up`, this.#surfacePageUp)
+		this.#router.addRoute(`surface ${SurfaceId} page-down`, this.#surfacePageDown)
 
 		// control by location
-		this.#router.addPath('location :page/:row/:column press', this.#locationPress)
-		this.#router.addPath('location :page/:row/:column down', this.#locationDown)
-		this.#router.addPath('location :page/:row/:column up', this.#locationUp)
-		this.#router.addPath('location :page/:row/:column rotate-left', this.#locationRotateLeft)
-		this.#router.addPath('location :page/:row/:column rotate-right', this.#locationRotateRight)
-		this.#router.addPath('location :page/:row/:column set-step :step', this.#locationSetStep)
+		this.#router.addRoute(`location ${Location} press`, this.#locationPress)
+		this.#router.addRoute(`location ${Location} down`, this.#locationDown)
+		this.#router.addRoute(`location ${Location} up`, this.#locationUp)
+		this.#router.addRoute(`location ${Location} rotate-left`, this.#locationRotateLeft)
+		this.#router.addRoute(`location ${Location} rotate-right`, this.#locationRotateRight)
+		this.#router.addRoute(`location ${Location} set-step ${Step}`, this.#locationSetStep)
 
-		this.#router.addPath('location :page/:row/:column style text{ *text}', this.#locationStyleText)
-		this.#router.addPath('location :page/:row/:column style color :color', this.#locationStyleColor)
-		this.#router.addPath('location :page/:row/:column style bgcolor :bgcolor', this.#locationStyleBgcolor)
+		this.#router.addRoute(`location ${Location} style text ?${TextRequiringPrecedingSpace}`, this.#locationStyleText)
+		this.#router.addRoute(`location ${Location} style color ${Color}`, this.#locationStyleColor)
+		this.#router.addRoute(`location ${Location} style bgcolor ${Color}`, this.#locationStyleBgcolor)
 
 		// surfaces
-		this.#router.addPath('surfaces rescan', this.#surfacesRescan)
+		this.#router.addRoute('surfaces rescan', this.#surfacesRescan)
 
 		// custom variables
-		this.#router.addPath('custom-variable :name set-value {*value}', this.#customVariableSetValue)
+		this.#router.addRoute(`custom-variable ${VariableName} set-value ${VariableValue}`, this.#customVariableSetValue)
 	}
 
 	/**
@@ -440,7 +452,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 		const control = this.controls.getControl(controlId)
 		if (control && control.supportsStyle) {
-			const color = parseColorToNumber(match.bgcolor)
+			const color = parseColorToNumber(match.color)
 
 			control.styleSetFields({ bgcolor: color })
 		} else {

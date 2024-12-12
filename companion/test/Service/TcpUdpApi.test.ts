@@ -696,6 +696,35 @@ describe('TcpUdpApi', () => {
 				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: 'de/f two' })
 			})
 
+			test('ok with leading space', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				const mockControl = mock<ControlButtonNormal>(
+					{
+						styleSetFields: vi.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage('location 1/2/3 style text  234')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+
+				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: ' 234' })
+			})
+
 			test('ok no text', async () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('abc')
@@ -723,6 +752,58 @@ describe('TcpUdpApi', () => {
 
 				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
 				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: '' })
+			})
+
+			test('ok no text with trailing space', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				const mockControl = mock<ControlButtonNormal>(
+					{
+						styleSetFields: vi.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage('location 1/2/3 style text ')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+
+				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: '' })
+			})
+
+			test('no space after text', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				const mockControl = mock<ControlButtonNormal>(
+					{
+						styleSetFields: vi.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				expect(router.processMessage('location 1/2/3 style textfoo')).rejects.toEqual(
+					new ApiMessageError('Syntax error')
+				)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
+
+				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(0)
 			})
 		})
 
