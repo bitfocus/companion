@@ -1,8 +1,8 @@
 import { CoreBase } from '../Core/Base.js'
 import type { Registry } from '../Registry.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import { nanoid } from 'nanoid'
 
 /**
  * Class to handle execution of actions.
@@ -25,94 +25,22 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
  * disclosing the source code of your own applications.
  */
 export class ActionRunner extends CoreBase {
-	/**
-	 * Timers for all pending delayed actions
-	 */
-	readonly #timers_running = new Map<NodeJS.Timeout, string>()
-
 	constructor(registry: Registry) {
 		super(registry, 'Control/ActionRunner')
 	}
 
 	/**
-	 * Abort all pending delayed actions
-	 */
-	abortAllDelayed(): void {
-		this.logger.silly('Aborting delayed actions')
-
-		const affectedControlIds = new Set<string>()
-
-		// Clear the timers
-		for (const [timer, controlId] of this.#timers_running.entries()) {
-			clearTimeout(timer)
-			affectedControlIds.add(controlId)
-		}
-		this.#timers_running.clear()
-
-		// Redraw any controls
-		for (const controlId of affectedControlIds.values()) {
-			this.#setControlIsRunning(controlId, false)
-		}
-	}
-
-	/**
-	 * Abort pending delayed actions for a control
-	 * @param controlId Id of the control
-	 * @param skip_up Mark button as released
-	 */
-	abortControlDelayed(controlId: string, skip_up: boolean): void {
-		// Clear any timers
-		let cleared = false
-		for (const [timer, timerControlId] of this.#timers_running.entries()) {
-			if (timerControlId === controlId) {
-				if (!cleared) {
-					this.logger.silly(`Aborting delayed actions on ${controlId}`)
-					cleared = true
-				}
-
-				this.#timers_running.delete(timer)
-				clearTimeout(timer)
-			}
-		}
-
-		// Update control
-		this.#setControlIsRunning(controlId, false, skip_up)
-	}
-
-	/**
-	 * Abort pending delayed actions for a page
-	 * @param pageNumber Page to abort actions for
-	 * @param skipLocations locations to skip
-	 */
-	abortPageDelayed(pageNumber: number, skipLocations?: ControlLocation[]) {
-		const controlIds = new Set(this.page.getAllControlIdsOnPage(pageNumber))
-
-		// Remove any skipped locations
-		for (const location of skipLocations || []) {
-			if (location.pageNumber == pageNumber) {
-				const controlId = this.page.getControlIdAt(location)
-				if (controlId) controlIds.delete(controlId)
-			}
-		}
-
-		for (const controlId of controlIds) {
-			// Abort the actions
-			this.abortControlDelayed(controlId, false)
-		}
-	}
-
-	/**
 	 * Run a single action
 	 */
-	#runAction(action: ActionInstance, extras: RunActionExtras): void {
+	async #runAction(action: ActionInstance, extras: RunActionExtras): Promise<void> {
+		this.logger.silly('Running action', action)
+
 		if (action.instance === 'internal') {
-			this.internalModule.executeAction(action, extras)
+			await this.internalModule.executeAction(action, extras)
 		} else {
 			const instance = this.instance.moduleHost.getChild(action.instance)
 			if (instance) {
-				instance.actionRun(action, extras).catch((e) => {
-					this.logger.silly(`Error executing action for ${instance.connectionId}: ${e.message ?? e}`)
-				})
+				await instance.actionRun(action, extras)
 			} else {
 				this.logger.silly('trying to run action on a missing instance.', action)
 			}
@@ -120,89 +48,139 @@ export class ActionRunner extends CoreBase {
 	}
 
 	/**
-	 * Inform a control whether actions are running
+	 * Run multiple actions
 	 */
-	#setControlIsRunning(controlId: string, running: boolean, skip_up?: boolean) {
-		const control = this.controls.getControl(controlId)
-		if (control && control.supportsActions) {
-			control.setActionsRunning(running, skip_up ?? false)
+	async runMultipleActions(
+		actions0: ActionInstance[],
+		extras: RunActionExtras,
+		executeSequential = false
+	): Promise<void> {
+		const actions = actions0.filter((act) => !act.disabled)
+		if (actions.length === 0) return
+
+		if (extras.abortDelayed.aborted) return
+
+		if (executeSequential) {
+			// Future: abort on error?
+
+			for (const action of actions) {
+				if (extras.abortDelayed.aborted) break
+				await this.#runAction(action, extras).catch((e) => {
+					this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
+				})
+			}
+		} else {
+			const groupedActions = this.#splitActionsAroundWaits(actions)
+
+			for (const { waitAction, actions } of groupedActions) {
+				if (extras.abortDelayed.aborted) break
+
+				if (waitAction) {
+					// Perform the wait action
+					await this.#runAction(waitAction, extras).catch((e) => {
+						this.logger.silly(`Error executing action for ${waitAction.instance}: ${e.message ?? e}`)
+					})
+				}
+
+				if (actions.length > 0) {
+					// Run all the actions in parallel
+					await Promise.all(
+						actions.map(async (action) =>
+							this.#runAction(action, extras).catch((e) => {
+								this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
+							})
+						)
+					)
+				}
+			}
 		}
 	}
 
-	/**
-	 * Run multiple actions
-	 */
-	runMultipleActions(
-		actions0: ActionInstance[],
-		controlId: string,
-		relative_delay: boolean,
-		extras: Omit<RunActionExtras, 'controlId' | 'location'>
-	): void {
-		const actions = actions0.filter((act) => !act.disabled)
+	#splitActionsAroundWaits(actions: ActionInstance[]): GroupedActionInstances[] {
+		const groupedActions: GroupedActionInstances[] = [
+			{
+				waitAction: undefined,
+				actions: [],
+			},
+		]
 
-		if (actions.length === 0) {
-			return
-		}
-
-		// Handle whether the delays are absolute or relative.
-		const effective_delays: Record<string, number> = {}
-		let tmp_delay = 0
 		for (const action of actions) {
-			let this_delay = !action.delay ? 0 : Number(action.delay)
-			if (isNaN(this_delay)) this_delay = 0
-
-			if (relative_delay) {
-				// Relative delay: each action's delay adds to the next.
-				tmp_delay += this_delay
+			if (action.action === 'wait') {
+				groupedActions.push({
+					waitAction: action,
+					actions: [],
+				})
 			} else {
-				// Absolute delay: each delay is its own.
-				tmp_delay = this_delay
-			}
-
-			// Create the property .effective_delay. Don't change the user's .delay property.
-			effective_delays[action.id] = tmp_delay
-		}
-
-		const location = this.page.getLocationOfControlId(controlId)
-		const extra2: RunActionExtras = {
-			...(extras || {}),
-			location,
-			controlId,
-		}
-
-		let has_delayed = false
-		for (const action of actions) {
-			const delay_time = effective_delays[action.id] === undefined ? 0 : effective_delays[action.id]
-
-			this.logger.silly('Running action', action)
-
-			// is this a timedelayed action?
-			if (delay_time > 0) {
-				has_delayed = true
-				const timer = setTimeout(() => {
-					this.#runAction(action, extra2)
-
-					this.#timers_running.delete(timer)
-
-					// Stop timer-indication
-					const hasAnotherTimer = Array.from(this.#timers_running.values()).find((v) => v === controlId)
-					if (hasAnotherTimer === undefined) {
-						this.#setControlIsRunning(controlId, false)
-					}
-				}, delay_time)
-
-				this.#timers_running.set(timer, controlId)
-			}
-
-			// or is it immediate
-			else {
-				this.#runAction(action, extra2)
+				groupedActions[groupedActions.length - 1].actions.push(action)
 			}
 		}
 
-		if (has_delayed) {
-			// Start timer-indication
-			this.#setControlIsRunning(controlId, true)
+		return groupedActions
+	}
+}
+
+interface GroupedActionInstances {
+	waitAction: ActionInstance | undefined
+	actions: ActionInstance[]
+}
+
+export class ControlActionRunner {
+	readonly #actionRunner: ActionRunner
+	readonly #controlId: string
+	readonly #triggerRedraw: () => void
+
+	readonly #runningChains = new Map<string, AbortController>()
+
+	get hasRunningChains(): boolean {
+		return this.#runningChains.size > 0
+	}
+
+	constructor(actionRunner: ActionRunner, controlId: string, triggerRedraw: () => void) {
+		this.#actionRunner = actionRunner
+		this.#controlId = controlId
+		this.#triggerRedraw = triggerRedraw
+	}
+
+	async runActions(
+		actions: ActionInstance[],
+		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed'>
+	): Promise<void> {
+		const controller = new AbortController()
+
+		const chainId = nanoid()
+		this.#runningChains.set(chainId, controller)
+
+		// If this is the first chain, trigger a redraw
+		if (this.#runningChains.size === 1) {
+			this.#triggerRedraw()
 		}
+
+		return this.#actionRunner
+			.runMultipleActions(actions, {
+				...extras,
+				controlId: this.#controlId,
+				abortDelayed: controller.signal,
+			})
+			.finally(() => {
+				// If this removes the last chain, trigger a redraw
+				if (this.#runningChains.delete(chainId) && this.#runningChains.size === 0) {
+					this.#triggerRedraw()
+				}
+			})
+	}
+
+	abortAll(): boolean {
+		if (this.#runningChains.size === 0) {
+			return false
+		}
+
+		for (const controller of this.#runningChains.values()) {
+			controller.abort()
+		}
+		this.#runningChains.clear()
+
+		this.#triggerRedraw()
+
+		return true
 	}
 }

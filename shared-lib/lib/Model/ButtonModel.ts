@@ -35,9 +35,7 @@ export type NormalButtonSteps = Record<
 	}
 >
 
-export interface ButtonOptionsBase {
-	relativeDelay: boolean
-}
+export interface ButtonOptionsBase {}
 
 export interface NormalButtonOptions extends ButtonOptionsBase {
 	rotaryActions: boolean

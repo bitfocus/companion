@@ -18,6 +18,7 @@
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import debounceFn from 'debounce-fn'
 import type {
+	ActionForVisitor,
 	FeedbackForVisitor,
 	FeedbackInstanceExt,
 	InternalModuleFragment,
@@ -146,7 +147,7 @@ export class InternalTriggers implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
 }
