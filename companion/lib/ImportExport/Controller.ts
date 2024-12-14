@@ -848,6 +848,7 @@ export class ImportExportController {
 				for (const controlId of discardedControlIds) {
 					this.#controlsController.deleteControl(controlId)
 				}
+				this.#graphicsController.clearAllForPage(topage)
 
 				doPageImport(pageInfo, topage, instanceIdMap)
 
@@ -919,6 +920,7 @@ export class ImportExportController {
 			if (!skipNavButtons) {
 				this.#pagesController.createPageDefaultNavButtons(1)
 			}
+			this.#graphicsController.clearAllForPage(1)
 
 			// Delete other pages
 			const pageCount = this.#pagesController.getPageCount()

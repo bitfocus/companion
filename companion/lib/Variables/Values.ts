@@ -153,6 +153,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				moduleValues[variable] = value
 
 				all_changed_variables_set.add(`${label}:${variable}`)
+				// Also report the old custom variable names as having changed
+				if (label === 'custom') all_changed_variables_set.add(`internal:custom_${variable}`)
 
 				// Skip debug if it's just internal:time_* spamming.
 				if (this.#logger.isSillyEnabled() && !(label === 'internal' && variable.startsWith('time_'))) {

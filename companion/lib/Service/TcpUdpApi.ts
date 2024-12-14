@@ -167,7 +167,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			if (!control.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
 		})
 
-		this.#router.addPath('style bank :page :bank text{ :text}', (match) => {
+		this.#router.addPath('style bank :page :bank text{ *text}', (match) => {
 			this.#checkLegacyRouteAllowed()
 
 			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
@@ -247,7 +247,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 		this.#router.addPath('location :page/:row/:column rotate-right', this.#locationRotateRight)
 		this.#router.addPath('location :page/:row/:column set-step :step', this.#locationSetStep)
 
-		this.#router.addPath('location :page/:row/:column style text{ :text}', this.#locationStyleText)
+		this.#router.addPath('location :page/:row/:column style text{ *text}', this.#locationStyleText)
 		this.#router.addPath('location :page/:row/:column style color :color', this.#locationStyleColor)
 		this.#router.addPath('location :page/:row/:column style bgcolor :bgcolor', this.#locationStyleBgcolor)
 
@@ -255,7 +255,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 		this.#router.addPath('surfaces rescan', this.#surfacesRescan)
 
 		// custom variables
-		this.#router.addPath('custom-variable :name set-value {:value}', this.#customVariableSetValue)
+		this.#router.addPath('custom-variable :name set-value {*value}', this.#customVariableSetValue)
 	}
 
 	/**
