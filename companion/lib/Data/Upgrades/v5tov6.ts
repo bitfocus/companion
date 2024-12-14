@@ -162,7 +162,7 @@ function wrapActionsInGroup(actions: any[]): any {
 		instance: 'internal',
 		action: 'action_group',
 		options: {
-			execution_mode: 'burst',
+			execution_mode: 'concurrent',
 		},
 		children: {
 			default: actions,

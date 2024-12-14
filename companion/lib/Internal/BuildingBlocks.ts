@@ -95,9 +95,9 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 						type: 'dropdown',
 						label: 'Execution mode',
 						id: 'execution_mode',
-						default: 'burst',
+						default: 'concurrent',
 						choices: [
-							{ id: 'burst', label: 'Burst' },
+							{ id: 'concurrent', label: 'Concurrent' },
 							{ id: 'sequential', label: 'Sequential' },
 						],
 						tooltip:
