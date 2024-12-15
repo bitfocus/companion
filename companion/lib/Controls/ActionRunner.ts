@@ -155,8 +155,6 @@ export class ControlActionRunner {
 			this.#triggerRedraw()
 		}
 
-		console.log('run', actions)
-
 		return this.#actionRunner
 			.runMultipleActions(actions, {
 				...extras,

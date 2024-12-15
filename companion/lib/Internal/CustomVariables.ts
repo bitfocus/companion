@@ -272,7 +272,6 @@ export class InternalCustomVariables implements InternalModuleFragment {
 					action.options.expression,
 					extras
 				)
-				console.log('new value', result)
 				this.#variableController.custom.setValue(action.options.name, result.value)
 			} catch (error: any) {
 				this.#logger.warn(`${error.toString()}, in expression: "${action.options.expression}"`)

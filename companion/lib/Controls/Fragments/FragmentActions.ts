@@ -139,8 +139,6 @@ export class FragmentActions {
 	}
 
 	getActionSet(setId: ActionSetId): FragmentActionList | undefined {
-		console.log('getActionSet', setId, Array.from(this.#actions.keys()))
-
 		return this.#actions.get(setId)
 	}
 
