@@ -9,6 +9,8 @@ import type { DataCache } from '../Data/Cache.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 
+const ModuleApiBase = 'https://developer.bitfocus.io/api/v1/companion/modules/connection'
+
 const ModuleStoreListRoom = 'module-store:list'
 const ModuleStoreInfoRoom = (moduleId: string) => `module-store:info:${moduleId}`
 
@@ -162,9 +164,7 @@ export class ModuleStoreService {
 				// Simulate a delay
 				// await new Promise((resolve) => setTimeout(resolve, 1000))
 				this.#io.emitToAll('modules-store:list:progress', 0.2)
-				const req = await fetch(
-					'https://raw.githubusercontent.com/Julusian/companion-module-repository-poc/refs/heads/main/json/_all.json'
-				)
+				const req = await fetch(ModuleApiBase)
 				const jsonData: any = await req.json()
 				this.#io.emitToAll('modules-store:list:progress', 0.6)
 
@@ -175,8 +175,8 @@ export class ModuleStoreService {
 					updateWarning: null,
 
 					modules: Object.fromEntries(
-						Object.entries(jsonData).map(([id, data]: [id: string, data: any]) => [
-							id,
+						jsonData.modules.map((data: any) => [
+							data.id,
 							{ ...data, name: data.manufacturer + ': ' + data.products.join('; ') }, // Match what the on disk scanner generates
 						])
 					),
@@ -221,9 +221,7 @@ export class ModuleStoreService {
 			// Simulate a delay
 			await new Promise((resolve) => setTimeout(resolve, 1000))
 			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.2)
-			const req = await fetch(
-				`https://raw.githubusercontent.com/Julusian/companion-module-repository-poc/refs/heads/main/json/${moduleId}.json`
-			)
+			const req = await fetch(`${ModuleApiBase}/${moduleId}`)
 			const jsonData: any = await req.json()
 			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.6)
 
@@ -233,7 +231,10 @@ export class ModuleStoreService {
 				lastUpdateAttempt: Date.now(),
 				updateWarning: null,
 
-				versions: jsonData.versions,
+				versions: jsonData.versions.map((data: any) => ({
+					...data,
+					id: data.id.startsWith('v') ? data.id.slice(1) : data.id,
+				})),
 			}
 		} catch (e: any) {
 			// This could be on an always offline system
