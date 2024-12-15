@@ -173,7 +173,8 @@ const PageListRow = observer(function PageListRow({
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<PageListDragItem>({
 		accept: PAGE_LIST_DRAG_ID,
-		hover(item, _monitor) {
+		drop(item, _monitor) {
+			// We do this one on drop, as it is costly to move the page around
 			if (!ref.current) {
 				return
 			}
