@@ -143,7 +143,7 @@ export class ControlActionRunner {
 
 	async runActions(
 		actions: ActionInstance[],
-		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed'>
+		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed' | 'executionMode'>
 	): Promise<void> {
 		const controller = new AbortController()
 
@@ -160,6 +160,7 @@ export class ControlActionRunner {
 				...extras,
 				controlId: this.#controlId,
 				abortDelayed: controller.signal,
+				executionMode: 'concurrent',
 			})
 			.finally(() => {
 				// If this removes the last chain, trigger a redraw

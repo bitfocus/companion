@@ -927,6 +927,7 @@ export interface RunActionExtras {
 	surfaceId: string | undefined
 	location: ControlLocation | undefined
 	abortDelayed: AbortSignal
+	executionMode: 'sequential' | 'concurrent'
 }
 
 export interface VariableDefinitionTmp {

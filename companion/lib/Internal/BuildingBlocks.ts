@@ -98,8 +98,9 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 						type: 'dropdown',
 						label: 'Execution mode',
 						id: 'execution_mode',
-						default: 'concurrent',
+						default: 'inherit',
 						choices: [
+							{ id: 'inherit', label: 'Inherit' },
 							{ id: 'concurrent', label: 'Concurrent' },
 							{ id: 'sequential', label: 'Sequential' },
 						],
@@ -172,10 +173,28 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		} else if (action.action === 'action_group') {
 			if (extras.abortDelayed.aborted) return true
 
-			const executeSequential = action.options.execution_mode === 'sequential'
+			let executeSequential = false
+			switch (action.options.execution_mode) {
+				case 'sequential':
+					executeSequential = true
+					break
+				case 'concurrent':
+					executeSequential = false
+					break
+				case 'inherit':
+					executeSequential = extras.executionMode === 'sequential'
+					break
+				default:
+					this.#logger.error(`Unknown execution mode: ${action.options.execution_mode}`)
+			}
+
+			const newExtras: RunActionExtras = {
+				...extras,
+				executionMode: executeSequential ? 'sequential' : 'concurrent',
+			}
 
 			return this.#actionRunner
-				.runMultipleActions(action.children?.['default'] ?? [], extras, executeSequential)
+				.runMultipleActions(action.children?.['default'] ?? [], newExtras, executeSequential)
 				.catch((e) => {
 					this.#logger.error(`Failed to run actions: ${e.message}`)
 				})
