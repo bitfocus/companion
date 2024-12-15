@@ -12,11 +12,12 @@ export const RefreshModulesList = observer(function RefreshModulesList() {
 
 	const refreshProgress = moduleStoreRefreshProgress.get(null) ?? 1
 
-	const [refreshError, setLoadError] = useState<string | null>(null) // TODO - show this error
+	const [refreshError, setLoadError] = useState<string | null>(null)
 
 	const doRefreshModules = useCallback(() => {
 		socketEmitPromise(socket, 'modules-store:list:refresh', []).catch((err) => {
 			console.error('Failed to refresh modules', err)
+			setLoadError('Failed to refresh modules: ' + err)
 		})
 	}, [socket])
 

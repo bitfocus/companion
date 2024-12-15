@@ -2,10 +2,18 @@ import React, { useCallback, useContext, useState } from 'react'
 import { socketEmitPromise } from '../util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAsterisk, faPlus, faSync, faToiletsPortable, faTrash, faWarning } from '@fortawesome/free-solid-svg-icons'
+import {
+	faAsterisk,
+	faPlus,
+	faQuestionCircle,
+	faSync,
+	faToiletsPortable,
+	faTrash,
+	faWarning,
+} from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { ModuleDisplayInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreModuleInfoStore, ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
@@ -17,16 +25,16 @@ import relativeTime from 'dayjs/plugin/relativeTime.js'
 dayjs.extend(relativeTime)
 
 interface ModuleVersionsTableProps {
-	moduleInfo: ModuleDisplayInfo
+	moduleId: string
 	moduleStoreInfo: ModuleStoreModuleInfoStore | null
 }
 
 export const ModuleVersionsTable = observer(function ModuleVersionsTable({
-	moduleInfo,
+	moduleId,
 	moduleStoreInfo,
 }: ModuleVersionsTableProps) {
 	const { modules } = useContext(RootAppStoreContext)
-	const moduleInstalledInfo = modules.modules.get(moduleInfo.id)
+	const moduleInstalledInfo = modules.modules.get(moduleId)
 
 	const allVersionsSet = new Set<string>()
 	const installedModuleVersions = new Map<string, ClientModuleVersionInfo>()
@@ -44,7 +52,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 
 	const allVersionNumbers = Array.from(allVersionsSet).sort((a, b) => semver.compare(b, a))
 
-	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(`modules_visible_versions:${moduleInfo.id}`, {
+	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(`modules_visible_versions:${moduleId}`, {
 		availableStable: true,
 		availableDeprecated: false,
 		availableBeta: false,
@@ -86,7 +94,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 					return (
 						<ModuleVersionRow
 							key={versionId}
-							moduleId={moduleInfo.id}
+							moduleId={moduleId}
 							versionId={versionId}
 							storeInfo={storeInfo}
 							installedInfo={installedInfo}
@@ -125,6 +133,16 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 	installedInfo,
 	storeInfo,
 }: ModuleVersionRowProps) {
+	const { helpViewer } = useContext(RootAppStoreContext)
+
+	const versionDisplayName = installedInfo?.displayName ?? `v${storeInfo?.id}`
+	const helpPath = installedInfo?.helpPath ?? storeInfo?.helpUrl
+
+	const doShowHelp = useCallback(() => {
+		if (!helpPath) return
+		helpViewer.current?.showFromUrl(moduleId, versionDisplayName, helpPath)
+	}, [helpViewer, moduleId, versionDisplayName, helpPath])
+
 	if (!storeInfo && !installedInfo) return null // Should never happen
 
 	return (
@@ -157,6 +175,11 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				<ModuleVersionUsageIcon moduleId={moduleId} moduleVersionId={versionId} isInstalled={!!installedInfo} />
+				{helpPath && (
+					<div className="float_right" onClick={doShowHelp}>
+						<FontAwesomeIcon icon={faQuestionCircle} />
+					</div>
+				)}
 			</td>
 		</tr>
 	)

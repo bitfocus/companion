@@ -3,8 +3,8 @@ import { socketEmitPromise } from '../util.js'
 import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { ModuleDisplayInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
+import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ModuleStoreListCacheEntry, ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
@@ -15,20 +15,15 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons'
 
 interface ModuleManagePanelProps {
 	moduleId: string
-	doManageModule: (moduleId: string | null) => void
-	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
-export const ModuleManagePanel = observer(function ModuleManagePanel({
-	moduleId,
-	doManageModule,
-	showHelp,
-}: ModuleManagePanelProps) {
+export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleId }: ModuleManagePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(moduleId)?.display ?? modules.storeList.get(moduleId)
+	const moduleInfo = modules.modules.get(moduleId)?.display
+	const moduleStoreInfo = modules.storeList.get(moduleId)
 
-	if (!moduleInfo) {
+	if (!moduleInfo && !moduleStoreInfo) {
 		return (
 			<CRow className="edit-connection">
 				<CCol xs={12}>
@@ -38,43 +33,28 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({
 		)
 	}
 
-	return (
-		<ModuleManagePanelInner
-			moduleId={moduleId}
-			moduleInfo={moduleInfo}
-			doManageModule={doManageModule}
-			showHelp={showHelp}
-		/>
-	)
+	return <ModuleManagePanelInner moduleId={moduleId} moduleInfo={moduleInfo} moduleStoreBaseInfo={moduleStoreInfo} />
 })
 
 interface ModuleManagePanelInnerProps {
 	moduleId: string
-	moduleInfo: ModuleDisplayInfo
-	doManageModule: (moduleId: string | null) => void
-	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
+	moduleInfo: ModuleDisplayInfo | undefined
+	moduleStoreBaseInfo: ModuleStoreListCacheEntry | undefined
 }
 
 const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	moduleId,
 	moduleInfo,
-	doManageModule,
-	showHelp,
+	moduleStoreBaseInfo,
 }: ModuleManagePanelInnerProps) {
-	const { modules } = useContext(RootAppStoreContext)
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
 
-	const moduleStoreBaseInfo = modules.storeList.get(moduleId)
+	const baseInfo = moduleInfo || moduleStoreBaseInfo
 
 	return (
 		<div>
 			<h5>
-				Manage {moduleInfo.name}
-				{/* {moduleVersion?.hasHelp && (
-					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type, moduleVersion)}>
-						<FontAwesomeIcon icon={faQuestionCircle} />
-					</div>
-				)} */}
+				Manage {baseInfo?.name ?? moduleId}
 				{!!moduleStoreBaseInfo && (
 					<WindowLinkOpen className="float_right" title="Open Store Page" href={moduleStoreBaseInfo.storeUrl}>
 						<FontAwesomeIcon icon={faExternalLink} />
@@ -93,7 +73,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 			</div>
 			{moduleStoreInfo?.updateWarning && <CAlert color="danger">{moduleStoreInfo.updateWarning}</CAlert>}
 
-			<ModuleVersionsTable moduleInfo={moduleInfo} moduleStoreInfo={moduleStoreInfo} />
+			<ModuleVersionsTable moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
 		</div>
 	)
 })

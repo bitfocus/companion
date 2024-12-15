@@ -12,7 +12,7 @@ import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
-import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import semver from 'semver'
@@ -24,13 +24,11 @@ import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 interface ConnectionEditPanelProps {
 	connectionId: string
 	doConfigureConnection: (connectionId: string | null) => void
-	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
 export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 	connectionId,
 	doConfigureConnection,
-	showHelp,
 }: ConnectionEditPanelProps) {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
@@ -54,7 +52,6 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 			connectionInfo={connectionInfo}
 			moduleInfo={moduleInfo}
 			doConfigureConnection={doConfigureConnection}
-			showHelp={showHelp}
 		/>
 	)
 })
@@ -64,7 +61,6 @@ interface ConnectionEditPanelInnerProps {
 	connectionInfo: ClientConnectionConfig
 	moduleInfo: ClientModuleInfo | undefined
 	doConfigureConnection: (connectionId: string | null) => void
-	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
 const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
@@ -72,9 +68,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	connectionInfo,
 	moduleInfo,
 	doConfigureConnection,
-	showHelp,
 }: ConnectionEditPanelInnerProps) {
-	const { socket, modules } = useContext(RootAppStoreContext)
+	const { socket, helpViewer, modules } = useContext(RootAppStoreContext)
 
 	const [error, setError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
@@ -237,12 +232,19 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true)
 
+	const doShowHelp = useCallback(
+		() =>
+			moduleVersion?.helpPath &&
+			helpViewer.current?.showFromUrl(connectionInfo.instance_type, moduleVersion.displayName, moduleVersion.helpPath),
+		[helpViewer, connectionInfo.instance_type, moduleVersion]
+	)
+
 	return (
 		<div>
 			<h5>
 				{moduleInfo?.display?.shortname ?? connectionInfo.instance_type} configuration
-				{moduleVersion?.hasHelp && (
-					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type, moduleVersion)}>
+				{moduleVersion?.helpPath && (
+					<div className="float_right" onClick={doShowHelp}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}

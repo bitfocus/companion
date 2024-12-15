@@ -194,6 +194,7 @@ export class ModuleStoreService {
 
 								storeUrl: data.storeUrl,
 								githubUrl: data.githubUrl ?? null,
+								helpUrl: data.latestHelpUrl,
 
 								deprecationReason: data.deprecationReason ?? null,
 							} satisfies Complete<ModuleStoreListCacheEntry>, // Match what the on disk scanner generates
@@ -268,6 +269,8 @@ export class ModuleStoreService {
 							deprecationReason: data.deprecationReason ?? null,
 
 							apiVersion: data.apiVersion,
+
+							helpUrl: data.helpUrl,
 						}) satisfies Complete<ModuleStoreModuleInfoVersion>
 				),
 			}

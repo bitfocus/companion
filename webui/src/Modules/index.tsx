@@ -1,12 +1,10 @@
 import { CCol, CRow, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
-import React, { memo, useCallback, useContext, useEffect, useRef } from 'react'
-import { HelpModal, HelpModalRef } from '../Connections/HelpModal.js'
+import React, { memo, useCallback, useContext, useEffect } from 'react'
 import { MyErrorBoundary } from '../util.js'
 import { ModulesList } from './ModulesList.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
-import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleManagePanel } from './ModuleManagePanel.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -36,8 +34,6 @@ function navigateToModulePage(navigate: NavigateFunction, controlId: string | nu
 export const ModulesPage = memo(function ConnectionsPage() {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const helpModalRef = useRef<HelpModalRef>(null)
-
 	const selectedModuleId = useSelectedModuleId()
 	const activeTab = selectedModuleId ? 'manage' : 'placeholder'
 	const navigate = useNavigate()
@@ -49,19 +45,12 @@ export const ModulesPage = memo(function ConnectionsPage() {
 		}
 	}, [navigate, modules, selectedModuleId])
 
-	const showHelp = useCallback(
-		(id: string, moduleVersion: ClientModuleVersionInfo) => helpModalRef.current?.show(id, moduleVersion),
-		[]
-	)
-
 	const doManageModule = useCallback((moduleId: string | null) => navigateToModulePage(navigate, moduleId), [])
 
 	return (
 		<CRow className="connections-page split-panels">
-			<HelpModal ref={helpModalRef} />
-
 			<CCol xl={6} className="connections-panel primary-panel">
-				<ModulesList showHelp={showHelp} doManageModule={doManageModule} selectedModuleId={selectedModuleId} />
+				<ModulesList doManageModule={doManageModule} selectedModuleId={selectedModuleId} />
 			</CCol>
 
 			<CCol xl={6} className="connections-panel secondary-panel add-connections-panel">
@@ -90,14 +79,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 						</CTabPane>
 						<CTabPane role="tabpanel" aria-labelledby="manage-tab" visible={activeTab === 'manage'}>
 							<MyErrorBoundary>
-								{selectedModuleId && (
-									<ModuleManagePanel
-										key={selectedModuleId}
-										showHelp={showHelp}
-										doManageModule={doManageModule}
-										moduleId={selectedModuleId}
-									/>
-								)}
+								{selectedModuleId && <ModuleManagePanel key={selectedModuleId} moduleId={selectedModuleId} />}
 							</MyErrorBoundary>
 						</CTabPane>
 					</CTabContent>

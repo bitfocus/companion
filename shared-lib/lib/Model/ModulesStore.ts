@@ -19,6 +19,8 @@ export interface ModuleStoreListCacheEntry {
 
 	deprecationReason: string | null
 
+	helpUrl: string
+
 	// description: string | null
 
 	// licenseSPDX: string
@@ -26,8 +28,6 @@ export interface ModuleStoreListCacheEntry {
 
 	// Platform support?
 	// Has compatible version?
-
-	// TODO - more props
 }
 
 export interface ModuleStoreModuleInfoStore {
@@ -37,7 +37,6 @@ export interface ModuleStoreModuleInfoStore {
 	lastUpdateAttempt: number
 	updateWarning: string | null
 
-	// TODO
 	versions: ModuleStoreModuleInfoVersion[]
 }
 export interface ModuleStoreModuleInfoVersion {
@@ -51,5 +50,5 @@ export interface ModuleStoreModuleInfoVersion {
 
 	apiVersion: string
 
-	// TODO - more props
+	helpUrl: string
 }

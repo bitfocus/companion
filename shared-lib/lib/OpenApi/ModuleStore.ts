@@ -109,6 +109,7 @@ export interface components {
 			storeUrl: string
 			/** @description Url to the module source code */
 			githubUrl?: string
+			latestHelpUrl: string
 			/** @description Reason for deprecation (if deprecated) */
 			deprecationReason?: string
 		}
@@ -127,6 +128,7 @@ export interface components {
 			apiVersion: string
 			/** @description Reason for deprecation (if deprecated) */
 			deprecationReason?: string
+			helpUrl: string
 		}
 	}
 	responses: never

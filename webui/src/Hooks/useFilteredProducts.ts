@@ -11,6 +11,7 @@ export function useAllConnectionProducts(modules: ModuleInfoStore): FuzzyProduct
 		// Start with all installed modules
 		for (const moduleInfo of modules.modules.values()) {
 			for (const product of moduleInfo.display.products) {
+				const latestVersion = moduleInfo.stableVersion ?? moduleInfo.betaVersion
 				const key = `${moduleInfo.display.id}-${product}`
 				allProducts[key] = {
 					id: moduleInfo.display.id,
@@ -23,6 +24,9 @@ export function useAllConnectionProducts(modules: ModuleInfoStore): FuzzyProduct
 					name: moduleInfo.display.name,
 					manufacturer: moduleInfo.display.manufacturer,
 					shortname: moduleInfo.display.shortname,
+
+					bugUrl: moduleInfo.display.bugUrl,
+					helpUrl: latestVersion?.helpPath,
 				}
 			}
 		}
@@ -47,6 +51,9 @@ export function useAllConnectionProducts(modules: ModuleInfoStore): FuzzyProduct
 						name: moduleInfo.name,
 						manufacturer: moduleInfo.manufacturer,
 						shortname: moduleInfo.shortname,
+
+						bugUrl: moduleInfo.githubUrl ?? undefined,
+						helpUrl: moduleInfo.helpUrl,
 					}
 				}
 			}
@@ -76,4 +83,7 @@ export interface FuzzyProduct {
 	name: string
 	manufacturer: string
 	shortname: string
+
+	bugUrl: string | undefined
+	helpUrl: string | undefined
 }

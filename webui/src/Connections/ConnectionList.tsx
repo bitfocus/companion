@@ -30,7 +30,6 @@ import { NonIdealState } from '../Components/NonIdealState.js'
 import { Tuck } from '../Components/Tuck.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { UpdateConnectionToLatestButton } from './UpdateConnectionToLatestButton.js'
 import { InlineHelp } from '../Components/InlineHelp.js'
@@ -43,14 +42,12 @@ interface VisibleConnectionsState {
 }
 
 interface ConnectionsListProps {
-	showHelp: (connectionId: string, moduleVersion: ClientModuleVersionInfo) => void
 	doConfigureConnection: (connectionId: string | null) => void
 	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
 }
 
 export const ConnectionsList = observer(function ConnectionsList({
-	showHelp,
 	doConfigureConnection,
 	connectionStatus,
 	selectedConnectionId,
@@ -118,7 +115,6 @@ export const ConnectionsList = observer(function ConnectionsList({
 					id={id}
 					connection={connection}
 					connectionStatus={status}
-					showHelp={showHelp}
 					showVariables={doShowVariables}
 					deleteModalRef={deleteModalRef}
 					configureConnection={doConfigureConnection}
@@ -197,7 +193,6 @@ interface ConnectionsTableRowProps {
 	id: string
 	connection: ClientConnectionConfig
 	connectionStatus: ConnectionStatusEntry | undefined
-	showHelp: (connectionId: string, moduleVersion: ClientModuleVersionInfo) => void
 	showVariables: (label: string) => void
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
@@ -209,14 +204,13 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	id,
 	connection,
 	connectionStatus,
-	showHelp,
 	showVariables,
 	configureConnection,
 	deleteModalRef,
 	moveRow,
 	isSelected,
 }: ConnectionsTableRowProps) {
-	const { socket, modules, variablesStore } = useContext(RootAppStoreContext)
+	const { socket, helpViewer, modules, variablesStore } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.modules.get(connection.instance_type)
 
@@ -244,11 +238,6 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			console.error('Set enabled failed', e)
 		})
 	}, [socket, id, isEnabled])
-
-	const doShowHelp = useCallback(
-		() => moduleVersion?.hasHelp && showHelp(connection.instance_type, moduleVersion),
-		[showHelp, connection.instance_type]
-	)
 
 	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label])
 
@@ -289,6 +278,13 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	}, [moduleInfo])
 
 	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection.moduleVersionId)
+
+	const doShowHelp = useCallback(
+		() =>
+			moduleVersion?.helpPath &&
+			helpViewer.current?.showFromUrl(connection.instance_type, moduleVersion.displayName, moduleVersion.helpPath),
+		[helpViewer, connection.instance_type, moduleVersion]
+	)
 
 	return (
 		<tr
@@ -356,7 +352,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 										onMouseDown={doShowHelp}
 										color="secondary"
 										title="Help"
-										disabled={!moduleVersion?.hasHelp}
+										disabled={!moduleVersion?.helpPath}
 										style={{ textAlign: 'left' }}
 									>
 										<Tuck>

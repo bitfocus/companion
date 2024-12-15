@@ -3,6 +3,7 @@ import type { ModuleVersionInfo } from './Types.js'
 import semver from 'semver'
 import { compact } from 'lodash-es'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { getHelpPathForInstalledModule } from './ModuleScanner.js'
 
 /**
  * Information about a module
@@ -68,14 +69,14 @@ function translateStableVersion(version: ModuleVersionInfo | null): ClientModule
 			displayName: 'Dev',
 			isLegacy: false,
 			isBeta: false,
-			hasHelp: version.helpPath !== null,
+			helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
 			versionId: 'dev',
 		}
 	} else {
 		return {
 			displayName: `Latest ${version.isBeta ? 'Beta' : 'Stable'} (v${version.versionId})`,
 			isLegacy: version.isLegacy,
-			hasHelp: version.helpPath !== null,
+			helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
 			isBeta: version.isBeta,
 			versionId: version.versionId,
 		}
@@ -87,7 +88,7 @@ function translateReleaseVersion(version: ModuleVersionInfo): ClientModuleVersio
 		displayName: `v${version.versionId}`,
 		isLegacy: version.isLegacy,
 		isBeta: version.isBeta,
-		hasHelp: version.helpPath !== null,
+		helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
 		versionId: version.versionId,
 	}
 }

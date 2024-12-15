@@ -1,12 +1,11 @@
 import React, { useCallback, useContext, useState } from 'react'
-import { CAlert, CButtonGroup } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEyeSlash, faPlug, faWarning } from '@fortawesome/free-solid-svg-icons'
+import { faEyeSlash, faPlug, faQuestionCircle, faWarning } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
-import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { SearchBox } from '../Components/SearchBox.js'
 import { useAllConnectionProducts, filterProducts, FuzzyProduct } from '../Hooks/useFilteredProducts.js'
 import { ImportModules } from './ImportCustomModule.js'
@@ -21,16 +20,11 @@ interface VisibleModulesState {
 }
 
 interface ModulesListProps {
-	showHelp: (connectionId: string, moduleVersion: ClientModuleVersionInfo) => void
 	doManageModule: (connectionId: string | null) => void
 	selectedModuleId: string | null
 }
 
-export const ModulesList = observer(function ModulesList({
-	showHelp,
-	doManageModule,
-	selectedModuleId,
-}: ModulesListProps) {
+export const ModulesList = observer(function ModulesList({ doManageModule, selectedModuleId }: ModulesListProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
@@ -76,7 +70,6 @@ export const ModulesList = observer(function ModulesList({
 					key={moduleInfo.id}
 					id={moduleInfo.id}
 					moduleInfo={moduleInfo}
-					showHelp={showHelp}
 					doManageModule={doManageModule}
 					isSelected={moduleInfo.id === selectedModuleId}
 				/>
@@ -119,7 +112,10 @@ export const ModulesList = observer(function ModulesList({
 				Here you can view and manage the modules you have installed.
 				<br />
 				If you have an active internet connection, you can search for and install modules to support additional devices.
-				If you can't find the device you're looking for, please add a request on GitHub
+				If you can't find the device you're looking for, please add a request{' '}
+				<a href="https://github.com/bitfocus/companion-module-requests/issues" target="_new">
+					on GitHub
+				</a>
 			</p>
 
 			<CAlert color="info">
@@ -143,7 +139,7 @@ export const ModulesList = observer(function ModulesList({
 			<table className="table-tight table-responsive-sm">
 				<thead>
 					<tr>
-						<th>
+						<th colSpan={2}>
 							Module
 							<CButtonGroup className="table-header-buttons">
 								<VisibilityButton {...visibleModules} keyId="installed" color="success" label="Installed" />
@@ -200,7 +196,6 @@ export const ModulesList = observer(function ModulesList({
 interface ModulesListRowProps {
 	id: string
 	moduleInfo: FuzzyProduct
-	showHelp: (connectionId: string, moduleVersion: ClientModuleVersionInfo) => void
 	doManageModule: (moduleId: string | null) => void
 	isSelected: boolean
 }
@@ -208,13 +203,16 @@ interface ModulesListRowProps {
 const ModulesListRow = observer(function ModulesListRow({
 	id,
 	moduleInfo,
-	showHelp,
 	doManageModule,
 	isSelected,
 }: ModulesListRowProps) {
+	const { helpViewer } = useContext(RootAppStoreContext)
+
 	const doShowHelp = useCallback(() => {
-		// moduleVersion?.hasHelp && showHelp(connection.instance_type, moduleVersion),
-	}, [showHelp, id])
+		const latestVersion = moduleInfo.installedInfo?.stableVersion ?? moduleInfo.installedInfo?.betaVersion
+		if (!latestVersion) return
+		helpViewer.current?.showFromUrl(id, latestVersion.displayName, latestVersion.helpPath)
+	}, [helpViewer, id, moduleInfo])
 
 	const doEdit = () => {
 		if (!moduleInfo) {
@@ -252,6 +250,17 @@ const ModulesListRow = observer(function ModulesListRow({
 					</>
 				)}
 				{moduleVersion?.displayName} */}
+			</td>
+			<td className="compact">
+				<CButton
+					onMouseDown={doShowHelp}
+					color="white"
+					title="Show Help"
+					disabled={!moduleInfo.helpUrl}
+					style={{ textAlign: 'left' }}
+				>
+					<FontAwesomeIcon icon={faQuestionCircle} />
+				</CButton>
 			</td>
 		</tr>
 	)

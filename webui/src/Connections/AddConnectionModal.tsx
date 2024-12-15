@@ -15,12 +15,13 @@ import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
-import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { useConnectionVersionSelectOptions } from './ConnectionEditPanel.js'
 import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 import type { FuzzyProduct } from '../Hooks/useFilteredProducts.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 export interface AddConnectionModalRef {
 	show(info: FuzzyProduct): void
@@ -28,15 +29,11 @@ export interface AddConnectionModalRef {
 
 interface AddConnectionModalProps {
 	doConfigureConnection: (connectionId: string) => void
-	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 }
 
 export const AddConnectionModal = observer(
-	forwardRef<AddConnectionModalRef, AddConnectionModalProps>(function AddActionsModal(
-		{ doConfigureConnection, showHelp },
-		ref
-	) {
-		const { socket, notifier, connections, modules } = useContext(RootAppStoreContext)
+	forwardRef<AddConnectionModalRef, AddConnectionModalProps>(function AddActionsModal({ doConfigureConnection }, ref) {
+		const { socket, helpViewer, notifier, connections, modules } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<FuzzyProduct | null>(null)
@@ -114,8 +111,16 @@ export const AddConnectionModal = observer(
 			})
 		}, [versionChoices, defaultVersionId])
 
-		const selectedVersionIsLegacy =
-			moduleInfo?.installedInfo?.installedVersions.find((v) => v.versionId === selectedVersion)?.isLegacy ?? false
+		const selectedVersionInfo =
+			selectedVersion === 'dev'
+				? moduleInfo?.installedInfo?.devVersion
+				: moduleInfo?.installedInfo?.installedVersions.find((v) => v.versionId === selectedVersion)
+		const selectedVersionIsLegacy = selectedVersionInfo?.isLegacy ?? false
+
+		const showHelpClick = useCallback(() => {
+			if (!moduleInfo || !selectedVersionInfo) return
+			helpViewer.current?.showFromUrl(moduleInfo.id, selectedVersionInfo.versionId, selectedVersionInfo.helpPath)
+		}, [helpViewer, moduleInfo?.id, selectedVersionInfo])
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
@@ -146,11 +151,11 @@ export const AddConnectionModal = observer(
 
 								<CFormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm">
 									Module Version&nbsp;
-									{/* {moduleVersion?.hasHelp && (
-										<div className="float_right" onClick={() => showHelp(moduleInfo.id, moduleVersion)}>
+									{moduleInfo && selectedVersionInfo && (
+										<div className="float_right" onClick={showHelpClick}>
 											<FontAwesomeIcon icon={faQuestionCircle} />
 										</div>
-									)} */}
+									)}
 									{isModuleOnStore && <ModuleVersionsRefresh moduleId={moduleInfo.id} />}
 								</CFormLabel>
 								<CCol sm={8}>
@@ -179,9 +184,13 @@ export const AddConnectionModal = observer(
 										</p>
 										<p>
 											If this module is broken, please let the module author know on{' '}
-											<a target="_blank" rel="noreferrer" href={moduleInfo.bugUrl}>
-												Github
-											</a>
+											{moduleInfo.bugUrl ? (
+												<a target="_blank" rel="noreferrer" href={moduleInfo.bugUrl}>
+													Github
+												</a>
+											) : (
+												'Github'
+											)}
 										</p>
 									</CAlert>
 								</>

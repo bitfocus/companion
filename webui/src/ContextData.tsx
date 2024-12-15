@@ -28,6 +28,7 @@ import { ConnectionsStore } from './Stores/ConnectionsStore.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
 import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStoreRefreshProgress.js'
 import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
+import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -37,11 +38,13 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const socket = useContext(SocketContext)
 
 	const notifierRef = useRef<NotificationsManagerRef>(null)
+	const helpModalRef = useRef<HelpModalRef>(null)
 
 	const rootStore = useMemo(() => {
 		return {
 			socket,
 			notifier: notifierRef,
+			helpViewer: helpModalRef,
 
 			modules: new ModuleInfoStore(),
 			connections: new ConnectionsStore(),
@@ -125,6 +128,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	return (
 		<RootAppStoreContext.Provider value={rootStore}>
 			<NotificationsManager ref={notifierRef} />
+			<HelpModal ref={helpModalRef} />
+
 			{children(progressPercent, completedSteps.length === steps.length)}
 		</RootAppStoreContext.Provider>
 	)

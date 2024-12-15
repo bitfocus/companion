@@ -17,12 +17,10 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { filterProducts, FuzzyProduct, useAllConnectionProducts } from '../Hooks/useFilteredProducts.js'
 
 interface AddConnectionsPanelProps {
-	showHelp: (moduleId: string, moduleVersion: ClientModuleVersionInfo) => void
 	doConfigureConnection: (connectionId: string) => void
 }
 
 export const AddConnectionsPanel = observer(function AddConnectionsPanel({
-	showHelp,
 	doConfigureConnection,
 }: AddConnectionsPanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
@@ -47,12 +45,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
 			candidatesObj[moduleInfo.name] = (
-				<AddConnectionEntry
-					key={moduleInfo.name}
-					moduleInfo={moduleInfo}
-					addConnection={addConnection}
-					showHelp={showHelp}
-				/>
+				<AddConnectionEntry key={moduleInfo.name} moduleInfo={moduleInfo} addConnection={addConnection} />
 			)
 		}
 
@@ -92,7 +85,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 	return (
 		<>
-			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} showHelp={showHelp} />
+			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} />
 			<div style={{ clear: 'both' }} className="row-heading">
 				<h4>Add connection</h4>
 				{modules.storeList.size > 0 ? (
@@ -164,18 +157,20 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 interface AddConnectionEntryProps {
 	moduleInfo: FuzzyProduct
 	addConnection(module: FuzzyProduct): void
-	showHelp(moduleId: string, moduleVersion: ClientModuleVersionInfo): void
 }
 
-function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnectionEntryProps) {
+function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryProps) {
+	const { helpViewer } = useContext(RootAppStoreContext)
+
 	const addConnectionClick = useCallback(() => addConnection(moduleInfo), [addConnection, moduleInfo])
 	const showVersion: ClientModuleVersionInfo | undefined =
 		moduleInfo.installedInfo?.stableVersion ??
 		moduleInfo.installedInfo?.betaVersion ??
 		moduleInfo.installedInfo?.installedVersions?.[0]
+
 	const showHelpClick = useCallback(
-		() => showVersion && showHelp(moduleInfo.id, showVersion),
-		[showHelp, moduleInfo.id, showVersion]
+		() => showVersion && helpViewer.current?.showFromUrl(moduleInfo.id, showVersion.displayName, showVersion.helpPath),
+		[helpViewer, moduleInfo.id, showVersion]
 	)
 
 	return (
@@ -207,7 +202,7 @@ function AddConnectionEntry({ moduleInfo, addConnection, showHelp }: AddConnecti
 					<FontAwesomeIcon icon={faGithub} />
 				</WindowLinkOpen>
 			)}
-			{showVersion?.hasHelp && (
+			{showVersion?.helpPath && (
 				<div className="float_right" onClick={showHelpClick}>
 					<FontAwesomeIcon icon={faQuestionCircle} />
 				</div>

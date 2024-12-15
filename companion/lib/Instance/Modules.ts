@@ -15,7 +15,6 @@
  *
  */
 
-import fs from 'fs-extra'
 import path from 'path'
 import { cloneDeep } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
@@ -23,7 +22,6 @@ import type express from 'express'
 import { type ModuleManifest } from '@companion-module/base'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
-import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import LogController from '../Log/Controller.js'
 import type { InstanceController } from './Controller.js'
 import jsonPatch from 'fast-json-patch'
@@ -314,8 +312,6 @@ export class InstanceModules {
 		client.onPromise('modules:unsubscribe', () => {
 			client.leave(ModulesRoom)
 		})
-
-		client.onPromise('connections:get-help', this.#getHelpForModule)
 	}
 
 	/**
@@ -349,41 +345,6 @@ export class InstanceModules {
 	}
 
 	/**
-	 * Load the help markdown file for a specified moduleId
-	 */
-	#getHelpForModule = async (
-		moduleId: string,
-		versionId: string | null
-	): Promise<[err: string, result: null] | [err: null, result: HelpDescription]> => {
-		try {
-			const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionId)
-			if (moduleInfo && moduleInfo.helpPath) {
-				const stats = await fs.stat(moduleInfo.helpPath)
-				if (stats.isFile()) {
-					const data = await fs.readFile(moduleInfo.helpPath)
-					return [
-						null,
-						{
-							markdown: data.toString(),
-							baseUrl: `/int/help/module/${moduleId}/${versionId ?? 'current'}`,
-						},
-					]
-				} else {
-					this.#logger.silly(`Error loading help for ${moduleId}`, moduleInfo.helpPath)
-					this.#logger.silly('Not a file')
-					return ['nofile', null]
-				}
-			} else {
-				return ['nofile', null]
-			}
-		} catch (err) {
-			this.#logger.silly(`Error loading help for ${moduleId}`)
-			this.#logger.silly(err)
-			return ['nofile', null]
-		}
-	}
-
-	/**
 	 * Return a module help asset over http
 	 */
 	#getHelpAsset = (
@@ -397,10 +358,12 @@ export class InstanceModules {
 
 		const moduleInfo = this.#knownModules.get(moduleId)?.getVersion(versionId)
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
-			const fullpath = path.join(moduleInfo.basePath, 'companion', file)
-			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig)$/) && fs.existsSync(fullpath)) {
+			const basePath = path.join(moduleInfo.basePath, 'companion')
+			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig|md)$/)) {
 				// Send the file, then stop
-				res.sendFile(fullpath)
+				res.sendFile(file, {
+					root: basePath, // This is needed to prevent path traversal, and because this could be inside a dotfile
+				})
 				return
 			}
 		}

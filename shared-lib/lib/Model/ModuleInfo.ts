@@ -3,7 +3,7 @@ import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 export interface ModuleDisplayInfo {
 	id: string
 	name: string
-	// hasHelp: boolean
+	helpPath: string
 	bugUrl: string
 	shortname: string
 	manufacturer: string
@@ -15,7 +15,7 @@ export interface ClientModuleVersionInfo {
 	displayName: string
 	isLegacy: boolean
 	isBeta: boolean
-	hasHelp: boolean
+	helpPath: string
 	versionId: string
 }
 
