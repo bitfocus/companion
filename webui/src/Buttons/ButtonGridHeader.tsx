@@ -47,7 +47,7 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 	const pageOptions = useComputed(() => {
 		const pageOptions: SelectOption[] = pagesStore.data.map((value, index) => ({
 			value: index + 1,
-			label: `${index + 1} (${value.name})`,
+			label: value.name ? `${index + 1} (${value.name})` : `${index + 1}`,
 		}))
 
 		if (newPageAtEnd) {

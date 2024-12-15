@@ -12,8 +12,6 @@ export interface AddPagesModalRef {
 	show(beforePageNumber: number): void
 }
 
-const DEFAULT_PAGE_NAME = 'New Page'
-
 interface ModalState {
 	show: boolean
 
@@ -25,7 +23,7 @@ const defaultState: ModalState = {
 	show: false,
 
 	beforePage: 1,
-	names: [DEFAULT_PAGE_NAME],
+	names: [''],
 }
 
 export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(function AddPagesModal({}, ref) {
@@ -90,7 +88,7 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 		if (!isNaN(pageNumber)) {
 			setState((oldState) => {
 				const newNames = [...oldState.names]
-				newNames.splice(pageNumber, 0, DEFAULT_PAGE_NAME)
+				newNames.splice(pageNumber, 0, '')
 				return { ...oldState, names: newNames }
 			})
 		}
@@ -176,7 +174,7 @@ function AddPageRow({ index, name, canDelete, changeName, doInsertPage, doDelete
 	return (
 		<tr>
 			<td>
-				<CFormInput type="text" value={name} onChange={changeName} data-page={index} />
+				<CFormInput type="text" value={name} onChange={changeName} data-page={index} placeholder="Unnamed page" />
 			</td>
 			<td style={{ width: 50, textAlign: 'right' }}>
 				<CButtonGroup>
