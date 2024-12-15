@@ -1,6 +1,7 @@
 import LogController from '../Log/Controller.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type {
+	ModuleStoreListCacheEntry,
 	ModuleStoreListCacheStore,
 	ModuleStoreModuleInfoStore,
 	ModuleStoreModuleInfoVersion,
@@ -8,8 +9,11 @@ import type {
 import type { DataCache } from '../Data/Cache.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import createClient from 'openapi-fetch'
+import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
+import { Complete } from '@companion-module/base/dist/util.js'
 
-const ModuleApiBase = 'https://developer.bitfocus.io/api/v1/companion/modules/connection'
+const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({ baseUrl: 'https://developer.bitfocus.io/api' })
 
 const ModuleStoreListRoom = 'module-store:list'
 const ModuleStoreInfoRoom = (moduleId: string) => `module-store:info:${moduleId}`
@@ -161,23 +165,38 @@ export class ModuleStoreService {
 			.then(async () => {
 				this.#io.emitToAll('modules-store:list:progress', 0)
 
-				// Simulate a delay
-				// await new Promise((resolve) => setTimeout(resolve, 1000))
-				this.#io.emitToAll('modules-store:list:progress', 0.2)
-				const req = await fetch(ModuleApiBase)
-				const jsonData: any = await req.json()
-				this.#io.emitToAll('modules-store:list:progress', 0.6)
+				const { data, error } = await ModuleOpenApiClient.GET('/v1/companion/modules/{moduleType}', {
+					params: {
+						path: {
+							moduleType: 'connection',
+						},
+					},
+				})
+				this.#io.emitToAll('modules-store:list:progress', 0.5)
 
-				// TODO - fetch and transform this from the api once it exists
+				if (error) throw new Error(`Failed to fetch module list: ${JSON.stringify(error)}`)
+
 				this.#listStore = {
 					lastUpdated: Date.now(),
 					lastUpdateAttempt: Date.now(),
 					updateWarning: null,
 
 					modules: Object.fromEntries(
-						jsonData.modules.map((data: any) => [
+						data.modules.map((data) => [
 							data.id,
-							{ ...data, name: data.manufacturer + ': ' + data.products.join('; ') }, // Match what the on disk scanner generates
+							{
+								id: data.id,
+								name: data.manufacturer + ': ' + data.products.join('; '),
+								manufacturer: data.manufacturer,
+								shortname: data.shortname,
+								products: data.products,
+								keywords: data.keywords,
+
+								storeUrl: data.storeUrl,
+								githubUrl: data.githubUrl ?? null,
+
+								deprecationReason: data.deprecationReason ?? null,
+							} satisfies Complete<ModuleStoreListCacheEntry>, // Match what the on disk scanner generates
 						])
 					),
 				}
@@ -214,34 +233,50 @@ export class ModuleStoreService {
 
 		this.#logger.debug(`Refreshing store info for module "${moduleId}"`)
 
-		let data: ModuleStoreModuleInfoStore
+		let moduleData: ModuleStoreModuleInfoStore
 		try {
 			this.#io.emitToAll('modules-store:info:progress', moduleId, 0)
 
-			// Simulate a delay
-			await new Promise((resolve) => setTimeout(resolve, 1000))
-			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.2)
-			const req = await fetch(`${ModuleApiBase}/${moduleId}`)
-			const jsonData: any = await req.json()
-			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.6)
+			const { data, error } = await ModuleOpenApiClient.GET('/v1/companion/modules/{moduleType}/{moduleName}', {
+				params: {
+					path: {
+						moduleType: 'connection',
+						moduleName: moduleId,
+					},
+				},
+			})
+			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.5)
 
-			data = {
+			if (error) throw new Error(`Failed to fetch module info: ${error?.error ?? JSON.stringify(error)}`)
+
+			moduleData = {
 				id: moduleId,
 				lastUpdated: Date.now(),
 				lastUpdateAttempt: Date.now(),
 				updateWarning: null,
 
-				versions: jsonData.versions.map((data: any) => ({
-					...data,
-					id: data.id.startsWith('v') ? data.id.slice(1) : data.id,
-				})),
+				versions: data.versions.map(
+					(data) =>
+						({
+							id: data.id.startsWith('v') ? data.id.slice(1) : data.id,
+							releaseChannel: data.isPrerelease ? 'beta' : 'stable',
+							releasedAt: data.releasedAt,
+
+							tarUrl: data.tarUrl ?? null,
+							tarSha: data.tarSha ?? null,
+
+							deprecationReason: data.deprecationReason ?? null,
+
+							apiVersion: data.apiVersion,
+						}) satisfies Complete<ModuleStoreModuleInfoVersion>
+				),
 			}
 		} catch (e: any) {
 			// This could be on an always offline system
 
 			this.#logger.warn(`Refreshing store info for module "${moduleId}" failed: ${e?.message ?? e}`)
 
-			data = this.#infoStore.get(moduleId) ?? {
+			moduleData = this.#infoStore.get(moduleId) ?? {
 				id: moduleId,
 				lastUpdated: 0,
 				lastUpdateAttempt: Date.now(),
@@ -250,23 +285,23 @@ export class ModuleStoreService {
 				versions: [],
 			}
 
-			data.lastUpdateAttempt = Date.now()
-			data.updateWarning = 'Failed to update the module version list from the store'
+			moduleData.lastUpdateAttempt = Date.now()
+			moduleData.updateWarning = 'Failed to update the module version list from the store'
 		}
 
 		// Store value and update the cache on disk
-		this.#infoStore.set(moduleId, data)
-		this.#cacheStore.setTableKey(CacheStoreModuleTable, moduleId, data)
+		this.#infoStore.set(moduleId, moduleData)
+		this.#cacheStore.setTableKey(CacheStoreModuleTable, moduleId, moduleData)
 
 		// Update clients
-		this.#io.emitToRoom(ModuleStoreInfoRoom(moduleId), 'modules-store:info:data', moduleId, data)
+		this.#io.emitToRoom(ModuleStoreInfoRoom(moduleId), 'modules-store:info:data', moduleId, moduleData)
 		this.#io.emitToAll('modules-store:info:progress', moduleId, 1)
 
 		this.#isRefreshingStoreInfo.delete(moduleId)
 
 		this.#logger.debug(`Done refreshing store info for module "${moduleId}"`)
 
-		return data
+		return moduleData
 	}
 }
 

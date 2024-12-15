@@ -81,6 +81,7 @@
 		"lru-cache": "^11.0.2",
 		"nanoid": "^5.0.9",
 		"node-machine-id": "^1.1.12",
+		"openapi-fetch": "^0.13.3",
 		"osc": "2.4.5",
 		"p-debounce": "^4.0.0",
 		"p-queue": "^8.0.1",

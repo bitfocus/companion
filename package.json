@@ -26,6 +26,7 @@
     "format": "prettier --write .",
     "test": "vitest",
     "build:writefile": "zx ./tools/build_writefile.mjs",
+    "build:module-openapi": "zx ./tools/generate_module_openapi.mjs",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
   "engines": {
@@ -41,6 +42,7 @@
     "dotenv": "^16.4.7",
     "octokit": "^4.0.2",
     "open": "^10.1.0",
+    "openapi-typescript": "^7.4.4",
     "prettier": "^3.4.2",
     "typescript": "~5.7.2",
     "vitest": "^2.1.8",
