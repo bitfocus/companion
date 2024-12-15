@@ -20,6 +20,7 @@ import type { InternalController } from './Controller.js'
 import type { ActionRecorder } from '../Controls/ActionRecorder.js'
 import type { PageController } from '../Page/Controller.js'
 import type {
+	ActionForVisitor,
 	FeedbackForVisitor,
 	FeedbackInstanceExt,
 	InternalModuleFragment,
@@ -338,7 +339,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]) {
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]) {
 		for (const action of actions) {
 			if (action.action === 'action_recorder_set_connections') {
 				visitor.visitConnectionIdArray(action.options, 'connections')

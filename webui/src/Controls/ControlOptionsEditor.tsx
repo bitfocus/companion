@@ -35,7 +35,6 @@ export function ControlOptionsEditor({
 		(val: boolean) => setValueInner('stepAutoProgress', val),
 		[setValueInner]
 	)
-	const setRelativeDelayValue = useCallback((val: boolean) => setValueInner('relativeDelay', val), [setValueInner])
 	const setRotaryActions = useCallback(
 		(val: boolean) => {
 			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {
@@ -72,23 +71,6 @@ export function ControlOptionsEditor({
 			{' '}
 			<GenericConfirmModal ref={confirmRef} />
 			<div className="flex w-full gap-2rem flex-form">
-				<div>
-					<CFormLabel>
-						<InlineHelp help="Delay times will be relative to the previous action, rather than all delays being relative to the button press.">
-							Relative Delays
-						</InlineHelp>
-					</CFormLabel>
-					<br />
-					<CFormSwitch
-						size="xl"
-						color="success"
-						checked={options.relativeDelay}
-						onChange={() => {
-							setRelativeDelayValue(!options.relativeDelay)
-						}}
-					/>
-				</div>
-
 				{controlType === 'button' && (
 					<>
 						<div>

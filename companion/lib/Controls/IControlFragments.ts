@@ -1,7 +1,7 @@
 import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
 import type { FragmentFeedbacks } from './Fragments/FragmentFeedbacks.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionOwner } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
@@ -124,12 +124,16 @@ export interface ControlWithoutFeedbacks extends ControlBase<any> {
 export interface ControlWithActions extends ControlBase<any> {
 	readonly supportsActions: true
 
-	readonly has_actions_running: boolean
+	/**
+	 * Abort pending delayed actions for a control
+	 * @param skip_up Mark button as released
+	 */
+	abortDelayedActions(skip_up: boolean): void
 
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(stepId: string, setId: string, actionItem: ActionInstance): boolean
+	actionAdd(stepId: string, setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean
 
 	/**
 	 * Append some actions to this button
@@ -137,7 +141,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(stepId: string, setId: string, newActions: ActionInstance[]): boolean
+	actionAppend(stepId: string, setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean
 
 	/**
 	 * Duplicate an action on this control
@@ -167,13 +171,14 @@ export interface ControlWithActions extends ControlBase<any> {
 	/**
 	 * Reorder an action in the list or move between sets
 	 */
-	actionReorder(
+	actionMoveTo(
 		dragStepId: string,
 		dragSetId: string,
 		dragActionId: string,
-		dropStepId: string,
-		dropSetId: string,
-		dropIndex: number
+		hoverStepId: string,
+		hoverSetId: string,
+		hoverOwnerId: ActionOwner | null,
+		hoverIndex: number
 	): boolean
 
 	/**
@@ -190,11 +195,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * Set the connection of an action
 	 */
 	actionSetConnection(stepId: string, setId: string, id: string, connectionId: string): boolean
-
-	/**
-	 * Set the delay of an action
-	 */
-	actionSetDelay(stepId: string, setId: string, id: string, delay: number): boolean
 
 	/**
 	 * Set an option of an action
@@ -214,14 +214,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	/**
 	 * Get all the actions on this control
 	 */
-	getAllActions(): ActionInstance[]
-
-	/**
-	 * Mark the button as having pending delayed actions
-	 * @param running Whether any delayed actions are pending
-	 * @param skip_up Mark the button as released, skipping the release actions
-	 */
-	setActionsRunning(running: boolean, skip_up: boolean): void
+	getFlattenedActionInstances(): ActionInstance[]
 }
 
 export interface ControlWithoutActions extends ControlBase<any> {

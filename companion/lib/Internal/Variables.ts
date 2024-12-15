@@ -19,6 +19,7 @@ import LogController from '../Log/Controller.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type {
+	ActionForVisitor,
 	FeedbackForVisitor,
 	FeedbackInstanceExt,
 	InternalModuleFragment,
@@ -26,7 +27,6 @@ import type {
 	InternalFeedbackDefinition,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -235,7 +235,7 @@ export class InternalVariables implements InternalModuleFragment {
 	/**
 	 *
 	 */
-	visitReferences(visitor: InternalVisitor, _actions: ActionInstance[], feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(visitor: InternalVisitor, _actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
 		for (const feedback of feedbacks) {
 			try {
 				// check_expression.expression handled by generic options visitor

@@ -21,6 +21,7 @@ import type { InstanceController } from '../Instance/Controller.js'
 import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type {
+	ActionForVisitor,
 	FeedbackForVisitor,
 	FeedbackInstanceExt,
 	InternalModuleFragment,
@@ -375,7 +376,7 @@ export class InternalInstance implements InternalModuleFragment {
 		this.#debounceCheckFeedbacks()
 	}
 
-	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
 		for (const action of actions) {
 			try {
 				if (action.action === 'instance_control') {

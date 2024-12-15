@@ -25,8 +25,9 @@ import type {
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionOwner } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import { ControlActionRunner } from '../../ActionRunner.js'
 
 /**
  * Class for an interval trigger.
@@ -78,7 +79,6 @@ export class ControlTrigger
 		name: 'New Trigger',
 		enabled: false,
 		sortOrder: 0,
-		relativeDelay: false,
 	}
 
 	/**
@@ -131,10 +131,7 @@ export class ControlTrigger
 	 */
 	readonly #variablesEvents: TriggersEventVariables
 
-	/**
-	 * Whether this button has delayed actions running
-	 */
-	has_actions_running: boolean = false
+	readonly #actionRunner: ControlActionRunner
 
 	readonly actions: FragmentActions
 	readonly feedbacks: FragmentFeedbacks
@@ -155,7 +152,10 @@ export class ControlTrigger
 	) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
+		this.#actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
+
 		this.actions = new FragmentActions(
+			deps.instance.definitions,
 			deps.internalModule,
 			deps.instance.moduleHost,
 			controlId,
@@ -177,9 +177,6 @@ export class ControlTrigger
 		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this))
 
 		this.options = cloneDeep(ControlTrigger.DefaultOptions)
-		this.actions.action_sets = {
-			0: [],
-		}
 		this.events = []
 
 		if (!storage) {
@@ -193,7 +190,7 @@ export class ControlTrigger
 			if (storage.type !== 'trigger') throw new Error(`Invalid type given to ControlTriggerInterval: "${storage.type}"`)
 
 			this.options = storage.options || this.options
-			this.actions.action_sets = storage.action_sets || this.actions.action_sets
+			this.actions.loadStorage(storage.action_sets || {}, true, isImport)
 			this.feedbacks.loadStorage(storage.condition || [], true, isImport)
 			this.events = storage.events || this.events
 
@@ -206,18 +203,22 @@ export class ControlTrigger
 		})
 	}
 
+	abortDelayedActions(_skip_up: boolean): void {
+		this.#actionRunner.abortAll()
+	}
+
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance): boolean {
-		return this.actions.actionAdd('0', actionItem)
+	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
+		return this.actions.actionAdd('0', actionItem, ownerId)
 	}
 
 	/**
 	 * Append some actions to this button
 	 */
-	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[]): boolean {
-		return this.actions.actionAppend('0', newActions)
+	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
+		return this.actions.actionAppend('0', newActions, ownerId)
 	}
 
 	/**
@@ -277,13 +278,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Set the delay of an action
-	 */
-	actionSetDelay(_stepId: string, _setId: string, id: string, delay: number): boolean {
-		return this.actions.actionSetDelay('0', id, delay)
-	}
-
-	/**
 	 * Set an option of an action
 	 */
 	actionSetOption(_stepId: string, _setId: string, id: string, key: string, value: any): boolean {
@@ -299,29 +293,42 @@ export class ControlTrigger
 	 * @param _dropSetId the target action_set of the action
 	 * @param dropIndex the target index of the action
 	 */
-	actionReorder(
+	actionMoveTo(
 		_dragStepId: string,
 		_dragSetId: string,
 		dragActionId: string,
-		_dropStepId: string,
-		_dropSetId: string,
-		dropIndex: number
+		_hoverStepId: string,
+		_hoverSetId: string,
+		hoverOwnerId: ActionOwner | null,
+		hoverIndex: number
 	): boolean {
-		const set = this.actions.action_sets['0']
-		if (set) {
-			const dragIndex = set.findIndex((a) => a.id === dragActionId)
-			if (dragIndex === -1) return false
+		const oldItem = this.actions.findParentAndIndex('0', dragActionId)
+		if (!oldItem) return false
 
-			dropIndex = clamp(dropIndex, 0, set.length)
+		const set = this.actions.getActionSet('0')
+		if (!set) return false
 
-			set.splice(dropIndex, 0, ...set.splice(dragIndex, 1))
+		const newParent = hoverOwnerId ? set?.findById(hoverOwnerId.parentActionId) : null
+		if (hoverOwnerId && !newParent) return false
 
-			this.commitChange(false)
+		// Ensure the new parent is not a child of the action being moved
+		if (hoverOwnerId && oldItem.item.findChildById(hoverOwnerId.parentActionId)) return false
 
-			return true
+		// Check if the new parent can hold the action being moved
+		if (newParent && !newParent.canAcceptChild(hoverOwnerId!.childGroup, oldItem.item)) return false
+
+		const poppedAction = oldItem.parent.popAction(oldItem.index)
+		if (!poppedAction) return false
+
+		if (newParent) {
+			newParent.pushChild(poppedAction, hoverOwnerId!.childGroup, hoverIndex)
+		} else {
+			set.pushAction(poppedAction, hoverIndex)
 		}
 
-		return false
+		this.commitChange(false)
+
+		return true
 	}
 
 	/**
@@ -354,27 +361,26 @@ export class ControlTrigger
 			this.#sendTriggerJsonChange()
 		}
 
-		const actions = this.actions.action_sets['0']
+		const actions = this.actions.getActionSet('0')
 		if (actions) {
 			this.logger.silly('found actions')
 
-			this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
-				surfaceId: this.controlId,
-			})
+			this.#actionRunner
+				.runActions(actions.asActionInstances(), {
+					surfaceId: this.controlId,
+					location: undefined,
+				})
+				.catch((e) => {
+					this.logger.error(`Failed to run actions: ${e.message}`)
+				})
 		}
 	}
 
 	/**
 	 * Get all the actions on this control
 	 */
-	getAllActions(): ActionInstance[] {
-		const actions: ActionInstance[] = []
-
-		for (const set of Object.values(this.actions.action_sets)) {
-			if (set) actions.push(...set)
-		}
-
-		return actions
+	getFlattenedActionInstances(): ActionInstance[] {
+		return this.actions.getFlattenedActionInstances()
 	}
 
 	/**
@@ -390,7 +396,7 @@ export class ControlTrigger
 			foundConnectionIds.add(feedback.connectionId)
 		}
 		for (const action of allActions) {
-			foundConnectionIds.add(action.instance)
+			foundConnectionIds.add(action.connectionId)
 		}
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
@@ -399,8 +405,9 @@ export class ControlTrigger
 			this.deps.internalModule,
 			visitor,
 			undefined,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			this.events
 		)
@@ -422,7 +429,7 @@ export class ControlTrigger
 		const obj: TriggerModel = {
 			type: this.type,
 			options: this.options,
-			action_sets: this.actions.action_sets,
+			action_sets: this.actions.asActionStepModel(),
 			condition: this.feedbacks.getAllFeedbackInstances(),
 			events: this.events,
 		}
@@ -530,8 +537,9 @@ export class ControlTrigger
 			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			this.events,
 			true
@@ -592,16 +600,6 @@ export class ControlTrigger
 		} else {
 			this.#stopEvent(event)
 		}
-	}
-
-	/**
-	 * Mark the button as having pending delayed actions
-	 * @param running Whether any delayed actions are pending
-	 * @param skip_up Mark the button as released, skipping the release actions
-	 * @access public
-	 */
-	setActionsRunning(_running: boolean, _skip_up: boolean) {
-		// Nothing to do
 	}
 
 	#stopEvent(event: EventInstance): void {

@@ -247,7 +247,7 @@ export class CloudController {
 				data: {
 					...drawStyle,
 					pushed: control.supportsPushed && control.pushed,
-					actions_running: control.supportsActions && control.has_actions_running,
+					actions_running: drawStyle.action_running,
 					bank_status: control.supportsStyle && control.button_status,
 					style: 'button',
 				},

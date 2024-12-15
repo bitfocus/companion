@@ -44,6 +44,7 @@ import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/Act
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
+import type { ActionOwner } from './Model/ActionModel.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -154,13 +155,6 @@ export interface ClientToBackendEventsMap {
 		actionId: string,
 		connectionId: string
 	) => boolean
-	'controls:action:set-delay': (
-		controlId: string,
-		stepId: string,
-		setId: string,
-		actionId: string,
-		delay: number
-	) => boolean
 	'controls:action:set-option': (
 		controlId: string,
 		stepId: string,
@@ -169,19 +163,21 @@ export interface ClientToBackendEventsMap {
 		key: string,
 		val: any
 	) => boolean
-	'controls:action:reorder': (
+	'controls:action:move': (
 		controlId: string,
 		dragStepId: string,
 		dragSetId: string,
 		dragActionId: string,
-		stepId: string,
-		setId: string,
-		dropIndex: number
+		hoverStepId: string,
+		hoverSetId: string,
+		hoverOwnerId: ActionOwner | null,
+		hoverIndex: number
 	) => boolean
 	'controls:action:add': (
 		controlId: string,
 		stepId: string,
 		setId: string,
+		ownerId: ActionOwner | null,
 		connectionId: string,
 		actionType: string
 	) => boolean

@@ -1,4 +1,4 @@
-import { CButton, CForm, CInputGroup, CInputGroupText, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -10,13 +10,13 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useDeferredValue, useMemo, useRef, useState } from 'react'
-import { DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
+import { DropdownInputField, TextInputField } from '../Components/index.js'
 import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { AddActionsModal, AddActionsModalRef } from './AddModal.js'
-import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -31,6 +31,20 @@ import {
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import classNames from 'classnames'
+
+function findAllActionIdsDeep(actions: ActionInstance[]): string[] {
+	const result: string[] = actions.map((f) => f.id)
+
+	for (const action of actions) {
+		if (!action.children) continue
+		for (const actionGroup of Object.values(action.children)) {
+			if (!actionGroup) continue
+			result.push(...findAllActionIdsDeep(actionGroup))
+		}
+	}
+
+	return result
+}
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -57,30 +71,97 @@ export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 
 	const actionsService = useControlActionsEditorService(controlId, stepId, setId, confirmModal)
 
-	const actionIds = useMemo(() => (actions ? actions.map((act) => act.id) : []), [actions])
-	const panelCollapseHelper = usePanelCollapseHelperLite(`actions_${controlId}_${stepId}_${setId}`, actionIds)
+	const actionIds = useMemo(() => findAllActionIdsDeep(actions ?? []), [actions])
+	const panelCollapseHelper = usePanelCollapseHelper(`actions_${controlId}_${stepId}_${setId}`, actionIds)
 
 	return (
 		<div className="action-category">
+			<GenericConfirmModal ref={confirmModal} />
+
+			<InlineActionList
+				controlId={controlId}
+				heading={heading}
+				headingActions={headingActions}
+				actions={actions}
+				location={location}
+				stepId={stepId}
+				setId={setId}
+				addPlaceholder={addPlaceholder}
+				actionsService={actionsService}
+				parentId={null}
+				panelCollapseHelper={panelCollapseHelper}
+			/>
+		</div>
+	)
+})
+
+interface InlineActionListProps {
+	controlId: string
+	heading: JSX.Element | string | null
+	headingActions?: JSX.Element[]
+	actions: ActionInstance[] | undefined
+	location: ControlLocation | undefined
+	stepId: string
+	setId: string | number
+	addPlaceholder: string
+	actionsService: IActionEditorService
+	parentId: string | null
+	panelCollapseHelper: PanelCollapseHelper
+}
+function InlineActionList({
+	controlId,
+	heading,
+	headingActions,
+	actions,
+	location,
+	stepId,
+	setId,
+	addPlaceholder,
+	actionsService,
+	parentId,
+	panelCollapseHelper,
+}: InlineActionListProps) {
+	const addAction = useCallback(
+		(actionType: string) => actionsService.addAction(actionType, parentId),
+		[actionsService, parentId]
+	)
+
+	const childActionIds = actions?.map((f) => f.id) ?? []
+
+	return (
+		<>
 			<h5>
 				{heading}
+
 				<CButtonGroup className="right">
-					{actions && actions.length > 1 && panelCollapseHelper.canExpandAll() && (
-						<CButton color="white" size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all">
+					{actions && actions.length >= 1 && panelCollapseHelper.canExpandAll(parentId, childActionIds) && (
+						<CButton
+							color="white"
+							size="sm"
+							onClick={() => panelCollapseHelper.setAllExpanded(parentId, childActionIds)}
+							title="Expand all"
+						>
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					)}
-					{actions && actions.length > 1 && panelCollapseHelper.canCollapseAll() && (
-						<CButton color="white" size="sm" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all">
+					{actions && actions.length >= 1 && panelCollapseHelper.canCollapseAll(parentId, childActionIds) && (
+						<CButton
+							color="white"
+							size="sm"
+							onClick={() => panelCollapseHelper.setAllCollapsed(parentId, childActionIds)}
+							title="Collapse all"
+						>
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
 					{headingActions || ''}
 				</CButtonGroup>
 			</h5>
-			<GenericConfirmModal ref={confirmModal} />
+
 			<ActionsList
 				location={location}
+				controlId={controlId}
+				parentId={parentId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
 				setId={setId}
@@ -88,10 +169,10 @@ export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 				actionsService={actionsService}
 				panelCollapseHelper={panelCollapseHelper}
 			/>
-			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={actionsService.addAction} />
-		</div>
+			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
+		</>
 	)
-})
+}
 
 interface AddActionsPanelProps {
 	addPlaceholder: string
@@ -120,17 +201,21 @@ const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addActio
 
 interface ActionsListProps {
 	location: ControlLocation | undefined
+	controlId: string
+	parentId: string | null
 	dragId: string
 	stepId: string
 	setId: string | number
 	actions: ActionInstance[] | undefined
 	actionsService: IActionEditorService
 	readonly?: boolean
-	panelCollapseHelper: PanelCollapseHelperLite
+	panelCollapseHelper: PanelCollapseHelper
 }
 
 export function ActionsList({
 	location,
+	controlId,
+	parentId,
 	dragId,
 	stepId,
 	setId,
@@ -147,6 +232,8 @@ export function ActionsList({
 						<MyErrorBoundary key={a?.id ?? i}>
 							<ActionTableRow
 								key={a?.id ?? i}
+								controlId={controlId}
+								parentId={parentId}
 								location={location}
 								action={a}
 								index={i}
@@ -159,8 +246,10 @@ export function ActionsList({
 							/>
 						</MyErrorBoundary>
 					))}
+
 				<ActionRowDropPlaceholder
 					dragId={dragId}
+					parentId={parentId}
 					setId={setId}
 					actionCount={actions ? actions.length : 0}
 					moveCard={actionsService.moveCard}
@@ -172,19 +261,26 @@ export function ActionsList({
 
 interface ActionRowDropPlaceholderProps {
 	setId: string | number
+	parentId: string | null
 	dragId: string
 	actionCount: number
-	moveCard: (stepId: string, setId: string | number, actionId: string, targetIndex: number) => void
+	moveCard: (
+		stepId: string,
+		setId: string | number,
+		actionId: string,
+		parentId: string | null,
+		targetIndex: number
+	) => void
 }
 
-function ActionRowDropPlaceholder({ setId, dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
+function ActionRowDropPlaceholder({ setId, parentId, dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
 	const [isDragging, drop] = useDrop<ActionTableRowDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
-			moveCard(item.stepId, item.setId, item.actionId, 0)
+			moveCard(item.stepId, item.setId, item.actionId, parentId, 0)
 
 			item.setId = setId
 			item.index = 0
@@ -213,6 +309,7 @@ interface ActionTableRowDragItem {
 	stepId: string
 	setId: string | number
 	index: number
+	parentId: string | null
 	dragState: DragState | null
 }
 interface ActionTableRowDragStatus {
@@ -221,6 +318,8 @@ interface ActionTableRowDragStatus {
 
 interface ActionTableRowProps {
 	action: ActionInstance
+	controlId: string
+	parentId: string | null
 	stepId: string
 	setId: string | number
 	location: ControlLocation | undefined
@@ -229,11 +328,13 @@ interface ActionTableRowProps {
 	serviceFactory: IActionEditorService
 
 	readonly: boolean
-	panelCollapseHelper: PanelCollapseHelperLite
+	panelCollapseHelper: PanelCollapseHelper
 }
 
 const ActionTableRow = observer(function ActionTableRow({
 	action,
+	controlId,
+	parentId,
 	stepId,
 	setId,
 	location,
@@ -267,19 +368,25 @@ const ActionTableRow = observer(function ActionTableRow({
 			// Ensure the hover targets this element, and not a child element
 			if (!monitor.isOver({ shallow: true })) return
 
+			const dragParentId = item.parentId
 			const dragIndex = item.index
+
+			const hoverParentId = parentId
 			const hoverIndex = index
 			const hoverId = action.id
 
 			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Don't replace items with themselves
-			if (item.actionId === hoverId || (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId)) {
+			if (
+				item.actionId === hoverId ||
+				(dragIndex === hoverIndex && dragParentId === hoverParentId && item.setId === setId && item.stepId === stepId)
+			) {
 				return
 			}
 
 			// Time to actually perform the action
-			serviceFactory.moveCard(item.stepId, item.setId, item.actionId, index)
+			serviceFactory.moveCard(item.stepId, item.setId, item.actionId, hoverParentId, index)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -287,6 +394,7 @@ const ActionTableRow = observer(function ActionTableRow({
 			// to avoid expensive index searches.
 			item.index = hoverIndex
 			item.setId = setId
+			item.parentId = hoverParentId
 		},
 		drop(item, _monitor) {
 			item.dragState = null
@@ -300,6 +408,7 @@ const ActionTableRow = observer(function ActionTableRow({
 			stepId: stepId,
 			setId: setId,
 			index: index,
+			parentId: parentId,
 			// ref: ref,
 			dragState: null,
 		},
@@ -317,7 +426,7 @@ const ActionTableRow = observer(function ActionTableRow({
 		() => panelCollapseHelper.setPanelCollapsed(action.id, false),
 		[panelCollapseHelper, action.id]
 	)
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(action.id)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(parentId, action.id)
 
 	const canSetHeadline = !!service.setHeadline
 	const headline = action.headline
@@ -404,7 +513,7 @@ const ActionTableRow = observer(function ActionTableRow({
 							})}
 						>
 							{headlineExpanded && <p className="name">{name}</p>}
-							{actionSpec?.description}
+							<div className="description">{actionSpec?.description}</div>
 						</div>
 
 						{showButtonPreview && (
@@ -427,23 +536,9 @@ const ActionTableRow = observer(function ActionTableRow({
 										multiple={false}
 										value={action.instance}
 										setValue={service.setConnection}
-									></DropdownInputField>
+									/>
 								</div>
 							)}
-
-							<CForm onSubmit={PreventDefaultHandler}>
-								<label>Delay</label>
-								<CInputGroup>
-									<NumberInputField
-										min={0}
-										step={10}
-										disabled={readonly}
-										value={action.delay}
-										setValue={service.setDelay}
-									/>
-									<CInputGroupText>ms</CInputGroupText>
-								</CInputGroup>
-							</CForm>
 						</div>
 
 						<div className="cell-actions">
@@ -471,6 +566,29 @@ const ActionTableRow = observer(function ActionTableRow({
 								))}
 							</CForm>
 						</div>
+
+						{action.instance === 'internal' && actionSpec?.supportsChildActionGroups.includes('default') && (
+							<div
+								className={classNames('cell-children', {
+									// 'hide-top-gap': actionOptions.length > 0 && (action.children ?? []).length > 0,
+								})}
+							>
+								<CForm onSubmit={PreventDefaultHandler}>
+									<InlineActionList
+										controlId={controlId}
+										heading={null}
+										actions={action.children?.['default'] ?? []}
+										location={location}
+										stepId={stepId}
+										setId={setId}
+										addPlaceholder="+ Add action"
+										actionsService={serviceFactory}
+										parentId={action.id}
+										panelCollapseHelper={panelCollapseHelper}
+									/>
+								</CForm>
+							</div>
+						)}
 					</div>
 				)}
 			</td>

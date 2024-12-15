@@ -175,7 +175,6 @@ export class InstanceDefinitions {
 				action: actionId,
 				instance: connectionId,
 				options: {},
-				delay: 0,
 			}
 
 			if (definition.options !== undefined && definition.options.length > 0) {
@@ -309,7 +308,6 @@ export class InstanceDefinitions {
 		const result: NormalButtonModel = {
 			type: 'button',
 			options: {
-				relativeDelay: definition.options?.relativeDelay ?? false,
 				rotaryActions: definition.options?.rotaryActions ?? false,
 				stepAutoProgress: definition.options?.stepAutoProgress ?? true,
 			},
@@ -334,14 +332,7 @@ export class InstanceDefinitions {
 				result.steps[i] = newStep
 
 				for (const [set, actions_set] of Object.entries(definition.steps[i].action_sets)) {
-					newStep.action_sets[set] = actions_set.map((action: PresetActionInstance) => ({
-						id: nanoid(),
-						instance: connectionId,
-						action: action.action,
-						options: cloneDeep(action.options ?? {}),
-						delay: action.delay ?? 0,
-						headline: action.headline,
-					}))
+					newStep.action_sets[set] = convertActionsDelay(actions_set, connectionId, definition.options?.relativeDelay)
 				}
 			}
 		}
@@ -461,11 +452,10 @@ export class InstanceDefinitions {
 											const setActions: CompanionPresetAction[] = Array.isArray(set) ? set : set.actions
 											if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
 
-											// @ts-ignore
-											action_sets[setId] = setActions.map((act) => ({
+											action_sets[setId as any] = setActions.map((act) => ({
 												action: act.actionId,
 												options: act.options,
-												delay: act.delay,
+												delay: act.delay ?? 0,
 												headline: act.headline,
 											}))
 										}
@@ -586,4 +576,102 @@ export class InstanceDefinitions {
 
 export type PresetDefinitionTmp = CompanionPresetDefinition & {
 	id: string
+}
+
+function toActionInstance(action: PresetActionInstance, connectionId: string): ActionInstance {
+	return {
+		id: nanoid(),
+		instance: connectionId,
+		action: action.action,
+		options: cloneDeep(action.options ?? {}),
+		headline: action.headline,
+	}
+}
+
+function convertActionsDelay(
+	actions: PresetActionInstance[],
+	connectionId: string,
+	relativeDelays: boolean | undefined
+) {
+	if (relativeDelays) {
+		const newActions: ActionInstance[] = []
+
+		for (const action of actions) {
+			const delay = Number(action.delay)
+
+			// Add the wait action
+			if (!isNaN(delay) && delay > 0) {
+				newActions.push({
+					id: nanoid(),
+					instance: 'internal',
+					action: 'wait',
+					options: {
+						time: delay,
+					},
+				})
+			}
+
+			newActions.push(toActionInstance(action, connectionId))
+		}
+
+		return newActions
+	} else {
+		let currentDelay = 0
+		let currentDelayGroupChildren: any[] = []
+
+		let delayGroups: any[] = [wrapActionsInGroup(currentDelayGroupChildren)]
+
+		for (const action of actions) {
+			const delay = Number(action.delay)
+
+			if (!isNaN(delay) && delay >= 0 && delay !== currentDelay) {
+				// action has different delay to the last one
+				if (delay > currentDelay) {
+					// delay is greater than the last one, translate it to a relative delay
+					currentDelayGroupChildren.push(createWaitAction(delay - currentDelay))
+				} else {
+					// delay is less than the last one, preserve the weird order
+					currentDelayGroupChildren = []
+					if (delay > 0) currentDelayGroupChildren.push(createWaitAction(delay))
+					delayGroups.push(wrapActionsInGroup(currentDelayGroupChildren))
+				}
+
+				currentDelay = delay
+			}
+
+			currentDelayGroupChildren.push(toActionInstance(action, connectionId))
+		}
+
+		if (delayGroups.length > 1) {
+			// Weird delay ordering was found, preserve it
+			return delayGroups
+		} else {
+			// Order was incrementing, don't add the extra group layer
+			return currentDelayGroupChildren
+		}
+	}
+}
+
+function wrapActionsInGroup(actions: any[]): any {
+	return {
+		id: nanoid(),
+		instance: 'internal',
+		action: 'action_group',
+		options: {
+			execution_mode: 'concurrent',
+		},
+		children: {
+			default: actions,
+		},
+	}
+}
+function createWaitAction(delay: number): any {
+	return {
+		id: nanoid(),
+		instance: 'internal',
+		action: 'wait',
+		options: {
+			time: delay,
+		},
+	}
 }
