@@ -186,11 +186,14 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 })
 
 function LastUpdatedTimestamp({ releasedAt }: { releasedAt: number | undefined }) {
-	let releaseStr = 'Unknown'
+	let releaseStr = 'at some point'
 	let titleStr: string | undefined = undefined
 	if (releasedAt !== undefined && releasedAt > 0) {
 		releaseStr = dayjs(releasedAt).fromNow()
 		titleStr = dayjs(releasedAt).format('YYYY-MM-DD')
+	} else if (releasedAt === 0) {
+		releaseStr = 'a long time ago'
+		titleStr = 'Unknown'
 	}
 
 	return <span title={titleStr}>{releaseStr}</span>
