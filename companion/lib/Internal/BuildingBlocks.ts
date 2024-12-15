@@ -28,13 +28,16 @@ import type {
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { InternalController } from './Controller.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
 
+	readonly #internalModule: InternalController
 	readonly #actionRunner: ActionRunner
 
-	constructor(actionRunner: ActionRunner) {
+	constructor(internalModule: InternalController, actionRunner: ActionRunner) {
+		this.#internalModule = internalModule
 		this.#actionRunner = actionRunner
 	}
 
@@ -114,9 +117,11 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				options: [
 					{
 						type: 'textinput',
-						label: 'Time (ms)',
+						label: 'Time expression (ms)',
 						id: 'time',
 						default: '1000',
+						useVariables: { local: true },
+						isExpression: true,
 					},
 				],
 				hasLearn: false,
@@ -148,7 +153,15 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		if (action.action === 'wait') {
 			if (extras.abortDelayed.aborted) return true
 
-			const delay = Number(action.options.time)
+			let delay = 0
+			try {
+				delay = Number(
+					this.#internalModule.executeExpressionForInternalActionOrFeedback(action.options.time, extras, 'number').value
+				)
+			} catch (e: any) {
+				this.#logger.error(`Failed to parse delay: ${e.message}`)
+			}
+
 			if (!isNaN(delay) && delay > 0) {
 				// Perform the wait
 				return new Promise((resolve) => setTimeout(resolve, delay)).then(() => true)

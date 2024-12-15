@@ -69,7 +69,7 @@ export class InternalController {
 		this.#variablesController = variablesController
 
 		// More get added from elsewhere
-		this.#buildingBlocksFragment = new InternalBuildingBlocks(this.#controlsController.actionRunner)
+		this.#buildingBlocksFragment = new InternalBuildingBlocks(this, this.#controlsController.actionRunner)
 		this.#fragments = [this.#buildingBlocksFragment]
 	}
 
@@ -530,7 +530,7 @@ export class InternalController {
 			...injectedVariableValues,
 		}
 		return this.#variablesController.values.executeExpression(
-			str,
+			String(str),
 			extras.location,
 			requiredType,
 			injectedVariableValuesComplete
