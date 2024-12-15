@@ -387,7 +387,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	/**
 	 * Save the recorded actions to a control
 	 */
-	saveToControlId(controlId: string, stepId: string, setId: string, mode: 'replace' | 'append'): void {
+	saveToControlId(controlId: string, stepId: string, setId: string | number, mode: 'replace' | 'append'): void {
 		if (mode !== 'replace' && mode !== 'append') throw new Error(`Invalid mode: ${mode}`)
 
 		const control = this.#registry.controls.getControl(controlId)

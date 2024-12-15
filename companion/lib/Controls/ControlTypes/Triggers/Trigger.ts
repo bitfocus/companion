@@ -210,50 +210,60 @@ export class ControlTrigger
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
-		return this.actions.actionAdd('0', actionItem, ownerId)
+	actionAdd(
+		_stepId: string,
+		_setId: string | number,
+		actionItem: ActionInstance,
+		ownerId: ActionOwner | null
+	): boolean {
+		return this.actions.actionAdd(0, actionItem, ownerId)
 	}
 
 	/**
 	 * Append some actions to this button
 	 */
-	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
-		return this.actions.actionAppend('0', newActions, ownerId)
+	actionAppend(
+		_stepId: string,
+		_setId: string | number,
+		newActions: ActionInstance[],
+		ownerId: ActionOwner | null
+	): boolean {
+		return this.actions.actionAppend(0, newActions, ownerId)
 	}
 
 	/**
 	 * Learn the options for an action, by asking the instance for the current values
 	 */
-	async actionLearn(_stepId: string, _setId: string, id: string): Promise<boolean> {
-		return this.actions.actionLearn('0', id)
+	async actionLearn(_stepId: string, _setId: string | number, id: string): Promise<boolean> {
+		return this.actions.actionLearn(0, id)
 	}
 
 	/**
 	 * Enable or disable an action
 	 */
-	actionEnabled(_stepId: string, _setId: string, id: string, enabled: boolean): boolean {
-		return this.actions.actionEnabled('0', id, enabled)
+	actionEnabled(_stepId: string, _setId: string | number, id: string, enabled: boolean): boolean {
+		return this.actions.actionEnabled(0, id, enabled)
 	}
 
 	/**
 	 * Set action headline
 	 */
-	actionHeadline(_stepId: string, _setId: string, id: string, headline: string): boolean {
-		return this.actions.actionHeadline('0', id, headline)
+	actionHeadline(_stepId: string, _setId: string | number, id: string, headline: string): boolean {
+		return this.actions.actionHeadline(0, id, headline)
 	}
 
 	/**
 	 * Remove an action from this control
 	 */
-	actionRemove(_stepId: string, _setId: string, id: string): boolean {
-		return this.actions.actionRemove('0', id)
+	actionRemove(_stepId: string, _setId: string | number, id: string): boolean {
+		return this.actions.actionRemove(0, id)
 	}
 
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(_stepId: string, _setId: string, id: string): string | null {
-		return this.actions.actionDuplicate('0', id)
+	actionDuplicate(_stepId: string, _setId: string | number, id: string): string | null {
+		return this.actions.actionDuplicate(0, id)
 	}
 
 	/**
@@ -266,22 +276,22 @@ export class ControlTrigger
 	/**
 	 * Replace all the actions in a set
 	 */
-	actionReplaceAll(_stepId: string, _setId: string, newActions: ActionInstance[]): boolean {
-		return this.actions.actionReplaceAll('0', newActions)
+	actionReplaceAll(_stepId: string, _setId: string | number, newActions: ActionInstance[]): boolean {
+		return this.actions.actionReplaceAll(0, newActions)
 	}
 
 	/**
 	 * Set the connection of an action
 	 */
-	actionSetConnection(_stepId: string, _setId: string, id: string, connectionId: string): boolean {
-		return this.actions.actionSetConnection('0', id, connectionId)
+	actionSetConnection(_stepId: string, _setId: string | number, id: string, connectionId: string): boolean {
+		return this.actions.actionSetConnection(0, id, connectionId)
 	}
 
 	/**
 	 * Set an option of an action
 	 */
-	actionSetOption(_stepId: string, _setId: string, id: string, key: string, value: any): boolean {
-		return this.actions.actionSetOption('0', id, key, value)
+	actionSetOption(_stepId: string, _setId: string | number, id: string, key: string, value: any): boolean {
+		return this.actions.actionSetOption(0, id, key, value)
 	}
 
 	/**
@@ -295,17 +305,17 @@ export class ControlTrigger
 	 */
 	actionMoveTo(
 		_dragStepId: string,
-		_dragSetId: string,
+		_dragSetId: string | number,
 		dragActionId: string,
 		_hoverStepId: string,
-		_hoverSetId: string,
+		_hoverSetId: string | number,
 		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	): boolean {
-		const oldItem = this.actions.findParentAndIndex('0', dragActionId)
+		const oldItem = this.actions.findParentAndIndex(0, dragActionId)
 		if (!oldItem) return false
 
-		const set = this.actions.getActionSet('0')
+		const set = this.actions.getActionSet(0)
 		if (!set) return false
 
 		const newParent = hoverOwnerId ? set?.findById(hoverOwnerId.parentActionId) : null
@@ -361,7 +371,7 @@ export class ControlTrigger
 			this.#sendTriggerJsonChange()
 		}
 
-		const actions = this.actions.getActionSet('0')
+		const actions = this.actions.getActionSet(0)
 		if (actions) {
 			this.logger.silly('found actions')
 
@@ -373,6 +383,8 @@ export class ControlTrigger
 				.catch((e) => {
 					this.logger.error(`Failed to run actions: ${e.message}`)
 				})
+		} else {
+			this.logger.warn('No action set found')
 		}
 	}
 

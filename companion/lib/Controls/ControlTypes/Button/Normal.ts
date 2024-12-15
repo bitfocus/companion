@@ -141,7 +141,7 @@ export class ControlButtonNormal
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(stepId: string, setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
+	actionAdd(stepId: string, setId: string | number, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionAdd(setId, actionItem, ownerId)
@@ -156,7 +156,12 @@ export class ControlButtonNormal
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(stepId: string, setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
+	actionAppend(
+		stepId: string,
+		setId: string | number,
+		newActions: ActionInstance[],
+		ownerId: ActionOwner | null
+	): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionAppend(setId, newActions, ownerId)
@@ -168,7 +173,7 @@ export class ControlButtonNormal
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(stepId: string, setId: string, id: string): string | null {
+	actionDuplicate(stepId: string, setId: string | number, id: string): string | null {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionDuplicate(setId, id)
@@ -180,7 +185,7 @@ export class ControlButtonNormal
 	/**
 	 * Enable or disable an action
 	 */
-	actionEnabled(stepId: string, setId: string, id: string, enabled: boolean): boolean {
+	actionEnabled(stepId: string, setId: string | number, id: string, enabled: boolean): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionEnabled(setId, id, enabled)
@@ -192,7 +197,7 @@ export class ControlButtonNormal
 	/**
 	 * Set action headline
 	 */
-	actionHeadline(stepId: string, setId: string, id: string, headline: string): boolean {
+	actionHeadline(stepId: string, setId: string | number, id: string, headline: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionHeadline(setId, id, headline)
@@ -204,7 +209,7 @@ export class ControlButtonNormal
 	/**
 	 * Learn the options for an action, by asking the instance for the current values
 	 */
-	async actionLearn(stepId: string, setId: string, id: string): Promise<boolean> {
+	async actionLearn(stepId: string, setId: string | number, id: string): Promise<boolean> {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionLearn(setId, id)
@@ -216,7 +221,7 @@ export class ControlButtonNormal
 	/**
 	 * Remove an action from this control
 	 */
-	actionRemove(stepId: string, setId: string, id: string): boolean {
+	actionRemove(stepId: string, setId: string | number, id: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionRemove(setId, id)
@@ -230,10 +235,10 @@ export class ControlButtonNormal
 	 */
 	actionMoveTo(
 		dragStepId: string,
-		dragSetId: string,
+		dragSetId: string | number,
 		dragActionId: string,
 		hoverStepId: string,
-		hoverSetId: string,
+		hoverSetId: string | number,
 		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	): boolean {
@@ -298,7 +303,7 @@ export class ControlButtonNormal
 	/**
 	 * Replace all the actions in a set
 	 */
-	actionReplaceAll(stepId: string, setId: string, newActions: ActionInstance[]): boolean {
+	actionReplaceAll(stepId: string, setId: string | number, newActions: ActionInstance[]): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionReplaceAll(setId, newActions)
@@ -310,7 +315,7 @@ export class ControlButtonNormal
 	/**
 	 * Set the connection of an action
 	 */
-	actionSetConnection(stepId: string, setId: string, id: string, connectionId: string): boolean {
+	actionSetConnection(stepId: string, setId: string | number, id: string, connectionId: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionSetConnection(setId, id, connectionId)
@@ -322,7 +327,7 @@ export class ControlButtonNormal
 	/**
 	 * Set an option of an action
 	 */
-	actionSetOption(stepId: string, setId: string, id: string, key: string, value: any): boolean {
+	actionSetOption(stepId: string, setId: string | number, id: string, key: string, value: any): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionSetOption(setId, id, key, value)

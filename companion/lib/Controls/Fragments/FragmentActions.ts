@@ -108,7 +108,7 @@ export class FragmentActions {
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(setId: string, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
+	actionAdd(setId: string | number, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) {
 			// cant implicitly create a set
@@ -134,6 +134,8 @@ export class FragmentActions {
 	}
 
 	getActionSet(setId: string | number): FragmentActionList | undefined {
+		console.log('getActionSet', setId, Array.from(this.#actions.keys()))
+
 		return this.#actions.get(setId)
 	}
 
@@ -257,7 +259,7 @@ export class FragmentActions {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(setId: string, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
+	actionAppend(setId: string | number, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) {
 			// cant implicitly create a set
@@ -290,7 +292,7 @@ export class FragmentActions {
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(setId: string, id: string): string | null {
+	actionDuplicate(setId: string | number, id: string): string | null {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return null
 
@@ -305,7 +307,7 @@ export class FragmentActions {
 	/**
 	 * Enable or disable an action
 	 */
-	actionEnabled(setId: string, id: string, enabled: boolean): boolean {
+	actionEnabled(setId: string | number, id: string, enabled: boolean): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -322,7 +324,7 @@ export class FragmentActions {
 	/**
 	 * Set action headline
 	 */
-	actionHeadline(setId: string, id: string, headline: string): boolean {
+	actionHeadline(setId: string | number, id: string, headline: string): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -341,7 +343,7 @@ export class FragmentActions {
 	 * @param setId the id of the action set
 	 * @param id the id of the action
 	 */
-	async actionLearn(setId: string, id: string): Promise<boolean> {
+	async actionLearn(setId: string | number, id: string): Promise<boolean> {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -365,7 +367,7 @@ export class FragmentActions {
 	 * @param setId the id of the action set
 	 * @param id the id of the action
 	 */
-	actionRemove(setId: string, id: string): boolean {
+	actionRemove(setId: string | number, id: string): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -416,7 +418,7 @@ export class FragmentActions {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to populate
 	 */
-	actionReplaceAll(setId: string, newActions: ActionInstance[]): boolean {
+	actionReplaceAll(setId: string | number, newActions: ActionInstance[]): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -433,7 +435,7 @@ export class FragmentActions {
 	 * @param id the action id
 	 * @param connectionId the id of the new connection
 	 */
-	actionSetConnection(setId: string, id: string, connectionId: string): boolean {
+	actionSetConnection(setId: string | number, id: string, connectionId: string): boolean {
 		if (connectionId == '') return false
 
 		const actionSet = this.#actions.get(setId)
@@ -456,7 +458,7 @@ export class FragmentActions {
 	 * @param key the desired option to set
 	 * @param value the new value of the option
 	 */
-	actionSetOption(setId: string, id: string, key: string, value: any): boolean {
+	actionSetOption(setId: string | number, id: string, key: string, value: any): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 

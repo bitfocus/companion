@@ -134,31 +134,36 @@ export interface ClientToBackendEventsMap {
 	'controls:action:set-headline': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		actionId: string,
 		headline: string
 	) => boolean
 	'controls:action:enabled': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		actionId: string,
 		enabled: boolean
 	) => boolean
-	'controls:action:learn': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
-	'controls:action:duplicate': (controlId: string, stepId: string, setId: string, actionId: string) => string | null
-	'controls:action:remove': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
+	'controls:action:learn': (controlId: string, stepId: string, setId: string | number, actionId: string) => boolean
+	'controls:action:duplicate': (
+		controlId: string,
+		stepId: string,
+		setId: string | number,
+		actionId: string
+	) => string | null
+	'controls:action:remove': (controlId: string, stepId: string, setId: string | number, actionId: string) => boolean
 	'controls:action:set-connection': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		actionId: string,
 		connectionId: string
 	) => boolean
 	'controls:action:set-option': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		actionId: string,
 		key: string,
 		val: any
@@ -166,17 +171,17 @@ export interface ClientToBackendEventsMap {
 	'controls:action:move': (
 		controlId: string,
 		dragStepId: string,
-		dragSetId: string,
+		dragSetId: string | number,
 		dragActionId: string,
 		hoverStepId: string,
-		hoverSetId: string,
+		hoverSetId: string | number,
 		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	) => boolean
 	'controls:action:add': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		ownerId: ActionOwner | null,
 		connectionId: string,
 		actionType: string
@@ -185,12 +190,17 @@ export interface ClientToBackendEventsMap {
 	'controls:action-set:set-run-while-held': (
 		controlId: string,
 		stepId: string,
-		newSetId: string,
+		newSetId: string | number,
 		runWhileHeld: boolean
 	) => boolean
-	'controls:action-set:rename': (controlId: string, stepId: string, oldSetId: string, newSetId: string) => boolean
+	'controls:action-set:rename': (
+		controlId: string,
+		stepId: string,
+		oldSetId: string | number,
+		newSetId: string | number
+	) => boolean
 	'controls:action-set:add': (controlId: string, stepId: string) => boolean
-	'controls:action-set:remove': (controlId: string, stepId: string, setId: string) => boolean
+	'controls:action-set:remove': (controlId: string, stepId: string, setId: string | number) => boolean
 
 	'controls:step:add': (controlId: string) => string | false
 	'controls:step:duplicate': (controlId: string, stepId: string) => boolean
@@ -223,7 +233,7 @@ export interface ClientToBackendEventsMap {
 		sessionId: string,
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		mode: 'replace' | 'append'
 	) => void
 	'action-recorder:session:discard-actions': (sessionId: string) => void
