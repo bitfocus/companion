@@ -347,21 +347,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		this.commitChange(changed)
 	}
 
-	// /**
-	//  * Mark the button as having pending delayed actions
-	//  * @param running Whether any delayed actions are pending
-	//  * @param skip_up Mark the button as released, skipping the release actions
-	//  */
-	// setActionsRunning(running: boolean, skip_up: boolean): void {
-	// 	this.has_actions_running = running
-
-	// 	if (skip_up) {
-	// 		this.setPushed(false)
-	// 	}
-
-	// 	this.triggerRedraw()
-	// }
-
 	/**
 	 * Set the button as being pushed.
 	 * Notifies interested observers

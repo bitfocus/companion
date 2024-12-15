@@ -50,7 +50,7 @@ export function upgradeStartup(db: DataDatabase): void {
 	}
 
 	// Debug: uncomment to force the upgrade to run again
-	db.setKey('page_config_version', targetVersion - 1)
+	// db.setKey('page_config_version', targetVersion - 1)
 }
 
 /**
