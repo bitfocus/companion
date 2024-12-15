@@ -20,6 +20,7 @@ import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
 import { MenuPortalContext } from '../../Components/DropdownInputField.js'
 import { ButtonPicker } from './ButtonPicker.js'
 import { TriggerPicker } from './TriggerPicker.js'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
 interface RecorderSessionFinishModalProps {
 	doClose: () => void
@@ -29,7 +30,7 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 	const socket = useContext(SocketContext)
 
 	const doSave = useCallback(
-		(controlId: string, stepId: string, setId: string, mode: 'replace' | 'append') => {
+		(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append') => {
 			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
 				.then(() => {
 					doClose()

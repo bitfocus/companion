@@ -1,17 +1,22 @@
 import { useContext, useMemo, useRef } from 'react'
 import { SocketContext, socketEmitPromise } from '../../util.js'
-import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 export interface IActionEditorService {
-	addAction: (actionType: string) => void
+	addAction: (actionType: string, parentId: string | null) => void
 
 	setValue: (actionId: string, action: ActionInstance | undefined, key: string, val: any) => void
 	performDelete: (actionId: string) => void
 	performDuplicate: (actionId: string) => void
 	setConnection: (actionId: string, connectionId: string | number) => void
-	setDelay: (actionId: string, delay: number) => void
-	moveCard: (dragStepId: string, dragSetId: string | number, dragActionId: string, dropIndex: number) => void
+	moveCard: (
+		dragStepId: string,
+		dragSetId: ActionSetId,
+		dragActionId: string,
+		dropParentId: string | null,
+		dropIndex: number
+	) => void
 	performLearn: ((actionId: string) => void) | undefined
 	setEnabled: ((actionId: string, enabled: boolean) => void) | undefined
 	setHeadline: ((actionId: string, headline: string) => void) | undefined
@@ -22,7 +27,6 @@ export interface IActionEditorActionService {
 	performDelete: () => void
 	performDuplicate: () => void
 	setConnection: (connectionId: string | number) => void
-	setDelay: (delay: number) => void
 	performLearn: (() => void) | undefined
 	setEnabled: ((enabled: boolean) => void) | undefined
 	setHeadline: ((headline: string) => void) | undefined
@@ -31,30 +35,42 @@ export interface IActionEditorActionService {
 export function useControlActionsEditorService(
 	controlId: string,
 	stepId: string,
-	setId: string | number,
+	setId: ActionSetId,
 	confirmModal: React.RefObject<GenericConfirmModalRef>
 ): IActionEditorService {
 	const socket = useContext(SocketContext)
 
 	return useMemo(
 		() => ({
-			addAction: (actionType: string) => {
+			addAction: (actionType: string, parentId: string | null) => {
 				const [connectionId, actionId] = actionType.split(':', 2)
-				socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId + '', connectionId, actionId]).catch(
-					(e) => {
-						console.error('Failed to add control action', e)
-					}
-				)
+				socketEmitPromise(socket, 'controls:action:add', [
+					controlId,
+					stepId,
+					setId,
+					parentId ? { parentActionId: parentId, childGroup: 'default' } : null,
+					connectionId,
+					actionId,
+				]).catch((e) => {
+					console.error('Failed to add control action', e)
+				})
 			},
 
-			moveCard: (dragStepId: string, dragSetId: string | number, dragActionId: string, dropIndex: number) => {
-				socketEmitPromise(socket, 'controls:action:reorder', [
+			moveCard: (
+				dragStepId: string,
+				dragSetId: ActionSetId,
+				dragActionId: string,
+				dropParentId: string | null,
+				dropIndex: number
+			) => {
+				socketEmitPromise(socket, 'controls:action:move', [
 					controlId,
 					dragStepId,
-					dragSetId + '',
+					dragSetId,
 					dragActionId,
 					stepId,
-					setId + '',
+					setId,
+					dropParentId ? { parentActionId: dropParentId, childGroup: 'default' } : null,
 					dropIndex,
 				]).catch((e) => {
 					console.error('Failed to reorder control actions', e)
@@ -63,16 +79,11 @@ export function useControlActionsEditorService(
 
 			setValue: (actionId: string, action: ActionInstance | undefined, key: string, val: any) => {
 				if (!action?.options || action.options[key] !== val) {
-					socketEmitPromise(socket, 'controls:action:set-option', [
-						controlId,
-						stepId,
-						setId + '',
-						actionId,
-						key,
-						val,
-					]).catch((e) => {
-						console.error('Failed to set control action option', e)
-					})
+					socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
+						(e) => {
+							console.error('Failed to set control action option', e)
+						}
+					)
 				}
 			},
 
@@ -80,7 +91,7 @@ export function useControlActionsEditorService(
 				socketEmitPromise(socket, 'controls:action:set-connection', [
 					controlId,
 					stepId,
-					setId + '',
+					setId,
 					actionId,
 					connectionId + '',
 				]).catch((e) => {
@@ -88,36 +99,28 @@ export function useControlActionsEditorService(
 				})
 			},
 
-			setDelay: (actionId: string, delay: number) => {
-				socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId + '', actionId, delay]).catch(
-					(e) => {
-						console.error('Failed to set control action delay', e)
-					}
-				)
-			},
-
 			performDelete: (actionId: string) => {
 				confirmModal.current?.show('Delete action', 'Delete action?', 'Delete', () => {
-					socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId + '', actionId]).catch((e) => {
+					socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
 						console.error('Failed to remove control action', e)
 					})
 				})
 			},
 
 			performDuplicate: (actionId: string) => {
-				socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId + '', actionId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
 					console.error('Failed to duplicate control action', e)
 				})
 			},
 
 			performLearn: (actionId: string) => {
-				socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId + '', actionId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
 					console.error('Failed to learn control action values', e)
 				})
 			},
 
 			setEnabled: (actionId: string, enabled: boolean) => {
-				socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId + '', actionId, enabled]).catch(
+				socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId, actionId, enabled]).catch(
 					(e) => {
 						console.error('Failed to enable/disable action', e)
 					}
@@ -125,15 +128,11 @@ export function useControlActionsEditorService(
 			},
 
 			setHeadline: (actionId: string, headline: string) => {
-				socketEmitPromise(socket, 'controls:action:set-headline', [
-					controlId,
-					stepId,
-					setId + '',
-					actionId,
-					headline,
-				]).catch((e) => {
-					console.error('Failed to set action headline', e)
-				})
+				socketEmitPromise(socket, 'controls:action:set-headline', [controlId, stepId, setId, actionId, headline]).catch(
+					(e) => {
+						console.error('Failed to set action headline', e)
+					}
+				)
 			},
 		}),
 		[socket, confirmModal, controlId, stepId, setId]
@@ -145,10 +144,16 @@ export function useActionRecorderActionService(sessionId: string): IActionEditor
 
 	return useMemo(
 		() => ({
-			addAction: (_actionType: string) => {
+			addAction: (_actionType: string, _parentId: string | null) => {
 				// Not supported
 			},
-			moveCard: (_dragStepId: string, _dragSetId: string | number, dragActionId: string, dropIndex: number) => {
+			moveCard: (
+				_dragStepId: string,
+				_dragSetId: ActionSetId,
+				dragActionId: string,
+				_dropParentId: string | null,
+				dropIndex: number
+			) => {
 				socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragActionId, dropIndex]).catch(
 					(e) => {
 						console.error(e)
@@ -211,7 +216,6 @@ export function useControlActionService(
 			performDelete: () => serviceFactory.performDelete(actionId),
 			performDuplicate: () => serviceFactory.performDuplicate(actionId),
 			setConnection: (connectionId: string | number) => serviceFactory.setConnection(actionId, connectionId),
-			setDelay: (delay: number) => serviceFactory.setDelay(actionId, delay),
 			performLearn: serviceFactory.performLearn ? () => serviceFactory.performLearn?.(actionId) : undefined,
 			setEnabled: serviceFactory.setEnabled
 				? (enabled: boolean) => serviceFactory.setEnabled?.(actionId, enabled)

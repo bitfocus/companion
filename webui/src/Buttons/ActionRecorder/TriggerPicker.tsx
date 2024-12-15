@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { NonIdealState } from '../../Components/NonIdealState.js'
 import { faList } from '@fortawesome/free-solid-svg-icons'
+import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
 interface TriggerPickerRowProps {
 	id: string
@@ -33,13 +34,13 @@ function TriggerPickerRow({ id, trigger, selectTrigger }: TriggerPickerRowProps)
 	)
 }
 interface TriggerPickerProps {
-	selectControl: (controlId: string, stepId: string, setId: string, mode: 'append' | 'replace') => void
+	selectControl: (controlId: string, stepId: string, setId: ActionSetId, mode: 'append' | 'replace') => void
 }
 export const TriggerPicker = observer(function TriggerPicker({ selectControl }: TriggerPickerProps) {
 	const { triggersList } = useContext(RootAppStoreContext)
 
 	const selectTrigger = useCallback(
-		(id: string, mode: 'append' | 'replace') => selectControl(CreateTriggerControlId(id), '', '', mode),
+		(id: string, mode: 'append' | 'replace') => selectControl(CreateTriggerControlId(id), '', 0, mode),
 		[selectControl]
 	)
 

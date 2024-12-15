@@ -3,7 +3,7 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
 import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
-import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 
 /**
  * Create an old-style bank controlId

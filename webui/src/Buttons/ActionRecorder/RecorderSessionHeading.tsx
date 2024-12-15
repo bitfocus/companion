@@ -3,7 +3,7 @@ import { socketEmitPromise, LoadingRetryOrError, PreventDefaultHandler, useCompu
 import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch, CCallout } from '@coreui/react'
 import { DropdownInputField } from '../../Components/index.js'
 import { ActionsList } from '../../Controls/ActionSetEditor.js'
-import { usePanelCollapseHelperLite } from '../../Helpers/CollapseHelper.js'
+import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService.js'
@@ -141,10 +141,7 @@ interface RecorderSessionProps {
 export const RecorderSession = observer(function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 	const actionsService = useActionRecorderActionService(sessionId)
 
-	const panelCollapseHelper = usePanelCollapseHelperLite(
-		'action_recorder',
-		sessionInfo?.actions?.map((a) => a.id) ?? []
-	)
+	const panelCollapseHelper = usePanelCollapseHelper('action_recorder', sessionInfo?.actions?.map((a) => a.id) ?? [])
 
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} />
 
@@ -152,8 +149,10 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 		<CCol xs={12} className="flex-form">
 			<ActionsList
 				location={undefined}
+				controlId=""
 				stepId=""
-				setId=""
+				setId={0}
+				parentId={null}
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}

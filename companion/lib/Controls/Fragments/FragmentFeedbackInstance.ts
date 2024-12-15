@@ -2,7 +2,7 @@ import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
-import { visitFeedbackInstance } from '../../Util/Visitors/FeedbackInstanceVisitor.js'
+import { visitFeedbackInstance } from '../../Resources/Visitors/FeedbackInstanceVisitor.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
@@ -435,20 +435,20 @@ export class FragmentFeedbackInstance {
 		return this.#children.duplicateFeedback(id)
 	}
 
-	/**
-	 * Reorder a feedback in the list
-	 */
-	moveChild(oldIndex: number, newIndex: number): void {
-		return this.#children.moveFeedback(oldIndex, newIndex)
-	}
+	// /**
+	//  * Reorder a feedback in the list
+	//  */
+	// moveChild(oldIndex: number, newIndex: number): void {
+	// 	return this.#children.moveFeedback(oldIndex, newIndex)
+	// }
 
-	/**
-	 * Pop a child feedback from the list
-	 * Note: this is used when moving a feedback to a different parent. Lifecycle is not managed
-	 */
-	popChild(index: number): FragmentFeedbackInstance | undefined {
-		return this.#children.popFeedback(index)
-	}
+	// /**
+	//  * Pop a child feedback from the list
+	//  * Note: this is used when moving a feedback to a different parent. Lifecycle is not managed
+	//  */
+	// popChild(index: number): FragmentFeedbackInstance | undefined {
+	// 	return this.#children.popFeedback(index)
+	// }
 
 	/**
 	 * Push a child feedback to the list
@@ -518,7 +518,7 @@ export class FragmentFeedbackInstance {
 	 * Replace portions of the feedback with an updated version
 	 */
 	replaceProps(
-		newProps: Pick<FeedbackInstance, 'id' | 'type' | 'style' | 'options' | 'isInverted'>,
+		newProps: Pick<FeedbackInstance, 'type' | 'style' | 'options' | 'isInverted'>,
 		skipNotifyModule = false
 	): void {
 		this.#data.type = newProps.type // || newProps.feedbackId

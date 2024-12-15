@@ -4,9 +4,13 @@ export interface ActionInstance {
 	headline?: string
 	action: string
 	options: Record<string, any>
-	delay: number
 	disabled?: boolean
 	upgradeIndex?: number
+
+	/**
+	 * Some internal actions can have children, one or more set of them
+	 */
+	children?: Record<string, ActionInstance[] | undefined>
 }
 
 export interface ActionStepOptions {
@@ -14,8 +18,10 @@ export interface ActionStepOptions {
 	name?: string
 }
 
+export type ActionSetId = 'down' | 'up' | 'rotate_left' | 'rotate_right' | number
+
 // TODO - type better?
-export type ActionSetsModel = Record<string | number, ActionInstance[] | undefined>
+export type ActionSetsModel = Record<ActionSetId, ActionInstance[] | undefined>
 //  {
 // 	down: ActionInstance[]
 // 	up: ActionInstance[]
@@ -26,3 +32,8 @@ export type ActionSetsModel = Record<string | number, ActionInstance[] | undefin
 // }
 
 // export type ActionSetId = 'down' | 'up' | 'rotate_left' | 'rotate_right' | number
+
+export interface ActionOwner {
+	parentActionId: string
+	childGroup: string
+}

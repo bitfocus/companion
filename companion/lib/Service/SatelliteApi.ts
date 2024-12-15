@@ -6,7 +6,7 @@ import {
 	parseLineParameters,
 	parseStringParamWithBooleanFallback,
 } from '../Resources/Util.js'
-import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
+import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import { Logger } from '../Log/Controller.js'
 import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../Surface/IP/Satellite.js'
 import type { Registry } from '../Registry.js'

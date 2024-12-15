@@ -83,10 +83,23 @@ describe('TcpUdpApi', () => {
 				mockFn.mockReturnValue(null)
 
 				// Perform the request
-				await router.processMessage('custom-variable my-var-name set-value 123')
+				await router.processMessage('custom-variable my-var-name set-value 123 def')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name', '123')
+				expect(mockFn).toHaveBeenCalledWith('my-var-name', '123 def')
+			})
+
+			test('ok from query with slash', async () => {
+				const { router, registry } = createService()
+
+				const mockFn = registry.variables.custom.setValue
+				mockFn.mockReturnValue(null)
+
+				// Perform the request
+				await router.processMessage('custom-variable my-var-name set-value 12/3 def')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name', '12/3 def')
 			})
 
 			test('ok empty', async () => {
@@ -638,7 +651,7 @@ describe('TcpUdpApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 style text def')
+				router.processMessage('location 1/2/3 style text def two')
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -651,7 +664,36 @@ describe('TcpUdpApi', () => {
 				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
 
 				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
-				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: 'def' })
+				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: 'def two' })
+			})
+
+			test('ok with slash', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				const mockControl = mock<ControlButtonNormal>(
+					{
+						styleSetFields: vi.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage('location 1/2/3 style text de/f two')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+
+				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: 'de/f two' })
 			})
 
 			test('ok no text', async () => {

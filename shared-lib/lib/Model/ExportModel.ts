@@ -2,49 +2,49 @@ import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
 import type { CustomVariablesModel } from './CustomVariableModel.js'
 
-export type SomeExportv4 = ExportFullv4 | ExportPageModelv4 | ExportTriggersListv4
+export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 4
+	readonly version: 6
 	readonly type: Type
 }
 
-export interface ExportFullv4 extends ExportBase<'full'> {
-	pages?: Record<number, ExportPageContentv4>
-	triggers?: Record<string, ExportTriggerContentv4>
+export interface ExportFullv6 extends ExportBase<'full'> {
+	pages?: Record<number, ExportPageContentv6>
+	triggers?: Record<string, ExportTriggerContentv6>
 	custom_variables?: CustomVariablesModel
-	instances?: ExportInstancesv4
+	instances?: ExportInstancesv6
 	surfaces?: unknown
 	surfaceGroups?: unknown
 }
 
-export interface ExportPageModelv4 extends ExportBase<'page'> {
-	page: ExportPageContentv4
-	instances: ExportInstancesv4
+export interface ExportPageModelv6 extends ExportBase<'page'> {
+	page: ExportPageContentv6
+	instances: ExportInstancesv6
 	oldPageNumber: number
 }
 
-export interface ExportTriggersListv4 extends ExportBase<'trigger_list'> {
-	triggers: Record<string, ExportTriggerContentv4>
-	instances: ExportInstancesv4
+export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
+	triggers: Record<string, ExportTriggerContentv6>
+	instances: ExportInstancesv6
 }
 
-export type ExportTriggerContentv4 = Record<string, any> // TODO
+export type ExportTriggerContentv6 = Record<string, any> // TODO
 
-export interface ExportPageContentv4 {
+export interface ExportPageContentv6 {
 	name: string
-	controls: Record<number, Record<number, ExportControlv4>>
+	controls: Record<number, Record<number, ExportControlv6>>
 
 	gridSize: UserConfigGridSize
 }
 
-export type ExportControlv4 = Record<string, any> // TODO
+export type ExportControlv6 = Record<string, any> // TODO
 
-export type ExportInstancesv4 =
-	| Record<string, ExportInstanceFullv4 | ExportInstanceMinimalv4>
+export type ExportInstancesv6 =
+	| Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6>
 	| Record<string, ConnectionConfig | undefined> // TODO - tidy
 
-export type ExportInstanceFullv4 = {
+export type ExportInstanceFullv6 = {
 	label: string
 	config: unknown
 	isFirstInit: boolean
@@ -56,7 +56,7 @@ export type ExportInstanceFullv4 = {
 	sortOrder?: number
 }
 
-export type ExportInstanceMinimalv4 = {
+export type ExportInstanceMinimalv6 = {
 	label: string
 	instance_type: string
 	lastUpgradeIndex: number

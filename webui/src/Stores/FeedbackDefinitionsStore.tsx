@@ -1,18 +1,18 @@
 import type {
 	FeedbackDefinitionUpdate,
-	InternalFeedbackDefinition,
+	ClientFeedbackDefinition,
 } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import { ObservableMap, action, observable } from 'mobx'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'
 import { assertNever } from '../util.js'
 
-export type ConnectionFeedbackDefinitions = ObservableMap<string, InternalFeedbackDefinition>
+export type ConnectionFeedbackDefinitions = ObservableMap<string, ClientFeedbackDefinition>
 
 export class FeedbackDefinitionsStore {
 	readonly connections = observable.map<string, ConnectionFeedbackDefinitions>()
 
 	public reset = action(
-		(newData: Record<string, Record<string, InternalFeedbackDefinition | undefined> | undefined> | null) => {
+		(newData: Record<string, Record<string, ClientFeedbackDefinition | undefined> | undefined> | null) => {
 			this.connections.clear()
 
 			if (newData) {
@@ -49,8 +49,8 @@ export class FeedbackDefinitionsStore {
 		}
 	})
 
-	#replaceConnection(connectionId: string, feedbackSet: Record<string, InternalFeedbackDefinition | undefined>): void {
-		const moduleFeedbacks = observable.map<string, InternalFeedbackDefinition>()
+	#replaceConnection(connectionId: string, feedbackSet: Record<string, ClientFeedbackDefinition | undefined>): void {
+		const moduleFeedbacks = observable.map<string, ClientFeedbackDefinition>()
 		this.connections.set(connectionId, moduleFeedbacks)
 
 		for (const [feedbackId, feedback] of Object.entries(feedbackSet)) {

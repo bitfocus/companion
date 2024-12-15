@@ -159,9 +159,9 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									controlId={controlId}
 									location={undefined}
 									stepId=""
-									setId={'0'}
+									setId={0}
 									addPlaceholder="+ Add action"
-									actions={config.action_sets['0']}
+									actions={config.action_sets[0]}
 								/>
 							</MyErrorBoundary>
 						</>
