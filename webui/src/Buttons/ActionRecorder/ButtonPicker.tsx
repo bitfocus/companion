@@ -28,7 +28,7 @@ interface ButtonPickerProps {
 export const ButtonPicker = observer(function ButtonPicker({ selectButton }: ButtonPickerProps) {
 	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
 
-	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
+	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
 
 	const [selectedLocation, setSelectedLocation] = useState<ControlLocation | null>(null)
 	const [selectedStep, setSelectedStep] = useState<string | null>(null)
