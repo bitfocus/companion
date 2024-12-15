@@ -25,7 +25,7 @@ import type {
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ActionInstance, ActionOwner } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 
@@ -210,12 +210,7 @@ export class ControlTrigger
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(
-		_stepId: string,
-		_setId: string | number,
-		actionItem: ActionInstance,
-		ownerId: ActionOwner | null
-	): boolean {
+	actionAdd(_stepId: string, _setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
 		return this.actions.actionAdd(0, actionItem, ownerId)
 	}
 
@@ -224,7 +219,7 @@ export class ControlTrigger
 	 */
 	actionAppend(
 		_stepId: string,
-		_setId: string | number,
+		_setId: ActionSetId,
 		newActions: ActionInstance[],
 		ownerId: ActionOwner | null
 	): boolean {
@@ -234,35 +229,35 @@ export class ControlTrigger
 	/**
 	 * Learn the options for an action, by asking the instance for the current values
 	 */
-	async actionLearn(_stepId: string, _setId: string | number, id: string): Promise<boolean> {
+	async actionLearn(_stepId: string, _setId: ActionSetId, id: string): Promise<boolean> {
 		return this.actions.actionLearn(0, id)
 	}
 
 	/**
 	 * Enable or disable an action
 	 */
-	actionEnabled(_stepId: string, _setId: string | number, id: string, enabled: boolean): boolean {
+	actionEnabled(_stepId: string, _setId: ActionSetId, id: string, enabled: boolean): boolean {
 		return this.actions.actionEnabled(0, id, enabled)
 	}
 
 	/**
 	 * Set action headline
 	 */
-	actionHeadline(_stepId: string, _setId: string | number, id: string, headline: string): boolean {
+	actionHeadline(_stepId: string, _setId: ActionSetId, id: string, headline: string): boolean {
 		return this.actions.actionHeadline(0, id, headline)
 	}
 
 	/**
 	 * Remove an action from this control
 	 */
-	actionRemove(_stepId: string, _setId: string | number, id: string): boolean {
+	actionRemove(_stepId: string, _setId: ActionSetId, id: string): boolean {
 		return this.actions.actionRemove(0, id)
 	}
 
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(_stepId: string, _setId: string | number, id: string): string | null {
+	actionDuplicate(_stepId: string, _setId: ActionSetId, id: string): string | null {
 		return this.actions.actionDuplicate(0, id)
 	}
 
@@ -276,21 +271,21 @@ export class ControlTrigger
 	/**
 	 * Replace all the actions in a set
 	 */
-	actionReplaceAll(_stepId: string, _setId: string | number, newActions: ActionInstance[]): boolean {
+	actionReplaceAll(_stepId: string, _setId: ActionSetId, newActions: ActionInstance[]): boolean {
 		return this.actions.actionReplaceAll(0, newActions)
 	}
 
 	/**
 	 * Set the connection of an action
 	 */
-	actionSetConnection(_stepId: string, _setId: string | number, id: string, connectionId: string): boolean {
+	actionSetConnection(_stepId: string, _setId: ActionSetId, id: string, connectionId: string): boolean {
 		return this.actions.actionSetConnection(0, id, connectionId)
 	}
 
 	/**
 	 * Set an option of an action
 	 */
-	actionSetOption(_stepId: string, _setId: string | number, id: string, key: string, value: any): boolean {
+	actionSetOption(_stepId: string, _setId: ActionSetId, id: string, key: string, value: any): boolean {
 		return this.actions.actionSetOption(0, id, key, value)
 	}
 
@@ -305,10 +300,10 @@ export class ControlTrigger
 	 */
 	actionMoveTo(
 		_dragStepId: string,
-		_dragSetId: string | number,
+		_dragSetId: ActionSetId,
 		dragActionId: string,
 		_hoverStepId: string,
-		_hoverSetId: string | number,
+		_hoverSetId: ActionSetId,
 		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	): boolean {

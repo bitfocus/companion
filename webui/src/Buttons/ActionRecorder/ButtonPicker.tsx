@@ -15,12 +15,13 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
 interface ButtonPickerProps {
 	selectButton: (
 		selectedControl: string,
 		selectedStep: string,
-		selectedSet: string | number,
+		selectedSet: ActionSetId,
 		mode: 'replace' | 'append'
 	) => void
 }
@@ -31,7 +32,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 
 	const [selectedLocation, setSelectedLocation] = useState<ControlLocation | null>(null)
 	const [selectedStep, setSelectedStep] = useState<string | null>(null)
-	const [selectedSet, setSelectedSet] = useState<string | number | null>(null)
+	const [selectedSet, setSelectedSet] = useState<ActionSetId | null>(null)
 
 	const buttonClick = useCallback((location: ControlLocation, pressed: boolean) => {
 		if (pressed) setSelectedLocation(location)
@@ -163,7 +164,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 			if (actionSetOptions.find((opt) => opt.id === oldSet)) {
 				return oldSet
 			} else {
-				return actionSetOptions[0]?.id
+				return (actionSetOptions[0]?.id ?? null) as ActionSetId | null
 			}
 		})
 	}, [actionSetOptions])
@@ -227,7 +228,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 								choices={actionSetOptions}
 								multiple={false}
 								value={selectedSet ?? ''}
-								setValue={setSelectedSet}
+								setValue={setSelectedSet as (val: DropdownChoiceId) => void}
 								disabled={!controlInfo}
 							/>
 						</CCol>

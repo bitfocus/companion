@@ -24,6 +24,7 @@ import LogController from '../Log/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -326,13 +327,28 @@ export class InstanceDefinitions {
 		if (definition.steps) {
 			for (let i = 0; i < definition.steps.length; i++) {
 				const newStep: NormalButtonSteps[0] = {
-					action_sets: {},
+					action_sets: {
+						down: [],
+						up: [],
+						rotate_left: undefined,
+						rotate_right: undefined,
+					},
 					options: cloneDeep(definition.steps[i].options) ?? cloneDeep(ControlButtonNormal.DefaultStepOptions),
 				}
 				result.steps[i] = newStep
 
 				for (const [set, actions_set] of Object.entries(definition.steps[i].action_sets)) {
-					newStep.action_sets[set] = convertActionsDelay(actions_set, connectionId, definition.options?.relativeDelay)
+					const setIdSafe = validateActionSetId(set as any)
+					if (setIdSafe === undefined) {
+						this.#logger.warn(`Invalid set id: ${set}`)
+						continue
+					}
+
+					newStep.action_sets[setIdSafe] = convertActionsDelay(
+						actions_set,
+						connectionId,
+						definition.options?.relativeDelay
+					)
 				}
 			}
 		}

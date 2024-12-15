@@ -21,7 +21,7 @@ import os from 'os'
 import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
 import { getTimestamp, isFalsey } from '../Resources/Util.js'
-import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreateTriggerControlId, ParseControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
 import archiver from 'archiver'
 import path from 'path'
 import fs from 'fs'
@@ -1036,7 +1036,13 @@ export class ImportExportController {
 		const result: TriggerModel = {
 			type: 'trigger',
 			options: cloneDeep(control.options),
-			action_sets: {},
+			action_sets: {
+				0: [],
+				down: undefined,
+				up: undefined,
+				rotate_left: undefined,
+				rotate_right: undefined,
+			},
 			condition: [],
 			events: control.events,
 		}
@@ -1047,12 +1053,12 @@ export class ImportExportController {
 
 		const allActions: ActionInstance[] = []
 		if (control.action_sets) {
-			for (const [setId, action_set] of Object.entries(control.action_sets)) {
-				const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
+			// Triggers can only have the 0 set
+			const action_set = control.action_sets[0]
+			const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
 
-				result.action_sets[setId] = newActions
-				allActions.push(...newActions)
-			}
+			result.action_sets[0] = newActions
+			allActions.push(...newActions)
 		}
 
 		ReferencesVisitors.fixupControlReferences(
@@ -1108,16 +1114,27 @@ export class ImportExportController {
 		const allActions: ActionInstance[] = []
 		if (control.steps) {
 			for (const [stepId, step] of Object.entries<any>(control.steps)) {
-				const newStepSets: ActionSetsModel = {}
+				const newStepSets: ActionSetsModel = {
+					down: [],
+					up: [],
+					rotate_left: undefined,
+					rotate_right: undefined,
+				}
 				result.steps[stepId] = {
 					action_sets: newStepSets,
 					options: cloneDeep(step.options),
 				}
 
 				for (const [setId, action_set] of Object.entries<any>(step.action_sets)) {
+					const setIdSafe = validateActionSetId(setId as any)
+					if (setIdSafe === undefined) {
+						this.#logger.warn(`Invalid set id: ${setId}`)
+						continue
+					}
+
 					const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
 
-					newStepSets[setId] = newActions
+					newStepSets[setIdSafe] = newActions
 					allActions.push(...newActions)
 				}
 			}

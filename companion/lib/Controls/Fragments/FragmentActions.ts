@@ -2,6 +2,7 @@ import LogController, { Logger } from '../../Log/Controller.js'
 import type {
 	ActionInstance,
 	ActionOwner,
+	ActionSetId,
 	ActionSetsModel,
 	ActionStepOptions,
 } from '@companion-app/shared/Model/ActionModel.js'
@@ -10,6 +11,7 @@ import type { InternalController } from '../../Internal/Controller.js'
 import { FragmentActionList } from './FragmentActionList.js'
 import type { FragmentActionInstance } from './FragmentActionInstance.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
+import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 
 /**
  * Helper for ControlTypes with actions
@@ -35,7 +37,7 @@ export class FragmentActions {
 	/**
 	 * The action-sets on this button
 	 */
-	#actions: Map<string | number, FragmentActionList> = new Map()
+	#actions: Map<ActionSetId, FragmentActionList> = new Map()
 
 	/**
 	 */
@@ -90,8 +92,11 @@ export class FragmentActions {
 		for (const [key, value] of Object.entries(actions)) {
 			if (!value) continue
 
-			const keyNumber = Number(key)
-			const keySafe = isNaN(keyNumber) ? key : keyNumber
+			const keySafe = validateActionSetId(key as any)
+			if (keySafe === undefined) {
+				this.#logger.error(`Invalid action set id ${key}`)
+				continue
+			}
 
 			const newList = new FragmentActionList(
 				this.#instanceDefinitions,
@@ -108,7 +113,7 @@ export class FragmentActions {
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(setId: string | number, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
+	actionAdd(setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) {
 			// cant implicitly create a set
@@ -133,7 +138,7 @@ export class FragmentActions {
 		return true
 	}
 
-	getActionSet(setId: string | number): FragmentActionList | undefined {
+	getActionSet(setId: ActionSetId): FragmentActionList | undefined {
 		console.log('getActionSet', setId, Array.from(this.#actions.keys()))
 
 		return this.#actions.get(setId)
@@ -259,7 +264,7 @@ export class FragmentActions {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(setId: string | number, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
+	actionAppend(setId: ActionSetId, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) {
 			// cant implicitly create a set
@@ -292,7 +297,7 @@ export class FragmentActions {
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(setId: string | number, id: string): string | null {
+	actionDuplicate(setId: ActionSetId, id: string): string | null {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return null
 
@@ -307,7 +312,7 @@ export class FragmentActions {
 	/**
 	 * Enable or disable an action
 	 */
-	actionEnabled(setId: string | number, id: string, enabled: boolean): boolean {
+	actionEnabled(setId: ActionSetId, id: string, enabled: boolean): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -324,7 +329,7 @@ export class FragmentActions {
 	/**
 	 * Set action headline
 	 */
-	actionHeadline(setId: string | number, id: string, headline: string): boolean {
+	actionHeadline(setId: ActionSetId, id: string, headline: string): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -343,7 +348,7 @@ export class FragmentActions {
 	 * @param setId the id of the action set
 	 * @param id the id of the action
 	 */
-	async actionLearn(setId: string | number, id: string): Promise<boolean> {
+	async actionLearn(setId: ActionSetId, id: string): Promise<boolean> {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -367,7 +372,7 @@ export class FragmentActions {
 	 * @param setId the id of the action set
 	 * @param id the id of the action
 	 */
-	actionRemove(setId: string | number, id: string): boolean {
+	actionRemove(setId: ActionSetId, id: string): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -399,7 +404,7 @@ export class FragmentActions {
 	/**
 	 * Find a child feedback by id
 	 */
-	findChildById(setId: string | number, id: string): FragmentActionInstance | undefined {
+	findChildById(setId: ActionSetId, id: string): FragmentActionInstance | undefined {
 		return this.#actions.get(setId)?.findById(id)
 	}
 
@@ -407,7 +412,7 @@ export class FragmentActions {
 	 * Find the index of a child feedback, and the parent list
 	 */
 	findParentAndIndex(
-		setId: string | number,
+		setId: ActionSetId,
 		id: string
 	): { parent: FragmentActionList; index: number; item: FragmentActionInstance } | undefined {
 		return this.#actions.get(setId)?.findParentAndIndex(id)
@@ -418,7 +423,7 @@ export class FragmentActions {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to populate
 	 */
-	actionReplaceAll(setId: string | number, newActions: ActionInstance[]): boolean {
+	actionReplaceAll(setId: ActionSetId, newActions: ActionInstance[]): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -435,7 +440,7 @@ export class FragmentActions {
 	 * @param id the action id
 	 * @param connectionId the id of the new connection
 	 */
-	actionSetConnection(setId: string | number, id: string, connectionId: string): boolean {
+	actionSetConnection(setId: ActionSetId, id: string, connectionId: string): boolean {
 		if (connectionId == '') return false
 
 		const actionSet = this.#actions.get(setId)
@@ -458,7 +463,7 @@ export class FragmentActions {
 	 * @param key the desired option to set
 	 * @param value the new value of the option
 	 */
-	actionSetOption(setId: string | number, id: string, key: string, value: any): boolean {
+	actionSetOption(setId: ActionSetId, id: string, key: string, value: any): boolean {
 		const actionSet = this.#actions.get(setId)
 		if (!actionSet) return false
 
@@ -514,7 +519,12 @@ export class FragmentActions {
 	}
 
 	asActionStepModel(): ActionSetsModel {
-		const actions: ActionSetsModel = {}
+		const actions: ActionSetsModel = {
+			down: undefined,
+			up: undefined,
+			rotate_left: undefined,
+			rotate_right: undefined,
+		}
 
 		for (const [key, list] of this.#actions) {
 			actions[key] = list.asActionInstances()

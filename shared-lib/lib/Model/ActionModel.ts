@@ -18,8 +18,10 @@ export interface ActionStepOptions {
 	name?: string
 }
 
+export type ActionSetId = 'down' | 'up' | 'rotate_left' | 'rotate_right' | number
+
 // TODO - type better?
-export type ActionSetsModel = Record<string | number, ActionInstance[] | undefined>
+export type ActionSetsModel = Record<ActionSetId, ActionInstance[] | undefined>
 //  {
 // 	down: ActionInstance[]
 // 	up: ActionInstance[]

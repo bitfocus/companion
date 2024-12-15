@@ -44,7 +44,7 @@ import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/Act
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
-import type { ActionOwner } from './Model/ActionModel.js'
+import type { ActionOwner, ActionSetId } from './Model/ActionModel.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -134,36 +134,36 @@ export interface ClientToBackendEventsMap {
 	'controls:action:set-headline': (
 		controlId: string,
 		stepId: string,
-		setId: string | number,
+		setId: ActionSetId,
 		actionId: string,
 		headline: string
 	) => boolean
 	'controls:action:enabled': (
 		controlId: string,
 		stepId: string,
-		setId: string | number,
+		setId: ActionSetId,
 		actionId: string,
 		enabled: boolean
 	) => boolean
-	'controls:action:learn': (controlId: string, stepId: string, setId: string | number, actionId: string) => boolean
+	'controls:action:learn': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
 	'controls:action:duplicate': (
 		controlId: string,
 		stepId: string,
-		setId: string | number,
+		setId: ActionSetId,
 		actionId: string
 	) => string | null
-	'controls:action:remove': (controlId: string, stepId: string, setId: string | number, actionId: string) => boolean
+	'controls:action:remove': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
 	'controls:action:set-connection': (
 		controlId: string,
 		stepId: string,
-		setId: string | number,
+		setId: ActionSetId,
 		actionId: string,
 		connectionId: string
 	) => boolean
 	'controls:action:set-option': (
 		controlId: string,
 		stepId: string,
-		setId: string | number,
+		setId: ActionSetId,
 		actionId: string,
 		key: string,
 		val: any
@@ -171,17 +171,17 @@ export interface ClientToBackendEventsMap {
 	'controls:action:move': (
 		controlId: string,
 		dragStepId: string,
-		dragSetId: string | number,
+		dragSetId: ActionSetId,
 		dragActionId: string,
 		hoverStepId: string,
-		hoverSetId: string | number,
+		hoverSetId: ActionSetId,
 		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	) => boolean
 	'controls:action:add': (
 		controlId: string,
 		stepId: string,
-		setId: string | number,
+		setId: ActionSetId,
 		ownerId: ActionOwner | null,
 		connectionId: string,
 		actionType: string
@@ -190,17 +190,17 @@ export interface ClientToBackendEventsMap {
 	'controls:action-set:set-run-while-held': (
 		controlId: string,
 		stepId: string,
-		newSetId: string | number,
+		newSetId: ActionSetId,
 		runWhileHeld: boolean
 	) => boolean
 	'controls:action-set:rename': (
 		controlId: string,
 		stepId: string,
-		oldSetId: string | number,
-		newSetId: string | number
+		oldSetId: ActionSetId,
+		newSetId: ActionSetId
 	) => boolean
 	'controls:action-set:add': (controlId: string, stepId: string) => boolean
-	'controls:action-set:remove': (controlId: string, stepId: string, setId: string | number) => boolean
+	'controls:action-set:remove': (controlId: string, stepId: string, setId: ActionSetId) => boolean
 
 	'controls:step:add': (controlId: string) => string | false
 	'controls:step:duplicate': (controlId: string, stepId: string) => boolean
@@ -233,7 +233,7 @@ export interface ClientToBackendEventsMap {
 		sessionId: string,
 		controlId: string,
 		stepId: string,
-		setId: string | number,
+		setId: ActionSetId,
 		mode: 'replace' | 'append'
 	) => void
 	'action-recorder:session:discard-actions': (sessionId: string) => void

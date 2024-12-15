@@ -54,7 +54,12 @@ import { cloneDeep } from 'lodash-es'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import {
+	ActionInstance,
+	ActionSetId,
+	ActionSetsModel,
+	ActionStepOptions,
+} from '@companion-app/shared/Model/ActionModel.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { NormalButtonSteps, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -481,9 +486,9 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		[socket, controlId]
 	)
 	const removeSet = useCallback(
-		(stepId: string, setId: string | number) => {
+		(stepId: string, setId: ActionSetId) => {
 			confirmRef.current?.show('Remove set', 'Are you sure you wish to remove this group?', 'Remove', () => {
-				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, setId + '']).catch((e) => {
+				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, setId]).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
 			})
@@ -773,7 +778,7 @@ interface EditActionsReleaseProps {
 	action_sets: ActionSetsModel
 	stepOptions: ActionStepOptions
 	stepId: string
-	removeSet: (stepId: string, setId: string | number) => void
+	removeSet: (stepId: string, setId: ActionSetId) => void
 }
 
 function EditActionsRelease({
@@ -797,12 +802,12 @@ function EditActionsRelease({
 				const runWhileHeld = stepOptions.runWhileHeld.includes(oldIdNumber)
 				editRef.current?.show(oldIdNumber, runWhileHeld, (newId: number, runWhileHeld: boolean) => {
 					if (!isNaN(newId)) {
-						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldIdNumber + '', newId + ''])
+						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldIdNumber, newId])
 							.then(() => {
 								socketEmitPromise(socket, 'controls:action-set:set-run-while-held', [
 									controlId,
 									stepId,
-									newId + '',
+									newId,
 									runWhileHeld,
 								]).catch((e) => {
 									console.error('Failed to set runWhileHeld:', e)

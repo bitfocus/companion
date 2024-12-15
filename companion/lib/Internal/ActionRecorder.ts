@@ -30,6 +30,7 @@ import type {
 } from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 
 export class InternalActionRecorder implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/ActionRecorder')
@@ -243,7 +244,10 @@ export class InternalActionRecorder implements InternalModuleFragment {
 				if (!isNaN(Number(stepId))) stepId = `${Number(stepId) - 1}`
 
 				try {
-					this.#actionRecorder.saveToControlId(controlId, stepId, setId, action.options.mode)
+					const setIdSafe = validateActionSetId(setId as any)
+					if (setIdSafe === undefined) throw new Error('Invalid setId')
+
+					this.#actionRecorder.saveToControlId(controlId, stepId, setIdSafe, action.options.mode)
 				} catch (e) {
 					// We don't have a good way to present this to the user, so ignore it for now. They should notice that it didnt work
 					this.#logger.info(`action_recorder_save_to_button failed: ${e}`)

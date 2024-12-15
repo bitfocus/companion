@@ -18,7 +18,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { AddActionsModal, AddActionsModalRef } from './AddModal.js'
 import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
-import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { LearnButton } from '../Components/LearnButton.js'
@@ -50,7 +50,7 @@ interface ControlActionSetEditorProps {
 	controlId: string
 	location: ControlLocation | undefined
 	stepId: string
-	setId: string | number
+	setId: ActionSetId
 	actions: ActionInstance[] | undefined
 	addPlaceholder: string
 	heading: JSX.Element | string
@@ -102,7 +102,7 @@ interface InlineActionListProps {
 	actions: ActionInstance[] | undefined
 	location: ControlLocation | undefined
 	stepId: string
-	setId: string | number
+	setId: ActionSetId
 	addPlaceholder: string
 	actionsService: IActionEditorService
 	parentId: string | null
@@ -205,7 +205,7 @@ interface ActionsListProps {
 	parentId: string | null
 	dragId: string
 	stepId: string
-	setId: string | number
+	setId: ActionSetId
 	actions: ActionInstance[] | undefined
 	actionsService: IActionEditorService
 	readonly?: boolean
@@ -260,17 +260,11 @@ export function ActionsList({
 }
 
 interface ActionRowDropPlaceholderProps {
-	setId: string | number
+	setId: ActionSetId
 	parentId: string | null
 	dragId: string
 	actionCount: number
-	moveCard: (
-		stepId: string,
-		setId: string | number,
-		actionId: string,
-		parentId: string | null,
-		targetIndex: number
-	) => void
+	moveCard: (stepId: string, setId: ActionSetId, actionId: string, parentId: string | null, targetIndex: number) => void
 }
 
 function ActionRowDropPlaceholder({ setId, parentId, dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
@@ -307,7 +301,7 @@ function ActionRowDropPlaceholder({ setId, parentId, dragId, actionCount, moveCa
 interface ActionTableRowDragItem {
 	actionId: string
 	stepId: string
-	setId: string | number
+	setId: ActionSetId
 	index: number
 	parentId: string | null
 	dragState: DragState | null
@@ -321,7 +315,7 @@ interface ActionTableRowProps {
 	controlId: string
 	parentId: string | null
 	stepId: string
-	setId: string | number
+	setId: ActionSetId
 	location: ControlLocation | undefined
 	index: number
 	dragId: string

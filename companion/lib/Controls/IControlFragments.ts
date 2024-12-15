@@ -1,7 +1,7 @@
 import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
 import type { FragmentFeedbacks } from './Fragments/FragmentFeedbacks.js'
-import type { ActionInstance, ActionOwner } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
@@ -133,7 +133,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(stepId: string, setId: string | number, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean
+	actionAdd(stepId: string, setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean
 
 	/**
 	 * Append some actions to this button
@@ -141,47 +141,42 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(
-		stepId: string,
-		setId: string | number,
-		newActions: ActionInstance[],
-		ownerId: ActionOwner | null
-	): boolean
+	actionAppend(stepId: string, setId: ActionSetId, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean
 
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(stepId: string, setId: string | number, id: string): string | null
+	actionDuplicate(stepId: string, setId: ActionSetId, id: string): string | null
 
 	/**
 	 * Enable or disable an action
 	 */
-	actionEnabled(stepId: string, setId: string | number, id: string, enabled: boolean): boolean
+	actionEnabled(stepId: string, setId: ActionSetId, id: string, enabled: boolean): boolean
 
 	/**
 	 * Set action headline
 	 */
-	actionHeadline(stepId: string, setId: string | number, id: string, headline: string): boolean
+	actionHeadline(stepId: string, setId: ActionSetId, id: string, headline: string): boolean
 
 	/**
 	 * Learn the options for an action, by asking the connection for the current values
 	 */
-	actionLearn(stepId: string, setId: string | number, id: string): Promise<boolean>
+	actionLearn(stepId: string, setId: ActionSetId, id: string): Promise<boolean>
 
 	/**
 	 * Remove an action from this control
 	 */
-	actionRemove(stepId: string, setId: string | number, id: string): boolean
+	actionRemove(stepId: string, setId: ActionSetId, id: string): boolean
 
 	/**
 	 * Reorder an action in the list or move between sets
 	 */
 	actionMoveTo(
 		dragStepId: string,
-		dragSetId: string | number,
+		dragSetId: ActionSetId,
 		dragActionId: string,
 		hoverStepId: string,
-		hoverSetId: string | number,
+		hoverSetId: ActionSetId,
 		hoverOwnerId: ActionOwner | null,
 		hoverIndex: number
 	): boolean
@@ -194,17 +189,17 @@ export interface ControlWithActions extends ControlBase<any> {
 	/**
 	 * Replace all the actions in a set
 	 */
-	actionReplaceAll(stepId: string, setId: string | number, newActions: ActionInstance[]): boolean
+	actionReplaceAll(stepId: string, setId: ActionSetId, newActions: ActionInstance[]): boolean
 
 	/**
 	 * Set the connection of an action
 	 */
-	actionSetConnection(stepId: string, setId: string | number, id: string, connectionId: string): boolean
+	actionSetConnection(stepId: string, setId: ActionSetId, id: string, connectionId: string): boolean
 
 	/**
 	 * Set an option of an action
 	 */
-	actionSetOption(stepId: string, setId: string | number, id: string, key: string, value: any): boolean
+	actionSetOption(stepId: string, setId: ActionSetId, id: string, key: string, value: any): boolean
 
 	/**
 	 * Remove any tracked state for a connection
@@ -285,17 +280,17 @@ export interface ControlWithActionSets extends ControlBase<any> {
 	/**
 	 * Remove an action-set from this control
 	 */
-	actionSetRemove(stepId: string, setId: string | number): boolean
+	actionSetRemove(stepId: string, setId: ActionSetId): boolean
 
 	/**
 	 * Rename an action-sets
 	 */
-	actionSetRename(stepId: string, oldSetId: string | number, newSetId: string | number): boolean
+	actionSetRename(stepId: string, oldSetId: ActionSetId, newSetId: ActionSetId): boolean
 
 	/**
 	 * Set whether an action-set should run while the button is held
 	 */
-	actionSetRunWhileHeld(stepId: string, setId: string | number, runWhileHeld: boolean): boolean
+	actionSetRunWhileHeld(stepId: string, setId: ActionSetId, runWhileHeld: boolean): boolean
 
 	/**
 	 * Execute a rotate of this control
