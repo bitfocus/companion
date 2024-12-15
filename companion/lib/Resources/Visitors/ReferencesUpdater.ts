@@ -1,4 +1,4 @@
-import { TrySplitVariableId } from '../../Resources/Util.js'
+import { TrySplitVariableId } from '../Util.js'
 
 /**
  * Visit property on actions and feedbacks, and update any references used

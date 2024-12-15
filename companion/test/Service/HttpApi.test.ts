@@ -3,7 +3,7 @@ import { mock, mockDeep } from 'vitest-mock-extended'
 import { ServiceHttpApi } from '../../lib/Service/HttpApi'
 import express from 'express'
 import supertest from 'supertest'
-import bodyParser from 'body-parser'
+import Express from 'express'
 import { rgb } from '../../lib/Resources/Util'
 import type { Registry } from '../../lib/Registry'
 import type { ControlButtonNormal } from '../../lib/Controls/ControlTypes/Button/Normal'
@@ -62,8 +62,8 @@ describe('HttpApi', () => {
 			},
 		} as any as UIExpress
 
-		app.use(bodyParser.text())
-		app.use(bodyParser.json())
+		app.use(Express.text())
+		app.use(Express.json())
 		app.use('/api', (r, s, n) => router(r, s, n))
 		app.use((r, s, n) => legacyRouter(r, s, n))
 		app.get('*any', (_req, res, _next) => {

@@ -18,7 +18,7 @@ import { EventEmitter } from 'events'
 import { XKeys, setupXkeysPanel, Color as XKeysColor } from 'xkeys'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
-import { LEGACY_BUTTONS_PER_COLUMN, LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Util/Constants.js'
+import { LEGACY_BUTTONS_PER_COLUMN, LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,

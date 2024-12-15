@@ -108,7 +108,7 @@ class LogController {
 			const consoleFormat = [
 				winston.format.timestamp(),
 				winston.format.printf(({ level, message, timestamp, source }) => {
-					const color = selectColor(source)
+					const color = selectColor(String(source))
 					const colorCode = '\u001B[3' + (color < 8 ? color : '8;5;' + color)
 					const prefix = `${colorCode};1m${source}\u001B[0m`
 

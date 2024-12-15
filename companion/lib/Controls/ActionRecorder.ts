@@ -11,6 +11,7 @@ import type {
 	RecordSessionListInfo,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ClientSocket } from '../UI/Handler.js'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
 const SessionListRoom = 'action-recorder:session-list'
 function SessionRoom(id: string): string {
@@ -387,7 +388,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	/**
 	 * Save the recorded actions to a control
 	 */
-	saveToControlId(controlId: string, stepId: string, setId: string, mode: 'replace' | 'append'): void {
+	saveToControlId(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append'): void {
 		if (mode !== 'replace' && mode !== 'append') throw new Error(`Invalid mode: ${mode}`)
 
 		const control = this.#registry.controls.getControl(controlId)
@@ -395,7 +396,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 		if (mode === 'append') {
 			if (control.supportsActions) {
-				if (!control.actionAppend(stepId, setId, this.#currentSession.actions)) throw new Error('Unknown set')
+				if (!control.actionAppend(stepId, setId, this.#currentSession.actions, null)) throw new Error('Unknown set')
 			} else {
 				throw new Error('Not supported by control')
 			}

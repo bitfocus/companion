@@ -136,7 +136,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
 				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
-				<EditPagePropertiesModal ref={editRef} />
+				<EditPagePropertiesModal ref={editRef} includeName />
 
 				<h4>Buttons</h4>
 				<p style={{ marginBottom: '0.5rem' }}>

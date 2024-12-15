@@ -94,14 +94,14 @@ export const ConnectionsList = observer(function ConnectionsList({
 		.map(([id, connection]) => {
 			const status = connectionStatus?.[id]
 
-			if (!visibleConnections.visiblity.disabled && connection.enabled === false) {
+			if (!visibleConnections.visibility.disabled && connection.enabled === false) {
 				return undefined
 			} else if (status) {
-				if (!visibleConnections.visiblity.ok && status.category === 'good') {
+				if (!visibleConnections.visibility.ok && status.category === 'good') {
 					return undefined
-				} else if (!visibleConnections.visiblity.warning && status.category === 'warning') {
+				} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
 					return undefined
-				} else if (!visibleConnections.visiblity.error && status.category === 'error') {
+				} else if (!visibleConnections.visibility.error && status.category === 'error') {
 					return undefined
 				}
 			}

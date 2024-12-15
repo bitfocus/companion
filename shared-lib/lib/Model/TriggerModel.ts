@@ -16,7 +16,6 @@ export interface TriggerOptions {
 	name: string
 	enabled: boolean
 	sortOrder: number
-	relativeDelay: boolean
 }
 
 export interface ClientTriggerData extends TriggerOptions {

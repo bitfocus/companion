@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Setup some fixes before loading any imports
-import './Util/FixImports.js'
+import './Resources/FixImports.js'
 
 // Setup segfault handler
 import '@julusian/segfault-raub'

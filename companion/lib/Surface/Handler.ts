@@ -17,7 +17,7 @@
 
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { cloneDeep } from 'lodash-es'
-import { LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
+import { LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'

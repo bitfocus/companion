@@ -640,7 +640,6 @@ describe('parser', () => {
 		it('from variable with comparison', () => {
 			const res = ParseExpression2("$(my:variable)['d'] === undefined")
 
-			// nocommit - update this
 			expect(res).toEqual({
 				expr: {
 					type: 'BinaryExpression',

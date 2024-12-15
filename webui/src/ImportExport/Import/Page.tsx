@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
 import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
-import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader.js'
+import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '../../Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import {
 	ButtonGridIcon,
@@ -37,12 +37,28 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 
 	const isSinglePage = snapshot.type === 'page'
 
-	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
+	const [snapshotPageOptions, pageCount] = useMemo(() => {
+		const snapshotPageOptions: PageNumberOption[] = []
+		let pageCount = 0
+		for (const [pageNumber, pageInfo] of Object.entries(snapshot.pages ?? {})) {
+			const pageNumberInt = parseInt(pageNumber)
+			pageCount = Math.max(pageCount, pageNumberInt)
+
+			snapshotPageOptions.push({
+				value: pageNumberInt,
+				label: pageInfo.name ? `${pageNumberInt} (${pageInfo.name})` : `${pageNumberInt}`,
+			})
+		}
+
+		return [snapshotPageOptions, pageCount]
+	}, [snapshot.pages])
+
+	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
 	const {
 		pageNumber: importPageNumber,
 		setPageNumber: setImportPageNumber,
 		changePage: changeImportPage,
-	} = usePagePicker(pages, 1)
+	} = usePagePicker(pageCount, 1)
 
 	const setConnectionRemap2 = useCallback(
 		(fromId: string, toId: string) => {
@@ -86,15 +102,16 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 				<MyErrorBoundary>
 					<>
 						<CCol sm={12}>
-							<ButtonGridHeader
+							<PageNumberPicker
 								pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 								changePage={isSinglePage ? undefined : changeImportPage}
 								setPage={isSinglePage ? undefined : setImportPageNumber}
+								pageOptions={snapshotPageOptions}
 							>
 								<CButton color="light" className="btn-right" title="Home Position" onClick={resetSourcePosition}>
 									<FontAwesomeIcon icon={faHome} />
 								</CButton>
-							</ButtonGridHeader>
+							</PageNumberPicker>
 						</CCol>
 						<div className="buttongrid" ref={hasBeenRenderedRef}>
 							{hasBeenRendered && sourceGridSize && (

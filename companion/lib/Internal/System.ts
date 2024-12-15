@@ -22,12 +22,17 @@ import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	ActionForVisitor,
+	FeedbackForVisitor,
+	InternalActionDefinition,
+	InternalModuleFragment,
+	InternalVisitor,
+} from './Types.js'
 import type { Registry } from '../Registry.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 
 async function getHostnameVariables() {
 	const values: CompanionVariableValues = {}
@@ -237,7 +242,7 @@ export class InternalSystem implements InternalModuleFragment {
 		return actions
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
+	async executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> {
 		if (action.action === 'exec') {
 			if (action.options.path) {
 				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.path, extras).text
@@ -276,7 +281,7 @@ export class InternalSystem implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
 }

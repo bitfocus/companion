@@ -26,6 +26,11 @@ jobs:
 
           yarn build:ts
 
+      - name: Check types (shared-lib)
+        run: |
+          cd shared-lib
+          yarn check-types
+
       - name: Check types (server)
         run: |
           cd companion
@@ -37,7 +42,7 @@ jobs:
           yarn check-types
 
   linux-x64:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: check-types
     timeout-minutes: 20
 
@@ -91,6 +96,12 @@ jobs:
           echo "targetname=companion-linux-x64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.filenames.outputs.targetname }}
+          path: ${{ steps.filenames.outputs.sourcename }}
+          retention-days: 1
       - name: Upload build
         id: upload
         uses: bitfocus/actions/upload-and-notify@main
@@ -111,7 +122,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   linux-arm64:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: check-types
     timeout-minutes: 20
 
@@ -162,6 +173,12 @@ jobs:
           echo "targetname=companion-linux-arm64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.filenames.outputs.targetname }}
+          path: ${{ steps.filenames.outputs.sourcename }}
+          retention-days: 1
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
         with:
@@ -181,7 +198,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-x64:
-    runs-on: macos-13
+    runs-on: macos-latest
     needs: check-types
     timeout-minutes: 60
 
@@ -215,9 +232,9 @@ jobs:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
-          APPLEID: ${{ secrets.APPLEID }}
-          APPLETEAMID: ${{ secrets.APPLETEAMID }}
-          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          APPLE_ID: ${{ secrets.APPLEID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLETEAMID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           USE_HARD_LINKS: false
 
@@ -231,6 +248,12 @@ jobs:
           echo "targetname=companion-mac-x64-${VERSION}.dmg" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.filenames.outputs.targetname }}
+          path: ${{ steps.filenames.outputs.sourcename }}
+          retention-days: 1
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
         with:
@@ -250,7 +273,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-arm64:
-    runs-on: macos-13
+    runs-on: macos-latest
     needs: check-types
     timeout-minutes: 60
 
@@ -287,9 +310,9 @@ jobs:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
-          APPLEID: ${{ secrets.APPLEID }}
-          APPLETEAMID: ${{ secrets.APPLETEAMID }}
-          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          APPLE_ID: ${{ secrets.APPLEID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLETEAMID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           USE_HARD_LINKS: false
           SKIP_LAUNCH_CHECK: true
@@ -304,6 +327,12 @@ jobs:
           echo "targetname=companion-mac-arm64-${VERSION}.dmg" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.filenames.outputs.targetname }}
+          path: ${{ steps.filenames.outputs.sourcename }}
+          retention-days: 1
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
         with:
@@ -356,8 +385,9 @@ jobs:
           yarn zx tools/build/complete.mjs win32-x64
         env:
           CI: 1
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # HACK: temporarily disable signing
+          # CSC_LINK: ${{ secrets.CSC_LINK }}
+          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
       - name: Determine files to upload
@@ -370,6 +400,12 @@ jobs:
           echo "targetname=companion-win64-${VERSION}.exe" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.filenames.outputs.targetname }}
+          path: ${{ steps.filenames.outputs.sourcename }}
+          retention-days: 1
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
         with:

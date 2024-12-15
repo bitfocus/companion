@@ -19,15 +19,21 @@ import { combineRgb, CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
-import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	ActionForVisitor,
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalModuleFragment,
+	InternalVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+} from './Types.js'
 import type { InternalController } from './Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
@@ -657,7 +663,7 @@ export class InternalSurface implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// actions page_variable handled by generic options visitor
 		// actions controller_variable handled by generic options visitor
 	}

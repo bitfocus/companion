@@ -12,23 +12,22 @@
 	},
 	"dependencies": {
 		"@companion-app/shared": "*",
-		"@sentry/electron": "^5.7.0",
+		"@sentry/electron": "^5.8.0",
 		"chokidar": "^3.6.0",
 		"debounce-fn": "^6.0.0",
 		"electron-store": "^10.0.0",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.2.0",
-		"nanoid": "^5.0.8",
+		"nanoid": "^5.0.9",
 		"plist": "^3.1.0",
 		"semver": "^7.6.3",
 		"strip-ansi": "^7.1.0",
-		"systeminformation": "^5.23.5"
+		"systeminformation": "^5.23.13"
 	},
 	"devDependencies": {
-		"@electron/notarize": "^2.5.0",
 		"@types/plist": "^3.0.5",
-		"electron": "33.0.2",
-		"electron-builder": "24.13.3",
+		"electron": "33.3.0",
+		"electron-builder": "26.0.0-alpha.7",
 		"electron-reloader": "^1.2.3"
 	},
 	"build": {
@@ -53,7 +52,6 @@
 			"entitlementsInherit": "entitlements.mac.plist"
 		},
 		"afterPack": "fix-bundled-modules.cjs",
-		"afterSign": "notarize.cjs",
 		"win": {
 			"target": "nsis"
 		},
@@ -91,7 +89,11 @@
 		"extraResources": [
 			{
 				"from": "../dist",
-				"to": "."
+				"to": ".",
+				"filter": [
+					"**/*",
+					"!.yarn"
+				]
 			}
 		]
 	}

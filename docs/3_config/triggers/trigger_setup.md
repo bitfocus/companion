@@ -8,7 +8,8 @@ To begin with you should give it a name, and fill in the other fields.
 Triggers have 3 sections to configure
 
 - **Events**
-  This defines when the trigger to be executed.  
+  This defines when the trigger will be executed.  
+  The trigger will be executed when any of these events occur.  
   Common events are **Time interval** and **On variable change**
 
   ![Events](images/events.png?raw=true 'Events')

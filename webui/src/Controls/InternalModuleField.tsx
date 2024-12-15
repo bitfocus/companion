@@ -256,7 +256,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
 
 	const choices = useComputed(() => {
-		const choices = []
+		const choices: DropdownChoice[] = []
 
 		if (includeNone) {
 			choices.push({
@@ -265,7 +265,11 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			})
 		}
 
-		for (const [id] of customVariables.customVariables) {
+		const customVariablesSorted = Array.from(customVariables.customVariables.entries()).sort(
+			(a, b) => a[1].sortOrder - b[1].sortOrder
+		)
+
+		for (const [id] of customVariablesSorted) {
 			choices.push({
 				id,
 				label: id,

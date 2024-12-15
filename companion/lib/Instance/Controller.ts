@@ -30,7 +30,7 @@ import type {
 	ConnectionConfig,
 } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleManifest } from '@companion-module/base'
-import type { ExportInstanceFullv4, ExportInstanceMinimalv4 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { EventEmitter } from 'events'
@@ -423,7 +423,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		instanceId: string,
 		minimal = false,
 		clone = true
-	): ExportInstanceFullv4 | ExportInstanceMinimalv4 | undefined {
+	): ExportInstanceFullv6 | ExportInstanceMinimalv6 | undefined {
 		const rawObj = this.#configStore.getConfigForId(instanceId)
 		if (!rawObj) return undefined
 
@@ -586,7 +586,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const result = this.#configStore.getPartialClientJson()
 
 		for (const [id, config] of Object.entries(result)) {
-			const instance = this.moduleHost.getChild(id)
+			const instance = this.moduleHost.getChild(id, true)
 			if (instance) {
 				config.hasRecordActionsHandler = instance.hasRecordActionsHandler
 			}

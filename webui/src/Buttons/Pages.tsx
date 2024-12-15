@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faTrash, faPencil, faSort, faShareFromSquare } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faTrash, faSort, faShareFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { AddPagesModal, AddPagesModalRef } from './PagesAddModal.js'
@@ -10,6 +10,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { useDrag, useDrop } from 'react-dnd'
+import { TextInputField } from '../Components/TextInputField.js'
 
 interface PagesListProps {
 	setPageNumber: (page: number) => void
@@ -80,7 +81,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 				<CCol xs={12}>
 					<GenericConfirmModal ref={deleteRef} />
 					<AddPagesModal ref={addRef} />
-					<EditPagePropertiesModal ref={editRef} />
+					<EditPagePropertiesModal ref={editRef} includeName={false} />
 
 					<table className="table table-responsive-sm pages-list-table">
 						<thead>
@@ -154,16 +155,26 @@ const PageListRow = observer(function PageListRow({
 	info,
 	pageCount,
 	goToPage,
-	configurePage,
+	// configurePage,
 	doInsertPage,
 	doDeletePage,
 }: PageListRowProps) {
 	const { socket } = useContext(RootAppStoreContext)
 
+	const changeName = useCallback(
+		(newName: string) => {
+			socketEmitPromise(socket, 'pages:set-name', [pageNumber, newName ?? '']).catch((e) => {
+				console.error('Failed to set name', e)
+			})
+		},
+		[socket, pageNumber]
+	)
+
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<PageListDragItem>({
 		accept: PAGE_LIST_DRAG_ID,
-		hover(item, _monitor) {
+		drop(item, _monitor) {
+			// We do this one on drop, as it is costly to move the page around
 			if (!ref.current) {
 				return
 			}
@@ -207,13 +218,16 @@ const PageListRow = observer(function PageListRow({
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td style={{ width: 80, textAlign: 'center', fontWeight: 'bold' }}>{pageNumber}</td>
-			<td>{info.name ?? ''}</td>
+			<td>
+				<TextInputField value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
+			</td>
 			<td style={{ width: 100, textAlign: 'right' }}>
 				<CButtonGroup>
 					<CButton color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
 						<FontAwesomeIcon icon={faShareFromSquare} />
 					</CButton>
-					<CButton
+					{/* <CButton
+						TODO: for future use, once the modal has more properties
 						color="info"
 						size="sm"
 						onClick={configurePage}
@@ -222,7 +236,7 @@ const PageListRow = observer(function PageListRow({
 						data-page-info={JSON.stringify(info)}
 					>
 						<FontAwesomeIcon icon={faPencil} />
-					</CButton>
+					</CButton> */}
 					<CButton color="warning" size="sm" onClick={doInsertPage} title="Insert page above" data-page={pageNumber}>
 						<FontAwesomeIcon icon={faPlus} />
 					</CButton>

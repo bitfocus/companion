@@ -10,3 +10,8 @@ export function pad(str0: string | number, ch: string, len: number): string {
 
 	return str
 }
+
+/** Type assert that a value is never */
+export function assertNever(_val: never): void {
+	// Nothing to do
+}

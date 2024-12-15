@@ -7,10 +7,6 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useComputed } from '../util.js'
 
-interface SelectOption {
-	value: number
-	label: string
-}
 interface ButtonGridHeaderProps {
 	pageNumber: number
 	changePage?: (delta: number) => void
@@ -27,8 +23,48 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 }: React.PropsWithChildren<ButtonGridHeaderProps>) {
 	const { pages: pagesStore } = useContext(RootAppStoreContext)
 
+	const pageOptions = useComputed(() => {
+		const pageOptions: PageNumberOption[] = pagesStore.data.map((value, index) => ({
+			value: index + 1,
+			label: value.name ? `${index + 1} (${value.name})` : `${index + 1}`,
+		}))
+
+		if (newPageAtEnd) {
+			pageOptions.push({
+				value: -1,
+				label: `Insert new page`,
+			})
+		}
+		return pageOptions
+	}, [pagesStore, newPageAtEnd])
+
+	return (
+		<PageNumberPicker pageNumber={pageNumber} changePage={changePage} setPage={setPage} pageOptions={pageOptions}>
+			{children}
+		</PageNumberPicker>
+	)
+})
+
+export interface PageNumberOption {
+	value: number
+	label: string
+}
+interface PageNumberPickerProps {
+	pageNumber: number
+	changePage?: (delta: number) => void
+	setPage?: (page: number) => void
+	pageOptions: PageNumberOption[]
+}
+
+export const PageNumberPicker = observer(function ButtonGridHeader({
+	pageNumber,
+	changePage,
+	setPage,
+	pageOptions,
+	children,
+}: React.PropsWithChildren<PageNumberPickerProps>) {
 	const inputChange = useCallback(
-		(val: SelectOption | null) => {
+		(val: PageNumberOption | null) => {
 			const val2 = val?.value
 			if (val2 !== undefined && setPage && !isNaN(val2)) {
 				setPage(val2)
@@ -44,22 +80,7 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 		changePage?.(-1)
 	}, [changePage])
 
-	const pageOptions = useComputed(() => {
-		const pageOptions: SelectOption[] = pagesStore.data.map((value, index) => ({
-			value: index + 1,
-			label: `${index + 1} (${value.name})`,
-		}))
-
-		if (newPageAtEnd) {
-			pageOptions.push({
-				value: -1,
-				label: `Insert new page`,
-			})
-		}
-		return pageOptions
-	}, [pagesStore, newPageAtEnd])
-
-	const currentValue: SelectOption | undefined = useMemo(() => {
+	const currentValue: PageNumberOption | undefined = useMemo(() => {
 		return (
 			pageOptions.find((o) => o.value == pageNumber) ?? {
 				value: pageNumber,
@@ -74,7 +95,7 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 				<CButton color="dark" hidden={!changePage} onClick={prevPage}>
 					<FontAwesomeIcon icon={faChevronLeft} />
 				</CButton>
-				<Select<SelectOption>
+				<Select<PageNumberOption>
 					className="button-page-input"
 					isDisabled={!setPage}
 					placeholder={pageNumber}
