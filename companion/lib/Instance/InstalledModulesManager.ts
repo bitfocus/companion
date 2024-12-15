@@ -15,6 +15,7 @@ import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/M
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import crypto from 'node:crypto'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -332,6 +333,11 @@ export class InstanceInstalledModulesManager {
 			return `Module ${moduleId} v${moduleVersion} has no download URL`
 		}
 
+		if (!versionInfo.tarSha) {
+			this.#logger.error(`Module ${moduleId} v${moduleVersion} has no download checksum`)
+			return `Module ${moduleId} v${moduleVersion} has no download checksum`
+		}
+
 		const timeBeforeDownload = Date.now()
 
 		const abortControl = new AbortController()
@@ -363,7 +369,15 @@ export class InstanceInstalledModulesManager {
 			`Downloaded ${moduleId} v${moduleVersion} in ${Date.now() - timeBeforeDownload}ms (${bytesReceived} bytes)`
 		)
 
-		const decompressedData = await gunzipP(Buffer.concat(chunks))
+		const fullTarBuffer = Buffer.concat(chunks)
+
+		const bufferChecksum = crypto.createHash('sha256').update(fullTarBuffer).digest('hex')
+		if (bufferChecksum !== versionInfo.tarSha) {
+			this.#logger.error(`Downlod did not match checksum`)
+			return 'Download did not match checksum'
+		}
+
+		const decompressedData = await gunzipP(fullTarBuffer)
 		if (!decompressedData) {
 			this.#logger.error(`Failed to decompress module data`)
 			return 'Failed to decompress data'

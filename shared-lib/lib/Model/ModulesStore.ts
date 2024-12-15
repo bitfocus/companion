@@ -46,6 +46,7 @@ export interface ModuleStoreModuleInfoVersion {
 	releasedAt: number // unix timestamp
 
 	tarUrl: string | null
+	tarSha: string | null
 	deprecationReason: string | null
 
 	apiVersion: string
