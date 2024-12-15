@@ -82,5 +82,5 @@ export type InternalActionDefinition = SetOptional<
 
 export type InternalFeedbackDefinition = SetOptional<
 	FeedbackDefinition,
-	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildFeedbacks'
+	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildFeedbacks' | 'supportsAdvancedChildFeedbacks'
 >
