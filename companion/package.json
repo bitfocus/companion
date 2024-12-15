@@ -56,7 +56,7 @@
 		"@julusian/segfault-raub": "^2.3.1",
 		"@loupedeck/node": "^1.2.0",
 		"@napi-rs/canvas": "^0.1.65",
-		"@sentry/node": "^8.42.0",
+		"@sentry/node": "^8.45.0",
 		"archiver": "^7.0.1",
 		"better-sqlite3": "^11.7.0",
 		"bufferutil": "^4.0.8",
@@ -89,8 +89,8 @@
 		"socket.io": "^4.8.1",
 		"socketcluster-client": "^19.2.3",
 		"supports-color": "^9.4.0",
-		"systeminformation": "^5.23.6",
-		"type-fest": "^4.30.0",
+		"systeminformation": "^5.23.13",
+		"type-fest": "^4.30.1",
 		"usb": "2.14.0",
 		"uuid": "^11.0.3",
 		"vec-footpedal": "^2.0.1",
@@ -98,7 +98,7 @@
 		"winston": "^3.17.0",
 		"workerpool": "^9.2.0",
 		"ws": "^8.18.0",
-		"xkeys": "^3.1.2",
+		"xkeys": "^3.3.0",
 		"yaml": "^2.6.1"
 	},
 	"collective": {
