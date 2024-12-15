@@ -146,17 +146,16 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 
 	executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean {
 		if (action.action === 'wait') {
-			return Promise.resolve().then(async () => {
-				if (extras.abortDelayed.aborted) return true
+			if (extras.abortDelayed.aborted) return true
 
-				const delay = Number(action.options.time)
-				if (!isNaN(delay) && delay > 0) {
-					// Perform the wait
-					await new Promise((resolve) => setTimeout(resolve, delay))
-				}
-
+			const delay = Number(action.options.time)
+			if (!isNaN(delay) && delay > 0) {
+				// Perform the wait
+				return new Promise((resolve) => setTimeout(resolve, delay)).then(() => true)
+			} else {
+				// No wait, return immediately
 				return true
-			})
+			}
 		} else if (action.action === 'action_group') {
 			if (extras.abortDelayed.aborted) return true
 
