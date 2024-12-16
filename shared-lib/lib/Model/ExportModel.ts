@@ -1,5 +1,5 @@
 import type { UserConfigGridSize } from './UserConfigModel.js'
-import type { ConnectionConfig } from './Connections.js'
+import type { ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
 import type { CustomVariablesModel } from './CustomVariableModel.js'
 
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
@@ -49,6 +49,8 @@ export type ExportInstanceFullv6 = {
 	config: unknown
 	isFirstInit: boolean
 	lastUpgradeIndex: number
+	moduleVersionId?: string // Added in v3.5
+	updatePolicy?: ConnectionUpdatePolicy // Added in v3.5
 	instance_type: string
 	enabled: boolean
 	sortOrder?: number
@@ -58,5 +60,7 @@ export type ExportInstanceMinimalv6 = {
 	label: string
 	instance_type: string
 	lastUpgradeIndex: number
+	moduleVersionId?: string // Added in v3.5
+	updatePolicy?: ConnectionUpdatePolicy // Added in v3.5
 	sortOrder?: number
 }

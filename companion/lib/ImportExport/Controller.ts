@@ -634,6 +634,7 @@ export class ImportExportController {
 
 				clientObject.instances[instanceId] = {
 					instance_type: this.#instancesController.modules.verifyInstanceTypeIsCurrent(instance.instance_type),
+					moduleVersionId: instance.moduleVersionId ?? null,
 					label: instance.label,
 					sortOrder: instance.sortOrder,
 				}
@@ -992,6 +993,8 @@ export class ImportExportController {
 					const [newId, newConfig] = this.#instancesController.addInstanceWithLabel(
 						{ type: instance_type },
 						obj.label,
+						obj.moduleVersionId ?? null,
+						obj.updatePolicy,
 						true
 					)
 					if (newId && newConfig) {

@@ -9,9 +9,10 @@ import os from 'os'
 import { getNodeJsPath } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { InstanceModules, ModuleInfo } from './Modules.js'
+import type { InstanceModules } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import type { ModuleVersionInfo } from './Types.js'
 
 /**
  * A backoff sleep strategy
@@ -95,7 +96,7 @@ export class ModuleHost {
 			if (!child.crashed) {
 				child.crashed = setTimeout(() => {
 					const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
-					const moduleInfo = config && this.#modules.getModuleManifest(config.instance_type)
+					const moduleInfo = config && this.#modules.getModuleManifest(config.instance_type, config.moduleVersionId)
 
 					// Restart after a short sleep
 					this.queueRestartConnection(child.connectionId, config, moduleInfo)
@@ -324,7 +325,7 @@ export class ModuleHost {
 	async queueRestartConnection(
 		connectionId: string,
 		config: ConnectionConfig | undefined,
-		moduleInfo: ModuleInfo | undefined
+		moduleInfo: ModuleVersionInfo | undefined
 	): Promise<void> {
 		if (!config || !moduleInfo) return
 
@@ -464,7 +465,7 @@ export class ModuleHost {
 							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')
 						})
 						monitor.on('stdout', (data) => {
-							if (!moduleInfo.isPackaged) {
+							if (moduleInfo.versionId === 'dev') {
 								// Only show stdout for modules which are being developed
 								child.logger.verbose(`stdout: ${data.toString()}`)
 							}

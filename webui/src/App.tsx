@@ -23,6 +23,7 @@ import {
 	faFileImport,
 	faDollarSign,
 	faTh,
+	faPuzzlePiece,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
@@ -46,6 +47,7 @@ import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionVariables } from './Variables/index.js'
+import { MODULES_PAGE_PREFIX, ModulesPage } from './Modules/index.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -470,13 +472,18 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/settings" as={NavLink}>
-						<FontAwesomeIcon icon={faCog} /> Settings
+					<CNavLink to="/import-export" as={NavLink}>
+						<FontAwesomeIcon icon={faFileImport} /> Import / Export
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/import-export" as={NavLink}>
-						<FontAwesomeIcon icon={faFileImport} /> Import / Export
+					<CNavLink to={MODULES_PAGE_PREFIX} as={NavLink}>
+						<FontAwesomeIcon icon={faPuzzlePiece} /> Modules
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/settings" as={NavLink}>
+						<FontAwesomeIcon icon={faCog} /> Settings
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
@@ -518,14 +525,19 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 						<ConnectionVariables />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/settings')}>
-					<MyErrorBoundary>
-						<UserConfig />
-					</MyErrorBoundary>
-				</CTabPane>
 				<CTabPane className={getClassForPane('/import-export')}>
 					<MyErrorBoundary>
 						<ImportExport />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane(MODULES_PAGE_PREFIX)}>
+					<MyErrorBoundary>
+						<ModulesPage />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/settings')}>
+					<MyErrorBoundary>
+						<UserConfig />
 					</MyErrorBoundary>
 				</CTabPane>
 				{getClassForPane('/log') !== '' && (
