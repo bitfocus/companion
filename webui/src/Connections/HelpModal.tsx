@@ -6,6 +6,7 @@ import { baseUrl } from 'marked-base-url'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { CModalExt } from '../Components/CModalExt.js'
+import semver from 'semver'
 
 interface HelpModalProps {
 	// Nothing
@@ -35,7 +36,13 @@ export const HelpModal = observer(
 		useImperativeHandle(
 			ref,
 			() => ({
-				showFromUrl(moduleId, versionDisplayName, url) {
+				showFromUrl(moduleId, versionId, url) {
+					let versionDisplayName = versionId
+					if (versionId) {
+						const parsed = semver.parse(versionId)
+						if (parsed) versionDisplayName = `v${parsed.toString()}`
+					}
+
 					fetch(url)
 						.then(async (response) => {
 							const text = await response.text()

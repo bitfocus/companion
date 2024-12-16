@@ -135,7 +135,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 }: ModuleVersionRowProps) {
 	const { helpViewer } = useContext(RootAppStoreContext)
 
-	const versionDisplayName = installedInfo?.displayName ?? `v${storeInfo?.id}`
+	const versionDisplayName = installedInfo?.versionId ?? storeInfo?.id ?? ''
 	const helpPath = installedInfo?.helpPath ?? storeInfo?.helpUrl
 
 	const doShowHelp = useCallback(() => {

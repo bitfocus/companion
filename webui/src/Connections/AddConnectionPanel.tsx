@@ -5,7 +5,6 @@ import { faExclamationTriangle, faExternalLink, faPlug, faQuestionCircle } from 
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '../Components/SearchBox.js'
-import { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { AddConnectionModal, AddConnectionModalRef } from './AddConnectionModal.js'
 import { RefreshModulesList } from '../Modules/RefreshModulesList.js'
 import { LastUpdatedTimestamp } from '../Modules/LastUpdatedTimestamp.js'
@@ -163,13 +162,16 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 	const { helpViewer } = useContext(RootAppStoreContext)
 
 	const addConnectionClick = useCallback(() => addConnection(moduleInfo), [addConnection, moduleInfo])
-	const showVersion: ClientModuleVersionInfo | undefined =
+	const showVersion =
 		moduleInfo.installedInfo?.stableVersion ??
 		moduleInfo.installedInfo?.betaVersion ??
-		moduleInfo.installedInfo?.installedVersions?.[0]
+		moduleInfo.installedInfo?.installedVersions?.[0] ??
+		(moduleInfo.storeInfo ? { helpPath: moduleInfo.storeInfo.helpUrl, versionId: '' } : undefined)
 
 	const showHelpClick = useCallback(
-		() => showVersion && helpViewer.current?.showFromUrl(moduleInfo.id, showVersion.displayName, showVersion.helpPath),
+		() =>
+			showVersion?.helpPath &&
+			helpViewer.current?.showFromUrl(moduleInfo.id, showVersion.versionId, showVersion.helpPath),
 		[helpViewer, moduleInfo.id, showVersion]
 	)
 

@@ -282,7 +282,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const doShowHelp = useCallback(
 		() =>
 			moduleVersion?.helpPath &&
-			helpViewer.current?.showFromUrl(connection.instance_type, moduleVersion.displayName, moduleVersion.helpPath),
+			helpViewer.current?.showFromUrl(connection.instance_type, moduleVersion.versionId, moduleVersion.helpPath),
 		[helpViewer, connection.instance_type, moduleVersion]
 	)
 

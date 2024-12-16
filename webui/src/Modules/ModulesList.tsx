@@ -210,9 +210,10 @@ const ModulesListRow = observer(function ModulesListRow({
 	const { helpViewer } = useContext(RootAppStoreContext)
 
 	const doShowHelp = useCallback(() => {
-		const latestVersion = moduleInfo.installedInfo?.stableVersion ?? moduleInfo.installedInfo?.betaVersion
-		if (!latestVersion) return
-		helpViewer.current?.showFromUrl(id, latestVersion.displayName, latestVersion.helpPath)
+		if (!moduleInfo.helpUrl) return
+		const latestVersionName =
+			moduleInfo.installedInfo?.stableVersion?.versionId ?? moduleInfo.installedInfo?.betaVersion?.versionId ?? ''
+		helpViewer.current?.showFromUrl(id, latestVersionName, moduleInfo.helpUrl)
 	}, [helpViewer, id, moduleInfo])
 
 	const doEdit = () => {

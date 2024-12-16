@@ -235,7 +235,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const doShowHelp = useCallback(
 		() =>
 			moduleVersion?.helpPath &&
-			helpViewer.current?.showFromUrl(connectionInfo.instance_type, moduleVersion.displayName, moduleVersion.helpPath),
+			helpViewer.current?.showFromUrl(connectionInfo.instance_type, moduleVersion.versionId, moduleVersion.helpPath),
 		[helpViewer, connectionInfo.instance_type, moduleVersion]
 	)
 
