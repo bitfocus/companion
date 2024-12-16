@@ -109,7 +109,10 @@ export interface components {
 			storeUrl: string
 			/** @description Url to the module source code */
 			githubUrl?: string
-			latestHelpUrl: string
+			/** @description Url to the module help markdown. This may reference other assets in the same folder */
+			latestHelpUrl?: string
+			/** @description Old module ids that this module replaces */
+			legacyIds?: string[]
 			/** @description Reason for deprecation (if deprecated) */
 			deprecationReason?: string
 		}
@@ -128,7 +131,8 @@ export interface components {
 			apiVersion: string
 			/** @description Reason for deprecation (if deprecated) */
 			deprecationReason?: string
-			helpUrl: string
+			/** @description Url to the module help markdown. This may reference other assets in the same folder */
+			helpUrl?: string
 		}
 	}
 	responses: never

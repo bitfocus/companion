@@ -53,7 +53,7 @@ export function useAllConnectionProducts(modules: ModuleInfoStore): FuzzyProduct
 						shortname: moduleInfo.shortname,
 
 						bugUrl: moduleInfo.githubUrl ?? undefined,
-						helpUrl: moduleInfo.helpUrl,
+						helpUrl: moduleInfo.helpUrl ?? undefined,
 					}
 				}
 			}

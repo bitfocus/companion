@@ -13,7 +13,11 @@ import createClient from 'openapi-fetch'
 import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import { Complete } from '@companion-module/base/dist/util.js'
 
-const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({ baseUrl: 'https://developer.bitfocus.io/api' })
+const baseUrl = process.env.STAGING_MODULE_API
+	? 'https://developer-staging.bitfocus.io/api'
+	: 'https://developer.bitfocus.io/api'
+
+const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({ baseUrl })
 
 const ModuleStoreListRoom = 'module-store:list'
 const ModuleStoreInfoRoom = (moduleId: string) => `module-store:info:${moduleId}`
@@ -194,8 +198,9 @@ export class ModuleStoreService {
 
 								storeUrl: data.storeUrl,
 								githubUrl: data.githubUrl ?? null,
-								helpUrl: data.latestHelpUrl,
+								helpUrl: data.latestHelpUrl ?? null,
 
+								legacyIds: data.legacyIds ?? [],
 								deprecationReason: data.deprecationReason ?? null,
 							} satisfies Complete<ModuleStoreListCacheEntry>, // Match what the on disk scanner generates
 						])
@@ -270,7 +275,7 @@ export class ModuleStoreService {
 
 							apiVersion: data.apiVersion,
 
-							helpUrl: data.helpUrl,
+							helpUrl: data.helpUrl ?? null,
 						}) satisfies Complete<ModuleStoreModuleInfoVersion>
 				),
 			}

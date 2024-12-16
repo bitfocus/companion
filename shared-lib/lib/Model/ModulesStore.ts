@@ -16,10 +16,10 @@ export interface ModuleStoreListCacheEntry {
 
 	storeUrl: string
 	githubUrl: string | null
+	helpUrl: string | null
 
+	legacyIds: string[]
 	deprecationReason: string | null
-
-	helpUrl: string
 
 	// description: string | null
 
@@ -50,5 +50,5 @@ export interface ModuleStoreModuleInfoVersion {
 
 	apiVersion: string
 
-	helpUrl: string
+	helpUrl: string | null
 }
