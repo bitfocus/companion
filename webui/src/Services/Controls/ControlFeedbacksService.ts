@@ -43,17 +43,20 @@ export function useControlFeedbacksEditorService(
 		() => ({
 			addFeedback: (feedbackType: string, parentId: string | null) => {
 				const [connectionId, feedbackId] = feedbackType.split(':', 2)
-				socketEmitPromise(socket, 'controls:feedback:add', [controlId, parentId, connectionId, feedbackId]).catch(
-					(e) => {
-						console.error('Failed to add control feedback', e)
-					}
-				)
+				socketEmitPromise(socket, 'controls:feedback:add', [
+					controlId,
+					parentId ? { parentFeedbackId: parentId, childGroup: 'children' } : null,
+					connectionId,
+					feedbackId,
+				]).catch((e) => {
+					console.error('Failed to add control feedback', e)
+				})
 			},
 			moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => {
 				socketEmitPromise(socket, 'controls:feedback:move', [
 					controlId,
 					dragFeedbackId,
-					hoverParentId,
+					hoverParentId ? { parentFeedbackId: hoverParentId, childGroup: 'children' } : null,
 					hoverIndex,
 				]).catch((e) => {
 					console.error(`Move failed: ${e}`)

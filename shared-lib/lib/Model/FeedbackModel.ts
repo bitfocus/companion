@@ -12,4 +12,12 @@ export interface FeedbackInstance {
 	style?: Partial<ButtonStyleProperties>
 
 	children?: FeedbackInstance[]
+	advancedChildren?: FeedbackInstance[]
+}
+
+export type FeedbackChildGroup = 'children' | 'advancedChildren'
+
+export interface FeedbackOwner {
+	parentFeedbackId: string
+	childGroup: FeedbackChildGroup
 }

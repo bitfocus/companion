@@ -6,11 +6,12 @@ import { visitFeedbackInstance } from '../../Resources/Visitors/FeedbackInstance
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { FeedbackChildGroup, FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 export class FragmentFeedbackInstance {
 	/**
@@ -29,7 +30,7 @@ export class FragmentFeedbackInstance {
 
 	readonly #data: Omit<FeedbackInstance, 'children'>
 
-	#children: FragmentFeedbackList
+	#children = new Map<FeedbackChildGroup, FragmentFeedbackList>()
 
 	/**
 	 * Value of the feedback when it was last executed
@@ -96,17 +97,64 @@ export class FragmentFeedbackInstance {
 			this.#data.id = nanoid()
 		}
 
-		this.#children = new FragmentFeedbackList(
+		try {
+			const childGroup = this.#getOrCreateFeedbackGroup('children')
+			if (data.instance_id === 'internal' && data.children) {
+				childGroup.loadStorage(data.children, true, isCloned)
+			}
+		} catch (e: any) {
+			this.#logger.error(`Error loading child feedback group: ${e.message}`)
+		}
+
+		try {
+			const childGroup = this.#getOrCreateFeedbackGroup('advancedChildren')
+			if (data.instance_id === 'internal' && data.advancedChildren) {
+				childGroup.loadStorage(data.advancedChildren, true, isCloned)
+			}
+		} catch (e: any) {
+			this.#logger.error(`Error loading advancedChildren feedback group: ${e.message}`)
+		}
+	}
+
+	#getOrCreateFeedbackGroup(groupId: FeedbackChildGroup): FragmentFeedbackList {
+		const existing = this.#children.get(groupId)
+		if (existing) return existing
+
+		// Check what names are allowed
+		const definition = this.connectionId === 'internal' && this.getDefinition()
+		if (!definition) throw new Error('Feedback cannot accept children.')
+
+		let childType: 'boolean' | 'advanced'
+
+		switch (groupId) {
+			case 'children':
+				childType = 'boolean'
+				if (!definition.supportsChildFeedbacks) {
+					throw new Error('Feedback cannot accept children in this group.')
+				}
+				break
+			case 'advancedChildren':
+				childType = 'advanced'
+				if (!definition.supportsAdvancedChildFeedbacks) {
+					throw new Error("Feedback cannot accept 'advanced' children in this group.")
+				}
+				break
+			default:
+				assertNever(groupId)
+				throw new Error(`Feedback cannot accept children of type "${groupId}".`)
+		}
+
+		const childGroup = new FragmentFeedbackList(
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#moduleHost,
 			this.#controlId,
-			this.id,
-			true
+			{ parentFeedbackId: this.id, childGroup: groupId },
+			childType
 		)
-		if (data.instance_id === 'internal' && data.children) {
-			this.#children.loadStorage(data.children, true, isCloned)
-		}
+		this.#children.set(groupId, childGroup)
+
+		return childGroup
 	}
 
 	/**
@@ -115,7 +163,9 @@ export class FragmentFeedbackInstance {
 	asFeedbackInstance(): FeedbackInstance {
 		return {
 			...this.#data,
-			children: this.connectionId === 'internal' ? this.#children.asFeedbackInstances() : undefined,
+			children: this.connectionId === 'internal' ? this.#children.get('children')?.asFeedbackInstances() : undefined,
+			advancedChildren:
+				this.connectionId === 'internal' ? this.#children.get('advancedChildren')?.asFeedbackInstances() : undefined,
 		}
 	}
 
@@ -138,7 +188,7 @@ export class FragmentFeedbackInstance {
 		// Special case to handle the internal 'logic' operators, which need to be executed live
 		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
-			const childValues = this.#children.getChildBooleanValues()
+			const childValues = this.#children.get('children')?.getChildBooleanValues() ?? []
 
 			return this.#internalModule.executeLogicFeedback(this.asFeedbackInstance(), childValues)
 		}
@@ -168,7 +218,9 @@ export class FragmentFeedbackInstance {
 		// Remove from cached feedback values
 		this.#cachedValue = undefined
 
-		this.#children.cleanup()
+		for (const childGroup of this.#children.values()) {
+			childGroup.cleanup()
+		}
 	}
 
 	/**
@@ -193,7 +245,9 @@ export class FragmentFeedbackInstance {
 		}
 
 		if (recursive) {
-			this.#children.subscribe(recursive, onlyConnectionId)
+			for (const childGroup of this.#children.values()) {
+				childGroup.subscribe(recursive, onlyConnectionId)
+			}
 		}
 	}
 
@@ -387,8 +441,10 @@ export class FragmentFeedbackInstance {
 			changed = true
 		}
 
-		if (this.#children.clearCachedValueForConnectionId(connectionId)) {
-			changed = true
+		for (const childGroup of this.#children.values()) {
+			if (childGroup.clearCachedValueForConnectionId(connectionId)) {
+				changed = true
+			}
 		}
 
 		return changed
@@ -398,7 +454,11 @@ export class FragmentFeedbackInstance {
 	 * Find a child feedback by id
 	 */
 	findChildById(id: string): FragmentFeedbackInstance | undefined {
-		return this.#children.findById(id)
+		for (const childGroup of this.#children.values()) {
+			const result = childGroup.findById(id)
+			if (result) return result
+		}
+		return undefined
 	}
 
 	/**
@@ -407,32 +467,44 @@ export class FragmentFeedbackInstance {
 	findParentAndIndex(
 		id: string
 	): { parent: FragmentFeedbackList; index: number; item: FragmentFeedbackInstance } | undefined {
-		return this.#children.findParentAndIndex(id)
+		for (const childGroup of this.#children.values()) {
+			const result = childGroup.findParentAndIndex(id)
+			if (result) return result
+		}
+		return undefined
 	}
 
 	/**
 	 * Add a child feedback to this feedback
 	 */
-	addChild(feedback: FeedbackInstance): FragmentFeedbackInstance {
+	addChild(groupId: FeedbackChildGroup, feedback: FeedbackInstance): FragmentFeedbackInstance {
 		if (this.connectionId !== 'internal') {
 			throw new Error('Only internal feedbacks can have children')
 		}
 
-		return this.#children.addFeedback(feedback)
+		const childGroup = this.#getOrCreateFeedbackGroup(groupId)
+		return childGroup.addFeedback(feedback)
 	}
 
 	/**
 	 * Remove a child feedback
 	 */
 	removeChild(id: string): boolean {
-		return this.#children.removeFeedback(id)
+		for (const childGroup of this.#children.values()) {
+			if (childGroup.removeFeedback(id)) return true
+		}
+		return false
 	}
 
 	/**
 	 * Duplicate a child feedback
 	 */
 	duplicateChild(id: string): FragmentFeedbackInstance | undefined {
-		return this.#children.duplicateFeedback(id)
+		for (const childGroup of this.#children.values()) {
+			const newFeedback = childGroup.duplicateFeedback(id)
+			if (newFeedback) return newFeedback
+		}
+		return undefined
 	}
 
 	// /**
@@ -454,29 +526,43 @@ export class FragmentFeedbackInstance {
 	 * Push a child feedback to the list
 	 * Note: this is used when moving a feedback from a different parent. Lifecycle is not managed
 	 */
-	pushChild(feedback: FragmentFeedbackInstance, index: number): void {
-		return this.#children.pushFeedback(feedback, index)
+	pushChild(feedback: FragmentFeedbackInstance, groupId: FeedbackChildGroup, index: number): void {
+		const childGroup = this.#getOrCreateFeedbackGroup(groupId)
+		return childGroup.pushFeedback(feedback, index)
 	}
 
 	/**
 	 * Check if this list can accept a specified child
 	 */
-	canAcceptChild(feedback: FragmentFeedbackInstance): boolean {
-		return this.#children.canAcceptFeedback(feedback)
+	canAcceptChild(groupId: FeedbackChildGroup, feedback: FragmentFeedbackInstance): boolean {
+		const childGroup = this.#getOrCreateFeedbackGroup(groupId)
+		return childGroup.canAcceptFeedback(feedback)
 	}
 
 	/**
 	 * Recursively get all the feedbacks
 	 */
 	getAllChildren(): FragmentFeedbackInstance[] {
-		return this.#children.getAllFeedbacks()
+		const feedbacks: FragmentFeedbackInstance[] = []
+
+		for (const childGroup of this.#children.values()) {
+			feedbacks.push(...childGroup.getAllFeedbacks())
+		}
+
+		return feedbacks
 	}
 
 	/**
 	 * Cleanup and forget any children belonging to the given connection
 	 */
 	forgetChildrenForConnection(connectionId: string): boolean {
-		return this.#children.forgetForConnection(connectionId)
+		let changed = false
+		for (const childGroup of this.#children.values()) {
+			if (childGroup.forgetForConnection(connectionId)) {
+				changed = true
+			}
+		}
+		return changed
 	}
 
 	/**
@@ -484,7 +570,13 @@ export class FragmentFeedbackInstance {
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
 	verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
-		return this.#children.verifyConnectionIds(knownConnectionIds)
+		let changed = false
+		for (const childGroup of this.#children.values()) {
+			if (childGroup.verifyConnectionIds(knownConnectionIds)) {
+				changed = true
+			}
+		}
+		return changed
 	}
 
 	/**
@@ -509,7 +601,9 @@ export class FragmentFeedbackInstance {
 			}
 		}
 
-		ps.push(...this.#children.postProcessImport())
+		for (const childGroup of this.#children.values()) {
+			ps.push(...childGroup.postProcessImport())
+		}
 
 		return ps
 	}

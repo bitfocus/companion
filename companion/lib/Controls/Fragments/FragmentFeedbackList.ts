@@ -3,7 +3,7 @@ import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 
 export class FragmentFeedbackList {
@@ -16,17 +16,17 @@ export class FragmentFeedbackList {
 	 */
 	readonly #controlId: string
 
-	readonly #id: string | null
+	readonly #ownerId: FeedbackOwner | null
 
 	/**
 	 * Whether this set of feedbacks can only use boolean feedbacks
 	 */
-	readonly #booleanOnly: boolean
+	readonly #onlyType: 'boolean' | 'advanced' | null
 
 	#feedbacks: FragmentFeedbackInstance[] = []
 
-	get id(): string | null {
-		return this.#id
+	get ownerId(): FeedbackOwner | null {
+		return this.#ownerId
 	}
 
 	constructor(
@@ -34,15 +34,15 @@ export class FragmentFeedbackList {
 		internalModule: InternalController,
 		moduleHost: ModuleHost,
 		controlId: string,
-		id: string | null,
-		booleanOnly: boolean
+		ownerId: FeedbackOwner | null,
+		onlyType: 'boolean' | 'advanced' | null
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
-		this.#id = id
-		this.#booleanOnly = booleanOnly
+		this.#ownerId = ownerId
+		this.#onlyType = onlyType
 	}
 
 	/**
@@ -63,7 +63,7 @@ export class FragmentFeedbackList {
 	 * Get the value of this feedback as a boolean
 	 */
 	getBooleanValue(): boolean {
-		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
+		if (this.#onlyType !== 'boolean') throw new Error('FragmentFeedbacks is setup to use styles')
 
 		let result = true
 
@@ -77,7 +77,7 @@ export class FragmentFeedbackList {
 	}
 
 	getChildBooleanValues(): boolean[] {
-		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
+		if (this.#onlyType !== 'boolean') throw new Error('FragmentFeedbacks is setup to use styles')
 
 		const values: boolean[] = []
 
@@ -270,10 +270,10 @@ export class FragmentFeedbackList {
 	 * Check if this list can accept a specified child
 	 */
 	canAcceptFeedback(feedback: FragmentFeedbackInstance): boolean {
-		if (!this.#booleanOnly) return true
+		if (!this.#onlyType) return true
 
 		const definition = feedback.getDefinition()
-		if (!definition || definition.type !== 'boolean') return false
+		if (!definition || definition.type !== this.#onlyType) return false
 
 		return true
 	}
@@ -355,7 +355,7 @@ export class FragmentFeedbackList {
 	 * @returns the unprocessed style
 	 */
 	getUnparsedStyle(baseStyle: ButtonStyleProperties): UnparsedButtonStyle {
-		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+		if (this.#onlyType == 'boolean') throw new Error('FragmentFeedbacks not setup to use styles')
 
 		let style: UnparsedButtonStyle = {
 			...baseStyle,
