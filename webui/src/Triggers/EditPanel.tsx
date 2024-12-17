@@ -128,7 +128,10 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									heading={
 										<>
 											Events &nbsp;
-											<FontAwesomeIcon icon={faQuestionCircle} title="When should the trigger execute" />
+											<FontAwesomeIcon
+												icon={faQuestionCircle}
+												title="The trigger will be executed when any of the events happens"
+											/>
 										</>
 									}
 									controlId={controlId}
@@ -138,7 +141,15 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 
 							<MyErrorBoundary>
 								<ControlFeedbacksEditor
-									heading={<InlineHelp help="Only execute when all of these conditions are true">Condition</InlineHelp>}
+									heading={
+										<>
+											Conditions &nbsp;
+											<FontAwesomeIcon
+												icon={faQuestionCircle}
+												title="Only execute when all of these conditions are true"
+											/>
+										</>
+									}
 									entityType="condition"
 									controlId={controlId}
 									feedbacks={config.condition}
