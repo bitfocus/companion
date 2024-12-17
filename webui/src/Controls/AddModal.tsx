@@ -80,6 +80,7 @@ export const AddActionsModal = observer(
 							key={connectionId}
 							connectionId={connectionId}
 							items={actions}
+							onlyType={null}
 							itemName="actions"
 							expanded={!!filter || expanded[connectionId]}
 							filter={filter}
@@ -100,7 +101,7 @@ export const AddActionsModal = observer(
 
 interface AddFeedbacksModalProps {
 	addFeedback: (feedbackType: string) => void
-	booleanOnly: boolean
+	onlyType: 'boolean' | 'advanced' | null
 	entityType: string
 }
 export interface AddFeedbacksModalRef {
@@ -109,7 +110,7 @@ export interface AddFeedbacksModalRef {
 
 export const AddFeedbacksModal = observer(
 	forwardRef<AddFeedbacksModalRef, AddFeedbacksModalProps>(function AddFeedbacksModal(
-		{ addFeedback, booleanOnly, entityType },
+		{ addFeedback, onlyType, entityType },
 		ref
 	) {
 		const { feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
@@ -175,7 +176,7 @@ export const AddFeedbacksModal = observer(
 							itemName="feedbacks"
 							expanded={!!filter || expanded[connectionId]}
 							filter={filter}
-							booleanOnly={booleanOnly}
+							onlyType={onlyType}
 							doToggle={toggleExpanded}
 							doAdd={addFeedback2}
 						/>
@@ -205,7 +206,7 @@ interface ConnectionCollapseProps<TDef> {
 	itemName: string
 	expanded: boolean
 	filter: string
-	booleanOnly?: boolean
+	onlyType: string | null
 	doToggle: (connectionId: string) => void
 	doAdd: (itemId: string) => void
 }
@@ -216,7 +217,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDe
 	itemName,
 	expanded,
 	filter,
-	booleanOnly,
+	onlyType,
 	doToggle,
 	doAdd,
 }: ConnectionCollapseProps<TDef>) {
@@ -231,7 +232,8 @@ const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDe
 
 		return Array.from(items.entries())
 			.map(([id, info]) => {
-				if (!info || !info.label || (booleanOnly && (!('type' in info) || info.type !== 'boolean'))) return null
+				if (!info || !info.label) return null
+				if (onlyType && (!('type' in info) || info.type !== onlyType)) return null
 
 				return {
 					fullId: `${connectionId}:${id}`,
@@ -240,7 +242,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDe
 				}
 			})
 			.filter((v): v is ConnectionItem => !!v)
-	}, [items, booleanOnly])
+	}, [items, onlyType])
 
 	const searchResults = filter
 		? fuzzySearch(filter, allValues, {

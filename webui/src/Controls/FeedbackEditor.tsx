@@ -20,7 +20,7 @@ import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
 import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
 import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -36,12 +36,13 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { InlineHelp } from '../Components/InlineHelp.js'
+import { isEqual } from 'lodash-es'
 interface ControlFeedbacksEditorProps {
 	controlId: string
 	feedbacks: FeedbackInstance[]
 	heading: JSX.Element | string
 	entityType: string
-	booleanOnly: boolean
+	onlyType: 'boolean' | 'advanced' | null
 	location: ControlLocation | undefined
 	addPlaceholder: string
 }
@@ -53,6 +54,9 @@ function findAllFeedbackIdsDeep(feedbacks: FeedbackInstance[]): string[] {
 		if (feedback.children) {
 			result.push(...findAllFeedbackIdsDeep(feedback.children))
 		}
+		if (feedback.advancedChildren) {
+			result.push(...findAllFeedbackIdsDeep(feedback.advancedChildren))
+		}
 	}
 
 	return result
@@ -63,7 +67,7 @@ export function ControlFeedbacksEditor({
 	feedbacks,
 	heading,
 	entityType,
-	booleanOnly,
+	onlyType,
 	location,
 	addPlaceholder,
 }: ControlFeedbacksEditorProps) {
@@ -84,11 +88,11 @@ export function ControlFeedbacksEditor({
 				heading={heading}
 				feedbacks={feedbacks}
 				entityType={entityType}
-				booleanOnly={booleanOnly}
+				onlyType={onlyType}
 				location={location}
 				addPlaceholder={addPlaceholder}
 				feedbacksService={feedbacksService}
-				parentId={null}
+				ownerId={null}
 				panelCollapseHelper={panelCollapseHelper}
 			/>
 		</>
@@ -100,11 +104,11 @@ interface InlineFeedbacksEditorProps {
 	heading: JSX.Element | string | null
 	feedbacks: FeedbackInstance[]
 	entityType: string
-	booleanOnly: boolean
+	onlyType: 'boolean' | 'advanced' | null
 	location: ControlLocation | undefined
 	addPlaceholder: string
 	feedbacksService: IFeedbackEditorService
-	parentId: string | null
+	ownerId: FeedbackOwner | null
 	panelCollapseHelper: PanelCollapseHelper
 }
 
@@ -113,22 +117,24 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 	heading,
 	feedbacks,
 	entityType,
-	booleanOnly,
+	onlyType,
 	location,
 	addPlaceholder,
 	feedbacksService,
-	parentId,
+	ownerId,
 	panelCollapseHelper,
 }: InlineFeedbacksEditorProps) {
 	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
 
 	const addFeedback = useCallback(
-		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, parentId),
-		[feedbacksService, parentId]
+		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, ownerId),
+		[feedbacksService, ownerId]
 	)
 
 	const childFeedbackIds = feedbacks.map((f) => f.id)
+
+	const expandGroupId = feedbackOwnerString(ownerId)
 
 	return (
 		<>
@@ -136,7 +142,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 				<AddFeedbacksModal
 					ref={addFeedbacksRef}
 					addFeedback={addFeedback}
-					booleanOnly={booleanOnly}
+					onlyType={onlyType}
 					entityType={entityType}
 				/>
 			</MyErrorBoundary>
@@ -147,19 +153,19 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 				{feedbacks.length >= 1 && (
 					<CButtonGroup className="right">
 						<CButtonGroup>
-							{panelCollapseHelper.canExpandAll(parentId, childFeedbackIds) && (
+							{panelCollapseHelper.canExpandAll(expandGroupId, childFeedbackIds) && (
 								<CButton
 									size="sm"
-									onClick={() => panelCollapseHelper.setAllExpanded(parentId, childFeedbackIds)}
+									onClick={() => panelCollapseHelper.setAllExpanded(expandGroupId, childFeedbackIds)}
 									title="Expand all feedbacks"
 								>
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							)}
-							{panelCollapseHelper.canCollapseAll(parentId, childFeedbackIds) && (
+							{panelCollapseHelper.canCollapseAll(expandGroupId, childFeedbackIds) && (
 								<CButton
 									size="sm"
-									onClick={() => panelCollapseHelper.setAllCollapsed(parentId, childFeedbackIds)}
+									onClick={() => panelCollapseHelper.setAllCollapsed(expandGroupId, childFeedbackIds)}
 									title="Collapse all feedbacks"
 								>
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
@@ -177,22 +183,22 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 							<FeedbackTableRow
 								key={a?.id ?? i}
 								controlId={controlId}
-								parentId={parentId}
+								ownerId={ownerId}
 								entityType={entityType}
 								index={i}
 								feedback={a}
 								dragId={`feedbacks_${controlId}`}
 								serviceFactory={feedbacksService}
 								panelCollapseHelper={panelCollapseHelper}
-								booleanOnly={booleanOnly}
+								onlyType={onlyType}
 								location={location}
 							/>
 						</MyErrorBoundary>
 					))}
-					{!!parentId && (
+					{!!ownerId && (
 						<FeedbackRowDropPlaceholder
 							dragId={`feedbacks_${controlId}`}
-							parentId={parentId}
+							ownerId={ownerId}
 							feedbackCount={feedbacks ? feedbacks.length : 0}
 							moveCard={feedbacksService.moveCard}
 						/>
@@ -201,7 +207,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} booleanOnly={booleanOnly} addPlaceholder={addPlaceholder} />
+				<AddFeedbackDropdown onSelect={addFeedback} onlyType={onlyType} addPlaceholder={addPlaceholder} />
 				<CButton
 					color="primary"
 					onClick={showAddModal}
@@ -220,7 +226,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 interface FeedbackTableRowDragItem {
 	feedbackId: string
 	index: number
-	parentId: string | null
+	ownerId: FeedbackOwner | null
 	dragState: DragState | null
 }
 interface FeedbackTableRowDragStatus {
@@ -233,10 +239,10 @@ interface FeedbackTableRowProps {
 	feedback: FeedbackInstance
 	serviceFactory: IFeedbackEditorService
 	index: number
-	parentId: string | null
+	ownerId: FeedbackOwner | null
 	dragId: string
 	panelCollapseHelper: PanelCollapseHelper
-	booleanOnly: boolean
+	onlyType: 'boolean' | 'advanced' | null
 	location: ControlLocation | undefined
 }
 
@@ -246,10 +252,10 @@ function FeedbackTableRow({
 	feedback,
 	serviceFactory,
 	index,
-	parentId,
+	ownerId,
 	dragId,
 	panelCollapseHelper,
-	booleanOnly,
+	onlyType,
 	location,
 }: FeedbackTableRowProps) {
 	const ref = useRef<HTMLTableRowElement>(null)
@@ -263,31 +269,31 @@ function FeedbackTableRow({
 			// Ensure the hover targets this element, and not a child element
 			if (!monitor.isOver({ shallow: true })) return
 
-			const dragParentId = item.parentId
+			const dragOwnerId = item.ownerId
 			const dragIndex = item.index
 
-			const hoverParentId = parentId
+			const hoverOwnerId = ownerId
 			const hoverIndex = index
 			const hoverId = feedback.id
 
 			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Don't replace items with themselves
-			if (item.feedbackId === hoverId || (dragIndex === hoverIndex && dragParentId === hoverParentId)) {
+			if (item.feedbackId === hoverId || (dragIndex === hoverIndex && isEqual(dragOwnerId, hoverOwnerId))) {
 				return
 			}
 			// Can't move into itself
-			if (item.feedbackId === hoverParentId) return
+			if (hoverOwnerId && item.feedbackId === hoverOwnerId.parentFeedbackId) return
 
 			// Time to actually perform the action
-			serviceFactory.moveCard(item.feedbackId, hoverParentId, hoverIndex)
+			serviceFactory.moveCard(item.feedbackId, hoverOwnerId, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
 			// to avoid expensive index searches.
 			item.index = hoverIndex
-			item.parentId = hoverParentId
+			item.ownerId = hoverOwnerId
 		},
 		drop(item, _monitor) {
 			item.dragState = null
@@ -298,7 +304,7 @@ function FeedbackTableRow({
 		item: {
 			feedbackId: feedback.id,
 			index: index,
-			parentId: parentId,
+			ownerId: ownerId,
 			dragState: null,
 		},
 		collect: (monitor) => ({
@@ -320,13 +326,13 @@ function FeedbackTableRow({
 			<td>
 				<FeedbackEditor
 					controlId={controlId}
-					parentId={parentId}
+					ownerId={ownerId}
 					entityType={entityType}
 					location={location}
 					feedback={feedback}
 					serviceFactory={serviceFactory}
 					panelCollapseHelper={panelCollapseHelper}
-					booleanOnly={booleanOnly}
+					onlyType={onlyType}
 				/>
 			</td>
 		</tr>
@@ -335,24 +341,24 @@ function FeedbackTableRow({
 
 interface FeedbackEditorProps {
 	controlId: string
-	parentId: string | null
+	ownerId: FeedbackOwner | null
 	entityType: string
 	feedback: FeedbackInstance
 	location: ControlLocation | undefined
 	serviceFactory: IFeedbackEditorService
 	panelCollapseHelper: PanelCollapseHelper
-	booleanOnly: boolean
+	onlyType: 'boolean' | 'advanced' | null
 }
 
 const FeedbackEditor = observer(function FeedbackEditor({
 	controlId,
-	parentId,
+	ownerId,
 	entityType,
 	feedback,
 	location,
 	serviceFactory,
 	panelCollapseHelper,
-	booleanOnly,
+	onlyType,
 }: FeedbackEditorProps) {
 	const service = useControlFeedbackService(serviceFactory, feedback)
 
@@ -390,7 +396,10 @@ const FeedbackEditor = observer(function FeedbackEditor({
 		() => panelCollapseHelper.setPanelCollapsed(feedback.id, false),
 		[panelCollapseHelper, feedback.id]
 	)
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(parentId, feedback.id)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(feedbackOwnerString(ownerId), feedback.id)
+
+	const childrenGroupId: FeedbackOwner = { parentFeedbackId: feedback.id, childGroup: 'children' }
+	const advancedChildrenGroupId: FeedbackOwner = { parentFeedbackId: feedback.id, childGroup: 'advancedChildren' }
 
 	return (
 		<>
@@ -498,17 +507,36 @@ const FeedbackEditor = observer(function FeedbackEditor({
 							<CForm onSubmit={PreventDefaultHandler}>
 								<InlineFeedbacksEditor
 									controlId={controlId}
-									heading={null}
+									heading={feedbackSpec.supportsAdvancedChildFeedbacks ? 'Conditions' : null}
 									feedbacks={feedback.children ?? []}
 									entityType="condition"
-									booleanOnly
+									onlyType={'boolean'}
 									location={location}
 									addPlaceholder="+ Add condition"
 									feedbacksService={serviceFactory}
-									parentId={feedback.id}
+									ownerId={childrenGroupId}
 									panelCollapseHelper={panelCollapseHelper}
 								/>
 							</CForm>
+
+							{feedbackSpec.supportsAdvancedChildFeedbacks && (
+								<>
+									<CForm onSubmit={PreventDefaultHandler}>
+										<InlineFeedbacksEditor
+											controlId={controlId}
+											heading={'Feedbacks'}
+											feedbacks={feedback.advancedChildren ?? []}
+											entityType="feedback"
+											onlyType={'advanced'}
+											location={location}
+											addPlaceholder="+ Add feedback"
+											feedbacksService={serviceFactory}
+											ownerId={advancedChildrenGroupId}
+											panelCollapseHelper={panelCollapseHelper}
+										/>
+									</CForm>
+								</>
+							)}
 						</div>
 					)}
 
@@ -548,7 +576,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						)}
 					</div>
 
-					{!booleanOnly && (
+					{onlyType === null && (
 						<>
 							<FeedbackStyles
 								feedbackSpec={feedbackSpec}
@@ -652,12 +680,12 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 
 interface FeedbackRowDropPlaceholderProps {
 	dragId: string
-	parentId: string
+	ownerId: FeedbackOwner
 	feedbackCount: number
-	moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => void
+	moveCard: (dragFeedbackId: string, hoverOwnerId: FeedbackOwner | null, hoverIndex: number) => void
 }
 
-function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard }: FeedbackRowDropPlaceholderProps) {
+function FeedbackRowDropPlaceholder({ dragId, ownerId, feedbackCount, moveCard }: FeedbackRowDropPlaceholderProps) {
 	const [isDragging, drop] = useDrop<FeedbackTableRowDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
@@ -665,9 +693,9 @@ function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard 
 		},
 		hover(item, _monitor) {
 			// Can't move into itself
-			if (item.feedbackId === parentId) return
+			if (isEqual(item.feedbackId, ownerId)) return
 
-			moveCard(item.feedbackId, parentId, 0)
+			moveCard(item.feedbackId, ownerId, 0)
 		},
 	})
 
@@ -680,4 +708,8 @@ function FeedbackRowDropPlaceholder({ dragId, parentId, feedbackCount, moveCard 
 			</td>
 		</tr>
 	)
+}
+
+function feedbackOwnerString(ownerId: FeedbackOwner | null): string | null {
+	return ownerId ? `${ownerId.parentFeedbackId}_${ownerId.childGroup}` : null
 }

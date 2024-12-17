@@ -85,7 +85,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				learnTimeout: undefined,
 				supportsChildFeedbacks: true,
 			},
-			conditionalise_advanced: {
+			logic_conditionalise_advanced: {
 				type: 'advanced',
 				label: 'Conditionalise existing feedbacks',
 				description: "Make 'advanced' feedbacks conditional",
@@ -147,7 +147,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	 * Execute a logic feedback
 	 */
 	executeLogicFeedback(feedback: FeedbackInstance, childValues: boolean[]): boolean {
-		if (feedback.type === 'logic_and') {
+		if (feedback.type === 'logic_and' || feedback.type === 'logic_conditionalise_advanced') {
 			if (childValues.length === 0) return !!feedback.isInverted
 
 			return childValues.reduce((acc, val) => acc && val, true) === !feedback.isInverted
@@ -156,9 +156,6 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		} else if (feedback.type === 'logic_xor') {
 			const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
 			return isSingleTrue === !feedback.isInverted
-		} else if (feedback.type === 'conditionalise_advanced') {
-			console.log('TODO', feedback)
-			return false
 		} else {
 			this.#logger.warn(`Unexpected logic feedback type "${feedback.type}"`)
 			return false

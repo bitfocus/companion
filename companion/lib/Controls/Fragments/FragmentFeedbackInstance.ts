@@ -48,6 +48,10 @@ export class FragmentFeedbackInstance {
 		return !!this.#data.disabled
 	}
 
+	get feedbackId(): string {
+		return this.#data.type
+	}
+
 	/**
 	 * Get the id of the connection this feedback belongs to
 	 */
@@ -183,7 +187,6 @@ export class FragmentFeedbackInstance {
 		if (this.#data.disabled) return false
 
 		const definition = this.getDefinition()
-		if (!definition || definition.type !== 'boolean') return false
 
 		// Special case to handle the internal 'logic' operators, which need to be executed live
 		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
@@ -192,6 +195,8 @@ export class FragmentFeedbackInstance {
 
 			return this.#internalModule.executeLogicFeedback(this.asFeedbackInstance(), childValues)
 		}
+
+		if (!definition || definition.type !== 'boolean') return false
 
 		if (typeof this.#cachedValue === 'boolean') {
 			if (definition.showInvert && this.#data.isInverted) return !this.#cachedValue
@@ -550,6 +555,13 @@ export class FragmentFeedbackInstance {
 		}
 
 		return feedbacks
+	}
+
+	/**
+	 * Recursively get all the feedbacks
+	 */
+	getChildrenOfGroup(groupId: FeedbackChildGroup): FragmentFeedbackInstance[] {
+		return this.#children.get(groupId)?.getFeedbacks() ?? []
 	}
 
 	/**

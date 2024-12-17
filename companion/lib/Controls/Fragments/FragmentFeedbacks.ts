@@ -7,6 +7,7 @@ import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
+import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 
 /**
  * Helper for ControlTypes with feedbacks
@@ -451,7 +452,9 @@ export class FragmentFeedbacks {
 	 * Note: Does not clone the style
 	 */
 	getUnparsedStyle(): UnparsedButtonStyle {
-		return this.#feedbacks.getUnparsedStyle(this.baseStyle)
+		const styleBuilder = new FeedbackStyleBuilder(this.baseStyle)
+		this.#feedbacks.buildStyle(styleBuilder)
+		return styleBuilder.style
 	}
 
 	/**
