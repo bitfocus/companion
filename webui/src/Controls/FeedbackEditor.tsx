@@ -7,6 +7,7 @@ import {
 	faCopy,
 	faFolderOpen,
 	faPencil,
+	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
@@ -507,7 +508,17 @@ const FeedbackEditor = observer(function FeedbackEditor({
 							<CForm onSubmit={PreventDefaultHandler}>
 								<InlineFeedbacksEditor
 									controlId={controlId}
-									heading={feedbackSpec.supportsAdvancedChildFeedbacks ? 'Conditions' : null}
+									heading={
+										feedbackSpec.supportsAdvancedChildFeedbacks ? (
+											<>
+												Conditions&nbsp;
+												<FontAwesomeIcon
+													icon={faQuestionCircle}
+													title="This feedback will only execute when all of the conditions are true"
+												/>
+											</>
+										) : null
+									}
 									feedbacks={feedback.children ?? []}
 									entityType="condition"
 									onlyType={'boolean'}
@@ -521,10 +532,18 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 							{feedbackSpec.supportsAdvancedChildFeedbacks && (
 								<>
-									<CForm onSubmit={PreventDefaultHandler}>
+									<CForm onSubmit={PreventDefaultHandler} className="mt-2">
 										<InlineFeedbacksEditor
 											controlId={controlId}
-											heading={'Feedbacks'}
+											heading={
+												<>
+													Feedbacks&nbsp;
+													<FontAwesomeIcon
+														icon={faQuestionCircle}
+														title="These feedbacks will only be shown if the conditions above are met"
+													/>
+												</>
+											}
 											feedbacks={feedback.advancedChildren ?? []}
 											entityType="feedback"
 											onlyType={'advanced'}
