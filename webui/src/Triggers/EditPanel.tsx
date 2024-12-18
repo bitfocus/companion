@@ -20,7 +20,6 @@ import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
