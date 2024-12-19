@@ -424,7 +424,7 @@ export class FragmentFeedbacks {
 	 * Get all the feedback instances
 	 * @param onlyConnectionId Optionally, only for a specific connection
 	 */
-	getFlattenedFeedbackInstances(onlyConnectionId?: string): Omit<FeedbackInstance, 'children'>[] {
+	getFlattenedFeedbackInstances(onlyConnectionId?: string): Omit<FeedbackInstance, 'children' | 'advancedChildren'>[] {
 		const instances: FeedbackInstance[] = []
 
 		const extractInstances = (feedbacks: FeedbackInstance[]) => {
@@ -433,12 +433,12 @@ export class FragmentFeedbacks {
 					instances.push({
 						...feedback,
 						children: undefined,
+						advancedChildren: undefined,
 					})
 				}
 
-				if (feedback.children) {
-					extractInstances(feedback.children)
-				}
+				if (feedback.children) extractInstances(feedback.children)
+				if (feedback.advancedChildren) extractInstances(feedback.advancedChildren)
 			}
 		}
 

@@ -28,7 +28,7 @@ export class FragmentFeedbackInstance {
 	 */
 	readonly #controlId: string
 
-	readonly #data: Omit<FeedbackInstance, 'children'>
+	readonly #data: Omit<FeedbackInstance, 'children' | 'advancedChildren'>
 
 	#children = new Map<FeedbackChildGroup, FragmentFeedbackList>()
 
