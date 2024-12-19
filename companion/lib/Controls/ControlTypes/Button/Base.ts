@@ -16,6 +16,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolButton } from '../../Fragments/EntityListPoolBase.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
  * Abstract class for a editable button control.
@@ -162,7 +163,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
-		this.feedbacks.destroy()
+		this.entities.destroy()
 
 		for (const step of Object.values(this.steps)) {
 			step.destroy()
@@ -214,7 +215,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleButtonModel {
-		let style = this.feedbacks.getUnparsedStyle()
+		let style = this.entities.getUnparsedFeedbackStyle()
 
 		if (style.text) {
 			// Block out the button text
@@ -300,7 +301,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	protected postProcessImport(): void {
 		const ps = []
 
-		ps.push(this.feedbacks.postProcessImport())
+		ps.push(this.entities.postProcessImport())
 
 		for (const step of Object.values(this.steps)) {
 			ps.push(step.postProcessImport())
@@ -395,7 +396,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 			if ('show_topbar' in diff) {
 				// Some feedbacks will need to redraw
-				this.feedbacks.resubscribeAllFeedbacks()
+				this.entities.resubscribeEntities(EntityModelType.Feedback)
 			}
 
 			this.commitChange()
@@ -411,7 +412,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
 	verifyConnectionIds(knownConnectionIds: Set<string>): void {
-		const changedFeedbacks = this.feedbacks.verifyConnectionIds(knownConnectionIds)
+		const changed = this.entities.verifyConnectionIds(knownConnectionIds)
 
 		let changedSteps = false
 		for (const step of Object.values(this.steps)) {
@@ -419,8 +420,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			changedSteps = changedSteps || changed
 		}
 
-		if (changedFeedbacks || changedSteps) {
-			this.commitChange(changedFeedbacks)
+		if (changed || changedSteps) {
+			this.commitChange(changed)
 		}
 	}
 }

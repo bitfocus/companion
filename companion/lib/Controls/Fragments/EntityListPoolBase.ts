@@ -398,6 +398,29 @@ export abstract class ControlEntityListPoolBase {
 		}
 		return changed
 	}
+
+	/**
+	 * Prune all actions/feedbacks referencing unknown conncetions
+	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
+	 */
+	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
+		let changed = false
+
+		for (const list of this.getAllEntityLists()) {
+			if (list.verifyConnectionIds(knownConnectionIds)) changed = true
+		}
+
+		return changed
+	}
+
+	/**
+	 * If this control was imported to a running system, do some data cleanup/validation
+	 */
+	async postProcessImport(): Promise<void> {
+		await Promise.all(this.getAllEntityLists().map((list) => list.postProcessImport())).catch((e) => {
+			this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
+		})
+	}
 }
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase {

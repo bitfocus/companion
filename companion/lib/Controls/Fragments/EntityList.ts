@@ -287,31 +287,31 @@ export class ControlEntityList {
 		return changed
 	}
 
-	// /**
-	//  * Prune all actions/actions referencing unknown conncetions
-	//  * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	//  */
-	// verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
-	// 	// Clean out actions
-	// 	const actionLength = this.#actions.length
-	// 	this.#actions = this.#actions.filter((action) => !!action && knownConnectionIds.has(action.connectionId))
-	// 	let changed = this.#actions.length !== actionLength
+	/**
+	 * Prune all entities referencing unknown conncetions
+	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
+	 */
+	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
+		// Clean out actions
+		const entitiesLength = this.#entities.length
+		this.#entities = this.#entities.filter((entity) => !!entity && knownConnectionIds.has(entity.connectionId))
+		let changed = this.#entities.length !== entitiesLength
 
-	// 	for (const action of this.#actions) {
-	// 		if (action.verifyChildConnectionIds(knownConnectionIds)) {
-	// 			changed = true
-	// 		}
-	// 	}
+		for (const entity of this.#entities) {
+			if (entity.verifyChildConnectionIds(knownConnectionIds)) {
+				changed = true
+			}
+		}
 
-	// 	return changed
-	// }
+		return changed
+	}
 
-	// /**
-	//  * If this control was imported to a running system, do some data cleanup/validation
-	//  */
-	// postProcessImport(): Promise<void>[] {
-	// 	return this.#actions.flatMap((action) => action.postProcessImport())
-	// }
+	/**
+	 * If this control was imported to a running system, do some data cleanup/validation
+	 */
+	postProcessImport(): Promise<void>[] {
+		return this.#entities.flatMap((entity) => entity.postProcessImport())
+	}
 
 	clearCachedValueForConnectionId(connectionId: string): boolean {
 		let changed = false

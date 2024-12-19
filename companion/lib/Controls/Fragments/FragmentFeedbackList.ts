@@ -300,30 +300,4 @@ export class FragmentFeedbackList {
 
 		return undefined
 	}
-
-	/**
-	 * Prune all actions/feedbacks referencing unknown conncetions
-	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
-		// Clean out feedbacks
-		const feedbackLength = this.#feedbacks.length
-		this.#feedbacks = this.#feedbacks.filter((feedback) => !!feedback && knownConnectionIds.has(feedback.connectionId))
-		let changed = this.#feedbacks.length !== feedbackLength
-
-		for (const feedback of this.#feedbacks) {
-			if (feedback.verifyChildConnectionIds(knownConnectionIds)) {
-				changed = true
-			}
-		}
-
-		return changed
-	}
-
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	postProcessImport(): Promise<void>[] {
-		return this.#feedbacks.flatMap((feedback) => feedback.postProcessImport())
-	}
 }

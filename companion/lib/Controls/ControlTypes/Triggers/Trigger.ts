@@ -507,11 +507,11 @@ export class ControlTrigger
 	 * Remove any actions and feedbacks referencing a specified connectionId
 	 */
 	forgetConnection(connectionId: string): void {
-		const changedFeedbacks = this.feedbacks.forgetConnection(connectionId)
+		const changed = this.entities.forgetConnection(connectionId)
 		const changedActions = this.actions.forgetConnection(connectionId)
 
-		if (changedFeedbacks || changedActions) {
-			this.commitChange(changedFeedbacks)
+		if (changed || changedActions) {
+			this.commitChange(changed)
 		}
 	}
 
@@ -680,7 +680,7 @@ export class ControlTrigger
 	postProcessImport(): void {
 		const ps = []
 
-		ps.push(this.feedbacks.postProcessImport())
+		ps.push(this.entities.postProcessImport())
 		ps.push(this.actions.postProcessImport())
 
 		Promise.all(ps).catch((e) => {
@@ -697,10 +697,10 @@ export class ControlTrigger
 	 */
 	verifyConnectionIds(knownConnectionIds: Set<string>): void {
 		const changedActions = this.actions.verifyConnectionIds(knownConnectionIds)
-		const changedFeedbacks = this.feedbacks.verifyConnectionIds(knownConnectionIds)
+		const changed = this.entities.verifyConnectionIds(knownConnectionIds)
 
-		if (changedFeedbacks || changedActions) {
-			this.commitChange(changedFeedbacks)
+		if (changed || changedActions) {
+			this.commitChange(changed)
 		}
 	}
 
@@ -748,7 +748,7 @@ export class ControlTrigger
 		this.#eventBus.emit('trigger_enabled', this.controlId, false)
 
 		this.actions.destroy()
-		this.feedbacks.destroy()
+		this.entities.destroy()
 
 		super.destroy()
 
@@ -767,7 +767,7 @@ export class ControlTrigger
 	triggerRedraw = debounceFn(
 		() => {
 			try {
-				const newStatus = this.feedbacks.checkValueAsBoolean()
+				const newStatus = this.entities.checkConditionValue()
 				const runOnTrue = this.events.some((event) => event.enabled && event.type === 'condition_true')
 				const runOnFalse = this.events.some((event) => event.enabled && event.type === 'condition_false')
 				if (

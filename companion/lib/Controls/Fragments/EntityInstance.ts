@@ -408,48 +408,49 @@ export class ControlEntityInstance {
 		return changed
 	}
 
-	// /**
-	//  * Prune all actions/feedbacks referencing unknown conncetions
-	//  * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	//  */
-	// verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
-	// 	let changed = false
-	// 	for (const actionGroup of this.#children.values()) {
-	// 		if (actionGroup.verifyConnectionIds(knownConnectionIds)) {
-	// 			changed = true
-	// 		}
-	// 	}
-	// 	return changed
-	// }
+	/**
+	 * Prune all entities referencing unknown conncetions
+	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
+	 */
+	verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
+		let changed = false
+		for (const childGroup of this.#children.values()) {
+			if (childGroup.verifyConnectionIds(knownConnectionIds)) {
+				changed = true
+			}
+		}
+		return changed
+	}
 
-	// /**
-	//  * If this control was imported to a running system, do some data cleanup/validation
-	//  */
-	// postProcessImport(): Promise<void>[] {
-	// 	const ps: Promise<void>[] = []
+	/**
+	 * If this control was imported to a running system, do some data cleanup/validation
+	 */
+	postProcessImport(): Promise<void>[] {
+		const ps: Promise<void>[] = []
 
-	// 	if (this.#data.instance === 'internal') {
-	// 		const newProps = this.#internalModule.actionUpgrade(this.asActionInstance(), this.#controlId)
-	// 		if (newProps) {
-	// 			this.replaceProps(newProps, false)
-	// 		}
+		if (this.#data.connectionId === 'internal') {
+			// nocommit - implement this
+			// const newProps = this.#internalModule.actionUpgrade(this.asActionInstance(), this.#controlId)
+			// if (newProps) {
+			// 	this.replaceProps(newProps, false)
+			// }
+			// setImmediate(() => {
+			// 	this.#internalModule.actionUpdate(this.asActionInstance(), this.#controlId)
+			// })
+		} else {
+			// nocommit - implement this
+			// const instance = this.#moduleHost.getChild(this.connectionId, true)
+			// if (instance) {
+			// 	ps.push(instance.actionUpdate(this.asActionInstance(), this.#controlId))
+			// }
+		}
 
-	// 		// setImmediate(() => {
-	// 		// 	this.#internalModule.actionUpdate(this.asActionInstance(), this.#controlId)
-	// 		// })
-	// 	} else {
-	// 		const instance = this.#moduleHost.getChild(this.connectionId, true)
-	// 		if (instance) {
-	// 			ps.push(instance.actionUpdate(this.asActionInstance(), this.#controlId))
-	// 		}
-	// 	}
+		for (const childGroup of this.#children.values()) {
+			ps.push(...childGroup.postProcessImport())
+		}
 
-	// 	for (const childGroup of this.#children.values()) {
-	// 		ps.push(...childGroup.postProcessImport())
-	// 	}
-
-	// 	return ps
-	// }
+		return ps
+	}
 
 	// /**
 	//  * Replace portions of the action with an updated version

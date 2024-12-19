@@ -276,12 +276,4 @@ export class FragmentFeedbacks {
 			this.#triggerRedraw()
 		}
 	}
-
-	/**
-	 * Prune all actions/feedbacks referencing unknown conncetions
-	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
-		return this.#feedbacks.verifyConnectionIds(knownConnectionIds)
-	}
 }
