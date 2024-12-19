@@ -302,26 +302,6 @@ export class FragmentFeedbackList {
 	}
 
 	/**
-	 * Cleanup and forget any children belonging to the given connection
-	 */
-	forgetForConnection(connectionId: string): boolean {
-		let changed = false
-
-		this.#feedbacks = this.#feedbacks.filter((feedback) => {
-			if (feedback.connectionId === connectionId) {
-				feedback.cleanup()
-
-				return false
-			} else {
-				changed = feedback.forgetChildrenForConnection(connectionId)
-				return true
-			}
-		})
-
-		return changed
-	}
-
-	/**
 	 * Prune all actions/feedbacks referencing unknown conncetions
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
@@ -338,37 +318,6 @@ export class FragmentFeedbackList {
 		}
 
 		return changed
-	}
-
-	/**
-	 * Get the unparsed style for these feedbacks
-	 * Note: Does not clone the style
-	 * @param baseStyle Style of the button without feedbacks applied
-	 * @returns the unprocessed style
-	 */
-	buildStyle(styleBuilder: FeedbackStyleBuilder): void {
-		if (this.#onlyType == 'boolean') throw new Error('FragmentFeedbacks not setup to use styles')
-
-		// Note: We don't need to consider children of the feedbacks here, as that can only be from boolean feedbacks which are handled by the `getBooleanValue`
-
-		for (const feedback of this.#feedbacks) {
-			if (feedback.disabled) continue
-
-			const definition = feedback.getDefinition()
-			if (definition?.type === 'boolean') {
-				if (feedback.getBooleanValue()) styleBuilder.applySimpleStyle(feedback.asFeedbackInstance().style)
-			} else if (definition?.type === 'advanced') {
-				if (feedback.connectionId === 'internal' && feedback.feedbackId === 'logic_conditionalise_advanced') {
-					if (feedback.getBooleanValue()) {
-						for (const child of feedback.getChildrenOfGroup('advancedChildren')) {
-							styleBuilder.applyComplexStyle(child.cachedValue)
-						}
-					}
-				} else {
-					styleBuilder.applyComplexStyle(feedback.cachedValue)
-				}
-			}
-		}
 	}
 
 	/**

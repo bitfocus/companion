@@ -12,6 +12,7 @@ import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { ControlEntityList } from './EntityList.js'
+import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 
 export class ControlEntityInstance {
 	/**
@@ -46,6 +47,10 @@ export class ControlEntityInstance {
 
 	get disabled(): boolean {
 		return !!this.#data.disabled
+	}
+
+	get definitionId(): string {
+		return this.#data.definitionId
 	}
 
 	/**
@@ -164,6 +169,9 @@ export class ControlEntityInstance {
 			// 	this.#logger.silly(`action_delete to connection failed: ${e.message}`)
 			// })
 		}
+
+		// Remove from cached feedback values
+		this.#cachedValue = undefined
 
 		for (const childGroup of this.#children.values()) {
 			childGroup.cleanup()
@@ -387,18 +395,18 @@ export class ControlEntityInstance {
 		return actions
 	}
 
-	// /**
-	//  * Cleanup and forget any children belonging to the given connection
-	//  */
-	// forgetChildrenForConnection(connectionId: string): boolean {
-	// 	let changed = false
-	// 	for (const actionGroup of this.#children.values()) {
-	// 		if (actionGroup.forgetForConnection(connectionId)) {
-	// 			changed = true
-	// 		}
-	// 	}
-	// 	return changed
-	// }
+	/**
+	 * Cleanup and forget any children belonging to the given connection
+	 */
+	forgetChildrenForConnection(connectionId: string): boolean {
+		let changed = false
+		for (const childGroup of this.#children.values()) {
+			if (childGroup.forgetForConnection(connectionId)) {
+				changed = true
+			}
+		}
+		return changed
+	}
 
 	// /**
 	//  * Prune all actions/feedbacks referencing unknown conncetions
@@ -528,6 +536,32 @@ export class ControlEntityInstance {
 		} else {
 			// An invalid value is falsey, it probably means that the feedback has no value
 			return false
+		}
+	}
+
+	/**
+	 * Apply the unparsed style for the feedbacks
+	 * Note: Does not clone the style
+	 */
+	buildFeedbackStyle(styleBuilder: FeedbackStyleBuilder): void {
+		if (this.disabled) return
+
+		const feedback = this.#data as FeedbackEntityModel
+		if (feedback.type !== EntityModelType.Feedback) return
+
+		const definition = this.getDefinition()
+		if (definition?.type === 'boolean') {
+			if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
+		} else if (definition?.type === 'advanced') {
+			if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
+				if (this.getBooleanFeedbackValue()) {
+					for (const child of feedback.getChildrenOfGroup('advancedChildren')) {
+						styleBuilder.applyComplexStyle(child.cachedValue)
+					}
+				}
+			} else {
+				styleBuilder.applyComplexStyle(this.#cachedValue)
+			}
 		}
 	}
 }

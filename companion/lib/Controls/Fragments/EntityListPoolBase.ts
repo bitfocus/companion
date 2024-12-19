@@ -5,6 +5,10 @@ import { ControlEntityList } from './EntityList.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
+import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import { Complete } from '@companion-module/base/dist/util.js'
+import { UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
+import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitions
@@ -60,6 +64,16 @@ export abstract class ControlEntityListPoolBase {
 			if (list.clearCachedValueForConnectionId(connectionId)) changed = true
 		}
 		if (changed) this.#triggerRedraw()
+	}
+
+	/**
+	 * Prepare this control for deletion
+	 * @access public
+	 */
+	destroy(): void {
+		for (const list of this.getAllEntityLists()) {
+			list.cleanup()
+		}
 	}
 
 	protected abstract getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined
@@ -327,42 +341,63 @@ export abstract class ControlEntityListPoolBase {
 		return true
 	}
 
-	// /**
-	//  * Update the selected style properties for a boolean feedback
-	//  * @param id the id of the feedback
-	//  * @param selected the properties to be selected
-	//  */
-	// feedbackSetStyleSelection(id: string, selected: string[]): boolean {
-	// 	if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+	/**
+	 * Update the selected style properties for a boolean feedback
+	 * @param id the id of the entity
+	 * @param selected the properties to be selected
+	 */
+	entitySetStyleSelection(listId: SomeSocketEntityLocation, id: string, selected: string[]): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
 
-	// 	const feedback = this.#feedbacks.findById(id)
-	// 	if (feedback && feedback.setStyleSelection(selected, this.baseStyle)) {
-	// 		this.#commitChange()
+		const entity = entityList.findById(id)
+		if (!entity) return false
 
-	// 		return true
-	// 	}
+		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
-	// 	return false
-	// }
+		if (entity.setStyleSelection(selected, this.baseStyle)) {
+			this.#commitChange()
 
-	// /**
-	//  * Update an style property for a boolean feedback
-	//  * @param id the id of the feedback
-	//  * @param key the key/name of the property
-	//  * @param value the new value
-	//  */
-	// feedbackSetStyleValue(id: string, key: string, value: any): boolean {
-	// 	if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+			return true
+		}
 
-	// 	const feedback = this.#feedbacks.findById(id)
-	// 	if (feedback && feedback.setStyleValue(key, value)) {
-	// 		this.#commitChange()
+		return false
+	}
 
-	// 		return true
-	// 	}
+	/**
+	 * Update an style property for a boolean feedback
+	 * @param id the id of the entity
+	 * @param key the key/name of the property
+	 * @param value the new value
+	 */
+	entitySetStyleValue(listId: SomeSocketEntityLocation, id: string, key: string, value: any): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
 
-	// 	return false
-	// }
+		const entity = entityList.findById(id)
+		if (!entity) return false
+
+		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+
+		if (entity.setStyleValue(key, value)) {
+			this.#commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
+	 * Remove any entities referencing a specified connectionId
+	 */
+	forgetConnection(connectionId: string): boolean {
+		let changed = false
+		for (const list of this.getAllEntityLists()) {
+			if (list.forgetForConnection(connectionId)) changed = true
+		}
+		return changed
+	}
 }
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase {
@@ -387,6 +422,13 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase {
 		// TODO
 	}
 
+	/**
+	 * Get all the feedback instances
+	 */
+	getFeedbackInstances(): FeedbackInstance[] {
+		return transformEntityToFeedbacks(this.#feedbacks.getDirectEntities())
+	}
+
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		// TODO - expand
 		if (listId === 'feedbacks') return this.#feedbacks
@@ -396,6 +438,16 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase {
 	protected getAllEntityLists(): ControlEntityList[] {
 		// TODO - expand
 		return [this.#feedbacks]
+	}
+
+	/**
+	 * Get the unparsed style for the feedbacks
+	 * Note: Does not clone the style
+	 */
+	getUnparsedFeedbackStyle(): UnparsedButtonStyle {
+		const styleBuilder = new FeedbackStyleBuilder(this.baseStyle)
+		this.#feedbacks.buildFeedbackStyle(styleBuilder)
+		return styleBuilder.style
 	}
 }
 
@@ -429,6 +481,13 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		return this.#feedbacks.getBooleanFeedbackValue()
 	}
 
+	/**
+	 * Get all the feedback instances
+	 */
+	getFeedbackInstances(): FeedbackInstance[] {
+		return transformEntityToFeedbacks(this.#feedbacks.getDirectEntities())
+	}
+
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		// TODO - expand
 		if (listId === 'feedbacks') return this.#feedbacks
@@ -439,4 +498,24 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		// TODO - expand
 		return [this.#feedbacks]
 	}
+}
+
+function transformEntityToFeedbacks(entities: ControlEntityInstance[]): FeedbackInstance[] {
+	return entities.map((entity) => {
+		const entityModel = entity.asEntityModel()
+
+		return {
+			id: entityModel.id,
+			type: entityModel.definitionId,
+			instance_id: entityModel.connectionId,
+			style: entityModel.type === EntityModelType.Feedback ? entityModel.style : undefined,
+			options: entityModel.options,
+			isInverted: entityModel.type === EntityModelType.Feedback ? entityModel.isInverted : false,
+			headline: entityModel.headline,
+			upgradeIndex: entityModel.upgradeIndex,
+			disabled: entityModel.disabled,
+			children: undefined, // Not needed from this
+			advancedChildren: undefined, // Not needed from this
+		} satisfies Complete<FeedbackInstance>
+	})
 }

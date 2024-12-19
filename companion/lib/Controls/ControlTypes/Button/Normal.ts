@@ -24,6 +24,7 @@ import type {
 } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
  * Class for the stepped button control.
@@ -512,7 +513,7 @@ export class ControlButtonNormal
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
 	triggerLocationHasChanged(): void {
-		this.feedbacks.resubscribeAllFeedbacks('internal')
+		this.entities.resubscribeEntities(EntityModelType.Feedback, 'internal')
 	}
 
 	/**
@@ -871,7 +872,7 @@ export class ControlButtonNormal
 			type: this.type,
 			style: this.feedbacks.baseStyle,
 			options: this.options,
-			feedbacks: this.feedbacks.getAllFeedbackInstances(),
+			feedbacks: this.entities.getFeedbackInstances(),
 			steps: stepsJson,
 		}
 

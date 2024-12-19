@@ -175,7 +175,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Remove any actions and feedbacks referencing a specified connectionId
 	 */
 	forgetConnection(connectionId: string): void {
-		const changedFeedbacks = this.feedbacks.forgetConnection(connectionId)
+		const changed = this.entities.forgetConnection(connectionId)
 
 		let changedSteps = false
 		for (const step of Object.values(this.steps)) {
@@ -183,8 +183,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			changedSteps = changedSteps || changed
 		}
 
-		if (changedFeedbacks || changedSteps) {
-			this.commitChange(changedFeedbacks)
+		if (changed || changedSteps) {
+			this.commitChange(changed)
 		}
 	}
 

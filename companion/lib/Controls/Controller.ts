@@ -433,21 +433,13 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackSetStyleSelection(id, selected)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entitySetStyleSelection(entityLocation, id, selected)
 		})
 		client.onPromise('controls:entity:set-style-value', (controlId, entityLocation, id, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackSetStyleValue(id, key, value)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entitySetStyleValue(entityLocation, id, key, value)
 		})
 
 		client.onPromise('controls:hot-press', (location, direction, surfaceId) => {

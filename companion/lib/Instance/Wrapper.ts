@@ -49,6 +49,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
@@ -222,21 +223,23 @@ export class SocketEventsHandler {
 		// Find all the feedbacks on controls
 		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
-			const controlFeedbacks =
-				control.supportsFeedbacks && control.feedbacks.getFlattenedFeedbackInstances(this.connectionId)
-			if (controlFeedbacks && controlFeedbacks.length > 0) {
+			const controlEntities = control.entities.getAllEntities()
+			if (controlEntities && controlEntities.length > 0) {
 				const imageSize = control.getBitmapSize()
-				for (const feedback of controlFeedbacks) {
-					allFeedbacks[feedback.id] = {
-						id: feedback.id,
+				for (const entity of controlEntities) {
+					const entityModel = entity.asEntityModel()
+					if (entityModel.type !== EntityModelType.Feedback) continue
+
+					allFeedbacks[entityModel.id] = {
+						id: entityModel.id,
 						controlId: controlId,
-						feedbackId: feedback.type,
-						options: feedback.options,
+						feedbackId: entityModel.definitionId,
+						options: entityModel.options,
 
-						isInverted: !!feedback.isInverted,
+						isInverted: !!entityModel.isInverted,
 
-						upgradeIndex: feedback.upgradeIndex ?? null,
-						disabled: !!feedback.disabled,
+						upgradeIndex: entityModel.upgradeIndex ?? null,
+						disabled: !!entityModel.disabled,
 
 						image: imageSize ?? undefined,
 					}

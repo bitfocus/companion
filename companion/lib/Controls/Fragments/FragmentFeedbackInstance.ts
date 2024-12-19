@@ -537,19 +537,6 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
-	 * Cleanup and forget any children belonging to the given connection
-	 */
-	forgetChildrenForConnection(connectionId: string): boolean {
-		let changed = false
-		for (const childGroup of this.#children.values()) {
-			if (childGroup.forgetForConnection(connectionId)) {
-				changed = true
-			}
-		}
-		return changed
-	}
-
-	/**
 	 * Prune all actions/feedbacks referencing unknown conncetions
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */

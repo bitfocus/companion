@@ -121,22 +121,6 @@ export class FragmentFeedbacks {
 	}
 
 	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void {
-		const changed = this.#feedbacks.clearCachedValueForConnectionId(connectionId)
-		if (changed) this.#triggerRedraw()
-	}
-
-	/**
-	 * Prepare this control for deletion
-	 * @access public
-	 */
-	destroy(): void {
-		this.loadStorage([])
-	}
-
-	/**
 	 * Add a feedback to this control
 	 * @param feedbackItem the item to add
 	 * @param ownerId the ids of parent feedback that this feedback should be added as a child of
@@ -160,84 +144,6 @@ export class FragmentFeedbacks {
 		this.#commitChange()
 
 		return true
-	}
-
-	/**
-	 * Duplicate an feedback on this control
-	 */
-	feedbackDuplicate(id: string): boolean {
-		const feedback = this.#feedbacks.duplicateFeedback(id)
-		if (feedback) {
-			this.#commitChange(false)
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Enable or disable a feedback
-	 */
-	feedbackEnabled(id: string, enabled: boolean): boolean {
-		const feedback = this.#feedbacks.findById(id)
-		if (feedback) {
-			feedback.setEnabled(enabled)
-
-			this.#commitChange()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Set headline for the feedback
-	 */
-	feedbackHeadline(id: string, headline: string): boolean {
-		const feedback = this.#feedbacks.findById(id)
-		if (feedback) {
-			feedback.setHeadline(headline)
-
-			this.#commitChange()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Learn the options for a feedback, by asking the instance for the current values
-	 */
-	async feedbackLearn(id: string): Promise<boolean> {
-		const feedback = this.#feedbacks.findById(id)
-		if (!feedback) return false
-
-		const changed = await feedback.learnOptions()
-		if (!changed) return false
-
-		// Time has passed due to the `await`
-		// So the feedback may not still exist, meaning we should find it again to be sure
-		const feedbackAfter = this.#feedbacks.findById(id)
-		if (!feedbackAfter) return false
-
-		this.#commitChange(true)
-		return true
-	}
-
-	/**
-	 * Remove a feedback from this control
-	 */
-	feedbackRemove(id: string): boolean {
-		if (this.#feedbacks.removeFeedback(id)) {
-			this.#commitChange()
-
-			return true
-		} else {
-			return false
-		}
 	}
 
 	/**
@@ -300,113 +206,6 @@ export class FragmentFeedbacks {
 	}
 
 	/**
-	 * Update an option for a feedback
-	 * @param id the id of the feedback
-	 * @param key the key/name of the property
-	 * @param value the new value
-	 */
-	feedbackSetOptions(id: string, key: string, value: any): boolean {
-		const feedback = this.#feedbacks.findById(id)
-		if (feedback) {
-			feedback.setOption(key, value)
-
-			this.#commitChange()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Set a new connection instance for a feedback
-	 * @param id the id of the feedback
-	 * @param connectionId the id of the new connection
-	 */
-	feedbackSetConnection(id: string, connectionId: string | number): boolean {
-		const feedback = this.#feedbacks.findById(id)
-		if (feedback) {
-			feedback.setInstance(connectionId)
-
-			this.#commitChange()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Set whether a boolean feedback should be inverted
-	 * @param id the id of the feedback
-	 * @param isInverted the new value
-	 */
-	feedbackSetInverted(id: string, isInverted: boolean): boolean {
-		const feedback = this.#feedbacks.findById(id)
-		if (feedback) {
-			feedback.setInverted(!!isInverted)
-
-			this.#commitChange()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Update the selected style properties for a boolean feedback
-	 * @param id the id of the feedback
-	 * @param selected the properties to be selected
-	 */
-	feedbackSetStyleSelection(id: string, selected: string[]): boolean {
-		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
-
-		const feedback = this.#feedbacks.findById(id)
-		if (feedback && feedback.setStyleSelection(selected, this.baseStyle)) {
-			this.#commitChange()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Update an style property for a boolean feedback
-	 * @param id the id of the feedback
-	 * @param key the key/name of the property
-	 * @param value the new value
-	 */
-	feedbackSetStyleValue(id: string, key: string, value: any): boolean {
-		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
-
-		const feedback = this.#feedbacks.findById(id)
-		if (feedback && feedback.setStyleValue(key, value)) {
-			this.#commitChange()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Remove any actions referencing a specified connectionId
-	 */
-	forgetConnection(connectionId: string): boolean {
-		// Cleanup any feedbacks
-		return this.#feedbacks.forgetForConnection(connectionId)
-	}
-
-	/**
-	 * Get all the feedback instances
-	 */
-	getAllFeedbackInstances(): FeedbackInstance[] {
-		return this.#feedbacks.asFeedbackInstances()
-	}
-
-	/**
 	 * Get all the feedbacks contained
 	 */
 	getAllFeedbacks(): FragmentFeedbackInstance[] {
@@ -438,16 +237,6 @@ export class FragmentFeedbacks {
 		extractInstances(this.#feedbacks.asFeedbackInstances())
 
 		return instances
-	}
-
-	/**
-	 * Get the unparsed style for these feedbacks
-	 * Note: Does not clone the style
-	 */
-	getUnparsedStyle(): UnparsedButtonStyle {
-		const styleBuilder = new FeedbackStyleBuilder(this.baseStyle)
-		this.#feedbacks.buildStyle(styleBuilder)
-		return styleBuilder.style
 	}
 
 	/**

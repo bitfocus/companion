@@ -8,6 +8,7 @@ import {
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from './EntityInstance.js'
+import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 
 export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitions
@@ -266,25 +267,25 @@ export class ControlEntityList {
 		return undefined
 	}
 
-	// /**
-	//  * Cleanup and forget any children belonging to the given connection
-	//  */
-	// forgetForConnection(connectionId: string): boolean {
-	// 	let changed = false
+	/**
+	 * Cleanup and forget any children belonging to the given connection
+	 */
+	forgetForConnection(connectionId: string): boolean {
+		let changed = false
 
-	// 	this.#actions = this.#actions.filter((action) => {
-	// 		if (action.connectionId === connectionId) {
-	// 			action.cleanup()
+		this.#entities = this.#entities.filter((entity) => {
+			if (entity.connectionId === connectionId) {
+				entity.cleanup()
 
-	// 			return false
-	// 		} else {
-	// 			changed = action.forgetChildrenForConnection(connectionId)
-	// 			return true
-	// 		}
-	// 	})
+				return false
+			} else {
+				changed = entity.forgetChildrenForConnection(connectionId)
+				return true
+			}
+		})
 
-	// 	return changed
-	// }
+		return changed
+	}
 
 	// /**
 	//  * Prune all actions/actions referencing unknown conncetions
@@ -337,5 +338,20 @@ export class ControlEntityList {
 		}
 
 		return result
+	}
+
+	/**
+	 * Get the unparsed style for the feedbacks
+	 * Note: Does not clone the style
+	 */
+	buildFeedbackStyle(styleBuilder: FeedbackStyleBuilder): void {
+		if (this.#listDefinition.type !== EntityModelType.Feedback || this.#listDefinition.booleanFeedbacksOnly)
+			throw new Error('ControlEntityList is not style feedbacks')
+
+		// Note: We don't need to consider children of the feedbacks here, as that can only be from boolean feedbacks which are handled by the `getBooleanValue`
+
+		for (const entity of this.#entities) {
+			entity.buildFeedbackStyle(styleBuilder)
+		}
 	}
 }

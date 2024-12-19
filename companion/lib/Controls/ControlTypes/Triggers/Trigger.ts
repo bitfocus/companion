@@ -1,6 +1,5 @@
 import { ControlBase } from '../../ControlBase.js'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
-import { FragmentFeedbacks } from '../../Fragments/FragmentFeedbacks.js'
 import { TriggersListRoom } from '../../Controller.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
@@ -29,6 +28,7 @@ import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/sh
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Fragments/EntityListPoolBase.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
  * Class for an interval trigger.
@@ -425,7 +425,7 @@ export class ControlTrigger
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
 	triggerLocationHasChanged(): void {
-		this.feedbacks.resubscribeAllFeedbacks('internal')
+		this.entities.resubscribeEntities(EntityModelType.Feedback, 'internal')
 	}
 
 	/**
@@ -438,7 +438,7 @@ export class ControlTrigger
 			type: this.type,
 			options: this.options,
 			action_sets: this.actions.asActionStepModel(),
-			condition: this.feedbacks.getAllFeedbackInstances(),
+			condition: this.entities.getFeedbackInstances(),
 			events: this.events,
 		}
 		return clone ? cloneDeep(obj) : obj
