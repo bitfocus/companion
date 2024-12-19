@@ -34,12 +34,12 @@ interface AddFeedbackGroup {
 }
 interface AddFeedbackDropdownProps {
 	onSelect: (feedbackType: string) => void
-	booleanOnly: boolean
+	onlyType: 'boolean' | 'advanced' | null
 	addPlaceholder: string
 }
 export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 	onSelect,
-	booleanOnly,
+	onlyType,
 	addPlaceholder,
 }: AddFeedbackDropdownProps) {
 	const { connections, feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
@@ -49,7 +49,7 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 		const options: Array<AddFeedbackOption | AddFeedbackGroup> = []
 		for (const [connectionId, instanceFeedbacks] of feedbackDefinitions.connections.entries()) {
 			for (const [feedbackId, feedback] of instanceFeedbacks.entries()) {
-				if (!booleanOnly || feedback.type === 'boolean') {
+				if (!onlyType || feedback.type === onlyType) {
 					const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 					const optionLabel = `${connectionLabel}: ${feedback.label}`
 					options.push({
@@ -64,19 +64,21 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 
 		const recents: AddFeedbackOption[] = []
 		for (const feedbackType of recentlyAddedFeedbacks.recentIds) {
-			if (feedbackType) {
-				const [connectionId, feedbackId] = feedbackType.split(':', 2)
-				const feedbackInfo = feedbackDefinitions.connections.get(connectionId)?.get(feedbackId)
-				if (feedbackInfo) {
-					const connectionLabel = connections.getLabel(connectionId) ?? connectionId
-					const optionLabel = `${connectionLabel}: ${feedbackInfo.label}`
-					recents.push({
-						isRecent: true,
-						value: `${connectionId}:${feedbackId}`,
-						label: optionLabel,
-						fuzzy: fuzzyPrepare(optionLabel),
-					})
-				}
+			if (!feedbackType) continue
+
+			const [connectionId, feedbackId] = feedbackType.split(':', 2)
+			const feedbackInfo = feedbackDefinitions.connections.get(connectionId)?.get(feedbackId)
+			if (!feedbackInfo) continue
+
+			if (!onlyType || feedbackInfo.type === onlyType) {
+				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
+				const optionLabel = `${connectionLabel}: ${feedbackInfo.label}`
+				recents.push({
+					isRecent: true,
+					value: `${connectionId}:${feedbackId}`,
+					label: optionLabel,
+					fuzzy: fuzzyPrepare(optionLabel),
+				})
 			}
 		}
 
@@ -86,7 +88,7 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 		})
 
 		return options
-	}, [feedbackDefinitions, connections, booleanOnly, recentlyAddedFeedbacks.recentIds])
+	}, [feedbackDefinitions, connections, onlyType, recentlyAddedFeedbacks.recentIds])
 
 	const innerChange = useCallback(
 		(e: AddFeedbackOption | null) => {

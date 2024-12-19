@@ -323,7 +323,7 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:feedback:add', (controlId, parentId, connectionId, feedbackId) => {
+		client.onPromise('controls:feedback:add', (controlId, ownerId, connectionId, feedbackId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
@@ -334,7 +334,7 @@ export class ControlsController extends CoreBase {
 					control.feedbacks.isBooleanOnly
 				)
 				if (feedbackItem) {
-					return control.feedbacks.feedbackAdd(feedbackItem, parentId)
+					return control.feedbacks.feedbackAdd(feedbackItem, ownerId)
 				} else {
 					return false
 				}
@@ -450,14 +450,15 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:feedback:move', (controlId, moveFeedbackId, newParentId, newIndex) => {
+		client.onPromise('controls:feedback:move', (controlId, moveFeedbackId, newOwnerId, newIndex) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (moveFeedbackId === newParentId) throw new Error('Cannot move feedback to itself')
+			if (newOwnerId && moveFeedbackId === newOwnerId.parentFeedbackId)
+				throw new Error('Cannot move feedback to itself')
 
 			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackMoveTo(moveFeedbackId, newParentId, newIndex)
+				return control.feedbacks.feedbackMoveTo(moveFeedbackId, newOwnerId, newIndex)
 			} else {
 				throw new Error(`Control "${controlId}" does not support feedbacks`)
 			}

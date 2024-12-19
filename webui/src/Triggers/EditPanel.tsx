@@ -152,7 +152,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									entityType="condition"
 									controlId={controlId}
 									feedbacks={config.condition}
-									booleanOnly={true}
+									onlyType={'boolean'}
 									location={undefined}
 									addPlaceholder="+ Add condition"
 								/>

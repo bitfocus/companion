@@ -559,7 +559,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								controlId={controlId}
 								feedbacks={feedbacks}
 								location={location}
-								booleanOnly={false}
+								onlyType={null}
 								addPlaceholder="+ Add feedback"
 							/>
 						</MyErrorBoundary>

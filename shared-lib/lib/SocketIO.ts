@@ -45,6 +45,7 @@ import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
 import type { ActionOwner, ActionSetId } from './Model/ActionModel.js'
+import type { FeedbackOwner } from './Model/FeedbackModel.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -121,12 +122,12 @@ export interface ClientToBackendEventsMap {
 	'controls:feedback:move': (
 		controlId: string,
 		dragFeedbackId: string,
-		hoverParentId: string | null,
+		hoverOwnerId: FeedbackOwner | null,
 		hoverIndex: number
 	) => boolean
 	'controls:feedback:add': (
 		controlId: string,
-		parentId: string | null,
+		ownerId: FeedbackOwner | null,
 		connectionId: string,
 		feedbackType: string
 	) => boolean

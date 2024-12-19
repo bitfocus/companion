@@ -438,6 +438,7 @@ export class InternalController {
 
 						showButtonPreview: feedback.showButtonPreview ?? false,
 						supportsChildFeedbacks: feedback.supportsChildFeedbacks ?? false,
+						supportsAdvancedChildFeedbacks: feedback.supportsAdvancedChildFeedbacks ?? false,
 					}
 				}
 			}
