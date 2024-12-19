@@ -206,13 +206,6 @@ export class FragmentFeedbacks {
 	}
 
 	/**
-	 * Get all the feedbacks contained
-	 */
-	getAllFeedbacks(): FragmentFeedbackInstance[] {
-		return this.#feedbacks.getAllFeedbacks()
-	}
-
-	/**
 	 * Get all the feedback instances
 	 * @param onlyConnectionId Optionally, only for a specific connection
 	 */
@@ -237,15 +230,6 @@ export class FragmentFeedbacks {
 		extractInstances(this.#feedbacks.asFeedbackInstances())
 
 		return instances
-	}
-
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	async postProcessImport(): Promise<void> {
-		await Promise.all(this.#feedbacks.postProcessImport()).catch((e) => {
-			this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
-		})
 	}
 
 	/**

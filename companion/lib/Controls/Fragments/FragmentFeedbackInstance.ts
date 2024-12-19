@@ -463,27 +463,6 @@ export class FragmentFeedbackInstance {
 		return childGroup.addFeedback(feedback)
 	}
 
-	/**
-	 * Remove a child feedback
-	 */
-	removeChild(id: string): boolean {
-		for (const childGroup of this.#children.values()) {
-			if (childGroup.removeFeedback(id)) return true
-		}
-		return false
-	}
-
-	/**
-	 * Duplicate a child feedback
-	 */
-	duplicateChild(id: string): FragmentFeedbackInstance | undefined {
-		for (const childGroup of this.#children.values()) {
-			const newFeedback = childGroup.duplicateFeedback(id)
-			if (newFeedback) return newFeedback
-		}
-		return undefined
-	}
-
 	// /**
 	//  * Reorder a feedback in the list
 	//  */
@@ -519,64 +498,8 @@ export class FragmentFeedbackInstance {
 	/**
 	 * Recursively get all the feedbacks
 	 */
-	getAllChildren(): FragmentFeedbackInstance[] {
-		const feedbacks: FragmentFeedbackInstance[] = []
-
-		for (const childGroup of this.#children.values()) {
-			feedbacks.push(...childGroup.getAllFeedbacks())
-		}
-
-		return feedbacks
-	}
-
-	/**
-	 * Recursively get all the feedbacks
-	 */
 	getChildrenOfGroup(groupId: FeedbackChildGroup): FragmentFeedbackInstance[] {
 		return this.#children.get(groupId)?.getFeedbacks() ?? []
-	}
-
-	/**
-	 * Prune all actions/feedbacks referencing unknown conncetions
-	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 */
-	verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
-		let changed = false
-		for (const childGroup of this.#children.values()) {
-			if (childGroup.verifyConnectionIds(knownConnectionIds)) {
-				changed = true
-			}
-		}
-		return changed
-	}
-
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	postProcessImport(): Promise<void>[] {
-		const ps: Promise<void>[] = []
-
-		if (this.#data.instance_id === 'internal') {
-			const newProps = this.#internalModule.feedbackUpgrade(this.asFeedbackInstance(), this.#controlId)
-			if (newProps) {
-				this.replaceProps(newProps, false)
-			}
-
-			setImmediate(() => {
-				this.#internalModule.feedbackUpdate(this.asFeedbackInstance(), this.#controlId)
-			})
-		} else {
-			const instance = this.#moduleHost.getChild(this.connectionId, true)
-			if (instance) {
-				ps.push(instance.feedbackUpdate(this.asFeedbackInstance(), this.#controlId))
-			}
-		}
-
-		for (const childGroup of this.#children.values()) {
-			ps.push(...childGroup.postProcessImport())
-		}
-
-		return ps
 	}
 
 	/**

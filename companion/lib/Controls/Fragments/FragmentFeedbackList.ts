@@ -53,13 +53,6 @@ export class FragmentFeedbackList {
 	}
 
 	/**
-	 * Get all the feedbacks
-	 */
-	getAllFeedbacks(): FragmentFeedbackInstance[] {
-		return [...this.#feedbacks, ...this.#feedbacks.flatMap((feedback) => feedback.getAllChildren())]
-	}
-
-	/**
 	 * Get the contained feedbacks as `FeedbackInstance`s
 	 */
 	asFeedbackInstances(): FeedbackInstance[] {
@@ -206,27 +199,6 @@ export class FragmentFeedbackList {
 	}
 
 	/**
-	 * Remove a child feedback
-	 */
-	removeFeedback(id: string): boolean {
-		const index = this.#feedbacks.findIndex((fb) => fb.id === id)
-		if (index !== -1) {
-			const feedback = this.#feedbacks[index]
-			this.#feedbacks.splice(index, 1)
-
-			feedback.cleanup()
-
-			return true
-		}
-
-		for (const feedback of this.#feedbacks) {
-			if (feedback.removeChild(id)) return true
-		}
-
-		return false
-	}
-
-	/**
 	 * Reorder a feedback in the list
 	 */
 	moveFeedback(oldIndex: number, newIndex: number): void {
@@ -268,36 +240,5 @@ export class FragmentFeedbackList {
 		if (!definition || definition.type !== this.#onlyType) return false
 
 		return true
-	}
-
-	/**
-	 * Duplicate a feedback
-	 */
-	duplicateFeedback(id: string): FragmentFeedbackInstance | undefined {
-		const feedbackIndex = this.#feedbacks.findIndex((fb) => fb.id === id)
-		if (feedbackIndex !== -1) {
-			const feedbackInstance = this.#feedbacks[feedbackIndex].asFeedbackInstance()
-			const newFeedback = new FragmentFeedbackInstance(
-				this.#instanceDefinitions,
-				this.#internalModule,
-				this.#moduleHost,
-				this.#controlId,
-				feedbackInstance,
-				true
-			)
-
-			this.#feedbacks.splice(feedbackIndex + 1, 0, newFeedback)
-
-			newFeedback.subscribe(true)
-
-			return newFeedback
-		}
-
-		for (const feedback of this.#feedbacks) {
-			const newFeedback = feedback.duplicateChild(id)
-			if (newFeedback) return newFeedback
-		}
-
-		return undefined
 	}
 }
