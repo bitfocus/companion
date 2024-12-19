@@ -181,34 +181,6 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
-	 * Get the value of this feedback as a boolean
-	 */
-	getBooleanValue(): boolean {
-		if (this.#data.disabled) return false
-
-		const definition = this.getDefinition()
-
-		// Special case to handle the internal 'logic' operators, which need to be executed live
-		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
-			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
-			const childValues = this.#children.get('children')?.getChildBooleanValues() ?? []
-
-			return this.#internalModule.executeLogicFeedback(this.asFeedbackInstance(), childValues)
-		}
-
-		if (!definition || definition.type !== 'boolean') return false
-
-		if (typeof this.#cachedValue === 'boolean') {
-			if (definition.showInvert && this.#data.isInverted) return !this.#cachedValue
-
-			return this.#cachedValue
-		} else {
-			// An invalid value is falsey, it probably means that the feedback has no value
-			return false
-		}
-	}
-
-	/**
 	 * Inform the instance of a removed feedback
 	 */
 	cleanup() {

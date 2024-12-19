@@ -121,13 +121,6 @@ export class FragmentFeedbacks {
 	}
 
 	/**
-	 * Get the value from all feedbacks as a single boolean
-	 */
-	checkValueAsBoolean(): boolean {
-		return this.#feedbacks.getBooleanValue()
-	}
-
-	/**
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {

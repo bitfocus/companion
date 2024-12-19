@@ -66,23 +66,6 @@ export class FragmentFeedbackList {
 		return this.#feedbacks.map((feedback) => feedback.asFeedbackInstance())
 	}
 
-	/**
-	 * Get the value of this feedback as a boolean
-	 */
-	getBooleanValue(): boolean {
-		if (this.#onlyType !== 'boolean') throw new Error('FragmentFeedbacks is setup to use styles')
-
-		let result = true
-
-		for (const feedback of this.#feedbacks) {
-			if (feedback.disabled) continue
-
-			result = result && feedback.getBooleanValue()
-		}
-
-		return result
-	}
-
 	getChildBooleanValues(): boolean[] {
 		if (this.#onlyType !== 'boolean') throw new Error('FragmentFeedbacks is setup to use styles')
 

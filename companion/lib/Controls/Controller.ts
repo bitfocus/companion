@@ -323,7 +323,7 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:feedback:add', (controlId, ownerId, connectionId, feedbackId) => {
+		client.onPromise('controls:entity:add', (controlId, entityLocation, ownerId, connectionId, entityDefinition) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
@@ -343,114 +343,80 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:feedback:learn', async (controlId, id) => {
+		client.onPromise('controls:entity:learn', async (controlId, entityLocation, id) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
-				try {
-					this.#setIsLearning(id, true)
+			if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
+			try {
+				this.#setIsLearning(id, true)
 
-					control.feedbacks
-						.feedbackLearn(id)
-						.catch((e) => {
-							this.logger.error(`Learn failed: ${e}`)
-						})
-						.then(() => {
-							this.#setIsLearning(id, false)
-						})
+				control.entities
+					.entityLearn(entityLocation, id)
+					.catch((e) => {
+						this.logger.error(`Learn failed: ${e}`)
+					})
+					.then(() => {
+						this.#setIsLearning(id, false)
+					})
 
-					return true
-				} catch (e) {
-					this.#setIsLearning(id, false)
-					throw e
-				}
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
+				return true
+			} catch (e) {
+				this.#setIsLearning(id, false)
+				throw e
 			}
 		})
 
-		client.onPromise('controls:feedback:enabled', (controlId, id, enabled) => {
+		client.onPromise('controls:entity:enabled', (controlId, entityLocation, id, enabled) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackEnabled(id, enabled)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entityEnabled(entityLocation, id, enabled)
 		})
 
-		client.onPromise('controls:feedback:set-headline', (controlId, id, headline) => {
+		client.onPromise('controls:entity:set-headline', (controlId, entityLocation, id, headline) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackHeadline(id, headline)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entityHeadline(entityLocation, id, headline)
 		})
 
-		client.onPromise('controls:feedback:remove', (controlId, id) => {
+		client.onPromise('controls:entity:remove', (controlId, entityLocation, id) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackRemove(id)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entityRemove(entityLocation, id)
 		})
 
-		client.onPromise('controls:feedback:duplicate', (controlId, id) => {
+		client.onPromise('controls:entity:duplicate', (controlId, entityLocation, id) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackDuplicate(id)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entityDuplicate(entityLocation, id)
 		})
 
-		client.onPromise('controls:feedback:set-option', (controlId, id, key, value) => {
+		client.onPromise('controls:entity:set-option', (controlId, entityLocation, id, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackSetOptions(id, key, value)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entrySetOptions(entityLocation, id, key, value)
 		})
 
-		client.onPromise('controls:feedback:set-connection', (controlId, feedbackId, connectionId) => {
+		client.onPromise('controls:entity:set-connection', (controlId, entityLocation, id, connectionId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackSetConnection(feedbackId, connectionId)
-			} else {
-				throw new Error(
-					`Trying to set connection of feedback ${feedbackId} to ${connectionId} but control ${controlId} does not support feedbacks`
-				)
-			}
+			return control.entities.entitySetConnection(entityLocation, id, connectionId)
 		})
 
-		client.onPromise('controls:feedback:set-inverted', (controlId, id, isInverted) => {
+		client.onPromise('controls:entity:set-inverted', (controlId, entityLocation, id, isInverted) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackSetInverted(id, isInverted)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entitySetInverted(entityLocation, id, isInverted)
 		})
 
-		client.onPromise('controls:feedback:move', (controlId, moveFeedbackId, newOwnerId, newIndex) => {
+		client.onPromise('controls:entity:move', (controlId, entityLocation, moveEntityId, newOwnerId, newIndex) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
@@ -463,7 +429,7 @@ export class ControlsController extends CoreBase {
 				throw new Error(`Control "${controlId}" does not support feedbacks`)
 			}
 		})
-		client.onPromise('controls:feedback:set-style-selection', (controlId, id, selected) => {
+		client.onPromise('controls:entity:set-style-selection', (controlId, entityLocation, id, selected) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
@@ -473,7 +439,7 @@ export class ControlsController extends CoreBase {
 				throw new Error(`Control "${controlId}" does not support feedbacks`)
 			}
 		})
-		client.onPromise('controls:feedback:set-style-value', (controlId, id, key, value) => {
+		client.onPromise('controls:entity:set-style-value', (controlId, entityLocation, id, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
@@ -503,136 +469,137 @@ export class ControlsController extends CoreBase {
 			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
 		})
 
-		client.onPromise('controls:action:add', (controlId, stepId, setId, parentId, connectionId, actionId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		// client.onPromise('controls:action:add', (controlId, stepId, setId, parentId, connectionId, actionId) => {
+		// 	const control = this.getControl(controlId)
+		// 	if (!control) return false
 
-			if (control.supportsActions) {
-				const actionItem = this.instance.definitions.createActionItem(connectionId, actionId)
-				if (actionItem) {
-					return control.actionAdd(stepId, setId, actionItem, parentId)
-				} else {
-					return false
-				}
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
+		// 	if (control.supportsActions) {
+		// 		const actionItem = this.instance.definitions.createActionItem(connectionId, actionId)
+		// 		if (actionItem) {
+		// 			return control.actionAdd(stepId, setId, actionItem, parentId)
+		// 		} else {
+		// 			return false
+		// 		}
+		// 	} else {
+		// 		throw new Error(`Control "${controlId}" does not support actions`)
+		// 	}
+		// })
 
-		client.onPromise('controls:action:learn', async (controlId, stepId, setId, id) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		// client.onPromise('controls:action:learn', async (controlId, stepId, setId, id) => {
+		// 	const control = this.getControl(controlId)
+		// 	if (!control) return false
 
-			if (control.supportsActions) {
-				if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
-				try {
-					this.#setIsLearning(id, true)
+		// 	if (control.supportsActions) {
+		// 		if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
+		// 		try {
+		// 			this.#setIsLearning(id, true)
 
-					control
-						.actionLearn(stepId, setId, id)
-						.catch((e) => {
-							this.logger.error(`Learn failed: ${e}`)
-						})
-						.then(() => {
-							this.#setIsLearning(id, false)
-						})
+		// 			control
+		// 				.actionLearn(stepId, setId, id)
+		// 				.catch((e) => {
+		// 					this.logger.error(`Learn failed: ${e}`)
+		// 				})
+		// 				.then(() => {
+		// 					this.#setIsLearning(id, false)
+		// 				})
 
-					return true
-				} catch (e) {
-					this.#setIsLearning(id, false)
-					throw e
-				}
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
+		// 			return true
+		// 		} catch (e) {
+		// 			this.#setIsLearning(id, false)
+		// 			throw e
+		// 		}
+		// 	} else {
+		// 		throw new Error(`Control "${controlId}" does not support actions`)
+		// 	}
+		// })
 
-		client.onPromise('controls:action:enabled', (controlId, stepId, setId, id, enabled) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		// client.onPromise('controls:action:enabled', (controlId, stepId, setId, id, enabled) => {
+		// 	const control = this.getControl(controlId)
+		// 	if (!control) return false
 
-			if (control.supportsActions) {
-				return control.actionEnabled(stepId, setId, id, enabled)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
+		// 	if (control.supportsActions) {
+		// 		return control.actionEnabled(stepId, setId, id, enabled)
+		// 	} else {
+		// 		throw new Error(`Control "${controlId}" does not support actions`)
+		// 	}
+		// })
 
-		client.onPromise('controls:action:set-headline', (controlId, stepId, setId, id, headline) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		// client.onPromise('controls:action:set-headline', (controlId, stepId, setId, id, headline) => {
+		// 	const control = this.getControl(controlId)
+		// 	if (!control) return false
 
-			if (control.supportsActions) {
-				return control.actionHeadline(stepId, setId, id, headline)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
+		// 	if (control.supportsActions) {
+		// 		return control.actionHeadline(stepId, setId, id, headline)
+		// 	} else {
+		// 		throw new Error(`Control "${controlId}" does not support actions`)
+		// 	}
+		// })
 
-		client.onPromise('controls:action:remove', (controlId, stepId, setId, id) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		// client.onPromise('controls:action:remove', (controlId, stepId, setId, id) => {
+		// 	const control = this.getControl(controlId)
+		// 	if (!control) return false
 
-			if (control.supportsActions) {
-				return control.actionRemove(stepId, setId, id)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
+		// 	if (control.supportsActions) {
+		// 		return control.actionRemove(stepId, setId, id)
+		// 	} else {
+		// 		throw new Error(`Control "${controlId}" does not support actions`)
+		// 	}
+		// })
 
-		client.onPromise('controls:action:duplicate', (controlId, stepId, setId, id) => {
-			const control = this.getControl(controlId)
-			if (!control) return null
+		// client.onPromise('controls:action:duplicate', (controlId, stepId, setId, id) => {
+		// 	const control = this.getControl(controlId)
+		// 	if (!control) return null
 
-			if (control.supportsActions) {
-				return control.actionDuplicate(stepId, setId, id)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
+		// 	if (control.supportsActions) {
+		// 		return control.actionDuplicate(stepId, setId, id)
+		// 	} else {
+		// 		throw new Error(`Control "${controlId}" does not support actions`)
+		// 	}
+		// })
 
-		client.onPromise('controls:action:set-connection', (controlId, stepId, setId, id, connectionId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		// client.onPromise('controls:action:set-connection', (controlId, stepId, setId, id, connectionId) => {
+		// 	const control = this.getControl(controlId)
+		// 	if (!control) return false
 
-			if (control.supportsActions) {
-				return control.actionSetConnection(stepId, setId, id, connectionId)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
+		// 	if (control.supportsActions) {
+		// 		return control.actionSetConnection(stepId, setId, id, connectionId)
+		// 	} else {
+		// 		throw new Error(`Control "${controlId}" does not support actions`)
+		// 	}
+		// })
 
-		client.onPromise('controls:action:set-option', (controlId, stepId, setId, id, key, value) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		// client.onPromise('controls:action:set-option', (controlId, stepId, setId, id, key, value) => {
+		// 	const control = this.getControl(controlId)
+		// 	if (!control) return false
 
-			if (control.supportsActions) {
-				return control.actionSetOption(stepId, setId, id, key, value)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
-		client.onPromise(
-			'controls:action:move',
-			(controlId, dragStepId, dragSetId, dragActionId, hoverStepId, hoverSetId, hoverParentId, hoverIndex) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		// 	if (control.supportsActions) {
+		// 		return control.actionSetOption(stepId, setId, id, key, value)
+		// 	} else {
+		// 		throw new Error(`Control "${controlId}" does not support actions`)
+		// 	}
+		// })
+		// client.onPromise(
+		// 	'controls:action:move',
+		// 	(controlId, dragStepId, dragSetId, dragActionId, hoverStepId, hoverSetId, hoverParentId, hoverIndex) => {
+		// 		const control = this.getControl(controlId)
+		// 		if (!control) return false
 
-				if (control.supportsActions) {
-					return control.actionMoveTo(
-						dragStepId,
-						dragSetId,
-						dragActionId,
-						hoverStepId,
-						hoverSetId,
-						hoverParentId,
-						hoverIndex
-					)
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
+		// 		if (control.supportsActions) {
+		// 			return control.actionMoveTo(
+		// 				dragStepId,
+		// 				dragSetId,
+		// 				dragActionId,
+		// 				hoverStepId,
+		// 				hoverSetId,
+		// 				hoverParentId,
+		// 				hoverIndex
+		// 			)
+		// 		} else {
+		// 			throw new Error(`Control "${controlId}" does not support actions`)
+		// 		}
+		// 	}
+		// )
+
 		client.onPromise('controls:action-set:add', (controlId, stepId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false

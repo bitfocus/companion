@@ -1,7 +1,6 @@
 import { ControlBase } from '../../ControlBase.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { cloneDeep } from 'lodash-es'
-import { FragmentFeedbacks } from '../../Fragments/FragmentFeedbacks.js'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
 import type {
 	ControlWithFeedbacks,
@@ -16,6 +15,7 @@ import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleMode
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
+import { ControlEntityListPoolButton } from '../../Fragments/EntityListPoolBase.js'
 
 /**
  * Abstract class for a editable button control.
@@ -52,11 +52,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	static DefaultOptions: ButtonOptionsBase = {}
 
 	/**
-	 * The feedbacks fragment
-	 */
-	readonly feedbacks: FragmentFeedbacks
-
-	/**
 	 * The current status of this button
 	 */
 	button_status: ButtonStatus = 'good'
@@ -81,6 +76,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 */
 	protected steps: Record<string, FragmentActions> = {}
 
+	readonly entities: ControlEntityListPoolButton // TODO - should this be private?
+
 	protected readonly actionRunner: ControlActionRunner
 
 	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
@@ -88,15 +85,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
 
-		this.feedbacks = new FragmentFeedbacks(
-			deps.instance.definitions,
-			deps.internalModule,
-			deps.instance.moduleHost,
+		this.entities = new ControlEntityListPoolButton({
 			controlId,
-			this.commitChange.bind(this),
-			this.triggerRedraw.bind(this),
-			false
-		)
+			commitChange: this.commitChange.bind(this),
+			triggerRedraw: this.triggerRedraw.bind(this),
+			instanceDefinitions: deps.instance.definitions,
+			internalModule: deps.internalModule,
+			moduleHost: deps.instance.moduleHost,
+		})
 	}
 
 	/**
@@ -159,7 +155,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {
-		this.feedbacks.clearConnectionState(connectionId)
+		this.entities.clearConnectionState(connectionId)
 	}
 
 	/**

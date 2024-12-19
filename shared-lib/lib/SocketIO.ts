@@ -45,7 +45,7 @@ import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
 import type { ActionOwner, ActionSetId } from './Model/ActionModel.js'
-import type { FeedbackOwner } from './Model/FeedbackModel.js'
+import type { EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -109,84 +109,123 @@ export interface ClientToBackendEventsMap {
 	'controls:swap': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:reset': (location: ControlLocation, newType?: string) => void
 
-	'controls:feedback:set-headline': (controlId: string, feedbackId: string, headline: string) => boolean
-	'controls:feedback:enabled': (controlId: string, feedbackId: string, enabled: boolean) => boolean
-	'controls:feedback:set-style-selection': (controlId: string, feedbackId: string, selected: string[]) => boolean
-	'controls:feedback:set-style-value': (controlId: string, feedbackId: string, key: string, value: any) => boolean
-	'controls:feedback:learn': (controlId: string, feedbackId: string) => boolean
-	'controls:feedback:duplicate': (controlId: string, feedbackId: string) => boolean
-	'controls:feedback:remove': (controlId: string, feedbackId: string) => boolean
-	'controls:feedback:set-connection': (controlId: string, feedbackId: string, connectionId: string | number) => boolean
-	'controls:feedback:set-inverted': (controlId: string, feedbackId: string, isInverted: boolean) => boolean
-	'controls:feedback:set-option': (controlId: string, feedbackId: string, key: string, val: any) => boolean
-	'controls:feedback:move': (
+	'controls:entity:set-headline': (
 		controlId: string,
-		dragFeedbackId: string,
-		hoverOwnerId: FeedbackOwner | null,
-		hoverIndex: number
-	) => boolean
-	'controls:feedback:add': (
-		controlId: string,
-		ownerId: FeedbackOwner | null,
-		connectionId: string,
-		feedbackType: string
-	) => boolean
-
-	'controls:action:set-headline': (
-		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
 		headline: string
 	) => boolean
-	'controls:action:enabled': (
+	'controls:entity:enabled': (
 		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
 		enabled: boolean
 	) => boolean
-	'controls:action:learn': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
-	'controls:action:duplicate': (
+	'controls:entity:set-style-selection': (
 		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string
-	) => string | null
-	'controls:action:remove': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
-	'controls:action:set-connection': (
-		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string,
-		connectionId: string
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		selected: string[]
 	) => boolean
-	'controls:action:set-option': (
+	'controls:entity:set-style-value': (
 		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		key: string,
+		value: any
+	) => boolean
+	'controls:entity:learn': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
+	'controls:entity:duplicate': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
+	'controls:entity:remove': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
+	'controls:entity:set-connection': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		connectionId: string | number
+	) => boolean
+	'controls:entity:set-inverted': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		isInverted: boolean
+	) => boolean
+	'controls:entity:set-option': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
 		key: string,
 		val: any
 	) => boolean
-	'controls:action:move': (
+	'controls:entity:move': (
 		controlId: string,
-		dragStepId: string,
-		dragSetId: ActionSetId,
-		dragActionId: string,
-		hoverStepId: string,
-		hoverSetId: ActionSetId,
-		hoverOwnerId: ActionOwner | null,
+		entityLocation: SomeSocketEntityLocation,
+		dragEntityId: string,
+		hoverOwnerId: EntityOwner | null,
 		hoverIndex: number
 	) => boolean
-	'controls:action:add': (
+	'controls:entity:add': (
 		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		ownerId: ActionOwner | null,
+		entityLocation: SomeSocketEntityLocation,
+		ownerId: EntityOwner | null,
 		connectionId: string,
-		actionType: string
+		entityDefinition: string
 	) => boolean
+
+	// 'controls:action:set-headline': (
+	// 	controlId: string,
+	// 	stepId: string,
+	// 	setId: ActionSetId,
+	// 	actionId: string,
+	// 	headline: string
+	// ) => boolean
+	// 'controls:action:enabled': (
+	// 	controlId: string,
+	// 	stepId: string,
+	// 	setId: ActionSetId,
+	// 	actionId: string,
+	// 	enabled: boolean
+	// ) => boolean
+	// 'controls:action:learn': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
+	// 'controls:action:duplicate': (
+	// 	controlId: string,
+	// 	stepId: string,
+	// 	setId: ActionSetId,
+	// 	actionId: string
+	// ) => string | null
+	// 'controls:action:remove': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
+	// 'controls:action:set-connection': (
+	// 	controlId: string,
+	// 	stepId: string,
+	// 	setId: ActionSetId,
+	// 	actionId: string,
+	// 	connectionId: string
+	// ) => boolean
+	// 'controls:action:set-option': (
+	// 	controlId: string,
+	// 	stepId: string,
+	// 	setId: ActionSetId,
+	// 	actionId: string,
+	// 	key: string,
+	// 	val: any
+	// ) => boolean
+	// 'controls:action:move': (
+	// 	controlId: string,
+	// 	dragStepId: string,
+	// 	dragSetId: ActionSetId,
+	// 	dragActionId: string,
+	// 	hoverStepId: string,
+	// 	hoverSetId: ActionSetId,
+	// 	hoverOwnerId: ActionOwner | null,
+	// 	hoverIndex: number
+	// ) => boolean
+	// 'controls:action:add': (
+	// 	controlId: string,
+	// 	stepId: string,
+	// 	setId: ActionSetId,
+	// 	ownerId: ActionOwner | null,
+	// 	connectionId: string,
+	// 	actionType: string
+	// ) => boolean
 
 	'controls:action-set:set-run-while-held': (
 		controlId: string,

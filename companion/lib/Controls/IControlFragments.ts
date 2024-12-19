@@ -1,6 +1,5 @@
 import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
-import type { FragmentFeedbacks } from './Fragments/FragmentFeedbacks.js'
 import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
@@ -104,7 +103,7 @@ export interface ControlWithoutStyle extends ControlBase<any> {
 export interface ControlWithFeedbacks extends ControlBase<any> {
 	readonly supportsFeedbacks: true
 
-	readonly feedbacks: FragmentFeedbacks
+	// readonly feedbacks: FragmentFeedbacks
 
 	/**
 	 * Remove any tracked state for an connection

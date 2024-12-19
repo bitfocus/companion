@@ -28,6 +28,7 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
+import { ControlEntityListPoolTrigger } from '../../Fragments/EntityListPoolBase.js'
 
 /**
  * Class for an interval trigger.
@@ -134,7 +135,8 @@ export class ControlTrigger
 	readonly #actionRunner: ControlActionRunner
 
 	readonly actions: FragmentActions
-	readonly feedbacks: FragmentFeedbacks
+
+	readonly entities: ControlEntityListPoolTrigger // TODO - should this be private?
 
 	/**
 	 * @param registry - the application core
@@ -161,15 +163,14 @@ export class ControlTrigger
 			controlId,
 			this.commitChange.bind(this)
 		)
-		this.feedbacks = new FragmentFeedbacks(
-			deps.instance.definitions,
-			deps.internalModule,
-			deps.instance.moduleHost,
+		this.entities = new ControlEntityListPoolTrigger({
 			controlId,
-			this.commitChange.bind(this),
-			this.triggerRedraw.bind(this),
-			true
-		)
+			commitChange: this.commitChange.bind(this),
+			triggerRedraw: this.triggerRedraw.bind(this),
+			instanceDefinitions: deps.instance.definitions,
+			internalModule: deps.internalModule,
+			moduleHost: deps.instance.moduleHost,
+		})
 
 		this.#eventBus = eventBus
 		this.#timerEvents = new TriggersEventTimer(eventBus, controlId, this.executeActions.bind(this))
@@ -340,7 +341,7 @@ export class ControlTrigger
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {
-		this.feedbacks.clearConnectionState(connectionId)
+		this.entities.clearConnectionState(connectionId)
 	}
 
 	/**
@@ -356,7 +357,7 @@ export class ControlTrigger
 
 			// Ensure the condition passes when it is not part of the event
 			if (!this.events.some((event) => event.type.startsWith('condition_'))) {
-				const conditionPasses = this.feedbacks.checkValueAsBoolean()
+				const conditionPasses = this.entities.checkConditionValue()
 				if (!conditionPasses) return
 			}
 
