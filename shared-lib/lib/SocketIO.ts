@@ -158,9 +158,10 @@ export interface ClientToBackendEventsMap {
 	) => boolean
 	'controls:entity:move': (
 		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
+		dragEntityLocation: SomeSocketEntityLocation,
 		dragEntityId: string,
 		hoverOwnerId: EntityOwner | null,
+		hoverEntityLocation: SomeSocketEntityLocation,
 		hoverIndex: number
 	) => boolean
 	'controls:entity:add': (
@@ -171,62 +172,6 @@ export interface ClientToBackendEventsMap {
 		entityType: EntityModelType,
 		entityDefinition: string
 	) => boolean
-
-	// 'controls:action:set-headline': (
-	// 	controlId: string,
-	// 	stepId: string,
-	// 	setId: ActionSetId,
-	// 	actionId: string,
-	// 	headline: string
-	// ) => boolean
-	// 'controls:action:enabled': (
-	// 	controlId: string,
-	// 	stepId: string,
-	// 	setId: ActionSetId,
-	// 	actionId: string,
-	// 	enabled: boolean
-	// ) => boolean
-	// 'controls:action:learn': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
-	// 'controls:action:duplicate': (
-	// 	controlId: string,
-	// 	stepId: string,
-	// 	setId: ActionSetId,
-	// 	actionId: string
-	// ) => string | null
-	// 'controls:action:remove': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
-	// 'controls:action:set-connection': (
-	// 	controlId: string,
-	// 	stepId: string,
-	// 	setId: ActionSetId,
-	// 	actionId: string,
-	// 	connectionId: string
-	// ) => boolean
-	// 'controls:action:set-option': (
-	// 	controlId: string,
-	// 	stepId: string,
-	// 	setId: ActionSetId,
-	// 	actionId: string,
-	// 	key: string,
-	// 	val: any
-	// ) => boolean
-	// 'controls:action:move': (
-	// 	controlId: string,
-	// 	dragStepId: string,
-	// 	dragSetId: ActionSetId,
-	// 	dragActionId: string,
-	// 	hoverStepId: string,
-	// 	hoverSetId: ActionSetId,
-	// 	hoverOwnerId: ActionOwner | null,
-	// 	hoverIndex: number
-	// ) => boolean
-	// 'controls:action:add': (
-	// 	controlId: string,
-	// 	stepId: string,
-	// 	setId: ActionSetId,
-	// 	ownerId: ActionOwner | null,
-	// 	connectionId: string,
-	// 	actionType: string
-	// ) => boolean
 
 	'controls:action-set:set-run-while-held': (
 		controlId: string,

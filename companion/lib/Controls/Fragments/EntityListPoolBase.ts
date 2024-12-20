@@ -14,6 +14,7 @@ import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { Complete } from '@companion-module/base/dist/util.js'
 import { UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
+import { isEqual } from 'lodash-es'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitions
@@ -233,34 +234,35 @@ export abstract class ControlEntityListPoolBase {
 
 	/**
 	 * Move an entity within the hierarchy
-	 * @param listId the id of the list to move the entity within
+	 * @param moveListId the id of the list to move the entity from
 	 * @param moveEntityId the id of the entity to move
 	 * @param newOwnerId the target new owner of the entity
+	 * @param newListId the id of the list to move the entity to
 	 * @param newIndex the target index of the entity
 	 */
 	entityMoveTo(
-		listId: SomeSocketEntityLocation,
+		moveListId: SomeSocketEntityLocation,
 		moveEntityId: string,
 		newOwnerId: EntityOwner | null,
+		newListId: SomeSocketEntityLocation,
 		newIndex: number
 	): boolean {
 		if (newOwnerId && moveEntityId === newOwnerId.parentId) return false
 
-		// For now, limit to moving within the same list
-		// But this in an artificial limitation, there is no reason it couldn't be expanded
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const oldInfo = entityList.findParentAndIndex(moveEntityId)
+		const oldInfo = this.getEntityList(moveListId)?.findParentAndIndex(moveEntityId)
 		if (!oldInfo) return false
 
 		if (
+			isEqual(moveListId, newListId) &&
 			oldInfo.parent.ownerId?.parentId === newOwnerId?.parentId &&
 			oldInfo.parent.ownerId?.childGroup === newOwnerId?.childGroup
 		) {
 			oldInfo.parent.moveEntity(oldInfo.index, newIndex)
 		} else {
-			const newParent = newOwnerId ? entityList.findById(newOwnerId.parentId) : null
+			const newEntityList = this.getEntityList(newListId)
+			if (!newEntityList) return false
+
+			const newParent = newOwnerId ? newEntityList.findById(newOwnerId.parentId) : null
 			if (newOwnerId && !newParent) return false
 
 			// Ensure the new parent is not a child of the entity being moved
@@ -275,7 +277,7 @@ export abstract class ControlEntityListPoolBase {
 			if (newParent) {
 				newParent.pushChild(poppedFeedback, newOwnerId!.childGroup, newIndex)
 			} else {
-				entityList.pushEntity(poppedFeedback, newIndex)
+				newEntityList.pushEntity(poppedFeedback, newIndex)
 			}
 		}
 

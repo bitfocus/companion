@@ -423,12 +423,15 @@ export class ControlsController extends CoreBase {
 			return control.entities.entitySetInverted(entityLocation, id, isInverted)
 		})
 
-		client.onPromise('controls:entity:move', (controlId, entityLocation, moveEntityId, newOwnerId, newIndex) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		client.onPromise(
+			'controls:entity:move',
+			(controlId, moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex) => {
+				const control = this.getControl(controlId)
+				if (!control) return false
 
-			return control.entities.entityMoveTo(entityLocation, moveEntityId, newOwnerId, newIndex)
-		})
+				return control.entities.entityMoveTo(moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex)
+			}
+		)
 		client.onPromise('controls:entity:set-style-selection', (controlId, entityLocation, id, selected) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
@@ -460,137 +463,6 @@ export class ControlsController extends CoreBase {
 
 			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
 		})
-
-		// client.onPromise('controls:action:add', (controlId, stepId, setId, parentId, connectionId, actionId) => {
-		// 	const control = this.getControl(controlId)
-		// 	if (!control) return false
-
-		// 	if (control.supportsActions) {
-		// 		const actionItem = this.instance.definitions.createActionItem(connectionId, actionId)
-		// 		if (actionItem) {
-		// 			return control.actionAdd(stepId, setId, actionItem, parentId)
-		// 		} else {
-		// 			return false
-		// 		}
-		// 	} else {
-		// 		throw new Error(`Control "${controlId}" does not support actions`)
-		// 	}
-		// })
-
-		// client.onPromise('controls:action:learn', async (controlId, stepId, setId, id) => {
-		// 	const control = this.getControl(controlId)
-		// 	if (!control) return false
-
-		// 	if (control.supportsActions) {
-		// 		if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
-		// 		try {
-		// 			this.#setIsLearning(id, true)
-
-		// 			control
-		// 				.actionLearn(stepId, setId, id)
-		// 				.catch((e) => {
-		// 					this.logger.error(`Learn failed: ${e}`)
-		// 				})
-		// 				.then(() => {
-		// 					this.#setIsLearning(id, false)
-		// 				})
-
-		// 			return true
-		// 		} catch (e) {
-		// 			this.#setIsLearning(id, false)
-		// 			throw e
-		// 		}
-		// 	} else {
-		// 		throw new Error(`Control "${controlId}" does not support actions`)
-		// 	}
-		// })
-
-		// client.onPromise('controls:action:enabled', (controlId, stepId, setId, id, enabled) => {
-		// 	const control = this.getControl(controlId)
-		// 	if (!control) return false
-
-		// 	if (control.supportsActions) {
-		// 		return control.actionEnabled(stepId, setId, id, enabled)
-		// 	} else {
-		// 		throw new Error(`Control "${controlId}" does not support actions`)
-		// 	}
-		// })
-
-		// client.onPromise('controls:action:set-headline', (controlId, stepId, setId, id, headline) => {
-		// 	const control = this.getControl(controlId)
-		// 	if (!control) return false
-
-		// 	if (control.supportsActions) {
-		// 		return control.actionHeadline(stepId, setId, id, headline)
-		// 	} else {
-		// 		throw new Error(`Control "${controlId}" does not support actions`)
-		// 	}
-		// })
-
-		// client.onPromise('controls:action:remove', (controlId, stepId, setId, id) => {
-		// 	const control = this.getControl(controlId)
-		// 	if (!control) return false
-
-		// 	if (control.supportsActions) {
-		// 		return control.actionRemove(stepId, setId, id)
-		// 	} else {
-		// 		throw new Error(`Control "${controlId}" does not support actions`)
-		// 	}
-		// })
-
-		// client.onPromise('controls:action:duplicate', (controlId, stepId, setId, id) => {
-		// 	const control = this.getControl(controlId)
-		// 	if (!control) return null
-
-		// 	if (control.supportsActions) {
-		// 		return control.actionDuplicate(stepId, setId, id)
-		// 	} else {
-		// 		throw new Error(`Control "${controlId}" does not support actions`)
-		// 	}
-		// })
-
-		// client.onPromise('controls:action:set-connection', (controlId, stepId, setId, id, connectionId) => {
-		// 	const control = this.getControl(controlId)
-		// 	if (!control) return false
-
-		// 	if (control.supportsActions) {
-		// 		return control.actionSetConnection(stepId, setId, id, connectionId)
-		// 	} else {
-		// 		throw new Error(`Control "${controlId}" does not support actions`)
-		// 	}
-		// })
-
-		// client.onPromise('controls:action:set-option', (controlId, stepId, setId, id, key, value) => {
-		// 	const control = this.getControl(controlId)
-		// 	if (!control) return false
-
-		// 	if (control.supportsActions) {
-		// 		return control.actionSetOption(stepId, setId, id, key, value)
-		// 	} else {
-		// 		throw new Error(`Control "${controlId}" does not support actions`)
-		// 	}
-		// })
-		// client.onPromise(
-		// 	'controls:action:move',
-		// 	(controlId, dragStepId, dragSetId, dragActionId, hoverStepId, hoverSetId, hoverParentId, hoverIndex) => {
-		// 		const control = this.getControl(controlId)
-		// 		if (!control) return false
-
-		// 		if (control.supportsActions) {
-		// 			return control.actionMoveTo(
-		// 				dragStepId,
-		// 				dragSetId,
-		// 				dragActionId,
-		// 				hoverStepId,
-		// 				hoverSetId,
-		// 				hoverParentId,
-		// 				hoverIndex
-		// 			)
-		// 		} else {
-		// 			throw new Error(`Control "${controlId}" does not support actions`)
-		// 		}
-		// 	}
-		// )
 
 		client.onPromise('controls:action-set:add', (controlId, stepId) => {
 			const control = this.getControl(controlId)
