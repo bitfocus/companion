@@ -18,6 +18,7 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
+import { FeedbackDefinition } from '@companion-app/shared/FeedbackDefinitionModel.js'
 
 export class ControlEntityInstance {
 	/**
@@ -271,9 +272,11 @@ export class ControlEntityInstance {
 	setInverted(isInverted: boolean): void {
 		if (this.#data.type !== EntityModelType.Feedback) return
 
+		const thisData = this.#data as FeedbackEntityModel
+
 		// TODO - verify this is a boolean feedback
 
-		this.#data.isInverted = isInverted
+		thisData.isInverted = isInverted
 
 		// Don't need to resubscribe
 		// Don't need to clear cached value
@@ -322,6 +325,11 @@ export class ControlEntityInstance {
 		this.subscribe(false)
 	}
 
+	getFeedbackDefinition(): FeedbackDefinition | undefined {
+		if (this.#data.type !== EntityModelType.Feedback) return undefined
+		return this.#instanceDefinitions.getFeedbackDefinition(this.#data.connectionId, this.#data.definitionId)
+	}
+
 	/**
 	 * Update an style property for a boolean feedback
 	 * @param key the key/name of the property
@@ -339,7 +347,7 @@ export class ControlEntityInstance {
 			value = value.replace(/^.*base64,/, '')
 		}
 
-		const definition = this.getDefinition()
+		const definition = this.getFeedbackDefinition()
 		if (!definition || definition.type !== 'boolean') return false
 
 		if (!this.#data.style) this.#data.style = {}
@@ -359,7 +367,7 @@ export class ControlEntityInstance {
 	setStyleSelection(selected: string[], baseStyle: ButtonStyleProperties): boolean {
 		if (this.#data.type !== EntityModelType.Feedback) return false
 
-		const definition = this.getDefinition()
+		const definition = this.getFeedbackDefinition()
 		if (!definition || definition.type !== 'boolean') return false
 
 		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.style || {}
@@ -625,7 +633,7 @@ export class ControlEntityInstance {
 
 		if (this.#data.type !== EntityModelType.Feedback) return false
 
-		const definition = this.getDefinition()
+		const definition = this.getFeedbackDefinition()
 
 		// Special case to handle the internal 'logic' operators, which need to be executed live
 		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
@@ -658,7 +666,7 @@ export class ControlEntityInstance {
 		const feedback = this.#data as FeedbackEntityModel
 		if (feedback.type !== EntityModelType.Feedback) return
 
-		const definition = this.getDefinition()
+		const definition = this.getFeedbackDefinition()
 		if (definition?.type === 'boolean') {
 			if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
 		} else if (definition?.type === 'advanced') {
