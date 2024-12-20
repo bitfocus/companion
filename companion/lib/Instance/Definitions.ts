@@ -24,7 +24,11 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
-import { EntityModelType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	ActionEntityModel,
+	EntityModelType,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -354,9 +358,10 @@ export class InstanceDefinitions {
 
 		if (definition.feedbacks) {
 			result.feedbacks = definition.feedbacks.map((feedback) => ({
+				type: EntityModelType.Feedback,
 				id: nanoid(),
-				instance_id: connectionId,
-				type: feedback.type,
+				connectionId: connectionId,
+				definitionId: feedback.type,
 				options: cloneDeep(feedback.options ?? {}),
 				isInverted: feedback.isInverted,
 				style: cloneDeep(feedback.style),
@@ -593,11 +598,12 @@ export type PresetDefinitionTmp = CompanionPresetDefinition & {
 	id: string
 }
 
-function toActionInstance(action: PresetActionInstance, connectionId: string): ActionInstance {
+function toActionInstance(action: PresetActionInstance, connectionId: string): ActionEntityModel {
 	return {
+		type: EntityModelType.Action,
 		id: nanoid(),
-		instance: connectionId,
-		action: action.action,
+		connectionId: connectionId,
+		definitionId: action.action,
 		options: cloneDeep(action.options ?? {}),
 		headline: action.headline,
 	}
@@ -607,23 +613,16 @@ function convertActionsDelay(
 	actions: PresetActionInstance[],
 	connectionId: string,
 	relativeDelays: boolean | undefined
-) {
+): ActionEntityModel[] {
 	if (relativeDelays) {
-		const newActions: ActionInstance[] = []
+		const newActions: ActionEntityModel[] = []
 
 		for (const action of actions) {
 			const delay = Number(action.delay)
 
 			// Add the wait action
 			if (!isNaN(delay) && delay > 0) {
-				newActions.push({
-					id: nanoid(),
-					instance: 'internal',
-					action: 'wait',
-					options: {
-						time: delay,
-					},
-				})
+				newActions.push(createWaitAction(delay))
 			}
 
 			newActions.push(toActionInstance(action, connectionId))
@@ -632,9 +631,9 @@ function convertActionsDelay(
 		return newActions
 	} else {
 		let currentDelay = 0
-		let currentDelayGroupChildren: any[] = []
+		let currentDelayGroupChildren: ActionEntityModel[] = []
 
-		let delayGroups: any[] = [wrapActionsInGroup(currentDelayGroupChildren)]
+		let delayGroups: ActionEntityModel[] = [wrapActionsInGroup(currentDelayGroupChildren)]
 
 		for (const action of actions) {
 			const delay = Number(action.delay)
@@ -667,11 +666,12 @@ function convertActionsDelay(
 	}
 }
 
-function wrapActionsInGroup(actions: any[]): any {
+function wrapActionsInGroup(actions: ActionEntityModel[]): ActionEntityModel {
 	return {
+		type: EntityModelType.Action,
 		id: nanoid(),
-		instance: 'internal',
-		action: 'action_group',
+		connectionId: 'internal',
+		definitionId: 'action_group',
 		options: {
 			execution_mode: 'concurrent',
 		},
@@ -680,11 +680,12 @@ function wrapActionsInGroup(actions: any[]): any {
 		},
 	}
 }
-function createWaitAction(delay: number): any {
+function createWaitAction(delay: number): ActionEntityModel {
 	return {
+		type: EntityModelType.Action,
 		id: nanoid(),
-		instance: 'internal',
-		action: 'wait',
+		connectionId: 'internal',
+		definitionId: 'wait',
 		options: {
 			time: delay,
 		},
