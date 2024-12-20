@@ -98,7 +98,7 @@ export class ControlButtonNormal
 
 			this.options = Object.assign(this.options, storage.options || {})
 			this.feedbacks.baseStyle = Object.assign(this.feedbacks.baseStyle, storage.style || {})
-			this.feedbacks.loadStorage(storage.feedbacks || [], isImport, isImport)
+			this.entities.loadStorage(storage, true, isImport)
 
 			if (storage.steps) {
 				this.steps = {}

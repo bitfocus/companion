@@ -49,6 +49,7 @@ export class ControlButtonPageNumber
 
 	readonly supportsActions = false
 	readonly supportsSteps = false
+	readonly supportsEntities = false
 	readonly supportsFeedbacks = false
 	readonly supportsStyle = false
 	readonly supportsEvents = false

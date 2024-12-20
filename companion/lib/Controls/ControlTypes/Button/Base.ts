@@ -43,6 +43,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	implements ControlWithStyle, ControlWithFeedbacks, ControlWithOptions, ControlWithPushed
 {
 	readonly supportsStyle = true
+	readonly supportsEntities = true
 	readonly supportsFeedbacks = true
 	readonly supportsOptions = true
 	readonly supportsPushed = true

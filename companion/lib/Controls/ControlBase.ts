@@ -4,7 +4,6 @@ import debounceFn from 'debounce-fn'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import LogController, { Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
-import type { ControlEntityListPoolBase } from './Fragments/EntityListPoolBase.js'
 
 /**
  * Get Socket.io room to use for changes to a control config
@@ -38,8 +37,6 @@ export abstract class ControlBase<TJson> {
 
 	protected readonly logger: Logger
 	protected readonly deps: ControlDependencies
-
-	abstract readonly entities: ControlEntityListPoolBase // TODO - should this be private?
 
 	/**
 	 * The last sent config json object

@@ -331,6 +331,8 @@ export class ControlsController extends CoreBase {
 				const control = this.getControl(controlId)
 				if (!control) return false
 
+				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
 				let newEntity: SomeEntityModel | null = null
 				switch (entityType) {
 					case EntityModelType.Action:
@@ -353,6 +355,8 @@ export class ControlsController extends CoreBase {
 		client.onPromise('controls:entity:learn', async (controlId, entityLocation, id) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 			if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
 			try {
@@ -378,12 +382,16 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
 			return control.entities.entityEnabled(entityLocation, id, enabled)
 		})
 
 		client.onPromise('controls:entity:set-headline', (controlId, entityLocation, id, headline) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 			return control.entities.entityHeadline(entityLocation, id, headline)
 		})
@@ -392,12 +400,16 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
 			return control.entities.entityRemove(entityLocation, id)
 		})
 
 		client.onPromise('controls:entity:duplicate', (controlId, entityLocation, id) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 			return control.entities.entityDuplicate(entityLocation, id)
 		})
@@ -406,6 +418,8 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
 			return control.entities.entrySetOptions(entityLocation, id, key, value)
 		})
 
@@ -413,12 +427,16 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
 			return control.entities.entitySetConnection(entityLocation, id, connectionId)
 		})
 
 		client.onPromise('controls:entity:set-inverted', (controlId, entityLocation, id, isInverted) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 			return control.entities.entitySetInverted(entityLocation, id, isInverted)
 		})
@@ -429,6 +447,8 @@ export class ControlsController extends CoreBase {
 				const control = this.getControl(controlId)
 				if (!control) return false
 
+				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
 				return control.entities.entityMoveTo(moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex)
 			}
 		)
@@ -436,11 +456,15 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
 			return control.entities.entitySetStyleSelection(entityLocation, id, selected)
 		})
 		client.onPromise('controls:entity:set-style-value', (controlId, entityLocation, id, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 			return control.entities.entitySetStyleValue(entityLocation, id, key, value)
 		})

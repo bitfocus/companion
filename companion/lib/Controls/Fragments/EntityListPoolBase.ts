@@ -15,6 +15,8 @@ import { Complete } from '@companion-module/base/dist/util.js'
 import { UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { isEqual } from 'lodash-es'
+import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitions
@@ -481,7 +483,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase {
 				label: 'Feedbacks',
 			}
 		)
-		// TODO
+	}
+
+	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean) {
+		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
 	}
 
 	/**
@@ -514,7 +519,6 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase {
 }
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
-	// TODO
 	#feedbacks: ControlEntityList
 
 	constructor(props: ControlEntityListPoolProps) {
@@ -533,7 +537,10 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 				booleanFeedbacksOnly: true,
 			}
 		)
-		// TODO
+	}
+
+	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean) {
+		this.#feedbacks.loadStorage(storage.condition || [], skipSubscribe, isImport)
 	}
 
 	/**

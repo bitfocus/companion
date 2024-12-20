@@ -67,6 +67,7 @@ export class ControlTrigger
 	readonly supportsActions = true
 	readonly supportsEvents = true
 	readonly supportsSteps = false
+	readonly supportsEntities = true
 	readonly supportsFeedbacks = true
 	readonly supportsStyle = false
 	readonly supportsActionSets = false
@@ -192,7 +193,7 @@ export class ControlTrigger
 
 			this.options = storage.options || this.options
 			this.actions.loadStorage(storage.action_sets || {}, true, isImport)
-			this.feedbacks.loadStorage(storage.condition || [], true, isImport)
+			this.entities.loadStorage(storage, true, isImport)
 			this.events = storage.events || this.events
 
 			if (isImport) this.postProcessImport()

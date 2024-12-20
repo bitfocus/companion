@@ -2,10 +2,12 @@ import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
 import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { ControlEntityListPoolBase } from './Fragments/EntityListPoolBase.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithSteps | ControlWithoutSteps) &
 	(ControlWithStyle | ControlWithoutStyle) &
+	(ControlWithEntities | ControlWithoutEntities) &
 	(ControlWithFeedbacks | ControlWithoutFeedbacks) &
 	(ControlWithActions | ControlWithoutActions) &
 	(ControlWithEvents | ControlWithoutEvents) &
@@ -98,6 +100,26 @@ export interface ControlWithStyle extends ControlBase<any> {
 
 export interface ControlWithoutStyle extends ControlBase<any> {
 	readonly supportsStyle: false
+}
+
+export interface ControlWithEntities extends ControlBase<any> {
+	readonly supportsEntities: true
+
+	readonly entities: ControlEntityListPoolBase
+
+	/**
+	 * Remove any tracked state for an connection
+	 */
+	clearConnectionState(connectionId: string): void
+
+	/**
+	 * Update all controls to forget an connection
+	 */
+	forgetConnection(connectionId: string): void
+}
+
+export interface ControlWithoutEntities extends ControlBase<any> {
+	readonly supportsEntities: false
 }
 
 export interface ControlWithFeedbacks extends ControlBase<any> {
