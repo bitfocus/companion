@@ -151,25 +151,6 @@ export class FragmentActions {
 	}
 
 	/**
-	 * Prepare this control for deletion
-	 */
-	destroy(): void {
-		// Inform modules of action cleanup
-		for (const list of this.#actions.values()) {
-			list.cleanup()
-		}
-
-		this.#actions.clear()
-	}
-
-	/**
-	 * Get all the actions contained here
-	 */
-	getAllActions(): FragmentActionInstance[] {
-		return Array.from(this.#actions.values()).flatMap((list) => list.getAllActions())
-	}
-
-	/**
 	 * Rename this control
 	 * @param newName the new name
 	 */

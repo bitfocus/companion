@@ -218,8 +218,6 @@ export class ControlButtonNormal
 			visitor,
 			this.feedbacks.baseStyle,
 			[],
-			[],
-			[],
 			allEntities,
 			[]
 		)

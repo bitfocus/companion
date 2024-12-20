@@ -256,8 +256,6 @@ export class ControlTrigger
 			visitor,
 			undefined,
 			[],
-			[],
-			[],
 			allEntities,
 			this.events
 		)

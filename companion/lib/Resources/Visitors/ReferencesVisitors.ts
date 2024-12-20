@@ -7,7 +7,6 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { FragmentActionInstance } from '../../Controls/Fragments/FragmentActionInstance.js'
-import { visitActionInstance } from './ActionInstanceVisitor.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../../Controls/Fragments/EntityInstance.js'
 
@@ -17,9 +16,7 @@ export class ReferencesVisitors {
 	 * @param internalModule
 	 * @param visitor Visitor to be used
 	 * @param style Style object of the control (if any)
-	 * @param rawActions  Array of unprocessed actions belonging to the control
 	 * @param rawEntities Array of unprocessed entities belonging to the control
-	 * @param actions Array of actions belonging to the control
 	 * @param entities Array of loaded entities belonging to the control
 	 * @param events Array of events belonging to the control
 	 */
@@ -27,9 +24,7 @@ export class ReferencesVisitors {
 		internalModule: InternalController,
 		visitor: InternalVisitor,
 		style: ButtonStyleProperties | undefined,
-		rawActions: ActionInstance[],
 		rawEntities: SomeEntityModel[],
-		actions: FragmentActionInstance[],
 		entities: ControlEntityInstance[],
 		events: EventInstance[]
 	): void {
@@ -37,7 +32,7 @@ export class ReferencesVisitors {
 		if (style) visitor.visitString(style, 'text')
 
 		// Apply any updates to the internal actions/feedbacks
-		internalModule.visitReferences(visitor, rawActions, actions, rawEntities, entities)
+		internalModule.visitReferences(visitor, rawEntities, entities)
 
 		for (const entity of rawEntities) {
 			visitEntityModel(visitor, entity)
@@ -45,15 +40,6 @@ export class ReferencesVisitors {
 
 		for (const entity of entities) {
 			entity.visitReferences(visitor)
-		}
-
-		// Fixup any references in action options
-		for (const action of rawActions) {
-			visitActionInstance(visitor, action)
-		}
-
-		for (const action of actions) {
-			action.visitReferences(visitor)
 		}
 
 		// Fixup any references in event options
@@ -88,7 +74,7 @@ export class ReferencesVisitors {
 	): boolean {
 		const visitor = new VisitorReferencesUpdater(updateMaps.connectionLabels, updateMaps.connectionIds)
 
-		this.visitControlReferences(internalModule, visitor, style, rawActions, rawEntities, actions, entities, events)
+		this.visitControlReferences(internalModule, visitor, style, rawEntities, entities, events)
 
 		// Trigger the feedbacks to be rechecked, this will cause a redraw if needed
 		if (recheckChangedFeedbacks && visitor.changedFeedbackIds.size > 0) {

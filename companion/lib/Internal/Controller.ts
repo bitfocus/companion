@@ -39,9 +39,9 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { PageController } from '../Page/Controller.js'
 import LogController from '../Log/Controller.js'
-import type { FragmentActionInstance } from '../Controls/Fragments/FragmentActionInstance.js'
 import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Fragments/EntityInstance.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -273,47 +273,57 @@ export class InternalController {
 	/**
 	 * Visit any references in some inactive internal actions and feedbacks
 	 */
-	visitReferences(
-		visitor: InternalVisitor,
-		rawActions: ActionInstance[],
-		actions: FragmentActionInstance[],
-		rawEntities: SomeEntityModel[],
-		entities: ControlEntityInstance[]
-	): void {
+	visitReferences(visitor: InternalVisitor, rawEntities: SomeEntityModel[], entities: ControlEntityInstance[]): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const simpleInternalFeedbacks: FeedbackForVisitor[] = []
+		const simpleInternalActions: ActionForVisitor[] = []
 
 		for (const entity of rawEntities) {
-			if (entity.connectionId !== 'internal' || entity.type !== EntityModelType.Feedback) continue
-			simpleInternalFeedbacks.push({
-				id: entity.id,
-				type: entity.definitionId,
-				options: entity.options,
-			})
+			if (entity.connectionId !== 'internal') continue
+
+			switch (entity.type) {
+				case EntityModelType.Feedback:
+					simpleInternalFeedbacks.push({
+						id: entity.id,
+						type: entity.definitionId,
+						options: entity.options,
+					})
+					break
+				case EntityModelType.Action:
+					simpleInternalActions.push({
+						id: entity.id,
+						action: entity.definitionId,
+						options: entity.options,
+					})
+					break
+				default:
+					assertNever(entity)
+					break
+			}
 		}
 		for (const entity of entities) {
-			if (entity.connectionId !== 'internal' || entity.type !== EntityModelType.Feedback) continue
-			simpleInternalFeedbacks.push({
-				id: entity.id,
-				type: entity.definitionId,
-				options: entity.rawOptions, // Ensure the options is not a copy/clone
-			})
-		}
+			if (entity.connectionId !== 'internal') continue
 
-		const simpleInternalActions: ActionForVisitor[] = []
-		for (const action of rawActions) {
-			if (action.instance !== 'internal') continue
-			simpleInternalActions.push(action)
-		}
-		for (const action of actions) {
-			if (action.connectionId !== 'internal') continue
-			const actionInstance = action.asActionInstance()
-			simpleInternalActions.push({
-				id: actionInstance.id,
-				action: actionInstance.action,
-				options: action.rawOptions, // Ensure the options is not a copy/clone
-			})
+			switch (entity.type) {
+				case EntityModelType.Feedback:
+					simpleInternalFeedbacks.push({
+						id: entity.id,
+						type: entity.definitionId,
+						options: entity.rawOptions, // Ensure the options is not a copy/clone
+					})
+					break
+				case EntityModelType.Action:
+					simpleInternalActions.push({
+						id: entity.id,
+						action: entity.definitionId,
+						options: entity.rawOptions, // Ensure the options is not a copy/clone
+					})
+					break
+				default:
+					assertNever(entity.type)
+					break
+			}
 		}
 
 		for (const fragment of this.#fragments) {
