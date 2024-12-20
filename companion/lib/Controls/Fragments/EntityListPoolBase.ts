@@ -36,7 +36,7 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Commit changes to the database and disk
 	 */
-	readonly #commitChange: (redraw?: boolean) => void
+	protected readonly commitChange: (redraw?: boolean) => void
 
 	/**
 	 * Trigger a redraw/invalidation of the control
@@ -49,7 +49,7 @@ export abstract class ControlEntityListPoolBase {
 		this.#logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.#controlId = props.controlId
-		this.#commitChange = props.commitChange
+		this.commitChange = props.commitChange
 		this.#triggerRedraw = props.triggerRedraw
 
 		this.#instanceDefinitions = props.instanceDefinitions
@@ -143,7 +143,7 @@ export abstract class ControlEntityListPoolBase {
 			entity.subscribe(true)
 		}
 
-		this.#commitChange()
+		this.commitChange()
 
 		return true
 	}
@@ -158,7 +158,7 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.duplicateEntity(id)
 		if (!entity) return false
 
-		this.#commitChange(false)
+		this.commitChange(false)
 
 		return true
 	}
@@ -175,7 +175,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setEnabled(enabled)
 
-		this.#commitChange()
+		this.commitChange()
 
 		return true
 	}
@@ -192,7 +192,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setHeadline(headline)
 
-		this.#commitChange()
+		this.commitChange()
 
 		return true
 	}
@@ -215,7 +215,7 @@ export abstract class ControlEntityListPoolBase {
 		const feedbackAfter = entityList.findById(id)
 		if (!feedbackAfter) return false
 
-		this.#commitChange(true)
+		this.commitChange(true)
 		return true
 	}
 
@@ -227,7 +227,7 @@ export abstract class ControlEntityListPoolBase {
 		if (!entityList) return false
 
 		if (entityList.removeEntity(id)) {
-			this.#commitChange()
+			this.commitChange()
 
 			return true
 		} else {
@@ -284,7 +284,7 @@ export abstract class ControlEntityListPoolBase {
 			}
 		}
 
-		this.#commitChange()
+		this.commitChange()
 
 		return true
 	}
@@ -323,7 +323,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setOption(key, value)
 
-		this.#commitChange()
+		this.commitChange()
 
 		return true
 	}
@@ -342,7 +342,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setConnectionId(connectionId)
 
-		this.#commitChange()
+		this.commitChange()
 
 		return true
 	}
@@ -361,7 +361,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setInverted(!!isInverted)
 
-		this.#commitChange()
+		this.commitChange()
 
 		return true
 	}
@@ -381,7 +381,7 @@ export abstract class ControlEntityListPoolBase {
 		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
 		if (entity.setStyleSelection(selected, this.baseStyle)) {
-			this.#commitChange()
+			this.commitChange()
 
 			return true
 		}
@@ -405,7 +405,7 @@ export abstract class ControlEntityListPoolBase {
 		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
 		if (entity.setStyleValue(key, value)) {
-			this.#commitChange()
+			this.commitChange()
 
 			return true
 		}

@@ -10,15 +10,12 @@ import type {
 	ControlWithoutEvents,
 } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
-import type {
-	NormalButtonModel,
-	NormalButtonOptions,
-	NormalButtonSteps,
-} from '@companion-app/shared/Model/ButtonModel.js'
+import type { NormalButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlActionSetAndStepsManager } from '../../Fragments/ControlActionSetAndStepsManager.js'
 
 /**
  * Class for the stepped button control.
@@ -68,6 +65,10 @@ export class ControlButtonNormal
 	 */
 	#surfaceHoldState = new Map<string, SurfaceHoldState>()
 
+	get actionSets(): ControlActionSetAndStepsManager {
+		return this.entities
+	}
+
 	constructor(deps: ControlDependencies, controlId: string, storage: NormalButtonModel | null, isImport: boolean) {
 		super(deps, controlId, `Controls/Button/Normal/${controlId}`)
 
@@ -101,7 +102,7 @@ export class ControlButtonNormal
 				}
 			}
 
-			this.#current_step_id = GetStepIds(this.steps)[0]
+			this.#current_step_id = this.entities.getStepIds()[0]
 
 			// Ensure control is stored before setup
 			if (isImport) setImmediate(() => this.postProcessImport())
@@ -135,84 +136,6 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Add an action set to this control
-	 */
-	actionSetAdd(stepId: string): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			step.actionSetAdd()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Remove an action-set from this control
-	 */
-	actionSetRemove(stepId: string, setId0: ActionSetId): boolean {
-		const setId = Number(setId0)
-
-		// Ensure valid
-		if (isNaN(setId)) return false
-
-		const step = this.steps[stepId]
-		if (!step) return false
-
-		return step.actionSetRemove(setId)
-	}
-
-	/**
-	 * Rename an action-sets
-	 */
-	actionSetRename(stepId: string, oldSetId0: ActionSetId, newSetId0: ActionSetId): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			const newSetId = Number(newSetId0)
-			const oldSetId = Number(oldSetId0)
-
-			// Only valid when both are numbers
-			if (isNaN(newSetId) || isNaN(oldSetId)) return false
-
-			if (!step.actionSetRename(oldSetId, newSetId)) return false
-
-			this.commitChange(false)
-
-			return true
-		}
-
-		return false
-	}
-
-	actionSetRunWhileHeld(stepId: string, setId0: ActionSetId, runWhileHeld: boolean): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			// Ensure it is a number
-			const setId = Number(setId0)
-
-			// Only valid when step is a number
-			if (isNaN(setId)) return false
-
-			// Ensure set exists
-			if (!step.getActionSet(setId)) return false
-
-			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(setId)
-			if (runWhileHeld && runWhileHeldIndex === -1) {
-				step.options.runWhileHeld.push(setId)
-			} else if (!runWhileHeld && runWhileHeldIndex !== -1) {
-				step.options.runWhileHeld.splice(runWhileHeldIndex, 1)
-			}
-
-			this.commitChange(false)
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
@@ -226,7 +149,7 @@ export class ControlButtonNormal
 	 * @returns The index of current step
 	 */
 	getActiveStepIndex(): number {
-		const out = GetStepIds(this.steps).indexOf(this.#current_step_id)
+		const out = this.entities.getStepIds().indexOf(this.#current_step_id)
 		return out !== -1 ? out : 0
 	}
 
@@ -237,7 +160,7 @@ export class ControlButtonNormal
 		const style = super.getDrawStyle()
 		if (!style) return style
 
-		if (GetStepIds(this.steps).length > 1) {
+		if (this.entities.getStepIds().length > 1) {
 			style.step_cycle = this.getActiveStepIndex() + 1
 		}
 
@@ -283,17 +206,9 @@ export class ControlButtonNormal
 	 */
 	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
 		const allEntities = this.entities.getAllEntities()
-		const allActions = []
-
-		for (const step of Object.values(this.steps)) {
-			allActions.push(...step.getAllActions())
-		}
 
 		for (const entity of allEntities) {
 			foundConnectionIds.add(entity.connectionId)
-		}
-		for (const action of allActions) {
-			foundConnectionIds.add(action.connectionId)
 		}
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
@@ -304,7 +219,7 @@ export class ControlButtonNormal
 			this.feedbacks.baseStyle,
 			[],
 			[],
-			allActions,
+			[],
 			allEntities,
 			[]
 		)
@@ -555,7 +470,7 @@ export class ControlButtonNormal
 	 */
 	stepMakeCurrent(index: number): boolean {
 		if (typeof index === 'number') {
-			const stepId = GetStepIds(this.steps)[index - 1]
+			const stepId = this.entities.getStepIds()[index - 1]
 			if (stepId !== undefined) {
 				return this.stepSelectCurrent(stepId)
 			}
@@ -661,20 +576,12 @@ export class ControlButtonNormal
 	 * @param clone - Whether to return a cloned object
 	 */
 	override toJSON(clone = true): NormalButtonModel {
-		const stepsJson: NormalButtonSteps = {}
-		for (const [id, step] of Object.entries(this.steps)) {
-			stepsJson[id] = {
-				action_sets: step.asActionStepModel(),
-				options: step.options,
-			}
-		}
-
 		const obj: NormalButtonModel = {
 			type: this.type,
 			style: this.feedbacks.baseStyle,
 			options: this.options,
 			feedbacks: this.entities.getFeedbackInstances(),
-			steps: stepsJson,
+			steps: this.entities.asActionStepsModel(),
 		}
 
 		return clone ? cloneDeep(obj) : obj
@@ -691,7 +598,7 @@ export class ControlButtonNormal
 
 	#validateCurrentStepId(): [null, null] | [string, string] {
 		const this_step_raw = this.#current_step_id
-		const stepIds = GetStepIds(this.steps)
+		const stepIds = this.entities.getStepIds()
 		if (stepIds.length > 0) {
 			// verify 'this_step_raw' is valid
 			const this_step_index = stepIds.findIndex((s) => s == this_step_raw) || 0

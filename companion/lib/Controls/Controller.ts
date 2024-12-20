@@ -493,7 +493,7 @@ export class ControlsController extends CoreBase {
 			if (!control) return false
 
 			if (control.supportsActionSets) {
-				return control.actionSetAdd(stepId)
+				return control.actionSets.actionSetAdd(stepId)
 			} else {
 				throw new Error(`Control "${controlId}" does not support this operation`)
 			}
@@ -503,7 +503,7 @@ export class ControlsController extends CoreBase {
 			if (!control) return false
 
 			if (control.supportsActionSets) {
-				return control.actionSetRemove(stepId, setId)
+				return control.actionSets.actionSetRemove(stepId, setId)
 			} else {
 				throw new Error(`Control "${controlId}" does not support this operation`)
 			}
@@ -514,7 +514,7 @@ export class ControlsController extends CoreBase {
 			if (!control) return false
 
 			if (control.supportsActionSets) {
-				return control.actionSetRename(stepId, oldSetId, newSetId)
+				return control.actionSets.actionSetRename(stepId, oldSetId, newSetId)
 			} else {
 				throw new Error(`Control "${controlId}" does not support this operation`)
 			}
@@ -525,7 +525,7 @@ export class ControlsController extends CoreBase {
 			if (!control) return false
 
 			if (control.supportsActionSets) {
-				return control.actionSetRunWhileHeld(stepId, setId, runWhileHeld)
+				return control.actionSets.actionSetRunWhileHeld(stepId, setId, runWhileHeld)
 			} else {
 				throw new Error(`Control "${controlId}" does not support this operation`)
 			}
@@ -1110,7 +1110,7 @@ export class ControlsController extends CoreBase {
 		// Pass values to controls
 		for (const [controlId, newValues] of Object.entries(values)) {
 			const control = this.getControl(controlId)
-			if (control) {
+			if (control && control.supportsEntities) {
 				control.entities.updateFeedbackValues(connectionId, newValues)
 			}
 		}

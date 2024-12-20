@@ -1,11 +1,9 @@
 import { ControlBase } from '../../ControlBase.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { cloneDeep } from 'lodash-es'
-import { FragmentActions } from '../../Fragments/FragmentActions.js'
 import type { ControlWithOptions, ControlWithPushed, ControlWithStyle } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -66,11 +64,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
 	protected last_draw_variables: Set<string> | null = null
-
-	/**
-	 * Steps on this button
-	 */
-	protected steps: Record<string, FragmentActions> = {}
 
 	readonly entities: ControlEntityListPoolButton // TODO - should this be private?
 
@@ -160,10 +153,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	destroy(): void {
 		this.entities.destroy()
 
-		for (const step of Object.values(this.steps)) {
-			step.destroy()
-		}
-
 		super.destroy()
 	}
 
@@ -173,14 +162,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	forgetConnection(connectionId: string): void {
 		const changed = this.entities.forgetConnection(connectionId)
 
-		let changedSteps = false
-		for (const step of Object.values(this.steps)) {
-			const changed = step.forgetConnection(connectionId)
-			changedSteps = changedSteps || changed
-		}
-
-		if (changed || changedSteps) {
-			this.commitChange(changed)
+		if (changed) {
+			this.commitChange(true)
 		}
 	}
 
@@ -303,10 +286,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
 		const allEntities = this.entities.getAllEntities()
-		const allActions = []
-		for (const step of Object.values(this.steps)) {
-			allActions.push(...step.getAllActions())
-		}
 
 		// Fix up references
 		const changed = ReferencesVisitors.fixupControlReferences(
@@ -315,7 +294,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			this.feedbacks.baseStyle,
 			[],
 			[],
-			allActions,
+			[],
 			allEntities,
 			[],
 			true
@@ -395,14 +374,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	verifyConnectionIds(knownConnectionIds: Set<string>): void {
 		const changed = this.entities.verifyConnectionIds(knownConnectionIds)
 
-		let changedSteps = false
-		for (const step of Object.values(this.steps)) {
-			const changed = step.verifyConnectionIds(knownConnectionIds)
-			changedSteps = changedSteps || changed
-		}
-
-		if (changed || changedSteps) {
-			this.commitChange(changed)
+		if (changed) {
+			this.commitChange(true)
 		}
 	}
 }

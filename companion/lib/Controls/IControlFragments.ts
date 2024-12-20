@@ -1,8 +1,8 @@
 import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
-import type { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ControlEntityListPoolBase } from './Fragments/EntityListPoolBase.js'
+import type { ControlActionSetAndStepsManager } from './Fragments/ControlActionSetAndStepsManager.js'
+import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithSteps | ControlWithoutSteps) &
@@ -186,25 +186,7 @@ export interface ControlWithoutEvents extends ControlBase<any> {
 export interface ControlWithActionSets extends ControlBase<any> {
 	readonly supportsActionSets: true
 
-	/**
-	 * Add an action set to this control
-	 */
-	actionSetAdd(stepId: string): boolean
-
-	/**
-	 * Remove an action-set from this control
-	 */
-	actionSetRemove(stepId: string, setId: ActionSetId): boolean
-
-	/**
-	 * Rename an action-sets
-	 */
-	actionSetRename(stepId: string, oldSetId: ActionSetId, newSetId: ActionSetId): boolean
-
-	/**
-	 * Set whether an action-set should run while the button is held
-	 */
-	actionSetRunWhileHeld(stepId: string, setId: ActionSetId, runWhileHeld: boolean): boolean
+	readonly actionSets: ControlActionSetAndStepsManager
 
 	/**
 	 * Execute a rotate of this control
