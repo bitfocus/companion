@@ -1,4 +1,4 @@
-import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
 export interface ControlActionSetAndStepsManager {
 	/**

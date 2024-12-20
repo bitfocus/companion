@@ -2,6 +2,7 @@ import LogController, { Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
 	EntityOwner,
+	EntitySupportedChildGroupDefinition,
 	SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -55,6 +56,17 @@ export abstract class ControlEntityListPoolBase {
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule
 		this.#moduleHost = props.moduleHost
+	}
+
+	protected createEntityList(listDefinition: EntitySupportedChildGroupDefinition) {
+		return new ControlEntityList(
+			this.#instanceDefinitions,
+			this.#internalModule,
+			this.#moduleHost,
+			this.#controlId,
+			null,
+			listDefinition
+		)
 	}
 
 	/**

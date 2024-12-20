@@ -100,7 +100,11 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			// add the default '1000' set
 			step.sets.set(
 				1000,
-				new ControlEntityList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId)
+				this.createEntityList({
+					type: EntityModelType.Action,
+					groupId: '',
+					label: '',
+				})
 			)
 
 			this.commitChange(true)
@@ -114,7 +118,11 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 			step.sets.set(
 				newIndex,
-				new ControlEntityList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId)
+				this.createEntityList({
+					type: EntityModelType.Action,
+					groupId: '',
+					label: '',
+				})
 			)
 
 			this.commitChange(false)
@@ -203,6 +211,47 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.commitChange(false)
 
 		return true
+	}
+
+	setupRotaryActionSets(ensureCreated: boolean, skipCommit?: boolean): void {
+		for (const step of this.#steps.values()) {
+			if (ensureCreated) {
+				// ensure they exist
+				if (!step.sets.has('rotate_left'))
+					step.sets.set(
+						'rotate_left',
+						this.createEntityList({
+							type: EntityModelType.Action,
+							groupId: '',
+							label: '',
+						})
+					)
+				if (!step.sets.has('rotate_right'))
+					step.sets.set(
+						'rotate_right',
+						this.createEntityList({
+							type: EntityModelType.Action,
+							groupId: '',
+							label: '',
+						})
+					)
+			} else {
+				// remove the sets
+				const rotateLeftSet = step.sets.get('rotate_left')
+				const rotateRightSet = step.sets.get('rotate_right')
+
+				if (rotateLeftSet) {
+					rotateLeftSet.cleanup()
+					step.sets.delete('rotate_left')
+				}
+				if (rotateRightSet) {
+					rotateRightSet.cleanup()
+					step.sets.delete('rotate_right')
+				}
+			}
+		}
+
+		if (!skipCommit) this.commitChange(true)
 	}
 }
 

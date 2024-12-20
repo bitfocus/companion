@@ -116,37 +116,6 @@ export class FragmentActions {
 		return Array.from(this.#actions.keys())
 	}
 
-	setupRotaryActionSets(ensureCreated: boolean, skipCommit?: boolean): void {
-		if (ensureCreated) {
-			// ensure they exist
-			if (!this.#actions.has('rotate_left'))
-				this.#actions.set(
-					'rotate_left',
-					new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId)
-				)
-			if (!this.#actions.has('rotate_right'))
-				this.#actions.set(
-					'rotate_right',
-					new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId)
-				)
-		} else {
-			// remove the sets
-			const rotateLeftSet = this.#actions.get('rotate_left')
-			const rotateRightSet = this.#actions.get('rotate_right')
-
-			if (rotateLeftSet) {
-				rotateLeftSet.cleanup()
-				this.#actions.delete('rotate_left')
-			}
-			if (rotateRightSet) {
-				rotateRightSet.cleanup()
-				this.#actions.delete('rotate_right')
-			}
-		}
-
-		if (!skipCommit) this.#commitChange()
-	}
-
 	/**
 	 * Replace a action with an updated version
 	 */
@@ -198,21 +167,6 @@ export class FragmentActions {
 	 */
 	getAllActions(): FragmentActionInstance[] {
 		return Array.from(this.#actions.values()).flatMap((list) => list.getAllActions())
-	}
-
-	asActionStepModel(): ActionSetsModel {
-		const actions: ActionSetsModel = {
-			down: undefined,
-			up: undefined,
-			rotate_left: undefined,
-			rotate_right: undefined,
-		}
-
-		for (const [key, list] of this.#actions) {
-			actions[key] = list.asActionInstances()
-		}
-
-		return actions
 	}
 
 	/**

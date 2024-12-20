@@ -18,32 +18,18 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	constructor(props: ControlEntityListPoolProps) {
 		super(props)
 
-		this.#feedbacks = new ControlEntityList(
-			props.instanceDefinitions,
-			props.internalModule,
-			props.moduleHost,
-			props.controlId,
-			null,
-			{
-				type: EntityModelType.Feedback,
-				groupId: 'conditions',
-				label: 'Conditions',
-				booleanFeedbacksOnly: true,
-			}
-		)
+		this.#feedbacks = this.createEntityList({
+			type: EntityModelType.Feedback,
+			groupId: 'conditions',
+			label: 'Conditions',
+			booleanFeedbacksOnly: true,
+		})
 
-		this.#actions = new ControlEntityList(
-			props.instanceDefinitions,
-			props.internalModule,
-			props.moduleHost,
-			props.controlId,
-			null,
-			{
-				type: EntityModelType.Action,
-				groupId: 'actions',
-				label: 'Actions',
-			}
-		)
+		this.#actions = this.createEntityList({
+			type: EntityModelType.Action,
+			groupId: 'actions',
+			label: 'Actions',
+		})
 	}
 
 	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean) {
