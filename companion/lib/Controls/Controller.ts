@@ -1145,7 +1145,8 @@ export class ControlsController extends CoreBase {
 		knownConnectionIds.add('internal')
 
 		for (const control of this.#controls.values()) {
-			control.verifyConnectionIds(knownConnectionIds)
+			if (!control.supportsEntities) continue
+			control.entities.verifyConnectionIds(knownConnectionIds)
 		}
 	}
 }

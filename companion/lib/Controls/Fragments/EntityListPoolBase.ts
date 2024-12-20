@@ -438,14 +438,16 @@ export abstract class ControlEntityListPoolBase {
 	 * Prune all actions/feedbacks referencing unknown conncetions
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
+	verifyConnectionIds(knownConnectionIds: Set<string>): void {
 		let changed = false
 
 		for (const list of this.getAllEntityLists()) {
 			if (list.verifyConnectionIds(knownConnectionIds)) changed = true
 		}
 
-		return changed
+		if (changed) {
+			this.commitChange(true)
+		}
 	}
 
 	/**

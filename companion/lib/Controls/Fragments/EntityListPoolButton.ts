@@ -1,7 +1,7 @@
 import { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import { UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
@@ -19,6 +19,21 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		runWhileHeld: [], // array of set ids
 	}
 
+	/**
+	 * The defaults style for a button
+	 */
+	static DefaultStyle: ButtonStyleProperties = {
+		text: '',
+		textExpression: false,
+		size: 'auto',
+		png64: null,
+		alignment: 'center:center',
+		pngalignment: 'center:center',
+		color: 0xffffff,
+		bgcolor: 0x000000,
+		show_topbar: 'default',
+	}
+
 	readonly #feedbacks: ControlEntityList
 
 	readonly #steps = new Map<string, ControlEntityListActionStep>()
@@ -30,8 +45,17 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 */
 	#current_step_id: string = '0'
 
+	/**
+	 * The base style without feedbacks applied
+	 */
+	#baseStyle: ButtonStyleProperties = cloneDeep(ControlEntityListPoolButton.DefaultStyle)
+
 	get currentStepId(): string {
 		return this.#current_step_id
+	}
+
+	get baseStyle(): ButtonStyleProperties {
+		return this.#baseStyle
 	}
 
 	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void) {
@@ -58,6 +82,8 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean) {
+		this.#baseStyle = Object.assign(this.#baseStyle, storage.style || {})
+
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
 
 		// Future:	cleanup the steps/sets
@@ -102,7 +128,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * Note: Does not clone the style
 	 */
 	getUnparsedFeedbackStyle(): UnparsedButtonStyle {
-		const styleBuilder = new FeedbackStyleBuilder(this.baseStyle)
+		const styleBuilder = new FeedbackStyleBuilder(this.#baseStyle)
 		this.#feedbacks.buildFeedbackStyle(styleBuilder)
 		return styleBuilder.style
 	}
@@ -436,7 +462,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param stepId the id of the action-set
 	 */
 	stepRemove(stepId: string): boolean {
-		const oldKeys = GetStepIds(this.steps)
+		const oldKeys = this.getStepIds()
 
 		// Ensure there is at least one step
 		if (oldKeys.length === 1) return false

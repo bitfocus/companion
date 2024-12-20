@@ -128,7 +128,4 @@ export class ControlButtonPageUp
 	renameVariables(_labelFrom: string, _labelTo: string) {
 		// Nothing to do
 	}
-	verifyConnectionIds(_knownConnectionIds: Set<string>) {
-		// Nothing to do
-	}
 }

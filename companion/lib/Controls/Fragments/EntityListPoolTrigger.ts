@@ -3,12 +3,9 @@ import {
 	SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
-import { transformEntityToFeedbacks } from './Util.js'
-import { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList
@@ -34,7 +31,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean) {
 		this.#feedbacks.loadStorage(storage.condition || [], skipSubscribe, isImport)
-		this.#feedbacks.loadStorage(storage.action_sets?.[0] || [], skipSubscribe, isImport) // TODO - move this
+		this.#feedbacks.loadStorage(storage.actions || [], skipSubscribe, isImport)
 	}
 
 	/**
@@ -47,20 +44,15 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	/**
 	 * Get all the feedback instances
 	 */
-	getFeedbackInstances(): FeedbackInstance[] {
-		return transformEntityToFeedbacks(this.#feedbacks.getDirectEntities())
+	getFeedbackEntities(): SomeEntityModel[] {
+		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
 	}
 
-	asActionStepModel(): ActionSetsModel {
-		const actions: ActionSetsModel = {
-			down: undefined,
-			up: undefined,
-			rotate_left: undefined,
-			rotate_right: undefined,
-			0: this.#actions.getDirectEntities().map((ent) => ent.asEntityModel(true)),
-		}
-
-		return actions
+	/**
+	 * Get all the action instances
+	 */
+	getActionEntities(): SomeEntityModel[] {
+		return this.#actions.getDirectEntities().map((ent) => ent.asEntityModel(true))
 	}
 
 	getActionsToExecute(): SomeEntityModel[] {

@@ -274,8 +274,8 @@ export class ControlTrigger
 		const obj: TriggerModel = {
 			type: this.type,
 			options: this.options,
-			action_sets: this.entities.asActionStepModel(),
-			condition: this.entities.getFeedbackInstances(),
+			actions: this.entities.getActionEntities(),
+			condition: this.entities.getFeedbackEntities(),
 			events: this.events,
 		}
 		return clone ? cloneDeep(obj) : obj
@@ -523,18 +523,6 @@ export class ControlTrigger
 
 		this.commitChange()
 		this.sendRuntimePropsChange()
-	}
-
-	/**
-	 * Prune all actions/feedbacks referencing unknown instances
-	 * Doesn't do any cleanup, as it is assumed that the instance has not been running
-	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): void {
-		const changed = this.entities.verifyConnectionIds(knownConnectionIds)
-
-		if (changed) {
-			this.commitChange(true)
-		}
 	}
 
 	/**

@@ -74,14 +74,17 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
 
-		this.entities = new ControlEntityListPoolButton({
-			controlId,
-			commitChange: this.commitChange.bind(this),
-			triggerRedraw: this.triggerRedraw.bind(this),
-			instanceDefinitions: deps.instance.definitions,
-			internalModule: deps.internalModule,
-			moduleHost: deps.instance.moduleHost,
-		})
+		this.entities = new ControlEntityListPoolButton(
+			{
+				controlId,
+				commitChange: this.commitChange.bind(this),
+				triggerRedraw: this.triggerRedraw.bind(this),
+				instanceDefinitions: deps.instance.definitions,
+				internalModule: deps.internalModule,
+				moduleHost: deps.instance.moduleHost,
+			},
+			this.sendRuntimePropsChange.bind(this)
+		)
 	}
 
 	/**
@@ -263,15 +266,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	protected postProcessImport(): void {
-		const ps = []
-
-		ps.push(this.entities.postProcessImport())
-
-		for (const step of Object.values(this.steps)) {
-			ps.push(step.postProcessImport())
-		}
-
-		Promise.all(ps).catch((e) => {
+		this.entities.postProcessImport().catch((e) => {
 			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
 		})
 
@@ -364,18 +359,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			return true
 		} else {
 			return false
-		}
-	}
-
-	/**
-	 * Prune all actions/feedbacks referencing unknown connections
-	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): void {
-		const changed = this.entities.verifyConnectionIds(knownConnectionIds)
-
-		if (changed) {
-			this.commitChange(true)
 		}
 	}
 }

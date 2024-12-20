@@ -68,7 +68,6 @@ export class ControlButtonNormal
 			if (storage.type !== 'button') throw new Error(`Invalid type given to ControlButtonStep: "${storage.type}"`)
 
 			this.options = Object.assign(this.options, storage.options || {})
-			this.feedbacks.baseStyle = Object.assign(this.feedbacks.baseStyle, storage.style || {})
 			this.entities.loadStorage(storage, true, isImport)
 
 			// Ensure control is stored before setup
@@ -142,7 +141,7 @@ export class ControlButtonNormal
 		ReferencesVisitors.visitControlReferences(
 			this.deps.internalModule,
 			visitor,
-			this.feedbacks.baseStyle,
+			this.entities.baseStyle,
 			[],
 			allEntities,
 			[]
@@ -310,7 +309,7 @@ export class ControlButtonNormal
 	override toJSON(clone = true): NormalButtonModel {
 		const obj: NormalButtonModel = {
 			type: this.type,
-			style: this.feedbacks.baseStyle,
+			style: this.entities.baseStyle,
 			options: this.options,
 			feedbacks: this.entities.getFeedbackInstances(),
 			steps: this.entities.asActionStepsModel(),
