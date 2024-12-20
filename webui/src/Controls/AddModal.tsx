@@ -101,7 +101,7 @@ export const AddActionsModal = observer(
 )
 
 interface AddFeedbacksModalProps {
-	addFeedback: (feedbackType: string) => void
+	addFeedback: (connectionId: string, definitionId: string) => void
 	onlyType: 'boolean' | 'advanced' | null
 	entityType: string
 }
@@ -149,7 +149,8 @@ export const AddFeedbacksModal = observer(
 			(feedbackType: string) => {
 				recentlyAddedFeedbacks.trackId(feedbackType)
 
-				addFeedback(feedbackType)
+				const [connectionId, definitionId] = feedbackType.split(':', 2)
+				addFeedback(connectionId, definitionId)
 			},
 			[recentlyAddedFeedbacks, addFeedback]
 		)

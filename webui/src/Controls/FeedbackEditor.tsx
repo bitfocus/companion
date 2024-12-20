@@ -127,7 +127,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
 
 	const addFeedback = useCallback(
-		(feedbackType: string) => feedbacksService.addFeedback(feedbackType, ownerId),
+		(connectionId: string, definitionId: string) => feedbacksService.addEntity(connectionId, definitionId, ownerId),
 		[feedbacksService, ownerId]
 	)
 
@@ -397,8 +397,8 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	)
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(stringifyEntityOwnerId(ownerId), feedback.id)
 
-	const childrenGroupId: EntityOwner = { parentFeedbackId: feedback.id, childGroup: 'children' }
-	const advancedChildrenGroupId: EntityOwner = { parentFeedbackId: feedback.id, childGroup: 'advancedChildren' }
+	const childrenGroupId: EntityOwner = { parentId: feedback.id, childGroup: 'children' }
+	const advancedChildrenGroupId: EntityOwner = { parentId: feedback.id, childGroup: 'advancedChildren' }
 
 	return (
 		<>

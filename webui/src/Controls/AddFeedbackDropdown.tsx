@@ -33,7 +33,7 @@ interface AddFeedbackGroup {
 	options: AddFeedbackOption[]
 }
 interface AddFeedbackDropdownProps {
-	onSelect: (feedbackType: string) => void
+	onSelect: (connectionId: string, definitionId: string) => void
 	onlyType: 'boolean' | 'advanced' | null
 	addPlaceholder: string
 }
@@ -95,7 +95,8 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 			if (e?.value) {
 				recentlyAddedFeedbacks.trackId(e.value)
 
-				onSelect(e.value)
+				const [connectionId, definitionId] = e.value.split(':', 2)
+				onSelect(connectionId, definitionId)
 			}
 		},
 		[onSelect, recentlyAddedFeedbacks]
