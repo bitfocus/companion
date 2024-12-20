@@ -1,33 +1,9 @@
 import { FragmentActionInstance } from './FragmentActionInstance.js'
 import { clamp } from '../../Resources/Util.js'
-import type { InstanceDefinitions } from '../../Instance/Definitions.js'
-import type { InternalController } from '../../Internal/Controller.js'
-import type { ModuleHost } from '../../Instance/Host.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
 export class FragmentActionList {
-	readonly #instanceDefinitions: InstanceDefinitions
-	readonly #internalModule: InternalController
-	readonly #moduleHost: ModuleHost
-
-	/**
-	 * Id of the control this belongs to
-	 */
-	readonly #controlId: string
-
 	#actions: FragmentActionInstance[] = []
-
-	constructor(
-		instanceDefinitions: InstanceDefinitions,
-		internalModule: InternalController,
-		moduleHost: ModuleHost,
-		controlId: string
-	) {
-		this.#instanceDefinitions = instanceDefinitions
-		this.#internalModule = internalModule
-		this.#moduleHost = moduleHost
-		this.#controlId = controlId
-	}
 
 	/**
 	 * Get all the actions
@@ -41,36 +17,6 @@ export class FragmentActionList {
 	 */
 	asActionInstances(): ActionInstance[] {
 		return this.#actions.map((action) => action.asActionInstance())
-	}
-
-	/**
-	 * Initialise from storage
-	 * @param actions
-	 * @param skipSubscribe Whether to skip calling subscribe for the new actions
-	 * @param isCloned Whether this is a cloned instance
-	 */
-	loadStorage(actions: ActionInstance[], skipSubscribe: boolean, isCloned: boolean): void {
-		// Inform modules of action cleanup
-		for (const action of this.#actions) {
-			action.cleanup()
-		}
-
-		this.#actions =
-			actions?.map(
-				(action) =>
-					new FragmentActionInstance(
-						this.#instanceDefinitions,
-						this.#internalModule,
-						this.#moduleHost,
-						this.#controlId,
-						action,
-						!!isCloned
-					)
-			) || []
-
-		if (!skipSubscribe) {
-			this.subscribe(true)
-		}
 	}
 
 	/**
@@ -107,26 +53,6 @@ export class FragmentActionList {
 		}
 
 		return undefined
-	}
-
-	/**
-	 * Add a child action to this action
-	 * @param action
-	 * @param isCloned Whether this is a cloned instance
-	 */
-	addAction(action: ActionInstance, isCloned?: boolean): FragmentActionInstance {
-		const newAction = new FragmentActionInstance(
-			this.#instanceDefinitions,
-			this.#internalModule,
-			this.#moduleHost,
-			this.#controlId,
-			action,
-			!!isCloned
-		)
-
-		this.#actions.push(newAction)
-
-		return newAction
 	}
 
 	/**

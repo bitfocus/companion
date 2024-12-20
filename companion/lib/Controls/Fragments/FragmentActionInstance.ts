@@ -1,6 +1,4 @@
-import { cloneDeep } from 'lodash-es'
-import { nanoid } from 'nanoid'
-import LogController, { Logger } from '../../Log/Controller.js'
+import { Logger } from '../../Log/Controller.js'
 import { FragmentActionList } from './FragmentActionList.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
@@ -55,50 +53,6 @@ export class FragmentActionInstance {
 		return this.#data.options
 	}
 
-	/**
-	 * @param instanceDefinitions
-	 * @param internalModule
-	 * @param moduleHost
-	 * @param controlId - id of the control
-	 * @param data
-	 * @param isCloned Whether this is a cloned instance and should generate new ids
-	 */
-	constructor(
-		instanceDefinitions: InstanceDefinitions,
-		internalModule: InternalController,
-		moduleHost: ModuleHost,
-		controlId: string,
-		data: ActionInstance,
-		isCloned: boolean
-	) {
-		this.#logger = LogController.createLogger(`Controls/Fragments/Actions/${controlId}`)
-
-		this.#instanceDefinitions = instanceDefinitions
-		this.#internalModule = internalModule
-		this.#moduleHost = moduleHost
-		this.#controlId = controlId
-
-		this.#data = cloneDeep(data) // TODO - cleanup unwanted properties
-		if (!this.#data.options) this.#data.options = {}
-
-		if (isCloned) {
-			this.#data.id = nanoid()
-		}
-
-		if (data.instance === 'internal' && data.children) {
-			for (const [groupId, actions] of Object.entries(data.children)) {
-				if (!actions) continue
-
-				try {
-					const childGroup = this.#getOrCreateActionGroup(groupId)
-					childGroup.loadStorage(actions, true, isCloned)
-				} catch (e: any) {
-					this.#logger.error(`Error loading child action group: ${e.message}`)
-				}
-			}
-		}
-	}
-
 	#getOrCreateActionGroup(groupId: string): FragmentActionList {
 		const existing = this.#children.get(groupId)
 		if (existing) return existing
@@ -115,8 +69,7 @@ export class FragmentActionInstance {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#moduleHost,
-			this.#controlId,
-			{ parentActionId: this.id, childGroup: groupId }
+			this.#controlId
 		)
 		this.#children.set(groupId, childGroup)
 
@@ -201,18 +154,6 @@ export class FragmentActionInstance {
 			if (result) return result
 		}
 		return undefined
-	}
-
-	/**
-	 * Add a child action to this action
-	 */
-	addChild(groupId: string, action: ActionInstance): FragmentActionInstance {
-		if (this.connectionId !== 'internal') {
-			throw new Error('Only internal actions can have children')
-		}
-
-		const actionGroup = this.#getOrCreateActionGroup(groupId)
-		return actionGroup.addAction(action)
 	}
 
 	/**

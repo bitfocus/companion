@@ -348,7 +348,7 @@ export class ControlsController extends CoreBase {
 
 				if (!newEntity) return false
 
-				return control.entities.entityAdd(entityLocation, newEntity, ownerId)
+				return control.entities.entityAdd(entityLocation, ownerId, newEntity)
 			}
 		)
 

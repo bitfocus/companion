@@ -169,6 +169,7 @@ export class ControlEntityList {
 			!!isCloned
 		)
 
+		// TODO - should this log and return instead of throw?
 		if (!this.canAcceptEntity(newEntity)) throw new Error('EntityList cannot accept this type of entity')
 
 		this.#entities.push(newEntity)

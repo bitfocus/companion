@@ -395,8 +395,9 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		if (!control) throw new Error(`Unknown control: ${controlId}`)
 
 		if (mode === 'append') {
-			if (control.supportsActions) {
-				if (!control.actionAppend(stepId, setId, this.#currentSession.actions, null)) throw new Error('Unknown set')
+			if (control.supportsEntities) {
+				if (!control.entities.entityAdd({ stepId, setId }, null, ...this.#currentSession.actions))
+					throw new Error('Unknown set')
 			} else {
 				throw new Error('Not supported by control')
 			}

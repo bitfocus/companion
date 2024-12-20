@@ -216,41 +216,6 @@ export class FragmentActions {
 	}
 
 	/**
-	 * Append some actions to this button
-	 * @param setId the action_set id to update
-	 * @param newActions actions to append
-	 */
-	actionAppend(setId: ActionSetId, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) {
-			// cant implicitly create a set
-			this.#logger.silly(`Missing set ${this.#controlId}:${setId}`)
-			return false
-		}
-
-		if (newActions.length === 0) return true
-
-		let newActionInstances: FragmentActionInstance[]
-		if (ownerId) {
-			const parent = actionSet.findById(ownerId.parentActionId)
-			if (!parent) throw new Error(`Failed to find parent action ${ownerId.parentActionId} when adding child action`)
-
-			newActionInstances = newActions.map((actionItem) => parent.addChild(ownerId.childGroup, actionItem))
-		} else {
-			newActionInstances = newActions.map((actionItem) => actionSet.addAction(actionItem))
-		}
-
-		for (const action of newActionInstances) {
-			// Inform relevant module
-			action.subscribe(true)
-		}
-
-		this.#commitChange(false)
-
-		return false
-	}
-
-	/**
 	 * Replace a action with an updated version
 	 */
 	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
@@ -294,13 +259,6 @@ export class FragmentActions {
 		}
 
 		this.#actions.clear()
-	}
-
-	/**
-	 * Get all the actions contained here
-	 */
-	getAllActionInstances(): ActionInstance[] {
-		return Array.from(this.#actions.values()).flatMap((list) => list.asActionInstances())
 	}
 
 	/**
