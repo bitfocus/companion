@@ -1,5 +1,6 @@
 import type { InternalActionInputField } from './Options.js'
 import type { ObjectsDiff } from './Common.js'
+import type { EntitySupportedChildGroupDefinition } from './EntityModel.js'
 
 export interface ActionDefinition {
 	label: string
@@ -9,7 +10,7 @@ export interface ActionDefinition {
 	learnTimeout: number | undefined
 
 	showButtonPreview: boolean
-	supportsChildActionGroups: string[]
+	supportsChildGroups: EntitySupportedChildGroupDefinition[]
 }
 
 export interface ClientActionDefinition extends ActionDefinition {}

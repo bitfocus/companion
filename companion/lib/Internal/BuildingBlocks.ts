@@ -29,6 +29,7 @@ import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalController } from './Controller.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
@@ -55,7 +56,13 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildFeedbacks: true,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						groupId: 'default',
+						label: '',
+					},
+				],
 			},
 			logic_or: {
 				type: 'boolean',
@@ -69,7 +76,13 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildFeedbacks: true,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						groupId: 'default',
+						label: '',
+					},
+				],
 			},
 			logic_xor: {
 				type: 'boolean',
@@ -83,7 +96,13 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildFeedbacks: true,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						groupId: 'default',
+						label: '',
+					},
+				],
 			},
 			logic_conditionalise_advanced: {
 				type: 'advanced',
@@ -94,8 +113,18 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildFeedbacks: true,
-				supportsAdvancedChildFeedbacks: true,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						groupId: 'condition',
+						label: 'Condition',
+					},
+					{
+						type: EntityModelType.Feedback,
+						groupId: 'feedbacks',
+						label: 'Feedbacks',
+					},
+				],
 			},
 		}
 	}
@@ -122,7 +151,13 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildActionGroups: ['default'],
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Action,
+						groupId: 'default',
+						label: '',
+					},
+				],
 			},
 			wait: {
 				label: 'Wait',

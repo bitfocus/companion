@@ -101,33 +101,30 @@ export class InternalController {
 		for (const [controlId, control] of allControls.entries()) {
 			if (!control.supportsEntities) continue
 
-			// Discover feedbacks to process
-			if (control.supportsEntities) {
-				for (let feedback of control.feedbacks.getFlattenedFeedbackInstances('internal')) {
-					if (control.feedbacks.feedbackReplace) {
-						const newFeedback = this.feedbackUpgrade(feedback, controlId)
-						if (newFeedback) {
-							feedback = newFeedback
-							control.feedbacks.feedbackReplace(newFeedback)
+			const allEntities = control.entities.getAllEntities()
+			for (const entity of allEntities) {
+				if (entity.connectionId !== 'internal') continue
+
+				switch (entity.type) {
+					case EntityModelType.Feedback: {
+						const newEntity = this.feedbackUpgrade(entity, controlId)
+						if (newEntity) {
+							control.entities.entityReplace(newEntity)
 						}
+
+						this.feedbackUpdate(newEntity || entity, controlId)
+						break
 					}
-
-					this.feedbackUpdate(feedback, controlId)
-				}
-			}
-
-			// Discover actions to process
-			if (control.supportsActions) {
-				const actions = control.getFlattenedActionInstances()
-
-				for (const action of actions) {
-					if (action.instance === 'internal') {
-						// Try and run an upgrade
-						const newAction = this.actionUpgrade(action, controlId)
-						if (newAction) {
-							control.actionReplace(newAction)
+					case EntityModelType.Action: {
+						const newEntity = this.actionUpgrade(entity, controlId)
+						if (newEntity) {
+							control.entities.entityReplace(newEntity)
 						}
+						break
 					}
+					default:
+						assertNever(entity)
+						break
 				}
 			}
 		}
@@ -433,7 +430,7 @@ export class InternalController {
 						learnTimeout: action.learnTimeout,
 
 						showButtonPreview: action.showButtonPreview ?? false,
-						supportsChildActionGroups: action.supportsChildActionGroups ?? [],
+						supportsChildGroups: action.supportsChildGroups ?? [],
 					}
 				}
 			}
@@ -456,8 +453,7 @@ export class InternalController {
 						learnTimeout: feedback.learnTimeout,
 
 						showButtonPreview: feedback.showButtonPreview ?? false,
-						supportsChildFeedbacks: feedback.supportsChildFeedbacks ?? false,
-						supportsAdvancedChildFeedbacks: feedback.supportsAdvancedChildFeedbacks ?? false,
+						supportsChildGroups: feedback.supportsChildGroups ?? [],
 					}
 				}
 			}

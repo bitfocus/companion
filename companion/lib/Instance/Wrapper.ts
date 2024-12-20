@@ -31,12 +31,13 @@ import type {
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import type {
-	CompanionHTTPRequest,
-	CompanionInputFieldBase,
-	CompanionOptionValues,
-	CompanionVariableValue,
-	LogLevel,
+import {
+	assertNever,
+	type CompanionHTTPRequest,
+	type CompanionInputFieldBase,
+	type CompanionOptionValues,
+	type CompanionVariableValue,
+	type LogLevel,
 } from '@companion-module/base'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -49,7 +50,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
@@ -352,58 +353,98 @@ export class SocketEventsHandler {
 	/**
 	 *
 	 */
-	async feedbackLearnValues(
-		feedback: FeedbackInstance,
-		controlId: string
+	async entityLearnValues(
+		entity: SomeEntityModel,
+		controlId: string,
+		learnTimeout: number | undefined
 	): Promise<CompanionOptionValues | undefined | void> {
-		if (feedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
+		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
 		const control = this.#deps.controls.getControl(controlId)
 
-		const feedbackSpec = this.#deps.instanceDefinitions.getFeedbackDefinition(this.connectionId, feedback.type)
-		const learnTimeout = feedbackSpec?.learnTimeout
-
 		try {
-			const msg = await this.#ipcWrapper.sendWithCb(
-				'learnFeedback',
-				{
-					feedback: {
-						id: feedback.id,
-						controlId: controlId,
-						feedbackId: feedback.type,
-						options: feedback.options,
+			switch (entity.type) {
+				case EntityModelType.Action: {
+					const msg = await this.#ipcWrapper.sendWithCb(
+						'learnAction',
+						{
+							action: {
+								id: entity.id,
+								controlId: controlId,
+								actionId: entity.definitionId,
+								options: entity.options,
 
-						isInverted: !!feedback.isInverted,
+								upgradeIndex: null,
+								disabled: !!entity.disabled,
+							},
+						},
+						undefined,
+						learnTimeout
+					)
 
-						image: control?.getBitmapSize() ?? undefined,
+					return msg.options
+				}
+				case EntityModelType.Feedback: {
+					const msg = await this.#ipcWrapper.sendWithCb(
+						'learnFeedback',
+						{
+							feedback: {
+								id: entity.id,
+								controlId: controlId,
+								feedbackId: entity.definitionId,
+								options: entity.options,
 
-						upgradeIndex: null,
-						disabled: !!feedback.disabled,
-					},
-				},
-				undefined,
-				learnTimeout
-			)
+								isInverted: !!entity.isInverted,
 
-			return msg.options
+								image: control?.getBitmapSize() ?? undefined,
+
+								upgradeIndex: null,
+								disabled: !!entity.disabled,
+							},
+						},
+						undefined,
+						learnTimeout
+					)
+
+					return msg.options
+				}
+				default:
+					assertNever(entity)
+					break
+			}
 		} catch (e: any) {
-			this.logger.warn('Error learning feedback options: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error learning feedback options: ' + e?.message)
+			this.logger.warn('Error learning options: ' + e?.message)
+			this.#sendToModuleLog('error', 'Error learning options: ' + e?.message)
 		}
 	}
 
 	/**
-	 * Inform the child instance class about an feedback that has been deleted
+	 * Inform the child instance class about an entity that has been deleted
 	 */
-	async feedbackDelete(oldFeedback: FeedbackInstance): Promise<void> {
-		if (oldFeedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
+	async entityDelete(oldEntity: SomeEntityModel): Promise<void> {
+		if (oldEntity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
-		await this.#ipcWrapper.sendWithCb('updateFeedbacks', {
-			feedbacks: {
-				// Mark as deleted
-				[oldFeedback.id]: null,
-			},
-		})
+		switch (oldEntity.type) {
+			case EntityModelType.Action:
+				await this.#ipcWrapper.sendWithCb('updateActions', {
+					actions: {
+						// Mark as deleted
+						[oldEntity.id]: null,
+					},
+				})
+				break
+			case EntityModelType.Feedback:
+				await this.#ipcWrapper.sendWithCb('updateFeedbacks', {
+					feedbacks: {
+						// Mark as deleted
+						[oldEntity.id]: null,
+					},
+				})
+				break
+			default:
+				assertNever(oldEntity)
+				break
+		}
 	}
 
 	/**
@@ -426,56 +467,6 @@ export class SocketEventsHandler {
 				},
 			},
 		})
-	}
-	/**
-	 * Inform the child instance class about an action that has been deleted
-	 */
-	async actionDelete(oldAction: ActionInstance): Promise<void> {
-		if (oldAction.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
-
-		await this.#ipcWrapper.sendWithCb('updateActions', {
-			actions: {
-				// Mark as deleted
-				[oldAction.id]: null,
-			},
-		})
-	}
-
-	/**
-	 *
-	 */
-	async actionLearnValues(
-		action: ActionInstance,
-		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
-		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
-
-		const actionSpec = this.#deps.instanceDefinitions.getActionDefinition(this.connectionId, action.action)
-		const learnTimeout = actionSpec?.learnTimeout
-
-		try {
-			const msg = await this.#ipcWrapper.sendWithCb(
-				'learnAction',
-				{
-					action: {
-						id: action.id,
-						controlId: controlId,
-						actionId: action.action,
-						options: action.options,
-
-						upgradeIndex: null,
-						disabled: !!action.disabled,
-					},
-				},
-				undefined,
-				learnTimeout
-			)
-
-			return msg.options
-		} catch (e: any) {
-			this.logger.warn('Error learning action options: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error learning action options: ' + e?.message)
-		}
 	}
 
 	/**

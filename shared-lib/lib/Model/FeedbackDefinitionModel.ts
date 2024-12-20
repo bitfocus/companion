@@ -1,6 +1,7 @@
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { ObjectsDiff } from './Common.js'
 import type { InternalFeedbackInputField } from './Options.js'
+import { EntitySupportedChildGroupDefinition } from './EntityModel.js'
 
 export interface FeedbackDefinition {
 	label: string
@@ -13,8 +14,7 @@ export interface FeedbackDefinition {
 	showInvert: boolean
 
 	showButtonPreview: boolean
-	supportsChildFeedbacks: boolean
-	supportsAdvancedChildFeedbacks: boolean
+	supportsChildGroups: EntitySupportedChildGroupDefinition[]
 }
 
 export type ClientFeedbackDefinition = FeedbackDefinition

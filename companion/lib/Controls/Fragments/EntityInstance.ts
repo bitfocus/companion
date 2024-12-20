@@ -17,7 +17,7 @@ import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
-import { visitEntityModel } from '../../Resources/Visitors/FeedbackInstanceVisitor.js'
+import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 
 export class ControlEntityInstance {
 	/**
@@ -154,7 +154,7 @@ export class ControlEntityInstance {
 				return actionDefinition?.supportsChildGroups ?? []
 			}
 			case EntityModelType.Feedback: {
-				const feedbackDefinition = this.#instanceDefinitions.getActionDefinition(
+				const feedbackDefinition = this.#instanceDefinitions.getFeedbackDefinition(
 					this.#data.connectionId,
 					this.#data.definitionId
 				)
@@ -173,11 +173,9 @@ export class ControlEntityInstance {
 		// Inform relevant module
 		const connection = this.#moduleHost.getChild(this.#data.connectionId, true)
 		if (connection) {
-			// nocommit - implement this
-			// connection.feedbackDelete(this.asFeedbackInstance()).catch((e) => {
-			// connection.actionDelete(this.asActionInstance()).catch((e) => {
-			// 	this.#logger.silly(`action_delete to connection failed: ${e.message}`)
-			// })
+			connection.entityDelete(this.asEntityModel()).catch((e) => {
+				this.#logger.silly(`entityDelete to connection failed: ${e.message}`)
+			})
 		}
 
 		// Remove from cached feedback values
@@ -297,14 +295,15 @@ export class ControlEntityInstance {
 		const connection = this.#moduleHost.getChild(this.connectionId)
 		if (!connection) return false
 
-		// nocommit - implement this
-		// const newOptions = await instance.feedbackLearnValues(this.asFeedbackInstance(), this.#controlId)
-		// const newOptions = await connection.actionLearnValues(this.asActionInstance(), this.#controlId)
-		// if (newOptions) {
-		// 	this.setOptions(newOptions)
+		const feedbackSpec = this.#instanceDefinitions.getFeedbackDefinition(this.connectionId, feedback.type)
+		const learnTimeout = feedbackSpec?.learnTimeout
 
-		// 	return true
-		// }
+		const newOptions = await connection.entityLearnValues(this.asEntityModel(), this.#controlId, learnTimeout)
+		if (newOptions) {
+			this.setOptions(newOptions)
+
+			return true
+		}
 
 		return false
 	}
