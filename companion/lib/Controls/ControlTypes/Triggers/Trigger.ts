@@ -22,7 +22,6 @@ import type {
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Fragments/EntityListPoolTrigger.js'
@@ -225,21 +224,17 @@ export class ControlTrigger
 			this.#sendTriggerJsonChange()
 		}
 
-		const actions = this.actions.getActionSet(0)
-		if (actions) {
-			this.logger.silly('found actions')
+		const actions = this.entities.getActionsToExecute()
+		this.logger.silly('found actions')
 
-			this.#actionRunner
-				.runActions(actions.asActionInstances(), {
-					surfaceId: this.controlId,
-					location: undefined,
-				})
-				.catch((e) => {
-					this.logger.error(`Failed to run actions: ${e.message}`)
-				})
-		} else {
-			this.logger.warn('No action set found')
-		}
+		this.#actionRunner
+			.runActions(actions, {
+				surfaceId: this.controlId,
+				location: undefined,
+			})
+			.catch((e) => {
+				this.logger.error(`Failed to run actions: ${e.message}`)
+			})
 	}
 
 	/**

@@ -1,4 +1,8 @@
-import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	SomeEntityModel,
+	type SomeSocketEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { ControlEntityList } from './EntityList.js'
@@ -71,6 +75,10 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		}
 
 		return actions
+	}
+
+	getActionsToExecute(): SomeEntityModel[] {
+		return this.#actions.getDirectEntities().map((e) => e.asEntityModel(true))
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {

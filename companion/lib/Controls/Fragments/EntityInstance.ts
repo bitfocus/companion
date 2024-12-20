@@ -166,14 +166,6 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Add a child entity to this entity
-	 */
-	addChild(groupId: string, entityModel: SomeEntityModel): ControlEntityInstance {
-		const childGroup = this.#getOrCreateChildGroup(groupId)
-		return childGroup.addEntity(entityModel)
-	}
-
-	/**
 	 * Inform the instance of a removed entity
 	 */
 	cleanup() {
@@ -426,17 +418,13 @@ export class ControlEntityInstance {
 		return undefined
 	}
 
-	// /**
-	//  * Add a child action to this action
-	//  */
-	// addChild(groupId: string, action: ActionInstance): FragmentActionInstance {
-	// 	if (this.connectionId !== 'internal') {
-	// 		throw new Error('Only internal actions can have children')
-	// 	}
-
-	// 	const actionGroup = this.#getOrCreateActionGroup(groupId)
-	// 	return actionGroup.addAction(action)
-	// }
+	/**
+	 * Add a child entity to this entity
+	 */
+	addChild(groupId: string, entityModel: SomeEntityModel): ControlEntityInstance {
+		const childGroup = this.#getOrCreateChildGroup(groupId)
+		return childGroup.addEntity(entityModel)
+	}
 
 	/**
 	 * Remove a child entity
