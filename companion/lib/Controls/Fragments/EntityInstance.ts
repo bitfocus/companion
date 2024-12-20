@@ -703,4 +703,16 @@ export class ControlEntityInstance {
 
 		return changed
 	}
+	/**
+	 * Get all the connection ids that are enabled
+	 */
+	getAllEnabledConnectionIds(connectionIds: Set<string>): void {
+		if (this.disabled) return
+
+		connectionIds.add(this.connectionId)
+
+		for (const childGroup of this.#children.values()) {
+			childGroup.getAllEnabledConnectionIds(connectionIds)
+		}
+	}
 }

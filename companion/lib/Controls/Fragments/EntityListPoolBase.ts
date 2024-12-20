@@ -478,4 +478,17 @@ export abstract class ControlEntityListPoolBase {
 			this.triggerRedraw()
 		}
 	}
+
+	/**
+	 * Get all the connectionIds for actions and feedbacks which are active
+	 */
+	getAllEnabledConnectionIds(): Set<string> {
+		const connectionIds = new Set<string>()
+
+		for (const list of this.getAllEntityLists()) {
+			list.getAllEnabledConnectionIds(connectionIds)
+		}
+
+		return connectionIds
+	}
 }

@@ -381,8 +381,6 @@ export class ControlTrigger
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
 			[],
-			[],
-			[],
 			allEntities,
 			this.events,
 			true

@@ -395,4 +395,13 @@ export class ControlEntityList {
 
 		return changed
 	}
+
+	/**
+	 * Get all the connection ids that are enabled
+	 */
+	getAllEnabledConnectionIds(connectionIds: Set<string>): void {
+		for (const entity of this.#entities) {
+			entity.getAllEnabledConnectionIds(connectionIds)
+		}
+	}
 }

@@ -106,13 +106,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 */
 	checkButtonStatus = (redraw = true): boolean => {
 		// Find all the connections referenced by the button
-		const connectionIds = new Set<string>()
-		for (const step of Object.values(this.steps)) {
-			for (const action of step.getAllActions()) {
-				if (action.disabled) continue
-				connectionIds.add(action.connectionId)
-			}
-		}
+		const connectionIds = this.entities.getAllEnabledConnectionIds()
 
 		// Figure out the combined status
 		let status: ButtonStatus = 'good'
