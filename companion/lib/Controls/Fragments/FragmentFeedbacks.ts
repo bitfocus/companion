@@ -1,11 +1,7 @@
 import { cloneDeep } from 'lodash-es'
-import LogController, { Logger } from '../../Log/Controller.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { InstanceDefinitions } from '../../Instance/Definitions.js'
-import type { InternalController } from '../../Internal/Controller.js'
-import type { ModuleHost } from '../../Instance/Host.js'
-import type { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 
 /**
  * Helper for ControlTypes with feedbacks
@@ -49,74 +45,9 @@ export class FragmentFeedbacks {
 	baseStyle: ButtonStyleProperties = cloneDeep(FragmentFeedbacks.DefaultStyle)
 
 	/**
-	 * Whether this set of feedbacks can only use boolean feedbacks
-	 */
-	readonly #booleanOnly: boolean
-
-	readonly #controlId: string
-
-	/**
 	 * The feedbacks on this control
 	 */
 	readonly #feedbacks: FragmentFeedbackList
-
-	/**
-	 * Whether this set of feedbacks can only use boolean feedbacks
-	 */
-	get isBooleanOnly(): boolean {
-		return this.#booleanOnly
-	}
-
-	/**
-	 * Commit changes to the database and disk
-	 */
-	readonly #commitChange: (redraw?: boolean) => void
-
-	/**
-	 * Trigger a redraw/invalidation of the control
-	 */
-	readonly #triggerRedraw: () => void
-
-	/**
-	 * The logger
-	 */
-	readonly #logger: Logger
-
-	constructor(
-		instanceDefinitions: InstanceDefinitions,
-		internalModule: InternalController,
-		moduleHost: ModuleHost,
-		controlId: string,
-		commitChange: (redraw?: boolean) => void,
-		triggerRedraw: () => void,
-		booleanOnly: boolean
-	) {
-		this.#logger = LogController.createLogger(`Controls/Fragments/Feedbacks/${controlId}`)
-
-		this.#controlId = controlId
-		this.#commitChange = commitChange
-		this.#triggerRedraw = triggerRedraw
-		this.#booleanOnly = booleanOnly
-
-		this.#feedbacks = new FragmentFeedbackList(
-			instanceDefinitions,
-			internalModule,
-			moduleHost,
-			this.#controlId,
-			null,
-			this.#booleanOnly ? 'boolean' : null
-		)
-	}
-
-	/**
-	 * Initialise from storage
-	 * @param feedbacks
-	 * @param skipSubscribe Whether to skip calling subscribe for the new feedbacks
-	 * @param isCloned Whether this is a cloned instance
-	 */
-	loadStorage(feedbacks: FeedbackInstance[], skipSubscribe?: boolean, isCloned?: boolean) {
-		this.#feedbacks.loadStorage(feedbacks, !!skipSubscribe, !!isCloned)
-	}
 
 	/**
 	 * Replace a feedback with an updated version
