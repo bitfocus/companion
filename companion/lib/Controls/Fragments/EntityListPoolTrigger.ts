@@ -42,21 +42,17 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Get all the feedback instances
+	 * Get direct the feedback instances
 	 */
 	getFeedbackEntities(): SomeEntityModel[] {
 		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
 	}
 
 	/**
-	 * Get all the action instances
+	 * Get direct the action instances
 	 */
 	getActionEntities(): SomeEntityModel[] {
 		return this.#actions.getDirectEntities().map((ent) => ent.asEntityModel(true))
-	}
-
-	getActionsToExecute(): SomeEntityModel[] {
-		return this.#actions.getDirectEntities().map((e) => e.asEntityModel(true))
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {

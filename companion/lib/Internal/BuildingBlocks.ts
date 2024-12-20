@@ -15,7 +15,6 @@
  *
  */
 
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import LogController from '../Log/Controller.js'
 import type {
 	FeedbackForVisitor,
@@ -28,7 +27,7 @@ import type {
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalController } from './Controller.js'
-import { ActionEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { ActionEntityModel, EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
@@ -180,14 +179,14 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	/**
 	 * Execute a logic feedback
 	 */
-	executeLogicFeedback(feedback: FeedbackInstance, childValues: boolean[]): boolean {
-		if (feedback.type === 'logic_and' || feedback.type === 'logic_conditionalise_advanced') {
+	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
+		if (feedback.definitionId === 'logic_and' || feedback.definitionId === 'logic_conditionalise_advanced') {
 			if (childValues.length === 0) return !!feedback.isInverted
 
 			return childValues.reduce((acc, val) => acc && val, true) === !feedback.isInverted
-		} else if (feedback.type === 'logic_or') {
+		} else if (feedback.definitionId === 'logic_or') {
 			return childValues.reduce((acc, val) => acc || val, false)
-		} else if (feedback.type === 'logic_xor') {
+		} else if (feedback.definitionId === 'logic_xor') {
 			const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
 			return isSingleTrue === !feedback.isInverted
 		} else {

@@ -25,7 +25,6 @@ import type {
 	InternalModuleFragment,
 	InternalVisitor,
 } from './Types.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
@@ -235,19 +234,21 @@ export class InternalController {
 	/**
 	 * A feedback has been deleted
 	 */
-	feedbackDelete(feedback: FeedbackInstance): void {
+	entityDelete(entity: SomeEntityModel): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		if (feedback.instance_id !== 'internal') throw new Error(`Feedback is not for internal instance`)
+		if (entity.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
 
-		this.#feedbacks.delete(feedback.id)
+		if (entity.type !== EntityModelType.Feedback) return
+
+		this.#feedbacks.delete(entity.id)
 
 		for (const fragment of this.#fragments) {
-			if ('forgetFeedback' in fragment && typeof fragment.forgetFeedback === 'function') {
+			if (typeof fragment.forgetFeedback === 'function') {
 				try {
-					fragment.forgetFeedback(feedback)
+					fragment.forgetFeedback(entity)
 				} catch (e: any) {
-					this.#logger.silly(`Feedback forget failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
+					this.#logger.silly(`Feedback forget failed: ${JSON.stringify(entity)} - ${e?.message ?? e} ${e?.stack}`)
 				}
 			}
 		}
@@ -370,7 +371,7 @@ export class InternalController {
 	/**
 	 * Execute a logic feedback
 	 */
-	executeLogicFeedback(feedback: FeedbackInstance, childValues: boolean[]): boolean {
+	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)

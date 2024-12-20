@@ -336,7 +336,7 @@ export class ControlsController extends CoreBase {
 				let newEntity: SomeEntityModel | null = null
 				switch (entityType) {
 					case EntityModelType.Action:
-						// newEntity = this.instance.definitions.createActionItem(connectionId, entityDefinition)
+						newEntity = this.instance.definitions.createActionItem(connectionId, entityDefinition)
 						break
 					case EntityModelType.Feedback:
 						newEntity = this.instance.definitions.createFeedbackItem(connectionId, entityDefinition, false) // TODO booleanOnly?

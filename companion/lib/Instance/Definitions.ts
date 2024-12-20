@@ -14,7 +14,6 @@ import type {
 import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -172,13 +171,14 @@ export class InstanceDefinitions {
 	 * @param connectionId - the id of the instance
 	 * @param actionId - the id of the action
 	 */
-	createActionItem(connectionId: string, actionId: string): ActionInstance | null {
+	createActionItem(connectionId: string, actionId: string): ActionEntityModel | null {
 		const definition = this.getActionDefinition(connectionId, actionId)
 		if (definition) {
-			const action: ActionInstance = {
+			const action: ActionEntityModel = {
+				type: EntityModelType.Action,
 				id: nanoid(),
-				action: actionId,
-				instance: connectionId,
+				definitionId: actionId,
+				connectionId: connectionId,
 				options: {},
 			}
 

@@ -171,11 +171,15 @@ export class ControlEntityInstance {
 	 */
 	cleanup() {
 		// Inform relevant module
-		const connection = this.#moduleHost.getChild(this.#data.connectionId, true)
-		if (connection) {
-			connection.entityDelete(this.asEntityModel()).catch((e) => {
-				this.#logger.silly(`entityDelete to connection failed: ${e.message}`)
-			})
+		if (this.#data.connectionId === 'internal') {
+			this.#internalModule.entityDelete(this.asEntityModel())
+		} else {
+			const connection = this.#moduleHost.getChild(this.#data.connectionId, true)
+			if (connection) {
+				connection.entityDelete(this.asEntityModel()).catch((e) => {
+					this.#logger.silly(`entityDelete to connection failed: ${e.message}`)
+				})
+			}
 		}
 
 		// Remove from cached feedback values
@@ -631,7 +635,7 @@ export class ControlEntityInstance {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
 			const childValues = this.#children.get('children')?.getChildBooleanFeedbackValues() ?? []
 
-			return this.#internalModule.executeLogicFeedback(this.asFeedbackInstance(), childValues)
+			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
 		}
 
 		if (!definition || definition.type !== 'boolean') return false

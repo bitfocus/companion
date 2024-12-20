@@ -311,8 +311,8 @@ export class ControlButtonNormal
 			type: this.type,
 			style: this.entities.baseStyle,
 			options: this.options,
-			feedbacks: this.entities.getFeedbackInstances(),
-			steps: this.entities.asActionStepsModel(),
+			feedbacks: this.entities.getFeedbackEntities(),
+			steps: this.entities.asNormalButtonSteps(),
 		}
 
 		return clone ? cloneDeep(obj) : obj

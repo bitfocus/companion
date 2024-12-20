@@ -27,6 +27,7 @@ import type {
 	InternalFeedbackDefinition,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
+import type { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -205,7 +206,7 @@ export class InternalVariables implements InternalModuleFragment {
 		}
 	}
 
-	forgetFeedback(feedback: FeedbackEntityModelExt): void {
+	forgetFeedback(feedback: FeedbackEntityModel): void {
 		this.#variableSubscriptions.delete(feedback.id)
 	}
 

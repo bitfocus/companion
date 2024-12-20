@@ -60,6 +60,8 @@ export interface InternalModuleFragment {
 
 	feedbackUpgrade?: (feedback: FeedbackEntityModel, controlId: string) => FeedbackEntityModel | void
 
+	forgetFeedback?: (feedback: FeedbackEntityModel) => void
+
 	/**
 	 *
 	 */

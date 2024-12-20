@@ -221,7 +221,7 @@ export class ControlTrigger
 			this.#sendTriggerJsonChange()
 		}
 
-		const actions = this.entities.getActionsToExecute()
+		const actions = this.entities.getActionEntities()
 		this.logger.silly('found actions')
 
 		this.#actionRunner

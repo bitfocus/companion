@@ -1,11 +1,13 @@
 import { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
-import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import {
+	EntityModelType,
+	SomeEntityModel,
+	type SomeSocketEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
-import { transformEntityToFeedbacks } from './Util.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
@@ -97,10 +99,38 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	/**
-	 * Get all the feedback instances
+	 * Get direct the feedback instances
 	 */
-	getFeedbackInstances(): FeedbackInstance[] {
-		return transformEntityToFeedbacks(this.#feedbacks.getDirectEntities())
+	getFeedbackEntities(): SomeEntityModel[] {
+		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	}
+
+	// /**
+	//  * Get direct the action instances
+	//  */
+	// getActionEntities(): SomeEntityModel[] {
+	// 	return this.#actions.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	// }
+	asNormalButtonSteps(): NormalButtonSteps {
+		const stepsJson: NormalButtonSteps = {}
+		for (const [id, step] of this.#steps) {
+			const actionSets: ActionSetsModel = {
+				down: [],
+				up: [],
+				rotate_left: undefined,
+				rotate_right: undefined,
+			}
+			for (const [setId, set] of step.sets) {
+				actionSets[setId] = set.getDirectEntities().map((ent) => ent.asEntityModel(true))
+			}
+
+			stepsJson[id] = {
+				action_sets: actionSets,
+				options: step.options,
+			}
+		}
+
+		return stepsJson
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
@@ -135,18 +165,6 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	getStepIds(): string[] {
 		return GetStepIds(this.#steps)
-	}
-
-	asActionStepsModel(): NormalButtonSteps {
-		const stepsJson: NormalButtonSteps = {}
-		for (const [id, step] of this.#steps) {
-			stepsJson[id] = {
-				action_sets: step.asActionStepModel(),
-				options: step.options,
-			}
-		}
-
-		return stepsJson
 	}
 
 	actionSetAdd(stepId: string): boolean {

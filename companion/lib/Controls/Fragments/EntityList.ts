@@ -61,13 +61,6 @@ export class ControlEntityList {
 		return this.#entities
 	}
 
-	// /**
-	//  * Get the contained actions as `ActionInstance`s
-	//  */
-	// asActionInstances(): ActionInstance[] {
-	// 	return this.#actions.map((action) => action.asActionInstance())
-	// }
-
 	/**
 	 * Initialise from storage
 	 * @param entities
