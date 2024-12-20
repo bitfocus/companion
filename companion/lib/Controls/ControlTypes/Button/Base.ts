@@ -15,7 +15,7 @@ import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleMode
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
-import { ControlEntityListPoolButton } from '../../Fragments/EntityListPoolBase.js'
+import { ControlEntityListPoolButton } from 'lib/Controls/Fragments/ControlEntityListPoolButton.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**

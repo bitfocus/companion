@@ -27,7 +27,7 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
-import { ControlEntityListPoolTrigger } from '../../Fragments/EntityListPoolBase.js'
+import { ControlEntityListPoolTrigger } from 'lib/Controls/Fragments/ControlEntityListPoolTrigger.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
