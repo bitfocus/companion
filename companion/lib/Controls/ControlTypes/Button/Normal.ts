@@ -17,7 +17,6 @@ import type {
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type {
 	ActionInstance,
-	ActionOwner,
 	ActionSetId,
 	ActionSetsModel,
 	ActionStepOptions,
@@ -137,66 +136,6 @@ export class ControlButtonNormal
 				}
 			}
 			this.#surfaceHoldState.clear()
-		}
-	}
-
-	/**
-	 * Reorder an action in the list or move between sets
-	 */
-	actionMoveTo(
-		dragStepId: string,
-		dragSetId: ActionSetId,
-		dragActionId: string,
-		hoverStepId: string,
-		hoverSetId: ActionSetId,
-		hoverOwnerId: ActionOwner | null,
-		hoverIndex: number
-	): boolean {
-		const oldStep = this.steps[dragStepId]
-		if (!oldStep) return false
-
-		const oldItem = oldStep.findParentAndIndex(dragSetId, dragActionId)
-		if (!oldItem) return false
-
-		if (
-			dragStepId === hoverStepId &&
-			dragSetId === hoverSetId &&
-			oldItem.parent.ownerId?.parentActionId === hoverOwnerId?.parentActionId &&
-			oldItem.parent.ownerId?.childGroup === hoverOwnerId?.childGroup
-		) {
-			oldItem.parent.moveAction(oldItem.index, hoverIndex)
-
-			this.commitChange(false)
-
-			return true
-		} else {
-			const newStep = this.steps[hoverStepId]
-			if (!newStep) return false
-
-			const newSet = newStep.getActionSet(hoverSetId)
-			if (!newSet) return false
-
-			const newParent = hoverOwnerId ? newSet?.findById(hoverOwnerId.parentActionId) : null
-			if (hoverOwnerId && !newParent) return false
-
-			// Ensure the new parent is not a child of the action being moved
-			if (hoverOwnerId && oldItem.item.findChildById(hoverOwnerId.parentActionId)) return false
-
-			// Check if the new parent can hold the action being moved
-			if (newParent && !newParent.canAcceptChild(hoverOwnerId!.childGroup, oldItem.item)) return false
-
-			const poppedAction = oldItem.parent.popAction(oldItem.index)
-			if (!poppedAction) return false
-
-			if (newParent) {
-				newParent.pushChild(poppedAction, hoverOwnerId!.childGroup, hoverIndex)
-			} else {
-				newSet.pushAction(poppedAction, hoverIndex)
-			}
-
-			this.commitChange(false)
-
-			return true
 		}
 	}
 

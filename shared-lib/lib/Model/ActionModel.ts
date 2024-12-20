@@ -32,8 +32,3 @@ export type ActionSetsModel = Record<ActionSetId, ActionInstance[] | undefined>
 // }
 
 // export type ActionSetId = 'down' | 'up' | 'rotate_left' | 'rotate_right' | number
-
-export interface ActionOwner {
-	parentActionId: string
-	childGroup: string
-}

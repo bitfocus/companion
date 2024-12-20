@@ -1,6 +1,6 @@
 import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
-import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ControlEntityListPoolBase } from './Fragments/EntityListPoolBase.js'
 
@@ -129,19 +129,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * @param skip_up Mark button as released
 	 */
 	abortDelayedActions(skip_up: boolean): void
-
-	/**
-	 * Reorder an action in the list or move between sets
-	 */
-	actionMoveTo(
-		dragStepId: string,
-		dragSetId: ActionSetId,
-		dragActionId: string,
-		hoverStepId: string,
-		hoverSetId: ActionSetId,
-		hoverOwnerId: ActionOwner | null,
-		hoverIndex: number
-	): boolean
 
 	/**
 	 * Remove an action from this control

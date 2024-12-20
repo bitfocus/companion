@@ -204,19 +204,6 @@ export class FragmentActionInstance {
 	}
 
 	/**
-	 * Find the index of a child action, and the parent list
-	 */
-	findParentAndIndex(
-		id: string
-	): { parent: FragmentActionList; index: number; item: FragmentActionInstance } | undefined {
-		for (const actionGroup of this.#children.values()) {
-			const result = actionGroup.findParentAndIndex(id)
-			if (result) return result
-		}
-		return undefined
-	}
-
-	/**
 	 * Add a child action to this action
 	 */
 	addChild(groupId: string, action: ActionInstance): FragmentActionInstance {

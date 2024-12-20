@@ -22,7 +22,7 @@ import type {
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Fragments/EntityListPoolTrigger.js'
@@ -210,53 +210,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Reorder an action in the list or move between sets
-	 * @param _dragStepId
-	 * @param _dragSetId the action_set id to remove from
-	 * @param dragActionId the id of the action to move
-	 * @param _dropStepId
-	 * @param _dropSetId the target action_set of the action
-	 * @param dropIndex the target index of the action
-	 */
-	actionMoveTo(
-		_dragStepId: string,
-		_dragSetId: ActionSetId,
-		dragActionId: string,
-		_hoverStepId: string,
-		_hoverSetId: ActionSetId,
-		hoverOwnerId: ActionOwner | null,
-		hoverIndex: number
-	): boolean {
-		const oldItem = this.actions.findParentAndIndex(0, dragActionId)
-		if (!oldItem) return false
-
-		const set = this.actions.getActionSet(0)
-		if (!set) return false
-
-		const newParent = hoverOwnerId ? set?.findById(hoverOwnerId.parentActionId) : null
-		if (hoverOwnerId && !newParent) return false
-
-		// Ensure the new parent is not a child of the action being moved
-		if (hoverOwnerId && oldItem.item.findChildById(hoverOwnerId.parentActionId)) return false
-
-		// Check if the new parent can hold the action being moved
-		if (newParent && !newParent.canAcceptChild(hoverOwnerId!.childGroup, oldItem.item)) return false
-
-		const poppedAction = oldItem.parent.popAction(oldItem.index)
-		if (!poppedAction) return false
-
-		if (newParent) {
-			newParent.pushChild(poppedAction, hoverOwnerId!.childGroup, hoverIndex)
-		} else {
-			set.pushAction(poppedAction, hoverIndex)
-		}
-
-		this.commitChange(false)
-
-		return true
-	}
-
-	/**
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {
@@ -317,13 +270,9 @@ export class ControlTrigger
 	 */
 	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>) {
 		const allEntities = this.entities.getAllEntities()
-		const allActions = this.actions.getAllActions()
 
 		for (const entities of allEntities) {
 			foundConnectionIds.add(entities.connectionId)
-		}
-		for (const action of allActions) {
-			foundConnectionIds.add(action.connectionId)
 		}
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
@@ -334,7 +283,7 @@ export class ControlTrigger
 			undefined,
 			[],
 			[],
-			allActions,
+			[],
 			allEntities,
 			this.events
 		)
@@ -427,10 +376,9 @@ export class ControlTrigger
 	 */
 	forgetConnection(connectionId: string): void {
 		const changed = this.entities.forgetConnection(connectionId)
-		const changedActions = this.actions.forgetConnection(connectionId)
 
-		if (changed || changedActions) {
-			this.commitChange(changed)
+		if (changed) {
+			this.commitChange(true)
 		}
 	}
 
@@ -457,7 +405,6 @@ export class ControlTrigger
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
 		const allEntities = this.entities.getAllEntities()
-		const allActions = this.actions.getAllActions()
 
 		// Fix up references
 		const changed = ReferencesVisitors.fixupControlReferences(
@@ -466,7 +413,7 @@ export class ControlTrigger
 			undefined,
 			[],
 			[],
-			allActions,
+			[],
 			allEntities,
 			this.events,
 			true
@@ -600,7 +547,6 @@ export class ControlTrigger
 		const ps = []
 
 		ps.push(this.entities.postProcessImport())
-		ps.push(this.actions.postProcessImport())
 
 		Promise.all(ps).catch((e) => {
 			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
@@ -615,11 +561,10 @@ export class ControlTrigger
 	 * Doesn't do any cleanup, as it is assumed that the instance has not been running
 	 */
 	verifyConnectionIds(knownConnectionIds: Set<string>): void {
-		const changedActions = this.actions.verifyConnectionIds(knownConnectionIds)
 		const changed = this.entities.verifyConnectionIds(knownConnectionIds)
 
-		if (changed || changedActions) {
-			this.commitChange(changed)
+		if (changed) {
+			this.commitChange(true)
 		}
 	}
 
@@ -666,7 +611,6 @@ export class ControlTrigger
 
 		this.#eventBus.emit('trigger_enabled', this.controlId, false)
 
-		this.actions.destroy()
 		this.entities.destroy()
 
 		super.destroy()

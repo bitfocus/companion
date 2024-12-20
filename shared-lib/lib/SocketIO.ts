@@ -44,7 +44,7 @@ import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/Act
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
-import type { ActionOwner, ActionSetId } from './Model/ActionModel.js'
+import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
 
 export interface ClientToBackendEventsMap {

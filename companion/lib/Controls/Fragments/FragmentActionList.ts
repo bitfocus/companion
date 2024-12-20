@@ -3,7 +3,7 @@ import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
-import type { ActionInstance, ActionOwner } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 
 export class FragmentActionList {
 	readonly #instanceDefinitions: InstanceDefinitions
@@ -15,26 +15,18 @@ export class FragmentActionList {
 	 */
 	readonly #controlId: string
 
-	readonly #ownerId: ActionOwner | null
-
 	#actions: FragmentActionInstance[] = []
-
-	get ownerId(): ActionOwner | null {
-		return this.#ownerId
-	}
 
 	constructor(
 		instanceDefinitions: InstanceDefinitions,
 		internalModule: InternalController,
 		moduleHost: ModuleHost,
-		controlId: string,
-		ownerId: ActionOwner | null
+		controlId: string
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
-		this.#ownerId = ownerId
 	}
 
 	/**
@@ -111,25 +103,6 @@ export class FragmentActionList {
 			if (action.id === id) return action
 
 			const found = action.findChildById(id)
-			if (found) return found
-		}
-
-		return undefined
-	}
-
-	/**
-	 * Find the index of a child action, and the parent list
-	 */
-	findParentAndIndex(
-		id: string
-	): { parent: FragmentActionList; index: number; item: FragmentActionInstance } | undefined {
-		const index = this.#actions.findIndex((fb) => fb.id === id)
-		if (index !== -1) {
-			return { parent: this, index, item: this.#actions[index] }
-		}
-
-		for (const action of this.#actions) {
-			const found = action.findParentAndIndex(id)
 			if (found) return found
 		}
 

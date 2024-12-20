@@ -1,7 +1,6 @@
 import LogController, { Logger } from '../../Log/Controller.js'
 import type {
 	ActionInstance,
-	ActionOwner,
 	ActionSetId,
 	ActionSetsModel,
 	ActionStepOptions,
@@ -70,7 +69,7 @@ export class FragmentActions {
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
 
-		this.#actions.set(0, new FragmentActionList(instanceDefinitions, internalModule, moduleHost, controlId, null))
+		this.#actions.set(0, new FragmentActionList(instanceDefinitions, internalModule, moduleHost, controlId))
 
 		this.#controlId = controlId
 		this.#commitChange = commitChange
@@ -102,40 +101,11 @@ export class FragmentActions {
 				this.#instanceDefinitions,
 				this.#internalModule,
 				this.#moduleHost,
-				this.#controlId,
-				null
+				this.#controlId
 			)
 			newList.loadStorage(value, !!skipSubscribe, !!isCloned)
 			this.#actions.set(keySafe, newList)
 		}
-	}
-
-	/**
-	 * Add an action to this control
-	 */
-	actionAdd(setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) {
-			// cant implicitly create a set
-			this.#logger.silly(`Missing set ${this.#controlId}:${setId}`)
-			return false
-		}
-
-		let newAction: FragmentActionInstance
-		if (ownerId) {
-			const parent = actionSet.findById(ownerId.parentActionId)
-			if (!parent) throw new Error(`Failed to find parent action ${ownerId.parentActionId} when adding child action`)
-
-			newAction = parent.addChild(ownerId.childGroup, actionItem)
-		} else {
-			newAction = actionSet.addAction(actionItem)
-		}
-
-		// Inform relevant module
-		newAction.subscribe(true)
-
-		this.#commitChange(false)
-		return true
 	}
 
 	getActionSet(setId: ActionSetId): FragmentActionList | undefined {
@@ -152,24 +122,12 @@ export class FragmentActions {
 			if (!this.#actions.has('rotate_left'))
 				this.#actions.set(
 					'rotate_left',
-					new FragmentActionList(
-						this.#instanceDefinitions,
-						this.#internalModule,
-						this.#moduleHost,
-						this.#controlId,
-						null
-					)
+					new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId)
 				)
 			if (!this.#actions.has('rotate_right'))
 				this.#actions.set(
 					'rotate_right',
-					new FragmentActionList(
-						this.#instanceDefinitions,
-						this.#internalModule,
-						this.#moduleHost,
-						this.#controlId,
-						null
-					)
+					new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId)
 				)
 		} else {
 			// remove the sets
@@ -197,7 +155,7 @@ export class FragmentActions {
 			// add the default '1000' set
 			this.#actions.set(
 				1000,
-				new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId, null)
+				new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId)
 			)
 
 			this.#commitChange(true)
@@ -210,7 +168,7 @@ export class FragmentActions {
 
 			this.#actions.set(
 				newIndex,
-				new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId, null)
+				new FragmentActionList(this.#instanceDefinitions, this.#internalModule, this.#moduleHost, this.#controlId)
 			)
 
 			this.#commitChange(false)
@@ -308,23 +266,6 @@ export class FragmentActions {
 		}
 
 		return false
-	}
-
-	/**
-	 * Find a child feedback by id
-	 */
-	findChildById(setId: ActionSetId, id: string): FragmentActionInstance | undefined {
-		return this.#actions.get(setId)?.findById(id)
-	}
-
-	/**
-	 * Find the index of a child feedback, and the parent list
-	 */
-	findParentAndIndex(
-		setId: ActionSetId,
-		id: string
-	): { parent: FragmentActionList; index: number; item: FragmentActionInstance } | undefined {
-		return this.#actions.get(setId)?.findParentAndIndex(id)
 	}
 
 	/**

@@ -15,9 +15,5 @@ export interface FeedbackInstance {
 	advancedChildren?: FeedbackInstance[]
 }
 
+/** @deprecated */
 export type FeedbackChildGroup = 'children' | 'advancedChildren'
-
-export interface FeedbackOwner {
-	parentFeedbackId: string
-	childGroup: FeedbackChildGroup
-}
