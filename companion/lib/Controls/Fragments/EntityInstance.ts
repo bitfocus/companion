@@ -169,10 +169,6 @@ export class ControlEntityInstance {
 	 * Add a child entity to this entity
 	 */
 	addChild(groupId: string, entityModel: SomeEntityModel): ControlEntityInstance {
-		if (this.connectionId !== 'internal') {
-			throw new Error('Only internal feedbacks can have children')
-		}
-
 		const childGroup = this.#getOrCreateChildGroup(groupId)
 		return childGroup.addEntity(entityModel)
 	}

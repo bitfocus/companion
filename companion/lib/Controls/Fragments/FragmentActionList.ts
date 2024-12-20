@@ -6,13 +6,6 @@ export class FragmentActionList {
 	#actions: FragmentActionInstance[] = []
 
 	/**
-	 * Get all the actions
-	 */
-	getAllActions(): FragmentActionInstance[] {
-		return [...this.#actions, ...this.#actions.flatMap((action) => action.getAllChildren())]
-	}
-
-	/**
 	 * Get the contained actions as `ActionInstance`s
 	 */
 	asActionInstances(): ActionInstance[] {

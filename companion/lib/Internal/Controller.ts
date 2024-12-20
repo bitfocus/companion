@@ -90,6 +90,9 @@ export class InternalController {
 		this.regenerateVariables()
 	}
 
+	/**
+	 * Trigger the first update after launch of each action and feedback
+	 */
 	firstUpdate(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 

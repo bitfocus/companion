@@ -285,21 +285,23 @@ export class SocketEventsHandler {
 
 		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
-			if (control.supportsActions) {
-				const actions = control.getFlattenedActionInstances()
+			if (!control.supportsEntities) continue
+			// const actions = .map(e => e.asEntityModel())
 
-				for (const action of actions) {
-					if (action.instance == this.connectionId) {
-						allActions[action.id] = {
-							id: action.id,
-							controlId: controlId,
-							actionId: action.action,
-							options: action.options,
+			for (const entity of control.entities.getAllEntities()) {
+				if (entity.connectionId !== this.connectionId) continue
+				if (entity.type !== EntityModelType.Action) continue
 
-							upgradeIndex: action.upgradeIndex ?? null,
-							disabled: !!action.disabled,
-						}
-					}
+				const entityModel = entity.asEntityModel(false)
+
+				allActions[entity.id] = {
+					id: entityModel.id,
+					controlId: controlId,
+					actionId: entityModel.definitionId,
+					options: entityModel.rawOptions,
+
+					upgradeIndex: entityModel.upgradeIndex ?? null,
+					disabled: !!entityModel.disabled,
 				}
 			}
 		}

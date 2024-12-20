@@ -185,20 +185,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	}
 
 	/**
-	 * Get all the actions on this control
-	 */
-	getFlattenedActionInstances(): ActionInstance[] {
-		const actions: ActionInstance[] = []
-
-		for (const step of Object.values(this.steps)) {
-			if (!step) continue
-			actions.push(...step.getFlattenedActionInstances())
-		}
-
-		return actions
-	}
-
-	/**
 	 * Get the size of the bitmap render of this control
 	 */
 	getBitmapSize(): { width: number; height: number } | null {

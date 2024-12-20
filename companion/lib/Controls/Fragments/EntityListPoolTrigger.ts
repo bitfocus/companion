@@ -4,6 +4,7 @@ import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import { transformEntityToFeedbacks } from './Util.js'
+import { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList
@@ -58,6 +59,18 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	 */
 	getFeedbackInstances(): FeedbackInstance[] {
 		return transformEntityToFeedbacks(this.#feedbacks.getDirectEntities())
+	}
+
+	asActionStepModel(): ActionSetsModel {
+		const actions: ActionSetsModel = {
+			down: undefined,
+			up: undefined,
+			rotate_left: undefined,
+			rotate_right: undefined,
+			0: this.#actions.getDirectEntities().map((ent) => ent.asEntityModel(true)),
+		}
+
+		return actions
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {

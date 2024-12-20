@@ -174,19 +174,6 @@ export class FragmentActionInstance {
 	}
 
 	/**
-	 * Recursively get all the actions
-	 */
-	getAllChildren(): FragmentActionInstance[] {
-		const actions: FragmentActionInstance[] = []
-
-		for (const actionGroup of this.#children.values()) {
-			actions.push(...actionGroup.getAllActions())
-		}
-
-		return actions
-	}
-
-	/**
 	 * Replace portions of the action with an updated version
 	 */
 	replaceProps(newProps: Pick<ActionInstance, 'action' | 'options'>, skipNotifyModule = false): void {

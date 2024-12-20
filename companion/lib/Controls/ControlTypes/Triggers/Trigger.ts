@@ -22,7 +22,7 @@ import type {
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Fragments/EntityListPoolTrigger.js'
@@ -196,20 +196,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Remove an action from this control
-	 */
-	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
-		return this.actions.actionReplace(newProps, skipNotifyModule)
-	}
-
-	/**
-	 * Replace all the actions in a set
-	 */
-	actionReplaceAll(_stepId: string, _setId: ActionSetId, newActions: ActionInstance[]): boolean {
-		return this.actions.actionReplaceAll(0, newActions)
-	}
-
-	/**
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {
@@ -257,13 +243,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Get all the actions on this control
-	 */
-	getFlattenedActionInstances(): ActionInstance[] {
-		return this.actions.getFlattenedActionInstances()
-	}
-
-	/**
 	 * Collect the instance ids and labels referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
@@ -305,7 +284,7 @@ export class ControlTrigger
 		const obj: TriggerModel = {
 			type: this.type,
 			options: this.options,
-			action_sets: this.actions.asActionStepModel(),
+			action_sets: this.entities.asActionStepModel(),
 			condition: this.entities.getFeedbackInstances(),
 			events: this.events,
 		}

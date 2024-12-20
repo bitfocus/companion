@@ -284,40 +284,6 @@ export class FragmentActions {
 	}
 
 	/**
-	 * Get all the action instances
-	 * @param onlyConnectionId Optionally, only for a specific connection
-	 * @returns {}
-	 */
-	getFlattenedActionInstances(onlyConnectionId?: string): Omit<ActionInstance, 'children'>[] {
-		const instances: ActionInstance[] = []
-
-		const extractInstances = (actions: ActionInstance[]) => {
-			for (const action of actions) {
-				if (!onlyConnectionId || onlyConnectionId === action.instance) {
-					instances.push({
-						...action,
-						children: undefined,
-					})
-				}
-
-				if (action.children) {
-					for (const actions of Object.values(action.children)) {
-						if (!actions) continue
-
-						extractInstances(actions)
-					}
-				}
-			}
-		}
-
-		for (const list of this.#actions.values()) {
-			extractInstances(list.asActionInstances())
-		}
-
-		return instances
-	}
-
-	/**
 	 * Rename this control
 	 * @param newName the new name
 	 */

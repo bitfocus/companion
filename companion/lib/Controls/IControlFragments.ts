@@ -129,21 +129,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * @param skip_up Mark button as released
 	 */
 	abortDelayedActions(skip_up: boolean): void
-
-	/**
-	 * Remove an action from this control
-	 */
-	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule?: boolean): boolean
-
-	/**
-	 * Replace all the actions in a set
-	 */
-	actionReplaceAll(stepId: string, setId: ActionSetId, newActions: ActionInstance[]): boolean
-
-	/**
-	 * Get all the actions on this control
-	 */
-	getFlattenedActionInstances(): ActionInstance[]
 }
 
 export interface ControlWithoutActions extends ControlBase<any> {

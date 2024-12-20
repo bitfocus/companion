@@ -15,12 +15,7 @@ import type {
 	NormalButtonOptions,
 	NormalButtonSteps,
 } from '@companion-app/shared/Model/ButtonModel.js'
-import type {
-	ActionInstance,
-	ActionSetId,
-	ActionSetsModel,
-	ActionStepOptions,
-} from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -136,28 +131,6 @@ export class ControlButtonNormal
 				}
 			}
 			this.#surfaceHoldState.clear()
-		}
-	}
-
-	/**
-	 * Remove an action from this control
-	 */
-	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
-		for (const step of Object.values(this.steps)) {
-			if (step.actionReplace(newProps, skipNotifyModule)) return true
-		}
-		return false
-	}
-
-	/**
-	 * Replace all the actions in a set
-	 */
-	actionReplaceAll(stepId: string, setId: ActionSetId, newActions: ActionInstance[]): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionReplaceAll(setId, newActions)
-		} else {
-			return false
 		}
 	}
 
