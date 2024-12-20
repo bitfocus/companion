@@ -27,7 +27,6 @@ import type {
 } from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import type { FragmentFeedbackInstance } from '../Controls/Fragments/FragmentFeedbackInstance.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
@@ -41,6 +40,8 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { PageController } from '../Page/Controller.js'
 import LogController from '../Log/Controller.js'
 import type { FragmentActionInstance } from '../Controls/Fragments/FragmentActionInstance.js'
+import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Fragments/EntityInstance.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -273,24 +274,28 @@ export class InternalController {
 		visitor: InternalVisitor,
 		rawActions: ActionInstance[],
 		actions: FragmentActionInstance[],
-		rawFeedbacks: FeedbackInstance[],
-		feedbacks: FragmentFeedbackInstance[]
+		rawEntities: SomeEntityModel[],
+		entities: ControlEntityInstance[]
 	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const simpleInternalFeedbacks: FeedbackForVisitor[] = []
 
-		for (const feedback of rawFeedbacks) {
-			if (feedback.instance_id !== 'internal') continue
-			simpleInternalFeedbacks.push(feedback)
-		}
-		for (const feedback of feedbacks) {
-			if (feedback.connectionId !== 'internal') continue
-			const feedbackInstance = feedback.asFeedbackInstance()
+		for (const entity of rawEntities) {
+			if (entity.connectionId !== 'internal' || entity.type !== EntityModelType.Feedback) continue
 			simpleInternalFeedbacks.push({
-				id: feedbackInstance.id,
-				type: feedbackInstance.type,
-				options: feedback.rawOptions, // Ensure the options is not a copy/clone
+				id: entity.id,
+				type: entity.definitionId,
+				options: entity.options,
+			})
+		}
+		for (const entity of entities) {
+			const entityModel = entity.asEntityModel()
+			if (entity.connectionId !== 'internal' || entityModel.type !== EntityModelType.Feedback) continue
+			simpleInternalFeedbacks.push({
+				id: entityModel.id,
+				type: entityModel.type,
+				options: entity.rawOptions, // Ensure the options is not a copy/clone
 			})
 		}
 

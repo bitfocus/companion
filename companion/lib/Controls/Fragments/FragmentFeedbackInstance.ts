@@ -1,4 +1,4 @@
-import { cloneDeep, isEqual } from 'lodash-es'
+import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
@@ -229,102 +229,6 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
-	 * Set whether this feedback is enabled
-	 */
-	setEnabled(enabled: boolean): void {
-		this.#data.disabled = !enabled
-
-		// Remove from cached feedback values
-		this.#cachedValue = undefined
-
-		// Inform relevant module
-		if (!this.#data.disabled) {
-			this.subscribe(true)
-		} else {
-			this.cleanup()
-		}
-	}
-
-	/**
-	 * Set the headline for this feedback
-	 */
-	setHeadline(headline: string): void {
-		this.#data.headline = headline
-
-		// Don't need to resubscribe
-		// Don't need to clear cached value
-	}
-
-	/**
-	 * Set the connection instance of this feedback
-	 */
-	setInstance(instanceId: string | number): void {
-		const instance = `${instanceId}`
-
-		// first unsubscribe feedback from old instance
-		this.cleanup()
-		// next change instance
-		this.#data.instance_id = instance
-		// last subscribe to new instance
-		this.subscribe(true, instance)
-	}
-
-	/**
-	 * Set whether this feedback is inverted
-	 */
-	setInverted(isInverted: boolean): void {
-		// TODO - verify this is a boolean feedback
-
-		this.#data.isInverted = isInverted
-
-		// Don't need to resubscribe
-		// Don't need to clear cached value
-	}
-
-	/**
-	 * Set the options for this feedback
-	 */
-	setOptions(options: Record<string, any>): void {
-		this.#data.options = options
-
-		// Remove from cached feedback values
-		this.#cachedValue = undefined
-
-		// Inform relevant module
-		this.subscribe(false)
-	}
-
-	/**
-	 * Learn the options for a feedback, by asking the instance for the current values
-	 */
-	async learnOptions(): Promise<boolean> {
-		const instance = this.#moduleHost.getChild(this.connectionId)
-		if (!instance) return false
-
-		const newOptions = await instance.feedbackLearnValues(this.asFeedbackInstance(), this.#controlId)
-		if (newOptions) {
-			this.setOptions(newOptions)
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Set an option for this feedback
-	 */
-	setOption(key: string, value: any): void {
-		this.#data.options[key] = value
-
-		// Remove from cached feedback values
-		this.#cachedValue = undefined
-
-		// Inform relevant module
-		this.subscribe(false)
-	}
-
-	/**
 	 * Update an style property for a boolean feedback
 	 * @param key the key/name of the property
 	 * @param value the new value
@@ -394,40 +298,6 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
-	 * Set the cached value of this feedback
-	 */
-	setCachedValue(value: any): boolean {
-		if (!isEqual(value, this.#cachedValue)) {
-			this.#cachedValue = value
-			return true
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Clear cached values for any feedback belonging to the given connection
-	 * @returns Whether a value was changed
-	 */
-	clearCachedValueForConnectionId(connectionId: string): boolean {
-		let changed = false
-
-		if (this.#data.instance_id === connectionId) {
-			this.#cachedValue = undefined
-
-			changed = true
-		}
-
-		for (const childGroup of this.#children.values()) {
-			if (childGroup.clearCachedValueForConnectionId(connectionId)) {
-				changed = true
-			}
-		}
-
-		return changed
-	}
-
-	/**
 	 * Find a child feedback by id
 	 */
 	findChildById(id: string): FragmentFeedbackInstance | undefined {
@@ -449,18 +319,6 @@ export class FragmentFeedbackInstance {
 			if (result) return result
 		}
 		return undefined
-	}
-
-	/**
-	 * Add a child feedback to this feedback
-	 */
-	addChild(groupId: FeedbackChildGroup, feedback: FeedbackInstance): FragmentFeedbackInstance {
-		if (this.connectionId !== 'internal') {
-			throw new Error('Only internal feedbacks can have children')
-		}
-
-		const childGroup = this.#getOrCreateFeedbackGroup(groupId)
-		return childGroup.addFeedback(feedback)
 	}
 
 	// /**

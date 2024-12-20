@@ -481,15 +481,15 @@ export class ControlButtonNormal
 	 * @param foundConnectionLabels - instance labels being referenced
 	 */
 	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
-		const allFeedbacks = this.feedbacks.getAllFeedbacks()
+		const allEntities = this.entities.getAllEntities()
 		const allActions = []
 
 		for (const step of Object.values(this.steps)) {
 			allActions.push(...step.getAllActions())
 		}
 
-		for (const feedback of allFeedbacks) {
-			foundConnectionIds.add(feedback.connectionId)
+		for (const entity of allEntities) {
+			foundConnectionIds.add(entity.connectionId)
 		}
 		for (const action of allActions) {
 			foundConnectionIds.add(action.connectionId)
@@ -504,7 +504,7 @@ export class ControlButtonNormal
 			[],
 			[],
 			allActions,
-			allFeedbacks,
+			allEntities,
 			[]
 		)
 	}

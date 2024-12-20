@@ -1,5 +1,22 @@
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
+import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import { visitActionInstance } from './ActionInstanceVisitor.js'
+
+export function visitEntityModel(visitor: InternalVisitor, entity: SomeEntityModel) {
+	switch (entity.type) {
+		case EntityModelType.Action:
+			visitActionInstance(visitor, entity)
+			break
+		case EntityModelType.Feedback:
+			visitFeedbackInstance(visitor, entity)
+			break
+		default:
+			assertNever(entity)
+			break
+	}
+}
 
 /**
  * Visits a feedback instance.

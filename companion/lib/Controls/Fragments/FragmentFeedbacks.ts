@@ -1,13 +1,11 @@
 import { cloneDeep } from 'lodash-es'
 import LogController, { Logger } from '../../Log/Controller.js'
-import { FragmentFeedbackInstance } from './FragmentFeedbackInstance.js'
 import { FragmentFeedbackList } from './FragmentFeedbackList.js'
-import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
-import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 
 /**
  * Helper for ControlTypes with feedbacks
@@ -121,32 +119,6 @@ export class FragmentFeedbacks {
 	}
 
 	/**
-	 * Add a feedback to this control
-	 * @param feedbackItem the item to add
-	 * @param ownerId the ids of parent feedback that this feedback should be added as a child of
-	 */
-	feedbackAdd(feedbackItem: FeedbackInstance, ownerId: FeedbackOwner | null): boolean {
-		let newFeedback: FragmentFeedbackInstance
-
-		if (ownerId) {
-			const parent = this.#feedbacks.findById(ownerId.parentFeedbackId)
-			if (!parent)
-				throw new Error(`Failed to find parent feedback ${ownerId.parentFeedbackId} when adding child feedback`)
-
-			newFeedback = parent.addChild(ownerId.childGroup, feedbackItem)
-		} else {
-			newFeedback = this.#feedbacks.addFeedback(feedbackItem)
-		}
-
-		// Inform relevant module
-		newFeedback.subscribe(true)
-
-		this.#commitChange()
-
-		return true
-	}
-
-	/**
 	 * Move a feedback within the hierarchy
 	 * @param moveFeedbackId the id of the feedback to move
 	 * @param newOwnerId the target parentId of the feedback
@@ -230,34 +202,5 @@ export class FragmentFeedbacks {
 		extractInstances(this.#feedbacks.asFeedbackInstances())
 
 		return instances
-	}
-
-	/**
-	 * Re-trigger 'subscribe' for all feedbacks
-	 * This should be used when something has changed which will require all feedbacks to be re-run
-	 * @param onlyConnectionId If set, only re-subscribe feedbacks for this connection
-	 */
-	resubscribeAllFeedbacks(onlyConnectionId?: string): void {
-		this.#feedbacks.subscribe(true, onlyConnectionId)
-	}
-
-	/**
-	 * Update the feedbacks on the button with new values
-	 * @param connectionId The instance the feedbacks are for
-	 * @param newValues The new feedback values
-	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
-		let changed = false
-
-		for (const id in newValues) {
-			const feedback = this.#feedbacks.findById(id)
-			if (feedback && feedback.connectionId === connectionId && feedback.setCachedValue(newValues[id])) {
-				changed = true
-			}
-		}
-
-		if (changed) {
-			this.#triggerRedraw()
-		}
 	}
 }

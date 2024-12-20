@@ -24,6 +24,8 @@ import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
+import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -323,25 +325,30 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:entity:add', (controlId, entityLocation, ownerId, connectionId, entityDefinition) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
+		client.onPromise(
+			'controls:entity:add',
+			(controlId, entityLocation, ownerId, connectionId, entityType, entityDefinition) => {
+				const control = this.getControl(controlId)
+				if (!control) return false
 
-			if (control.supportsFeedbacks) {
-				const feedbackItem = this.instance.definitions.createFeedbackItem(
-					connectionId,
-					feedbackId,
-					control.feedbacks.isBooleanOnly
-				)
-				if (feedbackItem) {
-					return control.feedbacks.feedbackAdd(feedbackItem, ownerId)
-				} else {
-					return false
+				let newEntity: SomeEntityModel | null = null
+				switch (entityType) {
+					case EntityModelType.Action:
+						// newEntity = this.instance.definitions.createActionItem(connectionId, entityDefinition)
+						break
+					case EntityModelType.Feedback:
+						newEntity = this.instance.definitions.createFeedbackItem(connectionId, entityDefinition, false) // TODO booleanOnly?
+						break
+					default:
+						assertNever(entityType)
+						return false
 				}
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
+
+				if (!newEntity) return false
+
+				return control.entities.entityAdd(entityLocation, newEntity, ownerId)
 			}
-		})
+		)
 
 		client.onPromise('controls:entity:learn', async (controlId, entityLocation, id) => {
 			const control = this.getControl(controlId)
@@ -1214,8 +1221,8 @@ export class ControlsController extends CoreBase {
 		// Pass values to controls
 		for (const [controlId, newValues] of Object.entries(values)) {
 			const control = this.getControl(controlId)
-			if (control && control.supportsFeedbacks) {
-				control.feedbacks.updateFeedbackValues(connectionId, newValues)
+			if (control) {
+				control.entities.updateFeedbackValues(connectionId, newValues)
 			}
 		}
 	}

@@ -8,11 +8,15 @@ import {
 	FeedbackEntityModel,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { ControlEntityList } from './EntityList.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { CompanionButtonStyleProps } from '@companion-module/base'
+import type { InternalVisitor } from '../../Internal/Types.js'
+import { visitEntityModel } from '../../Resources/Visitors/FeedbackInstanceVisitor.js'
 
 export class ControlEntityInstance {
 	/**
@@ -158,6 +162,18 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Add a child entity to this entity
+	 */
+	addChild(groupId: string, entityModel: SomeEntityModel): ControlEntityInstance {
+		if (this.connectionId !== 'internal') {
+			throw new Error('Only internal feedbacks can have children')
+		}
+
+		const childGroup = this.#getOrCreateChildGroup(groupId)
+		return childGroup.addEntity(entityModel)
+	}
+
+	/**
 	 * Inform the instance of a removed entity
 	 */
 	cleanup() {
@@ -218,6 +234,9 @@ export class ControlEntityInstance {
 	setEnabled(enabled: boolean): void {
 		this.#data.disabled = !enabled
 
+		// Remove from cached feedback values
+		this.#cachedValue = undefined
+
 		// Inform relevant module
 		if (!this.#data.disabled) {
 			this.subscribe(true)
@@ -251,10 +270,27 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Set whether this feedback is inverted
+	 */
+	setInverted(isInverted: boolean): void {
+		if (this.#data.type !== EntityModelType.Feedback) return
+
+		// TODO - verify this is a boolean feedback
+
+		this.#data.isInverted = isInverted
+
+		// Don't need to resubscribe
+		// Don't need to clear cached value
+	}
+
+	/**
 	 * Set the options for this entity
 	 */
 	setOptions(options: Record<string, any>): void {
 		this.#data.options = options
+
+		// Remove from cached feedback values
+		this.#cachedValue = undefined
 
 		// Inform relevant module
 		this.subscribe(false)
@@ -268,6 +304,7 @@ export class ControlEntityInstance {
 		if (!connection) return false
 
 		// nocommit - implement this
+		// const newOptions = await instance.feedbackLearnValues(this.asFeedbackInstance(), this.#controlId)
 		// const newOptions = await connection.actionLearnValues(this.asActionInstance(), this.#controlId)
 		// if (newOptions) {
 		// 	this.setOptions(newOptions)
@@ -284,8 +321,84 @@ export class ControlEntityInstance {
 	setOption(key: string, value: any): void {
 		this.#data.options[key] = value
 
+		// Remove from cached feedback values
+		this.#cachedValue = undefined
+
 		// Inform relevant module
 		this.subscribe(false)
+	}
+
+	/**
+	 * Update an style property for a boolean feedback
+	 * @param key the key/name of the property
+	 * @param value the new value
+	 * @returns success
+	 */
+	setStyleValue(key: string, value: any): boolean {
+		if (this.#data.type !== EntityModelType.Feedback) return false
+
+		if (key === 'png64' && value !== null) {
+			if (!value.match(/data:.*?image\/png/)) {
+				return false
+			}
+
+			value = value.replace(/^.*base64,/, '')
+		}
+
+		const definition = this.getDefinition()
+		if (!definition || definition.type !== 'boolean') return false
+
+		if (!this.#data.style) this.#data.style = {}
+		// @ts-ignore
+		this.#data.style[key] = value
+
+		return true
+	}
+
+	/**
+	 * Update the selected style properties for a boolean feedback
+	 * @param selected the properties to be selected
+	 * @param baseStyle Style of the button without feedbacks applied
+	 * @returns success
+	 * @access public
+	 */
+	setStyleSelection(selected: string[], baseStyle: ButtonStyleProperties): boolean {
+		if (this.#data.type !== EntityModelType.Feedback) return false
+
+		const definition = this.getDefinition()
+		if (!definition || definition.type !== 'boolean') return false
+
+		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.style || {}
+		const oldStyle: Record<string, any> = this.#data.style || {}
+		const newStyle: Record<string, any> = {}
+
+		for (const key of selected) {
+			if (key in oldStyle) {
+				// preserve existing value
+				newStyle[key] = oldStyle[key]
+			} else {
+				// copy button value as a default
+				// @ts-ignore
+				newStyle[key] = defaultStyle[key] !== undefined ? defaultStyle[key] : baseStyle[key]
+
+				// png needs to be set to something harmless
+				if (key === 'png64' && !newStyle[key]) {
+					newStyle[key] = null
+				}
+			}
+
+			if (key === 'text') {
+				// also preserve textExpression
+				newStyle['textExpression'] =
+					oldStyle['textExpression'] ??
+					/*defaultStyle['textExpression'] !== undefined
+									? defaultStyle['textExpression']
+									: */ baseStyle['textExpression']
+			}
+		}
+		this.#data.style = newStyle
+
+		return true
 	}
 
 	/**
@@ -469,12 +582,12 @@ export class ControlEntityInstance {
 	// 	}
 	// }
 
-	// /**
-	//  * Visit any references in the current action
-	//  */
-	// visitReferences(visitor: InternalVisitor): void {
-	// 	visitActionInstance(visitor, this.#data)
-	// }
+	/**
+	 * Visit any references in the current action
+	 */
+	visitReferences(visitor: InternalVisitor): void {
+		visitEntityModel(visitor, this.#data)
+	}
 
 	asEntityModel(): SomeEntityModel {
 		const data: SomeEntityModel = { ...this.#data }
@@ -525,7 +638,7 @@ export class ControlEntityInstance {
 		// Special case to handle the internal 'logic' operators, which need to be executed live
 		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
-			const childValues = this.#children.get('children')?.getChildBooleanValues() ?? []
+			const childValues = this.#children.get('children')?.getChildBooleanFeedbackValues() ?? []
 
 			return this.#internalModule.executeLogicFeedback(this.asFeedbackInstance(), childValues)
 		}
@@ -567,5 +680,36 @@ export class ControlEntityInstance {
 				styleBuilder.applyComplexStyle(this.#cachedValue)
 			}
 		}
+	}
+
+	/**
+	 * Set the cached value of this feedback
+	 */
+	setCachedValue(value: any): boolean {
+		if (!isEqual(value, this.#cachedValue)) {
+			this.#cachedValue = value
+			return true
+		} else {
+			return false
+		}
+	}
+
+	/**
+	 * Update the feedbacks on the button with new values
+	 * @param connectionId The instance the feedbacks are for
+	 * @param newValues The new feedback values
+	 */
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): boolean {
+		let changed = false
+
+		if (this.#data.connectionId === connectionId && this.#data.id in newValues) {
+			if (this.setCachedValue(newValues[this.#data.id])) changed = true
+		}
+
+		for (const childGroup of this.#children.values()) {
+			if (childGroup.updateFeedbackValues(connectionId, newValues)) changed = true
+		}
+
+		return changed
 	}
 }

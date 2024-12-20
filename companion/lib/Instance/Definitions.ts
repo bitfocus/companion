@@ -15,7 +15,6 @@ import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinit
 import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -25,6 +24,7 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import { EntityModelType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -198,36 +198,35 @@ export class InstanceDefinitions {
 	 * @param feedbackId - the id of the feedback
 	 * @param booleanOnly - whether the feedback must be boolean
 	 */
-	createFeedbackItem(connectionId: string, feedbackId: string, booleanOnly: boolean): FeedbackInstance | null {
+	createFeedbackItem(connectionId: string, feedbackId: string, booleanOnly: boolean): FeedbackEntityModel | null {
 		const definition = this.getFeedbackDefinition(connectionId, feedbackId)
-		if (definition) {
-			if (booleanOnly && definition.type !== 'boolean') return null
+		if (!definition) return null
 
-			const feedback: FeedbackInstance = {
-				id: nanoid(),
-				type: feedbackId,
-				instance_id: connectionId,
-				options: {},
-				style: {},
-				isInverted: false,
-			}
+		if (booleanOnly && definition.type !== 'boolean') return null
 
-			if (definition.options !== undefined && definition.options.length > 0) {
-				for (const j in definition.options) {
-					const opt = definition.options[j]
-					// @ts-ignore
-					feedback.options[opt.id] = cloneDeep(opt.default)
-				}
-			}
-
-			if (!booleanOnly && definition.type === 'boolean' && definition.style) {
-				feedback.style = cloneDeep(definition.style)
-			}
-
-			return feedback
-		} else {
-			return null
+		const feedback: FeedbackEntityModel = {
+			type: EntityModelType.Feedback,
+			id: nanoid(),
+			definitionId: feedbackId,
+			connectionId: connectionId,
+			options: {},
+			style: {},
+			isInverted: false,
 		}
+
+		if (definition.options !== undefined && definition.options.length > 0) {
+			for (const j in definition.options) {
+				const opt = definition.options[j]
+				// @ts-ignore
+				feedback.options[opt.id] = cloneDeep(opt.default)
+			}
+		}
+
+		if (!booleanOnly && definition.type === 'boolean' && definition.style) {
+			feedback.style = cloneDeep(definition.style)
+		}
+
+		return feedback
 	}
 
 	createEventItem(eventType: string): EventInstance | null {

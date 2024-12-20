@@ -4,7 +4,6 @@ import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
-import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 
 export class FragmentFeedbackList {
 	readonly #instanceDefinitions: InstanceDefinitions
@@ -59,20 +58,6 @@ export class FragmentFeedbackList {
 		return this.#feedbacks.map((feedback) => feedback.asFeedbackInstance())
 	}
 
-	getChildBooleanValues(): boolean[] {
-		if (this.#onlyType !== 'boolean') throw new Error('FragmentFeedbacks is setup to use styles')
-
-		const values: boolean[] = []
-
-		for (const feedback of this.#feedbacks) {
-			if (feedback.disabled) continue
-
-			values.push(feedback.getBooleanValue())
-		}
-
-		return values
-	}
-
 	/**
 	 * Initialise from storage
 	 * @param feedbacks
@@ -123,22 +108,6 @@ export class FragmentFeedbackList {
 		for (const child of this.#feedbacks) {
 			child.subscribe(recursive, onlyConnectionId)
 		}
-	}
-
-	/**
-	 * Clear cached values for any feedback belonging to the given connection
-	 * @returns Whether a value was changed
-	 */
-	clearCachedValueForConnectionId(connectionId: string): boolean {
-		let changed = false
-
-		for (const feedback of this.#feedbacks) {
-			if (feedback.clearCachedValueForConnectionId(connectionId)) {
-				changed = true
-			}
-		}
-
-		return changed
 	}
 
 	/**

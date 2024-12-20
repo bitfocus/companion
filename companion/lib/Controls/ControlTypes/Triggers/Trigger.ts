@@ -397,11 +397,11 @@ export class ControlTrigger
 	 * @param foundConnectionLabels - instance labels being referenced
 	 */
 	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>) {
-		const allFeedbacks = this.feedbacks.getAllFeedbacks()
+		const allEntities = this.entities.getAllEntities()
 		const allActions = this.actions.getAllActions()
 
-		for (const feedback of allFeedbacks) {
-			foundConnectionIds.add(feedback.connectionId)
+		for (const entities of allEntities) {
+			foundConnectionIds.add(entities.connectionId)
 		}
 		for (const action of allActions) {
 			foundConnectionIds.add(action.connectionId)
@@ -416,7 +416,7 @@ export class ControlTrigger
 			[],
 			[],
 			allActions,
-			allFeedbacks,
+			allEntities,
 			this.events
 		)
 	}
@@ -537,7 +537,7 @@ export class ControlTrigger
 	 * @access public
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
-		const allFeedbacks = this.feedbacks.getAllFeedbacks()
+		const allEntities = this.entities.getAllEntities()
 		const allActions = this.actions.getAllActions()
 
 		// Fix up references
@@ -548,7 +548,7 @@ export class ControlTrigger
 			[],
 			[],
 			allActions,
-			allFeedbacks,
+			allEntities,
 			this.events,
 			true
 		)

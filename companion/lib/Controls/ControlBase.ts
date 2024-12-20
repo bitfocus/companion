@@ -4,7 +4,7 @@ import debounceFn from 'debounce-fn'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import LogController, { Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
-import { ControlEntityListPoolButton, ControlEntityListPoolBase } from './Fragments/EntityListPoolBase.js'
+import type { ControlEntityListPoolBase } from './Fragments/EntityListPoolBase.js'
 
 /**
  * Get Socket.io room to use for changes to a control config

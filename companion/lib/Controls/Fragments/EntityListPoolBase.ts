@@ -1,5 +1,10 @@
 import LogController, { Logger } from '../../Log/Controller.js'
-import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	EntityOwner,
+	SomeEntityModel,
+	type SomeSocketEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList } from './EntityList.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
@@ -111,31 +116,33 @@ export abstract class ControlEntityListPoolBase {
 		}
 	}
 
-	// /**
-	//  * Add a feedback to this control
-	//  * @param feedbackItem the item to add
-	//  * @param ownerId the ids of parent feedback that this feedback should be added as a child of
-	//  */
-	// feedbackAdd(feedbackItem: FeedbackInstance, ownerId: FeedbackOwner | null): boolean {
-	// 	let newFeedback: FragmentFeedbackInstance
+	/**
+	 * Add an entity to this control
+	 * @param entityModel the item to add
+	 * @param ownerId the ids of parent entity that this entity should be added as a child of
+	 */
+	entityAdd(listId: SomeSocketEntityLocation, entityModel: SomeEntityModel, ownerId: EntityOwner | null): boolean {
+		let newEntity: ControlEntityInstance
 
-	// 	if (ownerId) {
-	// 		const parent = this.#feedbacks.findById(ownerId.parentFeedbackId)
-	// 		if (!parent)
-	// 			throw new Error(`Failed to find parent feedback ${ownerId.parentFeedbackId} when adding child feedback`)
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
 
-	// 		newFeedback = parent.addChild(ownerId.childGroup, feedbackItem)
-	// 	} else {
-	// 		newFeedback = this.#feedbacks.addFeedback(feedbackItem)
-	// 	}
+		if (ownerId) {
+			const parent = entityList.findById(ownerId.parentId)
+			if (!parent) throw new Error(`Failed to find parent entity ${ownerId.parentId} when adding child entity`)
 
-	// 	// Inform relevant module
-	// 	newFeedback.subscribe(true)
+			newEntity = parent.addChild(ownerId.childGroup, entityModel)
+		} else {
+			newEntity = entityList.addEntity(entityModel)
+		}
 
-	// 	this.#commitChange()
+		// Inform relevant module
+		newEntity.subscribe(true)
 
-	// 	return true
-	// }
+		this.#commitChange()
+
+		return true
+	}
 
 	/**
 	 * Duplicate an feedback on this control
@@ -420,6 +427,23 @@ export abstract class ControlEntityListPoolBase {
 		await Promise.all(this.getAllEntityLists().map((list) => list.postProcessImport())).catch((e) => {
 			this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
 		})
+	}
+
+	/**
+	 * Update the feedbacks on the button with new values
+	 * @param connectionId The instance the feedbacks are for
+	 * @param newValues The new feedback values
+	 */
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+		let changed = false
+
+		for (const list of this.getAllEntityLists()) {
+			if (list.updateFeedbackValues(connectionId, newValues)) changed = true
+		}
+
+		if (changed) {
+			this.#triggerRedraw()
+		}
 	}
 }
 

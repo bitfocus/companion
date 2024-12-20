@@ -153,25 +153,34 @@ export class ControlEntityList {
 		return undefined
 	}
 
-	// /**
-	//  * Add a child action to this action
-	//  * @param action
-	//  * @param isCloned Whether this is a cloned instance
-	//  */
-	// addAction(action: ActionInstance, isCloned?: boolean): FragmentActionInstance {
-	// 	const newAction = new FragmentActionInstance(
-	// 		this.#instanceDefinitions,
-	// 		this.#internalModule,
-	// 		this.#moduleHost,
-	// 		this.#controlId,
-	// 		action,
-	// 		!!isCloned
-	// 	)
+	/**
+	 * Add a child entity to this entity
+	 * @param entityModel
+	 * @param isCloned Whether this is a cloned instance
+	 */
+	addEntity(entityModel: SomeEntityModel, isCloned?: boolean): ControlEntityInstance {
+		if (entityModel.type !== this.#listDefinition.type) throw new Error('EntityList cannot accept this type of entity')
 
-	// 	this.#actions.push(newAction)
+		const newEntity = new ControlEntityInstance(
+			this.#instanceDefinitions,
+			this.#internalModule,
+			this.#moduleHost,
+			this.#controlId,
+			entityModel,
+			!!isCloned
+		)
 
-	// 	return newAction
-	// }
+		// If a feedback list, check that the feedback is of the correct type
+		if (this.#listDefinition.type === EntityModelType.Feedback) {
+			const feedbackDefinition = newEntity.getDefinition()
+			if (this.#listDefinition.booleanFeedbacksOnly && feedbackDefinition?.type !== 'boolean')
+				throw new Error('EntityList cannot accept this type of feedback')
+		}
+
+		this.#entities.push(newEntity)
+
+		return newEntity
+	}
 
 	/**
 	 * Remove a child entity
@@ -340,6 +349,21 @@ export class ControlEntityList {
 		return result
 	}
 
+	getChildBooleanFeedbackValues(): boolean[] {
+		if (this.#listDefinition.type !== EntityModelType.Feedback || !this.#listDefinition.booleanFeedbacksOnly)
+			throw new Error('ControlEntityList is not boolean feedbacks')
+
+		const values: boolean[] = []
+
+		for (const entity of this.#entities) {
+			if (entity.disabled) continue
+
+			values.push(entity.getBooleanFeedbackValue())
+		}
+
+		return values
+	}
+
 	/**
 	 * Get the unparsed style for the feedbacks
 	 * Note: Does not clone the style
@@ -353,5 +377,20 @@ export class ControlEntityList {
 		for (const entity of this.#entities) {
 			entity.buildFeedbackStyle(styleBuilder)
 		}
+	}
+
+	/**
+	 * Update the feedbacks on the button with new values
+	 * @param connectionId The instance the feedbacks are for
+	 * @param newValues The new feedback values
+	 */
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): boolean {
+		let changed = false
+
+		for (const entity of this.#entities) {
+			if (entity.updateFeedbackValues(connectionId, newValues)) changed = true
+		}
+
+		return changed
 	}
 }

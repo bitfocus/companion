@@ -45,7 +45,7 @@ import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
 import type { ActionOwner, ActionSetId } from './Model/ActionModel.js'
-import type { EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
+import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -168,6 +168,7 @@ export interface ClientToBackendEventsMap {
 		entityLocation: SomeSocketEntityLocation,
 		ownerId: EntityOwner | null,
 		connectionId: string,
+		entityType: EntityModelType,
 		entityDefinition: string
 	) => boolean
 

@@ -321,7 +321,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * @param labelTo - the new connection short name
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
-		const allFeedbacks = this.feedbacks.getAllFeedbacks()
+		const allEntities = this.entities.getAllEntities()
 		const allActions = []
 		for (const step of Object.values(this.steps)) {
 			allActions.push(...step.getAllActions())
@@ -335,7 +335,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			[],
 			[],
 			allActions,
-			allFeedbacks,
+			allEntities,
 			[],
 			true
 		)
