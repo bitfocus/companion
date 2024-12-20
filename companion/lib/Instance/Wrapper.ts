@@ -298,7 +298,7 @@ export class SocketEventsHandler {
 					id: entityModel.id,
 					controlId: controlId,
 					actionId: entityModel.definitionId,
-					options: entityModel.rawOptions,
+					options: entityModel.options,
 
 					upgradeIndex: entityModel.upgradeIndex ?? null,
 					disabled: !!entityModel.disabled,

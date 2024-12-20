@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
-import { ControlButtonNormal } from '../Controls/ControlTypes/Button/Normal.js'
+import { ControlEntityListPoolButton } from '../Controls/Fragments/EntityListPoolButton.js'
 import jsonPatch from 'fast-json-patch'
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import { replaceAllVariables } from '../Variables/Util.js'
@@ -332,7 +332,7 @@ export class InstanceDefinitions {
 						rotate_left: undefined,
 						rotate_right: undefined,
 					},
-					options: cloneDeep(definition.steps[i].options) ?? cloneDeep(ControlButtonNormal.DefaultStepOptions),
+					options: cloneDeep(definition.steps[i].options) ?? cloneDeep(ControlEntityListPoolButton.DefaultStepOptions),
 				}
 				result.steps[i] = newStep
 
@@ -455,7 +455,7 @@ export class InstanceDefinitions {
 							rawPreset.steps.length === 0
 								? [{ action_sets: { down: [], up: [] } }]
 								: rawPreset.steps.map((step) => {
-										const options = cloneDeep(ControlButtonNormal.DefaultStepOptions)
+										const options = cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
 										const action_sets: PresetActionSets = {
 											down: [],
 											up: [],

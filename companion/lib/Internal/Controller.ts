@@ -99,6 +99,8 @@ export class InternalController {
 		// Find all the feedbacks on controls
 		const allControls = this.#controlsController.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
+			if (!control.supportsEntities) continue
+
 			// Discover feedbacks to process
 			if (control.supportsEntities) {
 				for (let feedback of control.feedbacks.getFlattenedFeedbackInstances('internal')) {

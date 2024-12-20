@@ -4,7 +4,7 @@ import { VisitorReferencesCollector } from '../../../Resources/Visitors/Referenc
 import type { ControlWithActionSets, ControlWithActions, ControlWithoutEvents } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { NormalButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ActionSetId, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -41,18 +41,6 @@ export class ControlButtonNormal
 	readonly supportsActionSets = true
 
 	/**
-	 * The defaults options for a step
-	 */
-	static DefaultStepOptions: ActionStepOptions = {
-		runWhileHeld: [], // array of set ids
-	}
-
-	/**
-	 * The id of the currently selected (next to be executed) step
-	 */
-	#current_step_id: string = '0'
-
-	/**
 	 * Button hold state for each surface
 	 */
 	#surfaceHoldState = new Map<string, SurfaceHoldState>()
@@ -70,8 +58,6 @@ export class ControlButtonNormal
 			stepAutoProgress: true,
 		}
 
-		this.#current_step_id = '0'
-
 		if (!storage) {
 			// New control
 
@@ -84,8 +70,6 @@ export class ControlButtonNormal
 			this.options = Object.assign(this.options, storage.options || {})
 			this.feedbacks.baseStyle = Object.assign(this.feedbacks.baseStyle, storage.style || {})
 			this.entities.loadStorage(storage, true, isImport)
-
-			this.#current_step_id = this.entities.getStepIds()[0]
 
 			// Ensure control is stored before setup
 			if (isImport) setImmediate(() => this.postProcessImport())
@@ -135,7 +119,7 @@ export class ControlButtonNormal
 		if (!style) return style
 
 		if (this.entities.getStepIds().length > 1) {
-			style.step_cycle = this.getActiveStepIndex() + 1
+			style.step_cycle = this.entities.getActiveStepIndex() + 1
 		}
 
 		return style
@@ -191,7 +175,7 @@ export class ControlButtonNormal
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
-		const [this_step_id, next_step_id] = this.#validateCurrentStepId()
+		const [this_step_id, next_step_id] = this.entities.validateCurrentStepIdAndGetNext()
 
 		let pressedDuration = 0
 		let pressedStep = this_step_id
@@ -298,7 +282,7 @@ export class ControlButtonNormal
 	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(direction: boolean, surfaceId: string | undefined): void {
-		const [this_step_id] = this.#validateCurrentStepId()
+		const [this_step_id] = this.entities.validateCurrentStepIdAndGetNext()
 
 		const step = this_step_id && this.steps[this_step_id]
 		if (step) {
@@ -340,25 +324,7 @@ export class ControlButtonNormal
 	 */
 	override toRuntimeJSON() {
 		return {
-			current_step_id: this.#current_step_id,
-		}
-	}
-
-	#validateCurrentStepId(): [null, null] | [string, string] {
-		const this_step_raw = this.#current_step_id
-		const stepIds = this.entities.getStepIds()
-		if (stepIds.length > 0) {
-			// verify 'this_step_raw' is valid
-			const this_step_index = stepIds.findIndex((s) => s == this_step_raw) || 0
-			const this_step_id = stepIds[this_step_index]
-
-			// figure out the new step
-			const next_index = this_step_index + 1 >= stepIds.length ? 0 : this_step_index + 1
-			const next_step_id = stepIds[next_index]
-
-			return [this_step_id, next_step_id]
-		} else {
-			return [null, null]
+			current_step_id: this.entities.currentStepId,
 		}
 	}
 }

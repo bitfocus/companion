@@ -8,7 +8,6 @@ import type {
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { FragmentActionList } from './FragmentActionList.js'
-import type { FragmentActionInstance } from './FragmentActionInstance.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 

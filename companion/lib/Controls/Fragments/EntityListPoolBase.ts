@@ -26,7 +26,7 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * The logger
 	 */
-	readonly #logger: Logger
+	protected readonly logger: Logger
 
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #internalModule: InternalController
@@ -42,16 +42,14 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Trigger a redraw/invalidation of the control
 	 */
-	readonly #triggerRedraw: () => void
-
-	// TODO
+	protected readonly triggerRedraw: () => void
 
 	protected constructor(props: ControlEntityListPoolProps) {
-		this.#logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
+		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.#controlId = props.controlId
 		this.commitChange = props.commitChange
-		this.#triggerRedraw = props.triggerRedraw
+		this.triggerRedraw = props.triggerRedraw
 
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule
@@ -77,7 +75,7 @@ export abstract class ControlEntityListPoolBase {
 		for (const list of this.getAllEntityLists()) {
 			if (list.clearCachedValueForConnectionId(connectionId)) changed = true
 		}
-		if (changed) this.#triggerRedraw()
+		if (changed) this.triggerRedraw()
 	}
 
 	/**
@@ -455,7 +453,7 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	async postProcessImport(): Promise<void> {
 		await Promise.all(this.getAllEntityLists().map((list) => list.postProcessImport())).catch((e) => {
-			this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
+			this.logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
 		})
 	}
 
@@ -472,7 +470,7 @@ export abstract class ControlEntityListPoolBase {
 		}
 
 		if (changed) {
-			this.#triggerRedraw()
+			this.triggerRedraw()
 		}
 	}
 }

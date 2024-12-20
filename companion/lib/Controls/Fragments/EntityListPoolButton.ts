@@ -12,12 +12,32 @@ import type { ControlActionSetAndStepsManager } from './ControlActionSetAndSteps
 import { cloneDeep } from 'lodash-es'
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
+	/**
+	 * The defaults options for a step
+	 */
+	static DefaultStepOptions: ActionStepOptions = {
+		runWhileHeld: [], // array of set ids
+	}
+
 	readonly #feedbacks: ControlEntityList
 
 	readonly #steps = new Map<string, ControlEntityListActionStep>()
 
-	constructor(props: ControlEntityListPoolProps) {
+	readonly #sendRuntimePropsChange: () => void
+
+	/**
+	 * The id of the currently selected (next to be executed) step
+	 */
+	#current_step_id: string = '0'
+
+	get currentStepId(): string {
+		return this.#current_step_id
+	}
+
+	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void) {
 		super(props)
+
+		this.#sendRuntimePropsChange = sendRuntimePropsChange
 
 		this.#feedbacks = new ControlEntityList(
 			props.instanceDefinitions,
@@ -32,18 +52,22 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			}
 		)
 
+		this.#current_step_id = '0'
+
 		this.#steps.set('0', this.#getNewStepValue(null, null))
 	}
 
 	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean) {
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
 
-		if (storage.steps) {
-			this.#steps.clear()
-			for (const [id, stepObj] of Object.entries(storage.steps)) {
-				this.#steps.set(id, this.#getNewStepValue(stepObj.action_sets, stepObj.options))
-			}
+		// Future:	cleanup the steps/sets
+		this.#steps.clear()
+
+		for (const [id, stepObj] of Object.entries(storage.steps ?? {})) {
+			this.#steps.set(id, this.#getNewStepValue(stepObj.action_sets, stepObj.options))
 		}
+
+		this.#current_step_id = this.getStepIds()[0]
 	}
 
 	/**
@@ -268,7 +292,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		existingActions: ActionSetsModel | null,
 		existingOptions: ActionStepOptions | null
 	): ControlEntityListActionStep {
-		const options = existingOptions || cloneDeep(ControlButtonNormal.DefaultStepOptions)
+		const options = existingOptions || cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
 
 		const downList = this.createEntityList({ type: EntityModelType.Action, groupId: '', label: 'Down' })
 		downList.loadStorage(existingActions?.down || [], true, !!existingActions)
@@ -384,7 +408,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		})
 
 		// Ensure the ui knows which step is current
-		this.sendRuntimePropsChange()
+		this.#sendRuntimePropsChange()
 
 		// Save the change, and perform a draw
 		this.commitChange(true)
@@ -432,7 +456,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		if (newIndex !== oldIndex) {
 			this.#current_step_id = oldKeys[newIndex]
 
-			this.sendRuntimePropsChange()
+			this.#sendRuntimePropsChange()
 		}
 
 		// Save the change, and perform a draw
@@ -454,7 +478,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		this.#current_step_id = stepId
 
-		this.sendRuntimePropsChange()
+		this.#sendRuntimePropsChange()
 
 		this.triggerRedraw()
 
@@ -494,6 +518,24 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.commitChange(false)
 
 		return true
+	}
+
+	validateCurrentStepIdAndGetNext(): [null, null] | [string, string] {
+		const this_step_raw = this.#current_step_id
+		const stepIds = this.getStepIds()
+		if (stepIds.length > 0) {
+			// verify 'this_step_raw' is valid
+			const this_step_index = stepIds.findIndex((s) => s == this_step_raw) || 0
+			const this_step_id = stepIds[this_step_index]
+
+			// figure out the new step
+			const next_index = this_step_index + 1 >= stepIds.length ? 0 : this_step_index + 1
+			const next_step_id = stepIds[next_index]
+
+			return [this_step_id, next_step_id]
+		} else {
+			return [null, null]
+		}
 	}
 }
 
