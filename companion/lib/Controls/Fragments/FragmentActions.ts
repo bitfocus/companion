@@ -1,14 +1,5 @@
-import LogController, { Logger } from '../../Log/Controller.js'
-import type {
-	ActionInstance,
-	ActionSetId,
-	ActionSetsModel,
-	ActionStepOptions,
-} from '@companion-app/shared/Model/ActionModel.js'
-import type { ModuleHost } from '../../Instance/Host.js'
-import type { InternalController } from '../../Internal/Controller.js'
+import type { ActionInstance, ActionSetId, ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import { FragmentActionList } from './FragmentActionList.js'
-import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 
 /**
@@ -38,41 +29,9 @@ export class FragmentActions {
 	#actions: Map<ActionSetId, FragmentActionList> = new Map()
 
 	/**
-	 */
-	options!: ActionStepOptions
-
-	/**
 	 * Commit changes to the database and disk
 	 */
 	readonly #commitChange: (redraw?: boolean) => void
-
-	/**
-	 * The logger
-	 */
-	readonly #logger: Logger
-	readonly #instanceDefinitions: InstanceDefinitions
-	readonly #internalModule: InternalController
-	readonly #moduleHost: ModuleHost
-	readonly #controlId: string
-
-	constructor(
-		instanceDefinitions: InstanceDefinitions,
-		internalModule: InternalController,
-		moduleHost: ModuleHost,
-		controlId: string,
-		commitChange: (redraw?: boolean) => void
-	) {
-		this.#logger = LogController.createLogger(`Controls/Fragments/Actions/${controlId}`)
-
-		this.#instanceDefinitions = instanceDefinitions
-		this.#internalModule = internalModule
-		this.#moduleHost = moduleHost
-
-		this.#actions.set(0, new FragmentActionList(instanceDefinitions, internalModule, moduleHost, controlId))
-
-		this.#controlId = controlId
-		this.#commitChange = commitChange
-	}
 
 	/**
 	 * Initialise from storage
@@ -116,24 +75,6 @@ export class FragmentActions {
 	}
 
 	/**
-	 * Replace a action with an updated version
-	 */
-	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
-		for (const actionSet of this.#actions.values()) {
-			const action = actionSet.findById(newProps.id)
-			if (!action) return false
-
-			action.replaceProps(newProps, skipNotifyModule)
-
-			this.#commitChange(false)
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
 	 * Replace all the actions in a set
 	 * @param setId the action_set id to update
 	 * @param newActions actions to populate
@@ -147,13 +88,5 @@ export class FragmentActions {
 		this.#commitChange(false)
 
 		return true
-	}
-
-	/**
-	 * Rename this control
-	 * @param newName the new name
-	 */
-	rename(newName: string): void {
-		this.options.name = newName
 	}
 }

@@ -71,6 +71,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
+import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 	if (raw === 'json-gz' || raw === 'json' || raw === 'yaml') return raw
@@ -1036,13 +1037,7 @@ export class ImportExportController {
 		const result: TriggerModel = {
 			type: 'trigger',
 			options: cloneDeep(control.options),
-			action_sets: {
-				0: [],
-				down: undefined,
-				up: undefined,
-				rotate_left: undefined,
-				rotate_right: undefined,
-			},
+			actions: [],
 			condition: [],
 			events: control.events,
 		}
@@ -1051,14 +1046,8 @@ export class ImportExportController {
 			result.condition = fixupFeedbacksRecursive(instanceIdMap, cloneDeep(control.condition))
 		}
 
-		const allActions: ActionInstance[] = []
-		if (control.action_sets) {
-			// Triggers can only have the 0 set
-			const action_set = control.action_sets[0]
-			const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
-
-			result.action_sets[0] = newActions
-			allActions.push(...newActions)
+		if (control.actions) {
+			result.actions = fixupActionsRecursive(instanceIdMap, cloneDeep(control.actions) as any)
 		}
 
 		ReferencesVisitors.fixupControlReferences(
@@ -1068,9 +1057,7 @@ export class ImportExportController {
 				connectionIds: connectionIdRemap,
 			},
 			undefined,
-			allActions,
-			result.condition || [],
-			[],
+			result.condition.concat(result.actions),
 			[],
 			result.events || [],
 			false
@@ -1111,7 +1098,7 @@ export class ImportExportController {
 			result.feedbacks = fixupFeedbacksRecursive(instanceIdMap, cloneDeep(control.feedbacks))
 		}
 
-		const allActions: ActionInstance[] = []
+		const allEntities: SomeEntityModel[] = [...result.feedbacks]
 		if (control.steps) {
 			for (const [stepId, step] of Object.entries<any>(control.steps)) {
 				const newStepSets: ActionSetsModel = {
@@ -1135,7 +1122,7 @@ export class ImportExportController {
 					const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
 
 					newStepSets[setIdSafe] = newActions
-					allActions.push(...newActions)
+					allEntities.push(...newActions)
 				}
 			}
 		}
@@ -1147,9 +1134,7 @@ export class ImportExportController {
 				connectionIds: connectionIdRemap,
 			},
 			result.style,
-			allActions,
-			result.feedbacks || [],
-			[],
+			allEntities,
 			[],
 			[],
 			false

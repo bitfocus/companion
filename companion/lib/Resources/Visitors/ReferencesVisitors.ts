@@ -4,9 +4,7 @@ import { visitEntityModel } from './FeedbackInstanceVisitor.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { FragmentActionInstance } from '../../Controls/Fragments/FragmentActionInstance.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../../Controls/Fragments/EntityInstance.js'
 
@@ -53,9 +51,7 @@ export class ReferencesVisitors {
 	 * @param internalModule
 	 * @param updateMaps Description of instance ids and labels to remap
 	 * @param style Style object of the control (if any)
-	 * @param rawActions  Array of unprocessed actions belonging to the control
 	 * @param rawEntities Array of unprocessed entities belonging to the control
-	 * @param actions Array of actions belonging to the control
 	 * @param entities Array of loaded entities belonging to the control
 	 * @param events Array of events belonging to the control
 	 * @param recheckChangedFeedbacks Whether to recheck the feedbacks that were modified
@@ -65,9 +61,7 @@ export class ReferencesVisitors {
 		internalModule: InternalController,
 		updateMaps: FixupReferencesUpdateMaps,
 		style: ButtonStyleProperties | undefined,
-		rawActions: ActionInstance[],
 		rawEntities: SomeEntityModel[],
-		actions: FragmentActionInstance[],
 		entities: ControlEntityInstance[],
 		events: EventInstance[],
 		recheckChangedFeedbacks: boolean

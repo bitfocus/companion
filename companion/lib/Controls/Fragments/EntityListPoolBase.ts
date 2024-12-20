@@ -4,6 +4,7 @@ import {
 	EntityOwner,
 	EntitySupportedChildGroupDefinition,
 	SomeEntityModel,
+	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
@@ -299,24 +300,23 @@ export abstract class ControlEntityListPoolBase {
 		return true
 	}
 
-	// /**
-	//  * Replace a feedback with an updated version
-	//  */
-	// feedbackReplace(
-	// 	newProps: Pick<FeedbackInstance, 'id' | 'type' | 'style' | 'options' | 'isInverted'>,
-	// 	skipNotifyModule = false
-	// ): boolean {
-	// 	const feedback = this.#feedbacks.findById(newProps.id)
-	// 	if (feedback) {
-	// 		feedback.replaceProps(newProps, skipNotifyModule)
+	/**
+	 * Replace a feedback with an updated version
+	 */
+	entityReplace(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): boolean {
+		for (const childGroup of this.getAllEntityLists()) {
+			const entity = childGroup.findById(newProps.id)
+			if (!entity) continue
 
-	// 		this.#commitChange(true)
+			entity.replaceProps(newProps, skipNotifyModule)
 
-	// 		return true
-	// 	}
+			this.commitChange(true)
 
-	// 	return false
-	// }
+			return true
+		}
+
+		return false
+	}
 
 	/**
 	 * Update an option for an entity

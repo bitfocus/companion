@@ -7,6 +7,7 @@ import {
 	EntitySupportedChildGroupDefinition,
 	FeedbackEntityModel,
 	SomeEntityModel,
+	SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
@@ -557,19 +558,26 @@ export class ControlEntityInstance {
 		return ps
 	}
 
-	// /**
-	//  * Replace portions of the action with an updated version
-	//  */
-	// replaceProps(newProps: Pick<ActionInstance, 'action' | 'options'>, skipNotifyModule = false): void {
-	// 	this.#data.action = newProps.action // || newProps.actionId
-	// 	this.#data.options = newProps.options
+	/**
+	 * Replace portions of the action with an updated version
+	 */
+	replaceProps(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): void {
+		this.#data.definitionId = newProps.definitionId
+		this.#data.options = newProps.options
 
-	// 	delete this.#data.upgradeIndex
+		if (this.#data.type === EntityModelType.Feedback) {
+			const feedbackData = this.#data as FeedbackEntityModel
+			const newPropsData = newProps as FeedbackEntityModel
+			feedbackData.isInverted = !!newPropsData.isInverted
+			feedbackData.style = Object.keys(feedbackData.style || {}).length > 0 ? feedbackData.style : newPropsData.style
+		}
 
-	// 	if (!skipNotifyModule) {
-	// 		this.subscribe(false)
-	// 	}
-	// }
+		delete this.#data.upgradeIndex
+
+		if (!skipNotifyModule) {
+			this.subscribe(false)
+		}
+	}
 
 	/**
 	 * Visit any references in the current action
