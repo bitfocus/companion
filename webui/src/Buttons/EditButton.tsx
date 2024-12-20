@@ -54,17 +54,12 @@ import { cloneDeep } from 'lodash-es'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import {
-	ActionInstance,
-	ActionSetId,
-	ActionSetsModel,
-	ActionStepOptions,
-} from '@companion-app/shared/Model/ActionModel.js'
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import { NormalButtonSteps, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
+import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -380,7 +375,7 @@ interface TabsSectionProps {
 	steps: NormalButtonSteps
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
-	feedbacks: FeedbackInstance[]
+	feedbacks: SomeEntityModel[]
 }
 
 function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }: TabsSectionProps) {
@@ -628,8 +623,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												heading="Rotate left actions"
 												controlId={controlId}
 												location={location}
-												stepId={selectedKey}
-												setId="rotate_left"
+												listId={{ stepId: selectedKey, setId: 'rotate_left' }}
 												addPlaceholder="+ Add rotate left action"
 												actions={selectedStep2.action_sets['rotate_left']}
 											/>
@@ -640,8 +634,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												heading="Rotate right actions"
 												controlId={controlId}
 												location={location}
-												stepId={selectedKey}
-												setId="rotate_right"
+												listId={{ stepId: selectedKey, setId: 'rotate_right' }}
 												addPlaceholder="+ Add rotate right action"
 												actions={selectedStep2.action_sets['rotate_right']}
 											/>
@@ -656,8 +649,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												heading={`Press actions`}
 												controlId={controlId}
 												location={location}
-												stepId={selectedKey}
-												setId="down"
+												listId={{ stepId: selectedKey, setId: 'down' }}
 												addPlaceholder={`+ Add press action`}
 												actions={selectedStep2.action_sets['down']}
 											/>
@@ -824,7 +816,7 @@ function EditActionsRelease({
 	)
 
 	const candidate_sets = Object.entries(action_sets)
-		.map((o): [number, ActionInstance[] | undefined] => [Number(o[0]), o[1]])
+		.map((o): [number, SomeEntityModel[] | undefined] => [Number(o[0]), o[1]])
 		.filter(([id]) => !isNaN(id))
 	candidate_sets.sort((a, b) => a[0] - b[0])
 
@@ -846,8 +838,7 @@ function EditActionsRelease({
 					]}
 					controlId={controlId}
 					location={location}
-					stepId={stepId}
-					setId={id}
+					listId={{ stepId, setId: id }}
 					addPlaceholder={`+ Add ${ident} action`}
 					actions={actions}
 				/>
@@ -864,8 +855,7 @@ function EditActionsRelease({
 					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
 					controlId={controlId}
 					location={location}
-					stepId={stepId}
-					setId={'up'}
+					listId={{ stepId, setId: 'up' }}
 					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
 					actions={action_sets['up']}
 				/>

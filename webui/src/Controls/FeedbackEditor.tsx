@@ -21,27 +21,33 @@ import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
 import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
-import { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
 import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { LearnButton } from '../Components/LearnButton.js'
 import { AddFeedbackDropdown } from './AddFeedbackDropdown.js'
-import {
-	IFeedbackEditorService,
-	useControlFeedbackService,
-	useControlFeedbacksEditorService,
-} from '../Services/Controls/ControlFeedbacksService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { InlineHelp } from '../Components/InlineHelp.js'
 import { isEqual } from 'lodash-es'
-import { findAllEntityIdsDeep } from './Util.js'
+import { findAllEntityIdsDeep, stringifyEntityOwnerId } from './Util.js'
+import {
+	EntityModelType,
+	EntityOwner,
+	SomeEntityModel,
+	SomeSocketEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
+import {
+	useControlEntityService,
+	useControlEntitiesEditorService,
+	IEntityEditorService,
+} from '../Services/Controls/ControlEntitiesService.js'
+
 interface ControlFeedbacksEditorProps {
 	controlId: string
-	feedbacks: FeedbackInstance[]
+	feedbacks: SomeEntityModel[]
 	heading: JSX.Element | string
 	entityType: string
 	onlyType: 'boolean' | 'advanced' | null
@@ -60,7 +66,13 @@ export function ControlFeedbacksEditor({
 }: ControlFeedbacksEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
+	const feedbacksService = useControlEntitiesEditorService(
+		controlId,
+		'feedbacks',
+		entityType,
+		EntityModelType.Feedback,
+		confirmModal
+	)
 
 	const feedbackIds = useMemo(() => findAllEntityIdsDeep(feedbacks), [feedbacks])
 
@@ -89,13 +101,13 @@ export function ControlFeedbacksEditor({
 interface InlineFeedbacksEditorProps {
 	controlId: string
 	heading: JSX.Element | string | null
-	feedbacks: FeedbackInstance[]
+	feedbacks: SomeEntityModel[]
 	entityType: string
 	onlyType: 'boolean' | 'advanced' | null
 	location: ControlLocation | undefined
 	addPlaceholder: string
-	feedbacksService: IFeedbackEditorService
-	ownerId: FeedbackOwner | null
+	feedbacksService: IEntityEditorService
+	ownerId: EntityOwner | null
 	panelCollapseHelper: PanelCollapseHelper
 }
 
@@ -121,7 +133,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 
 	const childFeedbackIds = feedbacks.map((f) => f.id)
 
-	const expandGroupId = feedbackOwnerString(ownerId)
+	const expandGroupId = stringifyEntityOwnerId(ownerId)
 
 	return (
 		<>
@@ -213,7 +225,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 interface FeedbackTableRowDragItem {
 	feedbackId: string
 	index: number
-	ownerId: FeedbackOwner | null
+	ownerId: EntityOwner | null
 	dragState: DragState | null
 }
 interface FeedbackTableRowDragStatus {
@@ -223,10 +235,10 @@ interface FeedbackTableRowDragStatus {
 interface FeedbackTableRowProps {
 	controlId: string
 	entityType: string
-	feedback: FeedbackInstance
-	serviceFactory: IFeedbackEditorService
+	feedback: SomeEntityModel
+	serviceFactory: IEntityEditorService
 	index: number
-	ownerId: FeedbackOwner | null
+	ownerId: EntityOwner | null
 	dragId: string
 	panelCollapseHelper: PanelCollapseHelper
 	onlyType: 'boolean' | 'advanced' | null
@@ -273,7 +285,7 @@ function FeedbackTableRow({
 			if (hoverOwnerId && item.feedbackId === hoverOwnerId.parentFeedbackId) return
 
 			// Time to actually perform the action
-			serviceFactory.moveCard(item.feedbackId, hoverOwnerId, hoverIndex)
+			serviceFactory.moveCard('feedbacks', item.feedbackId, hoverOwnerId, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -328,11 +340,11 @@ function FeedbackTableRow({
 
 interface FeedbackEditorProps {
 	controlId: string
-	ownerId: FeedbackOwner | null
+	ownerId: EntityOwner | null
 	entityType: string
-	feedback: FeedbackInstance
+	feedback: SomeEntityModel
 	location: ControlLocation | undefined
-	serviceFactory: IFeedbackEditorService
+	serviceFactory: IEntityEditorService
 	panelCollapseHelper: PanelCollapseHelper
 	onlyType: 'boolean' | 'advanced' | null
 }
@@ -347,20 +359,20 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	panelCollapseHelper,
 	onlyType,
 }: FeedbackEditorProps) {
-	const service = useControlFeedbackService(serviceFactory, feedback)
+	const service = useControlEntityService(serviceFactory, feedback)
 
 	const { connections, feedbackDefinitions } = useContext(RootAppStoreContext)
 
-	const connectionInfo = connections.getInfo(feedback.instance_id)
-	const connectionLabel = connectionInfo?.label ?? feedback.instance_id
+	const connectionInfo = connections.getInfo(feedback.connectionId)
+	const connectionLabel = connectionInfo?.label ?? feedback.connectionId
 	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
-	const feedbackSpec = feedbackDefinitions.connections.get(feedback.instance_id)?.get(feedback.type)
+	const feedbackSpec = feedbackDefinitions.connections.get(feedback.connectionId)?.get(feedback.type)
 
 	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec?.options, feedback?.options)
 
 	const innerSetEnabled = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled(e.target.checked),
+		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled?.(e.target.checked),
 		[service.setEnabled]
 	)
 
@@ -368,7 +380,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 		? `${connectionLabel}: ${feedbackSpec.label}`
 		: `${connectionLabel}: ${feedback.type} (undefined)`
 
-	const showButtonPreview = feedback?.instance_id === 'internal' && feedbackSpec?.showButtonPreview
+	const showButtonPreview = feedback?.connectionId === 'internal' && feedbackSpec?.showButtonPreview
 
 	const canSetHeadline = !!service.setHeadline
 	const headline = feedback.headline
@@ -383,10 +395,10 @@ const FeedbackEditor = observer(function FeedbackEditor({
 		() => panelCollapseHelper.setPanelCollapsed(feedback.id, false),
 		[panelCollapseHelper, feedback.id]
 	)
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(feedbackOwnerString(ownerId), feedback.id)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(stringifyEntityOwnerId(ownerId), feedback.id)
 
-	const childrenGroupId: FeedbackOwner = { parentFeedbackId: feedback.id, childGroup: 'children' }
-	const advancedChildrenGroupId: FeedbackOwner = { parentFeedbackId: feedback.id, childGroup: 'advancedChildren' }
+	const childrenGroupId: EntityOwner = { parentFeedbackId: feedback.id, childGroup: 'children' }
+	const advancedChildrenGroupId: EntityOwner = { parentFeedbackId: feedback.id, childGroup: 'advancedChildren' }
 
 	return (
 		<>
@@ -458,7 +470,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 					)}
 
 					<div className="cell-actions">
-						{feedbackSpec?.hasLearn && (
+						{feedbackSpec?.hasLearn && !!service.performLearn && (
 							<div style={{ marginTop: 10 }}>
 								<LearnButton id={feedback.id} doLearn={service.performLearn} />
 							</div>
@@ -473,7 +485,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 										key={i}
 										isLocatedInGrid={!!location}
 										isAction={false}
-										connectionId={feedback.instance_id}
+										connectionId={feedback.connectionId}
 										option={opt}
 										value={(feedback.options || {})[opt.id]}
 										setValue={service.setValue}
@@ -484,7 +496,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						</CForm>
 					</div>
 
-					{feedback.instance_id === 'internal' && feedbackSpec?.supportsChildFeedbacks && (
+					{feedback.connectionId === 'internal' && feedbackSpec?.supportsChildFeedbacks && (
 						<div
 							className={classNames('cell-children', {
 								'hide-top-gap':
@@ -557,8 +569,8 @@ const FeedbackEditor = observer(function FeedbackEditor({
 											return { id, label: info.label }
 										})}
 									multiple={false}
-									value={feedback.instance_id}
-									setValue={service.setConnection}
+									value={feedback.connectionId}
+									setValue={(val) => service.setConnection(`${val}`)}
 								></DropdownInputField>
 							</div>
 						)}
@@ -603,7 +615,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 interface FeedbackManageStylesProps {
 	feedbackSpec: ClientFeedbackDefinition | undefined
-	feedback: FeedbackInstance
+	feedback: SomeEntityModel
 	setSelectedStyleProps: (keys: string[]) => void
 }
 
@@ -634,7 +646,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }:
 
 interface FeedbackStylesProps {
 	feedbackSpec: ClientFeedbackDefinition | undefined
-	feedback: FeedbackInstance
+	feedback: SomeEntityModel
 	setStylePropsValue: (key: string, value: any) => void
 }
 
@@ -685,9 +697,14 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 
 interface FeedbackRowDropPlaceholderProps {
 	dragId: string
-	ownerId: FeedbackOwner
+	ownerId: EntityOwner
 	feedbackCount: number
-	moveCard: (dragFeedbackId: string, hoverOwnerId: FeedbackOwner | null, hoverIndex: number) => void
+	moveCard: (
+		dragListId: SomeSocketEntityLocation,
+		dragFeedbackId: string,
+		hoverOwnerId: EntityOwner | null,
+		hoverIndex: number
+	) => void
 }
 
 function FeedbackRowDropPlaceholder({ dragId, ownerId, feedbackCount, moveCard }: FeedbackRowDropPlaceholderProps) {
@@ -700,7 +717,7 @@ function FeedbackRowDropPlaceholder({ dragId, ownerId, feedbackCount, moveCard }
 			// Can't move into itself
 			if (isEqual(item.feedbackId, ownerId)) return
 
-			moveCard(item.feedbackId, ownerId, 0)
+			moveCard('feedbacks', item.feedbackId, ownerId, 0)
 		},
 	})
 
@@ -713,8 +730,4 @@ function FeedbackRowDropPlaceholder({ dragId, ownerId, feedbackCount, moveCard }
 			</td>
 		</tr>
 	)
-}
-
-function feedbackOwnerString(ownerId: FeedbackOwner | null): string | null {
-	return ownerId ? `${ownerId.parentFeedbackId}_${ownerId.childGroup}` : null
 }
