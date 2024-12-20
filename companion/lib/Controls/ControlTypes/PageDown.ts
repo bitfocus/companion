@@ -4,7 +4,6 @@ import type {
 	ControlWithoutActionSets,
 	ControlWithoutActions,
 	ControlWithoutEvents,
-	ControlWithoutFeedbacks,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 	ControlWithoutSteps,
@@ -37,7 +36,6 @@ export class ControlButtonPageDown
 	extends ControlBase<PageDownButtonModel>
 	implements
 		ControlWithoutActions,
-		ControlWithoutFeedbacks,
 		ControlWithoutSteps,
 		ControlWithoutStyle,
 		ControlWithoutEvents,

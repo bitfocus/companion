@@ -193,80 +193,6 @@ export class FragmentActionInstance {
 	}
 
 	/**
-	 * Set whether this action is enabled
-	 */
-	setEnabled(enabled: boolean): void {
-		this.#data.disabled = !enabled
-
-		// Inform relevant module
-		if (!this.#data.disabled) {
-			this.subscribe(true)
-		} else {
-			this.cleanup()
-		}
-	}
-
-	/**
-	 * Set the headline for this action
-	 */
-	setHeadline(headline: string): void {
-		this.#data.headline = headline
-
-		// Don't need to resubscribe
-	}
-
-	/**
-	 * Set the connection instance of this action
-	 */
-	setInstance(instanceId: string | number): void {
-		const instance = `${instanceId}`
-
-		// first unsubscribe action from old instance
-		this.cleanup()
-		// next change instance
-		this.#data.instance = instance
-		// last subscribe to new instance
-		this.subscribe(true, instance)
-	}
-
-	/**
-	 * Set the options for this action
-	 */
-	setOptions(options: Record<string, any>): void {
-		this.#data.options = options
-
-		// Inform relevant module
-		this.subscribe(false)
-	}
-
-	/**
-	 * Learn the options for a action, by asking the instance for the current values
-	 */
-	async learnOptions(): Promise<boolean> {
-		const instance = this.#moduleHost.getChild(this.connectionId)
-		if (!instance) return false
-
-		const newOptions = await instance.actionLearnValues(this.asActionInstance(), this.#controlId)
-		if (newOptions) {
-			this.setOptions(newOptions)
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Set an option for this action
-	 */
-	setOption(key: string, value: any): void {
-		this.#data.options[key] = value
-
-		// Inform relevant module
-		this.subscribe(false)
-	}
-
-	/**
 	 * Find a child action by id
 	 */
 	findChildById(id: string): FragmentActionInstance | undefined {
@@ -303,45 +229,6 @@ export class FragmentActionInstance {
 	}
 
 	/**
-	 * Remove a child action
-	 */
-	removeChild(id: string): boolean {
-		for (const actionGroup of this.#children.values()) {
-			if (actionGroup.removeAction(id)) return true
-		}
-		return false
-	}
-
-	/**
-	 * Duplicate a child action
-	 */
-	duplicateChild(id: string): FragmentActionInstance | undefined {
-		for (const actionGroup of this.#children.values()) {
-			const newAction = actionGroup.duplicateAction(id)
-			if (newAction) return newAction
-		}
-		return undefined
-	}
-
-	// /**
-	//  * Reorder a action in the list
-	//  */
-	// moveChild(groupId: string, oldIndex: number, newIndex: number): void {
-	// 	const actionGroup = this.#children.get(groupId)
-	// 	if (!actionGroup) return
-
-	// 	return actionGroup.moveAction(oldIndex, newIndex)
-	// }
-
-	// /**
-	//  * Pop a child action from the list
-	//  * Note: this is used when moving a action to a different parent. Lifecycle is not managed
-	//  */
-	// popChild(index: number): FragmentActionInstance | undefined {
-	// 	return this.#children.popAction(index)
-	// }
-
-	/**
 	 * Push a child action to the list
 	 * Note: this is used when moving a action from a different parent. Lifecycle is not managed
 	 */
@@ -369,62 +256,6 @@ export class FragmentActionInstance {
 		}
 
 		return actions
-	}
-
-	/**
-	 * Cleanup and forget any children belonging to the given connection
-	 */
-	forgetChildrenForConnection(connectionId: string): boolean {
-		let changed = false
-		for (const actionGroup of this.#children.values()) {
-			if (actionGroup.forgetForConnection(connectionId)) {
-				changed = true
-			}
-		}
-		return changed
-	}
-
-	/**
-	 * Prune all actions/feedbacks referencing unknown conncetions
-	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 */
-	verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
-		let changed = false
-		for (const actionGroup of this.#children.values()) {
-			if (actionGroup.verifyConnectionIds(knownConnectionIds)) {
-				changed = true
-			}
-		}
-		return changed
-	}
-
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	postProcessImport(): Promise<void>[] {
-		const ps: Promise<void>[] = []
-
-		if (this.#data.instance === 'internal') {
-			const newProps = this.#internalModule.actionUpgrade(this.asActionInstance(), this.#controlId)
-			if (newProps) {
-				this.replaceProps(newProps, false)
-			}
-
-			// setImmediate(() => {
-			// 	this.#internalModule.actionUpdate(this.asActionInstance(), this.#controlId)
-			// })
-		} else {
-			const instance = this.#moduleHost.getChild(this.connectionId, true)
-			if (instance) {
-				ps.push(instance.actionUpdate(this.asActionInstance(), this.#controlId))
-			}
-		}
-
-		for (const childGroup of this.#children.values()) {
-			ps.push(...childGroup.postProcessImport())
-		}
-
-		return ps
 	}
 
 	/**

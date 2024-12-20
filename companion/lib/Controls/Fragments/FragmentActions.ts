@@ -293,95 +293,6 @@ export class FragmentActions {
 	}
 
 	/**
-	 * Duplicate an action on this control
-	 */
-	actionDuplicate(setId: ActionSetId, id: string): string | null {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return null
-
-		const newAction = actionSet.duplicateAction(id)
-		if (!newAction) return null
-
-		this.#commitChange(false)
-
-		return newAction.id
-	}
-
-	/**
-	 * Enable or disable an action
-	 */
-	actionEnabled(setId: ActionSetId, id: string, enabled: boolean): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
-
-		const action = actionSet.findById(id)
-		if (!action) return false
-
-		action.setEnabled(enabled)
-
-		this.#commitChange(false)
-
-		return true
-	}
-
-	/**
-	 * Set action headline
-	 */
-	actionHeadline(setId: ActionSetId, id: string, headline: string): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
-
-		const action = actionSet.findById(id)
-		if (!action) return false
-
-		action.setHeadline(headline)
-
-		this.#commitChange(false)
-
-		return true
-	}
-
-	/**
-	 * Learn the options for an action, by asking the instance for the current values
-	 * @param setId the id of the action set
-	 * @param id the id of the action
-	 */
-	async actionLearn(setId: ActionSetId, id: string): Promise<boolean> {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
-
-		const action = actionSet.findById(id)
-		if (!action) return false
-
-		const changed = await action.learnOptions()
-		if (!changed) return false
-
-		// Time has passed due to the `await`
-		// So the action may not still exist, meaning we should find it again to be sure
-		const actionAfter = actionSet.findById(id)
-		if (!actionAfter) return false
-
-		this.#commitChange(true)
-		return true
-	}
-
-	/**
-	 * Remove an action from this control
-	 * @param setId the id of the action set
-	 * @param id the id of the action
-	 */
-	actionRemove(setId: ActionSetId, id: string): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
-
-		if (!actionSet.removeAction(id)) return false
-
-		this.#commitChange(false)
-
-		return true
-	}
-
-	/**
 	 * Replace a action with an updated version
 	 */
 	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
@@ -433,49 +344,6 @@ export class FragmentActions {
 	}
 
 	/**
-	 * Set the connection of an action
-	 * @param setId the action_set id
-	 * @param id the action id
-	 * @param connectionId the id of the new connection
-	 */
-	actionSetConnection(setId: ActionSetId, id: string, connectionId: string): boolean {
-		if (connectionId == '') return false
-
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
-
-		const action = actionSet.findById(id)
-		if (!action) return false
-
-		action.setInstance(connectionId)
-
-		this.#commitChange()
-
-		return true
-	}
-
-	/**
-	 * Set an option of an action
-	 * @param setId the action_set id
-	 * @param id the action id
-	 * @param key the desired option to set
-	 * @param value the new value of the option
-	 */
-	actionSetOption(setId: ActionSetId, id: string, key: string, value: any): boolean {
-		const actionSet = this.#actions.get(setId)
-		if (!actionSet) return false
-
-		const action = actionSet.findById(id)
-		if (!action) return false
-
-		action.setOption(key, value)
-
-		this.#commitChange(false)
-
-		return true
-	}
-
-	/**
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
@@ -485,21 +353,6 @@ export class FragmentActions {
 		}
 
 		this.#actions.clear()
-	}
-
-	/**
-	 * Remove any actions referencing a specified connectionId
-	 */
-	forgetConnection(connectionId: string): boolean {
-		let changed = false
-
-		for (const list of this.#actions.values()) {
-			if (list.forgetForConnection(connectionId)) {
-				changed = true
-			}
-		}
-
-		return changed
 	}
 
 	/**
@@ -563,34 +416,6 @@ export class FragmentActions {
 		}
 
 		return instances
-	}
-
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	async postProcessImport(): Promise<void> {
-		await Promise.all(Array.from(this.#actions.values()).flatMap((actionSet) => actionSet.postProcessImport())).catch(
-			(e) => {
-				this.#logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
-			}
-		)
-	}
-
-	/**
-	 * Prune all actions/feedbacks referencing unknown connections
-	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 * @returns Whether any changes were made
-	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
-		let changed = false
-
-		for (const list of this.#actions.values()) {
-			if (list.verifyConnectionIds(knownConnectionIds)) {
-				changed = true
-			}
-		}
-
-		return changed
 	}
 
 	/**

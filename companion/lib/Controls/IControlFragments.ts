@@ -131,44 +131,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	abortDelayedActions(skip_up: boolean): void
 
 	/**
-	 * Add an action to this control
-	 */
-	actionAdd(stepId: string, setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean
-
-	/**
-	 * Append some actions to this button
-	 * @param stepId
-	 * @param setId the action_set id to update
-	 * @param newActions actions to append
-	 */
-	actionAppend(stepId: string, setId: ActionSetId, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean
-
-	/**
-	 * Duplicate an action on this control
-	 */
-	actionDuplicate(stepId: string, setId: ActionSetId, id: string): string | null
-
-	/**
-	 * Enable or disable an action
-	 */
-	actionEnabled(stepId: string, setId: ActionSetId, id: string, enabled: boolean): boolean
-
-	/**
-	 * Set action headline
-	 */
-	actionHeadline(stepId: string, setId: ActionSetId, id: string, headline: string): boolean
-
-	/**
-	 * Learn the options for an action, by asking the connection for the current values
-	 */
-	actionLearn(stepId: string, setId: ActionSetId, id: string): Promise<boolean>
-
-	/**
-	 * Remove an action from this control
-	 */
-	actionRemove(stepId: string, setId: ActionSetId, id: string): boolean
-
-	/**
 	 * Reorder an action in the list or move between sets
 	 */
 	actionMoveTo(
@@ -190,16 +152,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * Replace all the actions in a set
 	 */
 	actionReplaceAll(stepId: string, setId: ActionSetId, newActions: ActionInstance[]): boolean
-
-	/**
-	 * Set the connection of an action
-	 */
-	actionSetConnection(stepId: string, setId: ActionSetId, id: string, connectionId: string): boolean
-
-	/**
-	 * Set an option of an action
-	 */
-	actionSetOption(stepId: string, setId: ActionSetId, id: string, key: string, value: any): boolean
 
 	/**
 	 * Get all the actions on this control

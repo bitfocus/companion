@@ -141,93 +141,6 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Add an action to this control
-	 */
-	actionAdd(stepId: string, setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionAdd(setId, actionItem, ownerId)
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Append some actions to this button
-	 * @param stepId
-	 * @param setId the action_set id to update
-	 * @param newActions actions to append
-	 */
-	actionAppend(stepId: string, setId: ActionSetId, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionAppend(setId, newActions, ownerId)
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Duplicate an action on this control
-	 */
-	actionDuplicate(stepId: string, setId: ActionSetId, id: string): string | null {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionDuplicate(setId, id)
-		} else {
-			return null
-		}
-	}
-
-	/**
-	 * Enable or disable an action
-	 */
-	actionEnabled(stepId: string, setId: ActionSetId, id: string, enabled: boolean): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionEnabled(setId, id, enabled)
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Set action headline
-	 */
-	actionHeadline(stepId: string, setId: ActionSetId, id: string, headline: string): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionHeadline(setId, id, headline)
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Learn the options for an action, by asking the instance for the current values
-	 */
-	async actionLearn(stepId: string, setId: ActionSetId, id: string): Promise<boolean> {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionLearn(setId, id)
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Remove an action from this control
-	 */
-	actionRemove(stepId: string, setId: ActionSetId, id: string): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionRemove(setId, id)
-		} else {
-			return false
-		}
-	}
-
-	/**
 	 * Reorder an action in the list or move between sets
 	 */
 	actionMoveTo(
@@ -304,30 +217,6 @@ export class ControlButtonNormal
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionReplaceAll(setId, newActions)
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Set the connection of an action
-	 */
-	actionSetConnection(stepId: string, setId: ActionSetId, id: string, connectionId: string): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionSetConnection(setId, id, connectionId)
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Set an option of an action
-	 */
-	actionSetOption(stepId: string, setId: ActionSetId, id: string, key: string, value: any): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionSetOption(setId, id, key, value)
 		} else {
 			return false
 		}

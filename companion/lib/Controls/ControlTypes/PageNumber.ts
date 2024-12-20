@@ -3,7 +3,6 @@ import type {
 	ControlWithoutActionSets,
 	ControlWithoutActions,
 	ControlWithoutEvents,
-	ControlWithoutFeedbacks,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 	ControlWithoutSteps,
@@ -37,7 +36,6 @@ export class ControlButtonPageNumber
 	extends ControlBase<PageNumberButtonModel>
 	implements
 		ControlWithoutActions,
-		ControlWithoutFeedbacks,
 		ControlWithoutSteps,
 		ControlWithoutStyle,
 		ControlWithoutEvents,

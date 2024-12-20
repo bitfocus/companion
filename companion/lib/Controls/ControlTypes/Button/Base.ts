@@ -2,12 +2,7 @@ import { ControlBase } from '../../ControlBase.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { cloneDeep } from 'lodash-es'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
-import type {
-	ControlWithFeedbacks,
-	ControlWithOptions,
-	ControlWithPushed,
-	ControlWithStyle,
-} from '../../IControlFragments.js'
+import type { ControlWithOptions, ControlWithPushed, ControlWithStyle } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
@@ -15,7 +10,7 @@ import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleMode
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
-import { ControlEntityListPoolButton } from 'lib/Controls/Fragments/ControlEntityListPoolButton.js'
+import { ControlEntityListPoolButton } from '../../Fragments/EntityListPoolButton.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
@@ -40,7 +35,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
  */
 export abstract class ButtonControlBase<TJson, TOptions extends Record<string, any>>
 	extends ControlBase<TJson>
-	implements ControlWithStyle, ControlWithFeedbacks, ControlWithOptions, ControlWithPushed
+	implements ControlWithStyle, ControlWithOptions, ControlWithPushed
 {
 	readonly supportsStyle = true
 	readonly supportsEntities = true

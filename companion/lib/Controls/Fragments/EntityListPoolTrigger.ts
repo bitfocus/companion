@@ -8,6 +8,8 @@ import { transformEntityToFeedbacks } from './Util.js'
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList
 
+	#actions: ControlEntityList
+
 	constructor(props: ControlEntityListPoolProps) {
 		super(props)
 
@@ -19,15 +21,29 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 			null,
 			{
 				type: EntityModelType.Feedback,
-				groupId: 'feedbacks',
-				label: 'Feedbacks',
+				groupId: 'conditions',
+				label: 'Conditions',
 				booleanFeedbacksOnly: true,
+			}
+		)
+
+		this.#actions = new ControlEntityList(
+			props.instanceDefinitions,
+			props.internalModule,
+			props.moduleHost,
+			props.controlId,
+			null,
+			{
+				type: EntityModelType.Action,
+				groupId: 'actions',
+				label: 'Actions',
 			}
 		)
 	}
 
 	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean) {
 		this.#feedbacks.loadStorage(storage.condition || [], skipSubscribe, isImport)
+		this.#feedbacks.loadStorage(storage.action_sets?.[0] || [], skipSubscribe, isImport) // TODO - move this
 	}
 
 	/**
@@ -45,13 +61,12 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
-		// TODO - expand
 		if (listId === 'feedbacks') return this.#feedbacks
+		if (listId === 'trigger_actions') return this.#feedbacks
 		return undefined
 	}
 
 	protected getAllEntityLists(): ControlEntityList[] {
-		// TODO - expand
-		return [this.#feedbacks]
+		return [this.#feedbacks, this.#actions]
 	}
 }

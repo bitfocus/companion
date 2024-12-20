@@ -52,7 +52,7 @@ export interface EntitySupportedChildGroupDefinition {
 
 // TODO: confirm this is sensible
 export type SomeSocketEntityLocation =
-	| 'trigger_events'
+	// | 'trigger_events'
 	| 'feedbacks'
 	| 'trigger_actions'
 	| {

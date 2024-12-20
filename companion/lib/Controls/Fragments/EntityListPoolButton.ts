@@ -8,7 +8,6 @@ import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { transformEntityToFeedbacks } from './Util.js'
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase {
-	// TODO
 	#feedbacks: ControlEntityList
 
 	constructor(props: ControlEntityListPoolProps) {

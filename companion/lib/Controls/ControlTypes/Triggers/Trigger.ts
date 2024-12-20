@@ -1,5 +1,4 @@
 import { ControlBase } from '../../ControlBase.js'
-import { FragmentActions } from '../../Fragments/FragmentActions.js'
 import { TriggersListRoom } from '../../Controller.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
@@ -14,7 +13,6 @@ import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
 	ControlWithEvents,
-	ControlWithFeedbacks,
 	ControlWithOptions,
 	ControlWithoutActionSets,
 	ControlWithoutPushed,
@@ -27,7 +25,7 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
-import { ControlEntityListPoolTrigger } from 'lib/Controls/Fragments/ControlEntityListPoolTrigger.js'
+import { ControlEntityListPoolTrigger } from '../../Fragments/EntityListPoolTrigger.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
@@ -55,7 +53,6 @@ export class ControlTrigger
 	implements
 		ControlWithActions,
 		ControlWithEvents,
-		ControlWithFeedbacks,
 		ControlWithoutSteps,
 		ControlWithoutStyle,
 		ControlWithoutActionSets,
@@ -134,8 +131,6 @@ export class ControlTrigger
 
 	readonly #actionRunner: ControlActionRunner
 
-	readonly actions: FragmentActions
-
 	readonly entities: ControlEntityListPoolTrigger // TODO - should this be private?
 
 	/**
@@ -156,13 +151,6 @@ export class ControlTrigger
 
 		this.#actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
 
-		this.actions = new FragmentActions(
-			deps.instance.definitions,
-			deps.internalModule,
-			deps.instance.moduleHost,
-			controlId,
-			this.commitChange.bind(this)
-		)
 		this.entities = new ControlEntityListPoolTrigger({
 			controlId,
 			commitChange: this.commitChange.bind(this),
@@ -191,7 +179,6 @@ export class ControlTrigger
 			if (storage.type !== 'trigger') throw new Error(`Invalid type given to ControlTriggerInterval: "${storage.type}"`)
 
 			this.options = storage.options || this.options
-			this.actions.loadStorage(storage.action_sets || {}, true, isImport)
 			this.entities.loadStorage(storage, true, isImport)
 			this.events = storage.events || this.events
 
@@ -209,60 +196,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Add an action to this control
-	 */
-	actionAdd(_stepId: string, _setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
-		return this.actions.actionAdd(0, actionItem, ownerId)
-	}
-
-	/**
-	 * Append some actions to this button
-	 */
-	actionAppend(
-		_stepId: string,
-		_setId: ActionSetId,
-		newActions: ActionInstance[],
-		ownerId: ActionOwner | null
-	): boolean {
-		return this.actions.actionAppend(0, newActions, ownerId)
-	}
-
-	/**
-	 * Learn the options for an action, by asking the instance for the current values
-	 */
-	async actionLearn(_stepId: string, _setId: ActionSetId, id: string): Promise<boolean> {
-		return this.actions.actionLearn(0, id)
-	}
-
-	/**
-	 * Enable or disable an action
-	 */
-	actionEnabled(_stepId: string, _setId: ActionSetId, id: string, enabled: boolean): boolean {
-		return this.actions.actionEnabled(0, id, enabled)
-	}
-
-	/**
-	 * Set action headline
-	 */
-	actionHeadline(_stepId: string, _setId: ActionSetId, id: string, headline: string): boolean {
-		return this.actions.actionHeadline(0, id, headline)
-	}
-
-	/**
-	 * Remove an action from this control
-	 */
-	actionRemove(_stepId: string, _setId: ActionSetId, id: string): boolean {
-		return this.actions.actionRemove(0, id)
-	}
-
-	/**
-	 * Duplicate an action on this control
-	 */
-	actionDuplicate(_stepId: string, _setId: ActionSetId, id: string): string | null {
-		return this.actions.actionDuplicate(0, id)
-	}
-
-	/**
 	 * Remove an action from this control
 	 */
 	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule = false): boolean {
@@ -274,20 +207,6 @@ export class ControlTrigger
 	 */
 	actionReplaceAll(_stepId: string, _setId: ActionSetId, newActions: ActionInstance[]): boolean {
 		return this.actions.actionReplaceAll(0, newActions)
-	}
-
-	/**
-	 * Set the connection of an action
-	 */
-	actionSetConnection(_stepId: string, _setId: ActionSetId, id: string, connectionId: string): boolean {
-		return this.actions.actionSetConnection(0, id, connectionId)
-	}
-
-	/**
-	 * Set an option of an action
-	 */
-	actionSetOption(_stepId: string, _setId: ActionSetId, id: string, key: string, value: any): boolean {
-		return this.actions.actionSetOption(0, id, key, value)
 	}
 
 	/**

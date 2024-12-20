@@ -157,27 +157,6 @@ export class FragmentActionList {
 	}
 
 	/**
-	 * Remove a child action
-	 */
-	removeAction(id: string): boolean {
-		const index = this.#actions.findIndex((fb) => fb.id === id)
-		if (index !== -1) {
-			const action = this.#actions[index]
-			this.#actions.splice(index, 1)
-
-			action.cleanup()
-
-			return true
-		}
-
-		for (const action of this.#actions) {
-			if (action.removeChild(id)) return true
-		}
-
-		return false
-	}
-
-	/**
 	 * Reorder a action in the list
 	 */
 	moveAction(oldIndex: number, newIndex: number): void {
@@ -217,82 +196,5 @@ export class FragmentActionList {
 		if (!definition) return false
 
 		return true
-	}
-
-	/**
-	 * Duplicate a action
-	 */
-	duplicateAction(id: string): FragmentActionInstance | undefined {
-		const actionIndex = this.#actions.findIndex((fb) => fb.id === id)
-		if (actionIndex !== -1) {
-			const actionInstance = this.#actions[actionIndex].asActionInstance()
-			const newAction = new FragmentActionInstance(
-				this.#instanceDefinitions,
-				this.#internalModule,
-				this.#moduleHost,
-				this.#controlId,
-				actionInstance,
-				true
-			)
-
-			this.#actions.splice(actionIndex + 1, 0, newAction)
-
-			newAction.subscribe(true)
-
-			return newAction
-		}
-
-		for (const action of this.#actions) {
-			const newAction = action.duplicateChild(id)
-			if (newAction) return newAction
-		}
-
-		return undefined
-	}
-
-	/**
-	 * Cleanup and forget any children belonging to the given connection
-	 */
-	forgetForConnection(connectionId: string): boolean {
-		let changed = false
-
-		this.#actions = this.#actions.filter((action) => {
-			if (action.connectionId === connectionId) {
-				action.cleanup()
-
-				return false
-			} else {
-				changed = action.forgetChildrenForConnection(connectionId)
-				return true
-			}
-		})
-
-		return changed
-	}
-
-	/**
-	 * Prune all actions/actions referencing unknown conncetions
-	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
-		// Clean out actions
-		const actionLength = this.#actions.length
-		this.#actions = this.#actions.filter((action) => !!action && knownConnectionIds.has(action.connectionId))
-		let changed = this.#actions.length !== actionLength
-
-		for (const action of this.#actions) {
-			if (action.verifyChildConnectionIds(knownConnectionIds)) {
-				changed = true
-			}
-		}
-
-		return changed
-	}
-
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	postProcessImport(): Promise<void>[] {
-		return this.#actions.flatMap((action) => action.postProcessImport())
 	}
 }
