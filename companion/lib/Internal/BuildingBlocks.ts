@@ -116,6 +116,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 						type: EntityModelType.Feedback,
 						groupId: 'condition',
 						label: 'Condition',
+						hint: 'This feedback will only execute when all of the conditions are true',
 					},
 					{
 						type: EntityModelType.Feedback,

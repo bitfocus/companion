@@ -25,6 +25,10 @@ export interface IEntityEditorService {
 	performLearn: ((entityId: string) => void) | undefined
 	setEnabled: ((entityId: string, enabled: boolean) => void) | undefined
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
+
+	setInverted: (entityId: string, inverted: boolean) => void
+	setSelectedStyleProps: (entityId: string, keys: string[]) => void
+	setStylePropsValue: (entityId: string, key: string, value: any) => void
 }
 
 export interface IEntityEditorActionService {
@@ -35,6 +39,10 @@ export interface IEntityEditorActionService {
 	performLearn: (() => void) | undefined
 	setEnabled: ((enabled: boolean) => void) | undefined
 	setHeadline: ((headline: string) => void) | undefined
+
+	setInverted: (inverted: boolean) => void
+	setSelectedStyleProps: (keys: string[]) => void
+	setStylePropsValue: (key: string, value: any) => void
 }
 
 export function useControlEntitiesEditorService(
@@ -130,6 +138,30 @@ export function useControlEntitiesEditorService(
 					}
 				)
 			},
+
+			setInverted: (entityId: string, inverted: boolean) => {
+				socketEmitPromise(socket, 'controls:entity:set-inverted', [controlId, listId, entityId, inverted]).catch(
+					(e) => {
+						console.error('Failed to set entity inverted', e)
+					}
+				)
+			},
+
+			setSelectedStyleProps: (entityId: string, keys: string[]) => {
+				socketEmitPromise(socket, 'controls:entity:set-style-selection', [controlId, listId, entityId, keys]).catch(
+					(e) => {
+						console.error('Failed to set entity style selected props', e)
+					}
+				)
+			},
+
+			setStylePropsValue: (entityId: string, key: string, value: any) => {
+				socketEmitPromise(socket, 'controls:entity:set-style-value', [controlId, listId, entityId, key, value]).catch(
+					(e) => {
+						console.error('Failed to set entity style value', e)
+					}
+				)
+			},
 		}),
 		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId), entityType]
 	)
@@ -159,6 +191,9 @@ export function useControlEntityService(
 			setHeadline: serviceFactory.setHeadline
 				? (headline: string) => serviceFactory.setHeadline?.(entityId, headline)
 				: undefined,
+			setInverted: (inverted: boolean) => serviceFactory.setInverted(entityId, inverted),
+			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
+			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 		}),
 		[socket, serviceFactory, entityId]
 	)

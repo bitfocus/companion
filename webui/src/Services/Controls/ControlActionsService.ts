@@ -57,6 +57,18 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			performLearn: undefined,
 			setEnabled: undefined,
 			setHeadline: undefined,
+
+			setInverted: (_entityId: string, _inverted: boolean) => {
+				// Not supported
+			},
+
+			setSelectedStyleProps: (_entityId: string, _keys: string[]) => {
+				// Not supported
+			},
+
+			setStylePropsValue: (_entityId: string, _key: string, _value: any) => {
+				// Not supported
+			},
 		}),
 		[socket, sessionId]
 	)

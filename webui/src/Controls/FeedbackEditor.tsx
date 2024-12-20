@@ -36,6 +36,8 @@ import { findAllEntityIdsDeep, stringifyEntityOwnerId } from './Util.js'
 import {
 	EntityModelType,
 	EntityOwner,
+	EntitySupportedChildGroupDefinition,
+	FeedbackEntityModel,
 	SomeEntityModel,
 	SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -282,7 +284,7 @@ function FeedbackTableRow({
 				return
 			}
 			// Can't move into itself
-			if (hoverOwnerId && item.feedbackId === hoverOwnerId.parentFeedbackId) return
+			if (hoverOwnerId && item.feedbackId === hoverOwnerId.parentId) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard('feedbacks', item.feedbackId, hoverOwnerId, hoverIndex)
@@ -323,16 +325,20 @@ function FeedbackTableRow({
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td>
-				<FeedbackEditor
-					controlId={controlId}
-					ownerId={ownerId}
-					entityType={entityType}
-					location={location}
-					feedback={feedback}
-					serviceFactory={serviceFactory}
-					panelCollapseHelper={panelCollapseHelper}
-					onlyType={onlyType}
-				/>
+				{feedback.type === EntityModelType.Feedback ? (
+					<FeedbackEditor
+						controlId={controlId}
+						ownerId={ownerId}
+						entityType={entityType}
+						location={location}
+						feedback={feedback}
+						serviceFactory={serviceFactory}
+						panelCollapseHelper={panelCollapseHelper}
+						onlyType={onlyType}
+					/>
+				) : (
+					<p>Entity is not a feedback!</p>
+				)}
 			</td>
 		</tr>
 	)
@@ -342,7 +348,7 @@ interface FeedbackEditorProps {
 	controlId: string
 	ownerId: EntityOwner | null
 	entityType: string
-	feedback: SomeEntityModel
+	feedback: FeedbackEntityModel
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
 	panelCollapseHelper: PanelCollapseHelper
@@ -396,9 +402,6 @@ const FeedbackEditor = observer(function FeedbackEditor({
 		[panelCollapseHelper, feedback.id]
 	)
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(stringifyEntityOwnerId(ownerId), feedback.id)
-
-	const childrenGroupId: EntityOwner = { parentId: feedback.id, childGroup: 'children' }
-	const advancedChildrenGroupId: EntityOwner = { parentId: feedback.id, childGroup: 'advancedChildren' }
 
 	return (
 		<>
@@ -496,66 +499,28 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						</CForm>
 					</div>
 
-					{feedback.connectionId === 'internal' && feedbackSpec?.supportsChildFeedbacks && (
-						<div
-							className={classNames('cell-children', {
-								'hide-top-gap':
-									(feedbackSpec.showInvert || feedbackOptions.length > 0) && (feedback.children ?? []).length > 0,
-							})}
-						>
-							<CForm onSubmit={PreventDefaultHandler}>
-								<InlineFeedbacksEditor
-									controlId={controlId}
-									heading={
-										feedbackSpec.supportsAdvancedChildFeedbacks ? (
-											<>
-												Conditions&nbsp;
-												<FontAwesomeIcon
-													icon={faQuestionCircle}
-													title="This feedback will only execute when all of the conditions are true"
-												/>
-											</>
-										) : null
-									}
-									feedbacks={feedback.children ?? []}
-									entityType="condition"
-									onlyType={'boolean'}
-									location={location}
-									addPlaceholder="+ Add condition"
-									feedbacksService={serviceFactory}
-									ownerId={childrenGroupId}
-									panelCollapseHelper={panelCollapseHelper}
-								/>
-							</CForm>
-
-							{feedbackSpec.supportsAdvancedChildFeedbacks && (
-								<>
-									<CForm onSubmit={PreventDefaultHandler} className="mt-2">
-										<InlineFeedbacksEditor
-											controlId={controlId}
-											heading={
-												<>
-													Feedbacks&nbsp;
-													<FontAwesomeIcon
-														icon={faQuestionCircle}
-														title="These feedbacks will only be shown if the conditions above are met"
-													/>
-												</>
-											}
-											feedbacks={feedback.advancedChildren ?? []}
-											entityType="feedback"
-											onlyType={'advanced'}
-											location={location}
-											addPlaceholder="+ Add feedback"
-											feedbacksService={serviceFactory}
-											ownerId={advancedChildrenGroupId}
-											panelCollapseHelper={panelCollapseHelper}
-										/>
-									</CForm>
-								</>
-							)}
-						</div>
-					)}
+					{feedback.connectionId === 'internal' &&
+						feedbackSpec?.supportsChildGroups &&
+						feedbackSpec.supportsChildGroups.length > 0 && (
+							<div
+								className={classNames('cell-children', {
+									'hide-top-gap': feedbackSpec.showInvert || feedbackOptions.length > 0, //&& (feedback.children ?? []).length > 0,
+								})}
+							>
+								{feedbackSpec.supportsChildGroups.map((groupInfo) => (
+									<FeedbackManageChildGroup
+										key={groupInfo.groupId}
+										controlId={controlId}
+										location={location}
+										groupInfo={groupInfo}
+										entities={feedback.children?.[groupInfo.groupId]}
+										parentId={feedback.id}
+										panelCollapseHelper={panelCollapseHelper}
+										serviceFactory={serviceFactory}
+									/>
+								))}
+							</div>
+						)}
 
 					<div className="cell-left-main">
 						{connectionsWithSameType.length > 1 && (
@@ -613,9 +578,57 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	)
 })
 
+interface FeedbackManageChildGroupProps {
+	controlId: string
+	location: ControlLocation | undefined
+	groupInfo: EntitySupportedChildGroupDefinition
+	entities: SomeEntityModel[] | undefined
+	parentId: string
+	panelCollapseHelper: PanelCollapseHelper
+	serviceFactory: IEntityEditorService
+}
+
+function FeedbackManageChildGroup({
+	controlId,
+	location,
+	groupInfo,
+	entities,
+	parentId,
+	panelCollapseHelper,
+	serviceFactory: serviceFactory0,
+}: FeedbackManageChildGroupProps) {
+	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
+
+	const serviceFactory = useControlEntitiesEditorService(controlId, listId, entityType, groupInfo.type, confirmModal)
+
+	return (
+		<CForm onSubmit={PreventDefaultHandler}>
+			<InlineFeedbacksEditor
+				controlId={controlId}
+				heading={
+					groupInfo.label ? (
+						<>
+							{groupInfo.label}&nbsp;
+							{groupInfo.hint ? <FontAwesomeIcon icon={faQuestionCircle} title={groupInfo.hint} /> : null}
+						</>
+					) : null
+				}
+				feedbacks={entities ?? []}
+				entityType={entityType}
+				onlyType={groupInfo.booleanFeedbacksOnly ? 'boolean' : null}
+				location={location}
+				addPlaceholder={`+ Add ${entityType}`}
+				feedbacksService={serviceFactory}
+				ownerId={groupId}
+				panelCollapseHelper={panelCollapseHelper}
+			/>
+		</CForm>
+	)
+}
+
 interface FeedbackManageStylesProps {
 	feedbackSpec: ClientFeedbackDefinition | undefined
-	feedback: SomeEntityModel
+	feedback: FeedbackEntityModel
 	setSelectedStyleProps: (keys: string[]) => void
 }
 
@@ -646,7 +659,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }:
 
 interface FeedbackStylesProps {
 	feedbackSpec: ClientFeedbackDefinition | undefined
-	feedback: SomeEntityModel
+	feedback: FeedbackEntityModel
 	setStylePropsValue: (key: string, value: any) => void
 }
 

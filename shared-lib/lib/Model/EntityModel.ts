@@ -51,6 +51,7 @@ export interface EntitySupportedChildGroupDefinition {
 	type: EntityModelType
 	groupId: string
 	label: string
+	hint?: string
 
 	/** Only valid for feedback entities */
 	booleanFeedbacksOnly?: boolean
