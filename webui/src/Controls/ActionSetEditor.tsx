@@ -18,40 +18,32 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { AddActionsModal, AddActionsModalRef } from './AddModal.js'
 import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
-import { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { LearnButton } from '../Components/LearnButton.js'
 import { AddActionDropdown } from './AddActionDropdown.js'
-import {
-	IActionEditorService,
-	useControlActionService,
-	useControlActionsEditorService,
-} from '../Services/Controls/ControlActionsService.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import classNames from 'classnames'
-
-function findAllActionIdsDeep(actions: ActionInstance[]): string[] {
-	const result: string[] = actions.map((f) => f.id)
-
-	for (const action of actions) {
-		if (!action.children) continue
-		for (const actionGroup of Object.values(action.children)) {
-			if (!actionGroup) continue
-			result.push(...findAllActionIdsDeep(actionGroup))
-		}
-	}
-
-	return result
-}
+import {
+	EntityModelType,
+	EntityOwner,
+	SomeEntityModel,
+	SomeSocketEntityLocation,
+	stringifySocketEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
+import { findAllEntityIdsDeep, stringifyEntityOwnerId } from './Util.js'
+import {
+	IEntityEditorService,
+	useControlEntitiesEditorService,
+	useControlEntityService,
+} from '../Services/Controls/ControlEntitiesService.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
 	location: ControlLocation | undefined
-	stepId: string
-	setId: ActionSetId
-	actions: ActionInstance[] | undefined
+	listId: SomeSocketEntityLocation
+	actions: SomeEntityModel[] | undefined
 	addPlaceholder: string
 	heading: JSX.Element | string
 	headingActions?: JSX.Element[]
@@ -60,8 +52,7 @@ interface ControlActionSetEditorProps {
 export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 	controlId,
 	location,
-	stepId,
-	setId,
+	listId,
 	actions,
 	addPlaceholder,
 	heading,
@@ -69,10 +60,19 @@ export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 }: ControlActionSetEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const actionsService = useControlActionsEditorService(controlId, stepId, setId, confirmModal)
+	const actionsService = useControlEntitiesEditorService(
+		controlId,
+		listId,
+		'action',
+		EntityModelType.Action,
+		confirmModal
+	)
 
-	const actionIds = useMemo(() => findAllActionIdsDeep(actions ?? []), [actions])
-	const panelCollapseHelper = usePanelCollapseHelper(`actions_${controlId}_${stepId}_${setId}`, actionIds)
+	const actionIds = useMemo(() => findAllEntityIdsDeep(actions ?? []), [actions])
+	const panelCollapseHelper = usePanelCollapseHelper(
+		`actions_${controlId}_${stringifySocketEntityLocation(listId)}`,
+		actionIds
+	)
 
 	return (
 		<div className="action-category">
@@ -84,11 +84,10 @@ export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 				headingActions={headingActions}
 				actions={actions}
 				location={location}
-				stepId={stepId}
-				setId={setId}
+				listId={listId}
 				addPlaceholder={addPlaceholder}
 				actionsService={actionsService}
-				parentId={null}
+				ownerId={null}
 				panelCollapseHelper={panelCollapseHelper}
 			/>
 		</div>
@@ -99,13 +98,12 @@ interface InlineActionListProps {
 	controlId: string
 	heading: JSX.Element | string | null
 	headingActions?: JSX.Element[]
-	actions: ActionInstance[] | undefined
+	actions: SomeEntityModel[] | undefined
 	location: ControlLocation | undefined
-	stepId: string
-	setId: ActionSetId
+	listId: SomeSocketEntityLocation
 	addPlaceholder: string
-	actionsService: IActionEditorService
-	parentId: string | null
+	actionsService: IEntityEditorService
+	ownerId: EntityOwner | null
 	panelCollapseHelper: PanelCollapseHelper
 }
 function InlineActionList({
@@ -114,19 +112,20 @@ function InlineActionList({
 	headingActions,
 	actions,
 	location,
-	stepId,
-	setId,
+	listId,
 	addPlaceholder,
 	actionsService,
-	parentId,
+	ownerId,
 	panelCollapseHelper,
 }: InlineActionListProps) {
 	const addAction = useCallback(
-		(actionType: string) => actionsService.addAction(actionType, parentId),
-		[actionsService, parentId]
+		(connectionId: string, definitionId: string) => actionsService.addEntity(connectionId, definitionId, ownerId),
+		[actionsService, ownerId]
 	)
 
 	const childActionIds = actions?.map((f) => f.id) ?? []
+
+	const ownerIdString = stringifyEntityOwnerId(ownerId)
 
 	return (
 		<>
@@ -134,21 +133,21 @@ function InlineActionList({
 				{heading}
 
 				<CButtonGroup className="right">
-					{actions && actions.length >= 1 && panelCollapseHelper.canExpandAll(parentId, childActionIds) && (
+					{actions && actions.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childActionIds) && (
 						<CButton
 							color="white"
 							size="sm"
-							onClick={() => panelCollapseHelper.setAllExpanded(parentId, childActionIds)}
+							onClick={() => panelCollapseHelper.setAllExpanded(ownerIdString, childActionIds)}
 							title="Expand all"
 						>
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					)}
-					{actions && actions.length >= 1 && panelCollapseHelper.canCollapseAll(parentId, childActionIds) && (
+					{actions && actions.length >= 1 && panelCollapseHelper.canCollapseAll(ownerIdString, childActionIds) && (
 						<CButton
 							color="white"
 							size="sm"
-							onClick={() => panelCollapseHelper.setAllCollapsed(parentId, childActionIds)}
+							onClick={() => panelCollapseHelper.setAllCollapsed(ownerIdString, childActionIds)}
 							title="Collapse all"
 						>
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
@@ -161,10 +160,9 @@ function InlineActionList({
 			<ActionsList
 				location={location}
 				controlId={controlId}
-				parentId={parentId}
+				ownerId={ownerId}
 				dragId={`${controlId}_actions`}
-				stepId={stepId}
-				setId={setId}
+				listId={listId}
 				actions={actions}
 				actionsService={actionsService}
 				panelCollapseHelper={panelCollapseHelper}
@@ -176,7 +174,7 @@ function InlineActionList({
 
 interface AddActionsPanelProps {
 	addPlaceholder: string
-	addAction: (actionType: string) => void
+	addAction: (connectionId: string, definitionId: string) => void
 }
 
 const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addAction }: AddActionsPanelProps) {
@@ -202,12 +200,11 @@ const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addActio
 interface ActionsListProps {
 	location: ControlLocation | undefined
 	controlId: string
-	parentId: string | null
+	ownerId: EntityOwner | null
 	dragId: string
-	stepId: string
-	setId: ActionSetId
-	actions: ActionInstance[] | undefined
-	actionsService: IActionEditorService
+	listId: SomeSocketEntityLocation
+	actions: SomeEntityModel[] | undefined
+	actionsService: IEntityEditorService
 	readonly?: boolean
 	panelCollapseHelper: PanelCollapseHelper
 }
@@ -215,10 +212,9 @@ interface ActionsListProps {
 export function ActionsList({
 	location,
 	controlId,
-	parentId,
+	ownerId,
 	dragId,
-	stepId,
-	setId,
+	listId,
 	actions,
 	actionsService,
 	readonly,
@@ -233,12 +229,11 @@ export function ActionsList({
 							<ActionTableRow
 								key={a?.id ?? i}
 								controlId={controlId}
-								parentId={parentId}
+								ownerId={ownerId}
 								location={location}
 								action={a}
 								index={i}
-								stepId={stepId}
-								setId={setId}
+								listId={listId}
 								dragId={dragId}
 								serviceFactory={actionsService}
 								readonly={readonly ?? false}
@@ -249,8 +244,8 @@ export function ActionsList({
 
 				<ActionRowDropPlaceholder
 					dragId={dragId}
-					parentId={parentId}
-					setId={setId}
+					ownerId={ownerId}
+					listId={listId}
 					actionCount={actions ? actions.length : 0}
 					moveCard={actionsService.moveCard}
 				/>
@@ -260,23 +255,28 @@ export function ActionsList({
 }
 
 interface ActionRowDropPlaceholderProps {
-	setId: ActionSetId
-	parentId: string | null
+	listId: SomeSocketEntityLocation
+	ownerId: EntityOwner | null
 	dragId: string
 	actionCount: number
-	moveCard: (stepId: string, setId: ActionSetId, actionId: string, parentId: string | null, targetIndex: number) => void
+	moveCard: (
+		listId: SomeSocketEntityLocation,
+		actionId: string,
+		ownerId: EntityOwner | null,
+		targetIndex: number
+	) => void
 }
 
-function ActionRowDropPlaceholder({ setId, parentId, dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
+function ActionRowDropPlaceholder({ listId, ownerId, dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
 	const [isDragging, drop] = useDrop<ActionTableRowDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
-			moveCard(item.stepId, item.setId, item.actionId, parentId, 0)
+			moveCard(item.listId, item.actionId, ownerId, 0)
 
-			item.setId = setId
+			item.listId = listId
 			item.index = 0
 		},
 	})
@@ -300,10 +300,9 @@ function ActionRowDropPlaceholder({ setId, parentId, dragId, actionCount, moveCa
 
 interface ActionTableRowDragItem {
 	actionId: string
-	stepId: string
-	setId: ActionSetId
+	listId: SomeSocketEntityLocation
 	index: number
-	parentId: string | null
+	ownerId: EntityOwner | null
 	dragState: DragState | null
 }
 interface ActionTableRowDragStatus {
@@ -311,15 +310,14 @@ interface ActionTableRowDragStatus {
 }
 
 interface ActionTableRowProps {
-	action: ActionInstance
+	action: SomeEntityModel
 	controlId: string
-	parentId: string | null
-	stepId: string
-	setId: ActionSetId
+	ownerId: EntityOwner | null
+	listId: SomeSocketEntityLocation
 	location: ControlLocation | undefined
 	index: number
 	dragId: string
-	serviceFactory: IActionEditorService
+	serviceFactory: IEntityEditorService
 
 	readonly: boolean
 	panelCollapseHelper: PanelCollapseHelper
@@ -328,9 +326,8 @@ interface ActionTableRowProps {
 const ActionTableRow = observer(function ActionTableRow({
 	action,
 	controlId,
-	parentId,
-	stepId,
-	setId,
+	ownerId,
+	listId,
 	location,
 	index,
 	dragId,
@@ -340,14 +337,14 @@ const ActionTableRow = observer(function ActionTableRow({
 }: ActionTableRowProps): JSX.Element | null {
 	const { actionDefinitions, connections } = useContext(RootAppStoreContext)
 
-	const service = useControlActionService(serviceFactory, action)
+	const service = useControlEntityService(serviceFactory, action)
 
 	const innerSetEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled && service.setEnabled(e.target.checked),
 		[service.setEnabled]
 	)
 
-	const actionSpec = actionDefinitions.connections.get(action.instance)?.get(action.action)
+	const actionSpec = actionDefinitions.connections.get(action.connectionId)?.get(action.definitionId)
 
 	const [actionOptions, optionVisibility] = useOptionsAndIsVisible(actionSpec?.options, action?.options)
 
@@ -362,10 +359,10 @@ const ActionTableRow = observer(function ActionTableRow({
 			// Ensure the hover targets this element, and not a child element
 			if (!monitor.isOver({ shallow: true })) return
 
-			const dragParentId = item.parentId
+			const dragParentId = item.ownerId
 			const dragIndex = item.index
 
-			const hoverParentId = parentId
+			const hoverOwnerId = ownerId
 			const hoverIndex = index
 			const hoverId = action.id
 
@@ -374,21 +371,23 @@ const ActionTableRow = observer(function ActionTableRow({
 			// Don't replace items with themselves
 			if (
 				item.actionId === hoverId ||
-				(dragIndex === hoverIndex && dragParentId === hoverParentId && item.setId === setId && item.stepId === stepId)
+				(dragIndex === hoverIndex &&
+					stringifyEntityOwnerId(dragParentId) === stringifyEntityOwnerId(hoverOwnerId) &&
+					stringifySocketEntityLocation(item.listId) === stringifySocketEntityLocation(listId))
 			) {
 				return
 			}
 
 			// Time to actually perform the action
-			serviceFactory.moveCard(item.stepId, item.setId, item.actionId, hoverParentId, index)
+			serviceFactory.moveCard(item.listId, item.actionId, hoverOwnerId, index)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
 			// to avoid expensive index searches.
 			item.index = hoverIndex
-			item.setId = setId
-			item.parentId = hoverParentId
+			item.listId = listId
+			item.ownerId = hoverOwnerId
 		},
 		drop(item, _monitor) {
 			item.dragState = null
@@ -399,10 +398,9 @@ const ActionTableRow = observer(function ActionTableRow({
 		canDrag: !readonly,
 		item: {
 			actionId: action.id,
-			stepId: stepId,
-			setId: setId,
+			listId: listId,
 			index: index,
-			parentId: parentId,
+			ownerId: ownerId,
 			// ref: ref,
 			dragState: null,
 		},
@@ -420,7 +418,7 @@ const ActionTableRow = observer(function ActionTableRow({
 		() => panelCollapseHelper.setPanelCollapsed(action.id, false),
 		[panelCollapseHelper, action.id]
 	)
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(parentId, action.id)
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(stringifyEntityOwnerId(ownerId), action.id)
 
 	const canSetHeadline = !!service.setHeadline
 	const headline = action.headline
@@ -432,16 +430,16 @@ const ActionTableRow = observer(function ActionTableRow({
 		return null
 	}
 
-	const connectionInfo = connections.getInfo(action.instance)
+	const connectionInfo = connections.getInfo(action.connectionId)
 	// const module = instance ? modules[instance.instance_type] : undefined
-	const connectionLabel = connectionInfo?.label ?? action.instance
+	const connectionLabel = connectionInfo?.label ?? action.connectionId
 	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
-	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
+	const showButtonPreview = action?.connectionId === 'internal' && actionSpec?.showButtonPreview
 
 	const name = actionSpec
 		? `${connectionLabel}: ${actionSpec.label}`
-		: `${connectionLabel}: ${action.action} (undefined)`
+		: `${connectionLabel}: ${action.definitionId} (undefined)`
 
 	return (
 		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
@@ -528,8 +526,8 @@ const ActionTableRow = observer(function ActionTableRow({
 												return { id, label: info.label }
 											})}
 										multiple={false}
-										value={action.instance}
-										setValue={service.setConnection}
+										value={action.connectionId}
+										setValue={(val) => service.setConnection(`${val}`)}
 									/>
 								</div>
 							)}
@@ -549,7 +547,7 @@ const ActionTableRow = observer(function ActionTableRow({
 											key={i}
 											isLocatedInGrid={!!location}
 											isAction={true}
-											connectionId={action.instance}
+											connectionId={action.connectionId}
 											option={opt}
 											value={(action.options || {})[opt.id]}
 											setValue={service.setValue}
@@ -561,28 +559,30 @@ const ActionTableRow = observer(function ActionTableRow({
 							</CForm>
 						</div>
 
-						{action.instance === 'internal' && actionSpec?.supportsChildActionGroups.includes('default') && (
-							<div
-								className={classNames('cell-children', {
-									// 'hide-top-gap': actionOptions.length > 0 && (action.children ?? []).length > 0,
-								})}
-							>
-								<CForm onSubmit={PreventDefaultHandler}>
-									<InlineActionList
-										controlId={controlId}
-										heading={null}
-										actions={action.children?.['default'] ?? []}
-										location={location}
-										stepId={stepId}
-										setId={setId}
-										addPlaceholder="+ Add action"
-										actionsService={serviceFactory}
-										parentId={action.id}
-										panelCollapseHelper={panelCollapseHelper}
-									/>
-								</CForm>
-							</div>
-						)}
+						{action.connectionId === 'internal' &&
+							!!actionSpec?.supportsChildGroups.find(
+								(grp) => grp.type === EntityModelType.Action && grp.groupId === 'default'
+							) && (
+								<div
+									className={classNames('cell-children', {
+										// 'hide-top-gap': actionOptions.length > 0 && (action.children ?? []).length > 0,
+									})}
+								>
+									<CForm onSubmit={PreventDefaultHandler}>
+										<InlineActionList
+											controlId={controlId}
+											heading={null}
+											actions={action.children?.['default'] ?? []}
+											location={location}
+											listId={listId}
+											addPlaceholder="+ Add action"
+											actionsService={serviceFactory}
+											ownerId={{ parentId: action.id, childGroup: 'default' }}
+											panelCollapseHelper={panelCollapseHelper}
+										/>
+									</CForm>
+								</div>
+							)}
 					</div>
 				)}
 			</td>

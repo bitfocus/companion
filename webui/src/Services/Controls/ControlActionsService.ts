@@ -2,6 +2,7 @@ import { useContext, useMemo, useRef } from 'react'
 import { SocketContext, socketEmitPromise } from '../../util.js'
 import { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
+import { SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 
 export interface IActionEditorService {
 	addAction: (actionType: string, parentId: string | null) => void
@@ -34,8 +35,7 @@ export interface IActionEditorActionService {
 
 export function useControlActionsEditorService(
 	controlId: string,
-	stepId: string,
-	setId: ActionSetId,
+	listId: SomeSocketEntityLocation,
 	confirmModal: React.RefObject<GenericConfirmModalRef>
 ): IActionEditorService {
 	const socket = useContext(SocketContext)

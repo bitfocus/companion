@@ -38,6 +38,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { InlineHelp } from '../Components/InlineHelp.js'
 import { isEqual } from 'lodash-es'
+import { findAllEntityIdsDeep } from './Util.js'
 interface ControlFeedbacksEditorProps {
 	controlId: string
 	feedbacks: FeedbackInstance[]
@@ -46,21 +47,6 @@ interface ControlFeedbacksEditorProps {
 	onlyType: 'boolean' | 'advanced' | null
 	location: ControlLocation | undefined
 	addPlaceholder: string
-}
-
-function findAllFeedbackIdsDeep(feedbacks: FeedbackInstance[]): string[] {
-	const result: string[] = feedbacks.map((f) => f.id)
-
-	for (const feedback of feedbacks) {
-		if (feedback.children) {
-			result.push(...findAllFeedbackIdsDeep(feedback.children))
-		}
-		if (feedback.advancedChildren) {
-			result.push(...findAllFeedbackIdsDeep(feedback.advancedChildren))
-		}
-	}
-
-	return result
 }
 
 export function ControlFeedbacksEditor({
@@ -76,7 +62,7 @@ export function ControlFeedbacksEditor({
 
 	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
 
-	const feedbackIds = useMemo(() => findAllFeedbackIdsDeep(feedbacks), [feedbacks])
+	const feedbackIds = useMemo(() => findAllEntityIdsDeep(feedbacks), [feedbacks])
 
 	const panelCollapseHelper = usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
 

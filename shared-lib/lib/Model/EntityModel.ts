@@ -66,3 +66,8 @@ export type SomeSocketEntityLocation =
 			stepId: string
 			setId: ActionSetId
 	  }
+
+export function stringifySocketEntityLocation(location: SomeSocketEntityLocation): string {
+	if (typeof location === 'string') return location
+	return `${location.stepId}_${location.setId}`
+}

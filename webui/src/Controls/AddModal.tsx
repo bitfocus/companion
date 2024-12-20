@@ -11,7 +11,7 @@ import { ClientActionDefinition } from '@companion-app/shared/Model/ActionDefini
 import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 interface AddActionsModalProps {
-	addAction: (actionType: string) => void
+	addAction: (connectionId: string, definitionId: string) => void
 }
 export interface AddActionsModalRef {
 	show(): void
@@ -54,7 +54,8 @@ export const AddActionsModal = observer(
 			(actionType: string) => {
 				recentlyAddedActions.trackId(actionType)
 
-				addAction(actionType)
+				const [connectionId, definitionId] = actionType.split(':', 2)
+				addAction(connectionId, definitionId)
 			},
 			[recentlyAddedActions, addAction]
 		)

@@ -31,7 +31,7 @@ interface AddActionGroup {
 	options: AddActionOption[]
 }
 interface AddActionDropdownProps {
-	onSelect: (actionType: string) => void
+	onSelect: (connectionId: string, definitionId: string) => void
 	placeholder: string
 }
 export const AddActionDropdown = observer(function AddActionDropdown({
@@ -86,7 +86,8 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 			if (e?.value) {
 				recentlyAddedActions.trackId(e.value)
 
-				onSelect(e.value)
+				const [connectionId, definitionId] = e.value.split(':', 2)
+				onSelect(connectionId, definitionId)
 			}
 		},
 		[onSelect, recentlyAddedActions]
