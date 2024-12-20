@@ -20,7 +20,7 @@ import debounceFn from 'debounce-fn'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
@@ -136,8 +136,8 @@ export class InternalTriggers implements InternalModuleFragment {
 		}
 	}
 
-	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
-		if (feedback.type === 'trigger_enabled') {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+		if (feedback.definitionId === 'trigger_enabled') {
 			const control = this.#controlsController.getControl(feedback.options.trigger_id)
 			if (!control || control.type !== 'trigger' || !control.supportsOptions) return false
 

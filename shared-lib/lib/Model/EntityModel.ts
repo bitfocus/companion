@@ -3,8 +3,8 @@ import type { ButtonStyleProperties } from './StyleModel.js'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel =
-	| Pick<ActionEntityModel, 'id' | 'definitionId' | 'options'>
-	| Pick<FeedbackEntityModel, 'id' | 'definitionId' | 'style' | 'options' | 'isInverted'>
+	| Pick<ActionEntityModel, 'id' | 'type' | 'definitionId' | 'options'>
+	| Pick<FeedbackEntityModel, 'id' | 'type' | 'definitionId' | 'style' | 'options' | 'isInverted'>
 
 export enum EntityModelType {
 	Action = 'action',

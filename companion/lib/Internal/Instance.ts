@@ -23,7 +23,7 @@ import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
@@ -259,8 +259,8 @@ export class InternalInstance implements InternalModuleFragment {
 		}
 	}
 
-	executeFeedback(feedback: FeedbackInstanceExt): CompanionFeedbackButtonStyleResult | boolean | void {
-		if (feedback.type === 'instance_status') {
+	executeFeedback(feedback: FeedbackEntityModelExt): CompanionFeedbackButtonStyleResult | boolean | void {
+		if (feedback.definitionId === 'instance_status') {
 			if (feedback.options.instance_id == 'all') {
 				if (this.#instancesError > 0) {
 					return {
@@ -312,7 +312,7 @@ export class InternalInstance implements InternalModuleFragment {
 				color: feedback.options.disabled_fg,
 				bgcolor: feedback.options.disabled_bg,
 			}
-		} else if (feedback.type === 'instance_custom_state') {
+		} else if (feedback.definitionId === 'instance_custom_state') {
 			const selected_status = this.#instanceStatuses[String(feedback.options.instance_id)]?.category ?? null
 
 			return selected_status == feedback.options.state

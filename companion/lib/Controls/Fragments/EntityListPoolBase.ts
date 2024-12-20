@@ -308,6 +308,9 @@ export abstract class ControlEntityListPoolBase {
 			const entity = childGroup.findById(newProps.id)
 			if (!entity) continue
 
+			// Ignore if the types do not match
+			if (entity.type !== newProps.type) return false
+
 			entity.replaceProps(newProps, skipNotifyModule)
 
 			this.commitChange(true)

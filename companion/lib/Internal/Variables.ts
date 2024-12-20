@@ -21,7 +21,7 @@ import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalFeedbackDefinition,
@@ -162,8 +162,8 @@ export class InternalVariables implements InternalModuleFragment {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
-		if (feedback.type == 'variable_value') {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+		if (feedback.definitionId == 'variable_value') {
 			const result = this.#internalModule.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
 				feedback
@@ -172,7 +172,7 @@ export class InternalVariables implements InternalModuleFragment {
 			this.#variableSubscriptions.set(feedback.id, result.variableIds)
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
-		} else if (feedback.type == 'variable_variable') {
+		} else if (feedback.definitionId == 'variable_variable') {
 			const result1 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
 				feedback
@@ -185,7 +185,7 @@ export class InternalVariables implements InternalModuleFragment {
 			this.#variableSubscriptions.set(feedback.id, [...result1.variableIds, ...result2.variableIds])
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
-		} else if (feedback.type == 'check_expression') {
+		} else if (feedback.definitionId == 'check_expression') {
 			try {
 				const res = this.#variableController.executeExpression(
 					feedback.options.expression,
@@ -205,7 +205,7 @@ export class InternalVariables implements InternalModuleFragment {
 		}
 	}
 
-	forgetFeedback(feedback: FeedbackInstanceExt): void {
+	forgetFeedback(feedback: FeedbackEntityModelExt): void {
 		this.#variableSubscriptions.delete(feedback.id)
 	}
 

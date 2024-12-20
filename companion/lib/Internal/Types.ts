@@ -8,8 +8,9 @@ import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper
 import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { SetOptional } from 'type-fest'
 import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
-export interface FeedbackInstanceExt extends FeedbackInstance {
+export interface FeedbackEntityModelExt extends FeedbackEntityModel {
 	controlId: string
 	location: ControlLocation | undefined
 	referencedVariables: string[] | null
@@ -56,7 +57,7 @@ export interface InternalModuleFragment {
 	 * Get an updated value for a feedback
 	 */
 	executeFeedback?: (
-		feedback: FeedbackInstanceExt
+		feedback: FeedbackEntityModelExt
 	) => CompanionFeedbackButtonStyleResult | boolean | ExecuteFeedbackResultWithReferences | void
 
 	feedbackUpgrade?: (feedback: FeedbackInstance, _controlId: string) => FeedbackInstance | void

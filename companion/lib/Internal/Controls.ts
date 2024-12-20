@@ -22,7 +22,7 @@ import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
 import type {
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	ExecuteFeedbackResultWithReferences,
@@ -193,7 +193,7 @@ export class InternalControls implements InternalModuleFragment {
 
 	#fetchLocationAndControlId(
 		options: Record<string, any>,
-		extras: RunActionExtras | FeedbackInstanceExt,
+		extras: RunActionExtras | FeedbackEntityModelExt,
 		useVariableFields = false
 	): {
 		theControlId: string | null
@@ -711,8 +711,8 @@ export class InternalControls implements InternalModuleFragment {
 		if (changed) return feedback
 	}
 
-	executeFeedback(feedback: FeedbackInstanceExt): ExecuteFeedbackResultWithReferences | void {
-		if (feedback.type === 'bank_style') {
+	executeFeedback(feedback: FeedbackEntityModelExt): ExecuteFeedbackResultWithReferences | void {
+		if (feedback.definitionId === 'bank_style') {
 			const { theLocation, referencedVariables } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			if (
@@ -760,7 +760,7 @@ export class InternalControls implements InternalModuleFragment {
 					value: {},
 				}
 			}
-		} else if (feedback.type === 'bank_pushed') {
+		} else if (feedback.definitionId === 'bank_pushed') {
 			const { theControlId, referencedVariables } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			const control = theControlId && this.#controlsController.getControl(theControlId)
@@ -782,7 +782,7 @@ export class InternalControls implements InternalModuleFragment {
 					value: false,
 				}
 			}
-		} else if (feedback.type == 'bank_current_step') {
+		} else if (feedback.definitionId == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			const theStep = feedback.options.step

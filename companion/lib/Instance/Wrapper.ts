@@ -818,10 +818,11 @@ export class SocketEventsHandler {
 					const control = this.#deps.controls.getControl(feedback.controlId)
 					const found =
 						control?.supportsEntities &&
-						control.feedbacks.feedbackReplace(
+						control.entities.entityReplace(
 							{
+								type: EntityModelType.Feedback,
 								id: feedback.id,
-								type: feedback.feedbackId,
+								definitionId: feedback.feedbackId,
 								options: feedback.options,
 								style: feedback.style,
 								isInverted: feedback.isInverted,
@@ -838,11 +839,12 @@ export class SocketEventsHandler {
 				if (action) {
 					const control = this.#deps.controls.getControl(action.controlId)
 					const found =
-						control?.supportsActions &&
-						control.actionReplace(
+						control?.supportsEntities &&
+						control.entities.entityReplace(
 							{
+								type: EntityModelType.Action,
 								id: action.id,
-								action: action.actionId,
+								definitionId: action.actionId,
 								options: action.options,
 							},
 							true

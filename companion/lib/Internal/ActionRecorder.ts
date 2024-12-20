@@ -22,7 +22,7 @@ import type { PageController } from '../Page/Controller.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
@@ -313,8 +313,8 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
-		if (feedback.type === 'action_recorder_check_connections') {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+		if (feedback.definitionId === 'action_recorder_check_connections') {
 			const session = this.#actionRecorder.getSession()
 			if (!session) return false
 

@@ -21,7 +21,7 @@ import { ParseInternalControlReference } from './Util.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 } from './Types.js'
@@ -39,7 +39,12 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { PageController } from '../Page/Controller.js'
 import LogController from '../Log/Controller.js'
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	ActionEntityModel,
+	EntityModelType,
+	FeedbackEntityModel,
+	SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Fragments/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
@@ -51,7 +56,7 @@ export class InternalController {
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #variablesController: VariablesController
 
-	readonly #feedbacks = new Map<string, FeedbackInstanceExt>()
+	readonly #feedbacks = new Map<string, FeedbackEntityModelExt>()
 
 	readonly #buildingBlocksFragment: InternalBuildingBlocks
 	readonly #fragments: InternalModuleFragment[]
@@ -105,27 +110,10 @@ export class InternalController {
 			for (const entity of allEntities) {
 				if (entity.connectionId !== 'internal') continue
 
-				switch (entity.type) {
-					case EntityModelType.Feedback: {
-						const newEntity = this.feedbackUpgrade(entity, controlId)
-						if (newEntity) {
-							control.entities.entityReplace(newEntity)
-						}
+				const newEntity = this.entityUpgrade(entity.asEntityModel(), controlId)
+				if (newEntity) control.entities.entityReplace(newEntity)
 
-						this.feedbackUpdate(newEntity || entity, controlId)
-						break
-					}
-					case EntityModelType.Action: {
-						const newEntity = this.actionUpgrade(entity, controlId)
-						if (newEntity) {
-							control.entities.entityReplace(newEntity)
-						}
-						break
-					}
-					default:
-						assertNever(entity)
-						break
-				}
+				this.entityUpdate(newEntity || entity.asEntityModel(), controlId)
 			}
 		}
 
@@ -138,12 +126,32 @@ export class InternalController {
 	}
 
 	/**
+	 * Perform an upgrade for an entity
+	 * @param entity
+	 * @param controlId
+	 * @returns Updated entity if any changes were made
+	 */
+	entityUpgrade(entity: SomeEntityModel, controlId: string): SomeEntityModel | undefined {
+		switch (entity.type) {
+			case EntityModelType.Feedback: {
+				return this.#feedbackUpgrade(entity, controlId)
+			}
+			case EntityModelType.Action: {
+				return this.#actionUpgrade(entity, controlId)
+			}
+			default:
+				assertNever(entity)
+				return undefined
+		}
+	}
+
+	/**
 	 * Perform an upgrade for an action
 	 * @param action
 	 * @param controlId
 	 * @returns Updated action if any changes were made
 	 */
-	actionUpgrade(action: ActionInstance, controlId: string): ActionInstance | undefined {
+	#actionUpgrade(action: ActionEntityModel, controlId: string): ActionEntityModel | undefined {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		for (const fragment of this.#fragments) {
@@ -151,7 +159,6 @@ export class InternalController {
 				try {
 					const newAction = fragment.actionUpgrade(action, controlId)
 					if (newAction !== undefined) {
-						// newAction.actionId = newAction.action
 						// It was handled, so break
 						return newAction
 					}
@@ -171,7 +178,7 @@ export class InternalController {
 	 * @param controlId
 	 * @returns Updated feedback if any changes were made
 	 */
-	feedbackUpgrade(feedback: FeedbackInstance, controlId: string): FeedbackInstance | undefined {
+	#feedbackUpgrade(feedback: FeedbackEntityModel, controlId: string): FeedbackEntityModel | undefined {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		for (const fragment of this.#fragments) {
@@ -179,7 +186,6 @@ export class InternalController {
 				try {
 					const newFeedback = fragment.feedbackUpgrade(feedback, controlId)
 					if (newFeedback !== undefined) {
-						// newFeedback.feedbackId = newFeedback.type
 						// It was handled, so break
 						return newFeedback
 					}
@@ -194,18 +200,24 @@ export class InternalController {
 		return undefined
 	}
 
+	entityUpdate(entity: SomeEntityModel, controlId: string): void {
+		if (entity.type === EntityModelType.Feedback) {
+			this.#feedbackUpdate(entity, controlId)
+		}
+	}
+
 	/**
 	 * A feedback has changed, and state should be updated
 	 */
-	feedbackUpdate(feedback: FeedbackInstance, controlId: string): void {
+	#feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		if (feedback.instance_id !== 'internal') throw new Error(`Feedback is not for internal instance`)
+		if (feedback.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
 		if (feedback.disabled) return
 
 		const location = this.#pageController.getLocationOfControlId(controlId)
 
-		const cloned: FeedbackInstanceExt = {
+		const cloned: FeedbackEntityModelExt = {
 			...cloneDeep(feedback),
 			controlId,
 			location,
@@ -244,7 +256,7 @@ export class InternalController {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	#feedbackGetValue(feedback: FeedbackInstanceExt): any {
+	#feedbackGetValue(feedback: FeedbackEntityModelExt): any {
 		for (const fragment of this.#fragments) {
 			if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
 				let value: ReturnType<Required<InternalModuleFragment>['executeFeedback']> | undefined
@@ -513,7 +525,7 @@ export class InternalController {
 	 */
 	parseVariablesForInternalActionOrFeedback(
 		str: string,
-		extras: RunActionExtras | FeedbackInstanceExt,
+		extras: RunActionExtras | FeedbackEntityModelExt,
 		injectedVariableValues?: VariablesCache
 	): ParseVariablesResult {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -535,7 +547,7 @@ export class InternalController {
 	 */
 	executeExpressionForInternalActionOrFeedback(
 		str: string,
-		extras: RunActionExtras | FeedbackInstanceExt,
+		extras: RunActionExtras | FeedbackEntityModelExt,
 		requiredType?: string,
 		injectedVariableValues?: CompanionVariableValues
 	): { value: boolean | number | string | undefined; variableIds: Set<string> } {
@@ -557,7 +569,7 @@ export class InternalController {
 	 *
 	 */
 	parseInternalControlReferenceForActionOrFeedback(
-		extras: RunActionExtras | FeedbackInstanceExt,
+		extras: RunActionExtras | FeedbackEntityModelExt,
 		options: Record<string, any>,
 		useVariableFields: boolean
 	): {

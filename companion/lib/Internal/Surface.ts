@@ -22,7 +22,7 @@ import debounceFn from 'debounce-fn'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
@@ -192,7 +192,7 @@ export class InternalSurface implements InternalModuleFragment {
 
 	#fetchSurfaceId(
 		options: Record<string, any>,
-		info: RunActionExtras | FeedbackInstanceExt,
+		info: RunActionExtras | FeedbackEntityModelExt,
 		useVariableFields: boolean
 	): string | undefined {
 		let surfaceId: string | undefined = options.controller + ''
@@ -210,7 +210,7 @@ export class InternalSurface implements InternalModuleFragment {
 
 	#fetchPage(
 		options: Record<string, any>,
-		extras: RunActionExtras | FeedbackInstanceExt,
+		extras: RunActionExtras | FeedbackEntityModelExt,
 		useVariableFields: boolean,
 		surfaceId: string | undefined
 	): string | 'back' | 'forward' | '+1' | '-1' | undefined {
@@ -650,8 +650,8 @@ export class InternalSurface implements InternalModuleFragment {
 		}
 	}
 
-	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
-		if (feedback.type == 'surface_on_page') {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+		if (feedback.definitionId == 'surface_on_page') {
 			const surfaceId = this.#fetchSurfaceId(feedback.options, feedback, false)
 			if (!surfaceId) return false
 
