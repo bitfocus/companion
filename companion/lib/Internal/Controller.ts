@@ -97,7 +97,7 @@ export class InternalController {
 		const allControls = this.#controlsController.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			// Discover feedbacks to process
-			if (control.supportsFeedbacks) {
+			if (control.supportsEntities) {
 				for (let feedback of control.feedbacks.getFlattenedFeedbackInstances('internal')) {
 					if (control.feedbacks.feedbackReplace) {
 						const newFeedback = this.feedbackUpgrade(feedback, controlId)

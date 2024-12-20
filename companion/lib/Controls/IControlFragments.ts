@@ -8,7 +8,6 @@ export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithSteps | ControlWithoutSteps) &
 	(ControlWithStyle | ControlWithoutStyle) &
 	(ControlWithEntities | ControlWithoutEntities) &
-	(ControlWithFeedbacks | ControlWithoutFeedbacks) &
 	(ControlWithActions | ControlWithoutActions) &
 	(ControlWithEvents | ControlWithoutEvents) &
 	(ControlWithActionSets | ControlWithoutActionSets) &
@@ -122,26 +121,6 @@ export interface ControlWithoutEntities extends ControlBase<any> {
 	readonly supportsEntities: false
 }
 
-export interface ControlWithFeedbacks extends ControlBase<any> {
-	readonly supportsFeedbacks: true
-
-	// readonly feedbacks: FragmentFeedbacks
-
-	/**
-	 * Remove any tracked state for an connection
-	 */
-	clearConnectionState(connectionId: string): void
-
-	/**
-	 * Update all controls to forget an connection
-	 */
-	forgetConnection(connectionId: string): void
-}
-
-export interface ControlWithoutFeedbacks extends ControlBase<any> {
-	readonly supportsFeedbacks: false
-}
-
 export interface ControlWithActions extends ControlBase<any> {
 	readonly supportsActions: true
 
@@ -221,16 +200,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * Set an option of an action
 	 */
 	actionSetOption(stepId: string, setId: ActionSetId, id: string, key: string, value: any): boolean
-
-	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void
-
-	/**
-	 * Update all controls to forget a connection
-	 */
-	forgetConnection(connectionId: string): void
 
 	/**
 	 * Get all the actions on this control

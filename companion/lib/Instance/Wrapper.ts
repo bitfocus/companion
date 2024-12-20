@@ -223,26 +223,28 @@ export class SocketEventsHandler {
 		// Find all the feedbacks on controls
 		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
+			if (!control.supportsEntities) continue
+
 			const controlEntities = control.entities.getAllEntities()
-			if (controlEntities && controlEntities.length > 0) {
-				const imageSize = control.getBitmapSize()
-				for (const entity of controlEntities) {
-					if (entity.type !== EntityModelType.Feedback) continue
+			if (!controlEntities || controlEntities.length === 0) continue
 
-					const entityModel = entity.asEntityModel(false)
-					allFeedbacks[entityModel.id] = {
-						id: entityModel.id,
-						controlId: controlId,
-						feedbackId: entityModel.definitionId,
-						options: entityModel.options,
+			const imageSize = control.getBitmapSize()
+			for (const entity of controlEntities) {
+				if (entity.type !== EntityModelType.Feedback) continue
 
-						isInverted: !!entityModel.isInverted,
+				const entityModel = entity.asEntityModel(false)
+				allFeedbacks[entityModel.id] = {
+					id: entityModel.id,
+					controlId: controlId,
+					feedbackId: entityModel.definitionId,
+					options: entityModel.options,
 
-						upgradeIndex: entityModel.upgradeIndex ?? null,
-						disabled: !!entityModel.disabled,
+					isInverted: !!entityModel.isInverted,
 
-						image: imageSize ?? undefined,
-					}
+					upgradeIndex: entityModel.upgradeIndex ?? null,
+					disabled: !!entityModel.disabled,
+
+					image: imageSize ?? undefined,
 				}
 			}
 		}
@@ -822,7 +824,7 @@ export class SocketEventsHandler {
 				if (feedback) {
 					const control = this.#deps.controls.getControl(feedback.controlId)
 					const found =
-						control?.supportsFeedbacks &&
+						control?.supportsEntities &&
 						control.feedbacks.feedbackReplace(
 							{
 								id: feedback.id,

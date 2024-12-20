@@ -68,7 +68,6 @@ export class ControlTrigger
 	readonly supportsEvents = true
 	readonly supportsSteps = false
 	readonly supportsEntities = true
-	readonly supportsFeedbacks = true
 	readonly supportsStyle = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = true

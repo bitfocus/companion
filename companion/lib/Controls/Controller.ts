@@ -144,7 +144,7 @@ export class ControlsController extends CoreBase {
 	 */
 	clearConnectionState(connectionId: string): void {
 		for (const control of this.#controls.values()) {
-			if (control.supportsActions || control.supportsFeedbacks) {
+			if (control.supportsEntities) {
 				control.clearConnectionState(connectionId)
 			}
 		}
@@ -849,7 +849,7 @@ export class ControlsController extends CoreBase {
 	 */
 	forgetConnection(connectionId: string): void {
 		for (const control of this.#controls.values()) {
-			if (control.supportsActions || control.supportsFeedbacks) {
+			if (control.supportsEntities) {
 				control.forgetConnection(connectionId)
 			}
 		}

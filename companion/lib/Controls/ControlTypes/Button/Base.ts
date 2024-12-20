@@ -44,7 +44,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 {
 	readonly supportsStyle = true
 	readonly supportsEntities = true
-	readonly supportsFeedbacks = true
 	readonly supportsOptions = true
 	readonly supportsPushed = true
 
