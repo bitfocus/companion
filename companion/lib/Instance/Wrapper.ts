@@ -367,16 +367,19 @@ export class SocketEventsHandler {
 	 */
 	async entityLearnValues(
 		entity: SomeEntityModel,
-		controlId: string,
-		learnTimeout: number | undefined
+		controlId: string
 	): Promise<CompanionOptionValues | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
-
-		const control = this.#deps.controls.getControl(controlId)
 
 		try {
 			switch (entity.type) {
 				case EntityModelType.Action: {
+					const feedbackSpec = this.#deps.instanceDefinitions.getActionDefinition(
+						this.connectionId,
+						entity.definitionId
+					)
+					const learnTimeout = feedbackSpec?.learnTimeout
+
 					const msg = await this.#ipcWrapper.sendWithCb(
 						'learnAction',
 						{
@@ -397,6 +400,14 @@ export class SocketEventsHandler {
 					return msg.options
 				}
 				case EntityModelType.Feedback: {
+					const feedbackSpec = this.#deps.instanceDefinitions.getFeedbackDefinition(
+						this.connectionId,
+						entity.definitionId
+					)
+					const learnTimeout = feedbackSpec?.learnTimeout
+
+					const control = this.#deps.controls.getControl(controlId)
+
 					const msg = await this.#ipcWrapper.sendWithCb(
 						'learnFeedback',
 						{

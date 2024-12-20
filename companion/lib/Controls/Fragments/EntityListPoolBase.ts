@@ -33,7 +33,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #internalModule: InternalController
 	readonly #moduleHost: ModuleHost
 
-	readonly #controlId: string
+	protected readonly controlId: string
 
 	/**
 	 * Commit changes to the database and disk
@@ -48,7 +48,7 @@ export abstract class ControlEntityListPoolBase {
 	protected constructor(props: ControlEntityListPoolProps) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
-		this.#controlId = props.controlId
+		this.controlId = props.controlId
 		this.commitChange = props.commitChange
 		this.triggerRedraw = props.triggerRedraw
 
@@ -62,7 +62,7 @@ export abstract class ControlEntityListPoolBase {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#moduleHost,
-			this.#controlId,
+			this.controlId,
 			null,
 			listDefinition
 		)
@@ -458,7 +458,7 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	async postProcessImport(): Promise<void> {
 		await Promise.all(this.getAllEntityLists().map((list) => list.postProcessImport())).catch((e) => {
-			this.logger.silly(`postProcessImport for ${this.#controlId} failed: ${e.message}`)
+			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
 		})
 	}
 

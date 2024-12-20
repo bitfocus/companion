@@ -299,10 +299,7 @@ export class ControlEntityInstance {
 		const connection = this.#moduleHost.getChild(this.connectionId)
 		if (!connection) return false
 
-		const feedbackSpec = this.#instanceDefinitions.getFeedbackDefinition(this.connectionId, feedback.type)
-		const learnTimeout = feedbackSpec?.learnTimeout
-
-		const newOptions = await connection.entityLearnValues(this.asEntityModel(), this.#controlId, learnTimeout)
+		const newOptions = await connection.entityLearnValues(this.asEntityModel(), this.#controlId)
 		if (newOptions) {
 			this.setOptions(newOptions)
 

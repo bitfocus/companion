@@ -114,23 +114,27 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	asNormalButtonSteps(): NormalButtonSteps {
 		const stepsJson: NormalButtonSteps = {}
 		for (const [id, step] of this.#steps) {
-			const actionSets: ActionSetsModel = {
-				down: [],
-				up: [],
-				rotate_left: undefined,
-				rotate_right: undefined,
-			}
-			for (const [setId, set] of step.sets) {
-				actionSets[setId] = set.getDirectEntities().map((ent) => ent.asEntityModel(true))
-			}
-
 			stepsJson[id] = {
-				action_sets: actionSets,
+				action_sets: this.#stepAsActionSetsModel(step),
 				options: step.options,
 			}
 		}
 
 		return stepsJson
+	}
+
+	#stepAsActionSetsModel(step: ControlEntityListActionStep): ActionSetsModel {
+		const actionSets: ActionSetsModel = {
+			down: [],
+			up: [],
+			rotate_left: undefined,
+			rotate_right: undefined,
+		}
+		for (const [setId, set] of step.sets) {
+			actionSets[setId] = set.getDirectEntities().map((ent) => ent.asEntityModel(true))
+		}
+
+		return actionSets
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
@@ -438,7 +442,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const stepToCopy = this.#steps.get(stepId)
 		if (!stepToCopy) return false
 
-		const newStep = this.#getNewStepValue(cloneDeep(stepToCopy.asActionStepModel()), cloneDeep(stepToCopy.options))
+		const newStep = this.#getNewStepValue(
+			cloneDeep(this.#stepAsActionSetsModel(stepToCopy)),
+			cloneDeep(stepToCopy.options)
+		)
 
 		// add one after the last
 		const max = Math.max(...existingKeys)
@@ -447,7 +454,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#steps.set(newStepId, newStep)
 
 		// Treat it as an import, to make any ids unique
-		newStep.postProcessImport().catch((e) => {
+		Promise.all(Array.from(newStep.sets.values()).map((set) => set.postProcessImport())).catch((e) => {
 			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
 		})
 
