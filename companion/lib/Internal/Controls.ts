@@ -767,9 +767,9 @@ export class InternalControls implements InternalModuleFragment {
 			if (control && control.supportsPushed) {
 				let isPushed = !!control.pushed
 
-				if (!isPushed && feedback.options.latch_compatability && control.supportsSteps) {
+				if (!isPushed && feedback.options.latch_compatability && control.supportsActionSets) {
 					// Backwards compatibility for the old 'latching' behaviour
-					isPushed = control.getActiveStepIndex() !== 0
+					isPushed = control.actionSets.getActiveStepIndex() !== 0
 				}
 
 				return {
@@ -788,10 +788,10 @@ export class InternalControls implements InternalModuleFragment {
 			const theStep = feedback.options.step
 
 			const control = theControlId && this.#controlsController.getControl(theControlId)
-			if (control && control.supportsSteps) {
+			if (control && control.supportsActionSets) {
 				return {
 					referencedVariables: [],
-					value: control.getActiveStepIndex() + 1 === theStep,
+					value: control.actionSets.getActiveStepIndex() + 1 === theStep,
 				}
 			} else {
 				return {
@@ -1081,8 +1081,8 @@ export class InternalControls implements InternalModuleFragment {
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			if (control && control.supportsSteps) {
-				control.stepMakeCurrent(theStep)
+			if (control && control.supportsActionSets) {
+				control.actionSets.stepMakeCurrent(theStep)
 			}
 			return true
 		} else if (action.action == 'bank_current_step_condition') {
@@ -1104,8 +1104,8 @@ export class InternalControls implements InternalModuleFragment {
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
 			if (pressIt) {
-				if (control && control.supportsSteps) {
-					control.stepMakeCurrent(theStep)
+				if (control && control.supportsActionSets) {
+					control.actionSets.stepMakeCurrent(theStep)
 				}
 			}
 			return true
@@ -1124,8 +1124,8 @@ export class InternalControls implements InternalModuleFragment {
 			).value
 
 			if (pressIt) {
-				if (control && control.supportsSteps) {
-					control.stepMakeCurrent(theStep)
+				if (control && control.supportsActionSets) {
+					control.actionSets.stepMakeCurrent(theStep)
 				}
 			}
 			return true
@@ -1135,8 +1135,8 @@ export class InternalControls implements InternalModuleFragment {
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			if (control && control.supportsSteps) {
-				control.stepAdvanceDelta(action.options.amount)
+			if (control && control.supportsActionSets) {
+				control.actionSets.stepAdvanceDelta(action.options.amount)
 			}
 			return true
 		} else {

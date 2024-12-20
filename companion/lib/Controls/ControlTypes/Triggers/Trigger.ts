@@ -16,7 +16,6 @@ import type {
 	ControlWithOptions,
 	ControlWithoutActionSets,
 	ControlWithoutPushed,
-	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
@@ -52,7 +51,6 @@ export class ControlTrigger
 	implements
 		ControlWithActions,
 		ControlWithEvents,
-		ControlWithoutSteps,
 		ControlWithoutStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
@@ -62,7 +60,6 @@ export class ControlTrigger
 
 	readonly supportsActions = true
 	readonly supportsEvents = true
-	readonly supportsSteps = false
 	readonly supportsEntities = true
 	readonly supportsStyle = false
 	readonly supportsActionSets = false

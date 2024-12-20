@@ -535,8 +535,8 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsSteps) {
-				return control.stepAdd()
+			if (control.supportsActionSets) {
+				return control.actionSets.stepAdd()
 			} else {
 				throw new Error(`Control "${controlId}" does not support steps`)
 			}
@@ -545,8 +545,8 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsSteps) {
-				return control.stepDuplicate(stepId)
+			if (control.supportsActionSets) {
+				return control.actionSets.stepDuplicate(stepId)
 			} else {
 				throw new Error(`Control "${controlId}" does not support steps`)
 			}
@@ -555,8 +555,8 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsSteps) {
-				return control.stepRemove(stepId)
+			if (control.supportsActionSets) {
+				return control.actionSets.stepRemove(stepId)
 			} else {
 				throw new Error(`Control "${controlId}" does not support steps`)
 			}
@@ -566,8 +566,8 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsSteps) {
-				return control.stepSwap(stepId1, stepId2)
+			if (control.supportsActionSets) {
+				return control.actionSets.stepSwap(stepId1, stepId2)
 			} else {
 				throw new Error(`Control "${controlId}" does not support steps`)
 			}
@@ -577,8 +577,8 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsSteps) {
-				return control.stepSelectCurrent(stepId)
+			if (control.supportsActionSets) {
+				return control.actionSets.stepSelectCurrent(stepId)
 			} else {
 				throw new Error(`Control "${controlId}" does not support steps`)
 			}
@@ -588,8 +588,8 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsSteps) {
-				return control.stepRename(stepId, newName)
+			if (control.supportsActionSets) {
+				return control.actionSets.stepRename(stepId, newName)
 			} else {
 				throw new Error(`Control "${controlId}" does not support steps`)
 			}

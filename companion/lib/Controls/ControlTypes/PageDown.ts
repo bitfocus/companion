@@ -6,7 +6,6 @@ import type {
 	ControlWithoutEvents,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
-	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../IControlFragments.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
@@ -36,7 +35,6 @@ export class ControlButtonPageDown
 	extends ControlBase<PageDownButtonModel>
 	implements
 		ControlWithoutActions,
-		ControlWithoutSteps,
 		ControlWithoutStyle,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
@@ -46,7 +44,6 @@ export class ControlButtonPageDown
 	readonly type = 'pagedown'
 
 	readonly supportsActions = false
-	readonly supportsSteps = false
 	readonly supportsEntities = false
 	readonly supportsStyle = false
 	readonly supportsEvents = false

@@ -1,17 +1,10 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep } from 'lodash-es'
-import { FragmentActions } from '../../Fragments/FragmentActions.js'
-import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
-import type {
-	ControlWithActionSets,
-	ControlWithActions,
-	ControlWithSteps,
-	ControlWithoutEvents,
-} from '../../IControlFragments.js'
+import type { ControlWithActionSets, ControlWithActions, ControlWithoutEvents } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { NormalButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -39,12 +32,11 @@ import type { ControlActionSetAndStepsManager } from '../../Fragments/ControlAct
  */
 export class ControlButtonNormal
 	extends ButtonControlBase<NormalButtonModel, NormalButtonOptions>
-	implements ControlWithSteps, ControlWithActions, ControlWithoutEvents, ControlWithActionSets
+	implements ControlWithActions, ControlWithoutEvents, ControlWithActionSets
 {
 	readonly type = 'button'
 
 	readonly supportsActions = true
-	readonly supportsSteps = true
 	readonly supportsEvents = false
 	readonly supportsActionSets = true
 
@@ -77,9 +69,7 @@ export class ControlButtonNormal
 			rotaryActions: false,
 			stepAutoProgress: true,
 		}
-		this.steps = {
-			0: this.#getNewStepValue(null, null),
-		}
+
 		this.#current_step_id = '0'
 
 		if (!storage) {
@@ -94,13 +84,6 @@ export class ControlButtonNormal
 			this.options = Object.assign(this.options, storage.options || {})
 			this.feedbacks.baseStyle = Object.assign(this.feedbacks.baseStyle, storage.style || {})
 			this.entities.loadStorage(storage, true, isImport)
-
-			if (storage.steps) {
-				this.steps = {}
-				for (const [id, stepObj] of Object.entries(storage.steps)) {
-					this.steps[id] = this.#getNewStepValue(stepObj.action_sets, stepObj.options)
-				}
-			}
 
 			this.#current_step_id = this.entities.getStepIds()[0]
 
@@ -145,15 +128,6 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Get the index of the current (next to execute) step
-	 * @returns The index of current step
-	 */
-	getActiveStepIndex(): number {
-		const out = this.entities.getStepIds().indexOf(this.#current_step_id)
-		return out !== -1 ? out : 0
-	}
-
-	/**
 	 * Get the complete style object of a button
 	 */
 	override getDrawStyle(): DrawStyleButtonModel {
@@ -165,38 +139,6 @@ export class ControlButtonNormal
 		}
 
 		return style
-	}
-
-	#getNewStepValue(existingActions: ActionSetsModel | null, existingOptions: ActionStepOptions | null) {
-		const action_sets: ActionSetsModel = existingActions || {
-			down: [],
-			up: [],
-			rotate_left: undefined,
-			rotate_right: undefined,
-		}
-
-		const options = existingOptions || cloneDeep(ControlButtonNormal.DefaultStepOptions)
-
-		action_sets.down = action_sets.down || []
-		action_sets.up = action_sets.up || []
-
-		if (this.options.rotaryActions) {
-			action_sets.rotate_left = action_sets.rotate_left || []
-			action_sets.rotate_right = action_sets.rotate_right || []
-		}
-
-		const actions = new FragmentActions(
-			this.deps.instance.definitions,
-			this.deps.internalModule,
-			this.deps.instance.moduleHost,
-			this.controlId,
-			this.commitChange.bind(this)
-		)
-
-		actions.options = options
-		actions.loadStorage(action_sets, true, !!existingActions)
-
-		return actions
 	}
 
 	/**
@@ -236,9 +178,7 @@ export class ControlButtonNormal
 	optionsSetField(key: string, value: any): boolean {
 		// Check if rotary_actions should be added/remove
 		if (key === 'rotaryActions') {
-			for (const step of Object.values(this.steps)) {
-				step.setupRotaryActionSets(!!value, true)
-			}
+			this.entities.setupRotaryActionSets(!!value, true)
 		}
 
 		return super.optionsSetField(key, value)
@@ -376,196 +316,6 @@ export class ControlButtonNormal
 				})
 			}
 		}
-	}
-
-	/**
-	 * Add a step to this control
-	 * @returns Id of new step
-	 */
-	stepAdd(): string {
-		const existingKeys = GetStepIds(this.steps)
-			.map((k) => Number(k))
-			.filter((k) => !isNaN(k))
-		if (existingKeys.length === 0) {
-			// add the default '0' set
-			this.steps['0'] = this.#getNewStepValue(null, null)
-
-			this.commitChange(true)
-
-			return '0'
-		} else {
-			// add one after the last
-			const max = Math.max(...existingKeys)
-
-			const stepId = `${max + 1}`
-			this.steps[stepId] = this.#getNewStepValue(null, null)
-
-			this.commitChange(true)
-
-			return stepId
-		}
-	}
-
-	/**
-	 * Progress through the action-sets
-	 * @param amount Number of steps to progress
-	 */
-	stepAdvanceDelta(amount: number): boolean {
-		if (amount && typeof amount === 'number') {
-			const all_steps = GetStepIds(this.steps)
-			if (all_steps.length > 0) {
-				const current = all_steps.indexOf(this.#current_step_id)
-
-				let newIndex = (current === -1 ? 0 : current) + amount
-				while (newIndex < 0) newIndex += all_steps.length
-				newIndex = newIndex % all_steps.length
-
-				const newStepId = all_steps[newIndex]
-				return this.stepSelectCurrent(newStepId)
-			}
-		}
-
-		return false
-	}
-
-	/**
-	 * Duplicate a step on this control
-	 * @param stepId the id of the step to duplicate
-	 */
-	stepDuplicate(stepId: string): boolean {
-		const existingKeys = GetStepIds(this.steps)
-			.map((k) => Number(k))
-			.filter((k) => !isNaN(k))
-
-		const stepToCopy = this.steps[stepId]
-		if (!stepToCopy) return false
-
-		const newStep = this.#getNewStepValue(cloneDeep(stepToCopy.asActionStepModel()), cloneDeep(stepToCopy.options))
-
-		// add one after the last
-		const max = Math.max(...existingKeys)
-
-		const newStepId = `${max + 1}`
-		this.steps[newStepId] = newStep
-
-		// Treat it as an import, to make any ids unique
-		newStep.postProcessImport().catch((e) => {
-			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
-		})
-
-		// Ensure the ui knows which step is current
-		this.sendRuntimePropsChange()
-
-		// Save the change, and perform a draw
-		this.commitChange(true)
-
-		return true
-	}
-
-	/**
-	 * Set the current (next to execute) action-set by index
-	 * @param index The step index to make the next
-	 */
-	stepMakeCurrent(index: number): boolean {
-		if (typeof index === 'number') {
-			const stepId = this.entities.getStepIds()[index - 1]
-			if (stepId !== undefined) {
-				return this.stepSelectCurrent(stepId)
-			}
-		}
-
-		return false
-	}
-
-	/**
-	 * Remove an action-set from this control
-	 * @param stepId the id of the action-set
-	 */
-	stepRemove(stepId: string): boolean {
-		const oldKeys = GetStepIds(this.steps)
-
-		if (oldKeys.length > 1) {
-			if (this.steps[stepId]) {
-				this.steps[stepId].destroy()
-				delete this.steps[stepId]
-
-				// Update the current step
-				const oldIndex = oldKeys.indexOf(stepId)
-				let newIndex = oldIndex + 1
-				if (newIndex >= oldKeys.length) {
-					newIndex = 0
-				}
-				if (newIndex !== oldIndex) {
-					this.#current_step_id = oldKeys[newIndex]
-
-					this.sendRuntimePropsChange()
-				}
-
-				// Save the change, and perform a draw
-				this.commitChange(true)
-
-				return true
-			}
-		}
-
-		return false
-	}
-
-	/**
-	 * Set the current (next to execute) action-set by id
-	 * @param stepId The step id to make the next
-	 */
-	stepSelectCurrent(stepId: string): boolean {
-		if (this.steps[stepId]) {
-			// Ensure it isn't currently pressed
-			// this.setPushed(false)
-
-			this.#current_step_id = stepId
-
-			this.sendRuntimePropsChange()
-
-			this.triggerRedraw()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Swap two action-sets
-	 * @param stepId1 One of the action-sets
-	 * @param stepId2 The other action-set
-	 */
-	stepSwap(stepId1: string, stepId2: string): boolean {
-		if (this.steps[stepId1] && this.steps[stepId2]) {
-			const tmp = this.steps[stepId1]
-			this.steps[stepId1] = this.steps[stepId2]
-			this.steps[stepId2] = tmp
-
-			this.commitChange(false)
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Rename step
-	 * @param stepId the id of the action-set
-	 * @param newName the new name of the step
-	 */
-	stepRename(stepId: string, newName: string | undefined): boolean {
-		if (this.steps[stepId]) {
-			if (newName !== undefined) {
-				this.steps[stepId].rename(newName)
-			}
-			this.commitChange(true)
-			return true
-		}
-
-		return false
 	}
 
 	/**

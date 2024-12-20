@@ -6,14 +6,15 @@ import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { transformEntityToFeedbacks } from './Util.js'
-import type { ActionSetId, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
+import { cloneDeep } from 'lodash-es'
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
-	#feedbacks: ControlEntityList
+	readonly #feedbacks: ControlEntityList
 
-	#steps: Map<string, ControlEntityListActionStep>
+	readonly #steps = new Map<string, ControlEntityListActionStep>()
 
 	constructor(props: ControlEntityListPoolProps) {
 		super(props)
@@ -30,10 +31,19 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 				label: 'Feedbacks',
 			}
 		)
+
+		this.#steps.set('0', this.#getNewStepValue(null, null))
 	}
 
 	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean) {
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
+
+		if (storage.steps) {
+			this.#steps.clear()
+			for (const [id, stepObj] of Object.entries(storage.steps)) {
+				this.#steps.set(id, this.#getNewStepValue(stepObj.action_sets, stepObj.options))
+			}
+		}
 	}
 
 	/**
@@ -252,6 +262,238 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		}
 
 		if (!skipCommit) this.commitChange(true)
+	}
+
+	#getNewStepValue(
+		existingActions: ActionSetsModel | null,
+		existingOptions: ActionStepOptions | null
+	): ControlEntityListActionStep {
+		const options = existingOptions || cloneDeep(ControlButtonNormal.DefaultStepOptions)
+
+		const downList = this.createEntityList({ type: EntityModelType.Action, groupId: '', label: 'Down' })
+		downList.loadStorage(existingActions?.down || [], true, !!existingActions)
+		const upList = this.createEntityList({ type: EntityModelType.Action, groupId: '', label: 'Up' })
+		upList.loadStorage(existingActions?.up || [], true, !!existingActions)
+
+		const sets = new Map<ActionSetId, ControlEntityList>()
+		sets.set('down', downList)
+		sets.set('up', upList)
+
+		if (this.options.rotaryActions) {
+			const rotateLeftList = this.createEntityList({ type: EntityModelType.Action, groupId: '', label: 'rotate left' })
+			rotateLeftList.loadStorage(existingActions?.rotate_left || [], true, !!existingActions)
+			const rotateRightList = this.createEntityList({
+				type: EntityModelType.Action,
+				groupId: '',
+				label: 'rotate right',
+			})
+			rotateRightList.loadStorage(existingActions?.rotate_right || [], true, !!existingActions)
+
+			sets.set('rotate_left', rotateLeftList)
+			sets.set('rotate_right', rotateRightList)
+		}
+
+		return {
+			sets: sets,
+			options: options,
+		}
+	}
+
+	/**
+	 * Get the index of the current (next to execute) step
+	 * @returns The index of current step
+	 */
+	getActiveStepIndex(): number {
+		const out = this.getStepIds().indexOf(this.#current_step_id)
+		return out !== -1 ? out : 0
+	}
+
+	/**
+	 * Add a step to this control
+	 * @returns Id of new step
+	 */
+	stepAdd(): string {
+		const existingKeys = this.getStepIds()
+			.map((k) => Number(k))
+			.filter((k) => !isNaN(k))
+		if (existingKeys.length === 0) {
+			// add the default '0' set
+			this.#steps.set('0', this.#getNewStepValue(null, null))
+
+			this.commitChange(true)
+
+			return '0'
+		} else {
+			// add one after the last
+			const max = Math.max(...existingKeys)
+
+			const stepId = `${max + 1}`
+			this.#steps.set(stepId, this.#getNewStepValue(null, null))
+
+			this.commitChange(true)
+
+			return stepId
+		}
+	}
+
+	/**
+	 * Progress through the action-sets
+	 * @param amount Number of steps to progress
+	 */
+	stepAdvanceDelta(amount: number): boolean {
+		if (amount && typeof amount === 'number') {
+			const all_steps = this.getStepIds()
+			if (all_steps.length > 0) {
+				const current = all_steps.indexOf(this.#current_step_id)
+
+				let newIndex = (current === -1 ? 0 : current) + amount
+				while (newIndex < 0) newIndex += all_steps.length
+				newIndex = newIndex % all_steps.length
+
+				const newStepId = all_steps[newIndex]
+				return this.stepSelectCurrent(newStepId)
+			}
+		}
+
+		return false
+	}
+
+	/**
+	 * Duplicate a step on this control
+	 * @param stepId the id of the step to duplicate
+	 */
+	stepDuplicate(stepId: string): boolean {
+		const existingKeys = this.getStepIds()
+			.map((k) => Number(k))
+			.filter((k) => !isNaN(k))
+
+		const stepToCopy = this.#steps.get(stepId)
+		if (!stepToCopy) return false
+
+		const newStep = this.#getNewStepValue(cloneDeep(stepToCopy.asActionStepModel()), cloneDeep(stepToCopy.options))
+
+		// add one after the last
+		const max = Math.max(...existingKeys)
+
+		const newStepId = `${max + 1}`
+		this.#steps.set(newStepId, newStep)
+
+		// Treat it as an import, to make any ids unique
+		newStep.postProcessImport().catch((e) => {
+			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
+		})
+
+		// Ensure the ui knows which step is current
+		this.sendRuntimePropsChange()
+
+		// Save the change, and perform a draw
+		this.commitChange(true)
+
+		return true
+	}
+
+	/**
+	 * Set the current (next to execute) action-set by index
+	 * @param index The step index to make the next
+	 */
+	stepMakeCurrent(index: number): boolean {
+		if (typeof index === 'number') {
+			const stepId = this.getStepIds()[index - 1]
+			if (stepId !== undefined) {
+				return this.stepSelectCurrent(stepId)
+			}
+		}
+
+		return false
+	}
+
+	/**
+	 * Remove an action-set from this control
+	 * @param stepId the id of the action-set
+	 */
+	stepRemove(stepId: string): boolean {
+		const oldKeys = GetStepIds(this.steps)
+
+		// Ensure there is at least one step
+		if (oldKeys.length === 1) return false
+
+		const step = this.#steps.get(stepId)
+		if (!step) return false
+
+		step.destroy()
+		this.#steps.delete(stepId)
+
+		// Update the current step
+		const oldIndex = oldKeys.indexOf(stepId)
+		let newIndex = oldIndex + 1
+		if (newIndex >= oldKeys.length) {
+			newIndex = 0
+		}
+		if (newIndex !== oldIndex) {
+			this.#current_step_id = oldKeys[newIndex]
+
+			this.sendRuntimePropsChange()
+		}
+
+		// Save the change, and perform a draw
+		this.commitChange(true)
+
+		return true
+	}
+
+	/**
+	 * Set the current (next to execute) action-set by id
+	 * @param stepId The step id to make the next
+	 */
+	stepSelectCurrent(stepId: string): boolean {
+		const step = this.#steps.get(stepId)
+		if (!step) return false
+
+		// Ensure it isn't currently pressed
+		// this.setPushed(false)
+
+		this.#current_step_id = stepId
+
+		this.sendRuntimePropsChange()
+
+		this.triggerRedraw()
+
+		return true
+	}
+
+	/**
+	 * Swap two action-sets
+	 * @param stepId1 One of the action-sets
+	 * @param stepId2 The other action-set
+	 */
+	stepSwap(stepId1: string, stepId2: string): boolean {
+		const step1 = this.#steps.get(stepId1)
+		const step2 = this.#steps.get(stepId2)
+
+		if (!step1 || !step2) return false
+
+		this.#steps.set(stepId1, step2)
+		this.#steps.set(stepId2, step1)
+
+		this.commitChange(false)
+
+		return true
+	}
+
+	/**
+	 * Rename step
+	 * @param stepId the id of the action-set
+	 * @param newName the new name of the step
+	 */
+	stepRename(stepId: string, newName: string): boolean {
+		const step = this.#steps.get(stepId)
+		if (!step) return false
+
+		step.options.name = newName
+
+		this.commitChange(false)
+
+		return true
 	}
 }
 

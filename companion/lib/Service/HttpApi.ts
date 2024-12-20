@@ -456,12 +456,12 @@ export class ServiceHttpApi extends CoreBase {
 		}
 
 		const control = this.controls.getControl(controlId)
-		if (!control || !control.supportsSteps) {
+		if (!control || !control.supportsActionSets) {
 			res.status(204).send('No control')
 			return
 		}
 
-		if (!control.stepMakeCurrent(step)) {
+		if (!control.actionSets.stepMakeCurrent(step)) {
 			res.status(400).send('Bad step')
 			return
 		}

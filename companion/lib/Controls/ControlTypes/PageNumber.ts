@@ -5,7 +5,6 @@ import type {
 	ControlWithoutEvents,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
-	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../IControlFragments.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
@@ -36,7 +35,6 @@ export class ControlButtonPageNumber
 	extends ControlBase<PageNumberButtonModel>
 	implements
 		ControlWithoutActions,
-		ControlWithoutSteps,
 		ControlWithoutStyle,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
@@ -46,7 +44,6 @@ export class ControlButtonPageNumber
 	readonly type = 'pagenum'
 
 	readonly supportsActions = false
-	readonly supportsSteps = false
 	readonly supportsEntities = false
 	readonly supportsStyle = false
 	readonly supportsEvents = false
