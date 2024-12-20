@@ -57,6 +57,10 @@ export class ControlEntityInstance {
 		return this.#data.definitionId
 	}
 
+	get type(): EntityModelType {
+		return this.#data.type
+	}
+
 	/**
 	 * Get the id of the connection this action belongs to
 	 */
@@ -181,6 +185,7 @@ export class ControlEntityInstance {
 		const connection = this.#moduleHost.getChild(this.#data.connectionId, true)
 		if (connection) {
 			// nocommit - implement this
+			// connection.feedbackDelete(this.asFeedbackInstance()).catch((e) => {
 			// connection.actionDelete(this.asActionInstance()).catch((e) => {
 			// 	this.#logger.silly(`action_delete to connection failed: ${e.message}`)
 			// })
@@ -476,22 +481,22 @@ export class ControlEntityInstance {
 	// // 	return this.#children.popAction(index)
 	// // }
 
-	// /**
-	//  * Push a child action to the list
-	//  * Note: this is used when moving a action from a different parent. Lifecycle is not managed
-	//  */
-	// pushChild(action: FragmentActionInstance, groupId: string, index: number): void {
-	// 	const actionGroup = this.#getOrCreateActionGroup(groupId)
-	// 	return actionGroup.pushAction(action, index)
-	// }
+	/**
+	 * Push a child entity to the list
+	 * Note: this is used when moving an entity from a different parent. Lifecycle is not managed
+	 */
+	pushChild(entity: ControlEntityInstance, groupId: string, index: number): void {
+		const actionGroup = this.#getOrCreateChildGroup(groupId)
+		return actionGroup.pushEntity(entity, index)
+	}
 
-	// /**
-	//  * Check if this list can accept a specified child
-	//  */
-	// canAcceptChild(groupId: string, action: FragmentActionInstance): boolean {
-	// 	const actionGroup = this.#getOrCreateActionGroup(groupId)
-	// 	return actionGroup.canAcceptAction(action)
-	// }
+	/**
+	 * Check if this list can accept a provided entity
+	 */
+	canAcceptChild(groupId: string, entity: ControlEntityInstance): boolean {
+		const childGroup = this.#getOrCreateChildGroup(groupId)
+		return childGroup.canAcceptEntity(entity)
+	}
 
 	/**
 	 * Recursively get all the child entities
@@ -589,14 +594,14 @@ export class ControlEntityInstance {
 		visitEntityModel(visitor, this.#data)
 	}
 
-	asEntityModel(): SomeEntityModel {
+	asEntityModel(deep = true): SomeEntityModel {
 		const data: SomeEntityModel = { ...this.#data }
 
-		if (this.connectionId === 'internal') {
+		if (deep && this.connectionId === 'internal') {
 			data.children = {}
 
 			for (const [groupId, childGroup] of this.#children) {
-				data.children[groupId] = childGroup.getDirectEntities().map((ent) => ent.asEntityModel())
+				data.children[groupId] = childGroup.getDirectEntities().map((ent) => ent.asEntityModel(true))
 			}
 		}
 

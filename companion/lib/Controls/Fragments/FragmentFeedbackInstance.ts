@@ -162,42 +162,10 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
-	 * Get this feedback as a `FeedbackInstance`
-	 */
-	asFeedbackInstance(): FeedbackInstance {
-		return {
-			...this.#data,
-			children: this.connectionId === 'internal' ? this.#children.get('children')?.asFeedbackInstances() : undefined,
-			advancedChildren:
-				this.connectionId === 'internal' ? this.#children.get('advancedChildren')?.asFeedbackInstances() : undefined,
-		}
-	}
-
-	/**
 	 * Get the definition for this feedback
 	 */
 	getDefinition(): FeedbackDefinition | undefined {
 		return this.#instanceDefinitions.getFeedbackDefinition(this.#data.instance_id, this.#data.type)
-	}
-
-	/**
-	 * Inform the instance of a removed feedback
-	 */
-	cleanup() {
-		// Inform relevant module
-		const connection = this.#moduleHost.getChild(this.#data.instance_id, true)
-		if (connection) {
-			connection.feedbackDelete(this.asFeedbackInstance()).catch((e) => {
-				this.#logger.silly(`feedback_delete to connection failed: ${e.message}`)
-			})
-		}
-
-		// Remove from cached feedback values
-		this.#cachedValue = undefined
-
-		for (const childGroup of this.#children.values()) {
-			childGroup.cleanup()
-		}
 	}
 
 	/**
@@ -226,75 +194,6 @@ export class FragmentFeedbackInstance {
 				childGroup.subscribe(recursive, onlyConnectionId)
 			}
 		}
-	}
-
-	/**
-	 * Update an style property for a boolean feedback
-	 * @param key the key/name of the property
-	 * @param value the new value
-	 * @returns success
-	 */
-	setStyleValue(key: string, value: any): boolean {
-		if (key === 'png64' && value !== null) {
-			if (!value.match(/data:.*?image\/png/)) {
-				return false
-			}
-
-			value = value.replace(/^.*base64,/, '')
-		}
-
-		const definition = this.getDefinition()
-		if (!definition || definition.type !== 'boolean') return false
-
-		if (!this.#data.style) this.#data.style = {}
-		// @ts-ignore
-		this.#data.style[key] = value
-
-		return true
-	}
-
-	/**
-	 * Update the selected style properties for a boolean feedback
-	 * @param selected the properties to be selected
-	 * @param baseStyle Style of the button without feedbacks applied
-	 * @returns success
-	 * @access public
-	 */
-	setStyleSelection(selected: string[], baseStyle: ButtonStyleProperties): boolean {
-		const definition = this.getDefinition()
-		if (!definition || definition.type !== 'boolean') return false
-
-		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.style || {}
-		const oldStyle: Record<string, any> = this.#data.style || {}
-		const newStyle: Record<string, any> = {}
-
-		for (const key of selected) {
-			if (key in oldStyle) {
-				// preserve existing value
-				newStyle[key] = oldStyle[key]
-			} else {
-				// copy button value as a default
-				// @ts-ignore
-				newStyle[key] = defaultStyle[key] !== undefined ? defaultStyle[key] : baseStyle[key]
-
-				// png needs to be set to something harmless
-				if (key === 'png64' && !newStyle[key]) {
-					newStyle[key] = null
-				}
-			}
-
-			if (key === 'text') {
-				// also preserve textExpression
-				newStyle['textExpression'] =
-					oldStyle['textExpression'] ??
-					/*defaultStyle['textExpression'] !== undefined
-								? defaultStyle['textExpression']
-								: */ baseStyle['textExpression']
-			}
-		}
-		this.#data.style = newStyle
-
-		return true
 	}
 
 	/**
@@ -346,14 +245,6 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
-	 * Check if this list can accept a specified child
-	 */
-	canAcceptChild(groupId: FeedbackChildGroup, feedback: FragmentFeedbackInstance): boolean {
-		const childGroup = this.#getOrCreateFeedbackGroup(groupId)
-		return childGroup.canAcceptFeedback(feedback)
-	}
-
-	/**
 	 * Recursively get all the feedbacks
 	 */
 	getChildrenOfGroup(groupId: FeedbackChildGroup): FragmentFeedbackInstance[] {
@@ -379,12 +270,5 @@ export class FragmentFeedbackInstance {
 		if (!skipNotifyModule) {
 			this.subscribe(false)
 		}
-	}
-
-	/**
-	 * Visit any references in the current feedback
-	 */
-	visitReferences(visitor: InternalVisitor): void {
-		visitFeedbackInstance(visitor, this.#data)
 	}
 }

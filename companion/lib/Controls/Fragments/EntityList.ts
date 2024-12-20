@@ -9,6 +9,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from './EntityInstance.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
+import { clamp } from '../../Resources/Util.js'
 
 export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitions
@@ -159,8 +160,6 @@ export class ControlEntityList {
 	 * @param isCloned Whether this is a cloned instance
 	 */
 	addEntity(entityModel: SomeEntityModel, isCloned?: boolean): ControlEntityInstance {
-		if (entityModel.type !== this.#listDefinition.type) throw new Error('EntityList cannot accept this type of entity')
-
 		const newEntity = new ControlEntityInstance(
 			this.#instanceDefinitions,
 			this.#internalModule,
@@ -170,12 +169,7 @@ export class ControlEntityList {
 			!!isCloned
 		)
 
-		// If a feedback list, check that the feedback is of the correct type
-		if (this.#listDefinition.type === EntityModelType.Feedback) {
-			const feedbackDefinition = newEntity.getDefinition()
-			if (this.#listDefinition.booleanFeedbacksOnly && feedbackDefinition?.type !== 'boolean')
-				throw new Error('EntityList cannot accept this type of feedback')
-		}
+		if (!this.canAcceptEntity(newEntity)) throw new Error('EntityList cannot accept this type of entity')
 
 		this.#entities.push(newEntity)
 
@@ -203,47 +197,54 @@ export class ControlEntityList {
 		return false
 	}
 
-	// /**
-	//  * Reorder a action in the list
-	//  */
-	// moveAction(oldIndex: number, newIndex: number): void {
-	// 	oldIndex = clamp(oldIndex, 0, this.#actions.length)
-	// 	newIndex = clamp(newIndex, 0, this.#actions.length)
-	// 	this.#actions.splice(newIndex, 0, ...this.#actions.splice(oldIndex, 1))
-	// }
+	/**
+	 * Reorder an entity directly in in the list
+	 */
+	moveEntity(oldIndex: number, newIndex: number): void {
+		oldIndex = clamp(oldIndex, 0, this.#entities.length)
+		newIndex = clamp(newIndex, 0, this.#entities.length)
+		this.#entities.splice(newIndex, 0, ...this.#entities.splice(oldIndex, 1))
+	}
 
-	// /**
-	//  * Pop a child action from the list
-	//  * Note: this is used when moving a action to a different parent. Lifecycle is not managed
-	//  */
-	// popAction(index: number): FragmentActionInstance | undefined {
-	// 	const action = this.#actions[index]
-	// 	if (!action) return undefined
+	/**
+	 * Pop an entity from the list
+	 * Note: this is used when moving an entity to a different parent. Lifecycle is not managed
+	 */
+	popEntity(index: number): ControlEntityInstance | undefined {
+		const entity = this.#entities[index]
+		if (!entity) return undefined
 
-	// 	this.#actions.splice(index, 1)
+		this.#entities.splice(index, 1)
 
-	// 	return action
-	// }
+		return entity
+	}
 
-	// /**
-	//  * Push a child action to the list
-	//  * Note: this is used when moving a action from a different parent. Lifecycle is not managed
-	//  */
-	// pushAction(action: FragmentActionInstance, index: number): void {
-	// 	index = clamp(index, 0, this.#actions.length)
+	/**
+	 * Push an entity to the list
+	 * Note: this is used when moving an entity from a different parent. Lifecycle is not managed
+	 */
+	pushEntity(entity: ControlEntityInstance, index: number): void {
+		if (this.canAcceptEntity(entity)) throw new Error('EntityList cannot accept this type of entity')
 
-	// 	this.#actions.splice(index, 0, action)
-	// }
+		index = clamp(index, 0, this.#entities.length)
 
-	// /**
-	//  * Check if this list can accept a specified child
-	//  */
-	// canAcceptAction(action: FragmentActionInstance): boolean {
-	// 	const definition = action.getDefinition()
-	// 	if (!definition) return false
+		this.#entities.splice(index, 0, entity)
+	}
 
-	// 	return true
-	// }
+	/**
+	 * Check if this list can accept a specified entity
+	 */
+	canAcceptEntity(entity: ControlEntityInstance): boolean {
+		if (this.#listDefinition.type !== entity.type) return true
+
+		// If a feedback list, check that the feedback is of the correct type
+		if (this.#listDefinition.type === EntityModelType.Feedback) {
+			const feedbackDefinition = entity.getDefinition()
+			if (this.#listDefinition.booleanFeedbacksOnly && feedbackDefinition?.type !== 'boolean') return false
+		}
+
+		return true
+	}
 
 	/**
 	 * Duplicate an entity
@@ -251,7 +252,7 @@ export class ControlEntityList {
 	duplicateEntity(id: string): ControlEntityInstance | undefined {
 		const entityIndex = this.#entities.findIndex((entity) => entity.id === id)
 		if (entityIndex !== -1) {
-			const entityModel = this.#entities[entityIndex].asEntityModel()
+			const entityModel = this.#entities[entityIndex].asEntityModel(true)
 			const newEntity = new ControlEntityInstance(
 				this.#instanceDefinitions,
 				this.#internalModule,

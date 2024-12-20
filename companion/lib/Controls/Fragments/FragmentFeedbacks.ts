@@ -119,46 +119,6 @@ export class FragmentFeedbacks {
 	}
 
 	/**
-	 * Move a feedback within the hierarchy
-	 * @param moveFeedbackId the id of the feedback to move
-	 * @param newOwnerId the target parentId of the feedback
-	 * @param newIndex the target index of the feedback
-	 */
-	feedbackMoveTo(moveFeedbackId: string, newOwnerId: FeedbackOwner | null, newIndex: number): boolean {
-		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
-		if (!oldItem) return false
-
-		if (
-			oldItem.parent.ownerId?.parentFeedbackId === newOwnerId?.parentFeedbackId &&
-			oldItem.parent.ownerId?.childGroup === newOwnerId?.childGroup
-		) {
-			oldItem.parent.moveFeedback(oldItem.index, newIndex)
-		} else {
-			const newParent = newOwnerId ? this.#feedbacks.findById(newOwnerId.parentFeedbackId) : null
-			if (newOwnerId && !newParent) return false
-
-			// Ensure the new parent is not a child of the feedback being moved
-			if (newOwnerId && oldItem.item.findChildById(newOwnerId.parentFeedbackId)) return false
-
-			// Check if the new parent can hold the feedback being moved
-			if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldItem.item)) return false
-
-			const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
-			if (!poppedFeedback) return false
-
-			if (newParent) {
-				newParent.pushChild(poppedFeedback, newOwnerId!.childGroup, newIndex)
-			} else {
-				this.#feedbacks.pushFeedback(poppedFeedback, newIndex)
-			}
-		}
-
-		this.#commitChange()
-
-		return true
-	}
-
-	/**
 	 * Replace a feedback with an updated version
 	 */
 	feedbackReplace(

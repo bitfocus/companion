@@ -227,9 +227,9 @@ export class SocketEventsHandler {
 			if (controlEntities && controlEntities.length > 0) {
 				const imageSize = control.getBitmapSize()
 				for (const entity of controlEntities) {
-					const entityModel = entity.asEntityModel()
-					if (entityModel.type !== EntityModelType.Feedback) continue
+					if (entity.type !== EntityModelType.Feedback) continue
 
+					const entityModel = entity.asEntityModel(false)
 					allFeedbacks[entityModel.id] = {
 						id: entityModel.id,
 						controlId: controlId,

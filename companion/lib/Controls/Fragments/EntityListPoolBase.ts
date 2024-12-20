@@ -231,45 +231,58 @@ export abstract class ControlEntityListPoolBase {
 		}
 	}
 
-	// /**
-	//  * Move a feedback within the hierarchy
-	//  * @param moveFeedbackId the id of the feedback to move
-	//  * @param newOwnerId the target parentId of the feedback
-	//  * @param newIndex the target index of the feedback
-	//  */
-	// feedbackMoveTo(moveFeedbackId: string, newOwnerId: FeedbackOwner | null, newIndex: number): boolean {
-	// 	const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
-	// 	if (!oldItem) return false
+	/**
+	 * Move an entity within the hierarchy
+	 * @param listId the id of the list to move the entity within
+	 * @param moveEntityId the id of the entity to move
+	 * @param newOwnerId the target new owner of the entity
+	 * @param newIndex the target index of the entity
+	 */
+	entityMoveTo(
+		listId: SomeSocketEntityLocation,
+		moveEntityId: string,
+		newOwnerId: EntityOwner | null,
+		newIndex: number
+	): boolean {
+		if (newOwnerId && moveEntityId === newOwnerId.parentId) return false
 
-	// 	if (
-	// 		oldItem.parent.ownerId?.parentFeedbackId === newOwnerId?.parentFeedbackId &&
-	// 		oldItem.parent.ownerId?.childGroup === newOwnerId?.childGroup
-	// 	) {
-	// 		oldItem.parent.moveFeedback(oldItem.index, newIndex)
-	// 	} else {
-	// 		const newParent = newOwnerId ? this.#feedbacks.findById(newOwnerId.parentFeedbackId) : null
-	// 		if (newOwnerId && !newParent) return false
+		// For now, limit to moving within the same list
+		// But this in an artificial limitation, there is no reason it couldn't be expanded
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
 
-	// 		// Ensure the new parent is not a child of the feedback being moved
-	// 		if (newOwnerId && oldItem.item.findChildById(newOwnerId.parentFeedbackId)) return false
+		const oldInfo = entityList.findParentAndIndex(moveEntityId)
+		if (!oldInfo) return false
 
-	// 		// Check if the new parent can hold the feedback being moved
-	// 		if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldItem.item)) return false
+		if (
+			oldInfo.parent.ownerId?.parentId === newOwnerId?.parentId &&
+			oldInfo.parent.ownerId?.childGroup === newOwnerId?.childGroup
+		) {
+			oldInfo.parent.moveEntity(oldInfo.index, newIndex)
+		} else {
+			const newParent = newOwnerId ? entityList.findById(newOwnerId.parentId) : null
+			if (newOwnerId && !newParent) return false
 
-	// 		const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
-	// 		if (!poppedFeedback) return false
+			// Ensure the new parent is not a child of the entity being moved
+			if (newOwnerId && oldInfo.item.findChildById(newOwnerId.parentId)) return false
 
-	// 		if (newParent) {
-	// 			newParent.pushChild(poppedFeedback, newOwnerId!.childGroup, newIndex)
-	// 		} else {
-	// 			this.#feedbacks.pushFeedback(poppedFeedback, newIndex)
-	// 		}
-	// 	}
+			// Check if the new parent can hold the feedback being moved
+			if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldInfo.item)) return false
 
-	// 	this.#commitChange()
+			const poppedFeedback = oldInfo.parent.popEntity(oldInfo.index)
+			if (!poppedFeedback) return false
 
-	// 	return true
-	// }
+			if (newParent) {
+				newParent.pushChild(poppedFeedback, newOwnerId!.childGroup, newIndex)
+			} else {
+				entityList.pushEntity(poppedFeedback, newIndex)
+			}
+		}
+
+		this.#commitChange()
+
+		return true
+	}
 
 	// /**
 	//  * Replace a feedback with an updated version
@@ -549,7 +562,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 function transformEntityToFeedbacks(entities: ControlEntityInstance[]): FeedbackInstance[] {
 	return entities.map((entity) => {
-		const entityModel = entity.asEntityModel()
+		const entityModel = entity.asEntityModel(false)
 
 		return {
 			id: entityModel.id,

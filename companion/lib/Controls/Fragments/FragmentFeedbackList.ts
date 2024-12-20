@@ -52,54 +52,6 @@ export class FragmentFeedbackList {
 	}
 
 	/**
-	 * Get the contained feedbacks as `FeedbackInstance`s
-	 */
-	asFeedbackInstances(): FeedbackInstance[] {
-		return this.#feedbacks.map((feedback) => feedback.asFeedbackInstance())
-	}
-
-	/**
-	 * Initialise from storage
-	 * @param feedbacks
-	 * @param skipSubscribe Whether to skip calling subscribe for the new feedbacks
-	 * @param isCloned Whether this is a cloned instance
-	 */
-	loadStorage(feedbacks: FeedbackInstance[], skipSubscribe: boolean, isCloned: boolean): void {
-		// Inform modules of feedback cleanup
-		for (const feedback of this.#feedbacks) {
-			feedback.cleanup()
-		}
-
-		this.#feedbacks =
-			feedbacks?.map(
-				(feedback) =>
-					new FragmentFeedbackInstance(
-						this.#instanceDefinitions,
-						this.#internalModule,
-						this.#moduleHost,
-						this.#controlId,
-						feedback,
-						!!isCloned
-					)
-			) || []
-
-		if (!skipSubscribe) {
-			this.subscribe(true)
-		}
-	}
-
-	/**
-	 * Inform the instance of any removed feedbacks
-	 * @access public
-	 */
-	cleanup() {
-		for (const feedback of this.#feedbacks) {
-			feedback.cleanup()
-		}
-		this.#feedbacks = []
-	}
-
-	/**
 	 * Inform the instance of an updated feedback
 	 * @param recursive whether to call recursively
 	 * @param onlyConnectionId If set, only subscribe feedbacks for this connection
@@ -141,73 +93,5 @@ export class FragmentFeedbackList {
 		}
 
 		return undefined
-	}
-
-	/**
-	 * Add a child feedback to this feedback
-	 * @param feedback
-	 * @param isCloned Whether this is a cloned instance
-	 */
-	addFeedback(feedback: FeedbackInstance, isCloned?: boolean): FragmentFeedbackInstance {
-		const newFeedback = new FragmentFeedbackInstance(
-			this.#instanceDefinitions,
-			this.#internalModule,
-			this.#moduleHost,
-			this.#controlId,
-			feedback,
-			!!isCloned
-		)
-
-		const feedbackDefinition = newFeedback.getDefinition()
-		if (this.#onlyType && feedbackDefinition?.type !== this.#onlyType)
-			throw new Error('FragmentFeedbacks cannot accept this type of feedback')
-
-		this.#feedbacks.push(newFeedback)
-
-		return newFeedback
-	}
-
-	/**
-	 * Reorder a feedback in the list
-	 */
-	moveFeedback(oldIndex: number, newIndex: number): void {
-		oldIndex = clamp(oldIndex, 0, this.#feedbacks.length)
-		newIndex = clamp(newIndex, 0, this.#feedbacks.length)
-		this.#feedbacks.splice(newIndex, 0, ...this.#feedbacks.splice(oldIndex, 1))
-	}
-
-	/**
-	 * Pop a child feedback from the list
-	 * Note: this is used when moving a feedback to a different parent. Lifecycle is not managed
-	 */
-	popFeedback(index: number): FragmentFeedbackInstance | undefined {
-		const feedback = this.#feedbacks[index]
-		if (!feedback) return undefined
-
-		this.#feedbacks.splice(index, 1)
-
-		return feedback
-	}
-
-	/**
-	 * Push a child feedback to the list
-	 * Note: this is used when moving a feedback from a different parent. Lifecycle is not managed
-	 */
-	pushFeedback(feedback: FragmentFeedbackInstance, index: number): void {
-		index = clamp(index, 0, this.#feedbacks.length)
-
-		this.#feedbacks.splice(index, 0, feedback)
-	}
-
-	/**
-	 * Check if this list can accept a specified child
-	 */
-	canAcceptFeedback(feedback: FragmentFeedbackInstance): boolean {
-		if (!this.#onlyType) return true
-
-		const definition = feedback.getDefinition()
-		if (!definition || definition.type !== this.#onlyType) return false
-
-		return true
 	}
 }

@@ -290,11 +290,10 @@ export class InternalController {
 			})
 		}
 		for (const entity of entities) {
-			const entityModel = entity.asEntityModel()
-			if (entity.connectionId !== 'internal' || entityModel.type !== EntityModelType.Feedback) continue
+			if (entity.connectionId !== 'internal' || entity.type !== EntityModelType.Feedback) continue
 			simpleInternalFeedbacks.push({
-				id: entityModel.id,
-				type: entityModel.type,
+				id: entity.id,
+				type: entity.definitionId,
 				options: entity.rawOptions, // Ensure the options is not a copy/clone
 			})
 		}

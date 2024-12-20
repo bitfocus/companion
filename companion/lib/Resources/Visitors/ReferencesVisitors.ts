@@ -1,6 +1,6 @@
 import { VisitorReferencesUpdater } from './ReferencesUpdater.js'
 import { visitEventOptions } from '../EventDefinitions.js'
-import { visitEntityModel, visitFeedbackInstance } from './FeedbackInstanceVisitor.js'
+import { visitEntityModel } from './FeedbackInstanceVisitor.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'

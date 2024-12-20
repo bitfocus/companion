@@ -427,14 +427,7 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (newOwnerId && moveFeedbackId === newOwnerId.parentFeedbackId)
-				throw new Error('Cannot move feedback to itself')
-
-			if (control.supportsFeedbacks) {
-				return control.feedbacks.feedbackMoveTo(moveFeedbackId, newOwnerId, newIndex)
-			} else {
-				throw new Error(`Control "${controlId}" does not support feedbacks`)
-			}
+			return control.entities.entityMoveTo(entityLocation, moveEntityId, newOwnerId, newIndex)
 		})
 		client.onPromise('controls:entity:set-style-selection', (controlId, entityLocation, id, selected) => {
 			const control = this.getControl(controlId)
