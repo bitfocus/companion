@@ -322,6 +322,22 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
+	 * Replace all the entities in a list
+	 * @param lsitId the list to update
+	 * @param newEntities entities to populate
+	 */
+	entityReplaceAll(listId: SomeSocketEntityLocation, entities: SomeEntityModel[]): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		entityList.loadStorage(entities, false, false)
+
+		this.commitChange(true)
+
+		return true
+	}
+
+	/**
 	 * Update an option for an entity
 	 * @param id the id of the entity
 	 * @param key the key/name of the property

@@ -12,7 +12,7 @@ import type {
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 
 const SessionListRoom = 'action-recorder:session-list'
 function SessionRoom(id: string): string {
@@ -404,8 +404,9 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 				throw new Error('Not supported by control')
 			}
 		} else {
-			if (control.supportsActions) {
-				if (!control.actionReplaceAll(stepId, setId, this.#currentSession.actions)) throw new Error('Unknown set')
+			if (control.supportsEntities) {
+				const listId: SomeSocketEntityLocation = { stepId, setId }
+				if (!control.entities.entityReplaceAll(listId, this.#currentSession.actions)) throw new Error('Unknown set')
 			} else {
 				throw new Error('Not supported by control')
 			}

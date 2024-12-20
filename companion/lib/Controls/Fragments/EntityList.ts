@@ -72,6 +72,7 @@ export class ControlEntityList {
 		for (const entity of this.#entities) {
 			entity.cleanup()
 		}
+		// TODO - validate that the entities are of the correct type
 
 		this.#entities =
 			entities?.map(

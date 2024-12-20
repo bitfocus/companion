@@ -236,7 +236,7 @@ export class SocketEventsHandler {
 			for (const entity of controlEntities) {
 				if (entity.type !== EntityModelType.Feedback) continue
 
-				const entityModel = entity.asEntityModel(false)
+				const entityModel = entity.asEntityModel(false) as FeedbackEntityModel
 				allFeedbacks[entityModel.id] = {
 					id: entityModel.id,
 					controlId: controlId,
