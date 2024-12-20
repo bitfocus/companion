@@ -32,7 +32,7 @@ import type {
 import type { Registry } from '../Registry.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 async function getHostnameVariables() {
 	const values: CompanionVariableValues = {}
@@ -242,8 +242,8 @@ export class InternalSystem implements InternalModuleFragment {
 		return actions
 	}
 
-	async executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> {
-		if (action.action === 'exec') {
+	async executeAction(action: ActionEntityModel, extras: RunActionExtras): Promise<boolean> {
+		if (action.definitionId === 'exec') {
 			if (action.options.path) {
 				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.path, extras).text
 				this.#logger.silly(`Running path: '${path}'`)
@@ -270,10 +270,10 @@ export class InternalSystem implements InternalModuleFragment {
 				)
 			}
 			return true
-		} else if (action.action === 'app_restart') {
+		} else if (action.definitionId === 'app_restart') {
 			this.#registry.exit(true, true)
 			return true
-		} else if (action.action === 'app_exit') {
+		} else if (action.definitionId === 'app_exit') {
 			this.#registry.exit(true, false)
 			return true
 		} else {

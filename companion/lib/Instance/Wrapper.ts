@@ -50,7 +50,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { ActionEntityModel, EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
@@ -472,15 +472,15 @@ export class SocketEventsHandler {
 	/**
 	 * Tell the child instance class to execute an action
 	 */
-	async actionRun(action: ActionInstance, extras: RunActionExtras): Promise<void> {
-		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
+	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
+		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different instance`)
 
 		try {
 			await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
 					id: action.id,
 					controlId: extras?.controlId,
-					actionId: action.action,
+					actionId: action.definitionId,
 					options: action.options,
 
 					upgradeIndex: null,

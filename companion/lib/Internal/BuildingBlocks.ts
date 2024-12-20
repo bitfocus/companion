@@ -25,11 +25,10 @@ import type {
 	InternalActionDefinition,
 	ActionForVisitor,
 } from './Types.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalController } from './Controller.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { ActionEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
@@ -197,8 +196,8 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean {
-		if (action.action === 'wait') {
+	executeAction(action: ActionEntityModel, extras: RunActionExtras): Promise<boolean> | boolean {
+		if (action.definitionId === 'wait') {
 			if (extras.abortDelayed.aborted) return true
 
 			let delay = 0
@@ -217,7 +216,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				// No wait, return immediately
 				return true
 			}
-		} else if (action.action === 'action_group') {
+		} else if (action.definitionId === 'action_group') {
 			if (extras.abortDelayed.aborted) return true
 
 			let executeSequential = false

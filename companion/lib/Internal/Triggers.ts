@@ -28,8 +28,8 @@ import type {
 } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { InternalController } from './Controller.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 export class InternalTriggers implements InternalModuleFragment {
 	readonly #controlsController: ControlsController
@@ -80,16 +80,16 @@ export class InternalTriggers implements InternalModuleFragment {
 		}
 	}
 
-	actionUpgrade(action: ActionInstance, _controlId: string): ActionInstance | void {
-		if (action.action === 'trigger_enabled' && !isNaN(Number(action.options.trigger_id))) {
+	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
+		if (action.definitionId === 'trigger_enabled' && !isNaN(Number(action.options.trigger_id))) {
 			action.options.trigger_id = CreateTriggerControlId(action.options.trigger_id)
 
 			return action
 		}
 	}
 
-	executeAction(action: ActionInstance, _extras: RunActionExtras): boolean {
-		if (action.action === 'trigger_enabled') {
+	executeAction(action: ActionEntityModel, _extras: RunActionExtras): boolean {
+		if (action.definitionId === 'trigger_enabled') {
 			const control = this.#controlsController.getControl(action.options.trigger_id)
 			if (!control || control.type !== 'trigger' || !control.supportsOptions) return false
 

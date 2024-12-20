@@ -25,7 +25,6 @@ import type {
 	InternalModuleFragment,
 	InternalVisitor,
 } from './Types.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
@@ -347,7 +346,7 @@ export class InternalController {
 	/**
 	 * Run a single internal action
 	 */
-	async executeAction(action: ActionInstance, extras: RunActionExtras): Promise<void> {
+	async executeAction(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		for (const fragment of this.#fragments) {

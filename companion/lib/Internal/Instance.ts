@@ -29,8 +29,8 @@ import type {
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
 } from './Types.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
+import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 export class InternalInstance implements InternalModuleFragment {
 	readonly #internalModule: InternalController
@@ -243,8 +243,8 @@ export class InternalInstance implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, _extras: RunActionExtras): boolean {
-		if (action.action === 'instance_control') {
+	executeAction(action: ActionEntityModel, _extras: RunActionExtras): boolean {
+		if (action.definitionId === 'instance_control') {
 			let newState = action.options.enable == 'true'
 			if (action.options.enable == 'toggle') {
 				const curState = this.#instanceController.getConnectionStatus(action.options.instance_id)
