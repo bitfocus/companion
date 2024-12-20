@@ -1,3 +1,5 @@
+import { SomeEntityModel } from './EntityModel.js'
+
 export interface ActionInstance {
 	id: string
 	instance: string
@@ -21,7 +23,7 @@ export interface ActionStepOptions {
 export type ActionSetId = 'down' | 'up' | 'rotate_left' | 'rotate_right' | number
 
 // TODO - type better?
-export type ActionSetsModel = Record<ActionSetId, ActionInstance[] | undefined>
+export type ActionSetsModel = Record<ActionSetId, SomeEntityModel[] | undefined>
 //  {
 // 	down: ActionInstance[]
 // 	up: ActionInstance[]

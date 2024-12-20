@@ -30,7 +30,6 @@ import type {
 } from '@companion-module/base/dist/host-api/api.js'
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import {
 	assertNever,
 	type CompanionHTTPRequest,
@@ -39,7 +38,6 @@ import {
 	type CompanionVariableValue,
 	type LogLevel,
 } from '@companion-module/base'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
@@ -50,7 +48,12 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
-import { ActionEntityModel, EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	ActionEntityModel,
+	EntityModelType,
+	FeedbackEntityModel,
+	SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
@@ -322,11 +325,20 @@ export class SocketEventsHandler {
 	// 	await this.ipcWrapper.sendWithCb('updateActions', msg)
 	// }
 
+	entityUpdate(entity: SomeEntityModel, controlId: string): Promise<void> {
+		switch (entity.type) {
+			case EntityModelType.Action:
+				return this.#actionUpdate(entity, controlId)
+			case EntityModelType.Feedback:
+				return this.#feedbackUpdate(entity, controlId)
+		}
+	}
+
 	/**
 	 * Inform the child instance class about an updated feedback
 	 */
-	async feedbackUpdate(feedback: FeedbackInstance, controlId: string): Promise<void> {
-		if (feedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
+	async #feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): Promise<void> {
+		if (feedback.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 		if (feedback.disabled) return
 
 		const control = this.#deps.controls.getControl(controlId)
@@ -336,7 +348,7 @@ export class SocketEventsHandler {
 				[feedback.id]: {
 					id: feedback.id,
 					controlId: controlId,
-					feedbackId: feedback.type,
+					feedbackId: feedback.definitionId,
 					options: feedback.options,
 
 					isInverted: !!feedback.isInverted,
@@ -450,8 +462,8 @@ export class SocketEventsHandler {
 	/**
 	 * Inform the child instance class about an updated action
 	 */
-	async actionUpdate(action: ActionInstance, controlId: string): Promise<void> {
-		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
+	async #actionUpdate(action: ActionEntityModel, controlId: string): Promise<void> {
+		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 		if (action.disabled) return
 
 		await this.#ipcWrapper.sendWithCb('updateActions', {
@@ -459,7 +471,7 @@ export class SocketEventsHandler {
 				[action.id]: {
 					id: action.id,
 					controlId: controlId,
-					actionId: action.action,
+					actionId: action.definitionId,
 					options: action.options,
 
 					upgradeIndex: action.upgradeIndex ?? null,
@@ -473,7 +485,7 @@ export class SocketEventsHandler {
 	 * Tell the child instance class to execute an action
 	 */
 	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
-		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different instance`)
+		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 
 		try {
 			await this.#ipcWrapper.sendWithCb('executeAction', {

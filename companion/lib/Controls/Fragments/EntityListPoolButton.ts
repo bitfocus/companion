@@ -470,7 +470,9 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const step = this.#steps.get(stepId)
 		if (!step) return false
 
-		step.destroy()
+		for (const set of step.sets.values()) {
+			set.cleanup()
+		}
 		this.#steps.delete(stepId)
 
 		// Update the current step

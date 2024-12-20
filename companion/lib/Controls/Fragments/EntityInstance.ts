@@ -531,23 +531,18 @@ export class ControlEntityInstance {
 		const ps: Promise<void>[] = []
 
 		if (this.#data.connectionId === 'internal') {
-			// nocommit - implement this
-			// const newProps = this.#internalModule.feedbackUpgrade(this.asFeedbackInstance(), this.#controlId)
-			// const newProps = this.#internalModule.actionUpgrade(this.asActionInstance(), this.#controlId)
-			// if (newProps) {
-			// 	this.replaceProps(newProps, false)
-			// }
-			// setImmediate(() => {
-			// 	this.#internalModule.actionUpdate(this.asActionInstance(), this.#controlId)
-			// this.#internalModule.feedbackUpdate(this.asFeedbackInstance(), this.#controlId)
-			// })
+			const newProps = this.#internalModule.entityUpgrade(this.asEntityModel(), this.#controlId)
+			if (newProps) {
+				this.replaceProps(newProps, false)
+			}
+			setImmediate(() => {
+				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
+			})
 		} else {
-			// nocommit - implement this
-			// const instance = this.#moduleHost.getChild(this.connectionId, true)
-			// if (instance) {
-			// 	ps.push(instance.actionUpdate(this.asActionInstance(), this.#controlId))
-			// ps.push(instance.feedbackUpdate(this.asFeedbackInstance(), this.#controlId))
-			// }
+			const connection = this.#moduleHost.getChild(this.connectionId, true)
+			if (connection) {
+				ps.push(connection.entityUpdate(this.asEntityModel(), this.#controlId))
+			}
 		}
 
 		for (const childGroup of this.#children.values()) {

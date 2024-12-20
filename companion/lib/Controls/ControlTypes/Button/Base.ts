@@ -288,8 +288,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			this.feedbacks.baseStyle,
 			[],
-			[],
-			[],
 			allEntities,
 			[],
 			true
