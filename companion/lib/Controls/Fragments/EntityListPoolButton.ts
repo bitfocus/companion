@@ -74,6 +74,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			{
 				type: EntityModelType.Feedback,
 				groupId: 'feedbacks',
+				entityType: 'feedback',
 				label: 'Feedbacks',
 			}
 		)
@@ -185,6 +186,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 				this.createEntityList({
 					type: EntityModelType.Action,
 					groupId: '',
+					entityType: 'action',
 					label: '',
 				})
 			)
@@ -203,6 +205,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 				this.createEntityList({
 					type: EntityModelType.Action,
 					groupId: '',
+					entityType: 'action',
 					label: '',
 				})
 			)
@@ -305,6 +308,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 						this.createEntityList({
 							type: EntityModelType.Action,
 							groupId: '',
+							entityType: 'action',
 							label: '',
 						})
 					)
@@ -314,6 +318,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 						this.createEntityList({
 							type: EntityModelType.Action,
 							groupId: '',
+							entityType: 'action',
 							label: '',
 						})
 					)
@@ -342,9 +347,19 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	): ControlEntityListActionStep {
 		const options = existingOptions || cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
 
-		const downList = this.createEntityList({ type: EntityModelType.Action, groupId: '', label: 'Down' })
+		const downList = this.createEntityList({
+			type: EntityModelType.Action,
+			groupId: '',
+			entityType: 'action',
+			label: 'Down',
+		})
 		downList.loadStorage(existingActions?.down || [], true, !!existingActions)
-		const upList = this.createEntityList({ type: EntityModelType.Action, groupId: '', label: 'Up' })
+		const upList = this.createEntityList({
+			type: EntityModelType.Action,
+			groupId: '',
+			entityType: 'action',
+			label: 'Up',
+		})
 		upList.loadStorage(existingActions?.up || [], true, !!existingActions)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
@@ -352,11 +367,17 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		sets.set('up', upList)
 
 		if (this.options.rotaryActions) {
-			const rotateLeftList = this.createEntityList({ type: EntityModelType.Action, groupId: '', label: 'rotate left' })
+			const rotateLeftList = this.createEntityList({
+				type: EntityModelType.Action,
+				groupId: '',
+				entityType: 'action',
+				label: 'rotate left',
+			})
 			rotateLeftList.loadStorage(existingActions?.rotate_left || [], true, !!existingActions)
 			const rotateRightList = this.createEntityList({
 				type: EntityModelType.Action,
 				groupId: '',
+				entityType: 'action',
 				label: 'rotate right',
 			})
 			rotateRightList.loadStorage(existingActions?.rotate_right || [], true, !!existingActions)

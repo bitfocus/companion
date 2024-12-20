@@ -10,6 +10,9 @@ import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { SocketContext, socketEmitPromise } from '../../util.js'
 
 export interface IEntityEditorService {
+	readonly listId: SomeSocketEntityLocation
+	readonly confirmModal: React.RefObject<GenericConfirmModalRef>
+
 	addEntity: (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => void
 
 	setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: any) => void
@@ -56,6 +59,9 @@ export function useControlEntitiesEditorService(
 
 	return useMemo(
 		() => ({
+			listId,
+			confirmModal,
+
 			addEntity: (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => {
 				socketEmitPromise(socket, 'controls:entity:add', [
 					controlId,

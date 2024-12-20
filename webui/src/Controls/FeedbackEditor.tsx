@@ -599,7 +599,13 @@ function FeedbackManageChildGroup({
 }: FeedbackManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
 
-	const serviceFactory = useControlEntitiesEditorService(controlId, listId, entityType, groupInfo.type, confirmModal)
+	const serviceFactory = useControlEntitiesEditorService(
+		controlId,
+		serviceFactory0.listId,
+		groupInfo.entityType,
+		groupInfo.type,
+		serviceFactory0.confirmModal
+	)
 
 	return (
 		<CForm onSubmit={PreventDefaultHandler}>
@@ -614,10 +620,10 @@ function FeedbackManageChildGroup({
 					) : null
 				}
 				feedbacks={entities ?? []}
-				entityType={entityType}
+				entityType={groupInfo.entityType}
 				onlyType={groupInfo.booleanFeedbacksOnly ? 'boolean' : null}
 				location={location}
-				addPlaceholder={`+ Add ${entityType}`}
+				addPlaceholder={`+ Add ${groupInfo.entityType}`}
 				feedbacksService={serviceFactory}
 				ownerId={groupId}
 				panelCollapseHelper={panelCollapseHelper}
