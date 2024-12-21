@@ -1,16 +1,8 @@
-import { CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
-import {
-	faSort,
-	faTrash,
-	faExpandArrowsAlt,
-	faCompressArrowsAlt,
-	faCopy,
-	faFolderOpen,
-	faPencil,
-} from '@fortawesome/free-solid-svg-icons'
+import { CButton, CForm, CButtonGroup } from '@coreui/react'
+import { faSort, faExpandArrowsAlt, faCompressArrowsAlt, faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { DropdownInputField, TextInputField } from '../Components/index.js'
+import { DropdownInputField } from '../Components/index.js'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
@@ -38,7 +30,8 @@ import {
 	useControlEntitiesEditorService,
 	useControlEntityService,
 } from '../Services/Controls/ControlEntitiesService.js'
-import { EntityDropPlaceholderZone, EntityListDragItem } from './EntityListDropZone.js'
+import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
+import { EntityRowHeader } from './Components/EntityCellControls.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -291,11 +284,6 @@ const ActionTableRow = observer(function ActionTableRow({
 
 	const service = useControlEntityService(serviceFactory, action)
 
-	const innerSetEnabled = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled && service.setEnabled(e.target.checked),
-		[service.setEnabled]
-	)
-
 	const actionSpec = actionDefinitions.connections.get(action.connectionId)?.get(action.definitionId)
 
 	const [actionOptions, optionVisibility] = useOptionsAndIsVisible(actionSpec?.options, action?.options)
@@ -362,14 +350,6 @@ const ActionTableRow = observer(function ActionTableRow({
 	})
 	preview(drop(ref))
 
-	const doCollapse = useCallback(
-		() => panelCollapseHelper.setPanelCollapsed(action.id, true),
-		[panelCollapseHelper, action.id]
-	)
-	const doExpand = useCallback(
-		() => panelCollapseHelper.setPanelCollapsed(action.id, false),
-		[panelCollapseHelper, action.id]
-	)
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(stringifyEntityOwnerId(ownerId), action.id)
 
 	const canSetHeadline = !!service.setHeadline
@@ -389,7 +369,7 @@ const ActionTableRow = observer(function ActionTableRow({
 
 	const showButtonPreview = action?.connectionId === 'internal' && actionSpec?.showButtonPreview
 
-	const name = actionSpec
+	const definitionName = actionSpec
 		? `${connectionLabel}: ${actionSpec.label}`
 		: `${connectionLabel}: ${action.definitionId} (undefined)`
 
@@ -399,55 +379,18 @@ const ActionTableRow = observer(function ActionTableRow({
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td style={{ paddingRight: 0 }}>
-				<div className="editor-grid-header">
-					<div className="cell-name">
-						{!service.setHeadline || !headlineExpanded || isCollapsed ? (
-							headline || name
-						) : (
-							<TextInputField
-								value={headline ?? ''}
-								placeholder={'Describe the intent of the action'}
-								setValue={service.setHeadline}
-							/>
-						)}
-					</div>
-
-					<div className="cell-controls">
-						<CButtonGroup>
-							{canSetHeadline && !headlineExpanded && !isCollapsed && (
-								<CButton size="sm" onClick={doEditHeadline} title="Set headline">
-									<FontAwesomeIcon icon={faPencil} />
-								</CButton>
-							)}
-							{isCollapsed ? (
-								<CButton size="sm" onClick={doExpand} title="Expand action view">
-									<FontAwesomeIcon icon={faExpandArrowsAlt} />
-								</CButton>
-							) : (
-								<CButton size="sm" onClick={doCollapse} title="Collapse action view">
-									<FontAwesomeIcon icon={faCompressArrowsAlt} />
-								</CButton>
-							)}
-							<CButton disabled={readonly} size="sm" onClick={service.performDuplicate} title="Duplicate action">
-								<FontAwesomeIcon icon={faCopy} />
-							</CButton>
-							<CButton disabled={readonly} size="sm" onClick={service.performDelete} title="Remove action">
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>
-							{!!service.setEnabled && (
-								<>
-									&nbsp;
-									<CFormSwitch
-										color="success"
-										checked={!action.disabled}
-										title={action.disabled ? 'Enable action' : 'Disable action'}
-										onChange={innerSetEnabled}
-									/>
-								</>
-							)}
-						</CButtonGroup>
-					</div>
-				</div>
+				<EntityRowHeader
+					service={service}
+					entityType="action"
+					entity={action}
+					isPanelCollapsed={isCollapsed}
+					setPanelCollapsed={panelCollapseHelper.setPanelCollapsed}
+					definitionName={definitionName}
+					canSetHeadline={canSetHeadline}
+					headlineExpanded={headlineExpanded}
+					setHeadlineExpanded={doEditHeadline}
+					readonly={readonly}
+				/>
 
 				{!isCollapsed && (
 					<div className="editor-grid">
@@ -456,7 +399,7 @@ const ActionTableRow = observer(function ActionTableRow({
 								'no-options': actionOptions.length === 0,
 							})}
 						>
-							{headlineExpanded && <p className="name">{name}</p>}
+							{headlineExpanded && <p className="name">{definitionName}</p>}
 							<div className="description">{actionSpec?.description}</div>
 						</div>
 

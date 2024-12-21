@@ -1,12 +1,9 @@
 import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
 import {
 	faSort,
-	faTrash,
 	faCompressArrowsAlt,
 	faExpandArrowsAlt,
-	faCopy,
 	faFolderOpen,
-	faPencil,
 	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -15,7 +12,7 @@ import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { DropdownInputField, TextInputField } from '../Components/index.js'
+import { DropdownInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
 import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
@@ -45,7 +42,8 @@ import {
 	useControlEntitiesEditorService,
 	IEntityEditorService,
 } from '../Services/Controls/ControlEntitiesService.js'
-import { EntityDropPlaceholderZone, EntityListDragItem } from './EntityListDropZone.js'
+import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
+import { EntityRowHeader } from './Components/EntityCellControls.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -375,83 +373,32 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec?.options, feedback?.options)
 
-	const innerSetEnabled = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled?.(e.target.checked),
-		[service.setEnabled]
-	)
-
-	const name = feedbackSpec
+	const definitionName = feedbackSpec
 		? `${connectionLabel}: ${feedbackSpec.label}`
 		: `${connectionLabel}: ${feedback.type} (undefined)`
 
 	const showButtonPreview = feedback?.connectionId === 'internal' && feedbackSpec?.showButtonPreview
 
 	const canSetHeadline = !!service.setHeadline
-	const headline = feedback.headline
-	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
+	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!feedback.headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
 
-	const doCollapse = useCallback(
-		() => panelCollapseHelper.setPanelCollapsed(feedback.id, true),
-		[panelCollapseHelper, feedback.id]
-	)
-	const doExpand = useCallback(
-		() => panelCollapseHelper.setPanelCollapsed(feedback.id, false),
-		[panelCollapseHelper, feedback.id]
-	)
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(stringifyEntityOwnerId(ownerId), feedback.id)
 
 	return (
 		<>
-			<div className="editor-grid-header remove075right">
-				<div className="cell-name">
-					{!service.setHeadline || !headlineExpanded || isCollapsed ? (
-						headline || name
-					) : (
-						<TextInputField
-							value={headline ?? ''}
-							placeholder={'Describe the intent of the feedback'}
-							setValue={service.setHeadline}
-						/>
-					)}
-				</div>
-
-				<div className="cell-controls">
-					<CButtonGroup>
-						{canSetHeadline && !headlineExpanded && !isCollapsed && (
-							<CButton size="sm" onClick={doEditHeadline} title="Set headline">
-								<FontAwesomeIcon icon={faPencil} />
-							</CButton>
-						)}
-						{isCollapsed ? (
-							<CButton size="sm" onClick={doExpand} title={`Expand ${entityType} view`}>
-								<FontAwesomeIcon icon={faExpandArrowsAlt} />
-							</CButton>
-						) : (
-							<CButton size="sm" onClick={doCollapse} title={`Collapse ${entityType} view`}>
-								<FontAwesomeIcon icon={faCompressArrowsAlt} />
-							</CButton>
-						)}
-						<CButton size="sm" onClick={service.performDuplicate} title={`Duplicate ${entityType}`}>
-							<FontAwesomeIcon icon={faCopy} />
-						</CButton>
-						<CButton size="sm" onClick={service.performDelete} title={`Remove ${entityType}`}>
-							<FontAwesomeIcon icon={faTrash} />
-						</CButton>
-						{!!service.setEnabled && (
-							<>
-								&nbsp;
-								<CFormSwitch
-									color="success"
-									checked={!feedback.disabled}
-									title={feedback.disabled ? `Enable ${entityType}` : `Disable ${entityType}`}
-									onChange={innerSetEnabled}
-								/>
-							</>
-						)}
-					</CButtonGroup>
-				</div>
-			</div>
+			<EntityRowHeader
+				service={service}
+				entityType={entityType}
+				entity={feedback}
+				isPanelCollapsed={isCollapsed}
+				setPanelCollapsed={panelCollapseHelper.setPanelCollapsed}
+				definitionName={definitionName}
+				canSetHeadline={canSetHeadline}
+				headlineExpanded={headlineExpanded}
+				setHeadlineExpanded={doEditHeadline}
+				readonly={false}
+			/>
 
 			{!isCollapsed && (
 				<div className="editor-grid remove075right">
@@ -460,7 +407,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 							'no-options': feedbackOptions.length === 0,
 						})}
 					>
-						{headlineExpanded && <div className="name">{name}</div>}
+						{headlineExpanded && <div className="name">{definitionName}</div>}
 						{feedbackSpec?.description && <div className="description">{feedbackSpec?.description || ''}</div>}
 					</div>
 
