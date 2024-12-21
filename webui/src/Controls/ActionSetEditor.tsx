@@ -9,9 +9,9 @@ import {
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { memo, useCallback, useContext, useDeferredValue, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { DropdownInputField, TextInputField } from '../Components/index.js'
-import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
+import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -38,6 +38,7 @@ import {
 	useControlEntitiesEditorService,
 	useControlEntityService,
 } from '../Services/Controls/ControlEntitiesService.js'
+import { EntityDropPlaceholderZone, EntityListDragItem } from './EntityListDropZone.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -242,11 +243,12 @@ export function ActionsList({
 						</MyErrorBoundary>
 					))}
 
-				<ActionRowDropPlaceholder
+				<EntityDropPlaceholderZone
 					dragId={dragId}
 					ownerId={ownerId}
 					listId={listId}
-					actionCount={actions ? actions.length : 0}
+					entityCount={actions ? actions.length : 0}
+					entityType="action"
 					moveCard={actionsService.moveCard}
 				/>
 			</tbody>
@@ -254,57 +256,7 @@ export function ActionsList({
 	)
 }
 
-interface ActionRowDropPlaceholderProps {
-	listId: SomeSocketEntityLocation
-	ownerId: EntityOwner | null
-	dragId: string
-	actionCount: number
-	moveCard: (
-		listId: SomeSocketEntityLocation,
-		actionId: string,
-		ownerId: EntityOwner | null,
-		targetIndex: number
-	) => void
-}
-
-function ActionRowDropPlaceholder({ listId, ownerId, dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
-	const [isDragging, drop] = useDrop<ActionTableRowDragItem, unknown, boolean>({
-		accept: dragId,
-		collect: (monitor) => {
-			return monitor.canDrop()
-		},
-		hover(item, _monitor) {
-			moveCard(item.listId, item.actionId, ownerId, 0)
-
-			item.listId = listId
-			item.index = 0
-		},
-	})
-
-	// Defer the isDragging value to ensure dragend doesn't fire prematurely
-	// See https://github.com/bitfocus/companion/issues/3115
-	// https://bugs.webkit.org/show_bug.cgi?id=134212
-	// https://issues.chromium.org/issues/41150279
-	const isDraggingDeferred = useDeferredValue(isDragging)
-
-	if (!isDraggingDeferred || actionCount > 0) return null
-
-	return (
-		<tr ref={drop} className={'actionlist-dropzone'}>
-			<td colSpan={3}>
-				<p>Drop action here</p>
-			</td>
-		</tr>
-	)
-}
-
-interface ActionTableRowDragItem {
-	actionId: string
-	listId: SomeSocketEntityLocation
-	index: number
-	ownerId: EntityOwner | null
-	dragState: DragState | null
-}
+interface ActionTableRowDragItem extends EntityListDragItem {}
 interface ActionTableRowDragStatus {
 	isDragging: boolean
 }
@@ -370,7 +322,7 @@ const ActionTableRow = observer(function ActionTableRow({
 
 			// Don't replace items with themselves
 			if (
-				item.actionId === hoverId ||
+				item.entityId === hoverId ||
 				(dragIndex === hoverIndex &&
 					stringifyEntityOwnerId(dragParentId) === stringifyEntityOwnerId(hoverOwnerId) &&
 					stringifySocketEntityLocation(item.listId) === stringifySocketEntityLocation(listId))
@@ -379,7 +331,7 @@ const ActionTableRow = observer(function ActionTableRow({
 			}
 
 			// Time to actually perform the action
-			serviceFactory.moveCard(item.listId, item.actionId, hoverOwnerId, index)
+			serviceFactory.moveCard(item.listId, item.entityId, hoverOwnerId, index)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -397,7 +349,7 @@ const ActionTableRow = observer(function ActionTableRow({
 		type: dragId,
 		canDrag: !readonly,
 		item: {
-			actionId: action.id,
+			entityId: action.id,
 			listId: listId,
 			index: index,
 			ownerId: ownerId,

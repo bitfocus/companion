@@ -11,7 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
+import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -39,13 +39,13 @@ import {
 	EntitySupportedChildGroupDefinition,
 	FeedbackEntityModel,
 	SomeEntityModel,
-	SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	useControlEntityService,
 	useControlEntitiesEditorService,
 	IEntityEditorService,
 } from '../Services/Controls/ControlEntitiesService.js'
+import { EntityDropPlaceholderZone, EntityListDragItem } from './EntityListDropZone.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -197,10 +197,12 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 						</MyErrorBoundary>
 					))}
 					{!!ownerId && (
-						<FeedbackRowDropPlaceholder
+						<EntityDropPlaceholderZone
 							dragId={`feedbacks_${controlId}`}
 							ownerId={ownerId}
-							feedbackCount={feedbacks ? feedbacks.length : 0}
+							listId="feedbacks"
+							entityCount={feedbacks ? feedbacks.length : 0}
+							entityType={entityType}
 							moveCard={feedbacksService.moveCard}
 						/>
 					)}
@@ -224,12 +226,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 	)
 })
 
-interface FeedbackTableRowDragItem {
-	feedbackId: string
-	index: number
-	ownerId: EntityOwner | null
-	dragState: DragState | null
-}
+interface FeedbackTableRowDragItem extends EntityListDragItem {}
 interface FeedbackTableRowDragStatus {
 	isDragging: boolean
 }
@@ -280,14 +277,14 @@ function FeedbackTableRow({
 			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Don't replace items with themselves
-			if (item.feedbackId === hoverId || (dragIndex === hoverIndex && isEqual(dragOwnerId, hoverOwnerId))) {
+			if (item.entityId === hoverId || (dragIndex === hoverIndex && isEqual(dragOwnerId, hoverOwnerId))) {
 				return
 			}
 			// Can't move into itself
-			if (hoverOwnerId && item.feedbackId === hoverOwnerId.parentId) return
+			if (hoverOwnerId && item.entityId === hoverOwnerId.parentId) return
 
 			// Time to actually perform the action
-			serviceFactory.moveCard('feedbacks', item.feedbackId, hoverOwnerId, hoverIndex)
+			serviceFactory.moveCard('feedbacks', item.entityId, hoverOwnerId, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -303,7 +300,8 @@ function FeedbackTableRow({
 	const [{ isDragging }, drag, preview] = useDrag<FeedbackTableRowDragItem, unknown, FeedbackTableRowDragStatus>({
 		type: dragId,
 		item: {
-			feedbackId: feedback.id,
+			entityId: feedback.id,
+			listId: 'feedbacks',
 			index: index,
 			ownerId: ownerId,
 			dragState: null,
@@ -712,41 +710,4 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 	} else {
 		return null
 	}
-}
-
-interface FeedbackRowDropPlaceholderProps {
-	dragId: string
-	ownerId: EntityOwner
-	feedbackCount: number
-	moveCard: (
-		dragListId: SomeSocketEntityLocation,
-		dragFeedbackId: string,
-		hoverOwnerId: EntityOwner | null,
-		hoverIndex: number
-	) => void
-}
-
-function FeedbackRowDropPlaceholder({ dragId, ownerId, feedbackCount, moveCard }: FeedbackRowDropPlaceholderProps) {
-	const [isDragging, drop] = useDrop<FeedbackTableRowDragItem, unknown, boolean>({
-		accept: dragId,
-		collect: (monitor) => {
-			return monitor.canDrop()
-		},
-		hover(item, _monitor) {
-			// Can't move into itself
-			if (isEqual(item.feedbackId, ownerId)) return
-
-			moveCard('feedbacks', item.feedbackId, ownerId, 0)
-		},
-	})
-
-	if (!isDragging || feedbackCount > 0) return null
-
-	return (
-		<tr ref={drop} className={'feedbacklist-dropzone'}>
-			<td colSpan={3}>
-				<p>Drop feedback here</p>
-			</td>
-		</tr>
-	)
 }
