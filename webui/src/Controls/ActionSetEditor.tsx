@@ -2,7 +2,6 @@ import { CButton, CForm, CButtonGroup } from '@coreui/react'
 import { faSort, faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { DropdownInputField } from '../Components/index.js'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
@@ -35,6 +34,7 @@ import {
 import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
 import { EntityRowHeader } from './Components/EntityCellControls.js'
 import { AddEntityPanel } from './Components/AddEntityPanel.js'
+import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -340,7 +340,6 @@ const ActionTableRow = observer(function ActionTableRow({
 	const connectionInfo = connections.getInfo(action.connectionId)
 	// const module = instance ? modules[instance.instance_type] : undefined
 	const connectionLabel = connectionInfo?.label ?? action.connectionId
-	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
 	const showButtonPreview = action?.connectionId === 'internal' && actionSpec?.showButtonPreview
 
@@ -384,24 +383,7 @@ const ActionTableRow = observer(function ActionTableRow({
 							</div>
 						)}
 
-						<div className="cell-left-main">
-							{connectionsWithSameType.length > 1 && (
-								<div className="option-field">
-									<DropdownInputField
-										label="Connection"
-										choices={connectionsWithSameType
-											.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
-											.map((connection) => {
-												const [id, info] = connection
-												return { id, label: info.label }
-											})}
-										multiple={false}
-										value={action.connectionId}
-										setValue={(val) => service.setConnection(`${val}`)}
-									/>
-								</div>
-							)}
-						</div>
+						<EntityCellLeftMain entityConnectionId={action.connectionId} setConnectionId={service.setConnection} />
 
 						<div className="cell-actions">
 							{actionSpec?.hasLearn && service.performLearn && (

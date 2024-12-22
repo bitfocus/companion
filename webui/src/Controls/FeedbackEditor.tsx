@@ -41,6 +41,7 @@ import {
 import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
 import { EntityRowHeader } from './Components/EntityCellControls.js'
 import { AddEntityPanel } from './Components/AddEntityPanel.js'
+import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -331,7 +332,6 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 	const connectionInfo = connections.getInfo(feedback.connectionId)
 	const connectionLabel = connectionInfo?.label ?? feedback.connectionId
-	const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
 
 	const feedbackSpec = feedbackDefinitions.connections.get(feedback.connectionId)?.get(feedback.type)
 
@@ -433,23 +433,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 							</div>
 						)}
 
-					<div className="cell-left-main">
-						{connectionsWithSameType.length > 1 && (
-							<div className="option-field">
-								<DropdownInputField
-									label="Connection"
-									choices={connectionsWithSameType
-										.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
-										.map((connection) => {
-											const [id, info] = connection
-											return { id, label: info.label }
-										})}
-									multiple={false}
-									value={feedback.connectionId}
-									setValue={(val) => service.setConnection(`${val}`)}
-								></DropdownInputField>
-							</div>
-						)}
+					<EntityCellLeftMain entityConnectionId={feedback.connectionId} setConnectionId={service.setConnection}>
 						{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
 							<MyErrorBoundary>
 								<CForm onSubmit={PreventDefaultHandler}>
@@ -467,7 +451,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 								</CForm>
 							</MyErrorBoundary>
 						)}
-					</div>
+					</EntityCellLeftMain>
 
 					{onlyType === null && (
 						<>
