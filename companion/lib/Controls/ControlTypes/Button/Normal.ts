@@ -68,6 +68,7 @@ export class ControlButtonNormal
 			if (storage.type !== 'button') throw new Error(`Invalid type given to ControlButtonStep: "${storage.type}"`)
 
 			this.options = Object.assign(this.options, storage.options || {})
+			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
 			this.entities.loadStorage(storage, true, isImport)
 
 			// Ensure control is stored before setup
@@ -174,10 +175,10 @@ export class ControlButtonNormal
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
-		const [this_step_id, next_step_id] = this.entities.validateCurrentStepIdAndGetNext()
+		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNext()
 
 		let pressedDuration = 0
-		let pressedStep = this_step_id
+		let pressedStep = thisStepId
 		let holdState: SurfaceHoldState | undefined = undefined
 		if (surfaceId) {
 			// Calculate the press duration, or track when the press started
@@ -186,7 +187,7 @@ export class ControlButtonNormal
 
 				holdState = {
 					pressed: Date.now(),
-					step: this_step_id,
+					step: thisStepId,
 					timers: [],
 				}
 				this.#surfaceHoldState.set(surfaceId, holdState)
@@ -207,47 +208,43 @@ export class ControlButtonNormal
 		if (changed || force) {
 			// progress to the next step, if there is one, and the step hasnt already been changed
 			if (
-				this_step_id !== null &&
-				next_step_id !== null &&
+				thisStepId !== null &&
+				nextStepId !== null &&
 				this.options.stepAutoProgress &&
 				!pressed &&
-				(pressedStep === undefined || this_step_id === pressedStep)
+				(pressedStep === undefined || thisStepId === pressedStep)
 			) {
 				// update what the new step will be
-				this.#current_step_id = next_step_id
-
-				this.sendRuntimePropsChange()
+				this.entities.stepSelectCurrent(nextStepId)
 			}
 
 			// Make sure to execute for the step that was active when the press started
-			const step = pressedStep && this.steps[pressedStep]
+			const step = pressedStep ? this.entities.getStepActions(pressedStep) : null
 			if (step) {
-				let action_set_id: ActionSetId = pressed ? 'down' : 'up'
+				let actionSetId: ActionSetId = pressed ? 'down' : 'up'
 
 				const location = this.deps.page.getLocationOfControlId(this.controlId)
 
 				if (!pressed && pressedDuration) {
 					// find the correct set to execute on up
 
-					const setIds = step
-						.getActionSetIds()
+					const setIds = Object.keys(step)
 						.map((id) => Number(id))
 						.filter((id) => !isNaN(id) && id < pressedDuration)
 					if (setIds.length) {
-						action_set_id = Math.max(...setIds)
+						actionSetId = Math.max(...setIds)
 					}
 				}
 
-				const runActionSet = (set_id: ActionSetId): void => {
-					const actions = step.getActionSet(set_id)
-					if (actions) {
-						this.logger.silly('found actions')
+				const runActionSet = (setId: ActionSetId): void => {
+					const actions = step.sets.get(setId)
+					if (!actions) return
 
-						this.actionRunner.runActions(actions.asActionInstances(), {
-							surfaceId,
-							location,
-						})
-					}
+					this.logger.silly(`found ${actions.length} actions`)
+					this.actionRunner.runActions(actions, {
+						surfaceId,
+						location,
+					})
 				}
 
 				if (pressed && holdState && holdState.timers.length === 0) {
@@ -268,8 +265,8 @@ export class ControlButtonNormal
 				}
 
 				// Run the actions if it wasn't already run from being held
-				if (typeof action_set_id !== 'number' || !step.options.runWhileHeld.includes(action_set_id)) {
-					runActionSet(action_set_id)
+				if (typeof actionSetId !== 'number' || !step.options.runWhileHeld.includes(actionSetId)) {
+					runActionSet(actionSetId)
 				}
 			}
 		}
@@ -281,24 +278,15 @@ export class ControlButtonNormal
 	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(direction: boolean, surfaceId: string | undefined): void {
-		const [this_step_id] = this.entities.validateCurrentStepIdAndGetNext()
+		const actions = this.entities.getActionsToExecuteForSet(direction ? 'rotate_right' : 'rotate_left')
 
-		const step = this_step_id && this.steps[this_step_id]
-		if (step) {
-			const action_set_id = direction ? 'rotate_right' : 'rotate_left'
+		const location = this.deps.page.getLocationOfControlId(this.controlId)
 
-			const actions = step.getActionSet(action_set_id)
-			if (actions) {
-				this.logger.silly('found actions')
-
-				const location = this.deps.page.getLocationOfControlId(this.controlId)
-
-				this.actionRunner.runActions(actions.asActionInstances(), {
-					surfaceId,
-					location,
-				})
-			}
-		}
+		this.logger.silly(`found ${actions.length} actions`)
+		this.actionRunner.runActions(actions, {
+			surfaceId,
+			location,
+		})
 	}
 
 	/**

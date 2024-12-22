@@ -12,6 +12,7 @@ import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
 import { cloneDeep } from 'lodash-es'
+import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
 	/**
@@ -51,6 +52,8 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * The base style without feedbacks applied
 	 */
 	#baseStyle: ButtonStyleProperties = cloneDeep(ControlEntityListPoolButton.DefaultStyle)
+
+	#hasRotaryActions = false
 
 	get currentStepId(): string {
 		return this.#current_step_id
@@ -181,15 +184,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			.filter((k) => !isNaN(k))
 		if (existingKeys.length === 0) {
 			// add the default '1000' set
-			step.sets.set(
-				1000,
-				this.createEntityList({
-					type: EntityModelType.Action,
-					groupId: '',
-					entityType: 'action',
-					label: '',
-				})
-			)
+			step.sets.set(1000, this.#createActionEntityList('', [], false, false))
 
 			this.commitChange(true)
 
@@ -200,15 +195,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			const max = Math.max(...existingKeys)
 			const newIndex = Math.floor(max / 1000) * 1000 + 1000
 
-			step.sets.set(
-				newIndex,
-				this.createEntityList({
-					type: EntityModelType.Action,
-					groupId: '',
-					entityType: 'action',
-					label: '',
-				})
-			)
+			step.sets.set(newIndex, this.#createActionEntityList('', [], false, false))
 
 			this.commitChange(false)
 
@@ -299,29 +286,16 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	setupRotaryActionSets(ensureCreated: boolean, skipCommit?: boolean): void {
+		// Cache the value
+		this.#hasRotaryActions = ensureCreated
+
 		for (const step of this.#steps.values()) {
 			if (ensureCreated) {
 				// ensure they exist
 				if (!step.sets.has('rotate_left'))
-					step.sets.set(
-						'rotate_left',
-						this.createEntityList({
-							type: EntityModelType.Action,
-							groupId: '',
-							entityType: 'action',
-							label: '',
-						})
-					)
+					step.sets.set('rotate_left', this.#createActionEntityList('', [], false, false))
 				if (!step.sets.has('rotate_right'))
-					step.sets.set(
-						'rotate_right',
-						this.createEntityList({
-							type: EntityModelType.Action,
-							groupId: '',
-							entityType: 'action',
-							label: '',
-						})
-					)
+					step.sets.set('rotate_right', this.#createActionEntityList('', [], false, false))
 			} else {
 				// remove the sets
 				const rotateLeftSet = step.sets.get('rotate_left')
@@ -341,49 +315,59 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		if (!skipCommit) this.commitChange(true)
 	}
 
+	#createActionEntityList(
+		label: string,
+		entities: SomeEntityModel[],
+		skipSubscribe: boolean,
+		isCloned: boolean
+	): ControlEntityList {
+		const list = this.createEntityList({
+			type: EntityModelType.Action,
+			groupId: '',
+			entityType: 'action',
+			label: label,
+		})
+		list.loadStorage(entities, skipSubscribe, isCloned)
+		return list
+	}
+
 	#getNewStepValue(
 		existingActions: ActionSetsModel | null,
 		existingOptions: ActionStepOptions | null
 	): ControlEntityListActionStep {
 		const options = existingOptions || cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
 
-		const downList = this.createEntityList({
-			type: EntityModelType.Action,
-			groupId: '',
-			entityType: 'action',
-			label: 'Down',
-		})
-		downList.loadStorage(existingActions?.down || [], true, !!existingActions)
-		const upList = this.createEntityList({
-			type: EntityModelType.Action,
-			groupId: '',
-			entityType: 'action',
-			label: 'Up',
-		})
-		upList.loadStorage(existingActions?.up || [], true, !!existingActions)
+		const downList = this.#createActionEntityList('Down', existingActions?.down || [], true, !!existingActions)
+		const upList = this.#createActionEntityList('Up', existingActions?.up || [], true, !!existingActions)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
 		sets.set('down', downList)
 		sets.set('up', upList)
 
-		if (this.options.rotaryActions) {
-			const rotateLeftList = this.createEntityList({
-				type: EntityModelType.Action,
-				groupId: '',
-				entityType: 'action',
-				label: 'rotate left',
-			})
-			rotateLeftList.loadStorage(existingActions?.rotate_left || [], true, !!existingActions)
-			const rotateRightList = this.createEntityList({
-				type: EntityModelType.Action,
-				groupId: '',
-				entityType: 'action',
-				label: 'rotate right',
-			})
-			rotateRightList.loadStorage(existingActions?.rotate_right || [], true, !!existingActions)
+		if (this.#hasRotaryActions) {
+			sets.set(
+				'rotate_left',
+				this.#createActionEntityList('Rotate left', existingActions?.rotate_left || [], true, !!existingActions)
+			)
+			sets.set(
+				'rotate_right',
+				this.#createActionEntityList('Rotate right', existingActions?.rotate_right || [], true, !!existingActions)
+			)
+		}
 
-			sets.set('rotate_left', rotateLeftList)
-			sets.set('rotate_right', rotateRightList)
+		for (const setId in existingActions || {}) {
+			const setIdNumber = validateActionSetId(setId as ActionSetId)
+			if (typeof setIdNumber === 'number') {
+				sets.set(
+					setIdNumber,
+					this.#createActionEntityList(
+						`${setIdNumber}ms`,
+						existingActions?.[setIdNumber] || [],
+						true,
+						!!existingActions
+					)
+				)
+			}
 		}
 
 		return {
@@ -609,6 +593,42 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			return [this_step_id, next_step_id]
 		} else {
 			return [null, null]
+		}
+	}
+
+	getActionsToExecuteForSet(setId: ActionSetId): SomeEntityModel[] {
+		const [this_step_id] = this.validateCurrentStepIdAndGetNext()
+		if (!this_step_id) return []
+
+		const step = this.#steps.get(this_step_id)
+		if (!step) return []
+
+		const set = step.sets.get(setId)
+		if (!set) return []
+
+		return set.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	}
+
+	getStepActions(stepId: string):
+		| {
+				sets: Map<ActionSetId, SomeEntityModel[]>
+				options: Readonly<ActionStepOptions>
+		  }
+		| undefined {
+		const step = this.#steps.get(stepId)
+		if (!step) return undefined
+
+		const sets: Map<ActionSetId, SomeEntityModel[]> = new Map()
+		for (const [setId, set] of step.sets) {
+			sets.set(
+				setId,
+				set.getDirectEntities().map((ent) => ent.asEntityModel(true))
+			)
+		}
+
+		return {
+			sets: sets,
+			options: step.options,
 		}
 	}
 }

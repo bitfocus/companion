@@ -40,7 +40,7 @@ export class ControlEntityInstance {
 	/**
 	 * Value of the feedback when it was last executed
 	 */
-	#cachedValue: any = undefined
+	#cachedFeedbackValue: any = undefined
 
 	#children = new Map<string, ControlEntityList>()
 
@@ -184,7 +184,7 @@ export class ControlEntityInstance {
 		}
 
 		// Remove from cached feedback values
-		this.#cachedValue = undefined
+		this.#cachedFeedbackValue = undefined
 
 		for (const childGroup of this.#children.values()) {
 			childGroup.cleanup()
@@ -232,7 +232,7 @@ export class ControlEntityInstance {
 		this.#data.disabled = !enabled
 
 		// Remove from cached feedback values
-		this.#cachedValue = undefined
+		this.#cachedFeedbackValue = undefined
 
 		// Inform relevant module
 		if (!this.#data.disabled) {
@@ -289,7 +289,7 @@ export class ControlEntityInstance {
 		this.#data.options = options
 
 		// Remove from cached feedback values
-		this.#cachedValue = undefined
+		this.#cachedFeedbackValue = undefined
 
 		// Inform relevant module
 		this.subscribe(false)
@@ -319,7 +319,7 @@ export class ControlEntityInstance {
 		this.#data.options[key] = value
 
 		// Remove from cached feedback values
-		this.#cachedValue = undefined
+		this.#cachedFeedbackValue = undefined
 
 		// Inform relevant module
 		this.subscribe(false)
@@ -339,6 +339,8 @@ export class ControlEntityInstance {
 	setStyleValue(key: string, value: any): boolean {
 		if (this.#data.type !== EntityModelType.Feedback) return false
 
+		const feedbackData = this.#data as FeedbackEntityModel
+
 		if (key === 'png64' && value !== null) {
 			if (!value.match(/data:.*?image\/png/)) {
 				return false
@@ -350,9 +352,8 @@ export class ControlEntityInstance {
 		const definition = this.getFeedbackDefinition()
 		if (!definition || definition.type !== 'boolean') return false
 
-		if (!this.#data.style) this.#data.style = {}
-		// @ts-ignore
-		this.#data.style[key] = value
+		if (!feedbackData.style) feedbackData.style = {}
+		feedbackData.style[key as keyof ButtonStyleProperties] = value
 
 		return true
 	}
@@ -367,20 +368,22 @@ export class ControlEntityInstance {
 	setStyleSelection(selected: string[], baseStyle: ButtonStyleProperties): boolean {
 		if (this.#data.type !== EntityModelType.Feedback) return false
 
+		const feedbackData = this.#data as FeedbackEntityModel
+
 		const definition = this.getFeedbackDefinition()
 		if (!definition || definition.type !== 'boolean') return false
 
 		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.style || {}
-		const oldStyle: Record<string, any> = this.#data.style || {}
+		const oldStyle: Record<string, any> = feedbackData.style || {}
 		const newStyle: Record<string, any> = {}
 
-		for (const key of selected) {
+		for (const key0 of selected) {
+			const key = key0 as keyof ButtonStyleProperties
 			if (key in oldStyle) {
 				// preserve existing value
 				newStyle[key] = oldStyle[key]
 			} else {
 				// copy button value as a default
-				// @ts-ignore
 				newStyle[key] = defaultStyle[key] !== undefined ? defaultStyle[key] : baseStyle[key]
 
 				// png needs to be set to something harmless
@@ -398,7 +401,7 @@ export class ControlEntityInstance {
 									: */ baseStyle['textExpression']
 			}
 		}
-		this.#data.style = newStyle
+		feedbackData.style = newStyle
 
 		return true
 	}
@@ -611,7 +614,7 @@ export class ControlEntityInstance {
 		let changed = false
 
 		if (this.#data.connectionId === connectionId) {
-			this.#cachedValue = undefined
+			this.#cachedFeedbackValue = undefined
 
 			changed = true
 		}
@@ -645,11 +648,11 @@ export class ControlEntityInstance {
 
 		if (!definition || definition.type !== 'boolean') return false
 
-		if (typeof this.#cachedValue === 'boolean') {
+		if (typeof this.#cachedFeedbackValue === 'boolean') {
 			const feedbackData = this.#data as FeedbackEntityModel
-			if (definition.showInvert && feedbackData.isInverted) return !this.#cachedValue
+			if (definition.showInvert && feedbackData.isInverted) return !this.#cachedFeedbackValue
 
-			return this.#cachedValue
+			return this.#cachedFeedbackValue
 		} else {
 			// An invalid value is falsey, it probably means that the feedback has no value
 			return false
@@ -670,14 +673,15 @@ export class ControlEntityInstance {
 		if (definition?.type === 'boolean') {
 			if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
 		} else if (definition?.type === 'advanced') {
+			// Special case to handle the internal 'logic' operators, which need to be done differently
 			if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
 				if (this.getBooleanFeedbackValue()) {
-					for (const child of feedback.getChildrenOfGroup('advancedChildren')) {
-						styleBuilder.applyComplexStyle(child.cachedValue)
+					for (const child of this.#children.get('advanced')?.getDirectEntities() || []) {
+						child.buildFeedbackStyle(styleBuilder)
 					}
 				}
 			} else {
-				styleBuilder.applyComplexStyle(this.#cachedValue)
+				styleBuilder.applyComplexStyle(this.#cachedFeedbackValue)
 			}
 		}
 	}
@@ -686,8 +690,8 @@ export class ControlEntityInstance {
 	 * Set the cached value of this feedback
 	 */
 	setCachedValue(value: any): boolean {
-		if (!isEqual(value, this.#cachedValue)) {
-			this.#cachedValue = value
+		if (!isEqual(value, this.#cachedFeedbackValue)) {
+			this.#cachedFeedbackValue = value
 			return true
 		} else {
 			return false

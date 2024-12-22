@@ -168,7 +168,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Get the size of the bitmap render of this control
 	 */
 	getBitmapSize(): { width: number; height: number } | null {
-		return GetButtonBitmapSize(this.deps.userconfig, this.feedbacks.baseStyle)
+		return GetButtonBitmapSize(this.deps.userconfig, this.entities.baseStyle)
 	}
 
 	/**
@@ -280,7 +280,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		const changed = ReferencesVisitors.fixupControlReferences(
 			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
-			this.feedbacks.baseStyle,
+			this.entities.baseStyle,
 			[],
 			allEntities,
 			[],
@@ -339,7 +339,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		if (Object.keys(diff).length > 0) {
 			// Apply the diff
-			Object.assign(this.feedbacks.baseStyle, diff)
+			Object.assign(this.entities.baseStyle, diff)
 
 			if ('show_topbar' in diff) {
 				// Some feedbacks will need to redraw
