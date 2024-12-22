@@ -2,7 +2,6 @@ import React, { useCallback, useContext, ChangeEvent, RefObject, useMemo } from 
 import { socketEmitPromise, LoadingRetryOrError, PreventDefaultHandler, useComputed } from '../../util.js'
 import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch, CCallout } from '@coreui/react'
 import { DropdownInputField } from '../../Components/index.js'
-import { ActionsList } from '../../Controls/ActionSetEditor.js'
 import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
@@ -10,6 +9,8 @@ import { useActionRecorderActionService } from '../../Services/Controls/ControlA
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { MinimalEntityList } from '../../Controls/Components/EntityList.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
@@ -148,14 +149,16 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 	return (
 		<CCol xs={12} className="flex-form">
 			<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
-				<ActionsList
+				<MinimalEntityList
 					location={undefined}
-					controlId=""
+					controlId={`action_recorder_${sessionInfo.id}`}
 					ownerId={null}
-					dragId={'triggerAction'}
-					actions={sessionInfo.actions}
+					entities={sessionInfo.actions}
 					readonly={!!sessionInfo.isRunning}
-					actionsService={actionsService}
+					serviceFactory={actionsService}
+					entityType={EntityModelType.Action}
+					entityTypeLabel="action"
+					onlyFeedbackType={null}
 				/>
 			</PanelCollapseHelperProvider>
 			{sessionInfo.actions.length === 0 ? <CCallout color="info">No actions have been recorded</CCallout> : ''}

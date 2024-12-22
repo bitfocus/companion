@@ -167,7 +167,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	serviceFactory,
 	onlyFeedbackType,
 }: EntityEditorRowContentProps) {
-	const service = useControlEntityService(serviceFactory, entity)
+	const entityService = useControlEntityService(serviceFactory, entity)
 
 	const { connections, entityDefinitions } = useContext(RootAppStoreContext)
 
@@ -180,7 +180,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 		? `${connectionLabel}: ${entityDefinition.label}`
 		: `${connectionLabel}: ${entity.type} (undefined)`
 
-	const canSetHeadline = !!service.setHeadline
+	const canSetHeadline = !!entityService.setHeadline
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!entity.headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
 
@@ -192,7 +192,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	return (
 		<>
 			<EntityRowHeader
-				service={service}
+				service={entityService}
 				entityTypeLabel={entityTypeLabel}
 				entity={entity}
 				isPanelCollapsed={isCollapsed}
@@ -211,7 +211,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						entityType={entityType}
 						onlyFeedbackType={onlyFeedbackType}
 						entityDefinition={entityDefinition}
-						service={service}
+						service={entityService}
 						headlineExpanded={headlineExpanded}
 						definitionName={definitionName}
 						location={location}

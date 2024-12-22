@@ -13,12 +13,11 @@ import {
 	IEntityEditorService,
 	useControlEntitiesEditorService,
 } from '../../Services/Controls/ControlEntitiesService.js'
-import { assertNever, PreventDefaultHandler } from '../../util.js'
-import { InlineFeedbacksEditor } from '../FeedbackEditor.js'
-import { InlineActionList } from '../ActionSetEditor.js'
+import { PreventDefaultHandler } from '../../util.js'
 import classNames from 'classnames'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
+import { EditableEntityList } from './EntityList.js'
 
 interface EntityManageChildGroupsProps {
 	entity: SomeEntityModel
@@ -54,7 +53,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 						groupInfo={groupInfo}
 						entities={entity.children?.[groupInfo.groupId]}
 						parentId={entity.id}
-						serviceFactory={serviceFactory}
+						parentServiceFactory={serviceFactory}
 					/>
 				))}
 			</div>
@@ -68,7 +67,7 @@ interface EntityManageChildGroupProps {
 	groupInfo: EntitySupportedChildGroupDefinition
 	entities: SomeEntityModel[] | undefined
 	parentId: string
-	serviceFactory: IEntityEditorService
+	parentServiceFactory: IEntityEditorService
 }
 
 const EntityManageChildGroup = observer(function EntityManageChildGroup({
@@ -77,65 +76,40 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	groupInfo,
 	entities,
 	parentId,
-	serviceFactory: serviceFactory0,
+	parentServiceFactory,
 }: EntityManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
 
 	const serviceFactory = useControlEntitiesEditorService(
 		controlId,
-		serviceFactory0.listId,
+		parentServiceFactory.listId,
 		groupInfo.entityTypeLabel,
 		groupInfo.type,
-		serviceFactory0.confirmModal
+		parentServiceFactory.confirmModal
 	)
 
-	switch (groupInfo.type) {
-		case EntityModelType.Feedback:
-			return (
-				<CForm onSubmit={PreventDefaultHandler}>
-					<InlineFeedbacksEditor
-						controlId={controlId}
-						heading={
-							groupInfo.label ? (
-								<>
-									{groupInfo.label}&nbsp;
-									{groupInfo.hint ? <FontAwesomeIcon icon={faQuestionCircle} title={groupInfo.hint} /> : null}
-								</>
-							) : null
-						}
-						feedbacks={entities ?? []}
-						entityTypeLabel={groupInfo.entityTypeLabel}
-						onlyType={groupInfo.booleanFeedbacksOnly ? 'boolean' : null}
-						location={location}
-						feedbacksService={serviceFactory}
-						ownerId={groupId}
-					/>
-				</CForm>
-			)
-		case EntityModelType.Action:
-			return (
-				<CForm onSubmit={PreventDefaultHandler}>
-					<InlineActionList
-						controlId={controlId}
-						heading={
-							groupInfo.label ? (
-								<>
-									{groupInfo.label}&nbsp;
-									{groupInfo.hint ? <FontAwesomeIcon icon={faQuestionCircle} title={groupInfo.hint} /> : null}
-								</>
-							) : null
-						}
-						actions={entities ?? []}
-						// entityTypeLabel={groupInfo.entityTypeLabel}
-						// onlyType={groupInfo.booleanFeedbacksOnly ? 'boolean' : null}
-						location={location}
-						actionsService={serviceFactory}
-						ownerId={groupId}
-					/>
-				</CForm>
-			)
-		default:
-			assertNever(groupInfo.type)
-			throw new Error(`Unsupported group type ${groupInfo.type}`)
-	}
+	return (
+		<CForm onSubmit={PreventDefaultHandler}>
+			<EditableEntityList
+				controlId={controlId}
+				heading={
+					groupInfo.label ? (
+						<>
+							{groupInfo.label}&nbsp;
+							{groupInfo.hint ? <FontAwesomeIcon icon={faQuestionCircle} title={groupInfo.hint} /> : null}
+						</>
+					) : null
+				}
+				entities={entities}
+				entityType={groupInfo.type}
+				entityTypeLabel={groupInfo.entityTypeLabel}
+				onlyFeedbackType={
+					groupInfo.type === EntityModelType.Feedback && groupInfo.booleanFeedbacksOnly ? 'boolean' : null
+				}
+				location={location}
+				serviceFactory={serviceFactory}
+				ownerId={groupId}
+			/>
+		</CForm>
+	)
 })
