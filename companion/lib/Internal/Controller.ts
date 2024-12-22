@@ -31,8 +31,6 @@ import type { ControlsController, NewFeedbackValue } from '../Controls/Controlle
 import type { VariablesCache } from '../Variables/Util.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
-import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { PageController } from '../Page/Controller.js'
@@ -45,6 +43,8 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Fragments/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { Complete } from '@companion-module/base/dist/util.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -431,7 +431,7 @@ export class InternalController {
 	#regenerateActions(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		let actions: Record<string, ActionDefinition> = {}
+		let actions: Record<string, ClientEntityDefinition> = {}
 
 		for (const fragment of this.#fragments) {
 			if ('getActionDefinitions' in fragment && typeof fragment.getActionDefinitions === 'function') {
@@ -443,7 +443,12 @@ export class InternalController {
 
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
-					}
+
+						entityType: EntityModelType.Action,
+						showInvert: false,
+						feedbackType: null,
+						feedbackStyle: undefined,
+					} satisfies Complete<ClientEntityDefinition>
 				}
 			}
 		}
@@ -453,7 +458,7 @@ export class InternalController {
 	#regenerateFeedbacks(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		let feedbacks: Record<string, FeedbackDefinition> = {}
+		let feedbacks: Record<string, ClientEntityDefinition> = {}
 
 		for (const fragment of this.#fragments) {
 			if ('getFeedbackDefinitions' in fragment && typeof fragment.getFeedbackDefinitions === 'function') {
@@ -464,9 +469,10 @@ export class InternalController {
 						hasLearn: feedback.hasLearn ?? false,
 						learnTimeout: feedback.learnTimeout,
 
+						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,
 						supportsChildGroups: feedback.supportsChildGroups ?? [],
-					}
+					} satisfies Complete<ClientEntityDefinition>
 				}
 			}
 		}

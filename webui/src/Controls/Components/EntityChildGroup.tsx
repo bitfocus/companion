@@ -16,12 +16,12 @@ import {
 import { assertNever, PreventDefaultHandler } from '../../util.js'
 import { InlineFeedbacksEditor } from '../FeedbackEditor.js'
 import { InlineActionList } from '../ActionSetEditor.js'
-import { ClientActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import classNames from 'classnames'
+import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
 interface EntityManageChildGroupsProps {
 	entity: SomeEntityModel
-	entityDefinition: Pick<ClientActionDefinition, 'supportsChildGroups'> | undefined
+	entityDefinition: ClientEntityDefinition | undefined
 	controlId: string
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService

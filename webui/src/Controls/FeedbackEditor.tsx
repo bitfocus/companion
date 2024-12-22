@@ -1,4 +1,4 @@
-import { CAlert, CForm, CFormSwitch } from '@coreui/react'
+import { CAlert, CForm } from '@coreui/react'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
@@ -9,12 +9,11 @@ import { DropdownInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContextForPanel } from '../Helpers/CollapseHelper.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
-import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
 import { isEqual } from 'lodash-es'
 import { findAllEntityIdsDeep, stringifyEntityOwnerId } from './Util.js'
 import {
@@ -31,7 +30,6 @@ import {
 import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
 import { EntityRowHeader } from './Components/EntityCellControls.js'
 import { AddEntityPanel } from './Components/AddEntityPanel.js'
-import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
 import { EntityCommonCells } from './Components/EntityCommonCells.js'
 import { EntityEditorHeading } from './Components/EntityEditorHeadingProps.js'
 import { EntityManageChildGroups } from './Components/EntityChildGroup.js'
@@ -343,26 +341,6 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						serviceFactory={serviceFactory}
 					/>
 
-					<EntityCellLeftMain entityConnectionId={feedback.connectionId} setConnectionId={service.setConnection}>
-						{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
-							<MyErrorBoundary>
-								<CForm onSubmit={PreventDefaultHandler}>
-									<div style={{ paddingLeft: 20 }}>
-										<CFormSwitch
-											label={
-												<InlineHelp help="If checked, the behaviour of this feedback is inverted">Invert</InlineHelp>
-											}
-											color="success"
-											checked={!!feedback.isInverted}
-											size="xl"
-											onChange={(e) => service.setInverted(e.currentTarget.checked)}
-										/>
-									</div>
-								</CForm>
-							</MyErrorBoundary>
-						)}
-					</EntityCellLeftMain>
-
 					{onlyType === null && (
 						<>
 							<FeedbackStyles
@@ -384,13 +362,13 @@ const FeedbackEditor = observer(function FeedbackEditor({
 })
 
 interface FeedbackManageStylesProps {
-	feedbackSpec: ClientFeedbackDefinition | undefined
+	feedbackSpec: ClientEntityDefinition | undefined
 	feedback: FeedbackEntityModel
 	setSelectedStyleProps: (keys: string[]) => void
 }
 
 function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }: FeedbackManageStylesProps) {
-	if (feedbackSpec?.type === 'boolean') {
+	if (feedbackSpec?.feedbackType === 'boolean') {
 		const choicesSet = new Set(ButtonStyleProperties.map((c) => c.id))
 		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))
 
@@ -415,7 +393,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }:
 }
 
 interface FeedbackStylesProps {
-	feedbackSpec: ClientFeedbackDefinition | undefined
+	feedbackSpec: ClientEntityDefinition | undefined
 	feedback: FeedbackEntityModel
 	setStylePropsValue: (key: string, value: any) => void
 }
@@ -438,7 +416,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 	const currentStyle = useMemo(() => feedback?.style || {}, [feedback?.style])
 	const showField = useCallback((id: string) => id in currentStyle, [currentStyle])
 
-	if (feedbackSpec?.type === 'boolean') {
+	if (feedbackSpec?.feedbackType === 'boolean') {
 		return (
 			<div className="cell-styles">
 				<CForm onSubmit={PreventDefaultHandler}>

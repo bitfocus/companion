@@ -621,10 +621,10 @@ export class InternalSurface implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			surface_on_page: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Surface: When on the selected page',
 				description: 'Change style when a surface is on the selected page',
-				style: {
+				feedbackStyle: {
 					color: combineRgb(255, 255, 255),
 					bgcolor: combineRgb(255, 0, 0),
 				},

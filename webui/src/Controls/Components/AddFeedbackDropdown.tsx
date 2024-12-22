@@ -49,7 +49,7 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 		const options: Array<AddFeedbackOption | AddFeedbackGroup> = []
 		for (const [connectionId, instanceFeedbacks] of feedbackDefinitions.connections.entries()) {
 			for (const [feedbackId, feedback] of instanceFeedbacks.entries()) {
-				if (!onlyType || feedback.type === onlyType) {
+				if (!onlyType || feedback.feedbackType === onlyType) {
 					const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 					const optionLabel = `${connectionLabel}: ${feedback.label}`
 					options.push({
@@ -70,7 +70,7 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 			const feedbackInfo = feedbackDefinitions.connections.get(connectionId)?.get(feedbackId)
 			if (!feedbackInfo) continue
 
-			if (!onlyType || feedbackInfo.type === onlyType) {
+			if (!onlyType || feedbackInfo.feedbackType === onlyType) {
 				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 				const optionLabel = `${connectionLabel}: ${feedbackInfo.label}`
 				recents.push({

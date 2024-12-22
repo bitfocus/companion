@@ -43,10 +43,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			logic_and: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Logic: AND',
 				description: 'Test if multiple conditions are true',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -64,10 +64,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				],
 			},
 			logic_or: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Logic: OR',
 				description: 'Test if one or more of multiple conditions is true',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -85,10 +85,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				],
 			},
 			logic_xor: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Logic: XOR',
 				description: 'Test if only one of multiple conditions is true',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -106,10 +106,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				],
 			},
 			logic_conditionalise_advanced: {
-				type: 'advanced',
+				feedbackType: 'advanced',
 				label: 'Conditionalise existing feedbacks',
 				description: "Make 'advanced' feedbacks conditional",
-				style: undefined,
+				feedbackStyle: undefined,
 				showInvert: false,
 				options: [],
 				hasLearn: false,

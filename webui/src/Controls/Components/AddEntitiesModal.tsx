@@ -7,10 +7,9 @@ import { capitalize } from 'lodash-es'
 import { CModalExt } from '../../Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import { ObservableMap } from 'mobx'
-import { ClientActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import { RecentlyUsedIdsStore } from '../../Stores/RecentlyUsedIdsStore.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
 interface AddEntitiesModalProps {
 	addEntity: (connectionId: string, definitionId: string) => void
@@ -143,11 +142,9 @@ interface ConnectionItem {
 	description: string | undefined
 }
 
-type TDefBase = ClientActionDefinition | ClientFeedbackDefinition
-
-interface ConnectionCollapseProps<TDef> {
+interface ConnectionCollapseProps {
 	connectionId: string
-	items: ObservableMap<string, TDef> | undefined
+	items: ObservableMap<string, ClientEntityDefinition> | undefined
 	itemName: string
 	expanded: boolean
 	filter: string
@@ -156,7 +153,7 @@ interface ConnectionCollapseProps<TDef> {
 	doAdd: (itemId: string) => void
 }
 
-const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDefBase>({
+const ConnectionCollapse = observer(function ConnectionCollapse({
 	connectionId,
 	items,
 	itemName,
@@ -165,7 +162,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDe
 	onlyFeedbackType: onlyType,
 	doToggle,
 	doAdd,
-}: ConnectionCollapseProps<TDef>) {
+}: ConnectionCollapseProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const connectionInfo = connections.getInfo(connectionId)

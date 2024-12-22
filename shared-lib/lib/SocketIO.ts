@@ -35,17 +35,18 @@ import type {
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
-import type { FeedbackDefinitionUpdate, ClientFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
+import type { FeedbackDefinitionUpdate } from './Model/FeedbackDefinitionModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
-import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
+import type { ActionDefinitionUpdate } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
+import { ClientEntityDefinition } from './Model/EntityDefinitionModel.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -86,12 +87,9 @@ export interface ClientToBackendEventsMap {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'action-definitions:subscribe': () => Record<string, Record<string, ClientActionDefinition | undefined> | undefined>
+	'action-definitions:subscribe': () => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
 	'action-definitions:unsubscribe': () => void
-	'feedback-definitions:subscribe': () => Record<
-		string,
-		Record<string, ClientFeedbackDefinition | undefined> | undefined
-	>
+	'feedback-definitions:subscribe': () => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
 	'feedback-definitions:unsubscribe': () => void
 	'variable-definitions:subscribe': () => AllVariableDefinitions
 	'variable-definitions:unsubscribe': () => void

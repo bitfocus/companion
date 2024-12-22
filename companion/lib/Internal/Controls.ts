@@ -616,11 +616,11 @@ export class InternalControls implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			bank_style: {
-				type: 'advanced',
+				feedbackType: 'advanced',
 				label: 'Button: Use another buttons style',
 				description: 'Imitate the style of another button',
 				showButtonPreview: true,
-				style: undefined,
+				feedbackStyle: undefined,
 				showInvert: false,
 				options: [
 					...CHOICES_DYNAMIC_LOCATION,
@@ -635,11 +635,11 @@ export class InternalControls implements InternalModuleFragment {
 				],
 			},
 			bank_pushed: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Button: When pushed',
 				description: 'Change style when a button is being pressed',
 				showButtonPreview: true,
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -655,11 +655,11 @@ export class InternalControls implements InternalModuleFragment {
 				],
 			},
 			bank_current_step: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Button: Check step',
 				description: 'Change style based on the current step of a button',
 				showButtonPreview: true,
-				style: {
+				feedbackStyle: {
 					color: 0x000000,
 					bgcolor: 0x00ff00,
 				},

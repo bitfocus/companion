@@ -18,7 +18,7 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
-import { FeedbackDefinition } from '@companion-app/shared/FeedbackDefinitionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
 export class ControlEntityInstance {
 	/**
@@ -325,7 +325,7 @@ export class ControlEntityInstance {
 		this.subscribe(false)
 	}
 
-	getFeedbackDefinition(): FeedbackDefinition | undefined {
+	getFeedbackDefinition(): ClientEntityDefinition | undefined {
 		if (this.#data.type !== EntityModelType.Feedback) return undefined
 		return this.#instanceDefinitions.getFeedbackDefinition(this.#data.connectionId, this.#data.definitionId)
 	}
@@ -350,7 +350,7 @@ export class ControlEntityInstance {
 		}
 
 		const definition = this.getFeedbackDefinition()
-		if (!definition || definition.type !== 'boolean') return false
+		if (!definition || definition.feedbackType !== 'boolean') return false
 
 		if (!feedbackData.style) feedbackData.style = {}
 		feedbackData.style[key as keyof ButtonStyleProperties] = value
@@ -371,9 +371,9 @@ export class ControlEntityInstance {
 		const feedbackData = this.#data as FeedbackEntityModel
 
 		const definition = this.getFeedbackDefinition()
-		if (!definition || definition.type !== 'boolean') return false
+		if (!definition || definition.feedbackType !== 'boolean') return false
 
-		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.style || {}
+		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.feedbackStyle || {}
 		const oldStyle: Record<string, any> = feedbackData.style || {}
 		const newStyle: Record<string, any> = {}
 
@@ -646,7 +646,7 @@ export class ControlEntityInstance {
 			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
 		}
 
-		if (!definition || definition.type !== 'boolean') return false
+		if (!definition || definition.feedbackType !== 'boolean') return false
 
 		if (typeof this.#cachedFeedbackValue === 'boolean') {
 			const feedbackData = this.#data as FeedbackEntityModel
@@ -670,9 +670,9 @@ export class ControlEntityInstance {
 		if (feedback.type !== EntityModelType.Feedback) return
 
 		const definition = this.getFeedbackDefinition()
-		if (definition?.type === 'boolean') {
+		if (definition?.feedbackType === 'boolean') {
 			if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
-		} else if (definition?.type === 'advanced') {
+		} else if (definition?.feedbackType === 'advanced') {
 			// Special case to handle the internal 'logic' operators, which need to be done differently
 			if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
 				if (this.getBooleanFeedbackValue()) {

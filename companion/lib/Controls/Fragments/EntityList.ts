@@ -235,7 +235,7 @@ export class ControlEntityList {
 		// If a feedback list, check that the feedback is of the correct type
 		if (this.#listDefinition.type === EntityModelType.Feedback) {
 			const feedbackDefinition = entity.getFeedbackDefinition()
-			if (this.#listDefinition.booleanFeedbacksOnly && feedbackDefinition?.type !== 'boolean') return false
+			if (this.#listDefinition.booleanFeedbacksOnly && feedbackDefinition?.feedbackType !== 'boolean') return false
 		}
 
 		return true

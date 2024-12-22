@@ -145,11 +145,11 @@ export class InternalInstance implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			instance_status: {
-				type: 'advanced',
+				feedbackType: 'advanced',
 				label: 'Connection: Check Status',
 				description:
 					'Change button color on Connection Status\nDisabled color is not used when "All" connections is selected',
-				style: undefined,
+				feedbackStyle: undefined,
 				showInvert: false,
 				options: [
 					{
@@ -210,10 +210,10 @@ export class InternalInstance implements InternalModuleFragment {
 				],
 			},
 			instance_custom_state: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Connection: When matches specified status',
 				description: 'Change style when a connection matches the specified status',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0x00ff00,
 				},

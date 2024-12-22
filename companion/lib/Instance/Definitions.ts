@@ -11,8 +11,6 @@ import type {
 	PresetDefinition,
 	UIPresetDefinition,
 } from '@companion-app/shared/Model/Presets.js'
-import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
@@ -28,6 +26,7 @@ import {
 	EntityModelType,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -64,11 +63,11 @@ export class InstanceDefinitions {
 	/**
 	 * The action definitions
 	 */
-	#actionDefinitions: Record<string, Record<string, ActionDefinition>> = {}
+	#actionDefinitions: Record<string, Record<string, ClientEntityDefinition>> = {}
 	/**
 	 * The feedback definitions
 	 */
-	#feedbackDefinitions: Record<string, Record<string, FeedbackDefinition>> = {}
+	#feedbackDefinitions: Record<string, Record<string, ClientEntityDefinition>> = {}
 	/**
 	 * The preset definitions
 	 */
@@ -206,7 +205,7 @@ export class InstanceDefinitions {
 		const definition = this.getFeedbackDefinition(connectionId, feedbackId)
 		if (!definition) return null
 
-		if (booleanOnly && definition.type !== 'boolean') return null
+		if (booleanOnly && definition.feedbackType !== 'boolean') return null
 
 		const feedback: FeedbackEntityModel = {
 			type: EntityModelType.Feedback,
@@ -226,8 +225,8 @@ export class InstanceDefinitions {
 			}
 		}
 
-		if (!booleanOnly && definition.type === 'boolean' && definition.style) {
-			feedback.style = cloneDeep(definition.style)
+		if (!booleanOnly && definition.feedbackType === 'boolean' && definition.feedbackStyle) {
+			feedback.style = cloneDeep(definition.feedbackStyle)
 		}
 
 		return feedback
@@ -283,7 +282,7 @@ export class InstanceDefinitions {
 	/**
 	 * Get an action definition
 	 */
-	getActionDefinition(connectionId: string, actionId: string): ActionDefinition | undefined {
+	getActionDefinition(connectionId: string, actionId: string): ClientEntityDefinition | undefined {
 		if (this.#actionDefinitions[connectionId]) {
 			return this.#actionDefinitions[connectionId][actionId]
 		} else {
@@ -294,7 +293,7 @@ export class InstanceDefinitions {
 	/**
 	 * Get a feedback definition
 	 */
-	getFeedbackDefinition(connectionId: string, feedbackId: string): FeedbackDefinition | undefined {
+	getFeedbackDefinition(connectionId: string, feedbackId: string): ClientEntityDefinition | undefined {
 		if (this.#feedbackDefinitions[connectionId]) {
 			return this.#feedbackDefinitions[connectionId][feedbackId]
 		} else {
@@ -377,7 +376,7 @@ export class InstanceDefinitions {
 	/**
 	 * Set the action definitions for a connection
 	 */
-	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ActionDefinition>): void {
+	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastActionDefinitions = this.#actionDefinitions[connectionId]
 		this.#actionDefinitions[connectionId] = cloneDeep(actionDefinitions)
 
@@ -406,7 +405,7 @@ export class InstanceDefinitions {
 	/**
 	 * Set the feedback definitions for a connection
 	 */
-	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, FeedbackDefinition>): void {
+	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastFeedbackDefinitions = this.#feedbackDefinitions[connectionId]
 		this.#feedbackDefinitions[connectionId] = cloneDeep(feedbackDefinitions)
 

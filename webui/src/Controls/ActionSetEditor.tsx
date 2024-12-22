@@ -24,7 +24,6 @@ import {
 import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
 import { EntityRowHeader } from './Components/EntityCellControls.js'
 import { AddEntityPanel } from './Components/AddEntityPanel.js'
-import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
 import { EntityCommonCells } from './Components/EntityCommonCells.js'
 import { EntityEditorHeading } from './Components/EntityEditorHeadingProps.js'
 import { EntityManageChildGroups } from './Components/EntityChildGroup.js'
@@ -323,15 +322,13 @@ const ActionTableRow = observer(function ActionTableRow({
 					<div className="editor-grid">
 						<EntityCommonCells
 							entity={action}
-							entityType={EntityModelType.Feedback}
+							entityType={EntityModelType.Action}
 							entityDefinition={actionSpec}
 							service={service}
 							headlineExpanded={headlineExpanded}
 							definitionName={definitionName}
 							location={location}
 						/>
-
-						<EntityCellLeftMain entityConnectionId={action.connectionId} setConnectionId={service.setConnection} />
 
 						<EntityManageChildGroups
 							entity={action}

@@ -1,4 +1,3 @@
-import { ClientActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import classNames from 'classnames'
 import React from 'react'
@@ -6,17 +5,18 @@ import { IEntityEditorActionService } from '../../Services/Controls/ControlEntit
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { LearnButton } from '../../Components/LearnButton.js'
-import { CForm } from '@coreui/react'
+import { CForm, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler, MyErrorBoundary } from '../../util.js'
 import { OptionsInputField } from '../OptionsInputField.js'
 import { useOptionsAndIsVisible } from '../../Hooks/useOptionsAndIsVisible.js'
+import { EntityCellLeftMain } from './EntityCellLeftMain.js'
+import { InlineHelp } from '../../Components/InlineHelp.js'
+import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
 	entityType: EntityModelType
-	entityDefinition:
-		| Pick<ClientActionDefinition, 'hasLearn' | 'description' | 'showButtonPreview' | 'options'>
-		| undefined
+	entityDefinition: ClientEntityDefinition | undefined
 	service: IEntityEditorActionService
 	headlineExpanded: boolean
 	definitionName: string
@@ -79,6 +79,24 @@ export function EntityCommonCells({
 					))}
 				</CForm>
 			</div>
+
+			<EntityCellLeftMain entityConnectionId={entity.connectionId} setConnectionId={service.setConnection}>
+				{entityDefinition?.feedbackType === 'boolean' && entityDefinition.showInvert !== false && (
+					<MyErrorBoundary>
+						<CForm onSubmit={PreventDefaultHandler}>
+							<div style={{ paddingLeft: 20 }}>
+								<CFormSwitch
+									label={<InlineHelp help="If checked, the behaviour of this feedback is inverted">Invert</InlineHelp>}
+									color="success"
+									checked={!!('isInverted' in entity && entity.isInverted)}
+									size="xl"
+									onChange={(e) => service.setInverted(e.currentTarget.checked)}
+								/>
+							</div>
+						</CForm>
+					</MyErrorBoundary>
+				)}
+			</EntityCellLeftMain>
 		</>
 	)
 }

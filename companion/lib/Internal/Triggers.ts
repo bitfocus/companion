@@ -107,10 +107,10 @@ export class InternalTriggers implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			trigger_enabled: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Trigger: When enabled or disabled',
 				description: undefined,
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},

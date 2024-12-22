@@ -39,8 +39,6 @@ import {
 	type LogLevel,
 } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { InstanceDefinitions, PresetDefinitionTmp } from './Definitions.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { UIHandler } from '../UI/Handler.js'
@@ -54,6 +52,8 @@ import {
 	FeedbackEntityModel,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
@@ -639,17 +639,25 @@ export class SocketEventsHandler {
 	 * Handle settings action definitions from the child process
 	 */
 	async #handleSetActionDefinitions(msg: SetActionDefinitionsMessage): Promise<void> {
-		const actions: Record<string, ActionDefinition> = {}
+		const actions: Record<string, ClientEntityDefinition> = {}
 
 		for (const rawAction of msg.actions || []) {
 			actions[rawAction.id] = {
+				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				// @ts-expect-error @companion-module-base exposes these through a mapping that loses the differentiation between types
-				options: rawAction.options || [],
+				// @companion-module-base exposes these through a mapping that loses the differentiation between types
+				options: (rawAction.options || []) as any[],
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
-			}
+
+				showInvert: false,
+				showButtonPreview: false,
+				supportsChildGroups: [],
+
+				feedbackType: null,
+				feedbackStyle: undefined,
+			} satisfies Complete<ClientEntityDefinition>
 		}
 
 		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, actions)
@@ -659,20 +667,24 @@ export class SocketEventsHandler {
 	 * Handle settings feedback definitions from the child process
 	 */
 	async #handleSetFeedbackDefinitions(msg: SetFeedbackDefinitionsMessage): Promise<void> {
-		const feedbacks: Record<string, FeedbackDefinition> = {}
+		const feedbacks: Record<string, ClientEntityDefinition> = {}
 
 		for (const rawFeedback of msg.feedbacks || []) {
 			feedbacks[rawFeedback.id] = {
+				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				description: rawFeedback.description,
-				// @ts-expect-error @companion-module-base exposes these through a mapping that loses the differentiation between types
-				options: rawFeedback.options || [],
-				type: rawFeedback.type,
-				style: rawFeedback.defaultStyle,
+				// @companion-module-base exposes these through a mapping that loses the differentiation between types
+				options: (rawFeedback.options || []) as any[],
+				feedbackType: rawFeedback.type,
+				feedbackStyle: rawFeedback.defaultStyle,
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
-			}
+
+				showButtonPreview: false,
+				supportsChildGroups: [],
+			} satisfies Complete<ClientEntityDefinition>
 		}
 
 		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, feedbacks)

@@ -72,10 +72,10 @@ export class InternalVariables implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			variable_value: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Variable: Check value',
 				description: 'Change style based on the value of a variable',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -110,10 +110,10 @@ export class InternalVariables implements InternalModuleFragment {
 			},
 
 			variable_variable: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Variable: Compare two variables',
 				description: 'Change style based on a variable compared to another variable',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -136,10 +136,10 @@ export class InternalVariables implements InternalModuleFragment {
 			},
 
 			check_expression: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Variable: Check boolean expression',
 				description: 'Change style based on a boolean expression',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},

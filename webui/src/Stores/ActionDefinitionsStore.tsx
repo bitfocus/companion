@@ -1,18 +1,16 @@
-import type {
-	ActionDefinitionUpdate,
-	ClientActionDefinition,
-} from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import type { ActionDefinitionUpdate } from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '../util.js'
 import { ObservableMap, action, observable } from 'mobx'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'
 
-export type ConnectionActionDefinitions = ObservableMap<string, ClientActionDefinition>
+export type ConnectionActionDefinitions = ObservableMap<string, ClientEntityDefinition>
 
 export class ActionDefinitionsStore {
 	readonly connections = observable.map<string, ConnectionActionDefinitions>()
 
 	public reset = action(
-		(newData: Record<string, Record<string, ClientActionDefinition | undefined> | undefined> | null) => {
+		(newData: Record<string, Record<string, ClientEntityDefinition | undefined> | undefined> | null) => {
 			this.connections.clear()
 
 			if (newData) {
@@ -49,8 +47,8 @@ export class ActionDefinitionsStore {
 		}
 	})
 
-	#replaceConnection(connectionId: string, actionSet: Record<string, ClientActionDefinition | undefined>): void {
-		const moduleActions = observable.map<string, ClientActionDefinition>()
+	#replaceConnection(connectionId: string, actionSet: Record<string, ClientEntityDefinition | undefined>): void {
+		const moduleActions = observable.map<string, ClientEntityDefinition>()
 		this.connections.set(connectionId, moduleActions)
 
 		for (const [actionId, action] of Object.entries(actionSet)) {

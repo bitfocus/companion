@@ -267,10 +267,10 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			action_recorder_check_connections: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Action Recorder: Check if specified connections are selected',
 				description: undefined,
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},

@@ -1,19 +1,5 @@
-import type { InternalActionInputField } from './Options.js'
 import type { ObjectsDiff } from './Common.js'
-import type { EntitySupportedChildGroupDefinition } from './EntityModel.js'
-
-export interface ActionDefinition {
-	label: string
-	description: string | undefined
-	options: InternalActionInputField[]
-	hasLearn: boolean
-	learnTimeout: number | undefined
-
-	showButtonPreview: boolean
-	supportsChildGroups: EntitySupportedChildGroupDefinition[]
-}
-
-export interface ClientActionDefinition extends ActionDefinition {}
+import type { ClientEntityDefinition } from './EntityDefinitionModel.js'
 
 export type ActionDefinitionUpdate =
 	| ActionDefinitionUpdateForgetConnection
@@ -28,9 +14,9 @@ export interface ActionDefinitionUpdateAddConnection {
 	type: 'add-connection'
 	connectionId: string
 
-	actions: Record<string, ClientActionDefinition | undefined>
+	actions: Record<string, ClientEntityDefinition | undefined>
 }
-export interface ActionDefinitionUpdateUpdateConnection extends ObjectsDiff<ClientActionDefinition> {
+export interface ActionDefinitionUpdateUpdateConnection extends ObjectsDiff<ClientEntityDefinition> {
 	type: 'update-connection'
 	connectionId: string
 }
