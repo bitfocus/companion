@@ -29,13 +29,16 @@ export const AddEntitiesModal = observer(
 		const { feedbackDefinitions, actionDefinitions, recentlyAddedFeedbacks, recentlyAddedActions } =
 			useContext(RootAppStoreContext)
 
+		let definitions: ObservableMap<string, ObservableMap<string, ClientEntityDefinition>>
 		let recentlyUsed: RecentlyUsedIdsStore
 
 		switch (entityType) {
 			case EntityModelType.Action:
+				definitions = actionDefinitions.connections
 				recentlyUsed = recentlyAddedActions
 				break
 			case EntityModelType.Feedback:
+				definitions = feedbackDefinitions.connections
 				recentlyUsed = recentlyAddedFeedbacks
 				break
 			default:
@@ -97,34 +100,19 @@ export const AddEntitiesModal = observer(
 					/>
 				</CModalHeader>
 				<CModalBody>
-					{entityType === EntityModelType.Feedback &&
-						Array.from(feedbackDefinitions.connections.entries()).map(([connectionId, items]) => (
-							<ConnectionCollapse
-								key={connectionId}
-								connectionId={connectionId}
-								items={items}
-								itemName={`${entityTypeLabel}s`}
-								expanded={!!filter || expanded[connectionId]}
-								filter={filter}
-								onlyFeedbackType={onlyFeedbackType}
-								doToggle={toggleExpanded}
-								doAdd={addAndTrackRecentUsage}
-							/>
-						))}
-					{entityType === EntityModelType.Action &&
-						Array.from(actionDefinitions.connections.entries()).map(([connectionId, items]) => (
-							<ConnectionCollapse
-								key={connectionId}
-								connectionId={connectionId}
-								items={items}
-								itemName={`${entityTypeLabel}s`}
-								expanded={!!filter || expanded[connectionId]}
-								filter={filter}
-								onlyFeedbackType={null}
-								doToggle={toggleExpanded}
-								doAdd={addAndTrackRecentUsage}
-							/>
-						))}
+					{Array.from(definitions.entries()).map(([connectionId, items]) => (
+						<ConnectionCollapse
+							key={connectionId}
+							connectionId={connectionId}
+							items={items}
+							itemName={`${entityTypeLabel}s`}
+							expanded={!!filter || expanded[connectionId]}
+							filter={filter}
+							onlyFeedbackType={onlyFeedbackType}
+							doToggle={toggleExpanded}
+							doAdd={addAndTrackRecentUsage}
+						/>
+					))}
 				</CModalBody>
 				<CModalFooter>
 					<CButton color="secondary" onClick={doClose}>
