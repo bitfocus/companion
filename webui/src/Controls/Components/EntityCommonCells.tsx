@@ -1,4 +1,4 @@
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntityModel, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import classNames from 'classnames'
 import React from 'react'
 import { IEntityEditorActionService } from '../../Services/Controls/ControlEntitiesService.js'
@@ -12,10 +12,12 @@ import { useOptionsAndIsVisible } from '../../Hooks/useOptionsAndIsVisible.js'
 import { EntityCellLeftMain } from './EntityCellLeftMain.js'
 import { InlineHelp } from '../../Components/InlineHelp.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
 	entityType: EntityModelType
+	onlyFeedbackType: 'boolean' | 'advanced' | null
 	entityDefinition: ClientEntityDefinition | undefined
 	service: IEntityEditorActionService
 	headlineExpanded: boolean
@@ -26,6 +28,7 @@ interface EntityCommonCellsProps {
 export function EntityCommonCells({
 	entity,
 	entityType,
+	onlyFeedbackType,
 	entityDefinition,
 	service,
 	headlineExpanded,
@@ -81,22 +84,42 @@ export function EntityCommonCells({
 			</div>
 
 			<EntityCellLeftMain entityConnectionId={entity.connectionId} setConnectionId={service.setConnection}>
-				{entityDefinition?.feedbackType === 'boolean' && entityDefinition.showInvert !== false && (
-					<MyErrorBoundary>
-						<CForm onSubmit={PreventDefaultHandler}>
-							<div style={{ paddingLeft: 20 }}>
-								<CFormSwitch
-									label={<InlineHelp help="If checked, the behaviour of this feedback is inverted">Invert</InlineHelp>}
-									color="success"
-									checked={!!('isInverted' in entity && entity.isInverted)}
-									size="xl"
-									onChange={(e) => service.setInverted(e.currentTarget.checked)}
-								/>
-							</div>
-						</CForm>
-					</MyErrorBoundary>
-				)}
+				{!!entityDefinition &&
+					entityDefinition.entityType === EntityModelType.Feedback &&
+					entityDefinition.feedbackType === 'boolean' &&
+					entityDefinition.showInvert !== false && (
+						<MyErrorBoundary>
+							<CForm onSubmit={PreventDefaultHandler}>
+								<div style={{ paddingLeft: 20 }}>
+									<CFormSwitch
+										label={
+											<InlineHelp help="If checked, the behaviour of this feedback is inverted">Invert</InlineHelp>
+										}
+										color="success"
+										checked={!!('isInverted' in entity && entity.isInverted)}
+										size="xl"
+										onChange={(e) => service.setInverted(e.currentTarget.checked)}
+									/>
+								</div>
+							</CForm>
+						</MyErrorBoundary>
+					)}
 			</EntityCellLeftMain>
+
+			{!!entity && entityType === EntityModelType.Feedback && onlyFeedbackType === null && (
+				<>
+					<FeedbackStyles
+						feedbackSpec={entityDefinition}
+						feedback={entity as FeedbackEntityModel}
+						setStylePropsValue={service.setStylePropsValue}
+					/>
+					<FeedbackManageStyles
+						feedbackSpec={entityDefinition}
+						feedback={entity as FeedbackEntityModel}
+						setSelectedStyleProps={service.setSelectedStyleProps}
+					/>
+				</>
+			)}
 		</>
 	)
 }

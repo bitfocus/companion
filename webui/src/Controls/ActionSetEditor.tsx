@@ -323,6 +323,7 @@ const ActionTableRow = observer(function ActionTableRow({
 						<EntityCommonCells
 							entity={action}
 							entityType={EntityModelType.Action}
+							onlyFeedbackType={null}
 							entityDefinition={actionSpec}
 							service={service}
 							headlineExpanded={headlineExpanded}
