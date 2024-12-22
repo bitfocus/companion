@@ -5,6 +5,7 @@ import type {
 import { ObservableMap, action, observable } from 'mobx'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'
 import { assertNever } from '../util.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 export class EntityDefinitionsStore {
 	readonly feedbacks: EntityDefinitionsForTypeStore
@@ -13,6 +14,15 @@ export class EntityDefinitionsStore {
 	constructor() {
 		this.feedbacks = new EntityDefinitionsForTypeStore()
 		this.actions = new EntityDefinitionsForTypeStore()
+	}
+
+	getEntityDefinition(
+		entityType: EntityModelType,
+		connectionId: string,
+		entityId: string
+	): ClientEntityDefinition | undefined {
+		const entityDefinitions = entityType === EntityModelType.Action ? this.actions : this.feedbacks
+		return entityDefinitions.connections.get(connectionId)?.get(entityId)
 	}
 }
 

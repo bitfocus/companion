@@ -73,7 +73,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 				)}
 			</h4>
 
-			<table className="table feedback-table">
+			<table className="table entity-table">
 				<tbody>
 					{events.map((a, i) => (
 						<MyErrorBoundary key={a?.id ?? i}>
@@ -175,7 +175,7 @@ function EventsTableRow({
 	}
 
 	return (
-		<tr ref={ref} className={isDragging ? 'feedbacklist-dragging' : ''}>
+		<tr ref={ref} className={isDragging ? 'entitylist-dragging' : ''}>
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
