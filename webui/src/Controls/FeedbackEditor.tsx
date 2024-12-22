@@ -1,5 +1,5 @@
 import { CAlert, CForm, CFormSwitch } from '@coreui/react'
-import { faSort, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
@@ -14,14 +14,12 @@ import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import classNames from 'classnames'
 import { InlineHelp } from '../Components/InlineHelp.js'
 import { isEqual } from 'lodash-es'
 import { findAllEntityIdsDeep, stringifyEntityOwnerId } from './Util.js'
 import {
 	EntityModelType,
 	EntityOwner,
-	EntitySupportedChildGroupDefinition,
 	FeedbackEntityModel,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -36,6 +34,7 @@ import { AddEntityPanel } from './Components/AddEntityPanel.js'
 import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
 import { EntityCommonCells } from './Components/EntityCommonCells.js'
 import { EntityEditorHeading } from './Components/EntityEditorHeadingProps.js'
+import { EntityManageChildGroups } from './Components/EntityChildGroup.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -95,7 +94,7 @@ interface InlineFeedbacksEditorProps {
 	ownerId: EntityOwner | null
 }
 
-const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
+export const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 	controlId,
 	heading,
 	feedbacks,
@@ -136,7 +135,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 						<EntityDropPlaceholderZone
 							dragId={`feedbacks_${controlId}`}
 							ownerId={ownerId}
-							listId="feedbacks"
+							listId={feedbacksService.listId}
 							entityCount={feedbacks ? feedbacks.length : 0}
 							entityTypeLabel={entityTypeLabel}
 							moveCard={feedbacksService.moveCard}
@@ -211,7 +210,7 @@ function FeedbackTableRow({
 			if (hoverOwnerId && item.entityId === hoverOwnerId.parentId) return
 
 			// Time to actually perform the action
-			serviceFactory.moveCard('feedbacks', item.entityId, hoverOwnerId, hoverIndex)
+			serviceFactory.moveCard(serviceFactory.listId, item.entityId, hoverOwnerId, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -228,7 +227,7 @@ function FeedbackTableRow({
 		type: dragId,
 		item: {
 			entityId: feedback.id,
-			listId: 'feedbacks',
+			listId: serviceFactory.listId,
 			index: index,
 			ownerId: ownerId,
 			dragState: null,
@@ -336,27 +335,13 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						location={location}
 					/>
 
-					{feedback.connectionId === 'internal' &&
-						feedbackSpec?.supportsChildGroups &&
-						feedbackSpec.supportsChildGroups.length > 0 && (
-							<div
-								className={classNames('cell-children', {
-									'hide-top-gap': feedbackSpec.showInvert || feedbackSpec?.options?.length > 0, //&& (feedback.children ?? []).length > 0,
-								})}
-							>
-								{feedbackSpec.supportsChildGroups.map((groupInfo) => (
-									<FeedbackManageChildGroup
-										key={groupInfo.groupId}
-										controlId={controlId}
-										location={location}
-										groupInfo={groupInfo}
-										entities={feedback.children?.[groupInfo.groupId]}
-										parentId={feedback.id}
-										serviceFactory={serviceFactory}
-									/>
-								))}
-							</div>
-						)}
+					<EntityManageChildGroups
+						entity={feedback}
+						entityDefinition={feedbackSpec}
+						controlId={controlId}
+						location={location}
+						serviceFactory={serviceFactory}
+					/>
 
 					<EntityCellLeftMain entityConnectionId={feedback.connectionId} setConnectionId={service.setConnection}>
 						{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
@@ -397,56 +382,6 @@ const FeedbackEditor = observer(function FeedbackEditor({
 		</>
 	)
 })
-
-interface FeedbackManageChildGroupProps {
-	controlId: string
-	location: ControlLocation | undefined
-	groupInfo: EntitySupportedChildGroupDefinition
-	entities: SomeEntityModel[] | undefined
-	parentId: string
-	serviceFactory: IEntityEditorService
-}
-
-function FeedbackManageChildGroup({
-	controlId,
-	location,
-	groupInfo,
-	entities,
-	parentId,
-	serviceFactory: serviceFactory0,
-}: FeedbackManageChildGroupProps) {
-	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
-
-	const serviceFactory = useControlEntitiesEditorService(
-		controlId,
-		serviceFactory0.listId,
-		groupInfo.entityTypeLabel,
-		groupInfo.type,
-		serviceFactory0.confirmModal
-	)
-
-	return (
-		<CForm onSubmit={PreventDefaultHandler}>
-			<InlineFeedbacksEditor
-				controlId={controlId}
-				heading={
-					groupInfo.label ? (
-						<>
-							{groupInfo.label}&nbsp;
-							{groupInfo.hint ? <FontAwesomeIcon icon={faQuestionCircle} title={groupInfo.hint} /> : null}
-						</>
-					) : null
-				}
-				feedbacks={entities ?? []}
-				entityTypeLabel={groupInfo.entityTypeLabel}
-				onlyType={groupInfo.booleanFeedbacksOnly ? 'boolean' : null}
-				location={location}
-				feedbacksService={serviceFactory}
-				ownerId={groupId}
-			/>
-		</CForm>
-	)
-}
 
 interface FeedbackManageStylesProps {
 	feedbackSpec: ClientFeedbackDefinition | undefined

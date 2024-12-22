@@ -151,7 +151,6 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 				<ActionsList
 					location={undefined}
 					controlId=""
-					listId="trigger_actions"
 					ownerId={null}
 					dragId={'triggerAction'}
 					actions={sessionInfo.actions}

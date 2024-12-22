@@ -1,15 +1,13 @@
-import { CForm } from '@coreui/react'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
+import { MyErrorBoundary, checkDragState } from '../util.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContextForPanel } from '../Helpers/CollapseHelper.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import classNames from 'classnames'
 import {
 	EntityModelType,
 	EntityOwner,
@@ -29,6 +27,7 @@ import { AddEntityPanel } from './Components/AddEntityPanel.js'
 import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
 import { EntityCommonCells } from './Components/EntityCommonCells.js'
 import { EntityEditorHeading } from './Components/EntityEditorHeadingProps.js'
+import { EntityManageChildGroups } from './Components/EntityChildGroup.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -73,7 +72,6 @@ export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 					headingActions={headingActions}
 					actions={actions}
 					location={location}
-					listId={listId}
 					actionsService={actionsService}
 					ownerId={null}
 				/>
@@ -88,17 +86,15 @@ interface InlineActionListProps {
 	headingActions?: JSX.Element[]
 	actions: SomeEntityModel[] | undefined
 	location: ControlLocation | undefined
-	listId: SomeSocketEntityLocation
 	actionsService: IEntityEditorService
 	ownerId: EntityOwner | null
 }
-function InlineActionList({
+export function InlineActionList({
 	controlId,
 	heading,
 	headingActions,
 	actions,
 	location,
-	listId,
 	actionsService,
 	ownerId,
 }: InlineActionListProps) {
@@ -121,7 +117,6 @@ function InlineActionList({
 				controlId={controlId}
 				ownerId={ownerId}
 				dragId={`${controlId}_actions`}
-				listId={listId}
 				actions={actions}
 				actionsService={actionsService}
 			/>
@@ -140,7 +135,6 @@ interface ActionsListProps {
 	controlId: string
 	ownerId: EntityOwner | null
 	dragId: string
-	listId: SomeSocketEntityLocation
 	actions: SomeEntityModel[] | undefined
 	actionsService: IEntityEditorService
 	readonly?: boolean
@@ -151,7 +145,6 @@ export function ActionsList({
 	controlId,
 	ownerId,
 	dragId,
-	listId,
 	actions,
 	actionsService,
 	readonly,
@@ -169,7 +162,6 @@ export function ActionsList({
 								location={location}
 								action={a}
 								index={i}
-								listId={listId}
 								dragId={dragId}
 								serviceFactory={actionsService}
 								readonly={readonly ?? false}
@@ -180,7 +172,7 @@ export function ActionsList({
 				<EntityDropPlaceholderZone
 					dragId={dragId}
 					ownerId={ownerId}
-					listId={listId}
+					listId={actionsService.listId}
 					entityCount={actions ? actions.length : 0}
 					entityTypeLabel="action"
 					moveCard={actionsService.moveCard}
@@ -199,7 +191,6 @@ interface ActionTableRowProps {
 	action: SomeEntityModel
 	controlId: string
 	ownerId: EntityOwner | null
-	listId: SomeSocketEntityLocation
 	location: ControlLocation | undefined
 	index: number
 	dragId: string
@@ -212,7 +203,6 @@ const ActionTableRow = observer(function ActionTableRow({
 	action,
 	controlId,
 	ownerId,
-	listId,
 	location,
 	index,
 	dragId,
@@ -250,7 +240,7 @@ const ActionTableRow = observer(function ActionTableRow({
 				item.entityId === hoverId ||
 				(dragIndex === hoverIndex &&
 					stringifyEntityOwnerId(dragParentId) === stringifyEntityOwnerId(hoverOwnerId) &&
-					stringifySocketEntityLocation(item.listId) === stringifySocketEntityLocation(listId))
+					stringifySocketEntityLocation(item.listId) === stringifySocketEntityLocation(serviceFactory.listId))
 			) {
 				return
 			}
@@ -263,7 +253,7 @@ const ActionTableRow = observer(function ActionTableRow({
 			// but it's good here for the sake of performance
 			// to avoid expensive index searches.
 			item.index = hoverIndex
-			item.listId = listId
+			item.listId = serviceFactory.listId
 			item.ownerId = hoverOwnerId
 		},
 		drop(item, _monitor) {
@@ -275,7 +265,7 @@ const ActionTableRow = observer(function ActionTableRow({
 		canDrag: !readonly,
 		item: {
 			entityId: action.id,
-			listId: listId,
+			listId: serviceFactory.listId,
 			index: index,
 			ownerId: ownerId,
 			// ref: ref,
@@ -343,28 +333,13 @@ const ActionTableRow = observer(function ActionTableRow({
 
 						<EntityCellLeftMain entityConnectionId={action.connectionId} setConnectionId={service.setConnection} />
 
-						{action.connectionId === 'internal' &&
-							!!actionSpec?.supportsChildGroups.find(
-								(grp) => grp.type === EntityModelType.Action && grp.groupId === 'default'
-							) && (
-								<div
-									className={classNames('cell-children', {
-										// 'hide-top-gap': actionOptions.length > 0 && (action.children ?? []).length > 0,
-									})}
-								>
-									<CForm onSubmit={PreventDefaultHandler}>
-										<InlineActionList
-											controlId={controlId}
-											heading={null}
-											actions={action.children?.['default'] ?? []}
-											location={location}
-											listId={listId}
-											actionsService={serviceFactory}
-											ownerId={{ parentId: action.id, childGroup: 'default' }}
-										/>
-									</CForm>
-								</div>
-							)}
+						<EntityManageChildGroups
+							entity={action}
+							entityDefinition={actionSpec}
+							controlId={controlId}
+							location={location}
+							serviceFactory={serviceFactory}
+						/>
 					</div>
 				)}
 			</td>
