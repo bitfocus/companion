@@ -1,13 +1,12 @@
 import { CButton, CCard, CCardBody, CCollapse, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { assertNever, useComputed } from '../../util.js'
+import { useComputed } from '../../util.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { capitalize } from 'lodash-es'
 import { CModalExt } from '../../Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import { ObservableMap } from 'mobx'
-import { RecentlyUsedIdsStore } from '../../Stores/RecentlyUsedIdsStore.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
@@ -26,24 +25,10 @@ export const AddEntitiesModal = observer(
 		{ addEntity, onlyFeedbackType, entityType, entityTypeLabel },
 		ref
 	) {
-		const { entityDefinitions, recentlyAddedFeedbacks, recentlyAddedActions } = useContext(RootAppStoreContext)
+		const { entityDefinitions } = useContext(RootAppStoreContext)
 
-		let definitions: ObservableMap<string, ObservableMap<string, ClientEntityDefinition>>
-		let recentlyUsed: RecentlyUsedIdsStore
-
-		switch (entityType) {
-			case EntityModelType.Action:
-				definitions = entityDefinitions.actions.connections
-				recentlyUsed = recentlyAddedActions
-				break
-			case EntityModelType.Feedback:
-				definitions = entityDefinitions.feedbacks.connections
-				recentlyUsed = recentlyAddedFeedbacks
-				break
-			default:
-				assertNever(entityType)
-				throw new Error(`Invalid entity type: ${entityType}`)
-		}
+		const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
+		const recentlyUsed = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
 
 		const [show, setShow] = useState(false)
 
@@ -99,7 +84,7 @@ export const AddEntitiesModal = observer(
 					/>
 				</CModalHeader>
 				<CModalBody>
-					{Array.from(definitions.entries()).map(([connectionId, items]) => (
+					{Array.from(definitions.connections.entries()).map(([connectionId, items]) => (
 						<ConnectionCollapse
 							key={connectionId}
 							connectionId={connectionId}

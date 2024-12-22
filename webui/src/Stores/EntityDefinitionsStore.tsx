@@ -6,14 +6,21 @@ import { ObservableMap, action, observable } from 'mobx'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'
 import { assertNever } from '../util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { RecentlyUsedIdsStore } from './RecentlyUsedIdsStore.js'
 
 export class EntityDefinitionsStore {
 	readonly feedbacks: EntityDefinitionsForTypeStore
 	readonly actions: EntityDefinitionsForTypeStore
 
+	readonly recentlyAddedActions: RecentlyUsedIdsStore
+	readonly recentlyAddedFeedbacks: RecentlyUsedIdsStore
+
 	constructor() {
 		this.feedbacks = new EntityDefinitionsForTypeStore()
 		this.actions = new EntityDefinitionsForTypeStore()
+
+		this.recentlyAddedActions = new RecentlyUsedIdsStore('recent_actions', 20)
+		this.recentlyAddedFeedbacks = new RecentlyUsedIdsStore('recent_feedbacks', 20)
 	}
 
 	getEntityDefinition(
@@ -23,6 +30,30 @@ export class EntityDefinitionsStore {
 	): ClientEntityDefinition | undefined {
 		const entityDefinitions = entityType === EntityModelType.Action ? this.actions : this.feedbacks
 		return entityDefinitions.connections.get(connectionId)?.get(entityId)
+	}
+
+	getEntityDefinitionsStore(entityType: EntityModelType): EntityDefinitionsForTypeStore {
+		switch (entityType) {
+			case EntityModelType.Action:
+				return this.actions
+			case EntityModelType.Feedback:
+				return this.feedbacks
+			default:
+				assertNever(entityType)
+				throw new Error(`Invalid entity type: ${entityType}`)
+		}
+	}
+
+	getRecentlyUsedEntityDefinitionsStore(entityType: EntityModelType): RecentlyUsedIdsStore {
+		switch (entityType) {
+			case EntityModelType.Action:
+				return this.recentlyAddedActions
+			case EntityModelType.Feedback:
+				return this.recentlyAddedFeedbacks
+			default:
+				assertNever(entityType)
+				throw new Error(`Invalid entity type: ${entityType}`)
+		}
 	}
 }
 

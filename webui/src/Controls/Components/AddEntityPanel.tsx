@@ -2,11 +2,10 @@ import { CButton } from '@coreui/react'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useRef } from 'react'
-import { AddFeedbackDropdown } from './AddFeedbackDropdown.js'
 import { AddEntitiesModal, AddEntitiesModalRef } from './AddEntitiesModal.js'
-import { assertNever, MyErrorBoundary } from '../../util.js'
+import { MyErrorBoundary } from '../../util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { AddActionDropdown } from './AddActionDropdown.js'
+import { AddEntityDropdown } from './AddEntityDropdown.js'
 
 interface AddEntityPanelProps {
 	addEntity: (connectionId: string, definitionId: string) => void
@@ -19,34 +18,14 @@ export function AddEntityPanel({ addEntity, entityType, onlyFeedbackType, entity
 	const addEntitiesRef = useRef<AddEntitiesModalRef>(null)
 	const showAddModal = useCallback(() => addEntitiesRef.current?.show(), [])
 
-	let addDropdown: JSX.Element | null = null
-	switch (entityType) {
-		case EntityModelType.Action:
-			addDropdown = (
-				<AddActionDropdown
-					onSelect={addEntity}
-					// onlyType={onlyFeedbackType}
-					addPlaceholder={`+ Add ${entityTypeLabel}`}
-				/>
-			)
-			break
-		case EntityModelType.Feedback:
-			addDropdown = (
-				<AddFeedbackDropdown
-					onSelect={addEntity}
-					onlyType={onlyFeedbackType}
-					addPlaceholder={`+ Add ${entityTypeLabel}`}
-				/>
-			)
-			break
-		default:
-			assertNever(entityType)
-			break
-	}
-
 	return (
 		<div className="add-dropdown-wrapper">
-			{addDropdown}
+			<AddEntityDropdown
+				onSelect={addEntity}
+				entityType={entityType}
+				entityTypeLabel={entityTypeLabel}
+				onlyFeedbackType={onlyFeedbackType}
+			/>
 			<CButton
 				color="primary"
 				onClick={showAddModal}

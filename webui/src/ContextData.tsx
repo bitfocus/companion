@@ -6,7 +6,6 @@ import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
 import { useActionDefinitionsSubscription } from './Hooks/useActionDefinitionsSubscription.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
-import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
 import { observable } from 'mobx'
 import { PagesStore } from './Stores/PagesStore.js'
 import { EventDefinitionsStore } from './Stores/EventDefinitionsStore.js'
@@ -44,9 +43,6 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			connections: new ConnectionsStore(),
 
 			activeLearns: observable.set(),
-
-			recentlyAddedActions: new RecentlyUsedIdsStore('recent_actions', 20),
-			recentlyAddedFeedbacks: new RecentlyUsedIdsStore('recent_feedbacks', 20),
 
 			entityDefinitions: new EntityDefinitionsStore(),
 			eventDefinitions: new EventDefinitionsStore(),
