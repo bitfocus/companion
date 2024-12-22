@@ -1,5 +1,5 @@
-import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
-import { faSort, faCompressArrowsAlt, faExpandArrowsAlt, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { CAlert, CForm, CFormSwitch } from '@coreui/react'
+import { faSort, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
@@ -7,11 +7,7 @@ import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { DropdownInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
-import {
-	PanelCollapseHelperProvider,
-	usePanelCollapseHelperContext,
-	usePanelCollapseHelperContextForPanel,
-} from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperProvider, usePanelCollapseHelperContextForPanel } from '../Helpers/CollapseHelper.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import { DropdownChoiceId } from '@companion-module/base'
@@ -39,6 +35,7 @@ import { EntityRowHeader } from './Components/EntityCellControls.js'
 import { AddEntityPanel } from './Components/AddEntityPanel.js'
 import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
 import { EntityCommonCells } from './Components/EntityCommonCells.js'
+import { EntityEditorHeading } from './Components/EntityEditorHeadingProps.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -108,47 +105,14 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 	feedbacksService,
 	ownerId,
 }: InlineFeedbacksEditorProps) {
-	const panelCollapseHelper = usePanelCollapseHelperContext()
-
 	const addFeedback = useCallback(
 		(connectionId: string, definitionId: string) => feedbacksService.addEntity(connectionId, definitionId, ownerId),
 		[feedbacksService, ownerId]
 	)
 
-	const childFeedbackIds = feedbacks.map((f) => f.id)
-
-	const expandGroupId = stringifyEntityOwnerId(ownerId)
-
 	return (
 		<>
-			<h4 className="mt-3">
-				{heading}
-
-				{feedbacks.length >= 1 && (
-					<CButtonGroup className="right">
-						<CButtonGroup>
-							{panelCollapseHelper.canExpandAll(expandGroupId, childFeedbackIds) && (
-								<CButton
-									size="sm"
-									onClick={() => panelCollapseHelper.setAllExpanded(expandGroupId, childFeedbackIds)}
-									title="Expand all feedbacks"
-								>
-									<FontAwesomeIcon icon={faExpandArrowsAlt} />
-								</CButton>
-							)}
-							{panelCollapseHelper.canCollapseAll(expandGroupId, childFeedbackIds) && (
-								<CButton
-									size="sm"
-									onClick={() => panelCollapseHelper.setAllCollapsed(expandGroupId, childFeedbackIds)}
-									title="Collapse all feedbacks"
-								>
-									<FontAwesomeIcon icon={faCompressArrowsAlt} />
-								</CButton>
-							)}
-						</CButtonGroup>
-					</CButtonGroup>
-				)}
-			</h4>
+			<EntityEditorHeading heading={heading} ownerId={ownerId} childEntityIds={feedbacks.map((f) => f.id)} />
 
 			<table className="table feedback-table">
 				<tbody>

@@ -1,15 +1,11 @@
-import { CButton, CForm, CButtonGroup } from '@coreui/react'
-import { faSort, faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
+import { CForm } from '@coreui/react'
+import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import {
-	PanelCollapseHelperProvider,
-	usePanelCollapseHelperContext,
-	usePanelCollapseHelperContextForPanel,
-} from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperProvider, usePanelCollapseHelperContextForPanel } from '../Helpers/CollapseHelper.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -32,6 +28,7 @@ import { EntityRowHeader } from './Components/EntityCellControls.js'
 import { AddEntityPanel } from './Components/AddEntityPanel.js'
 import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
 import { EntityCommonCells } from './Components/EntityCommonCells.js'
+import { EntityEditorHeading } from './Components/EntityEditorHeadingProps.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -105,46 +102,19 @@ function InlineActionList({
 	actionsService,
 	ownerId,
 }: InlineActionListProps) {
-	const panelCollapseHelper = usePanelCollapseHelperContext()
-
 	const addAction = useCallback(
 		(connectionId: string, definitionId: string) => actionsService.addEntity(connectionId, definitionId, ownerId),
 		[actionsService, ownerId]
 	)
 
-	const childActionIds = actions?.map((f) => f.id) ?? []
-
-	const ownerIdString = stringifyEntityOwnerId(ownerId)
-
 	return (
 		<>
-			<h5>
-				{heading}
-
-				<CButtonGroup className="right">
-					{actions && actions.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childActionIds) && (
-						<CButton
-							color="white"
-							size="sm"
-							onClick={() => panelCollapseHelper.setAllExpanded(ownerIdString, childActionIds)}
-							title="Expand all"
-						>
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
-						</CButton>
-					)}
-					{actions && actions.length >= 1 && panelCollapseHelper.canCollapseAll(ownerIdString, childActionIds) && (
-						<CButton
-							color="white"
-							size="sm"
-							onClick={() => panelCollapseHelper.setAllCollapsed(ownerIdString, childActionIds)}
-							title="Collapse all"
-						>
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
-						</CButton>
-					)}
-					{headingActions || ''}
-				</CButtonGroup>
-			</h5>
+			<EntityEditorHeading
+				heading={heading}
+				ownerId={ownerId}
+				childEntityIds={actions?.map((f) => f.id) ?? []}
+				headingActions={headingActions}
+			/>
 
 			<ActionsList
 				location={location}
