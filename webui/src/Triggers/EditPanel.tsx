@@ -149,12 +149,11 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 											/>
 										</>
 									}
-									entityType="condition"
+									entityTypeLabel="condition"
 									controlId={controlId}
 									feedbacks={config.condition}
 									onlyType={'boolean'}
 									location={undefined}
-									addPlaceholder="+ Add condition"
 								/>
 							</MyErrorBoundary>
 

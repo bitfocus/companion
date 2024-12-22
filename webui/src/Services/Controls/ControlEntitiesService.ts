@@ -51,7 +51,7 @@ export interface IEntityEditorActionService {
 export function useControlEntitiesEditorService(
 	controlId: string,
 	listId: SomeSocketEntityLocation,
-	entityType: string,
+	entityTypeLabel: string,
 	entityModelType: EntityModelType,
 	confirmModal: React.RefObject<GenericConfirmModalRef>
 ): IEntityEditorService {
@@ -112,7 +112,7 @@ export function useControlEntitiesEditorService(
 			},
 
 			performDelete: (entityId: string) => {
-				confirmModal.current?.show(`Delete ${entityType}`, `Delete ${entityType}?`, 'Delete', () => {
+				confirmModal.current?.show(`Delete ${entityTypeLabel}`, `Delete ${entityTypeLabel}?`, 'Delete', () => {
 					socketEmitPromise(socket, 'controls:entity:remove', [controlId, listId, entityId]).catch((e) => {
 						console.error('Failed to remove control entity', e)
 					})
@@ -169,7 +169,7 @@ export function useControlEntitiesEditorService(
 				)
 			},
 		}),
-		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId), entityType]
+		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId), entityTypeLabel]
 	)
 }
 

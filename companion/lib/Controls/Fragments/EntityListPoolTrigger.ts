@@ -19,7 +19,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,
 			groupId: 'conditions',
-			entityType: 'condition',
+			entityTypeLabel: 'condition',
 			label: 'Conditions',
 			booleanFeedbacksOnly: true,
 		})
@@ -27,7 +27,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		this.#actions = this.createEntityList({
 			type: EntityModelType.Action,
 			groupId: 'actions',
-			entityType: 'action',
+			entityTypeLabel: 'action',
 			label: 'Actions',
 		})
 	}

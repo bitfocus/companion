@@ -1,6 +1,6 @@
 import { CButton, CCard, CCardBody, CCollapse, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { useComputed } from '../util.js'
+import { assertNever, useComputed } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { capitalize } from 'lodash-es'
@@ -9,112 +9,40 @@ import { go as fuzzySearch } from 'fuzzysort'
 import { ObservableMap } from 'mobx'
 import { ClientActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import { RecentlyUsedIdsStore } from '../Stores/RecentlyUsedIdsStore.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
-interface AddActionsModalProps {
-	addAction: (connectionId: string, definitionId: string) => void
+interface AddEntitiesModalProps {
+	addEntity: (connectionId: string, definitionId: string) => void
+	onlyFeedbackType: 'boolean' | 'advanced' | null
+	entityType: EntityModelType
+	entityTypeLabel: string
 }
-export interface AddActionsModalRef {
+export interface AddEntitiesModalRef {
 	show(): void
 }
 
-export const AddActionsModal = observer(
-	forwardRef<AddActionsModalRef, AddActionsModalProps>(function AddActionsModal({ addAction }, ref) {
-		const { recentlyAddedActions, actionDefinitions } = useContext(RootAppStoreContext)
-
-		const [show, setShow] = useState(false)
-
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => {
-			setFilter('')
-		}, [])
-
-		useImperativeHandle(
-			ref,
-			() => ({
-				show() {
-					setShow(true)
-					setFilter('')
-				},
-			}),
-			[]
-		)
-
-		const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-		const toggleExpanded = useCallback((id: string) => {
-			setExpanded((oldVal) => {
-				return {
-					...oldVal,
-					[id]: !oldVal[id],
-				}
-			})
-		}, [])
-		const [filter, setFilter] = useState('')
-
-		const addAction2 = useCallback(
-			(actionType: string) => {
-				recentlyAddedActions.trackId(actionType)
-
-				const [connectionId, definitionId] = actionType.split(':', 2)
-				addAction(connectionId, definitionId)
-			},
-			[recentlyAddedActions, addAction]
-		)
-
-		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
-				<CModalHeader closeButton>
-					<h5>Browse Actions</h5>
-				</CModalHeader>
-				<CModalHeader>
-					<CFormInput
-						type="text"
-						placeholder="Search..."
-						onChange={(e) => setFilter(e.currentTarget.value)}
-						value={filter}
-						autoFocus={true}
-						style={{ fontSize: '1.5em' }}
-					/>
-				</CModalHeader>
-				<CModalBody className="shadow-inset">
-					{Array.from(actionDefinitions.connections.entries()).map(([connectionId, actions]) => (
-						<ConnectionCollapse
-							key={connectionId}
-							connectionId={connectionId}
-							items={actions}
-							onlyType={null}
-							itemName="actions"
-							expanded={!!filter || expanded[connectionId]}
-							filter={filter}
-							doToggle={toggleExpanded}
-							doAdd={addAction2}
-						/>
-					))}
-				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Done
-					</CButton>
-				</CModalFooter>
-			</CModalExt>
-		)
-	})
-)
-
-interface AddFeedbacksModalProps {
-	addFeedback: (connectionId: string, definitionId: string) => void
-	onlyType: 'boolean' | 'advanced' | null
-	entityType: string
-}
-export interface AddFeedbacksModalRef {
-	show(): void
-}
-
-export const AddFeedbacksModal = observer(
-	forwardRef<AddFeedbacksModalRef, AddFeedbacksModalProps>(function AddFeedbacksModal(
-		{ addFeedback, onlyType, entityType },
+export const AddEntitiesModal = observer(
+	forwardRef<AddEntitiesModalRef, AddEntitiesModalProps>(function AddFeedbacksModal(
+		{ addEntity, onlyFeedbackType, entityType, entityTypeLabel },
 		ref
 	) {
-		const { feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
+		const { feedbackDefinitions, actionDefinitions, recentlyAddedFeedbacks, recentlyAddedActions } =
+			useContext(RootAppStoreContext)
+
+		let recentlyUsed: RecentlyUsedIdsStore
+
+		switch (entityType) {
+			case EntityModelType.Action:
+				recentlyUsed = recentlyAddedActions
+				break
+			case EntityModelType.Feedback:
+				recentlyUsed = recentlyAddedFeedbacks
+				break
+			default:
+				assertNever(entityType)
+				throw new Error(`Invalid entity type: ${entityType}`)
+		}
 
 		const [show, setShow] = useState(false)
 
@@ -145,20 +73,20 @@ export const AddFeedbacksModal = observer(
 		}, [])
 		const [filter, setFilter] = useState('')
 
-		const addFeedback2 = useCallback(
-			(feedbackType: string) => {
-				recentlyAddedFeedbacks.trackId(feedbackType)
+		const addAndTrackRecentUsage = useCallback(
+			(connectionAndDefinitionId: string) => {
+				recentlyUsed.trackId(connectionAndDefinitionId)
 
-				const [connectionId, definitionId] = feedbackType.split(':', 2)
-				addFeedback(connectionId, definitionId)
+				const [connectionId, definitionId] = connectionAndDefinitionId.split(':', 2)
+				addEntity(connectionId, definitionId)
 			},
-			[recentlyAddedFeedbacks, addFeedback]
+			[recentlyUsed, addEntity]
 		)
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 				<CModalHeader closeButton>
-					<h5>Browse {capitalize(entityType)}s</h5>
+					<h5>Browse {capitalize(entityTypeLabel)}s</h5>
 				</CModalHeader>
 				<CModalHeader>
 					<CFormInput
@@ -170,19 +98,34 @@ export const AddFeedbacksModal = observer(
 					/>
 				</CModalHeader>
 				<CModalBody>
-					{Array.from(feedbackDefinitions.connections.entries()).map(([connectionId, items]) => (
-						<ConnectionCollapse
-							key={connectionId}
-							connectionId={connectionId}
-							items={items}
-							itemName="feedbacks"
-							expanded={!!filter || expanded[connectionId]}
-							filter={filter}
-							onlyType={onlyType}
-							doToggle={toggleExpanded}
-							doAdd={addFeedback2}
-						/>
-					))}
+					{entityType === EntityModelType.Feedback &&
+						Array.from(feedbackDefinitions.connections.entries()).map(([connectionId, items]) => (
+							<ConnectionCollapse
+								key={connectionId}
+								connectionId={connectionId}
+								items={items}
+								itemName={`${entityTypeLabel}s`}
+								expanded={!!filter || expanded[connectionId]}
+								filter={filter}
+								onlyFeedbackType={onlyFeedbackType}
+								doToggle={toggleExpanded}
+								doAdd={addAndTrackRecentUsage}
+							/>
+						))}
+					{entityType === EntityModelType.Action &&
+						Array.from(actionDefinitions.connections.entries()).map(([connectionId, items]) => (
+							<ConnectionCollapse
+								key={connectionId}
+								connectionId={connectionId}
+								items={items}
+								itemName={`${entityTypeLabel}s`}
+								expanded={!!filter || expanded[connectionId]}
+								filter={filter}
+								onlyFeedbackType={null}
+								doToggle={toggleExpanded}
+								doAdd={addAndTrackRecentUsage}
+							/>
+						))}
 				</CModalBody>
 				<CModalFooter>
 					<CButton color="secondary" onClick={doClose}>
@@ -208,7 +151,7 @@ interface ConnectionCollapseProps<TDef> {
 	itemName: string
 	expanded: boolean
 	filter: string
-	onlyType: string | null
+	onlyFeedbackType: string | null
 	doToggle: (connectionId: string) => void
 	doAdd: (itemId: string) => void
 }
@@ -219,7 +162,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDe
 	itemName,
 	expanded,
 	filter,
-	onlyType,
+	onlyFeedbackType: onlyType,
 	doToggle,
 	doAdd,
 }: ConnectionCollapseProps<TDef>) {
@@ -227,7 +170,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDe
 
 	const connectionInfo = connections.getInfo(connectionId)
 
-	const doToggle2 = useCallback(() => doToggle(connectionId), [doToggle, connectionId])
+	const doToggleClick = useCallback(() => doToggle(connectionId), [doToggle, connectionId])
 
 	const allValues: ConnectionItem[] = useComputed(() => {
 		if (!items) return []
@@ -261,7 +204,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse<TDef extends TDe
 	} else {
 		return (
 			<CCard className={'add-browse-card'}>
-				<div className="header" onClick={doToggle2}>
+				<div className="header" onClick={doToggleClick}>
 					{connectionInfo?.label || connectionId}
 				</div>
 				<CCollapse visible={expanded}>
@@ -290,10 +233,10 @@ interface AddRowProps {
 	doAdd: (itemId: string) => void
 }
 function AddRow({ info, id, doAdd }: AddRowProps) {
-	const doAdd2 = useCallback(() => doAdd(id), [doAdd, id])
+	const doAddClick = useCallback(() => doAdd(id), [doAdd, id])
 
 	return (
-		<tr onClick={doAdd2} className="clickable-add-item">
+		<tr onClick={doAddClick} className="clickable-add-item">
 			<td>
 				<span className="item-label">{info.label}</span>
 				<br />

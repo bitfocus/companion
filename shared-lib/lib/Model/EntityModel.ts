@@ -51,7 +51,7 @@ export interface EntitySupportedChildGroupDefinition {
 	type: EntityModelType
 	groupId: string
 	/** Display type of the entity (eg condition, feedback or action) */
-	entityType: string
+	entityTypeLabel: string
 	label: string
 	hint?: string
 

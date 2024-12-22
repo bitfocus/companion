@@ -77,7 +77,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			{
 				type: EntityModelType.Feedback,
 				groupId: 'feedbacks',
-				entityType: 'feedback',
+				entityTypeLabel: 'feedback',
 				label: 'Feedbacks',
 			}
 		)
@@ -324,7 +324,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const list = this.createEntityList({
 			type: EntityModelType.Action,
 			groupId: '',
-			entityType: 'action',
+			entityTypeLabel: 'action',
 			label: label,
 		})
 		list.loadStorage(entities, skipSubscribe, isCloned)

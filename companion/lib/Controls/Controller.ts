@@ -327,14 +327,14 @@ export class ControlsController extends CoreBase {
 
 		client.onPromise(
 			'controls:entity:add',
-			(controlId, entityLocation, ownerId, connectionId, entityType, entityDefinition) => {
+			(controlId, entityLocation, ownerId, connectionId, entityTypeLabel, entityDefinition) => {
 				const control = this.getControl(controlId)
 				if (!control) return false
 
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 				let newEntity: SomeEntityModel | null = null
-				switch (entityType) {
+				switch (entityTypeLabel) {
 					case EntityModelType.Action:
 						newEntity = this.instance.definitions.createActionItem(connectionId, entityDefinition)
 						break
@@ -342,7 +342,7 @@ export class ControlsController extends CoreBase {
 						newEntity = this.instance.definitions.createFeedbackItem(connectionId, entityDefinition, false) // TODO booleanOnly?
 						break
 					default:
-						assertNever(entityType)
+						assertNever(entityTypeLabel)
 						return false
 				}
 

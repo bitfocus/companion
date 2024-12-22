@@ -8,7 +8,7 @@ import { TextInputField } from '../../Components/TextInputField.js'
 
 interface EntityCellControlProps {
 	service: IEntityEditorActionService
-	entityType: string
+	entityTypeLabel: string
 	entity: SomeEntityModel
 	isPanelCollapsed: boolean
 	setPanelCollapsed: (collapsed: boolean) => void
@@ -21,7 +21,7 @@ interface EntityCellControlProps {
 
 export function EntityRowHeader({
 	service,
-	entityType,
+	entityTypeLabel,
 	entity,
 	isPanelCollapsed,
 	setPanelCollapsed,
@@ -47,7 +47,7 @@ export function EntityRowHeader({
 				) : (
 					<TextInputField
 						value={entity.headline ?? ''}
-						placeholder={`Describe the intent of the ${entityType}`}
+						placeholder={`Describe the intent of the ${entityTypeLabel}`}
 						setValue={service.setHeadline}
 					/>
 				)}
@@ -60,18 +60,23 @@ export function EntityRowHeader({
 						</CButton>
 					)}
 					{isPanelCollapsed ? (
-						<CButton size="sm" onClick={doExpand} title={`Expand ${entityType} view`}>
+						<CButton size="sm" onClick={doExpand} title={`Expand ${entityTypeLabel} view`}>
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					) : (
-						<CButton size="sm" onClick={doCollapse} title={`Collapse ${entityType} view`}>
+						<CButton size="sm" onClick={doCollapse} title={`Collapse ${entityTypeLabel} view`}>
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
-					<CButton size="sm" disabled={readonly} onClick={service.performDuplicate} title={`Duplicate ${entityType}`}>
+					<CButton
+						size="sm"
+						disabled={readonly}
+						onClick={service.performDuplicate}
+						title={`Duplicate ${entityTypeLabel}`}
+					>
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
-					<CButton size="sm" disabled={readonly} onClick={service.performDelete} title={`Remove ${entityType}`}>
+					<CButton size="sm" disabled={readonly} onClick={service.performDelete} title={`Remove ${entityTypeLabel}`}>
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 					{!!service.setEnabled && (
@@ -80,7 +85,7 @@ export function EntityRowHeader({
 							<CFormSwitch
 								color="success"
 								checked={!entity.disabled}
-								title={entity.disabled ? `Enable ${entityType}` : `Disable ${entityType}`}
+								title={entity.disabled ? `Enable ${entityTypeLabel}` : `Disable ${entityTypeLabel}`}
 								onChange={innerSetEnabled}
 							/>
 						</>

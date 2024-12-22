@@ -58,7 +58,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 					{
 						type: EntityModelType.Feedback,
 						groupId: 'default',
-						entityType: 'condition',
+						entityTypeLabel: 'condition',
 						label: '',
 					},
 				],
@@ -79,7 +79,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 					{
 						type: EntityModelType.Feedback,
 						groupId: 'default',
-						entityType: 'condition',
+						entityTypeLabel: 'condition',
 						label: '',
 					},
 				],
@@ -100,7 +100,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 					{
 						type: EntityModelType.Feedback,
 						groupId: 'default',
-						entityType: 'condition',
+						entityTypeLabel: 'condition',
 						label: '',
 					},
 				],
@@ -118,14 +118,14 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 					{
 						type: EntityModelType.Feedback,
 						groupId: 'condition',
-						entityType: 'condition',
+						entityTypeLabel: 'condition',
 						label: 'Condition',
 						hint: 'This feedback will only execute when all of the conditions are true',
 					},
 					{
 						type: EntityModelType.Feedback,
 						groupId: 'feedbacks',
-						entityType: 'feedback',
+						entityTypeLabel: 'feedback',
 						label: 'Feedbacks',
 					},
 				],
@@ -159,7 +159,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 					{
 						type: EntityModelType.Action,
 						groupId: 'default',
-						entityType: 'action',
+						entityTypeLabel: 'action',
 						label: '',
 					},
 				],

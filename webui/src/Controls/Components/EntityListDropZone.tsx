@@ -17,7 +17,7 @@ interface EntityDropPlaceholderZoneProps {
 	listId: SomeSocketEntityLocation
 	ownerId: EntityOwner | null
 	entityCount: number
-	entityType: string
+	entityTypeLabel: string
 	moveCard: (
 		dragListId: SomeSocketEntityLocation,
 		dragEntityId: string,
@@ -31,7 +31,7 @@ export function EntityDropPlaceholderZone({
 	listId,
 	ownerId,
 	entityCount,
-	entityType,
+	entityTypeLabel,
 	moveCard,
 }: EntityDropPlaceholderZoneProps) {
 	const [isDragging, drop] = useDrop<EntityListDragItem, unknown, boolean>({
@@ -62,7 +62,7 @@ export function EntityDropPlaceholderZone({
 	return (
 		<tr ref={drop} className="entitylist-dropzone">
 			<td colSpan={3}>
-				<p>Drop {entityType} here</p>
+				<p>Drop {entityTypeLabel} here</p>
 			</td>
 		</tr>
 	)

@@ -7,7 +7,7 @@ import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { AddActionsModal, AddActionsModalRef } from './AddModal.js'
+import { AddEntitiesModal, AddEntitiesModalRef } from './AddModal.js'
 import {
 	PanelCollapseHelperProvider,
 	usePanelCollapseHelperContext,
@@ -175,7 +175,7 @@ interface AddActionsPanelProps {
 }
 
 const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addAction }: AddActionsPanelProps) {
-	const addActionsRef = useRef<AddActionsModalRef>(null)
+	const addActionsRef = useRef<AddEntitiesModalRef>(null)
 	const showAddModal = useCallback(() => {
 		addActionsRef.current?.show()
 	}, [])
@@ -188,7 +188,13 @@ const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addActio
 			</CButton>
 
 			<MyErrorBoundary>
-				<AddActionsModal ref={addActionsRef} addAction={addAction} />
+				<AddEntitiesModal
+					ref={addActionsRef}
+					addEntity={addAction}
+					entityTypeLabel="action"
+					entityType={EntityModelType.Action}
+					onlyFeedbackType={null}
+				/>
 			</MyErrorBoundary>
 		</div>
 	)
@@ -241,7 +247,7 @@ export function ActionsList({
 					ownerId={ownerId}
 					listId={listId}
 					entityCount={actions ? actions.length : 0}
-					entityType="action"
+					entityTypeLabel="action"
 					moveCard={actionsService.moveCard}
 				/>
 			</tbody>
@@ -382,7 +388,7 @@ const ActionTableRow = observer(function ActionTableRow({
 			<td style={{ paddingRight: 0 }}>
 				<EntityRowHeader
 					service={service}
-					entityType="action"
+					entityTypeLabel="action"
 					entity={action}
 					isPanelCollapsed={isCollapsed}
 					setPanelCollapsed={setCollapsed}

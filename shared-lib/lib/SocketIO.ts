@@ -169,7 +169,7 @@ export interface ClientToBackendEventsMap {
 		entityLocation: SomeSocketEntityLocation,
 		ownerId: EntityOwner | null,
 		connectionId: string,
-		entityType: EntityModelType,
+		entityTypeLabel: EntityModelType,
 		entityDefinition: string
 	) => boolean
 

@@ -1,11 +1,5 @@
 import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
-import {
-	faSort,
-	faCompressArrowsAlt,
-	faExpandArrowsAlt,
-	faFolderOpen,
-	faQuestionCircle,
-} from '@fortawesome/free-solid-svg-icons'
+import { faSort, faCompressArrowsAlt, faExpandArrowsAlt, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
@@ -14,7 +8,6 @@ import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { DropdownInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
-import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
 import {
 	PanelCollapseHelperProvider,
 	usePanelCollapseHelperContext,
@@ -27,7 +20,6 @@ import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { LearnButton } from '../Components/LearnButton.js'
-import { AddFeedbackDropdown } from './AddFeedbackDropdown.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
@@ -48,32 +40,31 @@ import {
 } from '../Services/Controls/ControlEntitiesService.js'
 import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
 import { EntityRowHeader } from './Components/EntityCellControls.js'
+import { AddFeedbackPanel } from './AddFeedbackPanel.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
 	feedbacks: SomeEntityModel[]
 	heading: JSX.Element | string
-	entityType: string
+	entityTypeLabel: string
 	onlyType: 'boolean' | 'advanced' | null
 	location: ControlLocation | undefined
-	addPlaceholder: string
 }
 
 export function ControlFeedbacksEditor({
 	controlId,
 	feedbacks,
 	heading,
-	entityType,
+	entityTypeLabel,
 	onlyType,
 	location,
-	addPlaceholder,
 }: ControlFeedbacksEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
 	const feedbacksService = useControlEntitiesEditorService(
 		controlId,
 		'feedbacks',
-		entityType,
+		entityTypeLabel,
 		EntityModelType.Feedback,
 		confirmModal
 	)
@@ -88,10 +79,9 @@ export function ControlFeedbacksEditor({
 				controlId={controlId}
 				heading={heading}
 				feedbacks={feedbacks}
-				entityType={entityType}
+				entityTypeLabel={entityTypeLabel}
 				onlyType={onlyType}
 				location={location}
-				addPlaceholder={addPlaceholder}
 				feedbacksService={feedbacksService}
 				ownerId={null}
 			/>
@@ -103,10 +93,9 @@ interface InlineFeedbacksEditorProps {
 	controlId: string
 	heading: JSX.Element | string | null
 	feedbacks: SomeEntityModel[]
-	entityType: string
+	entityTypeLabel: string
 	onlyType: 'boolean' | 'advanced' | null
 	location: ControlLocation | undefined
-	addPlaceholder: string
 	feedbacksService: IEntityEditorService
 	ownerId: EntityOwner | null
 }
@@ -115,16 +104,12 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 	controlId,
 	heading,
 	feedbacks,
-	entityType,
+	entityTypeLabel,
 	onlyType,
 	location,
-	addPlaceholder,
 	feedbacksService,
 	ownerId,
 }: InlineFeedbacksEditorProps) {
-	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
-	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
-
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
 	const addFeedback = useCallback(
@@ -138,15 +123,6 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 
 	return (
 		<>
-			<MyErrorBoundary>
-				<AddFeedbacksModal
-					ref={addFeedbacksRef}
-					addFeedback={addFeedback}
-					onlyType={onlyType}
-					entityType={entityType}
-				/>
-			</MyErrorBoundary>
-
 			<h4 className="mt-3">
 				{heading}
 
@@ -184,7 +160,7 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 								key={a?.id ?? i}
 								controlId={controlId}
 								ownerId={ownerId}
-								entityType={entityType}
+								entityTypeLabel={entityTypeLabel}
 								index={i}
 								feedback={a}
 								dragId={`feedbacks_${controlId}`}
@@ -200,26 +176,14 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 							ownerId={ownerId}
 							listId="feedbacks"
 							entityCount={feedbacks ? feedbacks.length : 0}
-							entityType={entityType}
+							entityTypeLabel={entityTypeLabel}
 							moveCard={feedbacksService.moveCard}
 						/>
 					)}
 				</tbody>
 			</table>
 
-			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} onlyType={onlyType} addPlaceholder={addPlaceholder} />
-				<CButton
-					color="primary"
-					onClick={showAddModal}
-					style={{
-						borderTopLeftRadius: 0,
-						borderBottomLeftRadius: 0,
-					}}
-				>
-					<FontAwesomeIcon icon={faFolderOpen} />
-				</CButton>
-			</div>
+			<AddFeedbackPanel addFeedback={addFeedback} onlyType={onlyType} entityTypeLabel={entityTypeLabel} />
 		</>
 	)
 })
@@ -231,7 +195,7 @@ interface FeedbackTableRowDragStatus {
 
 interface FeedbackTableRowProps {
 	controlId: string
-	entityType: string
+	entityTypeLabel: string
 	feedback: SomeEntityModel
 	serviceFactory: IEntityEditorService
 	index: number
@@ -243,7 +207,7 @@ interface FeedbackTableRowProps {
 
 function FeedbackTableRow({
 	controlId,
-	entityType,
+	entityTypeLabel,
 	feedback,
 	serviceFactory,
 	index,
@@ -323,7 +287,7 @@ function FeedbackTableRow({
 					<FeedbackEditor
 						controlId={controlId}
 						ownerId={ownerId}
-						entityType={entityType}
+						entityTypeLabel={entityTypeLabel}
 						location={location}
 						feedback={feedback}
 						serviceFactory={serviceFactory}
@@ -340,7 +304,7 @@ function FeedbackTableRow({
 interface FeedbackEditorProps {
 	controlId: string
 	ownerId: EntityOwner | null
-	entityType: string
+	entityTypeLabel: string
 	feedback: FeedbackEntityModel
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
@@ -350,7 +314,7 @@ interface FeedbackEditorProps {
 const FeedbackEditor = observer(function FeedbackEditor({
 	controlId,
 	ownerId,
-	entityType,
+	entityTypeLabel,
 	feedback,
 	location,
 	serviceFactory,
@@ -387,7 +351,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 		<>
 			<EntityRowHeader
 				service={service}
-				entityType={entityType}
+				entityTypeLabel={entityTypeLabel}
 				entity={feedback}
 				isPanelCollapsed={isCollapsed}
 				setPanelCollapsed={setCollapsed}
@@ -542,7 +506,7 @@ function FeedbackManageChildGroup({
 	const serviceFactory = useControlEntitiesEditorService(
 		controlId,
 		serviceFactory0.listId,
-		groupInfo.entityType,
+		groupInfo.entityTypeLabel,
 		groupInfo.type,
 		serviceFactory0.confirmModal
 	)
@@ -560,10 +524,9 @@ function FeedbackManageChildGroup({
 					) : null
 				}
 				feedbacks={entities ?? []}
-				entityType={groupInfo.entityType}
+				entityTypeLabel={groupInfo.entityTypeLabel}
 				onlyType={groupInfo.booleanFeedbacksOnly ? 'boolean' : null}
 				location={location}
-				addPlaceholder={`+ Add ${groupInfo.entityType}`}
 				feedbacksService={serviceFactory}
 				ownerId={groupId}
 			/>
