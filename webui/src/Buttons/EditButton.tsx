@@ -546,18 +546,21 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 				>
 					<p></p>
 					{selectedStep === 'feedbacks' && (
-						<MyErrorBoundary>
-							<ControlEntitiesEditor
-								heading="Feedbacks"
-								controlId={controlId}
-								entities={feedbacks}
-								location={location}
-								listId="feedbacks"
-								entityType={EntityModelType.Feedback}
-								entityTypeLabel="feedback"
-								onlyFeedbackType={null}
-							/>
-						</MyErrorBoundary>
+						<div>
+							{/* Wrap the entity-category, for :first-child to work */}
+							<MyErrorBoundary>
+								<ControlEntitiesEditor
+									heading="Feedbacks"
+									controlId={controlId}
+									entities={feedbacks}
+									location={location}
+									listId="feedbacks"
+									entityType={EntityModelType.Feedback}
+									entityTypeLabel="feedback"
+									onlyFeedbackType={null}
+								/>
+							</MyErrorBoundary>
+						</div>
 					)}
 
 					{selectedKey && selectedStep && (
