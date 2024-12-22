@@ -13,6 +13,7 @@ import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
+import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitions
@@ -44,6 +45,8 @@ export abstract class ControlEntityListPoolBase {
 	 * Trigger a redraw/invalidation of the control
 	 */
 	protected readonly triggerRedraw: () => void
+
+	abstract get baseStyle(): ButtonStyleProperties
 
 	protected constructor(props: ControlEntityListPoolProps) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)

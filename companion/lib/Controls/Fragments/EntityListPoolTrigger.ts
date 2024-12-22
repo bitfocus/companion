@@ -6,6 +6,7 @@ import {
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList
@@ -29,6 +30,10 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 			entityType: 'action',
 			label: 'Actions',
 		})
+	}
+
+	get baseStyle(): ButtonStyleProperties {
+		throw new Error('baseStyle not supported for triggers.')
 	}
 
 	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean) {
