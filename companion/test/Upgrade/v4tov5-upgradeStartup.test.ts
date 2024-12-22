@@ -4,6 +4,7 @@ import LogController from '../../lib/Log/Controller.js'
 import v4tov5 from '../../lib/Data/Upgrades/v4tov5.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import fs from 'fs-extra'
+import { SuppressLogging } from '../Util.js'
 
 function CreateDataDatabase() {
 	const db = new DataDatabase()
@@ -29,6 +30,8 @@ class DataDatabase extends DataStoreBase {
 }
 
 describe('upgrade', () => {
+	SuppressLogging()
+
 	const db = CreateDataDatabase()
 	let data = fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v5.json', 'utf8')
 	data = JSON.parse(data)
