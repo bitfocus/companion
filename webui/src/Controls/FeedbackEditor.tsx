@@ -15,7 +15,11 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { DropdownInputField } from '../Components/index.js'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
-import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import {
+	PanelCollapseHelperProvider,
+	usePanelCollapseHelperContext,
+	usePanelCollapseHelperContextForPanel,
+} from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
@@ -76,10 +80,8 @@ export function ControlFeedbacksEditor({
 
 	const feedbackIds = useMemo(() => findAllEntityIdsDeep(feedbacks), [feedbacks])
 
-	const panelCollapseHelper = usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
-
 	return (
-		<>
+		<PanelCollapseHelperProvider storageId={`feedbacks_${controlId}`} knownPanelIds={feedbackIds}>
 			<GenericConfirmModal ref={confirmModal} />
 
 			<InlineFeedbacksEditor
@@ -92,9 +94,8 @@ export function ControlFeedbacksEditor({
 				addPlaceholder={addPlaceholder}
 				feedbacksService={feedbacksService}
 				ownerId={null}
-				panelCollapseHelper={panelCollapseHelper}
 			/>
-		</>
+		</PanelCollapseHelperProvider>
 	)
 }
 
@@ -108,7 +109,6 @@ interface InlineFeedbacksEditorProps {
 	addPlaceholder: string
 	feedbacksService: IEntityEditorService
 	ownerId: EntityOwner | null
-	panelCollapseHelper: PanelCollapseHelper
 }
 
 const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
@@ -121,10 +121,11 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 	addPlaceholder,
 	feedbacksService,
 	ownerId,
-	panelCollapseHelper,
 }: InlineFeedbacksEditorProps) {
 	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
+
+	const panelCollapseHelper = usePanelCollapseHelperContext()
 
 	const addFeedback = useCallback(
 		(connectionId: string, definitionId: string) => feedbacksService.addEntity(connectionId, definitionId, ownerId),
@@ -188,7 +189,6 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 								feedback={a}
 								dragId={`feedbacks_${controlId}`}
 								serviceFactory={feedbacksService}
-								panelCollapseHelper={panelCollapseHelper}
 								onlyType={onlyType}
 								location={location}
 							/>
@@ -237,7 +237,6 @@ interface FeedbackTableRowProps {
 	index: number
 	ownerId: EntityOwner | null
 	dragId: string
-	panelCollapseHelper: PanelCollapseHelper
 	onlyType: 'boolean' | 'advanced' | null
 	location: ControlLocation | undefined
 }
@@ -250,7 +249,6 @@ function FeedbackTableRow({
 	index,
 	ownerId,
 	dragId,
-	panelCollapseHelper,
 	onlyType,
 	location,
 }: FeedbackTableRowProps) {
@@ -329,7 +327,6 @@ function FeedbackTableRow({
 						location={location}
 						feedback={feedback}
 						serviceFactory={serviceFactory}
-						panelCollapseHelper={panelCollapseHelper}
 						onlyType={onlyType}
 					/>
 				) : (
@@ -347,7 +344,6 @@ interface FeedbackEditorProps {
 	feedback: FeedbackEntityModel
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
-	panelCollapseHelper: PanelCollapseHelper
 	onlyType: 'boolean' | 'advanced' | null
 }
 
@@ -358,7 +354,6 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	feedback,
 	location,
 	serviceFactory,
-	panelCollapseHelper,
 	onlyType,
 }: FeedbackEditorProps) {
 	const service = useControlEntityService(serviceFactory, feedback)
@@ -383,7 +378,10 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!feedback.headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
 
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(stringifyEntityOwnerId(ownerId), feedback.id)
+	const { isCollapsed, setCollapsed } = usePanelCollapseHelperContextForPanel(
+		stringifyEntityOwnerId(ownerId),
+		feedback.id
+	)
 
 	return (
 		<>
@@ -392,7 +390,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 				entityType={entityType}
 				entity={feedback}
 				isPanelCollapsed={isCollapsed}
-				setPanelCollapsed={panelCollapseHelper.setPanelCollapsed}
+				setPanelCollapsed={setCollapsed}
 				definitionName={definitionName}
 				canSetHeadline={canSetHeadline}
 				headlineExpanded={headlineExpanded}
@@ -460,7 +458,6 @@ const FeedbackEditor = observer(function FeedbackEditor({
 										groupInfo={groupInfo}
 										entities={feedback.children?.[groupInfo.groupId]}
 										parentId={feedback.id}
-										panelCollapseHelper={panelCollapseHelper}
 										serviceFactory={serviceFactory}
 									/>
 								))}
@@ -529,7 +526,6 @@ interface FeedbackManageChildGroupProps {
 	groupInfo: EntitySupportedChildGroupDefinition
 	entities: SomeEntityModel[] | undefined
 	parentId: string
-	panelCollapseHelper: PanelCollapseHelper
 	serviceFactory: IEntityEditorService
 }
 
@@ -539,7 +535,6 @@ function FeedbackManageChildGroup({
 	groupInfo,
 	entities,
 	parentId,
-	panelCollapseHelper,
 	serviceFactory: serviceFactory0,
 }: FeedbackManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
@@ -571,7 +566,6 @@ function FeedbackManageChildGroup({
 				addPlaceholder={`+ Add ${groupInfo.entityType}`}
 				feedbacksService={serviceFactory}
 				ownerId={groupId}
-				panelCollapseHelper={panelCollapseHelper}
 			/>
 		</CForm>
 	)

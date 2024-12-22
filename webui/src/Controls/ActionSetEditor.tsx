@@ -8,7 +8,11 @@ import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { AddActionsModal, AddActionsModalRef } from './AddModal.js'
-import { PanelCollapseHelper, usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import {
+	PanelCollapseHelperProvider,
+	usePanelCollapseHelperContext,
+	usePanelCollapseHelperContextForPanel,
+} from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
@@ -63,27 +67,27 @@ export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 	)
 
 	const actionIds = useMemo(() => findAllEntityIdsDeep(actions ?? []), [actions])
-	const panelCollapseHelper = usePanelCollapseHelper(
-		`actions_${controlId}_${stringifySocketEntityLocation(listId)}`,
-		actionIds
-	)
 
 	return (
 		<div className="action-category">
-			<GenericConfirmModal ref={confirmModal} />
+			<PanelCollapseHelperProvider
+				storageId={`actions_${controlId}_${stringifySocketEntityLocation(listId)}`}
+				knownPanelIds={actionIds}
+			>
+				<GenericConfirmModal ref={confirmModal} />
 
-			<InlineActionList
-				controlId={controlId}
-				heading={heading}
-				headingActions={headingActions}
-				actions={actions}
-				location={location}
-				listId={listId}
-				addPlaceholder={addPlaceholder}
-				actionsService={actionsService}
-				ownerId={null}
-				panelCollapseHelper={panelCollapseHelper}
-			/>
+				<InlineActionList
+					controlId={controlId}
+					heading={heading}
+					headingActions={headingActions}
+					actions={actions}
+					location={location}
+					listId={listId}
+					addPlaceholder={addPlaceholder}
+					actionsService={actionsService}
+					ownerId={null}
+				/>
+			</PanelCollapseHelperProvider>
 		</div>
 	)
 })
@@ -98,7 +102,6 @@ interface InlineActionListProps {
 	addPlaceholder: string
 	actionsService: IEntityEditorService
 	ownerId: EntityOwner | null
-	panelCollapseHelper: PanelCollapseHelper
 }
 function InlineActionList({
 	controlId,
@@ -110,8 +113,9 @@ function InlineActionList({
 	addPlaceholder,
 	actionsService,
 	ownerId,
-	panelCollapseHelper,
 }: InlineActionListProps) {
+	const panelCollapseHelper = usePanelCollapseHelperContext()
+
 	const addAction = useCallback(
 		(connectionId: string, definitionId: string) => actionsService.addEntity(connectionId, definitionId, ownerId),
 		[actionsService, ownerId]
@@ -159,7 +163,6 @@ function InlineActionList({
 				listId={listId}
 				actions={actions}
 				actionsService={actionsService}
-				panelCollapseHelper={panelCollapseHelper}
 			/>
 			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
 		</>
@@ -200,7 +203,6 @@ interface ActionsListProps {
 	actions: SomeEntityModel[] | undefined
 	actionsService: IEntityEditorService
 	readonly?: boolean
-	panelCollapseHelper: PanelCollapseHelper
 }
 
 export function ActionsList({
@@ -212,7 +214,6 @@ export function ActionsList({
 	actions,
 	actionsService,
 	readonly,
-	panelCollapseHelper,
 }: ActionsListProps) {
 	return (
 		<table className="table action-table">
@@ -231,7 +232,6 @@ export function ActionsList({
 								dragId={dragId}
 								serviceFactory={actionsService}
 								readonly={readonly ?? false}
-								panelCollapseHelper={panelCollapseHelper}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -265,7 +265,6 @@ interface ActionTableRowProps {
 	serviceFactory: IEntityEditorService
 
 	readonly: boolean
-	panelCollapseHelper: PanelCollapseHelper
 }
 
 const ActionTableRow = observer(function ActionTableRow({
@@ -278,7 +277,6 @@ const ActionTableRow = observer(function ActionTableRow({
 	dragId,
 	serviceFactory,
 	readonly,
-	panelCollapseHelper,
 }: ActionTableRowProps): JSX.Element | null {
 	const { actionDefinitions, connections } = useContext(RootAppStoreContext)
 
@@ -350,7 +348,10 @@ const ActionTableRow = observer(function ActionTableRow({
 	})
 	preview(drop(ref))
 
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(stringifyEntityOwnerId(ownerId), action.id)
+	const { isCollapsed, setCollapsed } = usePanelCollapseHelperContextForPanel(
+		stringifyEntityOwnerId(ownerId),
+		action.id
+	)
 
 	const canSetHeadline = !!service.setHeadline
 	const headline = action.headline
@@ -384,7 +385,7 @@ const ActionTableRow = observer(function ActionTableRow({
 					entityType="action"
 					entity={action}
 					isPanelCollapsed={isCollapsed}
-					setPanelCollapsed={panelCollapseHelper.setPanelCollapsed}
+					setPanelCollapsed={setCollapsed}
 					definitionName={definitionName}
 					canSetHeadline={canSetHeadline}
 					headlineExpanded={headlineExpanded}
@@ -473,7 +474,6 @@ const ActionTableRow = observer(function ActionTableRow({
 											addPlaceholder="+ Add action"
 											actionsService={serviceFactory}
 											ownerId={{ parentId: action.id, childGroup: 'default' }}
-											panelCollapseHelper={panelCollapseHelper}
 										/>
 									</CForm>
 								</div>

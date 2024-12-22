@@ -11,7 +11,7 @@ interface EntityCellControlProps {
 	entityType: string
 	entity: SomeEntityModel
 	isPanelCollapsed: boolean
-	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
+	setPanelCollapsed: (collapsed: boolean) => void
 	definitionName: string
 	canSetHeadline: boolean
 	headlineExpanded: boolean
@@ -36,8 +36,8 @@ export function EntityRowHeader({
 		[service.setEnabled]
 	)
 
-	const doCollapse = useCallback(() => setPanelCollapsed(entity.id, true), [setPanelCollapsed, entity.id])
-	const doExpand = useCallback(() => setPanelCollapsed(entity.id, false), [setPanelCollapsed, entity.id])
+	const doCollapse = useCallback(() => setPanelCollapsed(true), [setPanelCollapsed])
+	const doExpand = useCallback(() => setPanelCollapsed(false), [setPanelCollapsed])
 
 	return (
 		<div className="editor-grid-header remove075right">
