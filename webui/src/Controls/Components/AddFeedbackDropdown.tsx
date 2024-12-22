@@ -1,8 +1,8 @@
 import React, { useCallback, useContext } from 'react'
-import { useComputed } from '../util.js'
+import { useComputed } from '../../util.js'
 import Select, { createFilter } from 'react-select'
-import { MenuPortalContext } from '../Components/DropdownInputField.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { MenuPortalContext } from '../../Components/DropdownInputField.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
 

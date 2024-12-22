@@ -40,7 +40,7 @@ import {
 } from '../Services/Controls/ControlEntitiesService.js'
 import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
 import { EntityRowHeader } from './Components/EntityCellControls.js'
-import { AddFeedbackPanel } from './AddFeedbackPanel.js'
+import { AddEntityPanel } from './Components/AddEntityPanel.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -183,7 +183,12 @@ const InlineFeedbacksEditor = observer(function InlineFeedbacksEditor({
 				</tbody>
 			</table>
 
-			<AddFeedbackPanel addFeedback={addFeedback} onlyType={onlyType} entityTypeLabel={entityTypeLabel} />
+			<AddEntityPanel
+				addEntity={addFeedback}
+				entityType={EntityModelType.Feedback}
+				onlyFeedbackType={onlyType}
+				entityTypeLabel={entityTypeLabel}
+			/>
 		</>
 	)
 })

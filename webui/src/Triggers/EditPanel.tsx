@@ -168,7 +168,6 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									controlId={controlId}
 									location={undefined}
 									listId="trigger_actions"
-									addPlaceholder="+ Add action"
 									actions={config.actions}
 								/>
 							</MyErrorBoundary>

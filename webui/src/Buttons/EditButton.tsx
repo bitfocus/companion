@@ -623,7 +623,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												controlId={controlId}
 												location={location}
 												listId={{ stepId: selectedKey, setId: 'rotate_left' }}
-												addPlaceholder="+ Add rotate left action"
+												// addPlaceholder="+ Add rotate left action"
 												actions={selectedStep2.action_sets['rotate_left']}
 											/>
 										</MyErrorBoundary>
@@ -634,7 +634,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												controlId={controlId}
 												location={location}
 												listId={{ stepId: selectedKey, setId: 'rotate_right' }}
-												addPlaceholder="+ Add rotate right action"
+												// addPlaceholder="+ Add rotate right action"
 												actions={selectedStep2.action_sets['rotate_right']}
 											/>
 										</MyErrorBoundary>
@@ -649,7 +649,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												controlId={controlId}
 												location={location}
 												listId={{ stepId: selectedKey, setId: 'down' }}
-												addPlaceholder={`+ Add press action`}
+												// addPlaceholder={`+ Add press action`}
 												actions={selectedStep2.action_sets['down']}
 											/>
 										</MyErrorBoundary>
@@ -838,7 +838,7 @@ function EditActionsRelease({
 					controlId={controlId}
 					location={location}
 					listId={{ stepId, setId: id }}
-					addPlaceholder={`+ Add ${ident} action`}
+					// addPlaceholder={`+ Add ${ident} action`}
 					actions={actions}
 				/>
 			</MyErrorBoundary>
@@ -855,7 +855,7 @@ function EditActionsRelease({
 					controlId={controlId}
 					location={location}
 					listId={{ stepId, setId: 'up' }}
-					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
+					// addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
 					actions={action_sets['up']}
 				/>
 			</MyErrorBoundary>

@@ -1,13 +1,12 @@
 import { CButton, CForm, CButtonGroup } from '@coreui/react'
-import { faSort, faExpandArrowsAlt, faCompressArrowsAlt, faFolderOpen } from '@fortawesome/free-solid-svg-icons'
+import { faSort, faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { DropdownInputField } from '../Components/index.js'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { AddEntitiesModal, AddEntitiesModalRef } from './AddModal.js'
 import {
 	PanelCollapseHelperProvider,
 	usePanelCollapseHelperContext,
@@ -17,7 +16,6 @@ import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { LearnButton } from '../Components/LearnButton.js'
-import { AddActionDropdown } from './AddActionDropdown.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import classNames from 'classnames'
@@ -36,13 +34,13 @@ import {
 } from '../Services/Controls/ControlEntitiesService.js'
 import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/EntityListDropZone.js'
 import { EntityRowHeader } from './Components/EntityCellControls.js'
+import { AddEntityPanel } from './Components/AddEntityPanel.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
 	location: ControlLocation | undefined
 	listId: SomeSocketEntityLocation
 	actions: SomeEntityModel[] | undefined
-	addPlaceholder: string
 	heading: JSX.Element | string
 	headingActions?: JSX.Element[]
 }
@@ -52,7 +50,6 @@ export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 	location,
 	listId,
 	actions,
-	addPlaceholder,
 	heading,
 	headingActions,
 }: ControlActionSetEditorProps) {
@@ -83,7 +80,6 @@ export const ControlActionSetEditor = observer(function ControlActionSetEditor({
 					actions={actions}
 					location={location}
 					listId={listId}
-					addPlaceholder={addPlaceholder}
 					actionsService={actionsService}
 					ownerId={null}
 				/>
@@ -99,7 +95,6 @@ interface InlineActionListProps {
 	actions: SomeEntityModel[] | undefined
 	location: ControlLocation | undefined
 	listId: SomeSocketEntityLocation
-	addPlaceholder: string
 	actionsService: IEntityEditorService
 	ownerId: EntityOwner | null
 }
@@ -110,7 +105,6 @@ function InlineActionList({
 	actions,
 	location,
 	listId,
-	addPlaceholder,
 	actionsService,
 	ownerId,
 }: InlineActionListProps) {
@@ -164,41 +158,15 @@ function InlineActionList({
 				actions={actions}
 				actionsService={actionsService}
 			/>
-			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
+			<AddEntityPanel
+				addEntity={addAction}
+				entityType={EntityModelType.Action}
+				onlyFeedbackType={null}
+				entityTypeLabel={'action'}
+			/>
 		</>
 	)
 }
-
-interface AddActionsPanelProps {
-	addPlaceholder: string
-	addAction: (connectionId: string, definitionId: string) => void
-}
-
-const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addAction }: AddActionsPanelProps) {
-	const addActionsRef = useRef<AddEntitiesModalRef>(null)
-	const showAddModal = useCallback(() => {
-		addActionsRef.current?.show()
-	}, [])
-
-	return (
-		<div className="add-dropdown-wrapper">
-			<AddActionDropdown onSelect={addAction} placeholder={addPlaceholder} />
-			<CButton color="primary" onClick={showAddModal} style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
-				<FontAwesomeIcon icon={faFolderOpen} />
-			</CButton>
-
-			<MyErrorBoundary>
-				<AddEntitiesModal
-					ref={addActionsRef}
-					addEntity={addAction}
-					entityTypeLabel="action"
-					entityType={EntityModelType.Action}
-					onlyFeedbackType={null}
-				/>
-			</MyErrorBoundary>
-		</div>
-	)
-})
 
 interface ActionsListProps {
 	location: ControlLocation | undefined
@@ -477,7 +445,6 @@ const ActionTableRow = observer(function ActionTableRow({
 											actions={action.children?.['default'] ?? []}
 											location={location}
 											listId={listId}
-											addPlaceholder="+ Add action"
 											actionsService={serviceFactory}
 											ownerId={{ parentId: action.id, childGroup: 'default' }}
 										/>

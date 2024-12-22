@@ -1,9 +1,9 @@
 import React, { useCallback, useContext } from 'react'
-import { useComputed } from '../util.js'
+import { useComputed } from '../../util.js'
 import Select, { createFilter } from 'react-select'
-import { MenuPortalContext } from '../Components/DropdownInputField.js'
+import { MenuPortalContext } from '../../Components/DropdownInputField.js'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
 
 const filterOptions: ReturnType<typeof createFilter<AddActionOption>> = (candidate, input): boolean => {
@@ -32,11 +32,11 @@ interface AddActionGroup {
 }
 interface AddActionDropdownProps {
 	onSelect: (connectionId: string, definitionId: string) => void
-	placeholder: string
+	addPlaceholder: string
 }
 export const AddActionDropdown = observer(function AddActionDropdown({
 	onSelect,
-	placeholder,
+	addPlaceholder,
 }: AddActionDropdownProps) {
 	const { actionDefinitions, connections, recentlyAddedActions } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
@@ -104,7 +104,7 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 			isSearchable={true}
 			isMulti={false}
 			options={options}
-			placeholder={placeholder}
+			placeholder={addPlaceholder}
 			value={null}
 			onChange={innerChange}
 			filterOption={filterOptions}
