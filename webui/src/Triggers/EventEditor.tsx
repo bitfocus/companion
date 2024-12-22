@@ -291,7 +291,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 									<OptionsInputField
 										key={i}
 										isLocatedInGrid={false}
-										isAction={false}
+										entityType={null}
 										connectionId={'internal'}
 										option={opt}
 										value={(event.options || {})[opt.id]}

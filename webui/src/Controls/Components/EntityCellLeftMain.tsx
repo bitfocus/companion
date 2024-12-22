@@ -3,12 +3,13 @@ import React, { useContext } from 'react'
 import { DropdownInputField } from '../../Components/DropdownInputField.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { useComputed } from '../../util.js'
+import { observer } from 'mobx-react-lite'
 
 interface EntityCellLeftMainProps {
 	entityConnectionId: string
 	setConnectionId: (connectionId: string) => void
 }
-export function EntityCellLeftMain({
+export const EntityCellLeftMain = observer(function EntityCellLeftMain({
 	entityConnectionId,
 	setConnectionId,
 	children,
@@ -45,4 +46,4 @@ export function EntityCellLeftMain({
 			{children}
 		</div>
 	)
-}
+})

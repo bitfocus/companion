@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IEntityEditorActionService } from '../../Services/Controls/ControlEntitiesService.js'
 import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { TextInputField } from '../../Components/TextInputField.js'
+import { observer } from 'mobx-react-lite'
 
 interface EntityCellControlProps {
 	service: IEntityEditorActionService
@@ -19,7 +20,7 @@ interface EntityCellControlProps {
 	readonly: boolean
 }
 
-export function EntityRowHeader({
+export const EntityRowHeader = observer(function EntityRowHeader({
 	service,
 	entityTypeLabel,
 	entity,
@@ -94,4 +95,4 @@ export function EntityRowHeader({
 			</div>
 		</div>
 	)
-}
+})

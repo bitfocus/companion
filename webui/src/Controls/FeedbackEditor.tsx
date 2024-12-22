@@ -3,7 +3,6 @@ import { faSort, faCompressArrowsAlt, faExpandArrowsAlt, faQuestionCircle } from
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
-import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { DropdownInputField } from '../Components/index.js'
@@ -13,13 +12,10 @@ import {
 	usePanelCollapseHelperContext,
 	usePanelCollapseHelperContextForPanel,
 } from '../Helpers/CollapseHelper.js'
-import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { ClientFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
-import { LearnButton } from '../Components/LearnButton.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
@@ -42,6 +38,7 @@ import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/Enti
 import { EntityRowHeader } from './Components/EntityCellControls.js'
 import { AddEntityPanel } from './Components/AddEntityPanel.js'
 import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
+import { EntityCommonCells } from './Components/EntityCommonCells.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -335,13 +332,9 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 	const feedbackSpec = feedbackDefinitions.connections.get(feedback.connectionId)?.get(feedback.type)
 
-	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec?.options, feedback?.options)
-
 	const definitionName = feedbackSpec
 		? `${connectionLabel}: ${feedbackSpec.label}`
 		: `${connectionLabel}: ${feedback.type} (undefined)`
-
-	const showButtonPreview = feedback?.connectionId === 'internal' && feedbackSpec?.showButtonPreview
 
 	const canSetHeadline = !!service.setHeadline
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!feedback.headline)
@@ -369,54 +362,22 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 			{!isCollapsed && (
 				<div className="editor-grid remove075right">
-					<div
-						className={classNames('cell-description', {
-							'no-options': feedbackOptions.length === 0,
-						})}
-					>
-						{headlineExpanded && <div className="name">{definitionName}</div>}
-						{feedbackSpec?.description && <div className="description">{feedbackSpec?.description || ''}</div>}
-					</div>
-
-					{showButtonPreview && (
-						<div className="cell-button-preview">
-							<OptionButtonPreview location={location} options={feedback.options} />
-						</div>
-					)}
-
-					<div className="cell-actions">
-						{feedbackSpec?.hasLearn && !!service.performLearn && (
-							<div style={{ marginTop: 10 }}>
-								<LearnButton id={feedback.id} doLearn={service.performLearn} />
-							</div>
-						)}
-					</div>
-
-					<div className="cell-option">
-						<CForm onSubmit={PreventDefaultHandler}>
-							{feedbackOptions.map((opt, i) => (
-								<MyErrorBoundary key={i}>
-									<OptionsInputField
-										key={i}
-										isLocatedInGrid={!!location}
-										isAction={false}
-										connectionId={feedback.connectionId}
-										option={opt}
-										value={(feedback.options || {})[opt.id]}
-										setValue={service.setValue}
-										visibility={optionVisibility[opt.id] ?? true}
-									/>
-								</MyErrorBoundary>
-							))}
-						</CForm>
-					</div>
+					<EntityCommonCells
+						entity={feedback}
+						entityType={EntityModelType.Feedback}
+						entityDefinition={feedbackSpec}
+						service={service}
+						headlineExpanded={headlineExpanded}
+						definitionName={definitionName}
+						location={location}
+					/>
 
 					{feedback.connectionId === 'internal' &&
 						feedbackSpec?.supportsChildGroups &&
 						feedbackSpec.supportsChildGroups.length > 0 && (
 							<div
 								className={classNames('cell-children', {
-									'hide-top-gap': feedbackSpec.showInvert || feedbackOptions.length > 0, //&& (feedback.children ?? []).length > 0,
+									'hide-top-gap': feedbackSpec.showInvert || feedbackSpec?.options?.length > 0, //&& (feedback.children ?? []).length > 0,
 								})}
 							>
 								{feedbackSpec.supportsChildGroups.map((groupInfo) => (

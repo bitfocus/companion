@@ -3,7 +3,6 @@ import { faSort, faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/fre
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
-import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import {
@@ -11,10 +10,7 @@ import {
 	usePanelCollapseHelperContext,
 	usePanelCollapseHelperContextForPanel,
 } from '../Helpers/CollapseHelper.js'
-import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
-import { LearnButton } from '../Components/LearnButton.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import classNames from 'classnames'
@@ -35,6 +31,7 @@ import { EntityDropPlaceholderZone, EntityListDragItem } from './Components/Enti
 import { EntityRowHeader } from './Components/EntityCellControls.js'
 import { AddEntityPanel } from './Components/AddEntityPanel.js'
 import { EntityCellLeftMain } from './Components/EntityCellLeftMain.js'
+import { EntityCommonCells } from './Components/EntityCommonCells.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -258,8 +255,6 @@ const ActionTableRow = observer(function ActionTableRow({
 
 	const actionSpec = actionDefinitions.connections.get(action.connectionId)?.get(action.definitionId)
 
-	const [actionOptions, optionVisibility] = useOptionsAndIsVisible(actionSpec?.options, action?.options)
-
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<ActionTableRowDragItem>({
 		accept: dragId,
@@ -341,8 +336,6 @@ const ActionTableRow = observer(function ActionTableRow({
 	// const module = instance ? modules[instance.instance_type] : undefined
 	const connectionLabel = connectionInfo?.label ?? action.connectionId
 
-	const showButtonPreview = action?.connectionId === 'internal' && actionSpec?.showButtonPreview
-
 	const definitionName = actionSpec
 		? `${connectionLabel}: ${actionSpec.label}`
 		: `${connectionLabel}: ${action.definitionId} (undefined)`
@@ -368,48 +361,17 @@ const ActionTableRow = observer(function ActionTableRow({
 
 				{!isCollapsed && (
 					<div className="editor-grid">
-						<div
-							className={classNames('cell-description', {
-								'no-options': actionOptions.length === 0,
-							})}
-						>
-							{headlineExpanded && <p className="name">{definitionName}</p>}
-							<div className="description">{actionSpec?.description}</div>
-						</div>
-
-						{showButtonPreview && (
-							<div className="cell-button-preview">
-								<OptionButtonPreview location={location} options={action.options} />
-							</div>
-						)}
+						<EntityCommonCells
+							entity={action}
+							entityType={EntityModelType.Feedback}
+							entityDefinition={actionSpec}
+							service={service}
+							headlineExpanded={headlineExpanded}
+							definitionName={definitionName}
+							location={location}
+						/>
 
 						<EntityCellLeftMain entityConnectionId={action.connectionId} setConnectionId={service.setConnection} />
-
-						<div className="cell-actions">
-							{actionSpec?.hasLearn && service.performLearn && (
-								<LearnButton id={action.id} disabled={readonly} doLearn={service.performLearn} />
-							)}
-						</div>
-
-						<div className="cell-option">
-							<CForm onSubmit={PreventDefaultHandler}>
-								{actionOptions.map((opt, i) => (
-									<MyErrorBoundary key={i}>
-										<OptionsInputField
-											key={i}
-											isLocatedInGrid={!!location}
-											isAction={true}
-											connectionId={action.connectionId}
-											option={opt}
-											value={(action.options || {})[opt.id]}
-											setValue={service.setValue}
-											visibility={optionVisibility[opt.id] ?? true}
-											readonly={readonly}
-										/>
-									</MyErrorBoundary>
-								))}
-							</CForm>
-						</div>
 
 						{action.connectionId === 'internal' &&
 							!!actionSpec?.supportsChildGroups.find(
