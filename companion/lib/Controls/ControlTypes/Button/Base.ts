@@ -65,7 +65,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 */
 	protected last_draw_variables: Set<string> | null = null
 
-	readonly entities: ControlEntityListPoolButton // TODO - should this be private?
+	readonly entities: ControlEntityListPoolButton
 
 	protected readonly actionRunner: ControlActionRunner
 

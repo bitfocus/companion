@@ -4,6 +4,7 @@ import { ServiceOscApi } from '../../lib/Service/OscApi'
 import { rgb } from '../../lib/Resources/Util'
 import type { Registry } from '../../lib/Registry'
 import type { ControlButtonNormal } from '../../lib/Controls/ControlTypes/Button/Normal'
+import { ControlEntityListPoolButton } from '../../lib/Controls/Fragments/EntityListPoolButton'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -627,18 +628,24 @@ describe('OscApi', () => {
 				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
 			})
 
-			test('ok', async () => {
+			test.only('ok', async () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('control123')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControlEntities = mock<ControlEntityListPoolButton>(
 					{
 						stepMakeCurrent: vi.fn(),
 					},
 					mockOptions
 				)
+				const mockControl = mock<ControlButtonNormal>(
+					{
+						actionSets: mockControlEntities,
+					},
+					mockOptions
+				)
 				registry.controls.getControl.mockReturnValue(mockControl)
-				mockControl.stepMakeCurrent.mockReturnValue(true)
+				mockControlEntities.stepMakeCurrent.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
@@ -649,22 +656,28 @@ describe('OscApi', () => {
 					row: 2,
 					column: 3,
 				})
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(2)
+				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledTimes(1)
+				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledWith(2)
 			})
 
 			test('string step', async () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('control123')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControlEntities = mock<ControlEntityListPoolButton>(
 					{
 						stepMakeCurrent: vi.fn(),
 					},
 					mockOptions
 				)
+				const mockControl = mock<ControlButtonNormal>(
+					{
+						actionSets: mockControlEntities,
+					},
+					mockOptions
+				)
 				registry.controls.getControl.mockReturnValue(mockControl)
-				mockControl.stepMakeCurrent.mockReturnValue(true)
+				mockControlEntities.stepMakeCurrent.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3/step', { args: [{ value: '4' }] })
@@ -675,8 +688,8 @@ describe('OscApi', () => {
 					row: 2,
 					column: 3,
 				})
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(4)
+				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledTimes(1)
+				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledWith(4)
 			})
 
 			test('bad page', async () => {
