@@ -10,8 +10,7 @@ import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
 import { observable } from 'mobx'
 import { PagesStore } from './Stores/PagesStore.js'
 import { EventDefinitionsStore } from './Stores/EventDefinitionsStore.js'
-import { ActionDefinitionsStore } from './Stores/ActionDefinitionsStore.js'
-import { FeedbackDefinitionsStore } from './Stores/FeedbackDefinitionsStore.js'
+import { EntityDefinitionsStore } from './Stores/EntityDefinitionsStore.js'
 import { useFeedbackDefinitionsSubscription } from './Hooks/useFeedbackDefinitionsSubscription.js'
 import { ModuleInfoStore } from './Stores/ModuleInfoStore.js'
 import { useModuleInfoSubscription } from './Hooks/useModuleInfoSubscription.js'
@@ -49,9 +48,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			recentlyAddedActions: new RecentlyUsedIdsStore('recent_actions', 20),
 			recentlyAddedFeedbacks: new RecentlyUsedIdsStore('recent_feedbacks', 20),
 
-			actionDefinitions: new ActionDefinitionsStore(),
+			entityDefinitions: new EntityDefinitionsStore(),
 			eventDefinitions: new EventDefinitionsStore(),
-			feedbackDefinitions: new FeedbackDefinitionsStore(),
 
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
@@ -65,8 +63,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 
 	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
 
-	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.actionDefinitions)
-	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.feedbackDefinitions)
+	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.entityDefinitions.actions)
+	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.entityDefinitions.feedbacks)
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)

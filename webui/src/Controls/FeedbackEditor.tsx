@@ -1,16 +1,10 @@
-import { CAlert, CForm } from '@coreui/react'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
+import { MyErrorBoundary, checkDragState } from '../util.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { DropdownInputField } from '../Components/index.js'
-import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContextForPanel } from '../Helpers/CollapseHelper.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -286,12 +280,12 @@ const FeedbackEditor = observer(function FeedbackEditor({
 }: FeedbackEditorProps) {
 	const service = useControlEntityService(serviceFactory, feedback)
 
-	const { connections, feedbackDefinitions } = useContext(RootAppStoreContext)
+	const { connections, entityDefinitions } = useContext(RootAppStoreContext)
 
 	const connectionInfo = connections.getInfo(feedback.connectionId)
 	const connectionLabel = connectionInfo?.label ?? feedback.connectionId
 
-	const feedbackSpec = feedbackDefinitions.connections.get(feedback.connectionId)?.get(feedback.type)
+	const feedbackSpec = entityDefinitions.feedbacks.connections.get(feedback.connectionId)?.get(feedback.type)
 
 	const definitionName = feedbackSpec
 		? `${connectionLabel}: ${feedbackSpec.label}`

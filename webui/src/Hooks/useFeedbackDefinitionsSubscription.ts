@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import { FeedbackDefinitionsStore } from '../Stores/FeedbackDefinitionsStore.js'
-import { FeedbackDefinitionUpdate } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import { EntityDefinitionUpdate } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { EntityDefinitionsForTypeStore } from '../Stores/EntityDefinitionsStore.js'
 
 export function useFeedbackDefinitionsSubscription(
 	socket: CompanionSocketType,
-	store: FeedbackDefinitionsStore
+	store: EntityDefinitionsForTypeStore
 ): boolean {
 	const [ready, setReady] = useState(false)
 
@@ -23,7 +23,7 @@ export function useFeedbackDefinitionsSubscription(
 				console.error('Failed to load feedback definitions list', e)
 			})
 
-		const updateFeedbackDefinitions = (change: FeedbackDefinitionUpdate) => {
+		const updateFeedbackDefinitions = (change: EntityDefinitionUpdate) => {
 			store.applyChanges(change)
 		}
 

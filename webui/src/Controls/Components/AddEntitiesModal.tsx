@@ -26,19 +26,18 @@ export const AddEntitiesModal = observer(
 		{ addEntity, onlyFeedbackType, entityType, entityTypeLabel },
 		ref
 	) {
-		const { feedbackDefinitions, actionDefinitions, recentlyAddedFeedbacks, recentlyAddedActions } =
-			useContext(RootAppStoreContext)
+		const { entityDefinitions, recentlyAddedFeedbacks, recentlyAddedActions } = useContext(RootAppStoreContext)
 
 		let definitions: ObservableMap<string, ObservableMap<string, ClientEntityDefinition>>
 		let recentlyUsed: RecentlyUsedIdsStore
 
 		switch (entityType) {
 			case EntityModelType.Action:
-				definitions = actionDefinitions.connections
+				definitions = entityDefinitions.actions.connections
 				recentlyUsed = recentlyAddedActions
 				break
 			case EntityModelType.Feedback:
-				definitions = feedbackDefinitions.connections
+				definitions = entityDefinitions.feedbacks.connections
 				recentlyUsed = recentlyAddedFeedbacks
 				break
 			default:

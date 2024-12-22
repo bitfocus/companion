@@ -18,6 +18,7 @@ import { InlineFeedbacksEditor } from '../FeedbackEditor.js'
 import { InlineActionList } from '../ActionSetEditor.js'
 import classNames from 'classnames'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface EntityManageChildGroupsProps {
 	entity: SomeEntityModel
@@ -27,7 +28,7 @@ interface EntityManageChildGroupsProps {
 	serviceFactory: IEntityEditorService
 }
 
-export function EntityManageChildGroups({
+export const EntityManageChildGroups = observer(function EntityManageChildGroups({
 	entity,
 	entityDefinition,
 	controlId,
@@ -59,7 +60,7 @@ export function EntityManageChildGroups({
 			</div>
 		)
 	)
-}
+})
 
 interface EntityManageChildGroupProps {
 	controlId: string
@@ -70,7 +71,7 @@ interface EntityManageChildGroupProps {
 	serviceFactory: IEntityEditorService
 }
 
-function EntityManageChildGroup({
+const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	controlId,
 	location,
 	groupInfo,
@@ -137,4 +138,4 @@ function EntityManageChildGroup({
 			assertNever(groupInfo.type)
 			throw new Error(`Unsupported group type ${groupInfo.type}`)
 	}
-}
+})

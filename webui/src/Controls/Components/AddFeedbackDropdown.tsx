@@ -42,12 +42,12 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 	onlyType,
 	addPlaceholder,
 }: AddFeedbackDropdownProps) {
-	const { connections, feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
+	const { connections, entityDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
 
 	const options = useComputed(() => {
 		const options: Array<AddFeedbackOption | AddFeedbackGroup> = []
-		for (const [connectionId, instanceFeedbacks] of feedbackDefinitions.connections.entries()) {
+		for (const [connectionId, instanceFeedbacks] of entityDefinitions.feedbacks.connections.entries()) {
 			for (const [feedbackId, feedback] of instanceFeedbacks.entries()) {
 				if (!onlyType || feedback.feedbackType === onlyType) {
 					const connectionLabel = connections.getLabel(connectionId) ?? connectionId
@@ -67,7 +67,7 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 			if (!feedbackType) continue
 
 			const [connectionId, feedbackId] = feedbackType.split(':', 2)
-			const feedbackInfo = feedbackDefinitions.connections.get(connectionId)?.get(feedbackId)
+			const feedbackInfo = entityDefinitions.feedbacks.connections.get(connectionId)?.get(feedbackId)
 			if (!feedbackInfo) continue
 
 			if (!onlyType || feedbackInfo.feedbackType === onlyType) {
@@ -88,7 +88,7 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 		})
 
 		return options
-	}, [feedbackDefinitions, connections, onlyType, recentlyAddedFeedbacks.recentIds])
+	}, [entityDefinitions.feedbacks, connections, onlyType, recentlyAddedFeedbacks.recentIds])
 
 	const innerChange = useCallback(
 		(e: AddFeedbackOption | null) => {

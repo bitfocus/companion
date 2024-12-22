@@ -386,7 +386,7 @@ export class InstanceDefinitions {
 					type: 'add-connection',
 					connectionId,
 
-					actions: actionDefinitions,
+					entities: actionDefinitions,
 				})
 			} else {
 				const diff = diffObjects(lastActionDefinitions, actionDefinitions || {})
@@ -415,7 +415,7 @@ export class InstanceDefinitions {
 					type: 'add-connection',
 					connectionId,
 
-					feedbacks: feedbackDefinitions,
+					entities: feedbackDefinitions,
 				})
 			} else {
 				const diff = diffObjects(lastFeedbackDefinitions, feedbackDefinitions || {})

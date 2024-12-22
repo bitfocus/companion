@@ -97,7 +97,7 @@ export function InlineActionList({
 	actionsService,
 	ownerId,
 }: InlineActionListProps) {
-	const addAction = useCallback(
+	const addEntity = useCallback(
 		(connectionId: string, definitionId: string) => actionsService.addEntity(connectionId, definitionId, ownerId),
 		[actionsService, ownerId]
 	)
@@ -120,7 +120,7 @@ export function InlineActionList({
 				actionsService={actionsService}
 			/>
 			<AddEntityPanel
-				addEntity={addAction}
+				addEntity={addEntity}
 				entityType={EntityModelType.Action}
 				onlyFeedbackType={null}
 				entityTypeLabel={'action'}
@@ -208,11 +208,11 @@ const ActionTableRow = observer(function ActionTableRow({
 	serviceFactory,
 	readonly,
 }: ActionTableRowProps): JSX.Element | null {
-	const { actionDefinitions, connections } = useContext(RootAppStoreContext)
+	const { entityDefinitions, connections } = useContext(RootAppStoreContext)
 
 	const service = useControlEntityService(serviceFactory, action)
 
-	const actionSpec = actionDefinitions.connections.get(action.connectionId)?.get(action.definitionId)
+	const actionSpec = entityDefinitions.actions.connections.get(action.connectionId)?.get(action.definitionId)
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<ActionTableRowDragItem>({

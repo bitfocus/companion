@@ -38,12 +38,12 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 	onSelect,
 	addPlaceholder,
 }: AddActionDropdownProps) {
-	const { actionDefinitions, connections, recentlyAddedActions } = useContext(RootAppStoreContext)
+	const { entityDefinitions, connections, recentlyAddedActions } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
 
 	const options = useComputed(() => {
 		const options: Array<AddActionOption | AddActionGroup> = []
-		for (const [connectionId, connectionActions] of actionDefinitions.connections.entries()) {
+		for (const [connectionId, connectionActions] of entityDefinitions.actions.connections.entries()) {
 			for (const [actionId, action] of connectionActions.entries()) {
 				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 				const optionLabel = `${connectionLabel}: ${action.label}`
@@ -60,7 +60,7 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 		for (const actionType of recentlyAddedActions.recentIds) {
 			if (actionType) {
 				const [connectionId, actionId] = actionType.split(':', 2)
-				const actionInfo = actionDefinitions.connections.get(connectionId)?.get(actionId)
+				const actionInfo = entityDefinitions.actions.connections.get(connectionId)?.get(actionId)
 				if (actionInfo) {
 					const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 					const optionLabel = `${connectionLabel}: ${actionInfo.label}`
@@ -79,7 +79,7 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 		})
 
 		return options
-	}, [actionDefinitions, connections, recentlyAddedActions.recentIds])
+	}, [entityDefinitions.actions, connections, recentlyAddedActions.recentIds])
 
 	const innerChange = useCallback(
 		(e: AddActionOption | null) => {
