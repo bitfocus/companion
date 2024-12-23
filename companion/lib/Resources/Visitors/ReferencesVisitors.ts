@@ -6,7 +6,7 @@ import type { InternalVisitor } from '../../Internal/Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlEntityInstance } from '../../Controls/Fragments/EntityInstance.js'
+import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 
 export class ReferencesVisitors {
 	/**

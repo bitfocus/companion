@@ -8,7 +8,7 @@ import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlActionSetAndStepsManager } from '../../Fragments/ControlActionSetAndStepsManager.js'
+import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 
 /**
  * Class for the stepped button control.

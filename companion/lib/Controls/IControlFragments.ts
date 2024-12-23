@@ -1,7 +1,7 @@
 import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
-import type { ControlEntityListPoolBase } from './Fragments/EntityListPoolBase.js'
-import type { ControlActionSetAndStepsManager } from './Fragments/ControlActionSetAndStepsManager.js'
+import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js'
+import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
 import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &

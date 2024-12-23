@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
-import { ControlEntityListPoolButton } from '../Controls/Fragments/EntityListPoolButton.js'
+import { ControlEntityListPoolButton } from '../Controls/Entities/EntityListPoolButton.js'
 import jsonPatch from 'fast-json-patch'
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import { replaceAllVariables } from '../Variables/Util.js'

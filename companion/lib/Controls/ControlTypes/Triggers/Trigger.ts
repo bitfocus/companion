@@ -23,7 +23,7 @@ import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
-import { ControlEntityListPoolTrigger } from '../../Fragments/EntityListPoolTrigger.js'
+import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**

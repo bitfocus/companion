@@ -41,7 +41,7 @@ import {
 	FeedbackEntityModel,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlEntityInstance } from '../Controls/Fragments/EntityInstance.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { Complete } from '@companion-module/base/dist/util.js'
