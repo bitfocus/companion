@@ -4,10 +4,8 @@ import type {
 	ControlWithoutActionSets,
 	ControlWithoutActions,
 	ControlWithoutEvents,
-	ControlWithoutFeedbacks,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
-	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../IControlFragments.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
@@ -37,8 +35,6 @@ export class ControlButtonPageDown
 	extends ControlBase<PageDownButtonModel>
 	implements
 		ControlWithoutActions,
-		ControlWithoutFeedbacks,
-		ControlWithoutSteps,
 		ControlWithoutStyle,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
@@ -48,8 +44,7 @@ export class ControlButtonPageDown
 	readonly type = 'pagedown'
 
 	readonly supportsActions = false
-	readonly supportsSteps = false
-	readonly supportsFeedbacks = false
+	readonly supportsEntities = false
 	readonly supportsStyle = false
 	readonly supportsEvents = false
 	readonly supportsActionSets = false
@@ -131,9 +126,6 @@ export class ControlButtonPageDown
 		return null
 	}
 	renameVariables(_labelFrom: string, _labelTo: string) {
-		// Nothing to do
-	}
-	verifyConnectionIds(_knownConnectionIds: Set<string>) {
 		// Nothing to do
 	}
 }

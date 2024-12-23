@@ -1,14 +1,14 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type { ActionSetsModel } from './ActionModel.js'
 import type { EventInstance } from './EventModel.js'
-import type { FeedbackInstance } from './FeedbackModel.js'
+import type { SomeEntityModel } from './EntityModel.js'
 
 export interface TriggerModel {
 	readonly type: 'trigger'
 	options: TriggerOptions
 
-	action_sets: ActionSetsModel
-	condition: FeedbackInstance[]
+	actions: SomeEntityModel[]
+	// action_sets: ActionSetsModel // nocommit migrate
+	condition: SomeEntityModel[] // nocmmit migrate
 	events: EventInstance[]
 }
 

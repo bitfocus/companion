@@ -269,11 +269,11 @@ export class ServiceOscApi extends CoreBase {
 		if (!controlId) return
 
 		const control = this.controls.getControl(controlId)
-		if (!control || !control.supportsSteps) {
+		if (!control || !control.supportsActionSets) {
 			return
 		}
 
-		control.stepMakeCurrent(step)
+		control.actionSets.stepMakeCurrent(step)
 	}
 
 	/**

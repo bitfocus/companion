@@ -1,5 +1,5 @@
 import { observable, runInAction } from 'mobx'
-import { useMemo, useRef } from 'react'
+import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import { useDeepCompareEffect } from 'use-deep-compare'
 
 interface CollapsedState {
@@ -121,6 +121,41 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 			this.#writeState()
 		})
 	}
+}
+
+const PanelCollapseHelperContext = createContext<PanelCollapseHelper | null>(null)
+export function usePanelCollapseHelperContext(): PanelCollapseHelper {
+	const context = useContext(PanelCollapseHelperContext)
+	if (!context) throw new Error('PanelCollapseHelperContext not found')
+	return context
+}
+export function usePanelCollapseHelperContextForPanel(ownerId: string | null, panelId: string) {
+	const panelCollapseHelper = usePanelCollapseHelperContext()
+
+	return {
+		// doCollapse: useCallback(() => panelCollapseHelper.setPanelCollapsed(panelId, true), [panelCollapseHelper, panelId]),
+		// doExpand: useCallback(() => panelCollapseHelper.setPanelCollapsed(panelId, false), [panelCollapseHelper, panelId]),
+		setCollapsed: useCallback(
+			(collapsed: boolean) => panelCollapseHelper.setPanelCollapsed(panelId, collapsed),
+			[panelCollapseHelper]
+		),
+		isCollapsed: panelCollapseHelper.isPanelCollapsed(ownerId, panelId),
+	}
+}
+
+export function PanelCollapseHelperProvider({
+	storageId,
+	knownPanelIds,
+	defaultCollapsed,
+	children,
+}: React.PropsWithChildren<{
+	storageId: string
+	knownPanelIds: string[]
+	defaultCollapsed?: boolean
+}>): JSX.Element {
+	const helper = usePanelCollapseHelper(storageId, knownPanelIds, defaultCollapsed)
+
+	return <PanelCollapseHelperContext.Provider value={helper}>{children}</PanelCollapseHelperContext.Provider>
 }
 
 export function usePanelCollapseHelper(

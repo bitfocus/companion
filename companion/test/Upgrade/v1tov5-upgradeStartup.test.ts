@@ -7,6 +7,7 @@ import v3tov4 from '../../lib/Data/Upgrades/v3tov4.js'
 import v4tov5 from '../../lib/Data/Upgrades/v4tov5.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import fs from 'fs-extra'
+import { SuppressLogging } from '../Util.js'
 
 function CreateDataDatabase() {
 	const db = new DataDatabase()
@@ -32,6 +33,8 @@ class DataDatabase extends DataStoreBase {
 }
 
 describe('upgrade', () => {
+	SuppressLogging()
+
 	const db = CreateDataDatabase()
 	v1tov2.upgradeStartup(db, LogController.createLogger('test-logger'))
 	v2tov3.upgradeStartup(db, LogController.createLogger('test-logger'))

@@ -139,6 +139,13 @@ class LogController {
 	}
 
 	/**
+	 * Get the log level
+	 */
+	getLogLevel(): string {
+		return this.#winston.level
+	}
+
+	/**
 	 * Set the log level to output
 	 */
 	setLogLevel(level: string): void {

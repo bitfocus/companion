@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import { ActionDefinitionsStore } from '../Stores/ActionDefinitionsStore.js'
-import { ActionDefinitionUpdate } from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import { EntityDefinitionUpdate } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { EntityDefinitionsForTypeStore } from '../Stores/EntityDefinitionsStore.js'
 
-export function useActionDefinitionsSubscription(socket: CompanionSocketType, store: ActionDefinitionsStore): boolean {
+export function useActionDefinitionsSubscription(
+	socket: CompanionSocketType,
+	store: EntityDefinitionsForTypeStore
+): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
@@ -20,7 +23,7 @@ export function useActionDefinitionsSubscription(socket: CompanionSocketType, st
 				console.error('Failed to load action definitions list', e)
 			})
 
-		const updateActionDefinitions = (change: ActionDefinitionUpdate) => {
+		const updateActionDefinitions = (change: EntityDefinitionUpdate) => {
 			store.applyChanges(change)
 		}
 

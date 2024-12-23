@@ -6,12 +6,13 @@ import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import type { Registry } from '../Registry.js'
 import type {
-	RecordActionTmp,
+	RecordActionEntityModel,
 	RecordSessionInfo,
 	RecordSessionListInfo,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import { EntityModelType, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 
 const SessionListRoom = 'action-recorder:session-list'
 function SessionRoom(id: string): string {
@@ -356,10 +357,11 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			const session = this.#currentSession
 
 			if (session.connectionIds.includes(connectionId)) {
-				const newAction: RecordActionTmp = {
+				const newAction: RecordActionEntityModel = {
+					type: EntityModelType.Action,
 					id: nanoid(),
-					instance: connectionId,
-					action: actionId,
+					connectionId: connectionId,
+					definitionId: actionId,
 					options: options,
 					delay: (session.actionDelay ?? 0) + delay,
 
@@ -395,14 +397,16 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		if (!control) throw new Error(`Unknown control: ${controlId}`)
 
 		if (mode === 'append') {
-			if (control.supportsActions) {
-				if (!control.actionAppend(stepId, setId, this.#currentSession.actions, null)) throw new Error('Unknown set')
+			if (control.supportsEntities) {
+				if (!control.entities.entityAdd({ stepId, setId }, null, ...this.#currentSession.actions))
+					throw new Error('Unknown set')
 			} else {
 				throw new Error('Not supported by control')
 			}
 		} else {
-			if (control.supportsActions) {
-				if (!control.actionReplaceAll(stepId, setId, this.#currentSession.actions)) throw new Error('Unknown set')
+			if (control.supportsEntities) {
+				const listId: SomeSocketEntityLocation = { stepId, setId }
+				if (!control.entities.entityReplaceAll(listId, this.#currentSession.actions)) throw new Error('Unknown set')
 			} else {
 				throw new Error('Not supported by control')
 			}

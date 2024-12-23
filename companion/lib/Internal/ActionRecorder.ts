@@ -22,15 +22,15 @@ import type { PageController } from '../Page/Controller.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
 } from './Types.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 export class InternalActionRecorder implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/ActionRecorder')
@@ -168,8 +168,8 @@ export class InternalActionRecorder implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
-		if (action.action === 'action_recorder_set_recording') {
+	executeAction(action: ActionEntityModel, extras: RunActionExtras): boolean {
+		if (action.definitionId === 'action_recorder_set_recording') {
 			const session = this.#actionRecorder.getSession()
 			if (session) {
 				let newState = action.options.enable == 'true'
@@ -179,7 +179,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'action_recorder_set_connections') {
+		} else if (action.definitionId === 'action_recorder_set_connections') {
 			const session = this.#actionRecorder.getSession()
 			if (session) {
 				let result = new Set(session.connectionIds)
@@ -214,7 +214,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'action_recorder_save_to_button') {
+		} else if (action.definitionId === 'action_recorder_save_to_button') {
 			let stepId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.step, extras).text
 			let setId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.set, extras).text
 			const pageRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.page, extras).text
@@ -255,7 +255,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'action_recorder_discard_actions') {
+		} else if (action.definitionId === 'action_recorder_discard_actions') {
 			this.#actionRecorder.discardActions()
 
 			return true
@@ -267,10 +267,10 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			action_recorder_check_connections: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Action Recorder: Check if specified connections are selected',
 				description: undefined,
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -313,8 +313,8 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
-		if (feedback.type === 'action_recorder_check_connections') {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+		if (feedback.definitionId === 'action_recorder_check_connections') {
 			const session = this.#actionRecorder.getSession()
 			if (!session) return false
 

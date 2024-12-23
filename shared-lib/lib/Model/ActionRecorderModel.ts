@@ -1,9 +1,11 @@
+import { ActionEntityModel } from './EntityModel.js'
+
 export interface RecordSessionInfo {
 	id: string
 	connectionIds: string[]
 	isRunning: boolean
 	actionDelay: number
-	actions: RecordActionTmp[]
+	actions: RecordActionEntityModel[]
 }
 
 export interface RecordSessionListInfo {
@@ -11,11 +13,7 @@ export interface RecordSessionListInfo {
 }
 
 // TODO - consolidate
-export interface RecordActionTmp {
-	id: string
-	instance: string
-	action: string
+export interface RecordActionEntityModel extends ActionEntityModel {
 	delay: number
-	options: Record<string, any>
 	uniquenessId: string | undefined
 }

@@ -21,12 +21,13 @@ import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalFeedbackDefinition,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
+import type { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -71,10 +72,10 @@ export class InternalVariables implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			variable_value: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Variable: Check value',
 				description: 'Change style based on the value of a variable',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -109,10 +110,10 @@ export class InternalVariables implements InternalModuleFragment {
 			},
 
 			variable_variable: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Variable: Compare two variables',
 				description: 'Change style based on a variable compared to another variable',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -135,10 +136,10 @@ export class InternalVariables implements InternalModuleFragment {
 			},
 
 			check_expression: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Variable: Check boolean expression',
 				description: 'Change style based on a boolean expression',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -162,8 +163,8 @@ export class InternalVariables implements InternalModuleFragment {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
-		if (feedback.type == 'variable_value') {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+		if (feedback.definitionId == 'variable_value') {
 			const result = this.#internalModule.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
 				feedback
@@ -172,7 +173,7 @@ export class InternalVariables implements InternalModuleFragment {
 			this.#variableSubscriptions.set(feedback.id, result.variableIds)
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
-		} else if (feedback.type == 'variable_variable') {
+		} else if (feedback.definitionId == 'variable_variable') {
 			const result1 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
 				feedback
@@ -185,7 +186,7 @@ export class InternalVariables implements InternalModuleFragment {
 			this.#variableSubscriptions.set(feedback.id, [...result1.variableIds, ...result2.variableIds])
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
-		} else if (feedback.type == 'check_expression') {
+		} else if (feedback.definitionId == 'check_expression') {
 			try {
 				const res = this.#variableController.executeExpression(
 					feedback.options.expression,
@@ -205,7 +206,7 @@ export class InternalVariables implements InternalModuleFragment {
 		}
 	}
 
-	forgetFeedback(feedback: FeedbackInstanceExt): void {
+	forgetFeedback(feedback: FeedbackEntityModel): void {
 		this.#variableSubscriptions.delete(feedback.id)
 	}
 
