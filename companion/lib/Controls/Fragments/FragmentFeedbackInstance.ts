@@ -158,11 +158,15 @@ export class FragmentFeedbackInstance {
 	 */
 	cleanup() {
 		// Inform relevant module
-		const connection = this.#moduleHost.getChild(this.#data.instance_id, true)
-		if (connection) {
-			connection.feedbackDelete(this.asFeedbackInstance()).catch((e) => {
-				this.#logger.silly(`feedback_delete to connection failed: ${e.message}`)
-			})
+		if (this.#data.instance_id === 'internal') {
+			this.#internalModule.feedbackDelete(this.asFeedbackInstance())
+		} else {
+			const connection = this.#moduleHost.getChild(this.#data.instance_id, true)
+			if (connection) {
+				connection.feedbackDelete(this.asFeedbackInstance()).catch((e) => {
+					this.#logger.silly(`feedback_delete to connection failed: ${e.message}`)
+				})
+			}
 		}
 
 		// Remove from cached feedback values
