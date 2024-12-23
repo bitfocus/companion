@@ -11,6 +11,8 @@ import { ControlEntityInstance } from './EntityInstance.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { clamp } from '../../Resources/Util.js'
 
+export type ControlEntityListDefinition = Pick<EntitySupportedChildGroupDefinition, 'type' | 'booleanFeedbacksOnly'>
+
 export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #internalModule: InternalController
@@ -23,7 +25,7 @@ export class ControlEntityList {
 
 	readonly #ownerId: EntityOwner | null
 
-	readonly #listDefinition: EntitySupportedChildGroupDefinition
+	readonly #listDefinition: ControlEntityListDefinition
 
 	#entities: ControlEntityInstance[] = []
 
@@ -37,7 +39,7 @@ export class ControlEntityList {
 		moduleHost: ModuleHost,
 		controlId: string,
 		ownerId: EntityOwner | null,
-		listDefinition: EntitySupportedChildGroupDefinition
+		listDefinition: ControlEntityListDefinition
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule

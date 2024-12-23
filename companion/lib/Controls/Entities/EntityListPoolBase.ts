@@ -8,7 +8,7 @@ import {
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
-import { ControlEntityList } from './EntityList.js'
+import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
@@ -60,7 +60,7 @@ export abstract class ControlEntityListPoolBase {
 		this.#moduleHost = props.moduleHost
 	}
 
-	protected createEntityList(listDefinition: EntitySupportedChildGroupDefinition) {
+	protected createEntityList(listDefinition: ControlEntityListDefinition) {
 		return new ControlEntityList(
 			this.#instanceDefinitions,
 			this.#internalModule,

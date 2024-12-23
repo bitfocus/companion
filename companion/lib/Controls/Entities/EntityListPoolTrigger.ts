@@ -18,18 +18,9 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,
-			groupId: 'conditions',
-			entityTypeLabel: 'condition',
-			label: 'Conditions',
 			booleanFeedbacksOnly: true,
 		})
-
-		this.#actions = this.createEntityList({
-			type: EntityModelType.Action,
-			groupId: 'actions',
-			entityTypeLabel: 'action',
-			label: 'Actions',
-		})
+		this.#actions = this.createEntityList({ type: EntityModelType.Action })
 	}
 
 	get baseStyle(): ButtonStyleProperties {

@@ -9,7 +9,6 @@ import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
 import { cloneDeep } from 'lodash-es'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
@@ -76,9 +75,6 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			null,
 			{
 				type: EntityModelType.Feedback,
-				groupId: 'feedbacks',
-				entityTypeLabel: 'feedback',
-				label: 'Feedbacks',
 			}
 		)
 
@@ -172,7 +168,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	getStepIds(): string[] {
-		return GetStepIds(this.#steps)
+		return Array.from(this.#steps.keys()).sort((a, b) => Number(a) - Number(b))
 	}
 
 	actionSetAdd(stepId: string): boolean {
@@ -184,7 +180,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			.filter((k) => !isNaN(k))
 		if (existingKeys.length === 0) {
 			// add the default '1000' set
-			step.sets.set(1000, this.#createActionEntityList('', [], false, false))
+			step.sets.set(1000, this.#createActionEntityList([], false, false))
 
 			this.commitChange(true)
 
@@ -195,7 +191,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			const max = Math.max(...existingKeys)
 			const newIndex = Math.floor(max / 1000) * 1000 + 1000
 
-			step.sets.set(newIndex, this.#createActionEntityList('', [], false, false))
+			step.sets.set(newIndex, this.#createActionEntityList([], false, false))
 
 			this.commitChange(false)
 
@@ -292,10 +288,9 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		for (const step of this.#steps.values()) {
 			if (ensureCreated) {
 				// ensure they exist
-				if (!step.sets.has('rotate_left'))
-					step.sets.set('rotate_left', this.#createActionEntityList('', [], false, false))
+				if (!step.sets.has('rotate_left')) step.sets.set('rotate_left', this.#createActionEntityList([], false, false))
 				if (!step.sets.has('rotate_right'))
-					step.sets.set('rotate_right', this.#createActionEntityList('', [], false, false))
+					step.sets.set('rotate_right', this.#createActionEntityList([], false, false))
 			} else {
 				// remove the sets
 				const rotateLeftSet = step.sets.get('rotate_left')
@@ -315,18 +310,8 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		if (!skipCommit) this.commitChange(true)
 	}
 
-	#createActionEntityList(
-		label: string,
-		entities: SomeEntityModel[],
-		skipSubscribe: boolean,
-		isCloned: boolean
-	): ControlEntityList {
-		const list = this.createEntityList({
-			type: EntityModelType.Action,
-			groupId: '',
-			entityTypeLabel: 'action',
-			label: label,
-		})
+	#createActionEntityList(entities: SomeEntityModel[], skipSubscribe: boolean, isCloned: boolean): ControlEntityList {
+		const list = this.createEntityList({ type: EntityModelType.Action })
 		list.loadStorage(entities, skipSubscribe, isCloned)
 		return list
 	}
@@ -337,21 +322,18 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	): ControlEntityListActionStep {
 		const options = existingOptions || cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
 
-		const downList = this.#createActionEntityList('Down', existingActions?.down || [], true, !!existingActions)
-		const upList = this.#createActionEntityList('Up', existingActions?.up || [], true, !!existingActions)
+		const downList = this.#createActionEntityList(existingActions?.down || [], true, !!existingActions)
+		const upList = this.#createActionEntityList(existingActions?.up || [], true, !!existingActions)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
 		sets.set('down', downList)
 		sets.set('up', upList)
 
 		if (this.#hasRotaryActions) {
-			sets.set(
-				'rotate_left',
-				this.#createActionEntityList('Rotate left', existingActions?.rotate_left || [], true, !!existingActions)
-			)
+			sets.set('rotate_left', this.#createActionEntityList(existingActions?.rotate_left || [], true, !!existingActions))
 			sets.set(
 				'rotate_right',
-				this.#createActionEntityList('Rotate right', existingActions?.rotate_right || [], true, !!existingActions)
+				this.#createActionEntityList(existingActions?.rotate_right || [], true, !!existingActions)
 			)
 		}
 
@@ -360,12 +342,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			if (typeof setIdNumber === 'number') {
 				sets.set(
 					setIdNumber,
-					this.#createActionEntityList(
-						`${setIdNumber}ms`,
-						existingActions?.[setIdNumber] || [],
-						true,
-						!!existingActions
-					)
+					this.#createActionEntityList(existingActions?.[setIdNumber] || [], true, !!existingActions)
 				)
 			}
 		}
