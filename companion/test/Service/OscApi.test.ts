@@ -628,7 +628,7 @@ describe('OscApi', () => {
 				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
 			})
 
-			test.only('ok', async () => {
+			test('ok', async () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('control123')
 
