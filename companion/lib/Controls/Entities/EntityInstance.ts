@@ -286,7 +286,7 @@ export class ControlEntityInstance {
 	 * Learn the options for an entity, by asking the connection for the current values
 	 */
 	async learnOptions(): Promise<boolean> {
-		const newOptions = await this.#moduleHost.connectionLearnOptions(this.asEntityModel(), this.#controlId)
+		const newOptions = await this.#moduleHost.connectionEntityLearnOptions(this.asEntityModel(), this.#controlId)
 		if (newOptions) {
 			this.setOptions(newOptions)
 

@@ -1,7 +1,6 @@
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
 import { EntityModelType, EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
-import { mockDeep } from 'vitest-mock-extended'
 import { cloneDeep } from 'lodash-es'
 import { ActionTree, ActionTreeEntityDefinitions, getAllModelsInTree } from './EntityListModels.js'
 import {
@@ -11,17 +10,13 @@ import {
 } from '../../../lib/Controls/Entities/Types.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
-const mockOptions = {
-	fallbackMockImplementation: () => {
-		throw new Error('not mocked')
-	},
-}
-
 describe('EntityList', () => {
 	function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
 		const getEntityDefinition = vi.fn<InstanceDefinitionsForEntity['getEntityDefinition']>()
 		const connectionEntityUpdate = vi.fn<ModuleHostForEntity['connectionEntityUpdate']>(async () => false)
-		const internalEntityUpdate = vi.fn<InternalControllerForEntity['entityUpdate']>(async () => false)
+		const connectionEntityDelete = vi.fn<ModuleHostForEntity['connectionEntityDelete']>(async () => false)
+		const internalEntityUpdate = vi.fn<InternalControllerForEntity['entityUpdate']>()
+		const internalEntityDelete = vi.fn<InternalControllerForEntity['entityDelete']>()
 
 		const list = new ControlEntityList(
 			{
@@ -29,14 +24,14 @@ describe('EntityList', () => {
 			},
 			{
 				entityUpdate: internalEntityUpdate,
-				entityDelete: null as any,
+				entityDelete: internalEntityDelete,
 				entityUpgrade: null as any,
 				executeLogicFeedback: null as any,
 			},
 			{
 				connectionEntityUpdate,
-				connectionEntityDelete: null as any,
-				connectionLearnOptions: null as any,
+				connectionEntityDelete,
+				connectionEntityLearnOptions: null as any,
 			},
 			controlId,
 			ownerId ?? null,
@@ -49,7 +44,9 @@ describe('EntityList', () => {
 			list,
 			getEntityDefinition,
 			connectionEntityUpdate,
+			connectionEntityDelete,
 			internalEntityUpdate,
+			internalEntityDelete,
 		}
 	}
 
@@ -294,6 +291,158 @@ describe('EntityList', () => {
 
 			expect(connectionEntityUpdate).toHaveBeenCalledTimes(4)
 			expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
+		})
+	})
+
+	test('cleanup entities', () => {
+		const { list, getEntityDefinition, connectionEntityDelete, internalEntityDelete } = createList('test01')
+
+		for (const def of ActionTreeEntityDefinitions) {
+			getEntityDefinition.mockReturnValueOnce(def)
+		}
+
+		const inputModels = ActionTree
+
+		list.loadStorage(cloneDeep(inputModels), true, false)
+
+		list.cleanup()
+
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(4)
+		expect(internalEntityDelete).toHaveBeenCalledTimes(2)
+
+		expect(list.getAllEntities()).toHaveLength(0)
+		expect(list.getDirectEntities()).toHaveLength(0)
+	})
+
+	describe('subscribe entities', () => {
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+
+		for (const def of ActionTreeEntityDefinitions) {
+			getEntityDefinition.mockReturnValueOnce(def)
+		}
+
+		list.loadStorage(cloneDeep(ActionTree), true, false)
+
+		beforeEach(() => {
+			connectionEntityUpdate.mockClear()
+			internalEntityUpdate.mockClear()
+		})
+
+		afterEach(() => {
+			expect(list.getAllEntities()).toHaveLength(6)
+			expect(list.getDirectEntities()).toHaveLength(3)
+		})
+
+		test('non recursive', () => {
+			list.subscribe(false)
+
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
+		})
+
+		test('recursive', () => {
+			list.subscribe(true)
+
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(4)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
+		})
+
+		test('only actions', () => {
+			list.subscribe(true, EntityModelType.Action)
+
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(3)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
+		})
+
+		test('only feedbacks', () => {
+			list.subscribe(true, EntityModelType.Feedback)
+
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
+		})
+
+		test('only internal', () => {
+			list.subscribe(true, undefined, 'internal')
+
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
+		})
+
+		test('only conn01', () => {
+			list.subscribe(true, undefined, 'conn01')
+
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
+		})
+
+		test('only missing-connection', () => {
+			list.subscribe(true, undefined, 'missing-connection')
+
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
+		})
+	})
+
+	describe('findById', () => {
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+
+		for (const def of ActionTreeEntityDefinitions) {
+			getEntityDefinition.mockReturnValueOnce(def)
+		}
+
+		list.loadStorage(cloneDeep(ActionTree), true, false)
+
+		test('find missing id', () => {
+			const entity = list.findById('missing-id')
+			expect(entity).toBeUndefined()
+		})
+
+		test('find at root level', () => {
+			const entity = list.findById('01')
+			expect(entity).not.toBeUndefined()
+			expect(entity?.id).toBe('01')
+		})
+
+		test('find deep - int1-b', () => {
+			const entity = list.findById('int1-b')
+			expect(entity).not.toBeUndefined()
+			expect(entity?.id).toBe('int1-b')
+		})
+	})
+
+	describe('findParentAndIndex', () => {
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+
+		for (const def of ActionTreeEntityDefinitions) {
+			getEntityDefinition.mockReturnValueOnce(def)
+		}
+
+		list.loadStorage(cloneDeep(ActionTree), true, false)
+
+		test('find missing id', () => {
+			const entity = list.findParentAndIndex('missing-id')
+			expect(entity).toBeUndefined()
+		})
+
+		test('find at root level', () => {
+			const info = list.findParentAndIndex('02')
+			expect(info).not.toBeUndefined()
+			const { parent, index, item } = info!
+			expect(item.id).toBe('02')
+			expect(index).toBe(1)
+			expect(parent.ownerId).toBe(null)
+		})
+
+		test('find deep - int1-b', () => {
+			const info = list.findParentAndIndex('int1-b')
+			expect(info).not.toBeUndefined()
+			const { parent, index, item } = info!
+			expect(item.id).toBe('int1-b')
+			expect(index).toBe(0)
+			expect(parent.ownerId).toEqual({
+				childGroup: 'default',
+				parentId: 'int1',
+			} satisfies EntityOwner)
 		})
 	})
 })

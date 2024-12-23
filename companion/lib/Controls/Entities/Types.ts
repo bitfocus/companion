@@ -6,7 +6,7 @@ export type InstanceDefinitionsForEntity = Pick<InstanceDefinitions, 'getEntityD
 
 export type ModuleHostForEntity = Pick<
 	ModuleHost,
-	'connectionEntityUpdate' | 'connectionEntityDelete' | 'connectionLearnOptions'
+	'connectionEntityUpdate' | 'connectionEntityDelete' | 'connectionEntityLearnOptions'
 >
 
 export type InternalControllerForEntity = Pick<

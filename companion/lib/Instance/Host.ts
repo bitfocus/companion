@@ -524,11 +524,11 @@ export class ModuleHost {
 
 		return true
 	}
-	async connectionLearnOptions(
+	async connectionEntityLearnOptions(
 		entityModel: SomeEntityModel,
 		controlId: string
 	): Promise<CompanionOptionValues | undefined | void> {
-		const connection = this.getChild(entityModel.connectionId, true)
+		const connection = this.getChild(entityModel.connectionId)
 		if (!connection) return undefined
 
 		return connection.entityLearnValues(entityModel, controlId)
