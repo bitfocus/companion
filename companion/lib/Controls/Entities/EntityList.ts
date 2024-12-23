@@ -1,6 +1,3 @@
-import type { InstanceDefinitions } from '../../Instance/Definitions.js'
-import type { InternalController } from '../../Internal/Controller.js'
-import type { ModuleHost } from '../../Instance/Host.js'
 import {
 	EntityModelType,
 	EntityOwner,
@@ -10,13 +7,14 @@ import {
 import { ControlEntityInstance } from './EntityInstance.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { clamp } from '../../Resources/Util.js'
+import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
 
 export type ControlEntityListDefinition = Pick<EntitySupportedChildGroupDefinition, 'type' | 'booleanFeedbacksOnly'>
 
 export class ControlEntityList {
-	readonly #instanceDefinitions: InstanceDefinitions
-	readonly #internalModule: InternalController
-	readonly #moduleHost: ModuleHost
+	readonly #instanceDefinitions: InstanceDefinitionsForEntity
+	readonly #internalModule: InternalControllerForEntity
+	readonly #moduleHost: ModuleHostForEntity
 
 	/**
 	 * Id of the control this belongs to
@@ -34,9 +32,9 @@ export class ControlEntityList {
 	}
 
 	constructor(
-		instanceDefinitions: InstanceDefinitions,
-		internalModule: InternalController,
-		moduleHost: ModuleHost,
+		instanceDefinitions: InstanceDefinitionsForEntity,
+		internalModule: InternalControllerForEntity,
+		moduleHost: ModuleHostForEntity,
 		controlId: string,
 		ownerId: EntityOwner | null,
 		listDefinition: ControlEntityListDefinition
@@ -46,7 +44,7 @@ export class ControlEntityList {
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
 		this.#ownerId = ownerId
-		this.#listDefinition = listDefinition // TODO - use this elsewhere
+		this.#listDefinition = listDefinition
 	}
 
 	/**
@@ -236,7 +234,7 @@ export class ControlEntityList {
 
 		// If a feedback list, check that the feedback is of the correct type
 		if (this.#listDefinition.type === EntityModelType.Feedback) {
-			const feedbackDefinition = entity.getFeedbackDefinition()
+			const feedbackDefinition = entity.getEntityDefinition()
 			if (this.#listDefinition.booleanFeedbacksOnly && feedbackDefinition?.feedbackType !== 'boolean') return false
 		}
 
@@ -316,7 +314,7 @@ export class ControlEntityList {
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	postProcessImport(): Promise<void>[] {
+	postProcessImport(): Promise<unknown>[] {
 		return this.#entities.flatMap((entity) => entity.postProcessImport())
 	}
 

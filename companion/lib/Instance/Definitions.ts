@@ -27,6 +27,7 @@ import {
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -171,28 +172,26 @@ export class InstanceDefinitions {
 	 * @param actionId - the id of the action
 	 */
 	createActionItem(connectionId: string, actionId: string): ActionEntityModel | null {
-		const definition = this.getActionDefinition(connectionId, actionId)
-		if (definition) {
-			const action: ActionEntityModel = {
-				type: EntityModelType.Action,
-				id: nanoid(),
-				definitionId: actionId,
-				connectionId: connectionId,
-				options: {},
-			}
+		const definition = this.getEntityDefinition(EntityModelType.Action, connectionId, actionId)
+		if (!definition) return null
 
-			if (definition.options !== undefined && definition.options.length > 0) {
-				for (const j in definition.options) {
-					const opt = definition.options[j]
-					// @ts-ignore
-					action.options[opt.id] = cloneDeep(opt.default)
-				}
-			}
-
-			return action
-		} else {
-			return null
+		const action: ActionEntityModel = {
+			type: EntityModelType.Action,
+			id: nanoid(),
+			definitionId: actionId,
+			connectionId: connectionId,
+			options: {},
 		}
+
+		if (definition.options !== undefined && definition.options.length > 0) {
+			for (const j in definition.options) {
+				const opt = definition.options[j]
+				// @ts-ignore
+				action.options[opt.id] = cloneDeep(opt.default)
+			}
+		}
+
+		return action
 	}
 
 	/**
@@ -202,7 +201,7 @@ export class InstanceDefinitions {
 	 * @param booleanOnly - whether the feedback must be boolean
 	 */
 	createFeedbackItem(connectionId: string, feedbackId: string, booleanOnly: boolean): FeedbackEntityModel | null {
-		const definition = this.getFeedbackDefinition(connectionId, feedbackId)
+		const definition = this.getEntityDefinition(EntityModelType.Feedback, connectionId, feedbackId)
 		if (!definition) return null
 
 		if (booleanOnly && definition.feedbackType !== 'boolean') return null
@@ -280,24 +279,21 @@ export class InstanceDefinitions {
 	}
 
 	/**
-	 * Get an action definition
+	 * Get an entity definition
 	 */
-	getActionDefinition(connectionId: string, actionId: string): ClientEntityDefinition | undefined {
-		if (this.#actionDefinitions[connectionId]) {
-			return this.#actionDefinitions[connectionId][actionId]
-		} else {
-			return undefined
-		}
-	}
-
-	/**
-	 * Get a feedback definition
-	 */
-	getFeedbackDefinition(connectionId: string, feedbackId: string): ClientEntityDefinition | undefined {
-		if (this.#feedbackDefinitions[connectionId]) {
-			return this.#feedbackDefinitions[connectionId][feedbackId]
-		} else {
-			return undefined
+	getEntityDefinition(
+		entityType: EntityModelType,
+		connectionId: string,
+		definitionId: string
+	): ClientEntityDefinition | undefined {
+		switch (entityType) {
+			case EntityModelType.Action:
+				return this.#actionDefinitions[connectionId]?.[definitionId]
+			case EntityModelType.Feedback:
+				return this.#feedbackDefinitions[connectionId]?.[definitionId]
+			default:
+				assertNever(entityType)
+				return undefined
 		}
 	}
 

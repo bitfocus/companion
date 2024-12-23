@@ -1,7 +1,4 @@
-import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import LogController, { Logger } from '../../Log/Controller.js'
-import type { InternalController } from '../../Internal/Controller.js'
-import type { ModuleHost } from '../../Instance/Host.js'
 import {
 	EntityModelType,
 	EntitySupportedChildGroupDefinition,
@@ -11,7 +8,6 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
-import { assertNever } from '@companion-app/shared/Util.js'
 import { ControlEntityList } from './EntityList.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
@@ -19,6 +15,7 @@ import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
 
 export class ControlEntityInstance {
 	/**
@@ -26,9 +23,9 @@ export class ControlEntityInstance {
 	 */
 	readonly #logger: Logger
 
-	readonly #instanceDefinitions: InstanceDefinitions
-	readonly #internalModule: InternalController
-	readonly #moduleHost: ModuleHost
+	readonly #instanceDefinitions: InstanceDefinitionsForEntity
+	readonly #internalModule: InternalControllerForEntity
+	readonly #moduleHost: ModuleHostForEntity
 
 	/**
 	 * Id of the control this belongs to
@@ -87,9 +84,9 @@ export class ControlEntityInstance {
 	 * @param isCloned Whether this is a cloned instance and should generate new ids
 	 */
 	constructor(
-		instanceDefinitions: InstanceDefinitions,
-		internalModule: InternalController,
-		moduleHost: ModuleHost,
+		instanceDefinitions: InstanceDefinitionsForEntity,
+		internalModule: InternalControllerForEntity,
+		moduleHost: ModuleHostForEntity,
 		controlId: string,
 		data: SomeEntityModel,
 		isCloned: boolean
@@ -101,8 +98,12 @@ export class ControlEntityInstance {
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
 
-		this.#data = cloneDeep(data) // TODO - cleanup unwanted properties
-		if (!this.#data.options) this.#data.options = {}
+		{
+			const newData = cloneDeep(data)
+			delete newData.children
+			if (!newData.options) newData.options = {}
+			this.#data = newData
+		}
 
 		if (isCloned) {
 			this.#data.id = nanoid()
@@ -112,13 +113,30 @@ export class ControlEntityInstance {
 			const supportedChildGroups = this.getSupportedChildGroupDefinitions()
 			for (const groupDefinition of supportedChildGroups) {
 				try {
-					const childGroup = this.#getOrCreateChildGroup(groupDefinition.groupId)
+					const childGroup = this.#getOrCreateChildGroupFromDefinition(groupDefinition)
 					childGroup.loadStorage(data.children?.[groupDefinition.groupId] ?? [], true, isCloned)
 				} catch (e: any) {
 					this.#logger.error(`Error loading child entity group: ${e.message}`)
 				}
 			}
 		}
+	}
+
+	#getOrCreateChildGroupFromDefinition(listDefinition: EntitySupportedChildGroupDefinition): ControlEntityList {
+		const existing = this.#children.get(listDefinition.groupId)
+		if (existing) return existing
+
+		const childGroup = new ControlEntityList(
+			this.#instanceDefinitions,
+			this.#internalModule,
+			this.#moduleHost,
+			this.#controlId,
+			{ parentId: this.id, childGroup: listDefinition.groupId },
+			listDefinition
+		)
+		this.#children.set(listDefinition.groupId, childGroup)
+
+		return childGroup
 	}
 
 	#getOrCreateChildGroup(groupId: string): ControlEntityList {
@@ -130,41 +148,18 @@ export class ControlEntityInstance {
 		const listDefinition = supportedChildGroups.find((g) => g.groupId === groupId)
 		if (!listDefinition) throw new Error('Entity cannot accept children in this group.')
 
-		const childGroup = new ControlEntityList(
-			this.#instanceDefinitions,
-			this.#internalModule,
-			this.#moduleHost,
-			this.#controlId,
-			{ parentId: this.id, childGroup: groupId },
-			listDefinition
-		)
-		this.#children.set(groupId, childGroup)
-
-		return childGroup
+		return this.#getOrCreateChildGroupFromDefinition(listDefinition)
 	}
 
 	getSupportedChildGroupDefinitions(): EntitySupportedChildGroupDefinition[] {
 		if (this.connectionId !== 'internal') return []
 
-		switch (this.#data.type) {
-			case EntityModelType.Action: {
-				const actionDefinition = this.#instanceDefinitions.getActionDefinition(
-					this.#data.connectionId,
-					this.#data.definitionId
-				)
-				return actionDefinition?.supportsChildGroups ?? []
-			}
-			case EntityModelType.Feedback: {
-				const feedbackDefinition = this.#instanceDefinitions.getFeedbackDefinition(
-					this.#data.connectionId,
-					this.#data.definitionId
-				)
-				return feedbackDefinition?.supportsChildGroups ?? []
-			}
-			default:
-				assertNever(this.#data.type)
-				return []
-		}
+		const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
+			this.#data.type,
+			this.#data.connectionId,
+			this.#data.definitionId
+		)
+		return entityDefinition?.supportsChildGroups ?? []
 	}
 
 	/**
@@ -175,12 +170,9 @@ export class ControlEntityInstance {
 		if (this.#data.connectionId === 'internal') {
 			this.#internalModule.entityDelete(this.asEntityModel())
 		} else {
-			const connection = this.#moduleHost.getChild(this.#data.connectionId, true)
-			if (connection) {
-				connection.entityDelete(this.asEntityModel()).catch((e) => {
-					this.#logger.silly(`entityDelete to connection failed: ${e.message}`)
-				})
-			}
+			this.#moduleHost.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
+				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
+			})
 		}
 
 		// Remove from cached feedback values
@@ -205,16 +197,11 @@ export class ControlEntityInstance {
 			(!onlyType || this.#data.type === onlyType)
 		) {
 			if (this.#data.connectionId === 'internal') {
-				// nocommit - implement this
-				// this.#internalModule.actionUpdate(this.asActionInstance(), this.#controlId)
+				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
-				const connection = this.#moduleHost.getChild(this.#data.connectionId, true)
-				if (connection) {
-					// nocommit - implement this
-					// connection.actionUpdate(this.asActionInstance(), this.#controlId).catch((e) => {
-					// 	this.#logger.silly(`action_update to connection failed: ${e.message} ${e.stack}`)
-					// })
-				}
+				this.#moduleHost.connectionEntityUpdate(this.asEntityModel(), this.#controlId).catch((e) => {
+					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
+				})
 			}
 		}
 
@@ -299,10 +286,7 @@ export class ControlEntityInstance {
 	 * Learn the options for an entity, by asking the connection for the current values
 	 */
 	async learnOptions(): Promise<boolean> {
-		const connection = this.#moduleHost.getChild(this.connectionId)
-		if (!connection) return false
-
-		const newOptions = await connection.entityLearnValues(this.asEntityModel(), this.#controlId)
+		const newOptions = await this.#moduleHost.connectionLearnOptions(this.asEntityModel(), this.#controlId)
 		if (newOptions) {
 			this.setOptions(newOptions)
 
@@ -325,9 +309,12 @@ export class ControlEntityInstance {
 		this.subscribe(false)
 	}
 
-	getFeedbackDefinition(): ClientEntityDefinition | undefined {
-		if (this.#data.type !== EntityModelType.Feedback) return undefined
-		return this.#instanceDefinitions.getFeedbackDefinition(this.#data.connectionId, this.#data.definitionId)
+	getEntityDefinition(): ClientEntityDefinition | undefined {
+		return this.#instanceDefinitions.getEntityDefinition(
+			this.#data.type,
+			this.#data.connectionId,
+			this.#data.definitionId
+		)
 	}
 
 	/**
@@ -349,8 +336,9 @@ export class ControlEntityInstance {
 			value = value.replace(/^.*base64,/, '')
 		}
 
-		const definition = this.getFeedbackDefinition()
-		if (!definition || definition.feedbackType !== 'boolean') return false
+		const definition = this.getEntityDefinition()
+		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+			return false
 
 		if (!feedbackData.style) feedbackData.style = {}
 		feedbackData.style[key as keyof ButtonStyleProperties] = value
@@ -370,8 +358,9 @@ export class ControlEntityInstance {
 
 		const feedbackData = this.#data as FeedbackEntityModel
 
-		const definition = this.getFeedbackDefinition()
-		if (!definition || definition.feedbackType !== 'boolean') return false
+		const definition = this.getEntityDefinition()
+		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+			return false
 
 		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.feedbackStyle || {}
 		const oldStyle: Record<string, any> = feedbackData.style || {}
@@ -500,13 +489,13 @@ export class ControlEntityInstance {
 	getAllChildren(): ControlEntityInstance[] {
 		if (this.connectionId !== 'internal') return []
 
-		const actions: ControlEntityInstance[] = []
+		const entities: ControlEntityInstance[] = []
 
 		for (const childGroup of this.#children.values()) {
-			actions.push(...childGroup.getAllEntities())
+			entities.push(...childGroup.getAllEntities())
 		}
 
-		return actions
+		return entities
 	}
 
 	/**
@@ -539,8 +528,8 @@ export class ControlEntityInstance {
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	postProcessImport(): Promise<void>[] {
-		const ps: Promise<void>[] = []
+	postProcessImport(): Promise<unknown>[] {
+		const ps: Promise<unknown>[] = []
 
 		if (this.#data.connectionId === 'internal') {
 			const newProps = this.#internalModule.entityUpgrade(this.asEntityModel(), this.#controlId)
@@ -551,10 +540,7 @@ export class ControlEntityInstance {
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			})
 		} else {
-			const connection = this.#moduleHost.getChild(this.connectionId, true)
-			if (connection) {
-				ps.push(connection.entityUpdate(this.asEntityModel(), this.#controlId))
-			}
+			ps.push(this.#moduleHost.connectionEntityUpdate(this.asEntityModel(), this.#controlId))
 		}
 
 		for (const childGroup of this.#children.values()) {
@@ -636,7 +622,7 @@ export class ControlEntityInstance {
 
 		if (this.#data.type !== EntityModelType.Feedback) return false
 
-		const definition = this.getFeedbackDefinition()
+		const definition = this.getEntityDefinition()
 
 		// Special case to handle the internal 'logic' operators, which need to be executed live
 		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
@@ -646,7 +632,8 @@ export class ControlEntityInstance {
 			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
 		}
 
-		if (!definition || definition.feedbackType !== 'boolean') return false
+		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+			return false
 
 		if (typeof this.#cachedFeedbackValue === 'boolean') {
 			const feedbackData = this.#data as FeedbackEntityModel
@@ -669,10 +656,12 @@ export class ControlEntityInstance {
 		const feedback = this.#data as FeedbackEntityModel
 		if (feedback.type !== EntityModelType.Feedback) return
 
-		const definition = this.getFeedbackDefinition()
-		if (definition?.feedbackType === 'boolean') {
+		const definition = this.getEntityDefinition()
+		if (!definition || definition.entityType !== EntityModelType.Feedback) return
+
+		if (definition.feedbackType === 'boolean') {
 			if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
-		} else if (definition?.feedbackType === 'advanced') {
+		} else if (definition.feedbackType === 'advanced') {
 			// Special case to handle the internal 'logic' operators, which need to be done differently
 			if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
 				if (this.getBooleanFeedbackValue()) {

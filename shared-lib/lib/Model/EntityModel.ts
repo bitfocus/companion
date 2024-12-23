@@ -13,9 +13,6 @@ export enum EntityModelType {
 
 export interface ActionEntityModel extends EntityModelBase {
 	readonly type: EntityModelType.Action
-
-	// isInverted?: undefined
-	// style?: undefined
 }
 
 export interface FeedbackEntityModel extends EntityModelBase {

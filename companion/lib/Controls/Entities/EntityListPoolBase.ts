@@ -2,21 +2,20 @@ import LogController, { Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
 	EntityOwner,
-	EntitySupportedChildGroupDefinition,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
-import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { InstanceDefinitionsForEntity } from './Types.js'
 
 export interface ControlEntityListPoolProps {
-	instanceDefinitions: InstanceDefinitions
+	instanceDefinitions: InstanceDefinitionsForEntity
 	internalModule: InternalController
 	moduleHost: ModuleHost
 	controlId: string
@@ -30,7 +29,7 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	protected readonly logger: Logger
 
-	readonly #instanceDefinitions: InstanceDefinitions
+	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalController
 	readonly #moduleHost: ModuleHost
 
