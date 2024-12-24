@@ -445,4 +445,8 @@ describe('EntityList', () => {
 			} satisfies EntityOwner)
 		})
 	})
+
+	// describe('addEntity', () => {
+	// 	//TODO
+	// })
 })
