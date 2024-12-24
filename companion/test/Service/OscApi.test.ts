@@ -4,7 +4,7 @@ import { ServiceOscApi } from '../../lib/Service/OscApi'
 import { rgb } from '../../lib/Resources/Util'
 import type { Registry } from '../../lib/Registry'
 import type { ControlButtonNormal } from '../../lib/Controls/ControlTypes/Button/Normal'
-import { ControlEntityListPoolButton } from '../../lib/Controls/Fragments/EntityListPoolButton'
+import type { ControlEntityListPoolButton } from '../../lib/Controls/Entities/EntityListPoolButton'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {

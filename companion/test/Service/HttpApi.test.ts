@@ -8,7 +8,7 @@ import { rgb } from '../../lib/Resources/Util'
 import type { Registry } from '../../lib/Registry'
 import type { ControlButtonNormal } from '../../lib/Controls/ControlTypes/Button/Normal'
 import type { UIExpress } from '../../lib/UI/Express'
-import { ControlEntityListPoolButton } from '../../lib/Controls/Fragments/EntityListPoolButton'
+import type { ControlEntityListPoolButton } from '../../lib/Controls/Entities/EntityListPoolButton'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
