@@ -1,11 +1,11 @@
 import { useContext, useMemo, useRef } from 'react'
 import { SocketContext, socketEmitPromise } from '../../util.js'
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 export interface IFeedbackEditorService {
-	addFeedback: (feedbackType: string, parentId: string | null) => void
-	moveCard: (dragId: string, hoverParentId: string | null, hoverIndex: number) => void
+	addFeedback: (feedbackType: string, ownerId: FeedbackOwner | null) => void
+	moveCard: (dragId: string, hoverOwnerId: FeedbackOwner | null, hoverIndex: number) => void
 
 	setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, value: any) => void
 	setConnection: (feedbackId: string, connectionId: string | number) => void
@@ -41,19 +41,19 @@ export function useControlFeedbacksEditorService(
 
 	return useMemo(
 		() => ({
-			addFeedback: (feedbackType: string, parentId: string | null) => {
+			addFeedback: (feedbackType: string, ownerId: FeedbackOwner | null) => {
 				const [connectionId, feedbackId] = feedbackType.split(':', 2)
-				socketEmitPromise(socket, 'controls:feedback:add', [controlId, parentId, connectionId, feedbackId]).catch(
+				socketEmitPromise(socket, 'controls:feedback:add', [controlId, ownerId, connectionId, feedbackId]).catch(
 					(e) => {
 						console.error('Failed to add control feedback', e)
 					}
 				)
 			},
-			moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => {
+			moveCard: (dragFeedbackId: string, hoverOwnerId: FeedbackOwner | null, hoverIndex: number) => {
 				socketEmitPromise(socket, 'controls:feedback:move', [
 					controlId,
 					dragFeedbackId,
-					hoverParentId,
+					hoverOwnerId,
 					hoverIndex,
 				]).catch((e) => {
 					console.error(`Move failed: ${e}`)

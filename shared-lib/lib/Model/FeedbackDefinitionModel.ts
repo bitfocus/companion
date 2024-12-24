@@ -14,6 +14,7 @@ export interface FeedbackDefinition {
 
 	showButtonPreview: boolean
 	supportsChildFeedbacks: boolean
+	supportsAdvancedChildFeedbacks: boolean
 }
 
 export type ClientFeedbackDefinition = FeedbackDefinition
