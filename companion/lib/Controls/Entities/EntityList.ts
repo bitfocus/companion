@@ -219,7 +219,7 @@ export class ControlEntityList {
 	 * Note: this is used when moving an entity from a different parent. Lifecycle is not managed
 	 */
 	pushEntity(entity: ControlEntityInstance, index: number): void {
-		if (this.canAcceptEntity(entity)) throw new Error('EntityList cannot accept this type of entity')
+		if (!this.canAcceptEntity(entity)) throw new Error('EntityList cannot accept this type of entity')
 
 		index = clamp(index, 0, this.#entities.length)
 
@@ -230,7 +230,7 @@ export class ControlEntityList {
 	 * Check if this list can accept a specified entity
 	 */
 	canAcceptEntity(entity: ControlEntityInstance): boolean {
-		if (this.#listDefinition.type !== entity.type) return true
+		if (this.#listDefinition.type !== entity.type) return false
 
 		// If a feedback list, check that the feedback is of the correct type
 		if (this.#listDefinition.type === EntityModelType.Feedback) {

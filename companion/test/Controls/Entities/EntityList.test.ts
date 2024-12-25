@@ -1,6 +1,12 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
-import { EntityModelType, EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	ActionEntityModel,
+	EntityModelType,
+	EntityOwner,
+	FeedbackEntityModel,
+	SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { cloneDeep } from 'lodash-es'
 import { ActionTree, ActionTreeEntityDefinitions, getAllModelsInTree } from './EntityListModels.js'
 import {
@@ -9,6 +15,7 @@ import {
 	ModuleHostForEntity,
 } from '../../../lib/Controls/Entities/Types.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 
 describe('EntityList', () => {
 	function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
@@ -18,27 +25,50 @@ describe('EntityList', () => {
 		const internalEntityUpdate = vi.fn<InternalControllerForEntity['entityUpdate']>()
 		const internalEntityDelete = vi.fn<InternalControllerForEntity['entityDelete']>()
 
+		const instanceDefinitions: InstanceDefinitionsForEntity = {
+			getEntityDefinition,
+		}
+		const moduleHost: ModuleHostForEntity = {
+			connectionEntityUpdate,
+			connectionEntityDelete,
+			connectionEntityLearnOptions: null as any,
+		}
+		const internalController: InternalControllerForEntity = {
+			entityUpdate: internalEntityUpdate,
+			entityDelete: internalEntityDelete,
+			entityUpgrade: null as any,
+			executeLogicFeedback: null as any,
+		}
+
 		const list = new ControlEntityList(
-			{
-				getEntityDefinition,
-			},
-			{
-				entityUpdate: internalEntityUpdate,
-				entityDelete: internalEntityDelete,
-				entityUpgrade: null as any,
-				executeLogicFeedback: null as any,
-			},
-			{
-				connectionEntityUpdate,
-				connectionEntityDelete,
-				connectionEntityLearnOptions: null as any,
-			},
+			instanceDefinitions,
+			internalController,
+			moduleHost,
 			controlId,
 			ownerId ?? null,
 			listId ?? {
 				type: EntityModelType.Action,
 			}
 		)
+
+		const newActionModel: ActionEntityModel = {
+			type: EntityModelType.Action,
+			id: 'my-new-action',
+			connectionId: 'internal',
+			definitionId: 'def01',
+			options: {},
+		}
+		const newAction = new ControlEntityInstance(
+			instanceDefinitions,
+			internalController,
+			moduleHost,
+			controlId,
+			newActionModel,
+			false
+		)
+
+		// Clear any calls made by the above
+		getEntityDefinition.mockClear()
 
 		return {
 			list,
@@ -47,6 +77,11 @@ describe('EntityList', () => {
 			connectionEntityDelete,
 			internalEntityUpdate,
 			internalEntityDelete,
+			instanceDefinitions,
+			internalController,
+			moduleHost,
+			newActionModel,
+			newAction,
 		}
 	}
 
@@ -411,7 +446,7 @@ describe('EntityList', () => {
 	})
 
 	describe('findParentAndIndex', () => {
-		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+		const { list, getEntityDefinition } = createList('test01')
 
 		for (const def of ActionTreeEntityDefinitions) {
 			getEntityDefinition.mockReturnValueOnce(def)
@@ -446,7 +481,622 @@ describe('EntityList', () => {
 		})
 	})
 
-	// describe('addEntity', () => {
-	// 	//TODO
-	// })
+	describe('addEntity', () => {
+		function expectEntityToMatchModel(entity: SomeEntityModel, instance: ControlEntityInstance) {
+			expect(instance).not.toBeUndefined()
+			expect(instance.id).toBe(entity.id)
+			expect(instance.connectionId).toBe(entity.connectionId)
+			expect(instance.definitionId).toBe(entity.definitionId)
+			expect(instance.rawOptions).toEqual(entity.options)
+			expect(instance.asEntityModel()).toEqual(entity)
+		}
+
+		test('add action to action list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Action })
+
+			const newAction: ActionEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Action,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+			}
+
+			const newInstance = list.addEntity(cloneDeep(newAction))
+			expect(newInstance).not.toBeUndefined()
+			expectEntityToMatchModel(newAction, newInstance)
+		})
+
+		test('add action to feedback list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+
+			const newAction: ActionEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Action,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+			}
+
+			expect(() => list.addEntity(cloneDeep(newAction))).toThrowError('EntityList cannot accept this type of entity')
+			expect(list.getAllEntities()).toHaveLength(0)
+		})
+
+		test('add feedback to action list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Action })
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+			}
+
+			expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
+			expect(list.getAllEntities()).toHaveLength(0)
+		})
+
+		test('add feedback to feedback list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+			}
+
+			const newInstance = list.addEntity(cloneDeep(newFeedback))
+			expect(newInstance).not.toBeUndefined()
+			expectEntityToMatchModel(newFeedback, newInstance)
+		})
+
+		test('add unknown feedback to boolean feedback list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Feedback, booleanFeedbacksOnly: true })
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+			}
+
+			expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
+			expect(list.getAllEntities()).toHaveLength(0)
+		})
+
+		test('add advanced feedback to boolean feedback list', () => {
+			const { list, getEntityDefinition } = createList('test01', null, {
+				type: EntityModelType.Feedback,
+				booleanFeedbacksOnly: true,
+			})
+
+			getEntityDefinition.mockReturnValueOnce({
+				entityType: EntityModelType.Feedback,
+				feedbackType: 'advanced',
+			} as Partial<ClientEntityDefinition> as any)
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+			}
+
+			expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
+			expect(list.getAllEntities()).toHaveLength(0)
+
+			expect(getEntityDefinition).toHaveBeenCalledTimes(1)
+			expect(getEntityDefinition).toHaveBeenCalledWith(EntityModelType.Feedback, 'my-conn99', 'something')
+		})
+
+		test('add boolean feedback to boolean feedback list', () => {
+			const { list, getEntityDefinition } = createList('test01', null, {
+				type: EntityModelType.Feedback,
+				booleanFeedbacksOnly: true,
+			})
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+			}
+
+			getEntityDefinition.mockReturnValueOnce({
+				entityType: EntityModelType.Feedback,
+				feedbackType: 'boolean',
+			} as Partial<ClientEntityDefinition> as any)
+
+			const newInstance = list.addEntity(cloneDeep(newFeedback))
+			expect(newInstance).not.toBeUndefined()
+			expectEntityToMatchModel(newFeedback, newInstance)
+
+			expect(getEntityDefinition).toHaveBeenCalledTimes(1)
+			expect(getEntityDefinition).toHaveBeenCalledWith(EntityModelType.Feedback, 'my-conn99', 'something')
+		})
+
+		test('non-internal with children', () => {
+			const { list } = createList('test01', null, {
+				type: EntityModelType.Feedback,
+			})
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+				children: {
+					group1: [
+						{
+							id: 'child01',
+							type: EntityModelType.Feedback,
+							connectionId: 'my-conn99',
+							definitionId: 'something',
+							options: {
+								test: 123,
+							},
+						},
+					],
+				},
+			}
+
+			const newInstance = list.addEntity(cloneDeep(newFeedback))
+			expect(newInstance).not.toBeUndefined()
+
+			// Prune out the children which will have been discarded
+			delete newFeedback.children
+			expectEntityToMatchModel(newFeedback, newInstance)
+
+			expect(list.getAllEntities()).toHaveLength(1)
+		})
+
+		test('internal with children', () => {
+			const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01', null, {
+				type: EntityModelType.Feedback,
+			})
+
+			getEntityDefinition.mockReturnValueOnce({
+				entityType: EntityModelType.Feedback,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						groupId: 'group1',
+						entityTypeLabel: 'Feedback',
+						label: 'Feedback',
+					},
+				],
+			} satisfies Partial<ClientEntityDefinition> as any)
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'internal',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+				children: {
+					group1: [
+						{
+							id: 'child01',
+							type: EntityModelType.Feedback,
+							connectionId: 'my-conn99',
+							definitionId: 'thing',
+							options: {
+								test: 99,
+							},
+						},
+					],
+					group2: [
+						{
+							id: 'child02',
+							type: EntityModelType.Feedback,
+							connectionId: 'my-conn99',
+							definitionId: 'another',
+							options: {
+								test: 45,
+							},
+						},
+					],
+				},
+			}
+
+			const newInstance = list.addEntity(cloneDeep(newFeedback))
+			expect(newInstance).not.toBeUndefined()
+
+			// Prune out the children which will have been discarded
+			delete newFeedback.children!.group2
+			expectEntityToMatchModel(newFeedback, newInstance)
+
+			const allInstances = list.getAllEntities()
+			expect(allInstances).toHaveLength(2)
+			expectEntityToMatchModel(newFeedback, allInstances[0])
+			expectEntityToMatchModel(newFeedback.children!['group1']![0], allInstances[1])
+
+			// ensure not cloned
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
+		})
+
+		test('add cloned', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'my-conn99',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+			}
+
+			const newInstance = list.addEntity(cloneDeep(newFeedback), true)
+			expect(newInstance).not.toBeUndefined()
+			expect(newInstance.id).not.toBe(newFeedback.id)
+
+			// Update the expected id
+			newFeedback.id = newInstance.id
+			expectEntityToMatchModel(newFeedback, newInstance)
+		})
+
+		test('clone with children', () => {
+			const { list, getEntityDefinition } = createList('test01', null, {
+				type: EntityModelType.Feedback,
+			})
+
+			getEntityDefinition.mockReturnValueOnce({
+				entityType: EntityModelType.Feedback,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						groupId: 'group1',
+						entityTypeLabel: 'Feedback',
+						label: 'Feedback',
+					},
+				],
+			} satisfies Partial<ClientEntityDefinition> as any)
+
+			const newFeedback: FeedbackEntityModel = {
+				id: 'new01',
+				type: EntityModelType.Feedback,
+				connectionId: 'internal',
+				definitionId: 'something',
+				options: {
+					test: 123,
+				},
+				children: {
+					group1: [
+						{
+							id: 'child01',
+							type: EntityModelType.Feedback,
+							connectionId: 'my-conn99',
+							definitionId: 'thing',
+							options: {
+								test: 99,
+							},
+						},
+					],
+				},
+			}
+
+			const newInstance = list.addEntity(cloneDeep(newFeedback), true)
+			expect(newInstance).not.toBeUndefined()
+
+			expect(newInstance.id).not.toBe(newFeedback.id)
+			newFeedback.id = newInstance.id
+			expect(newInstance.getAllChildren()[0].id).not.toBe(newFeedback.children!['group1']![0].id)
+			newFeedback.children!['group1']![0].id = newInstance.getAllChildren()[0].id
+			expectEntityToMatchModel(newFeedback, newInstance)
+		})
+	})
+
+	describe('removeEntity', () => {
+		test('remove from root', () => {
+			const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+			expect(list.findById('02')).not.toBeUndefined()
+
+			// Remove from root
+			list.removeEntity('02')
+
+			// Check was removed
+			expect(list.getAllEntities()).toHaveLength(5)
+			expect(list.findById('02')).toBeUndefined()
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(1)
+			expect(connectionEntityDelete).toHaveBeenCalledWith(ActionTree[1], 'test01')
+		})
+
+		test('remove from root with children', () => {
+			const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+			expect(list.findById('int0')).not.toBeUndefined()
+
+			// Remove from root
+			list.removeEntity('int0')
+
+			// Check was removed
+			expect(list.getAllEntities()).toHaveLength(2)
+			expect(list.findById('int0')).toBeUndefined()
+			expect(internalEntityDelete).toHaveBeenCalledTimes(2)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		})
+
+		test('remove deep', () => {
+			const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+			expect(list.findById('int1-b')).not.toBeUndefined()
+
+			// Remove from root
+			list.removeEntity('int1-b')
+
+			// Check was removed
+			expect(list.getAllEntities()).toHaveLength(5)
+			expect(list.findById('int1-b')).toBeUndefined()
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(1)
+		})
+	})
+
+	describe('popEntity', () => {
+		test('pop empty', () => {
+			const { list } = createList('test01')
+
+			const entity = list.popEntity(0)
+			expect(entity).toBeUndefined()
+		})
+
+		test('pop first', () => {
+			const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			const allEntitiesBefore = list.getAllEntities()
+			const beforeIds = allEntitiesBefore.map((e) => e.id)
+
+			// Starts with correct length
+			expect(allEntitiesBefore).toHaveLength(6)
+
+			// Remove from root
+			const popped = list.popEntity(0)
+			expect(popped).not.toBeUndefined()
+			expect(popped).toBe(allEntitiesBefore[0])
+
+			// Check no lifecycle
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Check ids after remove
+			const afterIds = list.getAllEntities().map((e) => e.id)
+			beforeIds.splice(0, 1)
+			expect(afterIds).toEqual(beforeIds)
+		})
+
+		test('pop negative', () => {
+			const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			// Remove from root
+			expect(list.popEntity(-1)).toBeUndefined()
+
+			// Check no lifecycle
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Check ids after remove
+			expect(list.getAllEntities()).toHaveLength(6)
+		})
+
+		test('after end', () => {
+			const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			// Remove from root
+			expect(list.popEntity(4)).toBeUndefined()
+
+			// Check no lifecycle
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Check ids after remove
+			expect(list.getAllEntities()).toHaveLength(6)
+		})
+
+		test('with children', () => {
+			const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			const allEntitiesBefore = list.getAllEntities()
+			const beforeIds = allEntitiesBefore.map((e) => e.id)
+
+			// Starts with correct length
+			expect(allEntitiesBefore).toHaveLength(6)
+
+			// Remove from root
+			const popped = list.popEntity(2)
+			expect(popped).not.toBeUndefined()
+			expect(popped).toBe(allEntitiesBefore[2])
+
+			// Check no lifecycle
+			expect(internalEntityDelete).toHaveBeenCalledTimes(0)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+
+			// Check ids after remove
+			const afterIds = list.getAllEntities().map((e) => e.id)
+			beforeIds.splice(2, 4)
+			expect(afterIds).toEqual(beforeIds)
+		})
+	})
+
+	describe('popEntity', () => {
+		test('push to empty', () => {
+			const { list, newAction, internalEntityUpdate, connectionEntityUpdate } = createList('test01')
+
+			expect(list.getAllEntities()).toHaveLength(0)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
+
+			list.pushEntity(newAction, 5)
+
+			expect(list.getAllEntities()).toHaveLength(1)
+			expect(list.getAllEntities()[0]).toBe(newAction)
+			expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
+			expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
+		})
+
+		test('push front', () => {
+			const { list, newAction } = createList('test01')
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(3)
+
+			list.pushEntity(newAction, 0)
+
+			// Check ids after push
+			const afterIds = list.getAllEntities().map((e) => e.id)
+			expect(afterIds).toHaveLength(4)
+			expect(afterIds[0]).toBe(newAction.id)
+		})
+
+		test('push front - negative', () => {
+			const { list, newAction } = createList('test01')
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(3)
+
+			list.pushEntity(newAction, -1)
+
+			// Check ids after push
+			const afterIds = list.getAllEntities().map((e) => e.id)
+			expect(afterIds).toHaveLength(4)
+			expect(afterIds[0]).toBe(newAction.id)
+		})
+
+		test('push front - beyond end', () => {
+			const { list, newAction } = createList('test01')
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(3)
+
+			list.pushEntity(newAction, 5)
+
+			// Check ids after push
+			const afterIds = list.getAllEntities().map((e) => e.id)
+			expect(afterIds).toHaveLength(4)
+			expect(afterIds[3]).toBe(newAction.id)
+		})
+
+		test('push front - middle', () => {
+			const { list, newAction } = createList('test01')
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(3)
+
+			list.pushEntity(newAction, 1)
+
+			// Check ids after push
+			const afterIds = list.getAllEntities().map((e) => e.id)
+			expect(afterIds).toHaveLength(4)
+			expect(afterIds[1]).toBe(newAction.id)
+		})
+	})
+
+	// canAcceptEntity is tested as part of addEntity
+
+	// TODO - duplicateEntity
 })
