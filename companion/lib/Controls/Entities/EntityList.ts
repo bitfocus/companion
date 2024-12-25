@@ -280,11 +280,13 @@ export class ControlEntityList {
 
 		this.#entities = this.#entities.filter((entity) => {
 			if (entity.connectionId === connectionId) {
+				changed = true
+
 				entity.cleanup()
 
 				return false
 			} else {
-				changed = entity.forgetChildrenForConnection(connectionId)
+				changed = entity.forgetChildrenForConnection(connectionId) || changed
 				return true
 			}
 		})

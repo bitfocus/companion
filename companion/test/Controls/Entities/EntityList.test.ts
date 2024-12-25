@@ -1099,4 +1099,127 @@ describe('EntityList', () => {
 	// canAcceptEntity is tested as part of addEntity
 
 	// TODO - duplicateEntity
+
+	describe('forgetForConnection', () => {
+		test('cleanup nothing', () => {
+			const { list, getEntityDefinition } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			expect(list.forgetForConnection('missing-connection')).toBe(false)
+
+			// Check ids after cleanup
+			expect(list.getAllEntities()).toHaveLength(6)
+		})
+
+		test('remove from root', () => {
+			const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			expect(list.forgetForConnection('conn02')).toBe(true)
+
+			// Check ids after cleanup
+			expect(list.getAllEntities()).toHaveLength(5)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(1)
+		})
+
+		test('remove deep', () => {
+			const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			expect(list.forgetForConnection('conn04')).toBe(true)
+
+			// Check ids after cleanup
+			expect(list.getAllEntities()).toHaveLength(4)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		})
+	})
+
+	describe('verifyConnectionIds', () => {
+		test('cleanup nothing', () => {
+			const { list, getEntityDefinition } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
+			list.verifyConnectionIds(allConnectionIds)
+
+			// Check ids after cleanup
+			expect(list.getAllEntities()).toHaveLength(6)
+		})
+
+		test('remove from root', () => {
+			const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
+			allConnectionIds.delete('conn02')
+			list.verifyConnectionIds(allConnectionIds)
+
+			// Check ids after cleanup
+			expect(list.getAllEntities()).toHaveLength(5)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+		})
+
+		test('remove deep', () => {
+			const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
+			allConnectionIds.delete('conn04')
+			list.verifyConnectionIds(allConnectionIds)
+
+			// Check ids after cleanup
+			expect(list.getAllEntities()).toHaveLength(4)
+			expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
+		})
+	})
+
+	// TODO - postProcessImport
 })
