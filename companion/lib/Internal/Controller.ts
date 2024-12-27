@@ -325,7 +325,11 @@ export class InternalController {
 		for (const fragment of this.#fragments) {
 			if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
 				try {
-					if (await fragment.executeAction(action, extras)) {
+					let value = fragment.executeAction(action, extras)
+					// Only await if it is a promise, to avoid unnecessary async pauses
+					value = value instanceof Promise ? await value : value
+
+					if (value) {
 						// It was handled, so break
 						return
 					}
