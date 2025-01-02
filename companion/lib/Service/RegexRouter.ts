@@ -1,5 +1,3 @@
-import { pathToRegexp } from 'path-to-regexp'
-
 /**
  * A regex based route
  */
@@ -51,25 +49,10 @@ export class RegexRouter {
 	/**
 	 * Add a route to the router
 	 */
-	addRegex(regexp: RegExp, handler: RouteHandler): void {
-		if (!regexp || !handler) throw new Error('Invalid route parameters')
-		this.#routes.push({ regexp, handler })
-	}
-
-	/**
-	 * Add a route to the router, using the express style path syntax
-	 */
-	addPath(path: string, handler: PathRouteHandler): void {
-		const { regexp, keys } = pathToRegexp(path)
-
-		this.addRegex(regexp, (match, ...args) => {
-			const values: Record<string, string> = {}
-			for (let i = 0; i < keys.length; i++) {
-				const key = keys[i]
-				values[key.name] = values[key.name] ?? match[i + 1]
-			}
-
-			return handler(values, ...args)
+	addRoute(route: string, handler: PathRouteHandler): void {
+		this.#routes.push({
+			regexp: new RegExp(`^${route}$`, 'i'),
+			handler: (match, ...args) => handler(match.groups ?? {}, ...args),
 		})
 	}
 }
