@@ -6,7 +6,8 @@ import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
+import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 
 /**
  * Helper for ControlTypes with feedbacks
@@ -105,7 +106,7 @@ export class FragmentFeedbacks {
 			moduleHost,
 			this.#controlId,
 			null,
-			this.#booleanOnly
+			this.#booleanOnly ? 'boolean' : null
 		)
 	}
 
@@ -145,16 +146,17 @@ export class FragmentFeedbacks {
 	/**
 	 * Add a feedback to this control
 	 * @param feedbackItem the item to add
-	 * @param parentId the ids of parent feedback that this feedback should be added as a child of
+	 * @param ownerId the ids of parent feedback that this feedback should be added as a child of
 	 */
-	feedbackAdd(feedbackItem: FeedbackInstance, parentId: string | null): boolean {
+	feedbackAdd(feedbackItem: FeedbackInstance, ownerId: FeedbackOwner | null): boolean {
 		let newFeedback: FragmentFeedbackInstance
 
-		if (parentId) {
-			const parent = this.#feedbacks.findById(parentId)
-			if (!parent) throw new Error(`Failed to find parent feedback ${parentId} when adding child feedback`)
+		if (ownerId) {
+			const parent = this.#feedbacks.findById(ownerId.parentFeedbackId)
+			if (!parent)
+				throw new Error(`Failed to find parent feedback ${ownerId.parentFeedbackId} when adding child feedback`)
 
-			newFeedback = parent.addChild(feedbackItem)
+			newFeedback = parent.addChild(ownerId.childGroup, feedbackItem)
 		} else {
 			newFeedback = this.#feedbacks.addFeedback(feedbackItem)
 		}
@@ -248,30 +250,33 @@ export class FragmentFeedbacks {
 	/**
 	 * Move a feedback within the hierarchy
 	 * @param moveFeedbackId the id of the feedback to move
-	 * @param newParentId the target parentId of the feedback
+	 * @param newOwnerId the target parentId of the feedback
 	 * @param newIndex the target index of the feedback
 	 */
-	feedbackMoveTo(moveFeedbackId: string, newParentId: string | null, newIndex: number): boolean {
+	feedbackMoveTo(moveFeedbackId: string, newOwnerId: FeedbackOwner | null, newIndex: number): boolean {
 		const oldItem = this.#feedbacks.findParentAndIndex(moveFeedbackId)
 		if (!oldItem) return false
 
-		if (oldItem.parent.id === newParentId) {
+		if (
+			oldItem.parent.ownerId?.parentFeedbackId === newOwnerId?.parentFeedbackId &&
+			oldItem.parent.ownerId?.childGroup === newOwnerId?.childGroup
+		) {
 			oldItem.parent.moveFeedback(oldItem.index, newIndex)
 		} else {
-			const newParent = newParentId ? this.#feedbacks.findById(newParentId) : null
-			if (newParentId && !newParent) return false
+			const newParent = newOwnerId ? this.#feedbacks.findById(newOwnerId.parentFeedbackId) : null
+			if (newOwnerId && !newParent) return false
 
 			// Ensure the new parent is not a child of the feedback being moved
-			if (newParentId && oldItem.item.findChildById(newParentId)) return false
+			if (newOwnerId && oldItem.item.findChildById(newOwnerId.parentFeedbackId)) return false
 
 			// Check if the new parent can hold the feedback being moved
-			if (newParent && !newParent.canAcceptChild(oldItem.item)) return false
+			if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldItem.item)) return false
 
 			const poppedFeedback = oldItem.parent.popFeedback(oldItem.index)
 			if (!poppedFeedback) return false
 
 			if (newParent) {
-				newParent.pushChild(poppedFeedback, newIndex)
+				newParent.pushChild(poppedFeedback, newOwnerId!.childGroup, newIndex)
 			} else {
 				this.#feedbacks.pushFeedback(poppedFeedback, newIndex)
 			}
@@ -419,7 +424,7 @@ export class FragmentFeedbacks {
 	 * Get all the feedback instances
 	 * @param onlyConnectionId Optionally, only for a specific connection
 	 */
-	getFlattenedFeedbackInstances(onlyConnectionId?: string): Omit<FeedbackInstance, 'children'>[] {
+	getFlattenedFeedbackInstances(onlyConnectionId?: string): Omit<FeedbackInstance, 'children' | 'advancedChildren'>[] {
 		const instances: FeedbackInstance[] = []
 
 		const extractInstances = (feedbacks: FeedbackInstance[]) => {
@@ -428,12 +433,12 @@ export class FragmentFeedbacks {
 					instances.push({
 						...feedback,
 						children: undefined,
+						advancedChildren: undefined,
 					})
 				}
 
-				if (feedback.children) {
-					extractInstances(feedback.children)
-				}
+				if (feedback.children) extractInstances(feedback.children)
+				if (feedback.advancedChildren) extractInstances(feedback.advancedChildren)
 			}
 		}
 
@@ -447,7 +452,9 @@ export class FragmentFeedbacks {
 	 * Note: Does not clone the style
 	 */
 	getUnparsedStyle(): UnparsedButtonStyle {
-		return this.#feedbacks.getUnparsedStyle(this.baseStyle)
+		const styleBuilder = new FeedbackStyleBuilder(this.baseStyle)
+		this.#feedbacks.buildStyle(styleBuilder)
+		return styleBuilder.style
 	}
 
 	/**

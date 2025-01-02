@@ -1182,6 +1182,10 @@ function fixupFeedbacksRecursive(instanceIdMap: InstanceAppliedRemappings, feedb
 					feedback.instance_id === 'internal' && feedback.children
 						? fixupFeedbacksRecursive(instanceIdMap, feedback.children)
 						: undefined,
+				advancedChildren:
+					feedback.instance_id === 'internal' && feedback.advancedChildren
+						? fixupFeedbacksRecursive(instanceIdMap, feedback.advancedChildren)
+						: undefined,
 			})
 		}
 	}

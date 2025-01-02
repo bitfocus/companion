@@ -3,8 +3,8 @@ import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { ModuleHost } from '../../Instance/Host.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
+import type { FeedbackInstance, FeedbackOwner } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 
 export class FragmentFeedbackList {
 	readonly #instanceDefinitions: InstanceDefinitions
@@ -16,17 +16,17 @@ export class FragmentFeedbackList {
 	 */
 	readonly #controlId: string
 
-	readonly #id: string | null
+	readonly #ownerId: FeedbackOwner | null
 
 	/**
 	 * Whether this set of feedbacks can only use boolean feedbacks
 	 */
-	readonly #booleanOnly: boolean
+	readonly #onlyType: 'boolean' | 'advanced' | null
 
 	#feedbacks: FragmentFeedbackInstance[] = []
 
-	get id(): string | null {
-		return this.#id
+	get ownerId(): FeedbackOwner | null {
+		return this.#ownerId
 	}
 
 	constructor(
@@ -34,15 +34,22 @@ export class FragmentFeedbackList {
 		internalModule: InternalController,
 		moduleHost: ModuleHost,
 		controlId: string,
-		id: string | null,
-		booleanOnly: boolean
+		ownerId: FeedbackOwner | null,
+		onlyType: 'boolean' | 'advanced' | null
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
-		this.#id = id
-		this.#booleanOnly = booleanOnly
+		this.#ownerId = ownerId
+		this.#onlyType = onlyType
+	}
+
+	/**
+	 * Get the feedbacks
+	 */
+	getFeedbacks(): FragmentFeedbackInstance[] {
+		return this.#feedbacks
 	}
 
 	/**
@@ -63,7 +70,7 @@ export class FragmentFeedbackList {
 	 * Get the value of this feedback as a boolean
 	 */
 	getBooleanValue(): boolean {
-		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
+		if (this.#onlyType !== 'boolean') throw new Error('FragmentFeedbacks is setup to use styles')
 
 		let result = true
 
@@ -77,7 +84,7 @@ export class FragmentFeedbackList {
 	}
 
 	getChildBooleanValues(): boolean[] {
-		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
+		if (this.#onlyType !== 'boolean') throw new Error('FragmentFeedbacks is setup to use styles')
 
 		const values: boolean[] = []
 
@@ -206,7 +213,9 @@ export class FragmentFeedbackList {
 			!!isCloned
 		)
 
-		// TODO - verify that the feedback matches this.#booleanOnly?
+		const feedbackDefinition = newFeedback.getDefinition()
+		if (this.#onlyType && feedbackDefinition?.type !== this.#onlyType)
+			throw new Error('FragmentFeedbacks cannot accept this type of feedback')
 
 		this.#feedbacks.push(newFeedback)
 
@@ -270,10 +279,10 @@ export class FragmentFeedbackList {
 	 * Check if this list can accept a specified child
 	 */
 	canAcceptFeedback(feedback: FragmentFeedbackInstance): boolean {
-		if (!this.#booleanOnly) return true
+		if (!this.#onlyType) return true
 
 		const definition = feedback.getDefinition()
-		if (!definition || definition.type !== 'boolean') return false
+		if (!definition || definition.type !== this.#onlyType) return false
 
 		return true
 	}
@@ -354,13 +363,8 @@ export class FragmentFeedbackList {
 	 * @param baseStyle Style of the button without feedbacks applied
 	 * @returns the unprocessed style
 	 */
-	getUnparsedStyle(baseStyle: ButtonStyleProperties): UnparsedButtonStyle {
-		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
-
-		let style: UnparsedButtonStyle = {
-			...baseStyle,
-			imageBuffers: [],
-		}
+	buildStyle(styleBuilder: FeedbackStyleBuilder): void {
+		if (this.#onlyType == 'boolean') throw new Error('FragmentFeedbacks not setup to use styles')
 
 		// Note: We don't need to consider children of the feedbacks here, as that can only be from boolean feedbacks which are handled by the `getBooleanValue`
 
@@ -369,45 +373,19 @@ export class FragmentFeedbackList {
 
 			const definition = feedback.getDefinition()
 			if (definition?.type === 'boolean') {
-				const booleanValue = feedback.getBooleanValue()
-				if (booleanValue) {
-					style = {
-						...style,
-						...feedback.asFeedbackInstance().style,
-					}
-				}
+				if (feedback.getBooleanValue()) styleBuilder.applySimpleStyle(feedback.asFeedbackInstance().style)
 			} else if (definition?.type === 'advanced') {
-				const rawValue = feedback.cachedValue
-				if (typeof rawValue === 'object' && rawValue !== undefined) {
-					// Prune off some special properties
-					const prunedValue = { ...rawValue }
-					delete prunedValue.imageBuffer
-					delete prunedValue.imageBufferPosition
-
-					// Ensure `textExpression` is set at the same times as `text`
-					delete prunedValue.textExpression
-					if ('text' in prunedValue) {
-						prunedValue.textExpression = rawValue.textExpression || false
+				if (feedback.connectionId === 'internal' && feedback.feedbackId === 'logic_conditionalise_advanced') {
+					if (feedback.getBooleanValue()) {
+						for (const child of feedback.getChildrenOfGroup('advancedChildren')) {
+							styleBuilder.applyComplexStyle(child.cachedValue)
+						}
 					}
-
-					style = {
-						...style,
-						...prunedValue,
-					}
-
-					// Push the imageBuffer into an array
-					if (rawValue.imageBuffer) {
-						style.imageBuffers.push({
-							...rawValue.imageBufferPosition,
-							...rawValue.imageBufferEncoding,
-							buffer: rawValue.imageBuffer,
-						})
-					}
+				} else {
+					styleBuilder.applyComplexStyle(feedback.cachedValue)
 				}
 			}
 		}
-
-		return style
 	}
 
 	/**
