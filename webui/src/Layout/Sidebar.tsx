@@ -1,6 +1,6 @@
-import React, { memo, useCallback, useState } from 'react'
+import React, { memo, useState } from 'react'
 import { useLocation, NavLink } from 'react-router-dom'
-import { CSidebar, CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarToggler, CSidebarHeader } from '@coreui/react'
+import { CSidebar, CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarToggler, CSidebarHeader, CNavGroup } from '@coreui/react'
 import {
 	faFileImport,
 	faCog,
@@ -9,14 +9,9 @@ import {
 	faTh,
 	faClock,
 	faPlug,
-	faBug,
-	faComments,
 	faDollarSign,
 	faGamepad,
-	faHatWizard,
-	faInfo,
-	faTabletAlt,
-	faUsers,
+	faExternalLinkSquare,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
@@ -25,7 +20,6 @@ import { TRIGGERS_PAGE_PREFIX } from '../Triggers/index.js'
 
 interface MySidebarProps {
 	sidebarShow: boolean
-	showWizard: () => void
 }
 
 const navItems = [
@@ -40,21 +34,12 @@ const navItems = [
 	{ name: 'Cloud', icon: faCloud, path: '/cloud', show: window.localStorage.getItem('show_companion_cloud') === '1' },
 ]
 
-export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: MySidebarProps) {
+export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps) {
 	const [unfoldable, setUnfoldable] = useState(false)
 
 	const routerLocation = useLocation()
 
 	const isActive = (prefix: string) => routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix
-
-	const showWizard2 = useCallback(
-		(e: React.MouseEvent<HTMLElement>) => {
-			e.preventDefault()
-
-			showWizard()
-		},
-		[showWizard]
-	)
 
 	return (
 		<CSidebar position="fixed" unfoldable={unfoldable} visible={sidebarShow} colorScheme="dark">
@@ -78,33 +63,30 @@ export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: My
 						</CNavLink>
 					</CNavItem>
 				))}
-				<CNavItem href="#" onClick={showWizard2}>
-					<FontAwesomeIcon className="nav-icon" icon={faHatWizard} /> Configuration Wizard
-				</CNavItem>
-				<CNavItem target="_new" href="/emulators">
-					<FontAwesomeIcon className="nav-icon" icon={faGamepad} /> Emulator
-				</CNavItem>
 
-				<CNavItem target="_new" href="/tablet">
-					<FontAwesomeIcon className="nav-icon" icon={faTabletAlt} /> Web buttons
-				</CNavItem>
+				<CNavGroup
+					toggler={
+						<>
+							<FontAwesomeIcon className="nav-icon" icon={faGamepad} /> Controls
+						</>
+					}
+				>
+					<CNavItem target="_new" href="/emulators">
+						<span className="nav-icon">
+							<span className="nav-icon-bullet" />
+						</span>
+						<div className="flex-fill">Emulator</div>
+						<FontAwesomeIcon icon={faExternalLinkSquare} />
+					</CNavItem>
 
-				<CNavItem target="_new" href="https://github.com/bitfocus/companion/issues">
-					<FontAwesomeIcon className="nav-icon" icon={faBug} /> Bugs & Features
-				</CNavItem>
-				<CNavItem target="_new" href="https://www.facebook.com/groups/companion/">
-					<FontAwesomeIcon className="nav-icon" icon={faUsers} /> Facebook
-				</CNavItem>
-				<CNavItem target="_new" href="https://bitfocus.io/api/slackinvite">
-					<FontAwesomeIcon className="nav-icon" icon={faComments} /> Slack Chat
-				</CNavItem>
-				<CNavItem target="_new" href="https://donorbox.org/bitfocus-opensource">
-					<FontAwesomeIcon className="nav-icon" icon={faDollarSign} /> Donate
-				</CNavItem>
-
-				<CNavItem target="_new" href="/getting-started">
-					<FontAwesomeIcon className="nav-icon" icon={faInfo} /> Getting Started
-				</CNavItem>
+					<CNavItem target="_new" href="/tablet">
+						<span className="nav-icon">
+							<span className="nav-icon-bullet" />
+						</span>
+						<div className="flex-fill">Web buttons</div>
+						<FontAwesomeIcon icon={faExternalLinkSquare} />
+					</CNavItem>
+				</CNavGroup>
 			</CSidebarNav>
 			<CSidebarHeader className="border-top">
 				<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />

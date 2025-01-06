@@ -19,6 +19,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { MySidebar } from './Layout/Sidebar.js'
 import { MyHeader } from './Layout/Header.js'
+import { Footer } from './Layout/Footer.js'
 import { Triggers, TRIGGERS_PAGE_PREFIX } from './Triggers/index.js'
 import { ConnectionsPage } from './Connections/index.js'
 import { BUTTONS_PAGE_PREFIX, ButtonsPage } from './Buttons/index.js'
@@ -211,7 +212,7 @@ const AppMain = observer(function AppMain({
 				''
 			)}
 			<WizardModal ref={wizardModal} />
-			<MySidebar sidebarShow={showSidebar} showWizard={showWizard} />
+			<MySidebar sidebarShow={showSidebar} />
 			<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
 				<div className="body flex-grow-1">
@@ -225,6 +226,7 @@ const AppMain = observer(function AppMain({
 						<AppLoading progress={loadingProgress} connected={connected} />
 					)}
 				</div>
+				<Footer showWizard={showWizard} />
 			</div>
 		</div>
 	)
@@ -427,7 +429,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 
 	return (
 		<CContainer fluid className="fadeIn">
-			<CTabContent className={'baseless'}>
+			<CTabContent className="baseless">
 				<CTabPane className={getClassForPane('/connections')}>
 					<MyErrorBoundary>
 						<ConnectionsPage />
