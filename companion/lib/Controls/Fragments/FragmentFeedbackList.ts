@@ -121,14 +121,13 @@ export class FragmentFeedbackList {
 	}
 
 	/**
-	 * Inform the instance of any removed feedbacks
+	 * Inform the instance of any removed/disabled feedbacks
 	 * @access public
 	 */
 	cleanup() {
 		for (const feedback of this.#feedbacks) {
 			feedback.cleanup()
 		}
-		this.#feedbacks = []
 	}
 
 	/**

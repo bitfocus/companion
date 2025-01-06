@@ -154,7 +154,7 @@ export class FragmentFeedbackInstance {
 	}
 
 	/**
-	 * Inform the instance of a removed feedback
+	 * Inform the instance of a removed/disabled feedback
 	 */
 	cleanup() {
 		// Inform relevant module
