@@ -3,9 +3,6 @@ import {
 	CContainer,
 	CTabContent,
 	CTabPane,
-	CNav,
-	CNavItem,
-	CNavLink,
 	CRow,
 	CCol,
 	CProgress,
@@ -13,18 +10,6 @@ import {
 	CForm,
 	CButton,
 } from '@coreui/react'
-import {
-	faClipboardList,
-	faClock,
-	faCloud,
-	faGamepad,
-	faPlug,
-	faCog,
-	faFileImport,
-	faDollarSign,
-	faTh,
-} from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
 import { SURFACES_PAGE_PREFIX, SurfacesPage } from './Surfaces/index.js'
 import { UserConfig } from './UserConfig/index.js'
@@ -40,7 +25,7 @@ import { BUTTONS_PAGE_PREFIX, ButtonsPage } from './Buttons/index.js'
 import { ContextData } from './ContextData.js'
 import { CloudPage } from './Cloud/index.js'
 import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard/index.js'
-import { NavLink, Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
@@ -48,7 +33,6 @@ import { observer } from 'mobx-react-lite'
 import { ConnectionVariables } from './Variables/index.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
-const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
 
 export default function App() {
 	const socket = useContext(SocketContext)
@@ -443,56 +427,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 
 	return (
 		<CContainer fluid className="fadeIn">
-			<CNav variant="tabs">
-				<CNavItem>
-					<CNavLink to="/connections" as={NavLink}>
-						<FontAwesomeIcon icon={faPlug} /> Connections
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink to={BUTTONS_PAGE_PREFIX} as={NavLink}>
-						<FontAwesomeIcon icon={faTh} /> Buttons
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink to={SURFACES_PAGE_PREFIX} as={NavLink}>
-						<FontAwesomeIcon icon={faGamepad} /> Surfaces
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink to={TRIGGERS_PAGE_PREFIX} as={NavLink}>
-						<FontAwesomeIcon icon={faClock} /> Triggers
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink to="/variables" as={NavLink}>
-						<FontAwesomeIcon icon={faDollarSign} /> Variables
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink to="/settings" as={NavLink}>
-						<FontAwesomeIcon icon={faCog} /> Settings
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink to="/import-export" as={NavLink}>
-						<FontAwesomeIcon icon={faFileImport} /> Import / Export
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink to="/log" as={NavLink}>
-						<FontAwesomeIcon icon={faClipboardList} /> Log
-					</CNavLink>
-				</CNavItem>
-				{showCloudTab && (
-					<CNavItem>
-						<CNavLink to="/cloud" as={NavLink}>
-							<FontAwesomeIcon icon={faCloud} /> Cloud
-						</CNavLink>
-					</CNavItem>
-				)}
-			</CNav>
-			<CTabContent>
+			<CTabContent className={'baseless'}>
 				<CTabPane className={getClassForPane('/connections')}>
 					<MyErrorBoundary>
 						<ConnectionsPage />

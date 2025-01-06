@@ -1,6 +1,14 @@
 import React, { memo, useCallback, useState } from 'react'
-import { CSidebar, CSidebarNav, CNavItem, CSidebarBrand, CSidebarToggler, CSidebarHeader } from '@coreui/react'
+import { useLocation, NavLink } from 'react-router-dom'
+import { CSidebar, CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarToggler, CSidebarHeader } from '@coreui/react'
 import {
+	faFileImport,
+	faCog,
+	faClipboardList,
+	faCloud,
+	faTh,
+	faClock,
+	faPlug,
 	faBug,
 	faComments,
 	faDollarSign,
@@ -11,14 +19,33 @@ import {
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
+import { BUTTONS_PAGE_PREFIX } from '../Buttons/index.js'
+import { TRIGGERS_PAGE_PREFIX } from '../Triggers/index.js'
 
 interface MySidebarProps {
 	sidebarShow: boolean
 	showWizard: () => void
 }
 
+const navItems = [
+	{ name: 'Connections', icon: faPlug, path: '/connections' },
+	{ name: 'Buttons', icon: faTh, path: BUTTONS_PAGE_PREFIX },
+	{ name: 'Surfaces', icon: faGamepad, path: SURFACES_PAGE_PREFIX },
+	{ name: 'Triggers', icon: faClock, path: TRIGGERS_PAGE_PREFIX },
+	{ name: 'Variables', icon: faDollarSign, path: '/variables' },
+	{ name: 'Settings', icon: faCog, path: '/settings' },
+	{ name: 'Import / Export', icon: faFileImport, path: '/import-export' },
+	{ name: 'Log', icon: faClipboardList, path: '/log' },
+	{ name: 'Cloud', icon: faCloud, path: '/cloud', show: window.localStorage.getItem('show_companion_cloud') === '1' },
+]
+
 export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: MySidebarProps) {
 	const [unfoldable, setUnfoldable] = useState(false)
+
+	const routerLocation = useLocation()
+
+	const isActive = (prefix: string) => routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix
 
 	const showWizard2 = useCallback(
 		(e: React.MouseEvent<HTMLElement>) => {
@@ -44,6 +71,13 @@ export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: My
 				</CSidebarBrand>
 			</CSidebarHeader>
 			<CSidebarNav>
+				{navItems.filter((item) => item.show !== false).map((item) => (
+					<CNavItem key={item.path}>
+						<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
+							<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+						</CNavLink>
+					</CNavItem>
+				))}
 				<CNavItem href="#" onClick={showWizard2}>
 					<FontAwesomeIcon className="nav-icon" icon={faHatWizard} /> Configuration Wizard
 				</CNavItem>
