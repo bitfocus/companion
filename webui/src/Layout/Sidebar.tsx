@@ -23,7 +23,6 @@ import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
 import { BUTTONS_PAGE_PREFIX } from '../Buttons/index.js'
 import { TRIGGERS_PAGE_PREFIX } from '../Triggers/index.js'
 
-
 type NavItem = {
 	name: string
 	icon: IconDefinition
@@ -31,7 +30,6 @@ type NavItem = {
 	show?: boolean
 	dropdown?: { name: string; icon?: IconDefinition; path: string; target?: string }[]
 }
-
 
 const primaryNavItems: NavItem[] = [
 	{ name: 'Connections', icon: faPlug, path: '/connections' },
@@ -58,11 +56,11 @@ const secondaryNavItems: NavItem[] = [
 	] },
 ]
 
-interface MenuProps {
+interface MenuProps extends React.HTMLAttributes<HTMLElement> {
 	navItems: NavItem[]
 }
 
-function Menu({ navItems }: MenuProps) {
+function SidebarMenu({ navItems, className }: MenuProps) {
 	const routerLocation = useLocation()
 
 	const isActive = (prefix: string) => routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix
@@ -73,31 +71,34 @@ function Menu({ navItems }: MenuProps) {
 		</span>
 	)
 
-	return navItems.filter((item) => item.show !== false).map((item) =>
-		item.path ? (
-			<CNavItem key={item.path}>
-			<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
-				<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
-			</CNavLink>
-		</CNavItem>
-		) : (
-			<CNavGroup
-				key={item.name}
-				toggler={
-					<>
-						<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
-					</>
-				}
-			>
-				{item.dropdown?.map((subItem) => (
-					<CNavItem key={subItem.path} target={subItem.target} href={subItem.path}>
-						{subItem.icon ? <FontAwesomeIcon className="nav-icon" icon={subItem.icon} /> : defaultDropdownOptionIcon}
-						<div className="flex-fill">{subItem.name}</div>
-						{subItem.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
+	return (
+		<CSidebarNav className={className}>
+			{navItems.filter((item) => item.show !== false).map((item) =>
+				item.path ? (
+					<CNavItem key={item.path}>
+						<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
+							<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+						</CNavLink>
 					</CNavItem>
-				))}
-			</CNavGroup>
-		)
+				) : (
+					<CNavGroup
+						key={item.name}
+						toggler={
+							<>
+								<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+							</>
+						}
+					>
+						{item.dropdown?.map((subItem) => (
+							<CNavItem key={subItem.path} target={subItem.target} href={subItem.path}>
+								{subItem.icon ? <FontAwesomeIcon className="nav-icon" icon={subItem.icon} /> : defaultDropdownOptionIcon}
+								<div className="flex-fill">{subItem.name}</div>
+								{subItem.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
+							</CNavItem>
+						))}
+					</CNavGroup>
+			))}
+		</CSidebarNav>
 	)
 }
 
@@ -123,13 +124,8 @@ export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps
 					</div>
 				</CSidebarBrand>
 			</CSidebarHeader>
-			<CSidebarNav>
-				<Menu navItems={primaryNavItems} />
-			</CSidebarNav>
-
-			<CSidebarNav style={{ flex: 'none' }}>
-				<Menu navItems={secondaryNavItems} />
-			</CSidebarNav>
+			<SidebarMenu navItems={primaryNavItems} />
+			<SidebarMenu navItems={secondaryNavItems} className="nav-secondary" />
 			<CSidebarHeader className="border-top">
 				<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />
 			</CSidebarHeader>
