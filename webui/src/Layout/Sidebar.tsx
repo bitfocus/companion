@@ -12,6 +12,11 @@ import {
 	faDollarSign,
 	faGamepad,
 	faExternalLinkSquare,
+	faQuestionCircle,
+	faBug,
+	faUsers,
+	faComments,
+	faInfo,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
@@ -32,6 +37,15 @@ const navItems = [
 	{ name: 'Import / Export', icon: faFileImport, path: '/import-export' },
 	{ name: 'Log', icon: faClipboardList, path: '/log' },
 	{ name: 'Cloud', icon: faCloud, path: '/cloud', show: window.localStorage.getItem('show_companion_cloud') === '1' },
+]
+
+
+const supportItems = [
+	{ name: 'Getting Started', icon: faInfo, href: '/getting-started' },
+	{ name: 'Bugs & Features', icon: faBug, href: 'https://github.com/bitfocus/companion/issues', target: '_new' },
+	{ name: 'Facebook', icon: faUsers, href: 'https://www.facebook.com/groups/companion/', target: '_new' },
+	{ name: 'Slack Chat', icon: faComments, href: 'https://bitfocus.io/api/slackinvite', target: '_new' },
+	{ name: 'Donate', icon: faDollarSign, href: 'https://donorbox.org/bitfocus-opensource', target: '_new' },
 ]
 
 export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps) {
@@ -86,6 +100,23 @@ export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps
 						<div className="flex-fill">Web buttons</div>
 						<FontAwesomeIcon icon={faExternalLinkSquare} />
 					</CNavItem>
+				</CNavGroup>
+			</CSidebarNav>
+
+			<CSidebarNav style={{ flex: 'none' }}>
+				<CNavGroup
+					toggler={
+						<>
+							<FontAwesomeIcon className="nav-icon" icon={faQuestionCircle} /> Help & Community
+						</>
+					}
+					className="nav-group-reverse"
+				>
+					{supportItems.map((item) => (
+						<CNavItem key={item.name} target={item.target} href={item.href}>
+							<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+						</CNavItem>
+					))}
 				</CNavGroup>
 			</CSidebarNav>
 			<CSidebarHeader className="border-top">

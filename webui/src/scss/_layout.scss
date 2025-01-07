@@ -223,6 +223,15 @@ body {
 	.nav-link:hover {
 		background-color: #262626 !important;
 	}
+
+	.nav-group-reverse {
+		.nav-group-toggle::after {
+			transform: rotate(180deg);
+		}
+		&.show > .nav-group-toggle::after {
+			transform: rotate(0deg);
+		}
+	}
 }
 
 .secondary-panel-inner {
