@@ -19,7 +19,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { MySidebar } from './Layout/Sidebar.js'
 import { MyHeader } from './Layout/Header.js'
-import { Footer } from './Layout/Footer.js'
 import { Triggers, TRIGGERS_PAGE_PREFIX } from './Triggers/index.js'
 import { ConnectionsPage } from './Connections/index.js'
 import { BUTTONS_PAGE_PREFIX, ButtonsPage } from './Buttons/index.js'
@@ -218,7 +217,7 @@ const AppMain = observer(function AppMain({
 				<div className="body flex-grow-1">
 					{connected && loadingComplete ? (
 						unlocked ? (
-							<AppContent buttonGridHotPress={buttonGridHotPress} />
+							<AppContent buttonGridHotPress={buttonGridHotPress} showWizard={showWizard} />
 						) : (
 							<AppAuthWrapper setUnlocked={setUnlockedInner} />
 						)
@@ -226,7 +225,6 @@ const AppMain = observer(function AppMain({
 						<AppLoading progress={loadingProgress} connected={connected} />
 					)}
 				</div>
-				<Footer showWizard={showWizard} />
 			</div>
 		</div>
 	)
@@ -399,10 +397,11 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 })
 
 interface AppContentProps {
-	buttonGridHotPress: boolean
+	buttonGridHotPress: boolean,
+	showWizard: () => void
 }
 
-const AppContent = observer(function AppContent({ buttonGridHotPress }: AppContentProps) {
+const AppContent = observer(function AppContent({ buttonGridHotPress, showWizard }: AppContentProps) {
 	const routerLocation = useLocation()
 	let hasMatchedPane = false
 	const getClassForPane = (prefix: string) => {
@@ -457,7 +456,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				</CTabPane>
 				<CTabPane className={getClassForPane('/settings')}>
 					<MyErrorBoundary>
-						<UserConfig />
+						<UserConfig showWizard={showWizard} />
 					</MyErrorBoundary>
 				</CTabPane>
 				<CTabPane className={getClassForPane('/import-export')}>
