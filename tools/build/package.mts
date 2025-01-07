@@ -96,10 +96,78 @@ if (process.env.ELECTRON !== '0') {
 	await fs.writeFile(launcherPkgJsonPath, JSON.stringify(launcherPkgJson))
 
 	try {
-		// perform the electron build
-		await $`yarn workspace @companion-app/launcher run -B electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
+		const options: electronBuilder.Configuration = {
+			productName: 'Companion',
+			executableName: 'Companion',
+			appId: 'test-companion.bitfocus.no',
+			dmg: {
+				artifactName: 'companion-mac-${arch}.dmg',
+				sign: !!process.env.CSC_LINK, // Only sign in ci
+			},
+			mac: {
+				target: 'dmg',
+				category: 'no.bitfocus.companion',
+				extendInfo: {
+					LSBackgroundOnly: 1,
+					LSUIElement: 1,
+					NSAppleEventsUsageDescription: 'Companion uses AppleEvents to control local applications.',
+				},
+				hardenedRuntime: true,
+				gatekeeperAssess: false,
+				entitlements: 'entitlements.mac.plist',
+				entitlementsInherit: 'entitlements.mac.plist',
+			},
+			afterPack: 'launcher/fix-bundled-modules.cjs',
+			win: {
+				target: 'nsis',
+				signingHashAlgorithms: ['sha256'],
+			},
+			nsis: {
+				artifactName: 'companion-win64.exe',
+				createStartMenuShortcut: true,
+				perMachine: false,
+				oneClick: false,
+				selectPerMachineByDefault: true,
+				allowElevation: true,
+				allowToChangeInstallationDirectory: true,
+				installerIcon: 'icon.ico',
+				installerSidebar: 'compinst.bmp',
+				uninstallerSidebar: 'compinst.bmp',
+			},
+			directories: {
+				buildResources: 'assets/',
+				output: '../electron-output/',
+			},
+			linux: {
+				target: 'dir',
+				executableName: 'companion-launcher',
+				artifactName: 'companion-x64',
+				extraFiles: [
+					{
+						from: '../assets/linux',
+						to: '.',
+					},
+				],
+			},
+			files: ['**/*', 'assets/*'],
+			extraResources: [
+				{
+					from: '../dist',
+					to: '.',
+					filter: ['**/*', '!.yarn'],
+				},
+			],
+		}
 
-		await electronBuilder.build({})
+		// perform the electron build
+		await electronBuilder.build({
+			targets: electronBuilder.Platform.fromString(platformInfo.electronBuilderPlatform).createTarget(
+				null,
+				platformInfo.electronBuilderArch
+			),
+			config: options,
+			projectDir: 'launcher',
+		})
 	} finally {
 		// undo the changes made
 		await fs.writeFile(launcherPkgJsonPath, launcherPkgJsonStr)
