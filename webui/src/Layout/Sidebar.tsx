@@ -26,6 +26,7 @@ import {
 	faUsers,
 	faComments,
 	IconDefinition,
+	faSquareCaretRight,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
@@ -51,8 +52,8 @@ const primaryNavItems: NavItem[] = [
 	{ name: 'Log', icon: faClipboardList, path: '/log' },
 	{ name: 'Cloud', icon: faCloud, path: '/cloud', show: window.localStorage.getItem('show_companion_cloud') === '1' },
 	{
-		name: 'Controls',
-		icon: faGamepad,
+		name: 'Interactive Buttons',
+		icon: faSquareCaretRight,
 		dropdown: [
 			{ name: 'Emulator', path: '/emulators', target: '_new' },
 			{ name: 'Web buttons', path: '/tablet', target: '_new' },
