@@ -135,13 +135,13 @@ if (process.env.ELECTRON !== '0') {
 				selectPerMachineByDefault: true,
 				allowElevation: true,
 				allowToChangeInstallationDirectory: true,
-				installerIcon: 'launcher/icon.ico',
-				installerSidebar: 'launcher/compinst.bmp',
-				uninstallerSidebar: 'launcher/compinst.bmp',
+				installerIcon: 'icon.ico',
+				installerSidebar: 'compinst.bmp',
+				uninstallerSidebar: 'compinst.bmp',
 			},
 			directories: {
-				buildResources: 'launcher/assets/',
-				output: 'electron-output/',
+				buildResources: 'assets/',
+				output: '../electron-output/',
 			},
 			linux: {
 				target: 'dir',
@@ -149,15 +149,15 @@ if (process.env.ELECTRON !== '0') {
 				artifactName: 'companion-x64',
 				extraFiles: [
 					{
-						from: 'assets/linux',
+						from: '../assets/linux',
 						to: '.',
 					},
 				],
 			},
-			files: ['launcher/**/*', 'launcher/assets/*'],
+			files: ['**/*', 'assets/*'],
 			extraResources: [
 				{
-					from: 'dist',
+					from: '../dist',
 					to: '.',
 					filter: ['**/*', '!.yarn'],
 				},
