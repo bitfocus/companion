@@ -1222,4 +1222,58 @@ describe('EntityList', () => {
 	})
 
 	// TODO - postProcessImport
+
+	// TODO - clearCachedValueForConnectionId
+
+	// TODO - getBooleanFeedbackValue
+
+	// TODO - getChildBooleanFeedbackValues
+
+	// TODO - buildFeedbackStyle
+
+	// TODO - updateFeedbackValues
+
+	describe('getAllEnabledConnectionIds', () => {
+		test('default', () => {
+			const { list, getEntityDefinition } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
+
+			const connectionIds = new Set<string>()
+			list.getAllEnabledConnectionIds(connectionIds)
+			expect(connectionIds).toHaveLength(allConnectionIds.size)
+		})
+
+		test('all disabled', () => {
+			const { list, getEntityDefinition } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			const actions = cloneDeep(ActionTree)
+			for (const entity of actions) {
+				entity.disabled = true
+			}
+
+			list.loadStorage(actions, true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			// const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
+			const connectionIds = new Set<string>()
+			list.getAllEnabledConnectionIds(connectionIds)
+			expect(connectionIds).toHaveLength(0)
+		})
+	})
 })
