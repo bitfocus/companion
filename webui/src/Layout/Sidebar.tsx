@@ -16,18 +16,24 @@ import {
 	faBug,
 	faUsers,
 	faComments,
-	faInfo,
+	IconDefinition,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
 import { BUTTONS_PAGE_PREFIX } from '../Buttons/index.js'
 import { TRIGGERS_PAGE_PREFIX } from '../Triggers/index.js'
 
-interface MySidebarProps {
-	sidebarShow: boolean
+
+type NavItem = {
+	name: string
+	icon: IconDefinition
+	path?: string
+	show?: boolean
+	dropdown?: { name: string; icon?: IconDefinition; path: string; target?: string }[]
 }
 
-const navItems = [
+
+const primaryNavItems: NavItem[] = [
 	{ name: 'Connections', icon: faPlug, path: '/connections' },
 	{ name: 'Buttons', icon: faTh, path: BUTTONS_PAGE_PREFIX },
 	{ name: 'Surfaces', icon: faGamepad, path: SURFACES_PAGE_PREFIX },
@@ -37,23 +43,71 @@ const navItems = [
 	{ name: 'Import / Export', icon: faFileImport, path: '/import-export' },
 	{ name: 'Log', icon: faClipboardList, path: '/log' },
 	{ name: 'Cloud', icon: faCloud, path: '/cloud', show: window.localStorage.getItem('show_companion_cloud') === '1' },
+	{ name: 'Controls', icon: faGamepad, dropdown: [
+		{ name: 'Emulator', path: '/emulators', target: '_new' },
+		{ name: 'Web buttons', path: '/tablet', target: '_new' },
+	] },
 ]
 
-
-const supportItems = [
-	{ name: 'Getting Started', icon: faInfo, href: '/getting-started' },
-	{ name: 'Bugs & Features', icon: faBug, href: 'https://github.com/bitfocus/companion/issues', target: '_new' },
-	{ name: 'Facebook', icon: faUsers, href: 'https://www.facebook.com/groups/companion/', target: '_new' },
-	{ name: 'Slack Chat', icon: faComments, href: 'https://bitfocus.io/api/slackinvite', target: '_new' },
-	{ name: 'Donate', icon: faDollarSign, href: 'https://donorbox.org/bitfocus-opensource', target: '_new' },
+const secondaryNavItems: NavItem[] = [
+	{ name: 'Help & Community', icon: faQuestionCircle, dropdown: [
+		{ name: 'Bugs & Features', icon: faBug, path: 'https://github.com/bitfocus/companion/issues', target: '_new' },
+		{ name: 'Facebook', icon: faUsers, path: 'https://www.facebook.com/groups/companion/', target: '_new' },
+		{ name: 'Slack Chat', icon: faComments, path: 'https://bitfocus.io/api/slackinvite', target: '_new' },
+		{ name: 'Donate', icon: faDollarSign, path: 'https://donorbox.org/bitfocus-opensource', target: '_new' },
+	] },
 ]
 
-export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps) {
-	const [unfoldable, setUnfoldable] = useState(false)
+interface MenuProps {
+	navItems: NavItem[]
+}
 
+function Menu({ navItems }: MenuProps) {
 	const routerLocation = useLocation()
 
 	const isActive = (prefix: string) => routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix
+
+	const defaultDropdownOptionIcon = (
+		<span className="nav-icon">
+			<span className="nav-icon-bullet" />
+		</span>
+	)
+
+	return navItems.filter((item) => item.show !== false).map((item) =>
+		item.path ? (
+			<CNavItem key={item.path}>
+			<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
+				<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+			</CNavLink>
+		</CNavItem>
+		) : (
+			<CNavGroup
+				key={item.name}
+				toggler={
+					<>
+						<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+					</>
+				}
+			>
+				{item.dropdown?.map((subItem) => (
+					<CNavItem key={subItem.path} target={subItem.target} href={subItem.path}>
+						{subItem.icon ? <FontAwesomeIcon className="nav-icon" icon={subItem.icon} /> : defaultDropdownOptionIcon}
+						<div className="flex-fill">{subItem.name}</div>
+						{subItem.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
+					</CNavItem>
+				))}
+			</CNavGroup>
+		)
+	)
+}
+
+
+interface MySidebarProps {
+	sidebarShow: boolean
+}
+
+export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps) {
+	const [unfoldable, setUnfoldable] = useState(false)
 
 	return (
 		<CSidebar position="fixed" unfoldable={unfoldable} visible={sidebarShow} colorScheme="dark">
@@ -70,54 +124,11 @@ export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps
 				</CSidebarBrand>
 			</CSidebarHeader>
 			<CSidebarNav>
-				{navItems.filter((item) => item.show !== false).map((item) => (
-					<CNavItem key={item.path}>
-						<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
-							<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
-						</CNavLink>
-					</CNavItem>
-				))}
-
-				<CNavGroup
-					toggler={
-						<>
-							<FontAwesomeIcon className="nav-icon" icon={faGamepad} /> Controls
-						</>
-					}
-				>
-					<CNavItem target="_new" href="/emulators">
-						<span className="nav-icon">
-							<span className="nav-icon-bullet" />
-						</span>
-						<div className="flex-fill">Emulator</div>
-						<FontAwesomeIcon icon={faExternalLinkSquare} />
-					</CNavItem>
-
-					<CNavItem target="_new" href="/tablet">
-						<span className="nav-icon">
-							<span className="nav-icon-bullet" />
-						</span>
-						<div className="flex-fill">Web buttons</div>
-						<FontAwesomeIcon icon={faExternalLinkSquare} />
-					</CNavItem>
-				</CNavGroup>
+				<Menu navItems={primaryNavItems} />
 			</CSidebarNav>
 
 			<CSidebarNav style={{ flex: 'none' }}>
-				<CNavGroup
-					toggler={
-						<>
-							<FontAwesomeIcon className="nav-icon" icon={faQuestionCircle} /> Help & Community
-						</>
-					}
-					className="nav-group-reverse"
-				>
-					{supportItems.map((item) => (
-						<CNavItem key={item.name} target={item.target} href={item.href}>
-							<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
-						</CNavItem>
-					))}
-				</CNavGroup>
+				<Menu navItems={secondaryNavItems} />
 			</CSidebarNav>
 			<CSidebarHeader className="border-top">
 				<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />
