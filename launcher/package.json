@@ -53,7 +53,8 @@
 		},
 		"afterPack": "fix-bundled-modules.cjs",
 		"win": {
-			"target": "nsis"
+			"target": "nsis",
+			"signingHashAlgorithms": ["sha256"]
 		},
 		"nsis": {
 			"artifactName": "companion-win64.exe",

@@ -352,7 +352,8 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win32-x64:
-    runs-on: windows-2019
+    # runs-on: windows-2019
+    runs-on: ${{ startsWith(github.ref, 'refs/tags/') && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-2019'}}
     needs: check-types
     timeout-minutes: 30
 
@@ -381,14 +382,26 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn --immutable
+        env:
+          CI: 1
 
+      - name: build & package (unsigned)
+        if: ${{ runner.environment != 'self-hosted' }}
+        run: |
+          yarn zx tools/build/complete.mjs win32-x64
+        env:
+          CI: 1
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: build & package (signed)
+        if: ${{ runner.environment == 'self-hosted' }}
+        run: |
           yarn zx tools/build/complete.mjs win32-x64
         env:
           CI: 1
           # HACK: temporarily disable signing
-          # CSC_LINK: ${{ secrets.CSC_LINK }}
-          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          BF_CODECERT_KEY: '${{ secrets.BF_CODECERT_KEY }}'
 
       - name: Determine files to upload
         id: filenames
