@@ -1,6 +1,15 @@
 import React, { memo, useState } from 'react'
 import { useLocation, NavLink } from 'react-router-dom'
-import { CSidebar, CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarToggler, CSidebarHeader, CNavGroup } from '@coreui/react'
+import {
+	CSidebar,
+	CSidebarNav,
+	CNavItem,
+	CNavLink,
+	CSidebarBrand,
+	CSidebarToggler,
+	CSidebarHeader,
+	CNavGroup,
+} from '@coreui/react'
 import {
 	faFileImport,
 	faCog,
@@ -41,19 +50,27 @@ const primaryNavItems: NavItem[] = [
 	{ name: 'Import / Export', icon: faFileImport, path: '/import-export' },
 	{ name: 'Log', icon: faClipboardList, path: '/log' },
 	{ name: 'Cloud', icon: faCloud, path: '/cloud', show: window.localStorage.getItem('show_companion_cloud') === '1' },
-	{ name: 'Controls', icon: faGamepad, dropdown: [
-		{ name: 'Emulator', path: '/emulators', target: '_new' },
-		{ name: 'Web buttons', path: '/tablet', target: '_new' },
-	] },
+	{
+		name: 'Controls',
+		icon: faGamepad,
+		dropdown: [
+			{ name: 'Emulator', path: '/emulators', target: '_new' },
+			{ name: 'Web buttons', path: '/tablet', target: '_new' },
+		],
+	},
 ]
 
 const secondaryNavItems: NavItem[] = [
-	{ name: 'Help & Community', icon: faQuestionCircle, dropdown: [
-		{ name: 'Bugs & Features', icon: faBug, path: 'https://github.com/bitfocus/companion/issues', target: '_new' },
-		{ name: 'Facebook', icon: faUsers, path: 'https://www.facebook.com/groups/companion/', target: '_new' },
-		{ name: 'Slack Chat', icon: faComments, path: 'https://bitfocus.io/api/slackinvite', target: '_new' },
-		{ name: 'Donate', icon: faDollarSign, path: 'https://donorbox.org/bitfocus-opensource', target: '_new' },
-	] },
+	{
+		name: 'Help & Community',
+		icon: faQuestionCircle,
+		dropdown: [
+			{ name: 'Bugs & Features', icon: faBug, path: 'https://github.com/bitfocus/companion/issues', target: '_new' },
+			{ name: 'Facebook', icon: faUsers, path: 'https://www.facebook.com/groups/companion/', target: '_new' },
+			{ name: 'Slack Chat', icon: faComments, path: 'https://bitfocus.io/api/slackinvite', target: '_new' },
+			{ name: 'Donate', icon: faDollarSign, path: 'https://donorbox.org/bitfocus-opensource', target: '_new' },
+		],
+	},
 ]
 
 interface MenuProps extends React.HTMLAttributes<HTMLElement> {
@@ -63,45 +80,51 @@ interface MenuProps extends React.HTMLAttributes<HTMLElement> {
 function SidebarMenu({ navItems, className }: MenuProps) {
 	const routerLocation = useLocation()
 
-	const isActive = (prefix: string) => routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix
+	const isActive = (prefix: string) =>
+		routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix
 
-	const defaultDropdownOptionIcon = (
-		<span className="nav-icon">
-			<span className="nav-icon-bullet" />
-		</span>
-	)
+	const subItemIconOrDefault = (icon?: IconDefinition) =>
+		icon ? (
+			<FontAwesomeIcon className="nav-icon" icon={icon} />
+		) : (
+			<span className="nav-icon">
+				<span className="nav-icon-bullet" />
+			</span>
+		)
 
 	return (
 		<CSidebarNav className={className}>
-			{navItems.filter((item) => item.show !== false).map((item) =>
-				item.path ? (
-					<CNavItem key={item.path}>
-						<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
-							<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
-						</CNavLink>
-					</CNavItem>
-				) : (
-					<CNavGroup
-						key={item.name}
-						toggler={
-							<>
+			{navItems
+				.filter((item) => item.show !== false)
+				.map((item) =>
+					item.path ? (
+						<CNavItem key={item.path}>
+							<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
 								<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
-							</>
-						}
-					>
-						{item.dropdown?.map((subItem) => (
-							<CNavItem key={subItem.path} target={subItem.target} href={subItem.path}>
-								{subItem.icon ? <FontAwesomeIcon className="nav-icon" icon={subItem.icon} /> : defaultDropdownOptionIcon}
-								<div className="flex-fill">{subItem.name}</div>
-								{subItem.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
-							</CNavItem>
-						))}
-					</CNavGroup>
-			))}
+							</CNavLink>
+						</CNavItem>
+					) : (
+						<CNavGroup
+							key={item.name}
+							toggler={
+								<>
+									<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+								</>
+							}
+						>
+							{item.dropdown?.map((subItem) => (
+								<CNavItem key={subItem.path} target={subItem.target} href={subItem.path}>
+									{subItemIconOrDefault(subItem.icon)}
+									<div className="flex-fill">{subItem.name}</div>
+									{subItem.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
+								</CNavItem>
+							))}
+						</CNavGroup>
+					)
+				)}
 		</CSidebarNav>
 	)
 }
-
 
 interface MySidebarProps {
 	sidebarShow: boolean

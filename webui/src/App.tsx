@@ -1,15 +1,5 @@
 import React, { Suspense, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import {
-	CContainer,
-	CTabContent,
-	CTabPane,
-	CRow,
-	CCol,
-	CProgress,
-	CFormInput,
-	CForm,
-	CButton,
-} from '@coreui/react'
+import { CContainer, CTabContent, CTabPane, CRow, CCol, CProgress, CFormInput, CForm, CButton } from '@coreui/react'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
 import { SURFACES_PAGE_PREFIX, SurfacesPage } from './Surfaces/index.js'
 import { UserConfig } from './UserConfig/index.js'
@@ -397,7 +387,7 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 })
 
 interface AppContentProps {
-	buttonGridHotPress: boolean,
+	buttonGridHotPress: boolean
 	showWizard: () => void
 }
 
