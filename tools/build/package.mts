@@ -120,7 +120,12 @@ if (process.env.ELECTRON !== '0') {
 			afterPack: 'launcher/fix-bundled-modules.cjs',
 			win: {
 				target: 'nsis',
-				signingHashAlgorithms: ['sha256'],
+				signtoolOptions: {
+					signingHashAlgorithms: ['sha256'],
+					// sign: () => {
+					// 	// TODO
+					// },
+				},
 			},
 			nsis: {
 				artifactName: 'companion-win64.exe',

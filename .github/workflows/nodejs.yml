@@ -401,7 +401,7 @@ jobs:
           CI: 1
           # HACK: temporarily disable signing
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          # BF_CODECERT_KEY: '${{ secrets.BF_CODECERT_KEY }}'
+          CSC_LINK: '${{ secrets.BF_CODECERT_KEY }}'
 
       - name: Determine files to upload
         id: filenames
