@@ -1,9 +1,11 @@
 #!/usr/bin/env zx
 
-import { fs, glob } from 'zx'
-import { determinePlatformInfo } from './util.mjs'
-import { generateVersionString } from '../lib.mjs'
-import { fetchNodejs } from '../fetch_nodejs.mjs'
+import { $, fs, glob, usePowerShell, argv } from 'zx'
+import path from 'path'
+import { determinePlatformInfo } from './util.mts'
+import { generateVersionString } from '../lib.mts'
+import { fetchNodejs } from '../fetch_nodejs.mts'
+import electronBuilder from 'electron-builder'
 
 $.verbose = true
 
@@ -45,7 +47,7 @@ $.cwd = undefined
 // Prune out any prebuilds from other platforms
 if (platformInfo.runtimePlatform === 'win') {
 	// Electron-builder fails trying to sign `.node` files from other platforms
-	async function pruneContentsOfDir(dirname) {
+	async function pruneContentsOfDir(dirname: string) {
 		const contents = await fs.readdir(dirname)
 		for (const subdir of contents) {
 			// TODO - test if it is a node file, or contains one?
@@ -96,6 +98,8 @@ if (process.env.ELECTRON !== '0') {
 	try {
 		// perform the electron build
 		await $`yarn workspace @companion-app/launcher run -B electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
+
+		await electronBuilder.build({})
 	} finally {
 		// undo the changes made
 		await fs.writeFile(launcherPkgJsonPath, launcherPkgJsonStr)

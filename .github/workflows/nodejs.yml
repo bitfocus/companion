@@ -74,7 +74,7 @@ jobs:
 
           yarn --immutable
 
-          yarn zx tools/build/complete.mjs linux-x64
+          yarn tsx tools/build/complete.mts linux-x64
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -151,7 +151,7 @@ jobs:
 
           yarn --immutable
 
-          yarn zx tools/build/complete.mjs linux-arm64
+          yarn tsx tools/build/complete.mts linux-arm64
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -227,7 +227,7 @@ jobs:
 
           yarn --immutable
 
-          yarn zx tools/build/complete.mjs darwin-x64
+          yarn tsx tools/build/complete.mts darwin-x64
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -305,7 +305,7 @@ jobs:
           CI: 1
       - name: build & package
         run: |
-          yarn zx tools/build/complete.mjs darwin-arm64
+          yarn tsx tools/build/complete.mts darwin-arm64
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -388,7 +388,7 @@ jobs:
       - name: build & package (unsigned)
         if: ${{ runner.environment != 'self-hosted' }}
         run: |
-          yarn zx tools/build/complete.mjs win32-x64
+          yarn tsx tools/build/complete.mts win32-x64
         env:
           CI: 1
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
@@ -396,12 +396,12 @@ jobs:
       - name: build & package (signed)
         if: ${{ runner.environment == 'self-hosted' }}
         run: |
-          yarn zx tools/build/complete.mjs win32-x64
+          yarn tsx tools/build/complete.mts win32-x64
         env:
           CI: 1
           # HACK: temporarily disable signing
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          BF_CODECERT_KEY: '${{ secrets.BF_CODECERT_KEY }}'
+          # BF_CODECERT_KEY: '${{ secrets.BF_CODECERT_KEY }}'
 
       - name: Determine files to upload
         id: filenames

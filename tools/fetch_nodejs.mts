@@ -4,7 +4,7 @@ import { fetch, fs, path, $ } from 'zx'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
-import { toPosix } from './build/util.mjs'
+import { toPosix } from './build/util.mts'
 import { fileURLToPath } from 'node:url'
 const streamPipeline = promisify(pipeline)
 
@@ -40,7 +40,7 @@ async function fetchSingleVersion(platformInfo, nodeVersion) {
 		const tarUrl = `https://nodejs.org/download/release/v${nodeVersion}/${tarFilename}`
 
 		const response = await fetch(tarUrl)
-		if (!response.ok) throw new Error(`unexpected response ${response.statusText}`)
+		if (!response.ok || !response.body) throw new Error(`unexpected response ${response.statusText}`)
 		await streamPipeline(response.body, createWriteStream(tarPath))
 	}
 

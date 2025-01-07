@@ -1,6 +1,7 @@
 #!/usr/bin/env zx
 
-import { generateVersionString } from './lib.mjs'
+import { fs, usePowerShell } from 'zx'
+import { generateVersionString } from './lib.mts'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell

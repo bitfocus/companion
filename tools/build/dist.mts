@@ -1,12 +1,12 @@
 #!/usr/bin/env zx
 
-import { generateVersionString } from '../lib.mjs'
+import { generateVersionString } from '../lib.mts'
 import archiver from 'archiver'
-import { fs } from 'zx'
+import { $, fs, usePowerShell, argv } from 'zx'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import yaml from 'yaml'
-import { determinePlatformInfo } from './util.mjs'
+import { determinePlatformInfo } from './util.mts'
 
 $.verbose = true
 
@@ -25,11 +25,11 @@ const platformInfo = determinePlatformInfo(argv._[0])
  * @param {String} outPath: /path/to/created.zip
  * @returns {Promise}
  */
-function zipDirectory(sourceDir, outPath) {
+async function zipDirectory(sourceDir: string, outPath: string): Promise<void> {
 	const archive = archiver('zip', { zlib: { level: 9 } })
 	const stream = fs.createWriteStream(outPath)
 
-	return new Promise((resolve, reject) => {
+	return new Promise<void>((resolve, reject) => {
 		archive
 			.directory(sourceDir, false)
 			.on('error', (err) => reject(err))
@@ -40,7 +40,7 @@ function zipDirectory(sourceDir, outPath) {
 	})
 }
 
-await $`zx tools/build_writefile.mjs`
+await $`tsx tools/build_writefile.mts`
 
 const buildString = await generateVersionString()
 

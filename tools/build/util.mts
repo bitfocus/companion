@@ -1,17 +1,26 @@
-function expandMissing(info) {
+import path from 'path'
+import { SetOptional } from 'type-fest'
+
+function expandMissing(info: SetOptional<PlatformInfo, 'nodeArch' | 'nodePlatform'>): PlatformInfo {
 	return {
 		// Allow some fields to be optional, if they are repeated
 		nodeArch: info.runtimeArch,
 		nodePlatform: info.runtimePlatform,
-		runtimePlatform: info.runtimePlatform,
-		runtimeArch: info.runtimeArch,
 		...info,
 	}
 }
 
-export const toPosix = (str) => str.split(path.sep).join(path.posix.sep)
+export const toPosix = (str: string) => str.split(path.sep).join(path.posix.sep)
 
-export function determinePlatformInfo(platform) {
+export interface PlatformInfo {
+	electronBuilderArgs: string[]
+	runtimePlatform: string
+	runtimeArch: string
+	nodePlatform: string
+	nodeArch: string
+}
+
+export function determinePlatformInfo(platform: string | undefined): PlatformInfo {
 	if (!platform) {
 		platform = `${process.platform}-${process.arch}`
 		console.log(`No platform specified, assumed ${platform}`)
