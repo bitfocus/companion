@@ -602,7 +602,7 @@ if (!lock) {
 
 	function showConfigFolder() {
 		try {
-			electron.shell.showItemInFolder(path.join(configDir, 'db'))
+			electron.shell.showItemInFolder(thisDbPath)
 		} catch (e) {
 			electron.dialog.showErrorBox('File Error', 'Could not open config directory.')
 		}
