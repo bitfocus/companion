@@ -1231,11 +1231,174 @@ describe('EntityList', () => {
 
 	// TODO - postProcessImport
 
-	// TODO - clearCachedValueForConnectionId
+	describe('getChildBooleanFeedbackValues', () => {
+		const { list, getEntityDefinition } = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			booleanFeedbacksOnly: true,
+		})
+		getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
-	// TODO - getBooleanFeedbackValue
+		test('invalid for action list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Action })
 
-	// TODO - getChildBooleanFeedbackValues
+			expect(list.clearCachedValueForConnectionId('internal')).toBe(false)
+		})
+
+		test('invalid for non boolean feedbacks list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+
+			expect(list.clearCachedValueForConnectionId('internal')).toBe(false)
+		})
+
+		test('all disabled', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+			// seed some values for boolean feedabcks
+			list.updateFeedbackValues('conn02', { '02': true })
+
+			// Disable all feedbacks
+			for (const entity of list.getAllEntities()) {
+				entity.setEnabled(false)
+			}
+
+			expect(list.clearCachedValueForConnectionId('internal')).toBe(true)
+		})
+
+		test('basic boolean values', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+			// seed some values for boolean feedabcks
+			list.updateFeedbackValues('conn02', { '02': true })
+
+			const entity = list.findById('02')
+			expect(entity).not.toBeUndefined()
+			expect(entity!.feedbackValue).toBe(true)
+
+			expect(list.clearCachedValueForConnectionId(entity!.connectionId)).toBe(true)
+
+			expect(entity!.feedbackValue).toBe(undefined)
+		})
+
+		test('advanced value values', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+			// seed some values for boolean feedabcks
+			list.updateFeedbackValues('internal', { int0: 'abc' })
+
+			const entity = list.findById('int0')
+			expect(entity).not.toBeUndefined()
+			expect(entity!.feedbackValue).toBe('abc')
+
+			expect(list.clearCachedValueForConnectionId(entity!.connectionId)).toBe(true)
+
+			expect(entity!.feedbackValue).toBe(undefined)
+		})
+	})
+
+	describe('getBooleanFeedbackValue', () => {
+		const { list, getEntityDefinition } = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			booleanFeedbacksOnly: true,
+		})
+		getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
+
+		test('invalid for action list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Action })
+
+			expect(() => list.getBooleanFeedbackValue()).toThrow('ControlEntityList is not boolean feedbacks')
+		})
+
+		test('invalid for non boolean feedbacks list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+
+			expect(() => list.getBooleanFeedbackValue()).toThrow('ControlEntityList is not boolean feedbacks')
+		})
+
+		test('empty list', () => {
+			list.loadStorage([], true, false)
+
+			// When empty disabled, should return true
+			expect(list.getBooleanFeedbackValue()).toBe(true)
+		})
+
+		test('all disabled', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+			// seed some values for boolean feedabcks
+			list.updateFeedbackValues('conn02', { '02': true })
+
+			// Disable all feedbacks
+			for (const entity of list.getAllEntities()) {
+				entity.setEnabled(false)
+			}
+
+			// When all disabled, should return true
+			expect(list.getBooleanFeedbackValue()).toBe(true)
+		})
+
+		test('boolean values values', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+
+			// disable the one set to non-boolean
+			list.findById('int0')?.setEnabled(false)
+
+			// set some values
+			list.updateFeedbackValues('conn01', { '01': true })
+
+			// check still false
+			expect(list.getBooleanFeedbackValue()).toBe(false)
+
+			// set final value
+			list.updateFeedbackValues('conn02', { '02': true })
+			expect(list.getBooleanFeedbackValue()).toBe(true)
+		})
+	})
+
+	describe('getChildBooleanFeedbackValues', () => {
+		const { list, getEntityDefinition } = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			booleanFeedbacksOnly: true,
+		})
+		getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
+
+		test('invalid for action list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Action })
+
+			expect(() => list.getChildBooleanFeedbackValues()).toThrow('ControlEntityList is not boolean feedbacks')
+		})
+
+		test('invalid for non boolean feedbacks list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+
+			expect(() => list.getChildBooleanFeedbackValues()).toThrow('ControlEntityList is not boolean feedbacks')
+		})
+
+		test('all disabled', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+			// seed some values for boolean feedabcks
+			list.updateFeedbackValues('conn02', { '02': true })
+
+			// Disable all feedbacks
+			for (const entity of list.getAllEntities()) {
+				entity.setEnabled(false)
+			}
+
+			expect(list.getChildBooleanFeedbackValues()).toHaveLength(0)
+		})
+
+		test('basic feedback values', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+			// seed some values for boolean feedabcks
+			list.updateFeedbackValues('conn02', { '02': true })
+			list.updateFeedbackValues('internal', { int0: 'abcd' })
+
+			const fb = list.findById('02')
+			fb!.setStyleValue('bgcolor', 123)
+
+			const len = list.getDirectEntities().length
+
+			const values = list.getChildBooleanFeedbackValues()
+			expect(values).toHaveLength(len)
+
+			expect(values).toEqual([false, true, false])
+		})
+	})
 
 	describe('buildFeedbackStyle', () => {
 		const { list, getEntityDefinition } = createList('test01', null, { type: EntityModelType.Feedback })
@@ -1278,15 +1441,20 @@ describe('EntityList', () => {
 			list.loadStorage(cloneDeep(FeedbackTree), true, false)
 			// seed some values for boolean feedabcks
 			list.updateFeedbackValues('conn02', { '02': true })
+			list.updateFeedbackValues('internal', { int0: 'abcd' })
+
+			const fb = list.findById('02')
+			fb!.setStyleValue('bgcolor', 123)
 
 			const styleBuilder = mock<FeedbackStyleBuilder>()
 			list.buildFeedbackStyle(styleBuilder)
 
 			expect(styleBuilder.applyComplexStyle).toHaveBeenCalledTimes(1)
 			expect(styleBuilder.applySimpleStyle).toHaveBeenCalledTimes(1)
-		})
 
-		// TODO - more
+			expect(styleBuilder.applyComplexStyle).toHaveBeenCalledWith('abcd')
+			expect(styleBuilder.applySimpleStyle).toHaveBeenCalledWith({ bgcolor: 123 })
+		})
 	})
 
 	describe('updateFeedbackValues', () => {
