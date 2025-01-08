@@ -7,8 +7,14 @@ import {
 	FeedbackEntityModel,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { cloneDeep } from 'lodash-es'
-import { ActionTree, ActionTreeEntityDefinitions, getAllModelsInTree } from './EntityListModels.js'
+import { after, cloneDeep } from 'lodash-es'
+import {
+	ActionTree,
+	ActionTreeEntityDefinitions,
+	FeedbackTree,
+	FeedbackTreeEntityDefinitions,
+	getAllModelsInTree,
+} from './EntityListModels.js'
 import {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -16,6 +22,8 @@ import {
 } from '../../../lib/Controls/Entities/Types.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
+import { FeedbackStyleBuilder } from '../../../lib/Controls/Entities/FeedbackStyleBuilder.js'
+import { mock, mockClear, mockReset } from 'vitest-mock-extended'
 
 describe('EntityList', () => {
 	function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
@@ -1229,9 +1237,152 @@ describe('EntityList', () => {
 
 	// TODO - getChildBooleanFeedbackValues
 
-	// TODO - buildFeedbackStyle
+	describe('buildFeedbackStyle', () => {
+		const { list, getEntityDefinition } = createList('test01', null, { type: EntityModelType.Feedback })
+		getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
-	// TODO - updateFeedbackValues
+		test('invalid for action list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Action })
+
+			const styleBuilder = mock<FeedbackStyleBuilder>()
+
+			expect(() => list.buildFeedbackStyle(styleBuilder)).toThrow('ControlEntityList is not style feedbacks')
+		})
+
+		test('invalid for boolean feedbacks list', () => {
+			const { list } = createList('test01', null, { type: EntityModelType.Feedback, booleanFeedbacksOnly: true })
+
+			const styleBuilder = mock<FeedbackStyleBuilder>()
+
+			expect(() => list.buildFeedbackStyle(styleBuilder)).toThrow('ControlEntityList is not style feedbacks')
+		})
+
+		test('disabled', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+			// seed some values for boolean feedabcks
+			list.updateFeedbackValues('conn02', { '02': true })
+
+			// Disable all feedbacks
+			for (const entity of list.getAllEntities()) {
+				entity.setEnabled(false)
+			}
+
+			const styleBuilder = mock<FeedbackStyleBuilder>()
+			list.buildFeedbackStyle(styleBuilder)
+
+			expect(styleBuilder.applyComplexStyle).toHaveBeenCalledTimes(0)
+			expect(styleBuilder.applySimpleStyle).toHaveBeenCalledTimes(0)
+		})
+
+		test('basic feedback values', () => {
+			list.loadStorage(cloneDeep(FeedbackTree), true, false)
+			// seed some values for boolean feedabcks
+			list.updateFeedbackValues('conn02', { '02': true })
+
+			const styleBuilder = mock<FeedbackStyleBuilder>()
+			list.buildFeedbackStyle(styleBuilder)
+
+			expect(styleBuilder.applyComplexStyle).toHaveBeenCalledTimes(1)
+			expect(styleBuilder.applySimpleStyle).toHaveBeenCalledTimes(1)
+		})
+
+		// TODO - more
+	})
+
+	describe('updateFeedbackValues', () => {
+		test('no values', () => {
+			const { list, getEntityDefinition } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			expect(list.updateFeedbackValues('internal', {})).toBe(false)
+		})
+
+		test('try set value for action', () => {
+			const { list, getEntityDefinition } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			expect(
+				list.updateFeedbackValues('internal', {
+					int0: 'abc',
+				})
+			).toBe(false)
+
+			// Ensure value is still undefined
+			const entity = list.findById('int0')
+			expect(entity).toBeTruthy()
+			expect(entity!.feedbackValue).toEqual(undefined)
+		})
+
+		test('set value for nested feedback', () => {
+			const { list, getEntityDefinition } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			expect(
+				list.updateFeedbackValues('conn04', {
+					int2: 'abc',
+				})
+			).toBe(true)
+
+			// Ensure value is reflected
+			const entity = list.findById('int2')
+			expect(entity).toBeTruthy()
+			expect(entity!.feedbackValue).toEqual('abc')
+		})
+
+		test('set value unchanged', () => {
+			const { list, getEntityDefinition } = createList('test01')
+
+			for (const def of ActionTreeEntityDefinitions) {
+				getEntityDefinition.mockReturnValueOnce(def)
+			}
+
+			list.loadStorage(cloneDeep(ActionTree), true, false)
+
+			// Starts with correct length
+			expect(list.getAllEntities()).toHaveLength(6)
+
+			// Set once
+			list.updateFeedbackValues('conn04', {
+				int2: 'abc',
+			})
+
+			// Try again
+			expect(
+				list.updateFeedbackValues('conn04', {
+					int2: 'abc',
+				})
+			).toBe(false)
+
+			// Ensure value is reflected
+			const entity = list.findById('int2')
+			expect(entity).toBeTruthy()
+			expect(entity!.feedbackValue).toEqual('abc')
+		})
+	})
 
 	describe('getAllEnabledConnectionIds', () => {
 		test('default', () => {

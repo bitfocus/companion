@@ -75,6 +75,10 @@ export class ControlEntityInstance {
 		return this.#data.options
 	}
 
+	get feedbackValue(): any {
+		return this.#cachedFeedbackValue
+	}
+
 	/**
 	 * @param instanceDefinitions
 	 * @param internalModule
@@ -676,18 +680,6 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Set the cached value of this feedback
-	 */
-	setCachedValue(value: any): boolean {
-		if (!isEqual(value, this.#cachedFeedbackValue)) {
-			this.#cachedFeedbackValue = value
-			return true
-		} else {
-			return false
-		}
-	}
-
-	/**
 	 * Update the feedbacks on the button with new values
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
@@ -695,8 +687,16 @@ export class ControlEntityInstance {
 	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): boolean {
 		let changed = false
 
-		if (this.#data.connectionId === connectionId && this.#data.id in newValues) {
-			if (this.setCachedValue(newValues[this.#data.id])) changed = true
+		if (
+			this.type === EntityModelType.Feedback &&
+			this.#data.connectionId === connectionId &&
+			this.#data.id in newValues
+		) {
+			const newValue = newValues[this.#data.id]
+			if (!isEqual(newValue, this.#cachedFeedbackValue)) {
+				this.#cachedFeedbackValue = newValue
+				changed = true
+			}
 		}
 
 		for (const childGroup of this.#children.values()) {
