@@ -71,7 +71,17 @@
 			},
 			{
 				"label": "Surfaces",
-				"file": "3_config/surfaces.md"
+				"file": "3_config/surfaces.md",
+				"children": [
+					{
+						"label": "Surface Groups",
+						"file": "3_config/surfaces/groups.md"
+					},
+					{
+						"label": "Discover",
+						"file": "3_config/surfaces/discover.md"
+					}
+				]
 			},
 			{
 				"label": "Triggers",
