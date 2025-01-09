@@ -398,10 +398,9 @@ jobs:
           yarn tsx tools/build/complete.mts win32-x64
         env:
           CI: 1
-          # HACK: temporarily disable signing
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          # CSC_LINK: '${{ secrets.BF_CODECERT_KEY }}'
           CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
+          BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
 
       - name: Determine files to upload
         id: filenames
