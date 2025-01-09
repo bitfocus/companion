@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@inquirer/prompts": "^7.2.0",
-    "@types/node": "^22.9.0",
+    "@types/node": "^22.10.5",
     "@types/ps-tree": "^1.1.6",
     "chokidar": "^3.6.0",
     "concurrently": "^9.1.0",
