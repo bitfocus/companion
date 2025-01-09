@@ -15,20 +15,31 @@
  *
  */
 
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import LogController from '../Log/Controller.js'
-import type { FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	FeedbackForVisitor,
+	InternalModuleFragment,
+	InternalVisitor,
+	InternalFeedbackDefinition,
+	InternalActionDefinition,
+	ActionForVisitor,
+} from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { InternalController } from './Controller.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
 
-	// #internalModule
+	readonly #internalModule: InternalController
+	readonly #actionRunner: ActionRunner
 
-	// constructor(internalModule) {
-	// 	this.#internalModule = internalModule
-	// }
+	constructor(internalModule: InternalController, actionRunner: ActionRunner) {
+		this.#internalModule = internalModule
+		this.#actionRunner = actionRunner
+	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
@@ -77,6 +88,49 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
+		return {
+			action_group: {
+				label: 'Action Group',
+				description: 'Execute a group of actions',
+				options: [
+					{
+						type: 'dropdown',
+						label: 'Execution mode',
+						id: 'execution_mode',
+						default: 'inherit',
+						choices: [
+							{ id: 'inherit', label: 'Inherit' },
+							{ id: 'concurrent', label: 'Concurrent' },
+							{ id: 'sequential', label: 'Sequential' },
+						],
+						tooltip: `Using "Sequential" will run the actions one after the other, waiting for each to complete before starting the next. 
+							If the module doesn't support it for a particular action, the following action will start immediately.`,
+					},
+				],
+				hasLearn: false,
+				learnTimeout: undefined,
+				supportsChildActionGroups: ['default'],
+			},
+			wait: {
+				label: 'Wait',
+				description: 'Wait for a specified amount of time',
+				options: [
+					{
+						type: 'textinput',
+						label: 'Time expression (ms)',
+						id: 'time',
+						default: '1000',
+						useVariables: { local: true },
+						isExpression: true,
+					},
+				],
+				hasLearn: false,
+				learnTimeout: undefined,
+			},
+		}
+	}
+
 	/**
 	 * Execute a logic feedback
 	 */
@@ -96,7 +150,61 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionInstance[], _feedbacks: FeedbackForVisitor[]): void {
+	executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean {
+		if (action.action === 'wait') {
+			if (extras.abortDelayed.aborted) return true
+
+			let delay = 0
+			try {
+				delay = Number(
+					this.#internalModule.executeExpressionForInternalActionOrFeedback(action.options.time, extras, 'number').value
+				)
+			} catch (e: any) {
+				this.#logger.error(`Failed to parse delay: ${e.message}`)
+			}
+
+			if (!isNaN(delay) && delay > 0) {
+				// Perform the wait
+				return new Promise((resolve) => setTimeout(resolve, delay)).then(() => true)
+			} else {
+				// No wait, return immediately
+				return true
+			}
+		} else if (action.action === 'action_group') {
+			if (extras.abortDelayed.aborted) return true
+
+			let executeSequential = false
+			switch (action.options.execution_mode) {
+				case 'sequential':
+					executeSequential = true
+					break
+				case 'concurrent':
+					executeSequential = false
+					break
+				case 'inherit':
+					executeSequential = extras.executionMode === 'sequential'
+					break
+				default:
+					this.#logger.error(`Unknown execution mode: ${action.options.execution_mode}`)
+			}
+
+			const newExtras: RunActionExtras = {
+				...extras,
+				executionMode: executeSequential ? 'sequential' : 'concurrent',
+			}
+
+			return this.#actionRunner
+				.runMultipleActions(action.children?.['default'] ?? [], newExtras, executeSequential)
+				.catch((e) => {
+					this.#logger.error(`Failed to run actions: ${e.message}`)
+				})
+				.then(() => true)
+		} else {
+			return false
+		}
+	}
+
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
 }

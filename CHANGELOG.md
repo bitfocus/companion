@@ -1,5 +1,52 @@
 # Bitfocus Companion
 
+## Companion v3.5.0 - Release Notes
+
+### BREAKING CHANGES
+
+- macOS must be at least 11 to run Companion. This is due to nodejs dropping support for older versions.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Support more than 99 pages.
+  - New configs will default to a single page.
+  - Pages can be reordered
+- DB file is now written with SQLite. This will make it more resilient to crashes, improves performance when saving and avoids issues with the db being too big
+- Custom variables are renamed from $(internal:custom_test) to $(custom:test). The old names still work, but will be removed in a future version
+- Support VEC footpedal as a surface
+- Connection labels can be edited while connections are disabled
+- Add $(internal:uptime) variable
+- Performance improvements for variables
+- Performance improvements for button drawing
+- Option to dismiss 'resize grid to surfaces' prompt
+- Allow import and export to be done in YAML
+- Filename of exports can be customised
+- Command line option to disable admin ui password
+- Add one time event trigger
+- Support satellite over websockets
+- Connection of actions and feedbacks can be changed
+- Improve module status clarity
+- Improve custom variables collapsed view
+- Support HTTP GET for module variables
+- Backend code refactoring to make Companion more robust
+- Modules can now be built with node22
+
+### 🐞 BUG FIXES
+
+- Show config directory tray option using wrong path
+- TCP protocols not disconnecting clients when disabling server
+- Unable to edit duplicated steps
+- Allow some missing expression operators
+- Custom variables in dropdowns are ordered to match the editor ui
+- Hide some unusable local variables in triggers
+- Rapidly toggling developer tools caused launcher to crash
+- TCP/UDP api not accepting button text or custom variables containing slashes
+- Streamdeck Studio not working over usb
+
+### 🧩 NEW & UPDATED MODULES
+
+-
+
 ## Companion v3.4.3 - Release Notes
 
 ### 🐞 BUG FIXES
@@ -121,7 +168,6 @@
 - Importing triggers fails to append due to duplicate ids
 - Improved error handling
 - Font sizes sometimes show as invalid
--
 
 ### 🧩 NEW & UPDATED MODULES
 

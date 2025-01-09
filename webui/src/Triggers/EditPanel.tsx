@@ -20,7 +20,6 @@ import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -128,7 +127,10 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									heading={
 										<>
 											Events &nbsp;
-											<FontAwesomeIcon icon={faQuestionCircle} title="When should the trigger execute" />
+											<FontAwesomeIcon
+												icon={faQuestionCircle}
+												title="The trigger will be executed when any of the events happens"
+											/>
 										</>
 									}
 									controlId={controlId}
@@ -138,7 +140,15 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 
 							<MyErrorBoundary>
 								<ControlFeedbacksEditor
-									heading={<InlineHelp help="Only execute when all of these conditions are true">Condition</InlineHelp>}
+									heading={
+										<>
+											Conditions &nbsp;
+											<FontAwesomeIcon
+												icon={faQuestionCircle}
+												title="Only execute when all of these conditions are true"
+											/>
+										</>
+									}
 									entityType="condition"
 									controlId={controlId}
 									feedbacks={config.condition}
@@ -159,9 +169,9 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									controlId={controlId}
 									location={undefined}
 									stepId=""
-									setId={'0'}
+									setId={0}
 									addPlaceholder="+ Add action"
-									actions={config.action_sets['0']}
+									actions={config.action_sets[0]}
 								/>
 							</MyErrorBoundary>
 						</>

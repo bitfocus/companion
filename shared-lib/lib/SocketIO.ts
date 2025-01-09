@@ -35,7 +35,7 @@ import type {
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
-import type { FeedbackDefinitionUpdate, InternalFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
+import type { FeedbackDefinitionUpdate, ClientFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
@@ -44,6 +44,7 @@ import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/Act
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
+import type { ActionOwner, ActionSetId } from './Model/ActionModel.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -88,7 +89,7 @@ export interface ClientToBackendEventsMap {
 	'action-definitions:unsubscribe': () => void
 	'feedback-definitions:subscribe': () => Record<
 		string,
-		Record<string, InternalFeedbackDefinition | undefined> | undefined
+		Record<string, ClientFeedbackDefinition | undefined> | undefined
 	>
 	'feedback-definitions:unsubscribe': () => void
 	'variable-definitions:subscribe': () => AllVariableDefinitions
@@ -133,55 +134,55 @@ export interface ClientToBackendEventsMap {
 	'controls:action:set-headline': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: ActionSetId,
 		actionId: string,
 		headline: string
 	) => boolean
 	'controls:action:enabled': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: ActionSetId,
 		actionId: string,
 		enabled: boolean
 	) => boolean
-	'controls:action:learn': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
-	'controls:action:duplicate': (controlId: string, stepId: string, setId: string, actionId: string) => string | null
-	'controls:action:remove': (controlId: string, stepId: string, setId: string, actionId: string) => boolean
+	'controls:action:learn': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
+	'controls:action:duplicate': (
+		controlId: string,
+		stepId: string,
+		setId: ActionSetId,
+		actionId: string
+	) => string | null
+	'controls:action:remove': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
 	'controls:action:set-connection': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: ActionSetId,
 		actionId: string,
 		connectionId: string
-	) => boolean
-	'controls:action:set-delay': (
-		controlId: string,
-		stepId: string,
-		setId: string,
-		actionId: string,
-		delay: number
 	) => boolean
 	'controls:action:set-option': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: ActionSetId,
 		actionId: string,
 		key: string,
 		val: any
 	) => boolean
-	'controls:action:reorder': (
+	'controls:action:move': (
 		controlId: string,
 		dragStepId: string,
-		dragSetId: string,
+		dragSetId: ActionSetId,
 		dragActionId: string,
-		stepId: string,
-		setId: string,
-		dropIndex: number
+		hoverStepId: string,
+		hoverSetId: ActionSetId,
+		hoverOwnerId: ActionOwner | null,
+		hoverIndex: number
 	) => boolean
 	'controls:action:add': (
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: ActionSetId,
+		ownerId: ActionOwner | null,
 		connectionId: string,
 		actionType: string
 	) => boolean
@@ -189,12 +190,17 @@ export interface ClientToBackendEventsMap {
 	'controls:action-set:set-run-while-held': (
 		controlId: string,
 		stepId: string,
-		newSetId: string,
+		newSetId: ActionSetId,
 		runWhileHeld: boolean
 	) => boolean
-	'controls:action-set:rename': (controlId: string, stepId: string, oldSetId: string, newSetId: string) => boolean
+	'controls:action-set:rename': (
+		controlId: string,
+		stepId: string,
+		oldSetId: ActionSetId,
+		newSetId: ActionSetId
+	) => boolean
 	'controls:action-set:add': (controlId: string, stepId: string) => boolean
-	'controls:action-set:remove': (controlId: string, stepId: string, setId: string) => boolean
+	'controls:action-set:remove': (controlId: string, stepId: string, setId: ActionSetId) => boolean
 
 	'controls:step:add': (controlId: string) => string | false
 	'controls:step:duplicate': (controlId: string, stepId: string) => boolean
@@ -227,7 +233,7 @@ export interface ClientToBackendEventsMap {
 		sessionId: string,
 		controlId: string,
 		stepId: string,
-		setId: string,
+		setId: ActionSetId,
 		mode: 'replace' | 'append'
 	) => void
 	'action-recorder:session:discard-actions': (sessionId: string) => void

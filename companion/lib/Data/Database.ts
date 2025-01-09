@@ -30,7 +30,7 @@ export class DataDatabase extends DataStoreBase {
 	 */
 	static Defaults: DatabaseDefault = {
 		main: {
-			page_config_version: 5,
+			page_config_version: 6,
 		},
 	}
 

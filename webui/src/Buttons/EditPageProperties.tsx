@@ -18,11 +18,11 @@ export interface EditPagePropertiesModalRef {
 	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void
 }
 interface EditPagePropertiesModalProps {
-	// Nothing
+	includeName: boolean
 }
 
 export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPagePropertiesModalProps>(
-	function EditPagePropertiesModal(_props, ref) {
+	function EditPagePropertiesModal({ includeName }, ref) {
 		const socket = useContext(SocketContext)
 		const [pageNumber, setPageNumber] = useState<number | null>(null)
 		const [show, setShow] = useState(false)
@@ -80,20 +80,23 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={doAction}>
-						<CRow className="mb-3">
-							<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
-								Name
-							</CFormLabel>
-							<CCol sm={9}>
-								<CFormInput
-									ref={inputRef}
-									name="colFormName"
-									type="text"
-									value={pageName || ''}
-									onChange={onNameChange}
-								/>
-							</CCol>
-						</CRow>
+						{includeName && (
+							<CRow className="mb-3">
+								<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
+									Name
+								</CFormLabel>
+								<CCol sm={9}>
+									<CFormInput
+										ref={inputRef}
+										name="colFormName"
+										type="text"
+										value={pageName || ''}
+										onChange={onNameChange}
+									/>
+								</CCol>
+							</CRow>
+						)}
+						{/* TODO: more fields should be added here */}
 					</CForm>
 				</CModalBody>
 				<CModalFooter>

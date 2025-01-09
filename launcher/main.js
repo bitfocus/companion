@@ -152,7 +152,7 @@ if (!lock) {
 		// companionRootPath = path.join(__dirname, '../dist')
 		// if (!fs.pathExistsSync(path.join(companionRootPath, 'BUILD'))) {
 		// Finally, use the unbuilt parent
-		companionRootPath = fileURLToPath(new URL('../companion', import.meta.url))
+		companionRootPath = fileURLToPath(new URL('../companion/dist', import.meta.url))
 		// }
 	}
 
@@ -246,6 +246,8 @@ if (!lock) {
 			after: true,
 		}
 	)
+
+	let restartCounter = 0
 
 	let watcher = null
 	let pendingWatcher = null
@@ -432,6 +434,9 @@ if (!lock) {
 		ipcMain.on('toggle-developer-settings', (e, msg) => {
 			console.log('toggle developer settings')
 			uiConfig.set('enable_developer', !uiConfig.get('enable_developer'))
+
+			// This isn't a usual restart, so pretend it didn't happen
+			restartCounter = 0
 
 			sendAppInfo()
 			triggerRestart()
@@ -755,7 +760,6 @@ if (!lock) {
 				}
 			})
 
-			let restartCounter = 0
 			let crashTimeout = null
 
 			// Find the node binary

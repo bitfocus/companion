@@ -19,11 +19,18 @@ import LogController from '../Log/Controller.js'
 import type { InternalController } from './Controller.js'
 import type { ActionRecorder } from '../Controls/ActionRecorder.js'
 import type { PageController } from '../Page/Controller.js'
-import type { FeedbackForVisitor, FeedbackInstanceExt, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	ActionForVisitor,
+	FeedbackForVisitor,
+	FeedbackInstanceExt,
+	InternalModuleFragment,
+	InternalVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+} from './Types.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { InternalActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 
 export class InternalActionRecorder implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/ActionRecorder')
@@ -237,7 +244,10 @@ export class InternalActionRecorder implements InternalModuleFragment {
 				if (!isNaN(Number(stepId))) stepId = `${Number(stepId) - 1}`
 
 				try {
-					this.#actionRecorder.saveToControlId(controlId, stepId, setId, action.options.mode)
+					const setIdSafe = validateActionSetId(setId as any)
+					if (setIdSafe === undefined) throw new Error('Invalid setId')
+
+					this.#actionRecorder.saveToControlId(controlId, stepId, setIdSafe, action.options.mode)
 				} catch (e) {
 					// We don't have a good way to present this to the user, so ignore it for now. They should notice that it didnt work
 					this.#logger.info(`action_recorder_save_to_button failed: ${e}`)
@@ -333,7 +343,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(visitor: InternalVisitor, actions: ActionInstance[], feedbacks: FeedbackForVisitor[]) {
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]) {
 		for (const action of actions) {
 			if (action.action === 'action_recorder_set_connections') {
 				visitor.visitConnectionIdArray(action.options, 'connections')

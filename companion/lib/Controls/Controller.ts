@@ -24,6 +24,7 @@ import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
+import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -88,6 +89,17 @@ export class ControlsController extends CoreBase {
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
 		this.triggers = new TriggerEvents()
+	}
+
+	/**
+	 * Abort all delayed actions across all controls
+	 */
+	abortAllDelayedActions(): void {
+		for (const control of this.#controls.values()) {
+			if (control.supportsActions) {
+				control.abortDelayedActions(false)
+			}
+		}
 	}
 
 	#createControlDependencies(): ControlDependencies {
@@ -491,14 +503,14 @@ export class ControlsController extends CoreBase {
 			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
 		})
 
-		client.onPromise('controls:action:add', (controlId, stepId, setId, connectionId, actionId) => {
+		client.onPromise('controls:action:add', (controlId, stepId, setId, parentId, connectionId, actionId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsActions) {
 				const actionItem = this.instance.definitions.createActionItem(connectionId, actionId)
 				if (actionItem) {
-					return control.actionAdd(stepId, setId, actionItem)
+					return control.actionAdd(stepId, setId, actionItem, parentId)
 				} else {
 					return false
 				}
@@ -590,17 +602,6 @@ export class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:action:set-delay', (controlId, stepId, setId, id, delay) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActions) {
-				return control.actionSetDelay(stepId, setId, id, delay)
-			} else {
-				throw new Error(`Control "${controlId}" does not support actions`)
-			}
-		})
-
 		client.onPromise('controls:action:set-option', (controlId, stepId, setId, id, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
@@ -612,13 +613,21 @@ export class ControlsController extends CoreBase {
 			}
 		})
 		client.onPromise(
-			'controls:action:reorder',
-			(controlId, dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex) => {
+			'controls:action:move',
+			(controlId, dragStepId, dragSetId, dragActionId, hoverStepId, hoverSetId, hoverParentId, hoverIndex) => {
 				const control = this.getControl(controlId)
 				if (!control) return false
 
 				if (control.supportsActions) {
-					return control.actionReorder(dragStepId, dragSetId, dragActionId, dropStepId, dropSetId, dropIndex)
+					return control.actionMoveTo(
+						dragStepId,
+						dragSetId,
+						dragActionId,
+						hoverStepId,
+						hoverSetId,
+						hoverParentId,
+						hoverIndex
+					)
 				} else {
 					throw new Error(`Control "${controlId}" does not support actions`)
 				}
@@ -817,7 +826,7 @@ export class ControlsController extends CoreBase {
 
 			const control = this.getControl(controlId)
 			if (control && control instanceof ControlTrigger) {
-				control.executeActions(Date.now(), true)
+				control.executeActions(Date.now(), TriggerExecutionSource.Test)
 			}
 
 			return false

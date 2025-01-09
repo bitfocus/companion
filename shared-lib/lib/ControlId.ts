@@ -1,4 +1,6 @@
+import { ActionSetId } from './Model/ActionModel.js'
 import type { ControlLocation } from './Model/Common.js'
+import { assertNever } from './Util.js'
 
 /**
  * Present a location as a string
@@ -80,4 +82,29 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 	}
 
 	return undefined
+}
+
+export function validateActionSetId(setId: ActionSetId): ActionSetId | undefined {
+	if (typeof setId === 'string') {
+		switch (setId) {
+			case 'down':
+			case 'up':
+			case 'rotate_left':
+			case 'rotate_right':
+				return setId
+			default:
+				assertNever(setId)
+				break
+		}
+
+		// In case its a number as a string
+		const setNumber = Number(setId)
+		if (!isNaN(setNumber)) return setNumber
+
+		return undefined
+	} else if (typeof setId === 'number') {
+		return setId
+	} else {
+		return undefined
+	}
 }

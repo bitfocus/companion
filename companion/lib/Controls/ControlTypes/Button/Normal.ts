@@ -1,22 +1,27 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep } from 'lodash-es'
 import { FragmentActions } from '../../Fragments/FragmentActions.js'
-import { clamp } from '../../../Resources/Util.js'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
-import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
 	ControlWithSteps,
 	ControlWithoutEvents,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
+import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type {
 	NormalButtonModel,
 	NormalButtonOptions,
 	NormalButtonSteps,
 } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type {
+	ActionInstance,
+	ActionOwner,
+	ActionSetId,
+	ActionSetsModel,
+	ActionStepOptions,
+} from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 
@@ -137,10 +142,10 @@ export class ControlButtonNormal
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(stepId: string, setId: string, actionItem: ActionInstance): boolean {
+	actionAdd(stepId: string, setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
 		const step = this.steps[stepId]
 		if (step) {
-			return step.actionAdd(setId, actionItem)
+			return step.actionAdd(setId, actionItem, ownerId)
 		} else {
 			return false
 		}
@@ -152,10 +157,10 @@ export class ControlButtonNormal
 	 * @param setId the action_set id to update
 	 * @param newActions actions to append
 	 */
-	actionAppend(stepId: string, setId: string, newActions: ActionInstance[]): boolean {
+	actionAppend(stepId: string, setId: ActionSetId, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean {
 		const step = this.steps[stepId]
 		if (step) {
-			return step.actionAppend(setId, newActions)
+			return step.actionAppend(setId, newActions, ownerId)
 		} else {
 			return false
 		}
@@ -164,7 +169,7 @@ export class ControlButtonNormal
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(stepId: string, setId: string, id: string): string | null {
+	actionDuplicate(stepId: string, setId: ActionSetId, id: string): string | null {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionDuplicate(setId, id)
@@ -176,7 +181,7 @@ export class ControlButtonNormal
 	/**
 	 * Enable or disable an action
 	 */
-	actionEnabled(stepId: string, setId: string, id: string, enabled: boolean): boolean {
+	actionEnabled(stepId: string, setId: ActionSetId, id: string, enabled: boolean): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionEnabled(setId, id, enabled)
@@ -188,7 +193,7 @@ export class ControlButtonNormal
 	/**
 	 * Set action headline
 	 */
-	actionHeadline(stepId: string, setId: string, id: string, headline: string): boolean {
+	actionHeadline(stepId: string, setId: ActionSetId, id: string, headline: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionHeadline(setId, id, headline)
@@ -200,7 +205,7 @@ export class ControlButtonNormal
 	/**
 	 * Learn the options for an action, by asking the instance for the current values
 	 */
-	async actionLearn(stepId: string, setId: string, id: string): Promise<boolean> {
+	async actionLearn(stepId: string, setId: ActionSetId, id: string): Promise<boolean> {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionLearn(setId, id)
@@ -212,7 +217,7 @@ export class ControlButtonNormal
 	/**
 	 * Remove an action from this control
 	 */
-	actionRemove(stepId: string, setId: string, id: string): boolean {
+	actionRemove(stepId: string, setId: ActionSetId, id: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionRemove(setId, id)
@@ -224,30 +229,61 @@ export class ControlButtonNormal
 	/**
 	 * Reorder an action in the list or move between sets
 	 */
-	actionReorder(
+	actionMoveTo(
 		dragStepId: string,
-		dragSetId: string,
+		dragSetId: ActionSetId,
 		dragActionId: string,
-		dropStepId: string,
-		dropSetId: string,
-		dropIndex: number
+		hoverStepId: string,
+		hoverSetId: ActionSetId,
+		hoverOwnerId: ActionOwner | null,
+		hoverIndex: number
 	): boolean {
-		const fromSet = this.steps[dragStepId]?.action_sets?.[dragSetId]
-		const toSet = this.steps[dropStepId]?.action_sets?.[dropSetId]
-		if (fromSet && toSet) {
-			const dragIndex = fromSet.findIndex((a) => a.id === dragActionId)
-			if (dragIndex === -1) return false
+		const oldStep = this.steps[dragStepId]
+		if (!oldStep) return false
 
-			dropIndex = clamp(dropIndex, 0, toSet.length)
+		const oldItem = oldStep.findParentAndIndex(dragSetId, dragActionId)
+		if (!oldItem) return false
 
-			toSet.splice(dropIndex, 0, ...fromSet.splice(dragIndex, 1))
+		if (
+			dragStepId === hoverStepId &&
+			dragSetId === hoverSetId &&
+			oldItem.parent.ownerId?.parentActionId === hoverOwnerId?.parentActionId &&
+			oldItem.parent.ownerId?.childGroup === hoverOwnerId?.childGroup
+		) {
+			oldItem.parent.moveAction(oldItem.index, hoverIndex)
 
-			this.commitChange()
+			this.commitChange(false)
+
+			return true
+		} else {
+			const newStep = this.steps[hoverStepId]
+			if (!newStep) return false
+
+			const newSet = newStep.getActionSet(hoverSetId)
+			if (!newSet) return false
+
+			const newParent = hoverOwnerId ? newSet?.findById(hoverOwnerId.parentActionId) : null
+			if (hoverOwnerId && !newParent) return false
+
+			// Ensure the new parent is not a child of the action being moved
+			if (hoverOwnerId && oldItem.item.findChildById(hoverOwnerId.parentActionId)) return false
+
+			// Check if the new parent can hold the action being moved
+			if (newParent && !newParent.canAcceptChild(hoverOwnerId!.childGroup, oldItem.item)) return false
+
+			const poppedAction = oldItem.parent.popAction(oldItem.index)
+			if (!poppedAction) return false
+
+			if (newParent) {
+				newParent.pushChild(poppedAction, hoverOwnerId!.childGroup, hoverIndex)
+			} else {
+				newSet.pushAction(poppedAction, hoverIndex)
+			}
+
+			this.commitChange(false)
 
 			return true
 		}
-
-		return false
 	}
 
 	/**
@@ -263,7 +299,7 @@ export class ControlButtonNormal
 	/**
 	 * Replace all the actions in a set
 	 */
-	actionReplaceAll(stepId: string, setId: string, newActions: ActionInstance[]): boolean {
+	actionReplaceAll(stepId: string, setId: ActionSetId, newActions: ActionInstance[]): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionReplaceAll(setId, newActions)
@@ -275,7 +311,7 @@ export class ControlButtonNormal
 	/**
 	 * Set the connection of an action
 	 */
-	actionSetConnection(stepId: string, setId: string, id: string, connectionId: string): boolean {
+	actionSetConnection(stepId: string, setId: ActionSetId, id: string, connectionId: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionSetConnection(setId, id, connectionId)
@@ -285,21 +321,9 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Set the delay of an action
-	 */
-	actionSetDelay(stepId: string, setId: string, id: string, delay: number): boolean {
-		const step = this.steps[stepId]
-		if (step) {
-			return step.actionSetDelay(setId, id, delay)
-		} else {
-			return false
-		}
-	}
-
-	/**
 	 * Set an option of an action
 	 */
-	actionSetOption(stepId: string, setId: string, id: string, key: string, value: any): boolean {
+	actionSetOption(stepId: string, setId: ActionSetId, id: string, key: string, value: any): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			return step.actionSetOption(setId, id, key, value)
@@ -314,23 +338,7 @@ export class ControlButtonNormal
 	actionSetAdd(stepId: string): boolean {
 		const step = this.steps[stepId]
 		if (step) {
-			let redraw = false
-
-			const existingKeys = Object.keys(step.action_sets)
-				.map((k) => Number(k))
-				.filter((k) => !isNaN(k))
-			if (existingKeys.length === 0) {
-				// add the default '1000' set
-				step.action_sets['1000'] = []
-				redraw = true
-			} else {
-				// add one after the last
-				const max = Math.max(...existingKeys)
-				const newIndex = Math.floor(max / 1000) * 1000 + 1000
-				step.action_sets[newIndex] = []
-			}
-
-			this.commitChange(redraw)
+			step.actionSetAdd()
 
 			return true
 		}
@@ -341,47 +349,22 @@ export class ControlButtonNormal
 	/**
 	 * Remove an action-set from this control
 	 */
-	actionSetRemove(stepId: string, setId0: string): boolean {
+	actionSetRemove(stepId: string, setId0: ActionSetId): boolean {
 		const setId = Number(setId0)
 
 		// Ensure valid
 		if (isNaN(setId)) return false
 
 		const step = this.steps[stepId]
-		if (step) {
-			const oldKeys = Object.keys(step.action_sets)
+		if (!step) return false
 
-			if (oldKeys.length > 1) {
-				const action_set = step.action_sets[setId]
-				if (action_set) {
-					// Inform modules of the change
-					for (const action of action_set) {
-						step.cleanupAction(action)
-					}
-
-					// Forget the step from the options
-					step.options.runWhileHeld = step.options.runWhileHeld.filter((id) => id !== Number(setId))
-
-					// Assume it exists
-					delete step.action_sets[setId]
-
-					// Save the change, and perform a draw
-					this.commitChange(false)
-
-					return true
-				}
-			}
-
-			return false
-		}
-
-		return false
+		return step.actionSetRemove(setId)
 	}
 
 	/**
 	 * Rename an action-sets
 	 */
-	actionSetRename(stepId: string, oldSetId0: string, newSetId0: string): boolean {
+	actionSetRename(stepId: string, oldSetId0: ActionSetId, newSetId0: ActionSetId): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			const newSetId = Number(newSetId0)
@@ -390,19 +373,7 @@ export class ControlButtonNormal
 			// Only valid when both are numbers
 			if (isNaN(newSetId) || isNaN(oldSetId)) return false
 
-			// Ensure old set exists
-			if (!step.action_sets[oldSetId]) return false
-
-			// Ensure new set doesnt already exist
-			if (step.action_sets[newSetId]) return false
-
-			step.action_sets[newSetId] = step.action_sets[oldSetId]
-			delete step.action_sets[oldSetId]
-
-			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(Number(oldSetId))
-			if (runWhileHeldIndex !== -1) {
-				step.options.runWhileHeld[runWhileHeldIndex] = Number(newSetId)
-			}
+			if (!step.actionSetRename(oldSetId, newSetId)) return false
 
 			this.commitChange(false)
 
@@ -412,7 +383,7 @@ export class ControlButtonNormal
 		return false
 	}
 
-	actionSetRunWhileHeld(stepId: string, setId0: string, runWhileHeld: boolean): boolean {
+	actionSetRunWhileHeld(stepId: string, setId0: ActionSetId, runWhileHeld: boolean): boolean {
 		const step = this.steps[stepId]
 		if (step) {
 			// Ensure it is a number
@@ -422,7 +393,7 @@ export class ControlButtonNormal
 			if (isNaN(setId)) return false
 
 			// Ensure set exists
-			if (!step.action_sets[setId]) return false
+			if (!step.getActionSet(setId)) return false
 
 			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(setId)
 			if (runWhileHeld && runWhileHeldIndex === -1) {
@@ -475,6 +446,8 @@ export class ControlButtonNormal
 		const action_sets: ActionSetsModel = existingActions || {
 			down: [],
 			up: [],
+			rotate_left: undefined,
+			rotate_right: undefined,
 		}
 
 		const options = existingOptions || cloneDeep(ControlButtonNormal.DefaultStepOptions)
@@ -488,6 +461,7 @@ export class ControlButtonNormal
 		}
 
 		const actions = new FragmentActions(
+			this.deps.instance.definitions,
 			this.deps.internalModule,
 			this.deps.instance.moduleHost,
 			this.controlId,
@@ -495,7 +469,7 @@ export class ControlButtonNormal
 		)
 
 		actions.options = options
-		actions.action_sets = action_sets
+		actions.loadStorage(action_sets, true, !!existingActions)
 
 		return actions
 	}
@@ -517,7 +491,7 @@ export class ControlButtonNormal
 			foundConnectionIds.add(feedback.connectionId)
 		}
 		for (const action of allActions) {
-			foundConnectionIds.add(action.instance)
+			foundConnectionIds.add(action.connectionId)
 		}
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
@@ -526,8 +500,9 @@ export class ControlButtonNormal
 			this.deps.internalModule,
 			visitor,
 			this.feedbacks.baseStyle,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			[]
 		)
@@ -547,17 +522,7 @@ export class ControlButtonNormal
 		// Check if rotary_actions should be added/remove
 		if (key === 'rotaryActions') {
 			for (const step of Object.values(this.steps)) {
-				if (value) {
-					// ensure they exist
-					step.action_sets.rotate_left = step.action_sets.rotate_left || []
-					step.action_sets.rotate_right = step.action_sets.rotate_right || []
-				} else {
-					// remove the sets
-					step.actionClearSet('rotate_left', true)
-					step.actionClearSet('rotate_right', true)
-					delete step.action_sets.rotate_left
-					delete step.action_sets.rotate_right
-				}
+				step.setupRotaryActionSets(!!value, true)
 			}
 		}
 
@@ -619,12 +584,15 @@ export class ControlButtonNormal
 			// Make sure to execute for the step that was active when the press started
 			const step = pressedStep && this.steps[pressedStep]
 			if (step) {
-				let action_set_id: string | number = pressed ? 'down' : 'up'
+				let action_set_id: ActionSetId = pressed ? 'down' : 'up'
+
+				const location = this.deps.page.getLocationOfControlId(this.controlId)
 
 				if (!pressed && pressedDuration) {
 					// find the correct set to execute on up
 
-					const setIds = Object.keys(step.action_sets)
+					const setIds = step
+						.getActionSetIds()
 						.map((id) => Number(id))
 						.filter((id) => !isNaN(id) && id < pressedDuration)
 					if (setIds.length) {
@@ -632,13 +600,14 @@ export class ControlButtonNormal
 					}
 				}
 
-				const runActionSet = (set_id: string | number): void => {
-					const actions = step.action_sets[set_id]
+				const runActionSet = (set_id: ActionSetId): void => {
+					const actions = step.getActionSet(set_id)
 					if (actions) {
 						this.logger.silly('found actions')
 
-						this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
+						this.actionRunner.runActions(actions.asActionInstances(), {
 							surfaceId,
+							location,
 						})
 					}
 				}
@@ -680,14 +649,15 @@ export class ControlButtonNormal
 		if (step) {
 			const action_set_id = direction ? 'rotate_right' : 'rotate_left'
 
-			const actions = step.action_sets[action_set_id]
+			const actions = step.getActionSet(action_set_id)
 			if (actions) {
 				this.logger.silly('found actions')
 
-				const enabledActions = actions.filter((act) => !act.disabled)
+				const location = this.deps.page.getLocationOfControlId(this.controlId)
 
-				this.deps.actionRunner.runMultipleActions(enabledActions, this.controlId, this.options.relativeDelay, {
+				this.actionRunner.runActions(actions.asActionInstances(), {
 					surfaceId,
+					location,
 				})
 			}
 		}
@@ -755,7 +725,7 @@ export class ControlButtonNormal
 		const stepToCopy = this.steps[stepId]
 		if (!stepToCopy) return false
 
-		const newStep = this.#getNewStepValue(cloneDeep(stepToCopy.action_sets), cloneDeep(stepToCopy.options))
+		const newStep = this.#getNewStepValue(cloneDeep(stepToCopy.asActionStepModel()), cloneDeep(stepToCopy.options))
 
 		// add one after the last
 		const max = Math.max(...existingKeys)
@@ -892,7 +862,7 @@ export class ControlButtonNormal
 		const stepsJson: NormalButtonSteps = {}
 		for (const [id, step] of Object.entries(this.steps)) {
 			stepsJson[id] = {
-				action_sets: step.action_sets,
+				action_sets: step.asActionStepModel(),
 				options: step.options,
 			}
 		}

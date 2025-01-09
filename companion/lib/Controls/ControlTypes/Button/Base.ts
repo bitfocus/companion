@@ -9,12 +9,13 @@ import type {
 	ControlWithPushed,
 	ControlWithStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
+import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import { ControlActionRunner } from '../../ActionRunner.js'
 
 /**
  * Abstract class for a editable button control.
@@ -48,9 +49,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	/**
 	 * The defaults options for a button
 	 */
-	static DefaultOptions: ButtonOptionsBase = {
-		relativeDelay: false,
-	}
+	static DefaultOptions: ButtonOptionsBase = {}
 
 	/**
 	 * The feedbacks fragment
@@ -68,11 +67,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	options!: TOptions
 
 	/**
-	 * Whether this button has delayed actions running
-	 */
-	has_actions_running = false
-
-	/**
 	 * Whether this button is currently pressed
 	 */
 	pushed = false
@@ -85,10 +79,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	/**
 	 * Steps on this button
 	 */
-	steps: Record<string, FragmentActions> = {}
+	protected steps: Record<string, FragmentActions> = {}
+
+	protected readonly actionRunner: ControlActionRunner
 
 	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
 		super(deps, controlId, debugNamespace)
+
+		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
 
 		this.feedbacks = new FragmentFeedbacks(
 			deps.instance.definitions,
@@ -102,6 +100,18 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	}
 
 	/**
+	 * Abort pending delayed actions for a control
+	 * @param skip_up Mark button as released
+	 */
+	abortDelayedActions(skip_up: boolean): void {
+		if (skip_up) {
+			this.setPushed(false)
+		}
+
+		this.actionRunner.abortAll()
+	}
+
+	/**
 	 * Check the status of a control, and re-draw if needed
 	 * @param redraw whether to perform a draw
 	 * @returns whether the status changed
@@ -110,12 +120,9 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		// Find all the connections referenced by the button
 		const connectionIds = new Set<string>()
 		for (const step of Object.values(this.steps)) {
-			for (const actions of Object.values(step.action_sets)) {
-				if (!actions) continue
-				for (const action of actions) {
-					if (action.disabled) continue
-					connectionIds.add(action.instance)
-				}
+			for (const action of step.getAllActions()) {
+				if (action.disabled) continue
+				connectionIds.add(action.connectionId)
 			}
 		}
 
@@ -188,14 +195,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	/**
 	 * Get all the actions on this control
 	 */
-	getAllActions(): ActionInstance[] {
+	getFlattenedActionInstances(): ActionInstance[] {
 		const actions: ActionInstance[] = []
 
 		for (const step of Object.values(this.steps)) {
-			for (const set of Object.values(step.action_sets)) {
-				if (!set) continue
-				actions.push(...set)
-			}
+			if (!step) continue
+			actions.push(...step.getFlattenedActionInstances())
 		}
 
 		return actions
@@ -257,7 +262,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			step_cycle: undefined,
 
 			pushed: !!this.pushed,
-			action_running: this.has_actions_running,
+			action_running: this.actionRunner.hasRunningChains,
 			button_status: this.button_status,
 
 			style: 'button',
@@ -330,8 +335,9 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			this.feedbacks.baseStyle,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			[],
 			true
@@ -339,21 +345,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		// redraw if needed and save changes
 		this.commitChange(changed)
-	}
-
-	/**
-	 * Mark the button as having pending delayed actions
-	 * @param running Whether any delayed actions are pending
-	 * @param skip_up Mark the button as released, skipping the release actions
-	 */
-	setActionsRunning(running: boolean, skip_up: boolean): void {
-		this.has_actions_running = running
-
-		if (skip_up) {
-			this.setPushed(false)
-		}
-
-		this.triggerRedraw()
 	}
 
 	/**

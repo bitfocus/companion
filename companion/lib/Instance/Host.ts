@@ -482,8 +482,7 @@ export class ModuleHost {
 
 						child.monitor = monitor
 
-						const initialisedPromise = new Promise((resolve, reject) => {
-							// @ts-ignore
+						const initialisedPromise = new Promise<void>((resolve, reject) => {
 							this.#listenToModuleSocket(child, resolve, reject)
 						})
 

@@ -10,7 +10,7 @@ import { TriggersEventMisc } from './Events/Misc.js'
 import { clamp } from '../../../Resources/Util.js'
 import { TriggersEventVariables } from './Events/Variable.js'
 import { nanoid } from 'nanoid'
-import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
@@ -22,11 +22,13 @@ import type {
 	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
+import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import { ControlActionRunner } from '../../ActionRunner.js'
+import { TriggerExecutionSource } from './TriggerExecutionSource.js'
 
 /**
  * Class for an interval trigger.
@@ -78,7 +80,6 @@ export class ControlTrigger
 		name: 'New Trigger',
 		enabled: false,
 		sortOrder: 0,
-		relativeDelay: false,
 	}
 
 	/**
@@ -131,10 +132,7 @@ export class ControlTrigger
 	 */
 	readonly #variablesEvents: TriggersEventVariables
 
-	/**
-	 * Whether this button has delayed actions running
-	 */
-	has_actions_running: boolean = false
+	readonly #actionRunner: ControlActionRunner
 
 	readonly actions: FragmentActions
 	readonly feedbacks: FragmentFeedbacks
@@ -155,7 +153,10 @@ export class ControlTrigger
 	) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
+		this.#actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
+
 		this.actions = new FragmentActions(
+			deps.instance.definitions,
 			deps.internalModule,
 			deps.instance.moduleHost,
 			controlId,
@@ -177,9 +178,6 @@ export class ControlTrigger
 		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this))
 
 		this.options = cloneDeep(ControlTrigger.DefaultOptions)
-		this.actions.action_sets = {
-			0: [],
-		}
 		this.events = []
 
 		if (!storage) {
@@ -193,7 +191,7 @@ export class ControlTrigger
 			if (storage.type !== 'trigger') throw new Error(`Invalid type given to ControlTriggerInterval: "${storage.type}"`)
 
 			this.options = storage.options || this.options
-			this.actions.action_sets = storage.action_sets || this.actions.action_sets
+			this.actions.loadStorage(storage.action_sets || {}, true, isImport)
 			this.feedbacks.loadStorage(storage.condition || [], true, isImport)
 			this.events = storage.events || this.events
 
@@ -206,53 +204,62 @@ export class ControlTrigger
 		})
 	}
 
+	abortDelayedActions(_skip_up: boolean): void {
+		this.#actionRunner.abortAll()
+	}
+
 	/**
 	 * Add an action to this control
 	 */
-	actionAdd(_stepId: string, _setId: string, actionItem: ActionInstance): boolean {
-		return this.actions.actionAdd('0', actionItem)
+	actionAdd(_stepId: string, _setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean {
+		return this.actions.actionAdd(0, actionItem, ownerId)
 	}
 
 	/**
 	 * Append some actions to this button
 	 */
-	actionAppend(_stepId: string, _setId: string, newActions: ActionInstance[]): boolean {
-		return this.actions.actionAppend('0', newActions)
+	actionAppend(
+		_stepId: string,
+		_setId: ActionSetId,
+		newActions: ActionInstance[],
+		ownerId: ActionOwner | null
+	): boolean {
+		return this.actions.actionAppend(0, newActions, ownerId)
 	}
 
 	/**
 	 * Learn the options for an action, by asking the instance for the current values
 	 */
-	async actionLearn(_stepId: string, _setId: string, id: string): Promise<boolean> {
-		return this.actions.actionLearn('0', id)
+	async actionLearn(_stepId: string, _setId: ActionSetId, id: string): Promise<boolean> {
+		return this.actions.actionLearn(0, id)
 	}
 
 	/**
 	 * Enable or disable an action
 	 */
-	actionEnabled(_stepId: string, _setId: string, id: string, enabled: boolean): boolean {
-		return this.actions.actionEnabled('0', id, enabled)
+	actionEnabled(_stepId: string, _setId: ActionSetId, id: string, enabled: boolean): boolean {
+		return this.actions.actionEnabled(0, id, enabled)
 	}
 
 	/**
 	 * Set action headline
 	 */
-	actionHeadline(_stepId: string, _setId: string, id: string, headline: string): boolean {
-		return this.actions.actionHeadline('0', id, headline)
+	actionHeadline(_stepId: string, _setId: ActionSetId, id: string, headline: string): boolean {
+		return this.actions.actionHeadline(0, id, headline)
 	}
 
 	/**
 	 * Remove an action from this control
 	 */
-	actionRemove(_stepId: string, _setId: string, id: string): boolean {
-		return this.actions.actionRemove('0', id)
+	actionRemove(_stepId: string, _setId: ActionSetId, id: string): boolean {
+		return this.actions.actionRemove(0, id)
 	}
 
 	/**
 	 * Duplicate an action on this control
 	 */
-	actionDuplicate(_stepId: string, _setId: string, id: string): string | null {
-		return this.actions.actionDuplicate('0', id)
+	actionDuplicate(_stepId: string, _setId: ActionSetId, id: string): string | null {
+		return this.actions.actionDuplicate(0, id)
 	}
 
 	/**
@@ -265,29 +272,22 @@ export class ControlTrigger
 	/**
 	 * Replace all the actions in a set
 	 */
-	actionReplaceAll(_stepId: string, _setId: string, newActions: ActionInstance[]): boolean {
-		return this.actions.actionReplaceAll('0', newActions)
+	actionReplaceAll(_stepId: string, _setId: ActionSetId, newActions: ActionInstance[]): boolean {
+		return this.actions.actionReplaceAll(0, newActions)
 	}
 
 	/**
 	 * Set the connection of an action
 	 */
-	actionSetConnection(_stepId: string, _setId: string, id: string, connectionId: string): boolean {
-		return this.actions.actionSetConnection('0', id, connectionId)
-	}
-
-	/**
-	 * Set the delay of an action
-	 */
-	actionSetDelay(_stepId: string, _setId: string, id: string, delay: number): boolean {
-		return this.actions.actionSetDelay('0', id, delay)
+	actionSetConnection(_stepId: string, _setId: ActionSetId, id: string, connectionId: string): boolean {
+		return this.actions.actionSetConnection(0, id, connectionId)
 	}
 
 	/**
 	 * Set an option of an action
 	 */
-	actionSetOption(_stepId: string, _setId: string, id: string, key: string, value: any): boolean {
-		return this.actions.actionSetOption('0', id, key, value)
+	actionSetOption(_stepId: string, _setId: ActionSetId, id: string, key: string, value: any): boolean {
+		return this.actions.actionSetOption(0, id, key, value)
 	}
 
 	/**
@@ -299,29 +299,42 @@ export class ControlTrigger
 	 * @param _dropSetId the target action_set of the action
 	 * @param dropIndex the target index of the action
 	 */
-	actionReorder(
+	actionMoveTo(
 		_dragStepId: string,
-		_dragSetId: string,
+		_dragSetId: ActionSetId,
 		dragActionId: string,
-		_dropStepId: string,
-		_dropSetId: string,
-		dropIndex: number
+		_hoverStepId: string,
+		_hoverSetId: ActionSetId,
+		hoverOwnerId: ActionOwner | null,
+		hoverIndex: number
 	): boolean {
-		const set = this.actions.action_sets['0']
-		if (set) {
-			const dragIndex = set.findIndex((a) => a.id === dragActionId)
-			if (dragIndex === -1) return false
+		const oldItem = this.actions.findParentAndIndex(0, dragActionId)
+		if (!oldItem) return false
 
-			dropIndex = clamp(dropIndex, 0, set.length)
+		const set = this.actions.getActionSet(0)
+		if (!set) return false
 
-			set.splice(dropIndex, 0, ...set.splice(dragIndex, 1))
+		const newParent = hoverOwnerId ? set?.findById(hoverOwnerId.parentActionId) : null
+		if (hoverOwnerId && !newParent) return false
 
-			this.commitChange(false)
+		// Ensure the new parent is not a child of the action being moved
+		if (hoverOwnerId && oldItem.item.findChildById(hoverOwnerId.parentActionId)) return false
 
-			return true
+		// Check if the new parent can hold the action being moved
+		if (newParent && !newParent.canAcceptChild(hoverOwnerId!.childGroup, oldItem.item)) return false
+
+		const poppedAction = oldItem.parent.popAction(oldItem.index)
+		if (!poppedAction) return false
+
+		if (newParent) {
+			newParent.pushChild(poppedAction, hoverOwnerId!.childGroup, hoverIndex)
+		} else {
+			set.pushAction(poppedAction, hoverIndex)
 		}
 
-		return false
+		this.commitChange(false)
+
+		return true
 	}
 
 	/**
@@ -334,16 +347,16 @@ export class ControlTrigger
 	/**
 	 * Execute the actions of this trigger
 	 * @param nowTime
-	 * @param isTest Whether this is a 'test' execution from the ui and should skip condition checks
+	 * @param source The source of this execution
 	 */
-	executeActions(nowTime: number, isTest = false): void {
-		if (isTest) {
+	executeActions(nowTime: number, source: TriggerExecutionSource): void {
+		if (source === TriggerExecutionSource.Test) {
 			this.logger.debug(`Test Execute ${this.options.name}`)
 		} else {
 			if (!this.options.enabled) return
 
 			// Ensure the condition passes when it is not part of the event
-			if (!this.events.some((event) => event.type.startsWith('condition_'))) {
+			if (source !== TriggerExecutionSource.ConditionChange) {
 				const conditionPasses = this.feedbacks.checkValueAsBoolean()
 				if (!conditionPasses) return
 			}
@@ -354,27 +367,28 @@ export class ControlTrigger
 			this.#sendTriggerJsonChange()
 		}
 
-		const actions = this.actions.action_sets['0']
+		const actions = this.actions.getActionSet(0)
 		if (actions) {
 			this.logger.silly('found actions')
 
-			this.deps.actionRunner.runMultipleActions(actions, this.controlId, this.options.relativeDelay, {
-				surfaceId: this.controlId,
-			})
+			this.#actionRunner
+				.runActions(actions.asActionInstances(), {
+					surfaceId: this.controlId,
+					location: undefined,
+				})
+				.catch((e) => {
+					this.logger.error(`Failed to run actions: ${e.message}`)
+				})
+		} else {
+			this.logger.warn('No action set found')
 		}
 	}
 
 	/**
 	 * Get all the actions on this control
 	 */
-	getAllActions(): ActionInstance[] {
-		const actions: ActionInstance[] = []
-
-		for (const set of Object.values(this.actions.action_sets)) {
-			if (set) actions.push(...set)
-		}
-
-		return actions
+	getFlattenedActionInstances(): ActionInstance[] {
+		return this.actions.getFlattenedActionInstances()
 	}
 
 	/**
@@ -390,7 +404,7 @@ export class ControlTrigger
 			foundConnectionIds.add(feedback.connectionId)
 		}
 		for (const action of allActions) {
-			foundConnectionIds.add(action.instance)
+			foundConnectionIds.add(action.connectionId)
 		}
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
@@ -399,8 +413,9 @@ export class ControlTrigger
 			this.deps.internalModule,
 			visitor,
 			undefined,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			this.events
 		)
@@ -422,7 +437,7 @@ export class ControlTrigger
 		const obj: TriggerModel = {
 			type: this.type,
 			options: this.options,
-			action_sets: this.actions.action_sets,
+			action_sets: this.actions.asActionStepModel(),
 			condition: this.feedbacks.getAllFeedbackInstances(),
 			events: this.events,
 		}
@@ -530,8 +545,9 @@ export class ControlTrigger
 			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
-			allActions,
 			[],
+			[],
+			allActions,
 			allFeedbacks,
 			this.events,
 			true
@@ -592,16 +608,6 @@ export class ControlTrigger
 		} else {
 			this.#stopEvent(event)
 		}
-	}
-
-	/**
-	 * Mark the button as having pending delayed actions
-	 * @param running Whether any delayed actions are pending
-	 * @param skip_up Mark the button as released, skipping the release actions
-	 * @access public
-	 */
-	setActionsRunning(_running: boolean, _skip_up: boolean) {
-		// Nothing to do
 	}
 
 	#stopEvent(event: EventInstance): void {
@@ -771,7 +777,7 @@ export class ControlTrigger
 						(runOnFalse && !newStatus && this.#conditionCheckLastValue))
 				) {
 					setImmediate(() => {
-						this.executeActions(Date.now(), false)
+						this.executeActions(Date.now(), TriggerExecutionSource.ConditionChange)
 					})
 				}
 				this.#conditionCheckLastValue = newStatus

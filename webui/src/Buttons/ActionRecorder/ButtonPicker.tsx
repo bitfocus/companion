@@ -10,23 +10,29 @@ import { cloneDeep } from 'lodash-es'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { ButtonGridIcon, ButtonInfiniteGrid, ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
-import type { DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
 interface ButtonPickerProps {
-	selectButton: (selectedControl: string, selectedStep: string, selectedSet: string, mode: 'replace' | 'append') => void
+	selectButton: (
+		selectedControl: string,
+		selectedStep: string,
+		selectedSet: ActionSetId,
+		mode: 'replace' | 'append'
+	) => void
 }
 export const ButtonPicker = observer(function ButtonPicker({ selectButton }: ButtonPickerProps) {
 	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
 
-	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
+	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
 
 	const [selectedLocation, setSelectedLocation] = useState<ControlLocation | null>(null)
 	const [selectedStep, setSelectedStep] = useState<string | null>(null)
-	const [selectedSet, setSelectedSet] = useState<string | null>(null)
+	const [selectedSet, setSelectedSet] = useState<ActionSetId | null>(null)
 
 	const buttonClick = useCallback((location: ControlLocation, pressed: boolean) => {
 		if (pressed) setSelectedLocation(location)
@@ -100,7 +106,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 	const actionSetOptions = useMemo(() => {
 		switch (controlInfo?.type) {
 			case 'button': {
-				const sets = [
+				const sets: DropdownChoice[] = [
 					{
 						id: 'down',
 						label: 'Press',
@@ -124,8 +130,10 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 					)
 				}
 
-				const candidate_sets = Object.keys(selectedStepInfo?.action_sets || {}).filter((id) => !isNaN(Number(id)))
-				candidate_sets.sort((a, b) => Number(a) - Number(b))
+				const candidate_sets = Object.keys(selectedStepInfo?.action_sets || {})
+					.map((id) => Number(id))
+					.filter((id) => !isNaN(id))
+				candidate_sets.sort((a, b) => a - b)
 
 				for (const set of candidate_sets) {
 					sets.push({
@@ -156,7 +164,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 			if (actionSetOptions.find((opt) => opt.id === oldSet)) {
 				return oldSet
 			} else {
-				return actionSetOptions[0]?.id
+				return (actionSetOptions[0]?.id ?? null) as ActionSetId | null
 			}
 		})
 	}, [actionSetOptions])
