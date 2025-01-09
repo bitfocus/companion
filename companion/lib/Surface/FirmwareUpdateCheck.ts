@@ -8,7 +8,7 @@ const FIRMWARE_PAYLOAD_CACHE_MAX_TTL = 1000 * 60 * 60 * 24 // 24 hours
 
 interface PayloadCacheEntry {
 	timestamp: number
-	payload: Record<string, string>
+	payload: unknown
 }
 
 export class SurfaceFirmwareUpdateCheck {
@@ -16,7 +16,7 @@ export class SurfaceFirmwareUpdateCheck {
 
 	readonly #payloadCache = new Map<string, PayloadCacheEntry>()
 
-	readonly #payloadUpdating = new Map<string, Promise<Record<string, string> | null>>()
+	readonly #payloadUpdating = new Map<string, Promise<unknown | null>>()
 
 	/**
 	 * All the opened and active surfaces
@@ -87,7 +87,7 @@ export class SurfaceFirmwareUpdateCheck {
 	 * @param skipCache Whether to skip the cache and always fetch a new payload
 	 * @returns The payload, or null if it could not be fetched
 	 */
-	async #fetchPayloadForUrl(url: string, skipCache?: boolean): Promise<Record<string, string> | null> {
+	async #fetchPayloadForUrl(url: string, skipCache?: boolean): Promise<unknown | null> {
 		let cacheEntry = this.#payloadCache.get(url)
 
 		// Check if the cache is too old to be usable
@@ -106,12 +106,12 @@ export class SurfaceFirmwareUpdateCheck {
 		if (currentInFlight) return currentInFlight
 
 		// @ts-expect-error
-		const { promise: pendingPromise, resolve } = Promise.withResolvers<Record<string, string> | null>()
+		const { promise: pendingPromise, resolve } = Promise.withResolvers<unknown | null>()
 		this.#payloadUpdating.set(url, pendingPromise)
 
 		// Fetch new data
 		fetch(url)
-			.then((res) => res.json() as Promise<Record<string, string>>)
+			.then((res) => res.json() as Promise<unknown>)
 			.catch((e) => {
 				this.#logger.warn(`Failed to fetch firmware update payload from "${url}": ${e}`)
 				return null
@@ -157,7 +157,7 @@ export class SurfaceFirmwareUpdateCheck {
 		}, 0)
 	}
 
-	async #performForSurface(surface: SurfaceHandler, versionsInfo: Record<string, string> | null): Promise<boolean> {
+	async #performForSurface(surface: SurfaceHandler, versionsInfo: unknown | null): Promise<boolean> {
 		// Check if panel has updates
 		const firmwareUpdatesBefore = surface.panel.info.hasFirmwareUpdates
 		await surface.panel.checkForFirmwareUpdates?.(versionsInfo ?? undefined)

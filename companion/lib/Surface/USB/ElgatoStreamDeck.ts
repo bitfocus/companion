@@ -64,16 +64,29 @@ function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] 
 	return fields
 }
 
+interface FirmwareVersionInfo {
+	productIds: number[]
+	versions: Record<string, string>
+}
+
 /**
  * The latest firmware versions for the SDS at the time this was last updated
  */
-const LATEST_SDS_FIRMWARE_VERSIONS: Record<string, string> = {
-	AP2: '1.05.009',
-	ENCODER_AP2: '1.01.012',
-	ENCODER_LD: '1.01.006',
-}
-const SDS_UPDATE_TOOL_URL = 'https://bitfocus.io/?elgato-sds-firmware-updater'
-const SDS_UPDATE_VERSIONS_URL = 'https://builds.julusian.dev/builds/sds-test.json'
+const LATEST_FIRMWARE_VERSIONS: FirmwareVersionInfo[] = [
+	{
+		// Studio
+		productIds: [0x00aa],
+		versions: {
+			AP2: '1.05.009',
+			ENCODER_AP2: '1.01.012',
+			ENCODER_LD: '1.01.006',
+		},
+	},
+]
+const STREAMDECK_MODULES_SUPPORTING_UPDATES: ReadonlySet<DeviceModelId> = new Set([DeviceModelId.STUDIO])
+const STREAMDECK_UPDATE_TOOL_URL = 'https://bitfocus.io/?elgato-sds-firmware-updater'
+const STREAMDECK_UPDATE_VERSIONS_URL =
+	'https://gist.githubusercontent.com/Julusian/130d6e7f8142be5196ce4b5da9021954/raw/761859f823a74e2f52e0395ceb172a97cb43db9a/sds-update-test.json'
 
 export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
@@ -118,8 +131,8 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			location: undefined, // set later
 		}
 
-		if (this.#streamDeck.MODEL === DeviceModelId.STUDIO) {
-			this.info.firmwareUpdateVersionsUrl = SDS_UPDATE_VERSIONS_URL
+		if (STREAMDECK_MODULES_SUPPORTING_UPDATES.has(this.#streamDeck.MODEL)) {
+			this.info.firmwareUpdateVersionsUrl = STREAMDECK_UPDATE_VERSIONS_URL
 		}
 
 		const allRowValues = this.#streamDeck.CONTROLS.map((control) => control.row)
@@ -352,13 +365,17 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 		return self
 	}
 
-	async checkForFirmwareUpdates(latestVersions?: Record<string, string>): Promise<void> {
+	async checkForFirmwareUpdates(latestVersions0?: unknown): Promise<void> {
+		let latestVersions: FirmwareVersionInfo[] | undefined = latestVersions0 as FirmwareVersionInfo[]
 		// If no versions are provided, use the latest known versions for the SDS
-		if (!latestVersions && this.#streamDeck.MODEL === DeviceModelId.STUDIO)
-			latestVersions = LATEST_SDS_FIRMWARE_VERSIONS
+		if (!latestVersions) latestVersions = LATEST_FIRMWARE_VERSIONS
+
+		// This should probably be cached, but it is cheap to check
+		const deviceInfo = await this.#streamDeck.getHidDeviceInfo()
+		const latestVersionsForDevice = latestVersions.find((info) => info.productIds.includes(deviceInfo.productId))
 
 		// If no versions are provided, we can't know that there are updates
-		if (!latestVersions) {
+		if (!latestVersionsForDevice) {
 			this.info.hasFirmwareUpdates = undefined
 			return
 		}
@@ -367,7 +384,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 		const currentVersions = await this.#streamDeck.getAllFirmwareVersions()
 
-		for (const [key, targetVersion] of Object.entries(latestVersions)) {
+		for (const [key, targetVersion] of Object.entries(latestVersionsForDevice.versions)) {
 			const currentVersion = parseVersion(currentVersions[key])
 			const latestVersion = parseVersion(targetVersion)
 
@@ -380,7 +397,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 		if (hasUpdate) {
 			this.info.hasFirmwareUpdates = {
-				updaterDownloadUrl: SDS_UPDATE_TOOL_URL,
+				updaterDownloadUrl: STREAMDECK_UPDATE_TOOL_URL,
 			}
 		} else {
 			this.info.hasFirmwareUpdates = undefined

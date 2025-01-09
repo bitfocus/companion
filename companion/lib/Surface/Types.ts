@@ -48,7 +48,7 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void
 	quit(): void
-	checkForFirmwareUpdates?: (latestVersions?: Record<string, string>) => Promise<void>
+	checkForFirmwareUpdates?: (latestVersions?: unknown) => Promise<void>
 }
 export interface DrawButtonItem {
 	x: number
