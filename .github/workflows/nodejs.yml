@@ -359,7 +359,7 @@ jobs:
       - name: build & package (unsigned)
         if: ${{ runner.environment != 'self-hosted' }}
         run: |
-          yarn tsx tools/build/complete.mts win32-x64
+          yarn zx tools/build/complete.mjs win32-x64
         env:
           CI: 1
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
@@ -367,7 +367,7 @@ jobs:
       - name: build & package (signed)
         if: ${{ runner.environment == 'self-hosted' }}
         run: |
-          yarn tsx tools/build/complete.mts win32-x64
+          yarn zx tools/build/complete.mjs win32-x64
         env:
           CI: 1
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
