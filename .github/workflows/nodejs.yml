@@ -181,7 +181,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-x64:
-    runs-on: macos-12
+    runs-on: macos-13
     needs: check-types
     timeout-minutes: 60
 
@@ -250,7 +250,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-arm64:
-    runs-on: macos-12
+    runs-on: macos-13
     needs: check-types
     timeout-minutes: 60
 
