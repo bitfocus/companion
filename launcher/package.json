@@ -55,7 +55,9 @@
 		"afterPack": "fix-bundled-modules.cjs",
 		"afterSign": "notarize.cjs",
 		"win": {
-			"target": "nsis"
+			"target": "nsis",
+			"signingHashAlgorithms": ["sha256"],
+			"sign": "sign-win32.cjs"
 		},
 		"nsis": {
 			"artifactName": "companion-win64.exe",

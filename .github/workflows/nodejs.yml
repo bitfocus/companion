@@ -323,9 +323,9 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win32-x64:
-    runs-on: windows-2019
+    runs-on: ['self-hosted', 'Windows', 'codecert', 'X64']
     needs: check-types
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -352,13 +352,27 @@ jobs:
 
           yarn --immutable
           yarn update
-
-          yarn zx tools/build/complete.mjs win32-x64
         env:
           CI: 1
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: build & package (unsigned)
+        if: ${{ runner.environment != 'self-hosted' }}
+        run: |
+          yarn tsx tools/build/complete.mts win32-x64
+        env:
+          CI: 1
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: build & package (signed)
+        if: ${{ runner.environment == 'self-hosted' }}
+        run: |
+          yarn tsx tools/build/complete.mts win32-x64
+        env:
+          CI: 1
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
+          BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
 
       - name: Determine files to upload
         id: filenames
