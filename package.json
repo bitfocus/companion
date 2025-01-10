@@ -17,7 +17,7 @@
     "dev:webui": "yarn workspace @companion-app/webui dev",
     "build:ts": "yarn workspaces foreach --all run build:ts",
     "dist:webui": "yarn workspace @companion-app/webui build",
-    "dist": "zx ./tools/build/complete.mjs",
+    "dist": "tsx ./tools/build/complete.mts",
     "macdist": "run dist mac-x64",
     "macarmdist": "run dist mac-arm64",
     "windist": "run dist win-x64",
@@ -25,7 +25,7 @@
     "rpidist": "run dist linux-arm7",
     "format": "prettier --write .",
     "test": "vitest",
-    "build:writefile": "zx ./tools/build_writefile.mjs",
+    "build:writefile": "tsx ./tools/build_writefile.mts",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
   "engines": {
@@ -42,6 +42,7 @@
     "octokit": "^4.0.2",
     "open": "^10.1.0",
     "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
     "typescript": "~5.7.2",
     "vitest": "^2.1.8",
     "vitest-mock-extended": "^2.0.2",
