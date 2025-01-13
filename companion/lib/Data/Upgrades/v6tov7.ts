@@ -131,7 +131,6 @@ interface OldActionInstance {
 	children?: Record<string, OldActionInstance[] | undefined>
 }
 function fixupAction(action: OldActionInstance): Complete<ActionEntityModel> {
-	// TODO
 	return {
 		type: EntityModelType.Action,
 
