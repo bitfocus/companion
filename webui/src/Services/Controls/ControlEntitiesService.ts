@@ -7,7 +7,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { useContext, useMemo, useRef } from 'react'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { SocketContext, socketEmitPromise } from '../../util.js'
+import { SocketContext } from '../../util.js'
 
 export interface IEntityEditorService {
 	readonly listId: SomeSocketEntityLocation
@@ -63,16 +63,11 @@ export function useControlEntitiesEditorService(
 			confirmModal,
 
 			addEntity: (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => {
-				socketEmitPromise(socket, 'controls:entity:add', [
-					controlId,
-					listId,
-					ownerId,
-					connectionId,
-					entityModelType,
-					definitionId,
-				]).catch((e) => {
-					console.error('Failed to add control entity', e)
-				})
+				socket
+					.emitPromise('controls:entity:add', [controlId, listId, ownerId, connectionId, entityModelType, definitionId])
+					.catch((e) => {
+						console.error('Failed to add control entity', e)
+					})
 			},
 
 			moveCard: (
@@ -81,92 +76,75 @@ export function useControlEntitiesEditorService(
 				dropOwnerId: EntityOwner | null,
 				dropIndex: number
 			) => {
-				socketEmitPromise(socket, 'controls:entity:move', [
-					controlId,
-					dragListId,
-					dragEntityId,
-					dropOwnerId,
-					listId,
-					dropIndex,
-				]).catch((e) => {
-					console.error('Failed to reorder control entitys', e)
-				})
+				socket
+					.emitPromise('controls:entity:move', [controlId, dragListId, dragEntityId, dropOwnerId, listId, dropIndex])
+					.catch((e) => {
+						console.error('Failed to reorder control entitys', e)
+					})
 			},
 
 			setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: any) => {
 				if (!entity?.options || entity.options[key] !== val) {
-					socketEmitPromise(socket, 'controls:entity:set-option', [controlId, listId, entityId, key, val]).catch(
-						(e) => {
-							console.error('Failed to set control entity option', e)
-						}
-					)
+					socket.emitPromise('controls:entity:set-option', [controlId, listId, entityId, key, val]).catch((e) => {
+						console.error('Failed to set control entity option', e)
+					})
 				}
 			},
 
 			setConnection: (entityId: string, connectionId: string) => {
-				socketEmitPromise(socket, 'controls:entity:set-connection', [controlId, listId, entityId, connectionId]).catch(
-					(e) => {
-						console.error('Failed to set control entity connection', e)
-					}
-				)
+				socket.emitPromise('controls:entity:set-connection', [controlId, listId, entityId, connectionId]).catch((e) => {
+					console.error('Failed to set control entity connection', e)
+				})
 			},
 
 			performDelete: (entityId: string) => {
 				confirmModal.current?.show(`Delete ${entityTypeLabel}`, `Delete ${entityTypeLabel}?`, 'Delete', () => {
-					socketEmitPromise(socket, 'controls:entity:remove', [controlId, listId, entityId]).catch((e) => {
+					socket.emitPromise('controls:entity:remove', [controlId, listId, entityId]).catch((e) => {
 						console.error('Failed to remove control entity', e)
 					})
 				})
 			},
 
 			performDuplicate: (entityId: string) => {
-				socketEmitPromise(socket, 'controls:entity:duplicate', [controlId, listId, entityId]).catch((e) => {
+				socket.emitPromise('controls:entity:duplicate', [controlId, listId, entityId]).catch((e) => {
 					console.error('Failed to duplicate control entity', e)
 				})
 			},
 
 			performLearn: (entityId: string) => {
-				socketEmitPromise(socket, 'controls:entity:learn', [controlId, listId, entityId]).catch((e) => {
+				socket.emitPromise('controls:entity:learn', [controlId, listId, entityId]).catch((e) => {
 					console.error('Failed to learn control entity values', e)
 				})
 			},
 
 			setEnabled: (entityId: string, enabled: boolean) => {
-				socketEmitPromise(socket, 'controls:entity:enabled', [controlId, listId, entityId, enabled]).catch((e) => {
+				socket.emitPromise('controls:entity:enabled', [controlId, listId, entityId, enabled]).catch((e) => {
 					console.error('Failed to enable/disable entity', e)
 				})
 			},
 
 			setHeadline: (entityId: string, headline: string) => {
-				socketEmitPromise(socket, 'controls:entity:set-headline', [controlId, listId, entityId, headline]).catch(
-					(e) => {
-						console.error('Failed to set entity headline', e)
-					}
-				)
+				socket.emitPromise('controls:entity:set-headline', [controlId, listId, entityId, headline]).catch((e) => {
+					console.error('Failed to set entity headline', e)
+				})
 			},
 
 			setInverted: (entityId: string, inverted: boolean) => {
-				socketEmitPromise(socket, 'controls:entity:set-inverted', [controlId, listId, entityId, inverted]).catch(
-					(e) => {
-						console.error('Failed to set entity inverted', e)
-					}
-				)
+				socket.emitPromise('controls:entity:set-inverted', [controlId, listId, entityId, inverted]).catch((e) => {
+					console.error('Failed to set entity inverted', e)
+				})
 			},
 
 			setSelectedStyleProps: (entityId: string, keys: string[]) => {
-				socketEmitPromise(socket, 'controls:entity:set-style-selection', [controlId, listId, entityId, keys]).catch(
-					(e) => {
-						console.error('Failed to set entity style selected props', e)
-					}
-				)
+				socket.emitPromise('controls:entity:set-style-selection', [controlId, listId, entityId, keys]).catch((e) => {
+					console.error('Failed to set entity style selected props', e)
+				})
 			},
 
 			setStylePropsValue: (entityId: string, key: string, value: any) => {
-				socketEmitPromise(socket, 'controls:entity:set-style-value', [controlId, listId, entityId, key, value]).catch(
-					(e) => {
-						console.error('Failed to set entity style value', e)
-					}
-				)
+				socket.emitPromise('controls:entity:set-style-value', [controlId, listId, entityId, key, value]).catch((e) => {
+					console.error('Failed to set entity style value', e)
+				})
 			},
 		}),
 		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId), entityTypeLabel]
