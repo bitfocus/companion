@@ -25,6 +25,7 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { TriggerExecutionSource } from './TriggerExecutionSource.js'
 
 /**
  * Class for an interval trigger.
@@ -201,16 +202,16 @@ export class ControlTrigger
 	/**
 	 * Execute the actions of this trigger
 	 * @param nowTime
-	 * @param isTest Whether this is a 'test' execution from the ui and should skip condition checks
+	 * @param source The source of this execution
 	 */
-	executeActions(nowTime: number, isTest = false): void {
-		if (isTest) {
+	executeActions(nowTime: number, source: TriggerExecutionSource): void {
+		if (source === TriggerExecutionSource.Test) {
 			this.logger.debug(`Test Execute ${this.options.name}`)
 		} else {
 			if (!this.options.enabled) return
 
 			// Ensure the condition passes when it is not part of the event
-			if (!this.events.some((event) => event.type.startsWith('condition_'))) {
+			if (source !== TriggerExecutionSource.ConditionChange) {
 				const conditionPasses = this.entities.checkConditionValue()
 				if (!conditionPasses) return
 			}
@@ -595,7 +596,7 @@ export class ControlTrigger
 						(runOnFalse && !newStatus && this.#conditionCheckLastValue))
 				) {
 					setImmediate(() => {
-						this.executeActions(Date.now(), false)
+						this.executeActions(Date.now(), TriggerExecutionSource.ConditionChange)
 					})
 				}
 				this.#conditionCheckLastValue = newStatus

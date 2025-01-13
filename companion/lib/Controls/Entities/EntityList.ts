@@ -93,14 +93,13 @@ export class ControlEntityList {
 	}
 
 	/**
-	 * Inform the instance of any removed entities
+	 * Inform the instance of any removed/disabled entities
 	 * @access public
 	 */
 	cleanup() {
 		for (const entity of this.#entities) {
 			entity.cleanup()
 		}
-		this.#entities = []
 	}
 
 	/**

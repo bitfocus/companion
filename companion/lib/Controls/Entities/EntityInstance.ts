@@ -167,7 +167,7 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Inform the instance of a removed entity
+	 * Inform the instance of a removed/disabled entity
 	 */
 	cleanup() {
 		// Inform relevant module

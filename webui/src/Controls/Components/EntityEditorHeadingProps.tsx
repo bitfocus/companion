@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { usePanelCollapseHelperContext } from '../../Helpers/CollapseHelper.js'
 import { stringifyEntityOwnerId } from '../Util.js'
+import { observer } from 'mobx-react-lite'
 
 interface EntityEditorHeadingProps {
 	heading: JSX.Element | string | null
@@ -13,7 +14,12 @@ interface EntityEditorHeadingProps {
 	headingActions?: JSX.Element[]
 }
 
-export function EntityEditorHeading({ heading, ownerId, childEntityIds, headingActions }: EntityEditorHeadingProps) {
+export const EntityEditorHeading = observer(function EntityEditorHeading({
+	heading,
+	ownerId,
+	childEntityIds,
+	headingActions,
+}: EntityEditorHeadingProps) {
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
 	const ownerIdString = stringifyEntityOwnerId(ownerId)
@@ -47,4 +53,4 @@ export function EntityEditorHeading({ heading, ownerId, childEntityIds, headingA
 			</CButtonGroup>
 		</h5>
 	)
-}
+})

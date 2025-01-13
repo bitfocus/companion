@@ -84,6 +84,8 @@ export class ActionRunner extends CoreBase {
 					})
 				}
 
+				if (extras.abortDelayed.aborted) break
+
 				if (actions.length > 0) {
 					// Run all the actions in parallel
 					await Promise.all(

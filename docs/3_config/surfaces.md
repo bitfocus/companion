@@ -8,6 +8,9 @@ Here you can see all your current surfaces, both local and connected over satell
 
 Clicking the **Settings** button next to a device lets you change some things about how the Stream Deck operates:
 
+**Note** The exact list of settings varies depending on the type of the surface
+
+- **Surface Group**: Whether to put this surface into a [Surface Group](#3_config/surfaces/groups.md)
 - **Use Last Page At Startup**: Whether the surface should remember the last page it was on at startup, or if it should use the startup page slider bwloe
 - **Startup Page**: If 'Use Last Page At Startup' is not enabled, the page the StreamDeck will show at startup
 - **X Offset in grid**: If the device is smaller than the 8x4 grid, you can adjust the position of the surface within the grid
