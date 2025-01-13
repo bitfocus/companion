@@ -108,7 +108,7 @@ interface InlineActionListProps {
 	parentId: string | null
 	panelCollapseHelper: PanelCollapseHelper
 }
-function InlineActionList({
+const InlineActionList = observer(function InlineActionList({
 	controlId,
 	heading,
 	headingActions,
@@ -172,7 +172,7 @@ function InlineActionList({
 			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
 		</>
 	)
-}
+})
 
 interface AddActionsPanelProps {
 	addPlaceholder: string

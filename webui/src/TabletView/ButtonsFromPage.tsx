@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useMemo } from 'react'
-import { SocketContext, socketEmitPromise } from '../util.js'
+import { SocketContext } from '../util.js'
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { useInView } from 'react-intersection-observer'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
@@ -30,9 +30,9 @@ export function ButtonsFromPage({
 
 	const buttonClick = useCallback(
 		(location: ControlLocation, pressed: boolean) => {
-			socketEmitPromise(socket, 'controls:hot-press', [location, pressed, 'tablet']).catch((e) =>
-				console.error(`Hot press failed: ${e}`)
-			)
+			socket
+				.emitPromise('controls:hot-press', [location, pressed, 'tablet'])
+				.catch((e) => console.error(`Hot press failed: ${e}`))
 		},
 		[socket]
 	)

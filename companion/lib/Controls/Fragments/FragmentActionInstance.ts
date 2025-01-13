@@ -148,7 +148,7 @@ export class FragmentActionInstance {
 	}
 
 	/**
-	 * Inform the instance of a removed action
+	 * Inform the instance of a removed/disabled action
 	 */
 	cleanup() {
 		// Inform relevant module

@@ -82,14 +82,13 @@ export class FragmentActionList {
 	}
 
 	/**
-	 * Inform the instance of any removed actions
+	 * Inform the instance of any removed/disabled actions
 	 * @access public
 	 */
 	cleanup() {
 		for (const action of this.#actions) {
 			action.cleanup()
 		}
-		this.#actions = []
 	}
 
 	/**

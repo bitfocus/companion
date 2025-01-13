@@ -24,6 +24,7 @@ import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
+import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -825,7 +826,7 @@ export class ControlsController extends CoreBase {
 
 			const control = this.getControl(controlId)
 			if (control && control instanceof ControlTrigger) {
-				control.executeActions(Date.now(), true)
+				control.executeActions(Date.now(), TriggerExecutionSource.Test)
 			}
 
 			return false

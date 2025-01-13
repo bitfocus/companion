@@ -21,7 +21,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import io from 'socket.io-client'
 
 import App from './App.js'
-import { SocketContext } from './util.js'
+import { SocketContext, wrapSocket } from './util.js'
 
 // import i18n from 'i18next'
 // import Backend from 'i18next-http-backend'
@@ -47,6 +47,7 @@ import { ConnectionDebug } from './ConnectionDebug.js'
 // 	})
 
 const socket = io()
+const socketWrapped = wrapSocket(socket)
 if (window.location.hash && window.location.hash.includes('debug_socket')) {
 	socket.onAny(function (name, ...data) {
 		console.log('received event', name, data)
@@ -56,7 +57,7 @@ if (window.location.hash && window.location.hash.includes('debug_socket')) {
 const root = createRoot(document.getElementById('root')!)
 root.render(
 	<React.StrictMode>
-		<SocketContext.Provider value={socket}>
+		<SocketContext.Provider value={socketWrapped}>
 			<BrowserRouter>
 				<Routes>
 					<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />

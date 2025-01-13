@@ -3,7 +3,7 @@ import { faCalculator, faGift, faLayerGroup, faVideoCamera } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { ConnectionPresets } from './Presets/Presets.js'
-import { MyErrorBoundary, socketEmitPromise } from '../util.js'
+import { MyErrorBoundary } from '../util.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
@@ -83,9 +83,9 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const doButtonGridClick = useCallback(
 		(location: ControlLocation, isDown: boolean) => {
 			if (hotPress) {
-				socketEmitPromise(socket, 'controls:hot-press', [location, isDown, 'grid']).catch((e) =>
-					console.error(`Hot press failed: ${e}`)
-				)
+				socket
+					.emitPromise('controls:hot-press', [location, isDown, 'grid'])
+					.catch((e) => console.error(`Hot press failed: ${e}`))
 			} else if (isDown) {
 				setActiveTab('edit')
 				console.log('set selected', location)
@@ -210,7 +210,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								socketEmitPromise(socket, 'controls:reset', [selectedButton]).catch((e) => {
+								socket.emitPromise('controls:reset', [selectedButton]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							}
@@ -228,12 +228,12 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[1] === 'copy') {
-							socketEmitPromise(socket, 'controls:copy', [copyFromButton[0], selectedButton]).catch((e) => {
+							socket.emitPromise('controls:copy', [copyFromButton[0], selectedButton]).catch((e) => {
 								console.error(`copy failed: ${e}`)
 							})
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[1] === 'cut') {
-							socketEmitPromise(socket, 'controls:move', [copyFromButton[0], selectedButton]).catch((e) => {
+							socket.emitPromise('controls:move', [copyFromButton[0], selectedButton]).catch((e) => {
 								console.error(`move failed: ${e}`)
 							})
 							setCopyFromButton(null)

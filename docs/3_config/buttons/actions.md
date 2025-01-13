@@ -2,8 +2,6 @@ These actions define the behaviour of the button when it is pressed or depressed
 
 Multiple actions, even those from multiple modules, can be linked to a button. Most actions have options to let you customize how it performs.
 
-**Note** Actions are executed in parallel. Companion does not know when the actions finish executing. Therefore when you have something that requires actions to be sent in the correct order, use small relative delays of 10-100ms on each action in order for them to be executed sequentially. The same often applies when many actions (often around five or more) are sent at once to a single device. Add the same kind of delay on every 3-5 action.
-
 ![Button actions](images/button-actions.png?raw=true 'Button Actions')
 
 To add an action to a button, you can either search in the box below, or click the folder button to bring up a more detailed view of all the actions available.
@@ -17,23 +15,23 @@ The **Press actions** will be performed when the button is pressed or triggered.
 The **Release actions** are performed when the button is released.
 
 It is also possible to add some timed groups, to allow for long presses. You can add one with the **Add duration group** button.  
-Once added you can edit the time of that group and whether it executed upon release or while being held.  
+Once added you can edit the time of that group and whether it executed upon release or while being held.
 
 When there is a duration group added, the **Release actions** becomes **Short release actions**, and will only be executed when released before the first duration group time is reached.
 
+Starting in Companion 3.5, the delays have been replaced with a new **internal: Wait** Action. This will delay all actions that follow it in the list.  
+Actions at the root level get executed in the **Concurrent** mode described below.
 
-Within each group of actions, each action can be delayed to run a certain number of milliseconds after the button is triggered. Delays can be configured to be _Absolute_ (default) or _Relative_, by toggling the checkbox in the button styling section.
+To allow for more complex setups and customisability, there is also a new **internal: Action Group** action.  
+This action acts as a group that can contain other actions, including other **Action Group**
 
-**Absolute Delays**
+These groups have a few modes of execution
 
-All actions run a certain number of milliseconds from the start of the button press. Actions without a delay start immediately. This is the default behavior.
+- **Inherit** follows the mode of the parent group
+- **Concurrent** this is equivalent to previous releases of Companion, with **Absolute Delays** enabled.  
+  In this mode, the actions get executed in parallel, broken up between any **internal: Wait** actions.
+- **Sequeuntial** In this mode, the actions get executed in order, waiting for the previous one to complete execution before starting the next.
+  Not every module implementats actions in a way that lets Companion know that execution has completed, but many do.  
+  This allows for programming complex sequeunces that must be done in a particular order without relying on small delays
 
-![Absolute delays](images/delay-absolute.jpg?raw=true 'Absolute delays')
-
-**Relative Delays**
-
-Each action runs a certain number of milliseconds after the previous action _started_.
-
-![Relative delays](images/delay-relative.jpg?raw=true 'Relative delays')
-
-The order the actions are listed in matters when using relative delays. Actions can be reordered by grabbing the sort icon next to each action and dragging it up or down.
+![Action Group Sequential](images/action-group-sequential.png?raw=true 'Action Group Sequential')

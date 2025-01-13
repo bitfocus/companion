@@ -10,7 +10,7 @@ import {
 	CFormLabel,
 	CFormSwitch,
 } from '@coreui/react'
-import { LoadingRetryOrError, socketEmitPromise, PreventDefaultHandler, useComputed } from '../util.js'
+import { LoadingRetryOrError, PreventDefaultHandler, useComputed } from '../util.js'
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -98,7 +98,8 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 			setGroupConfig(null)
 
 			if (surfaceId) {
-				socketEmitPromise(socket, 'surfaces:config-get', [surfaceId])
+				socket
+					.emitPromise('surfaces:config-get', [surfaceId])
 					.then((config) => {
 						setSurfaceConfig(config)
 					})
@@ -108,7 +109,8 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 					})
 			}
 			if (groupId) {
-				socketEmitPromise(socket, 'surfaces:group-config-get', [groupId])
+				socket
+					.emitPromise('surfaces:group-config-get', [groupId])
 					.then((config) => {
 						setGroupConfig(config)
 					})
@@ -167,7 +169,8 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 							[key]: value,
 						}
 
-						socketEmitPromise(socket, 'surfaces:config-set', [surfaceId, newConfig])
+						socket
+							.emitPromise('surfaces:config-set', [surfaceId, newConfig])
 							.then((newConfig) => {
 								if (typeof newConfig === 'string') {
 									console.log('Config update failed', newConfig)
@@ -188,7 +191,8 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 			(key: string, value: any) => {
 				console.log('update group', key, value)
 				if (groupId) {
-					socketEmitPromise(socket, 'surfaces:group-config-set', [groupId, key, value])
+					socket
+						.emitPromise('surfaces:group-config-set', [groupId, key, value])
 						.then((newConfig) => {
 							if (typeof newConfig === 'string') {
 								console.log('group config update failed', newConfig)
@@ -216,7 +220,7 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 			(groupId0: string) => {
 				if (!surfaceId) return
 				const groupId = !groupId0 || groupId0 === 'null' ? null : groupId0
-				socketEmitPromise(socket, 'surfaces:add-to-group', [groupId, surfaceId]).catch((e) => {
+				socket.emitPromise('surfaces:add-to-group', [groupId, surfaceId]).catch((e) => {
 					console.log('Config update failed', e)
 				})
 			},

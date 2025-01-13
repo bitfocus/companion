@@ -1,7 +1,6 @@
 import { CButton, CButtonGroup, CFormCheck } from '@coreui/react'
 import React, { ChangeEvent, useCallback, useEffect, useState, useContext } from 'react'
 import { ImportRemap } from './Page.js'
-import { socketEmitPromise } from '../../util.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
@@ -54,7 +53,8 @@ export function ImportTriggersTab({ snapshot, connectionRemap, setConnectionRema
 
 			console.log('import', selectedTriggers, doReplace, e.currentTarget.getAttribute('data-replace'))
 
-			socketEmitPromise(socket, 'loadsave:import-triggers', [selectedTriggers, connectionRemap, doReplace])
+			socket
+				.emitPromise('loadsave:import-triggers', [selectedTriggers, connectionRemap, doReplace])
 				.then((res) => {
 					notifier.current?.show(`Import successful`, `Triggers were imported successfully`, 10000)
 					console.log('remap response', res)

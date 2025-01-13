@@ -2,7 +2,7 @@ import { CModalHeader, CFormInput, CModalBody, CModalFooter, CButton, CButtonGro
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { SocketContext, socketEmitPromise } from '../util.js'
+import { SocketContext } from '../util.js'
 import { CModalExt } from '../Components/CModalExt.js'
 
 interface AddPagesModalProps {
@@ -61,7 +61,7 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 	)
 
 	const doSave = useCallback(() => {
-		socketEmitPromise(socket, 'pages:insert-pages', [state.beforePage, state.names]).catch((e) => {
+		socket.emitPromise('pages:insert-pages', [state.beforePage, state.names]).catch((e) => {
 			console.error('Page insert failed', e)
 		})
 		setState((oldPage) => {

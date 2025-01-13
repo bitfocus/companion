@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
 import chokidar from 'chokidar'
-import { $ } from 'zx/core'
+import { $, usePowerShell, argv } from 'zx'
 import path from 'path'
 import fs from 'fs'
 import debounceFn from 'debounce-fn'
 import { fileURLToPath } from 'url'
 import concurrently from 'concurrently'
 import dotenv from 'dotenv'
-import { fetchNodejs } from './fetch_nodejs.mjs'
-import { determinePlatformInfo } from './build/util.mjs'
+import { fetchNodejs } from './fetch_nodejs.mts'
+import { determinePlatformInfo } from './build/util.mts'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
 
-await $`zx ../tools/build_writefile.mjs`
+await $`tsx ../tools/build_writefile.mts`
 
 dotenv.config({
 	path: path.resolve(process.cwd(), '..', '.env'),
@@ -26,7 +26,7 @@ let node
 const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
 const devModulesPath = rawDevModulesPath ? path.resolve(rawDevModulesPath) : undefined
 
-if (rawDevModulesPath) {
+if (devModulesPath) {
 	const argvIndex = process.argv.indexOf('--extra-module-path')
 	if (argvIndex === -1) {
 		process.argv.push('--extra-module-path', devModulesPath)
@@ -102,39 +102,41 @@ chokidar
 		restart()
 	})
 
-chokidar
-	.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
-		ignoreInitial: true,
-		cwd: devModulesPath,
-		ignored: ['**/node_modules/**'],
-	})
-	.on('all', (event, filename) => {
-		const moduleDirName = filename.split(path.sep)[0]
-		// Module changed
+if (devModulesPath) {
+	chokidar
+		.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
+			ignoreInitial: true,
+			cwd: devModulesPath,
+			ignored: ['**/node_modules/**'],
+		})
+		.on('all', (event, filename) => {
+			const moduleDirName = filename.split(path.sep)[0]
+			// Module changed
 
-		let fn = cachedDebounces[moduleDirName]
-		if (!fn) {
-			fn = debounceFn(
-				() => {
-					console.log('Sending reload for module:', moduleDirName)
-					if (node) {
-						node.send({
-							messageType: 'reload-extra-module',
-							fullpath: path.join(devModulesPath, moduleDirName),
-						})
+			let fn = cachedDebounces[moduleDirName]
+			if (!fn) {
+				fn = debounceFn(
+					() => {
+						console.log('Sending reload for module:', moduleDirName)
+						if (node) {
+							node.send({
+								messageType: 'reload-extra-module',
+								fullpath: path.join(devModulesPath, moduleDirName),
+							})
+						}
+					},
+					{
+						after: true,
+						before: false,
+						wait: 1000,
 					}
-				},
-				{
-					after: true,
-					before: false,
-					wait: 1000,
-				}
-			)
-			cachedDebounces[moduleDirName] = fn
-		}
+				)
+				cachedDebounces[moduleDirName] = fn
+			}
 
-		fn()
-	})
+			fn()
+		})
+}
 
 async function start() {
 	node = $.spawn('node', ['dist/main.js', ...process.argv.slice(3)], {

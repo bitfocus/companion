@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { socketEmitPromise, SocketContext } from './util.js'
+import { SocketContext } from './util.js'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
@@ -79,7 +79,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 
 	useEffect(() => {
 		if (socket) {
-			socketEmitPromise(socket, 'event-definitions:get', [])
+			socket
+				.emitPromise('event-definitions:get', [])
 				.then((definitions) => {
 					setLoadedEventDefinitions(true)
 					rootStore.eventDefinitions.setDefinitions(definitions)

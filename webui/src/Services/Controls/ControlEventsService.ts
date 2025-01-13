@@ -1,5 +1,5 @@
 import { useContext, useMemo, useRef } from 'react'
-import { SocketContext, socketEmitPromise } from '../../util.js'
+import { SocketContext } from '../../util.js'
 import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import type { DropdownChoiceId } from '@companion-module/base'
@@ -32,19 +32,19 @@ export function useControlEventsEditorService(
 	return useMemo(
 		() => ({
 			addEvent: (eventType: DropdownChoiceId) => {
-				socketEmitPromise(socket, 'controls:event:add', [controlId, String(eventType)]).catch((e) => {
+				socket.emitPromise('controls:event:add', [controlId, String(eventType)]).catch((e) => {
 					console.error('Failed to add trigger event', e)
 				})
 			},
 			moveCard: (dragIndex: number, hoverIndex: number) => {
-				socketEmitPromise(socket, 'controls:event:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
+				socket.emitPromise('controls:event:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
 					console.error(`Move failed: ${e}`)
 				})
 			},
 
 			setValue: (eventId: string, event: EventInstance | undefined, key: string, val: any) => {
 				if (!event?.options || event.options[key] !== val) {
-					socketEmitPromise(socket, 'controls:event:set-option', [controlId, eventId, key, val]).catch((e) => {
+					socket.emitPromise('controls:event:set-option', [controlId, eventId, key, val]).catch((e) => {
 						console.error(`Set-option failed: ${e}`)
 					})
 				}
@@ -52,26 +52,26 @@ export function useControlEventsEditorService(
 
 			performDelete: (eventId: string) => {
 				confirmModal.current?.show('Delete event', 'Delete event?', 'Delete', () => {
-					socketEmitPromise(socket, 'controls:event:remove', [controlId, eventId]).catch((e) => {
+					socket.emitPromise('controls:event:remove', [controlId, eventId]).catch((e) => {
 						console.error(`Failed to delete event: ${e}`)
 					})
 				})
 			},
 
 			performDuplicate: (eventId: string) => {
-				socketEmitPromise(socket, 'controls:event:duplicate', [controlId, eventId]).catch((e) => {
+				socket.emitPromise('controls:event:duplicate', [controlId, eventId]).catch((e) => {
 					console.error(`Failed to duplicate feeeventdback: ${e}`)
 				})
 			},
 
 			setEnabled: (eventId: string, enabled: boolean) => {
-				socketEmitPromise(socket, 'controls:event:enabled', [controlId, eventId, enabled]).catch((e) => {
+				socket.emitPromise('controls:event:enabled', [controlId, eventId, enabled]).catch((e) => {
 					console.error('Failed to enable/disable event', e)
 				})
 			},
 
 			setHeadline: (eventId: string, headline: string) => {
-				socketEmitPromise(socket, 'controls:event:set-headline', [controlId, eventId, headline]).catch((e) => {
+				socket.emitPromise('controls:event:set-headline', [controlId, eventId, headline]).catch((e) => {
 					console.error('Failed to set event headline', e)
 				})
 			},
