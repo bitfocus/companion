@@ -15,7 +15,7 @@
  *
  */
 
-const FILE_VERSION = 6
+const FILE_VERSION = 7
 
 import os from 'os'
 import { upgradeImport } from '../Data/Upgrade.js'

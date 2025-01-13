@@ -7,8 +7,7 @@ export interface TriggerModel {
 	options: TriggerOptions
 
 	actions: SomeEntityModel[]
-	// action_sets: ActionSetsModel // nocommit migrate
-	condition: SomeEntityModel[] // nocmmit migrate
+	condition: SomeEntityModel[]
 	events: EventInstance[]
 }
 

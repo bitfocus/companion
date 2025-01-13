@@ -178,7 +178,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 
 	const definitionName = entityDefinition
 		? `${connectionLabel}: ${entityDefinition.label}`
-		: `${connectionLabel}: ${entity.type} (undefined)`
+		: `${connectionLabel}: ${entity.definitionId} (undefined)`
 
 	const canSetHeadline = !!entityService.setHeadline
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!entity.headline)
