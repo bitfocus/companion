@@ -82,36 +82,51 @@ export const ActionTree: SomeEntityModel[] = [
 	},
 ]
 
-export const ActionTreeEntityDefinitions: ClientEntityDefinition[] = [
-	{
+export function ActionTreeEntityDefinitions(
+	entityType: EntityModelType,
+	connectionId: string,
+	definitionId: string
+): ClientEntityDefinition | undefined {
+	if (entityType !== EntityModelType.Action) return undefined
+
+	if (connectionId === 'internal' && definitionId === 'action-with-children') {
+		return {
+			entityType: EntityModelType.Action,
+			supportsChildGroups: [
+				{
+					type: EntityModelType.Action,
+					groupId: 'group1',
+					entityTypeLabel: 'Action',
+					label: 'Action',
+				},
+				{
+					type: EntityModelType.Feedback,
+					groupId: 'group2',
+					entityTypeLabel: 'Feedback',
+					label: 'Feedback',
+				},
+			],
+		} as Partial<ClientEntityDefinition> as any
+	}
+	if (connectionId === 'internal' && definitionId === 'def01') {
+		return {
+			entityType: EntityModelType.Action,
+			supportsChildGroups: [
+				{
+					type: EntityModelType.Action,
+					groupId: 'default',
+					entityTypeLabel: 'Action',
+					label: 'Action',
+				},
+			],
+		} as Partial<ClientEntityDefinition> as any
+	}
+
+	// Fallback to a valid action
+	return {
 		entityType: EntityModelType.Action,
-		supportsChildGroups: [
-			{
-				type: EntityModelType.Action,
-				groupId: 'group1',
-				entityTypeLabel: 'Action',
-				label: 'Action',
-			},
-			{
-				type: EntityModelType.Feedback,
-				groupId: 'group2',
-				entityTypeLabel: 'Feedback',
-				label: 'Feedback',
-			},
-		],
-	} as Partial<ClientEntityDefinition> as any,
-	{
-		entityType: EntityModelType.Action,
-		supportsChildGroups: [
-			{
-				type: EntityModelType.Action,
-				groupId: 'default',
-				entityTypeLabel: 'Action',
-				label: 'Action',
-			},
-		],
-	} as Partial<ClientEntityDefinition> as any,
-]
+	} as Partial<ClientEntityDefinition> as any
+}
 
 export const FeedbackTree: SomeEntityModel[] = [
 	{

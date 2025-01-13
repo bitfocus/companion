@@ -125,9 +125,7 @@ describe('loadStorage', () => {
 	test('actions tree with definition', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
 
@@ -226,9 +224,7 @@ describe('loadStorage', () => {
 	test('ids when not cloned', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
 		list.loadStorage(cloneDeep(inputModels), true, false)
@@ -243,9 +239,7 @@ describe('loadStorage', () => {
 	test('ids when cloned', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
 		list.loadStorage(cloneDeep(inputModels), true, true)
@@ -265,9 +259,7 @@ describe('loadStorage', () => {
 	test('subscribe when enabled', () => {
 		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
 		list.loadStorage(cloneDeep(inputModels), false, false)
@@ -280,9 +272,7 @@ describe('loadStorage', () => {
 test('cleanup entities', () => {
 	const { list, getEntityDefinition, connectionEntityDelete, internalEntityDelete } = createList('test01')
 
-	for (const def of ActionTreeEntityDefinitions) {
-		getEntityDefinition.mockReturnValueOnce(def)
-	}
+	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 	const inputModels = ActionTree
 
@@ -300,9 +290,7 @@ test('cleanup entities', () => {
 describe('subscribe entities', () => {
 	const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
 
-	for (const def of ActionTreeEntityDefinitions) {
-		getEntityDefinition.mockReturnValueOnce(def)
-	}
+	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 	list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -369,9 +357,7 @@ describe('subscribe entities', () => {
 describe('findById', () => {
 	const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
 
-	for (const def of ActionTreeEntityDefinitions) {
-		getEntityDefinition.mockReturnValueOnce(def)
-	}
+	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 	list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -396,9 +382,7 @@ describe('findById', () => {
 describe('findParentAndIndex', () => {
 	const { list, getEntityDefinition } = createList('test01')
 
-	for (const def of ActionTreeEntityDefinitions) {
-		getEntityDefinition.mockReturnValueOnce(def)
-	}
+	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 	list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -766,9 +750,7 @@ describe('removeEntity', () => {
 	test('remove from root', () => {
 		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
@@ -792,9 +774,7 @@ describe('removeEntity', () => {
 	test('remove from root with children', () => {
 		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
@@ -817,9 +797,7 @@ describe('removeEntity', () => {
 	test('remove deep', () => {
 		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
@@ -851,9 +829,7 @@ describe('popEntity', () => {
 	test('pop first', () => {
 		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
@@ -883,9 +859,7 @@ describe('popEntity', () => {
 	test('pop negative', () => {
 		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
@@ -908,9 +882,7 @@ describe('popEntity', () => {
 	test('after end', () => {
 		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
@@ -933,9 +905,7 @@ describe('popEntity', () => {
 	test('with children', () => {
 		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
@@ -1046,8 +1016,6 @@ describe('pushEntity', () => {
 
 // canAcceptEntity is tested as part of addEntity
 
-// TODO - duplicateEntity
-
 describe('duplicateEntity', () => {
 	test('duplicate missing', () => {
 		const { list, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
@@ -1089,15 +1057,42 @@ describe('duplicateEntity', () => {
 		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01')
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
 	})
+
+	test('duplicate deep', () => {
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		list.loadStorage(cloneDeep(ActionTree), true, false)
+
+		// Starts with correct length
+		expect(list.getAllEntities()).toHaveLength(6)
+
+		const newEntity = list.duplicateEntity('int1')
+		expect(newEntity).not.toBeUndefined()
+
+		// Check ids after push
+		const afterIds = list.getAllEntities().map((e) => e.id)
+		expect(afterIds).toHaveLength(8)
+		expect(afterIds[3]).toBe('int1')
+		expect(afterIds[5]).toBe(newEntity!.id)
+
+		const newEntityChild = newEntity?.getAllChildren()[0]
+		expect(newEntityChild).toBeTruthy()
+		expect(afterIds[6]).toBe(newEntityChild!.id)
+
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild!.asEntityModel(), 'test01')
+		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01')
+	})
 })
 
 describe('forgetForConnection', () => {
 	test('cleanup nothing', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1113,9 +1108,7 @@ describe('forgetForConnection', () => {
 	test('remove from root', () => {
 		const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1132,9 +1125,7 @@ describe('forgetForConnection', () => {
 	test('remove deep', () => {
 		const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1153,9 +1144,7 @@ describe('verifyConnectionIds', () => {
 	test('cleanup nothing', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1172,9 +1161,7 @@ describe('verifyConnectionIds', () => {
 	test('remove from root', () => {
 		const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1193,9 +1180,7 @@ describe('verifyConnectionIds', () => {
 	test('remove deep', () => {
 		const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1444,9 +1429,7 @@ describe('updateFeedbackValues', () => {
 	test('no values', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1459,9 +1442,7 @@ describe('updateFeedbackValues', () => {
 	test('try set value for action', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1483,9 +1464,7 @@ describe('updateFeedbackValues', () => {
 	test('set value for nested feedback', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1507,9 +1486,7 @@ describe('updateFeedbackValues', () => {
 	test('set value unchanged', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1539,9 +1516,7 @@ describe('getAllEnabledConnectionIds', () => {
 	test('default', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		list.loadStorage(cloneDeep(ActionTree), true, false)
 
@@ -1558,9 +1533,7 @@ describe('getAllEnabledConnectionIds', () => {
 	test('all disabled', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		for (const def of ActionTreeEntityDefinitions) {
-			getEntityDefinition.mockReturnValueOnce(def)
-		}
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const actions = cloneDeep(ActionTree)
 		for (const entity of actions) {

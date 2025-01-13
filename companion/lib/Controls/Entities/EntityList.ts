@@ -51,7 +51,7 @@ export class ControlEntityList {
 	 * Recursively get all the entities
 	 */
 	getAllEntities(): ControlEntityInstance[] {
-		return [...this.#entities, ...this.#entities.flatMap((entity) => entity.getAllChildren())]
+		return this.#entities.flatMap((e) => [e, ...e.getAllChildren()])
 	}
 
 	/**
