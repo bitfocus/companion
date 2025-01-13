@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, socketEmitPromise } from '../util.js'
+import { LoadingRetryOrError } from '../util.js'
 import { CRow, CCol, CButton } from '@coreui/react'
 import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
@@ -123,7 +123,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 			return
 		}
 
-		socketEmitPromise(socket, 'connections:set-config', [connectionId, newLabel, connectionConfig])
+		socket
+			.emitPromise('connections:set-config', [connectionId, newLabel, connectionConfig])
 			.then((err) => {
 				if (err) {
 					if (err === 'invalid label') {
@@ -145,7 +146,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	useEffect(() => {
 		if (connectionId) {
-			socketEmitPromise(socket, 'connections:edit', [connectionId])
+			socket
+				.emitPromise('connections:edit', [connectionId])
 				.then((res) => {
 					if (res) {
 						if (res.fields) {

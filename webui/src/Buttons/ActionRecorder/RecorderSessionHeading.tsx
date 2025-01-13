@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, ChangeEvent, RefObject, useMemo } from 'react'
-import { socketEmitPromise, LoadingRetryOrError, PreventDefaultHandler, useComputed } from '../../util.js'
+import { LoadingRetryOrError, PreventDefaultHandler, useComputed } from '../../util.js'
 import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch, CCallout } from '@coreui/react'
 import { DropdownInputField } from '../../Components/index.js'
 import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
@@ -28,7 +28,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	const { connections, socket } = useContext(RootAppStoreContext)
 
 	const doClearActions = useCallback(() => {
-		socketEmitPromise(socket, 'action-recorder:session:discard-actions', [sessionId]).catch((e) => {
+		socket.emitPromise('action-recorder:session:discard-actions', [sessionId]).catch((e) => {
 			console.error(e)
 		})
 	}, [socket, sessionId])
@@ -40,7 +40,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 				'Are you sure you wish to discard the current session?',
 				'Discard',
 				() => {
-					socketEmitPromise(socket, 'action-recorder:session:abort', [sessionId]).catch((e) => {
+					socket.emitPromise('action-recorder:session:abort', [sessionId]).catch((e) => {
 						console.error(e)
 					})
 				}
@@ -50,12 +50,11 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 
 	const changeRecording = useCallback(
 		(e: ChangeEvent<HTMLInputElement> | boolean) => {
-			socketEmitPromise(socket, 'action-recorder:session:recording', [
-				sessionId,
-				typeof e === 'boolean' ? e : e.target.checked,
-			]).catch((e) => {
-				console.error(e)
-			})
+			socket
+				.emitPromise('action-recorder:session:recording', [sessionId, typeof e === 'boolean' ? e : e.target.checked])
+				.catch((e) => {
+					console.error(e)
+				})
 		},
 		[socket, sessionId]
 	)
@@ -69,7 +68,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	const changeConnectionIds = useCallback(
 		(ids: DropdownChoiceId[]) => {
 			const connectionIds = ids.map((id) => String(id))
-			socketEmitPromise(socket, 'action-recorder:session:set-connections', [sessionId, connectionIds]).catch((e) => {
+			socket.emitPromise('action-recorder:session:set-connections', [sessionId, connectionIds]).catch((e) => {
 				console.error(e)
 			})
 		},

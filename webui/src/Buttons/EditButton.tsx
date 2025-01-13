@@ -44,9 +44,9 @@ import React, {
 import { nanoid } from 'nanoid'
 import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { KeyReceiver, LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary } from '../util.js'
+import { KeyReceiver, LoadingRetryOrError, SocketContext, MyErrorBoundary } from '../util.js'
 import { ControlEntitiesEditor } from '../Controls/EntitiesEditor.js'
-import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
+import jsonPatch from 'fast-json-patch'
 import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig.js'
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
 import { cloneDeep } from 'lodash-es'
@@ -98,7 +98,8 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 		setPreviewImage(null)
 		setRuntimeProps(null)
 
-		socketEmitPromise(socket, 'controls:subscribe', [controlId])
+		socket
+			.emitPromise('controls:subscribe', [controlId])
 			.then((config) => {
 				console.log(config)
 				setConfig((config as any)?.config ?? false)
@@ -111,7 +112,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 				setConfigError('Failed to load control config')
 			})
 
-		const patchConfig = (patch: JsonPatchOperation[] | false) => {
+		const unsubConfig = socket.on(`controls:config-${controlId}`, (patch) => {
 			setConfig((oldConfig) => {
 				if (!oldConfig) return oldConfig
 				if (patch === false) {
@@ -120,9 +121,8 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 					return jsonPatch.applyPatch(cloneDeep(oldConfig), patch).newDocument
 				}
 			})
-		}
-
-		const patchRuntimeProps = (patch: JsonPatchOperation[] | false) => {
+		})
+		const unsubRuntimeProps = socket.on(`controls:runtime-${controlId}`, (patch) => {
 			setRuntimeProps((oldProps) => {
 				if (!oldProps) return oldProps
 				if (patch === false) {
@@ -131,22 +131,18 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 					return jsonPatch.applyPatch(cloneDeep(oldProps), patch).newDocument
 				}
 			})
-		}
+		})
 
-		socket.on(`controls:config-${controlId}`, patchConfig)
-		socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
-
-		const updateImage = (img: string | null) => {
+		const unsubPreview = socket.on(`controls:preview-${controlId}`, (img) => {
 			setPreviewImage(img)
-		}
-		socket.on(`controls:preview-${controlId}`, updateImage)
+		})
 
 		return () => {
-			socket.off(`controls:config-${controlId}`, patchConfig)
-			socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
-			socket.off(`controls:preview-${controlId}`, updateImage)
+			unsubConfig()
+			unsubRuntimeProps()
+			unsubPreview()
 
-			socketEmitPromise(socket, 'controls:unsubscribe', [controlId]).catch((e) => {
+			socket.emitPromise('controls:unsubscribe', [controlId]).catch((e) => {
 				console.error('Failed to unsubscribe bank config', e)
 			})
 		}
@@ -169,7 +165,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 			}
 
 			const doChange = () => {
-				socketEmitPromise(socket, 'controls:reset', [location, newType]).catch((e) => {
+				socket.emitPromise('controls:reset', [location, newType]).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -197,7 +193,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				socketEmitPromise(socket, 'controls:reset', [location]).catch((e) => {
+				socket.emitPromise('controls:reset', [location]).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
@@ -205,24 +201,24 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 	}, [socket, location])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [location, true, 'edit']).catch((e) =>
-			console.error(`Hot press failed: ${e}`)
-		)
+		socket
+			.emitPromise('controls:hot-press', [location, true, 'edit'])
+			.catch((e) => console.error(`Hot press failed: ${e}`))
 	}, [socket, location])
 	const hotPressUp = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [location, false, 'edit']).catch((e) =>
-			console.error(`Hot press failed: ${e}`)
-		)
+		socket
+			.emitPromise('controls:hot-press', [location, false, 'edit'])
+			.catch((e) => console.error(`Hot press failed: ${e}`))
 	}, [socket, location])
 	const hotRotateLeft = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [location, false, 'edit']).catch((e) =>
-			console.error(`Hot rotate failed: ${e}`)
-		)
+		socket
+			.emitPromise('controls:hot-rotate', [location, false, 'edit'])
+			.catch((e) => console.error(`Hot rotate failed: ${e}`))
 	}, [socket, location])
 	const hotRotateRight = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [location, true, 'edit']).catch((e) =>
-			console.error(`Hot rotate failed: ${e}`)
-		)
+		socket
+			.emitPromise('controls:hot-rotate', [location, true, 'edit'])
+			.catch((e) => console.error(`Hot rotate failed: ${e}`))
 	}, [socket, location])
 
 	const errors: string[] = []
@@ -419,7 +415,8 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		(e: FormEvent) => {
 			if (e) e.preventDefault()
 
-			socketEmitPromise(socket, 'controls:step:add', [controlId])
+			socket
+				.emitPromise('controls:step:add', [controlId])
 				.then((newStep) => {
 					if (newStep) {
 						setSelectedStep(`step:${newStep}`)
@@ -435,7 +432,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	const removeStep = useCallback(
 		(stepId: string) => {
 			confirmRef.current?.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
-				socketEmitPromise(socket, 'controls:step:remove', [controlId, stepId]).catch((e) => {
+				socket.emitPromise('controls:step:remove', [controlId, stepId]).catch((e) => {
 					console.error('Failed to delete step:', e)
 				})
 			})
@@ -444,7 +441,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	)
 	const duplicateStep = useCallback(
 		(stepId: string) => {
-			socketEmitPromise(socket, 'controls:step:duplicate', [controlId, stepId]).catch((e) => {
+			socket.emitPromise('controls:step:duplicate', [controlId, stepId]).catch((e) => {
 				console.error('Failed to duplicate step:', e)
 			})
 		},
@@ -452,7 +449,8 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	)
 	const swapSteps = useCallback(
 		(stepId1: string, stepId2: string) => {
-			socketEmitPromise(socket, 'controls:step:swap', [controlId, stepId1, stepId2])
+			socket
+				.emitPromise('controls:step:swap', [controlId, stepId1, stepId2])
 				.then(() => {
 					setSelectedStep(`step:${stepId2}`)
 				})
@@ -464,7 +462,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	)
 	const setCurrentStep = useCallback(
 		(stepId: string) => {
-			socketEmitPromise(socket, 'controls:step:set-current', [controlId, stepId]).catch((e) => {
+			socket.emitPromise('controls:step:set-current', [controlId, stepId]).catch((e) => {
 				console.error('Failed to set step:', e)
 			})
 		},
@@ -473,7 +471,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 
 	const appendSet = useCallback(
 		(stepId: string) => {
-			socketEmitPromise(socket, 'controls:action-set:add', [controlId, stepId]).catch((e) => {
+			socket.emitPromise('controls:action-set:add', [controlId, stepId]).catch((e) => {
 				console.error('Failed to append set:', e)
 			})
 		},
@@ -482,7 +480,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	const removeSet = useCallback(
 		(stepId: string, setId: ActionSetId) => {
 			confirmRef.current?.show('Remove set', 'Are you sure you wish to remove this group?', 'Remove', () => {
-				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, setId]).catch((e) => {
+				socket.emitPromise('controls:action-set:remove', [controlId, stepId, setId]).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
 			})
@@ -734,7 +732,7 @@ function ActionSetTab({
 
 	const renameStep = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
-			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, e.target.value]).catch((e) => {
+			socket.emitPromise('controls:step:rename', [controlId, stepId, e.target.value]).catch((e) => {
 				console.error('Failed to rename step:', e)
 			})
 		},
@@ -806,16 +804,14 @@ function EditActionsRelease({
 				const runWhileHeld = stepOptions.runWhileHeld.includes(oldIdNumber)
 				editRef.current?.show(oldIdNumber, runWhileHeld, (newId: number, runWhileHeld: boolean) => {
 					if (!isNaN(newId)) {
-						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldIdNumber, newId])
+						socket
+							.emitPromise('controls:action-set:rename', [controlId, stepId, oldIdNumber, newId])
 							.then(() => {
-								socketEmitPromise(socket, 'controls:action-set:set-run-while-held', [
-									controlId,
-									stepId,
-									newId,
-									runWhileHeld,
-								]).catch((e) => {
-									console.error('Failed to set runWhileHeld:', e)
-								})
+								socket
+									.emitPromise('controls:action-set:set-run-while-held', [controlId, stepId, newId, runWhileHeld])
+									.catch((e) => {
+										console.error('Failed to set runWhileHeld:', e)
+									})
 							})
 							.catch((e) => {
 								console.error('Failed to rename set:', e)

@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState } from 'react'
-import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../../util.js'
+import { SocketContext, PreventDefaultHandler } from '../../util.js'
 import {
 	CButton,
 	CCol,
@@ -31,7 +31,8 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 
 	const doSave = useCallback(
 		(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append') => {
-			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
+			socket
+				.emitPromise('action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
 				.then(() => {
 					doClose()
 				})

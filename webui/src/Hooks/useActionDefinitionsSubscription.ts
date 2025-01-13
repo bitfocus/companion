@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import { EntityDefinitionUpdate } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { CompanionSocketWrapped } from '../util.js'
 import { EntityDefinitionsForTypeStore } from '../Stores/EntityDefinitionsStore.js'
 
 export function useActionDefinitionsSubscription(
-	socket: CompanionSocketType,
+	socket: CompanionSocketWrapped,
 	store: EntityDefinitionsForTypeStore
 ): boolean {
 	const [ready, setReady] = useState(false)
@@ -13,7 +12,8 @@ export function useActionDefinitionsSubscription(
 		store.reset(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'action-definitions:subscribe', [])
+		socket
+			.emitPromise('action-definitions:subscribe', [])
 			.then((data) => {
 				store.reset(data)
 				setReady(true)
@@ -23,17 +23,15 @@ export function useActionDefinitionsSubscription(
 				console.error('Failed to load action definitions list', e)
 			})
 
-		const updateActionDefinitions = (change: EntityDefinitionUpdate) => {
+		const unsubUpdates = socket.on('action-definitions:update', (change) => {
 			store.applyChanges(change)
-		}
-
-		socket.on('action-definitions:update', updateActionDefinitions)
+		})
 
 		return () => {
 			store.reset(null)
-			socket.off('action-definitions:update', updateActionDefinitions)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'action-definitions:unsubscribe', []).catch((e) => {
+			socket.emitPromise('action-definitions:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to action definitions list', e)
 			})
 		}

@@ -1,7 +1,7 @@
 import React from 'react'
 import type { ObservableSet } from 'mobx'
 import type { NotificationsManagerRef } from '../Components/Notifications.js'
-import type { CompanionSocketType } from '../util.js'
+import type { CompanionSocketWrapped } from '../util.js'
 import type { PagesStore } from './PagesStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
@@ -15,7 +15,7 @@ import type { ConnectionsStore } from './ConnectionsStore.js'
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
 export interface RootAppStore {
-	readonly socket: CompanionSocketType
+	readonly socket: CompanionSocketWrapped
 	readonly notifier: React.RefObject<NotificationsManagerRef> // TODO - this is not good
 
 	readonly modules: ModuleInfoStore

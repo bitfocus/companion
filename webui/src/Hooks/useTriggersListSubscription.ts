@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
+import { CompanionSocketWrapped } from '../util.js'
 import type { TriggersListStore } from '../Stores/TriggersListStore.js'
-import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 
-export function useTriggersListSubscription(socket: CompanionSocketType, store: TriggersListStore): boolean {
+export function useTriggersListSubscription(socket: CompanionSocketWrapped, store: TriggersListStore): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
 		store.reset(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'triggers:subscribe', [])
+		socket
+			.emitPromise('triggers:subscribe', [])
 			.then((triggers) => {
 				store.reset(triggers)
 				setReady(true)
@@ -24,18 +24,16 @@ export function useTriggersListSubscription(socket: CompanionSocketType, store: 
 		// 	store.applyChanges(change)
 		// }
 
-		const updateTriggers = (change: TriggersUpdate) => {
+		const unsubUpdates = socket.on('triggers:update', (change) => {
 			store.applyChange(change)
-		}
-
-		socket.on('triggers:update', updateTriggers)
+		})
 
 		return () => {
 			store.reset(null)
 
-			socket.off('triggers:update', updateTriggers)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'triggers:unsubscribe', []).catch((e) => {
+			socket.emitPromise('triggers:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to action definitions list', e)
 			})
 		}

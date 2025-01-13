@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
+import { CompanionSocketWrapped } from '../util.js'
 import type { VariablesStore } from '../Stores/VariablesStore.js'
-import { VariableDefinitionUpdate } from '@companion-app/shared/Model/Variables.js'
 
 export function useVariablesSubscription(
-	socket: CompanionSocketType,
+	socket: CompanionSocketWrapped,
 	store: VariablesStore,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
@@ -16,7 +15,8 @@ export function useVariablesSubscription(
 		store.resetCustomVariables(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'variable-definitions:subscribe', [])
+		socket
+			.emitPromise('variable-definitions:subscribe', [])
 			.then((variables) => {
 				setLoadError?.(null)
 				store.resetVariables(variables)
@@ -28,18 +28,16 @@ export function useVariablesSubscription(
 				store.resetVariables(null)
 			})
 
-		const updateVariables = (label: string, change: VariableDefinitionUpdate | null) => {
+		const unsubUpdates = socket.on('variable-definitions:update', (label, change) => {
 			store.applyVariablesChange(label, change)
-		}
-
-		socket.on('variable-definitions:update', updateVariables)
+		})
 
 		return () => {
 			store.resetCustomVariables(null)
 
-			socket.off('variable-definitions:update', updateVariables)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
+			socket.emitPromise('variable-definitions:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to variable-definitions list', e)
 			})
 		}

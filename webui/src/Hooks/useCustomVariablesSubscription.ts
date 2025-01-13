@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import type { CustomVariableUpdate } from '@companion-app/shared/Model/CustomVariableModel.js'
+import { CompanionSocketWrapped } from '../util.js'
 import type { VariablesStore } from '../Stores/VariablesStore.js'
 
 export function useCustomVariablesSubscription(
-	socket: CompanionSocketType,
+	socket: CompanionSocketWrapped,
 	store: VariablesStore,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
@@ -16,7 +15,8 @@ export function useCustomVariablesSubscription(
 		store.resetCustomVariables(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'custom-variables:subscribe', [])
+		socket
+			.emitPromise('custom-variables:subscribe', [])
 			.then((customVariables) => {
 				setLoadError?.(null)
 				store.resetCustomVariables(customVariables)
@@ -28,18 +28,16 @@ export function useCustomVariablesSubscription(
 				store.resetCustomVariables(null)
 			})
 
-		const updateCustomVariables = (changes: CustomVariableUpdate[]) => {
+		const unsubUpdates = socket.on('custom-variables:update', (changes) => {
 			store.applyCustomVariablesChanges(changes)
-		}
-
-		socket.on('custom-variables:update', updateCustomVariables)
+		})
 
 		return () => {
 			store.resetCustomVariables(null)
 
-			socket.off('custom-variables:update', updateCustomVariables)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'custom-variables:unsubscribe', []).catch((e) => {
+			socket.emitPromise('custom-variables:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to custom-variables list', e)
 			})
 		}

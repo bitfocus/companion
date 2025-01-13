@@ -1,5 +1,5 @@
 import { useContext, useMemo } from 'react'
-import { SocketContext, socketEmitPromise } from '../../util.js'
+import { SocketContext } from '../../util.js'
 import type { IEntityEditorService } from './ControlEntitiesService.js'
 import type { EntityOwner, SomeEntityModel, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 
@@ -20,19 +20,17 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				_dropOwnerId: EntityOwner | null,
 				dropIndex: number
 			) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragEntityId, dropIndex]).catch(
-					(e) => {
+				socket
+					.emitPromise('action-recorder:session:action-reorder', [sessionId, dragEntityId, dropIndex])
+					.catch((e) => {
 						console.error(e)
-					}
-				)
+					})
 			},
 
 			setValue: (entityId: string, _action: SomeEntityModel | undefined, key: string, value: any) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-set-value', [sessionId, entityId, key, value]).catch(
-					(e) => {
-						console.error(e)
-					}
-				)
+				socket.emitPromise('action-recorder:session:action-set-value', [sessionId, entityId, key, value]).catch((e) => {
+					console.error(e)
+				})
 			},
 
 			setConnection: (_entityId: string, _connectionId: string) => {
@@ -40,19 +38,19 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			},
 
 			setDelay: (entityId: string, delay: number) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-delay', [sessionId, entityId, delay]).catch((e) => {
+				socket.emitPromise('action-recorder:session:action-delay', [sessionId, entityId, delay]).catch((e) => {
 					console.error(e)
 				})
 			},
 
 			performDelete: (entityId: string) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-delete', [sessionId, entityId]).catch((e) => {
+				socket.emitPromise('action-recorder:session:action-delete', [sessionId, entityId]).catch((e) => {
 					console.error(e)
 				})
 			},
 
 			performDuplicate: (entityId: string) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-duplicate', [sessionId, entityId]).catch((e) => {
+				socket.emitPromise('action-recorder:session:action-duplicate', [sessionId, entityId]).catch((e) => {
 					console.error(e)
 				})
 			},

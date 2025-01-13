@@ -70,13 +70,11 @@ export const TabletView = observer(function TabletView() {
 	}, [userConfigStore.properties?.installName])
 
 	useEffect(() => {
-		const onConnect = () => {
+		const unsub = socket.onConnect(() => {
 			setRetryToken(nanoid())
-		}
-		socket.on('connect', onConnect)
-		return () => {
-			socket.off('connect', onConnect)
-		}
+		})
+
+		return unsub
 	}, [socket])
 
 	const navigate = useNavigate()

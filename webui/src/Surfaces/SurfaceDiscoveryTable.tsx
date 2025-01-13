@@ -2,10 +2,9 @@ import {
 	ClientDiscoveredSurfaceInfo,
 	ClientDiscoveredSurfaceInfoSatellite,
 	ClientDiscoveredSurfaceInfoStreamDeck,
-	SurfacesDiscoveryUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { socketEmitPromise, assertNever, SocketContext } from '../util.js'
+import { assertNever, SocketContext } from '../util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { faBan, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -26,12 +25,8 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 	const addRemoteStreamDeck = useCallback(
 		(surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck) => {
 			// TODO
-			socketEmitPromise(socket, 'surfaces:outbound:add', [
-				'elgato',
-				surfaceInfo.address,
-				surfaceInfo.port,
-				surfaceInfo.name,
-			])
+			socket
+				.emitPromise('surfaces:outbound:add', ['elgato', surfaceInfo.address, surfaceInfo.port, surfaceInfo.name])
 				.then(() => {
 					console.log('added streamdeck', surfaceInfo)
 				})
@@ -102,11 +97,12 @@ function useSurfaceDiscoverySubscription() {
 	// Start/Stop the subscription
 	useEffect(() => {
 		let killed = false
-		socketEmitPromise(socket, 'surfaces:discovery:join', [])
+		socket
+			.emitPromise('surfaces:discovery:join', [])
 			.then((services) => {
 				// Make sure it hasnt been terminated
 				if (killed) {
-					socketEmitPromise(socket, 'surfaces:discovery:leave', []).catch(() => {
+					socket.emitPromise('surfaces:discovery:leave', []).catch(() => {
 						console.error('Failed to leave discovery')
 					})
 					return
@@ -118,7 +114,7 @@ function useSurfaceDiscoverySubscription() {
 				console.error('Bonjour subscription failed: ', e)
 			})
 
-		const updateHandler = (update: SurfacesDiscoveryUpdate) => {
+		const unsubUpdates = socket.on('surfaces:discovery:update', (update) => {
 			switch (update.type) {
 				case 'remove':
 					setDiscoveredSurfaces((svcs) => {
@@ -139,18 +135,16 @@ function useSurfaceDiscoverySubscription() {
 					assertNever(update)
 					break
 			}
-		}
-
-		socket.on('surfaces:discovery:update', updateHandler)
+		})
 
 		return () => {
 			killed = true
 
-			socket.off('surfaces:discovery:update', updateHandler)
+			unsubUpdates()
 
 			setDiscoveredSurfaces({})
 
-			socketEmitPromise(socket, 'surfaces:discovery:leave', []).catch(() => {
+			socket.emitPromise('surfaces:discovery:leave', []).catch(() => {
 				console.error('Failed to leave discovery')
 			})
 		}

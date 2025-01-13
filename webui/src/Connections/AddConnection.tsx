@@ -3,7 +3,7 @@ import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { go as fuzzySearch } from 'fuzzysort'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { socketEmitPromise, useComputed } from '../util.js'
+import { useComputed } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -25,7 +25,8 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 	const addConnectionInner = useCallback(
 		(type: string, product: string | undefined) => {
-			socketEmitPromise(socket, 'connections:add', [{ type: type, product: product }])
+			socket
+				.emitPromise('connections:add', [{ type: type, product: product }])
 				.then((id) => {
 					setFilter('')
 					console.log('NEW CONNECTION', id)

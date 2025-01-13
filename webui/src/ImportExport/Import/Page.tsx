@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
-import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
+import { MyErrorBoundary, SocketContext } from '../../util.js'
 import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '../../Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import {
@@ -278,13 +278,14 @@ function ButtonImportPreview({ ...props }: ButtonInfiniteGridButtonProps) {
 	useEffect(() => {
 		setPreviewImage(null)
 
-		socketEmitPromise(socket, 'loadsave:control-preview', [
-			{
-				pageNumber: props.pageNumber,
-				column: props.column,
-				row: props.row,
-			},
-		])
+		socket
+			.emitPromise('loadsave:control-preview', [
+				{
+					pageNumber: props.pageNumber,
+					column: props.column,
+					row: props.row,
+				},
+			])
 			.then((img) => {
 				setPreviewImage(img)
 			})

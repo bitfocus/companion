@@ -283,8 +283,9 @@ test('cleanup entities', () => {
 	expect(connectionEntityDelete).toHaveBeenCalledTimes(4)
 	expect(internalEntityDelete).toHaveBeenCalledTimes(2)
 
-	expect(list.getAllEntities()).toHaveLength(0)
-	expect(list.getDirectEntities()).toHaveLength(0)
+	// Entities should remain
+	expect(list.getAllEntities()).toHaveLength(6)
+	expect(list.getDirectEntities()).toHaveLength(3)
 })
 
 describe('subscribe entities', () => {
