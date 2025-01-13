@@ -12,7 +12,7 @@
 	},
 	"dependencies": {
 		"@companion-app/shared": "*",
-		"@sentry/electron": "^5.8.0",
+		"@sentry/electron": "^5.9.0",
 		"chokidar": "^3.6.0",
 		"debounce-fn": "^6.0.0",
 		"electron-store": "^10.0.0",
@@ -22,11 +22,11 @@
 		"plist": "^3.1.0",
 		"semver": "^7.6.3",
 		"strip-ansi": "^7.1.0",
-		"systeminformation": "^5.23.13"
+		"systeminformation": "^5.25.11"
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
-		"electron": "33.3.0",
+		"electron": "33.3.1",
 		"electron-builder": "26.0.0-alpha.7",
 		"electron-reloader": "^1.2.3"
 	}
