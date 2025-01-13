@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { socketEmitPromise, SocketContext } from './util.js'
+import { SocketContext } from './util.js'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -38,7 +38,7 @@ export const LogPanel = memo(function LogPanel() {
 	}, [config])
 
 	const doClearLog = useCallback(() => {
-		socketEmitPromise(socket, 'logs:clear', []).catch((e) => {
+		socket.emitPromise('logs:clear', []).catch((e) => {
 			console.error('Log clear failed', e)
 		})
 	}, [socket])
@@ -154,7 +154,8 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 			})
 		}
 
-		socketEmitPromise(socket, 'logs:subscribe', [])
+		socket
+			.emitPromise('logs:subscribe', [])
 			.then((lines: ClientLogLine[]) => {
 				const items = lines.map((item) => ({
 					...item,
@@ -167,14 +168,14 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 				console.error('log subscribe error', e)
 			})
 
-		socket.on('logs:lines', logRecv)
-		socket.on('logs:clear', getClearLog)
+		const unsubLines = socket.on('logs:lines', logRecv)
+		const unsubClear = socket.on('logs:clear', getClearLog)
 
 		return () => {
-			socket.off('logs:lines', logRecv)
-			socket.off('logs:clear', getClearLog)
+			unsubLines()
+			unsubClear()
 
-			socketEmitPromise(socket, 'logs:unsubscribe', []).catch((e) => {
+			socket.emitPromise('logs:unsubscribe', []).catch((e) => {
 				console.error('log unsubscribe error', e)
 			})
 		}

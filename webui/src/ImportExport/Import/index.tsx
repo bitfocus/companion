@@ -1,6 +1,5 @@
 import { CButton } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { socketEmitPromise } from '../../util.js'
 import { ImportPageWizard } from './Page.js'
 import { ImportFullWizard } from './Full.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
@@ -23,7 +22,8 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps) {
 
 	const doSinglePageImport = useCallback(
 		(fromPage: number, toPage: number, connectionRemap: Record<string, string | undefined>) => {
-			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, connectionRemap])
+			socket
+				.emitPromise('loadsave:import-page', [toPage, fromPage, connectionRemap])
 				.then((_res) => {
 					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
 					clearImport()

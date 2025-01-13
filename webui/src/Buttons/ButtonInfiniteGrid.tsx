@@ -12,7 +12,7 @@ import React, {
 	useState,
 } from 'react'
 import { useDrop } from 'react-dnd'
-import { SocketContext, socketEmitPromise } from '../util.js'
+import { SocketContext } from '../util.js'
 import classNames from 'classnames'
 import useScrollPosition from '../Hooks/useScrollPosition.js'
 import useElementInnerSize from '../Hooks/useElementInnerSize.js'
@@ -271,13 +271,11 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
 			const location = { pageNumber: props.pageNumber, column: props.column, row: props.row }
-			socketEmitPromise(socket, 'presets:import-to-location', [
-				dropData.connectionId,
-				dropData.presetId,
-				location,
-			]).catch(() => {
-				console.error('Preset import failed')
-			})
+			socket
+				.emitPromise('presets:import-to-location', [dropData.connectionId, dropData.presetId, location])
+				.catch(() => {
+					console.error('Preset import failed')
+				})
 		},
 		collect: (monitor) => ({
 			isOver: !!monitor.isOver(),

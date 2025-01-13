@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
-import { SocketContext, type CompanionSocketType } from '../util.js'
+import { SocketContext, type CompanionSocketWrapped } from '../util.js'
 import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 import classNames from 'classnames'
 
@@ -52,23 +52,21 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 	)
 }
 
-function useRegionState(socket: CompanionSocketType, regionId: string) {
+function useRegionState(socket: CompanionSocketWrapped, regionId: string) {
 	const [regionState, setRegionState] = useState<CloudRegionState>()
 
 	useEffect(() => {
-		const cloudStateDidUpdate = (updateRegionId: string, newState: CloudRegionState) => {
+		console.log(`Mounted CLOUD REGION ${regionId}`)
+		const unsubUpdates = socket.on('cloud_region_state', (updateRegionId, newState) => {
 			if (regionId === updateRegionId) {
 				setRegionState(newState)
 			}
-		}
-
-		console.log(`Mounted CLOUD REGION ${regionId}`)
-		socket.on('cloud_region_state', cloudStateDidUpdate)
+		})
 		socket.emit('cloud_region_state_get', regionId)
 
 		return () => {
 			console.log(`Unmounted CLOUD REGION ${regionId}`)
-			socket.off('cloud_region_state', cloudStateDidUpdate)
+			unsubUpdates()
 		}
 	}, [socket, regionId])
 

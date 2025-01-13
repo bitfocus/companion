@@ -1,5 +1,5 @@
 import { useContext, useMemo, useRef } from 'react'
-import { SocketContext, socketEmitPromise } from '../../util.js'
+import { SocketContext } from '../../util.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
@@ -43,89 +43,78 @@ export function useControlFeedbacksEditorService(
 		() => ({
 			addFeedback: (feedbackType: string, parentId: string | null) => {
 				const [connectionId, feedbackId] = feedbackType.split(':', 2)
-				socketEmitPromise(socket, 'controls:feedback:add', [controlId, parentId, connectionId, feedbackId]).catch(
-					(e) => {
-						console.error('Failed to add control feedback', e)
-					}
-				)
+				socket.emitPromise('controls:feedback:add', [controlId, parentId, connectionId, feedbackId]).catch((e) => {
+					console.error('Failed to add control feedback', e)
+				})
 			},
 			moveCard: (dragFeedbackId: string, hoverParentId: string | null, hoverIndex: number) => {
-				socketEmitPromise(socket, 'controls:feedback:move', [
-					controlId,
-					dragFeedbackId,
-					hoverParentId,
-					hoverIndex,
-				]).catch((e) => {
-					console.error(`Move failed: ${e}`)
-				})
+				socket
+					.emitPromise('controls:feedback:move', [controlId, dragFeedbackId, hoverParentId, hoverIndex])
+					.catch((e) => {
+						console.error(`Move failed: ${e}`)
+					})
 			},
 
 			setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, val: any) => {
 				if (!feedback?.options || feedback.options[key] !== val) {
-					socketEmitPromise(socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
+					socket.emitPromise('controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
 						console.error(`Set-option failed: ${e}`)
 					})
 				}
 			},
 
 			setConnection: (feedbackId: string, connectionId: string | number) => {
-				socketEmitPromise(socket, 'controls:feedback:set-connection', [controlId, feedbackId, connectionId]).catch(
-					(e) => {
-						console.error(`Set-connection failed: ${e}`)
-					}
-				)
+				socket.emitPromise('controls:feedback:set-connection', [controlId, feedbackId, connectionId]).catch((e) => {
+					console.error(`Set-connection failed: ${e}`)
+				})
 			},
 
 			setInverted: (feedbackId: string, isInverted: boolean) => {
-				socketEmitPromise(socket, 'controls:feedback:set-inverted', [controlId, feedbackId, isInverted]).catch((e) => {
+				socket.emitPromise('controls:feedback:set-inverted', [controlId, feedbackId, isInverted]).catch((e) => {
 					console.error(`Set-inverted failed: ${e}`)
 				})
 			},
 
 			performDelete: (feedbackId: string) => {
 				confirmModal.current?.show(`Delete ${entityType}`, `Delete ${entityType}?`, 'Delete', () => {
-					socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
+					socket.emitPromise('controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 						console.error(`Failed to delete feedback: ${e}`)
 					})
 				})
 			},
 
 			performDuplicate: (feedbackId: string) => {
-				socketEmitPromise(socket, 'controls:feedback:duplicate', [controlId, feedbackId]).catch((e) => {
+				socket.emitPromise('controls:feedback:duplicate', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to duplicate feedback: ${e}`)
 				})
 			},
 
 			performLearn: (feedbackId: string) => {
-				socketEmitPromise(socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
+				socket.emitPromise('controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to learn feedback values: ${e}`)
 				})
 			},
 
 			setSelectedStyleProps: (feedbackId: string, selected: string[]) => {
-				socketEmitPromise(socket, 'controls:feedback:set-style-selection', [controlId, feedbackId, selected]).catch(
-					(e) => {
-						console.error(`Failed: ${e}`)
-					}
-				)
+				socket.emitPromise('controls:feedback:set-style-selection', [controlId, feedbackId, selected]).catch((e) => {
+					console.error(`Failed: ${e}`)
+				})
 			},
 
 			setStylePropsValue: (feedbackId: string, key: string, value: any) => {
-				socketEmitPromise(socket, 'controls:feedback:set-style-value', [controlId, feedbackId, key, value]).catch(
-					(e) => {
-						console.error(`Failed: ${e}`)
-					}
-				)
+				socket.emitPromise('controls:feedback:set-style-value', [controlId, feedbackId, key, value]).catch((e) => {
+					console.error(`Failed: ${e}`)
+				})
 			},
 
 			setEnabled: (feedbackId: string, enabled: boolean) => {
-				socketEmitPromise(socket, 'controls:feedback:enabled', [controlId, feedbackId, enabled]).catch((e) => {
+				socket.emitPromise('controls:feedback:enabled', [controlId, feedbackId, enabled]).catch((e) => {
 					console.error('Failed to enable/disable feedback', e)
 				})
 			},
 
 			setHeadline: (feedbackId: string, headline: string) => {
-				socketEmitPromise(socket, 'controls:feedback:set-headline', [controlId, feedbackId, headline]).catch((e) => {
+				socket.emitPromise('controls:feedback:set-headline', [controlId, feedbackId, headline]).catch((e) => {
 					console.error('Failed to set feedback headline', e)
 				})
 			},

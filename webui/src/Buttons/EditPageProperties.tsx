@@ -10,7 +10,7 @@ import {
 	CRow,
 } from '@coreui/react'
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { socketEmitPromise, SocketContext } from '../util.js'
+import { SocketContext } from '../util.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { CModalExt } from '../Components/CModalExt.js'
 
@@ -47,7 +47,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 
 				if (pageNumber === null) return
 
-				socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName ?? '']).catch((e) => {
+				socket.emitPromise('pages:set-name', [pageNumber, pageName ?? '']).catch((e) => {
 					console.error('Failed to set name', e)
 				})
 			},

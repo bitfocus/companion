@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import type { ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
+import { CompanionSocketWrapped } from '../util.js'
 import type { ConnectionsStore } from '../Stores/ConnectionsStore.js'
 
-export function useConnectionsConfigSubscription(socket: CompanionSocketType, store: ConnectionsStore): boolean {
+export function useConnectionsConfigSubscription(socket: CompanionSocketWrapped, store: ConnectionsStore): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
 		store.reset(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'connections:subscribe', [])
+		socket
+			.emitPromise('connections:subscribe', [])
 			.then((connections) => {
 				store.reset(connections)
 				setReady(true)
@@ -20,16 +20,15 @@ export function useConnectionsConfigSubscription(socket: CompanionSocketType, st
 				console.error('Failed to load connections list', e)
 			})
 
-		const patchConnections = (change: ClientConnectionsUpdate[]) => {
+		const unsubUpdates = socket.on('connections:patch', (change) => {
 			store.applyChange(change)
-		}
-		socket.on('connections:patch', patchConnections)
+		})
 
 		return () => {
 			store.reset(null)
-			socket.off('connections:patch', patchConnections)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'connections:unsubscribe', []).catch((e) => {
+			socket.emitPromise('connections:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe from connections list:', e)
 			})
 		}

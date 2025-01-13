@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddOutboundSurfaceModal, AddOutboundSurfaceModalRef } from './AddOutboundSurfaceModal.js'
 import { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { TextInputField } from '../Components/TextInputField.js'
-import { socketEmitPromise } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 
@@ -26,7 +25,7 @@ export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 	const removeSurface = useCallback(
 		(surfaceId: string) => {
 			confirmRef.current?.show('Remove Surface', 'Are you sure you want to remove this surface?', 'Remove', () => {
-				socketEmitPromise(socket, 'surfaces:outbound:remove', [surfaceId]).catch((err) => {
+				socket.emitPromise('surfaces:outbound:remove', [surfaceId]).catch((err) => {
 					console.error('fotget failed', err)
 				})
 			})
@@ -36,7 +35,7 @@ export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 
 	const updateName = useCallback(
 		(surfaceId: string, name: string) => {
-			socketEmitPromise(socket, 'surfaces:outbound:set-name', [surfaceId, name]).catch((err) => {
+			socket.emitPromise('surfaces:outbound:set-name', [surfaceId, name]).catch((err) => {
 				console.error('Update name failed', err)
 			})
 		},

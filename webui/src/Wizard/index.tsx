@@ -1,6 +1,6 @@
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { SocketContext, socketEmitPromise } from '../util.js'
+import { SocketContext } from '../util.js'
 import { BeginStep } from './BeginStep.js'
 import { SurfacesStep } from './SurfacesStep.js'
 import { GridStep } from './GridStep.js'
@@ -36,7 +36,8 @@ export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function
 	const [clear, setClear] = useState(true)
 
 	const getConfig = useCallback(() => {
-		socketEmitPromise(socket, 'userconfig:get-all', [])
+		socket
+			.emitPromise('userconfig:get-all', [])
 			.then((config) => {
 				setStartConfig(config)
 				setOldConfig(config)

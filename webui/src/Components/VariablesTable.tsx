@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useState, useMemo, useEffect } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
-import { socketEmitPromise, useComputed } from '../util.js'
+import { useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
@@ -38,7 +38,8 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 		if (!label) return
 
 		const doPoll = () => {
-			socketEmitPromise(socket, 'variables:connection-values', [label])
+			socket
+				.emitPromise('variables:connection-values', [label])
 				.then((values) => {
 					setVariableValues(values || {})
 				})
