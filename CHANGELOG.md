@@ -4,7 +4,7 @@
 
 ### 🐞 BUG FIXES
 
-- Update macos to available version	e23822e6c	Julian Waller <git@julusian.co.uk>	Jan 10, 2025 at 4:57 AM
+- Update macos to available version
 - Show config directory tray option using wrong path
 - Fix not cleaning up internal feedbacks fully when removing
 - Update streamdeck lib
@@ -15,6 +15,7 @@
 
 ### 🐞 MODULE FIXES
 
+- axeltechnology-cgplus
 - binwiederhier-ntfy
 - smodetech-smodelive
 - zenvideo-ndirouter
