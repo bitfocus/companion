@@ -1,6 +1,6 @@
 import { CFormLabel, CFormSwitch } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
-import { socketEmitPromise, SocketContext } from '../util.js'
+import { SocketContext } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { InlineHelp } from '../Components/InlineHelp.js'
 interface ControlOptionsEditorProps {
@@ -23,7 +23,7 @@ export function ControlOptionsEditor({
 	const setValueInner = useCallback(
 		(key: string, value: any) => {
 			if (configRef.current === undefined || value !== configRef.current.options[key]) {
-				socketEmitPromise(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
+				socket.emitPromise('controls:set-options-field', [controlId, key, value]).catch((e) => {
 					console.error(`Set field failed: ${e}`)
 				})
 			}

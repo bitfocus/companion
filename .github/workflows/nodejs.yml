@@ -74,7 +74,7 @@ jobs:
 
           yarn --immutable
 
-          yarn zx tools/build/complete.mjs linux-x64
+          yarn tsx tools/build/complete.mts linux-x64
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -151,7 +151,7 @@ jobs:
 
           yarn --immutable
 
-          yarn zx tools/build/complete.mjs linux-arm64
+          yarn tsx tools/build/complete.mts linux-arm64
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -227,7 +227,7 @@ jobs:
 
           yarn --immutable
 
-          yarn zx tools/build/complete.mjs darwin-x64
+          yarn tsx tools/build/complete.mts darwin-x64
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -305,7 +305,7 @@ jobs:
           CI: 1
       - name: build & package
         run: |
-          yarn zx tools/build/complete.mjs darwin-arm64
+          yarn tsx tools/build/complete.mts darwin-arm64
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -352,9 +352,9 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win32-x64:
-    runs-on: windows-2019
+    runs-on: ${{ startsWith(github.ref, 'refs/tags/') && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-2019'}}
     needs: check-types
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v4
@@ -381,14 +381,26 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn --immutable
-
-          yarn zx tools/build/complete.mjs win32-x64
         env:
           CI: 1
-          # HACK: temporarily disable signing
-          # CSC_LINK: ${{ secrets.CSC_LINK }}
-          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+
+      - name: build & package (unsigned)
+        if: ${{ runner.environment != 'self-hosted' }}
+        run: |
+          yarn tsx tools/build/complete.mts win32-x64
+        env:
+          CI: 1
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: build & package (signed)
+        if: ${{ runner.environment == 'self-hosted' }}
+        run: |
+          yarn tsx tools/build/complete.mts win32-x64
+        env:
+          CI: 1
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
+          BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
 
       - name: Determine files to upload
         id: filenames

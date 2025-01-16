@@ -1,6 +1,6 @@
 import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
-import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
+import { SocketContext, PreventDefaultHandler } from '../util.js'
 import {
 	AlignmentInputField,
 	ColorInputField,
@@ -38,15 +38,17 @@ export function ButtonStyleConfig({
 	const setPng = useCallback(
 		(data: string | null) => {
 			setPngError(null)
-			socketEmitPromise(socket, 'controls:set-style-fields', [
-				controlId,
-				{
-					png64: data,
-				},
-			]).catch((e) => {
-				console.error('Failed to upload png', e)
-				setPngError('Failed to set png')
-			})
+			socket
+				.emitPromise('controls:set-style-fields', [
+					controlId,
+					{
+						png64: data,
+					},
+				])
+				.catch((e) => {
+					console.error('Failed to upload png', e)
+					setPngError('Failed to set png')
+				})
 		},
 		[socket, controlId]
 	)
@@ -58,14 +60,16 @@ export function ButtonStyleConfig({
 				!currentConfig ||
 				(currentConfig.type === 'button' && value !== currentConfig.style[key as keyof ButtonStyleProperties])
 			) {
-				socketEmitPromise(socket, 'controls:set-style-fields', [
-					controlId,
-					{
-						[key]: value,
-					},
-				]).catch((e) => {
-					console.error(`Set field failed: ${e}`)
-				})
+				socket
+					.emitPromise('controls:set-style-fields', [
+						controlId,
+						{
+							[key]: value,
+						},
+					])
+					.catch((e) => {
+						console.error(`Set field failed: ${e}`)
+					})
 			}
 		},
 		[socket, controlId, configRef]

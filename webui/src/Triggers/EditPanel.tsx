@@ -2,15 +2,9 @@ import { CButton, CCol, CForm, CInputGroup, CFormLabel } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import {
-	LoadingRetryOrError,
-	socketEmitPromise,
-	SocketContext,
-	MyErrorBoundary,
-	PreventDefaultHandler,
-} from '../util.js'
+import { LoadingRetryOrError, SocketContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor.jsx'
-import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
+import jsonPatch from 'fast-json-patch'
 
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.jsx'
@@ -45,7 +39,8 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 		setConfigError(null)
 		setRuntimeProps(null)
 
-		socketEmitPromise(socket, 'controls:subscribe', [controlId])
+		socket
+			.emitPromise('controls:subscribe', [controlId])
 			.then((config) => {
 				setConfig((config as any)?.config ?? false)
 				setRuntimeProps((config as any)?.runtime ?? {})
@@ -57,7 +52,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 				setConfigError('Failed to load trigger config')
 			})
 
-		const patchConfig = (patch: JsonPatchOperation[] | false) => {
+		const unsubConfig = socket.on(`controls:config-${controlId}`, (patch) => {
 			setConfig((oldConfig) => {
 				if (!oldConfig || patch === false) {
 					return null
@@ -65,9 +60,8 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 					return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
 				}
 			})
-		}
-
-		const patchRuntimeProps = (patch: JsonPatchOperation[] | false) => {
+		})
+		const unsubRuntimeProps = socket.on(`controls:runtime-${controlId}`, (patch) => {
 			setRuntimeProps((oldProps) => {
 				if (patch === false) {
 					return {}
@@ -75,16 +69,13 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 					return jsonPatch.applyPatch(cloneDeep(oldProps) || {}, patch).newDocument
 				}
 			})
-		}
-
-		socket.on(`controls:config-${controlId}`, patchConfig)
-		socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
+		})
 
 		return () => {
-			socket.off(`controls:config-${controlId}`, patchConfig)
-			socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
+			unsubConfig()
+			unsubRuntimeProps()
 
-			socketEmitPromise(socket, 'controls:unsubscribe', [controlId]).catch((e) => {
+			socket.emitPromise('controls:unsubscribe', [controlId]).catch((e) => {
 				console.error('Failed to unsubscribe trigger config', e)
 			})
 		}
@@ -93,7 +84,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'triggers:test', [controlId]).catch((e) => console.error(`Hot press failed: ${e}`))
+		socket.emitPromise('triggers:test', [controlId]).catch((e) => console.error(`Hot press failed: ${e}`))
 	}, [socket, controlId])
 
 	const errors: string[] = []
@@ -198,7 +189,7 @@ function TriggerConfig({ controlId, options, hotPressDown }: TriggerConfigProps)
 	const setValueInner = useCallback(
 		(key: string, value: any) => {
 			console.log('set', controlId, key, value)
-			socketEmitPromise(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
+			socket.emitPromise('controls:set-options-field', [controlId, key, value]).catch((e) => {
 				console.error(`Set field failed: ${e}`)
 			})
 		},

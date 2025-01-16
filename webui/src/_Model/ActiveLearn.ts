@@ -1,13 +1,14 @@
 import type { ObservableSet } from 'mobx'
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
+import { CompanionSocketWrapped } from '../util.js'
 
-export function useActiveLearnRequests(socket: CompanionSocketType, activeIds: ObservableSet<string>): boolean {
+export function useActiveLearnRequests(socket: CompanionSocketWrapped, activeIds: ObservableSet<string>): boolean {
 	const [isReady, setIsReady] = useState<boolean>(false)
 
 	useEffect(() => {
 		let aborted = false
-		socketEmitPromise(socket, 'controls:subscribe:learn', [])
+		socket
+			.emitPromise('controls:subscribe:learn', [])
 			.then((active) => {
 				if (aborted) return
 				activeIds.clear()
@@ -21,23 +22,20 @@ export function useActiveLearnRequests(socket: CompanionSocketType, activeIds: O
 				console.error('subscribe to learn failed', e)
 			})
 
-		const onAdd = (id: string) => activeIds.add(id)
-		const onRemove = (id: string) => activeIds.delete(id)
-
-		socket.on('learn:add', onAdd)
-		socket.on('learn:remove', onRemove)
+		const unsubAdd = socket.on('learn:add', (id) => activeIds.add(id))
+		const unsubRemove = socket.on('learn:remove', (id) => activeIds.delete(id))
 
 		return () => {
 			setIsReady(false)
 			activeIds.clear()
 
 			aborted = true
-			socketEmitPromise(socket, 'controls:unsubscribe:learn', []).catch((e) => {
+			socket.emitPromise('controls:unsubscribe:learn', []).catch((e) => {
 				console.error('unsubscribe to learn failed', e)
 			})
 
-			socket.off('learn:add', onAdd)
-			socket.off('learn:remove', onRemove)
+			unsubAdd()
+			unsubRemove()
 		}
 	}, [activeIds, socket])
 

@@ -1,5 +1,5 @@
 import { useContext, useMemo, useRef } from 'react'
-import { SocketContext, socketEmitPromise } from '../../util.js'
+import { SocketContext } from '../../util.js'
 import { ActionInstance, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
@@ -44,16 +44,18 @@ export function useControlActionsEditorService(
 		() => ({
 			addAction: (actionType: string, parentId: string | null) => {
 				const [connectionId, actionId] = actionType.split(':', 2)
-				socketEmitPromise(socket, 'controls:action:add', [
-					controlId,
-					stepId,
-					setId,
-					parentId ? { parentActionId: parentId, childGroup: 'default' } : null,
-					connectionId,
-					actionId,
-				]).catch((e) => {
-					console.error('Failed to add control action', e)
-				})
+				socket
+					.emitPromise('controls:action:add', [
+						controlId,
+						stepId,
+						setId,
+						parentId ? { parentActionId: parentId, childGroup: 'default' } : null,
+						connectionId,
+						actionId,
+					])
+					.catch((e) => {
+						console.error('Failed to add control action', e)
+					})
 			},
 
 			moveCard: (
@@ -63,76 +65,72 @@ export function useControlActionsEditorService(
 				dropParentId: string | null,
 				dropIndex: number
 			) => {
-				socketEmitPromise(socket, 'controls:action:move', [
-					controlId,
-					dragStepId,
-					dragSetId,
-					dragActionId,
-					stepId,
-					setId,
-					dropParentId ? { parentActionId: dropParentId, childGroup: 'default' } : null,
-					dropIndex,
-				]).catch((e) => {
-					console.error('Failed to reorder control actions', e)
-				})
+				socket
+					.emitPromise('controls:action:move', [
+						controlId,
+						dragStepId,
+						dragSetId,
+						dragActionId,
+						stepId,
+						setId,
+						dropParentId ? { parentActionId: dropParentId, childGroup: 'default' } : null,
+						dropIndex,
+					])
+					.catch((e) => {
+						console.error('Failed to reorder control actions', e)
+					})
 			},
 
 			setValue: (actionId: string, action: ActionInstance | undefined, key: string, val: any) => {
 				if (!action?.options || action.options[key] !== val) {
-					socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
-						(e) => {
+					socket
+						.emitPromise('controls:action:set-option', [controlId, stepId, setId, actionId, key, val])
+						.catch((e) => {
 							console.error('Failed to set control action option', e)
-						}
-					)
+						})
 				}
 			},
 
 			setConnection: (actionId: string, connectionId: string | number) => {
-				socketEmitPromise(socket, 'controls:action:set-connection', [
-					controlId,
-					stepId,
-					setId,
-					actionId,
-					connectionId + '',
-				]).catch((e) => {
-					console.error('Failed to set control action connection', e)
-				})
+				socket
+					.emitPromise('controls:action:set-connection', [controlId, stepId, setId, actionId, connectionId + ''])
+					.catch((e) => {
+						console.error('Failed to set control action connection', e)
+					})
 			},
 
 			performDelete: (actionId: string) => {
 				confirmModal.current?.show('Delete action', 'Delete action?', 'Delete', () => {
-					socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
+					socket.emitPromise('controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
 						console.error('Failed to remove control action', e)
 					})
 				})
 			},
 
 			performDuplicate: (actionId: string) => {
-				socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
+				socket.emitPromise('controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
 					console.error('Failed to duplicate control action', e)
 				})
 			},
 
 			performLearn: (actionId: string) => {
-				socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
+				socket.emitPromise('controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
 					console.error('Failed to learn control action values', e)
 				})
 			},
 
 			setEnabled: (actionId: string, enabled: boolean) => {
-				socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId, actionId, enabled]).catch(
-					(e) => {
-						console.error('Failed to enable/disable action', e)
-					}
-				)
+				socket.emitPromise('controls:action:enabled', [controlId, stepId, setId, actionId, enabled]).catch((e) => {
+					console.error('Failed to enable/disable action', e)
+				})
 			},
 
 			setHeadline: (actionId: string, headline: string) => {
-				socketEmitPromise(socket, 'controls:action:set-headline', [controlId, stepId, setId, actionId, headline]).catch(
-					(e) => {
+				socket
+					.emitPromise('controls:action:set-headline', [controlId, stepId, setId, actionId, headline])
+					.catch((e) => {
 						console.error('Failed to set action headline', e)
-					}
-				)
+					})
 			},
 		}),
 		[socket, confirmModal, controlId, stepId, setId]
@@ -154,19 +152,17 @@ export function useActionRecorderActionService(sessionId: string): IActionEditor
 				_dropParentId: string | null,
 				dropIndex: number
 			) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragActionId, dropIndex]).catch(
-					(e) => {
+				socket
+					.emitPromise('action-recorder:session:action-reorder', [sessionId, dragActionId, dropIndex])
+					.catch((e) => {
 						console.error(e)
-					}
-				)
+					})
 			},
 
 			setValue: (actionId: string, _action: ActionInstance | undefined, key: string, value: any) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-set-value', [sessionId, actionId, key, value]).catch(
-					(e) => {
-						console.error(e)
-					}
-				)
+				socket.emitPromise('action-recorder:session:action-set-value', [sessionId, actionId, key, value]).catch((e) => {
+					console.error(e)
+				})
 			},
 
 			setConnection: (_actionId: string, _connectionId: string | number) => {
@@ -174,19 +170,19 @@ export function useActionRecorderActionService(sessionId: string): IActionEditor
 			},
 
 			setDelay: (actionId: string, delay: number) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-delay', [sessionId, actionId, delay]).catch((e) => {
+				socket.emitPromise('action-recorder:session:action-delay', [sessionId, actionId, delay]).catch((e) => {
 					console.error(e)
 				})
 			},
 
 			performDelete: (actionId: string) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-delete', [sessionId, actionId]).catch((e) => {
+				socket.emitPromise('action-recorder:session:action-delete', [sessionId, actionId]).catch((e) => {
 					console.error(e)
 				})
 			},
 
 			performDuplicate: (actionId: string) => {
-				socketEmitPromise(socket, 'action-recorder:session:action-duplicate', [sessionId, actionId]).catch((e) => {
+				socket.emitPromise('action-recorder:session:action-duplicate', [sessionId, actionId]).catch((e) => {
 					console.error(e)
 				})
 			},

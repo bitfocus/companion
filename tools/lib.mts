@@ -1,3 +1,5 @@
+import { $, fs } from 'zx'
+
 // suppress fnm reporting node version
 process.env.FNM_LOGLEVEL = 'quiet'
 

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { SocketContext, socketEmitPromise } from '../util.js'
+import { SocketContext } from '../util.js'
 import { nanoid } from 'nanoid'
 import { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 
@@ -23,10 +23,11 @@ export function useButtonRenderCache(location: ControlLocation, disable = false)
 
 		let terminated = false
 
-		socketEmitPromise(socket, 'preview:location:subscribe', [location, subId])
+		socket
+			.emitPromise('preview:location:subscribe', [location, subId])
 			.then((imageData) => {
 				if (terminated) {
-					socketEmitPromise(socket, 'preview:location:unsubscribe', [location, subId]).catch((e) => {
+					socket.emitPromise('preview:location:unsubscribe', [location, subId]).catch((e) => {
 						console.error(e)
 					})
 				} else {
@@ -37,7 +38,7 @@ export function useButtonRenderCache(location: ControlLocation, disable = false)
 				console.error(e)
 			})
 
-		const changeHandler = (renderLocation: ControlLocation, image: string | null, isUsed: boolean) => {
+		const unsubChange = socket.on('preview:location:render', (renderLocation, image, isUsed) => {
 			if (terminated) return
 
 			if (
@@ -47,17 +48,15 @@ export function useButtonRenderCache(location: ControlLocation, disable = false)
 			) {
 				setImageState({ image, isUsed })
 			}
-		}
-
-		socket.on('preview:location:render', changeHandler)
+		})
 
 		return () => {
 			terminated = true
-			socketEmitPromise(socket, 'preview:location:unsubscribe', [location, subId]).catch((e) => {
+			socket.emitPromise('preview:location:unsubscribe', [location, subId]).catch((e) => {
 				console.error(e)
 			})
 
-			socket.off('preview:location:render', changeHandler)
+			unsubChange()
 		}
 	}, [socket, location.pageNumber, location.row, location.column, disable])
 

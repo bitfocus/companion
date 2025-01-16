@@ -1,6 +1,6 @@
 import { CButton, CCol } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { socketEmitPromise, SocketContext } from '../util.js'
+import { SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
@@ -87,7 +87,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
 			'Reset',
 			() => {
-				socketEmitPromise(socket, 'pages:reset-page-clear', [pageNumber]).catch((e) => {
+				socket.emitPromise('pages:reset-page-clear', [pageNumber]).catch((e) => {
 					console.error(`Clear page failed: ${e}`)
 				})
 			}
@@ -101,7 +101,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 			`Are you sure you want to reset navigation buttons? This will completely erase button ${pageNumber}/0/0, ${pageNumber}/1/0 and ${pageNumber}/2/0`,
 			'Reset',
 			() => {
-				socketEmitPromise(socket, 'pages:reset-page-nav', [pageNumber]).catch((e) => {
+				socket.emitPromise('pages:reset-page-nav', [pageNumber]).catch((e) => {
 					console.error(`Reset nav failed: ${e}`)
 				})
 			}
@@ -116,7 +116,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current?.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
-								socketEmitPromise(socket, 'controls:reset', [location]).catch((e) => {
+								socket.emitPromise('controls:reset', [location]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							})
@@ -126,7 +126,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'copy':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:copy', [fromInfo, location]).catch((e) => {
+								socket.emitPromise('controls:copy', [fromInfo, location]).catch((e) => {
 									console.error(`copy failed: ${e}`)
 								})
 								stopFunction()
@@ -137,7 +137,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:move', [fromInfo, location]).catch((e) => {
+								socket.emitPromise('controls:move', [fromInfo, location]).catch((e) => {
 									console.error(`move failed: ${e}`)
 								})
 								stopFunction()
@@ -148,7 +148,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'swap':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:swap', [fromInfo, location]).catch((e) => {
+								socket.emitPromise('controls:swap', [fromInfo, location]).catch((e) => {
 									console.error(`swap failed: ${e}`)
 								})
 								stopFunction()

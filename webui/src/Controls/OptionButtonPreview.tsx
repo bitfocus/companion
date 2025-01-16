@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
-import { SocketContext, socketEmitPromise } from '../util.js'
+import { SocketContext } from '../util.js'
 import { useDeepCompareEffect } from 'use-deep-compare'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
@@ -21,7 +21,8 @@ export function OptionButtonPreview({ location, options }: OptionButtonPreviewPr
 	const [image, setImage] = useState<string | null>(null)
 	useDeepCompareEffect(() => {
 		const id = nanoid()
-		socketEmitPromise(socket, 'preview:button-reference:subscribe', [id, location, options])
+		socket
+			.emitPromise('preview:button-reference:subscribe', [id, location, options])
 			.then((newImage) => {
 				console.log('got image', newImage)
 				setImage(newImage)
@@ -31,17 +32,15 @@ export function OptionButtonPreview({ location, options }: OptionButtonPreviewPr
 				setImage(null)
 			})
 
-		const updateImage = (newImage: string | null) => {
+		const unsubUpdates = socket.on(`preview:button-reference:update:${id}`, (newImage) => {
 			setImage(newImage)
-		}
-
-		socket.on(`preview:button-reference:update:${id}`, updateImage)
+		})
 
 		return () => {
-			socketEmitPromise(socket, 'preview:button-reference:unsubscribe', [id]).catch((err) => {
+			socket.emitPromise('preview:button-reference:unsubscribe', [id]).catch((err) => {
 				console.error('Unsubscribe failure', err)
 			})
-			socket.off(`preview:button-reference:update:${id}`, updateImage)
+			unsubUpdates()
 		}
 
 		// TODO - is this too reactive watching all the options?

@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNav, CNavItem, CNavLink, CHeaderToggler, CContainer } from '@coreui/react'
-import { socketEmitPromise } from '../util.js'
 import { faBars, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
@@ -22,10 +21,11 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 	useEffect(() => {
 		if (!socket) return
 
-		socket.on('app-update-info', setUpdateData)
+		const unsubAppInfo = socket.on('app-update-info', setUpdateData)
 		socket.emit('app-update-info')
 
-		socketEmitPromise(socket, 'app-version-info', [])
+		socket
+			.emitPromise('app-version-info', [])
 			.then((info) => {
 				setVersionInfo(info)
 			})
@@ -34,7 +34,7 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 			})
 
 		return () => {
-			socket.off('app-update-info', setUpdateData)
+			unsubAppInfo()
 		}
 	}, [socket])
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CButton, CButtonGroup, CCallout } from '@coreui/react'
-import { socketEmitPromise, SocketContext } from '../../util.js'
+import { SocketContext } from '../../util.js'
 import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '../../Components/ButtonPreview.js'
 import { nanoid } from 'nanoid'
@@ -144,7 +144,8 @@ function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIco
 	useEffect(() => {
 		setPreviewError(false)
 
-		socketEmitPromise(socket, 'presets:preview_render', [connectionId, presetId])
+		socket
+			.emitPromise('presets:preview_render', [connectionId, presetId])
 			.then((img) => {
 				setPreviewImage(img)
 			})

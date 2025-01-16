@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import type { OutboundSurfacesUpdate } from '@companion-app/shared/Model/Surfaces.js'
+import { CompanionSocketWrapped } from '../util.js'
 import type { SurfacesStore } from '../Stores/SurfacesStore.js'
 
 export function useOutboundSurfacesSubscription(
-	socket: CompanionSocketType,
+	socket: CompanionSocketWrapped,
 	store: SurfacesStore,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
@@ -16,7 +15,8 @@ export function useOutboundSurfacesSubscription(
 		store.resetOutboundSurfaces(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'surfaces:outbound:subscribe', [])
+		socket
+			.emitPromise('surfaces:outbound:subscribe', [])
 			.then((surfaces) => {
 				setLoadError?.(null)
 				store.resetOutboundSurfaces(surfaces)
@@ -28,20 +28,18 @@ export function useOutboundSurfacesSubscription(
 				store.resetOutboundSurfaces(null)
 			})
 
-		const updateSurfaces = (changes: OutboundSurfacesUpdate[]) => {
+		const unsubUpdates = socket.on('surfaces:outbound:update', (changes) => {
 			for (const change of changes) {
 				store.applyOutboundSurfacesChange(change)
 			}
-		}
-
-		socket.on('surfaces:outbound:update', updateSurfaces)
+		})
 
 		return () => {
 			store.resetOutboundSurfaces(null)
 
-			socket.off('surfaces:outbound:update', updateSurfaces)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'surfaces:outbound:unsubscribe', []).catch((e) => {
+			socket.emitPromise('surfaces:outbound:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to outbound surfaces list', e)
 			})
 		}

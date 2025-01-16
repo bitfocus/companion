@@ -11,7 +11,7 @@ import {
 	CTabContent,
 	CTabPane,
 } from '@coreui/react'
-import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../util.js'
+import { MyErrorBoundary, SocketContext } from '../util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -85,7 +85,8 @@ export const Triggers = observer(function Triggers() {
 	)
 
 	const doAddNew = useCallback(() => {
-		socketEmitPromise(socket, 'triggers:create', [])
+		socket
+			.emitPromise('triggers:create', [])
 			.then((controlId) => {
 				console.log('created trigger', controlId)
 				doEditItem(controlId)
@@ -192,7 +193,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 			const newIds = rawIds.filter((id) => id !== itemId)
 			newIds.splice(targetIndex, 0, itemId)
 
-			socketEmitPromise(socket, 'triggers:set-order', [newIds]).catch((e) => {
+			socket.emitPromise('triggers:set-order', [newIds]).catch((e) => {
 				console.error('Reorder failed', e)
 			})
 		},
@@ -248,20 +249,21 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const doEnableDisable = useCallback(() => {
-		socketEmitPromise(socket, 'controls:set-options-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
+		socket.emitPromise('controls:set-options-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
 			console.error('failed to toggle trigger state', e)
 		})
 	}, [socket, controlId, item.enabled])
 	const doDelete = useCallback(() => {
 		confirmRef.current?.show('Delete trigger', 'Are you sure you wish to delete this trigger?', 'Delete', () => {
-			socketEmitPromise(socket, 'triggers:delete', [controlId]).catch((e) => {
+			socket.emitPromise('triggers:delete', [controlId]).catch((e) => {
 				console.error('Failed to delete', e)
 			})
 		})
 	}, [socket, controlId])
 	const doEdit = useCallback(() => editItem(controlId), [editItem, controlId])
 	const doClone = useCallback(() => {
-		socketEmitPromise(socket, 'triggers:clone', [controlId])
+		socket
+			.emitPromise('triggers:clone', [controlId])
 			.then((newControlId) => {
 				console.log('cloned to control', newControlId)
 			})

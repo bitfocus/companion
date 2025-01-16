@@ -47,6 +47,26 @@
 
 -
 
+## Companion v3.4.4 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Update macos to available version
+- Show config directory tray option using wrong path
+- Fix not cleaning up internal feedbacks fully when removing
+- Update streamdeck lib
+- Fix restarts from toggling developer tools aren't a crash #3151
+- Fix don't show some local variables in triggers #3161
+- Sort custom-variables dropdown in the same order as the editor #3159
+- Update IDs of duplicated steps before commiting, #3125
+
+### 🐞 MODULE FIXES
+
+- axeltechnology-cgplus
+- binwiederhier-ntfy
+- smodetech-smodelive
+- zenvideo-ndirouter
+
 ## Companion v3.4.3 - Release Notes
 
 ### 🐞 BUG FIXES

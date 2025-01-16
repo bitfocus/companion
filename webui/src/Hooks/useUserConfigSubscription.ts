@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
+import { CompanionSocketWrapped } from '../util.js'
 import type { UserConfigStore } from '../Stores/UserConfigStore.js'
-import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export function useUserConfigSubscription(
-	socket: CompanionSocketType,
+	socket: CompanionSocketWrapped,
 	store: UserConfigStore,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
@@ -16,7 +15,8 @@ export function useUserConfigSubscription(
 		store.reset(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'userconfig:get-all', [])
+		socket
+			.emitPromise('userconfig:get-all', [])
 			.then((config) => {
 				setLoadError?.(null)
 				store.reset(config)
@@ -28,14 +28,12 @@ export function useUserConfigSubscription(
 				store.reset(null)
 			})
 
-		const updateUserConfigValue = (key: keyof UserConfigModel, value: any) => {
+		const unsubUpdate = socket.on('set_userconfig_key', (key, value) => {
 			store.setValue(key, value)
-		}
-
-		socket.on('set_userconfig_key', updateUserConfigValue)
+		})
 
 		return () => {
-			socket.off('set_userconfig_key', updateUserConfigValue)
+			unsubUpdate()
 		}
 	}, [retryToken, setLoadError, socket, store])
 
