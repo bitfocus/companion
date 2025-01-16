@@ -73,20 +73,20 @@ interface FirmwareVersionInfo {
  * The latest firmware versions for the SDS at the time this was last updated
  */
 const LATEST_FIRMWARE_VERSIONS: FirmwareVersionInfo[] = [
-	{
-		// Studio
-		productIds: [0x00aa],
-		versions: {
-			AP2: '1.05.009',
-			ENCODER_AP2: '1.01.012',
-			ENCODER_LD: '1.01.006',
-		},
-	},
+	// Tool is not ready, so there are no versions to compare
+	// {
+	// 	// Studio
+	// 	productIds: [0x00aa],
+	// 	versions: {
+	// 		AP2: '1.05.009',
+	// 		ENCODER_AP2: '1.01.012',
+	// 		ENCODER_LD: '1.01.006',
+	// 	},
+	// },
 ]
 const STREAMDECK_MODULES_SUPPORTING_UPDATES: ReadonlySet<DeviceModelId> = new Set([DeviceModelId.STUDIO])
-const STREAMDECK_UPDATE_TOOL_URL = 'https://bitfocus.io/?elgato-sds-firmware-updater'
-const STREAMDECK_UPDATE_VERSIONS_URL =
-	'https://gist.githubusercontent.com/Julusian/130d6e7f8142be5196ce4b5da9021954/raw/761859f823a74e2f52e0395ceb172a97cb43db9a/sds-update-test.json'
+const STREAMDECK_UPDATE_DOWNLOAD_URL = 'http://api.bitfocus.io/v1/product/elgato-updater/download'
+const STREAMDECK_UPDATE_VERSIONS_URL = 'http://api.bitfocus.io/v1/product/elgato-updater/versions'
 
 export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
@@ -397,7 +397,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 		if (hasUpdate) {
 			this.info.hasFirmwareUpdates = {
-				updaterDownloadUrl: STREAMDECK_UPDATE_TOOL_URL,
+				updaterDownloadUrl: STREAMDECK_UPDATE_DOWNLOAD_URL,
 			}
 		} else {
 			this.info.hasFirmwareUpdates = undefined

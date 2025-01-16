@@ -43,7 +43,7 @@ export class SurfaceFirmwareUpdateCheck {
 
 			const currentList = allUpdateUrls.get(updateUrl)
 			if (currentList) {
-				currentList.push(handler.surfaceId)
+				currentList.push(surfaceId)
 			} else {
 				allUpdateUrls.set(updateUrl, [surfaceId])
 			}
@@ -67,7 +67,9 @@ export class SurfaceFirmwareUpdateCheck {
 								const handler = this.#surfaceHandlers.get(surfaceId)
 								if (!handler) return
 
-								return this.#performForSurface(handler, versionsInfo)
+								return this.#performForSurface(handler, versionsInfo).catch((e) => {
+									this.#logger.error(`Failed to check for firmware updates for surface "${surfaceId}":  ${e}`)
+								})
 							})
 						)
 					})
@@ -97,7 +99,7 @@ export class SurfaceFirmwareUpdateCheck {
 		}
 
 		// Check if cache is new enough to return directly
-		if (!skipCache && cacheEntry && cacheEntry.timestamp < Date.now() - FIRMWARE_PAYLOAD_CACHE_TTL) {
+		if (!skipCache && cacheEntry && cacheEntry.timestamp >= Date.now() - FIRMWARE_PAYLOAD_CACHE_TTL) {
 			return cacheEntry.payload
 		}
 
