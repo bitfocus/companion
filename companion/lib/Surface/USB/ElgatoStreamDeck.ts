@@ -33,6 +33,7 @@ import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/share
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { LcdPosition, StreamDeckLcdSegmentControlDefinition, StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
+import { SemVer } from 'semver'
 
 const setTimeoutPromise = util.promisify(setTimeout)
 
@@ -62,6 +63,30 @@ function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] 
 
 	return fields
 }
+
+interface FirmwareVersionInfo {
+	productIds: number[]
+	versions: Record<string, string>
+}
+
+/**
+ * The latest firmware versions for the SDS at the time this was last updated
+ */
+const LATEST_FIRMWARE_VERSIONS: FirmwareVersionInfo[] = [
+	// Tool is not ready, so there are no versions to compare
+	// {
+	// 	// Studio
+	// 	productIds: [0x00aa],
+	// 	versions: {
+	// 		AP2: '1.05.009',
+	// 		ENCODER_AP2: '1.01.012',
+	// 		ENCODER_LD: '1.01.006',
+	// 	},
+	// },
+]
+const STREAMDECK_MODULES_SUPPORTING_UPDATES: ReadonlySet<DeviceModelId> = new Set([DeviceModelId.STUDIO])
+const STREAMDECK_UPDATE_DOWNLOAD_URL = 'http://api.bitfocus.io/v1/product/elgato-updater/download'
+const STREAMDECK_UPDATE_VERSIONS_URL = 'http://api.bitfocus.io/v1/product/elgato-updater/versions'
 
 export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
@@ -104,6 +129,10 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			configFields: getConfigFields(this.#streamDeck),
 			deviceId: '', // set in #init()
 			location: undefined, // set later
+		}
+
+		if (STREAMDECK_MODULES_SUPPORTING_UPDATES.has(this.#streamDeck.MODEL)) {
+			this.info.firmwareUpdateVersionsUrl = STREAMDECK_UPDATE_VERSIONS_URL
 		}
 
 		const allRowValues = this.#streamDeck.CONTROLS.map((control) => control.row)
@@ -336,6 +365,45 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 		return self
 	}
 
+	async checkForFirmwareUpdates(latestVersions0?: unknown): Promise<void> {
+		let latestVersions: FirmwareVersionInfo[] | undefined = latestVersions0 as FirmwareVersionInfo[]
+		// If no versions are provided, use the latest known versions for the SDS
+		if (!latestVersions) latestVersions = LATEST_FIRMWARE_VERSIONS
+
+		// This should probably be cached, but it is cheap to check
+		const deviceInfo = await this.#streamDeck.getHidDeviceInfo()
+		const latestVersionsForDevice = latestVersions.find((info) => info.productIds.includes(deviceInfo.productId))
+
+		// If no versions are provided, we can't know that there are updates
+		if (!latestVersionsForDevice) {
+			this.info.hasFirmwareUpdates = undefined
+			return
+		}
+
+		let hasUpdate = false
+
+		const currentVersions = await this.#streamDeck.getAllFirmwareVersions()
+
+		for (const [key, targetVersion] of Object.entries(latestVersionsForDevice.versions)) {
+			const currentVersion = parseVersion(currentVersions[key])
+			const latestVersion = parseVersion(targetVersion)
+
+			if (currentVersion && latestVersion && latestVersion.compare(currentVersion) > 0) {
+				this.#logger.info(`Firmware update available for ${key}: ${currentVersion} -> ${latestVersion}`)
+				hasUpdate = true
+				break
+			}
+		}
+
+		if (hasUpdate) {
+			this.info.hasFirmwareUpdates = {
+				updaterDownloadUrl: STREAMDECK_UPDATE_DOWNLOAD_URL,
+			}
+		} else {
+			this.info.hasFirmwareUpdates = undefined
+		}
+	}
+
 	/**
 	 * Process the information from the GUI and what is saved in database
 	 * @returns false when nothing happens
@@ -380,4 +448,13 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 	draw(x: number, y: number, render: ImageResult): void {
 		this.#writeQueue.queue(`${x}_${y}`, x, y, render)
 	}
+}
+
+function parseVersion(rawVersion: string): SemVer | null {
+	// These versions are not semver, but can hopefully be safely cooerced into it
+
+	const parts = rawVersion.split('.')
+	if (parts.length !== 3) return null
+
+	return new SemVer(`${parseInt(parts[0])}.${parseInt(parts[1])}.${parseInt(parts[2])}`)
 }
