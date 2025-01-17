@@ -11,9 +11,13 @@
 - Support more than 99 pages.
   - New configs will default to a single page.
   - Pages can be reordered
+- Modernise action advancement
+  - Per delay action has been removed and replaced with a new 'Wait' action.
+  - A new 'action group' action exists, which can contain other actions. This allows finer control over action execution and order
 - DB file is now written with SQLite. This will make it more resilient to crashes, improves performance when saving and avoids issues with the db being too big
 - Custom variables are renamed from $(internal:custom_test) to $(custom:test). The old names still work, but will be removed in a future version
 - Support VEC footpedal as a surface
+- Check connection Stream Deck Studio devices for available firmware updates
 - Connection labels can be edited while connections are disabled
 - Add $(internal:uptime) variable
 - Performance improvements for variables
@@ -33,15 +37,10 @@
 
 ### 🐞 BUG FIXES
 
-- Show config directory tray option using wrong path
 - TCP protocols not disconnecting clients when disabling server
-- Unable to edit duplicated steps
 - Allow some missing expression operators
-- Custom variables in dropdowns are ordered to match the editor ui
-- Hide some unusable local variables in triggers
-- Rapidly toggling developer tools caused launcher to crash
 - TCP/UDP api not accepting button text or custom variables containing slashes
-- Streamdeck Studio not working over usb
+- Surface rotation not being considered when checking if a surface overflows the grid bounds
 
 ### 🧩 NEW & UPDATED MODULES
 
