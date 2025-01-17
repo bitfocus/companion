@@ -1,15 +1,16 @@
-import React, { useCallback, useContext, ChangeEvent, RefObject } from 'react'
+import React, { useCallback, useContext, ChangeEvent, RefObject, useMemo } from 'react'
 import { LoadingRetryOrError, PreventDefaultHandler, useComputed } from '../../util.js'
 import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch, CCallout } from '@coreui/react'
 import { DropdownInputField } from '../../Components/index.js'
-import { ActionsList } from '../../Controls/ActionSetEditor.js'
-import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { MinimalEntityList } from '../../Controls/Components/EntityList.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
@@ -140,24 +141,25 @@ interface RecorderSessionProps {
 export const RecorderSession = observer(function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 	const actionsService = useActionRecorderActionService(sessionId)
 
-	const panelCollapseHelper = usePanelCollapseHelper('action_recorder', sessionInfo?.actions?.map((a) => a.id) ?? [])
+	const actionIds = useMemo(() => sessionInfo?.actions?.map((a) => a.id) ?? [], [sessionInfo?.actions])
 
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} />
 
 	return (
 		<CCol xs={12} className="flex-form">
-			<ActionsList
-				location={undefined}
-				controlId=""
-				stepId=""
-				setId={0}
-				parentId={null}
-				dragId={'triggerAction'}
-				actions={sessionInfo.actions}
-				readonly={!!sessionInfo.isRunning}
-				actionsService={actionsService}
-				panelCollapseHelper={panelCollapseHelper}
-			/>
+			<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
+				<MinimalEntityList
+					location={undefined}
+					controlId={`action_recorder_${sessionInfo.id}`}
+					ownerId={null}
+					entities={sessionInfo.actions}
+					readonly={!!sessionInfo.isRunning}
+					serviceFactory={actionsService}
+					entityType={EntityModelType.Action}
+					entityTypeLabel="action"
+					onlyFeedbackType={null}
+				/>
+			</PanelCollapseHelperProvider>
 			{sessionInfo.actions.length === 0 ? <CCallout color="info">No actions have been recorded</CCallout> : ''}
 		</CCol>
 	)

@@ -1,8 +1,8 @@
 import { CoreBase } from '../Core/Base.js'
 import type { Registry } from '../Registry.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import { nanoid } from 'nanoid'
+import { ActionEntityModel, EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
  * Class to handle execution of actions.
@@ -32,13 +32,13 @@ export class ActionRunner extends CoreBase {
 	/**
 	 * Run a single action
 	 */
-	async #runAction(action: ActionInstance, extras: RunActionExtras): Promise<void> {
+	async #runAction(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
 		this.logger.silly('Running action', action)
 
-		if (action.instance === 'internal') {
+		if (action.connectionId === 'internal') {
 			await this.internalModule.executeAction(action, extras)
 		} else {
-			const instance = this.instance.moduleHost.getChild(action.instance)
+			const instance = this.instance.moduleHost.getChild(action.connectionId)
 			if (instance) {
 				await instance.actionRun(action, extras)
 			} else {
@@ -51,11 +51,13 @@ export class ActionRunner extends CoreBase {
 	 * Run multiple actions
 	 */
 	async runMultipleActions(
-		actions0: ActionInstance[],
+		actions0: SomeEntityModel[],
 		extras: RunActionExtras,
 		executeSequential = false
 	): Promise<void> {
-		const actions = actions0.filter((act) => !act.disabled)
+		const actions = actions0.filter(
+			(act): act is ActionEntityModel => act.type === EntityModelType.Action && !act.disabled
+		)
 		if (actions.length === 0) return
 
 		if (extras.abortDelayed.aborted) return
@@ -66,7 +68,7 @@ export class ActionRunner extends CoreBase {
 			for (const action of actions) {
 				if (extras.abortDelayed.aborted) break
 				await this.#runAction(action, extras).catch((e) => {
-					this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
+					this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
 				})
 			}
 		} else {
@@ -78,7 +80,7 @@ export class ActionRunner extends CoreBase {
 				if (waitAction) {
 					// Perform the wait action
 					await this.#runAction(waitAction, extras).catch((e) => {
-						this.logger.silly(`Error executing action for ${waitAction.instance}: ${e.message ?? e}`)
+						this.logger.silly(`Error executing action for ${waitAction.connectionId}: ${e.message ?? e}`)
 					})
 				}
 
@@ -89,7 +91,7 @@ export class ActionRunner extends CoreBase {
 					await Promise.all(
 						actions.map(async (action) =>
 							this.#runAction(action, extras).catch((e) => {
-								this.logger.silly(`Error executing action for ${action.instance}: ${e.message ?? e}`)
+								this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
 							})
 						)
 					)
@@ -98,8 +100,8 @@ export class ActionRunner extends CoreBase {
 		}
 	}
 
-	#splitActionsAroundWaits(actions: ActionInstance[]): GroupedActionInstances[] {
-		const groupedActions: GroupedActionInstances[] = [
+	#splitActionsAroundWaits(actions: ActionEntityModel[]): GroupedActionEntityModels[] {
+		const groupedActions: GroupedActionEntityModels[] = [
 			{
 				waitAction: undefined,
 				actions: [],
@@ -107,7 +109,7 @@ export class ActionRunner extends CoreBase {
 		]
 
 		for (const action of actions) {
-			if (action.action === 'wait') {
+			if (action.definitionId === 'wait') {
 				groupedActions.push({
 					waitAction: action,
 					actions: [],
@@ -121,9 +123,9 @@ export class ActionRunner extends CoreBase {
 	}
 }
 
-interface GroupedActionInstances {
-	waitAction: ActionInstance | undefined
-	actions: ActionInstance[]
+interface GroupedActionEntityModels {
+	waitAction: ActionEntityModel | undefined
+	actions: ActionEntityModel[]
 }
 
 export class ControlActionRunner {
@@ -144,7 +146,7 @@ export class ControlActionRunner {
 	}
 
 	async runActions(
-		actions: ActionInstance[],
+		actions: SomeEntityModel[],
 		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed' | 'executionMode'>
 	): Promise<void> {
 		const controller = new AbortController()

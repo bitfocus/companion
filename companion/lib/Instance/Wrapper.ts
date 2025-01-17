@@ -30,18 +30,15 @@ import type {
 } from '@companion-module/base/dist/host-api/api.js'
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import type {
-	CompanionHTTPRequest,
-	CompanionInputFieldBase,
-	CompanionOptionValues,
-	CompanionVariableValue,
-	LogLevel,
+import {
+	assertNever,
+	type CompanionHTTPRequest,
+	type CompanionInputFieldBase,
+	type CompanionOptionValues,
+	type CompanionVariableValue,
+	type LogLevel,
 } from '@companion-module/base'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { InstanceDefinitions, PresetDefinitionTmp } from './Definitions.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { UIHandler } from '../UI/Handler.js'
@@ -49,6 +46,14 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
+import {
+	ActionEntityModel,
+	EntityModelType,
+	FeedbackEntityModel,
+	SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
@@ -222,24 +227,28 @@ export class SocketEventsHandler {
 		// Find all the feedbacks on controls
 		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
-			const controlFeedbacks =
-				control.supportsFeedbacks && control.feedbacks.getFlattenedFeedbackInstances(this.connectionId)
-			if (controlFeedbacks && controlFeedbacks.length > 0) {
-				const imageSize = control.getBitmapSize()
-				for (const feedback of controlFeedbacks) {
-					allFeedbacks[feedback.id] = {
-						id: feedback.id,
-						controlId: controlId,
-						feedbackId: feedback.type,
-						options: feedback.options,
+			if (!control.supportsEntities) continue
 
-						isInverted: !!feedback.isInverted,
+			const controlEntities = control.entities.getAllEntities()
+			if (!controlEntities || controlEntities.length === 0) continue
 
-						upgradeIndex: feedback.upgradeIndex ?? null,
-						disabled: !!feedback.disabled,
+			const imageSize = control.getBitmapSize()
+			for (const entity of controlEntities) {
+				if (entity.type !== EntityModelType.Feedback) continue
 
-						image: imageSize ?? undefined,
-					}
+				const entityModel = entity.asEntityModel(false) as FeedbackEntityModel
+				allFeedbacks[entityModel.id] = {
+					id: entityModel.id,
+					controlId: controlId,
+					feedbackId: entityModel.definitionId,
+					options: entityModel.options,
+
+					isInverted: !!entityModel.isInverted,
+
+					upgradeIndex: entityModel.upgradeIndex ?? null,
+					disabled: !!entityModel.disabled,
+
+					image: imageSize ?? undefined,
 				}
 			}
 		}
@@ -280,21 +289,23 @@ export class SocketEventsHandler {
 
 		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
-			if (control.supportsActions) {
-				const actions = control.getFlattenedActionInstances()
+			if (!control.supportsEntities) continue
+			// const actions = .map(e => e.asEntityModel())
 
-				for (const action of actions) {
-					if (action.instance == this.connectionId) {
-						allActions[action.id] = {
-							id: action.id,
-							controlId: controlId,
-							actionId: action.action,
-							options: action.options,
+			for (const entity of control.entities.getAllEntities()) {
+				if (entity.connectionId !== this.connectionId) continue
+				if (entity.type !== EntityModelType.Action) continue
 
-							upgradeIndex: action.upgradeIndex ?? null,
-							disabled: !!action.disabled,
-						}
-					}
+				const entityModel = entity.asEntityModel(false)
+
+				allActions[entity.id] = {
+					id: entityModel.id,
+					controlId: controlId,
+					actionId: entityModel.definitionId,
+					options: entityModel.options,
+
+					upgradeIndex: entityModel.upgradeIndex ?? null,
+					disabled: !!entityModel.disabled,
 				}
 			}
 		}
@@ -314,11 +325,20 @@ export class SocketEventsHandler {
 	// 	await this.ipcWrapper.sendWithCb('updateActions', msg)
 	// }
 
+	entityUpdate(entity: SomeEntityModel, controlId: string): Promise<void> {
+		switch (entity.type) {
+			case EntityModelType.Action:
+				return this.#actionUpdate(entity, controlId)
+			case EntityModelType.Feedback:
+				return this.#feedbackUpdate(entity, controlId)
+		}
+	}
+
 	/**
 	 * Inform the child instance class about an updated feedback
 	 */
-	async feedbackUpdate(feedback: FeedbackInstance, controlId: string): Promise<void> {
-		if (feedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
+	async #feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): Promise<void> {
+		if (feedback.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 		if (feedback.disabled) return
 
 		const control = this.#deps.controls.getControl(controlId)
@@ -328,7 +348,7 @@ export class SocketEventsHandler {
 				[feedback.id]: {
 					id: feedback.id,
 					controlId: controlId,
-					feedbackId: feedback.type,
+					feedbackId: feedback.definitionId,
 					options: feedback.options,
 
 					isInverted: !!feedback.isInverted,
@@ -345,65 +365,111 @@ export class SocketEventsHandler {
 	/**
 	 *
 	 */
-	async feedbackLearnValues(
-		feedback: FeedbackInstance,
+	async entityLearnValues(
+		entity: SomeEntityModel,
 		controlId: string
 	): Promise<CompanionOptionValues | undefined | void> {
-		if (feedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
+		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
-		const control = this.#deps.controls.getControl(controlId)
-
-		const feedbackSpec = this.#deps.instanceDefinitions.getFeedbackDefinition(this.connectionId, feedback.type)
-		const learnTimeout = feedbackSpec?.learnTimeout
+		const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
+			entity.type,
+			this.connectionId,
+			entity.definitionId
+		)
+		const learnTimeout = entityDefinition?.learnTimeout
 
 		try {
-			const msg = await this.#ipcWrapper.sendWithCb(
-				'learnFeedback',
-				{
-					feedback: {
-						id: feedback.id,
-						controlId: controlId,
-						feedbackId: feedback.type,
-						options: feedback.options,
+			switch (entity.type) {
+				case EntityModelType.Action: {
+					const msg = await this.#ipcWrapper.sendWithCb(
+						'learnAction',
+						{
+							action: {
+								id: entity.id,
+								controlId: controlId,
+								actionId: entity.definitionId,
+								options: entity.options,
 
-						isInverted: !!feedback.isInverted,
+								upgradeIndex: null,
+								disabled: !!entity.disabled,
+							},
+						},
+						undefined,
+						learnTimeout
+					)
 
-						image: control?.getBitmapSize() ?? undefined,
+					return msg.options
+				}
+				case EntityModelType.Feedback: {
+					const control = this.#deps.controls.getControl(controlId)
 
-						upgradeIndex: null,
-						disabled: !!feedback.disabled,
-					},
-				},
-				undefined,
-				learnTimeout
-			)
+					const msg = await this.#ipcWrapper.sendWithCb(
+						'learnFeedback',
+						{
+							feedback: {
+								id: entity.id,
+								controlId: controlId,
+								feedbackId: entity.definitionId,
+								options: entity.options,
 
-			return msg.options
+								isInverted: !!entity.isInverted,
+
+								image: control?.getBitmapSize() ?? undefined,
+
+								upgradeIndex: null,
+								disabled: !!entity.disabled,
+							},
+						},
+						undefined,
+						learnTimeout
+					)
+
+					return msg.options
+				}
+				default:
+					assertNever(entity)
+					break
+			}
 		} catch (e: any) {
-			this.logger.warn('Error learning feedback options: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error learning feedback options: ' + e?.message)
+			this.logger.warn('Error learning options: ' + e?.message)
+			this.#sendToModuleLog('error', 'Error learning options: ' + e?.message)
 		}
 	}
 
 	/**
-	 * Inform the child instance class about an feedback that has been deleted
+	 * Inform the child instance class about an entity that has been deleted
 	 */
-	async feedbackDelete(oldFeedback: FeedbackInstance): Promise<void> {
-		if (oldFeedback.instance_id !== this.connectionId) throw new Error(`Feedback is for a different instance`)
+	async entityDelete(oldEntity: SomeEntityModel): Promise<void> {
+		if (oldEntity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
-		await this.#ipcWrapper.sendWithCb('updateFeedbacks', {
-			feedbacks: {
-				// Mark as deleted
-				[oldFeedback.id]: null,
-			},
-		})
+		switch (oldEntity.type) {
+			case EntityModelType.Action:
+				await this.#ipcWrapper.sendWithCb('updateActions', {
+					actions: {
+						// Mark as deleted
+						[oldEntity.id]: null,
+					},
+				})
+				break
+			case EntityModelType.Feedback:
+				await this.#ipcWrapper.sendWithCb('updateFeedbacks', {
+					feedbacks: {
+						// Mark as deleted
+						[oldEntity.id]: null,
+					},
+				})
+				break
+			default:
+				assertNever(oldEntity)
+				break
+		}
 	}
 
 	/**
 	 * Inform the child instance class about an updated action
 	 */
-	async actionUpdate(action: ActionInstance, controlId: string): Promise<void> {
-		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
+	async #actionUpdate(action: ActionEntityModel, controlId: string): Promise<void> {
+		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 		if (action.disabled) return
 
 		await this.#ipcWrapper.sendWithCb('updateActions', {
@@ -411,7 +477,7 @@ export class SocketEventsHandler {
 				[action.id]: {
 					id: action.id,
 					controlId: controlId,
-					actionId: action.action,
+					actionId: action.definitionId,
 					options: action.options,
 
 					upgradeIndex: action.upgradeIndex ?? null,
@@ -420,69 +486,19 @@ export class SocketEventsHandler {
 			},
 		})
 	}
-	/**
-	 * Inform the child instance class about an action that has been deleted
-	 */
-	async actionDelete(oldAction: ActionInstance): Promise<void> {
-		if (oldAction.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
-
-		await this.#ipcWrapper.sendWithCb('updateActions', {
-			actions: {
-				// Mark as deleted
-				[oldAction.id]: null,
-			},
-		})
-	}
-
-	/**
-	 *
-	 */
-	async actionLearnValues(
-		action: ActionInstance,
-		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
-		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
-
-		const actionSpec = this.#deps.instanceDefinitions.getActionDefinition(this.connectionId, action.action)
-		const learnTimeout = actionSpec?.learnTimeout
-
-		try {
-			const msg = await this.#ipcWrapper.sendWithCb(
-				'learnAction',
-				{
-					action: {
-						id: action.id,
-						controlId: controlId,
-						actionId: action.action,
-						options: action.options,
-
-						upgradeIndex: null,
-						disabled: !!action.disabled,
-					},
-				},
-				undefined,
-				learnTimeout
-			)
-
-			return msg.options
-		} catch (e: any) {
-			this.logger.warn('Error learning action options: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error learning action options: ' + e?.message)
-		}
-	}
 
 	/**
 	 * Tell the child instance class to execute an action
 	 */
-	async actionRun(action: ActionInstance, extras: RunActionExtras): Promise<void> {
-		if (action.instance !== this.connectionId) throw new Error(`Action is for a different instance`)
+	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
+		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 
 		try {
 			await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
 					id: action.id,
 					controlId: extras?.controlId,
-					actionId: action.action,
+					actionId: action.definitionId,
 					options: action.options,
 
 					upgradeIndex: null,
@@ -618,17 +634,25 @@ export class SocketEventsHandler {
 	 * Handle settings action definitions from the child process
 	 */
 	async #handleSetActionDefinitions(msg: SetActionDefinitionsMessage): Promise<void> {
-		const actions: Record<string, ActionDefinition> = {}
+		const actions: Record<string, ClientEntityDefinition> = {}
 
 		for (const rawAction of msg.actions || []) {
 			actions[rawAction.id] = {
+				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				// @ts-expect-error @companion-module-base exposes these through a mapping that loses the differentiation between types
-				options: rawAction.options || [],
+				// @companion-module-base exposes these through a mapping that loses the differentiation between types
+				options: (rawAction.options || []) as any[],
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
-			}
+
+				showInvert: false,
+				showButtonPreview: false,
+				supportsChildGroups: [],
+
+				feedbackType: null,
+				feedbackStyle: undefined,
+			} satisfies Complete<ClientEntityDefinition>
 		}
 
 		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, actions)
@@ -638,20 +662,24 @@ export class SocketEventsHandler {
 	 * Handle settings feedback definitions from the child process
 	 */
 	async #handleSetFeedbackDefinitions(msg: SetFeedbackDefinitionsMessage): Promise<void> {
-		const feedbacks: Record<string, FeedbackDefinition> = {}
+		const feedbacks: Record<string, ClientEntityDefinition> = {}
 
 		for (const rawFeedback of msg.feedbacks || []) {
 			feedbacks[rawFeedback.id] = {
+				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				description: rawFeedback.description,
-				// @ts-expect-error @companion-module-base exposes these through a mapping that loses the differentiation between types
-				options: rawFeedback.options || [],
-				type: rawFeedback.type,
-				style: rawFeedback.defaultStyle,
+				// @companion-module-base exposes these through a mapping that loses the differentiation between types
+				options: (rawFeedback.options || []) as any[],
+				feedbackType: rawFeedback.type,
+				feedbackStyle: rawFeedback.defaultStyle,
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
-			}
+
+				showButtonPreview: false,
+				supportsChildGroups: [],
+			} satisfies Complete<ClientEntityDefinition>
 		}
 
 		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, feedbacks)
@@ -819,11 +847,12 @@ export class SocketEventsHandler {
 				if (feedback) {
 					const control = this.#deps.controls.getControl(feedback.controlId)
 					const found =
-						control?.supportsFeedbacks &&
-						control.feedbacks.feedbackReplace(
+						control?.supportsEntities &&
+						control.entities.entityReplace(
 							{
+								type: EntityModelType.Feedback,
 								id: feedback.id,
-								type: feedback.feedbackId,
+								definitionId: feedback.feedbackId,
 								options: feedback.options,
 								style: feedback.style,
 								isInverted: feedback.isInverted,
@@ -840,11 +869,12 @@ export class SocketEventsHandler {
 				if (action) {
 					const control = this.#deps.controls.getControl(action.controlId)
 					const found =
-						control?.supportsActions &&
-						control.actionReplace(
+						control?.supportsEntities &&
+						control.entities.entityReplace(
 							{
+								type: EntityModelType.Action,
 								id: action.id,
-								action: action.actionId,
+								definitionId: action.actionId,
 								options: action.options,
 							},
 							true

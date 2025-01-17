@@ -212,7 +212,7 @@ const PageListRow = observer(function PageListRow({
 	preview(drop(ref))
 
 	return (
-		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
+		<tr ref={ref} className={isDragging ? 'entitylist-dragging' : ''}>
 			<td ref={drag} className="td-reorder" style={{ width: 10 }}>
 				<FontAwesomeIcon icon={faSort} />
 			</td>

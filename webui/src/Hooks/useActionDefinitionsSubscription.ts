@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { CompanionSocketWrapped } from '../util.js'
-import { ActionDefinitionsStore } from '../Stores/ActionDefinitionsStore.js'
+import { EntityDefinitionsForTypeStore } from '../Stores/EntityDefinitionsStore.js'
 
 export function useActionDefinitionsSubscription(
 	socket: CompanionSocketWrapped,
-	store: ActionDefinitionsStore
+	store: EntityDefinitionsForTypeStore
 ): boolean {
 	const [ready, setReady] = useState(false)
 

@@ -3,17 +3,16 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import { nanoid } from 'nanoid'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { LoadingRetryOrError, SocketContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
-import { ControlActionSetEditor } from '../Controls/ActionSetEditor.jsx'
+import { ControlEntitiesEditor } from '../Controls/EntitiesEditor.js'
 import jsonPatch from 'fast-json-patch'
-
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
-import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.jsx'
 import { cloneDeep } from 'lodash-es'
 import { TextInputField } from '../Components/index.js'
 import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -130,7 +129,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
-								<ControlFeedbacksEditor
+								<ControlEntitiesEditor
 									heading={
 										<>
 											Conditions &nbsp;
@@ -140,17 +139,18 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 											/>
 										</>
 									}
-									entityType="condition"
 									controlId={controlId}
-									feedbacks={config.condition}
-									booleanOnly={true}
+									entities={config.condition}
+									listId="feedbacks"
+									entityType={EntityModelType.Feedback}
+									entityTypeLabel="condition"
+									onlyFeedbackType="boolean"
 									location={undefined}
-									addPlaceholder="+ Add condition"
 								/>
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
-								<ControlActionSetEditor
+								<ControlEntitiesEditor
 									heading={
 										<>
 											Actions &nbsp;
@@ -159,10 +159,11 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									}
 									controlId={controlId}
 									location={undefined}
-									stepId=""
-									setId={0}
-									addPlaceholder="+ Add action"
-									actions={config.action_sets[0]}
+									listId="trigger_actions"
+									entities={config.actions}
+									entityType={EntityModelType.Action}
+									entityTypeLabel="action"
+									onlyFeedbackType={null}
 								/>
 							</MyErrorBoundary>
 						</>

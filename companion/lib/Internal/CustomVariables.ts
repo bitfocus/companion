@@ -26,8 +26,8 @@ import type {
 } from './Types.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 export class InternalCustomVariables implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/CustomVariables')
@@ -140,7 +140,7 @@ export class InternalCustomVariables implements InternalModuleFragment {
 		}
 	}
 
-	actionUpgrade(action: ActionInstance, _controlId: string): ActionInstance | void {
+	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
 		const variableRegex = /^\$\(([^:$)]+):([^)$]+)\)$/
 		const wrapValue = (val: string | number) => {
 			if (!isNaN(Number(val))) {
@@ -152,7 +152,7 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			}
 		}
 
-		if (action.action === 'custom_variable_math_operation') {
+		if (action.definitionId === 'custom_variable_math_operation') {
 			let op = '???'
 			let reverse = false
 			switch (action.options.operation) {
@@ -178,7 +178,7 @@ export class InternalCustomVariables implements InternalModuleFragment {
 					break
 			}
 
-			action.action = 'custom_variable_set_expression'
+			action.definitionId = 'custom_variable_set_expression'
 
 			const parts = [`$(${action.options.variable})`, op, wrapValue(action.options.value)]
 			if (reverse) parts.reverse()
@@ -191,8 +191,8 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			delete action.options.result
 
 			return action
-		} else if (action.action === 'custom_variable_math_int_operation') {
-			action.action = 'custom_variable_set_expression'
+		} else if (action.definitionId === 'custom_variable_math_int_operation') {
+			action.definitionId = 'custom_variable_set_expression'
 			action.options.expression = `fromRadix($(${action.options.variable}), ${action.options.radix || 2})`
 			action.options.name = action.options.result
 			delete action.options.variable
@@ -200,16 +200,16 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			delete action.options.result
 
 			return action
-		} else if (action.action === 'custom_variable_string_trim_operation') {
-			action.action = 'custom_variable_set_expression'
+		} else if (action.definitionId === 'custom_variable_string_trim_operation') {
+			action.definitionId = 'custom_variable_set_expression'
 			action.options.expression = `trim($(${action.options.variable}))`
 			action.options.name = action.options.result
 			delete action.options.variable
 			delete action.options.result
 
 			return action
-		} else if (action.action === 'custom_variable_string_concat_operation') {
-			action.action = 'custom_variable_set_expression'
+		} else if (action.definitionId === 'custom_variable_string_concat_operation') {
+			action.definitionId = 'custom_variable_set_expression'
 
 			const wrappedValue =
 				action.options.value.indexOf('$(') !== -1 ? `\${${wrapValue(action.options.value)}}` : action.options.value
@@ -227,8 +227,8 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			delete action.options.result
 
 			return action
-		} else if (action.action === 'custom_variable_string_substring_operation') {
-			action.action = 'custom_variable_set_expression'
+		} else if (action.definitionId === 'custom_variable_string_substring_operation') {
+			action.definitionId = 'custom_variable_set_expression'
 
 			action.options.expression = `substr($(${action.options.variable}), ${wrapValue(
 				action.options.start
@@ -241,8 +241,8 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			delete action.options.result
 
 			return action
-		} else if (action.action === 'custom_variable_set_via_jsonpath') {
-			action.action = 'custom_variable_set_expression'
+		} else if (action.definitionId === 'custom_variable_set_via_jsonpath') {
+			action.definitionId = 'custom_variable_set_expression'
 			action.options.expression = `jsonpath($(custom:${action.options.jsonResultDataVariable}), "${action.options.jsonPath?.replaceAll('"', '\\"')}")`
 
 			action.options.name = action.options.targetVariable
@@ -255,18 +255,18 @@ export class InternalCustomVariables implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
-		if (action.action === 'custom_variable_set_value') {
+	executeAction(action: ActionEntityModel, extras: RunActionExtras): boolean {
+		if (action.definitionId === 'custom_variable_set_value') {
 			this.#variableController.custom.setValue(action.options.name, action.options.value)
 			return true
-		} else if (action.action === 'custom_variable_create_value') {
+		} else if (action.definitionId === 'custom_variable_create_value') {
 			if (this.#variableController.custom.hasCustomVariable(action.options.name)) {
 				this.#variableController.custom.setValue(action.options.name, action.options.value)
 			} else {
 				this.#variableController.custom.createVariable(action.options.name, action.options.value)
 			}
 			return true
-		} else if (action.action === 'custom_variable_set_expression') {
+		} else if (action.definitionId === 'custom_variable_set_expression') {
 			try {
 				const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
 					action.options.expression,
@@ -278,15 +278,15 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'custom_variable_store_variable') {
+		} else if (action.definitionId === 'custom_variable_store_variable') {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const value = this.#variableController.values.getVariableValue(connectionLabel, variableName)
 			this.#variableController.custom.setValue(action.options.name, value)
 			return true
-		} else if (action.action === 'custom_variable_reset_to_default') {
+		} else if (action.definitionId === 'custom_variable_reset_to_default') {
 			this.#variableController.custom.resetValueToDefault(action.options.name)
 			return true
-		} else if (action.action === 'custom_variable_sync_to_default') {
+		} else if (action.definitionId === 'custom_variable_sync_to_default') {
 			this.#variableController.custom.syncValueToDefault(action.options.name)
 			return true
 		} else {

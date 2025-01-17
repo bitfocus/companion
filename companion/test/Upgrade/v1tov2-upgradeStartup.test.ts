@@ -1,9 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import LogController from '../../lib/Log/Controller.js'
 import v1tov2 from '../../lib/Data/Upgrades/v1tov2.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import fs from 'fs-extra'
+import { SuppressLogging } from '../Util.js'
 
 function CreateDataDatabase() {
 	const db = new DataDatabase()
@@ -29,6 +30,8 @@ class DataDatabase extends DataStoreBase {
 }
 
 describe('upgrade', () => {
+	SuppressLogging()
+
 	it('empty', () => {
 		const db = CreateDataDatabase()
 		v1tov2.upgradeStartup(db, LogController.createLogger('test-logger'))

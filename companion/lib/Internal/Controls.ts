@@ -22,7 +22,7 @@ import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
 import type {
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	ExecuteFeedbackResultWithReferences,
@@ -37,10 +37,9 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
 	{
@@ -193,7 +192,7 @@ export class InternalControls implements InternalModuleFragment {
 
 	#fetchLocationAndControlId(
 		options: Record<string, any>,
-		extras: RunActionExtras | FeedbackInstanceExt,
+		extras: RunActionExtras | FeedbackEntityModelExt,
 		useVariableFields = false
 	): {
 		theControlId: string | null
@@ -617,11 +616,11 @@ export class InternalControls implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			bank_style: {
-				type: 'advanced',
+				feedbackType: 'advanced',
 				label: 'Button: Use another buttons style',
 				description: 'Imitate the style of another button',
 				showButtonPreview: true,
-				style: undefined,
+				feedbackStyle: undefined,
 				showInvert: false,
 				options: [
 					...CHOICES_DYNAMIC_LOCATION,
@@ -636,11 +635,11 @@ export class InternalControls implements InternalModuleFragment {
 				],
 			},
 			bank_pushed: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Button: When pushed',
 				description: 'Change style when a button is being pressed',
 				showButtonPreview: true,
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -656,11 +655,11 @@ export class InternalControls implements InternalModuleFragment {
 				],
 			},
 			bank_current_step: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Button: Check step',
 				description: 'Change style based on the current step of a button',
 				showButtonPreview: true,
-				style: {
+				feedbackStyle: {
 					color: 0x000000,
 					bgcolor: 0x00ff00,
 				},
@@ -681,7 +680,7 @@ export class InternalControls implements InternalModuleFragment {
 		}
 	}
 
-	feedbackUpgrade(feedback: FeedbackInstance, _controlId: string): FeedbackInstance | void {
+	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
 		let changed = false
 
 		if (feedback.options.bank !== undefined) {
@@ -711,8 +710,8 @@ export class InternalControls implements InternalModuleFragment {
 		if (changed) return feedback
 	}
 
-	executeFeedback(feedback: FeedbackInstanceExt): ExecuteFeedbackResultWithReferences | void {
-		if (feedback.type === 'bank_style') {
+	executeFeedback(feedback: FeedbackEntityModelExt): ExecuteFeedbackResultWithReferences | void {
+		if (feedback.definitionId === 'bank_style') {
 			const { theLocation, referencedVariables } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			if (
@@ -760,16 +759,16 @@ export class InternalControls implements InternalModuleFragment {
 					value: {},
 				}
 			}
-		} else if (feedback.type === 'bank_pushed') {
+		} else if (feedback.definitionId === 'bank_pushed') {
 			const { theControlId, referencedVariables } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			const control = theControlId && this.#controlsController.getControl(theControlId)
 			if (control && control.supportsPushed) {
 				let isPushed = !!control.pushed
 
-				if (!isPushed && feedback.options.latch_compatability && control.supportsSteps) {
+				if (!isPushed && feedback.options.latch_compatability && control.supportsActionSets) {
 					// Backwards compatibility for the old 'latching' behaviour
-					isPushed = control.getActiveStepIndex() !== 0
+					isPushed = control.actionSets.getActiveStepIndex() !== 0
 				}
 
 				return {
@@ -782,16 +781,16 @@ export class InternalControls implements InternalModuleFragment {
 					value: false,
 				}
 			}
-		} else if (feedback.type == 'bank_current_step') {
+		} else if (feedback.definitionId == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
 
 			const theStep = feedback.options.step
 
 			const control = theControlId && this.#controlsController.getControl(theControlId)
-			if (control && control.supportsSteps) {
+			if (control && control.supportsActionSets) {
 				return {
 					referencedVariables: [],
-					value: control.getActiveStepIndex() + 1 === theStep,
+					value: control.actionSets.getActiveStepIndex() + 1 === Number(theStep),
 				}
 			} else {
 				return {
@@ -802,15 +801,15 @@ export class InternalControls implements InternalModuleFragment {
 		}
 	}
 
-	actionUpgrade(action: ActionInstance, _controlId: string): ActionInstance | void {
+	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
 		let changed = false
 		if (
-			action.action === 'button_pressrelease' ||
-			action.action === 'button_pressrelease_if_expression' ||
-			action.action === 'button_pressrelease_condition' ||
-			action.action === 'button_pressrelease_condition_variable' ||
-			action.action === 'button_press' ||
-			action.action === 'button_release'
+			action.definitionId === 'button_pressrelease' ||
+			action.definitionId === 'button_pressrelease_if_expression' ||
+			action.definitionId === 'button_pressrelease_condition' ||
+			action.definitionId === 'button_pressrelease_condition_variable' ||
+			action.definitionId === 'button_press' ||
+			action.definitionId === 'button_release'
 		) {
 			if (action.options.force === undefined) {
 				action.options.force = true
@@ -819,8 +818,8 @@ export class InternalControls implements InternalModuleFragment {
 			}
 		}
 
-		if (action.action === 'button_pressrelease_condition_variable') {
-			action.action = 'button_pressrelease_condition'
+		if (action.definitionId === 'button_pressrelease_condition_variable') {
+			action.definitionId = 'button_pressrelease_condition'
 
 			// Also mangle the page & bank inputs
 			action.options.page_from_variable = true
@@ -836,22 +835,22 @@ export class InternalControls implements InternalModuleFragment {
 		// Update bank -> location
 		if (
 			action.options.location_target === undefined &&
-			(action.action === 'button_pressrelease' ||
-				action.action === 'button_press' ||
-				action.action === 'button_pressrelease_if_expression' ||
-				action.action === 'button_pressrelease_condition' ||
-				action.action === 'button_press' ||
-				action.action === 'button_release' ||
-				action.action === 'button_rotate_left' ||
-				action.action === 'button_rotate_right' ||
-				action.action === 'button_text' ||
-				action.action === 'textcolor' ||
-				action.action === 'bgcolor' ||
-				action.action === 'panic_bank' ||
-				action.action === 'bank_current_step' ||
-				action.action === 'bank_current_step_condition' ||
-				action.action === 'bank_current_step_if_expression' ||
-				action.action === 'bank_current_step_delta')
+			(action.definitionId === 'button_pressrelease' ||
+				action.definitionId === 'button_press' ||
+				action.definitionId === 'button_pressrelease_if_expression' ||
+				action.definitionId === 'button_pressrelease_condition' ||
+				action.definitionId === 'button_press' ||
+				action.definitionId === 'button_release' ||
+				action.definitionId === 'button_rotate_left' ||
+				action.definitionId === 'button_rotate_right' ||
+				action.definitionId === 'button_text' ||
+				action.definitionId === 'textcolor' ||
+				action.definitionId === 'bgcolor' ||
+				action.definitionId === 'panic_bank' ||
+				action.definitionId === 'bank_current_step' ||
+				action.definitionId === 'bank_current_step_condition' ||
+				action.definitionId === 'bank_current_step_if_expression' ||
+				action.definitionId === 'bank_current_step_delta')
 		) {
 			const oldOptions = { ...action.options }
 			delete action.options.bank
@@ -893,8 +892,8 @@ export class InternalControls implements InternalModuleFragment {
 		if (changed) return action
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
-		if (action.action === 'button_pressrelease') {
+	executeAction(action: ActionEntityModel, extras: RunActionExtras): boolean {
+		if (action.definitionId === 'button_pressrelease') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -903,7 +902,7 @@ export class InternalControls implements InternalModuleFragment {
 			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
 			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
 			return true
-		} else if (action.action == 'button_pressrelease_if_expression') {
+		} else if (action.definitionId == 'button_pressrelease_if_expression') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -920,7 +919,7 @@ export class InternalControls implements InternalModuleFragment {
 				this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
 			}
 			return true
-		} else if (action.action == 'button_pressrelease_condition') {
+		} else if (action.definitionId == 'button_pressrelease_condition') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -941,7 +940,7 @@ export class InternalControls implements InternalModuleFragment {
 				this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
 			}
 			return true
-		} else if (action.action == 'button_press_condition') {
+		} else if (action.definitionId == 'button_press_condition') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -961,7 +960,7 @@ export class InternalControls implements InternalModuleFragment {
 				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
 			}
 			return true
-		} else if (action.action == 'button_release_condition') {
+		} else if (action.definitionId == 'button_release_condition') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -981,31 +980,31 @@ export class InternalControls implements InternalModuleFragment {
 				this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
 			}
 			return true
-		} else if (action.action === 'button_press') {
+		} else if (action.definitionId === 'button_press') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
 			return true
-		} else if (action.action === 'button_release') {
+		} else if (action.definitionId === 'button_release') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
 			return true
-		} else if (action.action === 'button_rotate_left') {
+		} else if (action.definitionId === 'button_rotate_left') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.rotateControl(theControlId, false, extras.surfaceId)
 			return true
-		} else if (action.action === 'button_rotate_right') {
+		} else if (action.definitionId === 'button_rotate_right') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.rotateControl(theControlId, true, extras.surfaceId)
 			return true
-		} else if (action.action === 'bgcolor') {
+		} else if (action.definitionId === 'bgcolor') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -1014,7 +1013,7 @@ export class InternalControls implements InternalModuleFragment {
 				control.styleSetFields({ bgcolor: action.options.color })
 			}
 			return true
-		} else if (action.action === 'textcolor') {
+		} else if (action.definitionId === 'textcolor') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -1023,7 +1022,7 @@ export class InternalControls implements InternalModuleFragment {
 				control.styleSetFields({ color: action.options.color })
 			}
 			return true
-		} else if (action.action === 'button_text') {
+		} else if (action.definitionId === 'button_text') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -1033,7 +1032,7 @@ export class InternalControls implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'panic_bank') {
+		} else if (action.definitionId === 'panic_bank') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -1043,7 +1042,7 @@ export class InternalControls implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'panic_page') {
+		} else if (action.definitionId === 'panic_page') {
 			const { thePage } = this.#fetchPage(action.options, extras)
 			if (thePage === null) return true
 
@@ -1058,7 +1057,7 @@ export class InternalControls implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'panic_trigger') {
+		} else if (action.definitionId === 'panic_trigger') {
 			let controlId = action.options.trigger_id
 			if (controlId === 'self') controlId = extras.controlId
 
@@ -1070,10 +1069,10 @@ export class InternalControls implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'panic') {
+		} else if (action.definitionId === 'panic') {
 			this.#controlsController.abortAllDelayedActions()
 			return true
-		} else if (action.action == 'bank_current_step') {
+		} else if (action.definitionId == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -1081,11 +1080,11 @@ export class InternalControls implements InternalModuleFragment {
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			if (control && control.supportsSteps) {
-				control.stepMakeCurrent(theStep)
+			if (control && control.supportsActionSets) {
+				control.actionSets.stepMakeCurrent(theStep)
 			}
 			return true
-		} else if (action.action == 'bank_current_step_condition') {
+		} else if (action.definitionId == 'bank_current_step_condition') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -1104,12 +1103,12 @@ export class InternalControls implements InternalModuleFragment {
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
 			if (pressIt) {
-				if (control && control.supportsSteps) {
-					control.stepMakeCurrent(theStep)
+				if (control && control.supportsActionSets) {
+					control.actionSets.stepMakeCurrent(theStep)
 				}
 			}
 			return true
-		} else if (action.action == 'bank_current_step_if_expression') {
+		} else if (action.definitionId == 'bank_current_step_if_expression') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
@@ -1124,19 +1123,19 @@ export class InternalControls implements InternalModuleFragment {
 			).value
 
 			if (pressIt) {
-				if (control && control.supportsSteps) {
-					control.stepMakeCurrent(theStep)
+				if (control && control.supportsActionSets) {
+					control.actionSets.stepMakeCurrent(theStep)
 				}
 			}
 			return true
-		} else if (action.action == 'bank_current_step_delta') {
+		} else if (action.definitionId == 'bank_current_step_delta') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			if (control && control.supportsSteps) {
-				control.stepAdvanceDelta(action.options.amount)
+			if (control && control.supportsActionSets) {
+				control.actionSets.stepAdvanceDelta(action.options.amount)
 			}
 			return true
 		} else {

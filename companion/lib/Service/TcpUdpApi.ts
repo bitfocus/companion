@@ -162,9 +162,9 @@ export class ServiceTcpUdpApi extends CoreBase {
 			if (isNaN(step) || step <= 0) throw new ApiMessageError('Step out of range')
 
 			const control = this.controls.getControl(controlId)
-			if (!control || !control.supportsSteps) throw new ApiMessageError('Invalid control')
+			if (!control || !control.supportsActionSets) throw new ApiMessageError('Invalid control')
 
-			if (!control.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
+			if (!control.actionSets.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
 		})
 
 		this.#router.addPath('style bank :page :bank text{ *text}', (match) => {
@@ -378,11 +378,11 @@ export class ServiceTcpUdpApi extends CoreBase {
 		}
 
 		const control = this.controls.getControl(controlId)
-		if (!control || !control.supportsSteps) {
+		if (!control || !control.supportsActionSets) {
 			throw new ApiMessageError('No control at location')
 		}
 
-		if (!control.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
+		if (!control.actionSets.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
 	}
 
 	/**

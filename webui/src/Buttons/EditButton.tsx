@@ -45,26 +45,20 @@ import { nanoid } from 'nanoid'
 import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { KeyReceiver, LoadingRetryOrError, SocketContext, MyErrorBoundary } from '../util.js'
-import { ControlActionSetEditor } from '../Controls/ActionSetEditor.js'
+import { ControlEntitiesEditor } from '../Controls/EntitiesEditor.js'
 import jsonPatch from 'fast-json-patch'
 import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig.js'
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
-import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.js'
 import { cloneDeep } from 'lodash-es'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import {
-	ActionInstance,
-	ActionSetId,
-	ActionSetsModel,
-	ActionStepOptions,
-} from '@companion-app/shared/Model/ActionModel.js'
-import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
+import { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import { NormalButtonSteps, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
+import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -376,7 +370,7 @@ interface TabsSectionProps {
 	steps: NormalButtonSteps
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
-	feedbacks: FeedbackInstance[]
+	feedbacks: SomeEntityModel[]
 }
 
 function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }: TabsSectionProps) {
@@ -550,17 +544,21 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 				>
 					<p></p>
 					{selectedStep === 'feedbacks' && (
-						<MyErrorBoundary>
-							<ControlFeedbacksEditor
-								heading="Feedbacks"
-								entityType="feedback"
-								controlId={controlId}
-								feedbacks={feedbacks}
-								location={location}
-								booleanOnly={false}
-								addPlaceholder="+ Add feedback"
-							/>
-						</MyErrorBoundary>
+						<div>
+							{/* Wrap the entity-category, for :first-child to work */}
+							<MyErrorBoundary>
+								<ControlEntitiesEditor
+									heading="Feedbacks"
+									controlId={controlId}
+									entities={feedbacks}
+									location={location}
+									listId="feedbacks"
+									entityType={EntityModelType.Feedback}
+									entityTypeLabel="feedback"
+									onlyFeedbackType={null}
+								/>
+							</MyErrorBoundary>
+						</div>
 					)}
 
 					{selectedKey && selectedStep && (
@@ -617,31 +615,35 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 							</CButtonGroup>
 
 							<div>
-								{/* Wrap the action-category, for :first-child to work */}
+								{/* Wrap the entity-category, for :first-child to work */}
 
 								{rotaryActions && selectedStep2 && (
 									<>
 										<MyErrorBoundary>
-											<ControlActionSetEditor
+											<ControlEntitiesEditor
 												heading="Rotate left actions"
 												controlId={controlId}
 												location={location}
-												stepId={selectedKey}
-												setId="rotate_left"
-												addPlaceholder="+ Add rotate left action"
-												actions={selectedStep2.action_sets['rotate_left']}
+												listId={{ stepId: selectedKey, setId: 'rotate_left' }}
+												// addPlaceholder="+ Add rotate left action"
+												entities={selectedStep2.action_sets['rotate_left']}
+												entityType={EntityModelType.Action}
+												entityTypeLabel="action"
+												onlyFeedbackType={null}
 											/>
 										</MyErrorBoundary>
 
 										<MyErrorBoundary>
-											<ControlActionSetEditor
+											<ControlEntitiesEditor
 												heading="Rotate right actions"
 												controlId={controlId}
 												location={location}
-												stepId={selectedKey}
-												setId="rotate_right"
-												addPlaceholder="+ Add rotate right action"
-												actions={selectedStep2.action_sets['rotate_right']}
+												listId={{ stepId: selectedKey, setId: 'rotate_right' }}
+												// addPlaceholder="+ Add rotate right action"
+												entities={selectedStep2.action_sets['rotate_right']}
+												entityType={EntityModelType.Action}
+												entityTypeLabel="action"
+												onlyFeedbackType={null}
 											/>
 										</MyErrorBoundary>
 									</>
@@ -650,14 +652,16 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								{selectedStep2 && (
 									<div className="mt-10">
 										<MyErrorBoundary>
-											<ControlActionSetEditor
+											<ControlEntitiesEditor
 												heading={`Press actions`}
 												controlId={controlId}
 												location={location}
-												stepId={selectedKey}
-												setId="down"
-												addPlaceholder={`+ Add press action`}
-												actions={selectedStep2.action_sets['down']}
+												listId={{ stepId: selectedKey, setId: 'down' }}
+												// addPlaceholder={`+ Add press action`}
+												entities={selectedStep2.action_sets['down']}
+												entityType={EntityModelType.Action}
+												entityTypeLabel="action"
+												onlyFeedbackType={null}
 											/>
 										</MyErrorBoundary>
 
@@ -820,7 +824,7 @@ function EditActionsRelease({
 	)
 
 	const candidate_sets = Object.entries(action_sets)
-		.map((o): [number, ActionInstance[] | undefined] => [Number(o[0]), o[1]])
+		.map((o): [number, SomeEntityModel[] | undefined] => [Number(o[0]), o[1]])
 		.filter(([id]) => !isNaN(id))
 	candidate_sets.sort((a, b) => a[0] - b[0])
 
@@ -829,7 +833,7 @@ function EditActionsRelease({
 		const ident = runWhileHeld ? `Held for ${id}ms` : `Release after ${id}ms`
 		return (
 			<MyErrorBoundary key={id}>
-				<ControlActionSetEditor
+				<ControlEntitiesEditor
 					key={id}
 					heading={`${ident} actions`}
 					headingActions={[
@@ -842,10 +846,12 @@ function EditActionsRelease({
 					]}
 					controlId={controlId}
 					location={location}
-					stepId={stepId}
-					setId={id}
-					addPlaceholder={`+ Add ${ident} action`}
-					actions={actions}
+					listId={{ stepId, setId: id }}
+					// addPlaceholder={`+ Add ${ident} action`}
+					entities={actions}
+					entityType={EntityModelType.Action}
+					entityTypeLabel="action"
+					onlyFeedbackType={null}
 				/>
 			</MyErrorBoundary>
 		)
@@ -856,14 +862,16 @@ function EditActionsRelease({
 			<EditDurationGroupPropertiesModal ref={editRef} />
 
 			<MyErrorBoundary>
-				<ControlActionSetEditor
+				<ControlEntitiesEditor
 					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
 					controlId={controlId}
 					location={location}
-					stepId={stepId}
-					setId={'up'}
-					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
-					actions={action_sets['up']}
+					listId={{ stepId, setId: 'up' }}
+					// addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
+					entities={action_sets['up']}
+					entityType={EntityModelType.Action}
+					entityTypeLabel="action"
+					onlyFeedbackType={null}
 				/>
 			</MyErrorBoundary>
 

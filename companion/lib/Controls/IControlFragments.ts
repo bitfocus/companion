@@ -1,82 +1,17 @@
 import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
-import type { FragmentFeedbacks } from './Fragments/FragmentFeedbacks.js'
-import type { ActionInstance, ActionOwner, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js'
+import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
+import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
-	(ControlWithSteps | ControlWithoutSteps) &
 	(ControlWithStyle | ControlWithoutStyle) &
-	(ControlWithFeedbacks | ControlWithoutFeedbacks) &
+	(ControlWithEntities | ControlWithoutEntities) &
 	(ControlWithActions | ControlWithoutActions) &
 	(ControlWithEvents | ControlWithoutEvents) &
 	(ControlWithActionSets | ControlWithoutActionSets) &
 	(ControlWithOptions | ControlWithoutOptions) &
 	(ControlWithPushed | ControlWithoutPushed)
-
-export interface ControlWithSteps extends ControlBase<any> {
-	readonly supportsSteps: true
-
-	/**
-	 * Get the index of the current (next to execute) step
-	 * @returns The index of current step
-	 */
-	getActiveStepIndex(): number
-
-	/**
-	 * Add a step to this control
-	 * @returns Id of new step
-	 */
-	stepAdd(): string
-
-	/**
-	 * Progress through the action-sets
-	 * @param amount Number of steps to progress
-	 */
-	stepAdvanceDelta(amount: number): boolean
-
-	/**
-	 * Duplicate a step on this control
-	 * @param stepId the id of the step to duplicate
-	 */
-	stepDuplicate(stepId: string): boolean
-
-	/**
-	 * Set the current (next to execute) action-set by index
-	 * @param index The step index to make the next
-	 */
-	stepMakeCurrent(index: number): boolean
-
-	/**
-	 * Remove an action-set from this control
-	 * @param stepId the id of the action-set
-	 */
-	stepRemove(stepId: string): boolean
-
-	/**
-	 * Set the current (next to execute) action-set by id
-	 * @param stepId The step id to make the next
-	 */
-	stepSelectCurrent(stepId: string): boolean
-
-	/**
-	 * Swap two action-sets
-	 * @param stepId1 One of the action-sets
-	 * @param stepId2 The other action-set
-	 */
-	stepSwap(stepId1: string, stepId2: string): boolean
-
-	/**
-	 * Rename step
-	 * @param stepId the id of the action-set
-	 * @param newName The new name of the step
-	 */
-	stepRename(stepId: string, newName: string): boolean
-}
-
-export interface ControlWithoutSteps extends ControlBase<any> {
-	readonly supportsSteps: false
-}
 
 export interface ControlWithStyle extends ControlBase<any> {
 	readonly supportsStyle: true
@@ -101,10 +36,10 @@ export interface ControlWithoutStyle extends ControlBase<any> {
 	readonly supportsStyle: false
 }
 
-export interface ControlWithFeedbacks extends ControlBase<any> {
-	readonly supportsFeedbacks: true
+export interface ControlWithEntities extends ControlBase<any> {
+	readonly supportsEntities: true
 
-	readonly feedbacks: FragmentFeedbacks
+	readonly entities: ControlEntityListPoolBase
 
 	/**
 	 * Remove any tracked state for an connection
@@ -117,8 +52,8 @@ export interface ControlWithFeedbacks extends ControlBase<any> {
 	forgetConnection(connectionId: string): void
 }
 
-export interface ControlWithoutFeedbacks extends ControlBase<any> {
-	readonly supportsFeedbacks: false
+export interface ControlWithoutEntities extends ControlBase<any> {
+	readonly supportsEntities: false
 }
 
 export interface ControlWithActions extends ControlBase<any> {
@@ -129,92 +64,6 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * @param skip_up Mark button as released
 	 */
 	abortDelayedActions(skip_up: boolean): void
-
-	/**
-	 * Add an action to this control
-	 */
-	actionAdd(stepId: string, setId: ActionSetId, actionItem: ActionInstance, ownerId: ActionOwner | null): boolean
-
-	/**
-	 * Append some actions to this button
-	 * @param stepId
-	 * @param setId the action_set id to update
-	 * @param newActions actions to append
-	 */
-	actionAppend(stepId: string, setId: ActionSetId, newActions: ActionInstance[], ownerId: ActionOwner | null): boolean
-
-	/**
-	 * Duplicate an action on this control
-	 */
-	actionDuplicate(stepId: string, setId: ActionSetId, id: string): string | null
-
-	/**
-	 * Enable or disable an action
-	 */
-	actionEnabled(stepId: string, setId: ActionSetId, id: string, enabled: boolean): boolean
-
-	/**
-	 * Set action headline
-	 */
-	actionHeadline(stepId: string, setId: ActionSetId, id: string, headline: string): boolean
-
-	/**
-	 * Learn the options for an action, by asking the connection for the current values
-	 */
-	actionLearn(stepId: string, setId: ActionSetId, id: string): Promise<boolean>
-
-	/**
-	 * Remove an action from this control
-	 */
-	actionRemove(stepId: string, setId: ActionSetId, id: string): boolean
-
-	/**
-	 * Reorder an action in the list or move between sets
-	 */
-	actionMoveTo(
-		dragStepId: string,
-		dragSetId: ActionSetId,
-		dragActionId: string,
-		hoverStepId: string,
-		hoverSetId: ActionSetId,
-		hoverOwnerId: ActionOwner | null,
-		hoverIndex: number
-	): boolean
-
-	/**
-	 * Remove an action from this control
-	 */
-	actionReplace(newProps: Pick<ActionInstance, 'id' | 'action' | 'options'>, skipNotifyModule?: boolean): boolean
-
-	/**
-	 * Replace all the actions in a set
-	 */
-	actionReplaceAll(stepId: string, setId: ActionSetId, newActions: ActionInstance[]): boolean
-
-	/**
-	 * Set the connection of an action
-	 */
-	actionSetConnection(stepId: string, setId: ActionSetId, id: string, connectionId: string): boolean
-
-	/**
-	 * Set an option of an action
-	 */
-	actionSetOption(stepId: string, setId: ActionSetId, id: string, key: string, value: any): boolean
-
-	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void
-
-	/**
-	 * Update all controls to forget a connection
-	 */
-	forgetConnection(connectionId: string): void
-
-	/**
-	 * Get all the actions on this control
-	 */
-	getFlattenedActionInstances(): ActionInstance[]
 }
 
 export interface ControlWithoutActions extends ControlBase<any> {
@@ -272,25 +121,7 @@ export interface ControlWithoutEvents extends ControlBase<any> {
 export interface ControlWithActionSets extends ControlBase<any> {
 	readonly supportsActionSets: true
 
-	/**
-	 * Add an action set to this control
-	 */
-	actionSetAdd(stepId: string): boolean
-
-	/**
-	 * Remove an action-set from this control
-	 */
-	actionSetRemove(stepId: string, setId: ActionSetId): boolean
-
-	/**
-	 * Rename an action-sets
-	 */
-	actionSetRename(stepId: string, oldSetId: ActionSetId, newSetId: ActionSetId): boolean
-
-	/**
-	 * Set whether an action-set should run while the button is held
-	 */
-	actionSetRunWhileHeld(stepId: string, setId: ActionSetId, runWhileHeld: boolean): boolean
+	readonly actionSets: ControlActionSetAndStepsManager
 
 	/**
 	 * Execute a rotate of this control
