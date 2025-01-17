@@ -790,7 +790,7 @@ export class InternalControls implements InternalModuleFragment {
 			if (control && control.supportsActionSets) {
 				return {
 					referencedVariables: [],
-					value: control.actionSets.getActiveStepIndex() + 1 === theStep,
+					value: control.actionSets.getActiveStepIndex() + 1 === Number(theStep),
 				}
 			} else {
 				return {

@@ -629,7 +629,7 @@ export class ControlEntityInstance {
 		const definition = this.getEntityDefinition()
 
 		// Special case to handle the internal 'logic' operators, which need to be executed live
-		if (this.connectionId === 'internal' && this.#data.type.startsWith('logic_')) {
+		if (this.connectionId === 'internal' && this.#data.definitionId.startsWith('logic_')) {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
 			const childValues = this.#children.get('children')?.getChildBooleanFeedbackValues() ?? []
 
@@ -669,7 +669,7 @@ export class ControlEntityInstance {
 			// Special case to handle the internal 'logic' operators, which need to be done differently
 			if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
 				if (this.getBooleanFeedbackValue()) {
-					for (const child of this.#children.get('advanced')?.getDirectEntities() || []) {
+					for (const child of this.#children.get('feedbacks')?.getDirectEntities() || []) {
 						child.buildFeedbackStyle(styleBuilder)
 					}
 				}

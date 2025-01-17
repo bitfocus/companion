@@ -400,7 +400,7 @@ export class InternalController {
 		const newValues: NewFeedbackValue[] = []
 
 		for (const [id, feedback] of this.#feedbacks.entries()) {
-			if (typesSet.size === 0 || typesSet.has(feedback.type)) {
+			if (typesSet.size === 0 || typesSet.has(feedback.definitionId)) {
 				newValues.push({
 					id: id,
 					controlId: feedback.controlId,

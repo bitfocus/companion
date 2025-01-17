@@ -181,6 +181,10 @@ table.variables-table {
 			h4 {
 				margin-top: 0 !important;
 			}
+
+			form:not(:first-child) {
+				margin-top: 0.5rem;
+			}
 		}
 
 		.cell-actions {

@@ -37,9 +37,8 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 	if (entity.connectionId !== 'internal') return null
 
 	return (
-		!!entityDefinition?.supportsChildGroups.find(
-			(grp) => grp.type === EntityModelType.Action && grp.groupId === 'default'
-		) && (
+		!!entityDefinition?.supportsChildGroups &&
+		entityDefinition.supportsChildGroups.length > 0 && (
 			<div
 				className={classNames('cell-children', {
 					// 'hide-top-gap': actionOptions.length > 0 && (action.children ?? []).length > 0,

@@ -47,7 +47,7 @@ export function upgradeStartup(db: DataDatabase): void {
 			allUpgrades[i - 1].upgradeStartup(db, logger)
 
 			// Record that the upgrade has been done
-			db.setKey('page_config_version', i)
+			db.setKey('page_config_version', i + 1)
 		}
 	}
 

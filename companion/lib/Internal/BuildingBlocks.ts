@@ -57,6 +57,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
 						groupId: 'default',
 						entityTypeLabel: 'condition',
 						label: '',
@@ -78,6 +79,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
 						groupId: 'default',
 						entityTypeLabel: 'condition',
 						label: '',
@@ -99,6 +101,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
 						groupId: 'default',
 						entityTypeLabel: 'condition',
 						label: '',
@@ -117,7 +120,8 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
-						groupId: 'condition',
+						booleanFeedbacksOnly: true,
+						groupId: 'children',
 						entityTypeLabel: 'condition',
 						label: 'Condition',
 						hint: 'This feedback will only execute when all of the conditions are true',
