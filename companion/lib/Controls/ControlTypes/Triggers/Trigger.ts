@@ -275,7 +275,7 @@ export class ControlTrigger
 		const obj: TriggerModel = {
 			type: this.type,
 			options: this.options,
-			actions: this.entities.getActionEntities(),
+			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
 			condition: this.entities.getFeedbackEntities(),
 			events: this.events,
 		}

@@ -35,6 +35,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
@@ -443,27 +444,27 @@ export class InternalSurface implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionEntityModel, extras: RunActionExtras): boolean {
+	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
 		if (action.definitionId === 'set_brightness') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
-			this.#surfaceController.setDeviceBrightness(surfaceId, action.options.brightness, true)
+			this.#surfaceController.setDeviceBrightness(surfaceId, action.rawOptions.brightness, true)
 			return true
 		} else if (action.definitionId === 'set_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
-			const thePage = this.#fetchPage(action.options, extras, true, surfaceId)
+			const thePage = this.#fetchPage(action.rawOptions, extras, true, surfaceId)
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
 			return true
 		} else if (action.definitionId === 'set_page_byindex') {
-			let surfaceIndex = action.options.controller
-			if (action.options.controller_from_variable) {
+			let surfaceIndex = action.rawOptions.controller
+			if (action.rawOptions.controller_from_variable) {
 				surfaceIndex = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-					action.options.controller_variable,
+					action.rawOptions.controller_variable,
 					extras
 				).text
 			}
@@ -476,30 +477,30 @@ export class InternalSurface implements InternalModuleFragment {
 
 			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(surfaceIndexNumber)
 			if (surfaceId === undefined || surfaceId === '') {
-				this.#logger.warn(`Trying to set controller #${action.options.controller} but it isn't available.`)
+				this.#logger.warn(`Trying to set controller #${action.rawOptions.controller} but it isn't available.`)
 				return true
 			}
 
-			const thePage = this.#fetchPage(action.options, extras, true, surfaceId)
+			const thePage = this.#fetchPage(action.rawOptions, extras, true, surfaceId)
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
 			return true
 		} else if (action.definitionId === 'inc_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
 			this.#changeSurfacePage(surfaceId, '+1')
 			return true
 		} else if (action.definitionId === 'dec_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
 			this.#changeSurfacePage(surfaceId, '-1')
 			return true
 		} else if (action.definitionId === 'lockout_device') {
 			if (this.#surfaceController.isPinLockEnabled()) {
-				const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+				const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 				if (!surfaceId) return true
 
 				if (extras.controlId && extras.surfaceId == surfaceId) {
@@ -516,7 +517,7 @@ export class InternalSurface implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId === 'unlockout_device') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
 			setImmediate(() => {

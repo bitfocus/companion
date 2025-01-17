@@ -12,6 +12,7 @@ import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
 import { cloneDeep } from 'lodash-es'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import type { ControlEntityInstance } from './EntityInstance.js'
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
 	/**
@@ -573,7 +574,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		}
 	}
 
-	getActionsToExecuteForSet(setId: ActionSetId): SomeEntityModel[] {
+	getActionsToExecuteForSet(setId: ActionSetId): ControlEntityInstance[] {
 		const [this_step_id] = this.validateCurrentStepIdAndGetNext()
 		if (!this_step_id) return []
 
@@ -583,24 +584,21 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const set = step.sets.get(setId)
 		if (!set) return []
 
-		return set.getDirectEntities().map((ent) => ent.asEntityModel(true))
+		return set.getDirectEntities()
 	}
 
 	getStepActions(stepId: string):
 		| {
-				sets: Map<ActionSetId, SomeEntityModel[]>
+				sets: Map<ActionSetId, ControlEntityInstance[]>
 				options: Readonly<ActionStepOptions>
 		  }
 		| undefined {
 		const step = this.#steps.get(stepId)
 		if (!step) return undefined
 
-		const sets: Map<ActionSetId, SomeEntityModel[]> = new Map()
+		const sets: Map<ActionSetId, ControlEntityInstance[]> = new Map()
 		for (const [setId, set] of step.sets) {
-			sets.set(
-				setId,
-				set.getDirectEntities().map((ent) => ent.asEntityModel(true))
-			)
+			sets.set(setId, set.getDirectEntities())
 		}
 
 		return {

@@ -40,6 +40,7 @@ import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
 	{
@@ -892,24 +893,24 @@ export class InternalControls implements InternalModuleFragment {
 		if (changed) return action
 	}
 
-	executeAction(action: ActionEntityModel, extras: RunActionExtras): boolean {
+	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
 		if (action.definitionId === 'button_pressrelease') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			const forcePress = !!action.options.force
+			const forcePress = !!action.rawOptions.force
 
 			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
 			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
 			return true
 		} else if (action.definitionId == 'button_pressrelease_if_expression') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			const forcePress = !!action.options.force
+			const forcePress = !!action.rawOptions.force
 
 			const pressIt = !!this.#internalModule.executeExpressionForInternalActionOrFeedback(
-				action.options.expression,
+				action.rawOptions.expression,
 				extras,
 				'boolean'
 			).value
@@ -920,20 +921,20 @@ export class InternalControls implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId == 'button_pressrelease_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			const forcePress = !!action.options.force
+			const forcePress = !!action.rawOptions.force
 
-			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
+			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
 			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.options.value,
+				action.rawOptions.value,
 				extras
 			).text
 
-			let pressIt = checkCondition(action.options.op, condition, variable_value)
+			let pressIt = checkCondition(action.rawOptions.op, condition, variable_value)
 
 			if (pressIt) {
 				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
@@ -941,114 +942,114 @@ export class InternalControls implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId == 'button_press_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			const forcePress = !!action.options.force
+			const forcePress = !!action.rawOptions.force
 
-			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
+			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
 			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.options.value,
+				action.rawOptions.value,
 				extras
 			).text
 
-			let pressIt = checkCondition(action.options.op, condition, variable_value)
+			let pressIt = checkCondition(action.rawOptions.op, condition, variable_value)
 
 			if (pressIt) {
 				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
 			}
 			return true
 		} else if (action.definitionId == 'button_release_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			const forcePress = !!action.options.force
+			const forcePress = !!action.rawOptions.force
 
-			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
+			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
 			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.options.value,
+				action.rawOptions.value,
 				extras
 			).text
 
-			let pressIt = checkCondition(action.options.op, condition, variable_value)
+			let pressIt = checkCondition(action.rawOptions.op, condition, variable_value)
 
 			if (pressIt) {
 				this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
 			}
 			return true
 		} else if (action.definitionId === 'button_press') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
+			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, !!action.rawOptions.force)
 			return true
 		} else if (action.definitionId === 'button_release') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
+			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, !!action.rawOptions.force)
 			return true
 		} else if (action.definitionId === 'button_rotate_left') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.rotateControl(theControlId, false, extras.surfaceId)
 			return true
 		} else if (action.definitionId === 'button_rotate_right') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
 			this.#controlsController.rotateControl(theControlId, true, extras.surfaceId)
 			return true
 		} else if (action.definitionId === 'bgcolor') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsStyle) {
-				control.styleSetFields({ bgcolor: action.options.color })
+				control.styleSetFields({ bgcolor: action.rawOptions.color })
 			}
 			return true
 		} else if (action.definitionId === 'textcolor') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsStyle) {
-				control.styleSetFields({ color: action.options.color })
+				control.styleSetFields({ color: action.rawOptions.color })
 			}
 			return true
 		} else if (action.definitionId === 'button_text') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsStyle) {
-				control.styleSetFields({ text: action.options.label })
+				control.styleSetFields({ text: action.rawOptions.label })
 			}
 
 			return true
 		} else if (action.definitionId === 'panic_bank') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsActions) {
-				control.abortDelayedActions(action.options.unlatch)
+				control.abortDelayedActions(action.rawOptions.unlatch)
 			}
 
 			return true
 		} else if (action.definitionId === 'panic_page') {
-			const { thePage } = this.#fetchPage(action.options, extras)
+			const { thePage } = this.#fetchPage(action.rawOptions, extras)
 			if (thePage === null) return true
 
 			const controlIdsOnPage = this.#pagesController.getAllControlIdsOnPage(thePage)
 			for (const controlId of controlIdsOnPage) {
-				if (action.options.ignoreSelf && controlId === extras.controlId) continue
+				if (action.rawOptions.ignoreSelf && controlId === extras.controlId) continue
 
 				const control = this.#controlsController.getControl(controlId)
 				if (control && control.supportsActions) {
@@ -1058,7 +1059,7 @@ export class InternalControls implements InternalModuleFragment {
 
 			return true
 		} else if (action.definitionId === 'panic_trigger') {
-			let controlId = action.options.trigger_id
+			let controlId = action.rawOptions.trigger_id
 			if (controlId === 'self') controlId = extras.controlId
 
 			if (controlId && ParseControlId(controlId)?.type === 'trigger') {
@@ -1073,10 +1074,10 @@ export class InternalControls implements InternalModuleFragment {
 			this.#controlsController.abortAllDelayedActions()
 			return true
 		} else if (action.definitionId == 'bank_current_step') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			const theStep = this.#fetchStep(action.options, extras)
+			const theStep = this.#fetchStep(action.rawOptions, extras)
 
 			const control = this.#controlsController.getControl(theControlId)
 
@@ -1085,22 +1086,22 @@ export class InternalControls implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId == 'bank_current_step_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			const theStep = this.#fetchStep(action.options, extras)
+			const theStep = this.#fetchStep(action.rawOptions, extras)
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
+			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
 			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.options.value,
+				action.rawOptions.value,
 				extras
 			).text
 
-			let pressIt = checkCondition(action.options.op, condition, variable_value)
+			let pressIt = checkCondition(action.rawOptions.op, condition, variable_value)
 
 			if (pressIt) {
 				if (control && control.supportsActionSets) {
@@ -1109,15 +1110,15 @@ export class InternalControls implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId == 'bank_current_step_if_expression') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
-			const theStep = this.#fetchStep(action.options, extras)
+			const theStep = this.#fetchStep(action.rawOptions, extras)
 
 			const control = this.#controlsController.getControl(theControlId)
 
 			const pressIt = !!this.#internalModule.executeExpressionForInternalActionOrFeedback(
-				action.options.expression,
+				action.rawOptions.expression,
 				extras,
 				'boolean'
 			).value
@@ -1129,13 +1130,13 @@ export class InternalControls implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId == 'bank_current_step_delta') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras, true)
+			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
 
 			if (control && control.supportsActionSets) {
-				control.actionSets.stepAdvanceDelta(action.options.amount)
+				control.actionSets.stepAdvanceDelta(action.rawOptions.amount)
 			}
 			return true
 		} else {

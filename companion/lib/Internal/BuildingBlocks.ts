@@ -27,7 +27,8 @@ import type {
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalController } from './Controller.js'
-import { ActionEntityModel, EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
@@ -206,14 +207,15 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionEntityModel, extras: RunActionExtras): Promise<boolean> | boolean {
+	executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> | boolean {
 		if (action.definitionId === 'wait') {
 			if (extras.abortDelayed.aborted) return true
 
 			let delay = 0
 			try {
 				delay = Number(
-					this.#internalModule.executeExpressionForInternalActionOrFeedback(action.options.time, extras, 'number').value
+					this.#internalModule.executeExpressionForInternalActionOrFeedback(action.rawOptions.time, extras, 'number')
+						.value
 				)
 			} catch (e: any) {
 				this.#logger.error(`Failed to parse delay: ${e.message}`)
@@ -230,7 +232,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 			if (extras.abortDelayed.aborted) return true
 
 			let executeSequential = false
-			switch (action.options.execution_mode) {
+			switch (action.rawOptions.execution_mode) {
 				case 'sequential':
 					executeSequential = true
 					break
@@ -241,7 +243,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 					executeSequential = extras.executionMode === 'sequential'
 					break
 				default:
-					this.#logger.error(`Unknown execution mode: ${action.options.execution_mode}`)
+					this.#logger.error(`Unknown execution mode: ${action.rawOptions.execution_mode}`)
 			}
 
 			const newExtras: RunActionExtras = {
@@ -249,8 +251,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				executionMode: executeSequential ? 'sequential' : 'concurrent',
 			}
 
+			const childActions = action.getChildren('default')?.getDirectEntities() ?? []
+
 			return this.#actionRunner
-				.runMultipleActions(action.children?.['default'] ?? [], newExtras, executeSequential)
+				.runMultipleActions(childActions, newExtras, executeSequential)
 				.catch((e) => {
 					this.#logger.error(`Failed to run actions: ${e.message}`)
 				})
@@ -263,4 +267,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
+}
+
+function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean {
+	if (childValues.length === 0) return isInverted
+
+	return childValues.reduce((acc, val) => acc && val, true) === !isInverted
 }

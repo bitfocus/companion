@@ -347,8 +347,11 @@ export class InternalController {
 	/**
 	 * Run a single internal action
 	 */
-	async executeAction(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
+	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+
+		if (action.type !== EntityModelType.Action)
+			throw new Error(`Cannot execute entity of type "${action.type}" as an action`)
 
 		for (const fragment of this.#fragments) {
 			if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {

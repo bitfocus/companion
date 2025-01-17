@@ -503,6 +503,15 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Recursively get all the child entities
+	 */
+	getChildren(groupId: string): ControlEntityList | undefined {
+		if (this.connectionId !== 'internal') return undefined
+
+		return this.#children.get(groupId)
+	}
+
+	/**
 	 * Cleanup and forget any children belonging to the given connection
 	 */
 	forgetChildrenForConnection(connectionId: string): boolean {

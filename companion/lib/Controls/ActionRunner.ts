@@ -2,7 +2,8 @@ import { CoreBase } from '../Core/Base.js'
 import type { Registry } from '../Registry.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import { nanoid } from 'nanoid'
-import { ActionEntityModel, EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 
 /**
  * Class to handle execution of actions.
@@ -32,7 +33,7 @@ export class ActionRunner extends CoreBase {
 	/**
 	 * Run a single action
 	 */
-	async #runAction(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
+	async #runAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
 		this.logger.silly('Running action', action)
 
 		if (action.connectionId === 'internal') {
@@ -40,7 +41,10 @@ export class ActionRunner extends CoreBase {
 		} else {
 			const instance = this.instance.moduleHost.getChild(action.connectionId)
 			if (instance) {
-				await instance.actionRun(action, extras)
+				const entityModel = action.asEntityModel(false)
+				if (entityModel.type !== EntityModelType.Action)
+					throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
+				await instance.actionRun(entityModel, extras)
 			} else {
 				this.logger.silly('trying to run action on a missing instance.', action)
 			}
@@ -51,13 +55,11 @@ export class ActionRunner extends CoreBase {
 	 * Run multiple actions
 	 */
 	async runMultipleActions(
-		actions0: SomeEntityModel[],
+		actions0: ControlEntityInstance[],
 		extras: RunActionExtras,
 		executeSequential = false
 	): Promise<void> {
-		const actions = actions0.filter(
-			(act): act is ActionEntityModel => act.type === EntityModelType.Action && !act.disabled
-		)
+		const actions = actions0.filter((act) => act.type === EntityModelType.Action && !act.disabled)
 		if (actions.length === 0) return
 
 		if (extras.abortDelayed.aborted) return
@@ -100,7 +102,7 @@ export class ActionRunner extends CoreBase {
 		}
 	}
 
-	#splitActionsAroundWaits(actions: ActionEntityModel[]): GroupedActionEntityModels[] {
+	#splitActionsAroundWaits(actions: ControlEntityInstance[]): GroupedActionEntityModels[] {
 		const groupedActions: GroupedActionEntityModels[] = [
 			{
 				waitAction: undefined,
@@ -124,8 +126,8 @@ export class ActionRunner extends CoreBase {
 }
 
 interface GroupedActionEntityModels {
-	waitAction: ActionEntityModel | undefined
-	actions: ActionEntityModel[]
+	waitAction: ControlEntityInstance | undefined
+	actions: ControlEntityInstance[]
 }
 
 export class ControlActionRunner {
@@ -146,7 +148,7 @@ export class ControlActionRunner {
 	}
 
 	async runActions(
-		actions: SomeEntityModel[],
+		actions: ControlEntityInstance[],
 		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed' | 'executionMode'>
 	): Promise<void> {
 		const controller = new AbortController()

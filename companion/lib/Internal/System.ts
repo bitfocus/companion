@@ -32,7 +32,7 @@ import type {
 import type { Registry } from '../Registry.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 async function getHostnameVariables() {
 	const values: CompanionVariableValues = {}
@@ -242,16 +242,16 @@ export class InternalSystem implements InternalModuleFragment {
 		return actions
 	}
 
-	async executeAction(action: ActionEntityModel, extras: RunActionExtras): Promise<boolean> {
+	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> {
 		if (action.definitionId === 'exec') {
-			if (action.options.path) {
-				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.path, extras).text
+			if (action.rawOptions.path) {
+				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.path, extras).text
 				this.#logger.silly(`Running path: '${path}'`)
 
 				exec(
 					path,
 					{
-						timeout: action.options.timeout ?? 5000,
+						timeout: action.rawOptions.timeout ?? 5000,
 					},
 					(error, stdout, _stderr) => {
 						if (error) {
@@ -263,8 +263,8 @@ export class InternalSystem implements InternalModuleFragment {
 						if (typeof stdout === 'string' && stdout.endsWith(os.EOL))
 							stdout = stdout.substring(0, stdout.length - os.EOL.length)
 
-						if (action.options.targetVariable) {
-							this.#variableController.custom.setValue(action.options.targetVariable, stdout)
+						if (action.rawOptions.targetVariable) {
+							this.#variableController.custom.setValue(action.rawOptions.targetVariable, stdout)
 						}
 					}
 				)

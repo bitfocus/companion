@@ -30,6 +30,7 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { InternalController } from './Controller.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 export class InternalTriggers implements InternalModuleFragment {
 	readonly #controlsController: ControlsController
@@ -88,13 +89,13 @@ export class InternalTriggers implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionEntityModel, _extras: RunActionExtras): boolean {
+	executeAction(action: ControlEntityInstance, _extras: RunActionExtras): boolean {
 		if (action.definitionId === 'trigger_enabled') {
-			const control = this.#controlsController.getControl(action.options.trigger_id)
+			const control = this.#controlsController.getControl(action.rawOptions.trigger_id)
 			if (!control || control.type !== 'trigger' || !control.supportsOptions) return false
 
-			let newState = action.options.enable == 'true'
-			if (action.options.enable == 'toggle') newState = !control.options.enabled
+			let newState = action.rawOptions.enable == 'true'
+			if (action.rawOptions.enable == 'toggle') newState = !control.options.enabled
 
 			control.optionsSetField('enabled', newState)
 

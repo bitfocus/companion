@@ -6,7 +6,8 @@ import {
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlEntityInstance } from './EntityInstance.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList
@@ -49,8 +50,8 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	/**
 	 * Get direct the action instances
 	 */
-	getActionEntities(): SomeEntityModel[] {
-		return this.#actions.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	getActionEntities(): ControlEntityInstance[] {
+		return this.#actions.getDirectEntities()
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
