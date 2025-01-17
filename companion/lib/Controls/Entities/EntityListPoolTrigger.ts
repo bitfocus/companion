@@ -30,7 +30,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean) {
 		this.#feedbacks.loadStorage(storage.condition || [], skipSubscribe, isImport)
-		this.#feedbacks.loadStorage(storage.actions || [], skipSubscribe, isImport)
+		this.#actions.loadStorage(storage.actions || [], skipSubscribe, isImport)
 	}
 
 	/**
@@ -56,7 +56,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		if (listId === 'feedbacks') return this.#feedbacks
-		if (listId === 'trigger_actions') return this.#feedbacks
+		if (listId === 'trigger_actions') return this.#actions
 		return undefined
 	}
 
