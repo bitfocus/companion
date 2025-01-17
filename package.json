@@ -34,10 +34,10 @@
     "node": ">=18.16 <19"
   },
   "devDependencies": {
-    "@inquirer/prompts": "^7.2.2",
+    "@inquirer/prompts": "^7.2.3",
     "@types/ps-tree": "^1.1.6",
-    "@vitest/coverage-v8": "2.1.8",
-    "@vitest/ui": "2.1.8",
+    "@vitest/coverage-v8": "3.0.2",
+    "@vitest/ui": "3.0.2",
     "chokidar": "^3.6.0",
     "concurrently": "^9.1.2",
     "dotenv": "^16.4.7",
@@ -46,7 +46,7 @@
     "prettier": "^3.4.2",
     "tsx": "^4.19.2",
     "typescript": "~5.7.3",
-    "vitest": "^2.1.8",
+    "vitest": "^3.0.2",
     "vitest-mock-extended": "^2.0.2",
     "yaml": "^2.7.0",
     "zx": "^8.3.0"
