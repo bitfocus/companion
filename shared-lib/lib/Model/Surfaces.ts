@@ -33,6 +33,7 @@ export interface ClientSurfaceItem {
 	hasFirmwareUpdates: SurfaceFirmwareUpdateInfo | null
 
 	size: RowsAndColumns | null
+	rotation: SurfaceRotation | null
 	offset: RowsAndColumns | null
 }
 

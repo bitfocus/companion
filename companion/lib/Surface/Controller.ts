@@ -692,6 +692,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				hasFirmwareUpdates: null,
 
 				size: config.gridSize || null,
+				rotation: config.config.rotation,
 				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 
