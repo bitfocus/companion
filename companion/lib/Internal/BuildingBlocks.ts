@@ -185,6 +185,28 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				hasLearn: false,
 				learnTimeout: undefined,
 			},
+			logic_if: {
+				label: 'Logic: If statement',
+				description: 'Execute some actions if a condition is true',
+				options: [],
+				hasLearn: false,
+				learnTimeout: undefined,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
+						groupId: 'condition',
+						label: 'When True',
+						entityTypeLabel: 'condition',
+					},
+					{
+						type: EntityModelType.Action,
+						groupId: 'actions',
+						label: 'Then',
+						entityTypeLabel: 'action',
+					},
+				],
+			},
 		}
 	}
 
@@ -193,9 +215,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	 */
 	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
 		if (feedback.definitionId === 'logic_and' || feedback.definitionId === 'logic_conditionalise_advanced') {
-			if (childValues.length === 0) return !!feedback.isInverted
-
-			return childValues.reduce((acc, val) => acc && val, true) === !feedback.isInverted
+			return booleanAnd(!!feedback.isInverted, childValues)
 		} else if (feedback.definitionId === 'logic_or') {
 			return childValues.reduce((acc, val) => acc || val, false)
 		} else if (feedback.definitionId === 'logic_xor') {
@@ -255,6 +275,25 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 
 			return this.#actionRunner
 				.runMultipleActions(childActions, newExtras, executeSequential)
+				.catch((e) => {
+					this.#logger.error(`Failed to run actions: ${e.message}`)
+				})
+				.then(() => true)
+		} else if (action.definitionId === 'logic_if') {
+			if (extras.abortDelayed.aborted) return true
+
+			const conditionValues = action.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
+			if (!booleanAnd(false, conditionValues)) {
+				// Condition failed, abort
+				return true
+			}
+
+			const executeSequential = extras.executionMode === 'sequential'
+
+			const childActions = action.getChildren('actions')?.getDirectEntities() ?? []
+
+			return this.#actionRunner
+				.runMultipleActions(childActions, extras, executeSequential)
 				.catch((e) => {
 					this.#logger.error(`Failed to run actions: ${e.message}`)
 				})
