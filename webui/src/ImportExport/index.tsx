@@ -1,5 +1,4 @@
 import React, { FormEvent, useCallback, useContext, useRef, useState } from 'react'
-import { socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
@@ -24,7 +23,7 @@ export const ImportExport = observer(function ImportExport() {
 	const clearImport = useCallback(() => {
 		setImportInfo(null)
 
-		socketEmitPromise(socket, 'loadsave:abort', []).catch((e) => {
+		socket.emitPromise('loadsave:abort', []).catch((e) => {
 			console.error('Failed to abort import', e)
 		})
 	}, [socket])
@@ -49,7 +48,8 @@ export const ImportExport = observer(function ImportExport() {
 				}
 
 				setLoadError(null)
-				socketEmitPromise(socket, 'loadsave:prepare-import', [fr.result], 20000)
+				socket
+					.emitPromise('loadsave:prepare-import', [fr.result], 20000)
 					.then(([err, config]) => {
 						if (err || !config) {
 							setLoadError(err || 'Failed to prepare')

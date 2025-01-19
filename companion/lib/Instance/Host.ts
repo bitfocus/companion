@@ -12,6 +12,8 @@ import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.j
 import type { InstanceModules, ModuleInfo } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { CompanionOptionValues } from '@companion-module/base'
 
 /**
  * A backoff sleep strategy
@@ -504,5 +506,31 @@ export class ModuleHost {
 					this.#logger.error(`Unhandled error restarting connection: ${e}`)
 				})
 		})
+	}
+
+	async connectionEntityUpdate(entityModel: SomeEntityModel, controlId: string): Promise<boolean> {
+		const connection = this.getChild(entityModel.connectionId, true)
+		if (!connection) return false
+
+		await connection.entityUpdate(entityModel, controlId)
+
+		return true
+	}
+	async connectionEntityDelete(entityModel: SomeEntityModel, _controlId: string): Promise<boolean> {
+		const connection = this.getChild(entityModel.connectionId, true)
+		if (!connection) return false
+
+		await connection.entityDelete(entityModel)
+
+		return true
+	}
+	async connectionEntityLearnOptions(
+		entityModel: SomeEntityModel,
+		controlId: string
+	): Promise<CompanionOptionValues | undefined | void> {
+		const connection = this.getChild(entityModel.connectionId)
+		if (!connection) return undefined
+
+		return connection.entityLearnValues(entityModel, controlId)
 	}
 }

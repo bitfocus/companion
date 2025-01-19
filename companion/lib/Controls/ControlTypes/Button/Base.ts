@@ -1,21 +1,15 @@
 import { ControlBase } from '../../ControlBase.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { cloneDeep } from 'lodash-es'
-import { FragmentFeedbacks } from '../../Fragments/FragmentFeedbacks.js'
-import { FragmentActions } from '../../Fragments/FragmentActions.js'
-import type {
-	ControlWithFeedbacks,
-	ControlWithOptions,
-	ControlWithPushed,
-	ControlWithStyle,
-} from '../../IControlFragments.js'
+import type { ControlWithOptions, ControlWithPushed, ControlWithStyle } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
+import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
  * Abstract class for a editable button control.
@@ -39,10 +33,10 @@ import { ControlActionRunner } from '../../ActionRunner.js'
  */
 export abstract class ButtonControlBase<TJson, TOptions extends Record<string, any>>
 	extends ControlBase<TJson>
-	implements ControlWithStyle, ControlWithFeedbacks, ControlWithOptions, ControlWithPushed
+	implements ControlWithStyle, ControlWithOptions, ControlWithPushed
 {
 	readonly supportsStyle = true
-	readonly supportsFeedbacks = true
+	readonly supportsEntities = true
 	readonly supportsOptions = true
 	readonly supportsPushed = true
 
@@ -50,11 +44,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * The defaults options for a button
 	 */
 	static DefaultOptions: ButtonOptionsBase = {}
-
-	/**
-	 * The feedbacks fragment
-	 */
-	readonly feedbacks: FragmentFeedbacks
 
 	/**
 	 * The current status of this button
@@ -76,10 +65,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 */
 	protected last_draw_variables: Set<string> | null = null
 
-	/**
-	 * Steps on this button
-	 */
-	protected steps: Record<string, FragmentActions> = {}
+	readonly entities: ControlEntityListPoolButton
 
 	protected readonly actionRunner: ControlActionRunner
 
@@ -88,14 +74,16 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
 
-		this.feedbacks = new FragmentFeedbacks(
-			deps.instance.definitions,
-			deps.internalModule,
-			deps.instance.moduleHost,
-			controlId,
-			this.commitChange.bind(this),
-			this.triggerRedraw.bind(this),
-			false
+		this.entities = new ControlEntityListPoolButton(
+			{
+				controlId,
+				commitChange: this.commitChange.bind(this),
+				triggerRedraw: this.triggerRedraw.bind(this),
+				instanceDefinitions: deps.instance.definitions,
+				internalModule: deps.internalModule,
+				moduleHost: deps.instance.moduleHost,
+			},
+			this.sendRuntimePropsChange.bind(this)
 		)
 	}
 
@@ -118,13 +106,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 */
 	checkButtonStatus = (redraw = true): boolean => {
 		// Find all the connections referenced by the button
-		const connectionIds = new Set<string>()
-		for (const step of Object.values(this.steps)) {
-			for (const action of step.getAllActions()) {
-				if (action.disabled) continue
-				connectionIds.add(action.connectionId)
-			}
-		}
+		const connectionIds = this.entities.getAllEnabledConnectionIds()
 
 		// Figure out the combined status
 		let status: ButtonStatus = 'good'
@@ -159,18 +141,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {
-		this.feedbacks.clearConnectionState(connectionId)
+		this.entities.clearConnectionState(connectionId)
 	}
 
 	/**
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
-		this.feedbacks.destroy()
-
-		for (const step of Object.values(this.steps)) {
-			step.destroy()
-		}
+		this.entities.destroy()
 
 		super.destroy()
 	}
@@ -179,38 +157,18 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Remove any actions and feedbacks referencing a specified connectionId
 	 */
 	forgetConnection(connectionId: string): void {
-		const changedFeedbacks = this.feedbacks.forgetConnection(connectionId)
+		const changed = this.entities.forgetConnection(connectionId)
 
-		let changedSteps = false
-		for (const step of Object.values(this.steps)) {
-			const changed = step.forgetConnection(connectionId)
-			changedSteps = changedSteps || changed
+		if (changed) {
+			this.commitChange(true)
 		}
-
-		if (changedFeedbacks || changedSteps) {
-			this.commitChange(changedFeedbacks)
-		}
-	}
-
-	/**
-	 * Get all the actions on this control
-	 */
-	getFlattenedActionInstances(): ActionInstance[] {
-		const actions: ActionInstance[] = []
-
-		for (const step of Object.values(this.steps)) {
-			if (!step) continue
-			actions.push(...step.getFlattenedActionInstances())
-		}
-
-		return actions
 	}
 
 	/**
 	 * Get the size of the bitmap render of this control
 	 */
 	getBitmapSize(): { width: number; height: number } | null {
-		return GetButtonBitmapSize(this.deps.userconfig, this.feedbacks.baseStyle)
+		return GetButtonBitmapSize(this.deps.userconfig, this.entities.baseStyle)
 	}
 
 	/**
@@ -218,7 +176,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleButtonModel {
-		let style = this.feedbacks.getUnparsedStyle()
+		let style = this.entities.getUnparsedFeedbackStyle()
 
 		if (style.text) {
 			// Block out the button text
@@ -302,15 +260,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	protected postProcessImport(): void {
-		const ps = []
-
-		ps.push(this.feedbacks.postProcessImport())
-
-		for (const step of Object.values(this.steps)) {
-			ps.push(step.postProcessImport())
-		}
-
-		Promise.all(ps).catch((e) => {
+		this.entities.postProcessImport().catch((e) => {
 			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
 		})
 
@@ -324,21 +274,15 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * @param labelTo - the new connection short name
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
-		const allFeedbacks = this.feedbacks.getAllFeedbacks()
-		const allActions = []
-		for (const step of Object.values(this.steps)) {
-			allActions.push(...step.getAllActions())
-		}
+		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
 		const changed = ReferencesVisitors.fixupControlReferences(
 			this.deps.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
-			this.feedbacks.baseStyle,
+			this.entities.baseStyle,
 			[],
-			[],
-			allActions,
-			allFeedbacks,
+			allEntities,
 			[],
 			true
 		)
@@ -395,11 +339,11 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		if (Object.keys(diff).length > 0) {
 			// Apply the diff
-			Object.assign(this.feedbacks.baseStyle, diff)
+			Object.assign(this.entities.baseStyle, diff)
 
 			if ('show_topbar' in diff) {
 				// Some feedbacks will need to redraw
-				this.feedbacks.resubscribeAllFeedbacks()
+				this.entities.resubscribeEntities(EntityModelType.Feedback)
 			}
 
 			this.commitChange()
@@ -407,24 +351,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			return true
 		} else {
 			return false
-		}
-	}
-
-	/**
-	 * Prune all actions/feedbacks referencing unknown connections
-	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
-	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): void {
-		const changedFeedbacks = this.feedbacks.verifyConnectionIds(knownConnectionIds)
-
-		let changedSteps = false
-		for (const step of Object.values(this.steps)) {
-			const changed = step.verifyConnectionIds(knownConnectionIds)
-			changedSteps = changedSteps || changed
-		}
-
-		if (changedFeedbacks || changedSteps) {
-			this.commitChange(changedFeedbacks)
 		}
 	}
 }

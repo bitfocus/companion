@@ -1,7 +1,7 @@
 {
   "name": "@companion-app/workspace",
-  "version": "3.5.0",
-  "packageManager": "yarn@4.5.3",
+  "version": "3.99.0",
+  "packageManager": "yarn@4.6.0",
   "workspaces": [
     "companion",
     "shared-lib",
@@ -17,7 +17,7 @@
     "dev:webui": "yarn workspace @companion-app/webui dev",
     "build:ts": "yarn workspaces foreach --all run build:ts",
     "dist:webui": "yarn workspace @companion-app/webui build",
-    "dist": "zx ./tools/build/complete.mjs",
+    "dist": "tsx ./tools/build/complete.mts",
     "macdist": "run dist mac-x64",
     "macarmdist": "run dist mac-arm64",
     "windist": "run dist win-x64",
@@ -25,7 +25,7 @@
     "rpidist": "run dist linux-arm7",
     "format": "prettier --write .",
     "test": "vitest",
-    "build:writefile": "zx ./tools/build_writefile.mjs",
+    "build:writefile": "tsx ./tools/build_writefile.mts",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
   "engines": {
@@ -34,19 +34,23 @@
     "node": ">=18.16 <19"
   },
   "devDependencies": {
-    "@inquirer/prompts": "^7.2.0",
+    "@inquirer/prompts": "^7.2.3",
+    "@types/node": "^22.10.5",
     "@types/ps-tree": "^1.1.6",
+    "@vitest/coverage-v8": "3.0.2",
+    "@vitest/ui": "3.0.2",
     "chokidar": "^3.6.0",
-    "concurrently": "^9.1.0",
+    "concurrently": "^9.1.2",
     "dotenv": "^16.4.7",
-    "octokit": "^4.0.2",
+    "octokit": "^4.1.0",
     "open": "^10.1.0",
     "prettier": "^3.4.2",
-    "typescript": "~5.7.2",
-    "vitest": "^2.1.8",
+    "tsx": "^4.19.2",
+    "typescript": "~5.7.3",
+    "vitest": "^3.0.2",
     "vitest-mock-extended": "^2.0.2",
-    "yaml": "^2.6.1",
-    "zx": "^8.2.4"
+    "yaml": "^2.7.0",
+    "zx": "^8.3.0"
   },
   "resolutions": {
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",

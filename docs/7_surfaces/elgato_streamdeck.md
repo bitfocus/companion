@@ -1,12 +1,14 @@
 Companion is primarily intended to be used with the various models of [Elgato Stream Deck](https://www.elgato.com/en/stream-deck).
 
 We currently support the following models:
+
 - Stream Deck (15 key)
 - Stream Deck Mini
 - Stream Deck XL
 - Stream Deck Mk2
 - Stream Deck Pedal
 - Stream Deck +
+- Stream Deck Neo
 - Stream Deck Studio
 
 Occasionally Elgato will release new revisions of these products without notice, so we have to play catch up which results in new devices not working for a few weeks.
@@ -21,6 +23,10 @@ The touch strip is a bit limited, and can only provide press events to companion
 
 To utilise the rotary encoders, enable the `Enable Rotary Actions` checkbox on the button which wants to support the encoder. This will provide additional action groups which will be used when rotating the encoder.
 
+##### Stream Deck Neo
+
+The Stream Deck Neo presents as a 4x3 grid, with the lcd spanning the bottom center two buttons.  
+We do not currently support drawing to the lcd segment.
 
 ##### Stream Deck Studio
 

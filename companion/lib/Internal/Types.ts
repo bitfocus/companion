@@ -1,15 +1,14 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { VisitorReferencesCollector } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { SetOptional } from 'type-fest'
-import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
+import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
-export interface FeedbackInstanceExt extends FeedbackInstance {
+export interface FeedbackEntityModelExt extends FeedbackEntityModel {
 	controlId: string
 	location: ControlLocation | undefined
 	referencedVariables: string[] | null
@@ -42,13 +41,13 @@ export interface InternalModuleFragment {
 	 * Run a single internal action
 	 * @returns Whether the action was handled
 	 */
-	executeAction?(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean
+	executeAction?(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> | boolean
 
 	/**
 	 * Perform an upgrade for an action
 	 * @returns Updated action if any changes were made
 	 */
-	actionUpgrade?: (action: ActionInstance, _controlId: string) => ActionInstance | void
+	actionUpgrade?: (action: ActionEntityModel, controlId: string) => ActionEntityModel | void
 
 	getFeedbackDefinitions?: () => Record<string, InternalFeedbackDefinition>
 
@@ -56,10 +55,12 @@ export interface InternalModuleFragment {
 	 * Get an updated value for a feedback
 	 */
 	executeFeedback?: (
-		feedback: FeedbackInstanceExt
+		feedback: FeedbackEntityModelExt
 	) => CompanionFeedbackButtonStyleResult | boolean | ExecuteFeedbackResultWithReferences | void
 
-	feedbackUpgrade?: (feedback: FeedbackInstance, _controlId: string) => FeedbackInstance | void
+	feedbackUpgrade?: (feedback: FeedbackEntityModel, controlId: string) => FeedbackEntityModel | void
+
+	forgetFeedback?: (feedback: FeedbackEntityModel) => void
 
 	/**
 	 *
@@ -76,11 +77,11 @@ export interface ExecuteFeedbackResultWithReferences {
 }
 
 export type InternalActionDefinition = SetOptional<
-	ActionDefinition,
-	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildActionGroups'
+	Omit<ClientEntityDefinition, 'entityType' | 'showInvert' | 'feedbackType' | 'feedbackStyle'>,
+	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups'
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	FeedbackDefinition,
-	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildFeedbacks'
+	Omit<ClientEntityDefinition, 'entityType'>,
+	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups'
 >

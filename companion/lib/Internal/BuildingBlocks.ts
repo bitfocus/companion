@@ -15,7 +15,6 @@
  *
  */
 
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import LogController from '../Log/Controller.js'
 import type {
 	FeedbackForVisitor,
@@ -25,10 +24,11 @@ import type {
 	InternalActionDefinition,
 	ActionForVisitor,
 } from './Types.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalController } from './Controller.js'
+import { EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
@@ -44,10 +44,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			logic_and: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Logic: AND',
 				description: 'Test if multiple conditions are true',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -55,13 +55,21 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildFeedbacks: true,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
+						groupId: 'default',
+						entityTypeLabel: 'condition',
+						label: '',
+					},
+				],
 			},
 			logic_or: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Logic: OR',
 				description: 'Test if one or more of multiple conditions is true',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -69,13 +77,21 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildFeedbacks: true,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
+						groupId: 'default',
+						entityTypeLabel: 'condition',
+						label: '',
+					},
+				],
 			},
 			logic_xor: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Logic: XOR',
 				description: 'Test if only one of multiple conditions is true',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -83,7 +99,41 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildFeedbacks: true,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
+						groupId: 'default',
+						entityTypeLabel: 'condition',
+						label: '',
+					},
+				],
+			},
+			logic_conditionalise_advanced: {
+				feedbackType: 'advanced',
+				label: 'Conditionalise existing feedbacks',
+				description: "Make 'advanced' feedbacks conditional",
+				feedbackStyle: undefined,
+				showInvert: false,
+				options: [],
+				hasLearn: false,
+				learnTimeout: undefined,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
+						groupId: 'children',
+						entityTypeLabel: 'condition',
+						label: 'Condition',
+						hint: 'This feedback will only execute when all of the conditions are true',
+					},
+					{
+						type: EntityModelType.Feedback,
+						groupId: 'feedbacks',
+						entityTypeLabel: 'feedback',
+						label: 'Feedbacks',
+					},
+				],
 			},
 		}
 	}
@@ -110,7 +160,14 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				],
 				hasLearn: false,
 				learnTimeout: undefined,
-				supportsChildActionGroups: ['default'],
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Action,
+						groupId: 'default',
+						entityTypeLabel: 'action',
+						label: '',
+					},
+				],
 			},
 			wait: {
 				label: 'Wait',
@@ -128,20 +185,40 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				hasLearn: false,
 				learnTimeout: undefined,
 			},
+			logic_if: {
+				label: 'Logic: If statement',
+				description: 'Execute some actions if a condition is true',
+				options: [],
+				hasLearn: false,
+				learnTimeout: undefined,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						booleanFeedbacksOnly: true,
+						groupId: 'condition',
+						label: 'When True',
+						entityTypeLabel: 'condition',
+					},
+					{
+						type: EntityModelType.Action,
+						groupId: 'actions',
+						label: 'Then',
+						entityTypeLabel: 'action',
+					},
+				],
+			},
 		}
 	}
 
 	/**
 	 * Execute a logic feedback
 	 */
-	executeLogicFeedback(feedback: FeedbackInstance, childValues: boolean[]): boolean {
-		if (feedback.type === 'logic_and') {
-			if (childValues.length === 0) return !!feedback.isInverted
-
-			return childValues.reduce((acc, val) => acc && val, true) === !feedback.isInverted
-		} else if (feedback.type === 'logic_or') {
+	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
+		if (feedback.definitionId === 'logic_and' || feedback.definitionId === 'logic_conditionalise_advanced') {
+			return booleanAnd(!!feedback.isInverted, childValues)
+		} else if (feedback.definitionId === 'logic_or') {
 			return childValues.reduce((acc, val) => acc || val, false)
-		} else if (feedback.type === 'logic_xor') {
+		} else if (feedback.definitionId === 'logic_xor') {
 			const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
 			return isSingleTrue === !feedback.isInverted
 		} else {
@@ -150,14 +227,15 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> | boolean {
-		if (action.action === 'wait') {
+	executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> | boolean {
+		if (action.definitionId === 'wait') {
 			if (extras.abortDelayed.aborted) return true
 
 			let delay = 0
 			try {
 				delay = Number(
-					this.#internalModule.executeExpressionForInternalActionOrFeedback(action.options.time, extras, 'number').value
+					this.#internalModule.executeExpressionForInternalActionOrFeedback(action.rawOptions.time, extras, 'number')
+						.value
 				)
 			} catch (e: any) {
 				this.#logger.error(`Failed to parse delay: ${e.message}`)
@@ -170,11 +248,11 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				// No wait, return immediately
 				return true
 			}
-		} else if (action.action === 'action_group') {
+		} else if (action.definitionId === 'action_group') {
 			if (extras.abortDelayed.aborted) return true
 
 			let executeSequential = false
-			switch (action.options.execution_mode) {
+			switch (action.rawOptions.execution_mode) {
 				case 'sequential':
 					executeSequential = true
 					break
@@ -185,7 +263,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 					executeSequential = extras.executionMode === 'sequential'
 					break
 				default:
-					this.#logger.error(`Unknown execution mode: ${action.options.execution_mode}`)
+					this.#logger.error(`Unknown execution mode: ${action.rawOptions.execution_mode}`)
 			}
 
 			const newExtras: RunActionExtras = {
@@ -193,8 +271,29 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				executionMode: executeSequential ? 'sequential' : 'concurrent',
 			}
 
+			const childActions = action.getChildren('default')?.getDirectEntities() ?? []
+
 			return this.#actionRunner
-				.runMultipleActions(action.children?.['default'] ?? [], newExtras, executeSequential)
+				.runMultipleActions(childActions, newExtras, executeSequential)
+				.catch((e) => {
+					this.#logger.error(`Failed to run actions: ${e.message}`)
+				})
+				.then(() => true)
+		} else if (action.definitionId === 'logic_if') {
+			if (extras.abortDelayed.aborted) return true
+
+			const conditionValues = action.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
+			if (!booleanAnd(false, conditionValues)) {
+				// Condition failed, abort
+				return true
+			}
+
+			const executeSequential = extras.executionMode === 'sequential'
+
+			const childActions = action.getChildren('actions')?.getDirectEntities() ?? []
+
+			return this.#actionRunner
+				.runMultipleActions(childActions, extras, executeSequential)
 				.catch((e) => {
 					this.#logger.error(`Failed to run actions: ${e.message}`)
 				})
@@ -207,4 +306,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
+}
+
+function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean {
+	if (childValues.length === 0) return isInverted
+
+	return childValues.reduce((acc, val) => acc && val, true) === !isInverted
 }

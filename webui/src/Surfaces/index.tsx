@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CCallout, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
-import { MyErrorBoundary, socketEmitPromise } from '../util.js'
+import { MyErrorBoundary } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faSync } from '@fortawesome/free-solid-svg-icons'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
@@ -102,7 +102,8 @@ function ConfiguredSurfacesTab() {
 		setScanning(true)
 		setScanError(null)
 
-		socketEmitPromise(socket, 'surfaces:rescan', [], 30000)
+		socket
+			.emitPromise('surfaces:rescan', [], 30000)
 			.then((errorMsg) => {
 				setScanError(errorMsg || null)
 				setScanning(false)
@@ -115,7 +116,7 @@ function ConfiguredSurfacesTab() {
 	}, [socket])
 
 	const addEmulator = useCallback(() => {
-		socketEmitPromise(socket, 'surfaces:emulator-add', []).catch((err) => {
+		socket.emitPromise('surfaces:emulator-add', []).catch((err) => {
 			console.error('Emulator add failed', err)
 		})
 	}, [socket])

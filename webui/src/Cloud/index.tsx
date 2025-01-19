@@ -14,7 +14,7 @@ import {
 } from '@coreui/react'
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
-import { SocketContext, type CompanionSocketType, LoadingRetryOrError } from '../util.js'
+import { SocketContext, type CompanionSocketWrapped, LoadingRetryOrError } from '../util.js'
 import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 
 export function CloudPage() {
@@ -44,15 +44,13 @@ export function CloudPage() {
 	)
 }
 
-function useCloudState(socket: CompanionSocketType) {
+function useCloudState(socket: CompanionSocketWrapped) {
 	const [cloudState, setCloudState] = useState<CloudControllerState>()
 
 	useEffect(() => {
-		const cloudStateDidUpdate = (newState: CloudControllerState) => {
+		const unsubUpdates = socket.on('cloud_state', (newState) => {
 			setCloudState(newState)
-		}
-
-		socket.on('cloud_state', cloudStateDidUpdate)
+		})
 		socket.emit('cloud_state_get')
 		console.log('Mounted CLOUD')
 		socket.emit('cloud_state_set', { ping: true })
@@ -60,7 +58,7 @@ function useCloudState(socket: CompanionSocketType) {
 		return () => {
 			socket.emit('cloud_state_set', { ping: false })
 			console.log('Unmounted CLOUD')
-			socket.off('cloud_state', cloudStateDidUpdate)
+			unsubUpdates()
 		}
 	}, [socket])
 

@@ -32,7 +32,7 @@ import type {
 import type { Registry } from '../Registry.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 async function getHostnameVariables() {
 	const values: CompanionVariableValues = {}
@@ -242,16 +242,16 @@ export class InternalSystem implements InternalModuleFragment {
 		return actions
 	}
 
-	async executeAction(action: ActionInstance, extras: RunActionExtras): Promise<boolean> {
-		if (action.action === 'exec') {
-			if (action.options.path) {
-				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.path, extras).text
+	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> {
+		if (action.definitionId === 'exec') {
+			if (action.rawOptions.path) {
+				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.path, extras).text
 				this.#logger.silly(`Running path: '${path}'`)
 
 				exec(
 					path,
 					{
-						timeout: action.options.timeout ?? 5000,
+						timeout: action.rawOptions.timeout ?? 5000,
 					},
 					(error, stdout, _stderr) => {
 						if (error) {
@@ -263,17 +263,17 @@ export class InternalSystem implements InternalModuleFragment {
 						if (typeof stdout === 'string' && stdout.endsWith(os.EOL))
 							stdout = stdout.substring(0, stdout.length - os.EOL.length)
 
-						if (action.options.targetVariable) {
-							this.#variableController.custom.setValue(action.options.targetVariable, stdout)
+						if (action.rawOptions.targetVariable) {
+							this.#variableController.custom.setValue(action.rawOptions.targetVariable, stdout)
 						}
 					}
 				)
 			}
 			return true
-		} else if (action.action === 'app_restart') {
+		} else if (action.definitionId === 'app_restart') {
 			this.#registry.exit(true, true)
 			return true
-		} else if (action.action === 'app_exit') {
+		} else if (action.definitionId === 'app_exit') {
 			this.#registry.exit(true, false)
 			return true
 		} else {

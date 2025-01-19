@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import { FeedbackDefinitionsStore } from '../Stores/FeedbackDefinitionsStore.js'
-import { FeedbackDefinitionUpdate } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
+import { CompanionSocketWrapped } from '../util.js'
+import { EntityDefinitionsForTypeStore } from '../Stores/EntityDefinitionsStore.js'
 
 export function useFeedbackDefinitionsSubscription(
-	socket: CompanionSocketType,
-	store: FeedbackDefinitionsStore
+	socket: CompanionSocketWrapped,
+	store: EntityDefinitionsForTypeStore
 ): boolean {
 	const [ready, setReady] = useState(false)
 
@@ -13,7 +12,8 @@ export function useFeedbackDefinitionsSubscription(
 		store.reset(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'feedback-definitions:subscribe', [])
+		socket
+			.emitPromise('feedback-definitions:subscribe', [])
 			.then((data) => {
 				store.reset(data)
 				setReady(true)
@@ -23,17 +23,15 @@ export function useFeedbackDefinitionsSubscription(
 				console.error('Failed to load feedback definitions list', e)
 			})
 
-		const updateFeedbackDefinitions = (change: FeedbackDefinitionUpdate) => {
+		const unsubUpdates = socket.on('feedback-definitions:update', (change) => {
 			store.applyChanges(change)
-		}
-
-		socket.on('feedback-definitions:update', updateFeedbackDefinitions)
+		})
 
 		return () => {
 			store.reset(null)
-			socket.off('feedback-definitions:update', updateFeedbackDefinitions)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
+			socket.emitPromise('feedback-definitions:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to feedback definitions list', e)
 			})
 		}

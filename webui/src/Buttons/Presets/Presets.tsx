@@ -1,9 +1,8 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CRow } from '@coreui/react'
-import { LoadingRetryOrError, socketEmitPromise, applyPatchOrReplaceSubObject } from '../../util.js'
+import { LoadingRetryOrError, applyPatchOrReplaceSubObject } from '../../util.js'
 import { nanoid } from 'nanoid'
 import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { PresetsButtonList } from './PresetsButtonList.js'
@@ -37,7 +36,8 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 		setPresetsMap(null)
 		setPresetsError(null)
 
-		socketEmitPromise(socket, 'presets:subscribe', [])
+		socket
+			.emitPromise('presets:subscribe', [])
 			.then((data) => {
 				console.log('presets:subscribe', data)
 				setPresetsMap(data)
@@ -47,20 +47,18 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 				setPresetsError('Failed to load presets')
 			})
 
-		const updatePresets = (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => {
+		const unsubUpdates = socket.on('presets:update', (id, patch) => {
 			setPresetsMap((oldPresets) =>
 				oldPresets
 					? applyPatchOrReplaceSubObject<Record<string, UIPresetDefinition> | undefined>(oldPresets, id, patch, {})
 					: null
 			)
-		}
-
-		socket.on('presets:update', updatePresets)
+		})
 
 		return () => {
-			socket.off('presets:update', updatePresets)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'presets:unsubscribe', []).catch(() => {
+			socket.emitPromise('presets:unsubscribe', []).catch(() => {
 				console.error('Failed to unsubscribe to presets')
 			})
 		}

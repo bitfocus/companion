@@ -1,7 +1,7 @@
 {
 	"name": "@companion-app/launcher",
 	"description": "Companion",
-	"version": "3.5.0",
+	"version": "3.99.0",
 	"main": "main.js",
 	"license": "MIT",
 	"private": true,
@@ -12,89 +12,22 @@
 	},
 	"dependencies": {
 		"@companion-app/shared": "*",
-		"@sentry/electron": "^5.8.0",
+		"@sentry/electron": "^5.10.0",
 		"chokidar": "^3.6.0",
 		"debounce-fn": "^6.0.0",
 		"electron-store": "^10.0.0",
 		"file-stream-rotator": "^1.0.0",
-		"fs-extra": "^11.2.0",
+		"fs-extra": "^11.3.0",
 		"nanoid": "^5.0.9",
 		"plist": "^3.1.0",
 		"semver": "^7.6.3",
 		"strip-ansi": "^7.1.0",
-		"systeminformation": "^5.23.13"
+		"systeminformation": "^5.25.11"
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
-		"electron": "33.3.0",
+		"electron": "34.0.0",
 		"electron-builder": "26.0.0-alpha.7",
 		"electron-reloader": "^1.2.3"
-	},
-	"build": {
-		"productName": "Companion",
-		"executableName": "Companion",
-		"appId": "test-companion.bitfocus.no",
-		"dmg": {
-			"artifactName": "companion-mac-${arch}.dmg",
-			"sign": true
-		},
-		"mac": {
-			"target": "dmg",
-			"category": "no.bitfocus.companion",
-			"extendInfo": {
-				"LSBackgroundOnly": 1,
-				"LSUIElement": 1,
-				"NSAppleEventsUsageDescription": "Companion uses AppleEvents to control local applications."
-			},
-			"hardenedRuntime": "true",
-			"gatekeeperAssess": "false",
-			"entitlements": "entitlements.mac.plist",
-			"entitlementsInherit": "entitlements.mac.plist"
-		},
-		"afterPack": "fix-bundled-modules.cjs",
-		"win": {
-			"target": "nsis"
-		},
-		"nsis": {
-			"artifactName": "companion-win64.exe",
-			"createStartMenuShortcut": true,
-			"perMachine": false,
-			"oneClick": false,
-			"selectPerMachineByDefault": true,
-			"allowElevation": true,
-			"allowToChangeInstallationDirectory": true,
-			"installerIcon": "icon.ico",
-			"installerSidebar": "compinst.bmp",
-			"uninstallerSidebar": "compinst.bmp"
-		},
-		"directories": {
-			"buildResources": "assets/",
-			"output": "../electron-output/"
-		},
-		"linux": {
-			"target": "dir",
-			"executableName": "companion-launcher",
-			"artifactName": "companion-x64",
-			"extraFiles": [
-				{
-					"from": "../assets/linux",
-					"to": "."
-				}
-			]
-		},
-		"files": [
-			"**/*",
-			"assets/*"
-		],
-		"extraResources": [
-			{
-				"from": "../dist",
-				"to": ".",
-				"filter": [
-					"**/*",
-					"!.yarn"
-				]
-			}
-		]
 	}
 }

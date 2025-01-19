@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import type { PageModelChanges } from '@companion-app/shared/Model/PageModel.js'
+import { CompanionSocketWrapped } from '../util.js'
 import { PagesStore } from '../Stores/PagesStore.js'
 
 export function usePagesInfoSubscription(
-	socket: CompanionSocketType,
+	socket: CompanionSocketWrapped,
 	store: PagesStore,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
@@ -16,7 +15,8 @@ export function usePagesInfoSubscription(
 		store.reset(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'pages:subscribe', [])
+		socket
+			.emitPromise('pages:subscribe', [])
 			.then((newPages) => {
 				setLoadError?.(null)
 				store.reset(newPages)
@@ -28,18 +28,16 @@ export function usePagesInfoSubscription(
 				store.reset(null)
 			})
 
-		const updatePageInfo = (change: PageModelChanges) => {
+		const unsubUpdates = socket.on('pages:update', (change) => {
 			store.updatePage(change)
-		}
-
-		socket.on('pages:update', updatePageInfo)
+		})
 
 		return () => {
 			store.reset(null)
 
-			socket.off('pages:update', updatePageInfo)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'pages:unsubscribe', []).catch((e) => {
+			socket.emitPromise('pages:unsubscribe', []).catch((e) => {
 				console.error('Failed to cleanup web-buttons:', e)
 			})
 		}

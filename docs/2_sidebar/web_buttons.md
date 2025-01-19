@@ -1,4 +1,4 @@
-**Web buttons** is a way of viewing all your buttons across all pages on a single screen, which may be useful if you want to use a web browser on a tablet to control Companion. It is an alternative approach to the **Emulator**, allowing for better viewing on larger screens.
+**Web buttons** is a way of viewing all your buttons across all pages on a single screen, which may be useful if you want to use a web browser on a tablet to control Companion.
 
 ![Web Buttons](images/webbuttons.png?raw=true 'Web Buttons')
 

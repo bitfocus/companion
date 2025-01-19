@@ -53,23 +53,19 @@
 	margin: 0;
 }
 
-table.action-table td,
-table.variables-table td,
-table.feedback-table td {
+table.entity-table td,
+table.variables-table td {
 	border-bottom: 10px solid #f0f0f0;
 	border-top: 10px solid #f0f0f0;
 }
 
-table.action-table,
-table.variables-table,
-table.feedback-table {
-	.actionlist-dragging,
-	.feedbacklist-dragging {
+table.entity-table,
+table.variables-table {
+	.entitylist-dragging {
 		opacity: 0.5;
 	}
 
-	.actionlist-dropzone,
-	.feedbacklist-dropzone {
+	.entitylist-dropzone {
 		p {
 			border: 2px dashed #bbb;
 			border-radius: 5px;
@@ -184,6 +180,10 @@ table.feedback-table {
 
 			h4 {
 				margin-top: 0 !important;
+			}
+
+			form:not(:first-child) {
+				margin-top: 0.5rem;
 			}
 		}
 

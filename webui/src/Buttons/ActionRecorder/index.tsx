@@ -1,11 +1,12 @@
-import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
-import { socketEmitPromise, SocketContext, applyPatchOrReplaceObject } from '../../util.js'
+import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
+import { SocketContext, applyPatchOrReplaceObject } from '../../util.js'
 import { CCallout, CCol, CRow } from '@coreui/react'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
-import { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { RecordSessionInfo, RecordSessionListInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { RecorderSessionFinishModal } from './RecorderSessionFinishModal.js'
-import { RecorderSessionHeading, RecorderSession } from './RecorderSessionHeading.js'
+import { RecorderSessionHeading } from './RecorderSessionHeading.js'
+import { RecorderSession } from './RecorderSession.js'
+import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
@@ -18,7 +19,8 @@ export function ActionRecorder() {
 
 	// Subscribe to the list of sessions
 	useEffect(() => {
-		socketEmitPromise(socket, 'action-recorder:subscribe', [])
+		socket
+			.emitPromise('action-recorder:subscribe', [])
 			.then((newSessions) => {
 				setSessions(newSessions)
 
@@ -29,18 +31,16 @@ export function ActionRecorder() {
 				console.error('Action record subscribe', e)
 			})
 
-		const updateSessionList = (newSessions: JsonPatchOperation[]) => {
+		const unsubList = socket.on('action-recorder:session-list', (newSessions) => {
 			setSessions((oldSessions) => oldSessions && applyPatchOrReplaceObject(oldSessions, newSessions))
-		}
-
-		socket.on('action-recorder:session-list', updateSessionList)
+		})
 
 		return () => {
-			socketEmitPromise(socket, 'action-recorder:unsubscribe', []).catch((e) => {
+			socket.emitPromise('action-recorder:unsubscribe', []).catch((e) => {
 				console.error('Action record subscribe', e)
 			})
 
-			socket.off('action-recorder:session-list', updateSessionList)
+			unsubList()
 		}
 	}, [socket])
 
@@ -61,7 +61,8 @@ export function ActionRecorder() {
 		setSessionInfo(null)
 
 		if (!selectedSessionId) return
-		socketEmitPromise(socket, 'action-recorder:session:subscribe', [selectedSessionId])
+		socket
+			.emitPromise('action-recorder:session:subscribe', [selectedSessionId])
 			.then((info) => {
 				setSessionInfo(info)
 			})
@@ -69,18 +70,16 @@ export function ActionRecorder() {
 				console.error('Action record session subscribe', e)
 			})
 
-		const updateSessionInfo = (patch: JsonPatchOperation[]) => {
+		const unsubUpdate = socket.on(`action-recorder:session:update:${selectedSessionId}`, (patch) => {
 			setSessionInfo((oldInfo) => oldInfo && applyPatchOrReplaceObject(oldInfo, patch))
-		}
-
-		socket.on(`action-recorder:session:update:${selectedSessionId}`, updateSessionInfo)
+		})
 
 		return () => {
-			socketEmitPromise(socket, 'action-recorder:session:unsubscribe', [selectedSessionId]).catch((e) => {
+			socket.emitPromise('action-recorder:session:unsubscribe', [selectedSessionId]).catch((e) => {
 				console.error('Action record subscribe', e)
 			})
 
-			socket.off(`action-recorder:session:update:${selectedSessionId}`, updateSessionInfo)
+			unsubUpdate()
 		}
 	}, [socket, selectedSessionId])
 
@@ -90,6 +89,8 @@ export function ActionRecorder() {
 	const openFinishingModal = useCallback(() => {
 		setIsFinishing(true)
 	}, [])
+
+	const actionIds = useMemo(() => sessionInfo?.actions?.map((a) => a.id) ?? [], [sessionInfo?.actions])
 
 	return (
 		<CRow className="action-recorder-panel">
@@ -120,7 +121,9 @@ export function ActionRecorder() {
 			</CCol>
 
 			{selectedSessionId ? (
-				<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionInfo} />
+				<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
+					<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionInfo} />
+				</PanelCollapseHelperProvider>
 			) : (
 				<CCallout color="danger">There is no session, this looks like a bug!</CCallout>
 			)}

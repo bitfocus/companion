@@ -9,7 +9,7 @@ dotenv.config()
 $.verbose = false
 
 if (argv._.length < 1) {
-	console.log('Usage: yarn zx tools/backport_module_changes.mjs stable-3.x')
+	console.log('Usage: yarn tsx tools/backport_module_changes.mjs stable-3.x')
 	process.exit(1)
 }
 

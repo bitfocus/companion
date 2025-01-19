@@ -88,7 +88,7 @@ module.exports = {
 
 					// sourcemaps: {
 					// 	assets: [path.join(distPath, '**')],
-					// 	deleteFilesAfterUpload: [path.join(distPath, '**/*.map')],
+					// 	filesToDeleteAfterUpload: [path.join(distPath, '**/*.map')],
 					// },
 
 					// Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/

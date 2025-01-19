@@ -62,6 +62,7 @@ import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
+import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -133,6 +134,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	readonly #outboundController: SurfaceOutboundController
 
+	readonly #firmwareUpdates: SurfaceFirmwareUpdateCheck
+
 	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies, io: UIHandler) {
 		super()
 
@@ -141,6 +144,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#io = io
 
 		this.#outboundController = new SurfaceOutboundController(this, db, io)
+		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.updateDevicesList())
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
 
@@ -341,6 +345,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		// Update the group to have the new surface
 		this.#attachSurfaceToGroup(handler)
+
+		// Perform an update check in the background
+		this.#firmwareUpdates.triggerCheckSurfaceForUpdates(handler)
 	}
 
 	/**
@@ -682,8 +689,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+				hasFirmwareUpdates: null,
 
 				size: config.gridSize || null,
+				rotation: config.config.rotation,
 				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 
@@ -693,6 +702,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
+				surfaceInfo.hasFirmwareUpdates = surfaceHandler.panel.info.hasFirmwareUpdates || null
 			}
 
 			return surfaceInfo

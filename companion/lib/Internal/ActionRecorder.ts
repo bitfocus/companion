@@ -22,15 +22,15 @@ import type { PageController } from '../Page/Controller.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
 } from './Types.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 export class InternalActionRecorder implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/ActionRecorder')
@@ -168,25 +168,25 @@ export class InternalActionRecorder implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
-		if (action.action === 'action_recorder_set_recording') {
+	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
+		if (action.definitionId === 'action_recorder_set_recording') {
 			const session = this.#actionRecorder.getSession()
 			if (session) {
-				let newState = action.options.enable == 'true'
-				if (action.options.enable == 'toggle') newState = !session.isRunning
+				let newState = action.rawOptions.enable == 'true'
+				if (action.rawOptions.enable == 'toggle') newState = !session.isRunning
 
 				this.#actionRecorder.setRecording(newState)
 			}
 
 			return true
-		} else if (action.action === 'action_recorder_set_connections') {
+		} else if (action.definitionId === 'action_recorder_set_connections') {
 			const session = this.#actionRecorder.getSession()
 			if (session) {
 				let result = new Set(session.connectionIds)
 
-				const selectedIds = new Set<string>(action.options.connections)
+				const selectedIds = new Set<string>(action.rawOptions.connections)
 
-				switch (action.options.mode) {
+				switch (action.rawOptions.mode) {
 					case 'set':
 						result = selectedIds
 						break
@@ -214,11 +214,17 @@ export class InternalActionRecorder implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'action_recorder_save_to_button') {
-			let stepId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.step, extras).text
-			let setId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.set, extras).text
-			const pageRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.page, extras).text
-			const bankRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.options.bank, extras).text
+		} else if (action.definitionId === 'action_recorder_save_to_button') {
+			let stepId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.step, extras).text
+			let setId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.set, extras).text
+			const pageRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				action.rawOptions.page,
+				extras
+			).text
+			const bankRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				action.rawOptions.bank,
+				extras
+			).text
 
 			if (setId === 'press') setId = 'down'
 			else if (setId === 'release') setId = 'up'
@@ -247,7 +253,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 					const setIdSafe = validateActionSetId(setId as any)
 					if (setIdSafe === undefined) throw new Error('Invalid setId')
 
-					this.#actionRecorder.saveToControlId(controlId, stepId, setIdSafe, action.options.mode)
+					this.#actionRecorder.saveToControlId(controlId, stepId, setIdSafe, action.rawOptions.mode)
 				} catch (e) {
 					// We don't have a good way to present this to the user, so ignore it for now. They should notice that it didnt work
 					this.#logger.info(`action_recorder_save_to_button failed: ${e}`)
@@ -255,7 +261,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 			}
 
 			return true
-		} else if (action.action === 'action_recorder_discard_actions') {
+		} else if (action.definitionId === 'action_recorder_discard_actions') {
 			this.#actionRecorder.discardActions()
 
 			return true
@@ -267,10 +273,10 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			action_recorder_check_connections: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Action Recorder: Check if specified connections are selected',
 				description: undefined,
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
@@ -313,8 +319,8 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
-		if (feedback.type === 'action_recorder_check_connections') {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+		if (feedback.definitionId === 'action_recorder_check_connections') {
 			const session = this.#actionRecorder.getSession()
 			if (!session) return false
 

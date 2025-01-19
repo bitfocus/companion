@@ -21,6 +21,7 @@ import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionVariables } from './Variables/index.js'
+import { SurfacesTabNotifyIcon } from './Surfaces/TabNotifyIcon.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
@@ -48,18 +49,19 @@ export default function App() {
 				return false
 			})
 		}
-		socket.on('connect', onConnected)
-		socket.on('disconnect', onDisconnected)
 
-		socket.on('load-save:task', setCurrentImportTask)
+		const unsubConnect = socket.onConnect(onConnected)
+		const unsubDisconnect = socket.onDisconnect(onDisconnected)
+
+		const unsubTask = socket.on('load-save:task', setCurrentImportTask)
 
 		if (socket.connected) onConnected()
 
 		return () => {
-			socket.off('connect', onConnected)
-			socket.off('disconnect', onDisconnected)
+			unsubConnect()
+			unsubDisconnect()
 
-			socket.off('load-save:task', setCurrentImportTask)
+			unsubTask()
 		}
 	}, [socket])
 

@@ -14,11 +14,12 @@ import { InternalActionInputField, InternalFeedbackInputField } from '@companion
 import classNames from 'classnames'
 import sanitizeHtml from 'sanitize-html'
 import { DropdownChoiceInt, ControlLocalVariables, InternalActionLocalVariables } from '../LocalVariableDefinitions.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
 	isLocatedInGrid: boolean
-	isAction: boolean
+	entityType: EntityModelType | null
 	option: InternalActionInputField | InternalFeedbackInputField
 	value: any
 	setValue: (key: string, value: any) => void
@@ -45,7 +46,7 @@ function OptionLabel({
 export function OptionsInputField({
 	connectionId,
 	isLocatedInGrid,
-	isAction,
+	entityType,
 	option,
 	value,
 	setValue,
@@ -72,7 +73,7 @@ export function OptionsInputField({
 			if (features.local) {
 				if (isLocatedInGrid) {
 					localVariables = ControlLocalVariables
-					if (isInternal && isAction) {
+					if (isInternal && entityType === EntityModelType.Action) {
 						localVariables = InternalActionLocalVariables
 					}
 				}
@@ -195,7 +196,7 @@ export function OptionsInputField({
 			break
 		}
 		case 'custom-variable': {
-			if (isAction) {
+			if (entityType === EntityModelType.Action) {
 				control = (
 					<InternalCustomVariableDropdown
 						label={<OptionLabel option={option} />}

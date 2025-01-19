@@ -2,24 +2,17 @@ import { CButton, CCol, CForm, CInputGroup, CFormLabel } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import {
-	LoadingRetryOrError,
-	socketEmitPromise,
-	SocketContext,
-	MyErrorBoundary,
-	PreventDefaultHandler,
-} from '../util.js'
-import { ControlActionSetEditor } from '../Controls/ActionSetEditor.jsx'
-import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
-
+import { LoadingRetryOrError, SocketContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { ControlEntitiesEditor } from '../Controls/EntitiesEditor.js'
+import jsonPatch from 'fast-json-patch'
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
-import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.jsx'
 import { cloneDeep } from 'lodash-es'
 import { TextInputField } from '../Components/index.js'
 import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -45,7 +38,8 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 		setConfigError(null)
 		setRuntimeProps(null)
 
-		socketEmitPromise(socket, 'controls:subscribe', [controlId])
+		socket
+			.emitPromise('controls:subscribe', [controlId])
 			.then((config) => {
 				setConfig((config as any)?.config ?? false)
 				setRuntimeProps((config as any)?.runtime ?? {})
@@ -57,7 +51,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 				setConfigError('Failed to load trigger config')
 			})
 
-		const patchConfig = (patch: JsonPatchOperation[] | false) => {
+		const unsubConfig = socket.on(`controls:config-${controlId}`, (patch) => {
 			setConfig((oldConfig) => {
 				if (!oldConfig || patch === false) {
 					return null
@@ -65,9 +59,8 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 					return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
 				}
 			})
-		}
-
-		const patchRuntimeProps = (patch: JsonPatchOperation[] | false) => {
+		})
+		const unsubRuntimeProps = socket.on(`controls:runtime-${controlId}`, (patch) => {
 			setRuntimeProps((oldProps) => {
 				if (patch === false) {
 					return {}
@@ -75,16 +68,13 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 					return jsonPatch.applyPatch(cloneDeep(oldProps) || {}, patch).newDocument
 				}
 			})
-		}
-
-		socket.on(`controls:config-${controlId}`, patchConfig)
-		socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
+		})
 
 		return () => {
-			socket.off(`controls:config-${controlId}`, patchConfig)
-			socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
+			unsubConfig()
+			unsubRuntimeProps()
 
-			socketEmitPromise(socket, 'controls:unsubscribe', [controlId]).catch((e) => {
+			socket.emitPromise('controls:unsubscribe', [controlId]).catch((e) => {
 				console.error('Failed to unsubscribe trigger config', e)
 			})
 		}
@@ -93,7 +83,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'triggers:test', [controlId]).catch((e) => console.error(`Hot press failed: ${e}`))
+		socket.emitPromise('triggers:test', [controlId]).catch((e) => console.error(`Hot press failed: ${e}`))
 	}, [socket, controlId])
 
 	const errors: string[] = []
@@ -139,7 +129,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
-								<ControlFeedbacksEditor
+								<ControlEntitiesEditor
 									heading={
 										<>
 											Conditions &nbsp;
@@ -149,17 +139,18 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 											/>
 										</>
 									}
-									entityType="condition"
 									controlId={controlId}
-									feedbacks={config.condition}
-									booleanOnly={true}
+									entities={config.condition}
+									listId="feedbacks"
+									entityType={EntityModelType.Feedback}
+									entityTypeLabel="condition"
+									onlyFeedbackType="boolean"
 									location={undefined}
-									addPlaceholder="+ Add condition"
 								/>
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
-								<ControlActionSetEditor
+								<ControlEntitiesEditor
 									heading={
 										<>
 											Actions &nbsp;
@@ -168,10 +159,11 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									}
 									controlId={controlId}
 									location={undefined}
-									stepId=""
-									setId={0}
-									addPlaceholder="+ Add action"
-									actions={config.action_sets[0]}
+									listId="trigger_actions"
+									entities={config.actions}
+									entityType={EntityModelType.Action}
+									entityTypeLabel="action"
+									onlyFeedbackType={null}
 								/>
 							</MyErrorBoundary>
 						</>
@@ -198,7 +190,7 @@ function TriggerConfig({ controlId, options, hotPressDown }: TriggerConfigProps)
 	const setValueInner = useCallback(
 		(key: string, value: any) => {
 			console.log('set', controlId, key, value)
-			socketEmitPromise(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
+			socket.emitPromise('controls:set-options-field', [controlId, key, value]).catch((e) => {
 				console.error(`Set field failed: ${e}`)
 			})
 		},

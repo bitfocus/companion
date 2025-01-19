@@ -3,7 +3,7 @@ import {
 	CompanionExternalAddresses,
 } from '@companion-app/shared/Model/Surfaces.js'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { socketEmitPromise, SocketContext, LoadingBar } from '../util.js'
+import { SocketContext, LoadingBar } from '../util.js'
 import { CButton, CForm, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CModalExt } from '../Components/CModalExt.js'
 import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
@@ -42,7 +42,8 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 		// setShow(false)
 		setIsExecuting(true)
 
-		socketEmitPromise(socket, 'surfaces:discovery:setup-satellite', [data, selectedAddress], 10000)
+		socket
+			.emitPromise('surfaces:discovery:setup-satellite', [data, selectedAddress], 10000)
 			.then((_failureReason) => {
 				// TODO
 
@@ -63,7 +64,8 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 				setExternalAddresses(null)
 				setIsExecuting(false)
 
-				socketEmitPromise(socket, 'surfaces:discovery:get-external:addresses', [])
+				socket
+					.emitPromise('surfaces:discovery:get-external:addresses', [])
 					.then((externalAddresses) => {
 						setExternalAddresses(externalAddresses)
 						setSelectedAddress((address) => (address || externalAddresses.addresses[0]?.id?.toString()) ?? null)

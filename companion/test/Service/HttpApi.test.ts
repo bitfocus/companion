@@ -8,6 +8,7 @@ import { rgb } from '../../lib/Resources/Util'
 import type { Registry } from '../../lib/Registry'
 import type { ControlButtonNormal } from '../../lib/Controls/ControlTypes/Button/Normal'
 import type { UIExpress } from '../../lib/UI/Express'
+import type { ControlEntityListPoolButton } from '../../lib/Controls/Entities/EntityListPoolButton'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -863,9 +864,15 @@ describe('HttpApi', () => {
 				const { app, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('test')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControlEntities = mock<ControlEntityListPoolButton>(
 					{
 						stepMakeCurrent: vi.fn(),
+					},
+					mockOptions
+				)
+				const mockControl = mock<ControlButtonNormal>(
+					{
+						actionSets: mockControlEntities,
 					},
 					mockOptions
 				)
@@ -885,22 +892,28 @@ describe('HttpApi', () => {
 				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
 				expect(registry.controls.getControl).toHaveBeenCalledWith('test')
 
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(NaN)
+				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledTimes(1)
+				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledWith(NaN)
 			})
 
 			test('ok', async () => {
 				const { app, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('control123')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControlEntities = mock<ControlEntityListPoolButton>(
 					{
 						stepMakeCurrent: vi.fn(),
 					},
 					mockOptions
 				)
+				const mockControl = mock<ControlButtonNormal>(
+					{
+						actionSets: mockControlEntities,
+					},
+					mockOptions
+				)
 				registry.controls.getControl.mockReturnValue(mockControl)
-				mockControl.stepMakeCurrent.mockReturnValue(true)
+				mockControlEntities.stepMakeCurrent.mockReturnValue(true)
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3/step?step=2')
@@ -912,8 +925,8 @@ describe('HttpApi', () => {
 					row: 2,
 					column: 3,
 				})
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(2)
+				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledTimes(1)
+				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledWith(2)
 			})
 
 			test('bad page', async () => {

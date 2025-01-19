@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
-import { ControlButtonNormal } from '../Controls/ControlTypes/Button/Normal.js'
+import { ControlEntityListPoolButton } from '../Controls/Entities/EntityListPoolButton.js'
 import jsonPatch from 'fast-json-patch'
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import { replaceAllVariables } from '../Variables/Util.js'
@@ -11,11 +11,7 @@ import type {
 	PresetDefinition,
 	UIPresetDefinition,
 } from '@companion-app/shared/Model/Presets.js'
-import type { ActionDefinition } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import type { FeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -25,6 +21,13 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import {
+	ActionEntityModel,
+	EntityModelType,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -61,11 +64,11 @@ export class InstanceDefinitions {
 	/**
 	 * The action definitions
 	 */
-	#actionDefinitions: Record<string, Record<string, ActionDefinition>> = {}
+	#actionDefinitions: Record<string, Record<string, ClientEntityDefinition>> = {}
 	/**
 	 * The feedback definitions
 	 */
-	#feedbackDefinitions: Record<string, Record<string, FeedbackDefinition>> = {}
+	#feedbackDefinitions: Record<string, Record<string, ClientEntityDefinition>> = {}
 	/**
 	 * The preset definitions
 	 */
@@ -168,28 +171,27 @@ export class InstanceDefinitions {
 	 * @param connectionId - the id of the instance
 	 * @param actionId - the id of the action
 	 */
-	createActionItem(connectionId: string, actionId: string): ActionInstance | null {
-		const definition = this.getActionDefinition(connectionId, actionId)
-		if (definition) {
-			const action: ActionInstance = {
-				id: nanoid(),
-				action: actionId,
-				instance: connectionId,
-				options: {},
-			}
+	createActionItem(connectionId: string, actionId: string): ActionEntityModel | null {
+		const definition = this.getEntityDefinition(EntityModelType.Action, connectionId, actionId)
+		if (!definition) return null
 
-			if (definition.options !== undefined && definition.options.length > 0) {
-				for (const j in definition.options) {
-					const opt = definition.options[j]
-					// @ts-ignore
-					action.options[opt.id] = cloneDeep(opt.default)
-				}
-			}
-
-			return action
-		} else {
-			return null
+		const action: ActionEntityModel = {
+			type: EntityModelType.Action,
+			id: nanoid(),
+			definitionId: actionId,
+			connectionId: connectionId,
+			options: {},
 		}
+
+		if (definition.options !== undefined && definition.options.length > 0) {
+			for (const j in definition.options) {
+				const opt = definition.options[j]
+				// @ts-ignore
+				action.options[opt.id] = cloneDeep(opt.default)
+			}
+		}
+
+		return action
 	}
 
 	/**
@@ -198,36 +200,35 @@ export class InstanceDefinitions {
 	 * @param feedbackId - the id of the feedback
 	 * @param booleanOnly - whether the feedback must be boolean
 	 */
-	createFeedbackItem(connectionId: string, feedbackId: string, booleanOnly: boolean): FeedbackInstance | null {
-		const definition = this.getFeedbackDefinition(connectionId, feedbackId)
-		if (definition) {
-			if (booleanOnly && definition.type !== 'boolean') return null
+	createFeedbackItem(connectionId: string, feedbackId: string, booleanOnly: boolean): FeedbackEntityModel | null {
+		const definition = this.getEntityDefinition(EntityModelType.Feedback, connectionId, feedbackId)
+		if (!definition) return null
 
-			const feedback: FeedbackInstance = {
-				id: nanoid(),
-				type: feedbackId,
-				instance_id: connectionId,
-				options: {},
-				style: {},
-				isInverted: false,
-			}
+		if (booleanOnly && definition.feedbackType !== 'boolean') return null
 
-			if (definition.options !== undefined && definition.options.length > 0) {
-				for (const j in definition.options) {
-					const opt = definition.options[j]
-					// @ts-ignore
-					feedback.options[opt.id] = cloneDeep(opt.default)
-				}
-			}
-
-			if (!booleanOnly && definition.type === 'boolean' && definition.style) {
-				feedback.style = cloneDeep(definition.style)
-			}
-
-			return feedback
-		} else {
-			return null
+		const feedback: FeedbackEntityModel = {
+			type: EntityModelType.Feedback,
+			id: nanoid(),
+			definitionId: feedbackId,
+			connectionId: connectionId,
+			options: {},
+			style: {},
+			isInverted: false,
 		}
+
+		if (definition.options !== undefined && definition.options.length > 0) {
+			for (const j in definition.options) {
+				const opt = definition.options[j]
+				// @ts-ignore
+				feedback.options[opt.id] = cloneDeep(opt.default)
+			}
+		}
+
+		if (!booleanOnly && definition.feedbackType === 'boolean' && definition.feedbackStyle) {
+			feedback.style = cloneDeep(definition.feedbackStyle)
+		}
+
+		return feedback
 	}
 
 	createEventItem(eventType: string): EventInstance | null {
@@ -278,24 +279,21 @@ export class InstanceDefinitions {
 	}
 
 	/**
-	 * Get an action definition
+	 * Get an entity definition
 	 */
-	getActionDefinition(connectionId: string, actionId: string): ActionDefinition | undefined {
-		if (this.#actionDefinitions[connectionId]) {
-			return this.#actionDefinitions[connectionId][actionId]
-		} else {
-			return undefined
-		}
-	}
-
-	/**
-	 * Get a feedback definition
-	 */
-	getFeedbackDefinition(connectionId: string, feedbackId: string): FeedbackDefinition | undefined {
-		if (this.#feedbackDefinitions[connectionId]) {
-			return this.#feedbackDefinitions[connectionId][feedbackId]
-		} else {
-			return undefined
+	getEntityDefinition(
+		entityType: EntityModelType,
+		connectionId: string,
+		definitionId: string
+	): ClientEntityDefinition | undefined {
+		switch (entityType) {
+			case EntityModelType.Action:
+				return this.#actionDefinitions[connectionId]?.[definitionId]
+			case EntityModelType.Feedback:
+				return this.#feedbackDefinitions[connectionId]?.[definitionId]
+			default:
+				assertNever(entityType)
+				return undefined
 		}
 	}
 
@@ -333,7 +331,7 @@ export class InstanceDefinitions {
 						rotate_left: undefined,
 						rotate_right: undefined,
 					},
-					options: cloneDeep(definition.steps[i].options) ?? cloneDeep(ControlButtonNormal.DefaultStepOptions),
+					options: cloneDeep(definition.steps[i].options) ?? cloneDeep(ControlEntityListPoolButton.DefaultStepOptions),
 				}
 				result.steps[i] = newStep
 
@@ -355,9 +353,10 @@ export class InstanceDefinitions {
 
 		if (definition.feedbacks) {
 			result.feedbacks = definition.feedbacks.map((feedback) => ({
+				type: EntityModelType.Feedback,
 				id: nanoid(),
-				instance_id: connectionId,
-				type: feedback.type,
+				connectionId: connectionId,
+				definitionId: feedback.type,
 				options: cloneDeep(feedback.options ?? {}),
 				isInverted: feedback.isInverted,
 				style: cloneDeep(feedback.style),
@@ -373,7 +372,7 @@ export class InstanceDefinitions {
 	/**
 	 * Set the action definitions for a connection
 	 */
-	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ActionDefinition>): void {
+	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastActionDefinitions = this.#actionDefinitions[connectionId]
 		this.#actionDefinitions[connectionId] = cloneDeep(actionDefinitions)
 
@@ -383,7 +382,7 @@ export class InstanceDefinitions {
 					type: 'add-connection',
 					connectionId,
 
-					actions: actionDefinitions,
+					entities: actionDefinitions,
 				})
 			} else {
 				const diff = diffObjects(lastActionDefinitions, actionDefinitions || {})
@@ -402,7 +401,7 @@ export class InstanceDefinitions {
 	/**
 	 * Set the feedback definitions for a connection
 	 */
-	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, FeedbackDefinition>): void {
+	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastFeedbackDefinitions = this.#feedbackDefinitions[connectionId]
 		this.#feedbackDefinitions[connectionId] = cloneDeep(feedbackDefinitions)
 
@@ -412,7 +411,7 @@ export class InstanceDefinitions {
 					type: 'add-connection',
 					connectionId,
 
-					feedbacks: feedbackDefinitions,
+					entities: feedbackDefinitions,
 				})
 			} else {
 				const diff = diffObjects(lastFeedbackDefinitions, feedbackDefinitions || {})
@@ -456,7 +455,7 @@ export class InstanceDefinitions {
 							rawPreset.steps.length === 0
 								? [{ action_sets: { down: [], up: [] } }]
 								: rawPreset.steps.map((step) => {
-										const options = cloneDeep(ControlButtonNormal.DefaultStepOptions)
+										const options = cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
 										const action_sets: PresetActionSets = {
 											down: [],
 											up: [],
@@ -594,11 +593,12 @@ export type PresetDefinitionTmp = CompanionPresetDefinition & {
 	id: string
 }
 
-function toActionInstance(action: PresetActionInstance, connectionId: string): ActionInstance {
+function toActionInstance(action: PresetActionInstance, connectionId: string): ActionEntityModel {
 	return {
+		type: EntityModelType.Action,
 		id: nanoid(),
-		instance: connectionId,
-		action: action.action,
+		connectionId: connectionId,
+		definitionId: action.action,
 		options: cloneDeep(action.options ?? {}),
 		headline: action.headline,
 	}
@@ -608,23 +608,16 @@ function convertActionsDelay(
 	actions: PresetActionInstance[],
 	connectionId: string,
 	relativeDelays: boolean | undefined
-) {
+): ActionEntityModel[] {
 	if (relativeDelays) {
-		const newActions: ActionInstance[] = []
+		const newActions: ActionEntityModel[] = []
 
 		for (const action of actions) {
 			const delay = Number(action.delay)
 
 			// Add the wait action
 			if (!isNaN(delay) && delay > 0) {
-				newActions.push({
-					id: nanoid(),
-					instance: 'internal',
-					action: 'wait',
-					options: {
-						time: delay,
-					},
-				})
+				newActions.push(createWaitAction(delay))
 			}
 
 			newActions.push(toActionInstance(action, connectionId))
@@ -633,9 +626,9 @@ function convertActionsDelay(
 		return newActions
 	} else {
 		let currentDelay = 0
-		let currentDelayGroupChildren: any[] = []
+		let currentDelayGroupChildren: ActionEntityModel[] = []
 
-		let delayGroups: any[] = [wrapActionsInGroup(currentDelayGroupChildren)]
+		let delayGroups: ActionEntityModel[] = [wrapActionsInGroup(currentDelayGroupChildren)]
 
 		for (const action of actions) {
 			const delay = Number(action.delay)
@@ -668,11 +661,12 @@ function convertActionsDelay(
 	}
 }
 
-function wrapActionsInGroup(actions: any[]): any {
+function wrapActionsInGroup(actions: ActionEntityModel[]): ActionEntityModel {
 	return {
+		type: EntityModelType.Action,
 		id: nanoid(),
-		instance: 'internal',
-		action: 'action_group',
+		connectionId: 'internal',
+		definitionId: 'action_group',
 		options: {
 			execution_mode: 'concurrent',
 		},
@@ -681,11 +675,12 @@ function wrapActionsInGroup(actions: any[]): any {
 		},
 	}
 }
-function createWaitAction(delay: number): any {
+function createWaitAction(delay: number): ActionEntityModel {
 	return {
+		type: EntityModelType.Action,
 		id: nanoid(),
-		instance: 'internal',
-		action: 'wait',
+		connectionId: 'internal',
+		definitionId: 'wait',
 		options: {
 			time: delay,
 		},

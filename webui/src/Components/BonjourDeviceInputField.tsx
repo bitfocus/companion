@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState, useMemo, useEffect } from 'react'
-import { SocketContext, socketEmitPromise } from '../util.js'
+import { SocketContext } from '../util.js'
 import { DropdownInputField } from './DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
@@ -28,36 +28,31 @@ export function BonjourDeviceInputField({
 
 	// Listen for data
 	useEffect(() => {
-		const onUp = (svc: ClientBonjourService) => {
+		const unsubUp = socket.on('bonjour:service:up', (svc) => {
 			if (!subIdsRef.current?.includes(svc.subId)) return
 
 			// console.log('up', svc)
-
 			setServices((svcs) => {
 				return {
 					...svcs,
 					[svc.fqdn]: svc,
 				}
 			})
-		}
-		const onDown = (subId: string, fqdn: string) => {
+		})
+		const unsubDown = socket.on('bonjour:service:down', (subId, fqdn) => {
 			if (!subIdsRef.current?.includes(subId)) return
 
 			// console.log('down', svc)
-
 			setServices((svcs) => {
 				const res = { ...svcs }
 				delete res[fqdn]
 				return res
 			})
-		}
-
-		socket.on('bonjour:service:up', onUp)
-		socket.on('bonjour:service:down', onDown)
+		})
 
 		return () => {
-			socket.off('bonjour:service:up', onUp)
-			socket.off('bonjour:service:down', onDown)
+			unsubUp()
+			unsubDown()
 		}
 	}, [])
 
@@ -65,7 +60,8 @@ export function BonjourDeviceInputField({
 	useEffect(() => {
 		let killed = false
 		let mySubIds: string[] | null = null
-		socketEmitPromise(socket, 'bonjour:subscribe', [connectionId, queryId])
+		socket
+			.emitPromise('bonjour:subscribe', [connectionId, queryId])
 			.then((newSubIds) => {
 				// Make sure it hasnt been terminated
 				if (killed) {
