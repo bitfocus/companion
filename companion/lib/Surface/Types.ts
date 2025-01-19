@@ -1,4 +1,8 @@
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	CompanionSurfaceConfigField,
+	GridSize,
+	SurfaceFirmwareUpdateInfo,
+} from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
@@ -29,7 +33,10 @@ export interface SurfacePanelInfo {
 	type: string
 	configFields: CompanionSurfaceConfigField[]
 	location?: string
+	firmwareUpdateVersionsUrl?: string
+	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 }
+
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
@@ -41,6 +48,7 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void
 	quit(): void
+	checkForFirmwareUpdates?: (latestVersions?: unknown) => Promise<void>
 }
 export interface DrawButtonItem {
 	x: number

@@ -2,17 +2,17 @@ import React, { useCallback, useEffect, useMemo, useState, useContext } from 're
 import { LoadingRetryOrError, SocketContext, useComputed } from '../util.js'
 import { CAlert, CButton, CCol, CContainer, CRow, CWidgetStatsA } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { useNavigate } from 'react-router-dom'
 import type { ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import { SurfacesStore } from '../Stores/SurfacesStore.js'
 import { useSurfacesSubscription } from '../Hooks/useSurfacesSubscription.js'
 import { UserConfigStore } from '../Stores/UserConfigStore.js'
 import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
+import { useNavigate } from '@tanstack/react-router'
 
 export const EmulatorList = observer(function EmulatorList() {
 	const socket = useContext(SocketContext)
-	const navigate = useNavigate()
+	const navigate = useNavigate({ from: '/emulator' })
 
 	const [loadError, setLoadError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
@@ -63,7 +63,7 @@ export const EmulatorList = observer(function EmulatorList() {
 								<CButton
 									key={surface.id}
 									color="light"
-									onClick={() => navigate(`/emulator/${surface.id.substring(9)}`)}
+									onClick={() => navigate({ to: `/emulator/${surface.id.substring(9)}` })}
 								>
 									{surface.name || 'Emulator'}
 								</CButton>

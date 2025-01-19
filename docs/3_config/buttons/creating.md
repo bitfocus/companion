@@ -1,9 +1,8 @@
-
 There are two ways of setting up buttons
 
 #### Using presets
 
-The fastest way to define buttons is to use the presets. 
+The fastest way to define buttons is to use the presets.
 
 Presets are ready made buttons with text, actions and feedback so you don't need to spend time making everything from scratch. They can be drag and dropped onto your button layout.  
 Not every module provides presets, and you are able to do a lot more by defining the actions on the buttons yourself, but presets can be a good starting point for those buttons.  
@@ -34,11 +33,10 @@ _**Note:** you can't add new presets as a user, they are all pre-made in code._
    1. **Regular button**: Can trigger one or more actions. You can also click **Create button** instead of the dropdown to do this
    2. **Page up**: Can move up to the next page set of buttons.
    3. **Page number**: Shows the current page number/name.
-      1. Pressing this button will return to page 1.
+      1. Pressing this button will return to the home page of the surface (by default page 1).
    4. **Page down**: Can move down to the previous page set of buttons.
 
 ![Selecting type](images/selecting-type.png?raw=true 'Selecting type')
-
 
 **Button styling**
 
@@ -55,10 +53,8 @@ There are several ways you can make your button stand out, including:
 
 There are also some behaviour options:
 
-- Change whether to use absolute delays or [Relative Delays](#header-delays).
-- Change whether to use progress when multiple steps are defined [Steps](#header-steps).
+- Change whether to use auto progression when multiple steps are defined [Steps](#header-steps).
 - Enable rotary actions for this button, to support the dials on a Streamdeck + (or similar).
-
 
 ![Button config](images/button-config.png?raw=true 'Button config')
 
@@ -76,12 +72,10 @@ Add actions to the button from the **Add Press/on action** drop-down menu.
 
 You can add multiple actions and set delay times for each action. Delay times are in milliseconds. 1000ms = 1 second.
 
-
 You can hide the topbar with the dropdown. This can be configured globally in the settings, or overridden per button.
 
 ![Button with topbar](images/button-with-topbar.png?raw=true 'Button with topbar') ![Button without topbar](images/button-without-topbar.png?raw=true 'Button without topbar')  
 _Same 72x72px image, but with and without the topbar_
-
 
 **Adding a PNG**
 

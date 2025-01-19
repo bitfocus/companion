@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
-import { socketEmitPromise, PreventDefaultHandler } from '../../util.js'
+import { PreventDefaultHandler } from '../../util.js'
 import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
@@ -7,7 +7,7 @@ import { DropdownInputField } from '../../Components/index.js'
 import { ButtonGridHeader } from '../ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import { cloneDeep } from 'lodash-es'
-import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
+import jsonPatch from 'fast-json-patch'
 import { ButtonGridIcon, ButtonInfiniteGrid, ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
@@ -59,7 +59,8 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 		setControlInfo(null)
 
 		if (!selectedControl) return
-		socketEmitPromise(socket, 'controls:subscribe', [selectedControl])
+		socket
+			.emitPromise('controls:subscribe', [selectedControl])
 			.then((config) => {
 				console.log(config)
 				setControlInfo((config as any)?.config ?? false)
@@ -69,7 +70,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 				setControlInfo(null)
 			})
 
-		const patchConfig = (patch: JsonPatchOperation[] | false) => {
+		const unsubUpdates = socket.on(`controls:config-${selectedControl}`, (patch) => {
 			setControlInfo((oldConfig) => {
 				if (!oldConfig || patch === false) {
 					return null
@@ -77,14 +78,12 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 					return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
 				}
 			})
-		}
-
-		socket.on(`controls:config-${selectedControl}`, patchConfig)
+		})
 
 		return () => {
-			socket.off(`controls:config-${selectedControl}`, patchConfig)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'controls:unsubscribe', [selectedControl]).catch((e) => {
+			socket.emitPromise('controls:unsubscribe', [selectedControl]).catch((e) => {
 				console.error('Failed to unsubscribe control config', e)
 			})
 		}

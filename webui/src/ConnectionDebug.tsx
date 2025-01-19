@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState, useContext, memo, useRef, useMemo } from 'react'
-import { SocketContext, socketEmitPromise } from './util.js'
+import { SocketContext } from './util.js'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { useParams } from 'react-router-dom'
 import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
+import { useParams } from '@tanstack/react-router'
 
 interface DebugLogLine {
 	level: string
@@ -26,10 +26,12 @@ const LogsOnDiskInfoLine: DebugLogLine = {
 	message: 'Starting log. Only lines generated since opening the page are shown here',
 }
 
+// const route = getRouteApi('/connection-debug/$connectionId')
+
 export function ConnectionDebug() {
 	const socket = useContext(SocketContext)
 
-	const { id: connectionId } = useParams()
+	const { connectionId } = useParams({ from: '/connection-debug/$connectionId' })
 
 	// const [loadError, setLoadError]=useState(null)
 	const [linesBuffer, setLinesBuffer] = useState<DebugLogLine[]>([])
@@ -47,14 +49,14 @@ export function ConnectionDebug() {
 			setIsConnected(false)
 		}
 
-		socket.on('connect', onConnected)
-		socket.on('disconnect', onDisconnected)
+		const unsubConnect = socket.onConnect(onConnected)
+		const unsubDisconnect = socket.onDisconnect(onDisconnected)
 
 		if (socket.connected) onConnected()
 
 		return () => {
-			socket.off('connect', onConnected)
-			socket.off('disconnect', onDisconnected)
+			unsubConnect()
+			unsubDisconnect()
 		}
 	}, [socket])
 
@@ -67,9 +69,10 @@ export function ConnectionDebug() {
 		}
 
 		if (connectionId) {
-			socket.on(`connection-debug:update:${connectionId}`, onNewLines)
+			const unsubLines = socket.on(`connection-debug:update:${connectionId}`, onNewLines)
 
-			socketEmitPromise(socket, 'connection-debug:subscribe', [connectionId])
+			socket
+				.emitPromise('connection-debug:subscribe', [connectionId])
 				.then((info) => {
 					if (!info) {
 						onNewLines('system', 'Connection was not found')
@@ -81,10 +84,10 @@ export function ConnectionDebug() {
 				})
 
 			return () => {
-				socketEmitPromise(socket, 'connection-debug:unsubscribe', [connectionId]).catch((err) => {
+				socket.emitPromise('connection-debug:unsubscribe', [connectionId]).catch((err) => {
 					console.error('Unsubscribe failure', err)
 				})
-				socket.off(`connection-debug:update:${connectionId}`, onNewLines)
+				unsubLines()
 			}
 		} else {
 			return undefined
@@ -116,13 +119,13 @@ export function ConnectionDebug() {
 
 	const doStopConnection = useCallback(() => {
 		if (!connectionId) return
-		socketEmitPromise(socket, 'connections:set-enabled', [connectionId, false]).catch((e) => {
+		socket.emitPromise('connections:set-enabled', [connectionId, false]).catch((e) => {
 			console.error('Failed', e)
 		})
 	}, [socket, connectionId])
 	const doStartConnection = useCallback(() => {
 		if (!connectionId) return
-		socketEmitPromise(socket, 'connections:set-enabled', [connectionId, true]).catch((e) => {
+		socket.emitPromise('connections:set-enabled', [connectionId, true]).catch((e) => {
 			console.error('Failed', e)
 		})
 	}, [socket, connectionId])

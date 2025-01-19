@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { MyErrorBoundary, socketEmitPromise } from '../../util.js'
+import { MyErrorBoundary } from '../../util.js'
 import { CAlert, CButton, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -19,7 +19,8 @@ export function ImportFullWizard({ snapshot, connectionRemap, setConnectionRemap
 
 	const doSinglePageImport = useCallback(
 		(fromPage: number, toPage: number, connectionRemap: Record<string, string | undefined>) => {
-			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, connectionRemap])
+			socket
+				.emitPromise('loadsave:import-page', [toPage, fromPage, connectionRemap])
 				.then((res) => {
 					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
 					console.log('remap response', res)
@@ -148,7 +149,8 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	}, [])
 
 	const doImport = useCallback(() => {
-		socketEmitPromise(socket, 'loadsave:import-full', [config], 60000)
+		socket
+			.emitPromise('loadsave:import-full', [config], 60000)
 			.then(() => {
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()

@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import reactPlugin from '@vitejs/plugin-react'
 import * as envCompatible from 'vite-plugin-env-compatible'
 import legacyPlugin from '@vitejs/plugin-legacy'
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 
 const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
 
@@ -25,6 +26,10 @@ export default defineConfig({
 		},
 	},
 	plugins: [
+		TanStackRouterVite({
+			virtualRouteConfig: './src/routes/-routes.ts',
+			addExtensions: true,
+		}),
 		reactPlugin(),
 		envCompatible.default({
 			prefix: 'DEV',

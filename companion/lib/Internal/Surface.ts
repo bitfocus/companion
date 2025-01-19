@@ -22,7 +22,7 @@ import debounceFn from 'debounce-fn'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
@@ -33,8 +33,9 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
+import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
@@ -192,7 +193,7 @@ export class InternalSurface implements InternalModuleFragment {
 
 	#fetchSurfaceId(
 		options: Record<string, any>,
-		info: RunActionExtras | FeedbackInstanceExt,
+		info: RunActionExtras | FeedbackEntityModelExt,
 		useVariableFields: boolean
 	): string | undefined {
 		let surfaceId: string | undefined = options.controller + ''
@@ -210,7 +211,7 @@ export class InternalSurface implements InternalModuleFragment {
 
 	#fetchPage(
 		options: Record<string, any>,
-		extras: RunActionExtras | FeedbackInstanceExt,
+		extras: RunActionExtras | FeedbackEntityModelExt,
 		useVariableFields: boolean,
 		surfaceId: string | undefined
 	): string | 'back' | 'forward' | '+1' | '-1' | undefined {
@@ -329,7 +330,7 @@ export class InternalSurface implements InternalModuleFragment {
 		this.#internalModule.setVariables(values)
 	}
 
-	actionUpgrade(action: ActionInstance, _controlId: string): void | ActionInstance {
+	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
 		// Upgrade an action. This check is not the safest, but it should be ok
 		if (action.options.controller === 'emulator') {
 			// Hope that the default emulator still exists
@@ -443,27 +444,27 @@ export class InternalSurface implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, extras: RunActionExtras): boolean {
-		if (action.action === 'set_brightness') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
+		if (action.definitionId === 'set_brightness') {
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
-			this.#surfaceController.setDeviceBrightness(surfaceId, action.options.brightness, true)
+			this.#surfaceController.setDeviceBrightness(surfaceId, action.rawOptions.brightness, true)
 			return true
-		} else if (action.action === 'set_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+		} else if (action.definitionId === 'set_page') {
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
-			const thePage = this.#fetchPage(action.options, extras, true, surfaceId)
+			const thePage = this.#fetchPage(action.rawOptions, extras, true, surfaceId)
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
 			return true
-		} else if (action.action === 'set_page_byindex') {
-			let surfaceIndex = action.options.controller
-			if (action.options.controller_from_variable) {
+		} else if (action.definitionId === 'set_page_byindex') {
+			let surfaceIndex = action.rawOptions.controller
+			if (action.rawOptions.controller_from_variable) {
 				surfaceIndex = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-					action.options.controller_variable,
+					action.rawOptions.controller_variable,
 					extras
 				).text
 			}
@@ -476,30 +477,30 @@ export class InternalSurface implements InternalModuleFragment {
 
 			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(surfaceIndexNumber)
 			if (surfaceId === undefined || surfaceId === '') {
-				this.#logger.warn(`Trying to set controller #${action.options.controller} but it isn't available.`)
+				this.#logger.warn(`Trying to set controller #${action.rawOptions.controller} but it isn't available.`)
 				return true
 			}
 
-			const thePage = this.#fetchPage(action.options, extras, true, surfaceId)
+			const thePage = this.#fetchPage(action.rawOptions, extras, true, surfaceId)
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
 			return true
-		} else if (action.action === 'inc_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+		} else if (action.definitionId === 'inc_page') {
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
 			this.#changeSurfacePage(surfaceId, '+1')
 			return true
-		} else if (action.action === 'dec_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+		} else if (action.definitionId === 'dec_page') {
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
 			this.#changeSurfacePage(surfaceId, '-1')
 			return true
-		} else if (action.action === 'lockout_device') {
+		} else if (action.definitionId === 'lockout_device') {
 			if (this.#surfaceController.isPinLockEnabled()) {
-				const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+				const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 				if (!surfaceId) return true
 
 				if (extras.controlId && extras.surfaceId == surfaceId) {
@@ -515,8 +516,8 @@ export class InternalSurface implements InternalModuleFragment {
 				})
 			}
 			return true
-		} else if (action.action === 'unlockout_device') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+		} else if (action.definitionId === 'unlockout_device') {
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
 			if (!surfaceId) return true
 
 			setImmediate(() => {
@@ -524,7 +525,7 @@ export class InternalSurface implements InternalModuleFragment {
 			})
 
 			return true
-		} else if (action.action === 'lockout_all') {
+		} else if (action.definitionId === 'lockout_all') {
 			if (this.#surfaceController.isPinLockEnabled()) {
 				if (extras.controlId) {
 					const control = this.#controlsController.getControl(extras.controlId)
@@ -539,12 +540,12 @@ export class InternalSurface implements InternalModuleFragment {
 				})
 			}
 			return true
-		} else if (action.action === 'unlockout_all') {
+		} else if (action.definitionId === 'unlockout_all') {
 			setImmediate(() => {
 				this.#surfaceController.setAllLocked(false)
 			})
 			return true
-		} else if (action.action === 'rescan') {
+		} else if (action.definitionId === 'rescan') {
 			this.#surfaceController.triggerRefreshDevices().catch(() => {
 				// TODO
 			})
@@ -621,10 +622,10 @@ export class InternalSurface implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			surface_on_page: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Surface: When on the selected page',
 				description: 'Change style when a surface is on the selected page',
-				style: {
+				feedbackStyle: {
 					color: combineRgb(255, 255, 255),
 					bgcolor: combineRgb(255, 0, 0),
 				},
@@ -650,8 +651,8 @@ export class InternalSurface implements InternalModuleFragment {
 		}
 	}
 
-	executeFeedback(feedback: FeedbackInstanceExt): boolean | void {
-		if (feedback.type == 'surface_on_page') {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+		if (feedback.definitionId == 'surface_on_page') {
 			const surfaceId = this.#fetchSurfaceId(feedback.options, feedback, false)
 			if (!surfaceId) return false
 

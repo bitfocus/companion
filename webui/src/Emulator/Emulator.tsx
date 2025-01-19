@@ -4,27 +4,20 @@ import {
 	applyPatchOrReplaceObject,
 	MyErrorBoundary,
 	SocketContext,
-	socketEmitPromise,
 	useMountEffect,
 	PreventDefaultHandler,
 } from '../util.js'
 import { CButton, CCol, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { useParams } from 'react-router-dom'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import {
-	ControlLocation,
-	EmulatorConfig,
-	EmulatorImage,
-	EmulatorImageCache,
-} from '@companion-app/shared/Model/Common.js'
-import { Operation as JsonPatchOperation } from 'fast-json-patch'
+import { ControlLocation, EmulatorConfig, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
 import { UserConfigStore } from '../Stores/UserConfigStore.js'
 import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
+import { useParams } from '@tanstack/react-router'
 
 export const Emulator = observer(function Emulator() {
 	const socket = useContext(SocketContext)
@@ -32,7 +25,7 @@ export const Emulator = observer(function Emulator() {
 	const [config, setConfig] = useState<EmulatorConfig | null>(null)
 	const [loadError, setLoadError] = useState<string | null>(null)
 
-	const { id: emulatorId } = useParams()
+	const { emulatorId } = useParams({ from: '/emulator/$emulatorId' })
 
 	const [imageCache, setImageCache] = useState<EmulatorImageCache>({})
 	useEffect(() => {
@@ -48,7 +41,8 @@ export const Emulator = observer(function Emulator() {
 
 		if (!emulatorId) return
 
-		socketEmitPromise(socket, 'emulator:startup', [emulatorId])
+		socket
+			.emitPromise('emulator:startup', [emulatorId])
 			.then((config) => {
 				setConfig(config)
 			})
@@ -57,14 +51,12 @@ export const Emulator = observer(function Emulator() {
 				setLoadError(`Failed: ${e}`)
 			})
 
-		const updateConfig = (patch: JsonPatchOperation[] | EmulatorConfig) => {
+		const unsubConfig = socket.on('emulator:config', (patch) => {
 			setConfig((oldConfig) => oldConfig && applyPatchOrReplaceObject(oldConfig, patch))
-		}
-
-		socket.on('emulator:config', updateConfig)
+		})
 
 		return () => {
-			socket.off('emulator:config', updateConfig)
+			unsubConfig()
 		}
 	}, [retryToken, socket, emulatorId])
 
@@ -87,7 +79,7 @@ export const Emulator = observer(function Emulator() {
 	}, [config?.emulator_control_enable])
 
 	useEffect(() => {
-		const updateImages = (newImages: EmulatorImage[] | EmulatorImageCache) => {
+		const unsubImages = socket.on('emulator:images', (newImages) => {
 			console.log('new images', newImages)
 			setImageCache((old) => {
 				if (Array.isArray(newImages)) {
@@ -103,23 +95,19 @@ export const Emulator = observer(function Emulator() {
 					return newImages
 				}
 			})
-		}
-
-		socket.on('emulator:images', updateImages)
+		})
 
 		return () => {
-			socket.off('emulator:images', updateImages)
+			unsubImages()
 		}
 	}, [socket, imageCache])
 
 	useEffect(() => {
-		const onConnect = () => {
+		const unsub = socket.onConnect(() => {
 			setRetryToken(nanoid())
-		}
-		socket.on('connect', onConnect)
-		return () => {
-			socket.off('connect', onConnect)
-		}
+		})
+
+		return unsub
 	}, [socket])
 
 	// Register key handlers
@@ -130,7 +118,7 @@ export const Emulator = observer(function Emulator() {
 			if (keymap[e.keyCode] !== undefined) {
 				const xy = keymap[e.keyCode]
 				if (xy) {
-					socketEmitPromise(socket, 'emulator:press', [emulatorId, ...xy]).catch((e: any) => {
+					socket.emitPromise('emulator:press', [emulatorId, ...xy]).catch((e: any) => {
 						console.error('press failed', e)
 					})
 					console.log('emulator:press', emulatorId, xy)
@@ -143,7 +131,7 @@ export const Emulator = observer(function Emulator() {
 
 			const xy = keymap[e.keyCode]
 			if (xy) {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e: any) => {
+				socket.emitPromise('emulator:release', [emulatorId, ...xy]).catch((e: any) => {
 					console.error('release failed', e)
 				})
 				console.log('emulator:release', emulatorId, xy)
@@ -163,12 +151,12 @@ export const Emulator = observer(function Emulator() {
 		(location: ControlLocation, pressed: boolean) => {
 			if (!emulatorId) return
 			if (pressed) {
-				socketEmitPromise(socket, 'emulator:press', [emulatorId, location.column, location.row]).catch((e: any) => {
+				socket.emitPromise('emulator:press', [emulatorId, location.column, location.row]).catch((e: any) => {
 					console.error('press failed', e)
 				})
 				console.log('emulator:press', emulatorId, location)
 			} else {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, location.column, location.row]).catch((e: any) => {
+				socket.emitPromise('emulator:release', [emulatorId, location.column, location.row]).catch((e: any) => {
 					console.error('release failed', e)
 				})
 				console.log('emulator:release', emulatorId, location)

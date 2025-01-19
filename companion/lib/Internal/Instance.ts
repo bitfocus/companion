@@ -23,14 +23,14 @@ import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackInstanceExt,
+	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
 } from './Types.js'
-import type { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 export class InternalInstance implements InternalModuleFragment {
 	readonly #internalModule: InternalController
@@ -145,11 +145,11 @@ export class InternalInstance implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			instance_status: {
-				type: 'advanced',
+				feedbackType: 'advanced',
 				label: 'Connection: Check Status',
 				description:
 					'Change button color on Connection Status\nDisabled color is not used when "All" connections is selected',
-				style: undefined,
+				feedbackStyle: undefined,
 				showInvert: false,
 				options: [
 					{
@@ -210,10 +210,10 @@ export class InternalInstance implements InternalModuleFragment {
 				],
 			},
 			instance_custom_state: {
-				type: 'boolean',
+				feedbackType: 'boolean',
 				label: 'Connection: When matches specified status',
 				description: 'Change style when a connection matches the specified status',
-				style: {
+				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0x00ff00,
 				},
@@ -243,24 +243,24 @@ export class InternalInstance implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ActionInstance, _extras: RunActionExtras): boolean {
-		if (action.action === 'instance_control') {
-			let newState = action.options.enable == 'true'
-			if (action.options.enable == 'toggle') {
-				const curState = this.#instanceController.getConnectionStatus(action.options.instance_id)
+	executeAction(action: ControlEntityInstance, _extras: RunActionExtras): boolean {
+		if (action.definitionId === 'instance_control') {
+			let newState = action.rawOptions.enable == 'true'
+			if (action.rawOptions.enable == 'toggle') {
+				const curState = this.#instanceController.getConnectionStatus(action.rawOptions.instance_id)
 
 				newState = !curState?.category
 			}
 
-			this.#instanceController.enableDisableInstance(action.options.instance_id, newState)
+			this.#instanceController.enableDisableInstance(action.rawOptions.instance_id, newState)
 			return true
 		} else {
 			return false
 		}
 	}
 
-	executeFeedback(feedback: FeedbackInstanceExt): CompanionFeedbackButtonStyleResult | boolean | void {
-		if (feedback.type === 'instance_status') {
+	executeFeedback(feedback: FeedbackEntityModelExt): CompanionFeedbackButtonStyleResult | boolean | void {
+		if (feedback.definitionId === 'instance_status') {
 			if (feedback.options.instance_id == 'all') {
 				if (this.#instancesError > 0) {
 					return {
@@ -312,7 +312,7 @@ export class InternalInstance implements InternalModuleFragment {
 				color: feedback.options.disabled_fg,
 				bgcolor: feedback.options.disabled_bg,
 			}
-		} else if (feedback.type === 'instance_custom_state') {
+		} else if (feedback.definitionId === 'instance_custom_state') {
 			const selected_status = this.#instanceStatuses[String(feedback.options.instance_id)]?.category ?? null
 
 			return selected_status == feedback.options.state

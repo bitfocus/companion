@@ -1,17 +1,15 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { socketEmitPromise, SocketContext } from './util.js'
+import { SocketContext } from './util.js'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
 import { useActionDefinitionsSubscription } from './Hooks/useActionDefinitionsSubscription.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
-import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
 import { observable } from 'mobx'
 import { PagesStore } from './Stores/PagesStore.js'
 import { EventDefinitionsStore } from './Stores/EventDefinitionsStore.js'
-import { ActionDefinitionsStore } from './Stores/ActionDefinitionsStore.js'
-import { FeedbackDefinitionsStore } from './Stores/FeedbackDefinitionsStore.js'
+import { EntityDefinitionsStore } from './Stores/EntityDefinitionsStore.js'
 import { useFeedbackDefinitionsSubscription } from './Hooks/useFeedbackDefinitionsSubscription.js'
 import { ModuleInfoStore } from './Stores/ModuleInfoStore.js'
 import { useModuleInfoSubscription } from './Hooks/useModuleInfoSubscription.js'
@@ -29,6 +27,7 @@ import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSu
 import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStoreRefreshProgress.js'
 import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
 import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
+import { ViewControlStore } from './Stores/ViewControlStore.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -41,6 +40,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const helpModalRef = useRef<HelpModalRef>(null)
 
 	const rootStore = useMemo(() => {
+		const showWizardEvent = new EventTarget()
+
 		return {
 			socket,
 			notifier: notifierRef,
@@ -51,12 +52,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 
 			activeLearns: observable.set(),
 
-			recentlyAddedActions: new RecentlyUsedIdsStore('recent_actions', 20),
-			recentlyAddedFeedbacks: new RecentlyUsedIdsStore('recent_feedbacks', 20),
-
-			actionDefinitions: new ActionDefinitionsStore(),
+			entityDefinitions: new EntityDefinitionsStore(),
 			eventDefinitions: new EventDefinitionsStore(),
-			feedbackDefinitions: new FeedbackDefinitionsStore(),
 
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
@@ -67,13 +64,18 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			userConfig: new UserConfigStore(),
 
 			moduleStoreRefreshProgress: observable.map(),
+
+			showWizardEvent,
+			showWizard: () => showWizardEvent.dispatchEvent(new Event('show')),
+
+			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore
 	}, [socket])
 
 	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
 
-	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.actionDefinitions)
-	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.feedbackDefinitions)
+	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.entityDefinitions.actions)
+	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.entityDefinitions.feedbacks)
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
@@ -91,7 +93,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 
 	useEffect(() => {
 		if (socket) {
-			socketEmitPromise(socket, 'event-definitions:get', [])
+			socket
+				.emitPromise('event-definitions:get', [])
 				.then((definitions) => {
 					setLoadedEventDefinitions(true)
 					rootStore.eventDefinitions.setDefinitions(definitions)

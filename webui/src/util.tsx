@@ -21,7 +21,31 @@ import type { ReadonlyDeep } from 'type-fest'
 
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
-export const SocketContext = React.createContext<CompanionSocketType>(null as any) // TODO - fix this
+export interface CompanionSocketWrapped {
+	readonly connected: boolean
+
+	onConnect(listener: () => void): () => void
+	onDisconnect(listener: () => void): () => void
+
+	/**
+	 * Listen for a message
+	 * @param ev Event name
+	 * @param listener Listener function
+	 * @returns Unsubscribe function
+	 */
+	on<Ev extends keyof BackendToClientEventsMap>(ev: Ev, listener: BackendToClientEventsMap[Ev]): () => void
+
+	emitPromise<T extends keyof SocketEmitPromiseEvents>(
+		name: T,
+		args: Parameters<SocketEmitPromiseEvents[T]>,
+		timeout?: number,
+		timeoutMessage?: string
+	): Promise<ReturnType<SocketEmitPromiseEvents[T]>>
+
+	emit<T extends keyof SocketEmitEvents>(name: T, ...args: Parameters<SocketEmitEvents[T]>): void
+}
+
+export const SocketContext = React.createContext<CompanionSocketWrapped>(null as any) // TODO - fix this
 
 type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
 
@@ -31,32 +55,71 @@ type SocketEmitPromiseEvents = StripNever<{
 		: never
 }>
 
-export function socketEmitPromise<T extends keyof SocketEmitPromiseEvents>(
-	socket: CompanionSocketType,
-	name: T,
-	args: Parameters<SocketEmitPromiseEvents[T]>,
-	timeout?: number,
-	timeoutMessage?: string
-): Promise<ReturnType<SocketEmitPromiseEvents[T]>> {
-	const p = new Promise<ReturnType<SocketEmitPromiseEvents[T]>>((resolve, reject) => {
-		console.log('send', name, ...args)
+// type VoidIfReturnIsNever<T extends (...args: any[]) => void> =
+// 	ReturnType<T> extends never ? (...args: Parameters<T>) => void : never
 
-		socket.emit(
-			name,
-			// @ts-expect-error types are unhappy because of the complex setup
-			args,
-			(err, res) => {
-				if (err) reject(err)
-				else resolve(res)
+type SocketEmitEvents = StripNever<{
+	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
+		? IfReturnIsNever<ClientToBackendEventsMap[K]> extends never
+			? ClientToBackendEventsMap[K]
+			: never
+		: never
+}>
+
+export function wrapSocket(socket: CompanionSocketType): CompanionSocketWrapped {
+	return {
+		get connected() {
+			return socket.connected
+		},
+		onConnect: (listener) => {
+			socket.on('connect', listener)
+
+			return () => {
+				socket.off('connect', listener)
 			}
-		)
-	})
+		},
+		onDisconnect: (listener) => {
+			socket.on('disconnect', listener)
 
-	timeout = timeout ?? 5000
-	return pTimeout(p, {
-		milliseconds: timeout,
-		message: timeoutMessage ?? `Timed out after ${timeout / 1000}s`,
-	})
+			return () => {
+				socket.off('disconnect', listener)
+			}
+		},
+
+		on: (key, listener) => {
+			socket.on(key, listener as any)
+
+			return () => {
+				socket.off(key, listener as any)
+			}
+		},
+
+		emit: (key, ...args) => {
+			socket.emit(key, ...args)
+		},
+
+		emitPromise: (name, args, timeout, timeoutMessage) => {
+			const p = new Promise<ReturnType<SocketEmitPromiseEvents[typeof name]>>((resolve, reject) => {
+				console.log('send', name, ...args)
+
+				socket.emit(
+					name,
+					// @ts-expect-error types are unhappy because of the complex setup
+					args,
+					(err, res) => {
+						if (err) reject(err)
+						else resolve(res)
+					}
+				)
+			})
+
+			timeout = timeout ?? 5000
+			return pTimeout(p, {
+				milliseconds: timeout,
+				message: timeoutMessage ?? `Timed out after ${timeout / 1000}s`,
+			})
+		},
+	}
 }
 
 const freezePrototypes = () => {
@@ -174,7 +237,7 @@ interface ErrorFallbackProps {
 	error: Error | undefined
 	resetErrorBoundary: () => void
 }
-function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
+export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
 	return (
 		<CAlert color="danger">
 			<p>Something went wrong:</p>

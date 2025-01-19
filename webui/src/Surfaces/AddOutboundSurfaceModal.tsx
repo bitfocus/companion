@@ -8,7 +8,7 @@ import React, {
 	useState,
 } from 'react'
 import { CAlert, CButton, CForm, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
+import { SocketContext, PreventDefaultHandler } from '../util.js'
 import { CModalExt } from '../Components/CModalExt.js'
 
 export interface AddOutboundSurfaceModalRef {
@@ -50,7 +50,8 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, Ad
 				setRunning(true)
 				setSaveError(null)
 
-				socketEmitPromise(socket, 'surfaces:outbound:add', ['elgato', info.address, info.port, info.name])
+				socket
+					.emitPromise('surfaces:outbound:add', ['elgato', info.address, info.port, info.name])
 					.then(() => {
 						setRunning(false)
 						setShow(false)

@@ -139,18 +139,6 @@ export class VariablesStore {
 
 		return definitions
 	}
-
-	public connectionLabelsWithDefinitions = computed((): string[] => {
-		const labels: string[] = []
-
-		for (const [label, variables] of this.variables) {
-			if (label === 'internal' || variables.size > 0) {
-				labels.push(label)
-			}
-		}
-
-		return labels
-	})
 }
 
 export interface VariableDefinitionExt extends VariableDefinition {

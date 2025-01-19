@@ -197,11 +197,6 @@ export abstract class ControlBase<TJson> {
 	abstract renameVariables(labelFrom: string, labelTo: string): void
 
 	/**
-	 * Prune any items on controls which belong to an unknown connectionId
-	 */
-	abstract verifyConnectionIds(knownConnectionIds: Set<string>): void
-
-	/**
 	 * Execute a press of a control
 	 * @param pressed Whether the control is pressed
 	 * @param surfaceId The surface that initiated this press

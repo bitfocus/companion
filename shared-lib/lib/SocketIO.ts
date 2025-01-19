@@ -34,17 +34,17 @@ import type {
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
-import type { FeedbackDefinitionUpdate, ClientFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
-import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
-import type { ClientModuleInfo, ModuleInfoUpdate } from './Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, ClientModuleInfo } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
-import type { ActionOwner, ActionSetId } from './Model/ActionModel.js'
-import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
+import type { ActionSetId } from './Model/ActionModel.js'
+import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
+import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
+import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -85,12 +85,9 @@ export interface ClientToBackendEventsMap {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'action-definitions:subscribe': () => Record<string, Record<string, ClientActionDefinition | undefined> | undefined>
+	'action-definitions:subscribe': () => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
 	'action-definitions:unsubscribe': () => void
-	'feedback-definitions:subscribe': () => Record<
-		string,
-		Record<string, ClientFeedbackDefinition | undefined> | undefined
-	>
+	'feedback-definitions:subscribe': () => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
 	'feedback-definitions:unsubscribe': () => void
 	'variable-definitions:subscribe': () => AllVariableDefinitions
 	'variable-definitions:unsubscribe': () => void
@@ -108,83 +105,68 @@ export interface ClientToBackendEventsMap {
 	'controls:swap': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:reset': (location: ControlLocation, newType?: string) => void
 
-	'controls:feedback:set-headline': (controlId: string, feedbackId: string, headline: string) => boolean
-	'controls:feedback:enabled': (controlId: string, feedbackId: string, enabled: boolean) => boolean
-	'controls:feedback:set-style-selection': (controlId: string, feedbackId: string, selected: string[]) => boolean
-	'controls:feedback:set-style-value': (controlId: string, feedbackId: string, key: string, value: any) => boolean
-	'controls:feedback:learn': (controlId: string, feedbackId: string) => boolean
-	'controls:feedback:duplicate': (controlId: string, feedbackId: string) => boolean
-	'controls:feedback:remove': (controlId: string, feedbackId: string) => boolean
-	'controls:feedback:set-connection': (controlId: string, feedbackId: string, connectionId: string | number) => boolean
-	'controls:feedback:set-inverted': (controlId: string, feedbackId: string, isInverted: boolean) => boolean
-	'controls:feedback:set-option': (controlId: string, feedbackId: string, key: string, val: any) => boolean
-	'controls:feedback:move': (
+	'controls:entity:set-headline': (
 		controlId: string,
-		dragFeedbackId: string,
-		hoverParentId: string | null,
-		hoverIndex: number
-	) => boolean
-	'controls:feedback:add': (
-		controlId: string,
-		parentId: string | null,
-		connectionId: string,
-		feedbackType: string
-	) => boolean
-
-	'controls:action:set-headline': (
-		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
 		headline: string
 	) => boolean
-	'controls:action:enabled': (
+	'controls:entity:enabled': (
 		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
 		enabled: boolean
 	) => boolean
-	'controls:action:learn': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
-	'controls:action:duplicate': (
+	'controls:entity:set-style-selection': (
 		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string
-	) => string | null
-	'controls:action:remove': (controlId: string, stepId: string, setId: ActionSetId, actionId: string) => boolean
-	'controls:action:set-connection': (
-		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string,
-		connectionId: string
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		selected: string[]
 	) => boolean
-	'controls:action:set-option': (
+	'controls:entity:set-style-value': (
 		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		actionId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		key: string,
+		value: any
+	) => boolean
+	'controls:entity:learn': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
+	'controls:entity:duplicate': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
+	'controls:entity:remove': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
+	'controls:entity:set-connection': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		connectionId: string | number
+	) => boolean
+	'controls:entity:set-inverted': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		isInverted: boolean
+	) => boolean
+	'controls:entity:set-option': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
 		key: string,
 		val: any
 	) => boolean
-	'controls:action:move': (
+	'controls:entity:move': (
 		controlId: string,
-		dragStepId: string,
-		dragSetId: ActionSetId,
-		dragActionId: string,
-		hoverStepId: string,
-		hoverSetId: ActionSetId,
-		hoverOwnerId: ActionOwner | null,
+		dragEntityLocation: SomeSocketEntityLocation,
+		dragEntityId: string,
+		hoverOwnerId: EntityOwner | null,
+		hoverEntityLocation: SomeSocketEntityLocation,
 		hoverIndex: number
 	) => boolean
-	'controls:action:add': (
+	'controls:entity:add': (
 		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		ownerId: ActionOwner | null,
+		entityLocation: SomeSocketEntityLocation,
+		ownerId: EntityOwner | null,
 		connectionId: string,
-		actionType: string
+		entityTypeLabel: EntityModelType,
+		entityDefinition: string
 	) => boolean
 
 	'controls:action-set:set-run-while-held': (
@@ -240,7 +222,6 @@ export interface ClientToBackendEventsMap {
 	'action-recorder:session:set-connections': (sessionId: string, connectionIds: string[]) => void
 	'action-recorder:session:action-reorder': (sessionId: string, actionId: string, dropIndex: number) => void
 	'action-recorder:session:action-set-value': (sessionId: string, actionId: string, key: string, value: any) => void
-	'action-recorder:session:action-delay': (sessionId: string, actionId: string, delay: number) => void
 	'action-recorder:session:action-delete': (sessionId: string, actionId: string) => void
 	'action-recorder:session:action-duplicate': (sessionId: string, actionId: string) => void
 
@@ -394,8 +375,8 @@ export interface BackendToClientEventsMap {
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
 	'triggers:update': (change: TriggersUpdate) => void
-	'action-definitions:update': (change: ActionDefinitionUpdate) => void
-	'feedback-definitions:update': (change: FeedbackDefinitionUpdate) => void
+	'action-definitions:update': (change: EntityDefinitionUpdate) => void
+	'feedback-definitions:update': (change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void

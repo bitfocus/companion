@@ -1,5 +1,7 @@
 import React, { memo, useCallback, useContext, useState } from 'react'
-import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
+import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CButton } from '@coreui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHatWizard } from '@fortawesome/free-solid-svg-icons'
 import { MyErrorBoundary } from '../util.js'
 import { ArtnetProtocol } from './ArtnetProtocol.js'
 import { RosstalkProtocol } from './RosstalkProtocol.js'
@@ -25,15 +27,26 @@ import { HttpConfig } from './HttpConfig.js'
 import { CompanionConfig } from './CompanionConfig.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { UserConfigProps } from './Components/Common.js'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { UserConfigProps } from './Components/Common.js'
 
-export const UserConfig = memo(function UserConfig() {
+export const UserConfigPage = memo(function UserConfig() {
+	const { showWizard } = useContext(RootAppStoreContext)
+
 	return (
 		<CRow className="split-panels">
 			<CCol xl={6} className="primary-panel">
-				<h4>Settings</h4>
-				<p>Settings apply instantaneously, don't worry about it!</p>
+				<div className="d-flex justify-content-between">
+					<div>
+						<h4>Settings</h4>
+						<p>Settings apply instantaneously, don't worry about it!</p>
+					</div>
+					<div>
+						<CButton color="primary" onClick={showWizard}>
+							<FontAwesomeIcon icon={faHatWizard} /> Configuration Wizard
+						</CButton>
+					</div>
+				</div>
 				<div style={{ marginTop: -30 }}>
 					<UserConfigTable />
 				</div>

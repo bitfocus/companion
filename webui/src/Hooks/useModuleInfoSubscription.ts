@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketType, socketEmitPromise } from '../util.js'
+import { CompanionSocketWrapped } from '../util.js'
 import { ModuleInfoStore } from '../Stores/ModuleInfoStore.js'
-import { ModuleInfoUpdate } from '@companion-app/shared/Model/ModuleInfo.js'
 
-export function useModuleInfoSubscription(socket: CompanionSocketType, store: ModuleInfoStore): boolean {
+export function useModuleInfoSubscription(socket: CompanionSocketWrapped, store: ModuleInfoStore): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
 		store.resetModules(null)
 		setReady(false)
 
-		socketEmitPromise(socket, 'modules:subscribe', [])
+		socket
+			.emitPromise('modules:subscribe', [])
 			.then((modules) => {
 				store.resetModules(modules)
 				setReady(true)
@@ -20,16 +20,15 @@ export function useModuleInfoSubscription(socket: CompanionSocketType, store: Mo
 				console.error('Failed to load modules list', e)
 			})
 
-		const patchModules = (change: ModuleInfoUpdate) => {
+		const unsubUpdates = socket.on('modules:patch', (change) => {
 			store.applyModuleChange(change)
-		}
-		socket.on('modules:patch', patchModules)
+		})
 
 		return () => {
 			store.resetModules(null)
-			socket.off('modules:patch', patchModules)
+			unsubUpdates()
 
-			socketEmitPromise(socket, 'modules:unsubscribe', []).catch((e) => {
+			socket.emitPromise('modules:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe from modules list:', e)
 			})
 		}

@@ -1,6 +1,6 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
-import { socketEmitPromise, PreventDefaultHandler, useComputed } from '../util.js'
+import { PreventDefaultHandler, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -24,6 +24,7 @@ import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVari
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
+import { Link } from '@tanstack/react-router'
 
 const DRAG_ID = 'custom-variables'
 
@@ -31,20 +32,15 @@ interface CustomVariableDefinitionExt extends CustomVariableDefinition {
 	name: string
 }
 
-interface CustomVariablesListProps {
-	setShowCustom: (show: boolean) => void
-}
-
-export const CustomVariablesList = observer(function CustomVariablesList({ setShowCustom }: CustomVariablesListProps) {
-	const doBack = useCallback(() => setShowCustom(false), [setShowCustom])
-
+export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const { socket, notifier, variablesStore: customVariables } = useContext(RootAppStoreContext)
 
 	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
 
 	useEffect(() => {
 		const doPoll = () => {
-			socketEmitPromise(socket, 'variables:connection-values', ['custom'])
+			socket
+				.emitPromise('variables:connection-values', ['custom'])
 				.then((values) => {
 					setVariableValues(values || {})
 				})
@@ -74,7 +70,8 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 			e?.preventDefault()
 
 			if (isCustomVariableValid(newName)) {
-				socketEmitPromise(socket, 'custom-variables:create', [newName, ''])
+				socket
+					.emitPromise('custom-variables:create', [newName, ''])
 					.then((res) => {
 						console.log('done with', res)
 						if (res) {
@@ -95,7 +92,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 	const setStartupValue = useCallback(
 		(name: string, value: any) => {
-			socketEmitPromise(socket, 'custom-variables:set-default', [name, value]).catch(() => {
+			socket.emitPromise('custom-variables:set-default', [name, value]).catch(() => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -103,7 +100,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 	)
 	const setCurrentValue = useCallback(
 		(name: string, value: any) => {
-			socketEmitPromise(socket, 'custom-variables:set-current', [name, value]).catch(() => {
+			socket.emitPromise('custom-variables:set-current', [name, value]).catch(() => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -112,7 +109,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 	const setPersistenceValue = useCallback(
 		(name: string, value: boolean) => {
-			socketEmitPromise(socket, 'custom-variables:set-persistence', [name, value]).catch(() => {
+			socket.emitPromise('custom-variables:set-persistence', [name, value]).catch(() => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -127,7 +124,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 				`Are you sure you want to delete the custom variable "${name}"?`,
 				'Delete',
 				() => {
-					socketEmitPromise(socket, 'custom-variables:delete', [name]).catch(() => {
+					socket.emitPromise('custom-variables:delete', [name]).catch(() => {
 						console.error('Failed to delete variable')
 					})
 				}
@@ -149,7 +146,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 			const newNames = rawNames.filter((id) => id !== itemName)
 			newNames.splice(targetIndex, 0, itemName)
 
-			socketEmitPromise(socket, 'custom-variables:set-order', [newNames]).catch((e) => {
+			socket.emitPromise('custom-variables:set-order', [newNames]).catch((e) => {
 				console.error('Reorder failed', e)
 			})
 		},
@@ -199,9 +196,9 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 	return (
 		<div className="variables-panel">
 			<div>
-				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
+				<h4 style={{ marginBottom: '0.8rem' }}>Custom Variables</h4>
 				<CButtonGroup size="sm">
-					<CButton color="primary" onClick={doBack}>
+					<CButton color="primary" as={Link} to="/variables">
 						<FontAwesomeIcon icon={faArrowLeft} />
 						&nbsp; Go back
 					</CButton>

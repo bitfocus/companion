@@ -28,7 +28,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 
 		const connectionInfo = connections.getInfo(id)
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
-		const compactName = moduleInfo?.display?.name?.replace(/\;.*/, '...')
+		const compactName = connectionInfo ? modules.getModuleFriendlyName(connectionInfo.instance_type) : undefined
 
 		return (
 			<CButton

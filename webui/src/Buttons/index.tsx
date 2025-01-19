@@ -3,7 +3,7 @@ import { faCalculator, faGift, faLayerGroup, faVideoCamera } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { ConnectionPresets } from './Presets/Presets.js'
-import { MyErrorBoundary, socketEmitPromise } from '../util.js'
+import { MyErrorBoundary } from '../util.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
@@ -16,25 +16,22 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
-import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+import { useMatchRoute, useNavigate, UseNavigateResult } from '@tanstack/react-router'
 
-export const BUTTONS_PAGE_PREFIX = '/buttons'
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
 
 function useUrlPageNumber(): number | null {
-	const routerLocation = useLocation()
-	if (!routerLocation.pathname.startsWith(BUTTONS_PAGE_PREFIX)) return null
+	const matchRoute = useMatchRoute()
+	const match = matchRoute({ to: '/buttons/$page' })
 
-	const fragments = routerLocation.pathname.slice(BUTTONS_PAGE_PREFIX.length + 1).split('/')
-
-	const pageIndex = Number(fragments[0])
+	const pageIndex = match ? Number(match.page) : NaN
 	if (isNaN(pageIndex) || pageIndex <= 0) return 0
 
 	return pageIndex
 }
 
-function navigateToButtonsPage(navigate: NavigateFunction, pageNumber: number): void {
-	navigate(`${BUTTONS_PAGE_PREFIX}/${pageNumber}`)
+function navigateToButtonsPage(navigate: UseNavigateResult<'/buttons'>, pageNumber: number): void {
+	navigate({ to: `/buttons/${pageNumber}` })
 	window.sessionStorage.setItem(SESSION_STORAGE_LAST_BUTTONS_PAGE, pageNumber.toString())
 }
 
@@ -46,12 +43,8 @@ function getLastPageNumber(): number {
 	return 1
 }
 
-interface ButtonsPageProps {
-	hotPress: boolean
-}
-
-export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPageProps) {
-	const { userConfig, socket, pages } = useContext(RootAppStoreContext)
+export const ButtonsPage = observer(function ButtonsPage() {
+	const { userConfig, socket, pages, viewControl } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
@@ -61,7 +54,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
-	const navigate = useNavigate()
+	const navigate = useNavigate({ from: '/buttons' })
 	let pageNumber = useUrlPageNumber()
 	const setPageNumber = useCallback(
 		(pageNumber: number) => {
@@ -82,10 +75,10 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 	const doButtonGridClick = useCallback(
 		(location: ControlLocation, isDown: boolean) => {
-			if (hotPress) {
-				socketEmitPromise(socket, 'controls:hot-press', [location, isDown, 'grid']).catch((e) =>
-					console.error(`Hot press failed: ${e}`)
-				)
+			if (viewControl.buttonGridHotPress) {
+				socket
+					.emitPromise('controls:hot-press', [location, isDown, 'grid'])
+					.catch((e) => console.error(`Hot press failed: ${e}`))
 			} else if (isDown) {
 				setActiveTab('edit')
 				console.log('set selected', location)
@@ -93,7 +86,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 				setTabResetToken(nanoid())
 			}
 		},
-		[socket, hotPress]
+		[socket, viewControl]
 	)
 	const clearSelectedButton = useCallback(() => {
 		doChangeTab('pages')
@@ -210,7 +203,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								socketEmitPromise(socket, 'controls:reset', [selectedButton]).catch((e) => {
+								socket.emitPromise('controls:reset', [selectedButton]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							}
@@ -228,12 +221,12 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[1] === 'copy') {
-							socketEmitPromise(socket, 'controls:copy', [copyFromButton[0], selectedButton]).catch((e) => {
+							socket.emitPromise('controls:copy', [copyFromButton[0], selectedButton]).catch((e) => {
 								console.error(`copy failed: ${e}`)
 							})
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[1] === 'cut') {
-							socketEmitPromise(socket, 'controls:move', [copyFromButton[0], selectedButton]).catch((e) => {
+							socket.emitPromise('controls:move', [copyFromButton[0], selectedButton]).catch((e) => {
 								console.error(`move failed: ${e}`)
 							})
 							setCopyFromButton(null)
@@ -269,7 +262,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 				<MyErrorBoundary>
 					<ButtonsGridPanel
 						buttonGridClick={doButtonGridClick}
-						isHot={hotPress}
+						isHot={viewControl.buttonGridHotPress}
 						selectedButton={selectedButton}
 						pageNumber={pageNumber}
 						changePage={setPageNumber}

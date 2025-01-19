@@ -4,5 +4,5 @@
 - **Show + and - instead of arrows on page buttons**  
   Changes the page buttons from the standard arrows symbols to + and - symbols instead.
 
-- **Remove the topbar on each button**  
-  Hides the Yellow bar and the button number at the top of each button.
+- **Show the topbar on each button**  
+  Disable this to hid the Yellow bar and the button number at the top of each button.

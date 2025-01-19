@@ -212,9 +212,6 @@ code {
 .text-right {
 	text-align: right;
 }
-.remove075right {
-	margin-right: -0.75rem;
-}
 
 .currentlyNone {
 	color: #777;
@@ -324,4 +321,20 @@ svg.button-size {
 }
 svg.pad-left {
 	margin-left: 0.5rem;
+}
+
+.notification-count {
+	background-color: $primary;
+	color: #fff;
+	font-weight: bold;
+
+	border-radius: 50%;
+	// padding: 0.1rem;
+	font-size: 0.7rem;
+	vertical-align: top;
+	text-align: center;
+
+	margin-right: -0.5rem;
+	min-width: calc(var(--cui-body-line-height) * 1em);
+	display: inline-block;
 }

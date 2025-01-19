@@ -1,80 +1,35 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
-import {
-	CButton,
-	CButtonGroup,
-	CCol,
-	CFormSwitch,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CRow,
-	CTabContent,
-	CTabPane,
-} from '@coreui/react'
-import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../util.js'
+import React, { useCallback, useContext, useMemo, useRef } from 'react'
+import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
+import { SocketContext } from '../util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-	faAdd,
-	faClock,
-	faClone,
-	faDownload,
-	faFileExport,
-	faList,
-	faSort,
-	faTrash,
-} from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faClone, faDownload, faFileExport, faList, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
-import { EditTriggerPanel } from './EditPanel.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import classNames from 'classnames'
 import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
-import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, useMatchRoute, useNavigate, UseNavigateResult } from '@tanstack/react-router'
 
-export const TRIGGERS_PAGE_PREFIX = '/triggers'
-
-function useSelectedTriggerId(): string | null {
-	const routerLocation = useLocation()
-	if (!routerLocation.pathname.startsWith(TRIGGERS_PAGE_PREFIX)) return null
-	const fragments = routerLocation.pathname.slice(TRIGGERS_PAGE_PREFIX.length + 1).split('/')
-	const triggerId = fragments[0]
-	if (!triggerId) return null
-
-	return CreateTriggerControlId(triggerId)
-}
-
-function navigateToTriggersPage(navigate: NavigateFunction, controlId: string | null): void {
+function navigateToTriggersPage(navigate: UseNavigateResult<'/triggers'>, controlId: string | null): void {
 	if (!controlId) {
-		navigate(TRIGGERS_PAGE_PREFIX)
+		navigate({ to: '/triggers' })
 		return
 	}
 
-	navigate(`${TRIGGERS_PAGE_PREFIX}/${controlId}`)
+	navigate({ to: `/triggers/${controlId}` })
 }
 
-export const Triggers = observer(function Triggers() {
-	const { socket, triggersList } = useContext(RootAppStoreContext)
+export const TriggersPage = observer(function Triggers() {
+	const { socket } = useContext(RootAppStoreContext)
 
-	const editItemId = useSelectedTriggerId()
-	const activeTab = editItemId ? 'edit' : 'placeholder'
-	const navigate = useNavigate()
+	const navigate = useNavigate({ from: '/triggers' })
 
-	// Ensure the selected trigger is valid
-	useEffect(() => {
-		if (editItemId && !triggersList.triggers.get(editItemId)) {
-			navigateToTriggersPage(navigate, null)
-		}
-	}, [navigate, triggersList, editItemId])
-
-	const doChangeTab = useCallback((_newTab: 'placeholder' | 'edit') => {
-		// setActiveTab(newTab)
-	}, [])
 	const doEditItem = useCallback(
 		(controlId: string) => {
 			const parsedId = ParseControlId(controlId)
@@ -86,7 +41,8 @@ export const Triggers = observer(function Triggers() {
 	)
 
 	const doAddNew = useCallback(() => {
-		socketEmitPromise(socket, 'triggers:create', [])
+		socket
+			.emitPromise('triggers:create', [])
 			.then((controlId) => {
 				console.log('created trigger', controlId)
 				doEditItem(controlId)
@@ -117,7 +73,7 @@ export const Triggers = observer(function Triggers() {
 					</CButton>
 				</CButtonGroup>
 
-				<TriggersTable editItem={doEditItem} selectedControlId={editItemId} />
+				<TriggersTable editItem={doEditItem} />
 
 				<CButton
 					color="secondary"
@@ -132,36 +88,7 @@ export const Triggers = observer(function Triggers() {
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
-					<CNav variant="tabs" role="tablist">
-						{!editItemId && (
-							<CNavItem>
-								<CNavLink active={activeTab === 'placeholder'} onClick={() => doChangeTab('placeholder')}>
-									Select a trigger
-								</CNavLink>
-							</CNavItem>
-						)}
-						<CNavItem
-							className={classNames({
-								hidden: !editItemId,
-							})}
-						>
-							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
-								<FontAwesomeIcon icon={faClock} /> Edit Trigger
-							</CNavLink>
-						</CNavItem>
-					</CNav>
-					<CTabContent>
-						{!editItemId && (
-							<CTabPane data-tab="placeholder" visible={activeTab === 'placeholder'}>
-								<NonIdealState text="Select a trigger to edit" icon={faClock} />
-							</CTabPane>
-						)}
-						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>
-							<MyErrorBoundary>
-								{editItemId ? <EditTriggerPanel key={`${editItemId}`} controlId={editItemId} /> : ''}
-							</MyErrorBoundary>
-						</CTabPane>
-					</CTabContent>
+					<Outlet />
 				</div>
 			</CCol>
 		</CRow>
@@ -170,11 +97,10 @@ export const Triggers = observer(function Triggers() {
 
 interface TriggersTableProps {
 	editItem: (controlId: string) => void
-	selectedControlId: string | null
 }
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
-const TriggersTable = observer(function TriggersTable({ editItem, selectedControlId }: TriggersTableProps) {
+const TriggersTable = observer(function TriggersTable({ editItem }: TriggersTableProps) {
 	const { socket, triggersList } = useContext(RootAppStoreContext)
 
 	const moveTrigger = useCallback(
@@ -193,7 +119,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 			const newIds = rawIds.filter((id) => id !== itemId)
 			newIds.splice(targetIndex, 0, itemId)
 
-			socketEmitPromise(socket, 'triggers:set-order', [newIds]).catch((e) => {
+			socket.emitPromise('triggers:set-order', [newIds]).catch((e) => {
 				console.error('Reorder failed', e)
 			})
 		},
@@ -213,7 +139,6 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 								item={item}
 								editItem={editItem}
 								moveTrigger={moveTrigger}
-								isSelected={controlId === selectedControlId}
 							/>
 						))
 				) : (
@@ -240,29 +165,29 @@ interface TriggersTableRowProps {
 	item: ClientTriggerData
 	editItem: (controlId: string) => void
 	moveTrigger: (hoverControlId: string, controlId: string) => void
-	isSelected: boolean
 }
 
-function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }: TriggersTableRowProps) {
+function TriggersTableRow({ controlId, item, editItem, moveTrigger }: TriggersTableRowProps) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const doEnableDisable = useCallback(() => {
-		socketEmitPromise(socket, 'controls:set-options-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
+		socket.emitPromise('controls:set-options-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
 			console.error('failed to toggle trigger state', e)
 		})
 	}, [socket, controlId, item.enabled])
 	const doDelete = useCallback(() => {
 		confirmRef.current?.show('Delete trigger', 'Are you sure you wish to delete this trigger?', 'Delete', () => {
-			socketEmitPromise(socket, 'triggers:delete', [controlId]).catch((e) => {
+			socket.emitPromise('triggers:delete', [controlId]).catch((e) => {
 				console.error('Failed to delete', e)
 			})
 		})
 	}, [socket, controlId])
 	const doEdit = useCallback(() => editItem(controlId), [editItem, controlId])
 	const doClone = useCallback(() => {
-		socketEmitPromise(socket, 'triggers:clone', [controlId])
+		socket
+			.emitPromise('triggers:clone', [controlId])
 			.then((newControlId) => {
 				console.log('cloned to control', newControlId)
 			})
@@ -310,6 +235,10 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 
 	const parsedId = ParseControlId(controlId)
 	const exportId = parsedId?.type === 'trigger' ? parsedId?.trigger : undefined
+
+	const matchRoute = useMatchRoute()
+	const routeMatach = matchRoute({ to: '/triggers/$controlId' })
+	const isSelected = routeMatach && routeMatach.controlId === exportId
 
 	return (
 		<tr

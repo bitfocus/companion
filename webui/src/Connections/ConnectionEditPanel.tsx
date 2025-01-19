@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, socketEmitPromise } from '../util.js'
+import { LoadingRetryOrError } from '../util.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert } from '@coreui/react'
 import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
@@ -133,12 +133,13 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		}
 
 		if (!connectionShouldBeRunning) {
-			socketEmitPromise(socket, 'connections:set-label-and-version', [
-				connectionId,
-				newLabel,
-				connectionVersion,
-				connectionUpdatePolicy,
-			])
+			socket
+				.emitPromise('connections:set-label-and-version', [
+					connectionId,
+					newLabel,
+					connectionVersion,
+					connectionUpdatePolicy,
+				])
 				.then((err) => {
 					if (err) {
 						if (err === 'invalid label') {
@@ -157,7 +158,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					setError(`Failed to save connection config: ${e}`)
 				})
 		} else if (connectionConfig) {
-			socketEmitPromise(socket, 'connections:set-label-and-config', [connectionId, newLabel, connectionConfig])
+			socket
+				.emitPromise('connections:set-label-and-config', [connectionId, newLabel, connectionConfig])
 				.then((err) => {
 					if (err) {
 						if (err === 'invalid label') {
@@ -190,7 +192,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	useEffect(() => {
 		if (connectionId) {
-			socketEmitPromise(socket, 'connections:edit', [connectionId])
+			socket
+				.emitPromise('connections:edit', [connectionId])
 				.then((res) => {
 					if (res) {
 						if (res.fields) {

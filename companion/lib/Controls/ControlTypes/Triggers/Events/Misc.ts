@@ -1,6 +1,7 @@
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import LogController, { Logger } from '../../../../Log/Controller.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
+import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
 
 interface ConnectEvent {
 	id: string
@@ -70,7 +71,7 @@ export class TriggersEventMisc {
 	/**
 	 * Execute the actions of the parent trigger
 	 */
-	readonly #executeActions: (nowTime: number) => void
+	readonly #executeActions: (nowTime: number, source: TriggerExecutionSource) => void
 
 	/**
 	 * The logger for this class
@@ -82,7 +83,11 @@ export class TriggersEventMisc {
 	 */
 	#startupEvents: StartupEvent[] = []
 
-	constructor(eventBus: TriggerEvents, controlId: string, executeActions: (nowTime: number) => void) {
+	constructor(
+		eventBus: TriggerEvents,
+		controlId: string,
+		executeActions: (nowTime: number, source: TriggerExecutionSource) => void
+	) {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Misc/${controlId}`)
 
 		this.#eventBus = eventBus
@@ -132,7 +137,7 @@ export class TriggersEventMisc {
 
 				setImmediate(() => {
 					try {
-						this.#executeActions(nowTime)
+						this.#executeActions(nowTime, TriggerExecutionSource.Other)
 					} catch (e: any) {
 						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
 					}
@@ -168,7 +173,7 @@ export class TriggersEventMisc {
 			for (const event of events) {
 				setTimeout(() => {
 					try {
-						this.#executeActions(nowTime)
+						this.#executeActions(nowTime, TriggerExecutionSource.Other)
 					} catch (e: any) {
 						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
 					}

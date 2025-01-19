@@ -15,7 +15,7 @@
  *
  */
 
-const FILE_VERSION = 6
+const FILE_VERSION = 7
 
 import os from 'os'
 import { upgradeImport } from '../Data/Upgrade.js'
@@ -58,8 +58,7 @@ import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import type { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import type { ActionInstance, ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -71,6 +70,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
+import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 	if (raw === 'json-gz' || raw === 'json' || raw === 'yaml') return raw
@@ -1039,29 +1039,17 @@ export class ImportExportController {
 		const result: TriggerModel = {
 			type: 'trigger',
 			options: cloneDeep(control.options),
-			action_sets: {
-				0: [],
-				down: undefined,
-				up: undefined,
-				rotate_left: undefined,
-				rotate_right: undefined,
-			},
+			actions: [],
 			condition: [],
 			events: control.events,
 		}
 
 		if (control.condition) {
-			result.condition = fixupFeedbacksRecursive(instanceIdMap, cloneDeep(control.condition))
+			result.condition = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.condition))
 		}
 
-		const allActions: ActionInstance[] = []
-		if (control.action_sets) {
-			// Triggers can only have the 0 set
-			const action_set = control.action_sets[0]
-			const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
-
-			result.action_sets[0] = newActions
-			allActions.push(...newActions)
+		if (control.actions) {
+			result.actions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.actions))
 		}
 
 		ReferencesVisitors.fixupControlReferences(
@@ -1071,9 +1059,7 @@ export class ImportExportController {
 				connectionIds: connectionIdRemap,
 			},
 			undefined,
-			allActions,
-			result.condition || [],
-			[],
+			result.condition.concat(result.actions),
 			[],
 			result.events || [],
 			false
@@ -1111,10 +1097,10 @@ export class ImportExportController {
 		}
 
 		if (control.feedbacks) {
-			result.feedbacks = fixupFeedbacksRecursive(instanceIdMap, cloneDeep(control.feedbacks))
+			result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
 		}
 
-		const allActions: ActionInstance[] = []
+		const allEntities: SomeEntityModel[] = [...result.feedbacks]
 		if (control.steps) {
 			for (const [stepId, step] of Object.entries<any>(control.steps)) {
 				const newStepSets: ActionSetsModel = {
@@ -1135,10 +1121,10 @@ export class ImportExportController {
 						continue
 					}
 
-					const newActions = fixupActionsRecursive(instanceIdMap, cloneDeep(action_set) as any)
+					const newActions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(action_set) as any)
 
 					newStepSets[setIdSafe] = newActions
-					allActions.push(...newActions)
+					allEntities.push(...newActions)
 				}
 			}
 		}
@@ -1150,9 +1136,7 @@ export class ImportExportController {
 				connectionIds: connectionIdRemap,
 			},
 			result.style,
-			allActions,
-			result.feedbacks || [],
-			[],
+			allEntities,
 			[],
 			[],
 			false
@@ -1172,47 +1156,33 @@ type ClientPendingImport = {
 	timeout: null
 }
 
-function fixupFeedbacksRecursive(instanceIdMap: InstanceAppliedRemappings, feedbacks: FeedbackInstance[]) {
-	const newFeedbacks: FeedbackInstance[] = []
-	for (const feedback of feedbacks) {
-		const instanceInfo = instanceIdMap[feedback?.instance_id]
-		if (feedback && instanceInfo) {
-			newFeedbacks.push({
-				...feedback,
-				instance_id: instanceInfo.id,
-				upgradeIndex: instanceInfo.lastUpgradeIndex,
-				children:
-					feedback.instance_id === 'internal' && feedback.children
-						? fixupFeedbacksRecursive(instanceIdMap, feedback.children)
-						: undefined,
-			})
-		}
-	}
-	return newFeedbacks
-}
+function fixupEntitiesRecursive(
+	instanceIdMap: InstanceAppliedRemappings,
+	entities: SomeEntityModel[]
+): SomeEntityModel[] {
+	const newEntities: SomeEntityModel[] = []
+	for (const entity of entities) {
+		if (!entity) continue
 
-function fixupActionsRecursive(instanceIdMap: InstanceAppliedRemappings, actions: ActionInstance[]) {
-	const newActions: ActionInstance[] = []
-	for (const action of actions) {
-		const instanceInfo = instanceIdMap[action?.instance]
-		if (action && instanceInfo) {
-			let newChildren: Record<string, ActionInstance[]> | undefined
-			if (action.instance === 'internal' && action.children) {
-				newChildren = {}
-				for (const [group, actions] of Object.entries(action.children)) {
-					if (!actions) continue
+		const instanceInfo = instanceIdMap[entity.connectionId]
+		if (!instanceInfo) continue
 
-					newChildren[group] = fixupActionsRecursive(instanceIdMap, actions)
-				}
+		let newChildren: Record<string, SomeEntityModel[]> | undefined
+		if (entity.connectionId === 'internal' && entity.children) {
+			newChildren = {}
+			for (const [group, childEntities] of Object.entries(entity.children)) {
+				if (!childEntities) continue
+
+				newChildren[group] = fixupEntitiesRecursive(instanceIdMap, childEntities)
 			}
-
-			newActions.push({
-				...action,
-				instance: instanceInfo.id,
-				upgradeIndex: instanceInfo.lastUpgradeIndex,
-				children: newChildren,
-			})
 		}
+
+		newEntities.push({
+			...entity,
+			connectionId: instanceInfo.id,
+			upgradeIndex: instanceInfo.lastUpgradeIndex,
+			children: newChildren,
+		})
 	}
-	return newActions
+	return newEntities
 }

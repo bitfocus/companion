@@ -64,4 +64,8 @@ export class ModuleInfoStore {
 		// TODO - is this too agressive?
 		this.storeList.replace(storeInfo.modules)
 	})
+
+	getModuleFriendlyName(moduleId: string): string | undefined {
+		return this.modules.get(moduleId)?.display.name?.replace(/\;.*/, '...')
+	}
 }

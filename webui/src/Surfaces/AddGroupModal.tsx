@@ -8,7 +8,7 @@ import React, {
 	useState,
 } from 'react'
 import { CButton, CForm, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
+import { SocketContext, PreventDefaultHandler } from '../util.js'
 import { CModalExt } from '../Components/CModalExt.js'
 
 export interface AddSurfaceGroupModalRef {
@@ -40,7 +40,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef, AddSurfa
 				setShow(false)
 				setGroupName(null)
 
-				socketEmitPromise(socket, 'surfaces:group-add', [groupName]).catch((err) => {
+				socket.emitPromise('surfaces:group-add', [groupName]).catch((err) => {
 					console.error('Group add failed', err)
 				})
 			},

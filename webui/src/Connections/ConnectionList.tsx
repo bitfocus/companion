@@ -1,6 +1,6 @@
 import React, { RefObject, useCallback, useContext, useRef } from 'react'
 import { CAlert, CButton, CButtonGroup, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
-import { socketEmitPromise, useComputed } from '../util.js'
+import { useComputed } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faSort,
@@ -81,7 +81,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 			const newIds = rawIds.filter((id) => id !== itemId)
 			newIds.splice(targetIndex, 0, itemId)
 
-			socketEmitPromise(socket, 'connections:set-order', [newIds]).catch((e) => {
+			socket.emitPromise('connections:set-order', [newIds]).catch((e) => {
 				console.error('Reorder failed', e)
 			})
 		},
@@ -225,7 +225,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			],
 			'Delete',
 			() => {
-				socketEmitPromise(socket, 'connections:delete', [id]).catch((e) => {
+				socket.emitPromise('connections:delete', [id]).catch((e) => {
 					console.error('Delete failed', e)
 				})
 				configureConnection(null)
@@ -234,7 +234,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	}, [socket, deleteModalRef, id, connection.label, configureConnection])
 
 	const doToggleEnabled = useCallback(() => {
-		socketEmitPromise(socket, 'connections:set-enabled', [id, !isEnabled]).catch((e) => {
+		socket.emitPromise('connections:set-enabled', [id, !isEnabled]).catch((e) => {
 			console.error('Set enabled failed', e)
 		})
 	}, [socket, id, isEnabled])
@@ -505,7 +505,7 @@ const MissingVersionsWarning = observer(function MissingVersionsWarning() {
 	}, [connections, modules])
 
 	const doInstallAllMissing = useCallback(() => {
-		socketEmitPromise(socket, 'modules:install-all-missing', []).catch((e) => {
+		socket.emitPromise('modules:install-all-missing', []).catch((e) => {
 			console.error('Install all missing failed', e)
 		})
 	}, [socket])

@@ -8,6 +8,7 @@ import { showFatalError } from '../Resources/Util.js'
 import type { DataDatabase } from './Database.js'
 import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import v5tov6 from './Upgrades/v5tov6.js'
+import v6tov7 from './Upgrades/v6tov7.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -17,6 +18,7 @@ const allUpgrades = [
 	v3tov4, // v3.2
 	v4tov5, // v3.5 - first round of sqlite rearranging
 	v5tov6, // v3.5 - replace action delay property https://github.com/bitfocus/companion/pull/3163
+	v6tov7, // v3.6 - rework 'entities' for better nesting https://github.com/bitfocus/companion/pull/3185
 ]
 const targetVersion = allUpgrades.length + 1
 
@@ -45,7 +47,7 @@ export function upgradeStartup(db: DataDatabase): void {
 			allUpgrades[i - 1].upgradeStartup(db, logger)
 
 			// Record that the upgrade has been done
-			db.setKey('page_config_version', i)
+			db.setKey('page_config_version', i + 1)
 		}
 	}
 

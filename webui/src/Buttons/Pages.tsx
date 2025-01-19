@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTrash, faSort, faShareFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -63,7 +62,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 			],
 			'Delete',
 			() => {
-				socketEmitPromise(socket, 'pages:delete-page', [pageNumber]).catch((e) => {
+				socket.emitPromise('pages:delete-page', [pageNumber]).catch((e) => {
 					console.error('Page delete failed', e)
 				})
 			}
@@ -163,7 +162,7 @@ const PageListRow = observer(function PageListRow({
 
 	const changeName = useCallback(
 		(newName: string) => {
-			socketEmitPromise(socket, 'pages:set-name', [pageNumber, newName ?? '']).catch((e) => {
+			socket.emitPromise('pages:set-name', [pageNumber, newName ?? '']).catch((e) => {
 				console.error('Failed to set name', e)
 			})
 		},
@@ -188,7 +187,7 @@ const PageListRow = observer(function PageListRow({
 			// Time to actually perform the action
 			// serviceFactory.moveCard(item.stepId, item.setId, item.index, index)
 			console.log('do move', item, hoverPageNumber)
-			socketEmitPromise(socket, 'pages:move-page', [item.pageId, hoverPageNumber]).catch((e) => {
+			socket.emitPromise('pages:move-page', [item.pageId, hoverPageNumber]).catch((e) => {
 				console.error('Page move failed', e)
 			})
 
@@ -213,7 +212,7 @@ const PageListRow = observer(function PageListRow({
 	preview(drop(ref))
 
 	return (
-		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
+		<tr ref={ref} className={isDragging ? 'entitylist-dragging' : ''}>
 			<td ref={drag} className="td-reorder" style={{ width: 10 }}>
 				<FontAwesomeIcon icon={faSort} />
 			</td>

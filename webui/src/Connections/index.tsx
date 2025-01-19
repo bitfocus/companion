@@ -1,13 +1,13 @@
 import { CCol, CRow, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { MyErrorBoundary, socketEmitPromise } from '../util.js'
+import { MyErrorBoundary } from '../util.js'
 import { ConnectionsList } from './ConnectionList.js'
 import { AddConnectionsPanel } from './AddConnectionPanel.js'
 import { ConnectionEditPanel } from './ConnectionEditPanel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
-import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
+import jsonPatch from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -38,7 +38,8 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 	const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatusEntry> | undefined>()
 	useEffect(() => {
 		let mounted = true
-		socketEmitPromise(socket, 'connections:get-statuses', [])
+		socket
+			.emitPromise('connections:get-statuses', [])
 			.then((statuses) => {
 				if (!mounted) return
 				setConnectionStatus(statuses)
@@ -47,18 +48,17 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 				console.error(`Failed to load connection statuses`, e)
 			})
 
-		const patchStatuses = (patch: JsonPatchOperation[]) => {
+		const unsubStatuses = socket.on('connections:patch-statuses', (patch) => {
 			if (!mounted) return
 			setConnectionStatus((oldStatuses) => {
 				if (!oldStatuses) return oldStatuses
 				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
 			})
-		}
-		socket.on('connections:patch-statuses', patchStatuses)
+		})
 
 		return () => {
 			mounted = false
-			socket.off('connections:patch-statuses', patchStatuses)
+			unsubStatuses()
 		}
 	}, [socket])
 
@@ -90,7 +90,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 							</CNavLink>
 						</CNavItem>
 					</CNav>
-					<CTabContent className="remove075right">
+					<CTabContent>
 						<CTabPane role="tabpanel" aria-labelledby="add-tab" visible={activeTab === 'add'}>
 							<MyErrorBoundary>
 								<AddConnectionsPanel doConfigureConnection={doConfigureConnection} />
