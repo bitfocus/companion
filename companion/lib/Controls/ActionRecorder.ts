@@ -364,13 +364,18 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 					// Update or push the delay before the current one
 					const oldPrevAction = session.actions[uniquenessIdIndex - 1]
-					if (oldPrevAction.instance === delayAction.instance && oldPrevAction.action === delayAction.action) {
+					if (
+						oldPrevAction &&
+						oldPrevAction.instance === delayAction.instance &&
+						oldPrevAction.action === delayAction.action
+					) {
 						session.actions[uniquenessIdIndex - 1] = delayAction
-					} else {
-						session.actions.splice(uniquenessIdIndex - 1, 0, delayAction)
+					} else if (delay > 0) {
+						session.actions.splice(uniquenessIdIndex, 0, delayAction)
 					}
 				} else {
-					session.actions.push(delayAction, newAction)
+					if (delay > 0) session.actions.push(delayAction)
+					session.actions.push(newAction)
 				}
 
 				changedSessionIds.push(session.id)
