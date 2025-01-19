@@ -12,7 +12,7 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { WindowLinkOpen } from '../Helpers/Window.js'
 
-export const KnownSurfacesTable = observer(function SurfacesPage() {
+export const KnownSurfacesTable = observer(function KnownSurfacesTable() {
 	const { surfaces, socket } = useContext(RootAppStoreContext)
 
 	const editModalRef = useRef<SurfaceEditModalRef>(null)

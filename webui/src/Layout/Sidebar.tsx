@@ -1,4 +1,14 @@
-import React, { createContext, memo, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+	createContext,
+	CSSProperties,
+	memo,
+	ReactNode,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react'
 import {
 	CSidebarNav,
 	CNavItem,
@@ -6,7 +16,6 @@ import {
 	CSidebarBrand,
 	CSidebarToggler,
 	CSidebarHeader,
-	CNavGroup,
 	CBackdrop,
 } from '@coreui/react'
 import {
@@ -33,6 +42,7 @@ import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
 import { Link } from '@tanstack/react-router'
+import { Transition, TransitionStatus } from 'react-transition-group'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -65,103 +75,51 @@ export function SidebarStateProvider({ children }: React.PropsWithChildren): Rea
 	return <SidebarStateContext.Provider value={value}>{children}</SidebarStateContext.Provider>
 }
 
-type NavItem = {
+interface SidebarMenuItemProps {
 	name: string
-	icon: IconDefinition
+	icon: IconDefinition | null
 	notifications?: React.ComponentType<Record<string, never>>
 	path?: string
-	show?: boolean
-	dropdown?: { name: string; icon?: IconDefinition; path: string; target?: string }[]
+	target?: string
 }
 
-const primaryNavItems: NavItem[] = [
-	{ name: 'Connections', icon: faPlug, path: '/connections' },
-	{ name: 'Buttons', icon: faTh, path: '/buttons' },
-	{ name: 'Surfaces', icon: faGamepad, path: '/surfaces', notifications: SurfacesTabNotifyIcon },
-	{ name: 'Triggers', icon: faClock, path: '/triggers' },
-	{ name: 'Variables', icon: faDollarSign, path: '/variables' },
-	{ name: 'Settings', icon: faCog, path: '/settings' },
-	{ name: 'Import / Export', icon: faFileImport, path: '/import-export' },
-	{ name: 'Log', icon: faClipboardList, path: '/log' },
-	{ name: 'Cloud', icon: faCloud, path: '/cloud', show: window.localStorage.getItem('show_companion_cloud') === '1' },
-	{
-		name: 'Interactive Buttons',
-		icon: faSquareCaretRight,
-		dropdown: [
-			{ name: 'Emulator', path: '/emulator', target: '_new' },
-			{ name: 'Web buttons', path: '/tablet', target: '_new' },
-		],
-	},
-]
-
-const secondaryNavItems: NavItem[] = [
-	{
-		name: 'Help & Community',
-		icon: faQuestionCircle,
-		dropdown: [
-			{ name: 'Bugs & Features', icon: faBug, path: 'https://github.com/bitfocus/companion/issues', target: '_new' },
-			{ name: 'Facebook', icon: faUsers, path: 'https://www.facebook.com/groups/companion/', target: '_new' },
-			{ name: 'Slack Chat', icon: faComments, path: 'https://bitfocus.io/api/slackinvite', target: '_new' },
-			{ name: 'Donate', icon: faDollarSign, path: 'https://donorbox.org/bitfocus-opensource', target: '_new' },
-		],
-	},
-]
-
-interface MenuProps extends React.HTMLAttributes<HTMLElement> {
-	navItems: NavItem[]
-}
-
-function SidebarMenu({ navItems, className }: MenuProps) {
-	// const routerLocation = useLocation()
-	const routerLocation = { pathname: 'abcd' }
-
-	const isActive = (prefix: string) =>
-		routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix
-
-	const subItemIconOrDefault = (icon?: IconDefinition) =>
-		icon ? (
-			<FontAwesomeIcon className="nav-icon" icon={icon} />
-		) : (
-			<span className="nav-icon">
-				<span className="nav-icon-bullet" />
-			</span>
-		)
-
+function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 	return (
-		<CSidebarNav className={className}>
-			{navItems
-				.filter((item) => item.show !== false)
-				.map((item) =>
-					item.path ? (
-						<CNavItem key={item.path}>
-							<CNavLink to={item.path} active={isActive(item.path)} as={Link}>
-								<FontAwesomeIcon className="nav-icon" icon={item.icon} />
-								<span className="flex-fill">{item.name}</span>
-								{!!item.notifications && <item.notifications />}
-							</CNavLink>
-						</CNavItem>
-					) : (
-						<CNavGroup
-							key={item.name}
-							toggler={
-								<>
-									<FontAwesomeIcon className="nav-icon" icon={item.icon} />
-									<span className="flex-fill">{item.name}</span>
-									{!!item.notifications && <item.notifications />}
-								</>
-							}
-						>
-							{item.dropdown?.map((subItem) => (
-								<CNavItem key={subItem.path} target={subItem.target} href={subItem.path}>
-									{subItemIconOrDefault(subItem.icon)}
-									<div className="flex-fill">{subItem.name}</div>
-									{subItem.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
-								</CNavItem>
-							))}
-						</CNavGroup>
-					)
-				)}
-		</CSidebarNav>
+		<>
+			{item.icon ? (
+				<FontAwesomeIcon className="nav-icon" icon={item.icon} />
+			) : (
+				<span className="nav-icon">
+					<span className="nav-icon-bullet" />
+				</span>
+			)}
+
+			<span className="flex-fill">{item.name}</span>
+			{item.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
+			{!!item.notifications && <item.notifications />}
+		</>
+	)
+}
+
+function SidebarMenuItem(item: SidebarMenuItemProps) {
+	return (
+		<CNavItem idx={item.path}>
+			<CNavLink to={item.path} target={item.target} as={Link}>
+				<SidebarMenuItemLabel {...item} />
+			</CNavLink>
+		</CNavItem>
+	)
+}
+
+interface SidebarMenuItemGroupProps extends SidebarMenuItemProps {
+	children?: Array<React.ReactElement | null>
+}
+
+function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
+	return (
+		<CNavGroup toggler={<SidebarMenuItemLabel {...item} />} to={item.path}>
+			{item.children}
+		</CNavGroup>
 	)
 }
 
@@ -182,8 +140,55 @@ export const MySidebar = memo(function MySidebar() {
 					</div>
 				</CSidebarBrand>
 			</CSidebarHeader>
-			<SidebarMenu navItems={primaryNavItems} />
-			<SidebarMenu navItems={secondaryNavItems} className="nav-secondary" />
+			<CSidebarNav>
+				<SidebarMenuItem name="Connections" icon={faPlug} path="/connections" />
+				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
+				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
+					<SidebarMenuItem name="Configured" icon={null} path="/surfaces/configured" />
+					<SidebarMenuItem name="Discover" icon={null} path="/surfaces/discover" />
+					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/outbound" />
+				</SidebarMenuItemGroup>
+				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
+				<SidebarMenuItem name="Variables" icon={faDollarSign} path="/variables" />
+				<SidebarMenuItem name="Settings" icon={faCog} path="/settings" />
+				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
+				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
+				{window.localStorage.getItem('show_companion_cloud') === '1' && (
+					<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
+				)}
+				<SidebarMenuItemGroup name="Interactive Buttons" icon={faSquareCaretRight}>
+					<SidebarMenuItem name="Emulator" icon={null} path="/emulator" target="_new" />
+					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_new" />
+				</SidebarMenuItemGroup>
+			</CSidebarNav>
+			<CSidebarNav className="nav-secondary">
+				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
+					<SidebarMenuItem
+						name="Bugs & Features"
+						icon={faBug}
+						path="https://github.com/bitfocus/companion/issues"
+						target="_new"
+					/>
+					<SidebarMenuItem
+						name="Facebook"
+						icon={faUsers}
+						path="https://www.facebook.com/groups/companion/"
+						target="_new"
+					/>
+					<SidebarMenuItem
+						name="Slack Chat"
+						icon={faComments}
+						path="https://bitfocus.io/api/slackinvite"
+						target="_new"
+					/>
+					<SidebarMenuItem
+						name="Donate"
+						icon={faDollarSign}
+						path="https://donorbox.org/bitfocus-opensource"
+						target="_new"
+					/>
+				</SidebarMenuItemGroup>
+			</CSidebarNav>
 			<CSidebarHeader className="border-top">
 				<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />
 			</CSidebarHeader>
@@ -285,5 +290,134 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 					document.body
 				)}
 		</>
+	)
+}
+
+interface CNavGroupProps {
+	to?: string
+
+	/**
+	 * A string of all className you want applied to the component.
+	 */
+	className?: string
+	/**
+	 * Make nav group more compact by cutting all `padding` in half.
+	 */
+	compact?: boolean
+	/**
+	 * Set group toggler label.
+	 */
+	toggler: ReactNode
+	/**
+	 * Show nav group items.
+	 */
+	visible?: boolean
+}
+
+/*
+ * A variant of CNavGroup from coreui-react that allows for making the group item be a link
+ */
+function CNavGroup({
+	children,
+	to,
+	className,
+	compact,
+	toggler,
+	visible,
+	...rest
+}: React.PropsWithChildren<CNavGroupProps>) {
+	const [height, setHeight] = useState<number | string>()
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const navItemsRef = useRef<any>(null)
+
+	const [_visible, setVisible] = useState(Boolean(visible))
+
+	const handleTogglerOnCLick = (event: React.MouseEvent<HTMLElement>) => {
+		event.preventDefault()
+		setVisible(!_visible)
+	}
+
+	const style: CSSProperties = {
+		height: 0,
+	}
+
+	const onEntering = () => {
+		navItemsRef.current && setHeight(navItemsRef.current.scrollHeight)
+	}
+
+	const onEntered = () => {
+		setHeight('auto')
+	}
+
+	const onExit = () => {
+		navItemsRef.current && setHeight(navItemsRef.current.scrollHeight)
+	}
+
+	const onExiting = () => {
+		// @ts-expect-error reflow is necessary to get correct height of the element
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const reflow = navItemsRef.current?.offsetHeight
+		setHeight(0)
+	}
+
+	const onExited = () => {
+		setHeight(0)
+	}
+
+	const transitionStyles = {
+		entering: { display: 'block', height: height },
+		entered: { display: 'block', height: height },
+		exiting: { display: 'block', height: height },
+		exited: { height: height },
+		unmounted: {},
+	}
+
+	return (
+		<li className={classNames('nav-group', { show: _visible }, className)} {...rest}>
+			{to ? (
+				<a className="nav-link nav-group-toggle nav-group-toggle-link" onClick={(event) => handleTogglerOnCLick(event)}>
+					<Link
+						to={to}
+						className="nav-link"
+						onClick={(e) => {
+							e.stopPropagation()
+							setVisible(true)
+						}}
+					>
+						{toggler}
+					</Link>
+				</a>
+			) : (
+				<a className="nav-link nav-group-toggle" onClick={(event) => handleTogglerOnCLick(event)}>
+					{toggler}
+				</a>
+			)}
+
+			<Transition
+				in={_visible}
+				nodeRef={navItemsRef}
+				onEntering={onEntering}
+				onEntered={onEntered}
+				onExit={onExit}
+				onExiting={onExiting}
+				onExited={onExited}
+				timeout={300}
+			>
+				{(state) => (
+					<ul
+						className={classNames('nav-group-items', {
+							compact: compact,
+						})}
+						style={{
+							...style,
+							...transitionStyles[state as TransitionStatus],
+						}}
+						ref={navItemsRef}
+					>
+						{children}
+					</ul>
+				)}
+			</Transition>
+		</li>
 	)
 }

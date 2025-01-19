@@ -237,8 +237,18 @@ body {
 		.nav-group-toggle::after {
 			transform: rotate(180deg);
 		}
-		&.show > .nav-group-toggle::after {
+		.show > .nav-group-toggle::after {
 			transform: rotate(0deg);
+		}
+	}
+
+	.nav-group-toggle-link {
+		padding-top: 0;
+		padding-left: 0;
+		padding-bottom: 0;
+
+		.nav-link {
+			margin-right: 16px;
 		}
 	}
 }

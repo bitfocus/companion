@@ -1,49 +1,12 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup, CCallout, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faSync } from '@fortawesome/free-solid-svg-icons'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
 import { KnownSurfacesTable } from './KnownSurfacesTable.js'
 import { OutboundSurfacesTable } from './OutboundSurfacesTable.js'
-import { Link, Outlet } from '@tanstack/react-router'
-
-export const SurfacesPage = observer(function SurfacesPage() {
-	return (
-		<div className="secondary-panel fill-height">
-			<div className="secondary-panel-header">
-				<h4>Surfaces</h4>
-			</div>
-
-			<div className="secondary-panel-inner">
-				<CNav variant="tabs" role="tablist">
-					<CNavItem>
-						<CNavLink to="/surfaces/configured" as={Link}>
-							Configured Surfaces
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink to="/surfaces/discover" as={Link}>
-							Discover
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink to="/surfaces/outbound" as={Link}>
-							Remote Surfaces
-						</CNavLink>
-					</CNavItem>
-				</CNav>
-				<CTabContent>
-					<CTabPane visible transition={false}>
-						<Outlet />
-					</CTabPane>
-				</CTabContent>
-			</div>
-		</div>
-	)
-})
 
 export function ConfiguredSurfacesTab() {
 	const { socket } = useContext(RootAppStoreContext)
@@ -81,6 +44,8 @@ export function ConfiguredSurfacesTab() {
 
 	return (
 		<>
+			<h4>Configured Surfaces</h4>
+
 			<p style={{ marginBottom: '0.5rem' }}>
 				Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the Elgato
 				Streamdeck application and click the Rescan button below.
@@ -121,6 +86,8 @@ export function ConfiguredSurfacesTab() {
 export function DiscoverSurfacesTab() {
 	return (
 		<>
+			<h4>Discover Surfaces</h4>
+
 			<p style={{ marginBottom: '0.5rem' }}>
 				Discovered remote surfaces, such as Companion Satellite and Stream Deck Studio will be listed here. You can
 				easily configure them to connect to Companion from here.
@@ -136,6 +103,8 @@ export function DiscoverSurfacesTab() {
 export function OutboundSurfacesTab() {
 	return (
 		<>
+			<h4>Remote Surfaces</h4>
+
 			<p style={{ marginBottom: '0.5rem' }}>
 				The Stream Deck Studio supports network connection. You can set up the connection from Companion here, or use
 				the Discovered Surfaces tab.
