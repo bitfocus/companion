@@ -7,11 +7,9 @@ import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecord
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
-import type { PanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
-	panelCollapseHelper: PanelCollapseHelper
 	sessionId: string
 	sessionInfo: RecordSessionInfo
 	doFinish: () => void
@@ -19,7 +17,6 @@ interface RecorderSessionHeadingProps {
 
 export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	confirmRef,
-	panelCollapseHelper,
 	sessionId,
 	sessionInfo,
 	doFinish,
