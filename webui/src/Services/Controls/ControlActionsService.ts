@@ -37,14 +37,8 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				// Not implemented in action recorder
 			},
 
-			setDelay: (entityId: string, delay: number) => {
-				socket.emitPromise('action-recorder:session:action-delay', [sessionId, entityId, delay]).catch((e) => {
-					console.error(e)
-				})
-			},
-
-			performDelete: (entityId: string) => {
-				socket.emitPromise('action-recorder:session:action-delete', [sessionId, entityId]).catch((e) => {
+			performDelete: (actionId: string) => {
+				socket.emitPromise('action-recorder:session:action-delete', [sessionId, actionId]).catch((e) => {
 					console.error(e)
 				})
 			},

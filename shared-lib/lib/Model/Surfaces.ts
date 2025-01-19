@@ -16,6 +16,10 @@ export interface RowsAndColumns {
 	columns: number
 }
 
+export interface SurfaceFirmwareUpdateInfo {
+	updaterDownloadUrl: string
+}
+
 export interface ClientSurfaceItem {
 	id: string
 	type: string
@@ -26,7 +30,10 @@ export interface ClientSurfaceItem {
 	displayName: string
 	location: string | null
 
+	hasFirmwareUpdates: SurfaceFirmwareUpdateInfo | null
+
 	size: RowsAndColumns | null
+	rotation: SurfaceRotation | null
 	offset: RowsAndColumns | null
 }
 

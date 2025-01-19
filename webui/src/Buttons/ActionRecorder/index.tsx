@@ -1,10 +1,12 @@
-import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
+import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
 import { SocketContext, applyPatchOrReplaceObject } from '../../util.js'
 import { CCallout, CCol, CRow } from '@coreui/react'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { RecorderSessionFinishModal } from './RecorderSessionFinishModal.js'
-import { RecorderSessionHeading, RecorderSession } from './RecorderSessionHeading.js'
+import { RecorderSessionHeading } from './RecorderSessionHeading.js'
+import { RecorderSession } from './RecorderSession.js'
+import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
@@ -88,6 +90,8 @@ export function ActionRecorder() {
 		setIsFinishing(true)
 	}, [])
 
+	const actionIds = useMemo(() => sessionInfo?.actions?.map((a) => a.id) ?? [], [sessionInfo?.actions])
+
 	return (
 		<CRow className="action-recorder-panel">
 			<GenericConfirmModal ref={confirmRef} />
@@ -117,7 +121,9 @@ export function ActionRecorder() {
 			</CCol>
 
 			{selectedSessionId ? (
-				<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionInfo} />
+				<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
+					<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionInfo} />
+				</PanelCollapseHelperProvider>
 			) : (
 				<CCallout color="danger">There is no session, this looks like a bug!</CCallout>
 			)}

@@ -98,10 +98,18 @@ export class SurfacesStore {
 			for (const surface of group.surfaces) {
 				if (!surface.size || !surface.offset) continue
 
+				// Determine the size, after rotation
+				let { rows, columns } = surface.size
+				if (surface.rotation === 'surface-90' || surface.rotation === 'surface90') {
+					const tmp = rows
+					rows = columns
+					columns = tmp
+				}
+
 				const minX = surface.offset.columns
 				const minY = surface.offset.rows
-				const maxX = minX + surface.size.columns - 1
-				const maxY = minY + surface.size.rows - 1
+				const maxX = minX + columns - 1
+				const maxY = minY + rows - 1
 
 				if (minX < bounds.minColumn || minY < bounds.minRow || maxX > bounds.maxColumn || maxY > bounds.maxRow) {
 					overflowingSurfaces.push(surface)
@@ -118,5 +126,19 @@ export class SurfacesStore {
 			neededBounds,
 			surfaces: overflowingSurfaces,
 		}
+	}
+
+	public countFirmwareUpdates(): number {
+		let count = 0
+
+		for (const group of this.store.values()) {
+			for (const surface of group.surfaces) {
+				if (surface.hasFirmwareUpdates) {
+					count++
+				}
+			}
+		}
+
+		return count
 	}
 }

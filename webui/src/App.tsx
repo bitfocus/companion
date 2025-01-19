@@ -46,6 +46,7 @@ import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionVariables } from './Variables/index.js'
+import { SurfacesTabNotifyIcon } from './Surfaces/TabNotifyIcon.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -457,7 +458,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				</CNavItem>
 				<CNavItem>
 					<CNavLink to={SURFACES_PAGE_PREFIX} as={NavLink}>
-						<FontAwesomeIcon icon={faGamepad} /> Surfaces
+						<FontAwesomeIcon icon={faGamepad} /> Surfaces <SurfacesTabNotifyIcon />
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
