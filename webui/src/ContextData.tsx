@@ -24,6 +24,9 @@ import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 import { useOutboundSurfacesSubscription } from './Hooks/useOutboundSurfacesSubscription.js'
 import { ConnectionsStore } from './Stores/ConnectionsStore.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
+import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStoreRefreshProgress.js'
+import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
+import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
 import { ViewControlStore } from './Stores/ViewControlStore.js'
 
 interface ContextDataProps {
@@ -34,6 +37,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const socket = useContext(SocketContext)
 
 	const notifierRef = useRef<NotificationsManagerRef>(null)
+	const helpModalRef = useRef<HelpModalRef>(null)
 
 	const rootStore = useMemo(() => {
 		const showWizardEvent = new EventTarget()
@@ -41,6 +45,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		return {
 			socket,
 			notifier: notifierRef,
+			helpViewer: helpModalRef,
 
 			modules: new ModuleInfoStore(),
 			connections: new ConnectionsStore(),
@@ -58,6 +63,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 
 			userConfig: new UserConfigStore(),
 
+			moduleStoreRefreshProgress: observable.map(),
+
 			showWizardEvent,
 			showWizard: () => showWizardEvent.dispatchEvent(new Event('show')),
 
@@ -70,6 +77,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.entityDefinitions.actions)
 	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.entityDefinitions.feedbacks)
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
+	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
@@ -78,6 +86,10 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(socket, rootStore.surfaces)
 	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
+	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(
+		socket,
+		rootStore.moduleStoreRefreshProgress
+	)
 
 	useEffect(() => {
 		if (socket) {
@@ -98,6 +110,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const steps: boolean[] = [
 		loadedEventDefinitions,
 		moduleInfoReady,
+		moduleStoreReady,
 		connectionsReady,
 		variablesReady,
 		actionDefinitionsReady,
@@ -109,6 +122,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		pagesReady,
 		triggersListReady,
 		activeLearnRequestsReady,
+		moduleStoreProgressReady,
 	]
 	const completedSteps = steps.filter((s) => !!s)
 
@@ -117,6 +131,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	return (
 		<RootAppStoreContext.Provider value={rootStore}>
 			<NotificationsManager ref={notifierRef} />
+			<HelpModal ref={helpModalRef} />
+
 			{children(progressPercent, completedSteps.length === steps.length)}
 		</RootAppStoreContext.Provider>
 	)

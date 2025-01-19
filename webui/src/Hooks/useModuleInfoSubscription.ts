@@ -6,26 +6,26 @@ export function useModuleInfoSubscription(socket: CompanionSocketWrapped, store:
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
-		store.reset(null)
+		store.resetModules(null)
 		setReady(false)
 
 		socket
 			.emitPromise('modules:subscribe', [])
 			.then((modules) => {
-				store.reset(modules)
+				store.resetModules(modules)
 				setReady(true)
 			})
 			.catch((e) => {
-				store.reset(null)
+				store.resetModules(null)
 				console.error('Failed to load modules list', e)
 			})
 
 		const unsubUpdates = socket.on('modules:patch', (change) => {
-			store.applyChange(change)
+			store.applyModuleChange(change)
 		})
 
 		return () => {
-			store.reset(null)
+			store.resetModules(null)
 			unsubUpdates()
 
 			socket.emitPromise('modules:unsubscribe', []).catch((e) => {

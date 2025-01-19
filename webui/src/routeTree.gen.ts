@@ -27,6 +27,7 @@ import { Route as IndexImport } from './routes/app/index.tsx'
 import { Route as ConnectionDebugconnectionIdImport } from './routes/self-contained/connection-debug.$connectionId.tsx'
 import { Route as TriggersImport } from './routes/app/triggers.tsx'
 import { Route as SettingsImport } from './routes/app/settings.tsx'
+import { Route as ModulesImport } from './routes/app/modules.tsx'
 import { Route as LogImport } from './routes/app/log.tsx'
 import { Route as ImportExportImport } from './routes/app/import-export.tsx'
 import { Route as ConnectionsImport } from './routes/app/connections.tsx'
@@ -35,6 +36,7 @@ import { Route as ButtonsImport } from './routes/app/buttons.tsx'
 import { Route as SplatImport } from './routes/app/$.tsx'
 import { Route as VariablesIndexImport } from './routes/app/variables/index.tsx'
 import { Route as TriggersIndexImport } from './routes/app/triggers/index.tsx'
+import { Route as ModulesIndexImport } from './routes/app/modules/index.tsx'
 import { Route as VariablesCustomImport } from './routes/app/variables/custom.tsx'
 import { Route as VariablesLabelImport } from './routes/app/variables/$label.tsx'
 import { Route as TriggersControlIdImport } from './routes/app/triggers/$controlId.tsx'
@@ -42,6 +44,7 @@ import { Route as SurfacesOutboundImport } from './routes/app/surfaces/outbound.
 import { Route as SurfacesDiscoverImport } from './routes/app/surfaces/discover.tsx'
 import { Route as SurfacesConfiguredImport } from './routes/app/surfaces/configured.tsx'
 import { Route as SurfacesSplatImport } from './routes/app/surfaces/$.tsx'
+import { Route as ModulesModuleIdImport } from './routes/app/modules/$moduleId.tsx'
 import { Route as ButtonsPageImport } from './routes/app/buttons/$page.tsx'
 
 // Create Virtual Routes
@@ -164,6 +167,12 @@ const SettingsRoute = SettingsImport.update({
   getParentRoute: () => appRoute,
 } as any)
 
+const ModulesRoute = ModulesImport.update({
+  id: '/modules',
+  path: '/modules',
+  getParentRoute: () => appRoute,
+} as any)
+
 const LogRoute = LogImport.update({
   id: '/log',
   path: '/log',
@@ -212,6 +221,12 @@ const TriggersIndexRoute = TriggersIndexImport.update({
   getParentRoute: () => TriggersRoute,
 } as any)
 
+const ModulesIndexRoute = ModulesIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ModulesRoute,
+} as any)
+
 const VariablesCustomRoute = VariablesCustomImport.update({
   id: '/variables/custom',
   path: '/variables/custom',
@@ -252,6 +267,12 @@ const SurfacesSplatRoute = SurfacesSplatImport.update({
   id: '/surfaces/$',
   path: '/surfaces/$',
   getParentRoute: () => appRoute,
+} as any)
+
+const ModulesModuleIdRoute = ModulesModuleIdImport.update({
+  id: '/$moduleId',
+  path: '/$moduleId',
+  getParentRoute: () => ModulesRoute,
 } as any)
 
 const ButtonsPageRoute = ButtonsPageImport.update({
@@ -383,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LogImport
       parentRoute: typeof appImport
     }
+    '/_app/modules': {
+      id: '/_app/modules'
+      path: '/modules'
+      fullPath: '/modules'
+      preLoaderRoute: typeof ModulesImport
+      parentRoute: typeof appImport
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -431,6 +459,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/buttons/$page'
       preLoaderRoute: typeof ButtonsPageImport
       parentRoute: typeof ButtonsImport
+    }
+    '/_app/modules/$moduleId': {
+      id: '/_app/modules/$moduleId'
+      path: '/$moduleId'
+      fullPath: '/modules/$moduleId'
+      preLoaderRoute: typeof ModulesModuleIdImport
+      parentRoute: typeof ModulesImport
     }
     '/_app/surfaces/$': {
       id: '/_app/surfaces/$'
@@ -481,6 +516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VariablesCustomImport
       parentRoute: typeof appImport
     }
+    '/_app/modules/': {
+      id: '/_app/modules/'
+      path: '/'
+      fullPath: '/modules/'
+      preLoaderRoute: typeof ModulesIndexImport
+      parentRoute: typeof ModulesImport
+    }
     '/_app/triggers/': {
       id: '/_app/triggers/'
       path: '/'
@@ -511,6 +553,19 @@ const ButtonsRouteChildren: ButtonsRouteChildren = {
 const ButtonsRouteWithChildren =
   ButtonsRoute._addFileChildren(ButtonsRouteChildren)
 
+interface ModulesRouteChildren {
+  ModulesModuleIdRoute: typeof ModulesModuleIdRoute
+  ModulesIndexRoute: typeof ModulesIndexRoute
+}
+
+const ModulesRouteChildren: ModulesRouteChildren = {
+  ModulesModuleIdRoute: ModulesModuleIdRoute,
+  ModulesIndexRoute: ModulesIndexRoute,
+}
+
+const ModulesRouteWithChildren =
+  ModulesRoute._addFileChildren(ModulesRouteChildren)
+
 interface TriggersRouteChildren {
   TriggersControlIdRoute: typeof TriggersControlIdRoute
   TriggersIndexRoute: typeof TriggersIndexRoute
@@ -532,6 +587,7 @@ interface appRouteChildren {
   ConnectionsRoute: typeof ConnectionsRoute
   ImportExportRoute: typeof ImportExportRoute
   LogRoute: typeof LogRoute
+  ModulesRoute: typeof ModulesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   TriggersRoute: typeof TriggersRouteWithChildren
   IndexRoute: typeof IndexRoute
@@ -551,6 +607,7 @@ const appRouteChildren: appRouteChildren = {
   ConnectionsRoute: ConnectionsRoute,
   ImportExportRoute: ImportExportRoute,
   LogRoute: LogRoute,
+  ModulesRoute: ModulesRouteWithChildren,
   SettingsRoute: SettingsRoute,
   TriggersRoute: TriggersRouteWithChildren,
   IndexRoute: IndexRoute,
@@ -583,6 +640,7 @@ export interface FileRoutesByFullPath {
   '/connections': typeof ConnectionsRoute
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
+  '/modules': typeof ModulesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/triggers': typeof TriggersRouteWithChildren
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
@@ -590,6 +648,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
+  '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/surfaces/$': typeof SurfacesSplatRoute
   '/surfaces/configured': typeof SurfacesConfiguredRoute
   '/surfaces/discover': typeof SurfacesDiscoverRoute
@@ -597,6 +656,7 @@ export interface FileRoutesByFullPath {
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
+  '/modules/': typeof ModulesIndexRoute
   '/triggers/': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
 }
@@ -624,6 +684,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
+  '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/surfaces/$': typeof SurfacesSplatRoute
   '/surfaces/configured': typeof SurfacesConfiguredRoute
   '/surfaces/discover': typeof SurfacesDiscoverRoute
@@ -631,6 +692,7 @@ export interface FileRoutesByTo {
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
+  '/modules': typeof ModulesIndexRoute
   '/triggers': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
 }
@@ -654,6 +716,7 @@ export interface FileRoutesById {
   '/_app/connections': typeof ConnectionsRoute
   '/_app/import-export': typeof ImportExportRoute
   '/_app/log': typeof LogRoute
+  '/_app/modules': typeof ModulesRouteWithChildren
   '/_app/settings': typeof SettingsRoute
   '/_app/triggers': typeof TriggersRouteWithChildren
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
@@ -661,6 +724,7 @@ export interface FileRoutesById {
   '/_app/': typeof IndexRoute
   '/emulator/': typeof EmulatorIndexRoute
   '/_app/buttons/$page': typeof ButtonsPageRoute
+  '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
   '/_app/surfaces/$': typeof SurfacesSplatRoute
   '/_app/surfaces/configured': typeof SurfacesConfiguredRoute
   '/_app/surfaces/discover': typeof SurfacesDiscoverRoute
@@ -668,6 +732,7 @@ export interface FileRoutesById {
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
   '/_app/variables/$label': typeof VariablesLabelRoute
   '/_app/variables/custom': typeof VariablesCustomRoute
+  '/_app/modules/': typeof ModulesIndexRoute
   '/_app/triggers/': typeof TriggersIndexRoute
   '/_app/variables/': typeof VariablesIndexRoute
 }
@@ -692,6 +757,7 @@ export interface FileRouteTypes {
     | '/connections'
     | '/import-export'
     | '/log'
+    | '/modules'
     | '/settings'
     | '/triggers'
     | '/connection-debug/$connectionId'
@@ -699,6 +765,7 @@ export interface FileRouteTypes {
     | '/'
     | '/emulator'
     | '/buttons/$page'
+    | '/modules/$moduleId'
     | '/surfaces/$'
     | '/surfaces/configured'
     | '/surfaces/discover'
@@ -706,6 +773,7 @@ export interface FileRouteTypes {
     | '/triggers/$controlId'
     | '/variables/$label'
     | '/variables/custom'
+    | '/modules/'
     | '/triggers/'
     | '/variables'
   fileRoutesByTo: FileRoutesByTo
@@ -732,6 +800,7 @@ export interface FileRouteTypes {
     | '/'
     | '/emulator'
     | '/buttons/$page'
+    | '/modules/$moduleId'
     | '/surfaces/$'
     | '/surfaces/configured'
     | '/surfaces/discover'
@@ -739,6 +808,7 @@ export interface FileRouteTypes {
     | '/triggers/$controlId'
     | '/variables/$label'
     | '/variables/custom'
+    | '/modules'
     | '/triggers'
     | '/variables'
   id:
@@ -760,6 +830,7 @@ export interface FileRouteTypes {
     | '/_app/connections'
     | '/_app/import-export'
     | '/_app/log'
+    | '/_app/modules'
     | '/_app/settings'
     | '/_app/triggers'
     | '/connection-debug/$connectionId'
@@ -767,6 +838,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/emulator/'
     | '/_app/buttons/$page'
+    | '/_app/modules/$moduleId'
     | '/_app/surfaces/$'
     | '/_app/surfaces/configured'
     | '/_app/surfaces/discover'
@@ -774,6 +846,7 @@ export interface FileRouteTypes {
     | '/_app/triggers/$controlId'
     | '/_app/variables/$label'
     | '/_app/variables/custom'
+    | '/_app/modules/'
     | '/_app/triggers/'
     | '/_app/variables/'
   fileRoutesById: FileRoutesById
@@ -848,6 +921,7 @@ export const routeTree = rootRoute
         "/_app/connections",
         "/_app/import-export",
         "/_app/log",
+        "/_app/modules",
         "/_app/settings",
         "/_app/triggers",
         "/_app/",
@@ -917,6 +991,14 @@ export const routeTree = rootRoute
       "filePath": "app/log.tsx",
       "parent": "/_app"
     },
+    "/_app/modules": {
+      "filePath": "app/modules.tsx",
+      "parent": "/_app",
+      "children": [
+        "/_app/modules/$moduleId",
+        "/_app/modules/"
+      ]
+    },
     "/_app/settings": {
       "filePath": "app/settings.tsx",
       "parent": "/_app"
@@ -946,6 +1028,10 @@ export const routeTree = rootRoute
       "filePath": "app/buttons/$page.tsx",
       "parent": "/_app/buttons"
     },
+    "/_app/modules/$moduleId": {
+      "filePath": "app/modules/$moduleId.tsx",
+      "parent": "/_app/modules"
+    },
     "/_app/surfaces/$": {
       "filePath": "app/surfaces/$.tsx",
       "parent": "/_app"
@@ -973,6 +1059,10 @@ export const routeTree = rootRoute
     "/_app/variables/custom": {
       "filePath": "app/variables/custom.tsx",
       "parent": "/_app"
+    },
+    "/_app/modules/": {
+      "filePath": "app/modules/index.tsx",
+      "parent": "/_app/modules"
     },
     "/_app/triggers/": {
       "filePath": "app/triggers/index.tsx",

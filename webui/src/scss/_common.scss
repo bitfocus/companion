@@ -312,6 +312,17 @@ table .td-reorder {
 	grid-template-columns: minmax(0, 1fr);
 }
 
+.searchbox {
+	margin-bottom: 0.5rem;
+}
+
+svg.button-size {
+	margin: $btn-padding-y $btn-padding-x;
+}
+svg.pad-left {
+	margin-left: 0.5rem;
+}
+
 .notification-count {
 	background-color: $primary;
 	color: #fff;

@@ -26,12 +26,13 @@
     "format": "prettier --write .",
     "test": "vitest",
     "build:writefile": "tsx ./tools/build_writefile.mts",
+    "build:module-openapi": "zx ./tools/generate_module_openapi.mjs",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
   "engines": {
     "npm": "please-use-yarn",
-    "yarn": "^4",
-    "node": ">=18.16 <19"
+    "yarn": "^4.5",
+    "node": ">=22.11 <23"
   },
   "devDependencies": {
     "@inquirer/prompts": "^7.2.3",
@@ -44,6 +45,7 @@
     "dotenv": "^16.4.7",
     "octokit": "^4.1.0",
     "open": "^10.1.0",
+    "openapi-typescript": "^7.4.4",
     "prettier": "^3.4.2",
     "tsx": "^4.19.2",
     "typescript": "~5.7.3",

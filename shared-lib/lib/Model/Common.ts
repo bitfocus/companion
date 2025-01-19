@@ -64,11 +64,6 @@ export interface WrappedImage {
 	isUsed: boolean
 }
 
-export interface HelpDescription {
-	markdown: string
-	baseUrl: string
-}
-
 export interface ClientEditConnectionConfig {
 	fields: Array<ExtendedInputField & { width: number }>
 	config: unknown
