@@ -46,4 +46,8 @@ export class ModuleInfoStore {
 				break
 		}
 	})
+
+	getModuleFriendlyName(moduleId: string): string | undefined {
+		return this.modules.get(moduleId)?.name?.replace(/\;.*/, '...')
+	}
 }

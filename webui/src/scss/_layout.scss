@@ -223,6 +223,11 @@ body {
 	.nav-link {
 		background-color: #151515;
 		border-bottom: 1px solid #262626;
+
+		small {
+			color: #aaa;
+			font-size: 0.75rem;
+		}
 	}
 
 	.nav-link:hover {

@@ -43,6 +43,9 @@ import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
 import { Link } from '@tanstack/react-router'
 import { Transition, TransitionStatus } from 'react-transition-group'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { useSortedConnectionsThatHaveVariables } from '../Stores/Util.js'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -77,6 +80,7 @@ export function SidebarStateProvider({ children }: React.PropsWithChildren): Rea
 
 interface SidebarMenuItemProps {
 	name: string
+	subheading?: string
 	icon: IconDefinition | null
 	notifications?: React.ComponentType<Record<string, never>>
 	path?: string
@@ -94,7 +98,16 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				</span>
 			)}
 
-			<span className="flex-fill">{item.name}</span>
+			<span>
+				<span className="flex-fill">{item.name}</span>
+				{!!item.subheading && (
+					<>
+						<br />
+						<small>{item.subheading}</small>
+					</>
+				)}
+			</span>
+
 			{item.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
 			{!!item.notifications && <item.notifications />}
 		</>
@@ -149,7 +162,11 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/outbound" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
-				<SidebarMenuItem name="Variables" icon={faDollarSign} path="/variables" />
+				<SidebarMenuItemGroup name="Variables" icon={faDollarSign} path="/variables">
+					<SidebarMenuItem name="Custom Variables" icon={null} path="/variables/custom" />
+					<SidebarMenuItem name="Internal" icon={null} path="/variables/internal" />
+					<SidebarVariablesGroups />
+				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Settings" icon={faCog} path="/settings" />
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
@@ -193,6 +210,25 @@ export const MySidebar = memo(function MySidebar() {
 				<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />
 			</CSidebarHeader>
 		</CSidebar>
+	)
+})
+
+const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
+	const { modules } = useContext(RootAppStoreContext)
+
+	const sortedConnections = useSortedConnectionsThatHaveVariables()
+
+	return (
+		<>
+			{sortedConnections.map((connectionInfo) => (
+				<SidebarMenuItem
+					name={connectionInfo.label}
+					subheading={modules.getModuleFriendlyName(connectionInfo.instance_type)}
+					icon={null}
+					path={`/variables/${connectionInfo.label}`}
+				/>
+			))}
+		</>
 	)
 })
 

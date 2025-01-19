@@ -24,6 +24,7 @@ import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVari
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
+import { Link } from '@tanstack/react-router'
 
 const DRAG_ID = 'custom-variables'
 
@@ -31,13 +32,7 @@ interface CustomVariableDefinitionExt extends CustomVariableDefinition {
 	name: string
 }
 
-interface CustomVariablesListProps {
-	setShowCustom: (show: boolean) => void
-}
-
-export const CustomVariablesList = observer(function CustomVariablesList({ setShowCustom }: CustomVariablesListProps) {
-	const doBack = useCallback(() => setShowCustom(false), [setShowCustom])
-
+export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const { socket, notifier, variablesStore: customVariables } = useContext(RootAppStoreContext)
 
 	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
@@ -203,7 +198,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 			<div>
 				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
 				<CButtonGroup size="sm">
-					<CButton color="primary" onClick={doBack}>
+					<CButton color="primary" as={Link} to="/variables">
 						<FontAwesomeIcon icon={faArrowLeft} />
 						&nbsp; Go back
 					</CButton>

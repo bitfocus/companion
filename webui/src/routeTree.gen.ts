@@ -25,7 +25,6 @@ import { Route as appImport } from './routes/_app.tsx'
 import { Route as EmulatorIndexImport } from './routes/self-contained/emulator/index.tsx'
 import { Route as IndexImport } from './routes/app/index.tsx'
 import { Route as ConnectionDebugconnectionIdImport } from './routes/self-contained/connection-debug.$connectionId.tsx'
-import { Route as VariablesImport } from './routes/app/variables.tsx'
 import { Route as TriggersImport } from './routes/app/triggers.tsx'
 import { Route as SettingsImport } from './routes/app/settings.tsx'
 import { Route as LogImport } from './routes/app/log.tsx'
@@ -34,7 +33,10 @@ import { Route as ConnectionsImport } from './routes/app/connections.tsx'
 import { Route as CloudImport } from './routes/app/cloud.tsx'
 import { Route as ButtonsImport } from './routes/app/buttons.tsx'
 import { Route as SplatImport } from './routes/app/$.tsx'
+import { Route as VariablesIndexImport } from './routes/app/variables/index.tsx'
 import { Route as TriggersIndexImport } from './routes/app/triggers/index.tsx'
+import { Route as VariablesCustomImport } from './routes/app/variables/custom.tsx'
+import { Route as VariablesLabelImport } from './routes/app/variables/$label.tsx'
 import { Route as TriggersControlIdImport } from './routes/app/triggers/$controlId.tsx'
 import { Route as SurfacesOutboundImport } from './routes/app/surfaces/outbound.tsx'
 import { Route as SurfacesDiscoverImport } from './routes/app/surfaces/discover.tsx'
@@ -150,12 +152,6 @@ const ConnectionDebugconnectionIdRoute =
     getParentRoute: () => rootRoute,
   } as any)
 
-const VariablesRoute = VariablesImport.update({
-  id: '/variables',
-  path: '/variables',
-  getParentRoute: () => appRoute,
-} as any)
-
 const TriggersRoute = TriggersImport.update({
   id: '/triggers',
   path: '/triggers',
@@ -204,10 +200,28 @@ const SplatRoute = SplatImport.update({
   getParentRoute: () => appRoute,
 } as any)
 
+const VariablesIndexRoute = VariablesIndexImport.update({
+  id: '/variables/',
+  path: '/variables/',
+  getParentRoute: () => appRoute,
+} as any)
+
 const TriggersIndexRoute = TriggersIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => TriggersRoute,
+} as any)
+
+const VariablesCustomRoute = VariablesCustomImport.update({
+  id: '/variables/custom',
+  path: '/variables/custom',
+  getParentRoute: () => appRoute,
+} as any)
+
+const VariablesLabelRoute = VariablesLabelImport.update({
+  id: '/variables/$label',
+  path: '/variables/$label',
+  getParentRoute: () => appRoute,
 } as any)
 
 const TriggersControlIdRoute = TriggersControlIdImport.update({
@@ -383,13 +397,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TriggersImport
       parentRoute: typeof appImport
     }
-    '/_app/variables': {
-      id: '/_app/variables'
-      path: '/variables'
-      fullPath: '/variables'
-      preLoaderRoute: typeof VariablesImport
-      parentRoute: typeof appImport
-    }
     '/connection-debug/$connectionId': {
       id: '/connection-debug/$connectionId'
       path: '/connection-debug/$connectionId'
@@ -460,12 +467,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TriggersControlIdImport
       parentRoute: typeof TriggersImport
     }
+    '/_app/variables/$label': {
+      id: '/_app/variables/$label'
+      path: '/variables/$label'
+      fullPath: '/variables/$label'
+      preLoaderRoute: typeof VariablesLabelImport
+      parentRoute: typeof appImport
+    }
+    '/_app/variables/custom': {
+      id: '/_app/variables/custom'
+      path: '/variables/custom'
+      fullPath: '/variables/custom'
+      preLoaderRoute: typeof VariablesCustomImport
+      parentRoute: typeof appImport
+    }
     '/_app/triggers/': {
       id: '/_app/triggers/'
       path: '/'
       fullPath: '/triggers/'
       preLoaderRoute: typeof TriggersIndexImport
       parentRoute: typeof TriggersImport
+    }
+    '/_app/variables/': {
+      id: '/_app/variables/'
+      path: '/variables'
+      fullPath: '/variables'
+      preLoaderRoute: typeof VariablesIndexImport
+      parentRoute: typeof appImport
     }
   }
 }
@@ -506,12 +534,14 @@ interface appRouteChildren {
   LogRoute: typeof LogRoute
   SettingsRoute: typeof SettingsRoute
   TriggersRoute: typeof TriggersRouteWithChildren
-  VariablesRoute: typeof VariablesRoute
   IndexRoute: typeof IndexRoute
   SurfacesSplatRoute: typeof SurfacesSplatRoute
   SurfacesConfiguredRoute: typeof SurfacesConfiguredRoute
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
+  VariablesLabelRoute: typeof VariablesLabelRoute
+  VariablesCustomRoute: typeof VariablesCustomRoute
+  VariablesIndexRoute: typeof VariablesIndexRoute
 }
 
 const appRouteChildren: appRouteChildren = {
@@ -523,12 +553,14 @@ const appRouteChildren: appRouteChildren = {
   LogRoute: LogRoute,
   SettingsRoute: SettingsRoute,
   TriggersRoute: TriggersRouteWithChildren,
-  VariablesRoute: VariablesRoute,
   IndexRoute: IndexRoute,
   SurfacesSplatRoute: SurfacesSplatRoute,
   SurfacesConfiguredRoute: SurfacesConfiguredRoute,
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
+  VariablesLabelRoute: VariablesLabelRoute,
+  VariablesCustomRoute: VariablesCustomRoute,
+  VariablesIndexRoute: VariablesIndexRoute,
 }
 
 const appRouteWithChildren = appRoute._addFileChildren(appRouteChildren)
@@ -553,7 +585,6 @@ export interface FileRoutesByFullPath {
   '/log': typeof LogRoute
   '/settings': typeof SettingsRoute
   '/triggers': typeof TriggersRouteWithChildren
-  '/variables': typeof VariablesRoute
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
   '/': typeof IndexRoute
@@ -564,7 +595,10 @@ export interface FileRoutesByFullPath {
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
+  '/variables/$label': typeof VariablesLabelRoute
+  '/variables/custom': typeof VariablesCustomRoute
   '/triggers/': typeof TriggersIndexRoute
+  '/variables': typeof VariablesIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -585,7 +619,6 @@ export interface FileRoutesByTo {
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
   '/settings': typeof SettingsRoute
-  '/variables': typeof VariablesRoute
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
   '/': typeof IndexRoute
@@ -596,7 +629,10 @@ export interface FileRoutesByTo {
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
+  '/variables/$label': typeof VariablesLabelRoute
+  '/variables/custom': typeof VariablesCustomRoute
   '/triggers': typeof TriggersIndexRoute
+  '/variables': typeof VariablesIndexRoute
 }
 
 export interface FileRoutesById {
@@ -620,7 +656,6 @@ export interface FileRoutesById {
   '/_app/log': typeof LogRoute
   '/_app/settings': typeof SettingsRoute
   '/_app/triggers': typeof TriggersRouteWithChildren
-  '/_app/variables': typeof VariablesRoute
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
   '/_app/': typeof IndexRoute
@@ -631,7 +666,10 @@ export interface FileRoutesById {
   '/_app/surfaces/discover': typeof SurfacesDiscoverRoute
   '/_app/surfaces/outbound': typeof SurfacesOutboundRoute
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
+  '/_app/variables/$label': typeof VariablesLabelRoute
+  '/_app/variables/custom': typeof VariablesCustomRoute
   '/_app/triggers/': typeof TriggersIndexRoute
+  '/_app/variables/': typeof VariablesIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -656,7 +694,6 @@ export interface FileRouteTypes {
     | '/log'
     | '/settings'
     | '/triggers'
-    | '/variables'
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/'
@@ -667,7 +704,10 @@ export interface FileRouteTypes {
     | '/surfaces/discover'
     | '/surfaces/outbound'
     | '/triggers/$controlId'
+    | '/variables/$label'
+    | '/variables/custom'
     | '/triggers/'
+    | '/variables'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -687,7 +727,6 @@ export interface FileRouteTypes {
     | '/import-export'
     | '/log'
     | '/settings'
-    | '/variables'
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/'
@@ -698,7 +737,10 @@ export interface FileRouteTypes {
     | '/surfaces/discover'
     | '/surfaces/outbound'
     | '/triggers/$controlId'
+    | '/variables/$label'
+    | '/variables/custom'
     | '/triggers'
+    | '/variables'
   id:
     | '__root__'
     | '/_app'
@@ -720,7 +762,6 @@ export interface FileRouteTypes {
     | '/_app/log'
     | '/_app/settings'
     | '/_app/triggers'
-    | '/_app/variables'
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/_app/'
@@ -731,7 +772,10 @@ export interface FileRouteTypes {
     | '/_app/surfaces/discover'
     | '/_app/surfaces/outbound'
     | '/_app/triggers/$controlId'
+    | '/_app/variables/$label'
+    | '/_app/variables/custom'
     | '/_app/triggers/'
+    | '/_app/variables/'
   fileRoutesById: FileRoutesById
 }
 
@@ -806,12 +850,14 @@ export const routeTree = rootRoute
         "/_app/log",
         "/_app/settings",
         "/_app/triggers",
-        "/_app/variables",
         "/_app/",
         "/_app/surfaces/$",
         "/_app/surfaces/configured",
         "/_app/surfaces/discover",
-        "/_app/surfaces/outbound"
+        "/_app/surfaces/outbound",
+        "/_app/variables/$label",
+        "/_app/variables/custom",
+        "/_app/variables/"
       ]
     },
     "/emulator.html": {
@@ -883,10 +929,6 @@ export const routeTree = rootRoute
         "/_app/triggers/"
       ]
     },
-    "/_app/variables": {
-      "filePath": "app/variables.tsx",
-      "parent": "/_app"
-    },
     "/connection-debug/$connectionId": {
       "filePath": "self-contained/connection-debug.$connectionId.tsx"
     },
@@ -924,9 +966,21 @@ export const routeTree = rootRoute
       "filePath": "app/triggers/$controlId.tsx",
       "parent": "/_app/triggers"
     },
+    "/_app/variables/$label": {
+      "filePath": "app/variables/$label.tsx",
+      "parent": "/_app"
+    },
+    "/_app/variables/custom": {
+      "filePath": "app/variables/custom.tsx",
+      "parent": "/_app"
+    },
     "/_app/triggers/": {
       "filePath": "app/triggers/index.tsx",
       "parent": "/_app/triggers"
+    },
+    "/_app/variables/": {
+      "filePath": "app/variables/index.tsx",
+      "parent": "/_app"
     }
   }
 }
