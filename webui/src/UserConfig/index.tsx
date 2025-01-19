@@ -28,12 +28,13 @@ import { CompanionConfig } from './CompanionConfig.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { UserConfigProps } from './Components/Common.js'
 
-interface UserConfigProps {
+interface UserConfigPageProps {
 	showWizard: () => void
 }
 
-export const UserConfig = memo(function UserConfig({ showWizard }: UserConfigProps) {
+export const UserConfig = memo(function UserConfig({ showWizard }: UserConfigPageProps) {
 	return (
 		<CRow className="split-panels">
 			<CCol xl={6} className="primary-panel">
