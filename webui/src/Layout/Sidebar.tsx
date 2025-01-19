@@ -35,7 +35,7 @@ import { TRIGGERS_PAGE_PREFIX } from '../Triggers/index.js'
 import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
-import { useMediaQuery } from 'usehooks-ts'
+import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -168,7 +168,7 @@ function SidebarMenu({ navItems, className }: MenuProps) {
 }
 
 export const MySidebar = memo(function MySidebar() {
-	const [unfoldable, setUnfoldable] = useState(false)
+	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
 
 	return (
 		<CSidebar unfoldable={unfoldable}>
