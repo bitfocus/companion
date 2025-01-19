@@ -32,10 +32,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
 import { BUTTONS_PAGE_PREFIX } from '../Buttons/index.js'
 import { TRIGGERS_PAGE_PREFIX } from '../Triggers/index.js'
+import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
 
 type NavItem = {
 	name: string
 	icon: IconDefinition
+	notifications?: React.ComponentType<Record<string, never>>
 	path?: string
 	show?: boolean
 	dropdown?: { name: string; icon?: IconDefinition; path: string; target?: string }[]
@@ -44,7 +46,7 @@ type NavItem = {
 const primaryNavItems: NavItem[] = [
 	{ name: 'Connections', icon: faPlug, path: '/connections' },
 	{ name: 'Buttons', icon: faTh, path: BUTTONS_PAGE_PREFIX },
-	{ name: 'Surfaces', icon: faGamepad, path: SURFACES_PAGE_PREFIX },
+	{ name: 'Surfaces', icon: faGamepad, path: SURFACES_PAGE_PREFIX, notifications: SurfacesTabNotifyIcon },
 	{ name: 'Triggers', icon: faClock, path: TRIGGERS_PAGE_PREFIX },
 	{ name: 'Variables', icon: faDollarSign, path: '/variables' },
 	{ name: 'Settings', icon: faCog, path: '/settings' },
@@ -101,7 +103,9 @@ function SidebarMenu({ navItems, className }: MenuProps) {
 					item.path ? (
 						<CNavItem key={item.path}>
 							<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
-								<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+								<FontAwesomeIcon className="nav-icon" icon={item.icon} />
+								<span className="flex-fill">{item.name}</span>
+								{!!item.notifications && <item.notifications />}
 							</CNavLink>
 						</CNavItem>
 					) : (
@@ -109,7 +113,9 @@ function SidebarMenu({ navItems, className }: MenuProps) {
 							key={item.name}
 							toggler={
 								<>
-									<FontAwesomeIcon className="nav-icon" icon={item.icon} /> {item.name}
+									<FontAwesomeIcon className="nav-icon" icon={item.icon} />
+									<span className="flex-fill">{item.name}</span>
+									{!!item.notifications && <item.notifications />}
 								</>
 							}
 						>
