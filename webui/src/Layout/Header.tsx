@@ -5,15 +5,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { useSidebarState } from './Sidebar.js'
 
 interface MyHeaderProps {
-	toggleSidebar: () => void
 	canLock: boolean
 	setLocked: (locked: boolean) => void
 }
 
-export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
+export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHeaderProps) {
 	const { socket, userConfig } = useContext(RootAppStoreContext)
+
+	const { showToggle, clickToggle } = useSidebarState()
 
 	const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null)
 	const [updateData, setUpdateData] = useState<AppUpdateInfo | null>(null)
@@ -48,9 +50,11 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 	return (
 		<CHeader position="sticky" className="p-0">
 			<CContainer fluid>
-				<CHeaderToggler className="ps-1" onClick={toggleSidebar}>
-					<FontAwesomeIcon icon={faBars} />
-				</CHeaderToggler>
+				{showToggle && (
+					<CHeaderToggler className="ps-1" onClick={clickToggle}>
+						<FontAwesomeIcon icon={faBars} />
+					</CHeaderToggler>
+				)}
 				<CHeaderBrand className="mx-auto d-md-none">
 					Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
 				</CHeaderBrand>

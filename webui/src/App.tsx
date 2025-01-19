@@ -7,7 +7,7 @@ import { LogPanel } from './LogPanel.js'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
-import { MySidebar } from './Layout/Sidebar.js'
+import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
 import { MyHeader } from './Layout/Header.js'
 import { Triggers, TRIGGERS_PAGE_PREFIX } from './Triggers/index.js'
 import { ConnectionsPage } from './Connections/index.js'
@@ -155,12 +155,8 @@ const AppMain = observer(function AppMain({
 }: AppMainProps) {
 	const { userConfig } = useContext(RootAppStoreContext)
 
-	const [showSidebar, setShowSidebar] = useState(true)
 	const [unlocked, setUnlocked] = useState(false)
 
-	const toggleSidebar = useCallback(() => {
-		setShowSidebar((oldVal) => !oldVal)
-	}, [])
 	const canLock = !!userConfig.properties?.admin_lockout
 	const setLocked = useCallback(() => {
 		if (canLock) {
@@ -196,27 +192,29 @@ const AppMain = observer(function AppMain({
 
 	return (
 		<div className="c-app">
-			{canLock && unlocked && (userConfig.properties?.admin_timeout ?? 0) > 0 ? (
-				<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={userConfig.properties?.admin_timeout} />
-			) : (
-				''
-			)}
-			<WizardModal ref={wizardModal} />
-			<MySidebar sidebarShow={showSidebar} />
-			<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
-				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
-				<div className="body flex-grow-1">
-					{connected && loadingComplete ? (
-						unlocked ? (
-							<AppContent buttonGridHotPress={buttonGridHotPress} showWizard={showWizard} />
+			<SidebarStateProvider>
+				{canLock && unlocked && (userConfig.properties?.admin_timeout ?? 0) > 0 ? (
+					<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={userConfig.properties?.admin_timeout} />
+				) : (
+					''
+				)}
+				<WizardModal ref={wizardModal} />
+				<MySidebar />
+				<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
+					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
+					<div className="body flex-grow-1">
+						{connected && loadingComplete ? (
+							unlocked ? (
+								<AppContent buttonGridHotPress={buttonGridHotPress} showWizard={showWizard} />
+							) : (
+								<AppAuthWrapper setUnlocked={setUnlockedInner} />
+							)
 						) : (
-							<AppAuthWrapper setUnlocked={setUnlockedInner} />
-						)
-					) : (
-						<AppLoading progress={loadingProgress} connected={connected} />
-					)}
+							<AppLoading progress={loadingProgress} connected={connected} />
+						)}
+					</div>
 				</div>
-			</div>
+			</SidebarStateProvider>
 		</div>
 	)
 })

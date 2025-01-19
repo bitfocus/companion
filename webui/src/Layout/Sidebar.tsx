@@ -1,7 +1,6 @@
-import React, { memo, useState } from 'react'
+import React, { createContext, memo, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, NavLink } from 'react-router-dom'
 import {
-	CSidebar,
 	CSidebarNav,
 	CNavItem,
 	CNavLink,
@@ -9,6 +8,7 @@ import {
 	CSidebarToggler,
 	CSidebarHeader,
 	CNavGroup,
+	CBackdrop,
 } from '@coreui/react'
 import {
 	faFileImport,
@@ -33,6 +33,40 @@ import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
 import { BUTTONS_PAGE_PREFIX } from '../Buttons/index.js'
 import { TRIGGERS_PAGE_PREFIX } from '../Triggers/index.js'
 import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
+import { createPortal } from 'react-dom'
+import classNames from 'classnames'
+import { useMediaQuery } from 'usehooks-ts'
+
+export interface SidebarStateProps {
+	showToggle: boolean
+	clickToggle: () => void
+	toggleEvent: EventTarget
+}
+const SidebarStateContext = createContext<SidebarStateProps | null>(null)
+
+export function useSidebarState(): SidebarStateProps {
+	const props = useContext(SidebarStateContext)
+	if (!props) throw new Error('Not inside a SidebarStateContext!')
+	return props
+}
+
+export function SidebarStateProvider({ children }: React.PropsWithChildren): React.ReactNode {
+	const isOnMobile = useMediaQuery('(max-width: 991.98px)')
+
+	const event = useMemo(() => new EventTarget(), [])
+
+	const value = useMemo(() => {
+		return {
+			showToggle: isOnMobile,
+			clickToggle: () => {
+				event.dispatchEvent(new Event('show'))
+			},
+			toggleEvent: event,
+		} satisfies SidebarStateProps
+	}, [isOnMobile, event])
+
+	return <SidebarStateContext.Provider value={value}>{children}</SidebarStateContext.Provider>
+}
 
 type NavItem = {
 	name: string
@@ -133,15 +167,11 @@ function SidebarMenu({ navItems, className }: MenuProps) {
 	)
 }
 
-interface MySidebarProps {
-	sidebarShow: boolean
-}
-
-export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps) {
+export const MySidebar = memo(function MySidebar() {
 	const [unfoldable, setUnfoldable] = useState(false)
 
 	return (
-		<CSidebar position="fixed" unfoldable={unfoldable} visible={sidebarShow} colorScheme="dark">
+		<CSidebar unfoldable={unfoldable}>
 			<CSidebarHeader className="brand">
 				<CSidebarBrand>
 					<div className="sidebar-brand-full">
@@ -162,3 +192,100 @@ export const MySidebar = memo(function MySidebar({ sidebarShow }: MySidebarProps
 		</CSidebar>
 	)
 })
+
+/**
+ * This is a stripped down copy of CSidebar from coreui-react.
+ * Since changing the sidebar, it no longer makes sense to be able to hide it entirely,
+ * but coreui doesn't give us the tools to use the toggling behaviour on mobile and avoid allowing it to be hidden on desktop.
+ * There was also a bug on mobile where it took 2 clicks to show, because we are maintaining a boolean state, which it was not updating.
+ */
+interface CSidebarProps {
+	/**
+	 * Expand narrowed sidebar on hover.
+	 */
+	unfoldable?: boolean
+}
+function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProps>) {
+	const sidebarRef = useRef<HTMLDivElement>(null)
+
+	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
+
+	const sidebarState = useSidebarState()
+
+	useEffect(() => {
+		const event = sidebarState.toggleEvent
+		const handler = () => {
+			setVisibleMobile(true)
+		}
+		event.addEventListener('show', handler)
+
+		return () => {
+			event.removeEventListener('show', handler)
+		}
+	}, [sidebarState.toggleEvent, setVisibleMobile])
+
+	useEffect(() => {
+		sidebarState.showToggle && setVisibleMobile(false)
+	}, [sidebarState.showToggle])
+
+	useEffect(() => {
+		window.addEventListener('mouseup', handleClickOutside)
+		window.addEventListener('keyup', handleKeyup)
+
+		sidebarRef.current?.addEventListener('mouseup', handleOnClick)
+
+		return () => {
+			window.removeEventListener('mouseup', handleClickOutside)
+			window.removeEventListener('keyup', handleKeyup)
+
+			sidebarRef.current?.removeEventListener('mouseup', handleOnClick)
+		}
+	})
+
+	const handleKeyup = (event: Event) => {
+		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+			setVisibleMobile(false)
+		}
+	}
+	const handleClickOutside = (event: Event) => {
+		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+			setVisibleMobile(false)
+		}
+	}
+
+	const handleOnClick = (event: Event) => {
+		const target = event.target as HTMLAnchorElement
+		target &&
+			target.classList.contains('nav-link') &&
+			!target.classList.contains('nav-group-toggle') &&
+			sidebarState.showToggle &&
+			setVisibleMobile(false)
+	}
+
+	return (
+		<>
+			<div
+				className={classNames('sidebar sidebar-dark sidebar-fixed', {
+					// [`sidebar-${colorScheme}`]: colorScheme,
+					// 'sidebar-narrow': narrow,
+					// 'sidebar-overlaid': overlaid,
+					// [`sidebar-${placement}`]: placement,
+					// [`sidebar-${position}`]: position,
+					// [`sidebar-${size}`]: size,
+					'sidebar-narrow-unfoldable': unfoldable,
+					show: sidebarState.showToggle && visibleMobile,
+					// hide: visibleDesktop === false && !sidebarState.showToggle && !overlaid,
+				})}
+				ref={sidebarRef}
+			>
+				{children}
+			</div>
+			{typeof window !== 'undefined' &&
+				sidebarState.showToggle &&
+				createPortal(
+					<CBackdrop className="sidebar-backdrop" visible={sidebarState.showToggle && visibleMobile} />,
+					document.body
+				)}
+		</>
+	)
+}
