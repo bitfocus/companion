@@ -23,6 +23,7 @@ interface EntityCommonCellsProps {
 	headlineExpanded: boolean
 	definitionName: string
 	location: ControlLocation | undefined
+	readonly: boolean
 }
 
 export function EntityCommonCells({
@@ -34,6 +35,7 @@ export function EntityCommonCells({
 	headlineExpanded,
 	definitionName,
 	location,
+	readonly,
 }: EntityCommonCellsProps) {
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
@@ -59,7 +61,7 @@ export function EntityCommonCells({
 			<div className="cell-actions">
 				{entityDefinition?.hasLearn && !!service.performLearn && (
 					<div style={{ marginTop: 10 }}>
-						<LearnButton id={entity.id} doLearn={service.performLearn} />
+						<LearnButton id={entity.id} doLearn={service.performLearn} disabled={readonly} />
 					</div>
 				)}
 			</div>
@@ -77,6 +79,7 @@ export function EntityCommonCells({
 								value={(entity.options || {})[opt.id]}
 								setValue={service.setValue}
 								visibility={optionVisibility[opt.id] ?? true}
+								readonly={readonly}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -99,6 +102,7 @@ export function EntityCommonCells({
 										checked={!!('isInverted' in entity && entity.isInverted)}
 										size="xl"
 										onChange={(e) => service.setInverted(e.currentTarget.checked)}
+										disabled={readonly}
 									/>
 								</div>
 							</CForm>

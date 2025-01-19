@@ -21,6 +21,7 @@ interface EditableEntityListProps {
 	entityType: EntityModelType
 	entityTypeLabel: string
 	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	readonly: boolean
 }
 export const EditableEntityList = observer(function EditableEntityList({
 	controlId,
@@ -33,6 +34,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 	entityType,
 	entityTypeLabel,
 	onlyFeedbackType,
+	readonly,
 }: EditableEntityListProps) {
 	const addEntity = useCallback(
 		(connectionId: string, definitionId: string) => serviceFactory.addEntity(connectionId, definitionId, ownerId),
@@ -52,7 +54,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 				location={location}
 				controlId={controlId}
 				ownerId={ownerId}
-				readonly={false}
+				readonly={readonly}
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
 				onlyFeedbackType={onlyFeedbackType}
@@ -64,6 +66,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 				entityType={entityType}
 				onlyFeedbackType={onlyFeedbackType}
 				entityTypeLabel={entityTypeLabel}
+				readonly={readonly}
 			/>
 		</>
 	)

@@ -25,6 +25,7 @@ interface EntityManageChildGroupsProps {
 	controlId: string
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
+	readonly: boolean
 }
 
 export const EntityManageChildGroups = observer(function EntityManageChildGroups({
@@ -33,6 +34,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 	controlId,
 	location,
 	serviceFactory,
+	readonly,
 }: EntityManageChildGroupsProps) {
 	if (entity.connectionId !== 'internal') return null
 
@@ -53,6 +55,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 						entities={entity.children?.[groupInfo.groupId]}
 						parentId={entity.id}
 						parentServiceFactory={serviceFactory}
+						readonly={readonly}
 					/>
 				))}
 			</div>
@@ -67,6 +70,7 @@ interface EntityManageChildGroupProps {
 	entities: SomeEntityModel[] | undefined
 	parentId: string
 	parentServiceFactory: IEntityEditorService
+	readonly: boolean
 }
 
 const EntityManageChildGroup = observer(function EntityManageChildGroup({
@@ -76,6 +80,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	entities,
 	parentId,
 	parentServiceFactory,
+	readonly,
 }: EntityManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
 

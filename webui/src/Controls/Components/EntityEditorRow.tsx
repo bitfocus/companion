@@ -137,6 +137,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 						entity={entity}
 						serviceFactory={serviceFactory}
 						onlyFeedbackType={onlyFeedbackType}
+						readonly={readonly}
 					/>
 				) : (
 					<p>Entity is not a {entityTypeLabel}!</p>
@@ -155,6 +156,7 @@ interface EntityEditorRowContentProps {
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
 	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	readonly: boolean
 }
 
 export const EntityEditorRowContent = observer(function EntityEditorRowContent({
@@ -166,6 +168,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	location,
 	serviceFactory,
 	onlyFeedbackType,
+	readonly,
 }: EntityEditorRowContentProps) {
 	const entityService = useControlEntityService(serviceFactory, entity)
 
@@ -201,7 +204,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				canSetHeadline={canSetHeadline}
 				headlineExpanded={headlineExpanded}
 				setHeadlineExpanded={doEditHeadline}
-				readonly={false}
+				readonly={readonly}
 			/>
 
 			{!isCollapsed && (
@@ -215,6 +218,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						headlineExpanded={headlineExpanded}
 						definitionName={definitionName}
 						location={location}
+						readonly={readonly}
 					/>
 
 					<EntityManageChildGroups
@@ -223,6 +227,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						controlId={controlId}
 						location={location}
 						serviceFactory={serviceFactory}
+						readonly={readonly}
 					/>
 				</div>
 			)}

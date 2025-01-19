@@ -12,9 +12,16 @@ interface AddEntityPanelProps {
 	entityType: EntityModelType
 	onlyFeedbackType: 'boolean' | 'advanced' | null
 	entityTypeLabel: string
+	readonly: boolean
 }
 
-export function AddEntityPanel({ addEntity, entityType, onlyFeedbackType, entityTypeLabel }: AddEntityPanelProps) {
+export function AddEntityPanel({
+	addEntity,
+	entityType,
+	onlyFeedbackType,
+	entityTypeLabel,
+	readonly,
+}: AddEntityPanelProps) {
 	const addEntitiesRef = useRef<AddEntitiesModalRef>(null)
 	const showAddModal = useCallback(() => addEntitiesRef.current?.show(), [])
 
@@ -25,6 +32,7 @@ export function AddEntityPanel({ addEntity, entityType, onlyFeedbackType, entity
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
 				onlyFeedbackType={onlyFeedbackType}
+				disabled={readonly}
 			/>
 			<CButton
 				color="primary"
@@ -33,6 +41,7 @@ export function AddEntityPanel({ addEntity, entityType, onlyFeedbackType, entity
 					borderTopLeftRadius: 0,
 					borderBottomLeftRadius: 0,
 				}}
+				disabled={readonly}
 			>
 				<FontAwesomeIcon icon={faFolderOpen} />
 			</CButton>

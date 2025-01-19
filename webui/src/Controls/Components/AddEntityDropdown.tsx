@@ -31,12 +31,14 @@ interface AddEntityDropdownProps {
 	entityType: EntityModelType
 	entityTypeLabel: string
 	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	disabled: boolean
 }
 export const AddEntityDropdown = observer(function AddEntityDropdown({
 	onSelect,
 	entityType,
 	entityTypeLabel,
 	onlyFeedbackType,
+	disabled,
 }: AddEntityDropdownProps) {
 	const { entityDefinitions, connections } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
@@ -127,6 +129,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			onChange={innerChange}
 			filterOption={filterOptions}
 			noOptionsMessage={noOptionsMessage}
+			isDisabled={disabled}
 		/>
 	)
 })
