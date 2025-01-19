@@ -196,7 +196,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	return (
 		<div className="variables-panel">
 			<div>
-				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
+				<h4 style={{ marginBottom: '0.8rem' }}>Custom Variables</h4>
 				<CButtonGroup size="sm">
 					<CButton color="primary" as={Link} to="/variables">
 						<FontAwesomeIcon icon={faArrowLeft} />

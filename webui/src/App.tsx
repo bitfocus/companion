@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback, useContext, useEffect, useState } from 'react'
-import { CContainer, CTabContent, CTabPane, CRow, CCol, CProgress, CFormInput, CForm, CButton } from '@coreui/react'
+import { CContainer, CRow, CCol, CProgress, CFormInput, CForm, CButton } from '@coreui/react'
 import { useMountEffect, SocketContext, MyErrorBoundary } from './util.js'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'

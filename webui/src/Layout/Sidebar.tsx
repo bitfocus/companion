@@ -426,7 +426,10 @@ function CNavGroup({
 					</Link>
 				</a>
 			) : (
-				<a className="nav-link nav-group-toggle" onClick={(event) => handleTogglerOnCLick(event)}>
+				<a
+					className="nav-link nav-group-toggle nav-group-toggle-basic"
+					onClick={(event) => handleTogglerOnCLick(event)}
+				>
 					{toggler}
 				</a>
 			)}

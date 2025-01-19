@@ -273,6 +273,10 @@ body {
 			margin-right: 16px;
 		}
 	}
+	.nav-group-toggle-basic::after,
+	.nav-group-items .nav-link {
+		margin-right: 8px;
+	}
 
 	.sidebar-nav .nav-group-items .nav-link {
 		padding-left: var(--cui-sidebar-nav-link-padding-x);
