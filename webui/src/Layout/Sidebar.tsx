@@ -1,5 +1,4 @@
 import React, { createContext, memo, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, NavLink } from 'react-router-dom'
 import {
 	CSidebarNav,
 	CNavItem,
@@ -29,13 +28,11 @@ import {
 	faSquareCaretRight,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { SURFACES_PAGE_PREFIX } from '../Surfaces/index.js'
-import { BUTTONS_PAGE_PREFIX } from '../Buttons/index.js'
-import { TRIGGERS_PAGE_PREFIX } from '../Triggers/index.js'
 import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
+import { Link } from '@tanstack/react-router'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -79,9 +76,9 @@ type NavItem = {
 
 const primaryNavItems: NavItem[] = [
 	{ name: 'Connections', icon: faPlug, path: '/connections' },
-	{ name: 'Buttons', icon: faTh, path: BUTTONS_PAGE_PREFIX },
-	{ name: 'Surfaces', icon: faGamepad, path: SURFACES_PAGE_PREFIX, notifications: SurfacesTabNotifyIcon },
-	{ name: 'Triggers', icon: faClock, path: TRIGGERS_PAGE_PREFIX },
+	{ name: 'Buttons', icon: faTh, path: '/buttons' },
+	{ name: 'Surfaces', icon: faGamepad, path: '/surfaces', notifications: SurfacesTabNotifyIcon },
+	{ name: 'Triggers', icon: faClock, path: '/triggers' },
 	{ name: 'Variables', icon: faDollarSign, path: '/variables' },
 	{ name: 'Settings', icon: faCog, path: '/settings' },
 	{ name: 'Import / Export', icon: faFileImport, path: '/import-export' },
@@ -91,7 +88,7 @@ const primaryNavItems: NavItem[] = [
 		name: 'Interactive Buttons',
 		icon: faSquareCaretRight,
 		dropdown: [
-			{ name: 'Emulator', path: '/emulators', target: '_new' },
+			{ name: 'Emulator', path: '/emulator', target: '_new' },
 			{ name: 'Web buttons', path: '/tablet', target: '_new' },
 		],
 	},
@@ -115,7 +112,8 @@ interface MenuProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 function SidebarMenu({ navItems, className }: MenuProps) {
-	const routerLocation = useLocation()
+	// const routerLocation = useLocation()
+	const routerLocation = { pathname: 'abcd' }
 
 	const isActive = (prefix: string) =>
 		routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix
@@ -136,7 +134,7 @@ function SidebarMenu({ navItems, className }: MenuProps) {
 				.map((item) =>
 					item.path ? (
 						<CNavItem key={item.path}>
-							<CNavLink to={item.path} active={isActive(item.path)} as={NavLink}>
+							<CNavLink to={item.path} active={isActive(item.path)} as={Link}>
 								<FontAwesomeIcon className="nav-icon" icon={item.icon} />
 								<span className="flex-fill">{item.name}</span>
 								{!!item.notifications && <item.notifications />}

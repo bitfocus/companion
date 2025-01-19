@@ -9,7 +9,7 @@ import { ImportWizard } from './Import/index.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { observer } from 'mobx-react-lite'
 
-export const ImportExport = observer(function ImportExport() {
+export const ImportExportPage = observer(function ImportExport() {
 	const { socket, connections } = useContext(RootAppStoreContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)

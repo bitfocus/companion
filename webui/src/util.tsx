@@ -237,7 +237,7 @@ interface ErrorFallbackProps {
 	error: Error | undefined
 	resetErrorBoundary: () => void
 }
-function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
+export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
 	return (
 		<CAlert color="danger">
 			<p>Something went wrong:</p>

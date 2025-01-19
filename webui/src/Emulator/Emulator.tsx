@@ -9,7 +9,6 @@ import {
 } from '../util.js'
 import { CButton, CCol, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { useParams } from 'react-router-dom'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -18,6 +17,7 @@ import { ControlLocation, EmulatorConfig, EmulatorImageCache } from '@companion-
 import { UserConfigStore } from '../Stores/UserConfigStore.js'
 import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
+import { useParams } from '@tanstack/react-router'
 
 export const Emulator = observer(function Emulator() {
 	const socket = useContext(SocketContext)
@@ -25,7 +25,7 @@ export const Emulator = observer(function Emulator() {
 	const [config, setConfig] = useState<EmulatorConfig | null>(null)
 	const [loadError, setLoadError] = useState<string | null>(null)
 
-	const { id: emulatorId } = useParams()
+	const { emulatorId } = useParams({ from: '/emulator/$emulatorId' })
 
 	const [imageCache, setImageCache] = useState<EmulatorImageCache>({})
 	useEffect(() => {

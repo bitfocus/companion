@@ -24,6 +24,7 @@ import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 import { useOutboundSurfacesSubscription } from './Hooks/useOutboundSurfacesSubscription.js'
 import { ConnectionsStore } from './Stores/ConnectionsStore.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
+import { ViewControlStore } from './Stores/ViewControlStore.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -35,6 +36,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const notifierRef = useRef<NotificationsManagerRef>(null)
 
 	const rootStore = useMemo(() => {
+		const showWizardEvent = new EventTarget()
+
 		return {
 			socket,
 			notifier: notifierRef,
@@ -54,6 +57,11 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			triggersList: new TriggersListStore(),
 
 			userConfig: new UserConfigStore(),
+
+			showWizardEvent,
+			showWizard: () => showWizardEvent.dispatchEvent(new Event('show')),
+
+			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore
 	}, [socket])
 

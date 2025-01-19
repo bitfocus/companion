@@ -11,6 +11,7 @@ import type { SurfacesStore } from './SurfacesStore.js'
 import type { UserConfigStore } from './UserConfigStore.js'
 import type { VariablesStore } from './VariablesStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
+import type { ViewControlStore } from './ViewControlStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -34,4 +35,9 @@ export interface RootAppStore {
 	readonly triggersList: TriggersListStore
 
 	readonly userConfig: UserConfigStore
+
+	readonly showWizardEvent: EventTarget
+	readonly showWizard: () => void
+
+	readonly viewControl: ViewControlStore
 }

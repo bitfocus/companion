@@ -4,7 +4,6 @@ import { CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
-import { useNavigate } from 'react-router-dom'
 import { usePagesInfoSubscription } from '../Hooks/usePagesInfoSubscription.js'
 import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
 import useElementclientSize from '../Hooks/useElementInnerSize.js'
@@ -13,9 +12,12 @@ import { ButtonsFromPage } from './ButtonsFromPage.js'
 import { PagesStore } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
 import { UserConfigStore } from '../Stores/UserConfigStore.js'
+import { useNavigate } from '@tanstack/react-router'
 
 export const TabletView = observer(function TabletView() {
 	const socket = useContext(SocketContext)
+
+	const navigate = useNavigate({ from: '/tablet' })
 
 	const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -77,7 +79,6 @@ export const TabletView = observer(function TabletView() {
 		return unsub
 	}, [socket])
 
-	const navigate = useNavigate()
 	const updateQueryUrl = useCallback(
 		(key: string, value: any) => {
 			setQueryUrl((oldUrl) => {
@@ -95,7 +96,7 @@ export const TabletView = observer(function TabletView() {
 				delete newQuery['rows']
 
 				const newStr = queryString.stringify(newQuery).replaceAll('%2C', ',') // replace commas to make it readable
-				navigate(`?${newStr}`)
+				navigate({ to: `?${newStr}` })
 				return newStr
 			})
 		},

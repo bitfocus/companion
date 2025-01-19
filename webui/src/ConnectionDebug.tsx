@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useState, useContext, memo, useRef, useM
 import { SocketContext } from './util.js'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { useParams } from 'react-router-dom'
 import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
+import { useParams } from '@tanstack/react-router'
 
 interface DebugLogLine {
 	level: string
@@ -26,10 +26,12 @@ const LogsOnDiskInfoLine: DebugLogLine = {
 	message: 'Starting log. Only lines generated since opening the page are shown here',
 }
 
+// const route = getRouteApi('/connection-debug/$connectionId')
+
 export function ConnectionDebug() {
 	const socket = useContext(SocketContext)
 
-	const { id: connectionId } = useParams()
+	const { connectionId } = useParams({ from: '/connection-debug/$connectionId' })
 
 	// const [loadError, setLoadError]=useState(null)
 	const [linesBuffer, setLinesBuffer] = useState<DebugLogLine[]>([])

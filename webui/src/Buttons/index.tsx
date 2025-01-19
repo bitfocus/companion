@@ -16,25 +16,22 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
-import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+import { useMatchRoute, useNavigate, UseNavigateResult } from '@tanstack/react-router'
 
-export const BUTTONS_PAGE_PREFIX = '/buttons'
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
 
 function useUrlPageNumber(): number | null {
-	const routerLocation = useLocation()
-	if (!routerLocation.pathname.startsWith(BUTTONS_PAGE_PREFIX)) return null
+	const matchRoute = useMatchRoute()
+	const match = matchRoute({ to: '/buttons/$page' })
 
-	const fragments = routerLocation.pathname.slice(BUTTONS_PAGE_PREFIX.length + 1).split('/')
-
-	const pageIndex = Number(fragments[0])
+	const pageIndex = match ? Number(match.page) : NaN
 	if (isNaN(pageIndex) || pageIndex <= 0) return 0
 
 	return pageIndex
 }
 
-function navigateToButtonsPage(navigate: NavigateFunction, pageNumber: number): void {
-	navigate(`${BUTTONS_PAGE_PREFIX}/${pageNumber}`)
+function navigateToButtonsPage(navigate: UseNavigateResult<'/buttons'>, pageNumber: number): void {
+	navigate({ to: `/buttons/${pageNumber}` })
 	window.sessionStorage.setItem(SESSION_STORAGE_LAST_BUTTONS_PAGE, pageNumber.toString())
 }
 
@@ -46,12 +43,8 @@ function getLastPageNumber(): number {
 	return 1
 }
 
-interface ButtonsPageProps {
-	hotPress: boolean
-}
-
-export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPageProps) {
-	const { userConfig, socket, pages } = useContext(RootAppStoreContext)
+export const ButtonsPage = observer(function ButtonsPage() {
+	const { userConfig, socket, pages, viewControl } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
@@ -61,7 +54,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
-	const navigate = useNavigate()
+	const navigate = useNavigate({ from: '/buttons' })
 	let pageNumber = useUrlPageNumber()
 	const setPageNumber = useCallback(
 		(pageNumber: number) => {
@@ -82,7 +75,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 	const doButtonGridClick = useCallback(
 		(location: ControlLocation, isDown: boolean) => {
-			if (hotPress) {
+			if (viewControl.buttonGridHotPress) {
 				socket
 					.emitPromise('controls:hot-press', [location, isDown, 'grid'])
 					.catch((e) => console.error(`Hot press failed: ${e}`))
@@ -93,7 +86,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 				setTabResetToken(nanoid())
 			}
 		},
-		[socket, hotPress]
+		[socket, viewControl]
 	)
 	const clearSelectedButton = useCallback(() => {
 		doChangeTab('pages')
@@ -269,7 +262,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 				<MyErrorBoundary>
 					<ButtonsGridPanel
 						buttonGridClick={doButtonGridClick}
-						isHot={hotPress}
+						isHot={viewControl.buttonGridHotPress}
 						selectedButton={selectedButton}
 						pageNumber={pageNumber}
 						changePage={setPageNumber}

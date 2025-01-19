@@ -1,6 +1,5 @@
-import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import React, { FormEvent, useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { SocketContext } from '../util.js'
 import { BeginStep } from './BeginStep.js'
 import { SurfacesStep } from './SurfacesStep.js'
 import { GridStep } from './GridStep.js'
@@ -9,6 +8,7 @@ import { PasswordStep } from './PasswordStep.js'
 import { ApplyStep } from './ApplyStep.js'
 import { FinishStep } from './FinishStep.js'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 export const WIZARD_VERSION_2_2 = 22 // 2.2
 export const WIZARD_VERSION_3_0 = 30 // 3.0
@@ -16,15 +16,9 @@ export const WIZARD_VERSION_3_4 = 34 // 3.0
 
 export const WIZARD_CURRENT_VERSION = WIZARD_VERSION_3_4
 
-export interface WizardModalRef {
-	show(): void
-}
-interface WizardModalProps {
-	// Nothing
-}
+export function WizardModal() {
+	const { socket, showWizardEvent } = useContext(RootAppStoreContext)
 
-export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function WizardModal(_props, ref) {
-	const socket = useContext(SocketContext)
 	const [currentStep, setCurrentStep] = useState(1)
 	const [maxSteps, setMaxSteps] = useState(7)
 	const [applyStep, setApplyStep] = useState(6)
@@ -122,20 +116,21 @@ export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function
 		)
 	}
 
-	useImperativeHandle(
-		ref,
-		() => ({
-			show() {
-				if (clear) {
-					getConfig()
-					setCurrentStep(1)
-				}
-				setShow(true)
-				setClear(false)
-			},
-		}),
-		[getConfig, clear]
-	)
+	useEffect(() => {
+		const show = () => {
+			if (clear) {
+				getConfig()
+				setCurrentStep(1)
+			}
+			setShow(true)
+			setClear(false)
+		}
+
+		showWizardEvent.addEventListener('show', show)
+		return () => {
+			showWizardEvent.removeEventListener('show', show)
+		}
+	}, [showWizardEvent])
 
 	let nextButton
 	switch (currentStep) {
@@ -218,4 +213,4 @@ export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function
 			</CForm>
 		</CModal>
 	)
-})
+}

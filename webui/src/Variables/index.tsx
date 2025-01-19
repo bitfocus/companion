@@ -8,7 +8,7 @@ import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
-export const ConnectionVariables = observer(function ConnectionVariables() {
+export const ConnectionVariablesPage = observer(function ConnectionVariables() {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const [connectionId, setConnectionId] = useState<string | null>(null)

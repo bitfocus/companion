@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CCallout, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
-import { MyErrorBoundary } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faSync } from '@fortawesome/free-solid-svg-icons'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
@@ -8,42 +7,10 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
 import { KnownSurfacesTable } from './KnownSurfacesTable.js'
-import { NavLink, NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 import { OutboundSurfacesTable } from './OutboundSurfacesTable.js'
-
-export const SURFACES_PAGE_PREFIX = '/surfaces'
-
-type SubPageType = 'configured' | 'discover' | 'outbound'
-
-function useSurfacesSubPage(): SubPageType | null | false {
-	const routerLocation = useLocation()
-	if (!routerLocation.pathname.startsWith(SURFACES_PAGE_PREFIX)) return false
-	const fragments = routerLocation.pathname.slice(SURFACES_PAGE_PREFIX.length + 1).split('/')
-	const subPage = fragments[0]
-	if (!subPage) return null
-
-	if (subPage !== 'configured' && subPage !== 'discover' && subPage !== 'outbound') return null
-
-	return subPage
-}
-
-function navigateToSubPage(navigate: NavigateFunction, subPage: SubPageType | null): void {
-	if (!subPage) subPage = 'configured'
-
-	navigate(`${SURFACES_PAGE_PREFIX}/${subPage}`)
-}
+import { Link, Outlet } from '@tanstack/react-router'
 
 export const SurfacesPage = observer(function SurfacesPage() {
-	const navigate = useNavigate()
-
-	const subPage = useSurfacesSubPage()
-	console.log('subPage', subPage)
-	if (subPage === false) return null
-	if (!subPage) {
-		setTimeout(() => navigateToSubPage(navigate, null), 0)
-		return null
-	}
-
 	return (
 		<div className="secondary-panel fill-height">
 			<div className="secondary-panel-header">
@@ -53,36 +20,24 @@ export const SurfacesPage = observer(function SurfacesPage() {
 			<div className="secondary-panel-inner">
 				<CNav variant="tabs" role="tablist">
 					<CNavItem>
-						<CNavLink to={`${SURFACES_PAGE_PREFIX}/configured`} as={NavLink}>
+						<CNavLink to="/surfaces/configured" as={Link}>
 							Configured Surfaces
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
-						<CNavLink to={`${SURFACES_PAGE_PREFIX}/discover`} as={NavLink}>
+						<CNavLink to="/surfaces/discover" as={Link}>
 							Discover
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
-						<CNavLink to={`${SURFACES_PAGE_PREFIX}/outbound`} as={NavLink}>
+						<CNavLink to="/surfaces/outbound" as={Link}>
 							Remote Surfaces
 						</CNavLink>
 					</CNavItem>
 				</CNav>
 				<CTabContent>
-					<CTabPane data-tab="configured" visible={subPage === 'configured'} transition={false}>
-						<MyErrorBoundary>
-							<ConfiguredSurfacesTab />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="discover" visible={subPage === 'discover'} transition={false}>
-						<MyErrorBoundary>
-							<DiscoverSurfacesTab />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="outbound" visible={subPage === 'outbound'} transition={false}>
-						<MyErrorBoundary>
-							<OutboundSurfacesTab />
-						</MyErrorBoundary>
+					<CTabPane visible transition={false}>
+						<Outlet />
 					</CTabPane>
 				</CTabContent>
 			</div>
@@ -90,7 +45,7 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	)
 })
 
-function ConfiguredSurfacesTab() {
+export function ConfiguredSurfacesTab() {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
@@ -163,7 +118,7 @@ function ConfiguredSurfacesTab() {
 	)
 }
 
-function DiscoverSurfacesTab() {
+export function DiscoverSurfacesTab() {
 	return (
 		<>
 			<p style={{ marginBottom: '0.5rem' }}>
@@ -178,7 +133,7 @@ function DiscoverSurfacesTab() {
 	)
 }
 
-function OutboundSurfacesTab() {
+export function OutboundSurfacesTab() {
 	return (
 		<>
 			<p style={{ marginBottom: '0.5rem' }}>

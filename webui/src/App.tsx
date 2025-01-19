@@ -1,26 +1,17 @@
-import React, { Suspense, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { CContainer, CTabContent, CTabPane, CRow, CCol, CProgress, CFormInput, CForm, CButton } from '@coreui/react'
-import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
-import { SURFACES_PAGE_PREFIX, SurfacesPage } from './Surfaces/index.js'
-import { UserConfig } from './UserConfig/index.js'
-import { LogPanel } from './LogPanel.js'
+import { useMountEffect, SocketContext, MyErrorBoundary } from './util.js'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
 import { MyHeader } from './Layout/Header.js'
-import { Triggers, TRIGGERS_PAGE_PREFIX } from './Triggers/index.js'
-import { ConnectionsPage } from './Connections/index.js'
-import { BUTTONS_PAGE_PREFIX, ButtonsPage } from './Buttons/index.js'
 import { ContextData } from './ContextData.js'
-import { CloudPage } from './Cloud/index.js'
-import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard/index.js'
-import { Navigate, useLocation } from 'react-router-dom'
+import { WizardModal, WIZARD_CURRENT_VERSION } from './Wizard/index.js'
 import { useIdleTimer } from 'react-idle-timer'
-import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { ConnectionVariables } from './Variables/index.js'
+import { Outlet } from '@tanstack/react-router'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
@@ -28,7 +19,6 @@ export default function App() {
 	const socket = useContext(SocketContext)
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
-	const [buttonGridHotPress, setButtonGridHotPress] = useState(false)
 	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
 
 	useEffect(() => {
@@ -64,35 +54,6 @@ export default function App() {
 		}
 	}, [socket])
 
-	const handleWindowBlur = useCallback(() => {
-		setButtonGridHotPress(false)
-	}, [])
-
-	const handleKeyDown = useCallback((e: KeyboardEvent) => {
-		if (e.key === 'Shift') {
-			setButtonGridHotPress(true)
-		}
-	}, [])
-	const handleKeyUp = useCallback((e: KeyboardEvent) => {
-		if (e.key === 'Shift') {
-			setButtonGridHotPress(false)
-		}
-	}, [])
-
-	useMountEffect(() => {
-		document.addEventListener('keydown', handleKeyDown)
-		document.addEventListener('keyup', handleKeyUp)
-
-		window.addEventListener('blur', handleWindowBlur)
-
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-			document.removeEventListener('keyup', handleKeyUp)
-
-			window.removeEventListener('blur', handleWindowBlur)
-		}
-	})
-
 	return (
 		<ContextData>
 			{(loadingProgress, loadingComplete) => (
@@ -126,12 +87,7 @@ export default function App() {
 							backend={useTouchBackend ? TouchBackend : HTML5Backend}
 							options={useTouchBackend ? { enableMouseEvents: true } : {}}
 						>
-							<AppMain
-								connected={connected}
-								loadingComplete={loadingComplete}
-								loadingProgress={loadingProgress}
-								buttonGridHotPress={buttonGridHotPress}
-							/>
+							<AppMain connected={connected} loadingComplete={loadingComplete} loadingProgress={loadingProgress} />
 						</DndProvider>
 					</Suspense>
 				</>
@@ -144,16 +100,10 @@ interface AppMainProps {
 	connected: boolean
 	loadingComplete: boolean
 	loadingProgress: number
-	buttonGridHotPress: boolean
 }
 
-const AppMain = observer(function AppMain({
-	connected,
-	loadingComplete,
-	loadingProgress,
-	buttonGridHotPress,
-}: AppMainProps) {
-	const { userConfig } = useContext(RootAppStoreContext)
+const AppMain = observer(function AppMain({ connected, loadingComplete, loadingProgress }: AppMainProps) {
+	const { userConfig, showWizard } = useContext(RootAppStoreContext)
 
 	const [unlocked, setUnlocked] = useState(false)
 
@@ -164,12 +114,13 @@ const AppMain = observer(function AppMain({
 		}
 	}, [canLock])
 
-	const wizardModal = useRef<WizardModalRef>(null)
-	const showWizard = useCallback(() => {
-		if (unlocked) {
-			wizardModal.current?.show()
-		}
-	}, [unlocked])
+	// const wizardModal = useRef<WizardModalRef>(null)
+	// const showWizard = useCallback(() => {
+	// 	if (unlocked) {
+
+	// 		wizardModal.current?.show()
+	// 	}
+	// }, [unlocked])
 
 	const setup_wizard = userConfig.properties?.setup_wizard
 	const setUnlockedInner = useCallback(() => {
@@ -198,14 +149,13 @@ const AppMain = observer(function AppMain({
 				) : (
 					''
 				)}
-				<WizardModal ref={wizardModal} />
 				<MySidebar />
 				<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
 					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
 					<div className="body flex-grow-1">
 						{connected && loadingComplete ? (
 							unlocked ? (
-								<AppContent buttonGridHotPress={buttonGridHotPress} showWizard={showWizard} />
+								<AppContent />
 							) : (
 								<AppAuthWrapper setUnlocked={setUnlockedInner} />
 							)
@@ -385,28 +335,37 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 	)
 })
 
-interface AppContentProps {
-	buttonGridHotPress: boolean
-	showWizard: () => void
-}
+const AppContent = observer(function AppContent() {
+	const { userConfig, viewControl } = useContext(RootAppStoreContext)
 
-const AppContent = observer(function AppContent({ buttonGridHotPress, showWizard }: AppContentProps) {
-	const routerLocation = useLocation()
-	let hasMatchedPane = false
-	const getClassForPane = (prefix: string) => {
-		// Require the path to be the same, or to be a prefix with a sub-route
+	const handleWindowBlur = useCallback(() => {
+		viewControl.setButtonGridHotPress(false)
+	}, [])
 
-		const paneBaseClass = 'pane-baseclass'
-
-		if (routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix) {
-			hasMatchedPane = true
-			return paneBaseClass + ' active show'
-		} else {
-			return paneBaseClass
+	const handleKeyDown = useCallback((e: KeyboardEvent) => {
+		if (e.key === 'Shift') {
+			viewControl.setButtonGridHotPress(true)
 		}
-	}
+	}, [])
+	const handleKeyUp = useCallback((e: KeyboardEvent) => {
+		if (e.key === 'Shift') {
+			viewControl.setButtonGridHotPress(false)
+		}
+	}, [])
 
-	const { userConfig } = useContext(RootAppStoreContext)
+	useMountEffect(() => {
+		document.addEventListener('keydown', handleKeyDown)
+		document.addEventListener('keyup', handleKeyUp)
+
+		window.addEventListener('blur', handleWindowBlur)
+
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown)
+			document.removeEventListener('keyup', handleKeyUp)
+
+			window.removeEventListener('blur', handleWindowBlur)
+		}
+	})
 
 	useEffect(() => {
 		document.title =
@@ -417,68 +376,14 @@ const AppContent = observer(function AppContent({ buttonGridHotPress, showWizard
 
 	return (
 		<CContainer fluid className="fadeIn">
+			<WizardModal />
+
 			<CTabContent className="baseless">
-				<CTabPane className={getClassForPane('/connections')}>
+				<CTabPane className="active show">
 					<MyErrorBoundary>
-						<ConnectionsPage />
+						<Outlet />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane(BUTTONS_PAGE_PREFIX)}>
-					<MyErrorBoundary>
-						<ButtonsPage hotPress={buttonGridHotPress} />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane className={getClassForPane(SURFACES_PAGE_PREFIX)}>
-					<MyErrorBoundary>
-						<SurfacesPage />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane className={getClassForPane(TRIGGERS_PAGE_PREFIX)}>
-					<MyErrorBoundary>
-						<Triggers />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane className={getClassForPane('/variables')}>
-					<MyErrorBoundary>
-						<ConnectionVariables />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane className={getClassForPane('/settings')}>
-					<MyErrorBoundary>
-						<UserConfig showWizard={showWizard} />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane className={getClassForPane('/import-export')}>
-					<MyErrorBoundary>
-						<ImportExport />
-					</MyErrorBoundary>
-				</CTabPane>
-				{getClassForPane('/log') !== '' && (
-					<CTabPane className={getClassForPane('/log')}>
-						<MyErrorBoundary>
-							<LogPanel />
-						</MyErrorBoundary>
-					</CTabPane>
-				)}
-				{getClassForPane('/cloud') !== '' && (
-					// We want the cloud panel to only load when it it needs to
-					<CTabPane className={getClassForPane('/cloud')}>
-						<MyErrorBoundary>
-							<CloudPage />
-						</MyErrorBoundary>
-					</CTabPane>
-				)}
-				{!hasMatchedPane ? (
-					// If no pane was matched, then redirect to the default
-					<Navigate
-						to={{
-							pathname: '/connections',
-						}}
-						replace
-					/>
-				) : (
-					''
-				)}
 			</CTabContent>
 		</CContainer>
 	)
