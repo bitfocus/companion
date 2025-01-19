@@ -51,7 +51,7 @@ body {
 		flex: 1;
 
 		display: grid;
-		grid-template-rows: auto 1fr;
+		grid-template-rows: 1fr;
 
 		> .tab-content {
 			overflow-y: hidden;
