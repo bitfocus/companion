@@ -62,6 +62,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 					entityType={entityType}
 					entityTypeLabel={entityTypeLabel}
 					onlyFeedbackType={onlyFeedbackType}
+					readonly={false}
 				/>
 			</PanelCollapseHelperProvider>
 		</div>

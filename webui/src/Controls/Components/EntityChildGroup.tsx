@@ -113,6 +113,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 				location={location}
 				serviceFactory={serviceFactory}
 				ownerId={groupId}
+				readonly={readonly}
 			/>
 		</CForm>
 	)
