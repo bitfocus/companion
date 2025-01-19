@@ -169,12 +169,6 @@ export function useActionRecorderActionService(sessionId: string): IActionEditor
 				// Not implemented in action recorder
 			},
 
-			setDelay: (actionId: string, delay: number) => {
-				socket.emitPromise('action-recorder:session:action-delay', [sessionId, actionId, delay]).catch((e) => {
-					console.error(e)
-				})
-			},
-
 			performDelete: (actionId: string) => {
 				socket.emitPromise('action-recorder:session:action-delete', [sessionId, actionId]).catch((e) => {
 					console.error(e)

@@ -1,18 +1,17 @@
 import React, { useCallback, useContext, ChangeEvent, RefObject } from 'react'
-import { LoadingRetryOrError, PreventDefaultHandler, useComputed } from '../../util.js'
-import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch, CCallout } from '@coreui/react'
+import { PreventDefaultHandler, useComputed } from '../../util.js'
+import { CButton, CButtonGroup, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { DropdownInputField } from '../../Components/index.js'
-import { ActionsList } from '../../Controls/ActionSetEditor.js'
-import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import type { PanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
+	panelCollapseHelper: PanelCollapseHelper
 	sessionId: string
 	sessionInfo: RecordSessionInfo
 	doFinish: () => void
@@ -20,6 +19,7 @@ interface RecorderSessionHeadingProps {
 
 export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	confirmRef,
+	panelCollapseHelper,
 	sessionId,
 	sessionInfo,
 	doFinish,
@@ -130,35 +130,5 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 				</CRow>
 			</CForm>
 		</>
-	)
-})
-
-interface RecorderSessionProps {
-	sessionId: string
-	sessionInfo: RecordSessionInfo | null
-}
-export const RecorderSession = observer(function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
-	const actionsService = useActionRecorderActionService(sessionId)
-
-	const panelCollapseHelper = usePanelCollapseHelper('action_recorder', sessionInfo?.actions?.map((a) => a.id) ?? [])
-
-	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} />
-
-	return (
-		<CCol xs={12} className="flex-form">
-			<ActionsList
-				location={undefined}
-				controlId=""
-				stepId=""
-				setId={0}
-				parentId={null}
-				dragId={'triggerAction'}
-				actions={sessionInfo.actions}
-				readonly={!!sessionInfo.isRunning}
-				actionsService={actionsService}
-				panelCollapseHelper={panelCollapseHelper}
-			/>
-			{sessionInfo.actions.length === 0 ? <CCallout color="info">No actions have been recorded</CCallout> : ''}
-		</CCol>
 	)
 })

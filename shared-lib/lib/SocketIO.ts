@@ -240,7 +240,6 @@ export interface ClientToBackendEventsMap {
 	'action-recorder:session:set-connections': (sessionId: string, connectionIds: string[]) => void
 	'action-recorder:session:action-reorder': (sessionId: string, actionId: string, dropIndex: number) => void
 	'action-recorder:session:action-set-value': (sessionId: string, actionId: string, key: string, value: any) => void
-	'action-recorder:session:action-delay': (sessionId: string, actionId: string, delay: number) => void
 	'action-recorder:session:action-delete': (sessionId: string, actionId: string) => void
 	'action-recorder:session:action-duplicate': (sessionId: string, actionId: string) => void
 

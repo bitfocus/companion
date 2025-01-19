@@ -81,7 +81,6 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			id: nanoid(),
 			connectionIds: [],
 			isRunning: false,
-			actionDelay: 0,
 			actions: [],
 		}
 
@@ -115,7 +114,6 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		// 		id,
 		// 		instanceIds,
 		// 		isRunning: false,
-		// 		actionDelay: 0,
 		// 		actions: [],
 		// 	}
 
@@ -180,22 +178,6 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 				const newAction = cloneDeep(this.#currentSession.actions[index])
 				newAction.id = nanoid()
 				this.#currentSession.actions.splice(index + 1, 0, newAction)
-
-				this.commitChanges([sessionId])
-			}
-		})
-		client.onPromise('action-recorder:session:action-delay', (sessionId, actionId, delay0) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
-
-			const delay = Number(delay0)
-
-			if (isNaN(delay) || delay < 0) throw new Error(`Invalid delay: ${delay0}`)
-
-			// Find and update the action
-			const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
-			if (index !== -1) {
-				this.#currentSession.actions[index].delay = delay
 
 				this.commitChanges([sessionId])
 			}
@@ -298,7 +280,6 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			id: newId,
 			connectionIds: [],
 			isRunning: false,
-			actionDelay: 0,
 			actions: [],
 		}
 
@@ -361,9 +342,17 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 					instance: connectionId,
 					action: actionId,
 					options: options,
-					delay: (session.actionDelay ?? 0) + delay,
 
 					uniquenessId,
+				}
+				const delayAction: RecordActionTmp = {
+					id: nanoid(),
+					instance: 'internal',
+					action: 'wait',
+					options: {
+						time: delay,
+					},
+					uniquenessId: undefined,
 				}
 
 				// Replace existing action with matching uniquenessId, or push to end of the list
@@ -372,8 +361,16 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 				)
 				if (uniquenessIdIndex !== -1) {
 					session.actions[uniquenessIdIndex] = newAction
+
+					// Update or push the delay before the current one
+					const oldPrevAction = session.actions[uniquenessIdIndex - 1]
+					if (oldPrevAction.instance === delayAction.instance && oldPrevAction.action === delayAction.action) {
+						session.actions[uniquenessIdIndex - 1] = delayAction
+					} else {
+						session.actions.splice(uniquenessIdIndex - 1, 0, delayAction)
+					}
 				} else {
-					session.actions.push(newAction)
+					session.actions.push(delayAction, newAction)
 				}
 
 				changedSessionIds.push(session.id)

@@ -4,7 +4,9 @@ import { CCallout, CCol, CRow } from '@coreui/react'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { RecorderSessionFinishModal } from './RecorderSessionFinishModal.js'
-import { RecorderSessionHeading, RecorderSession } from './RecorderSessionHeading.js'
+import { RecorderSessionHeading } from './RecorderSessionHeading.js'
+import { RecorderSession } from './RecorderSession.js'
+import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
@@ -88,6 +90,8 @@ export function ActionRecorder() {
 		setIsFinishing(true)
 	}, [])
 
+	const panelCollapseHelper = usePanelCollapseHelper('action_recorder', sessionInfo?.actions?.map((a) => a.id) ?? [])
+
 	return (
 		<CRow className="action-recorder-panel">
 			<GenericConfirmModal ref={confirmRef} />
@@ -117,7 +121,11 @@ export function ActionRecorder() {
 			</CCol>
 
 			{selectedSessionId ? (
-				<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionInfo} />
+				<RecorderSession
+					panelCollapseHelper={panelCollapseHelper}
+					sessionId={selectedSessionId}
+					sessionInfo={sessionInfo}
+				/>
 			) : (
 				<CCallout color="danger">There is no session, this looks like a bug!</CCallout>
 			)}
