@@ -106,6 +106,14 @@ body {
 		max-height: unset;
 	}
 
+	&.baseless {
+		border: none;
+		border-radius: 8px;
+		box-shadow:
+			0 4px 6px -1px rgb(0 0 0 / 0.1),
+			0 2px 4px -2px rgb(0 0 0 / 0.1);
+	}
+
 	.tab-pane {
 		padding: 1rem 1rem 1rem 1rem;
 
@@ -216,6 +224,17 @@ body {
 
 	.nav-link:hover {
 		background-color: #262626 !important;
+	}
+
+	.nav-secondary {
+		flex: none;
+
+		.nav-group-toggle::after {
+			transform: rotate(180deg);
+		}
+		&.show > .nav-group-toggle::after {
+			transform: rotate(0deg);
+		}
 	}
 }
 
@@ -428,4 +447,21 @@ hr.slim {
 
 .compact {
 	width: 0;
+}
+
+.footer-nav {
+	width: 100%;
+
+	margin-top: -15px;
+	padding: 4px 0;
+
+	justify-content: center;
+
+	.nav-link {
+		color: var(--cui-gray-600);
+
+		.nav-icon {
+			margin-right: 2px;
+		}
+	}
 }
