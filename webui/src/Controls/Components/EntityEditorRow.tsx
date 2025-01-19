@@ -208,7 +208,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 			/>
 
 			{!isCollapsed && (
-				<div className="editor-grid remove075right">
+				<div className="editor-grid">
 					<EntityCommonCells
 						entity={entity}
 						entityType={entityType}

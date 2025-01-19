@@ -41,7 +41,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	const doExpand = useCallback(() => setPanelCollapsed(false), [setPanelCollapsed])
 
 	return (
-		<div className="editor-grid-header remove075right">
+		<div className="editor-grid-header">
 			<div className="cell-name">
 				{!service.setHeadline || !headlineExpanded || isPanelCollapsed ? (
 					entity.headline || definitionName

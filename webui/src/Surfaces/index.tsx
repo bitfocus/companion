@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CCallout, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faSync } from '@fortawesome/free-solid-svg-icons'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
@@ -43,77 +43,83 @@ export function ConfiguredSurfacesTab() {
 	}, [socket])
 
 	return (
-		<>
-			<h4>Configured Surfaces</h4>
+		<CRow>
+			<CCol xs={12}>
+				<h4>Configured Surfaces</h4>
 
-			<p style={{ marginBottom: '0.5rem' }}>
-				Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the Elgato
-				Streamdeck application and click the Rescan button below.
-			</p>
+				<p style={{ marginBottom: '0.5rem' }}>
+					Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the Elgato
+					Streamdeck application and click the Rescan button below.
+				</p>
 
-			<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
-				{scanError}
-			</CAlert>
+				<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
+					{scanError}
+				</CAlert>
 
-			<CButtonGroup size="sm">
-				<CButton color="warning" onClick={refreshUSB}>
-					<FontAwesomeIcon icon={faSync} spin={scanning} />
-					{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
-				</CButton>
-				<CButton color="primary" onClick={addEmulator}>
-					<FontAwesomeIcon icon={faAdd} /> Add Emulator
-				</CButton>
-				<CButton color="secondary" onClick={addGroup}>
-					<FontAwesomeIcon icon={faAdd} /> Add Group
-				</CButton>
-			</CButtonGroup>
+				<CButtonGroup size="sm">
+					<CButton color="warning" onClick={refreshUSB}>
+						<FontAwesomeIcon icon={faSync} spin={scanning} />
+						{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
+					</CButton>
+					<CButton color="primary" onClick={addEmulator}>
+						<FontAwesomeIcon icon={faAdd} /> Add Emulator
+					</CButton>
+					<CButton color="secondary" onClick={addGroup}>
+						<FontAwesomeIcon icon={faAdd} /> Add Group
+					</CButton>
+				</CButtonGroup>
 
-			<AddSurfaceGroupModal ref={addGroupModalRef} />
+				<AddSurfaceGroupModal ref={addGroupModalRef} />
 
-			<KnownSurfacesTable />
+				<KnownSurfacesTable />
 
-			<CCallout color="info">
-				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite?companion-inapp-didyouknow">
-					Companion Satellite
-				</a>
-				?
-			</CCallout>
-		</>
+				<CCallout color="info">
+					Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+					<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite?companion-inapp-didyouknow">
+						Companion Satellite
+					</a>
+					?
+				</CCallout>
+			</CCol>
+		</CRow>
 	)
 }
 
 export function DiscoverSurfacesTab() {
 	return (
-		<>
-			<h4>Discover Surfaces</h4>
+		<CRow>
+			<CCol xs={12}>
+				<h4>Discover Surfaces</h4>
 
-			<p style={{ marginBottom: '0.5rem' }}>
-				Discovered remote surfaces, such as Companion Satellite and Stream Deck Studio will be listed here. You can
-				easily configure them to connect to Companion from here.
-				<br />
-				This requires Companion Satellite version 1.9.0 and later.
-			</p>
+				<p style={{ marginBottom: '0.5rem' }}>
+					Discovered remote surfaces, such as Companion Satellite and Stream Deck Studio will be listed here. You can
+					easily configure them to connect to Companion from here.
+					<br />
+					This requires Companion Satellite version 1.9.0 and later.
+				</p>
 
-			<SurfaceDiscoveryTable />
-		</>
+				<SurfaceDiscoveryTable />
+			</CCol>
+		</CRow>
 	)
 }
 
 export function OutboundSurfacesTab() {
 	return (
-		<>
-			<h4>Remote Surfaces</h4>
+		<CRow>
+			<CCol xs={12}>
+				<h4>Remote Surfaces</h4>
 
-			<p style={{ marginBottom: '0.5rem' }}>
-				The Stream Deck Studio supports network connection. You can set up the connection from Companion here, or use
-				the Discovered Surfaces tab.
-				<br />
-				This is not suitable for all remote surfaces such as Satellite, as that opens the connection to Companion
-				itself.
-			</p>
+				<p style={{ marginBottom: '0.5rem' }}>
+					The Stream Deck Studio supports network connection. You can set up the connection from Companion here, or use
+					the Discovered Surfaces tab.
+					<br />
+					This is not suitable for all remote surfaces such as Satellite, as that opens the connection to Companion
+					itself.
+				</p>
 
-			<OutboundSurfacesTable />
-		</>
+				<OutboundSurfacesTable />
+			</CCol>
+		</CRow>
 	)
 }

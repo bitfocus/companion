@@ -81,6 +81,7 @@ table.variables-table {
 	.editor-grid-header {
 		display: grid;
 		grid-template-columns: 1fr auto;
+		margin-right: -0.75rem;
 
 		.cell-name {
 			font-weight: bold;

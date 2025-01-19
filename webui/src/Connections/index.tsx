@@ -111,7 +111,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 							</CNavLink>
 						</CNavItem>
 					</CNav>
-					<CTabContent className="remove075right">
+					<CTabContent>
 						<CTabPane role="tabpanel" aria-labelledby="add-tab" visible={activeTab === 'add'}>
 							<MyErrorBoundary>
 								<AddConnectionsPanel showHelp={showHelp} doConfigureConnection={doConfigureConnection} />

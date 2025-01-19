@@ -378,13 +378,9 @@ const AppContent = observer(function AppContent() {
 		<CContainer fluid className="fadeIn">
 			<WizardModal />
 
-			<CTabContent className="baseless">
-				<CTabPane className="active show">
-					<MyErrorBoundary>
-						<Outlet />
-					</MyErrorBoundary>
-				</CTabPane>
-			</CTabContent>
+			<MyErrorBoundary>
+				<Outlet />
+			</MyErrorBoundary>
 		</CContainer>
 	)
 })
