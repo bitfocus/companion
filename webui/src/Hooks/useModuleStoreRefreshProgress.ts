@@ -1,34 +1,31 @@
 import { useEffect } from 'react'
-import { CompanionSocketType } from '../util.js'
+import { CompanionSocketWrapped } from '../util.js'
 import { ObservableMap, runInAction } from 'mobx'
 
 export function useModuleStoreRefreshProgressSubscription(
-	socket: CompanionSocketType,
+	socket: CompanionSocketWrapped,
 	moduleStoreRefreshProgress: ObservableMap<string | null, number>
 ): boolean {
 	useEffect(() => {
 		// Clear any previous progress
 		runInAction(() => moduleStoreRefreshProgress.clear())
 
-		const updateList = (progress: number) => {
+		const unsubProgress = socket.on('modules-store:list:progress', (progress) => {
 			runInAction(() => {
 				moduleStoreRefreshProgress.set(null, progress)
 			})
-		}
-		const updateModule = (moduleId: string, progress: number) => {
+		})
+		const unsubProgress2 = socket.on('modules-store:info:progress', (moduleId, progress) => {
 			runInAction(() => {
 				moduleStoreRefreshProgress.set(moduleId, progress)
 			})
-		}
-
-		socket.on('modules-store:list:progress', updateList)
-		socket.on('modules-store:info:progress', updateModule)
+		})
 
 		return () => {
 			runInAction(() => moduleStoreRefreshProgress.clear())
 
-			socket.off('modules-store:list:progress', updateList)
-			socket.off('modules-store:info:progress', updateModule)
+			unsubProgress()
+			unsubProgress2()
 		}
 	}, [socket, moduleStoreRefreshProgress])
 

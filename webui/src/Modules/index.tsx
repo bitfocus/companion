@@ -6,29 +6,28 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { ModuleManagePanel } from './ModuleManagePanel.js'
-import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
-
-export const MODULES_PAGE_PREFIX = '/modules'
+import { Outlet, useNavigate, UseNavigateResult } from '@tanstack/react-router'
 
 function useSelectedModuleId(): string | null {
-	const routerLocation = useLocation()
-	if (!routerLocation.pathname.startsWith(MODULES_PAGE_PREFIX)) return null
-	const fragments = routerLocation.pathname.slice(MODULES_PAGE_PREFIX.length + 1).split('/')
-	const moduleId = fragments[0]
-	if (!moduleId) return null
+	// const routerLocation = useLocation()
+	// if (!routerLocation.pathname.startsWith('/modules')) return null
+	// const fragments = routerLocation.pathname.slice('/modules'.length + 1).split('/')
+	// const moduleId = fragments[0]
+	// if (!moduleId) return null
 
-	return moduleId
+	// return moduleId
+	return null
 }
 
-function navigateToModulePage(navigate: NavigateFunction, controlId: string | null): void {
-	if (!controlId) {
-		navigate(MODULES_PAGE_PREFIX)
+function navigateToModulePage(navigate: UseNavigateResult<'/modules'>, moduleId: string | null): void {
+	if (!moduleId) {
+		navigate({ to: '/modules' })
 		return
 	}
 
-	navigate(`${MODULES_PAGE_PREFIX}/${controlId}`)
+	navigate({ to: `/modules/${moduleId}` })
 }
 
 export const ModulesPage = memo(function ConnectionsPage() {
@@ -36,7 +35,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 
 	const selectedModuleId = useSelectedModuleId()
 	const activeTab = selectedModuleId ? 'manage' : 'placeholder'
-	const navigate = useNavigate()
+	const navigate = useNavigate({ from: '/modules' })
 
 	// Ensure the selected module is valid
 	useEffect(() => {
@@ -55,7 +54,8 @@ export const ModulesPage = memo(function ConnectionsPage() {
 
 			<CCol xl={6} className="connections-panel secondary-panel add-connections-panel">
 				<div className="secondary-panel-inner">
-					<CNav variant="tabs">
+					<Outlet />
+					{/* <CNav variant="tabs">
 						<CNavItem>
 							<CNavLink active={activeTab === 'placeholder'} onClick={() => navigateToModulePage(navigate, null)}>
 								Select a module
@@ -82,7 +82,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 								{selectedModuleId && <ModuleManagePanel key={selectedModuleId} moduleId={selectedModuleId} />}
 							</MyErrorBoundary>
 						</CTabPane>
-					</CTabContent>
+					</CTabContent> */}
 				</div>
 			</CCol>
 		</CRow>

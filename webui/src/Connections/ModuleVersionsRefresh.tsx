@@ -1,7 +1,6 @@
 import React, { useContext, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
-import { socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 
@@ -15,7 +14,7 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ m
 
 	const doRefreshModules = useCallback(() => {
 		if (!moduleId) return
-		socketEmitPromise(socket, 'modules-store:info:refresh', [moduleId]).catch((err) => {
+		socket.emitPromise('modules-store:info:refresh', [moduleId]).catch((err) => {
 			console.error('Failed to refresh module versions', err)
 		})
 	}, [moduleId])

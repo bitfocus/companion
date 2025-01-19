@@ -4,7 +4,6 @@ import React from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { socketEmitPromise } from '../util.js'
 import { observer } from 'mobx-react-lite'
 
 export const RefreshModulesList = observer(function RefreshModulesList() {
@@ -15,7 +14,7 @@ export const RefreshModulesList = observer(function RefreshModulesList() {
 	const [refreshError, setLoadError] = useState<string | null>(null)
 
 	const doRefreshModules = useCallback(() => {
-		socketEmitPromise(socket, 'modules-store:list:refresh', []).catch((err) => {
+		socket.emitPromise('modules-store:list:refresh', []).catch((err) => {
 			console.error('Failed to refresh modules', err)
 			setLoadError('Failed to refresh modules: ' + err)
 		})

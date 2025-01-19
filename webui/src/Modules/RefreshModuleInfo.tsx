@@ -4,7 +4,6 @@ import React from 'react'
 import { CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { socketEmitPromise } from '../util.js'
 import { observer } from 'mobx-react-lite'
 
 interface RefreshModulesListProps {
@@ -17,7 +16,7 @@ export const RefreshModuleInfo = observer(function RefreshModuleInfo({ moduleId 
 	const refreshProgress = moduleStoreRefreshProgress.get(moduleId) ?? 1
 
 	const doRefreshModules = useCallback(() => {
-		socketEmitPromise(socket, 'modules-store:info:refresh', [moduleId]).catch((err) => {
+		socket.emitPromise('modules-store:info:refresh', [moduleId]).catch((err) => {
 			console.error('Failed to refresh module info', err)
 		})
 	}, [socket])

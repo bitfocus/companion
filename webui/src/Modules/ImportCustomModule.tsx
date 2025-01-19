@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { socketEmitPromise } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { CAlert } from '@coreui/react'
 
@@ -15,7 +14,7 @@ export function ImportModules() {
 		// setImportBundleProgress(null)
 		notifier.current?.close(NOTIFICATION_ID_IMPORT)
 
-		const onProgress = (_sessionId: string, progress: number | null) => {
+		const unsubProgress = socket.on('modules:bundle-import:progress', (_sessionId, progress) => {
 			// setImportBundleProgress(progress)
 			console.log('import progress', progress)
 
@@ -29,12 +28,10 @@ export function ImportModules() {
 					NOTIFICATION_ID_IMPORT
 				)
 			}
-		}
-
-		socket.on('modules:bundle-import:progress', onProgress)
+		})
 
 		return () => {
-			socket.off('modules:bundle-import:progress', onProgress)
+			unsubProgress()
 		}
 	}, [socket, notifier])
 
@@ -63,7 +60,8 @@ export function ImportModules() {
 				}
 
 				setImportError(null)
-				socketEmitPromise(socket, 'modules:install-module-tar', [new Uint8Array(fr.result)], 20000)
+				socket
+					.emitPromise('modules:install-module-tar', [new Uint8Array(fr.result)], 20000)
 					.then((failureReason) => {
 						if (failureReason) {
 							console.error('Failed to install module', failureReason)
@@ -127,23 +125,19 @@ export function ImportModules() {
 
 						console.log('starting upload', hashText)
 
-						const sessionId = await socketEmitPromise(socket, 'modules:bundle-import:start', [
-							'test',
-							buffer.length,
-							hashText,
-						])
+						const sessionId = await socket.emitPromise('modules:bundle-import:start', ['test', buffer.length, hashText])
 						if (!sessionId) throw new Error('Failed to start upload')
 
 						const bytesPerChunk = 1024 * 1024 * 1 // 1MB
 						for (let offset = 0; offset < buffer.length; offset += bytesPerChunk) {
 							console.log('uploading chunk', offset)
 							const chunk = buffer.slice(offset, offset + bytesPerChunk)
-							const success = await socketEmitPromise(socket, 'modules:bundle-import:chunk', [sessionId, offset, chunk])
+							const success = await socket.emitPromise('modules:bundle-import:chunk', [sessionId, offset, chunk])
 							if (!success) throw new Error(`Failed to upload chunk ${offset}`)
 						}
 
 						console.log('uploading complete, starting load')
-						const success = await socketEmitPromise(socket, 'modules:bundle-import:complete', [sessionId])
+						const success = await socket.emitPromise('modules:bundle-import:complete', [sessionId])
 						if (!success) throw new Error(`Failed to import`)
 					})
 					.catch((e) => {

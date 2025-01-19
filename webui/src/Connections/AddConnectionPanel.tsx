@@ -9,11 +9,11 @@ import { AddConnectionModal, AddConnectionModalRef } from './AddConnectionModal.
 import { RefreshModulesList } from '../Modules/RefreshModulesList.js'
 import { LastUpdatedTimestamp } from '../Modules/LastUpdatedTimestamp.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
-import { Link } from 'react-router-dom'
 import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
 import { WindowLinkOpen } from '../Helpers/Window.js'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { filterProducts, FuzzyProduct, useAllConnectionProducts } from '../Hooks/useFilteredProducts.js'
+import { Link } from '@tanstack/react-router'
 
 interface AddConnectionsPanelProps {
 	doConfigureConnection: (connectionId: string) => void

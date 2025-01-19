@@ -1,5 +1,4 @@
 import React, { useCallback, useContext, useState } from 'react'
-import { socketEmitPromise } from '../util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -211,7 +210,8 @@ function ModuleUninstallButton({ moduleId, versionId }: ModuleUninstallButtonPro
 
 	const doRemove = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
-		socketEmitPromise(socket, 'modules:uninstall-store-module', [moduleId, versionId])
+		socket
+			.emitPromise('modules:uninstall-store-module', [moduleId, versionId])
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to uninstall module', failureReason)
@@ -252,7 +252,8 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 
 	const doInstall = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
-		socketEmitPromise(socket, 'modules:install-store-module', [moduleId, versionId], 30000)
+		socket
+			.emitPromise('modules:install-store-module', [moduleId, versionId], 30000)
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to install module', failureReason)

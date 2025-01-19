@@ -11,7 +11,7 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
+import { PreventDefaultHandler } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '../Components/CModalExt.js'
@@ -52,14 +52,15 @@ export const AddConnectionModal = observer(
 		const doAction = () => {
 			if (!moduleInfo || !connectionLabel || !selectedVersion) return
 
-			socketEmitPromise(socket, 'connections:add', [
-				{
-					type: moduleInfo.id,
-					product: moduleInfo.product,
-				},
-				connectionLabel,
-				selectedVersion,
-			])
+			socket
+				.emitPromise('connections:add', [
+					{
+						type: moduleInfo.id,
+						product: moduleInfo.product,
+					},
+					connectionLabel,
+					selectedVersion,
+				])
 				.then((id) => {
 					console.log('NEW CONNECTION', id)
 					setShow(false)

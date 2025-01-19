@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { socketEmitPromise } from '../util.js'
 import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -93,13 +92,8 @@ export function useModuleStoreInfo(moduleId: string | undefined): ModuleStoreMod
 
 		setModuleStoreCache(null)
 
-		const updateCache = (msgModuleId: string, data: ModuleStoreModuleInfoStore) => {
-			if (destroyed) return
-			if (msgModuleId !== moduleId) return
-			setModuleStoreCache(data)
-		}
-
-		socketEmitPromise(socket, 'modules-store:info:subscribe', [moduleId])
+		socket
+			.emitPromise('modules-store:info:subscribe', [moduleId])
 			.then((data) => {
 				if (destroyed) return
 				setModuleStoreCache(data)
@@ -108,15 +102,19 @@ export function useModuleStoreInfo(moduleId: string | undefined): ModuleStoreMod
 				console.error('Failed to subscribe to module store', err)
 			})
 
-		socket.on('modules-store:info:data', updateCache)
+		const unsubData = socket.on('modules-store:info:data', (msgModuleId, data) => {
+			if (destroyed) return
+			if (msgModuleId !== moduleId) return
+			setModuleStoreCache(data)
+		})
 
 		return () => {
 			destroyed = true
-			socket.off('modules-store:info:data', updateCache)
+			unsubData()
 
 			setModuleStoreCache(null)
 
-			socketEmitPromise(socket, 'modules-store:info:unsubscribe', [moduleId]).catch((err) => {
+			socket.emitPromise('modules-store:info:unsubscribe', [moduleId]).catch((err) => {
 				console.error('Failed to unsubscribe to module store', err)
 			})
 		}
