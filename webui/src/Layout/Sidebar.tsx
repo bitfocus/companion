@@ -90,16 +90,18 @@ interface SidebarMenuItemProps {
 function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 	return (
 		<>
-			{item.icon ? (
-				<FontAwesomeIcon className="nav-icon" icon={item.icon} />
-			) : (
-				<span className="nav-icon">
-					<span className="nav-icon-bullet" />
-				</span>
-			)}
+			<span className="nav-icon-wrapper">
+				{item.icon ? (
+					<FontAwesomeIcon className="nav-icon" icon={item.icon} />
+				) : (
+					<span className="nav-icon">
+						<span className="nav-icon-bullet" />
+					</span>
+				)}
+			</span>
 
-			<span>
-				<span className="flex-fill">{item.name}</span>
+			<span className="flex-fill">
+				<span>{item.name}</span>
 				{!!item.subheading && (
 					<>
 						<br />
@@ -206,8 +208,8 @@ export const MySidebar = memo(function MySidebar() {
 					/>
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
-			<CSidebarHeader className="border-top">
-				<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />
+			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
+				<CSidebarToggler onClick={() => setUnfoldable((val) => !val)} />
 			</CSidebarHeader>
 		</CSidebar>
 	)
