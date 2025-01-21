@@ -1293,7 +1293,7 @@ __metadata:
     typescript: "npm:~5.7.3"
     use-deep-compare: "npm:^1.3.0"
     usehooks-ts: "npm:^3.1.0"
-    vite: "npm:^6.0.7"
+    vite: "npm:^6.0.9"
     vite-plugin-env-compatible: "npm:^2.0.1"
   languageName: unknown
   linkType: soft
@@ -15090,9 +15090,9 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"vite@npm:^6.0.7":
-  version: 6.0.7
-  resolution: "vite@npm:6.0.7"
+"vite@npm:^6.0.9":
+  version: 6.0.11
+  resolution: "vite@npm:6.0.11"
   dependencies:
     esbuild: "npm:^0.24.2"
     fsevents: "npm:~2.3.3"
@@ -15138,7 +15138,7 @@ asn1@evs-broadcast/node-asn1:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/ae81047b4290a7206b9394a39a782d509e9610462e7946422ba22d5bc615b5a322c07e33d7bf9dd0b3312ec3f5c63353b725913d1519324bfdf539b4f1e03f52
+  checksum: 10c0/a0537f9bf8d6ded740646a4aa44b8dbf442d3005e75f7b27e981ef6011f22d4759f5eb643a393c0ffb8d21e2f50fb5f774d3a53108fb96a10b0f83697e8efe84
   languageName: node
   linkType: hard
 
