@@ -388,12 +388,15 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return out !== -1 ? out : 0
 	}
 
+	/**
+	 * Propogate variable changes, and update the current step if the variables affect it
+	 */
 	stepCheckExpressionOnVariablesChanged(changedVariables: Set<string>): void {
 		if (this.#currentStep.type !== 'expression') return
 
 		for (const variableName of this.#currentStep.lastVariables) {
 			if (changedVariables.has(variableName)) {
-				if (this.stepCheckExpression(true)) {
+				if (this.#stepCheckExpression(true)) {
 					// Something changed, so redraw
 					this.triggerRedraw()
 				}
@@ -402,7 +405,12 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		}
 	}
 
-	stepCheckExpression(updateClient: boolean): boolean {
+	/**
+	 * Re-execute the expression, and update the current step if it has changed
+	 * @param updateClient Whether to inform the client if the step changed
+	 * @returns Whether a change was made
+	 */
+	#stepCheckExpression(updateClient: boolean): boolean {
 		if (this.#currentStep.type !== 'expression') return false
 
 		let changed = false
@@ -443,9 +451,13 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return changed
 	}
 
+	/**
+	 * Update the step operation mode or expression upon button options change
+	 * @param options
+	 */
 	stepExpressionUpdate(options: NormalButtonOptions): void {
 		if (options.stepProgression === 'expression') {
-			// Regenerate
+			// It may have changed, assume it has and purge the existing state
 			this.#currentStep = {
 				type: 'expression',
 				expression: options.stepExpression || '',
@@ -453,13 +465,11 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 				lastVariables: new Set(),
 			}
 
-			this.stepCheckExpression(true)
+			this.#stepCheckExpression(true)
 		} else {
 			if (this.#currentStep.type === 'expression') {
 				// Stick to whatever is currently selected
 				this.#currentStep = { type: 'id', id: this.currentStepId }
-			} else {
-				// Already correct
 			}
 		}
 	}
@@ -478,7 +488,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#steps.set(stepId, this.#getNewStepValue(null, null))
 
 		// Ensure current step is valid
-		this.stepCheckExpression(true)
+		this.#stepCheckExpression(true)
 
 		this.commitChange(true)
 
@@ -539,7 +549,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		})
 
 		// Ensure current step is valid
-		this.stepCheckExpression(false)
+		this.#stepCheckExpression(false)
 
 		// Ensure the ui knows which step is current
 		this.#sendRuntimePropsChange()
@@ -600,7 +610,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			}
 		} else {
 			// Ensure current step is valid
-			this.stepCheckExpression(true)
+			this.#stepCheckExpression(true)
 		}
 
 		// Save the change, and perform a draw
@@ -647,7 +657,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#steps.set(stepId2, step1)
 
 		// Ensure current step is valid
-		this.stepCheckExpression(true)
+		this.#stepCheckExpression(true)
 
 		this.commitChange(false)
 
@@ -674,7 +684,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		if (this.#currentStep.type === 'expression') {
 			// When in the expression mode, the next step is unknown, but we can produce a sane current step id
 
-			if (this.stepCheckExpression(true)) {
+			if (this.#stepCheckExpression(true)) {
 				// Something changed, so redraw
 				this.triggerRedraw()
 			}
