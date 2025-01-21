@@ -137,12 +137,11 @@ export class InstanceDefinitions {
 
 				if (style.text) {
 					if (style.textExpression) {
-						try {
-							const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
+						const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
+						if (parseResult.ok) {
 							style.text = parseResult.value + ''
-						} catch (e) {
-							this.#logger.error(`Expression parse error: ${e}`)
-
+						} else {
+							this.#logger.error(`Expression parse error: ${parseResult.error}`)
 							style.text = 'ERR'
 						}
 					} else {

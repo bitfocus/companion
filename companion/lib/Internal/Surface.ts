@@ -217,9 +217,13 @@ export class InternalSurface implements InternalModuleFragment {
 		let thePageNumber: number | string | undefined = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			thePageNumber = Number(
-				this.#internalModule.executeExpressionForInternalActionOrFeedback(options.page_variable, extras, 'number').value
+			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+				options.page_variable,
+				extras,
+				'number'
 			)
+			if (!expressionResult.ok) throw new Error(expressionResult.error)
+			thePageNumber = Number(expressionResult.value)
 		}
 
 		if (extras.location) {

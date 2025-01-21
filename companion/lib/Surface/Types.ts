@@ -11,6 +11,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import type { ExecuteExpressionResult } from '../Variables/Util.js'
 
 export type SurfacePanelFactory = {
 	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
@@ -25,7 +26,7 @@ export type SurfaceExecuteExpressionFn = (
 	str: string,
 	surfaceId: string,
 	injectedVariableValues?: CompanionVariableValues
-) => { value: CompanionVariableValue | undefined; variableIds: Set<string> }
+) => ExecuteExpressionResult
 
 export interface SurfacePanelInfo {
 	deviceId: string

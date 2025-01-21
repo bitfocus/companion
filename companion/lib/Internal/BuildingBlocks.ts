@@ -155,14 +155,16 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		if (action.action === 'wait') {
 			if (extras.abortDelayed.aborted) return true
 
-			let delay = 0
-			try {
-				delay = Number(
-					this.#internalModule.executeExpressionForInternalActionOrFeedback(action.options.time, extras, 'number').value
-				)
-			} catch (e: any) {
-				this.#logger.error(`Failed to parse delay: ${e.message}`)
+			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+				action.options.time,
+				extras,
+				'number'
+			)
+			if (!expressionResult.ok) {
+				this.#logger.error(`Failed to parse delay: ${expressionResult.error}`)
 			}
+
+			let delay = expressionResult.ok ? Number(expressionResult.value) : 0
 
 			if (!isNaN(delay) && delay > 0) {
 				// Perform the wait

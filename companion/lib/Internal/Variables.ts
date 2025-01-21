@@ -186,19 +186,15 @@ export class InternalVariables implements InternalModuleFragment {
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.type == 'check_expression') {
-			try {
-				const res = this.#variableController.executeExpression(
-					feedback.options.expression,
-					feedback.location,
-					'boolean'
-				)
+			const res = this.#variableController.executeExpression(feedback.options.expression, feedback.location, 'boolean')
 
-				this.#variableSubscriptions.set(feedback.id, Array.from(res.variableIds))
+			this.#variableSubscriptions.set(feedback.id, Array.from(res.variableIds))
 
+			if (res.ok) {
 				return !!res.value
-			} catch (e) {
+			} else {
 				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
-				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${e}`)
+				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${res.error}`)
 
 				return false
 			}

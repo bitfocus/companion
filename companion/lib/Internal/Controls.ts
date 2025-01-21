@@ -177,11 +177,13 @@ export class InternalControls implements InternalModuleFragment {
 		let thePage = options.page
 
 		if (options.page_from_variable) {
-			thePage = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
 				options.page_variable,
 				extras,
 				'number'
-			).value
+			)
+			if (!expressionResult.ok) throw new Error(expressionResult.error)
+			thePage = expressionResult.value
 		}
 
 		if (thePage === 0 || thePage === '0') thePage = extras.location?.pageNumber ?? null
@@ -219,11 +221,13 @@ export class InternalControls implements InternalModuleFragment {
 		let theStep = options.step
 
 		if (options.step_from_expression) {
-			theStep = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
 				options.step_expression,
 				extras,
 				'number'
-			).value
+			)
+			if (!expressionResult.ok) throw new Error(expressionResult.error)
+			theStep = expressionResult.value
 		}
 
 		return theStep
@@ -909,11 +913,14 @@ export class InternalControls implements InternalModuleFragment {
 
 			const forcePress = !!action.options.force
 
-			const pressIt = !!this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
 				action.options.expression,
 				extras,
 				'boolean'
-			).value
+			)
+			if (!expressionResult.ok) throw new Error(expressionResult.error)
+
+			const pressIt = !!expressionResult.value
 
 			if (pressIt) {
 				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
@@ -1117,11 +1124,14 @@ export class InternalControls implements InternalModuleFragment {
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			const pressIt = !!this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
 				action.options.expression,
 				extras,
 				'boolean'
-			).value
+			)
+			if (!expressionResult.ok) throw new Error(expressionResult.error)
+
+			const pressIt = !!expressionResult.value
 
 			if (pressIt) {
 				if (control && control.supportsSteps) {

@@ -35,8 +35,15 @@ export interface ParseVariablesResult {
 	text: string
 	variableIds: string[]
 }
-export interface ExecuteExpressionResult {
+export type ExecuteExpressionResult = ExecuteExpressionResultOk | ExecuteExpressionResultError
+interface ExecuteExpressionResultOk {
+	ok: true
 	value: boolean | number | string | undefined
+	variableIds: Set<string>
+}
+interface ExecuteExpressionResultError {
+	ok: false
+	error: string
 	variableIds: Set<string>
 }
 
@@ -148,76 +155,89 @@ export function executeExpression(
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
 
-	const getVariableValue = (variableId: string): CompanionVariableValue => {
-		referencedVariableIds.add(variableId)
+	try {
+		const getVariableValue = (variableId: string): CompanionVariableValue => {
+			referencedVariableIds.add(variableId)
 
-		// First check for an injected value
-		let value = injectedVariableValues?.[`$(${variableId})`]
-		if (value === undefined) {
-			// No value, lookup the raw value
-			const [connectionLabel, variableName] = SplitVariableId(variableId)
-			if (connectionLabel == 'internal' && variableName.substring(0, 7) === 'custom_') {
-				value = rawVariableValues['custom']?.[variableName.substring(7)]
-			} else {
-				value = rawVariableValues[connectionLabel]?.[variableName]
-			}
-		}
-
-		// If its a string, make sure any references to other variables are resolved
-		if (typeof value === 'string') {
-			// First check if it is a direct reference to another variable, so that the type can be preserved
-			const valueMatch = value.match(VARIABLE_REGEX)
-			if (valueMatch && valueMatch[0] === value) {
-				return getVariableValue(`${valueMatch[1]}:${valueMatch[2]}`)
-			} else {
-				// Fallback to parsing the string
-				const parsedValue = parseVariablesInString(value, rawVariableValues, injectedVariableValues)
-				value = parsedValue.text
-
-				for (const id of parsedValue.variableIds) {
-					referencedVariableIds.add(id)
+			// First check for an injected value
+			let value = injectedVariableValues?.[`$(${variableId})`]
+			if (value === undefined) {
+				// No value, lookup the raw value
+				const [connectionLabel, variableName] = SplitVariableId(variableId)
+				if (connectionLabel == 'internal' && variableName.substring(0, 7) === 'custom_') {
+					value = rawVariableValues['custom']?.[variableName.substring(7)]
+				} else {
+					value = rawVariableValues[connectionLabel]?.[variableName]
 				}
 			}
-		}
 
-		// Make sure to return a value, even if its undefined
-		if (value === undefined) return VARIABLE_UNKNOWN_VALUE
+			// If its a string, make sure any references to other variables are resolved
+			if (typeof value === 'string') {
+				// First check if it is a direct reference to another variable, so that the type can be preserved
+				const valueMatch = value.match(VARIABLE_REGEX)
+				if (valueMatch && valueMatch[0] === value) {
+					return getVariableValue(`${valueMatch[1]}:${valueMatch[2]}`)
+				} else {
+					// Fallback to parsing the string
+					const parsedValue = parseVariablesInString(value, rawVariableValues, injectedVariableValues)
+					value = parsedValue.text
 
-		return value
-	}
-
-	const functions = {
-		...ExpressionFunctions,
-		parseVariables: (str: string): string => {
-			const result = parseVariablesInString(str, rawVariableValues, injectedVariableValues)
-
-			// Track referenced variables
-			for (const varId of result.variableIds) {
-				referencedVariableIds.add(varId)
+					for (const id of parsedValue.variableIds) {
+						referencedVariableIds.add(id)
+					}
+				}
 			}
 
-			return result.text
-		},
-	}
+			// Make sure to return a value, even if its undefined
+			if (value === undefined) return VARIABLE_UNKNOWN_VALUE
 
-	let value = ResolveExpression(ParseExpression(str), getVariableValue, functions)
+			return value
+		}
 
-	// Fix up the result for some types
-	switch (requiredType) {
-		case 'string':
-			value = `${value}`
-			break
-		case 'number':
-			value = Number(value)
-			break
-	}
+		const functions = {
+			...ExpressionFunctions,
+			parseVariables: (str: string): string => {
+				const result = parseVariablesInString(str, rawVariableValues, injectedVariableValues)
 
-	if (requiredType && typeof value !== requiredType) {
-		throw new Error('Unexpected return type')
-	}
+				// Track referenced variables
+				for (const varId of result.variableIds) {
+					referencedVariableIds.add(varId)
+				}
 
-	return {
-		value,
-		variableIds: referencedVariableIds,
+				return result.text
+			},
+		}
+
+		let value = ResolveExpression(ParseExpression(str), getVariableValue, functions)
+
+		// Fix up the result for some types
+		switch (requiredType) {
+			case 'string':
+				value = `${value}`
+				break
+			case 'number':
+				value = Number(value)
+				break
+		}
+
+		if (requiredType && typeof value !== requiredType) {
+			return {
+				ok: false,
+				error: 'Unexpected return type',
+				variableIds: referencedVariableIds,
+			}
+		}
+
+		return {
+			ok: true,
+			value,
+			variableIds: referencedVariableIds,
+		}
+	} catch (e: any) {
+		return {
+			ok: false,
+			error: e?.message ?? 'Unknown error',
+			variableIds: referencedVariableIds,
+		}
 	}
 }
