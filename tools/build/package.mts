@@ -114,6 +114,7 @@ if (process.env.ELECTRON !== '0') {
 					LSBackgroundOnly: 1,
 					LSUIElement: 1,
 					NSAppleEventsUsageDescription: 'Companion uses AppleEvents to control local applications.',
+					NSLocalNetworkUsageDescription: 'Companion uses local network to communicate with devices.',
 				},
 				hardenedRuntime: true,
 				gatekeeperAssess: false,
