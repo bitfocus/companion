@@ -103,19 +103,18 @@ export function ParseInternalControlReference(
 			break
 		case 'expression':
 			if (useVariableFields) {
-				try {
-					const result = variablesController.executeExpression(
-						options.location_expression,
-						pressLocation,
-						'string',
-						injectedVariableValues
-					)
-
+				const result = variablesController.executeExpression(
+					options.location_expression,
+					pressLocation,
+					'string',
+					injectedVariableValues
+				)
+				if (result.ok) {
 					location = parseLocationString(String(result.value))
-					referencedVariables = Array.from(result.variableIds)
-				} catch (error: any) {
-					logger.warn(`${error.toString()}, in expression: "${options.location_expression}"`)
+				} else {
+					logger.warn(`${result.error}, in expression: "${options.location_expression}"`)
 				}
+				referencedVariables = Array.from(result.variableIds)
 			}
 			break
 	}

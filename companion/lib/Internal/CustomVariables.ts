@@ -268,14 +268,14 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId === 'custom_variable_set_expression') {
-			try {
-				const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
-					action.rawOptions.expression,
-					extras
-				)
+			const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+				action.rawOptions.expression,
+				extras
+			)
+			if (result.ok) {
 				this.#variableController.custom.setValue(action.rawOptions.name, result.value)
-			} catch (error: any) {
-				this.#logger.warn(`${error.toString()}, in expression: "${action.rawOptions.expression}"`)
+			} else {
+				this.#logger.warn(`${result.error}, in expression: "${action.rawOptions.expression}"`)
 			}
 
 			return true

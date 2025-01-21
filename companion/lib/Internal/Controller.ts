@@ -28,7 +28,7 @@ import type {
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
-import type { VariablesCache } from '../Variables/Util.js'
+import type { ExecuteExpressionResult, VariablesCache } from '../Variables/Util.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -563,7 +563,7 @@ export class InternalController {
 		extras: RunActionExtras | FeedbackEntityModelExt,
 		requiredType?: string,
 		injectedVariableValues?: CompanionVariableValues
-	): { value: boolean | number | string | undefined; variableIds: Set<string> } {
+	): ExecuteExpressionResult {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const injectedVariableValuesComplete = {

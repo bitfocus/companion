@@ -98,6 +98,11 @@ chokidar
 		ignored: ['**/node_modules/**', 'webui', 'launcher', 'module-local-dev', 'tools', 'test'],
 	})
 	.on('all', (event, filename) => {
+		if (filename.endsWith('shared-lib/lib/Paths.mts')) {
+			// Exit when the paths change, as that usually means the config dir will have changed, and that may not be detected fast enough
+			console.warn('Config paths changed, exiting')
+			process.exit(0)
+		}
 		// Something else changed
 		restart()
 	})
