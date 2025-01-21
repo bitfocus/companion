@@ -66,8 +66,8 @@ function fixupControlEntities(control: ExportControlv6): void {
 
 		control.feedbacks = control.feedbacks?.map(fixupFeedback) ?? []
 	} else if (control.type === 'trigger') {
-		if (control.action_sets) {
-			control.actions = control.action_sets.map(fixupAction)
+		if (control.action_sets?.[0]) {
+			control.actions = control.action_sets[0].map(fixupAction)
 			delete control.action_sets
 		} else {
 			control.actions = []
