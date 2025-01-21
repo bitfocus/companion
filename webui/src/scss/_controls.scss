@@ -107,6 +107,12 @@ label.disabled {
 	}
 }
 
+.select-warning {
+	.select-control__control {
+		box-shadow: orange 0 0 0 1px;
+	}
+}
+
 .select-control__menu-portal {
 	z-index: 1200 !important;
 }

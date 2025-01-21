@@ -12,6 +12,7 @@ export const MenuPortalContext = createContext<HTMLElement | null>(null)
 type AsType<Multi extends boolean> = Multi extends true ? DropdownChoiceId[] : DropdownChoiceId
 
 interface DropdownInputFieldProps<Multi extends boolean> {
+	className?: string
 	label?: React.ReactNode
 	choices: DropdownChoice[] | Record<string, DropdownChoice>
 	allowCustom?: boolean
@@ -34,6 +35,7 @@ interface DropdownChoiceInt {
 }
 
 export const DropdownInputField = memo(function DropdownInputField<Multi extends boolean>({
+	className,
 	label,
 	choices,
 	allowCustom,
@@ -202,14 +204,23 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	)
 	const formatCreateLabel = useCallback((v: string | number) => `Use "${v}"`, [])
 
+	console.log(
+		'a',
+		isValueValid(isMultiple && currentValue ? (currentValue.map((v) => v.value) ?? []) : currentValue[0]?.value),
+		regex,
+		compiledRegex
+	)
 	return (
 		<div
-			className={classNames({
-				'select-tooltip': true,
-				'select-invalid': !isValueValid(
-					isMultiple && currentValue ? (currentValue.map((v) => v.value) ?? []) : currentValue[0]?.value
-				),
-			})}
+			className={classNames(
+				{
+					'select-tooltip': true,
+					'select-invalid': !isValueValid(
+						isMultiple && currentValue ? (currentValue.map((v) => v.value) ?? []) : currentValue[0]?.value
+					),
+				},
+				className
+			)}
 			title={tooltip}
 		>
 			{helpText ? (

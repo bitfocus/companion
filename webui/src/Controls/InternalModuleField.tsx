@@ -323,14 +323,18 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 		return choices
 	}, [baseVariableDefinitions])
 
+	const hasMatch = choices.find((c) => c.id === value)
+
 	return (
 		<DropdownInputField
+			className={hasMatch ? '' : 'select-warning'}
 			label={label}
 			disabled={disabled}
 			value={value}
 			choices={choices}
 			multiple={false}
 			setValue={setValue}
+			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
 		/>
 	)
