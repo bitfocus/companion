@@ -119,7 +119,7 @@ export function ControlOptionsEditor({
 
 					{options.stepProgression === 'expression' && (
 						<div className="flex w-full gap-2rem flex-form">
-							<div>
+							<div style={{ width: '100%' }}>
 								<TextInputField
 									label={'Step Progression Expression'}
 									tooltip={'Current step of button'}
