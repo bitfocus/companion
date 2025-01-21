@@ -349,6 +349,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 										location={location}
 										controlId={controlId}
 										steps={config.steps || {}}
+										disabledSetStep={config?.options?.stepProgression === 'expression'}
 										runtimeProps={runtimeProps}
 										rotaryActions={config?.options?.rotaryActions}
 										feedbacks={config.feedbacks}
@@ -368,12 +369,22 @@ interface TabsSectionProps {
 	controlId: string
 	location: ControlLocation
 	steps: NormalButtonSteps
+	disabledSetStep: boolean
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
 	feedbacks: SomeEntityModel[]
 }
 
-function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }: TabsSectionProps) {
+function TabsSection({
+	style,
+	controlId,
+	location,
+	steps,
+	disabledSetStep,
+	runtimeProps,
+	rotaryActions,
+	feedbacks,
+}: TabsSectionProps) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
@@ -583,8 +594,11 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 
 								<CButton
 									color="success"
-									style={{ fontWeight: 'bold', opacity: runtimeProps.current_step_id === selectedKey ? 0.3 : 1 }}
-									disabled={runtimeProps.current_step_id === selectedKey}
+									style={{
+										fontWeight: 'bold',
+										opacity: runtimeProps.current_step_id === selectedKey || disabledSetStep ? 0.3 : 1,
+									}}
+									disabled={runtimeProps.current_step_id === selectedKey || disabledSetStep}
 									onClick={() => setCurrentStep(selectedKey)}
 								>
 									Select

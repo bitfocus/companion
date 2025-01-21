@@ -3,6 +3,11 @@ import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
 import { SocketContext } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { InlineHelp } from '../Components/InlineHelp.js'
+import { DropdownInputField } from '../Components/DropdownInputField.js'
+import { DropdownChoice } from '@companion-module/base'
+import { TextInputField } from '../Components/TextInputField.js'
+import { ControlLocalVariables } from '../LocalVariableDefinitions.js'
+
 interface ControlOptionsEditorProps {
 	controlId: string
 	controlType: string
@@ -31,10 +36,8 @@ export function ControlOptionsEditor({
 		[socket, controlId, configRef]
 	)
 
-	const setStepAutoProgressValue = useCallback(
-		(val: boolean) => setValueInner('stepAutoProgress', val),
-		[setValueInner]
-	)
+	const setStepProgressionValue = useCallback((val: any) => setValueInner('stepProgression', val), [setValueInner])
+	const setStepExpressionValue = useCallback((val: string) => setValueInner('stepExpression', val), [setValueInner])
 	const setRotaryActions = useCallback(
 		(val: boolean) => {
 			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {
@@ -70,24 +73,32 @@ export function ControlOptionsEditor({
 		<>
 			{' '}
 			<GenericConfirmModal ref={confirmRef} />
-			<div className="flex w-full gap-2rem flex-form">
-				{controlType === 'button' && (
-					<>
+			{controlType === 'button' && (
+				<>
+					<div className="flex w-full gap-2rem flex-form">
 						<div>
 							<CFormLabel>
 								<InlineHelp help="When this button has multiple steps, progress to the next step when the button is released">
-									Progress
+									Step Progression
 								</InlineHelp>
 							</CFormLabel>
 							<br />
-							<CFormSwitch
+							{/* <CFormSwitch
 								size="xl"
 								color="success"
-								checked={options.stepAutoProgress}
+								checked={options.stepProgression}
 								onChange={() => {
-									setStepAutoProgressValue(!options.stepAutoProgress)
+									setStepProgressionValue(!options.stepAutoProgress)
 								}}
-							/>
+							/> */}
+							<div>
+								<DropdownInputField
+									choices={STEP_PROGRESSION_CHOICES}
+									setValue={setStepProgressionValue}
+									value={options.stepProgression}
+									multiple={false}
+								/>
+							</div>
 						</div>
 
 						<div>
@@ -104,9 +115,32 @@ export function ControlOptionsEditor({
 								}}
 							/>
 						</div>
-					</>
-				)}
-			</div>
+					</div>
+
+					{options.stepProgression === 'expression' && (
+						<div className="flex w-full gap-2rem flex-form">
+							<div>
+								<TextInputField
+									label={'Step Progression Expression'}
+									tooltip={'Current step of button'}
+									setValue={setStepExpressionValue}
+									value={options.stepExpression}
+									useVariables
+									localVariables={ControlLocalVariables}
+									isExpression
+									style={{ fontWeight: 'bold', fontSize: 18 }}
+								/>
+							</div>
+						</div>
+					)}
+				</>
+			)}
 		</>
 	)
 }
+
+const STEP_PROGRESSION_CHOICES: DropdownChoice[] = [
+	{ id: 'auto', label: 'Auto' },
+	{ id: 'manual', label: 'Manual' },
+	{ id: 'expression', label: 'Expression' },
+]

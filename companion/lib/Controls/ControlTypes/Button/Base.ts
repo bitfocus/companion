@@ -61,7 +61,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	pushed = false
 
 	/**
-	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
+	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
 	protected last_draw_variables: Set<string> | null = null
 
@@ -82,6 +82,13 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				moduleHost: deps.instance.moduleHost,
+				executeExpressionInControl: (expression, requiredType, injectedVariableValues) =>
+					deps.variables.values.executeExpression(
+						expression,
+						deps.page.getLocationOfControlId(this.controlId),
+						requiredType,
+						injectedVariableValues
+					),
 			},
 			this.sendRuntimePropsChange.bind(this)
 		)
@@ -215,7 +222,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 			...cloneDeep(style),
 
-			step_cycle: undefined,
+			stepCurrent: 1,
+			stepCount: 1,
 
 			pushed: !!this.pushed,
 			action_running: this.actionRunner.hasRunningChains,

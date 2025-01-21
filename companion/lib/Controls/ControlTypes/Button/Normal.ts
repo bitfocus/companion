@@ -55,7 +55,7 @@ export class ControlButtonNormal
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
-			stepAutoProgress: true,
+			stepProgression: 'auto',
 		}
 
 		if (!storage) {
@@ -70,6 +70,7 @@ export class ControlButtonNormal
 			this.options = Object.assign(this.options, storage.options || {})
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
 			this.entities.loadStorage(storage, true, isImport)
+			this.entities.stepExpressionUpdate(this.options)
 
 			// Ensure control is stored before setup
 			if (isImport) setImmediate(() => this.postProcessImport())
@@ -118,9 +119,8 @@ export class ControlButtonNormal
 		const style = super.getDrawStyle()
 		if (!style) return style
 
-		if (this.entities.getStepIds().length > 1) {
-			style.step_cycle = this.entities.getActiveStepIndex() + 1
-		}
+		style.stepCurrent = this.entities.getActiveStepIndex() + 1
+		style.stepCount = this.entities.getStepIds().length
 
 		return style
 	}
@@ -159,13 +159,21 @@ export class ControlButtonNormal
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: any): boolean {
+	optionsSetField(key0: string, value: any): boolean {
+		const key = key0 as keyof NormalButtonOptions
+
 		// Check if rotary_actions should be added/remove
 		if (key === 'rotaryActions') {
 			this.entities.setupRotaryActionSets(!!value, true)
 		}
 
-		return super.optionsSetField(key, value)
+		const changed = super.optionsSetField(key, value)
+
+		if (key === 'stepProgression' || key === 'stepExpression') {
+			this.entities.stepExpressionUpdate(this.options)
+		}
+
+		return changed
 	}
 
 	/**
@@ -175,7 +183,7 @@ export class ControlButtonNormal
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
-		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNext()
+		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNextProgression()
 
 		let pressedDuration = 0
 		let pressedStep = thisStepId
@@ -210,7 +218,7 @@ export class ControlButtonNormal
 			if (
 				thisStepId !== null &&
 				nextStepId !== null &&
-				this.options.stepAutoProgress &&
+				this.options.stepProgression === 'auto' &&
 				!pressed &&
 				(pressedStep === undefined || thisStepId === pressedStep)
 			) {
@@ -287,6 +295,16 @@ export class ControlButtonNormal
 			surfaceId,
 			location,
 		})
+	}
+
+	/**
+	 * Propagate variable changes
+	 * @param allChangedVariables - variables with changes
+	 */
+	onVariablesChanged(allChangedVariables: Set<string>): void {
+		super.onVariablesChanged(allChangedVariables)
+
+		this.entities.stepCheckExpressionOnVariablesChanged(allChangedVariables)
 	}
 
 	/**

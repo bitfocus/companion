@@ -39,7 +39,8 @@ export interface ButtonOptionsBase {}
 
 export interface NormalButtonOptions extends ButtonOptionsBase {
 	rotaryActions: boolean
-	stepAutoProgress: boolean
+	stepProgression: 'auto' | 'manual' | 'expression'
+	stepExpression?: string
 }
 
 export type ButtonStatus = 'good' | 'warning' | 'error'

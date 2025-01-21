@@ -13,6 +13,8 @@ import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { InstanceDefinitionsForEntity } from './Types.js'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type { ExecuteExpressionResult } from '../../Variables/Util.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -21,6 +23,11 @@ export interface ControlEntityListPoolProps {
 	controlId: string
 	commitChange: (redraw?: boolean) => void
 	triggerRedraw: () => void
+	executeExpressionInControl: (
+		expression: string,
+		requiredType?: string,
+		injectedVariableValues?: CompanionVariableValues
+	) => ExecuteExpressionResult
 }
 
 export abstract class ControlEntityListPoolBase {
