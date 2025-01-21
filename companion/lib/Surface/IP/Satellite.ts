@@ -362,16 +362,15 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					let expressionResult: CompanionVariableValue | undefined = VARIABLE_UNKNOWN_VALUE
 
 					const expressionText = this.#config[outputVariable.id]
-					try {
-						const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+					const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+					if (parseResult.ok) {
 						expressionResult = parseResult.value
-
-						outputVariable.lastReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-					} catch (e) {
-						this.#logger.error(`expression parse error: ${e}`)
-
-						outputVariable.lastReferencedVariables = null
+					} else {
+						this.#logger.error(`expression parse error: ${parseResult.error}`)
+						expressionResult = VARIABLE_UNKNOWN_VALUE
 					}
+
+					outputVariable.lastReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 
 					// Only send if the value has changed
 					if (outputVariable.lastValue === expressionResult) return

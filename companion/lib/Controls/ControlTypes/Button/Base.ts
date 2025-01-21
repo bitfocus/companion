@@ -189,21 +189,19 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			}
 
 			if (style.textExpression) {
-				try {
-					const parseResult = this.deps.variables.values.executeExpression(
-						style.text,
-						location,
-						undefined,
-						injectedVariableValues
-					)
+				const parseResult = this.deps.variables.values.executeExpression(
+					style.text,
+					location,
+					undefined,
+					injectedVariableValues
+				)
+				if (parseResult.ok) {
 					style.text = parseResult.value + ''
-					this.last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-				} catch (e) {
-					this.logger.error(`Expression parse error: ${e}`)
-
+				} else {
+					this.logger.error(`Expression parse error: ${parseResult.error}`)
 					style.text = 'ERR'
-					this.last_draw_variables = null
 				}
+				this.last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			} else {
 				const parseResult = this.deps.variables.values.parseVariables(style.text, location, injectedVariableValues)
 				style.text = parseResult.text

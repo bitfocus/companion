@@ -250,16 +250,13 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 			let expressionResult: CompanionVariableValue | undefined = 0
 
 			const expressionText = this.config.tbarLeds
-			try {
-				const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+			const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+			if (parseResult.ok) {
 				expressionResult = parseResult.value
-
-				this.#lastTbarDrawReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-			} catch (e) {
-				this.#logger.error(`T-bar expression parse error: ${e}`)
-
-				this.#lastTbarDrawReferencedVariables = null
+			} else {
+				this.#logger.error(`T-bar expression parse error: ${parseResult.error}`)
 			}
+			this.#lastTbarDrawReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 
 			let ledValues = new Array(tbarControl.ledSegments).fill(false)
 			const fillLedCount = Number(expressionResult)
