@@ -14,16 +14,7 @@ import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
-import { Outlet, useMatchRoute, useNavigate, UseNavigateResult } from '@tanstack/react-router'
-
-function navigateToTriggersPage(navigate: UseNavigateResult<'/triggers'>, controlId: string | null): void {
-	if (!controlId) {
-		navigate({ to: '/triggers' })
-		return
-	}
-
-	navigate({ to: `/triggers/${controlId}` })
-}
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 
 export const TriggersPage = observer(function Triggers() {
 	const { socket } = useContext(RootAppStoreContext)
@@ -35,7 +26,7 @@ export const TriggersPage = observer(function Triggers() {
 			const parsedId = ParseControlId(controlId)
 			if (parsedId?.type !== 'trigger') return
 
-			navigateToTriggersPage(navigate, parsedId.trigger)
+			navigate({ to: `/triggers/${parsedId.trigger}` })
 		},
 		[navigate]
 	)
@@ -237,8 +228,8 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }: TriggersTa
 	const exportId = parsedId?.type === 'trigger' ? parsedId?.trigger : undefined
 
 	const matchRoute = useMatchRoute()
-	const routeMatach = matchRoute({ to: '/triggers/$controlId' })
-	const isSelected = routeMatach && routeMatach.controlId === exportId
+	const routeMatch = matchRoute({ to: '/triggers/$controlId' })
+	const isSelected = routeMatch && routeMatch.controlId === exportId
 
 	return (
 		<tr

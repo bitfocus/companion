@@ -1,19 +1,26 @@
 import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faCog } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import React from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import React, { useContext } from 'react'
 import { ModuleManagePanel } from '../../../Modules/ModuleManagePanel.js'
-import { MyErrorBoundary } from '../../../util.js'
+import { MyErrorBoundary, useComputed } from '../../../util.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 
-export const Route = createFileRoute('/_app/modules/$moduleId')({
-	component: RouteComponent,
-})
+const RouteComponent = observer(function RouteComponent() {
+	const { modules } = useContext(RootAppStoreContext)
 
-function RouteComponent() {
 	const { moduleId } = Route.useParams()
 
 	const navigate = Route.useNavigate()
+
+	// Ensure the selected trigger is valid
+	useComputed(() => {
+		if (moduleId && !modules.modules.get(moduleId) && !modules.storeList.has(moduleId)) {
+			navigate({ to: `/modules` })
+		}
+	}, [navigate, modules, moduleId])
 
 	return (
 		<>
@@ -34,4 +41,8 @@ function RouteComponent() {
 			</CTabContent>
 		</>
 	)
-}
+})
+
+export const Route = createFileRoute('/_app/modules/$moduleId')({
+	component: RouteComponent,
+})

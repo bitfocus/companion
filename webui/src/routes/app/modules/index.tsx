@@ -1,11 +1,8 @@
 import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
-import { faCog, faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import classNames from 'classnames'
+import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
+import { createFileRoute } from '@tanstack/react-router'
 import React from 'react'
 import { NonIdealState } from '../../../Components/NonIdealState.js'
-import { ModuleManagePanel } from '../../../Modules/ModuleManagePanel.js'
 import { MyErrorBoundary } from '../../../util.js'
 
 export const Route = createFileRoute('/_app/modules/')({
