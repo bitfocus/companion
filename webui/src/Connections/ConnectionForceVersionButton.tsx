@@ -102,14 +102,17 @@ export function ConnectionForceVersionButton({
 							}}
 						>
 							<CCol sm={12}>
-								Companion will help ensure you are using the latest version of modules. But sometimes we may be missing
-								some information and you need to force a connection to be using a different module than we expect.
-								<br />
-								<CAlert color="danger">
-									This can break the module and corrupt any existing actions and feedbacks for this connection. Only use
-									this if you are sure of what you are doing.
+								Companion will help ensure you are using the latest version of modules. But sometimes you may need to
+								force a connection to be using a different module manuall.
+								<CAlert color="danger" className="mt-2 mb-0">
+									This can break the connection and corrupt any existing actions and feedbacks. Only use this if you are
+									sure of what you are doing.
 								</CAlert>
-								{!!saveError && <CAlert color="warning">Save failed: {saveError}</CAlert>}
+								{!!saveError && (
+									<CAlert color="warning" className="mt-2 mb-0">
+										Save failed: {saveError}
+									</CAlert>
+								)}
 							</CCol>
 
 							<form.Field
