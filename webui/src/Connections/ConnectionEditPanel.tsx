@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError } from '../util.js'
-import { CRow, CCol, CButton, CFormSelect, CAlert } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup } from '@coreui/react'
 import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -20,6 +20,7 @@ import { useModuleStoreInfo } from '../Modules/ModuleManagePanel.js'
 import { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
+import { ConnectionForceVersionButton } from './ConnectionForceVersionButton.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -269,35 +270,47 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 							<ModuleVersionsRefresh moduleId={connectionInfo.instance_type} />
 						)}
 					</label>
-					<CFormSelect
-						name="colFormVersion"
-						value={connectionVersion as string}
-						onChange={(e) => setConnectionVersion(e.currentTarget.value)}
-						disabled={connectionShouldBeRunning}
-						title={
-							connectionShouldBeRunning
-								? 'Connection must be disabled to change version'
-								: 'Select the version of the module to use for this connection'
-						}
-					>
-						{!connectionVersionExists &&
-							!moduleVersionChoices.find((v) => v.value === connectionInfo.moduleVersionId) && (
-								<option value={connectionInfo.moduleVersionId as string}>
-									{connectionInfo.moduleVersionId} (Missing)
+					<CInputGroup>
+						<CFormSelect
+							name="colFormVersion"
+							value={connectionVersion as string}
+							onChange={(e) => setConnectionVersion(e.currentTarget.value)}
+							disabled={connectionShouldBeRunning}
+							title={
+								connectionShouldBeRunning
+									? 'Connection must be disabled to change version'
+									: 'Select the version of the module to use for this connection'
+							}
+						>
+							{!connectionVersionExists &&
+								!moduleVersionChoices.find((v) => v.value === connectionInfo.moduleVersionId) && (
+									<option value={connectionInfo.moduleVersionId as string}>
+										{connectionInfo.moduleVersionId} (Missing)
+									</option>
+								)}
+							{moduleVersionChoices.map((v) => (
+								<option key={v.value} value={v.value}>
+									{v.label}
 								</option>
-							)}
-						{moduleVersionChoices.map((v) => (
-							<option key={v.value} value={v.value}>
-								{v.label}
-							</option>
-						))}
-					</CFormSelect>
+							))}
+						</CFormSelect>
+						<ConnectionForceVersionButton
+							connectionId={connectionId}
+							disabled={connectionShouldBeRunning}
+							currentModuleId={connectionInfo.instance_type}
+							currentVersionId={connectionInfo.moduleVersionId}
+						/>
+					</CInputGroup>
 				</CCol>
 
 				<CCol className={`fieldtype-textinput`} sm={12}>
 					<label>
 						Update Policy
-						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title="How to check for updates" />
+						<FontAwesomeIcon
+							style={{ marginLeft: '5px' }}
+							icon={faQuestionCircle}
+							title="How to check whether there are updates available for this connection"
+						/>
 					</label>
 					<CFormSelect
 						name="colFormUpdatePolicy"

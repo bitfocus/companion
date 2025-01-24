@@ -630,6 +630,35 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return null
 		})
 
+		client.onPromise('connections:set-module-and-version', (connectionId, moduleId, versionId) => {
+			const config = this.#configStore.getConfigForId(connectionId)
+			if (!config) return 'no connection'
+
+			// Don't validate the version, as it might not yet be installed
+			// const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
+
+			// Update the config
+			config.instance_type = moduleId
+			config.moduleVersionId = versionId
+			// if (updatePolicy) config.updatePolicy = updatePolicy
+			this.#configStore.commitChanges([connectionId])
+
+			// Install the module if needed
+			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			if (!moduleInfo) {
+				this.userModulesManager.ensureModuleIsInstalled(config.instance_type, versionId)
+			}
+
+			// Trigger a restart (or as much as possible)
+			if (config.enabled) {
+				this.enableDisableInstance(connectionId, false)
+				this.enableDisableInstance(connectionId, true)
+			}
+
+			return null
+		})
+
 		client.onPromise('connections:set-enabled', (id, state) => {
 			this.enableDisableInstance(id, !!state)
 		})

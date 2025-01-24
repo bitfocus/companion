@@ -309,6 +309,11 @@ export interface ClientToBackendEventsMap {
 		versionId: string | null,
 		updatePolicy: ConnectionUpdatePolicy | null
 	) => string | null
+	'connections:set-module-and-version': (
+		connectionId: string,
+		newModuleId: string,
+		versionId: string | null
+	) => string | null
 	'connections:set-order': (sortedIds: string[]) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>

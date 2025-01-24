@@ -12,6 +12,7 @@ export const MenuPortalContext = createContext<HTMLElement | null>(null)
 type AsType<Multi extends boolean> = Multi extends true ? DropdownChoiceId[] : DropdownChoiceId
 
 interface DropdownInputFieldProps<Multi extends boolean> {
+	htmlName?: string
 	className?: string
 	label?: React.ReactNode
 	choices: DropdownChoice[] | Record<string, DropdownChoice>
@@ -27,6 +28,7 @@ interface DropdownInputFieldProps<Multi extends boolean> {
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	helpText?: string
+	onBlur?: () => void
 }
 
 interface DropdownChoiceInt {
@@ -35,6 +37,7 @@ interface DropdownChoiceInt {
 }
 
 export const DropdownInputField = memo(function DropdownInputField<Multi extends boolean>({
+	htmlName,
 	className,
 	label,
 	choices,
@@ -50,6 +53,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	setValid,
 	disabled,
 	helpText,
+	onBlur,
 }: DropdownInputFieldProps<Multi>) {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -171,6 +175,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 
 	const selectProps: Partial<CreatableProps<any, any, any>> = {
+		name: htmlName,
 		isDisabled: disabled,
 		classNamePrefix: 'select-control',
 		className: 'select-control',
@@ -186,6 +191,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 		onChange: onChange,
 		filterOption: createFilter({ ignoreAccents: false }),
 		components: { MenuList: WindowedMenuList },
+		onBlur: onBlur,
 	}
 
 	const isValidNewOption = useCallback(

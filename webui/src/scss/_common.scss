@@ -204,6 +204,11 @@ code {
 	color: #fff;
 }
 
+.btn.disabled.with-tooltip {
+	cursor: inherit;
+	pointer-events: inherit;
+}
+
 .btn-white.disabled {
 	opacity: 0.4;
 	border-color: transparent;
