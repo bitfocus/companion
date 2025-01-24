@@ -112,7 +112,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 				</div>
 
-				<div className="table-header-buttons">
+				<div className="table-header-buttons mb-2">
 					<VisibilityButton
 						{...typeFilter}
 						keyId="available"
