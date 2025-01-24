@@ -100,7 +100,7 @@ export const ImportExportPage = observer(function ImportExport() {
 	}
 
 	return (
-		<>
+		<div>
 			<ResetWizardModal ref={resetRef} />
 			<ExportWizardModal ref={exportRef} />
 
@@ -157,6 +157,6 @@ export const ImportExportPage = observer(function ImportExport() {
 					</CButton>
 				</div>
 			</CCallout>
-		</>
+		</div>
 	)
 })
