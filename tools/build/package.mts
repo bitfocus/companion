@@ -121,7 +121,6 @@ if (process.env.ELECTRON !== '0') {
 				entitlements: 'launcher/entitlements.mac.plist',
 				entitlementsInherit: 'launcher/entitlements.mac.plist',
 			},
-			afterPack: 'launcher/fix-bundled-modules.cjs',
 			win: {
 				target: 'nsis',
 				signtoolOptions: {

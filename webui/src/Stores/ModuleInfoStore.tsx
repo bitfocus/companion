@@ -1,17 +1,26 @@
 import { action, observable } from 'mobx'
-import type { ModuleDisplayInfo, ModuleInfoUpdate } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { assertNever } from '../util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
+import { ModuleStoreListCacheEntry, ModuleStoreListCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
 
 export class ModuleInfoStore {
-	readonly modules = observable.map<string, ModuleDisplayInfo>()
+	// TODO - should this be more granular/observable?
+	readonly modules = observable.map<string, ClientModuleInfo>()
+
+	readonly storeUpdateInfo: Omit<ModuleStoreListCacheStore, 'modules'> = observable.object({
+		lastUpdated: 0,
+		lastUpdateAttempt: 0,
+		updateWarning: null,
+	})
+	readonly storeList = observable.map<string, ModuleStoreListCacheEntry>()
 
 	public get count() {
 		return this.modules.size
 	}
 
-	public reset = action((newData: Record<string, ModuleDisplayInfo | undefined> | null) => {
+	public resetModules = action((newData: Record<string, ClientModuleInfo | undefined> | null) => {
 		this.modules.clear()
 
 		if (newData) {
@@ -23,15 +32,15 @@ export class ModuleInfoStore {
 		}
 	})
 
-	public applyChange = action((change: ModuleInfoUpdate) => {
+	public applyModuleChange = action((change: ModuleInfoUpdate) => {
 		const changeType = change.type
 		switch (change.type) {
 			case 'add':
 				this.modules.set(change.id, change.info)
 				break
-			// case 'remove':
-			// 	this.modules.delete(change.id)
-			// 	break
+			case 'remove':
+				this.modules.delete(change.id)
+				break
 			case 'update': {
 				const oldObj = this.modules.get(change.id)
 				if (!oldObj) throw new Error(`Got update for unknown module: ${change.id}`)
@@ -47,7 +56,16 @@ export class ModuleInfoStore {
 		}
 	})
 
+	public updateStoreInfo = action((storeInfo: ModuleStoreListCacheStore) => {
+		this.storeUpdateInfo.lastUpdated = storeInfo.lastUpdated
+		this.storeUpdateInfo.lastUpdateAttempt = storeInfo.lastUpdateAttempt
+		this.storeUpdateInfo.updateWarning = storeInfo.updateWarning
+
+		// TODO - is this too agressive?
+		this.storeList.replace(storeInfo.modules)
+	})
+
 	getModuleFriendlyName(moduleId: string): string | undefined {
-		return this.modules.get(moduleId)?.name?.replace(/\;.*/, '...')
+		return this.modules.get(moduleId)?.display.name?.replace(/\;.*/, '...')
 	}
 }

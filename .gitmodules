@@ -1,3 +1,0 @@
-[submodule "bundled-modules"]
-	path = bundled-modules
-	url = https://github.com/bitfocus/companion-bundled-modules

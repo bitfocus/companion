@@ -24,10 +24,11 @@ import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import type {
+import {
 	ClientConnectionConfig,
 	ClientConnectionsUpdate,
 	ConnectionConfig,
+	ConnectionUpdatePolicy,
 } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
@@ -41,6 +42,10 @@ import type { DataDatabase } from '../Data/Database.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import express from 'express'
+import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
+import { ModuleStoreService } from './ModuleStore.js'
+import type { AppInfo } from '../Registry.js'
+import type { DataCache } from '../Data/Cache.js'
 
 const InstancesRoom = 'instances'
 
@@ -71,12 +76,16 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly moduleHost: ModuleHost
 	readonly modules: InstanceModules
 	readonly sharedUdpManager: InstanceSharedUdpManager
+	readonly modulesStore: ModuleStoreService
+	readonly userModulesManager: InstanceInstalledModulesManager
 
 	readonly connectionApiRouter = express.Router()
 
 	constructor(
+		appInfo: AppInfo,
 		io: UIHandler,
 		db: DataDatabase,
+		cache: DataCache,
 		apiRouter: express.Router,
 		controls: ControlsController,
 		graphics: GraphicsController,
@@ -95,7 +104,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
 		this.status = new InstanceStatus(io, controls)
-		this.modules = new InstanceModules(io, this, apiRouter)
+		this.modules = new InstanceModules(io, this, apiRouter, appInfo.modulesDir)
 		this.moduleHost = new ModuleHost(
 			{
 				controls: controls,
@@ -113,6 +122,20 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			},
 			this.modules,
 			this.#configStore
+		)
+		this.modulesStore = new ModuleStoreService(io, cache)
+		this.userModulesManager = new InstanceInstalledModulesManager(
+			appInfo,
+			db,
+			io,
+			this.modules,
+			this.modulesStore,
+			this.#configStore,
+			appInfo.modulesDir,
+			(connectionId) => {
+				this.enableDisableInstance(connectionId, false)
+				this.enableDisableInstance(connectionId, true)
+			}
 		)
 
 		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())
@@ -160,11 +183,12 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 * @param extraModulePath - extra directory to search for modules
 	 */
 	async initInstances(extraModulePath: string): Promise<void> {
-		const connectionIds = this.#configStore.getAllInstanceIds()
-		this.#logger.silly('instance_init', connectionIds)
+		await this.userModulesManager.init()
 
 		await this.modules.initInstances(extraModulePath)
 
+		const connectionIds = this.#configStore.getAllInstanceIds()
+		this.#logger.silly('instance_init', connectionIds)
 		for (const id of connectionIds) {
 			this.#activate_module(id, false)
 		}
@@ -172,10 +196,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.emit('connection_added')
 	}
 
-	reloadUsesOfModule(moduleId: string): void {
+	async reloadUsesOfModule(moduleId: string, versionId: string): Promise<void> {
 		// restart usages of this module
 		const { connectionIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleId)
 		for (const id of connectionIds) {
+			// Skip any that we know are not using this version
+			const config = this.#configStore.getConfigForId(id)
+			if (config && config.moduleVersionId !== versionId) continue
+
 			// Restart it
 			this.enableDisableInstance(id, false)
 			this.enableDisableInstance(id, true)
@@ -237,35 +265,33 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	/**
-	 * Add a new instance of a module
-	 */
-	addInstance(data: CreateConnectionData, disabled: boolean): string {
-		let module = data.type
-
-		const moduleInfo = this.modules.getModuleManifest(module)
-		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
-
-		return this.addInstanceWithLabel(data, moduleInfo.display.shortname, disabled)[0]
-	}
-
-	/**
 	 * Add a new instance of a module with a predetermined label
 	 */
 	addInstanceWithLabel(
 		data: CreateConnectionData,
 		labelBase: string,
+		versionId: string | null,
+		updatePolicy: ConnectionUpdatePolicy,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
-		let module = data.type
+		let moduleId = data.type
 		let product = data.product
+
+		if (versionId === null) {
+			// Get the latest installed version
+			versionId = this.modules.getLatestVersionOfModule(moduleId)
+		}
+
+		// Ensure the requested module and version is installed
+		this.userModulesManager.ensureModuleIsInstalled(moduleId, versionId)
 
 		const label = this.#configStore.makeLabelUnique(labelBase)
 
 		if (this.getIdForLabel(label)) throw new Error(`Label "${label}" already in use`)
 
-		this.#logger.info('Adding connection ' + module + ' ' + product)
+		this.#logger.info('Adding connection ' + moduleId + ' ' + product)
 
-		const [id, config] = this.#configStore.addConnection(module, label, product, disabled)
+		const [id, config] = this.#configStore.addConnection(moduleId, label, product, versionId, updatePolicy, disabled)
 
 		this.#activate_module(id, true)
 
@@ -289,7 +315,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const config = this.#configStore.getConfigForId(id)
 		if (!config) return undefined
 
-		const moduleManifest = this.modules.getModuleManifest(config.instance_type)
+		const moduleManifest = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
 
 		return moduleManifest?.manifest
 	}
@@ -467,6 +493,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		config.instance_type = this.modules.verifyInstanceTypeIsCurrent(config.instance_type)
 
+		// Seamless fixup old configs
+		if (config.moduleVersionId === undefined) {
+			config.moduleVersionId = this.modules.getLatestVersionOfModule(config.instance_type)
+		}
+
 		if (config.enabled === false) {
 			this.#logger.silly("Won't load disabled module " + id + ' (' + config.instance_type + ')')
 			this.status.updateInstanceStatus(id, null, 'Disabled')
@@ -485,9 +516,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// TODO this could check if anything above changed, or is_being_created
 		this.#configStore.commitChanges([id])
 
-		const moduleInfo = this.modules.getModuleManifest(config.instance_type)
+		const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
 		if (!moduleInfo) {
 			this.#logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
+			if (this.modules.hasModule(config.instance_type)) {
+				this.status.updateInstanceStatus(id, 'system', 'Unknown module version')
+			} else {
+				this.status.updateInstanceStatus(id, 'system', 'Unknown module')
+			}
 		} else {
 			this.moduleHost.queueRestartConnection(id, config, moduleInfo).catch((e) => {
 				this.#logger.error('Configured instance ' + config.instance_type + ' failed to start: ', e)
@@ -503,6 +539,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
 		this.modules.clientConnect(client)
+		this.modulesStore.clientConnect(client)
+		this.userModulesManager.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)
@@ -535,7 +573,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			}
 		})
 
-		client.onPromise('connections:set-config', (id, label, config) => {
+		client.onPromise('connections:set-label-and-config', (id, label, config) => {
 			const idUsingLabel = this.getIdForLabel(label)
 			if (idUsingLabel && idUsingLabel !== id) {
 				return 'duplicate label'
@@ -550,6 +588,77 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return null
 		})
 
+		client.onPromise('connections:set-label-and-version', (id, label, versionId, updatePolicy) => {
+			this.#logger.info('Setting label and version', id, label, versionId)
+			const idUsingLabel = this.getIdForLabel(label)
+			if (idUsingLabel && idUsingLabel !== id) {
+				return 'duplicate label'
+			}
+
+			if (!isLabelValid(label)) {
+				return 'invalid label'
+			}
+
+			// TODO - refactor/optimise/tidy this
+
+			this.setInstanceLabelAndConfig(id, label, null)
+
+			const config = this.#configStore.getConfigForId(id)
+			if (!config) return 'no connection'
+
+			// Don't validate the version, as it might not yet be installed
+			// const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
+
+			// Update the config
+			config.moduleVersionId = versionId
+			if (updatePolicy) config.updatePolicy = updatePolicy
+			this.#configStore.commitChanges([id])
+
+			// Install the module if needed
+			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			if (!moduleInfo) {
+				this.userModulesManager.ensureModuleIsInstalled(config.instance_type, versionId)
+			}
+
+			// Trigger a restart (or as much as possible)
+			if (config.enabled) {
+				this.enableDisableInstance(id, false)
+				this.enableDisableInstance(id, true)
+			}
+
+			return null
+		})
+
+		client.onPromise('connections:set-module-and-version', (connectionId, moduleId, versionId) => {
+			const config = this.#configStore.getConfigForId(connectionId)
+			if (!config) return 'no connection'
+
+			// Don't validate the version, as it might not yet be installed
+			// const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
+
+			// Update the config
+			config.instance_type = moduleId
+			config.moduleVersionId = versionId
+			// if (updatePolicy) config.updatePolicy = updatePolicy
+			this.#configStore.commitChanges([connectionId])
+
+			// Install the module if needed
+			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			if (!moduleInfo) {
+				this.userModulesManager.ensureModuleIsInstalled(config.instance_type, versionId)
+			}
+
+			// Trigger a restart (or as much as possible)
+			if (config.enabled) {
+				this.enableDisableInstance(connectionId, false)
+				this.enableDisableInstance(connectionId, true)
+			}
+
+			return null
+		})
+
 		client.onPromise('connections:set-enabled', (id, state) => {
 			this.enableDisableInstance(id, !!state)
 		})
@@ -558,9 +667,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			await this.deleteInstance(id)
 		})
 
-		client.onPromise('connections:add', (module) => {
-			const id = this.addInstance(module, false)
-			return id
+		client.onPromise('connections:add', (module, label, version) => {
+			const connectionInfo = this.addInstanceWithLabel(module, label, version, ConnectionUpdatePolicy.Stable, false)
+			return connectionInfo[0]
 		})
 
 		client.onPromise('connections:set-order', async (connectionIds) => {

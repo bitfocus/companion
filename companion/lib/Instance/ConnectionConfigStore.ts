@@ -1,4 +1,8 @@
-import { ConnectionConfig, ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import {
+	ConnectionConfig,
+	ClientConnectionConfig,
+	ConnectionUpdatePolicy,
+} from '@companion-app/shared/Model/Connections.js'
 import { DataDatabase } from '../Data/Database.js'
 // import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
@@ -54,6 +58,8 @@ export class ConnectionConfigStore {
 		moduleType: string,
 		label: string,
 		product: string | undefined,
+		moduleVersionId: string | null,
+		updatePolicy: ConnectionUpdatePolicy,
 		disabled: boolean
 	): [id: string, config: ConnectionConfig] {
 		// Find the highest rank given to an instance
@@ -69,6 +75,8 @@ export class ConnectionConfigStore {
 
 		this.#store[id] = {
 			instance_type: moduleType,
+			moduleVersionId: moduleVersionId,
+			updatePolicy: updatePolicy,
 			sortOrder: highestRank + 1,
 			label: label,
 			isFirstInit: true,
@@ -101,6 +109,8 @@ export class ConnectionConfigStore {
 
 			result[id] = {
 				instance_type: config.instance_type,
+				moduleVersionId: config.moduleVersionId,
+				updatePolicy: config.updatePolicy,
 				label: config.label,
 				enabled: config.enabled,
 				sortOrder: config.sortOrder,

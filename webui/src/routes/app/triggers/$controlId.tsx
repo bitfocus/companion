@@ -17,10 +17,8 @@ const RouteComponent = observer(function RouteComponent() {
 
 	const fullControlId = CreateTriggerControlId(controlId)
 
-	console.log('draw', fullControlId)
 	// Ensure the selected trigger is valid
 	useComputed(() => {
-		console.log('check', fullControlId)
 		if (fullControlId && !triggersList.triggers.get(fullControlId)) {
 			navigate({ to: `/triggers` })
 		}

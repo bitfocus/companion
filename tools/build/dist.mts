@@ -129,6 +129,3 @@ for (const name of copyPrebuildsFromDependencies) {
 // Copy fonts
 await fs.mkdirp('dist/assets/Fonts')
 await fs.copy(path.join('assets', 'Fonts'), 'dist/assets/Fonts')
-
-// Bundle in modules
-await fs.copy('bundled-modules', 'dist/bundled-modules')

@@ -1,5 +1,13 @@
 .float_right {
 	float: right;
+}
+
+.float_inline {
+	display: inline;
+}
+
+.float_right,
+.float_inline {
 	cursor: pointer;
 	cursor: hand;
 
@@ -133,4 +141,8 @@
 
 .connection-enabled-switch {
 	margin-left: 1em;
+}
+
+.import-module {
+	margin-bottom: 0.5rem;
 }

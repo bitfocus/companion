@@ -1,9 +1,8 @@
 import { CCol, CRow, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
-import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { HelpModal, HelpModalRef } from './HelpModal.js'
+import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { MyErrorBoundary } from '../util.js'
 import { ConnectionsList } from './ConnectionList.js'
-import { AddConnectionsPanel } from './AddConnection.js'
+import { AddConnectionsPanel } from './AddConnectionPanel.js'
 import { ConnectionEditPanel } from './ConnectionEditPanel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
@@ -15,9 +14,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
-	const { socket, notifier } = useContext(RootAppStoreContext)
-
-	const helpModalRef = useRef<HelpModalRef>(null)
+	const { socket } = useContext(RootAppStoreContext)
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState<'add' | 'edit'>('add')
@@ -31,21 +28,6 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 			return newTab
 		})
 	}, [])
-
-	const showHelp = useCallback(
-		(id: string) => {
-			socket.emitPromise('connections:get-help', [id]).then(([err, result]) => {
-				if (err) {
-					notifier.current?.show('Connection help', `Failed to get help text: ${err}`)
-					return
-				}
-				if (result) {
-					helpModalRef.current?.show(id, result)
-				}
-			})
-		},
-		[socket, notifier]
-	)
 
 	const doConfigureConnection = useCallback((connectionId: string | null) => {
 		setSelectedConnectionId(connectionId)
@@ -82,12 +64,9 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 
 	return (
 		<CRow className="connections-page split-panels">
-			<HelpModal ref={helpModalRef} />
-
 			<CCol xl={6} className="connections-panel primary-panel">
 				<ConnectionsList
 					connectionStatus={connectionStatus}
-					showHelp={showHelp}
 					doConfigureConnection={doConfigureConnection}
 					selectedConnectionId={selectedConnectionId}
 				/>
@@ -114,7 +93,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 					<CTabContent>
 						<CTabPane role="tabpanel" aria-labelledby="add-tab" visible={activeTab === 'add'}>
 							<MyErrorBoundary>
-								<AddConnectionsPanel showHelp={showHelp} doConfigureConnection={doConfigureConnection} />
+								<AddConnectionsPanel doConfigureConnection={doConfigureConnection} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane role="tabpanel" aria-labelledby="edit-tab" visible={activeTab === 'edit'}>
@@ -122,7 +101,6 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 								{selectedConnectionId && (
 									<ConnectionEditPanel
 										key={tabResetToken}
-										showHelp={showHelp}
 										doConfigureConnection={doConfigureConnection}
 										connectionId={selectedConnectionId}
 									/>

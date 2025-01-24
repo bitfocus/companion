@@ -35,6 +35,7 @@ import {
 	faComments,
 	IconDefinition,
 	faSquareCaretRight,
+	faPuzzlePiece,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
@@ -169,6 +170,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Internal" icon={null} path="/variables/internal" />
 					<SidebarVariablesGroups />
 				</SidebarMenuItemGroup>
+				<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
 				<SidebarMenuItem name="Settings" icon={faCog} path="/settings" />
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />

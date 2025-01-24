@@ -87,6 +87,9 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 				category = 'warning'
 				level = 'Authentication Failure'
 				break
+			case 'system':
+				category = 'error'
+				break
 			default:
 				category = 'warning'
 				break

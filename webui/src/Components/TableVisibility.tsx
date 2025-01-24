@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 export interface TableVisibilityHelper<T extends Record<string, boolean>> {
 	visibility: T
-	toggleVisibility: (key: keyof T) => void
+	toggleVisibility: (key: keyof T, forceState?: boolean) => void
 }
 
 export function useTableVisibilityHelper<T extends Record<string, any>>(
@@ -30,10 +30,10 @@ export function useTableVisibilityHelper<T extends Record<string, any>>(
 	})
 
 	const toggleVisibility = useCallback(
-		(key: keyof T) => {
+		(key: keyof T, forceState?: boolean) => {
 			setVisibility((oldConfig) => ({
 				...oldConfig,
-				[key]: !oldConfig[key],
+				[key]: typeof forceState === 'boolean' ? forceState : !oldConfig[key],
 			}))
 		},
 		[setVisibility]
@@ -54,19 +54,27 @@ interface VisibilityButtonProps<T extends Record<string, boolean>> extends Table
 	keyId: keyof T
 	color: string
 	label: string
+	title?: string
 }
 
 export function VisibilityButton<T extends Record<string, any>>({
 	keyId,
 	color,
 	label,
+	title,
 	visibility,
 	toggleVisibility,
 }: VisibilityButtonProps<T>) {
 	const doToggle = useCallback(() => toggleVisibility(keyId), [keyId, toggleVisibility])
 
 	return (
-		<CButton size="sm" color={color} className={classNames({ active: visibility[keyId] })} onClick={doToggle}>
+		<CButton
+			size="sm"
+			color={color}
+			className={classNames({ active: visibility[keyId] })}
+			onClick={doToggle}
+			title={title}
+		>
 			{label}
 		</CButton>
 	)

@@ -12,7 +12,6 @@ import type {
 	EmulatorConfig,
 	EmulatorImage,
 	EmulatorImageCache,
-	HelpDescription,
 	WrappedImage,
 } from './Model/Common.js'
 import type {
@@ -40,11 +39,12 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
-import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
-import type { ClientConnectionsUpdate, ClientConnectionConfig } from './Model/Connections.js'
+import type { ModuleInfoUpdate, ClientModuleInfo } from './Model/ModuleInfo.js'
+import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
 import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
+import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -81,7 +81,7 @@ export interface ClientToBackendEventsMap {
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'custom-variables:subscribe': () => CustomVariablesModel
 	'custom-variables:unsubscribe': () => void
-	'modules:subscribe': () => Record<string, ModuleDisplayInfo>
+	'modules:subscribe': () => Record<string, ClientModuleInfo>
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
@@ -296,17 +296,42 @@ export interface ClientToBackendEventsMap {
 	'pages:reset-page-nav': (pageNumber: number) => 'ok'
 	'pages:reset-page-clear': (pageNumber: number) => 'ok'
 
-	'connections:add': (info: { type: string; product: string | undefined }) => string
+	'connections:add': (info: { type: string; product: string | undefined }, label: string, versionId: string) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
-	'connections:set-config': (
+	'connections:set-label-and-config': (
 		connectionId: string,
 		newLabel: string,
-		config: Record<string, any> | null
+		config: Record<string, any>
+	) => string | null
+	'connections:set-label-and-version': (
+		connectionId: string,
+		newLabel: string,
+		versionId: string | null,
+		updatePolicy: ConnectionUpdatePolicy | null
+	) => string | null
+	'connections:set-module-and-version': (
+		connectionId: string,
+		newModuleId: string,
+		versionId: string | null
 	) => string | null
 	'connections:set-order': (sortedIds: string[]) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
-	'connections:get-help': (id: string) => [err: string, result: null] | [err: null, result: HelpDescription]
+	'modules:install-all-missing': () => void
+	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
+	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
+	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
+	'modules:bundle-import:start': (name: string, size: number, checksum: string) => string | null
+	'modules:bundle-import:chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
+	'modules:bundle-import:complete': (sessionId: string) => boolean
+	'modules:bundle-import:cancel': (sessionId: string) => void
+
+	'modules-store:list:subscribe': () => ModuleStoreListCacheStore
+	'modules-store:list:unsubscribe': () => void
+	'modules-store:list:refresh': () => void
+	'modules-store:info:subscribe': (moduleId: string) => ModuleStoreModuleInfoStore | null
+	'modules-store:info:unsubscribe': (moduleId: string) => void
+	'modules-store:info:refresh': (moduleId: string) => void
 
 	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
 
@@ -363,6 +388,12 @@ export interface BackendToClientEventsMap {
 	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
 
 	'surfaces:discovery:update': (update: SurfacesDiscoveryUpdate) => void
+
+	'modules-store:list:data': (data: ModuleStoreListCacheStore) => void
+	'modules-store:list:progress': (percent: number) => void
+	'modules-store:info:data': (moduleId: string, data: ModuleStoreModuleInfoStore) => void
+	'modules-store:info:progress': (moduleId: string, percent: number) => void
+	'modules:bundle-import:progress': (sessionId: string, percent: number | null) => void
 
 	'emulator:images': (newImages: EmulatorImage[] | EmulatorImageCache) => void
 	'emulator:config': (patch: JsonPatchOperation[] | EmulatorConfig) => void

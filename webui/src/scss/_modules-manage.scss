@@ -1,0 +1,41 @@
+// .module-manager-list {
+// 	margin-top: 15px;
+
+// 	.module-list-entry {
+// 		// border: 1px solid;
+// 		// margin-bottom: 10px;
+
+// 		// padding: 5px;
+
+// 		h4 {
+// 			a {
+// 				color: #000000;
+
+// 				&:hover {
+// 					text-decoration: none;
+// 				}
+// 			}
+// 		}
+
+// 		.version-list {
+// 			li {
+// 				padding: 2px;
+// 			}
+// 		}
+// 	}
+// }
+
+.refresh-and-last-updated {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.5rem;
+
+	.last-updated {
+		margin-left: 0.5em;
+
+		.bold {
+			font-weight: bold;
+		}
+	}
+}

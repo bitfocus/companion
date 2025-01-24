@@ -31,7 +31,12 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 		const compactName = connectionInfo ? modules.getModuleFriendlyName(connectionInfo.instance_type) : undefined
 
 		return (
-			<CButton title={moduleInfo?.name} key={id} color="primary" onClick={() => setConnectionAndCategory([id, null])}>
+			<CButton
+				title={moduleInfo?.display?.name}
+				key={id}
+				color="primary"
+				onClick={() => setConnectionAndCategory([id, null])}
+			>
 				<h6>{connectionInfo?.label ?? id}</h6> <small>{compactName ?? '?'}</small>
 			</CButton>
 		)

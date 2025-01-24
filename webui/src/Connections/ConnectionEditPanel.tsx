@@ -1,29 +1,35 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError } from '../util.js'
-import { CRow, CCol, CButton } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup } from '@coreui/react'
 import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
-import { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { getModuleVersionInfoForConnection } from './Util.js'
+import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
+import semver from 'semver'
+import { useModuleStoreInfo } from '../Modules/ModuleManagePanel.js'
+import { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
+import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
+import { ConnectionForceVersionButton } from './ConnectionForceVersionButton.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
 	doConfigureConnection: (connectionId: string | null) => void
-	showHelp: (moduleId: string) => void
 }
 
 export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 	connectionId,
 	doConfigureConnection,
-	showHelp,
 }: ConnectionEditPanelProps) {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
@@ -40,15 +46,6 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 			</CRow>
 		)
 	}
-	if (!moduleInfo) {
-		return (
-			<CRow className="edit-connection">
-				<CCol xs={12}>
-					<p>Module not found</p>
-				</CCol>
-			</CRow>
-		)
-	}
 
 	return (
 		<ConnectionEditPanelInner
@@ -56,7 +53,6 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 			connectionInfo={connectionInfo}
 			moduleInfo={moduleInfo}
 			doConfigureConnection={doConfigureConnection}
-			showHelp={showHelp}
 		/>
 	)
 })
@@ -64,9 +60,8 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 interface ConnectionEditPanelInnerProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig
-	moduleInfo: ModuleDisplayInfo
+	moduleInfo: ClientModuleInfo | undefined
 	doConfigureConnection: (connectionId: string | null) => void
-	showHelp: (moduleId: string) => void
 }
 
 const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
@@ -74,9 +69,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	connectionInfo,
 	moduleInfo,
 	doConfigureConnection,
-	showHelp,
 }: ConnectionEditPanelInnerProps) {
-	const { socket } = useContext(RootAppStoreContext)
+	const { socket, helpViewer, modules } = useContext(RootAppStoreContext)
 
 	const [error, setError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
@@ -84,10 +78,23 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const [configFields, setConfigFields] = useState<Array<ExtendedInputField & { width: number }> | null>([])
 	const [connectionConfig, setConnectionConfig] = useState<Record<string, any> | null>(null)
 	const [connectionLabel, setConnectionLabel] = useState<string>(connectionInfo.label)
+	const [connectionVersion, setConnectionVersion] = useState<string | null>(connectionInfo.moduleVersionId)
+	const [connectionUpdatePolicy, setConnectionUpdatePolicy] = useState<ConnectionUpdatePolicy | null>(
+		connectionInfo.updatePolicy
+	)
 	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
 
 	// Update the in-edit label if the connection label changes
 	useEffect(() => setConnectionLabel(connectionInfo.label), [connectionInfo.label])
+	// Update the in-edit version if the connection version changes
+	useEffect(
+		() => setConnectionVersion(connectionInfo.moduleVersionId),
+		[connectionInfo.moduleVersionId, connectionInfo.enabled]
+	)
+	useEffect(
+		() => setConnectionUpdatePolicy(connectionInfo.updatePolicy),
+		[connectionInfo.updatePolicy, connectionInfo.enabled]
+	)
 
 	const [configOptions, fieldVisibility] = useOptionsAndIsVisible<ExtendedInputField & { width: number }>(
 		configFields,
@@ -113,6 +120,9 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		setConfigFields([])
 	}, [doConfigureConnection])
 
+	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, connectionInfo.moduleVersionId)
+	const connectionShouldBeRunning = connectionInfo.enabled && connectionVersionExists
+
 	const doSave = useCallback(() => {
 		setError(null)
 
@@ -123,26 +133,63 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 			return
 		}
 
-		socket
-			.emitPromise('connections:set-config', [connectionId, newLabel, connectionConfig])
-			.then((err) => {
-				if (err) {
-					if (err === 'invalid label') {
-						setError(`The label "${newLabel}" in not valid`)
-					} else if (err === 'duplicate label') {
-						setError(`The label "${newLabel}" is already in use. Please use a unique label for this connection`)
+		if (!connectionShouldBeRunning) {
+			socket
+				.emitPromise('connections:set-label-and-version', [
+					connectionId,
+					newLabel,
+					connectionVersion,
+					connectionUpdatePolicy,
+				])
+				.then((err) => {
+					if (err) {
+						if (err === 'invalid label') {
+							setError(`The label "${newLabel}" in not valid`)
+						} else if (err === 'duplicate label') {
+							setError(`The label "${newLabel}" is already in use. Please use a unique label for this connection`)
+						} else {
+							setError(`Unable to save connection version: "${err}"`)
+						}
 					} else {
-						setError(`Unable to save connection config: "${err}"`)
+						// Done
+						doCancel()
 					}
-				} else {
-					// Done
-					doCancel()
-				}
-			})
-			.catch((e) => {
-				setError(`Failed to save connection config: ${e}`)
-			})
-	}, [socket, connectionId, invalidFieldNames, connectionLabel, connectionConfig, doCancel])
+				})
+				.catch((e) => {
+					setError(`Failed to save connection config: ${e}`)
+				})
+		} else if (connectionConfig) {
+			socket
+				.emitPromise('connections:set-label-and-config', [connectionId, newLabel, connectionConfig])
+				.then((err) => {
+					if (err) {
+						if (err === 'invalid label') {
+							setError(`The label "${newLabel}" in not valid`)
+						} else if (err === 'duplicate label') {
+							setError(`The label "${newLabel}" is already in use. Please use a unique label for this connection`)
+						} else {
+							setError(`Unable to save connection config: "${err}"`)
+						}
+					} else {
+						// Done
+						doCancel()
+					}
+				})
+				.catch((e) => {
+					setError(`Failed to save connection config: ${e}`)
+				})
+		}
+	}, [
+		socket,
+		connectionId,
+		invalidFieldNames,
+		connectionLabel,
+		connectionConfig,
+		doCancel,
+		connectionShouldBeRunning,
+		connectionVersion,
+		connectionUpdatePolicy,
+	])
 
 	useEffect(() => {
 		if (connectionId) {
@@ -184,12 +231,24 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
+	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo.moduleVersionId)
+	const isModuleOnStore = !!modules.storeList.get(connectionInfo.instance_type)
+
+	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true)
+
+	const doShowHelp = useCallback(
+		() =>
+			moduleVersion?.helpPath &&
+			helpViewer.current?.showFromUrl(connectionInfo.instance_type, moduleVersion.versionId, moduleVersion.helpPath),
+		[helpViewer, connectionInfo.instance_type, moduleVersion]
+	)
+
 	return (
 		<div>
 			<h5>
-				{moduleInfo.shortname ?? connectionInfo.instance_type} configuration
-				{moduleInfo.hasHelp && (
-					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type)}>
+				{moduleInfo?.display?.shortname ?? connectionInfo.instance_type} configuration
+				{moduleVersion?.helpPath && (
+					<div className="float_right" onClick={doShowHelp}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}
@@ -204,7 +263,73 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					/>
 				</CCol>
 
-				{connectionInfo.enabled ? (
+				<CCol className={`fieldtype-textinput`} sm={12}>
+					<label>
+						Module Version&nbsp;
+						{isModuleOnStore && !connectionShouldBeRunning && (
+							<ModuleVersionsRefresh moduleId={connectionInfo.instance_type} />
+						)}
+					</label>
+					<CInputGroup>
+						<CFormSelect
+							name="colFormVersion"
+							value={connectionVersion as string}
+							onChange={(e) => setConnectionVersion(e.currentTarget.value)}
+							disabled={connectionShouldBeRunning}
+							title={
+								connectionShouldBeRunning
+									? 'Connection must be disabled to change version'
+									: 'Select the version of the module to use for this connection'
+							}
+						>
+							{!connectionVersionExists &&
+								!moduleVersionChoices.find((v) => v.value === connectionInfo.moduleVersionId) && (
+									<option value={connectionInfo.moduleVersionId as string}>
+										{connectionInfo.moduleVersionId} (Missing)
+									</option>
+								)}
+							{moduleVersionChoices.map((v) => (
+								<option key={v.value} value={v.value}>
+									{v.label}
+								</option>
+							))}
+						</CFormSelect>
+						<ConnectionForceVersionButton
+							connectionId={connectionId}
+							disabled={connectionShouldBeRunning}
+							currentModuleId={connectionInfo.instance_type}
+							currentVersionId={connectionInfo.moduleVersionId}
+						/>
+					</CInputGroup>
+				</CCol>
+
+				<CCol className={`fieldtype-textinput`} sm={12}>
+					<label>
+						Update Policy
+						<FontAwesomeIcon
+							style={{ marginLeft: '5px' }}
+							icon={faQuestionCircle}
+							title="How to check whether there are updates available for this connection"
+						/>
+					</label>
+					<CFormSelect
+						name="colFormUpdatePolicy"
+						value={connectionUpdatePolicy as string}
+						onChange={(e) => setConnectionUpdatePolicy(e.currentTarget.value as ConnectionUpdatePolicy)}
+					>
+						<option value="manual">Manual</option>
+						<option value="stable">Stable</option>
+						<option value="beta">Stable and Beta</option>
+					</CFormSelect>
+				</CCol>
+
+				<CCol className={`fieldtype-textinput`} sm={12}>
+					<CAlert color="warning">
+						Be careful when downgrading the module version. Some features may not be available in older versions.
+					</CAlert>
+				</CCol>
+
+				{connectionShouldBeRunning ? (
 					<ConnectionEditPanelConfigFields
 						connectionConfig={connectionConfig}
 						configOptions={configFields === null ? null : configOptions}
@@ -241,6 +366,89 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		</div>
 	)
 })
+
+export function useConnectionVersionSelectOptions(
+	moduleId: string | undefined,
+	installedInfo: ClientModuleInfo | null | undefined,
+	includeBeta: boolean
+): DropdownChoiceInt[] {
+	const moduleStoreInfo = useModuleStoreInfo(moduleId)
+
+	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
+	const latestBetaVersionn = getLatestVersion(moduleStoreInfo?.versions, true)
+
+	return useMemo(() => {
+		const choices: DropdownChoiceInt[] = []
+
+		const listedVersions = new Set<string>()
+		if (installedInfo) {
+			for (const version of installedInfo.installedVersions) {
+				if (!includeBeta && version.isBeta) continue
+
+				let label = version.displayName
+				if (installedInfo.stableVersion?.versionId === version.versionId) {
+					label += ' (Latest stable)'
+				}
+
+				choices.push({ value: version.versionId, label })
+				listedVersions.add(version.versionId)
+			}
+		}
+
+		if (
+			latestStableVersion &&
+			!listedVersions.has(latestStableVersion.id) &&
+			(!installedInfo?.stableVersion ||
+				semver.compare(latestStableVersion.id, installedInfo.stableVersion.versionId) > 0)
+		) {
+			choices.push({ value: latestStableVersion.id, label: `v${latestStableVersion.id} (Install latest stable)` })
+		}
+
+		if (
+			includeBeta &&
+			latestBetaVersionn &&
+			!listedVersions.has(latestBetaVersionn.id) &&
+			(!installedInfo?.betaVersion || semver.compare(latestBetaVersionn.id, installedInfo.betaVersion.versionId) > 0)
+		) {
+			choices.push({
+				value: latestBetaVersionn.id,
+				label: `v${latestBetaVersionn.id} (Install latest beta)`,
+			})
+		}
+
+		choices.sort((a, b) => semver.compare(String(b.value), String(a.value)))
+
+		if (installedInfo?.devVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
+
+		return choices
+	}, [installedInfo, latestStableVersion, latestBetaVersionn, includeBeta])
+}
+
+export function doesConnectionVersionExist(
+	moduleInfo: ClientModuleInfo | undefined,
+	versionId: string | null
+): boolean {
+	if (versionId === null) return false
+	if (versionId === 'dev') return !!moduleInfo?.devVersion
+
+	return !!moduleInfo?.installedVersions.find((v) => v.versionId === versionId)
+}
+
+export function getLatestVersion(
+	versions: ModuleStoreModuleInfoVersion[] | undefined,
+	isBeta: boolean
+): ModuleStoreModuleInfoVersion | null {
+	let latest: ModuleStoreModuleInfoVersion | null = null
+	for (const version of versions || []) {
+		if (!version || (version.releaseChannel === 'beta') !== isBeta) continue
+		if (!isModuleApiVersionCompatible(version.apiVersion) || version.deprecationReason) continue
+		if (!latest || semver.compare(version.id, latest.id) > 0) {
+			latest = version
+		}
+	}
+
+	return latest
+}
 
 interface ConnectionEditPanelConfigFieldsProps {
 	connectionConfig: Record<string, any> | null

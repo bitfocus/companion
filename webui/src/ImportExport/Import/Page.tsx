@@ -240,7 +240,11 @@ const ImportRemapRow = observer(function ImportRemapRow({
 }: ImportRemapRowProps) {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const snapshotModule = modules.modules.get(connection.instance_type)
+	const storeInfo = modules.storeList.get(connection.instance_type)
+	const moduleInfo = modules.modules.get(connection.instance_type)
+
+	const moduleManifest = moduleInfo?.display ?? storeInfo
+
 	const currentConnections = connections.getAllOfType(connection.instance_type)
 
 	const onChange = useCallback(
@@ -251,21 +255,17 @@ const ImportRemapRow = observer(function ImportRemapRow({
 	return (
 		<tr>
 			<td>
-				{snapshotModule ? (
-					<CFormSelect value={connectionRemap[id] ?? ''} onChange={onChange}>
-						<option value="_new">[ Create new connection ]</option>
-						<option value="_ignore">[ Ignore ]</option>
-						{currentConnections.map(([id, conn]) => (
-							<option key={id} value={id}>
-								{conn.label}
-							</option>
-						))}
-					</CFormSelect>
-				) : (
-					'Ignored'
-				)}
+				<CFormSelect value={connectionRemap[id] ?? ''} onChange={onChange}>
+					<option value="_new">[ Create new connection ]</option>
+					<option value="_ignore">[ Ignore ]</option>
+					{currentConnections.map(([id, conn]) => (
+						<option key={id} value={id}>
+							{conn.label}
+						</option>
+					))}
+				</CFormSelect>
 			</td>
-			<td>{snapshotModule ? snapshotModule.name : `Unknown module (${connection.instance_type})`}</td>
+			<td>{moduleManifest?.name ?? `Unknown module (${connection.instance_type})`}</td>
 			<td>{connection.label}</td>
 		</tr>
 	)
