@@ -205,6 +205,12 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 						label: 'Then',
 						entityTypeLabel: 'action',
 					},
+					{
+						type: EntityModelType.Action,
+						groupId: 'else_actions',
+						label: 'Else',
+						entityTypeLabel: 'action',
+					},
 				],
 			},
 		}
@@ -284,14 +290,10 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 			if (extras.abortDelayed.aborted) return true
 
 			const conditionValues = action.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
-			if (!booleanAnd(false, conditionValues)) {
-				// Condition failed, abort
-				return true
-			}
 
+			const executeGroup = booleanAnd(false, conditionValues) ? 'actions' : 'else_actions'
+			const childActions = action.getChildren(executeGroup)?.getDirectEntities() ?? []
 			const executeSequential = extras.executionMode === 'sequential'
-
-			const childActions = action.getChildren('actions')?.getDirectEntities() ?? []
 
 			return this.#actionRunner
 				.runMultipleActions(childActions, extras, executeSequential)
