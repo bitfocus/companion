@@ -625,7 +625,6 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												controlId={controlId}
 												location={location}
 												listId={{ stepId: selectedKey, setId: 'rotate_left' }}
-												// addPlaceholder="+ Add rotate left action"
 												entities={selectedStep2.action_sets['rotate_left']}
 												entityType={EntityModelType.Action}
 												entityTypeLabel="action"
@@ -639,7 +638,6 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												controlId={controlId}
 												location={location}
 												listId={{ stepId: selectedKey, setId: 'rotate_right' }}
-												// addPlaceholder="+ Add rotate right action"
 												entities={selectedStep2.action_sets['rotate_right']}
 												entityType={EntityModelType.Action}
 												entityTypeLabel="action"
@@ -657,7 +655,6 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 												controlId={controlId}
 												location={location}
 												listId={{ stepId: selectedKey, setId: 'down' }}
-												// addPlaceholder={`+ Add press action`}
 												entities={selectedStep2.action_sets['down']}
 												entityType={EntityModelType.Action}
 												entityTypeLabel="action"
@@ -847,7 +844,6 @@ function EditActionsRelease({
 					controlId={controlId}
 					location={location}
 					listId={{ stepId, setId: id }}
-					// addPlaceholder={`+ Add ${ident} action`}
 					entities={actions}
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
@@ -867,7 +863,6 @@ function EditActionsRelease({
 					controlId={controlId}
 					location={location}
 					listId={{ stepId, setId: 'up' }}
-					// addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
 					entities={action_sets['up']}
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
