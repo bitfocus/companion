@@ -4,16 +4,16 @@ import { DropdownInputField } from '../../Components/DropdownInputField.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { useComputed } from '../../util.js'
 import { observer } from 'mobx-react-lite'
+import { CCol, CFormLabel } from '@coreui/react'
 
 interface EntityCellLeftMainProps {
 	entityConnectionId: string
 	setConnectionId: (connectionId: string) => void
 }
-export const EntityCellLeftMain = observer(function EntityCellLeftMain({
+export const EntityChangeConnection = observer(function EntityCellLeftMain({
 	entityConnectionId,
 	setConnectionId,
-	children,
-}: React.PropsWithChildren<EntityCellLeftMainProps>) {
+}: EntityCellLeftMainProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const connectionChoices = useComputed(() => {
@@ -29,21 +29,22 @@ export const EntityCellLeftMain = observer(function EntityCellLeftMain({
 			})
 	}, [connections, entityConnectionId])
 
-	return (
-		<div className="cell-left-main">
-			{connectionChoices.length > 1 && (
-				<div className="option-field">
-					<DropdownInputField
-						label="Connection"
-						choices={connectionChoices}
-						multiple={false}
-						value={entityConnectionId}
-						setValue={setConnectionId as (value: DropdownChoiceId) => void}
-					/>
-				</div>
-			)}
+	if (connectionChoices.length === 0) return null
 
-			{children}
-		</div>
+	return (
+		<>
+			<CFormLabel htmlFor="colFormConnection" className="col-sm-4 col-form-label col-form-label-sm">
+				Connection
+			</CFormLabel>
+			<CCol sm={8}>
+				<DropdownInputField
+					htmlName="colFormConnection"
+					choices={connectionChoices}
+					multiple={false}
+					value={entityConnectionId}
+					setValue={setConnectionId as (value: DropdownChoiceId) => void}
+				/>
+			</CCol>
+		</>
 	)
 })

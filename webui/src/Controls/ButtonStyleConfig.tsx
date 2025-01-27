@@ -210,7 +210,7 @@ export function ButtonStyleConfigFields({
 			)}
 
 			<div style={{ display: 'block', padding: '0 4px', margin: 0 }}>
-				<div className="flex flex-wrap gap-1rem flex-form">
+				<div className="flex flex-wrap column-gap-1rem flex-form">
 					{showField2('size') && (
 						<div>
 							<div>

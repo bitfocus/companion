@@ -292,7 +292,6 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 									</CFormLabel>
 									<CCol sm={8}>
 										<InternalPageIdDropdown
-											label={null}
 											disabled={!!groupConfig.use_last_page}
 											// isLocatedInGrid={false}
 											includeDirection={false}
@@ -307,7 +306,6 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 									</CFormLabel>
 									<CCol sm={8}>
 										<InternalPageIdDropdown
-											label={null}
 											disabled={false}
 											// isLocatedInGrid={false}
 											includeDirection={false}

@@ -24,7 +24,7 @@ export const LearnButton = observer(function LearnButton({ id, disabled, doLearn
 			onClick={doLearn}
 			title="Capture the current values from the device"
 		>
-			Learn {isActive && <FontAwesomeIcon icon={faSync} spin />}
+			Learn values {isActive && <FontAwesomeIcon icon={faSync} spin />}
 		</CButton>
 	)
 })

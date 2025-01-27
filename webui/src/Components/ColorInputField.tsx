@@ -64,7 +64,7 @@ const toReturnType = <T extends 'string' | 'number'>(
 type AsType<T extends 'string' | 'number'> = T extends 'string' ? string : number
 
 interface ColorInputFieldProps<T extends 'string' | 'number'> {
-	label: React.ReactNode
+	label?: React.ReactNode
 	value: AsType<T>
 	setValue: (value: AsType<T>) => void
 	setValid?: (valid: boolean) => void

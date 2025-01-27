@@ -41,11 +41,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 	return (
 		!!entityDefinition?.supportsChildGroups &&
 		entityDefinition.supportsChildGroups.length > 0 && (
-			<div
-				className={classNames('cell-children', {
-					// 'hide-top-gap': actionOptions.length > 0 && (action.children ?? []).length > 0,
-				})}
-			>
+			<div className="cell-children">
 				{entityDefinition.supportsChildGroups.map((groupInfo) => (
 					<EntityManageChildGroup
 						key={groupInfo.groupId}

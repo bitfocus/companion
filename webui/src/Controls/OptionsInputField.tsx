@@ -1,4 +1,4 @@
-import { CFormLabel, CInputGroupText } from '@coreui/react'
+import { CCol, CFormLabel, CInputGroupText } from '@coreui/react'
 import React, { useCallback } from 'react'
 import {
 	CheckboxInputField,
@@ -62,9 +62,10 @@ export function OptionsInputField({
 	const isInternal = connectionId === 'internal'
 
 	let control: JSX.Element | string | undefined = undefined
+	let features: InputFeatureIconsProps | undefined = undefined
 	switch (option.type) {
 		case 'textinput': {
-			const features: InputFeatureIconsProps = {
+			features = {
 				variables: !!option.useVariables,
 				local: typeof option.useVariables === 'object' && !!option.useVariables?.local,
 			}
@@ -81,7 +82,6 @@ export function OptionsInputField({
 
 			control = (
 				<TextInputField
-					label={<OptionLabel option={option} features={features} />}
 					value={value}
 					regex={option.regex}
 					required={option.required}
@@ -98,7 +98,6 @@ export function OptionsInputField({
 		case 'dropdown': {
 			control = (
 				<DropdownInputField
-					label={<OptionLabel option={option} />}
 					value={value}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
@@ -114,7 +113,6 @@ export function OptionsInputField({
 		case 'multidropdown': {
 			control = (
 				<DropdownInputField
-					label={<OptionLabel option={option} />}
 					value={value}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
@@ -130,20 +128,12 @@ export function OptionsInputField({
 			break
 		}
 		case 'checkbox': {
-			control = (
-				<CheckboxInputField
-					label={<OptionLabel option={option} />}
-					value={value}
-					disabled={readonly}
-					setValue={setValue2}
-				/>
-			)
+			control = <CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
 			break
 		}
 		case 'colorpicker': {
 			control = (
 				<ColorInputField
-					label={<OptionLabel option={option} />}
 					value={value}
 					disabled={readonly}
 					setValue={setValue2}
@@ -157,7 +147,6 @@ export function OptionsInputField({
 		case 'number': {
 			control = (
 				<NumberInputField
-					label={<OptionLabel option={option} />}
 					value={value}
 					required={option.required}
 					min={option.min}
@@ -198,13 +187,7 @@ export function OptionsInputField({
 		case 'custom-variable': {
 			if (entityType === EntityModelType.Action) {
 				control = (
-					<InternalCustomVariableDropdown
-						label={<OptionLabel option={option} />}
-						disabled={!!readonly}
-						value={value}
-						setValue={setValue2}
-						includeNone={true}
-					/>
+					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue2} includeNone={true} />
 				)
 			}
 			break
@@ -212,9 +195,7 @@ export function OptionsInputField({
 		default:
 			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (isInternal) {
-				control =
-					InternalModuleField(<OptionLabel option={option} />, option, isLocatedInGrid, !!readonly, value, setValue2) ??
-					undefined
+				control = InternalModuleField(option, isLocatedInGrid, !!readonly, value, setValue2) ?? undefined
 			}
 			// Use default below
 			break
@@ -224,7 +205,19 @@ export function OptionsInputField({
 		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 	}
 
-	return <div className={classNames('option-field', { displayNone: !visibility })}>{control}</div>
+	return (
+		<>
+			<CFormLabel
+				htmlFor="colFormConnection"
+				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
+			>
+				<OptionLabel option={option} features={features} />
+			</CFormLabel>
+			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
+				{control}
+			</CCol>
+		</>
+	)
 }
 
 export interface InputFeatureIconsProps {

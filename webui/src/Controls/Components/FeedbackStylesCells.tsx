@@ -1,7 +1,7 @@
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
-import { CForm, CAlert } from '@coreui/react'
+import { CForm, CAlert, CFormLabel, CCol } from '@coreui/react'
 import React, { useState, useCallback, useMemo } from 'react'
 import { DropdownInputField } from '../../Components/DropdownInputField.js'
 import { PreventDefaultHandler, MyErrorBoundary } from '../../util.js'
@@ -20,19 +20,22 @@ export function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleP
 		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))
 
 		return (
-			<div className="cell-styles-manage">
-				<CForm onSubmit={PreventDefaultHandler}>
+			<>
+				<CFormLabel htmlFor="colFormStyleProperties" className="col-sm-4 col-form-label col-form-label-sm">
+					Change style properties
+				</CFormLabel>
+				<CCol sm={8}>
 					<MyErrorBoundary>
 						<DropdownInputField
-							label="Change style properties"
+							htmlName="colFormStyleProperties"
 							multiple={true}
 							choices={ButtonStyleProperties}
 							setValue={setSelectedStyleProps as (keys: DropdownChoiceId[]) => void}
 							value={currentValue}
 						/>
 					</MyErrorBoundary>
-				</CForm>
-			</div>
+				</CCol>
+			</>
 		)
 	} else {
 		return null
@@ -65,25 +68,23 @@ export function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: F
 
 	if (feedbackSpec?.feedbackType === 'boolean') {
 		return (
-			<div className="cell-styles">
-				<CForm onSubmit={PreventDefaultHandler}>
-					{pngError && (
-						<CAlert color="warning" dismissible>
-							{pngError}
-						</CAlert>
-					)}
+			<CCol sm={{ span: 8, offset: 4 }}>
+				{pngError && (
+					<CAlert color="warning" dismissible>
+						{pngError}
+					</CAlert>
+				)}
 
-					<ButtonStyleConfigFields
-						values={currentStyle}
-						setValueInner={setStylePropsValue}
-						setPng={setPng}
-						clearPng={clearPng}
-						setPngError={clearPngError}
-						showField={showField}
-					/>
-					{Object.keys(currentStyle).length === 0 ? 'Feedback has no effect. Try adding a property to override' : ''}
-				</CForm>
-			</div>
+				<ButtonStyleConfigFields
+					values={currentStyle}
+					setValueInner={setStylePropsValue}
+					setPng={setPng}
+					clearPng={clearPng}
+					setPngError={clearPngError}
+					showField={showField}
+				/>
+				{Object.keys(currentStyle).length === 0 ? 'Feedback has no effect. Try adding a property to override' : ''}
+			</CCol>
 		)
 	} else {
 		return null

@@ -1,4 +1,4 @@
-import { CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { CButton, CForm, CButtonGroup, CFormSwitch, CCol } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -275,33 +275,27 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 
 			{!isCollapsed && (
 				<div className="editor-grid editor-grid-events">
-					<div
-						className={classNames('cell-description', {
-							'no-options': eventOptions.length === 0,
-						})}
-					>
+					<CCol sm={12} className="cell-description">
 						{headlineExpanded && <p className="name">{name}</p>}
 						{eventSpec?.description || ''}
-					</div>
+					</CCol>
 
-					<div className="cell-option">
-						<CForm onSubmit={PreventDefaultHandler}>
-							{eventOptions.map((opt, i) => (
-								<MyErrorBoundary key={i}>
-									<OptionsInputField
-										key={i}
-										isLocatedInGrid={false}
-										entityType={null}
-										connectionId={'internal'}
-										option={opt}
-										value={(event.options || {})[opt.id]}
-										setValue={service.setValue}
-										visibility={optionVisibility[opt.id] ?? true}
-									/>
-								</MyErrorBoundary>
-							))}
-						</CForm>
-					</div>
+					<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
+						{eventOptions.map((opt, i) => (
+							<MyErrorBoundary key={i}>
+								<OptionsInputField
+									key={i}
+									isLocatedInGrid={false}
+									entityType={null}
+									connectionId={'internal'}
+									option={opt}
+									value={(event.options || {})[opt.id]}
+									setValue={service.setValue}
+									visibility={optionVisibility[opt.id] ?? true}
+								/>
+							</MyErrorBoundary>
+						))}
+					</CForm>
 				</div>
 			)}
 		</>

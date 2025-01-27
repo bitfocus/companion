@@ -243,6 +243,9 @@ code {
 .gap-2rem {
 	gap: 2rem;
 }
+.column-gap-1rem {
+	column-gap: 1rem;
+}
 .flex-wrap {
 	flex-wrap: wrap;
 }
@@ -342,4 +345,8 @@ svg.pad-left {
 	margin-right: -0.5rem;
 	min-width: calc(var(--cui-body-line-height) * 1em);
 	display: inline-block;
+}
+
+.grow {
+	flex-grow: 1;
 }

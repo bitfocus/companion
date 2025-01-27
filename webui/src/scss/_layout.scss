@@ -63,6 +63,16 @@ body {
 	}
 }
 
+.row {
+	> hr {
+		margin-bottom: 0;
+	}
+}
+
+form.row > * {
+	align-content: center;
+}
+
 // .c-header .c-header-brand {
 // 	font-size: 1.3em;
 // 	margin: 0 auto;

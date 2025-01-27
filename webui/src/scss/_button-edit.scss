@@ -79,15 +79,14 @@ table.variables-table {
 		margin-right: -0.75rem;
 	}
 	.editor-grid-header {
-		display: grid;
-		grid-template-columns: 1fr auto;
+		display: flex;
+		flex-direction: row;
 		margin-right: -0.75rem;
 
 		.cell-name {
-			font-weight: bold;
-			grid-row: 1;
-			grid-column: 1;
+			flex-grow: 1;
 
+			font-weight: bold;
 			align-self: center;
 
 			input {
@@ -96,119 +95,63 @@ table.variables-table {
 			}
 		}
 		.cell-controls {
-			grid-row: 1;
-			grid-column: 2;
 			text-align: right;
-
 			align-self: center;
 		}
 	}
 	.editor-grid {
-		display: grid;
-		grid-template-columns: 0.7fr auto 1fr;
-		grid-template-rows: auto auto auto 1fr;
-		column-gap: 10px;
+		display: flex;
+		flex-direction: column;
+
+		.entity-cells-wrapper {
+			display: flex;
+			flex-direction: row;
+			column-gap: 0.5rem;
+		}
 
 		.cell-name {
 			font-weight: bold;
-			grid-row: 1;
-			grid-column: 1 / 3;
-		}
-
-		.cell-controls {
-			grid-row: 1;
-			grid-column: 3;
-			text-align: right;
-
-			align-self: center;
-		}
-
-		.description {
-			color: #666;
-			line-height: 1.25em;
-			font-size: 12px;
-			margin-bottom: 10px;
 		}
 
 		.cell-description {
-			grid-row: 2;
-			grid-column: 1;
+			display: flex;
 
 			margin-top: 0.5rem;
-			margin-bottom: 0.5rem;
-			padding-left: 5px;
+			margin-bottom: 0.75rem;
 
 			.name {
 				font-weight: bold;
 				margin-bottom: 0;
 			}
 
-			&.no-options {
-				grid-column: 1/4;
+			.description {
+				color: #666;
+				line-height: 1.25em;
+				font-size: 12px;
+				// margin-bottom: 10px;
 			}
 		}
 
 		.cell-button-preview {
-			grid-row: 2 / 5;
-			grid-column: 2;
+			align-content: center;
 
 			.button-control {
 				padding: 0;
 			}
 		}
 
-		.cell-left-main {
-			grid-row: 3;
-			grid-column: 1;
-
-			// @include media-breakpoint-up('sm') {
-			// 	width: 70%;
-			// }
-
-			.form-check {
-				padding-left: 1.7rem;
-			}
-		}
-
 		.cell-children {
-			grid-row: 5;
-			grid-column: 1 / 4;
-
-			&.hide-top-gap {
-				// Avoid the large gap between expand/collapse buttons and the options/invert toggle
-				margin-top: -25px;
-			}
-
 			h4 {
 				margin-top: 0 !important;
 			}
 
-			form:not(:first-child) {
+			> form:not(:first-child) {
 				margin-top: 0.5rem;
 			}
 		}
 
-		.cell-actions {
-			grid-row: 4;
-			grid-column: 1;
-		}
-
-		.cell-option {
-			grid-row: 2 / 5;
-			grid-column: 3;
-		}
-
-		.cell-styles {
-			grid-row: 6;
-			grid-column: 3;
-
-			.png-browse {
-				display: block;
-			}
-		}
-		.cell-styles-manage {
-			grid-row: 6;
-			grid-column: 1 / 3;
+		.input-group {
+			flex-wrap: nowrap;
 		}
 	}
 
