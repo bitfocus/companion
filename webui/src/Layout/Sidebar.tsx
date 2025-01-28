@@ -36,6 +36,7 @@ import {
 	IconDefinition,
 	faSquareCaretRight,
 	faPuzzlePiece,
+	faInfo,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
@@ -183,6 +184,7 @@ export const MySidebar = memo(function MySidebar() {
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarNav className="nav-secondary">
+				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_new" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
 					<SidebarMenuItem
 						name="Bugs & Features"
