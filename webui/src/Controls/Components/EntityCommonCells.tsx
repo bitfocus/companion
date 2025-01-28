@@ -104,7 +104,6 @@ export function EntityCommonCells({
 
 					{!!entity && entityType === EntityModelType.Feedback && onlyFeedbackType === null && (
 						<>
-							<hr />
 							<FeedbackManageStyles
 								feedbackSpec={entityDefinition}
 								feedback={entity as FeedbackEntityModel}

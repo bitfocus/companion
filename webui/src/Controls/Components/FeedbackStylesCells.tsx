@@ -21,6 +21,7 @@ export function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleP
 
 		return (
 			<>
+				<hr />
 				<CFormLabel htmlFor="colFormStyleProperties" className="col-sm-4 col-form-label col-form-label-sm">
 					Change style properties
 				</CFormLabel>
