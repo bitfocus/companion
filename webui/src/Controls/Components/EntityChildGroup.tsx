@@ -14,7 +14,6 @@ import {
 	useControlEntitiesEditorService,
 } from '../../Services/Controls/ControlEntitiesService.js'
 import { PreventDefaultHandler } from '../../util.js'
-import classNames from 'classnames'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
 import { EditableEntityList } from './EntityList.js'

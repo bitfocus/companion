@@ -26,7 +26,6 @@ import {
 } from '../Services/Controls/ControlEventsService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import classNames from 'classnames'
 
 interface TriggerEventEditorProps {
 	controlId: string

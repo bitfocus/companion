@@ -1,10 +1,10 @@
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
-import { CForm, CAlert, CFormLabel, CCol } from '@coreui/react'
+import { CAlert, CFormLabel, CCol } from '@coreui/react'
 import React, { useState, useCallback, useMemo } from 'react'
 import { DropdownInputField } from '../../Components/DropdownInputField.js'
-import { PreventDefaultHandler, MyErrorBoundary } from '../../util.js'
+import { MyErrorBoundary } from '../../util.js'
 import { ButtonStyleConfigFields } from '../ButtonStyleConfig.js'
 import { DropdownChoiceId } from '@companion-module/base'
 
