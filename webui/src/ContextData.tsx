@@ -28,6 +28,7 @@ import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStor
 import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
 import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
 import { ViewControlStore } from './Stores/ViewControlStore.js'
+import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -38,6 +39,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 
 	const notifierRef = useRef<NotificationsManagerRef>(null)
 	const helpModalRef = useRef<HelpModalRef>(null)
+	const whatsNewModalRef = useRef<WhatsNewModalRef>(null)
 
 	const rootStore = useMemo(() => {
 		const showWizardEvent = new EventTarget()
@@ -46,6 +48,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			socket,
 			notifier: notifierRef,
 			helpViewer: helpModalRef,
+			whatsNewModal: whatsNewModalRef,
 
 			modules: new ModuleInfoStore(),
 			connections: new ConnectionsStore(),
@@ -132,6 +135,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		<RootAppStoreContext.Provider value={rootStore}>
 			<NotificationsManager ref={notifierRef} />
 			<HelpModal ref={helpModalRef} />
+			<WhatsNewModal ref={whatsNewModalRef} />
 
 			{children(progressPercent, completedSteps.length === steps.length)}
 		</RootAppStoreContext.Provider>

@@ -1272,6 +1272,7 @@ __metadata:
     "@hello-pangea/color-picker": "https://github.com/Julusian/color-picker/releases/download/v3.3.0-julusian.0/hello-pangea-color-picker-v3.3.0-julusian.0.tgz"
     "@popperjs/core": "npm:^2.11.8"
     "@tanstack/react-form": "npm:^0.41.3"
+    "@tanstack/react-query": "npm:^5.65.1"
     "@tanstack/react-router": "npm:^1.97.14"
     "@tanstack/router-devtools": "npm:^1.97.14"
     "@tanstack/router-plugin": "npm:^1.97.14"
@@ -4264,6 +4265,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/query-core@npm:5.65.0":
+  version: 5.65.0
+  resolution: "@tanstack/query-core@npm:5.65.0"
+  checksum: 10c0/8c957082819dc90aa162256e0cc9d7d33e90f4ba9a55ec788ef5ec36bbb2b1863663dda594f9b6eb820ec9855f8d6aecd01324a020d16b58ad012c99270fe989
+  languageName: node
+  linkType: hard
+
 "@tanstack/react-form@npm:^0.41.3":
   version: 0.41.3
   resolution: "@tanstack/react-form@npm:0.41.3"
@@ -4279,6 +4287,17 @@ __metadata:
     "@tanstack/start":
       optional: true
   checksum: 10c0/1628fd70b95f91d11f60f269284c76291e8db987760e3c857e6b12a114fc5a314e418c16cc05ca5cbe22cee3720d1bbb7d6fa06a464338c508482baee7c4c6be
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query@npm:^5.65.1":
+  version: 5.65.1
+  resolution: "@tanstack/react-query@npm:5.65.1"
+  dependencies:
+    "@tanstack/query-core": "npm:5.65.0"
+  peerDependencies:
+    react: ^18 || ^19
+  checksum: 10c0/0b0ed414c59ee1d7a5a8e72d2e2f2513f7367b59ee33d5663b114fcf5108438786b9bbbd12173ae7f8124538f313cd4dff942c7080b60d26d011c18918b1d563
   languageName: node
   linkType: hard
 

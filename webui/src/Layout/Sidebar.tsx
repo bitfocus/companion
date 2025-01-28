@@ -3,6 +3,7 @@ import React, {
 	CSSProperties,
 	memo,
 	ReactNode,
+	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
@@ -37,6 +38,7 @@ import {
 	faSquareCaretRight,
 	faPuzzlePiece,
 	faInfo,
+	faStar,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
@@ -86,6 +88,7 @@ interface SidebarMenuItemProps {
 	icon: IconDefinition | null
 	notifications?: React.ComponentType<Record<string, never>>
 	path?: string
+	onClick?: () => void
 	target?: string
 }
 
@@ -119,9 +122,14 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 }
 
 function SidebarMenuItem(item: SidebarMenuItemProps) {
+	const onClick2 = (e: React.MouseEvent) => {
+		if (!item.onClick) return
+		e.preventDefault()
+		item.onClick()
+	}
 	return (
 		<CNavItem idx={item.path}>
-			<CNavLink to={item.path} target={item.target} as={Link}>
+			<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2}>
 				<SidebarMenuItemLabel {...item} />
 			</CNavLink>
 		</CNavItem>
@@ -141,7 +149,10 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 }
 
 export const MySidebar = memo(function MySidebar() {
+	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
+
+	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [])
 
 	return (
 		<CSidebar unfoldable={unfoldable}>
@@ -184,6 +195,7 @@ export const MySidebar = memo(function MySidebar() {
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarNav className="nav-secondary">
+				<SidebarMenuItem name="Whats New" icon={faStar} onClick={whatsNewOpen} />
 				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_new" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
 					<SidebarMenuItem
@@ -228,6 +240,7 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 		<>
 			{sortedConnections.map((connectionInfo) => (
 				<SidebarMenuItem
+					key={connectionInfo.id}
 					name={connectionInfo.label}
 					subheading={modules.getModuleFriendlyName(connectionInfo.instance_type)}
 					icon={null}

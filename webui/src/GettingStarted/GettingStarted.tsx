@@ -1,11 +1,11 @@
-import React, { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useEffect } from 'react'
 import { useHash, useSize } from 'react-use'
-import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { useIntersectionObserver, useResizeObserver } from 'usehooks-ts'
 import { useStickyScroller } from './useStickyScroller.js'
 import { observable, ObservableSet, runInAction } from 'mobx'
 import { GettingStartedMenu } from './SideMenu.js'
+import { DocsContent } from './DocsContent.js'
+import { useQuery } from '@tanstack/react-query'
 
 export interface DocsSection {
 	label: string
@@ -77,9 +77,16 @@ const style = {
 
 export function GettingStarted() {
 	const [hash] = useHash()
-	const [structure, setStructure] = useState([])
-	const [error, setError] = useState(null)
-	const [loading, setLoading] = useState(true)
+
+	const {
+		isPending: loading,
+		error,
+		data: structure,
+	} = useQuery<DocsSection[]>({
+		queryKey: ['docsStructure'],
+		queryFn: () => fetch('/docs/structure.json').then((res) => res.json()),
+		retry: false,
+	})
 
 	const { scrollerElementRef, scrollerContentRef, handleScroll, restoreScroll } = useStickyScroller(hash)
 	// Restore the scroll position when the data updates
@@ -102,23 +109,6 @@ export function GettingStarted() {
 			}
 		}, 50)
 	}, [scrollerElementRef, hash, structure])
-
-	// Fetch /docs/structure.json and parse it
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const response = await fetch(`/docs/structure.json`)
-				const structure = await response.json()
-				setStructure(structure)
-			} catch (e: any) {
-				setError(e)
-			}
-
-			setLoading(false)
-		}
-
-		fetchData()
-	}, [])
 
 	const visibleFiles = observable.set<string>()
 
@@ -145,7 +135,7 @@ export function GettingStarted() {
 			</div>
 			<div style={style.menuWrapper}>
 				{error ? (
-					<div style={{ backgroundColor: 'white' }}>{error}</div>
+					<div style={{ backgroundColor: 'white' }}>{error.message}</div>
 				) : (
 					<>
 						<div style={style.menuStructure}>
@@ -165,7 +155,7 @@ export function GettingStarted() {
 						>
 							<div style={style.contentWrapper2} ref={scrollerContentRef}>
 								<div data-anchor="#top"></div>
-								{iterateContent(structure)}
+								{structure && iterateContent(structure)}
 							</div>
 						</div>
 					</>
@@ -193,7 +183,7 @@ function RenderSubsection({ subsect, visibleFiles, triggerScroll }: RenderSubsec
 						{subsect.file} <img src="/img/link.png" alt="Link" style={style.imgLink} />
 					</a>
 					<div>
-						<LoadContent file={subsect.file} />
+						<DocsContent file={subsect.file} />
 					</div>
 				</OnScreenReporter>
 			)}
@@ -213,49 +203,6 @@ function RenderSubsection({ subsect, visibleFiles, triggerScroll }: RenderSubsec
 			)}
 			{subsect.file && content}
 		</Fragment>
-	)
-}
-
-interface LoadContentProps {
-	file: string
-}
-function LoadContent({ file }: LoadContentProps) {
-	const [content, setContent] = useState<string>('')
-	const [loading, setLoading] = useState(true)
-
-	// strip filename
-	const baseUrl = `${file}`.replace(/\/[^/]+$/, '/')
-
-	useEffect(() => {
-		const fetchContent = async () => {
-			const response = await fetch(`/docs/${file}`)
-			const text = await response.text()
-			setContent(text)
-			setLoading(false)
-		}
-		fetchContent()
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
-
-	return (
-		<div>
-			{loading ? (
-				'loading'
-			) : (
-				<ReactMarkdown
-					urlTransform={(src, key, _node) => {
-						if (key === 'src') {
-							// img tag
-							return `/docs/${baseUrl}${defaultUrlTransform(src)}`
-						} else {
-							return defaultUrlTransform(src)
-						}
-					}}
-					children={content}
-					remarkPlugins={[remarkGfm]}
-				/>
-			)}
-		</div>
 	)
 }
 

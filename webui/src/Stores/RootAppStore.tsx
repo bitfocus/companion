@@ -13,6 +13,7 @@ import type { VariablesStore } from './VariablesStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { HelpModalRef } from '../Connections/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
+import type { WhatsNewModalRef } from '../WhatsNewModal.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -20,6 +21,7 @@ export interface RootAppStore {
 	readonly socket: CompanionSocketWrapped
 	readonly notifier: React.RefObject<NotificationsManagerRef> // TODO - this is not good
 	readonly helpViewer: React.RefObject<HelpModalRef> // TODO - this is not good
+	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good
 
 	readonly modules: ModuleInfoStore
 	readonly connections: ConnectionsStore

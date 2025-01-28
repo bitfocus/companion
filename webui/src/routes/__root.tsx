@@ -1,14 +1,19 @@
 import React, { Suspense } from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { ErrorFallback } from '../util.js'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 export const Route = createRootRoute({
 	component: () => (
 		<>
-			<Outlet />
-			<Suspense>
-				<TanStackRouterDevtools position="top-left" />
-			</Suspense>
+			<QueryClientProvider client={queryClient}>
+				<Outlet />
+				<Suspense>
+					<TanStackRouterDevtools position="top-left" />
+				</Suspense>
+			</QueryClientProvider>
 		</>
 	),
 	errorComponent: ({ error, reset }) => {

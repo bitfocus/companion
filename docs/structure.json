@@ -289,5 +289,16 @@
 				"file": "7_surfaces/mystrix.md"
 			}
 		]
+	},
+	{
+		"label": "Whats New",
+		"file": "9_whatsnew.md",
+		"_NOTE": "Note: These pages do not handle having nested children, that will break the modal",
+		"children": [
+			{
+				"label": "v3.5.0",
+				"file": "9_whatsnew/v3-5-0.md"
+			}
+		]
 	}
 ]
