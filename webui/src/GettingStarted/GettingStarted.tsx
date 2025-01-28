@@ -1,10 +1,13 @@
-import React, { Fragment, useRef, useState, useEffect } from 'react'
-import { useHash } from 'react-use'
+import React, { Fragment, useState, useEffect } from 'react'
+import { useHash, useSize } from 'react-use'
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useIntersectionObserver } from 'usehooks-ts'
+import { useIntersectionObserver, useResizeObserver } from 'usehooks-ts'
+import { useStickyScroller } from './useStickyScroller.js'
+import { observable, ObservableSet, runInAction } from 'mobx'
+import { GettingStartedMenu } from './SideMenu.js'
 
-interface DocsSection {
+export interface DocsSection {
 	label: string
 	file: string
 	children?: DocsSection[]
@@ -62,12 +65,7 @@ const style = {
 	} satisfies React.CSSProperties,
 	contentWrapper2: {
 		maxWidth: 1200,
-	} satisfies React.CSSProperties,
-	menuChildren: {
-		marginLeft: 3,
-		borderLeft: '1px dotted gray',
-		paddingLeft: 20,
-		marginBottom: 10,
+		// position: 'relative',
 	} satisfies React.CSSProperties,
 	imgLink: {
 		width: 12,
@@ -79,23 +77,31 @@ const style = {
 
 export function GettingStarted() {
 	const [hash] = useHash()
-	const contentWrapperRef = useRef<HTMLDivElement>(null)
 	const [structure, setStructure] = useState([])
 	const [error, setError] = useState(null)
 	const [loading, setLoading] = useState(true)
-	const [visibleFiles, setVisibleFiles] = useState<string[]>([])
 
+	const { scrollerElementRef, scrollerContentRef, handleScroll, restoreScroll } = useStickyScroller(hash)
+	// Restore the scroll position when the data updates
+	useEffect(() => restoreScroll(), [restoreScroll, hash])
+	// Restore the scroll position when the scroller resizes
+	useResizeObserver({
+		ref: scrollerContentRef as React.RefObject<HTMLDivElement>,
+		onResize: restoreScroll,
+	})
+
+	// Follow any changes to the hash
 	useEffect(() => {
 		setTimeout(() => {
-			if (contentWrapperRef.current) {
+			if (scrollerElementRef.current) {
 				// scroll to hash
-				const el = contentWrapperRef.current.querySelector(`[data-anchor="${hash}"]`)
+				const el = scrollerElementRef.current.querySelector(`[data-anchor="${hash}"]`)
 				if (el) {
 					el.scrollIntoView({ behavior: 'smooth' })
 				}
 			}
 		}, 50)
-	}, [contentWrapperRef, hash])
+	}, [scrollerElementRef, hash, structure])
 
 	// Fetch /docs/structure.json and parse it
 	useEffect(() => {
@@ -114,48 +120,15 @@ export function GettingStarted() {
 		fetchData()
 	}, [])
 
-	const iterateMenu = (s: DocsSection[], path: string[], depth: number) => {
-		return (
-			<Fragment>
-				{loading ? (
-					<div>loading..</div>
-				) : (
-					s.map((subsect) => (
-						<Fragment key={subsect.label}>
-							<div>
-								<a
-									href={`#${subsect.file || 'top'}`}
-									style={{
-										fontWeight: visibleFiles.includes(subsect.file) ? 'bold' : 'normal',
-										color: visibleFiles.includes(subsect.file) ? 'rgb(213, 2, 21)' : '#555',
-									}}
-								>
-									{subsect.label}
-								</a>
-							</div>
-							{subsect.children && (
-								<div style={style.menuChildren}>
-									{iterateMenu(subsect.children, [...path, subsect.label], depth + 1)}
-								</div>
-							)}
-						</Fragment>
-					))
-				)}
-			</Fragment>
-		)
-	}
+	const visibleFiles = observable.set<string>()
 
-	const iterateContent = (s: DocsSection[], path: string[], depth: number) => {
-		return (
-			<Fragment>
-				{s.map((subsect) => (
-					<Fragment key={subsect.label}>
-						<RenderSubsection subsect={subsect} setVisibleFiles={setVisibleFiles} visibleFiles={visibleFiles} />
-						{subsect.children && <div>{iterateContent(subsect.children, [...path, subsect.label], depth + 1)}</div>}
-					</Fragment>
-				))}
+	const iterateContent = (s: DocsSection[]) => {
+		return s.map((subsect) => (
+			<Fragment key={subsect.label}>
+				<RenderSubsection subsect={subsect} visibleFiles={visibleFiles} triggerScroll={restoreScroll} />
+				{subsect.children && iterateContent(subsect.children)}
 			</Fragment>
-		)
+		))
 	}
 
 	return (
@@ -176,12 +149,23 @@ export function GettingStarted() {
 				) : (
 					<>
 						<div style={style.menuStructure}>
-							<div style={{ padding: 20 }}>{iterateMenu(structure, [], 0)}</div>
+							<div style={{ padding: 20 }}>
+								{loading ? (
+									<div>loading..</div>
+								) : (
+									<GettingStartedMenu visibleFiles={visibleFiles} structure={structure} />
+								)}
+							</div>
 						</div>
-						<div style={style.contentWrapper} ref={contentWrapperRef} className="img-max-width">
-							<div style={style.contentWrapper2}>
+						<div
+							style={style.contentWrapper}
+							ref={scrollerElementRef}
+							onScroll={handleScroll}
+							className="img-max-width"
+						>
+							<div style={style.contentWrapper2} ref={scrollerContentRef}>
 								<div data-anchor="#top"></div>
-								{iterateContent(structure, [], 0)}
+								{iterateContent(structure)}
 							</div>
 						</div>
 					</>
@@ -193,41 +177,41 @@ export function GettingStarted() {
 
 interface RenderSubsectionProps {
 	subsect: DocsSection
-	setVisibleFiles: (visibleFiles: string[]) => void
-	visibleFiles: string[]
+	visibleFiles: ObservableSet<string>
+	triggerScroll: () => void
 }
-function RenderSubsection({ subsect, setVisibleFiles, visibleFiles }: RenderSubsectionProps) {
+function RenderSubsection({ subsect, visibleFiles, triggerScroll }: RenderSubsectionProps) {
+	const [content, { height }] = useSize(
+		<div style={{ marginBottom: 30, paddingBottom: 20, borderBottom: '1px solid #eee' }}>
+			{subsect.file && (
+				<OnScreenReporter visibleFiles={visibleFiles} file={subsect.file}>
+					<a
+						href={`https://github.com/bitfocus/companion/blob/main/docs/${subsect.file}`}
+						target="_new"
+						style={style.contentGithubLink}
+					>
+						{subsect.file} <img src="/img/link.png" alt="Link" style={style.imgLink} />
+					</a>
+					<div>
+						<LoadContent file={subsect.file} />
+					</div>
+				</OnScreenReporter>
+			)}
+		</div>,
+		{ width: 0, height: 0 }
+	)
+
+	// When the height changes, check the scroll position
+	useEffect(() => triggerScroll(), [height])
+
 	return (
 		<Fragment key={subsect.label}>
 			{subsect.file && (
-				<div style={{ marginBottom: 30, paddingBottom: 20, borderBottom: '1px solid #eee' }}>
-					<OnScreenReporter
-						onChange={(visible) => {
-							const updatedVisible = visible
-								? [...visibleFiles, subsect.file].filter((f): f is string => !!f)
-								: visibleFiles.filter((f) => f !== subsect.file)
-
-							if (JSON.stringify(visible) !== JSON.stringify(updatedVisible)) {
-								setVisibleFiles(updatedVisible)
-							}
-						}}
-					>
-						<h4 style={{ marginBottom: 15, paddingTop: 10 }} data-anchor={'#' + subsect.file}>
-							{subsect.label}
-						</h4>
-						<a
-							href={`https://github.com/bitfocus/companion/blob/main/docs/${subsect.file}`}
-							target="_new"
-							style={style.contentGithubLink}
-						>
-							{subsect.file} <img src="/img/link.png" alt="Link" style={style.imgLink} />
-						</a>
-						<div>
-							<LoadContent file={subsect.file} />
-						</div>
-					</OnScreenReporter>
-				</div>
+				<h4 style={{ marginBottom: 15, paddingTop: 10 }} data-anchor={'#' + subsect.file}>
+					{subsect.label}
+				</h4>
 			)}
+			{subsect.file && content}
 		</Fragment>
 	)
 }
@@ -276,19 +260,21 @@ function LoadContent({ file }: LoadContentProps) {
 }
 
 interface OnScreenReporterProps {
-	onChange: (isOnScreen: boolean) => void
+	visibleFiles: ObservableSet<string>
+	file: string
 }
-function OnScreenReporter({ children, onChange }: React.PropsWithChildren<OnScreenReporterProps>) {
-	const { ref, isIntersecting } = useIntersectionObserver({})
-
-	const [visible, setVisible] = useState<boolean | null>(null)
-
-	useEffect(() => {
-		if (isIntersecting !== visible) {
-			setVisible(isIntersecting)
-			onChange(isIntersecting)
-		}
-	}, [visible, isIntersecting, onChange])
+function OnScreenReporter({ children, visibleFiles, file }: React.PropsWithChildren<OnScreenReporterProps>) {
+	const { ref } = useIntersectionObserver({
+		onChange: (isVisible) => {
+			runInAction(() => {
+				if (isVisible) {
+					visibleFiles.add(file)
+				} else {
+					visibleFiles.delete(file)
+				}
+			})
+		},
+	})
 
 	return <div ref={ref}>{children}</div>
 }
