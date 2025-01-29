@@ -195,7 +195,7 @@ export const MySidebar = memo(function MySidebar() {
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarNav className="nav-secondary">
-				<SidebarMenuItem name="Whats New" icon={faStar} onClick={whatsNewOpen} />
+				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
 				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_new" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
 					<SidebarMenuItem

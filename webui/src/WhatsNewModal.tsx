@@ -66,7 +66,7 @@ export const WhatsNewModal = observer(
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
-					<h5>Whats New in Companion</h5>
+					<h5>What's New in Companion</h5>
 				</CModalHeader>
 				<CModalBody>
 					{isPending && <div>Loading...</div>}

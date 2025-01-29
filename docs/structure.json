@@ -291,7 +291,7 @@
 		]
 	},
 	{
-		"label": "Whats New",
+		"label": "What's New",
 		"file": "9_whatsnew.md",
 		"_NOTE": "Note: These pages do not handle having nested children, that will break the modal",
 		"children": [

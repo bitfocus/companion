@@ -154,8 +154,9 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 							{ id: 'concurrent', label: 'Concurrent' },
 							{ id: 'sequential', label: 'Sequential' },
 						],
-						tooltip: `Using "Sequential" will run the actions one after the other, waiting for each to complete before starting the next. 
-							If the module doesn't support it for a particular action, the following action will start immediately.`,
+						tooltip:
+							`Using "Sequential" will run the actions one after the other, waiting for each to complete before starting the next.\n` +
+							`If the module doesn't support it for a particular action, the following action will start immediately.`,
 					},
 				],
 				hasLearn: false,
