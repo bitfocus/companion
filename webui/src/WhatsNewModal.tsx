@@ -22,6 +22,7 @@ import { DocsSection } from './GettingStarted/GettingStarted.js'
 
 interface WhatsNewPage extends DocsSection {
 	_version?: string
+	file: string
 }
 
 const whatsNewPages: WhatsNewPage[] =
