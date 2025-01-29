@@ -13,12 +13,14 @@ import type { SurfacesStore } from './SurfacesStore.js'
 import type { UserConfigStore } from './UserConfigStore.js'
 import type { VariablesStore } from './VariablesStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
+import type { WhatsNewModalRef } from '../WhatsNewModal.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
 export interface RootAppStore {
 	readonly socket: CompanionSocketWrapped
 	readonly notifier: React.RefObject<NotificationsManagerRef> // TODO - this is not good
+	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good
 
 	readonly modules: ModuleInfoStore
 	readonly connections: ConnectionsStore

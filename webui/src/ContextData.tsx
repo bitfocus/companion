@@ -26,6 +26,7 @@ import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 import { useOutboundSurfacesSubscription } from './Hooks/useOutboundSurfacesSubscription.js'
 import { ConnectionsStore } from './Stores/ConnectionsStore.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
+import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -35,11 +36,13 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const socket = useContext(SocketContext)
 
 	const notifierRef = useRef<NotificationsManagerRef>(null)
+	const whatsNewModalRef = useRef<WhatsNewModalRef>(null)
 
 	const rootStore = useMemo(() => {
 		return {
 			socket,
 			notifier: notifierRef,
+			whatsNewModal: whatsNewModalRef,
 
 			modules: new ModuleInfoStore(),
 			connections: new ConnectionsStore(),
@@ -115,6 +118,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	return (
 		<RootAppStoreContext.Provider value={rootStore}>
 			<NotificationsManager ref={notifierRef} />
+			<WhatsNewModal ref={whatsNewModalRef} />
+
 			{children(progressPercent, completedSteps.length === steps.length)}
 		</RootAppStoreContext.Provider>
 	)

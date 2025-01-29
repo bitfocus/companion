@@ -1241,6 +1241,7 @@ __metadata:
     "@fortawesome/react-fontawesome": "npm:^0.2.2"
     "@hello-pangea/color-picker": "https://github.com/Julusian/color-picker/releases/download/v3.3.0-julusian.0/hello-pangea-color-picker-v3.3.0-julusian.0.tgz"
     "@popperjs/core": "npm:^2.11.8"
+    "@tanstack/react-query": "npm:^5.65.1"
     "@types/react": "npm:^18.3.18"
     "@types/react-copy-to-clipboard": "npm:^5.0.7"
     "@types/react-dom": "npm:^18.3.5"
@@ -4216,6 +4217,24 @@ __metadata:
   dependencies:
     defer-to-connect: "npm:^2.0.0"
   checksum: 10c0/73946918c025339db68b09abd91fa3001e87fc749c619d2e9c2003a663039d4c3cb89836c98a96598b3d47dec2481284ba85355392644911f5ecd2336536697f
+  languageName: node
+  linkType: hard
+
+"@tanstack/query-core@npm:5.65.0":
+  version: 5.65.0
+  resolution: "@tanstack/query-core@npm:5.65.0"
+  checksum: 10c0/8c957082819dc90aa162256e0cc9d7d33e90f4ba9a55ec788ef5ec36bbb2b1863663dda594f9b6eb820ec9855f8d6aecd01324a020d16b58ad012c99270fe989
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query@npm:^5.65.1":
+  version: 5.65.1
+  resolution: "@tanstack/react-query@npm:5.65.1"
+  dependencies:
+    "@tanstack/query-core": "npm:5.65.0"
+  peerDependencies:
+    react: ^18 || ^19
+  checksum: 10c0/0b0ed414c59ee1d7a5a8e72d2e2f2513f7367b59ee33d5663b114fcf5108438786b9bbbd12173ae7f8124538f313cd4dff942c7080b60d26d011c18918b1d563
   languageName: node
   linkType: hard
 

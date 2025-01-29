@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react'
+import React, { memo, useCallback, useContext, useState } from 'react'
 import { CSidebar, CSidebarNav, CNavItem, CSidebarBrand, CSidebarToggler, CSidebarHeader } from '@coreui/react'
 import {
 	faBug,
@@ -9,8 +9,10 @@ import {
 	faInfo,
 	faTabletAlt,
 	faUsers,
+	faStar,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface MySidebarProps {
 	sidebarShow: boolean
@@ -18,6 +20,8 @@ interface MySidebarProps {
 }
 
 export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: MySidebarProps) {
+	const { whatsNewModal } = useContext(RootAppStoreContext)
+
 	const [unfoldable, setUnfoldable] = useState(false)
 
 	const showWizard2 = useCallback(
@@ -28,6 +32,8 @@ export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: My
 		},
 		[showWizard]
 	)
+
+	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [])
 
 	return (
 		<CSidebar position="fixed" unfoldable={unfoldable} visible={sidebarShow} colorScheme="dark">
@@ -70,6 +76,9 @@ export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: My
 
 				<CNavItem target="_new" href="/getting-started">
 					<FontAwesomeIcon className="nav-icon" icon={faInfo} /> Getting Started
+				</CNavItem>
+				<CNavItem href="#" onClick={whatsNewOpen}>
+					<FontAwesomeIcon className="nav-icon" icon={faStar} /> What's New
 				</CNavItem>
 			</CSidebarNav>
 			<CSidebarHeader className="border-top">

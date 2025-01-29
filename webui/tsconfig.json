@@ -33,6 +33,7 @@
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"resolveJsonModule": true
 	}
 }

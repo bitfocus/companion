@@ -19,6 +19,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import io from 'socket.io-client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import App from './App.js'
 import { SocketContext, wrapSocket } from './util.js'
@@ -32,6 +33,8 @@ import { TabletView } from './TabletView/index.js'
 import { Emulator } from './Emulator/Emulator.js'
 import { EmulatorList } from './Emulator/List.js'
 import { ConnectionDebug } from './ConnectionDebug.js'
+
+const queryClient = new QueryClient()
 
 // i18n
 // 	.use(Backend)
@@ -57,31 +60,33 @@ if (window.location.hash && window.location.hash.includes('debug_socket')) {
 const root = createRoot(document.getElementById('root')!)
 root.render(
 	<React.StrictMode>
-		<SocketContext.Provider value={socketWrapped}>
-			<BrowserRouter>
-				<Routes>
-					<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />
-					<Route path="/getting-started" element={<GettingStarted />} />
+		<QueryClientProvider client={queryClient}>
+			<SocketContext.Provider value={socketWrapped}>
+				<BrowserRouter>
+					<Routes>
+						<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />
+						<Route path="/getting-started" element={<GettingStarted />} />
 
-					<Route path="/connection-debug/:id" element={<ConnectionDebug />} />
+						<Route path="/connection-debug/:id" element={<ConnectionDebug />} />
 
-					<Route path="/emulator/:id" element={<Emulator />} />
-					<Route path="/emulators" element={<EmulatorList />} />
-					<Route path="/emulator" element={<Navigate to="/emulator/emulator" replace />} />
-					<Route path="/emulator2" element={<Navigate to="/emulator/emulator" replace />} />
-					<Route path="/emulator.html" element={<Navigate to="/emulator/emulator" replace />} />
+						<Route path="/emulator/:id" element={<Emulator />} />
+						<Route path="/emulators" element={<EmulatorList />} />
+						<Route path="/emulator" element={<Navigate to="/emulator/emulator" replace />} />
+						<Route path="/emulator2" element={<Navigate to="/emulator/emulator" replace />} />
+						<Route path="/emulator.html" element={<Navigate to="/emulator/emulator" replace />} />
 
-					{/* TODO this needs some work, to translate the query strings to the new format */}
-					{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
-					<Route path="/tablet.html" element={<Navigate to="/tablet" replace />} />
-					<Route path="/tablet2.html" element={<Navigate to="/tablet" replace />} />
-					<Route path="/ipad.html" element={<Navigate to="/tablet" replace />} />
-					<Route path="/tablet3" element={<Navigate to="/tablet" replace />} />
+						{/* TODO this needs some work, to translate the query strings to the new format */}
+						{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
+						<Route path="/tablet.html" element={<Navigate to="/tablet" replace />} />
+						<Route path="/tablet2.html" element={<Navigate to="/tablet" replace />} />
+						<Route path="/ipad.html" element={<Navigate to="/tablet" replace />} />
+						<Route path="/tablet3" element={<Navigate to="/tablet" replace />} />
 
-					<Route path="/tablet" element={<TabletView />} />
-					<Route path="/*" element={<App />} />
-				</Routes>
-			</BrowserRouter>
-		</SocketContext.Provider>
+						<Route path="/tablet" element={<TabletView />} />
+						<Route path="/*" element={<App />} />
+					</Routes>
+				</BrowserRouter>
+			</SocketContext.Provider>
+		</QueryClientProvider>
 	</React.StrictMode>
 )

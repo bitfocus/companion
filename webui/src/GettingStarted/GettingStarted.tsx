@@ -1,15 +1,17 @@
-import React, { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useEffect } from 'react'
 import { useHash, useSize } from 'react-use'
-import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { useIntersectionObserver, useResizeObserver } from 'usehooks-ts'
 import { useStickyScroller } from './useStickyScroller.js'
 import { observable, ObservableSet, runInAction } from 'mobx'
-import { GettingStartedMenu } from './SideMenu.js'
+import { getFilenameForSection, GettingStartedMenu } from './SideMenu.js'
+import { DocsContent } from './DocsContent.js'
+
+import docsStructure0 from '../../../docs/structure.json'
+const docsStructure: DocsSection[] = docsStructure0
 
 export interface DocsSection {
 	label: string
-	file: string
+	file?: string
 	children?: DocsSection[]
 }
 
@@ -77,9 +79,6 @@ const style = {
 
 export function GettingStarted() {
 	const [hash] = useHash()
-	const [structure, setStructure] = useState([])
-	const [error, setError] = useState(null)
-	const [loading, setLoading] = useState(true)
 
 	const { scrollerElementRef, scrollerContentRef, handleScroll, restoreScroll } = useStickyScroller(hash)
 	// Restore the scroll position when the data updates
@@ -101,24 +100,7 @@ export function GettingStarted() {
 				}
 			}
 		}, 50)
-	}, [scrollerElementRef, hash, structure])
-
-	// Fetch /docs/structure.json and parse it
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const response = await fetch(`/docs/structure.json`)
-				const structure = await response.json()
-				setStructure(structure)
-			} catch (e: any) {
-				setError(e)
-			}
-
-			setLoading(false)
-		}
-
-		fetchData()
-	}, [])
+	}, [scrollerElementRef, hash])
 
 	const visibleFiles = observable.set<string>()
 
@@ -144,32 +126,19 @@ export function GettingStarted() {
 				</div>
 			</div>
 			<div style={style.menuWrapper}>
-				{error ? (
-					<div style={{ backgroundColor: 'white' }}>{error}</div>
-				) : (
-					<>
-						<div style={style.menuStructure}>
-							<div style={{ padding: 20 }}>
-								{loading ? (
-									<div>loading..</div>
-								) : (
-									<GettingStartedMenu visibleFiles={visibleFiles} structure={structure} />
-								)}
-							</div>
+				<>
+					<div style={style.menuStructure}>
+						<div style={{ padding: 20 }}>
+							<GettingStartedMenu visibleFiles={visibleFiles} structure={docsStructure} />
 						</div>
-						<div
-							style={style.contentWrapper}
-							ref={scrollerElementRef}
-							onScroll={handleScroll}
-							className="img-max-width"
-						>
-							<div style={style.contentWrapper2} ref={scrollerContentRef}>
-								<div data-anchor="#top"></div>
-								{iterateContent(structure)}
-							</div>
+					</div>
+					<div style={style.contentWrapper} ref={scrollerElementRef} onScroll={handleScroll} className="img-max-width">
+						<div style={style.contentWrapper2} ref={scrollerContentRef}>
+							<div data-anchor="#top"></div>
+							{iterateContent(docsStructure)}
 						</div>
-					</>
-				)}
+					</div>
+				</>
 			</div>
 		</Fragment>
 	)
@@ -181,22 +150,26 @@ interface RenderSubsectionProps {
 	triggerScroll: () => void
 }
 function RenderSubsection({ subsect, visibleFiles, triggerScroll }: RenderSubsectionProps) {
+	const fileName = getFilenameForSection(subsect)
+
 	const [content, { height }] = useSize(
-		<div style={{ marginBottom: 30, paddingBottom: 20, borderBottom: '1px solid #eee' }}>
-			{subsect.file && (
-				<OnScreenReporter visibleFiles={visibleFiles} file={subsect.file}>
-					<a
-						href={`https://github.com/bitfocus/companion/blob/main/docs/${subsect.file}`}
-						target="_new"
-						style={style.contentGithubLink}
-					>
-						{subsect.file} <img src="/img/link.png" alt="Link" style={style.imgLink} />
-					</a>
-					<div>
-						<LoadContent file={subsect.file} />
-					</div>
-				</OnScreenReporter>
-			)}
+		<div style={subsect.file ? { marginBottom: 30, paddingBottom: 20, borderBottom: '1px solid #eee' } : {}}>
+			<OnScreenReporter visibleFiles={visibleFiles} file={fileName}>
+				{subsect.file && (
+					<>
+						<a
+							href={`https://github.com/bitfocus/companion/blob/main/docs/${subsect.file}`}
+							target="_new"
+							style={style.contentGithubLink}
+						>
+							{subsect.file} <img src="/img/link.png" alt="Link" style={style.imgLink} />
+						</a>
+						<div>
+							<DocsContent file={subsect.file} />
+						</div>
+					</>
+				)}
+			</OnScreenReporter>
 		</div>,
 		{ width: 0, height: 0 }
 	)
@@ -206,56 +179,11 @@ function RenderSubsection({ subsect, visibleFiles, triggerScroll }: RenderSubsec
 
 	return (
 		<Fragment key={subsect.label}>
-			{subsect.file && (
-				<h4 style={{ marginBottom: 15, paddingTop: 10 }} data-anchor={'#' + subsect.file}>
-					{subsect.label}
-				</h4>
-			)}
-			{subsect.file && content}
+			<h4 style={{ marginBottom: 15, paddingTop: 10 }} data-anchor={'#' + fileName}>
+				{subsect.label}
+			</h4>
+			{content}
 		</Fragment>
-	)
-}
-
-interface LoadContentProps {
-	file: string
-}
-function LoadContent({ file }: LoadContentProps) {
-	const [content, setContent] = useState<string>('')
-	const [loading, setLoading] = useState(true)
-
-	// strip filename
-	const baseUrl = `${file}`.replace(/\/[^/]+$/, '/')
-
-	useEffect(() => {
-		const fetchContent = async () => {
-			const response = await fetch(`/docs/${file}`)
-			const text = await response.text()
-			setContent(text)
-			setLoading(false)
-		}
-		fetchContent()
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
-
-	return (
-		<div>
-			{loading ? (
-				'loading'
-			) : (
-				<ReactMarkdown
-					urlTransform={(src, key, _node) => {
-						if (key === 'src') {
-							// img tag
-							return `/docs/${baseUrl}${defaultUrlTransform(src)}`
-						} else {
-							return defaultUrlTransform(src)
-						}
-					}}
-					children={content}
-					remarkPlugins={[remarkGfm]}
-				/>
-			)}
-		</div>
 	)
 }
 
