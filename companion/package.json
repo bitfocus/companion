@@ -56,7 +56,7 @@
 		"@julusian/segfault-raub": "^2.3.1",
 		"@loupedeck/node": "^1.2.0",
 		"@napi-rs/canvas": "^0.1.65",
-		"@sentry/node": "^8.48.0",
+		"@sentry/node": "^8.49.0",
 		"archiver": "^7.0.1",
 		"better-sqlite3": "^11.7.2",
 		"bufferutil": "^4.0.9",
