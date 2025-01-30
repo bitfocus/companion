@@ -299,6 +299,11 @@
 				"_version": "3.5.0",
 				"label": "v3.5.0",
 				"file": "9_whatsnew/v3-5-0.md"
+			},
+			{
+				"_version": "3.4.0",
+				"label": "v3.4.0",
+				"file": "9_whatsnew/v3-4-0.md"
 			}
 		]
 	}
