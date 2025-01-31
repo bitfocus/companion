@@ -103,11 +103,6 @@ export class InternalSystem implements InternalModuleFragment {
 		this.#registry = registry
 		this.#variableController = registry.variables
 
-		// TODO - reactive:
-		// self.system.emit('config_get', 'bind_ip', function (bind_ip) {
-		// 	self.setVariable('bind_ip', bind_ip)
-		// })
-
 		// Update interfaces on an interval, but also soon after launch
 		setInterval(() => this.#updateNetworkVariables(), 30000)
 		setTimeout(() => this.#updateNetworkVariables(), 5000)
@@ -166,6 +161,16 @@ export class InternalSystem implements InternalModuleFragment {
 			.finally(() => {
 				this.#updateNetworkVariablesRunning = false
 			})
+	}
+
+	/**
+	 * Update the bind IP address variable
+	 * @param bindIp The IP address being bound to
+	 */
+	updateBindIp(bindIp: string) {
+		this.#internalModule.setVariables({
+			bind_ip: bindIp,
+		})
 	}
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {

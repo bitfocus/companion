@@ -41,6 +41,7 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { PageController } from '../Page/Controller.js'
 import LogController from '../Log/Controller.js'
 import type { FragmentActionInstance } from '../Controls/Fragments/FragmentActionInstance.js'
+import { InternalSystem } from './System.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -573,6 +574,17 @@ export class InternalController {
 		return {
 			// Doesn't need to be reactive, it's only for an action
 			'$(this:surface_id)': extras.surfaceId,
+		}
+	}
+
+	/**
+	 * The bind address has changed
+	 */
+	updateBindIp(bindIp: string): void {
+		for (const fragment of this.#fragments) {
+			if (fragment instanceof InternalSystem) {
+				fragment.updateBindIp(bindIp)
+			}
 		}
 	}
 }
