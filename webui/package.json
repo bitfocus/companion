@@ -83,5 +83,8 @@
       "react-app",
       "react-app/jest"
     ]
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
   }
 }
