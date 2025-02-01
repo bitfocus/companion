@@ -154,7 +154,7 @@ function ConfiguredSurfacesTab() {
 
 			<CCallout color="info">
 				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite?companion-inapp-didyouknow">
+				<a target="_blank" rel="noreferrer" href="https://bfoc.us/70n2m47akw">
 					Companion Satellite
 				</a>
 				?

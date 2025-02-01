@@ -6,7 +6,7 @@
 
 **Slack / Chat**
 
-- https://bitfocus.io/api/slackinvite
+- https://bfoc.us/ke7e9dqgaz
 
 **Our website**
 

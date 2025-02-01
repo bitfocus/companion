@@ -61,16 +61,16 @@ export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: My
 					<FontAwesomeIcon className="nav-icon" icon={faTabletAlt} /> Web buttons
 				</CNavItem>
 
-				<CNavItem target="_new" href="https://github.com/bitfocus/companion/issues">
+				<CNavItem target="_new" href="https://bfoc.us/fiobkz0yqs">
 					<FontAwesomeIcon className="nav-icon" icon={faBug} /> Bugs & Features
 				</CNavItem>
-				<CNavItem target="_new" href="https://www.facebook.com/groups/companion/">
-					<FontAwesomeIcon className="nav-icon" icon={faUsers} /> Facebook
+				<CNavItem target="_new" href="https://bfoc.us/qjk0reeqmy">
+					<FontAwesomeIcon className="nav-icon" icon={faUsers} /> Community Forum
 				</CNavItem>
-				<CNavItem target="_new" href="https://bitfocus.io/api/slackinvite">
+				<CNavItem target="_new" href="https://bfoc.us/ke7e9dqgaz">
 					<FontAwesomeIcon className="nav-icon" icon={faComments} /> Slack Chat
 				</CNavItem>
-				<CNavItem target="_new" href="https://donorbox.org/bitfocus-opensource">
+				<CNavItem target="_new" href="https://bfoc.us/ccfbf8wm2x">
 					<FontAwesomeIcon className="nav-icon" icon={faDollarSign} /> Donate
 				</CNavItem>
 

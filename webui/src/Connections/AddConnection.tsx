@@ -137,17 +137,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	}
 
 	const confirmContent = (
-		<>
-			<p>
-				This module has not been verified to be compatible with this version of companion. It may be buggy or broken.
-			</p>
-			<p>
-				If this module is broken, please let us know in{' '}
-				<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion/issues/2157">
-					this github issue
-				</a>
-			</p>
-		</>
+		<p>This module has not been verified to be compatible with this version of companion. It may be buggy or broken.</p>
 	)
 
 	return (
@@ -158,7 +148,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 				<p>
 					Companion currently supports {modules.count} different things, and the list grows every day. If you can't find
 					the device you're looking for, please{' '}
-					<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
+					<a target="_new" href="https://bfoc.us/5xcykgx03n">
 						add a request
 					</a>{' '}
 					on GitHub
