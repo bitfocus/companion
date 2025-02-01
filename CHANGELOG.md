@@ -18,6 +18,7 @@
 - Custom variables are renamed from $(internal:custom_test) to $(custom:test). The old names still work, but will be removed in a future version
 - Support VEC footpedal as a surface
 - Check connection Stream Deck Studio devices for available firmware updates
+- Expanded keymap for emulators
 - Connection labels can be edited while connections are disabled
 - Add $(internal:uptime) variable
 - Performance improvements for variables
@@ -34,6 +35,8 @@
 - Support HTTP GET for module variables
 - Backend code refactoring to make Companion more robust
 - Modules can now be built with node22
+- Polish getting started docs
+- Add Whats new modal and sidebar link
 
 ### 🐞 BUG FIXES
 
@@ -41,6 +44,8 @@
 - Allow some missing expression operators
 - TCP/UDP api not accepting button text or custom variables containing slashes
 - Surface rotation not being considered when checking if a surface overflows the grid bounds
+- Indicate when internal variable input fields have an invalid value
+- internal:bind_ip always undefined
 
 ### 🧩 NEW & UPDATED MODULES
 
