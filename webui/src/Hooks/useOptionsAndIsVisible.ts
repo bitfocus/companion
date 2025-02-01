@@ -3,6 +3,7 @@ import { useMemo, useEffect, useState } from 'react'
 import { deepFreeze, sandbox } from '../util.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { cloneDeep } from 'lodash-es'
+import { toJS } from 'mobx'
 
 interface IsVisibleFunctionEntry {
 	fn: IsVisibleFunction
@@ -26,7 +27,7 @@ export function useOptionsAndIsVisible<
 				if (typeof option.isVisibleFn === 'string') {
 					isVisibleFns[option.id] = {
 						fn: sandbox(option.isVisibleFn),
-						data: deepFreeze(option.isVisibleData),
+						data: deepFreeze(toJS(option.isVisibleData)),
 					}
 				}
 			} catch (e) {
@@ -44,7 +45,7 @@ export function useOptionsAndIsVisible<
 			for (const [id, entry] of Object.entries(isVisibleFns)) {
 				try {
 					if (entry && typeof entry.fn === 'function') {
-						visibility[id] = entry.fn(cloneDeep(optionValues), entry.data)
+						visibility[id] = entry.fn(cloneDeep(toJS(optionValues)), entry.data)
 					}
 				} catch (e) {
 					console.error('Failed to check visibility', e)

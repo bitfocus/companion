@@ -18,6 +18,7 @@
 - Custom variables are renamed from $(internal:custom_test) to $(custom:test). The old names still work, but will be removed in a future version
 - Support VEC footpedal as a surface
 - Check connection Stream Deck Studio devices for available firmware updates
+- Expanded keymap for emulators
 - Connection labels can be edited while connections are disabled
 - Add $(internal:uptime) variable
 - Performance improvements for variables
@@ -34,6 +35,8 @@
 - Support HTTP GET for module variables
 - Backend code refactoring to make Companion more robust
 - Modules can now be built with node22
+- Polish getting started docs
+- Add Whats new modal and sidebar link
 
 ### 🐞 BUG FIXES
 
@@ -41,10 +44,150 @@
 - Allow some missing expression operators
 - TCP/UDP api not accepting button text or custom variables containing slashes
 - Surface rotation not being considered when checking if a surface overflows the grid bounds
+- Indicate when internal variable input fields have an invalid value
+- internal:bind_ip always undefined
 
 ### 🧩 NEW & UPDATED MODULES
 
--
+- aimedia-icap
+- aimedia-lexilive
+- aja-kumo
+- allenheath-ahm
+- allenheath-cq
+- analogway-awj
+- analogway-picturall
+- android-tv
+- anomes-millumin
+- audiotechnica-esw
+- aver-ptz
+- aws-elementallive
+- axeltechnology-cgplus
+- axeltechnology-vjpro
+- axeltechnology-xplayout
+- axeltechnology-xradio
+- axeltechnology-youplay
+- axis-ptz
+- behringer-xair
+- binwiederhier-ntfy
+- birddog-ptz
+- bmd-atem
+- bmd-gpi-and-tally-interface
+- bmd-ultimatte
+- bmd-videohub
+- boxcast-api
+- brompton-tessera
+- canon-ptz
+- cedar-dns8d
+- christie-projector
+- chyronhego-lyric
+- cockos-reaper
+- colorlight-processor
+- dan-dugan-automixer
+- dataton-watchout-json
+- dbaudiotechnik-amps
+- dbaudiotechnik-dsp
+- dcc-ex-commandstation
+- denon-recorder
+- digitalprojection-projectors
+- discord-api
+- equipson-lightshark
+- evertz-quartz
+- evertz-symphony
+- figure53-qlab-advance
+- fivem-console
+- focusrite-mp8r
+- fora-mfr
+- generic-emberplus
+- generic-http
+- generic-midi
+- generic-mysql
+- generic-osc
+- generic-pingandwake
+- generic-pjlink
+- generic-snmp
+- generic-swp02
+- generic-swp08
+- generic-webtable
+- getontime-ontime
+- google-sheets
+- h2r-graphics
+- hive-beebox
+- ictag-easyvideo
+- imimot-mitti
+- interspace-cueether
+- ioversal-vertex
+- josephadams-scriptlauncher
+- joy-playdeck
+- leolabs-ableset
+- libreoffice-impress
+- logos-proclaim
+- malighting-grandma3
+- microsoft-teams
+- middleman-adit
+- middleman-scte104proxy
+- mixtech-theatremix
+- monteiro-cronosdown
+- monteiro-pptvideo
+- moxa-e2200series
+- nanoleaf-shapes
+- neutrik-dpro
+- newblue-captivate
+- nexo-nxamp
+- nohassleav-videowallprocessor
+- novastar-controller
+- novastar-splicer
+- novastar-switcher
+- obs-studio
+- osee-gostream
+- peavy-ratc
+- philips-hue
+- philips-sicp
+- pixelhue-switcher
+- presentationtools-aps
+- ptzoptics-visca
+- renewedvision-propresenter-api
+- resolume-arena
+- riedel-rrcs
+- rode-rcv
+- roland-p20hd
+- roland-vr120hd
+- roland-xs84h
+- samsung-smarttv
+- sennheiser-digital6000
+- shure-mxn5
+- sikn-kerkomroep
+- simedia-yesapi
+- singularlive-studio
+- slack-webhooks
+- smodetech-smodelive
+- smokotnin-opensoundmeter
+- snapav-wattbox
+- socialstream-ninja
+- sony-serialtally
+- soundcraft-ui
+- spotify-remote
+- stagetec-rcp
+- stagetec-xci
+- studiocoast-vmix
+- tascam-cd
+- tascam-cd400u
+- tascam-da-6400
+- tasmota-http
+- techministry-tallyarbiter
+- telestream-prism
+- toggl-track
+- toolsonair-justincapture
+- tplink-kasasmartplug
+- tslproducts-umd
+- uts-remotevolume
+- vbaudio-voicemeeter
+- vdo-ninja
+- vicreo-hotkey
+- vitec-avediaplayer9300-series
+- webcomms-panel
+- zenvideo-ndirouter
+- zinc-oscpoint
+- zoom-osc-iso
 
 ## Companion v3.4.4 - Release Notes
 

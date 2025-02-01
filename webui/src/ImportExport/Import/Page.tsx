@@ -38,20 +38,30 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 	const isSinglePage = snapshot.type === 'page'
 
 	const [snapshotPageOptions, pageCount] = useMemo(() => {
-		const snapshotPageOptions: PageNumberOption[] = []
-		let pageCount = 0
-		for (const [pageNumber, pageInfo] of Object.entries(snapshot.pages ?? {})) {
-			const pageNumberInt = parseInt(pageNumber)
-			pageCount = Math.max(pageCount, pageNumberInt)
+		if (isSinglePage) {
+			const snapshotPageOptions: PageNumberOption[] = [
+				{
+					value: 1,
+					label: snapshot.page?.name ? `1 (${snapshot.page.name})` : '1',
+				},
+			]
+			return [snapshotPageOptions, 1]
+		} else {
+			const snapshotPageOptions: PageNumberOption[] = []
+			let pageCount = 0
+			for (const [pageNumber, pageInfo] of Object.entries(snapshot.pages ?? {})) {
+				const pageNumberInt = parseInt(pageNumber)
+				pageCount = Math.max(pageCount, pageNumberInt)
 
-			snapshotPageOptions.push({
-				value: pageNumberInt,
-				label: pageInfo.name ? `${pageNumberInt} (${pageInfo.name})` : `${pageNumberInt}`,
-			})
+				snapshotPageOptions.push({
+					value: pageNumberInt,
+					label: pageInfo.name ? `${pageNumberInt} (${pageInfo.name})` : `${pageNumberInt}`,
+				})
+			}
+
+			return [snapshotPageOptions, pageCount]
 		}
-
-		return [snapshotPageOptions, pageCount]
-	}, [snapshot.pages])
+	}, [snapshot.pages, snapshot.page, isSinglePage])
 
 	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
 	const {
@@ -94,6 +104,8 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 	const [hasBeenRendered, hasBeenRenderedRef] = useHasBeenRendered()
 
 	const [gridZoomController, gridZoomValue] = useGridZoom('import')
+
+	console.log('sn', snapshotPageOptions, snapshot)
 
 	return (
 		<CRow className="">

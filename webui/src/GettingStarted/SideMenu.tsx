@@ -43,15 +43,21 @@ const GettingStartedLink = observer(function GettingStartedLink({
 	visibleFiles: ObservableSet<string>
 	subsect: DocsSection
 }) {
+	const fileName = getFilenameForSection(subsect)
+
 	return (
 		<a
-			href={`#${subsect.file || 'top'}`}
+			href={`#${fileName}`}
 			style={{
-				fontWeight: visibleFiles.has(subsect.file) ? 'bold' : 'normal',
-				color: visibleFiles.has(subsect.file) ? 'rgb(213, 2, 21)' : '#555',
+				fontWeight: visibleFiles.has(fileName) ? 'bold' : 'normal',
+				color: visibleFiles.has(fileName) ? 'rgb(213, 2, 21)' : '#555',
 			}}
 		>
 			{subsect.label}
 		</a>
 	)
 })
+
+export function getFilenameForSection(section: DocsSection): string {
+	return section.file || `${section.children?.[0]?.file || ''}_parent`
+}

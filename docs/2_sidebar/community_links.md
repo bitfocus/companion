@@ -1,7 +1,7 @@
-- [Companion GitHub to report bugs](https://github.com/bitfocus/companion/issues)
+- [Companion GitHub to report bugs](https://bfoc.us/fiobkz0yqs)
 
-- [Facebook group to share information and ask questions](https://www.facebook.com/groups/2047850215433318/)
+- [Facebook group to share information and ask questions](https://bfoc.us/qjk0reeqmy)
 
-- [The Slack group for developers](https://bitfocus.io/api/slackinvite)
+- [The Slack group for developers](https://bfoc.us/ke7e9dqgaz)
 
-- [Donate to show your support and fund future development](https://donorbox.org/bitfocus-opensource)
+- [Donate to show your support and fund future development](https://bfoc.us/ccfbf8wm2x)

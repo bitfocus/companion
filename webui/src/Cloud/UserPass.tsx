@@ -57,7 +57,7 @@ export const CloudUserPass = memo(function CloudUserPass({
 				<CCol sm={12}>
 					<CAlert color="info">
 						<FontAwesomeIcon icon={faInfoCircle} /> &nbsp;Companion Cloud is a premium service. Learn more and sign up{' '}
-						<a target="_new" href="http://bitfocus.io/companion-cloud">
+						<a target="_new" href="https://bfoc.us/ezzaf9tfeg">
 							here
 						</a>
 						.

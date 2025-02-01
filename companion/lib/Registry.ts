@@ -404,6 +404,7 @@ export class Registry {
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
 		this.services.https.updateBindIp(bindIp)
+		this.internalModule.updateBindIp(bindIp)
 	}
 }
 

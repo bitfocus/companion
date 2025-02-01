@@ -45,6 +45,7 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { assertNever } from '@companion-app/shared/Util.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { Complete } from '@companion-module/base/dist/util.js'
+import { InternalSystem } from './System.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -610,6 +611,17 @@ export class InternalController {
 		return {
 			// Doesn't need to be reactive, it's only for an action
 			'$(this:surface_id)': extras.surfaceId,
+		}
+	}
+
+	/**
+	 * The bind address has changed
+	 */
+	updateBindIp(bindIp: string): void {
+		for (const fragment of this.#fragments) {
+			if (fragment instanceof InternalSystem) {
+				fragment.updateBindIp(bindIp)
+			}
 		}
 	}
 }

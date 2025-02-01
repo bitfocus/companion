@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
 	test: {
-		reporters: ['default', 'html'],
+		// reporters: ['default', 'html'],
 		exclude: [
 			'**/module-local-dev/**',
 			'**/bundled-modules/**',
@@ -10,18 +10,20 @@ export default defineConfig({
 			'**/dist/**',
 			'**/build/**',
 			'**/coverage/**',
+			'**/webui/**',
 		],
-		coverage: {
-			reporter: ['text', 'json', 'html'],
-			include: ['companion/**', 'shared-lib/**'],
-			exclude: [
-				'**/module-local-dev/**',
-				'**/bundled-modules/**',
-				'**/node_modules/**',
-				'**/dist/**',
-				'**/build/**',
-				'**/coverage/**',
-			],
-		},
+		// coverage: {
+		// 	reporter: ['text', 'json', 'html'],
+		// 	include: ['companion/**', 'shared-lib/**'],
+		// 	exclude: [
+		// 		'**/module-local-dev/**',
+		// 		'**/bundled-modules/**',
+		// 		'**/node_modules/**',
+		// 		'**/dist/**',
+		// 		'**/build/**',
+		// 		'**/coverage/**',
+		// 		'**/webui/**',
+		// 	],
+		// },
 	},
 })

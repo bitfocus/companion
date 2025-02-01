@@ -12,10 +12,22 @@ import {
 } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from './Components/CModalExt.js'
-import { useQuery } from '@tanstack/react-query'
-import { DocsSection } from './GettingStarted/GettingStarted.js'
 import { MyErrorBoundary } from './util.js'
 import { DocsContent } from './GettingStarted/DocsContent.js'
+import { useLocalStorage } from 'usehooks-ts'
+import semver from 'semver'
+
+import docsStructure from '../../docs/structure.json'
+import { DocsSection } from './GettingStarted/GettingStarted.js'
+
+interface WhatsNewPage extends DocsSection {
+	_version?: string
+	file: string
+}
+
+const whatsNewPages: WhatsNewPage[] =
+	(docsStructure.find((section) => section._whatsnew)?.children as WhatsNewPage[]).filter((f) => !!f._version) ?? []
+const latestPage: WhatsNewPage | undefined = whatsNewPages[0]
 
 interface WhatsNewModalProps {
 	// Nothing
@@ -29,29 +41,22 @@ export const WhatsNewModal = observer(
 	forwardRef<WhatsNewModalRef, WhatsNewModalProps>(function HelpModal(_props, ref) {
 		const [show, setShow] = useState(false)
 
-		const { isPending, error, data } = useQuery<DocsSection[]>({
-			queryKey: ['docsStructure'],
-			queryFn: () => fetch('/docs/structure.json').then((res) => res.json()),
-			retry: false,
-		})
-
-		const whatsNewPages = data?.find((section) => section.file?.endsWith('whatsnew.md'))?.children
-
-		const [selectedVersion, setSelectedVersion] = useState('')
-
+		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined)
 		useEffect(() => {
-			if (whatsNewPages) {
-				setSelectedVersion((latestVersion) => {
-					if (whatsNewPages.find((p) => p.file === latestVersion)) return latestVersion
-					return whatsNewPages[0]?.file ?? ''
-				})
+			if (!storedLatest || (latestPage._version && semver.lt(storedLatest, latestPage._version))) {
+				setTimeout(() => {
+					setShow(true)
+				}, 10)
+				console.log('New version detected, showing WhatsNewModal')
 			}
-		}, [whatsNewPages])
+		}, [storedLatest])
+
+		const [selectedVersion, setSelectedVersion] = useState(latestPage.file)
 
 		const selectedPage = selectedVersion && whatsNewPages?.find((page) => page.file === selectedVersion)
 
 		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => {}, [])
+		const onClosed = useCallback(() => setStoredLatest(latestPage._version), [])
 
 		useImperativeHandle(
 			ref,
@@ -64,14 +69,11 @@ export const WhatsNewModal = observer(
 		)
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" className="modal-whatsnew">
 				<CModalHeader closeButton>
 					<h5>What's New in Companion</h5>
 				</CModalHeader>
 				<CModalBody>
-					{isPending && <div>Loading...</div>}
-					{error && <div>Error: {error.message}</div>}
-
 					<CNav variant="tabs">
 						{whatsNewPages?.map((page) => (
 							<CNavItem key={page.file}>
