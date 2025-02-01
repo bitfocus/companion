@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import {
 	CModalBody,
 	CModalHeader,
@@ -42,21 +42,21 @@ export const WhatsNewModal = observer(
 		const [show, setShow] = useState(false)
 
 		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined)
-		if (!storedLatest || (latestPage._version && semver.lt(storedLatest, latestPage._version))) {
-			setTimeout(() => {
-				setStoredLatest(latestPage._version)
-				setShow(true)
-			}, 10)
-			console.log('New version detected, showing WhatsNewModal')
-		}
-		console.log('aaa', storedLatest, latestPage._version)
+		useEffect(() => {
+			if (!storedLatest || (latestPage._version && semver.lt(storedLatest, latestPage._version))) {
+				setTimeout(() => {
+					setShow(true)
+				}, 10)
+				console.log('New version detected, showing WhatsNewModal')
+			}
+		}, [storedLatest])
 
 		const [selectedVersion, setSelectedVersion] = useState(latestPage.file)
 
 		const selectedPage = selectedVersion && whatsNewPages?.find((page) => page.file === selectedVersion)
 
 		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => {}, [])
+		const onClosed = useCallback(() => setStoredLatest(latestPage._version), [])
 
 		useImperativeHandle(
 			ref,
