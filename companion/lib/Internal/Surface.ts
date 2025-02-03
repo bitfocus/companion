@@ -320,14 +320,20 @@ export class InternalSurface implements InternalModuleFragment {
 				const surfaceId = surface.id.replaceAll(':', '_') // TODO - more chars
 				values[`surface_${surfaceId}_name`] = surface.name || surface.id
 				values[`surface_${surfaceId}_location`] = surface.location ?? ''
-				values[`surface_${surfaceId}_page`] = this.#surfaceController.devicePageGet(surface.id)
+
+				const surfacePageId = this.#surfaceController.devicePageGet(surface.id)
+				values[`surface_${surfaceId}_page`] =
+					(surfacePageId && this.#pageController.getPageNumber(surfacePageId)) || '0'
 			}
 
 			if (!surfaceGroup.isAutoGroup) {
 				const groupId = surfaceGroup.id.startsWith('group:') ? surfaceGroup.id.slice(6) : surfaceGroup.id
 				values[`surface_group_${groupId}_name`] = surfaceGroup.displayName
 				values[`surface_group_${groupId}_surface_count`] = surfaceCount
-				values[`surface_group_${groupId}_page`] = this.#surfaceController.devicePageGet(surfaceGroup.id)
+
+				const surfaceGroupPageId = this.#surfaceController.devicePageGet(surfaceGroup.id)
+				values[`surface_group_${groupId}_page`] =
+					(surfaceGroupPageId && this.#pageController.getPageNumber(surfaceGroupPageId)) || '0'
 			}
 		}
 
