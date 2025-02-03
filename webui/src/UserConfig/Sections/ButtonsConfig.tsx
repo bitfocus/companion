@@ -1,8 +1,8 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { UserConfigProps } from './Components/Common.js'
-import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
-import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
+import { UserConfigProps } from '../Components/Common.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
+import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 
 export const ButtonsConfig = observer(function ButtonsConfig(props: UserConfigProps) {
 	return (

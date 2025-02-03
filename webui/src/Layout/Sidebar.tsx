@@ -39,6 +39,7 @@ import {
 	faPuzzlePiece,
 	faInfo,
 	faStar,
+	faHatWizard,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
@@ -149,7 +150,7 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 }
 
 export const MySidebar = memo(function MySidebar() {
-	const { whatsNewModal } = useContext(RootAppStoreContext)
+	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [])
@@ -183,7 +184,15 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarVariablesGroups />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
-				<SidebarMenuItem name="Settings" icon={faCog} path="/settings" />
+				<SidebarMenuItemGroup name="Settings" icon={faCog} path="/settings">
+					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
+					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
+					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
+					<SidebarMenuItem name="Surfaces" icon={null} path="/settings/surfaces" />
+					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />
+					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
+					<></>
+				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
 				{window.localStorage.getItem('show_companion_cloud') === '1' && (

@@ -350,3 +350,11 @@ svg.pad-left {
 .grow {
 	flex-grow: 1;
 }
+
+.h-fit-content {
+	height: fit-content;
+}
+
+.text-decoration-none {
+	--cui-link-decoration: none;
+}
