@@ -94,6 +94,35 @@ function splitLongPng64Values(key: string, value: string): string {
 	return value
 }
 
+/**
+ * Compute a Content-Disposition header specifying an attachment with the
+ * given filename.
+ */
+function attachmentWithFilename(filename: string): string {
+	function quotedAscii(s: string): string {
+		// Boil away combining characters and non-ASCII code points and escape
+		// quotes.  Modern browsers don't use this, so don't bother going all-out.
+		// Don't percent-encode anything, because browsers don't agree on whether
+		// quoted filenames should be percent-decoded (Firefox and Chrome yes,
+		// Safari no).
+		return (
+			'"' +
+			[...s.normalize('NFKD')]
+				.filter((c) => '\x20' <= c && c <= '\x7e')
+				.map((c) => (c === '"' ? '\\"' : c))
+				.join('') +
+			'"'
+		)
+	}
+
+	// The filename parameter is used primarily by legacy browsers.  Strangely, it
+	// must be present for at least some versions of Safari to use the modern
+	// filename* parameter.
+	const quotedFallbackAsciiFilename = quotedAscii(filename)
+	const modernUnicodeFilename = encodeURIComponent(filename)
+	return `attachment; filename=${quotedFallbackAsciiFilename}; filename*=UTF-8''${modernUnicodeFilename}`
+}
+
 function downloadBlob(
 	logger: Logger,
 	res: express.Response,
@@ -111,7 +140,7 @@ function downloadBlob(
 				res.status(200)
 				res.set({
 					'Content-Type': 'application/gzip',
-					'Content-Disposition': `attachment; filename="${filename}"`,
+					'Content-Disposition': attachmentWithFilename(filename),
 				})
 				res.end(result)
 			}
@@ -120,14 +149,14 @@ function downloadBlob(
 		res.status(200)
 		res.set({
 			'Content-Type': 'application/json',
-			'Content-Disposition': `attachment; filename="${filename}"`,
+			'Content-Disposition': attachmentWithFilename(filename),
 		})
 		res.end(JSON.stringify(data, undefined, '\t'))
 	} else if (format === 'yaml') {
 		res.status(200)
 		res.set({
 			'Content-Type': 'application/yaml',
-			'Content-Disposition': `attachment; filename="${filename}.yaml"`,
+			'Content-Disposition': attachmentWithFilename(filename),
 		})
 		res.end(yaml.stringify(data, splitLongPng64Values))
 	} else {
@@ -240,8 +269,8 @@ export class ImportExportController {
 			const parsedName = this.#variablesController.values.parseVariables(filename, null).text
 
 			return parsedName && parsedName !== 'undefined'
-				? encodeURI(`${parsedName}${exportType && useDefault ? '_' + exportType : ''}.${fileExt}`)
-				: encodeURI(`${os.hostname()}_${getTimestamp()}_${exportType}.${fileExt}`)
+				? `${parsedName}${exportType && useDefault ? '_' + exportType : ''}.${fileExt}`
+				: `${os.hostname()}_${getTimestamp()}_${exportType}.${fileExt}`
 		}
 
 		const generate_export_for_triggers = (triggerControls: ControlTrigger[]): ExportTriggersListv6 => {
@@ -447,7 +476,7 @@ export class ImportExportController {
 			res.status(200)
 			res.set({
 				'Content-Type': 'text/csv',
-				'Content-Disposition': `attachment; filename="${filename}"`,
+				'Content-Disposition': attachmentWithFilename(filename),
 			})
 
 			const csvOut = csvStringify([
