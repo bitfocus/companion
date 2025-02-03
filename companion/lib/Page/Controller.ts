@@ -757,16 +757,23 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	 */
 	#setupPages(rawPageData: Record<string, PageModel>): void {
 		// Load existing data
+		let changedIds = false
 		for (let i = 1; true; i++) {
 			const pageInfo = rawPageData[i]
 			if (!pageInfo) break
 
 			// Ensure each page has an id defined
-			if (!pageInfo.id) pageInfo.id = nanoid()
+			if (!pageInfo.id) {
+				pageInfo.id = nanoid()
+				changedIds = true
+			}
 
 			this.#pagesById[pageInfo.id] = pageInfo
 			this.#pageIds.push(pageInfo.id)
 		}
+
+		// If the id of any page was added, save the changes
+		if (changedIds) this.db.setKey('page', this.getAll(false))
 
 		// Default values
 		if (this.#pageIds.length === 0) {
