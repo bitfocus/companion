@@ -1,9 +1,16 @@
-.settings-category {
-	font-weight: bold;
-	font-size: 18px;
-	padding-top: 30px !important;
-	background-color: #fff !important;
-	border-bottom: 1px solid #dddfe2 !important;
+.settings-category-spacer:not(:first-child) {
+	height: 20px;
+}
+
+.settings-category-row {
+	th {
+		font-weight: bold;
+		font-size: 18px;
+		padding-top: 10px !important;
+		padding-bottom: 10px !important;
+		// background-color: #fff !important;
+		border-bottom: 1px solid #dddfe2 !important;
+	}
 }
 
 .remote-control-tabs .nav-link {
@@ -16,10 +23,12 @@
 	margin: 0;
 	box-shadow: none;
 }
+
 .table-settings td,
 .table-settings th {
 	padding: 0;
 	margin: 0;
+	padding-left: 5px;
 }
 
 .table-settings td {
@@ -27,4 +36,5 @@
 	border-bottom: 1px solid #dddfe2;
 	padding-top: 5px;
 	padding-bottom: 7px;
+	background: none;
 }

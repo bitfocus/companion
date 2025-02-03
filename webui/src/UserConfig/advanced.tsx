@@ -16,7 +16,7 @@ export const SettingsAdvancedPage = memo(function UserConfig() {
 						<p>Settings apply instantaneously, don't worry about it!</p>
 					</div>
 				</div>
-				<div style={{ marginTop: -30 }}>
+				<div>
 					<UserConfigTable />
 				</div>
 			</CCol>
