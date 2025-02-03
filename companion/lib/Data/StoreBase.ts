@@ -310,6 +310,7 @@ export abstract class DataStoreBase {
 		this.store
 			?.backup(`${this.cfgBakFile}`)
 			.then(() => {
+				this.lastsave = Date.now()
 				this.dirty = false
 				this.logger.debug('backup complete')
 			})
