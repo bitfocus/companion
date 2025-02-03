@@ -20,7 +20,7 @@
     "jsep": "^1.4.0",
     "jsonpath-plus": "^10.2.0",
     "ps-tree": "^1.2.0",
-    "semver": "^7.6.3"
+    "semver": "^7.7.0"
   },
   "scripts": {
     "build": "run build:ts",
