@@ -516,7 +516,7 @@ const MissingVersionsWarning = observer(function MissingVersionsWarning() {
 		<CAlert color="info">
 			Some modules are missing version information.
 			<br />
-			<CButton color="info" onClick={doInstallAllMissing}>
+			<CButton color="info" className="mt-2" onClick={doInstallAllMissing}>
 				<FontAwesomeIcon icon={faDownload} />
 				&nbsp;Install missing versions
 			</CButton>
