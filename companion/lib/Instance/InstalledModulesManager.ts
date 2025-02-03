@@ -391,9 +391,10 @@ export class InstanceInstalledModulesManager {
 			return "Doesn't look like a valid module, missing manifest"
 		}
 
-		if (manifestJson.name !== moduleId || manifestJson.version !== moduleVersion) {
-			this.#logger.warn('Module manifest does not match requested module')
-			return 'Module manifest does not match requested module'
+		if (manifestJson.id !== moduleId || manifestJson.version !== moduleVersion) {
+			const msg = `Module manifest does not match requested module. Got ${manifestJson.id}@${manifestJson.version}, expected ${moduleId}@${moduleVersion}`
+			this.#logger.warn(msg)
+			return msg
 		}
 
 		return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, null)
