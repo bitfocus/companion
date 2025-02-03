@@ -12,7 +12,10 @@ export interface DrawStyleButtonModel extends ButtonStyleProperties {
 	imageBuffers: DrawImageBuffer[]
 
 	pushed: boolean
-	step_cycle: number | undefined
+
+	stepCurrent: number
+	stepCount: number
+
 	cloud: boolean | undefined
 	cloud_error: boolean | undefined
 	button_status: 'error' | 'warning' | 'good' | undefined
