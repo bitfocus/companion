@@ -7,6 +7,8 @@
 - Ensure pages are saved after filling in ids #3246
 - Strings with null characters break drawing #3247
 - Import not fixing up nested actions and feedbacks #3248
+- Surface page variables showing id instead of number #3244
+- Specify the config export download filename in the modern way that's interpreted identically in all modern browsers. #3242
 - DB backup being written too often
 
 ### 🐞 MODULE FIXES
