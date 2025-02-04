@@ -29,10 +29,23 @@ export class ReferencesVisitors {
 		// Update the base style
 		if (style) visitor.visitString(style, 'text')
 
-		// Apply any updates to the internal actions/feedbacks
-		internalModule.visitReferences(visitor, rawEntities, entities)
+		const flatRawEntities: SomeEntityModel[] = []
+		const pluckRawEntities = (entities: SomeEntityModel[]) => {
+			for (const entity of entities) {
+				flatRawEntities.push(entity)
+				if (entity.connectionId === 'internal' && entity.children) {
+					for (const children of Object.values(entity.children)) {
+						if (children) pluckRawEntities(children)
+					}
+				}
+			}
+		}
+		pluckRawEntities(rawEntities)
 
-		for (const entity of rawEntities) {
+		// Apply any updates to the internal actions/feedbacks
+		internalModule.visitReferences(visitor, flatRawEntities, entities)
+
+		for (const entity of flatRawEntities) {
 			visitEntityModel(visitor, entity)
 		}
 
