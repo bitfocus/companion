@@ -55,9 +55,9 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 - Get custom variable value  
   Method: GET  
   Path: `/api/custom-variable/<name>/value`
-- Get Module variable value
-  Method: GET
-  Path: `/api/variable/<Connection Label>/<name>/value`
+- Get Module variable value  
+  Method: GET  
+  Path: `/api/variable/<Connection Label>/<name>/value`  
 - Rescan for USB surfaces  
   Method: POST  
   Path: `/api/surfaces/rescan`  
