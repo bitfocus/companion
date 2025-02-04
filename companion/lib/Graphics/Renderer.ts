@@ -72,25 +72,6 @@ export class GraphicsRenderer {
 		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
 	}
 
-	/**
-	 * Draw the image for a button
-	 */
-	static async drawButtonImage(
-		options: GraphicsOptions,
-		drawStyle: DrawStyleModel,
-		location: ControlLocation | undefined,
-		pagename: string | undefined
-	): Promise<ImageResult> {
-		const { buffer, width, height, dataUrl, draw_style } = await GraphicsRenderer.drawButtonImageUnwrapped(
-			options,
-			drawStyle,
-			location,
-			pagename
-		)
-
-		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle)
-	}
-
 	static wrapDrawButtonImage(
 		buffer: Buffer,
 		width: number,
@@ -192,7 +173,7 @@ export class GraphicsRenderer {
 			buffer: img.buffer(),
 			width: img.realwidth,
 			height: img.realheight,
-			dataUrl: await img.toDataURL(),
+			dataUrl: img.toDataURLSync(),
 			draw_style,
 		}
 	}
