@@ -109,7 +109,7 @@ function attachmentWithFilename(filename: string): string {
 			'"' +
 			[...s.normalize('NFKD')]
 				.filter((c) => '\x20' <= c && c <= '\x7e')
-				.map((c) => (c === '"' ? '\\"' : c))
+				.map((c) => (c === '"' || c === '\\' ? '\\' : '') + c)
 				.join('') +
 			'"'
 		)
