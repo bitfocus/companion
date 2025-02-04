@@ -36,10 +36,34 @@ export class ReferencesVisitors {
 		// Update the base style
 		if (style) visitor.visitString(style, 'text')
 
-		// Apply any updates to the internal actions/feedbacks
-		internalModule.visitReferences(visitor, rawActions, actions, rawFeedbacks, feedbacks)
+		const flatRawFeedbacks: FeedbackInstance[] = []
+		const pluckRawFeedbacks = (feedbacks: FeedbackInstance[]) => {
+			for (const feedback of feedbacks) {
+				flatRawFeedbacks.push(feedback)
+				if (feedback.instance_id === 'internal' && feedback.children) {
+					pluckRawFeedbacks(feedback.children)
+				}
+			}
+		}
+		pluckRawFeedbacks(rawFeedbacks)
 
-		for (const feedback of rawFeedbacks) {
+		const flatRawActions: ActionInstance[] = []
+		const pluckRawActions = (actions: ActionInstance[]) => {
+			for (const action of actions) {
+				flatRawActions.push(action)
+				if (action.instance === 'internal' && action.children) {
+					for (const children of Object.values(action.children)) {
+						if (children) pluckRawActions(children)
+					}
+				}
+			}
+		}
+		pluckRawActions(rawActions)
+
+		// Apply any updates to the internal actions/feedbacks
+		internalModule.visitReferences(visitor, flatRawActions, actions, flatRawFeedbacks, feedbacks)
+
+		for (const feedback of flatRawFeedbacks) {
 			visitFeedbackInstance(visitor, feedback)
 		}
 
@@ -48,7 +72,7 @@ export class ReferencesVisitors {
 		}
 
 		// Fixup any references in action options
-		for (const action of rawActions) {
+		for (const action of flatRawActions) {
 			visitActionInstance(visitor, action)
 		}
 
