@@ -1,5 +1,21 @@
 # Bitfocus Companion
 
+## Companion v3.5.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Ensure pages are saved after filling in ids #3246
+- Strings with null characters break drawing #3247
+- Import not fixing up nested actions and feedbacks #3248
+- DB backup being written too often
+
+### 🐞 MODULE FIXES
+
+- figure53-qlab-advance
+- josephadams-scriptlauncher
+- sennheiser-digital6000
+- studiocoast-vmix
+
 ## Companion v3.5.0 - Release Notes
 
 ### BREAKING CHANGES
