@@ -1042,12 +1042,12 @@ export class Image {
 		return buffer
 	}
 
-	/**
-	 * returns the image as a data-url
-	 */
-	toDataURL(): Promise<string> {
-		return this.canvas.toDataURLAsync('image/png')
-	}
+	// /**
+	//  * returns the image as a data-url
+	//  */
+	// toDataURL(): Promise<string> {
+	// 	return this.canvas.toDataURLAsync('image/png')
+	// }
 
 	/**
 	 * returns the image as a data-url
