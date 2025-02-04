@@ -121,6 +121,13 @@ export function HttpProtocol() {
 					Path: <code>/api/custom-variable/</code>&lt;name&gt;<code>/value</code>
 				</li>
 				<li>
+					Get Module variable value
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Path: <code>/api/variable/</code>&lt;Connection label&gt;<code>/</code>&lt;name&gt;<code>/value</code>
+				</li>
+				<li>
 					Make Companion rescan for newly attached USB surfaces
 					<br />
 					Method: <code>POST</code>
