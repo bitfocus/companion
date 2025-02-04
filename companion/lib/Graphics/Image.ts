@@ -368,6 +368,15 @@ export class Image {
 		)
 	}
 
+	#sanitiseText(text: string | undefined): string {
+		if (text === undefined) return ''
+
+		// If there is a null character in the string, cut it off
+		const nullIndex = text.indexOf('\0')
+		if (nullIndex == -1) return text
+		return text.substring(0, nullIndex)
+	}
+
 	/**
 	 * draws a single line of left aligned text
 	 * the line length is not wrapped or limited and may extend beyond the canvas
@@ -380,6 +389,8 @@ export class Image {
 	 * @returns width of the line
 	 */
 	drawTextLine(x: number, y: number, text: string, color: string, fontsize: number, dummy = false): number {
+		text = this.#sanitiseText(text)
+
 		if (text === undefined || text.length == 0) return 0
 
 		if (isNaN(fontsize)) return 0
@@ -418,6 +429,8 @@ export class Image {
 		halignment: HorizontalAlignment = 'center',
 		valignment: VerticalAlignment = 'center'
 	): number {
+		text = this.#sanitiseText(text)
+
 		if (text === undefined || text.length == 0) return 0
 		if (halignment != 'left' && halignment != 'center' && halignment != 'right') halignment = 'left'
 
@@ -476,6 +489,8 @@ export class Image {
 		// let textFits = true
 		let lineheight
 		let fontheight
+
+		text = this.#sanitiseText(text)
 
 		if (text == undefined || text == '') {
 			return true
