@@ -33,6 +33,7 @@ import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
+import { createTrpcRouter } from './UI/TRPC.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -313,6 +314,7 @@ export class Registry {
 		await this.instance.initInstances(extraModulePath)
 
 		// Instances are loaded, start up http
+		this.ui.express.bindTrpcRouter(createTrpcRouter(this))
 		this.rebindHttp(bindIp, bindPort)
 
 		// Startup has completed, run triggers
