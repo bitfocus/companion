@@ -15,6 +15,7 @@ import type { UIHandler } from './Handler.js'
 import type { ClientSocket } from './Handler.js'
 import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
 import { compileUpdatePayload } from './UpdatePayload.js'
+import { publicProcedure, router } from './TRPC.js'
 
 export class UIUpdate {
 	readonly #logger = LogController.createLogger('UI/Update')
@@ -77,5 +78,18 @@ export class UIUpdate {
 			.catch((e) => {
 				this.#logger.verbose('update server said something unexpected!', e)
 			})
+	}
+
+	createTrpcRouter() {
+		return router({
+			// TODO
+
+			version: publicProcedure.query(() => {
+				return {
+					appVersion: this.#appInfo.appVersion,
+					appBuild: this.#appInfo.appBuild,
+				}
+			}),
+		})
 	}
 }

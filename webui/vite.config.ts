@@ -29,6 +29,10 @@ export default defineConfig({
 				target: `ws://${upstreamUrl}`,
 				ws: true,
 			},
+			'/trpc': {
+				target: `ws://${upstreamUrl}`,
+				ws: true,
+			},
 		},
 	},
 	plugins: [

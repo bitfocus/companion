@@ -1,11 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { CHeader, CHeaderBrand, CHeaderNav, CNavItem, CNavLink, CHeaderToggler, CContainer } from '@coreui/react'
+import {
+	CHeader,
+	CHeaderBrand,
+	CHeaderNav,
+	CNavItem,
+	CNavLink,
+	CHeaderToggler,
+	CContainer,
+	CSpinner,
+} from '@coreui/react'
 import { faBars, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
+import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
+import { trpc } from '../TRPC.js'
 
 interface MyHeaderProps {
 	canLock: boolean
@@ -17,7 +27,6 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 
 	const { showToggle, clickToggle } = useSidebarState()
 
-	const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null)
 	const [updateData, setUpdateData] = useState<AppUpdateInfo | null>(null)
 
 	useEffect(() => {
@@ -26,26 +35,10 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		const unsubAppInfo = socket.on('app-update-info', setUpdateData)
 		socket.emit('app-update-info')
 
-		socket
-			.emitPromise('app-version-info', [])
-			.then((info) => {
-				setVersionInfo(info)
-			})
-			.catch((e) => {
-				console.error('Failed to load version info', e)
-			})
-
 		return () => {
 			unsubAppInfo()
 		}
 	}, [socket])
-
-	const versionString = versionInfo
-		? versionInfo.appBuild.includes('stable')
-			? `v${versionInfo.appVersion}`
-			: `v${versionInfo.appBuild}`
-		: ''
-	const buildString = versionInfo ? `Build ${versionInfo.appBuild}` : ''
 
 	return (
 		<CHeader position="sticky" className="p-0">
@@ -64,11 +57,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 						<CNavItem className="install-name">{userConfig.properties?.installName}</CNavItem>
 					)}
 
-					<CNavItem>
-						<CNavLink target="_blank" title={buildString} href="https://bitfocus.io/companion/">
-							{versionString}
-						</CNavLink>
-					</CNavItem>
+					<HeaderVersion />
 
 					{updateData?.message ? (
 						<CNavItem className="header-update-warn">
@@ -95,3 +84,25 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		</CHeader>
 	)
 })
+
+function HeaderVersion() {
+	const versionInfo = trpc.appInfo.version.useQuery()
+
+	const versionString = versionInfo.data
+		? versionInfo.data.appBuild.includes('stable')
+			? `v${versionInfo.data.appVersion}`
+			: `v${versionInfo.data.appBuild}`
+		: ''
+	const buildString = versionInfo.data ? `Build ${versionInfo.data.appBuild}` : ''
+
+	return (
+		<CNavItem>
+			{versionInfo.isLoading ? <CSpinner color="white" /> : null}
+			{versionInfo.data ? (
+				<CNavLink target="_blank" title={buildString} href="https://bitfocus.io/companion/">
+					{versionString}
+				</CNavLink>
+			) : null}
+		</CNavItem>
+	)
+}

@@ -150,13 +150,6 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 
 		const client = new ClientSocket(rawClient, this.#logger)
 
-		client.onPromise('app-version-info', () => {
-			return {
-				appVersion: this.#appInfo.appVersion,
-				appBuild: this.#appInfo.appBuild,
-			}
-		})
-
 		this.emit('clientConnect', client)
 
 		client.on('disconnect', () => {

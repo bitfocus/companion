@@ -17,6 +17,8 @@ import fs from 'fs'
 // @ts-ignore
 import serveZip from 'express-serve-zip'
 import { fileURLToPath } from 'url'
+import * as trpcExpress from '@trpc/server/adapters/express'
+import { AppRouter, createTrpcContext } from './TRPC.js'
 
 /**
  * Create a zip serve app
@@ -57,6 +59,7 @@ export class UIExpress {
 	#apiRouter = Express.Router()
 	#legacyApiRouter = Express.Router()
 	#connectionApiRouter = Express.Router()
+	#trpcRouter = Express.Router()
 
 	constructor(internalApiRouter: Express.Router) {
 		this.app.use(cors())
@@ -85,6 +88,9 @@ export class UIExpress {
 
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use('/api', (r, s, n) => this.#apiRouter(r, s, n))
+
+		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
+		this.app.use('/trpc', (r, s, n) => this.#trpcRouter(r, s, n))
 
 		// Use the router #legacyApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use((r, s, n) => this.#legacyApiRouter(r, s, n))
@@ -139,5 +145,18 @@ export class UIExpress {
 	 */
 	set connectionApiRouter(router: Express.Router) {
 		this.#connectionApiRouter = router
+	}
+
+	#boundTrpcRouter = false
+	bindTrpcRouter(trpcRouter: AppRouter) {
+		if (this.#boundTrpcRouter) throw new Error('tRPC router already bound')
+		this.#boundTrpcRouter = true
+
+		this.#trpcRouter.use(
+			trpcExpress.createExpressMiddleware({
+				router: trpcRouter,
+				createContext: createTrpcContext,
+			})
+		)
 	}
 }

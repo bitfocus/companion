@@ -23,6 +23,8 @@
     "@tanstack/react-router-devtools": "^1.121.12",
     "@tanstack/router-plugin": "^1.121.12",
     "@tanstack/virtual-file-routes": "^1.120.17",
+    "@trpc/client": "^11.0.0-rc.730",
+    "@trpc/react-query": "^11.0.0-rc.730",
     "@types/crypto-js": "^4.2.2",
     "@types/react": "^18.3.23",
     "@types/react-copy-to-clipboard": "^5.0.7",
