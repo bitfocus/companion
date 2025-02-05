@@ -314,7 +314,9 @@ export class Registry {
 		await this.instance.initInstances(extraModulePath)
 
 		// Instances are loaded, start up http
-		this.ui.express.bindTrpcRouter(createTrpcRouter(this))
+		const router = createTrpcRouter(this)
+		this.ui.express.bindTrpcRouter(router)
+		this.ui.io.bindTrpcRouter(router)
 		this.rebindHttp(bindIp, bindPort)
 
 		// Startup has completed, run triggers
@@ -363,6 +365,8 @@ export class Registry {
 	exit(fromInternal: boolean, restart: boolean) {
 		Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
+
+			this.ui.close()
 
 			// Save the db to disk
 			this.db.close()

@@ -24,4 +24,8 @@ export class UIController {
 	clientConnect(client: ClientSocket): void {
 		this.update.clientConnect(client)
 	}
+
+	close() {
+		this.io.close()
+	}
 }
