@@ -90,6 +90,7 @@ async function getNetworkVariables() {
 
 export class InternalSystem implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/System')
+	readonly #customMessageLogger = LogController.createLogger('Custom')
 
 	readonly #registry: Registry
 	readonly #internalModule: InternalController
@@ -225,6 +226,20 @@ export class InternalSystem implements InternalModuleFragment {
 					},
 				],
 			},
+			custom_log: {
+				label: 'Write to companion log',
+				description: undefined,
+				options: [
+					{
+						type: 'textinput',
+						label: 'Message',
+						id: 'message',
+						useVariables: {
+							local: true,
+						},
+					},
+				],
+			},
 		}
 
 		if (process.env.COMPANION_IPC_PARENT || process.env.COMPANION_IN_SYSTEMD) {
@@ -274,6 +289,14 @@ export class InternalSystem implements InternalModuleFragment {
 					}
 				)
 			}
+			return true
+		} else if (action.definitionId === 'custom_log') {
+			const message = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				action.rawOptions.message,
+				extras
+			).text
+			this.#customMessageLogger.info(message)
+
 			return true
 		} else if (action.definitionId === 'app_restart') {
 			this.#registry.exit(true, true)
