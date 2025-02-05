@@ -43,16 +43,28 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
-			logic_and: {
+			logic_operator: {
 				feedbackType: 'boolean',
-				label: 'Logic: AND',
-				description: 'Test if multiple conditions are true',
+				label: 'Logic: Operation',
+				description: 'Combine multiple conditions',
 				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
 				},
 				showInvert: true,
-				options: [],
+				options: [
+					{
+						type: 'dropdown',
+						label: 'Operation',
+						id: 'operation',
+						default: 'and',
+						choices: [
+							{ id: 'and', label: 'AND' },
+							{ id: 'or', label: 'OR' },
+							{ id: 'xor', label: 'XOR' },
+						],
+					},
+				],
 				hasLearn: false,
 				learnTimeout: undefined,
 				supportsChildGroups: [
@@ -65,50 +77,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 					},
 				],
 			},
-			logic_or: {
-				feedbackType: 'boolean',
-				label: 'Logic: OR',
-				description: 'Test if one or more of multiple conditions is true',
-				feedbackStyle: {
-					color: 0xffffff,
-					bgcolor: 0xff0000,
-				},
-				showInvert: true,
-				options: [],
-				hasLearn: false,
-				learnTimeout: undefined,
-				supportsChildGroups: [
-					{
-						type: EntityModelType.Feedback,
-						booleanFeedbacksOnly: true,
-						groupId: 'default',
-						entityTypeLabel: 'condition',
-						label: '',
-					},
-				],
-			},
-			logic_xor: {
-				feedbackType: 'boolean',
-				label: 'Logic: XOR',
-				description: 'Test if only one of multiple conditions is true',
-				feedbackStyle: {
-					color: 0xffffff,
-					bgcolor: 0xff0000,
-				},
-				showInvert: true,
-				options: [],
-				hasLearn: false,
-				learnTimeout: undefined,
-				supportsChildGroups: [
-					{
-						type: EntityModelType.Feedback,
-						booleanFeedbacksOnly: true,
-						groupId: 'default',
-						entityTypeLabel: 'condition',
-						label: '',
-					},
-				],
-			},
+
 			logic_conditionalise_advanced: {
 				feedbackType: 'advanced',
 				label: 'Conditionalise existing feedbacks',
@@ -217,17 +186,44 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
+	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
+		if (feedback.definitionId === 'logic_and') {
+			feedback.definitionId = 'logic_operator'
+			feedback.options = { operation: 'and' }
+
+			return feedback
+		} else if (feedback.definitionId === 'logic_or') {
+			feedback.definitionId = 'logic_operator'
+			feedback.options = { operation: 'or' }
+
+			return feedback
+		} else if (feedback.definitionId === 'logic_xor') {
+			feedback.definitionId = 'logic_operator'
+			feedback.options = { operation: 'xor' }
+
+			return feedback
+		}
+	}
+
 	/**
 	 * Execute a logic feedback
 	 */
 	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
-		if (feedback.definitionId === 'logic_and' || feedback.definitionId === 'logic_conditionalise_advanced') {
+		if (feedback.definitionId === 'logic_operator') {
+			switch (feedback.options.operation) {
+				case 'and':
+					return booleanAnd(!!feedback.isInverted, childValues)
+				case 'or':
+					return childValues.reduce((acc, val) => acc || val, false)
+				case 'xor':
+					const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
+					return isSingleTrue === !feedback.isInverted
+				default:
+					this.#logger.warn(`Unexpected operation: ${feedback.options.operation}`)
+					return false
+			}
+		} else if (feedback.definitionId === 'logic_conditionalise_advanced') {
 			return booleanAnd(!!feedback.isInverted, childValues)
-		} else if (feedback.definitionId === 'logic_or') {
-			return childValues.reduce((acc, val) => acc || val, false)
-		} else if (feedback.definitionId === 'logic_xor') {
-			const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
-			return isSingleTrue === !feedback.isInverted
 		} else {
 			this.#logger.warn(`Unexpected logic feedback type "${feedback.type}"`)
 			return false
