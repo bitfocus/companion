@@ -16,7 +16,7 @@
  */
 
 import { cloneDeep } from 'lodash-es'
-import { SplitVariableId, serializeIsVisibleFnSingle } from '../Resources/Util.js'
+import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import { oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
@@ -30,17 +30,20 @@ import type {
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
 } from './Types.js'
-import type { CompanionVariableValue } from '@companion-module/base'
 import type { InternalController } from './Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { nanoid } from 'nanoid'
 
 const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
 	{
@@ -115,46 +118,22 @@ const ButtonStylePropertiesExt = [
 	{ id: 'imageBuffers', label: 'Image buffers' },
 ]
 
-function checkCondition(
-	op: string,
-	condition: CompanionVariableValue,
-	variable_value: CompanionVariableValue | undefined
-): boolean {
-	let variable_value_number = Number(variable_value)
-	let condition_number = Number(condition)
-
-	if (op == 'eq') {
-		return variable_value?.toString() == condition.toString()
-	} else if (op == 'ne') {
-		return variable_value?.toString() !== condition.toString()
-	} else if (op == 'gt') {
-		return variable_value_number > condition_number
-	} else if (op == 'lt') {
-		return variable_value_number < condition_number
-	} else {
-		return false
-	}
-}
-
 export class InternalControls implements InternalModuleFragment {
 	readonly #internalModule: InternalController
 	readonly #graphicsController: GraphicsController
 	readonly #controlsController: ControlsController
 	readonly #pagesController: PageController
-	readonly #variableController: VariablesValues
 
 	constructor(
 		internalModule: InternalController,
 		graphicsController: GraphicsController,
 		controlsController: ControlsController,
-		pagesController: PageController,
-		variableController: VariablesValues
+		pagesController: PageController
 	) {
 		this.#internalModule = internalModule
 		this.#graphicsController = graphicsController
 		this.#controlsController = controlsController
 		this.#pagesController = pagesController
-		this.#variableController = variableController
 
 		const debounceCheckFeedbacks = debounceFn(
 			() => {
@@ -249,138 +228,6 @@ export class InternalControls implements InternalModuleFragment {
 					},
 				],
 			},
-			button_pressrelease_if_expression: {
-				label: 'Button: Trigger press and release if expression is true',
-				description: undefined,
-				showButtonPreview: true,
-				options: [
-					{
-						type: 'textinput',
-						label: 'Expression',
-						id: 'expression',
-						default: '$(internal:time_s) >= 0',
-						useVariables: {
-							local: true,
-						},
-						isExpression: true,
-					},
-
-					...CHOICES_DYNAMIC_LOCATION,
-
-					{
-						type: 'checkbox',
-						label: 'Force press if already pressed',
-						id: 'force',
-						default: false,
-					},
-				],
-			},
-			button_pressrelease_condition: {
-				label: 'Button: Trigger press and release if variable meets condition',
-				description: undefined,
-				showButtonPreview: true,
-				options: [
-					{
-						type: 'internal:variable',
-						id: 'variable',
-						label: 'Variable to check',
-					},
-					{
-						type: 'dropdown',
-						label: 'Operation',
-						id: 'op',
-						default: 'eq',
-						choices: [
-							{ id: 'eq', label: '=' },
-							{ id: 'ne', label: '!=' },
-							{ id: 'gt', label: '>' },
-							{ id: 'lt', label: '<' },
-						],
-					},
-					{
-						type: 'textinput',
-						label: 'Value',
-						id: 'value',
-						default: '',
-						useVariables: {
-							local: true,
-						},
-					},
-
-					...CHOICES_DYNAMIC_LOCATION,
-				],
-			},
-			button_press_condition: {
-				label: 'Button: Trigger press if variable meets condition',
-				description: undefined,
-				showButtonPreview: true,
-				options: [
-					{
-						type: 'internal:variable',
-						id: 'variable',
-						label: 'Variable to check',
-					},
-					{
-						type: 'dropdown',
-						label: 'Operation',
-						id: 'op',
-						default: 'eq',
-						choices: [
-							{ id: 'eq', label: '=' },
-							{ id: 'ne', label: '!=' },
-							{ id: 'gt', label: '>' },
-							{ id: 'lt', label: '<' },
-						],
-					},
-					{
-						type: 'textinput',
-						label: 'Value',
-						id: 'value',
-						default: '',
-						useVariables: {
-							local: true,
-						},
-					},
-
-					...CHOICES_DYNAMIC_LOCATION,
-				],
-			},
-			button_release_condition: {
-				label: 'Button: Trigger release if variable meets condition',
-				description: undefined,
-				showButtonPreview: true,
-				options: [
-					{
-						type: 'internal:variable',
-						id: 'variable',
-						label: 'Variable to check',
-					},
-					{
-						type: 'dropdown',
-						label: 'Operation',
-						id: 'op',
-						default: 'eq',
-						choices: [
-							{ id: 'eq', label: '=' },
-							{ id: 'ne', label: '!=' },
-							{ id: 'gt', label: '>' },
-							{ id: 'lt', label: '<' },
-						],
-					},
-					{
-						type: 'textinput',
-						label: 'Value',
-						id: 'value',
-						default: '',
-						useVariables: {
-							local: true,
-						},
-					},
-
-					...CHOICES_DYNAMIC_LOCATION,
-				],
-			},
-
 			button_press: {
 				label: 'Button: Trigger press',
 				description: undefined,
@@ -542,61 +389,6 @@ export class InternalControls implements InternalModuleFragment {
 				description: undefined,
 				showButtonPreview: true,
 				options: [...CHOICES_DYNAMIC_LOCATION, ...CHOICES_STEP_WITH_VARIABLES],
-			},
-			bank_current_step_condition: {
-				label: 'Button: Set current step if variable meets condition',
-				description: undefined,
-				showButtonPreview: true,
-				options: [
-					{
-						type: 'internal:variable',
-						id: 'variable',
-						label: 'Variable to check',
-					},
-					{
-						type: 'dropdown',
-						label: 'Operation',
-						id: 'op',
-						default: 'eq',
-						choices: [
-							{ id: 'eq', label: '=' },
-							{ id: 'ne', label: '!=' },
-							{ id: 'gt', label: '>' },
-							{ id: 'lt', label: '<' },
-						],
-					},
-					{
-						type: 'textinput',
-						label: 'Value',
-						id: 'value',
-						default: '',
-						useVariables: {
-							local: true,
-						},
-					},
-
-					...CHOICES_DYNAMIC_LOCATION,
-					...CHOICES_STEP_WITH_VARIABLES,
-				],
-			},
-			bank_current_step_if_expression: {
-				label: 'Button: Set current step if expression is true',
-				description: undefined,
-				showButtonPreview: true,
-				options: [
-					{
-						type: 'textinput',
-						label: 'Expression',
-						id: 'expression',
-						default: '$(internal:time_s) >= 0',
-						useVariables: {
-							local: true,
-						},
-						isExpression: true,
-					},
-					...CHOICES_DYNAMIC_LOCATION,
-					...CHOICES_STEP_WITH_VARIABLES,
-				],
 			},
 			bank_current_step_delta: {
 				label: 'Button: Skip step',
@@ -894,6 +686,89 @@ export class InternalControls implements InternalModuleFragment {
 			}
 		}
 
+		if (
+			action.definitionId === 'button_pressrelease_if_expression' ||
+			action.definitionId === 'bank_current_step_if_expression'
+		) {
+			const newChildAction: ActionEntityModel = {
+				type: EntityModelType.Action,
+				id: nanoid(),
+				definitionId: action.definitionId.slice(0, -'_if_expression'.length),
+				connectionId: 'internal',
+				options: {
+					...action.options,
+				},
+			}
+			delete newChildAction.options.expression
+
+			const newExpressionFeedback: FeedbackEntityModel = {
+				type: EntityModelType.Feedback,
+				id: nanoid(),
+				definitionId: 'check_expression',
+				connectionId: 'internal',
+				options: {
+					expression: action.options.expression,
+				},
+			}
+
+			return {
+				type: EntityModelType.Action,
+				id: action.id,
+				definitionId: 'logic_if',
+				connectionId: 'internal',
+				options: {},
+				children: {
+					condition: [newExpressionFeedback],
+					actions: [newChildAction],
+					else_actions: [],
+				},
+			} satisfies ActionEntityModel
+		} else if (
+			action.definitionId === 'button_pressrelease_condition' ||
+			action.definitionId === 'button_press_condition' ||
+			action.definitionId === 'button_release_condition' ||
+			action.definitionId === 'bank_current_step_condition'
+		) {
+			const newChildAction: ActionEntityModel = {
+				type: EntityModelType.Action,
+				id: nanoid(),
+				definitionId: action.definitionId.slice(0, -'_condition'.length),
+				connectionId: 'internal',
+				options: {
+					...action.options,
+				},
+			}
+			delete newChildAction.options.variable
+			delete newChildAction.options.op
+			delete newChildAction.options.value
+
+			const newExpressionFeedback: FeedbackEntityModel = {
+				type: EntityModelType.Feedback,
+				id: nanoid(),
+				definitionId: 'variable_value',
+				connectionId: 'internal',
+				options: {
+					variable: action.options.variable,
+					op: action.options.op,
+					value: action.options.value,
+				},
+			}
+
+			return {
+				type: EntityModelType.Action,
+				id: action.id,
+				definitionId: 'logic_if',
+				connectionId: 'internal',
+				options: {},
+				children: {
+					condition: [newExpressionFeedback],
+					actions: [newChildAction],
+					else_actions: [],
+				},
+			} satisfies ActionEntityModel
+		}
+
+		// Note: some fixups above return directly, when wrapping the action inside a logic_if
 		if (changed) return action
 	}
 
@@ -906,87 +781,6 @@ export class InternalControls implements InternalModuleFragment {
 
 			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
 			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
-			return true
-		} else if (action.definitionId == 'button_pressrelease_if_expression') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
-			if (!theControlId) return true
-
-			const forcePress = !!action.rawOptions.force
-
-			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
-				action.rawOptions.expression,
-				extras,
-				'boolean'
-			)
-			if (!expressionResult.ok) throw new Error(expressionResult.error)
-
-			const pressIt = !!expressionResult.value
-
-			if (pressIt) {
-				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
-				this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
-			}
-			return true
-		} else if (action.definitionId == 'button_pressrelease_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
-			if (!theControlId) return true
-
-			const forcePress = !!action.rawOptions.force
-
-			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
-			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
-
-			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.rawOptions.value,
-				extras
-			).text
-
-			let pressIt = checkCondition(action.rawOptions.op, condition, variable_value)
-
-			if (pressIt) {
-				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
-				this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
-			}
-			return true
-		} else if (action.definitionId == 'button_press_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
-			if (!theControlId) return true
-
-			const forcePress = !!action.rawOptions.force
-
-			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
-			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
-
-			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.rawOptions.value,
-				extras
-			).text
-
-			let pressIt = checkCondition(action.rawOptions.op, condition, variable_value)
-
-			if (pressIt) {
-				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
-			}
-			return true
-		} else if (action.definitionId == 'button_release_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
-			if (!theControlId) return true
-
-			const forcePress = !!action.rawOptions.force
-
-			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
-			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
-
-			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.rawOptions.value,
-				extras
-			).text
-
-			let pressIt = checkCondition(action.rawOptions.op, condition, variable_value)
-
-			if (pressIt) {
-				this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
-			}
 			return true
 		} else if (action.definitionId === 'button_press') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
@@ -1092,53 +886,6 @@ export class InternalControls implements InternalModuleFragment {
 				control.actionSets.stepMakeCurrent(theStep)
 			}
 			return true
-		} else if (action.definitionId == 'bank_current_step_condition') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
-			if (!theControlId) return true
-
-			const theStep = this.#fetchStep(action.rawOptions, extras)
-
-			const control = this.#controlsController.getControl(theControlId)
-
-			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
-			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
-
-			const condition = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.rawOptions.value,
-				extras
-			).text
-
-			let pressIt = checkCondition(action.rawOptions.op, condition, variable_value)
-
-			if (pressIt) {
-				if (control && control.supportsActionSets) {
-					control.actionSets.stepMakeCurrent(theStep)
-				}
-			}
-			return true
-		} else if (action.definitionId == 'bank_current_step_if_expression') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
-			if (!theControlId) return true
-
-			const theStep = this.#fetchStep(action.rawOptions, extras)
-
-			const control = this.#controlsController.getControl(theControlId)
-
-			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
-				action.rawOptions.expression,
-				extras,
-				'boolean'
-			)
-			if (!expressionResult.ok) throw new Error(expressionResult.error)
-
-			const pressIt = !!expressionResult.value
-
-			if (pressIt) {
-				if (control && control.supportsActionSets) {
-					control.actionSets.stepMakeCurrent(theStep)
-				}
-			}
-			return true
 		} else if (action.definitionId == 'bank_current_step_delta') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
 			if (!theControlId) return true
@@ -1154,19 +901,7 @@ export class InternalControls implements InternalModuleFragment {
 		}
 	}
 
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			try {
-				// any expression/variables fields are handled by generic options visitor
-
-				if (action.action === 'button_pressrelease_condition') {
-					visitor.visitVariableName(action.options, 'variable')
-
-					// value handled by generic options visitor
-				}
-			} catch (e) {
-				//Ignore
-			}
-		}
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
+		// Nothing to do
 	}
 }
