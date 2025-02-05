@@ -107,38 +107,40 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 					<FontAwesomeIcon icon={faTimes} />
 				</CButton>
 			</CInputGroup>
-			<table className="table table-responsive-sm variables-table">
-				<thead>
-					<tr>
-						<th>Variable</th>
-						<th>Description</th>
-						<th>Value</th>
-					</tr>
-				</thead>
-				<tbody>
-					{errorMsg && (
+			<div className="variables-table-scroller ">
+				<table className="table table-responsive-sm variables-table">
+					<thead>
 						<tr>
-							<td colSpan={4}>
-								<CAlert color="warning" role="alert">
-									Failed to build list of variables:
-									<br />
-									{errorMsg}
-								</CAlert>
-							</td>
+							<th>Variable</th>
+							<th>Description</th>
+							<th>Value</th>
 						</tr>
-					)}
-					{candidates?.map((variable) => (
-						<VariablesTableRow
-							key={variable.name}
-							variable={variable}
-							value={variableValues[variable.name]}
-							label={label}
-							onCopied={onCopied}
-							panelCollapseHelper={panelCollapseHelper}
-						/>
-					))}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{errorMsg && (
+							<tr>
+								<td colSpan={4}>
+									<CAlert color="warning" role="alert">
+										Failed to build list of variables:
+										<br />
+										{errorMsg}
+									</CAlert>
+								</td>
+							</tr>
+						)}
+						{candidates?.map((variable) => (
+							<VariablesTableRow
+								key={variable.name}
+								variable={variable}
+								value={variableValues[variable.name]}
+								label={label}
+								onCopied={onCopied}
+								panelCollapseHelper={panelCollapseHelper}
+							/>
+						))}
+					</tbody>
+				</table>
+			</div>
 		</>
 	)
 })

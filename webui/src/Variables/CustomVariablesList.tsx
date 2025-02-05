@@ -282,7 +282,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 				</tbody>
 			</table>
 			<br></br>
-			<h5>Create custom variable</h5>
+			<h5 className="mt-2">Create custom variable</h5>
 			<div>
 				<CForm onSubmit={doCreateNew}>
 					<CInputGroup>

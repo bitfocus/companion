@@ -86,13 +86,31 @@
 
 .variables-panel {
 	margin-right: -0.5rem;
+
+	overflow-y: hidden;
+	height: 100%;
+	position: relative;
+
+	display: flex;
+	flex-direction: column;
+
 	.variables-table-filter {
 		margin-top: 1rem;
+	}
+
+	.variables-table-scroller {
+		overflow-y: auto;
 	}
 }
 
 .variables-table {
 	word-break: break-all;
+	// flex-grow: 1;
+
+	th {
+		position: sticky;
+		top: 0;
+	}
 
 	.variable-dragging {
 		opacity: 0.5;
