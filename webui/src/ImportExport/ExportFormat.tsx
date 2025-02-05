@@ -35,7 +35,6 @@ export const SelectExportFormat = memo(function SelectExportFormat({
 		<DropdownInputField
 			choices={formatOptions}
 			value={value}
-			multiple={false}
 			setValue={setValue as (value: DropdownChoiceId) => void}
 			label={label}
 		/>

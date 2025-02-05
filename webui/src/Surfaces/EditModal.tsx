@@ -410,7 +410,6 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					regex={definition.regex}
 					value={value}
 					setValue={setValue2}
-					multiple={false}
 				/>
 			)
 			break

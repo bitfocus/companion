@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react'
-import { DropdownInputField } from '../Components/index.js'
+import { DropdownInputField, MultiDropdownInputField } from '../Components/index.js'
 import { useComputed } from '../util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
@@ -113,9 +113,11 @@ const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropd
 		return connectionChoices
 	}, [connections, includeAll, filterActionsRecorder])
 
-	return (
-		<DropdownInputField disabled={disabled} value={value} choices={choices} multiple={!!multiple} setValue={setValue} />
-	)
+	if (multiple) {
+		return <MultiDropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	} else {
+		return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	}
 })
 
 interface InternalPageDropdownProps {
@@ -156,7 +158,7 @@ export const InternalPageDropdown = observer(function InternalPageDropdown({
 		return choices
 	}, [pages, isLocatedInGrid, includeStartup, includeDirection])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalPageIdDropdownProps {
@@ -197,7 +199,7 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 		return choices
 	}, [pages, /*isLocatedInGrid,*/ includeStartup, includeDirection])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalCustomVariableDropdownProps {
@@ -242,14 +244,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 	}, [customVariables, includeNone])
 
 	return (
-		<DropdownInputField
-			label={label}
-			disabled={disabled}
-			value={value ?? ''}
-			choices={choices}
-			multiple={false}
-			setValue={setValue}
-		/>
+		<DropdownInputField label={label} disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
 	)
 })
 
@@ -291,7 +286,6 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			disabled={disabled}
 			value={value}
 			choices={choices}
-			multiple={false}
 			setValue={setValue}
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
@@ -349,7 +343,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 		return choices
 	}, [surfaces, isLocatedInGrid, includeSelf, useRawSurfaces])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalTriggerDropdownProps {
@@ -384,7 +378,7 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 		return choices
 	}, [triggersList, isLocatedInGrid, includeSelf])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalTimePickerProps {

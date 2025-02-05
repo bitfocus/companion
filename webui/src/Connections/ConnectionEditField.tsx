@@ -1,6 +1,12 @@
 import React, { useCallback } from 'react'
 import { CFormSwitch, CFormLabel } from '@coreui/react'
-import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
+import {
+	ColorInputField,
+	DropdownInputField,
+	MultiDropdownInputField,
+	NumberInputField,
+	TextInputField,
+} from '../Components/index.js'
 import sanitizeHtml from 'sanitize-html'
 import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField.js'
 import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
@@ -104,12 +110,11 @@ export function ConnectionEditField({
 					value={value}
 					setValue={setValue2}
 					setValid={setValid2}
-					multiple={false}
 				/>
 			)
 		case 'multidropdown':
 			return (
-				<DropdownInputField
+				<MultiDropdownInputField
 					label={label}
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
@@ -120,7 +125,6 @@ export function ConnectionEditField({
 					value={value}
 					setValue={setValue2}
 					setValid={setValid2}
-					multiple={true}
 				/>
 			)
 		case 'colorpicker': {

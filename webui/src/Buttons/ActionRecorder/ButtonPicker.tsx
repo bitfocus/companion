@@ -214,7 +214,6 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 
 							<DropdownInputField
 								choices={actionStepOptions}
-								multiple={false}
 								value={selectedStep ?? ''}
 								setValue={setSelectedStep as (val: DropdownChoiceId) => void}
 								disabled={!controlInfo}
@@ -225,7 +224,6 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 
 							<DropdownInputField
 								choices={actionSetOptions}
-								multiple={false}
 								value={selectedSet ?? ''}
 								setValue={setSelectedSet as (val: DropdownChoiceId) => void}
 								disabled={!controlInfo}

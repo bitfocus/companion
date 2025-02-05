@@ -100,7 +100,6 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 								<DropdownInputField
 									label="Companion Address"
 									choices={externalAddresses.addresses}
-									multiple={false}
 									value={selectedAddress ?? ''}
 									setValue={(selected) => setSelectedAddress(selected?.toString() ?? '')}
 									allowCustom={true}

@@ -1,25 +1,26 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
-import React, { createContext, useContext, useMemo, useEffect, useCallback, memo, useState } from 'react'
-import Select, { createFilter, components as SelectComponents, InputProps, InputActionMeta } from 'react-select'
+import React, { useContext, useMemo, useEffect, useCallback, memo } from 'react'
+import Select, { createFilter } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
+import { MenuPortalContext } from './DropdownInputField.js'
 
-export const MenuPortalContext = createContext<HTMLElement | null>(null)
-
-interface DropdownInputFieldProps {
+interface MultiDropdownInputFieldProps {
 	htmlName?: string
 	className?: string
 	label?: React.ReactNode
 	choices: DropdownChoice[] | Record<string, DropdownChoice>
 	allowCustom?: boolean
+	minSelection?: number
 	minChoicesForSearch?: number
+	maxSelection?: number
 	tooltip?: string
 	regex?: string
-	value: DropdownChoiceId
-	setValue: (value: DropdownChoiceId) => void
+	value: DropdownChoiceId[]
+	setValue: (value: DropdownChoiceId[]) => void
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	helpText?: string
@@ -31,13 +32,15 @@ interface DropdownChoiceInt {
 	label: DropdownChoiceId
 }
 
-export const DropdownInputField = memo(function DropdownInputField({
+export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 	htmlName,
 	className,
 	label,
 	choices,
 	allowCustom,
+	minSelection,
 	minChoicesForSearch,
+	maxSelection,
 	tooltip,
 	regex,
 	value,
@@ -46,7 +49,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 	disabled,
 	helpText,
 	onBlur,
-}: DropdownInputFieldProps) {
+}: MultiDropdownInputFieldProps) {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const options = useMemo(() => {
@@ -62,14 +65,21 @@ export const DropdownInputField = memo(function DropdownInputField({
 		return options.map((choice): DropdownChoiceInt => ({ value: choice.id, label: choice.label }))
 	}, [choices])
 
+	if (value === undefined) value = [] as any
+
 	const currentValue = useMemo(() => {
-		// eslint-disable-next-line eqeqeq
-		const entry = options.find((o) => o.value == value) // Intentionally loose for compatibility
-		if (entry) {
-			return entry
-		} else {
-			return { value: value, label: allowCustom ? value : `?? (${value})` }
+		const selectedValue = Array.isArray(value) ? value : [value]
+		let res: DropdownChoiceInt[] = []
+		for (const val of selectedValue) {
+			// eslint-disable-next-line eqeqeq
+			const entry = options.find((o) => o.value == val) // Intentionally loose for compatibility
+			if (entry) {
+				res.push(entry)
+			} else {
+				res.push({ value: val, label: allowCustom ? val : `?? (${val})` })
+			}
 		}
+		return res
 	}, [value, options, allowCustom])
 
 	// Compile the regex (and cache)
@@ -86,14 +96,12 @@ export const DropdownInputField = memo(function DropdownInputField({
 
 	const isValueValid = useCallback(
 		(newValue: DropdownChoiceId | DropdownChoiceId[]) => {
-			// Require the selected choice to be valid
-			if (
-				allowCustom &&
-				compiledRegex &&
-				!options.find((c) => c.value === newValue) &&
-				!compiledRegex.exec(String(newValue))
-			) {
-				return false
+			const newValueArr = Array.isArray(newValue) ? newValue : [newValue]
+			for (const val of newValueArr) {
+				// Require the selected choices to be valid
+				if (allowCustom && compiledRegex && !options.find((c) => c.value === val) && !compiledRegex.exec(String(val))) {
+					return false
+				}
 			}
 
 			return true
@@ -107,15 +115,34 @@ export const DropdownInputField = memo(function DropdownInputField({
 	}, [value, setValid, isValueValid])
 
 	const onChange = useCallback(
-		(e: DropdownChoiceInt) => {
-			const newValue = e?.value
+		(e: DropdownChoiceInt[]) => {
+			const newValue = e?.map((v) => v.value) ?? []
 
 			const isValid = isValueValid(newValue)
+
+			const valueArr = value as DropdownChoiceId[] | undefined
+			if (
+				typeof minSelection === 'number' &&
+				newValue.length < minSelection &&
+				newValue.length <= (valueArr || []).length
+			) {
+				// Block change if too few are selected
+				return
+			}
+
+			if (
+				typeof maxSelection === 'number' &&
+				newValue.length > maxSelection &&
+				newValue.length >= (valueArr || []).length
+			) {
+				// Block change if too many are selected
+				return
+			}
 
 			setValue(newValue)
 			setValid?.(isValid)
 		},
-		[setValue, setValid, isValueValid]
+		[setValue, setValid, value, minSelection, maxSelection, isValueValid]
 	)
 
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
@@ -133,7 +160,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 		menuPlacement: 'auto',
 		isClearable: false,
 		isSearchable: minChoicesForSearch2 <= options.length,
-		isMulti: false,
+		isMulti: true,
 		options: options,
 		value: currentValue,
 		onChange: onChange,
@@ -158,43 +185,12 @@ export const DropdownInputField = memo(function DropdownInputField({
 	)
 	const formatCreateLabel = useCallback((v: string | number) => `Use "${v}"`, [])
 
-	/**
-	 * Do some mangling with the input value to make custom values flow a bit better
-	 */
-	const [inputValue, setInputValue] = useState<string | undefined>(undefined)
-	const onFocus = () => setInputValue(value + '')
-	const onBlur2 = useCallback(() => {
-		setInputValue(undefined)
-
-		onBlur?.()
-	}, [onBlur])
-
-	const onChange2 = useCallback(
-		(e: DropdownChoiceInt) => {
-			setInputValue(e.value)
-			onChange(e)
-		},
-		[onChange]
-	)
-	const onInputChange = useCallback(
-		(v: string, a: InputActionMeta) => {
-			if (!allowCustom) return
-
-			if (a.action === 'input-blur') {
-				onChange({ value: a.prevInputValue, label: a.prevInputValue })
-			} else if (a.action === 'input-change') {
-				setInputValue(v)
-			}
-		},
-		[onChange, allowCustom]
-	)
-
 	return (
 		<div
 			className={classNames(
 				{
 					'select-tooltip': true,
-					'select-invalid': !isValueValid(currentValue?.value),
+					'select-invalid': !isValueValid(currentValue.map((v) => v.value) ?? []),
 				},
 				className
 			)}
@@ -210,22 +206,17 @@ export const DropdownInputField = memo(function DropdownInputField({
 			{allowCustom ? (
 				<CreatableSelect
 					{...selectProps}
+					// ref={selectRef}
 					className={`${selectProps.className} select-control-editable`}
 					isSearchable={true}
 					noOptionsMessage={noOptionsMessage}
 					createOptionPosition="first"
 					formatCreateLabel={formatCreateLabel}
 					isValidNewOption={isValidNewOption}
-					onFocus={onFocus}
-					onBlur={onBlur2}
-					inputValue={allowCustom ? inputValue : undefined}
-					value={!allowCustom || inputValue === undefined || inputValue === currentValue?.value ? currentValue : ''}
-					onInputChange={onInputChange}
-					onChange={onChange2}
 				/>
 			) : (
 				<Select {...selectProps} />
 			)}
 		</div>
 	)
-}) as (props: DropdownInputFieldProps) => JSX.Element
+}) as (props: MultiDropdownInputFieldProps) => JSX.Element

@@ -250,7 +250,7 @@ const SurfaceRow = observer(function SurfaceRow({
 			<td>{surface.isConnected ? surface.location || 'Local' : 'Offline'}</td>
 			<td className="text-right">
 				{surface.isConnected ? (
-					<CButtonGroup>
+					<CButtonGroup className="no-break">
 						<CButton onClick={configureSurface2} title="Configure">
 							<FontAwesomeIcon icon={faCog} /> Settings
 						</CButton>

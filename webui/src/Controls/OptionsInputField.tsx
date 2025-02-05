@@ -4,6 +4,7 @@ import {
 	CheckboxInputField,
 	ColorInputField,
 	DropdownInputField,
+	MultiDropdownInputField,
 	NumberInputField,
 	TextInputField,
 } from '../Components/index.js'
@@ -104,7 +105,6 @@ export function OptionsInputField({
 					minChoicesForSearch={option.minChoicesForSearch}
 					regex={option.regex}
 					disabled={readonly}
-					multiple={false}
 					setValue={setValue2}
 				/>
 			)
@@ -112,7 +112,7 @@ export function OptionsInputField({
 		}
 		case 'multidropdown': {
 			control = (
-				<DropdownInputField
+				<MultiDropdownInputField
 					value={value}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
@@ -121,7 +121,6 @@ export function OptionsInputField({
 					maxSelection={option.maxSelection}
 					regex={option.regex}
 					disabled={readonly}
-					multiple={true}
 					setValue={setValue2}
 				/>
 			)

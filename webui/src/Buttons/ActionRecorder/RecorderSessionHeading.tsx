@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, ChangeEvent, RefObject } from 'react'
 import { PreventDefaultHandler, useComputed } from '../../util.js'
 import { CButton, CButtonGroup, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
-import { DropdownInputField } from '../../Components/index.js'
+import { MultiDropdownInputField } from '../../Components/index.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
@@ -93,10 +93,9 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 					<div className="flex w-full gap-2rem">
 						<div className="w-full">
 							<CFormLabel>Connections</CFormLabel>
-							<DropdownInputField<true>
+							<MultiDropdownInputField
 								value={sessionInfo.connectionIds}
 								setValue={changeConnectionIds}
-								multiple={true}
 								choices={connectionsWhichCanRecord}
 							/>
 						</div>

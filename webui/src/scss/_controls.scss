@@ -121,3 +121,23 @@ label.disabled {
 	border-color: #bbb !important;
 	font-weight: bold;
 }
+
+.select-control-editable {
+	.select-control__input-container {
+		opacity: 0;
+	}
+
+	.select-control__control--is-focused {
+		.select-control__single-value {
+			visibility: hidden;
+		}
+
+		.select-control__input-container {
+			opacity: 1;
+
+			.select-control__input {
+				opacity: 1 !important;
+			}
+		}
+	}
+}
