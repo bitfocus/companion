@@ -15,9 +15,7 @@
  *
  */
 
-import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { cloneDeep } from 'lodash-es'
-import { LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
@@ -126,11 +124,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#surfaceConfig: SurfaceConfig
 
 	/**
-	 * Xkeys: How many pages of colours it has asked for
-	 */
-	#xkeysPageCount: number = 0
-
-	/**
 	 * Grid size of the panel
 	 */
 	get panelGridSize(): GridSize {
@@ -235,9 +228,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.panel.on('setVariable', this.#onSetVariable.bind(this))
 		this.panel.on('setCustomVariable', this.#onSetCustomVariable.bind(this))
 
-		// subscribe to some xkeys specific events
-		this.panel.on('xkeys-subscribePage', this.#onXkeysSubscribePages.bind(this))
-
 		setImmediate(() => {
 			this.#saveConfig()
 
@@ -305,8 +295,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				})
 
 				this.#drawButtons(rawEntries)
-			} else if (this.#xkeysPageCount > 0) {
-				this.#xkeysDrawPages()
 			} else {
 				const { xOffset, yOffset } = this.#getCurrentOffset()
 
@@ -396,20 +384,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (this.#isSurfaceLocked) return
 
 		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
-		if (this.#xkeysPageCount > 0 && pageNumber) {
-			// xkeys mode
-			const pageOffset = location.pageNumber - pageNumber
-			if (this.panel.drawColor && pageOffset >= 0 && pageOffset < this.#xkeysPageCount) {
-				const [transformedX, transformedY] = rotateXYForPanel(
-					location.column,
-					location.row,
-					this.panelGridSize,
-					this.#surfaceConfig.config.rotation
-				)
-
-				this.panel.drawColor(pageOffset, transformedX, transformedY, render.bgcolor)
-			}
-		} else if (location.pageNumber == pageNumber) {
+		if (location.pageNumber == pageNumber) {
 			// normal mode
 			const { xOffset, yOffset } = this.#getCurrentOffset()
 
@@ -595,46 +570,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	#onSetCustomVariable(name: string, value: CompanionVariableValue): void {
 		this.#variables.custom.setValue(name, value)
-	}
-
-	/**
-	 * XKeys: Subscribe to additional pages for color information
-	 */
-	#onXkeysSubscribePages(pageCount: number): void {
-		this.#xkeysPageCount = pageCount
-
-		this.#xkeysDrawPages()
-	}
-
-	/**
-	 * XKeys: Draw additional pages color information
-	 */
-	#xkeysDrawPages(): void {
-		if (!this.panel || !this.panel.drawColor) return
-
-		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
-		if (!pageNumber) return
-
-		for (let page = 0; page < this.#xkeysPageCount; page++) {
-			for (let bank = 0; bank < LEGACY_MAX_BUTTONS; bank++) {
-				const xy = oldBankIndexToXY(bank)
-				if (xy) {
-					const render = this.#graphics.getCachedRenderOrGeneratePlaceholder({
-						pageNumber: pageNumber + page,
-						column: xy[0],
-						row: xy[1],
-					})
-
-					const [transformedX, transformedY] = rotateXYForPanel(
-						...xy,
-						this.panelGridSize,
-						this.#surfaceConfig.config.rotation
-					)
-
-					this.panel.drawColor(page, transformedX, transformedY, render.bgcolor)
-				}
-			}
-		}
 	}
 
 	/**

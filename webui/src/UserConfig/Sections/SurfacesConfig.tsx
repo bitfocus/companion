@@ -38,12 +38,6 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 			<UserConfigSwitchRow userConfig={props} label="Enable connected X-keys" requiresRestart field="xkeys_enable" />
 			<UserConfigSwitchRow
 				userConfig={props}
-				label="Use old layout for X-keys"
-				requiresRestart
-				field="xkeys_legacy_layout"
-			/>
-			<UserConfigSwitchRow
-				userConfig={props}
 				label="Enable connected Loupedeck and Razer Stream Controller devices"
 				requiresRestart
 				field="loupedeck_enable"

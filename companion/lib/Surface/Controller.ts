@@ -907,14 +907,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										}
 									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
 										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
-											await this.#addDevice(
-												deviceInfo.path,
-												{
-													useLegacyLayout: !!this.#handlerDependencies.userconfig.getKey('xkeys_legacy_layout'),
-												},
-												'xkeys',
-												SurfaceUSBXKeys
-											)
+											await this.#addDevice(deviceInfo.path, {}, 'xkeys', SurfaceUSBXKeys)
 										}
 									} else if (
 										deviceInfo.vendorId === shuttleControlUSB.vids.CONTOUR &&
