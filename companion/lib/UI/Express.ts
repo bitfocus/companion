@@ -158,5 +158,44 @@ export class UIExpress {
 				createContext: createTrpcContext,
 			})
 		)
+
+		// const wss = new WebSocketServer({
+		// 	noServer: true,
+		// })
+
+		// // TODO - this shouldnt be here like this..
+		// const handler = applyWSSHandler({
+		// 	wss,
+		// 	router: trpcRouter,
+		// 	createTrpcContext,
+		// 	// Enable heartbeat messages to keep connection open (disabled by default)
+		// 	keepAlive: {
+		// 		enabled: true,
+		// 		// server ping message interval in milliseconds
+		// 		pingMs: 30000,
+		// 		// connection is terminated if pong message is not received in this many milliseconds
+		// 		pongWaitMs: 5000,
+		// 	},
+		// })
+
+		// this.app.on("upgrade", (request, socket, head) => {
+		// 	wss.handleUpgrade(request, socket, head, (websocket) => {
+		// 		wss.emit("connection", websocket, request);
+		// 	});
+		// });
+
+		// wss.on('connection', (ws) => {
+		// 	console.log(`➕➕ Connection (${wss.clients.size})`)
+		// 	ws.once('close', () => {
+		// 		console.log(`➖➖ Connection (${wss.clients.size})`)
+		// 	})
+		// })
+		// console.log('✅ WebSocket Server listening on ws://localhost:3001')
+
+		// process.on('SIGTERM', () => {
+		// 	console.log('SIGTERM')
+		// 	handler.broadcastReconnectNotification()
+		// 	wss.close()
+		// })
 	}
 }
