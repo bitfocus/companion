@@ -30,12 +30,40 @@ import type { Registry } from '../Registry.js'
  */
 const API_VERSION = '1.7.0'
 
-export interface SatelliteSocketWrapper {
-	readonly remoteAddress?: string
+export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
-	write(data: string): void
+export abstract class SatelliteSocketWrapper {
+	abstract readonly remoteAddress?: string
 
-	destroy(): void
+	protected abstract write(data: string): void
+
+	sendMessage(
+		messageName: string,
+		status: 'OK' | 'ERROR' | null,
+		deviceId: string | null,
+		args: SatelliteMessageArgs
+	): void {
+		const chunks: string[] = [messageName]
+		if (status) chunks.push(status)
+		if (deviceId) chunks.push(`DEVICEID="${deviceId}"`)
+
+		for (const [key, value] of Object.entries(args)) {
+			let valueStr: string
+			if (typeof value === 'boolean') {
+				valueStr = value ? '1' : '0'
+			} else if (typeof value === 'number') {
+				valueStr = value.toString()
+			} else {
+				valueStr = `"${value}"`
+			}
+			chunks.push(`${key}=${valueStr}`)
+		}
+
+		chunks.push('\n')
+		this.write(chunks.join())
+	}
+
+	abstract destroy(): void
 }
 
 export interface SatelliteInitSocketResult {
@@ -157,7 +185,7 @@ export class ServiceSatelliteApi extends CoreBase {
 			device: device,
 		})
 
-		socket.write(`ADD-DEVICE OK DEVICEID="${params.DEVICEID}"\n`)
+		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
 	/**
@@ -200,7 +228,7 @@ export class ServiceSatelliteApi extends CoreBase {
 				this.#setVariableValue(socket, params)
 				break
 			case 'PING':
-				socket.write(`PONG ${body}\n`)
+				socket.sendMessage(`PONG ${body}`, null, null, {})
 				break
 			case 'PONG':
 				// Nothing to do
@@ -210,7 +238,9 @@ export class ServiceSatelliteApi extends CoreBase {
 				socket.destroy()
 				break
 			default:
-				socket.write(`ERROR MESSAGE="Unknown command: ${cmd.toUpperCase()}"\n`)
+				socket.sendMessage('ERROR', null, null, {
+					MESSAGE: 'Unknown command: ${cmd.toUpperCase()}',
+				})
 		}
 	}
 
@@ -220,7 +250,10 @@ export class ServiceSatelliteApi extends CoreBase {
 	initSocket(socketLogger: Logger, socket: SatelliteSocketWrapper): SatelliteInitSocketResult {
 		socketLogger.info(`new connection`)
 
-		socket.write(`BEGIN CompanionVersion=${this.appInfo.appBuild} ApiVersion=${API_VERSION}\n`)
+		socket.sendMessage('BEGIN', null, null, {
+			CompanionVersion: this.appInfo.appBuild,
+			ApiVersion: API_VERSION,
+		})
 
 		let receivebuffer = ''
 		return {
@@ -264,20 +297,7 @@ export class ServiceSatelliteApi extends CoreBase {
 		deviceId: string | undefined,
 		message: string
 	): void {
-		if (deviceId) {
-			socket.write(`${messageName} ERROR DEVICEID="${deviceId}" MESSAGE="${message}"\n`)
-		} else {
-			socket.write(`${messageName} ERROR MESSAGE="${message}"\n`)
-		}
-	}
-
-	/**
-	 * Format and send an error message
-	 * @param socket - the client socket
-	 * @param messageName - the message name
-	 */
-	#formatAndSendOk(socket: SatelliteSocketWrapper, messageName: string): void {
-		socket.write(`${messageName} OK\n`)
+		socket.sendMessage(messageName, 'ERROR', deviceId ?? null, { MESSAGE: message })
 	}
 
 	/**
@@ -327,7 +347,7 @@ export class ServiceSatelliteApi extends CoreBase {
 		const pressed = !isFalsey(params.PRESSED)
 
 		device.device.doButton(...xy, pressed)
-		this.#formatAndSendOk(socket, messageName)
+		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
 	/**
@@ -353,7 +373,7 @@ export class ServiceSatelliteApi extends CoreBase {
 		const direction = params.DIRECTION >= '1'
 
 		device.device.doRotate(...xy, direction)
-		this.#formatAndSendOk(socket, messageName)
+		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
 	/**
@@ -378,7 +398,7 @@ export class ServiceSatelliteApi extends CoreBase {
 		const variableValue = Buffer.from(encodedValue, 'base64').toString()
 
 		device.device.setVariableValue(variableName, variableValue)
-		this.#formatAndSendOk(socket, messageName)
+		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
 	#removeDevice(socketLogger: Logger, socket: SatelliteSocketWrapper, params: ParsedParams): void {
@@ -391,7 +411,7 @@ export class ServiceSatelliteApi extends CoreBase {
 
 		this.surfaces.removeDevice(id)
 		this.#devices.delete(id)
-		socket.write(`${messageName} OK DEVICEID="${params.DEVICEID}"\n`)
+		socket.sendMessage(messageName, 'OK', id, {})
 	}
 }
 

@@ -1,8 +1,8 @@
 import { ServiceBase } from './Base.js'
 import LogController from '../Log/Controller.js'
 import type { Registry } from '../Registry.js'
-import { ServiceSatelliteApi } from './SatelliteApi.js'
-import { WebSocketServer } from 'ws'
+import { SatelliteSocketWrapper, ServiceSatelliteApi } from './SatelliteApi.js'
+import { WebSocketServer, WebSocket } from 'ws'
 
 /**
  * Class providing the Satellite/Remote Surface api over websockets.
@@ -61,11 +61,10 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 						socketLogger.silly('socket error:', e)
 					})
 
-					const { processMessage, cleanupDevices } = this.#api.initSocket(socketLogger, {
-						remoteAddress: req.socket.remoteAddress,
-						destroy: () => socket.terminate(),
-						write: (data) => socket.send(data),
-					})
+					const { processMessage, cleanupDevices } = this.#api.initSocket(
+						socketLogger,
+						new SatelliteWSSocket(socket, req.socket.remoteAddress)
+					)
 
 					const timeoutCheck = setInterval(() => {
 						if (lastReceived < Date.now() - 5000) {
@@ -110,5 +109,25 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 			this.#server.close()
 			this.#server = undefined
 		}
+	}
+}
+
+class SatelliteWSSocket extends SatelliteSocketWrapper {
+	readonly #socket: WebSocket
+	readonly remoteAddress: string | undefined
+
+	constructor(socket: WebSocket, remoteAddress: string | undefined) {
+		super()
+
+		this.#socket = socket
+		this.remoteAddress = remoteAddress
+	}
+
+	destroy(): void {
+		this.#socket.terminate()
+	}
+
+	protected override write(data: string): void {
+		this.#socket.send(data)
 	}
 }

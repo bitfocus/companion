@@ -33,7 +33,7 @@ import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult, ImageResultStyle } from '../../Graphics/ImageResult.js'
-import type { SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
+import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
@@ -217,7 +217,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 */
 	#sendDraw(key: number, buffer: Buffer | undefined, style: ImageResultStyle | undefined): void {
 		if (this.socket !== undefined) {
-			let params = ``
+			const params: SatelliteMessageArgs = {}
 			if (this.#streamColors) {
 				let bgcolor = 'rgb(0,0,0)'
 				let fgcolor = 'rgb(0,0,0)'
@@ -230,21 +230,22 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					fgcolor = '#' + parseColorToNumber(fgcolor).toString(16).padStart(6, '0')
 				}
 
-				params += ` COLOR=${bgcolor} TEXTCOLOR=${fgcolor}`
+				params['COLOR'] = bgcolor
+				params['TEXTCOLOR'] = fgcolor
 			}
 			if (this.#streamBitmapSize) {
 				if (buffer === undefined || buffer.length == 0) {
 					this.#logger.warn('buffer has invalid size')
 				} else {
-					params += ` BITMAP=${buffer.toString('base64')}`
+					params['BITMAP'] = buffer.toString('base64')
 				}
 			}
 			if (this.#streamText) {
 				const text = (typeof style !== 'string' && style?.text) || ''
-				params += ` TEXT=${Buffer.from(text).toString('base64')}`
+				params['TEXT'] = Buffer.from(text).toString('base64')
 			}
 			if (this.#streamTextStyle) {
-				params += ` FONT_SIZE=${style && typeof style !== 'string' ? style.size : 'auto'}`
+				params['FONT_SIZE'] = style && typeof style !== 'string' ? style.size : 'auto'
 			}
 
 			let type = 'BUTTON'
@@ -256,9 +257,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 				type = 'PAGENUM'
 			}
 
-			params += ` PRESSED=${typeof style !== 'string' && style?.pushed ? 'true' : 'false'}`
+			params['PRESSED'] = typeof style !== 'string' && !!style?.pushed
+			params['KEY'] = key
+			params['TYPE'] = type
 
-			this.socket.write(`KEY-STATE DEVICEID=${this.deviceId} KEY=${key} TYPE=${type} ${params}\n`)
+			this.socket.sendMessage('KEY-STATE', null, this.deviceId, params)
 		}
 	}
 
@@ -331,7 +334,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	clearDeck(): void {
 		this.#logger.silly('elgato.prototype.clearDeck()')
 		if (this.socket !== undefined) {
-			this.socket.write(`KEYS-CLEAR DEVICEID=${this.deviceId}\n`)
+			this.socket.sendMessage('KEYS-CLEAR', null, this.deviceId, {})
 		} else {
 			this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
 		}
@@ -378,7 +381,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 					if (this.socket !== undefined) {
 						const base64Value = Buffer.from(expressionResult?.toString() ?? '').toString('base64')
-						this.socket.write(`VARIABLE-VALUE DEVICEID=${this.deviceId} VARIABLE="${name}" VALUE="${base64Value}"\n`)
+						this.socket.sendMessage('VARIABLE-VALUE', null, this.deviceId, {
+							VARIABLE: name,
+							VALUE: base64Value,
+						})
 					} else {
 						this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
 					}
@@ -420,7 +426,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	#setBrightness(value: number): void {
 		this.#logger.silly('brightness: ' + value)
 		if (this.socket !== undefined) {
-			this.socket.write(`BRIGHTNESS DEVICEID=${this.deviceId} VALUE=${value}\n`)
+			this.socket.sendMessage('BRIGHTNESS', null, this.deviceId, {
+				VALUE: value,
+			})
 		}
 	}
 }
