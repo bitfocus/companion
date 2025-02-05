@@ -48,8 +48,6 @@ import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/M
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
 
-	'app-update-info': () => never
-
 	set_userconfig_key(key: keyof UserConfigModel, value: any): never
 	reset_userconfig_key(key: keyof UserConfigModel): never
 	set_userconfig_keys(values: Partial<UserConfigModel>): never
@@ -348,8 +346,6 @@ export interface ClientToBackendEventsMap {
 }
 
 export interface BackendToClientEventsMap {
-	'app-update-info': (info: AppUpdateInfo) => void
-
 	'logs:lines': (rawItems: ClientLogLine[]) => void
 	'logs:clear': () => void
 
