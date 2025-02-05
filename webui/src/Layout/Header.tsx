@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext } from 'react'
 import {
 	CHeader,
 	CHeaderBrand,
@@ -11,7 +11,6 @@ import {
 } from '@coreui/react'
 import { faBars, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
@@ -23,22 +22,11 @@ interface MyHeaderProps {
 }
 
 export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHeaderProps) {
-	const { socket, userConfig } = useContext(RootAppStoreContext)
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	const { showToggle, clickToggle } = useSidebarState()
 
-	const [updateData, setUpdateData] = useState<AppUpdateInfo | null>(null)
-
-	useEffect(() => {
-		if (!socket) return
-
-		const unsubAppInfo = socket.on('app-update-info', setUpdateData)
-		socket.emit('app-update-info')
-
-		return () => {
-			unsubAppInfo()
-		}
-	}, [socket])
+	const updateData = trpc.appInfo.updateInfo.useSubscription()
 
 	return (
 		<CHeader position="sticky" className="p-0">
@@ -59,11 +47,11 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 
 					<HeaderVersion />
 
-					{updateData?.message ? (
+					{updateData.data ? (
 						<CNavItem className="header-update-warn">
-							<CNavLink target="_blank" href={updateData?.link || 'https://bitfocus.io/companion/'}>
+							<CNavLink target="_blank" href={updateData.data.link || 'https://bitfocus.io/companion/'}>
 								<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
-								{updateData.message}
+								{updateData.data.message}
 							</CNavLink>
 						</CNavItem>
 					) : (

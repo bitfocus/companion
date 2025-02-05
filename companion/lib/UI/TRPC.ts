@@ -1,6 +1,7 @@
 import { initTRPC } from '@trpc/server'
 import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
+import { EventEmitter, on } from 'events'
 
 // created for each request
 export const createTrpcContext = ({} /* req, res */ : trpcExpress.CreateExpressContextOptions) => ({}) // no context
@@ -40,3 +41,11 @@ export function createTrpcRouter(registry: Registry) {
 // Export type router type signature,
 // NOT the router itself.
 export type AppRouter = ReturnType<typeof createTrpcRouter>
+
+export function toIterable<T extends Record<string, any[]>, TKey extends string & keyof T>(
+	ee: EventEmitter<T>,
+	key: TKey,
+	signal: AbortSignal | undefined
+): NodeJS.AsyncIterator<T[TKey]> {
+	return on(ee as any, key, { signal }) as NodeJS.AsyncIterator<T[TKey]>
+}
