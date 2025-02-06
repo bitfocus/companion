@@ -58,23 +58,19 @@ export const TriggersPage = observer(function Triggers() {
 					This allows you to run actions based on Companion, feedback or time events.
 				</p>
 
-				<CButtonGroup style={{ marginBottom: '1em' }}>
-					<CButton color="primary" onClick={doAddNew} size="sm">
-						<FontAwesomeIcon icon={faAdd} /> Add Trigger
+				<div className="mb-2">
+					<CButtonGroup>
+						<CButton color="primary" onClick={doAddNew} size="sm">
+							<FontAwesomeIcon icon={faAdd} /> Add Trigger
+						</CButton>
+					</CButtonGroup>
+
+					<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
+						<FontAwesomeIcon icon={faFileExport} /> Export all
 					</CButton>
-				</CButtonGroup>
+				</div>
 
 				<TriggersTable editItem={doEditItem} />
-
-				<CButton
-					color="secondary"
-					style={{
-						marginTop: 10,
-					}}
-					onClick={showExportModal}
-				>
-					<FontAwesomeIcon icon={faFileExport} /> Export all
-				</CButton>
 			</CCol>
 
 			<CCol xs={12} xl={6} className="secondary-panel">
