@@ -159,7 +159,7 @@ function RenderSubsection({ subsect, visibleFiles, triggerScroll }: RenderSubsec
 					<>
 						<a
 							href={`https://github.com/bitfocus/companion/blob/main/docs/${subsect.file}`}
-							target="_new"
+							target="_blank"
 							style={style.contentGithubLink}
 						>
 							{subsect.file} <img src="/img/link.png" alt="Link" style={style.imgLink} />

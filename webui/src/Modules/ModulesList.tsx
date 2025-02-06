@@ -113,7 +113,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<br />
 				If you have an active internet connection, you can search for and install modules to support additional devices.
 				If you can't find the device you're looking for, please{' '}
-				<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
+				<a target="_blank" href="https://github.com/bitfocus/companion-module-requests">
 					add a request
 				</a>{' '}
 				on GitHub
@@ -123,7 +123,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				The module system is currently in development.
 				<br />
 				You can get the latest offline module bundle from{' '}
-				<a href="https://codeload.github.com/bitfocus/companion-bundled-modules/tar.gz/refs/heads/main" target="_new">
+				<a href="https://codeload.github.com/bitfocus/companion-bundled-modules/tar.gz/refs/heads/main" target="_blank">
 					GitHub here
 				</a>
 			</CAlert>

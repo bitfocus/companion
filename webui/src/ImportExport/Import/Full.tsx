@@ -170,7 +170,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 			<p>It is recommended to export the system configuration first.</p>
 
-			<CButton color="success" href="/int/export/full" target="_new">
+			<CButton color="success" href="/int/export/full" target="_blank">
 				<FontAwesomeIcon icon={faDownload} /> Export
 			</CButton>
 

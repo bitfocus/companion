@@ -199,18 +199,18 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
 				)}
 				<SidebarMenuItemGroup name="Interactive Buttons" icon={faSquareCaretRight}>
-					<SidebarMenuItem name="Emulator" icon={null} path="/emulator" target="_new" />
-					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_new" />
+					<SidebarMenuItem name="Emulator" icon={null} path="/emulator" target="_blank" />
+					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_blank" />
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarNav className="nav-secondary">
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_new" />
+				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_blank" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
-					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_new" />
-					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_new" />
-					<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_new" />
-					<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_new" />
+					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
+					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
+					<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
+					<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">

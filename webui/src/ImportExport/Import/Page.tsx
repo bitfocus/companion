@@ -268,7 +268,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 		<tr>
 			<td>
 				<CFormSelect value={connectionRemap[id] ?? ''} onChange={onChange}>
-					<option value="_new">[ Create new connection ]</option>
+					<option value="_blank">[ Create new connection ]</option>
 					<option value="_ignore">[ Ignore ]</option>
 					{currentConnections.map(([id, conn]) => (
 						<option key={id} value={id}>

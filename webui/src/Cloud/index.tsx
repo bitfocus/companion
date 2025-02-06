@@ -33,7 +33,7 @@ export function CloudPage() {
 				When enabled, Companion will make several persistent secure connections to different Bitfocus Cloud regions for
 				redundancy. You can learn more about the service, the service provider and the safety of your data in the
 				Companion Cloud documentation{' '}
-				<a target="_new" href="https://user.bitfocus.io/docs/companion-cloud">
+				<a target="_blank" href="https://user.bitfocus.io/docs/companion-cloud">
 					here
 				</a>
 				.
