@@ -49,8 +49,8 @@ export type ExportInstanceFullv6 = {
 	config: unknown
 	isFirstInit: boolean
 	lastUpgradeIndex: number
-	moduleVersionId?: string // Added in v3.5
-	updatePolicy?: ConnectionUpdatePolicy // Added in v3.5
+	moduleVersionId?: string // Added in v4.0
+	updatePolicy?: ConnectionUpdatePolicy // Added in v4.0
 	instance_type: string
 	enabled: boolean
 	sortOrder?: number
@@ -60,7 +60,7 @@ export type ExportInstanceMinimalv6 = {
 	label: string
 	instance_type: string
 	lastUpgradeIndex: number
-	moduleVersionId?: string // Added in v3.5
-	updatePolicy?: ConnectionUpdatePolicy // Added in v3.5
+	moduleVersionId?: string // Added in v4.0
+	updatePolicy?: ConnectionUpdatePolicy // Added in v4.0
 	sortOrder?: number
 }
