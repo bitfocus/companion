@@ -207,30 +207,10 @@ export const MySidebar = memo(function MySidebar() {
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
 				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_new" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
-					<SidebarMenuItem
-						name="Bugs & Features"
-						icon={faBug}
-						path="https://github.com/bitfocus/companion/issues"
-						target="_new"
-					/>
-					<SidebarMenuItem
-						name="Facebook"
-						icon={faUsers}
-						path="https://www.facebook.com/groups/companion/"
-						target="_new"
-					/>
-					<SidebarMenuItem
-						name="Slack Chat"
-						icon={faComments}
-						path="https://bitfocus.io/api/slackinvite"
-						target="_new"
-					/>
-					<SidebarMenuItem
-						name="Donate"
-						icon={faDollarSign}
-						path="https://donorbox.org/bitfocus-opensource"
-						target="_new"
-					/>
+					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_new" />
+					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_new" />
+					<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_new" />
+					<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_new" />
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
