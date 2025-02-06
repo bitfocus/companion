@@ -1,6 +1,6 @@
 import semver from 'semver'
 
-const MODULE_BASE_VERSION = '1.11.0'
+const MODULE_BASE_VERSION = '1.12.0-0'
 
 const moduleVersion = semver.parse(MODULE_BASE_VERSION)
 if (!moduleVersion) throw new Error(`Failed to parse version as semver: ${MODULE_BASE_VERSION}`)
@@ -10,5 +10,5 @@ const validApiRange = new semver.Range(
 )
 
 export function isModuleApiVersionCompatible(version: string): boolean {
-	return validApiRange.test(version)
+	return version === MODULE_BASE_VERSION || validApiRange.test(version)
 }
