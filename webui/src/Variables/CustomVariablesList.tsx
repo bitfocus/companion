@@ -1,5 +1,5 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CCol, CForm, CFormInput, CFormLabel, CInputGroup, CRow } from '@coreui/react'
 import { PreventDefaultHandler, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -25,6 +25,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Link } from '@tanstack/react-router'
+import classNames from 'classnames'
 
 const DRAG_ID = 'custom-variables'
 
@@ -391,7 +392,7 @@ function CustomVariableRow({
 			<td>
 				<div className="editor-grid">
 					<div className="cell-header">
-						<div className="cell-header-item">
+						<div className={classNames('cell-header-item', !isCollapsed && 'span-2')}>
 							<span className="variable-style">$({fullname})</span>
 							<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
 								<CButton size="sm" title="Copy variable name">
@@ -399,36 +400,38 @@ function CustomVariableRow({
 								</CButton>
 							</CopyToClipboard>
 						</div>
-						<div className="cell-header-item">
-							{isCollapsed && value?.length > 0 && (
-								<>
-									<code
-										style={{
-											backgroundColor: 'rgba(0,0,200,0.1)',
-											color: 'rgba(0,0,200,1)',
-											fontWeight: 'normal',
-											fontSize: 14,
-											padding: '4px',
-											lineHeight: '2em',
-											borderRadius: '6px',
-										}}
-										title={value}
-									>
-										{value?.length > 100 ? `${value.substring(0, 100)}...` : value}
-									</code>
-									<CopyToClipboard text={`${value?.length > 0 ? value : ' '}`} onCopy={onCopied}>
-										<CButton size="sm" title="Copy current variable value">
-											<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
-										</CButton>
-									</CopyToClipboard>
-								</>
-							)}
-							{isCollapsed && value?.length === 0 && (
-								<>
-									<span style={{ fontWeight: 'normal' }}>(empty)</span>
-								</>
-							)}
-						</div>
+						{isCollapsed && (
+							<div className="cell-header-item grow">
+								{value?.length > 0 && (
+									<>
+										<code
+											style={{
+												backgroundColor: 'rgba(0,0,200,0.1)',
+												color: 'rgba(0,0,200,1)',
+												fontWeight: 'normal',
+												fontSize: 14,
+												padding: '4px',
+												lineHeight: '2em',
+												borderRadius: '6px',
+											}}
+											title={value}
+										>
+											{value?.length > 100 ? `${value.substring(0, 100)}...` : value}
+										</code>
+										<CopyToClipboard text={`${value?.length > 0 ? value : ' '}`} onCopy={onCopied}>
+											<CButton size="sm" title="Copy current variable value">
+												<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
+											</CButton>
+										</CopyToClipboard>
+									</>
+								)}
+								{value?.length === 0 && (
+									<>
+										<span style={{ fontWeight: 'normal' }}>(empty)</span>
+									</>
+								)}
+							</div>
+						)}
 						<div className="cell-header-item">
 							<CButtonGroup style={{ float: 'inline-end' }}>
 								{isCollapsed ? (
@@ -449,36 +452,40 @@ function CustomVariableRow({
 					</div>
 					{!isCollapsed && (
 						<>
-							<div className="cell-fields">
-								<div className="cell-options">
-									<CForm onSubmit={PreventDefaultHandler}>
-										<CheckboxInputField
-											label="Persist value"
-											value={info.persistCurrentValue}
-											setValue={(val) => setPersistenceValue(name, val)}
-											helpText="If enabled, variable value will be saved and restored when Companion restarts."
-											inline={true}
-										/>
-									</CForm>
+							<CForm onSubmit={PreventDefaultHandler} className="cell-fields">
+								<div>
+									<CheckboxInputField
+										label="Persist value"
+										value={info.persistCurrentValue}
+										setValue={(val) => setPersistenceValue(name, val)}
+										helpText="If enabled, variable value will be saved and restored when Companion restarts."
+										inline={true}
+									/>
 								</div>
-								<div className="cell-values">
-									<CForm onSubmit={PreventDefaultHandler}>
+								<CRow>
+									<CFormLabel htmlFor="colFormCurrentValue" className="col-sm-3 align-right">
+										Current value:
+									</CFormLabel>
+									<CCol sm={9}>
 										<TextInputField
-											label="Current value: "
 											value={value ?? ''}
 											setValue={(val) => setCurrentValue(name, val)}
 											style={{ marginBottom: '0.5rem' }}
 										/>
+									</CCol>
 
+									<CFormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
+										Startup value:
+									</CFormLabel>
+									<CCol sm={9}>
 										<TextInputField
-											label="Startup value: "
 											disabled={!!info.persistCurrentValue}
 											value={info.defaultValue + ''}
 											setValue={(val) => setStartupValue(name, val)}
 										/>
-									</CForm>
-								</div>
-							</div>
+									</CCol>
+								</CRow>
+							</CForm>
 						</>
 					)}
 				</div>
