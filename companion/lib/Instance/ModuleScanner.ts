@@ -58,7 +58,7 @@ export class InstanceModuleScanner {
 			const manifestJsonStr = await fs.readFile(manifestPath)
 			const manifestJson: ModuleManifest = JSON.parse(manifestJsonStr.toString())
 
-			validateManifest(manifestJson)
+			validateManifest(manifestJson, true)
 
 			const helpPath = path.join(fullpath, 'companion/HELP.md')
 			const isLegacyPath = path.join(fullpath, '.is-legacy') // TODO - provide for modules
@@ -86,8 +86,7 @@ export class InstanceModuleScanner {
 				display: moduleDisplay,
 				isPackaged: isPackaged,
 				isLegacy: isLegacy,
-				// @ts-expect-error Not in manifest schema yet
-				isBeta: manifestJson.releaseChannel === 'beta',
+				isBeta: !!manifestJson.isPrerelease,
 			}
 
 			this.#logger.silly(`found module ${moduleDisplay.id}@${manifestJson.version}`)
