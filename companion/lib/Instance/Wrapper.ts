@@ -698,9 +698,14 @@ export class SocketEventsHandler {
 	async #handleSetVariableValues(msg: SetVariableValuesMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableValues before init was called`)
 
-		const variables: Record<string, CompanionVariableValue | undefined> = {}
-		for (const variable of msg.newValues) {
-			variables[variable.id] = variable.value
+		let variables: Record<string, CompanionVariableValue | undefined> = {}
+
+		if (msg.newValues instanceof Array) {
+			for (const variable of msg.newValues) {
+				variables[variable.id] = variable.value
+			}
+		} else {
+			variables = msg.newValues
 		}
 
 		this.#deps.variables.values.setVariableValues(this.#label, variables)
