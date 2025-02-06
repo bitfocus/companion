@@ -279,7 +279,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		if (versionId === null) {
 			// Get the latest installed version
-			versionId = this.modules.getLatestVersionOfModule(moduleId)
+			versionId = this.modules.getLatestVersionOfModule(moduleId, false)
 		}
 
 		// Ensure the requested module and version is installed
@@ -494,8 +494,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		config.instance_type = this.modules.verifyInstanceTypeIsCurrent(config.instance_type)
 
 		// Seamless fixup old configs
-		if (config.moduleVersionId === undefined) {
-			config.moduleVersionId = this.modules.getLatestVersionOfModule(config.instance_type)
+		if (!config.moduleVersionId) {
+			config.moduleVersionId = this.modules.getLatestVersionOfModule(config.instance_type, true)
 		}
 
 		if (config.enabled === false) {

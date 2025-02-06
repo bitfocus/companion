@@ -292,9 +292,11 @@ export class InstanceModules {
 		return moduleInfo.replacedByIds[0]
 	}
 
-	getLatestVersionOfModule(instance_type: string): string | null {
+	getLatestVersionOfModule(instance_type: string, allowDev: boolean): string | null {
 		const moduleInfo = this.#knownModules.get(instance_type)
 		if (!moduleInfo) return null
+
+		if (moduleInfo.devModule && allowDev) return 'dev'
 
 		return moduleInfo.getLatestVersion(false)?.versionId ?? null
 	}
