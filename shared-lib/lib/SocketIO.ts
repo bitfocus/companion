@@ -3,7 +3,6 @@ import type { UserConfigModel } from './Model/UserConfigModel.js'
 import type { ClientLogLine } from './Model/LogLine.js'
 import type {
 	AppUpdateInfo,
-	AppVersionInfo,
 	ClientBonjourService,
 	ClientEditConnectionConfig,
 	ClientEventDefinition,
@@ -48,9 +47,6 @@ import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/M
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
-
-	'app-update-info': () => never
-	'app-version-info': () => AppVersionInfo
 
 	set_userconfig_key(key: keyof UserConfigModel, value: any): never
 	reset_userconfig_key(key: keyof UserConfigModel): never
@@ -350,8 +346,6 @@ export interface ClientToBackendEventsMap {
 }
 
 export interface BackendToClientEventsMap {
-	'app-update-info': (info: AppUpdateInfo) => void
-
 	'logs:lines': (rawItems: ClientLogLine[]) => void
 	'logs:clear': () => void
 

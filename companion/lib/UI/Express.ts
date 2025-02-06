@@ -23,6 +23,8 @@ import fs from 'fs'
 // @ts-ignore
 import serveZip from 'express-serve-zip'
 import { fileURLToPath } from 'url'
+import * as trpcExpress from '@trpc/server/adapters/express'
+import { AppRouter, createTrpcContext } from './TRPC.js'
 
 /**
  * Create a zip serve app
@@ -63,6 +65,7 @@ export class UIExpress {
 	#apiRouter = Express.Router()
 	#legacyApiRouter = Express.Router()
 	#connectionApiRouter = Express.Router()
+	#trpcRouter = Express.Router()
 
 	constructor(internalApiRouter: Express.Router) {
 		this.app.use(cors())
@@ -91,6 +94,9 @@ export class UIExpress {
 
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use('/api', (r, s, n) => this.#apiRouter(r, s, n))
+
+		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
+		this.app.use('/trpc', (r, s, n) => this.#trpcRouter(r, s, n))
 
 		// Use the router #legacyApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use((r, s, n) => this.#legacyApiRouter(r, s, n))
@@ -145,5 +151,57 @@ export class UIExpress {
 	 */
 	set connectionApiRouter(router: Express.Router) {
 		this.#connectionApiRouter = router
+	}
+
+	#boundTrpcRouter = false
+	bindTrpcRouter(trpcRouter: AppRouter) {
+		if (this.#boundTrpcRouter) throw new Error('tRPC router already bound')
+		this.#boundTrpcRouter = true
+
+		this.#trpcRouter.use(
+			trpcExpress.createExpressMiddleware({
+				router: trpcRouter,
+				createContext: createTrpcContext,
+			})
+		)
+
+		// const wss = new WebSocketServer({
+		// 	noServer: true,
+		// })
+
+		// // TODO - this shouldnt be here like this..
+		// const handler = applyWSSHandler({
+		// 	wss,
+		// 	router: trpcRouter,
+		// 	createTrpcContext,
+		// 	// Enable heartbeat messages to keep connection open (disabled by default)
+		// 	keepAlive: {
+		// 		enabled: true,
+		// 		// server ping message interval in milliseconds
+		// 		pingMs: 30000,
+		// 		// connection is terminated if pong message is not received in this many milliseconds
+		// 		pongWaitMs: 5000,
+		// 	},
+		// })
+
+		// this.app.on("upgrade", (request, socket, head) => {
+		// 	wss.handleUpgrade(request, socket, head, (websocket) => {
+		// 		wss.emit("connection", websocket, request);
+		// 	});
+		// });
+
+		// wss.on('connection', (ws) => {
+		// 	console.log(`➕➕ Connection (${wss.clients.size})`)
+		// 	ws.once('close', () => {
+		// 		console.log(`➖➖ Connection (${wss.clients.size})`)
+		// 	})
+		// })
+		// console.log('✅ WebSocket Server listening on ws://localhost:3001')
+
+		// process.on('SIGTERM', () => {
+		// 	console.log('SIGTERM')
+		// 	handler.broadcastReconnectNotification()
+		// 	wss.close()
+		// })
 	}
 }

@@ -33,6 +33,7 @@ import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
+import { createTrpcRouter } from './UI/TRPC.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -279,7 +280,6 @@ export class Registry {
 
 		this.ui.io.on('clientConnect', (client) => {
 			LogController.clientConnect(client)
-			this.ui.clientConnect(client)
 			this.#data.clientConnect(client)
 			this.page.clientConnect(client)
 			this.controls.clientConnect(client)
@@ -313,6 +313,9 @@ export class Registry {
 		await this.instance.initInstances(extraModulePath)
 
 		// Instances are loaded, start up http
+		const router = createTrpcRouter(this)
+		this.ui.express.bindTrpcRouter(router)
+		this.ui.io.bindTrpcRouter(router)
 		this.rebindHttp(bindIp, bindPort)
 
 		// Startup has completed, run triggers
@@ -361,6 +364,8 @@ export class Registry {
 	exit(fromInternal: boolean, restart: boolean) {
 		Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
+
+			this.ui.close()
 
 			// Save the db to disk
 			this.db.close()
