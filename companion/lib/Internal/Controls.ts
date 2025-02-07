@@ -272,7 +272,8 @@ export class InternalControls implements InternalModuleFragment {
 
 			button_text: {
 				label: 'Button: Set text',
-				description: undefined,
+				description:
+					"Avoid this if you can. It's better to either set the text to a custom variable, or to use a feedback to dynamically override the text",
 				showButtonPreview: true,
 				options: [
 					{
@@ -286,7 +287,7 @@ export class InternalControls implements InternalModuleFragment {
 			},
 			textcolor: {
 				label: 'Button: Set text color',
-				description: undefined,
+				description: "Avoid this if you can. It's better to dynamically change the color with a feedback",
 				showButtonPreview: true,
 				options: [
 					{
@@ -300,7 +301,7 @@ export class InternalControls implements InternalModuleFragment {
 			},
 			bgcolor: {
 				label: 'Button: Set background color',
-				description: undefined,
+				description: "Avoid this if you can. It's better to dynamically change the color with a feedback",
 				showButtonPreview: true,
 				options: [
 					{
