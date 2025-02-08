@@ -68,8 +68,25 @@ export class VariablesCustomVariable {
 		client.onPromise('custom-variables:delete', this.deleteVariable.bind(this))
 		client.onPromise('custom-variables:set-default', this.setVariableDefaultValue.bind(this))
 		client.onPromise('custom-variables:set-current', this.setValue.bind(this))
+		client.onPromise('custom-variables:set-description', this.setVariableDescription.bind(this))
 		client.onPromise('custom-variables:set-persistence', this.setPersistence.bind(this))
 		client.onPromise('custom-variables:set-order', this.setOrder.bind(this))
+	}
+
+	/**
+	 * Emit to any room members an update of the named variable
+	 * @param name
+	 */
+	#emitUpdateOneVariable(name: string): void {
+		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
+				{
+					type: 'update',
+					itemId: name,
+					info: this.#custom_variables[name],
+				},
+			])
+		}
 	}
 
 	/**
@@ -102,15 +119,7 @@ export class VariablesCustomVariable {
 
 		this.#doSave()
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-				{
-					type: 'update',
-					itemId: name,
-					info: this.#custom_variables[name],
-				},
-			])
-		}
+		this.#emitUpdateOneVariable(name)
 
 		this.#setValueInner(name, defaultVal)
 
@@ -264,15 +273,7 @@ export class VariablesCustomVariable {
 
 		this.#doSave()
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-				{
-					type: 'update',
-					itemId: name,
-					info: this.#custom_variables[name],
-				},
-			])
-		}
+		this.#emitUpdateOneVariable(name)
 
 		return null
 	}
@@ -365,6 +366,26 @@ export class VariablesCustomVariable {
 	}
 
 	/**
+	 * Set the description of a custom variable
+	 * @param name
+	 * @param description
+	 * @returns Failure reason, if any
+	 */
+	setVariableDescription(name: string, description: string): string | null {
+		if (!this.#custom_variables[name]) {
+			return 'Unknown name'
+		}
+
+		this.#custom_variables[name].description = description
+
+		this.#doSave()
+
+		this.#emitUpdateOneVariable(name)
+
+		return null
+	}
+
+	/**
 	 * Reset a custom variable to the default value
 	 */
 	resetValueToDefault(name: string): void {
@@ -386,15 +407,7 @@ export class VariablesCustomVariable {
 
 			this.#doSave()
 
-			if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-					{
-						type: 'update',
-						itemId: name,
-						info: this.#custom_variables[name],
-					},
-				])
-			}
+			this.#emitUpdateOneVariable(name)
 		}
 	}
 
@@ -413,15 +426,7 @@ export class VariablesCustomVariable {
 
 		this.#doSave()
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-				{
-					type: 'update',
-					itemId: name,
-					info: this.#custom_variables[name],
-				},
-			])
-		}
+		this.#emitUpdateOneVariable(name)
 
 		return null
 	}
@@ -435,15 +440,7 @@ export class VariablesCustomVariable {
 
 			this.#doSave()
 
-			if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-					{
-						type: 'update',
-						itemId: name,
-						info: this.#custom_variables[name],
-					},
-				])
-			}
+			this.#emitUpdateOneVariable(name)
 		}
 	}
 }

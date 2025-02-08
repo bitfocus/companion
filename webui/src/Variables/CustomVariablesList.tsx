@@ -117,6 +117,15 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 		[socket]
 	)
 
+	const setDescription = useCallback(
+		(name: string, description: string) => {
+			socket.emitPromise('custom-variables:set-description', [name, description]).catch(() => {
+				console.error('Failed to update variable description')
+			})
+		},
+		[socket]
+	)
+
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 	const doDelete = useCallback(
 		(name: string) => {
@@ -261,10 +270,12 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 									key={info.name}
 									index={index}
 									name={info.name}
+									description={info.description}
 									value={variableValues[info.name]}
 									info={info}
 									onCopied={onCopied}
 									doDelete={doDelete}
+									setDescription={setDescription}
 									setStartupValue={setStartupValue}
 									setCurrentValue={setCurrentValue}
 									setPersistenceValue={setPersistenceValue}
@@ -316,10 +327,12 @@ interface CustomVariableDragStatus {
 interface CustomVariableRowProps {
 	index: number
 	name: string
+	description: string
 	value: any
 	info: CustomVariableDefinitionExt
 	onCopied: () => void
 	doDelete: (name: string) => void
+	setDescription: (name: string, value: string) => void
 	setStartupValue: (name: string, value: any) => void
 	setCurrentValue: (name: string, value: any) => void
 	setPersistenceValue: (name: string, persisted: boolean) => void
@@ -330,10 +343,12 @@ interface CustomVariableRowProps {
 function CustomVariableRow({
 	index,
 	name,
+	description,
 	value,
 	info,
 	onCopied,
 	doDelete,
+	setDescription,
 	setStartupValue,
 	setCurrentValue,
 	setPersistenceValue,
@@ -450,7 +465,11 @@ function CustomVariableRow({
 							</CButtonGroup>
 						</div>
 					</div>
-					{!isCollapsed && (
+					{isCollapsed ? (
+						<>
+							<div className="variable-description">{description}</div>
+						</>
+					) : (
 						<>
 							<CForm onSubmit={PreventDefaultHandler} className="cell-fields">
 								<div>
@@ -463,6 +482,17 @@ function CustomVariableRow({
 									/>
 								</div>
 								<CRow>
+									<CFormLabel htmlFor="colFormDescription" className="col-sm-3 align-right">
+										Description:
+									</CFormLabel>
+									<CCol sm={9}>
+										<TextInputField
+											value={description}
+											setValue={(description) => setDescription(name, description)}
+											style={{ marginBottom: '0.5rem' }}
+										/>
+									</CCol>
+
 									<CFormLabel htmlFor="colFormCurrentValue" className="col-sm-3 align-right">
 										Current value:
 									</CFormLabel>
