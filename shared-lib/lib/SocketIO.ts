@@ -74,6 +74,7 @@ export interface ClientToBackendEventsMap {
 	'custom-variables:create': (name: string, value: string) => string | null
 	'custom-variables:set-default': (name: string, value: string) => string | null
 	'custom-variables:set-current': (name: string, value: string) => string | null
+	'custom-variables:set-description': (name: string, description: string) => string | null
 	'custom-variables:set-persistence': (name: string, value: boolean) => string | null
 	'custom-variables:delete': (name: string) => void
 	'custom-variables:set-order': (newNames: string[]) => void
