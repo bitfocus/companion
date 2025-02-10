@@ -310,6 +310,9 @@ export abstract class DataStoreBase {
 		this.store
 			?.backup(`${this.cfgBakFile}`)
 			.then(() => {
+				// perform a flush of the WAL file. It may be a little aggressive for this to be a TRUNCATE vs FULL, but it ensures the WAL doesn't grow infinitly
+				this.store.pragma('wal_checkpoint(TRUNCATE)')
+
 				this.lastsave = Date.now()
 				this.dirty = false
 				this.logger.debug('backup complete')
@@ -481,8 +484,8 @@ export abstract class DataStoreBase {
 		this.setBackupCycle()
 	}
 
-	#createDatabase(...args: any) {
-		const db = new Database(...args)
+	#createDatabase(filename: string) {
+		const db = new Database(filename)
 
 		try {
 			db.pragma('journal_mode = WAL')
