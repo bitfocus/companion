@@ -155,7 +155,7 @@ export abstract class DataStoreBase {
 				query = this.statementCache[cacheKey]
 			} else {
 				query = this.store.prepare(`DELETE FROM ${table} WHERE id = @id`)
-				this.statementCache[cacheKey]
+				this.statementCache[cacheKey] = query
 			}
 
 			this.logger.silly(`Delete key: ${table} - ${key}`)
@@ -239,7 +239,7 @@ export abstract class DataStoreBase {
 				query = this.statementCache[cacheKey]
 			} else {
 				query = this.store.prepare(`SELECT value FROM ${table} WHERE id = @id`)
-				this.statementCache[cacheKey]
+				this.statementCache[cacheKey] = query
 			}
 
 			this.logger.silly(`Get table key: ${table} - ${key}`)
@@ -370,7 +370,7 @@ export abstract class DataStoreBase {
 				query = this.store.prepare(
 					`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
 				)
-				this.statementCache[cacheKey]
+				this.statementCache[cacheKey] = query
 			}
 
 			this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
@@ -408,7 +408,7 @@ export abstract class DataStoreBase {
 				this.logger.silly(`${this.cfgFile} exists. trying to read`)
 
 				try {
-					this.store = new Database(this.cfgFile)
+					this.store = this.#createDatabase(this.cfgFile)
 					this.getKey('test')
 				} catch (e) {
 					try {
@@ -433,7 +433,7 @@ export abstract class DataStoreBase {
 				this.startSQLiteWithBackup()
 			} else if (fs.existsSync(this.cfgLegacyFile)) {
 				try {
-					this.store = new Database(this.cfgFile)
+					this.store = this.#createDatabase(this.cfgFile)
 					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
 					this.migrateFileToSqlite()
 					this.getKey('test')
@@ -481,6 +481,18 @@ export abstract class DataStoreBase {
 		this.setBackupCycle()
 	}
 
+	#createDatabase(...args: any) {
+		const db = new Database(...args)
+
+		try {
+			db.pragma('journal_mode = WAL')
+		} catch (err) {
+			this.logger.warn(`Error setting journal mode: ${err}`)
+		}
+
+		return db
+	}
+
 	/**
 	 * Attempt to load the backup file from disk as a recovery
 	 */
@@ -493,7 +505,7 @@ export abstract class DataStoreBase {
 				} catch (e) {}
 
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
-				this.store = new Database(this.cfgFile)
+				this.store = this.#createDatabase(this.cfgFile)
 				this.getKey('test')
 			} catch (e: any) {
 				this.setStartupState(DatabaseStartupState.Reset)
@@ -517,7 +529,7 @@ export abstract class DataStoreBase {
 		} catch (e: any) {
 		} finally {
 			try {
-				this.store = new Database(this.cfgFile)
+				this.store = this.#createDatabase(this.cfgFile)
 				this.create()
 				this.getKey('test')
 				this.loadDefaults()
