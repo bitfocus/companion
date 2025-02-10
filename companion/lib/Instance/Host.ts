@@ -188,7 +188,6 @@ export class ModuleHost {
 					.then(() => {
 						child.restartCount = 0
 
-						child.monitor?.off('exit', forceRestart)
 						child.monitor?.off('message', initHandler)
 
 						startupCompleted()
