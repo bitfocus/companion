@@ -132,7 +132,7 @@ body {
 
 .variable-style {
 	font-family: monospace;
-	padding: 1px 3px 0px 3px;
+	padding: $variable-padding;
 	color: $primary;
 	font-weight: 600;
 	font-size: 16px;
