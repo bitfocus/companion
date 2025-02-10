@@ -129,7 +129,7 @@ export class RespawnMonitor extends EventEmitter<RespawnEvents> {
 	private kill: number | false
 	private shouldRestart: boolean
 
-	private child: RespawnChild | null
+	/*private*/ child: RespawnChild | null
 	private started: Date | null
 	private timeout: NodeJS.Timeout | undefined
 

@@ -12,6 +12,7 @@ import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.j
 import type { InstanceModules, ModuleInfo } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { Serializable } from 'child_process'
 
 /**
  * A backoff sleep strategy
@@ -40,7 +41,7 @@ interface ModuleChild {
 	logger: Logger
 	restartCount: number
 	isReady: boolean
-	monitor?: any
+	monitor?: RespawnMonitor
 	handler?: SocketEventsHandler
 	lifeCycleQueue: PQueue
 	authToken?: string
@@ -85,8 +86,8 @@ export class ModuleHost {
 			// Force restart the connection, as it failed to initialise and will be broken
 			child.restartCount++
 
-			child.monitor.off('exit', forceRestart)
-			child.monitor.off('message', initHandler)
+			child.monitor?.off('exit', forceRestart)
+			child.monitor?.off('message', initHandler)
 
 			// Report the failure
 			startupFailed(new Error('Restart forced'))
@@ -110,7 +111,8 @@ export class ModuleHost {
 
 		const debugLogRoom = ConnectionDebugLogRoom(child.connectionId)
 
-		const initHandler = (msg: Record<string, any>): void => {
+		const initHandler = (msg0: Serializable): void => {
+			const msg = msg0 as Record<string, any>
 			if (msg.direction === 'call' && msg.name === 'register' && msg.callbackId && msg.payload) {
 				const { apiVersion, connectionId, verificationToken } = ejson.parse(msg.payload)
 				if (!child.skipApiVersionCheck && !isModuleApiVersionCompatible(apiVersion)) {
@@ -136,6 +138,12 @@ export class ModuleHost {
 					// Clear existing restart timer
 					clearTimeout(child.crashed)
 					delete child.crashed
+				}
+
+				if (!child.monitor || !child.monitor.child) {
+					this.#logger.debug(`Got register with child not initialised: "${connectionId}"`)
+					forceRestart()
+					return
 				}
 
 				// Bind the event listeners
@@ -177,8 +185,8 @@ export class ModuleHost {
 					.then(() => {
 						child.restartCount = 0
 
-						child.monitor.off('exit', forceRestart)
-						child.monitor.off('message', initHandler)
+						child.monitor?.off('exit', forceRestart)
+						child.monitor?.off('message', initHandler)
 
 						startupCompleted()
 
@@ -196,8 +204,8 @@ export class ModuleHost {
 					})
 			}
 		}
-		child.monitor.on('message', initHandler)
-		child.monitor.on('exit', forceRestart)
+		child.monitor?.on('message', initHandler)
+		child.monitor?.on('exit', forceRestart)
 	}
 
 	/**
@@ -295,7 +303,7 @@ export class ModuleHost {
 			if (child.monitor) {
 				// Stop the child process
 				const monitor = child.monitor
-				await new Promise((resolve) => monitor.stop(resolve))
+				await new Promise<void>((resolve) => monitor.stop(resolve))
 			}
 
 			if (allowDeleteIfEmpty && child.lifeCycleQueue.size === 0) {
