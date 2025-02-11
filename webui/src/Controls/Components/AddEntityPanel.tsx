@@ -50,7 +50,7 @@ export function AddEntityPanel({
 				<AddEntitiesModal
 					ref={addEntitiesRef}
 					addEntity={addEntity}
-					entityType={EntityModelType.Feedback}
+					entityType={entityType}
 					onlyFeedbackType={onlyFeedbackType}
 					entityTypeLabel={entityTypeLabel}
 				/>
