@@ -1,5 +1,37 @@
 # Bitfocus Companion
 
+## Companion v3.5.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Crash reading property on undefined at startup
+- Improve sqlite performance
+- Handle module unexpected exits
+- Backport fix for potential crash when updating many buttons at once
+
+### 🐞 MODULE FIXES
+
+- aimedia-icap
+- allenheath-ahm
+- avocet-landscape
+- broadlink-remote
+- colorlight-grandshow
+- combitech-vidblasterx
+- dashare-multiplay3
+- emotimo-st4
+- etc-paradigm
+- greengo-intercom
+- intelix-matrix
+- kenku-fm
+- limagiran-holyrics
+- monospace-lightkey
+- mrmoco-mhc
+- novastar-coex
+- osee-gostream
+- vicreo-display
+- voicemod-api
+- wled-websocket
+
 ## Companion v3.5.1 - Release Notes
 
 ### 🐞 BUG FIXES
