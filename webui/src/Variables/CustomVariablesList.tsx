@@ -243,59 +243,61 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 				</CButton>
 			</CInputGroup>
 
-			<table className="table table-responsive-sm variables-table">
-				<thead>
-					<tr>
-						<th>&nbsp;</th>
-						<th>Variable</th>
-					</tr>
-				</thead>
-				<tbody>
-					{!hasNoVariables && errorMsg && (
+			<div className="variables-table-scroller ">
+				<table className="table table-responsive-sm variables-table">
+					<thead>
 						<tr>
-							<td>
-								<CAlert color="warning" role="alert">
-									Failed to build list of variables:
-									<br />
-									{errorMsg}
-								</CAlert>
-							</td>
+							<th>&nbsp;</th>
+							<th>Variable</th>
 						</tr>
-					)}
+					</thead>
+					<tbody>
+						{!hasNoVariables && errorMsg && (
+							<tr>
+								<td>
+									<CAlert color="warning" role="alert">
+										Failed to build list of variables:
+										<br />
+										{errorMsg}
+									</CAlert>
+								</td>
+							</tr>
+						)}
 
-					{candidates &&
-						candidates.map((info, index) => {
-							return (
-								<CustomVariableRow
-									key={info.name}
-									index={index}
-									name={info.name}
-									description={info.description}
-									value={variableValues[info.name]}
-									info={info}
-									onCopied={onCopied}
-									doDelete={doDelete}
-									setDescription={setDescription}
-									setStartupValue={setStartupValue}
-									setCurrentValue={setCurrentValue}
-									setPersistenceValue={setPersistenceValue}
-									moveRow={moveRow}
-									panelCollapseHelper={panelCollapseHelper}
-								/>
-							)
-						})}
-					{hasNoVariables && (
-						<tr>
-							<td colSpan={3}>
-								<NonIdealState icon={faSquareRootVariable} text="No custom variables defined" />
-							</td>
-						</tr>
-					)}
-				</tbody>
-			</table>
-			<br></br>
+						{candidates &&
+							candidates.map((info, index) => {
+								return (
+									<CustomVariableRow
+										key={info.name}
+										index={index}
+										name={info.name}
+										description={info.description}
+										value={variableValues[info.name]}
+										info={info}
+										onCopied={onCopied}
+										doDelete={doDelete}
+										setDescription={setDescription}
+										setStartupValue={setStartupValue}
+										setCurrentValue={setCurrentValue}
+										setPersistenceValue={setPersistenceValue}
+										moveRow={moveRow}
+										panelCollapseHelper={panelCollapseHelper}
+									/>
+								)
+							})}
+						{hasNoVariables && (
+							<tr>
+								<td colSpan={3}>
+									<NonIdealState icon={faSquareRootVariable} text="No custom variables defined" />
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
+
 			<h5 className="mt-2">Create custom variable</h5>
-			<div>
+			<div className="mx-1 mb-1">
 				<CForm onSubmit={doCreateNew}>
 					<CInputGroup>
 						<CFormInput

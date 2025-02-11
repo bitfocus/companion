@@ -87,7 +87,7 @@
 .variables-panel {
 	margin-right: -0.5rem;
 
-	overflow-y: hidden;
+	overflow: hidden;
 	height: 100%;
 	position: relative;
 
@@ -100,6 +100,7 @@
 
 	.variables-table-scroller {
 		overflow-y: auto;
+		overflow-x: hidden;
 	}
 }
 
@@ -139,9 +140,16 @@
 			display: grid;
 			grid-template-columns: 0.25fr 1fr;
 
-			.align-right {
-				text-align: right;
-				align-self: center;
+			@include media-breakpoint-up(sm) {
+				.align-right {
+					text-align: right;
+					align-self: center;
+				}
+			}
+			@include media-breakpoint-down(sm) {
+				.align-right {
+					margin-bottom: 0;
+				}
 			}
 		}
 	}
