@@ -266,7 +266,11 @@ export class ServiceSatelliteApi extends CoreBase {
 				while ((i = receivebuffer.indexOf('\n', offset)) !== -1) {
 					line = receivebuffer.substr(offset, i - offset)
 					offset = i + 1
-					this.#handleCommand(socketLogger, socket, line.toString().replace(/\r/, ''))
+					try {
+						this.#handleCommand(socketLogger, socket, line.toString().replace(/\r/, ''))
+					} catch (e: any) {
+						socketLogger.error(`Error processing command: ${e?.message ?? e}`)
+					}
 				}
 				receivebuffer = receivebuffer.substr(offset)
 			},
