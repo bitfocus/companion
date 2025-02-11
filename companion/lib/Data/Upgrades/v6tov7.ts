@@ -38,6 +38,11 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 				convertPageControls(page)
 			}
 		}
+		if (newObj.triggers) {
+			for (const trigger of Object.values<any>(newObj.triggers)) {
+				fixupControlEntities(trigger)
+			}
+		}
 		return newObj
 	} else if (obj.type == 'page') {
 		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 6 }
