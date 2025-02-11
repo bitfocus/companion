@@ -233,10 +233,10 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			(a, b) => a[1].sortOrder - b[1].sortOrder
 		)
 
-		for (const [id] of customVariablesSorted) {
+		for (const [id, info] of customVariablesSorted) {
 			choices.push({
 				id,
-				label: id,
+				label: `${info.description} (custom:${id})`,
 			})
 		}
 
@@ -284,7 +284,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 		<DropdownInputField
 			className={hasMatch ? '' : 'select-warning'}
 			disabled={disabled}
-			value={value}
+			value={value ?? ''}
 			choices={choices}
 			setValue={setValue}
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
