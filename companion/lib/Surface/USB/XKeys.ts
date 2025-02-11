@@ -17,8 +17,6 @@
 import { EventEmitter } from 'events'
 import { XKeys, setupXkeysPanel, Color as XKeysColor } from 'xkeys'
 import LogController, { Logger } from '../../Log/Controller.js'
-import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
-import { LEGACY_BUTTONS_PER_COLUMN, LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,
@@ -62,25 +60,10 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 	 */
 	readonly #myXkeysPanel: XKeys
 
-	/**
-	 * Whether to use the legacy layout, instead of accurate layouts
-	 */
-	readonly #useLegacyLayout: boolean
-
-	/**
-	 * Translate device index to companion index
-	 */
-	readonly #mapDeviceToCompanion: Array<number | undefined> = []
-
-	/**
-	 * Translate companion index to device index
-	 */
-	readonly #mapCompanionToDevice: Array<number | undefined> = []
-
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 
-	constructor(devicePath: string, panel: XKeys, deviceId: string, options: LocalUSBDeviceOptions) {
+	constructor(devicePath: string, panel: XKeys, deviceId: string, _options: LocalUSBDeviceOptions) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/XKeys/${devicePath}`)
@@ -88,7 +71,6 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		this.#logger.debug(`Adding xkeys ${panel.info.name} USB device: ${devicePath}`)
 
 		this.#myXkeysPanel = panel
-		this.#useLegacyLayout = !!options.useLegacyLayout
 
 		this.info = {
 			type: `XKeys ${this.#myXkeysPanel.info.name}`,
@@ -104,29 +86,9 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 
 		const { colCount, rowCount } = this.#myXkeysPanel.info
 
-		if (this.#useLegacyLayout) {
-			this.gridSize = {
-				columns: LEGACY_BUTTONS_PER_ROW,
-				rows: LEGACY_BUTTONS_PER_COLUMN,
-			}
-
-			// Mapping buttons
-			for (var leftRight = 0; leftRight < colCount; leftRight++) {
-				for (var topBottom = 0; topBottom < rowCount; topBottom++) {
-					this.#mapDeviceToCompanion.push(leftRight + topBottom * colCount)
-				}
-			}
-			// Mapping for feedback
-			for (let topBottom = 1; topBottom <= rowCount; topBottom++) {
-				for (let leftRight = 0; leftRight < colCount; leftRight++) {
-					this.#mapCompanionToDevice.push(topBottom + leftRight * rowCount)
-				}
-			}
-		} else {
-			this.gridSize = {
-				columns: colCount,
-				rows: rowCount,
-			}
+		this.gridSize = {
+			columns: colCount,
+			rows: rowCount,
 		}
 
 		// Blank out every key
@@ -151,12 +113,12 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 			const location = this.#translateIndexToXY(keyIndex)
 			if (!location) return
 
-			const [x, y, pageOffset] = location
+			const [x, y] = location
 
 			this.#logger.debug(`keyIndex: ${keyIndex}, companion button: ${y}/${x}`)
 			this.#pressed.add(keyIndex)
 
-			this.emit('click', x, y, true, pageOffset)
+			this.emit('click', x, y, true)
 
 			// Light up a button when pressed:
 			try {
@@ -174,12 +136,12 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 			const location = this.#translateIndexToXY(keyIndex)
 			if (!location) return
 
-			const [x, y, pageOffset] = location
+			const [x, y] = location
 
 			this.#logger.debug(`keyIndex: ${keyIndex}, companion button: ${y}/${x}`)
 			this.#pressed.delete(keyIndex)
 
-			this.emit('click', x, y, false, pageOffset)
+			this.emit('click', x, y, false)
 
 			// Turn off button light when released:
 			try {
@@ -221,38 +183,13 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 	/**
 	 * Translate companion keyindex to xkeys
 	 */
-	#translateIndexToXY(keyIndex: number): [x: number, y: number, pageOffset: number | undefined] | void {
-		if (this.#useLegacyLayout) {
-			const key = this.#mapDeviceToCompanion[keyIndex - 1]
-			if (key === undefined) {
-				return
-			}
-
-			const pageOffset = Math.floor(key / LEGACY_MAX_BUTTONS)
-			const localKey = key % LEGACY_MAX_BUTTONS
-
-			const xy = convertPanelIndexToXY(localKey, this.gridSize)
-			if (xy) {
-				return [...xy, pageOffset]
-			}
-		} else {
-			const gridSize = this.gridSize
-			keyIndex -= 1
-			if (isNaN(keyIndex) || keyIndex < 0 || keyIndex >= gridSize.columns * gridSize.rows) return undefined
-			const x = Math.floor(keyIndex / gridSize.rows)
-			const y = keyIndex % gridSize.rows
-			return [x, y, undefined]
-		}
-	}
-
-	#init(): void {
-		if (this.#useLegacyLayout) {
-			setTimeout(() => {
-				const { colCount, rowCount } = this.#myXkeysPanel.info
-				// Ask companion to provide colours for enough pages of buttons
-				this.emit('xkeys-subscribePage', Math.ceil((colCount * rowCount) / LEGACY_MAX_BUTTONS))
-			}, 1000)
-		}
+	#translateIndexToXY(keyIndex: number): [x: number, y: number] | void {
+		const gridSize = this.gridSize
+		keyIndex -= 1
+		if (isNaN(keyIndex) || keyIndex < 0 || keyIndex >= gridSize.columns * gridSize.rows) return undefined
+		const x = Math.floor(keyIndex / gridSize.rows)
+		const y = keyIndex % gridSize.rows
+		return [x, y]
 	}
 
 	/**
@@ -266,8 +203,6 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 			// (${devicePath.slice(0, -1).slice(-10)})` // This suffix produces `dev/hidraw` on linux, which is not useful.
 
 			const self = new SurfaceUSBXKeys(devicePath, panel, deviceId, options || {})
-
-			self.#init()
 
 			return self
 		} catch (e) {
@@ -315,37 +250,12 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 	 * Draw a button
 	 */
 	draw(x: number, y: number, render: ImageResult): void {
-		// Should never be used for legacy layout
-		if (this.#useLegacyLayout) return
-
 		const gridSize = this.gridSize
 		if (x < 0 || y < 0 || x >= gridSize.columns || y >= gridSize.rows) return
 
 		const buttonIndex = x * gridSize.rows + y + 1
 		const color = render.bgcolor
 		this.#drawColorAtIndex(buttonIndex, color)
-	}
-
-	/**
-	 * Set the color of a button by coordinate
-	 * @param page Page offset
-	 * @param x
-	 * @param y
-	 * @param color 24bit colour value
-	 * @returns
-	 */
-	drawColor(page: number, x: number, y: number, color: number) {
-		if (!this.#useLegacyLayout) return
-
-		const key = convertXYToIndexForPanel(x, y, this.gridSize)
-		if (key === null) return
-
-		const buttonNumber = page * LEGACY_MAX_BUTTONS + key + 1
-		if (buttonNumber <= this.#mapCompanionToDevice.length) {
-			const buttonIndex = this.#mapCompanionToDevice[buttonNumber - 1]
-
-			this.#drawColorAtIndex(buttonIndex, color)
-		}
 	}
 
 	/**

@@ -6,7 +6,6 @@ export interface UserConfigModel {
 	remove_topbar: boolean
 
 	xkeys_enable: boolean
-	xkeys_legacy_layout: boolean
 	elgato_plugin_enable: boolean // Also disables local streamdeck
 	usb_hotplug: boolean
 	loupedeck_enable: boolean
