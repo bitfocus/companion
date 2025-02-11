@@ -60,7 +60,7 @@ export abstract class SatelliteSocketWrapper {
 		}
 
 		chunks.push('\n')
-		this.write(chunks.join())
+		this.write(chunks.join(' '))
 	}
 
 	abstract destroy(): void
