@@ -3080,11 +3080,11 @@ __metadata:
   linkType: hard
 
 "@octokit/request-error@npm:^6.0.1, @octokit/request-error@npm:^6.1.6":
-  version: 6.1.6
-  resolution: "@octokit/request-error@npm:6.1.6"
+  version: 6.1.7
+  resolution: "@octokit/request-error@npm:6.1.7"
   dependencies:
     "@octokit/types": "npm:^13.6.2"
-  checksum: 10c0/cbbed77ddd1d40a1bed36224667c2fac4c20ce375a78d4648745ad1fedc8c2b1d01343b5908979d5b6557736245637eb58efc65d0cd1ef047ea6be74b46c47d2
+  checksum: 10c0/24bd6f98b1d7b2d4062de34777b4195d3cc4dc40c3187a0321dd588291ec5e13b5760765aacdef3a73796a529d3dec0bfb820780be6ef526a3e774d13566b5b0
   languageName: node
   linkType: hard
 
