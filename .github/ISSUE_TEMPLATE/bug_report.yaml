@@ -16,7 +16,7 @@ body:
       label: Is this a bug in companion itself or a module?
       description: If you wish to report a bug in a module, please do so against the correct repository found at https://github.com/bitfocus?type=source
       options:
-        - label: I believe this to be a bug in companion and NOT a module
+        - label: I believe this to be a bug in companion
           required: true
   - type: checkboxes
     attributes:
