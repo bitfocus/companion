@@ -402,7 +402,7 @@ export class ServiceSatelliteApi extends CoreBase {
 		const variableValue = Buffer.from(encodedValue, 'base64').toString()
 
 		device.device.setVariableValue(variableName, variableValue)
-		socket.sendMessage(messageName, 'OK', id, {})
+		socket.sendMessage(messageName, 'OK', id, { VARIABLE: variableName })
 	}
 
 	#removeDevice(socketLogger: Logger, socket: SatelliteSocketWrapper, params: ParsedParams): void {
