@@ -1,8 +1,9 @@
 import fs from 'fs-extra'
 import path from 'path'
-import Database, { Database as SQLiteDB, Statement } from 'better-sqlite3'
+import { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
+import { createSqliteDatabase } from './Util.js'
 
 export type DatabaseDefault = Record<string, any>
 
@@ -402,7 +403,7 @@ export abstract class DataStoreBase {
 	 */
 	protected startSQLite(): void {
 		if (this.cfgDir == ':memory:') {
-			this.store = new Database(this.cfgDir)
+			this.store = createSqliteDatabase(this.cfgDir)
 			this.create()
 			this.getKey('test')
 			this.loadDefaults()
@@ -453,7 +454,7 @@ export abstract class DataStoreBase {
 
 		if (!this.store) {
 			try {
-				this.store = new Database(':memory:')
+				this.store = createSqliteDatabase(':memory:')
 				this.setStartupState(DatabaseStartupState.RAM)
 				this.create()
 				this.getKey('test')
@@ -485,7 +486,7 @@ export abstract class DataStoreBase {
 	}
 
 	#createDatabase(filename: string) {
-		const db = new Database(filename)
+		const db = createSqliteDatabase(filename)
 
 		try {
 			db.pragma('journal_mode = WAL')

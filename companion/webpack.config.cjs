@@ -50,7 +50,6 @@ module.exports = {
 		bufferutil: 'commonjs2 bufferutil',
 		'@serialport/bindings-cpp': 'commonjs2 @serialport/bindings-cpp',
 		'@napi-rs/canvas': 'commonjs2 @napi-rs/canvas',
-		'better-sqlite3': 'commonjs2 better-sqlite3',
 	},
 	experiments: {
 		topLevelAwait: true,
