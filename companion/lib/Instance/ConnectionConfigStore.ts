@@ -123,24 +123,25 @@ export class ConnectionConfigStore {
 		return result
 	}
 
-	getInstancesMetrics(): Record<string, number> {
-		const instancesCounts: Record<string, number> = {}
+	getModuleVersionsMetrics(): Record<string, Record<string, number>> {
+		const moduleVersionCounts: Record<string, Record<string, number>> = {}
 
-		for (const instance_config of Object.values(this.#store)) {
-			if (
-				instance_config &&
-				instance_config.instance_type !== 'bitfocus-companion' &&
-				instance_config.enabled !== false
-			) {
-				if (instancesCounts[instance_config.instance_type]) {
-					instancesCounts[instance_config.instance_type]++
+		for (const moduleConfig of Object.values(this.#store)) {
+			if (moduleConfig && moduleConfig.instance_type !== 'bitfocus-companion' && !!moduleConfig.enabled) {
+				const moduleId = moduleConfig.instance_type
+				const versionId = moduleConfig.moduleVersionId ?? ''
+
+				if (moduleVersionCounts[moduleId]?.[versionId]) {
+					moduleVersionCounts[moduleId][versionId]++
+				} else if (moduleVersionCounts[moduleId]) {
+					moduleVersionCounts[moduleId][versionId] = 1
 				} else {
-					instancesCounts[instance_config.instance_type] = 1
+					moduleVersionCounts[moduleId] = { [versionId]: 1 }
 				}
 			}
 		}
 
-		return instancesCounts
+		return moduleVersionCounts
 	}
 
 	/**

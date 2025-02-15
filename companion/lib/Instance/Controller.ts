@@ -395,10 +395,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	/**
-	 * Get information for the metrics system about the current instances
+	 * Get information for the metrics system about the current connections
 	 */
-	getInstancesMetrics(): Record<string, number> {
-		return this.#configStore.getInstancesMetrics()
+	getConnectionsMetrics(): Record<string, Record<string, number>> {
+		return this.#configStore.getModuleVersionsMetrics()
 	}
 
 	/**
