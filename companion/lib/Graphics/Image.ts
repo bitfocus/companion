@@ -486,24 +486,20 @@ export class Image {
 		valign: VerticalAlignment = 'center',
 		dummy = false
 	): boolean {
-		// let textFits = true
-		let lineheight
-		let fontheight
-
 		text = this.#sanitiseText(text)
 
 		if (text == undefined || text == '') {
 			return true
 		}
 
-		let displayText = text.toString().trim() // remove leading and trailing spaces for display
+		let displayTextStr = text.toString().trim() // remove leading and trailing spaces for display
 
-		displayText = displayText.replaceAll('\\n', '\n') // users can add deliberate line breaks, let's replace it with a real line break
-		displayText = displayText.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
-		displayText = displayText.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
+		displayTextStr = displayTextStr.replaceAll('\\n', '\n') // users can add deliberate line breaks, let's replace it with a real line break
+		displayTextStr = displayTextStr.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
+		displayTextStr = displayTextStr.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
 
 		// validate the fontSize
-		fontheight = Number(fontsize)
+		let fontheight = Number(fontsize)
 		if (isNaN(fontheight)) {
 			fontsize = 'auto'
 		} else if (fontheight < 3) {
@@ -516,7 +512,7 @@ export class Image {
 
 		// get needed fontsize
 		if (fontsize === 'auto') {
-			let len = displayText.length
+			let len = displayTextStr.length
 			let checksize
 			// narrow the sizes to check by guessing how many chars will fit at a size
 			const area = (w * h) / 5000
@@ -534,37 +530,35 @@ export class Image {
 
 			fontheight =
 				checksize.find(
-					(size) => this.drawAlignedText(x, y, w, h, displayText, color, size, halign, valign, true) === true
+					(size) => this.drawAlignedText(x, y, w, h, displayTextStr, color, size, halign, valign, true) === true
 				) ?? 6
 		}
 
-		lineheight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
+		// Split the input into an array of unicode characters, where each can be formed of multiple codepoints
+		const displayTextChars: string[] = [...new Intl.Segmenter().segment(displayTextStr)]
+			.slice(0, (w * h) / fontheight) // limit the number of characters to an overestimate of what would fit at 1px per character
+			.map((segment) => segment.segment)
 
 		// breakup text in pieces
-		let lines = []
-		let breakPos = null
+		let lines: { textChars: string[]; ascent: number; descent: number }[] = []
+		let breakPos: number | null = null
 
 		//if (fontsize < 9) fontfamily = '7x5'
-		this.context2d.font = `${fontheight}px/${lineheight}px ${DEFAULT_FONTS}`
+		const fontLineHeight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
+		this.context2d.font = `${fontheight}px/${fontLineHeight}px ${DEFAULT_FONTS}`
 		this.context2d.textWrap = false
 
-		/**
-		 * this is necessary to get unicode compatible substring where a codepoint can be more than one char
-		 */
-		const substring = (string: string, start: number, end: number): string => {
-			const chars = [...string]
-			if (!start) start = 0
-			if (!end) end = chars.length
-			return chars.slice(start, end).join('')
-		}
+		// Measure the line height with a consistent string, to avoid issues with emoji being too tall
+		const lineHeightSample = this.context2d.measureText('A')
+		const measuredLineHeight = lineHeightSample.fontBoundingBoxAscent + lineHeightSample.fontBoundingBoxDescent
 
-		const findLastChar = (text: string): { ascent: number; descent: number; maxCodepoints: number } => {
+		const findLastChar = (textChars: string[]): { ascent: number; descent: number; maxCodepoints: number } => {
 			// skia-canvas built-in line break algorithm is poor
-			let length = [...text].length
+			let length = textChars.length
 			//console.log('\nstart linecheck for', text, 'in width', w, 'chars', length)
 
 			// let's check how far we off
-			let measure = this.context2d.measureText(text)
+			let measure = this.context2d.measureText(textChars.join(''))
 			let diff = w - measure.width
 
 			// if all fits we are done
@@ -581,7 +575,7 @@ export class Image {
 			// how many chars fit probably in one line
 			let chars = Math.round(w / nWidth)
 
-			diff = w - this.context2d.measureText(substring(text, 0, chars)).width // check our guessed length
+			diff = w - this.context2d.measureText(textChars.slice(0, chars).join('')).width // check our guessed length
 
 			if (Math.abs(diff) > nWidth) {
 				// we seem to be off by more than one char
@@ -591,7 +585,7 @@ export class Image {
 
 				while (Math.abs(chars - lastCheckedChars) > 1) {
 					chars += chardiff // apply assumed difference
-					diff = w - this.context2d.measureText(substring(text, 0, chars)).width
+					diff = w - this.context2d.measureText(textChars.slice(0, chars).join('')).width
 					lastCheckedChars = chars
 					//console.log('while checking', substring(text, 0, chars), chars, 'diff', diff, 'nWidth', nWidth, 'chardiff', chardiff)
 					chardiff = Math.round(diff / nWidth)
@@ -608,7 +602,7 @@ export class Image {
 						descent: measure.fontBoundingBoxDescent,
 						maxCodepoints: chars,
 					}
-				} else if (diff > 0 && w - this.context2d.measureText(substring(text, 0, chars + 1)).width < 0) {
+				} else if (diff > 0 && w - this.context2d.measureText(textChars.slice(0, chars + 1).join('')).width < 0) {
 					// we are smaller and next char is too big
 					//console.log('line algo says '+chars+' chars are smaller', substring(text, 0, chars), this.context2d.measureText(substring(text, 0, chars)).width);
 					return {
@@ -616,7 +610,7 @@ export class Image {
 						descent: measure.fontBoundingBoxDescent,
 						maxCodepoints: chars,
 					}
-				} else if (diff < 0 && w - this.context2d.measureText(substring(text, 0, chars - 1)).width > 0) {
+				} else if (diff < 0 && w - this.context2d.measureText(textChars.slice(0, chars - 1).join('')).width > 0) {
 					// we are bigger and one less char fits
 					//console.log('line algo says '+chars+' chars are bigger', substring(text, 0, chars-1), this.context2d.measureText(substring(text, 0, chars-1)).width);
 					return {
@@ -633,7 +627,7 @@ export class Image {
 						//console.log('nope, make it one shorter')
 						chars -= 1
 					}
-					diff = w - this.context2d.measureText(substring(text, 0, chars)).width
+					diff = w - this.context2d.measureText(textChars.slice(0, chars).join('')).width
 				}
 			}
 
@@ -645,39 +639,43 @@ export class Image {
 			}
 		}
 
-		// function byteToString(arr) {
-		// 	return new TextDecoder().decode(arr)
-		// }
+		// const textArr = [...displayText]
+		let lastDrawnCharCount = 0
+		while (lastDrawnCharCount < displayTextChars.length) {
+			if (lines.length * measuredLineHeight >= h) {
+				// Stop chunking once we have filled the full button height
+				break
+			}
 
-		const textArr = [...displayText]
-		let lastDrawnByte = 0
-		while (lastDrawnByte < textArr.length) {
 			// get rid of one space at line start, but keep more spaces
-			if (textArr[lastDrawnByte] == ' ') {
-				lastDrawnByte += 1
+			if (displayTextChars[lastDrawnCharCount] == ' ') {
+				lastDrawnCharCount += 1
 			}
 
 			// check if remaining text fits in line
-			let { maxCodepoints, ascent, descent } = findLastChar(textArr.slice(lastDrawnByte).join(''))
+			const maxCharsPerLine = w // Limit how many characters we attempt to draw per line
+			let { maxCodepoints, ascent, descent } = findLastChar(
+				displayTextChars.slice(lastDrawnCharCount, lastDrawnCharCount + maxCharsPerLine)
+			)
 
 			//console.log(`check text "${textArr.slice(lastDrawnByte).join('')}" arr=${textArr} length=${textArr.length - lastDrawnByte} max=${maxCodepoints}`)
-			if (maxCodepoints >= textArr.length - lastDrawnByte) {
-				let buf = []
-				for (let i = lastDrawnByte; i < textArr.length; i += 1) {
-					if (textArr[i].codePointAt(0) === 10) {
-						lines.push({ text: buf, ascent, descent })
+			if (maxCodepoints >= displayTextChars.length - lastDrawnCharCount) {
+				let buf: string[] = []
+				for (let i = lastDrawnCharCount; i < displayTextChars.length; i += 1) {
+					if (displayTextChars[i].codePointAt(0) === 10) {
+						lines.push({ textChars: buf, ascent, descent })
 						buf = []
 					} else {
-						buf.push(textArr[i])
+						buf.push(displayTextChars[i])
 					}
 				}
-				lines.push({ text: buf, ascent, descent })
-				lastDrawnByte = textArr.length
+				lines.push({ textChars: buf, ascent, descent })
+				lastDrawnCharCount = displayTextChars.length
 			} else {
-				let line = textArr.slice(lastDrawnByte, lastDrawnByte + maxCodepoints)
+				let line = displayTextChars.slice(lastDrawnCharCount, lastDrawnCharCount + maxCodepoints)
 				if (line.length === 0) {
 					// line is somehow empty, try skipping a character
-					lastDrawnByte += 1
+					lastDrawnCharCount += 1
 					continue
 				}
 
@@ -685,11 +683,11 @@ export class Image {
 				const newlinePos = line.indexOf(String.fromCharCode(10))
 				if (newlinePos >= 0) {
 					lines.push({
-						text: line.slice(0, newlinePos),
+						textChars: line.slice(0, newlinePos),
 						ascent,
 						descent,
 					})
-					lastDrawnByte += newlinePos + 1
+					lastDrawnCharCount += newlinePos + 1
 					continue
 				}
 
@@ -708,21 +706,15 @@ export class Image {
 					}
 				}
 
-				if (line[breakPos] === ' ') {
-					// get rid of a breaking space at end
-					lines.push({
-						text: line.slice(0, breakPos),
-						ascent,
-						descent,
-					})
-				} else {
-					lines.push({
-						text: line.slice(0, breakPos + 1),
-						ascent,
-						descent,
-					})
-				}
-				lastDrawnByte += breakPos + 1
+				// get rid of a breaking space at end
+				const lineText = line.slice(0, breakPos + (line[breakPos] === ' ' ? 0 : 1))
+				lines.push({
+					textChars: lineText,
+					ascent,
+					descent,
+				})
+
+				lastDrawnCharCount += breakPos + 1
 			}
 		}
 		//console.log('we got the break', text, lines.map(line => byteToString(line.text)))
@@ -730,32 +722,10 @@ export class Image {
 		// now that we know the number of lines, we can check if the text fits vertically
 		// the following function would be the real calculation if we would not force lineheight to 1.1x   let totalHeight = lines[0].ascent + lines[lines.length - 1].descent + (lines.length > 0 ? (lines.length - 1 ) * lineheight : 0 )
 		if (lines.length < 1) return false
-		lineheight = lines[0].ascent + lines[0].descent
-		let totalHeight = lines.length * lineheight
+		// lineheight = lines[0].ascent + lines[0].descent
 		if (dummy) {
-			return totalHeight <= h
+			return lines.length * measuredLineHeight <= h
 		}
-
-		// draw the individual lines
-
-		// the following code would be the real calculation if we would not force lineheight to 1.1x
-		/*
-		let lastFittingLine = -1
-		while (
-			lastFittingLine + 1 < lines.length &&
-			lines[0].ascent + lines[lastFittingLine + 1].descent + (lastFittingLine > 1 ? (lastFittingLine + 1) * lineheight : 0) <= h
-		)
-		{
-			lastFittingLine += 1
-		}
-		*/
-		let lastFittingLine = Math.min(lines.length, Math.floor(h / lineheight)) - 1
-
-		if (lastFittingLine == -1) return false
-
-		//totalHeight = lines[0].ascent + lines[lastFittingLine].descent + (lastFittingLine > 0 ? (lastFittingLine) * lineheight : 0)
-		totalHeight = (lastFittingLine + 1) * lineheight
-		//console.log('total text height', totalHeight, 'bounding box height', h);
 
 		// since we are forcing the lineheight to 1.1, we have to calculate a new, smaller ascent and descent
 		let correctedAscent = Math.round(fontheight * 1.02)
@@ -779,24 +749,25 @@ export class Image {
 				break
 		}
 
+		const linesTotalHeight = lines.length * measuredLineHeight
 		let yAnchor = 0
 		switch (valign) {
 			case 'top':
 				yAnchor = correctedAscent
 				break
 			case 'center':
-				yAnchor = Math.round((h - totalHeight) / 2 + correctedAscent)
+				yAnchor = Math.round((h - linesTotalHeight) / 2 + correctedAscent)
 				break
 			case 'bottom':
-				yAnchor = h - totalHeight + correctedAscent
+				yAnchor = h - linesTotalHeight + correctedAscent
 				break
 		}
 		yAnchor += y
 
 		this.context2d.fillStyle = color
 
-		for (let l = 0; l <= lastFittingLine; l += 1) {
-			const text = lines[l].text.join('')
+		for (const line of lines) {
+			const text = line.textChars.join('')
 			this.context2d.fillText(text, xAnchor, yAnchor)
 
 			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
@@ -805,7 +776,7 @@ export class Image {
 			//this.horizontalLine(yAnchor, 'rgb(255, 0, 0)')
 			//console.log('Fontsize', fontsize, 'Lineheight', lineheight, 'asc', correctedAscent, 'des', correctedDescent, 'a+d', correctedAscent+correctedDescent);
 
-			yAnchor += lineheight
+			yAnchor += measuredLineHeight
 		}
 
 		return true
