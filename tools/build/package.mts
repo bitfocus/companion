@@ -47,32 +47,65 @@ $.cwd = 'dist'
 await $`yarn install --no-immutable`
 $.cwd = undefined
 
+const prebuildsToKeep: string[] = [
+	'dist/prebuilds/better_sqlite3.node',
+	'julusian_segfault_handler-',
+	'julusian-image-rs.',
+	'jpeg-turbo-',
+	'HID-',
+	'HID_hidraw-',
+	'usb',
+	'@serialport/bindings-cpp',
+	'bufferutil',
+]
+
 // Prune out any prebuilds from other platforms
-if (platformInfo.runtimePlatform === 'win') {
-	// Electron-builder fails trying to sign `.node` files from other platforms
-	async function pruneContentsOfDir(dirname: string) {
-		const contents = await fs.readdir(dirname)
-		for (const subdir of contents) {
-			// TODO - test if it is a node file, or contains one?
-			// TODO - cross-platform matching?
-			if (
-				subdir.includes('android') ||
-				subdir.includes('linux') ||
-				subdir.includes('darwin') ||
-				subdir.includes('ia32')
-			) {
-				await fs.remove(path.join(dirname, subdir))
+// Electron-builder on windows fails trying to sign `.node` files from other platforms, and it wastes disk space
+const prebuildDirs = await glob('dist/**/*', { onlyDirectories: true })
+console.log(`Cleaning ${prebuildDirs.length} prebuild directories`)
+const matchedPrebuilds = new Set<string>()
+const unmatchedDirs: string[] = []
+for (const dirname of prebuildDirs) {
+	console.log(`pruning prebuilds from: ${dirname}`)
+
+	const subdirs = await fs.readdir(dirname)
+	for (const subdir of subdirs) {
+		const fullpath = path.join(dirname, subdir)
+		// console.log('checking', fullpath)
+		// Keep exact matches
+		if (prebuildsToKeep.includes(subdir)) {
+			matchedPrebuilds.add(fullpath)
+			continue
+		}
+
+		// Check for partial matches
+		let matched = false
+		for (const name of prebuildsToKeep) {
+			if (fullpath.includes(name)) {
+				if (subdir.includes(platformInfo.runtimePlatform)) {
+					matchedPrebuilds.add(fullpath)
+				} else {
+					console.log('purging', fullpath)
+					await fs.remove(fullpath)
+				}
+				matched = true
+				continue
 			}
 		}
-	}
 
-	const prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true })
-	console.log(`Cleaning ${prebuildDirs.length} prebuild directories`)
-	for (const dirname of prebuildDirs) {
-		console.log(`pruning prebuilds from: ${dirname}`)
-		await pruneContentsOfDir(dirname)
+		if (!matched) {
+			unmatchedDirs.push(fullpath)
+		}
 	}
 }
+if (unmatchedDirs.length) {
+	throw new Error(`Unknown prebuilds found in directory: ${unmatchedDirs.join(', ')}`)
+}
+
+// Clean out some extra source files that are large
+await fs.remove('dist/node_modules/node-addon-api')
+await fs.remove('dist/node_modules/node-gyp')
+await fs.remove('dist/node_modules/usb/libusb')
 
 if (!process.env.SKIP_LAUNCH_CHECK) {
 	const launchCheck = await $`node dist/main.js check-launches`.exitCode
