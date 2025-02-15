@@ -18,9 +18,9 @@
     "@jsep-plugin/object": "^1.2.2",
     "@jsep-plugin/template": "^1.0.5",
     "jsep": "^1.4.0",
-    "jsonpath-plus": "^10.2.0",
+    "jsonpath-plus": "^10.3.0",
     "ps-tree": "^1.2.0",
-    "semver": "^7.7.0"
+    "semver": "^7.7.1"
   },
   "scripts": {
     "build": "run build:ts",
