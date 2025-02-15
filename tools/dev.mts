@@ -10,6 +10,7 @@ import concurrently from 'concurrently'
 import dotenv from 'dotenv'
 import { fetchNodejs } from './fetch_nodejs.mts'
 import { determinePlatformInfo } from './build/util.mts'
+import { ChildProcess } from 'child_process'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -21,7 +22,8 @@ dotenv.config({
 	path: path.resolve(process.cwd(), '..', '.env'),
 })
 
-let node
+let node: ChildProcess | null = null
+const nodeArgs: string[] = []
 
 const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
 const devModulesPath = rawDevModulesPath ? path.resolve(rawDevModulesPath) : undefined
@@ -33,6 +35,13 @@ if (devModulesPath) {
 	} else {
 		process.argv[argvIndex + 1] = devModulesPath
 	}
+}
+
+const inspectIndex = process.argv.findIndex((arg) => arg.startsWith('--inspect'))
+if (inspectIndex !== -1) {
+	const inspectArg = process.argv[inspectIndex]
+	process.argv.splice(inspectIndex, 1)
+	nodeArgs.push(inspectArg)
 }
 
 console.log('Ensuring nodejs binaries are available')
@@ -144,7 +153,7 @@ if (devModulesPath) {
 }
 
 async function start() {
-	node = $.spawn('node', ['dist/main.js', ...process.argv.slice(3)], {
+	node = $.spawn('node', [...nodeArgs, 'dist/main.js', ...process.argv.slice(3)], {
 		stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
 		cwd: fileURLToPath(new URL('../companion', import.meta.url)),
 		env: {
