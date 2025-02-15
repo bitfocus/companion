@@ -63,7 +63,7 @@ export interface ControlWithActions extends ControlBase<any> {
 	 * Abort pending delayed actions for a control
 	 * @param skip_up Mark button as released
 	 */
-	abortDelayedActions(skip_up: boolean): void
+	abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null): void
 }
 
 export interface ControlWithoutActions extends ControlBase<any> {

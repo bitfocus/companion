@@ -841,7 +841,7 @@ export class InternalControls implements InternalModuleFragment {
 
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsActions) {
-				control.abortDelayedActions(action.rawOptions.unlatch)
+				control.abortDelayedActions(action.rawOptions.unlatch, extras.abortDelayed)
 			}
 
 			return true
@@ -855,7 +855,7 @@ export class InternalControls implements InternalModuleFragment {
 
 				const control = this.#controlsController.getControl(controlId)
 				if (control && control.supportsActions) {
-					control.abortDelayedActions(false)
+					control.abortDelayedActions(false, extras.abortDelayed)
 				}
 			}
 
@@ -867,13 +867,13 @@ export class InternalControls implements InternalModuleFragment {
 			if (controlId && ParseControlId(controlId)?.type === 'trigger') {
 				const control = this.#controlsController.getControl(controlId)
 				if (control && control.supportsActions) {
-					control.abortDelayedActions(false)
+					control.abortDelayedActions(false, extras.abortDelayed)
 				}
 			}
 
 			return true
 		} else if (action.definitionId === 'panic') {
-			this.#controlsController.abortAllDelayedActions()
+			this.#controlsController.abortAllDelayedActions(extras.abortDelayed)
 			return true
 		} else if (action.definitionId == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
