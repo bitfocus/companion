@@ -183,16 +183,14 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				)}
 			</div>
 			<div className="button-grid-panel-footer">
-				<CRow style={{ paddingTop: '15px' }}>
-					<ButtonGridActions
-						ref={actionsRef}
-						isHot={isHot}
-						pageNumber={pageNumber}
-						clearSelectedButton={clearSelectedButton}
-					/>
-				</CRow>
+				<ButtonGridActions
+					ref={actionsRef}
+					isHot={isHot}
+					pageNumber={pageNumber}
+					clearSelectedButton={clearSelectedButton}
+				/>
 
-				<CAlert color="info">
+				<CAlert color="info" className="mb-2">
 					You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
 					such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
 					button highlighted to delete it.
