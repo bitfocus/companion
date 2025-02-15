@@ -27,8 +27,9 @@ import type { Registry } from '../Registry.js'
  * 		 - allow buttons > 32
  * 1.7.0 - Support for transferable values. This allows surfaces to emit and consume values that don't align with a control in the grid.
  *       - allow surface to opt out of brightness slider and messages
+ * 1.7.1 - Respond with variable name in SET-VARIABLE-VALUE success message
  */
-const API_VERSION = '1.7.0'
+const API_VERSION = '1.7.1'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
