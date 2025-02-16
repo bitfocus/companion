@@ -471,7 +471,6 @@ export class Image {
 	 * @param fontsize height of font, either pixels or 'auto'
 	 * @param halign horizontal alignment left, center, right
 	 * @param valign vertical alignment top, center, bottom
-	 * @param dummy don't actually draw anything if true, just return if the text fits
 	 * @returns returns true if text fits
 	 */
 	drawAlignedText(
@@ -483,20 +482,19 @@ export class Image {
 		color: string,
 		fontsize: number | 'auto' = 'auto',
 		halign: HorizontalAlignment = 'center',
-		valign: VerticalAlignment = 'center',
-		dummy = false
+		valign: VerticalAlignment = 'center'
 	): boolean {
-		text = this.#sanitiseText(text)
-
-		if (text == undefined || text == '') {
-			return true
-		}
-
-		let displayTextStr = text.toString().trim() // remove leading and trailing spaces for display
+		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
+		if (!displayTextStr) return true
 
 		displayTextStr = displayTextStr.replaceAll('\\n', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
+
+		// Split the input into an array of unicode characters, where each can be formed of multiple codepoints
+		const displayTextChars: string[] = [...new Intl.Segmenter().segment(displayTextStr)]
+			.slice(0, (w * h) / 2) // limit the number of characters to an overestimate of what would fit at 1px per character (assuming chars are 2px tall)
+			.map((segment) => segment.segment)
 
 		// validate the fontSize
 		let fontheight = Number(fontsize)
@@ -530,15 +528,30 @@ export class Image {
 
 			fontheight =
 				checksize.find(
-					(size) => this.drawAlignedText(x, y, w, h, displayTextStr, color, size, halign, valign, true) === true
+					(size) =>
+						this.#drawAlignedTextCharsAtSize(x, y, w, h, displayTextChars, color, size, halign, valign, true) === true
 				) ?? 6
 		}
 
-		// Split the input into an array of unicode characters, where each can be formed of multiple codepoints
-		const displayTextChars: string[] = [...new Intl.Segmenter().segment(displayTextStr)]
-			.slice(0, (w * h) / fontheight) // limit the number of characters to an overestimate of what would fit at 1px per character
-			.map((segment) => segment.segment)
+		return this.#drawAlignedTextCharsAtSize(x, y, w, h, displayTextChars, color, fontheight, halign, valign, false)
+	}
 
+	/**
+	 * Draws aligned text in an boxed area.
+	 * Internals of 'drawAlignedText' after resolving the fontsize
+	 */
+	#drawAlignedTextCharsAtSize(
+		x: number,
+		y: number,
+		w: number,
+		h: number,
+		displayTextChars: string[],
+		color: string,
+		fontheight: number,
+		halign: HorizontalAlignment,
+		valign: VerticalAlignment,
+		dummy: boolean
+	): boolean {
 		// breakup text in pieces
 		let lines: { textChars: string[]; ascent: number; descent: number }[] = []
 		let breakPos: number | null = null
