@@ -107,7 +107,6 @@ export class SurfaceFirmwareUpdateCheck {
 		const currentInFlight = this.#payloadUpdating.get(url)
 		if (currentInFlight) return currentInFlight
 
-		// @ts-expect-error
 		const { promise: pendingPromise, resolve } = Promise.withResolvers<unknown | null>()
 		this.#payloadUpdating.set(url, pendingPromise)
 

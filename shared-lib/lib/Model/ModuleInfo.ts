@@ -48,3 +48,14 @@ export interface ModuleInfoUpdateUpdateOp {
 
 	patch: JsonPatchOperation[]
 }
+
+/**
+ * Description of a version of another module that this module can be upgraded to.
+ */
+export interface ModuleUpgradeToOtherVersion {
+	moduleId: string
+	displayName: string
+	// isBeta: boolean
+	helpPath: string | null
+	versionId: string | null
+}

@@ -318,11 +318,15 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 							</>
 						)}
 						{moduleVersion?.displayName ?? connection.moduleVersionId}
-						<UpdateConnectionToLatestButton connection={connection} />
 					</>
 				) : (
-					connection.instance_type
+					<>
+						{connection.instance_type}
+						<br />
+						{connection.moduleVersionId}
+					</>
 				)}
+				<UpdateConnectionToLatestButton connection={connection} />
 			</td>
 			<td className="hand" onClick={doEdit}>
 				<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} />

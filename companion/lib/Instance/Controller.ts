@@ -137,6 +137,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				this.enableDisableInstance(connectionId, true)
 			}
 		)
+		this.modules.listenToStoreEvents(this.modulesStore)
 
 		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())
 
@@ -491,8 +492,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const config = this.#configStore.getConfigForId(id)
 		if (!config) throw new Error('Cannot activate unknown module')
 
-		config.instance_type = this.modules.verifyInstanceTypeIsCurrent(config.instance_type)
-
 		// Seamless fixup old configs
 		if (!config.moduleVersionId) {
 			config.moduleVersionId = this.modules.getLatestVersionOfModule(config.instance_type, true)
@@ -610,15 +609,24 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			// const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
 			// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
 
+			if (versionId?.includes('@')) {
+				// Its a moduleId and version
+				const [moduleId, version] = versionId.split('@')
+				config.instance_type = moduleId
+				config.moduleVersionId = version || null
+			} else {
+				// Its a simple version
+				config.moduleVersionId = versionId
+			}
+
 			// Update the config
-			config.moduleVersionId = versionId
 			if (updatePolicy) config.updatePolicy = updatePolicy
 			this.#configStore.commitChanges([id])
 
 			// Install the module if needed
-			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
+			const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
 			if (!moduleInfo) {
-				this.userModulesManager.ensureModuleIsInstalled(config.instance_type, versionId)
+				this.userModulesManager.ensureModuleIsInstalled(config.instance_type, config.moduleVersionId)
 			}
 
 			// Trigger a restart (or as much as possible)

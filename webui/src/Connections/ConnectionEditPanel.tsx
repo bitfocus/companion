@@ -16,7 +16,7 @@ import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import semver from 'semver'
-import { useModuleStoreInfo } from '../Modules/ModuleManagePanel.js'
+import { useModuleStoreInfo, useModuleUpgradeToVersions } from '../Modules/ModuleManagePanel.js'
 import { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
@@ -373,6 +373,7 @@ export function useConnectionVersionSelectOptions(
 	includeBeta: boolean
 ): DropdownChoiceInt[] {
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
+	const upgradeToVersions = useModuleUpgradeToVersions(moduleId)
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
 	const latestBetaVersionn = getLatestVersion(moduleStoreInfo?.versions, true)
@@ -420,8 +421,24 @@ export function useConnectionVersionSelectOptions(
 
 		if (installedInfo?.devVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
 
-		return choices
-	}, [installedInfo, latestStableVersion, latestBetaVersionn, includeBeta])
+		const replacementChoices: DropdownChoiceInt[] = []
+		// Push the potential replacements first
+		for (const upgradeTo of upgradeToVersions) {
+			if (upgradeTo.versionId) {
+				replacementChoices.push({
+					value: `${upgradeTo.moduleId}@${upgradeTo.versionId}`,
+					label: `${upgradeTo.displayName} (v${upgradeTo.versionId})`,
+				})
+			} else {
+				replacementChoices.push({
+					value: `${upgradeTo.moduleId}@`,
+					label: `${upgradeTo.displayName} (Latest stable)`,
+				})
+			}
+		}
+
+		return [...replacementChoices, ...choices]
+	}, [installedInfo, upgradeToVersions, latestStableVersion, latestBetaVersionn, includeBeta])
 }
 
 export function doesConnectionVersionExist(

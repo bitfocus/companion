@@ -12,6 +12,7 @@ import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVer
 import createClient from 'openapi-fetch'
 import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import { Complete } from '@companion-module/base/dist/util.js'
+import EventEmitter from 'events'
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
@@ -28,7 +29,11 @@ const CacheStoreModuleTable = 'module_store'
 const SUBSCRIBE_REFRESH_INTERVAL = 1000 * 60 * 60 * 6 // Update when a user subscribes to the data, if older than 6 hours
 const LATEST_MODULE_INFO_CACHE_DURATION = 1000 * 60 * 60 * 6 // Cache the latest module info for 6 hours
 
-export class ModuleStoreService {
+export interface ModuleStoreServiceEvents {
+	storeListUpdated: [data: ModuleStoreListCacheStore]
+}
+
+export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 	readonly #logger = LogController.createLogger('Instance/ModuleStoreService')
 
 	/**
@@ -47,6 +52,8 @@ export class ModuleStoreService {
 	#infoStore = new Map<string, ModuleStoreModuleInfoStore>()
 
 	constructor(io: UIHandler, cacheStore: DataCache) {
+		super()
+
 		this.#io = io
 		this.#cacheStore = cacheStore
 
@@ -125,6 +132,10 @@ export class ModuleStoreService {
 		client.onPromise('modules-store:info:unsubscribe', async (moduleId) => {
 			client.leave(ModuleStoreInfoRoom(moduleId))
 		})
+	}
+
+	getCachedStoreList(): Record<string, ModuleStoreListCacheEntry> {
+		return this.#listStore.modules
 	}
 
 	getCachedModuleVersionInfo(moduleId: string, versionId: string): ModuleStoreModuleInfoVersion | null {
@@ -224,18 +235,23 @@ export class ModuleStoreService {
 
 				this.#isRefreshingStoreData = false
 
+				this.emit('storeListUpdated', this.#listStore)
+
 				this.#logger.debug(`Done refreshing store module list`)
 			})
 	}
 
-	readonly #isRefreshingStoreInfo = new Set<string>()
+	readonly #isRefreshingStoreInfo = new Map<string, Promise<ModuleStoreModuleInfoStore | null>>()
 	async #refreshStoreInfoData(moduleId: string): Promise<ModuleStoreModuleInfoStore | null> {
-		if (this.#isRefreshingStoreInfo.has(moduleId)) {
+		const inProgress = this.#isRefreshingStoreInfo.get(moduleId)
+		if (inProgress) {
 			this.#logger.debug(`Skipping refreshing store info for module "${moduleId}", already in progress`)
-			return null
+			return inProgress
 		}
-		// nocommit - create a promise using Promise.withResolvers, store it in the map and return it in the guard above
-		this.#isRefreshingStoreInfo.add(moduleId)
+
+		// Create a new promise and store it, so that concurrent calls can wait for the same promise
+		const { promise: completePromise, resolve } = Promise.withResolvers<ModuleStoreModuleInfoStore | null>()
+		this.#isRefreshingStoreInfo.set(moduleId, completePromise)
 
 		this.#logger.debug(`Refreshing store info for module "${moduleId}"`)
 
@@ -308,6 +324,9 @@ export class ModuleStoreService {
 		this.#isRefreshingStoreInfo.delete(moduleId)
 
 		this.#logger.debug(`Done refreshing store info for module "${moduleId}"`)
+
+		// Inform other listeners
+		setImmediate(() => resolve(moduleData))
 
 		return moduleData
 	}

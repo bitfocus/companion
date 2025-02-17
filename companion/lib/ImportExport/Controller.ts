@@ -594,22 +594,24 @@ export class ImportExportController {
 
 			return true
 		})
-		client.onPromise('loadsave:prepare-import', async (dataStr) => {
+		client.onPromise('loadsave:prepare-import', async (dataStr0) => {
+			let dataStr: string
 			try {
 				dataStr = await new Promise((resolve, reject) => {
-					zlib.gunzip(dataStr, (err, data) => {
+					zlib.gunzip(dataStr0, (err, data) => {
 						if (err) reject(err)
-						else resolve(data || dataStr)
+						else resolve(data?.toString() || dataStr)
 					})
 				})
 			} catch (e) {
 				// Ignore, it is probably not compressed
+				dataStr = dataStr0.toString()
 			}
 
 			let rawObject
 			try {
 				// YAML parser will handle JSON too
-				rawObject = yaml.parse(dataStr.toString())
+				rawObject = yaml.parse(dataStr)
 			} catch (e) {
 				return ['File is corrupted or unknown format']
 			}
@@ -662,7 +664,7 @@ export class ImportExportController {
 				if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
 
 				clientObject.instances[instanceId] = {
-					instance_type: this.#instancesController.modules.verifyInstanceTypeIsCurrent(instance.instance_type),
+					instance_type: instance.instance_type,
 					moduleVersionId: instance.moduleVersionId ?? null,
 					label: instance.label,
 					sortOrder: instance.sortOrder,
@@ -1018,9 +1020,8 @@ export class ImportExportController {
 					}
 				} else {
 					// Create a new instance
-					const instance_type = this.#instancesController.modules.verifyInstanceTypeIsCurrent(obj.instance_type)
 					const [newId, newConfig] = this.#instancesController.addInstanceWithLabel(
-						{ type: instance_type },
+						{ type: obj.instance_type },
 						obj.label,
 						obj.moduleVersionId ?? null,
 						obj.updatePolicy,

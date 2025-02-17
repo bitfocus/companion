@@ -11,8 +11,6 @@ import { getHelpPathForInstalledModule } from './ModuleScanner.js'
 export class InstanceModuleInfo {
 	id: string
 
-	replacedByIds: string[] = []
-
 	devModule: ModuleVersionInfo | null = null
 
 	installedVersions: Record<string, ModuleVersionInfo | undefined> = {}
