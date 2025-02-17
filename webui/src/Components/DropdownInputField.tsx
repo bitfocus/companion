@@ -15,6 +15,7 @@ interface DropdownInputFieldProps {
 	label?: React.ReactNode
 	choices: DropdownChoice[] | Record<string, DropdownChoice>
 	allowCustom?: boolean
+	disableEditingCustom?: boolean
 	minChoicesForSearch?: number
 	tooltip?: string
 	regex?: string
@@ -37,6 +38,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 	label,
 	choices,
 	allowCustom,
+	disableEditingCustom,
 	minChoicesForSearch,
 	tooltip,
 	regex,
@@ -210,18 +212,22 @@ export const DropdownInputField = memo(function DropdownInputField({
 			{allowCustom ? (
 				<CreatableSelect
 					{...selectProps}
-					className={`${selectProps.className} select-control-editable`}
+					className={!disableEditingCustom ? `${selectProps.className} select-control-editable` : selectProps.className}
 					isSearchable={true}
 					noOptionsMessage={noOptionsMessage}
 					createOptionPosition="first"
 					formatCreateLabel={formatCreateLabel}
 					isValidNewOption={isValidNewOption}
-					onFocus={onFocus}
-					onBlur={onBlur2}
-					inputValue={allowCustom ? inputValue : undefined}
-					value={!allowCustom || inputValue === undefined || inputValue === currentValue?.value ? currentValue : ''}
-					onInputChange={onInputChange}
-					onChange={onChange2}
+					onFocus={!disableEditingCustom ? onFocus : undefined}
+					onBlur={!disableEditingCustom ? onBlur2 : onBlur}
+					inputValue={allowCustom && !disableEditingCustom ? inputValue : undefined}
+					value={
+						!allowCustom || disableEditingCustom || inputValue === undefined || inputValue === currentValue?.value
+							? currentValue
+							: ''
+					}
+					onInputChange={!disableEditingCustom ? onInputChange : undefined}
+					onChange={!disableEditingCustom ? onChange2 : onChange}
 				/>
 			) : (
 				<Select {...selectProps} />
