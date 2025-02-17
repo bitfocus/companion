@@ -107,7 +107,7 @@ export class ActionRunner extends CoreBase {
 		]
 
 		for (const action of actions) {
-			if (action.definitionId === 'wait') {
+			if (action.connectionId === 'internal' && action.definitionId === 'wait') {
 				groupedActions.push({
 					waitAction: action,
 					actions: [],
