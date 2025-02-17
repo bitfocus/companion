@@ -740,6 +740,11 @@ export class Image {
 			return lines.length * measuredLineHeight <= h
 		}
 
+		if (lines.length * measuredLineHeight >= h) {
+			// If the text is too tall, we need to drop the last line
+			lines.splice(lines.length - 1, 1)
+		}
+
 		// since we are forcing the lineheight to 1.1, we have to calculate a new, smaller ascent and descent
 		let correctedAscent = Math.round(fontheight * 1.02)
 		// let correctedDescent = lineheight - correctedAscent
