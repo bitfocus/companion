@@ -319,7 +319,7 @@ export class InternalSurface implements InternalModuleFragment {
 
 				const surfaceId = surface.id.replaceAll(':', '_') // TODO - more chars
 				values[`surface_${surfaceId}_name`] = surface.name || surface.id
-				values[`surface_${surfaceId}_location`] = surface.location ?? ''
+				values[`surface_${surfaceId}_location`] = surface.location ?? 'Local'
 
 				const surfacePageId = this.#surfaceController.devicePageGet(surface.id)
 				values[`surface_${surfaceId}_page`] =

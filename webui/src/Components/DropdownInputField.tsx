@@ -1,30 +1,26 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
-import React, { createContext, useContext, useMemo, useEffect, useCallback, memo } from 'react'
-import Select, { createFilter } from 'react-select'
+import React, { createContext, useContext, useMemo, useEffect, useCallback, memo, useState } from 'react'
+import Select, { createFilter, InputActionMeta } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
 
 export const MenuPortalContext = createContext<HTMLElement | null>(null)
 
-type AsType<Multi extends boolean> = Multi extends true ? DropdownChoiceId[] : DropdownChoiceId
-
-interface DropdownInputFieldProps<Multi extends boolean> {
+interface DropdownInputFieldProps {
 	htmlName?: string
 	className?: string
 	label?: React.ReactNode
 	choices: DropdownChoice[] | Record<string, DropdownChoice>
 	allowCustom?: boolean
-	minSelection?: number
+	disableEditingCustom?: boolean
 	minChoicesForSearch?: number
-	maxSelection?: number
 	tooltip?: string
 	regex?: string
-	multiple: Multi
-	value: AsType<Multi>
-	setValue: (value: AsType<Multi>) => void
+	value: DropdownChoiceId
+	setValue: (value: DropdownChoiceId) => void
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	helpText?: string
@@ -36,25 +32,23 @@ interface DropdownChoiceInt {
 	label: DropdownChoiceId
 }
 
-export const DropdownInputField = memo(function DropdownInputField<Multi extends boolean>({
+export const DropdownInputField = memo(function DropdownInputField({
 	htmlName,
 	className,
 	label,
 	choices,
 	allowCustom,
-	minSelection,
+	disableEditingCustom,
 	minChoicesForSearch,
-	maxSelection,
 	tooltip,
 	regex,
-	multiple,
 	value,
 	setValue,
 	setValid,
 	disabled,
 	helpText,
 	onBlur,
-}: DropdownInputFieldProps<Multi>) {
+}: DropdownInputFieldProps) {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const options = useMemo(() => {
@@ -70,23 +64,14 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 		return options.map((choice): DropdownChoiceInt => ({ value: choice.id, label: choice.label }))
 	}, [choices])
 
-	const isMultiple = !!multiple
-
-	if (isMultiple && value === undefined) value = [] as any
-
 	const currentValue = useMemo(() => {
-		const selectedValue = Array.isArray(value) ? value : [value]
-		let res: DropdownChoiceInt[] = []
-		for (const val of selectedValue) {
-			// eslint-disable-next-line eqeqeq
-			const entry = options.find((o) => o.value == val) // Intentionally loose for compatibility
-			if (entry) {
-				res.push(entry)
-			} else {
-				res.push({ value: val, label: allowCustom ? val : `?? (${val})` })
-			}
+		// eslint-disable-next-line eqeqeq
+		const entry = options.find((o) => o.value == value) // Intentionally loose for compatibility
+		if (entry) {
+			return entry
+		} else {
+			return { value: value, label: allowCustom ? value : `?? (${value})` }
 		}
-		return res
 	}, [value, options, allowCustom])
 
 	// Compile the regex (and cache)
@@ -103,34 +88,19 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 
 	const isValueValid = useCallback(
 		(newValue: DropdownChoiceId | DropdownChoiceId[]) => {
-			if (isMultiple) {
-				const newValueArr = Array.isArray(newValue) ? newValue : [newValue]
-				for (const val of newValueArr) {
-					// Require the selected choices to be valid
-					if (
-						allowCustom &&
-						compiledRegex &&
-						!options.find((c) => c.value === val) &&
-						!compiledRegex.exec(String(val))
-					) {
-						return false
-					}
-				}
-			} else {
-				// Require the selected choice to be valid
-				if (
-					allowCustom &&
-					compiledRegex &&
-					!options.find((c) => c.value === newValue) &&
-					!compiledRegex.exec(String(newValue))
-				) {
-					return false
-				}
+			// Require the selected choice to be valid
+			if (
+				allowCustom &&
+				compiledRegex &&
+				!options.find((c) => c.value === newValue) &&
+				!compiledRegex.exec(String(newValue))
+			) {
+				return false
 			}
 
 			return true
 		},
-		[allowCustom, compiledRegex, options, isMultiple]
+		[allowCustom, compiledRegex, options]
 	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
@@ -139,40 +109,20 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	}, [value, setValid, isValueValid])
 
 	const onChange = useCallback(
-		(e: DropdownChoiceInt | DropdownChoiceInt[]) => {
-			const isMultiple = !!multiple
-			const newValue = Array.isArray(e) ? (e?.map((v) => v.value) ?? []) : e?.value
+		(e: DropdownChoiceInt) => {
+			const newValue = e?.value
 
 			const isValid = isValueValid(newValue)
-
-			if (isMultiple) {
-				const valueArr = value as DropdownChoiceId[] | undefined
-				if (
-					typeof minSelection === 'number' &&
-					newValue.length < minSelection &&
-					newValue.length <= (valueArr || []).length
-				) {
-					// Block change if too few are selected
-					return
-				}
-
-				if (
-					typeof maxSelection === 'number' &&
-					newValue.length > maxSelection &&
-					newValue.length >= (valueArr || []).length
-				) {
-					// Block change if too many are selected
-					return
-				}
-			}
 
 			setValue(newValue)
 			setValid?.(isValid)
 		},
-		[setValue, setValid, value, multiple, minSelection, maxSelection, isValueValid]
+		[setValue, setValid, isValueValid]
 	)
 
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
+
+	// const selectRef = useRef<any>(null)
 
 	const selectProps: Partial<CreatableProps<any, any, any>> = {
 		name: htmlName,
@@ -185,9 +135,9 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 		menuPlacement: 'auto',
 		isClearable: false,
 		isSearchable: minChoicesForSearch2 <= options.length,
-		isMulti: isMultiple,
+		isMulti: false,
 		options: options,
-		value: isMultiple ? currentValue : currentValue[0],
+		value: currentValue,
 		onChange: onChange,
 		filterOption: createFilter({ ignoreAccents: false }),
 		components: { MenuList: WindowedMenuList },
@@ -210,20 +160,43 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	)
 	const formatCreateLabel = useCallback((v: string | number) => `Use "${v}"`, [])
 
-	console.log(
-		'a',
-		isValueValid(isMultiple && currentValue ? (currentValue.map((v) => v.value) ?? []) : currentValue[0]?.value),
-		regex,
-		compiledRegex
+	/**
+	 * Do some mangling with the input value to make custom values flow a bit better
+	 */
+	const [inputValue, setInputValue] = useState<string | undefined>(undefined)
+	const onFocus = () => setInputValue(value + '')
+	const onBlur2 = useCallback(() => {
+		setInputValue(undefined)
+
+		onBlur?.()
+	}, [onBlur])
+
+	const onChange2 = useCallback(
+		(e: DropdownChoiceInt) => {
+			setInputValue(e.value)
+			onChange(e)
+		},
+		[onChange]
 	)
+	const onInputChange = useCallback(
+		(v: string, a: InputActionMeta) => {
+			if (!allowCustom) return
+
+			if (a.action === 'input-blur') {
+				onChange({ value: a.prevInputValue, label: a.prevInputValue })
+			} else if (a.action === 'input-change') {
+				setInputValue(v)
+			}
+		},
+		[onChange, allowCustom]
+	)
+
 	return (
 		<div
 			className={classNames(
 				{
 					'select-tooltip': true,
-					'select-invalid': !isValueValid(
-						isMultiple && currentValue ? (currentValue.map((v) => v.value) ?? []) : currentValue[0]?.value
-					),
+					'select-invalid': !isValueValid(currentValue?.value),
 				},
 				className
 			)}
@@ -239,15 +212,26 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 			{allowCustom ? (
 				<CreatableSelect
 					{...selectProps}
+					className={!disableEditingCustom ? `${selectProps.className} select-control-editable` : selectProps.className}
 					isSearchable={true}
 					noOptionsMessage={noOptionsMessage}
 					createOptionPosition="first"
 					formatCreateLabel={formatCreateLabel}
 					isValidNewOption={isValidNewOption}
+					onFocus={!disableEditingCustom ? onFocus : undefined}
+					onBlur={!disableEditingCustom ? onBlur2 : onBlur}
+					inputValue={allowCustom && !disableEditingCustom ? inputValue : undefined}
+					value={
+						!allowCustom || disableEditingCustom || inputValue === undefined || inputValue === currentValue?.value
+							? currentValue
+							: ''
+					}
+					onInputChange={!disableEditingCustom ? onInputChange : undefined}
+					onChange={!disableEditingCustom ? onChange2 : onChange}
 				/>
 			) : (
 				<Select {...selectProps} />
 			)}
 		</div>
 	)
-}) as <Multi extends boolean>(props: DropdownInputFieldProps<Multi>) => JSX.Element
+}) as (props: DropdownInputFieldProps) => JSX.Element

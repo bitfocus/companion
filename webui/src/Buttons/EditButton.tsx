@@ -586,6 +586,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 									style={{ fontWeight: 'bold', opacity: runtimeProps.current_step_id === selectedKey ? 0.3 : 1 }}
 									disabled={runtimeProps.current_step_id === selectedKey}
 									onClick={() => setCurrentStep(selectedKey)}
+									title="Make this step the current step, without executing any actions."
 								>
 									Select
 								</CButton>

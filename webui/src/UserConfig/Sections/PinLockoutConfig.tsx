@@ -1,10 +1,10 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
-import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
-import { UserConfigProps } from './Components/Common.js'
-import { UserConfigTextInputRow } from './Components/UserConfigTextInputRow.js'
-import { UserConfigNumberInputRow } from './Components/UserConfigNumberInputRow.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
+import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
+import { UserConfigProps } from '../Components/Common.js'
+import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
+import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
 
 export const PinLockoutConfig = observer(function PinLockoutConfig(props: UserConfigProps) {
 	return (

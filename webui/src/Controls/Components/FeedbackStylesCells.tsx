@@ -3,7 +3,7 @@ import { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { CAlert, CFormLabel, CCol } from '@coreui/react'
 import React, { useState, useCallback, useMemo } from 'react'
-import { DropdownInputField } from '../../Components/DropdownInputField.js'
+import { MultiDropdownInputField } from '../../Components/MultiDropdownInputField.js'
 import { MyErrorBoundary } from '../../util.js'
 import { ButtonStyleConfigFields } from '../ButtonStyleConfig.js'
 import { DropdownChoiceId } from '@companion-module/base'
@@ -27,9 +27,8 @@ export function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleP
 				</CFormLabel>
 				<CCol sm={8}>
 					<MyErrorBoundary>
-						<DropdownInputField
+						<MultiDropdownInputField
 							htmlName="colFormStyleProperties"
-							multiple={true}
 							choices={ButtonStyleProperties}
 							setValue={setSelectedStyleProps as (keys: DropdownChoiceId[]) => void}
 							value={currentValue}

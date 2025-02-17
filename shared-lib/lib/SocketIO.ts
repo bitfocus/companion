@@ -39,7 +39,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
-import type { ModuleInfoUpdate, ClientModuleInfo } from './Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
@@ -74,6 +74,7 @@ export interface ClientToBackendEventsMap {
 	'custom-variables:create': (name: string, value: string) => string | null
 	'custom-variables:set-default': (name: string, value: string) => string | null
 	'custom-variables:set-current': (name: string, value: string) => string | null
+	'custom-variables:set-description': (name: string, description: string) => string | null
 	'custom-variables:set-persistence': (name: string, value: boolean) => string | null
 	'custom-variables:delete': (name: string) => void
 	'custom-variables:set-order': (newNames: string[]) => void
@@ -332,6 +333,8 @@ export interface ClientToBackendEventsMap {
 	'modules-store:info:subscribe': (moduleId: string) => ModuleStoreModuleInfoStore | null
 	'modules-store:info:unsubscribe': (moduleId: string) => void
 	'modules-store:info:refresh': (moduleId: string) => void
+	'modules-upgrade-to-other:subscribe': (moduleId: string) => ModuleUpgradeToOtherVersion[]
+	'modules-upgrade-to-other:unsubscribe': (moduleId: string) => void
 
 	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
 
@@ -393,6 +396,7 @@ export interface BackendToClientEventsMap {
 	'modules-store:list:progress': (percent: number) => void
 	'modules-store:info:data': (moduleId: string, data: ModuleStoreModuleInfoStore) => void
 	'modules-store:info:progress': (moduleId: string, percent: number) => void
+	'modules-upgrade-to-other:data': (moduleId: string, data: ModuleUpgradeToOtherVersion[]) => void
 	'modules:bundle-import:progress': (sessionId: string, percent: number | null) => void
 
 	'emulator:images': (newImages: EmulatorImage[] | EmulatorImageCache) => void

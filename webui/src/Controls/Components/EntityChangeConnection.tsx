@@ -40,7 +40,6 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 				<DropdownInputField
 					htmlName="colFormConnection"
 					choices={connectionChoices}
-					multiple={false}
 					value={entityConnectionId}
 					setValue={setConnectionId as (value: DropdownChoiceId) => void}
 				/>

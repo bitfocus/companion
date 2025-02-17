@@ -391,19 +391,23 @@ export class InstanceInstalledModulesManager {
 			return "Doesn't look like a valid module, missing manifest"
 		}
 
-		if (manifestJson.name !== moduleId || manifestJson.version !== moduleVersion) {
-			this.#logger.warn('Module manifest does not match requested module')
-			return 'Module manifest does not match requested module'
+		if (manifestJson.id !== moduleId) {
+			const msg = `Module manifest does not match requested module. Got ${manifestJson.id}@${manifestJson.version}, expected ${moduleId}@${moduleVersion}`
+			this.#logger.warn(msg)
+			return msg
 		}
 
-		return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, null)
+		return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, null, {
+			forceVersion: moduleVersion,
+		})
 	}
 
 	async #installModuleFromTarBuffer(
 		moduleDir: string,
 		manifestJson: ModuleManifest,
 		uncompressedData: Buffer,
-		subdirName: string | null
+		subdirName: string | null,
+		options?: { forceVersion?: string }
 	): Promise<string | null> {
 		try {
 			await fs.mkdirp(moduleDir)
@@ -435,6 +439,14 @@ export class InstanceInstalledModulesManager {
 			})
 
 			this.#logger.debug(`Extracted module to ${moduleDir}`)
+
+			if (options?.forceVersion && options.forceVersion !== manifestJson.version) {
+				this.#logger.warn(
+					`Module ${manifestJson.id} v${manifestJson.version}, contained wrong version number. Fixing it!`
+				)
+				manifestJson.version = options.forceVersion
+				await fs.writeFile(path.join(moduleDir, 'companion/manifest.json'), JSON.stringify(manifestJson))
+			}
 		} catch (e) {
 			// cleanup the dir, just to be sure it doesn't get stranded
 			await fs.rm(moduleDir, { recursive: true }).catch(() => null)

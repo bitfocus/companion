@@ -1,10 +1,10 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { UserConfigProps } from './Components/Common.js'
-import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
-import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
-import { UserConfigStaticTextRow } from './Components/UserConfigStaticTextRow.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
+import { UserConfigProps } from '../Components/Common.js'
+import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
+import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
+import { InlineHelp } from '../../Components/InlineHelp.js'
 
 export const RosstalkConfig = observer(function RosstalkConfig(props: UserConfigProps) {
 	return (

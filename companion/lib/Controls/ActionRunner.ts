@@ -88,15 +88,11 @@ export class ActionRunner extends CoreBase {
 
 				if (extras.abortDelayed.aborted) break
 
-				if (actions.length > 0) {
-					// Run all the actions in parallel
-					await Promise.all(
-						actions.map(async (action) =>
-							this.#runAction(action, extras).catch((e) => {
-								this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
-							})
-						)
-					)
+				// Spawn all the actions in parallel
+				for (const action of actions) {
+					this.#runAction(action, extras).catch((e) => {
+						this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+					})
 				}
 			}
 		}
@@ -111,7 +107,7 @@ export class ActionRunner extends CoreBase {
 		]
 
 		for (const action of actions) {
-			if (action.definitionId === 'wait') {
+			if (action.connectionId === 'internal' && action.definitionId === 'wait') {
 				groupedActions.push({
 					waitAction: action,
 					actions: [],
@@ -176,15 +172,18 @@ export class ControlActionRunner {
 			})
 	}
 
-	abortAll(): boolean {
+	abortAll(exceptSignal: AbortSignal | null): boolean {
 		if (this.#runningChains.size === 0) {
 			return false
 		}
 
-		for (const controller of this.#runningChains.values()) {
+		for (const [chainId, controller] of this.#runningChains.entries()) {
+			// Skip the chain if it's the one we're supposed to ignore
+			if (exceptSignal && exceptSignal === controller.signal) continue
+
 			controller.abort()
+			this.#runningChains.delete(chainId)
 		}
-		this.#runningChains.clear()
 
 		this.#triggerRedraw()
 

@@ -221,10 +221,9 @@ const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
 	}, [allProducts, value])
 
 	return (
-		<DropdownInputField<false>
+		<DropdownInputField
 			htmlName={htmlName}
 			choices={choices}
-			multiple={false}
 			value={value}
 			setValue={(value) => onChange(String(value))}
 			onBlur={onBlur}

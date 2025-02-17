@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleDisplayInfo, ModuleUpgradeToOtherVersion } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreListCacheEntry, ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
@@ -11,6 +11,7 @@ import { WindowLinkOpen } from '../Helpers/Window.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
+import { useComputed } from '../util.js'
 
 interface ModuleManagePanelProps {
 	moduleId: string
@@ -78,47 +79,25 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 })
 
 export function useModuleStoreInfo(moduleId: string | undefined): ModuleStoreModuleInfoStore | null {
-	const { socket } = useContext(RootAppStoreContext)
-
-	const [moduleStoreCache, setModuleStoreCache] = useState<ModuleStoreModuleInfoStore | null>(null)
+	const { modules } = useContext(RootAppStoreContext)
 
 	useEffect(() => {
-		if (!moduleId) {
-			setModuleStoreCache(null)
-			return
-		}
+		if (!moduleId) return
 
-		let destroyed = false
+		return modules.storeVersions.subscribeToModuleStoreVersions(moduleId)
+	}, [modules.storeVersions])
 
-		setModuleStoreCache(null)
+	return useComputed(() => (moduleId ? modules.storeVersions.getModuleStoreVersions(moduleId) : null), [moduleId])
+}
 
-		socket
-			.emitPromise('modules-store:info:subscribe', [moduleId])
-			.then((data) => {
-				if (destroyed) return
-				setModuleStoreCache(data)
-			})
-			.catch((err) => {
-				console.error('Failed to subscribe to module store', err)
-			})
+export function useModuleUpgradeToVersions(moduleId: string | undefined): ModuleUpgradeToOtherVersion[] {
+	const { modules } = useContext(RootAppStoreContext)
 
-		const unsubData = socket.on('modules-store:info:data', (msgModuleId, data) => {
-			if (destroyed) return
-			if (msgModuleId !== moduleId) return
-			setModuleStoreCache(data)
-		})
+	useEffect(() => {
+		if (!moduleId) return
 
-		return () => {
-			destroyed = true
-			unsubData()
+		return modules.storeVersions.subscribeToModuleUpgradeToVersions(moduleId)
+	}, [modules.storeVersions])
 
-			setModuleStoreCache(null)
-
-			socket.emitPromise('modules-store:info:unsubscribe', [moduleId]).catch((err) => {
-				console.error('Failed to unsubscribe to module store', err)
-			})
-		}
-	}, [socket, moduleId])
-
-	return moduleStoreCache
+	return useComputed(() => (moduleId ? modules.storeVersions.getModuleUpgradeToVersions(moduleId) : []), [moduleId])
 }

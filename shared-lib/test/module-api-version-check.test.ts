@@ -14,6 +14,7 @@ describe('isModuleApiVersionCompatible', () => {
 		const version = semver.parse(moduleBasePkg.version)
 		expect(version).not.toBe(null)
 		version!.patch++
+		version!.prerelease = []
 
 		const versionStr = version!.format()
 		expect(versionStr).toBeTruthy()
@@ -47,6 +48,7 @@ describe('isModuleApiVersionCompatible', () => {
 		const version = semver.parse(moduleBasePkg.version)
 		expect(version).not.toBe(null)
 		version!.minor--
+		version!.prerelease = []
 
 		const versionStr = version!.format()
 		expect(versionStr).toBeTruthy()

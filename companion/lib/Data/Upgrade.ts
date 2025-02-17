@@ -18,7 +18,7 @@ const allUpgrades = [
 	v3tov4, // v3.2
 	v4tov5, // v3.5 - first round of sqlite rearranging
 	v5tov6, // v3.5 - replace action delay property https://github.com/bitfocus/companion/pull/3163
-	v6tov7, // v3.6 - rework 'entities' for better nesting https://github.com/bitfocus/companion/pull/3185
+	v6tov7, // v4.0 - rework 'entities' for better nesting https://github.com/bitfocus/companion/pull/3185
 ]
 const targetVersion = allUpgrades.length + 1
 

@@ -54,10 +54,9 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
+import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
-
-type Monitor = any // TODO
 
 export interface InstanceModuleWrapperDependencies {
 	readonly controls: ControlsController
@@ -98,7 +97,12 @@ export class SocketEventsHandler {
 	 */
 	#unsubListeners: () => void
 
-	constructor(deps: InstanceModuleWrapperDependencies, monitor: Monitor, connectionId: string, apiVersion0: string) {
+	constructor(
+		deps: InstanceModuleWrapperDependencies,
+		monitor: RespawnMonitor,
+		connectionId: string,
+		apiVersion0: string
+	) {
 		this.logger = LogController.createLogger(`Instance/Wrapper/${connectionId}`)
 
 		const apiVersion = semver.parse(apiVersion0)
@@ -145,10 +149,10 @@ export class SocketEventsHandler {
 		const messageHandler = (msg: any) => {
 			this.#ipcWrapper.receivedMessage(msg)
 		}
-		monitor.child.on('message', messageHandler)
+		monitor.child?.on('message', messageHandler)
 
 		this.#unsubListeners = () => {
-			monitor.child.off('message', messageHandler)
+			monitor.child?.off('message', messageHandler)
 		}
 	}
 

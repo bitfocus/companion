@@ -96,10 +96,10 @@ export class ControlsController extends CoreBase {
 	/**
 	 * Abort all delayed actions across all controls
 	 */
-	abortAllDelayedActions(): void {
+	abortAllDelayedActions(exceptSignal: AbortSignal | null): void {
 		for (const control of this.#controls.values()) {
 			if (control.supportsActions) {
-				control.abortDelayedActions(false)
+				control.abortDelayedActions(false, exceptSignal)
 			}
 		}
 	}

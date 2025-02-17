@@ -91,12 +91,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Abort pending delayed actions for a control
 	 * @param skip_up Mark button as released
 	 */
-	abortDelayedActions(skip_up: boolean): void {
+	abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null): void {
 		if (skip_up) {
 			this.setPushed(false)
 		}
 
-		this.actionRunner.abortAll()
+		this.actionRunner.abortAll(exceptSignal)
 	}
 
 	/**

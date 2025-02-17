@@ -19,7 +19,6 @@ export type SurfacePanelFactory = {
 
 export interface LocalUSBDeviceOptions {
 	executeExpression: SurfaceExecuteExpressionFn
-	useLegacyLayout?: boolean
 }
 
 export type SurfaceExecuteExpressionFn = (
@@ -44,7 +43,6 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	clearDeck(): void
 	draw(x: number, y: number, render: ImageResult): void
 	drawMany?: (entries: DrawButtonItem[]) => void
-	drawColor?: (pageOffset: number, x: number, y: number, color: number) => void
 	setConfig(config: any, force?: boolean): void
 	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void
@@ -62,15 +60,12 @@ export interface SurfacePanelEvents {
 	error: [error: Error]
 
 	click: [x: number, y: number, pressed: boolean, pageOffset?: number]
-	rotate: [x: number, y: number, direction: boolean]
+	rotate: [x: number, y: number, direction: boolean, pageOffset?: number]
 
 	setVariable: [variableId: string, value: CompanionVariableValue]
 	setCustomVariable: [variableId: string, value: CompanionVariableValue]
 
 	resized: []
-
-	/** @deprecated */
-	'xkeys-subscribePage': [pageCount: number]
 }
 
 export interface SurfaceHandlerDependencies {

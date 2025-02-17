@@ -11,8 +11,6 @@ import { getHelpPathForInstalledModule } from './ModuleScanner.js'
 export class InstanceModuleInfo {
 	id: string
 
-	replacedByIds: string[] = []
-
 	devModule: ModuleVersionInfo | null = null
 
 	installedVersions: Record<string, ModuleVersionInfo | undefined> = {}
@@ -46,7 +44,7 @@ export class InstanceModuleInfo {
 		const stableVersion = this.getLatestVersion(false)
 		const betaVersion = this.getLatestVersion(true)
 
-		const baseVersion = stableVersion ?? betaVersion ?? Object.values(this.installedVersions)[0]
+		const baseVersion = stableVersion ?? betaVersion ?? Object.values(this.installedVersions)[0] ?? this.devModule
 		if (!baseVersion) return null
 
 		return {

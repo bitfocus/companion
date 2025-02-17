@@ -38,7 +38,6 @@ export class DataUserConfig extends CoreBase {
 		remove_topbar: false,
 
 		xkeys_enable: true,
-		xkeys_legacy_layout: false,
 		elgato_plugin_enable: false, // Also disables local streamdeck
 		usb_hotplug: true,
 		loupedeck_enable: false,

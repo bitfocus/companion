@@ -50,7 +50,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			helpViewer: helpModalRef,
 			whatsNewModal: whatsNewModalRef,
 
-			modules: new ModuleInfoStore(),
+			modules: new ModuleInfoStore(socket),
 			connections: new ConnectionsStore(),
 
 			activeLearns: observable.set(),

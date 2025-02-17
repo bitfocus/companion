@@ -29,7 +29,7 @@ export function useUserConfigSubscription(
 			})
 
 		const unsubUpdate = socket.on('set_userconfig_key', (key, value) => {
-			store.setValue(key, value)
+			store.updateStoreValue(key, value)
 		})
 
 		return () => {

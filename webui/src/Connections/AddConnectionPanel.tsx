@@ -91,7 +91,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 					<p>
 						Companion currently supports over {modules.storeList.size} different things, and the list grows every day.
 						If you can't find the device you're looking for, please{' '}
-						<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
+						<a target="_blank" href="https://bfoc.us/5xcykgx03n">
 							add a request
 						</a>{' '}
 						on GitHub
@@ -101,7 +101,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 						Companion currently hundreds of different things, and the list grows every day. If you have an active
 						internet connection you can search for and install modules to support additional devices. Otherwise you can
 						install download and load in a module bundle from the website.
-						<a target="_new" href="https://user.bitfocus.io/download">
+						<a target="_blank" href="https://user.bitfocus.io/download">
 							the website
 						</a>{' '}
 					</p>

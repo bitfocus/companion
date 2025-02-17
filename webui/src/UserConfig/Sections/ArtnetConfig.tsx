@@ -1,9 +1,9 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { UserConfigProps } from './Components/Common.js'
-import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
-import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
-import { UserConfigNumberInputRow } from './Components/UserConfigNumberInputRow.js'
+import { UserConfigProps } from '../Components/Common.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
+import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
+import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
 
 export const ArtnetConfig = observer(function ArtnetConfig(props: UserConfigProps) {
 	return (

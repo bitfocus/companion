@@ -61,13 +61,26 @@ export class DataMetrics {
 			// don't care
 		}
 
-		const instanceCount = this.#instancesController.getInstancesMetrics()
+		const moduleVersionCounts = this.#instancesController.getConnectionsMetrics()
 
 		try {
+			const moduleCountsOld: Record<string, number> = {}
+			for (const [key, value] of Object.entries(moduleVersionCounts)) {
+				if (!value) continue
+
+				let sum = 0
+				for (const count of Object.values(value)) {
+					sum += count || 0
+				}
+
+				moduleCountsOld[key] = sum
+			}
+
 			const payload = {
 				i: this.#appInfo.machineId,
 				r: process.uptime(),
-				m: instanceCount,
+				m: moduleCountsOld,
+				mv: moduleVersionCounts,
 				d: relevantDevices,
 			}
 

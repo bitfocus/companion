@@ -26,7 +26,6 @@ import { Route as EmulatorIndexImport } from './routes/self-contained/emulator/i
 import { Route as IndexImport } from './routes/app/index.tsx'
 import { Route as ConnectionDebugconnectionIdImport } from './routes/self-contained/connection-debug.$connectionId.tsx'
 import { Route as TriggersImport } from './routes/app/triggers.tsx'
-import { Route as SettingsImport } from './routes/app/settings.tsx'
 import { Route as ModulesImport } from './routes/app/modules.tsx'
 import { Route as LogImport } from './routes/app/log.tsx'
 import { Route as ImportExportImport } from './routes/app/import-export.tsx'
@@ -36,6 +35,7 @@ import { Route as ButtonsImport } from './routes/app/buttons.tsx'
 import { Route as SplatImport } from './routes/app/$.tsx'
 import { Route as VariablesIndexImport } from './routes/app/variables/index.tsx'
 import { Route as TriggersIndexImport } from './routes/app/triggers/index.tsx'
+import { Route as SettingsIndexImport } from './routes/app/settings/index.tsx'
 import { Route as ModulesIndexImport } from './routes/app/modules/index.tsx'
 import { Route as VariablesCustomImport } from './routes/app/variables/custom.tsx'
 import { Route as VariablesLabelImport } from './routes/app/variables/$label.tsx'
@@ -44,6 +44,11 @@ import { Route as SurfacesOutboundImport } from './routes/app/surfaces/outbound.
 import { Route as SurfacesDiscoverImport } from './routes/app/surfaces/discover.tsx'
 import { Route as SurfacesConfiguredImport } from './routes/app/surfaces/configured.tsx'
 import { Route as SurfacesSplatImport } from './routes/app/surfaces/$.tsx'
+import { Route as SettingsSurfacesImport } from './routes/app/settings/surfaces.tsx'
+import { Route as SettingsProtocolsImport } from './routes/app/settings/protocols.tsx'
+import { Route as SettingsGeneralImport } from './routes/app/settings/general.tsx'
+import { Route as SettingsButtonsImport } from './routes/app/settings/buttons.tsx'
+import { Route as SettingsAdvancedImport } from './routes/app/settings/advanced.tsx'
 import { Route as ModulesModuleIdImport } from './routes/app/modules/$moduleId.tsx'
 import { Route as ButtonsPageImport } from './routes/app/buttons/$page.tsx'
 
@@ -161,12 +166,6 @@ const TriggersRoute = TriggersImport.update({
   getParentRoute: () => appRoute,
 } as any)
 
-const SettingsRoute = SettingsImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => appRoute,
-} as any)
-
 const ModulesRoute = ModulesImport.update({
   id: '/modules',
   path: '/modules',
@@ -221,6 +220,12 @@ const TriggersIndexRoute = TriggersIndexImport.update({
   getParentRoute: () => TriggersRoute,
 } as any)
 
+const SettingsIndexRoute = SettingsIndexImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => appRoute,
+} as any)
+
 const ModulesIndexRoute = ModulesIndexImport.update({
   id: '/',
   path: '/',
@@ -266,6 +271,36 @@ const SurfacesConfiguredRoute = SurfacesConfiguredImport.update({
 const SurfacesSplatRoute = SurfacesSplatImport.update({
   id: '/surfaces/$',
   path: '/surfaces/$',
+  getParentRoute: () => appRoute,
+} as any)
+
+const SettingsSurfacesRoute = SettingsSurfacesImport.update({
+  id: '/settings/surfaces',
+  path: '/settings/surfaces',
+  getParentRoute: () => appRoute,
+} as any)
+
+const SettingsProtocolsRoute = SettingsProtocolsImport.update({
+  id: '/settings/protocols',
+  path: '/settings/protocols',
+  getParentRoute: () => appRoute,
+} as any)
+
+const SettingsGeneralRoute = SettingsGeneralImport.update({
+  id: '/settings/general',
+  path: '/settings/general',
+  getParentRoute: () => appRoute,
+} as any)
+
+const SettingsButtonsRoute = SettingsButtonsImport.update({
+  id: '/settings/buttons',
+  path: '/settings/buttons',
+  getParentRoute: () => appRoute,
+} as any)
+
+const SettingsAdvancedRoute = SettingsAdvancedImport.update({
+  id: '/settings/advanced',
+  path: '/settings/advanced',
   getParentRoute: () => appRoute,
 } as any)
 
@@ -411,13 +446,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModulesImport
       parentRoute: typeof appImport
     }
-    '/_app/settings': {
-      id: '/_app/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsImport
-      parentRoute: typeof appImport
-    }
     '/_app/triggers': {
       id: '/_app/triggers'
       path: '/triggers'
@@ -466,6 +494,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/modules/$moduleId'
       preLoaderRoute: typeof ModulesModuleIdImport
       parentRoute: typeof ModulesImport
+    }
+    '/_app/settings/advanced': {
+      id: '/_app/settings/advanced'
+      path: '/settings/advanced'
+      fullPath: '/settings/advanced'
+      preLoaderRoute: typeof SettingsAdvancedImport
+      parentRoute: typeof appImport
+    }
+    '/_app/settings/buttons': {
+      id: '/_app/settings/buttons'
+      path: '/settings/buttons'
+      fullPath: '/settings/buttons'
+      preLoaderRoute: typeof SettingsButtonsImport
+      parentRoute: typeof appImport
+    }
+    '/_app/settings/general': {
+      id: '/_app/settings/general'
+      path: '/settings/general'
+      fullPath: '/settings/general'
+      preLoaderRoute: typeof SettingsGeneralImport
+      parentRoute: typeof appImport
+    }
+    '/_app/settings/protocols': {
+      id: '/_app/settings/protocols'
+      path: '/settings/protocols'
+      fullPath: '/settings/protocols'
+      preLoaderRoute: typeof SettingsProtocolsImport
+      parentRoute: typeof appImport
+    }
+    '/_app/settings/surfaces': {
+      id: '/_app/settings/surfaces'
+      path: '/settings/surfaces'
+      fullPath: '/settings/surfaces'
+      preLoaderRoute: typeof SettingsSurfacesImport
+      parentRoute: typeof appImport
     }
     '/_app/surfaces/$': {
       id: '/_app/surfaces/$'
@@ -522,6 +585,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/modules/'
       preLoaderRoute: typeof ModulesIndexImport
       parentRoute: typeof ModulesImport
+    }
+    '/_app/settings/': {
+      id: '/_app/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsIndexImport
+      parentRoute: typeof appImport
     }
     '/_app/triggers/': {
       id: '/_app/triggers/'
@@ -588,15 +658,20 @@ interface appRouteChildren {
   ImportExportRoute: typeof ImportExportRoute
   LogRoute: typeof LogRoute
   ModulesRoute: typeof ModulesRouteWithChildren
-  SettingsRoute: typeof SettingsRoute
   TriggersRoute: typeof TriggersRouteWithChildren
   IndexRoute: typeof IndexRoute
+  SettingsAdvancedRoute: typeof SettingsAdvancedRoute
+  SettingsButtonsRoute: typeof SettingsButtonsRoute
+  SettingsGeneralRoute: typeof SettingsGeneralRoute
+  SettingsProtocolsRoute: typeof SettingsProtocolsRoute
+  SettingsSurfacesRoute: typeof SettingsSurfacesRoute
   SurfacesSplatRoute: typeof SurfacesSplatRoute
   SurfacesConfiguredRoute: typeof SurfacesConfiguredRoute
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
   VariablesLabelRoute: typeof VariablesLabelRoute
   VariablesCustomRoute: typeof VariablesCustomRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   VariablesIndexRoute: typeof VariablesIndexRoute
 }
 
@@ -608,15 +683,20 @@ const appRouteChildren: appRouteChildren = {
   ImportExportRoute: ImportExportRoute,
   LogRoute: LogRoute,
   ModulesRoute: ModulesRouteWithChildren,
-  SettingsRoute: SettingsRoute,
   TriggersRoute: TriggersRouteWithChildren,
   IndexRoute: IndexRoute,
+  SettingsAdvancedRoute: SettingsAdvancedRoute,
+  SettingsButtonsRoute: SettingsButtonsRoute,
+  SettingsGeneralRoute: SettingsGeneralRoute,
+  SettingsProtocolsRoute: SettingsProtocolsRoute,
+  SettingsSurfacesRoute: SettingsSurfacesRoute,
   SurfacesSplatRoute: SurfacesSplatRoute,
   SurfacesConfiguredRoute: SurfacesConfiguredRoute,
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
   VariablesLabelRoute: VariablesLabelRoute,
   VariablesCustomRoute: VariablesCustomRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   VariablesIndexRoute: VariablesIndexRoute,
 }
 
@@ -641,7 +721,6 @@ export interface FileRoutesByFullPath {
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
   '/modules': typeof ModulesRouteWithChildren
-  '/settings': typeof SettingsRoute
   '/triggers': typeof TriggersRouteWithChildren
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
@@ -649,6 +728,11 @@ export interface FileRoutesByFullPath {
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
+  '/settings/advanced': typeof SettingsAdvancedRoute
+  '/settings/buttons': typeof SettingsButtonsRoute
+  '/settings/general': typeof SettingsGeneralRoute
+  '/settings/protocols': typeof SettingsProtocolsRoute
+  '/settings/surfaces': typeof SettingsSurfacesRoute
   '/surfaces/$': typeof SurfacesSplatRoute
   '/surfaces/configured': typeof SurfacesConfiguredRoute
   '/surfaces/discover': typeof SurfacesDiscoverRoute
@@ -657,6 +741,7 @@ export interface FileRoutesByFullPath {
   '/variables/$label': typeof VariablesLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
   '/modules/': typeof ModulesIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/triggers/': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
 }
@@ -678,13 +763,17 @@ export interface FileRoutesByTo {
   '/connections': typeof ConnectionsRoute
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
-  '/settings': typeof SettingsRoute
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
+  '/settings/advanced': typeof SettingsAdvancedRoute
+  '/settings/buttons': typeof SettingsButtonsRoute
+  '/settings/general': typeof SettingsGeneralRoute
+  '/settings/protocols': typeof SettingsProtocolsRoute
+  '/settings/surfaces': typeof SettingsSurfacesRoute
   '/surfaces/$': typeof SurfacesSplatRoute
   '/surfaces/configured': typeof SurfacesConfiguredRoute
   '/surfaces/discover': typeof SurfacesDiscoverRoute
@@ -693,6 +782,7 @@ export interface FileRoutesByTo {
   '/variables/$label': typeof VariablesLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
   '/modules': typeof ModulesIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/triggers': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
 }
@@ -717,7 +807,6 @@ export interface FileRoutesById {
   '/_app/import-export': typeof ImportExportRoute
   '/_app/log': typeof LogRoute
   '/_app/modules': typeof ModulesRouteWithChildren
-  '/_app/settings': typeof SettingsRoute
   '/_app/triggers': typeof TriggersRouteWithChildren
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
@@ -725,6 +814,11 @@ export interface FileRoutesById {
   '/emulator/': typeof EmulatorIndexRoute
   '/_app/buttons/$page': typeof ButtonsPageRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
+  '/_app/settings/advanced': typeof SettingsAdvancedRoute
+  '/_app/settings/buttons': typeof SettingsButtonsRoute
+  '/_app/settings/general': typeof SettingsGeneralRoute
+  '/_app/settings/protocols': typeof SettingsProtocolsRoute
+  '/_app/settings/surfaces': typeof SettingsSurfacesRoute
   '/_app/surfaces/$': typeof SurfacesSplatRoute
   '/_app/surfaces/configured': typeof SurfacesConfiguredRoute
   '/_app/surfaces/discover': typeof SurfacesDiscoverRoute
@@ -733,6 +827,7 @@ export interface FileRoutesById {
   '/_app/variables/$label': typeof VariablesLabelRoute
   '/_app/variables/custom': typeof VariablesCustomRoute
   '/_app/modules/': typeof ModulesIndexRoute
+  '/_app/settings/': typeof SettingsIndexRoute
   '/_app/triggers/': typeof TriggersIndexRoute
   '/_app/variables/': typeof VariablesIndexRoute
 }
@@ -758,7 +853,6 @@ export interface FileRouteTypes {
     | '/import-export'
     | '/log'
     | '/modules'
-    | '/settings'
     | '/triggers'
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
@@ -766,6 +860,11 @@ export interface FileRouteTypes {
     | '/emulator'
     | '/buttons/$page'
     | '/modules/$moduleId'
+    | '/settings/advanced'
+    | '/settings/buttons'
+    | '/settings/general'
+    | '/settings/protocols'
+    | '/settings/surfaces'
     | '/surfaces/$'
     | '/surfaces/configured'
     | '/surfaces/discover'
@@ -774,6 +873,7 @@ export interface FileRouteTypes {
     | '/variables/$label'
     | '/variables/custom'
     | '/modules/'
+    | '/settings'
     | '/triggers/'
     | '/variables'
   fileRoutesByTo: FileRoutesByTo
@@ -794,13 +894,17 @@ export interface FileRouteTypes {
     | '/connections'
     | '/import-export'
     | '/log'
-    | '/settings'
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/'
     | '/emulator'
     | '/buttons/$page'
     | '/modules/$moduleId'
+    | '/settings/advanced'
+    | '/settings/buttons'
+    | '/settings/general'
+    | '/settings/protocols'
+    | '/settings/surfaces'
     | '/surfaces/$'
     | '/surfaces/configured'
     | '/surfaces/discover'
@@ -809,6 +913,7 @@ export interface FileRouteTypes {
     | '/variables/$label'
     | '/variables/custom'
     | '/modules'
+    | '/settings'
     | '/triggers'
     | '/variables'
   id:
@@ -831,7 +936,6 @@ export interface FileRouteTypes {
     | '/_app/import-export'
     | '/_app/log'
     | '/_app/modules'
-    | '/_app/settings'
     | '/_app/triggers'
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
@@ -839,6 +943,11 @@ export interface FileRouteTypes {
     | '/emulator/'
     | '/_app/buttons/$page'
     | '/_app/modules/$moduleId'
+    | '/_app/settings/advanced'
+    | '/_app/settings/buttons'
+    | '/_app/settings/general'
+    | '/_app/settings/protocols'
+    | '/_app/settings/surfaces'
     | '/_app/surfaces/$'
     | '/_app/surfaces/configured'
     | '/_app/surfaces/discover'
@@ -847,6 +956,7 @@ export interface FileRouteTypes {
     | '/_app/variables/$label'
     | '/_app/variables/custom'
     | '/_app/modules/'
+    | '/_app/settings/'
     | '/_app/triggers/'
     | '/_app/variables/'
   fileRoutesById: FileRoutesById
@@ -922,15 +1032,20 @@ export const routeTree = rootRoute
         "/_app/import-export",
         "/_app/log",
         "/_app/modules",
-        "/_app/settings",
         "/_app/triggers",
         "/_app/",
+        "/_app/settings/advanced",
+        "/_app/settings/buttons",
+        "/_app/settings/general",
+        "/_app/settings/protocols",
+        "/_app/settings/surfaces",
         "/_app/surfaces/$",
         "/_app/surfaces/configured",
         "/_app/surfaces/discover",
         "/_app/surfaces/outbound",
         "/_app/variables/$label",
         "/_app/variables/custom",
+        "/_app/settings/",
         "/_app/variables/"
       ]
     },
@@ -999,10 +1114,6 @@ export const routeTree = rootRoute
         "/_app/modules/"
       ]
     },
-    "/_app/settings": {
-      "filePath": "app/settings.tsx",
-      "parent": "/_app"
-    },
     "/_app/triggers": {
       "filePath": "app/triggers.tsx",
       "parent": "/_app",
@@ -1031,6 +1142,26 @@ export const routeTree = rootRoute
     "/_app/modules/$moduleId": {
       "filePath": "app/modules/$moduleId.tsx",
       "parent": "/_app/modules"
+    },
+    "/_app/settings/advanced": {
+      "filePath": "app/settings/advanced.tsx",
+      "parent": "/_app"
+    },
+    "/_app/settings/buttons": {
+      "filePath": "app/settings/buttons.tsx",
+      "parent": "/_app"
+    },
+    "/_app/settings/general": {
+      "filePath": "app/settings/general.tsx",
+      "parent": "/_app"
+    },
+    "/_app/settings/protocols": {
+      "filePath": "app/settings/protocols.tsx",
+      "parent": "/_app"
+    },
+    "/_app/settings/surfaces": {
+      "filePath": "app/settings/surfaces.tsx",
+      "parent": "/_app"
     },
     "/_app/surfaces/$": {
       "filePath": "app/surfaces/$.tsx",
@@ -1063,6 +1194,10 @@ export const routeTree = rootRoute
     "/_app/modules/": {
       "filePath": "app/modules/index.tsx",
       "parent": "/_app/modules"
+    },
+    "/_app/settings/": {
+      "filePath": "app/settings/index.tsx",
+      "parent": "/_app"
     },
     "/_app/triggers/": {
       "filePath": "app/triggers/index.tsx",

@@ -20,15 +20,19 @@ import { cloneDeep } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import type express from 'express'
 import { type ModuleManifest } from '@companion-module/base'
-import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ClientModuleInfo, ModuleUpgradeToOtherVersion } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import LogController from '../Log/Controller.js'
 import type { InstanceController } from './Controller.js'
 import jsonPatch from 'fast-json-patch'
 import type { ModuleVersionInfo } from './Types.js'
 import { InstanceModuleInfo } from './ModuleInfo.js'
+import { ModuleStoreService } from './ModuleStore.js'
 
 const ModulesRoom = 'modules'
+function ModuleUpgradeToVersionsRoom(moduleId: string): string {
+	return `modules-upgrade-to-other:${moduleId}`
+}
 
 export class InstanceModules {
 	readonly #logger = LogController.createLogger('Instance/Modules')
@@ -53,15 +57,16 @@ export class InstanceModules {
 	 */
 	readonly #knownModules = new Map<string, InstanceModuleInfo>()
 
-	// /**
-	//  * Module renames
-	//  */
-	// readonly #moduleRenames = new Map<string, string>()
-
 	/**
 	 * Module scanner helper
 	 */
 	readonly #moduleScanner = new InstanceModuleScanner()
+
+	/**
+	 * Which rooms are active for watching the upgrade to other versions subscription
+	 * Note: values are not removed from this, until the subscription data is invalidated
+	 */
+	readonly #activeModuleUpgradeRooms = new Set<string>()
 
 	readonly #installedModulesDir: string
 
@@ -96,6 +101,7 @@ export class InstanceModules {
 
 		// Notify clients
 		this.#emitModuleUpdate(manifest.id)
+		this.#invalidateModuleUpgradeRoom(manifest.id)
 
 		// Ensure any modules using this version are started
 		await this.#instanceController.reloadUsesOfModule(manifest.id, manifest.version)
@@ -115,6 +121,7 @@ export class InstanceModules {
 
 		// Notify clients
 		this.#emitModuleUpdate(moduleId)
+		this.#invalidateModuleUpgradeRoom(moduleId)
 
 		// Ensure any modules using this version are started
 		await this.#instanceController.reloadUsesOfModule(moduleId, versionId)
@@ -161,22 +168,6 @@ export class InstanceModules {
 
 			this.#logger.info(`Found ${candidates.length} extra modules`)
 		}
-
-		// nocommit redo this
-		// // Figure out the redirects. We do this afterwards, to ensure we avoid collisions and circles
-		// // TODO - could this have infinite loops?
-		// const allModuleEntries = Array.from(this.#knownModules.entries()).sort((a, b) => a[0].localeCompare(b[0]))
-		// for (const [id, moduleInfo] of allModuleEntries) {
-		// 	for (const moduleVersion of moduleInfo.allVersions) {
-		// 		if (moduleVersion && Array.isArray(moduleVersion.manifest.legacyIds)) {
-		// 			for (const legacyId of moduleVersion.manifest.legacyIds) {
-		// 				const fromEntry = this.#getOrCreateModuleEntry(legacyId)
-		// 				fromEntry.replacedByIds.push(id)
-		// 			}
-		// 		}
-		// 		// TODO - is there a risk of a legacy module replacing a modern one?
-		// 	}
-		// }
 
 		// Log the loaded modules
 		for (const id of Array.from(this.#knownModules.keys()).sort()) {
@@ -277,24 +268,11 @@ export class InstanceModules {
 		this.#lastModulesJson = newJson
 	}
 
-	/**
-	 * Checks whether an instance_type has been renamed
-	 * @returns the instance_type that should be used (often the provided parameter)
-	 */
-	verifyInstanceTypeIsCurrent(instance_type: string): string {
-		const moduleInfo = this.#knownModules.get(instance_type)
-		if (!moduleInfo || moduleInfo.replacedByIds.length === 0) return instance_type
-
-		// TODO - should this ignore redirects if there are valid versions (that aren't legacy?)
-
-		// TODO - should this handle deeper references?
-		// TODO - should this choose one of the ids properly?
-		return moduleInfo.replacedByIds[0]
-	}
-
-	getLatestVersionOfModule(instance_type: string): string | null {
+	getLatestVersionOfModule(instance_type: string, allowDev: boolean): string | null {
 		const moduleInfo = this.#knownModules.get(instance_type)
 		if (!moduleInfo) return null
+
+		if (moduleInfo.devModule && allowDev) return 'dev'
 
 		return moduleInfo.getLatestVersion(false)?.versionId ?? null
 	}
@@ -312,6 +290,83 @@ export class InstanceModules {
 		client.onPromise('modules:unsubscribe', () => {
 			client.leave(ModulesRoom)
 		})
+
+		client.onPromise('modules-upgrade-to-other:subscribe', (moduleId: string) => {
+			client.join(ModuleUpgradeToVersionsRoom(moduleId))
+			this.#activeModuleUpgradeRooms.add(moduleId)
+
+			// Future: maybe this should be cached, but it may not be worth the cost
+			return this.#getModuleUpgradeCandidates(moduleId)
+		})
+
+		client.onPromise('modules-upgrade-to-other:unsubscribe', (moduleId: string) => {
+			client.leave(ModuleUpgradeToVersionsRoom(moduleId))
+
+			// Note: we could update `this.#activeModuleUpgradeRooms`, here but then we would also need to handle the case where the client disconnects
+			// It is simpler to forget about it, and skip the update when it gets invalidated
+		})
+	}
+
+	listenToStoreEvents(modulesStore: ModuleStoreService) {
+		modulesStore.on('storeListUpdated', () => {
+			// Invalidate any module upgrade data
+			for (const moduleId of this.#activeModuleUpgradeRooms) {
+				this.#invalidateModuleUpgradeRoom(moduleId)
+			}
+		})
+	}
+
+	#invalidateModuleUpgradeRoom = (moduleId: string): void => {
+		const roomId = ModuleUpgradeToVersionsRoom(moduleId)
+		if (this.#io.countRoomMembers(roomId) == 0) {
+			// Abort if no clients are listening
+			this.#activeModuleUpgradeRooms.delete(moduleId)
+			return
+		}
+
+		// Compile and emit data
+		const newData = this.#getModuleUpgradeCandidates(moduleId)
+		this.#io.emitToRoom(roomId, 'modules-upgrade-to-other:data', moduleId, newData)
+	}
+
+	/**
+	 * Compile a list of modules which a module could be 'upgraded' to
+	 */
+	#getModuleUpgradeCandidates(moduleId: string): ModuleUpgradeToOtherVersion[] {
+		const candidateVersions: ModuleUpgradeToOtherVersion[] = []
+
+		// First, push the store versions of each module
+		const cachedStoreInfo = this.#instanceController.modulesStore.getCachedStoreList()
+		for (const [storeModuleId, storeModuleInfo] of Object.entries(cachedStoreInfo)) {
+			if (storeModuleId === moduleId || storeModuleInfo.deprecationReason) continue
+			if (storeModuleInfo.legacyIds.includes(moduleId)) {
+				// Create a new entry to report that the module can upgrade to the latest version of this store module
+				candidateVersions.push({
+					moduleId: storeModuleId,
+					displayName: storeModuleInfo.name,
+					helpPath: storeModuleInfo.helpUrl,
+					versionId: null,
+				})
+			}
+		}
+
+		// Next, push the latest installed versions of each module
+		for (const [knownModuleId, knownModuleInfo] of this.#knownModules) {
+			if (knownModuleId === moduleId) continue
+			const latestVersion = knownModuleInfo.getLatestVersion(false)
+			if (!latestVersion) continue
+
+			if (latestVersion.manifest.legacyIds.includes(moduleId)) {
+				candidateVersions.push({
+					moduleId: knownModuleId,
+					displayName: latestVersion.display.name,
+					helpPath: latestVersion.helpPath,
+					versionId: latestVersion.versionId,
+				})
+			}
+		}
+
+		return candidateVersions
 	}
 
 	/**

@@ -255,7 +255,7 @@ export class Registry {
 			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
 			new InternalInstance(this.internalModule, this.instance),
 			new InternalTime(this.internalModule),
-			new InternalControls(this.internalModule, this.graphics, this.controls, this.page, this.variables.values),
+			new InternalControls(this.internalModule, this.graphics, this.controls, this.page),
 			new InternalCustomVariables(this.internalModule, this.variables),
 			new InternalPage(this.internalModule, this.page),
 			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),

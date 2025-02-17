@@ -38,6 +38,8 @@ import type { VariablesValues } from '../Variables/Values.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
+const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADING === '1'
+
 export interface GraphicsOptions {
 	page_direction_flipped: boolean
 	page_plusminus: boolean
@@ -475,6 +477,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		dataUrl: string
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
+		if (DEBUG_DISABLE_RENDER_THREADING) {
+			return GraphicsRenderer.drawButtonImageUnwrapped(this.#drawOptions, drawStyle, location, pagename)
+		}
+
 		try {
 			return this.#pool.exec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename])
 		} catch (e: any) {

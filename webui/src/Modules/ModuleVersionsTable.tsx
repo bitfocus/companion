@@ -49,7 +49,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 		allVersionsSet.add(version.id)
 	}
 
-	const allVersionNumbers = Array.from(allVersionsSet).sort((a, b) => semver.compare(b, a))
+	const allVersionNumbers = Array.from(allVersionsSet).sort((a, b) => semver.compare(b, a, true))
 
 	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(`modules_visible_versions:${moduleId}`, {
 		availableStable: true,

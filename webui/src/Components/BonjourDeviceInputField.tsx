@@ -122,7 +122,5 @@ export function BonjourDeviceInputField({
 		return choices
 	}, [choicesRaw, value])
 
-	return (
-		<DropdownInputField<false> label={label} value={value} setValue={setValue} choices={choices} multiple={false} />
-	)
+	return <DropdownInputField label={label} value={value} setValue={setValue} choices={choices} />
 }

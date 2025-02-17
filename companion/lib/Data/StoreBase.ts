@@ -1,8 +1,9 @@
 import fs from 'fs-extra'
 import path from 'path'
-import Database, { Database as SQLiteDB, Statement } from 'better-sqlite3'
+import { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
+import { createSqliteDatabase } from './Util.js'
 
 export type DatabaseDefault = Record<string, any>
 
@@ -155,7 +156,7 @@ export abstract class DataStoreBase {
 				query = this.statementCache[cacheKey]
 			} else {
 				query = this.store.prepare(`DELETE FROM ${table} WHERE id = @id`)
-				this.statementCache[cacheKey]
+				this.statementCache[cacheKey] = query
 			}
 
 			this.logger.silly(`Delete key: ${table} - ${key}`)
@@ -239,7 +240,7 @@ export abstract class DataStoreBase {
 				query = this.statementCache[cacheKey]
 			} else {
 				query = this.store.prepare(`SELECT value FROM ${table} WHERE id = @id`)
-				this.statementCache[cacheKey]
+				this.statementCache[cacheKey] = query
 			}
 
 			this.logger.silly(`Get table key: ${table} - ${key}`)
@@ -310,6 +311,10 @@ export abstract class DataStoreBase {
 		this.store
 			?.backup(`${this.cfgBakFile}`)
 			.then(() => {
+				// perform a flush of the WAL file. It may be a little aggressive for this to be a TRUNCATE vs FULL, but it ensures the WAL doesn't grow infinitly
+				this.store.pragma('wal_checkpoint(TRUNCATE)')
+
+				this.lastsave = Date.now()
 				this.dirty = false
 				this.logger.debug('backup complete')
 			})
@@ -369,7 +374,7 @@ export abstract class DataStoreBase {
 				query = this.store.prepare(
 					`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
 				)
-				this.statementCache[cacheKey]
+				this.statementCache[cacheKey] = query
 			}
 
 			this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
@@ -398,7 +403,7 @@ export abstract class DataStoreBase {
 	 */
 	protected startSQLite(): void {
 		if (this.cfgDir == ':memory:') {
-			this.store = new Database(this.cfgDir)
+			this.store = createSqliteDatabase(this.cfgDir)
 			this.create()
 			this.getKey('test')
 			this.loadDefaults()
@@ -407,7 +412,7 @@ export abstract class DataStoreBase {
 				this.logger.silly(`${this.cfgFile} exists. trying to read`)
 
 				try {
-					this.store = new Database(this.cfgFile)
+					this.store = this.#createDatabase(this.cfgFile)
 					this.getKey('test')
 				} catch (e) {
 					try {
@@ -432,7 +437,7 @@ export abstract class DataStoreBase {
 				this.startSQLiteWithBackup()
 			} else if (fs.existsSync(this.cfgLegacyFile)) {
 				try {
-					this.store = new Database(this.cfgFile)
+					this.store = this.#createDatabase(this.cfgFile)
 					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
 					this.migrateFileToSqlite()
 					this.getKey('test')
@@ -449,7 +454,7 @@ export abstract class DataStoreBase {
 
 		if (!this.store) {
 			try {
-				this.store = new Database(':memory:')
+				this.store = createSqliteDatabase(':memory:')
 				this.setStartupState(DatabaseStartupState.RAM)
 				this.create()
 				this.getKey('test')
@@ -480,6 +485,18 @@ export abstract class DataStoreBase {
 		this.setBackupCycle()
 	}
 
+	#createDatabase(filename: string) {
+		const db = createSqliteDatabase(filename)
+
+		try {
+			db.pragma('journal_mode = WAL')
+		} catch (err) {
+			this.logger.warn(`Error setting journal mode: ${err}`)
+		}
+
+		return db
+	}
+
 	/**
 	 * Attempt to load the backup file from disk as a recovery
 	 */
@@ -492,7 +509,7 @@ export abstract class DataStoreBase {
 				} catch (e) {}
 
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
-				this.store = new Database(this.cfgFile)
+				this.store = this.#createDatabase(this.cfgFile)
 				this.getKey('test')
 			} catch (e: any) {
 				this.setStartupState(DatabaseStartupState.Reset)
@@ -516,7 +533,7 @@ export abstract class DataStoreBase {
 		} catch (e: any) {
 		} finally {
 			try {
-				this.store = new Database(this.cfgFile)
+				this.store = this.#createDatabase(this.cfgFile)
 				this.create()
 				this.getKey('test')
 				this.loadDefaults()

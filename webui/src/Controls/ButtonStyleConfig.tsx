@@ -220,8 +220,8 @@ export function ButtonStyleConfigFields({
 									setValue={setSizeValue}
 									value={values.size ?? 'auto'}
 									allowCustom={true}
+									disableEditingCustom={true}
 									regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
-									multiple={false}
 								/>
 							</div>
 						</div>
@@ -259,7 +259,6 @@ export function ButtonStyleConfigFields({
 								choices={SHOW_HIDE_TOP_BAR}
 								setValue={setShowTopBar}
 								value={(values.show_topbar as string) ?? false}
-								multiple={false}
 								helpText="By default, you have a top bar with the button name and the page number. With this option, you can manually override the default behavior."
 							/>
 						</div>

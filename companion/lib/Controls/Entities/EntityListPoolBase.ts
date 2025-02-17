@@ -305,22 +305,22 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Replace a feedback with an updated version
 	 */
-	entityReplace(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): boolean {
+	entityReplace(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): ControlEntityInstance | undefined {
 		for (const childGroup of this.getAllEntityLists()) {
 			const entity = childGroup.findById(newProps.id)
 			if (!entity) continue
 
 			// Ignore if the types do not match
-			if (entity.type !== newProps.type) return false
+			if (entity.type !== newProps.type) return undefined
 
 			entity.replaceProps(newProps, skipNotifyModule)
 
 			this.commitChange(true)
 
-			return true
+			return entity
 		}
 
-		return false
+		return undefined
 	}
 
 	/**

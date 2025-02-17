@@ -2,7 +2,7 @@ import { ServiceBase } from './Base.js'
 import net, { Socket } from 'net'
 import LogController from '../Log/Controller.js'
 import type { Registry } from '../Registry.js'
-import { ServiceSatelliteApi } from './SatelliteApi.js'
+import { SatelliteSocketWrapper, ServiceSatelliteApi } from './SatelliteApi.js'
 
 /**
  * Class providing the Satellite/Remote Surface api over tcp.
@@ -55,7 +55,7 @@ export class ServiceSatelliteTcp extends ServiceBase {
 				socketLogger.silly('socket error:', e)
 			})
 
-			const { processMessage, cleanupDevices } = this.#api.initSocket(socketLogger, socket)
+			const { processMessage, cleanupDevices } = this.#api.initSocket(socketLogger, new SatelliteTcpSocket(socket))
 
 			const doCleanup = () => {
 				this.#clients.delete(socket)
@@ -103,5 +103,27 @@ export class ServiceSatelliteTcp extends ServiceBase {
 			}
 		})
 		this.#clients.clear()
+	}
+}
+
+class SatelliteTcpSocket extends SatelliteSocketWrapper {
+	readonly #socket: Socket
+
+	get remoteAddress() {
+		return this.#socket.remoteAddress
+	}
+
+	constructor(socket: Socket) {
+		super()
+
+		this.#socket = socket
+	}
+
+	destroy(): void {
+		this.#socket.destroy()
+	}
+
+	protected override write(data: string): void {
+		this.#socket.write(data)
 	}
 }

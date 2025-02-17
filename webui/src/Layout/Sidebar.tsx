@@ -39,6 +39,7 @@ import {
 	faPuzzlePiece,
 	faInfo,
 	faStar,
+	faHatWizard,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
@@ -149,7 +150,7 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 }
 
 export const MySidebar = memo(function MySidebar() {
-	const { whatsNewModal } = useContext(RootAppStoreContext)
+	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [])
@@ -183,45 +184,33 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarVariablesGroups />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
-				<SidebarMenuItem name="Settings" icon={faCog} path="/settings" />
+				<SidebarMenuItemGroup name="Settings" icon={faCog} path="/settings">
+					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
+					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
+					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
+					<SidebarMenuItem name="Surfaces" icon={null} path="/settings/surfaces" />
+					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />
+					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
+					<></>
+				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
 				{window.localStorage.getItem('show_companion_cloud') === '1' && (
 					<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
 				)}
 				<SidebarMenuItemGroup name="Interactive Buttons" icon={faSquareCaretRight}>
-					<SidebarMenuItem name="Emulator" icon={null} path="/emulator" target="_new" />
-					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_new" />
+					<SidebarMenuItem name="Emulator" icon={null} path="/emulator" target="_blank" />
+					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_blank" />
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarNav className="nav-secondary">
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_new" />
+				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_blank" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
-					<SidebarMenuItem
-						name="Bugs & Features"
-						icon={faBug}
-						path="https://github.com/bitfocus/companion/issues"
-						target="_new"
-					/>
-					<SidebarMenuItem
-						name="Facebook"
-						icon={faUsers}
-						path="https://www.facebook.com/groups/companion/"
-						target="_new"
-					/>
-					<SidebarMenuItem
-						name="Slack Chat"
-						icon={faComments}
-						path="https://bitfocus.io/api/slackinvite"
-						target="_new"
-					/>
-					<SidebarMenuItem
-						name="Donate"
-						icon={faDollarSign}
-						path="https://donorbox.org/bitfocus-opensource"
-						target="_new"
-					/>
+					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
+					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
+					<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
+					<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">

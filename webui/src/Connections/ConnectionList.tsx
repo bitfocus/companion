@@ -318,11 +318,15 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 							</>
 						)}
 						{moduleVersion?.displayName ?? connection.moduleVersionId}
-						<UpdateConnectionToLatestButton connection={connection} />
 					</>
 				) : (
-					connection.instance_type
+					<>
+						{connection.instance_type}
+						<br />
+						{connection.moduleVersionId}
+					</>
 				)}
+				<UpdateConnectionToLatestButton connection={connection} />
 			</td>
 			<td className="hand" onClick={doEdit}>
 				<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} />
@@ -514,11 +518,11 @@ const MissingVersionsWarning = observer(function MissingVersionsWarning() {
 
 	return (
 		<CAlert color="info">
-			Some modules are missing version information.
+			Some modules do not have versions specified, or are not installed.
 			<br />
-			<CButton color="info" onClick={doInstallAllMissing}>
+			<CButton color="info" className="mt-2" onClick={doInstallAllMissing}>
 				<FontAwesomeIcon icon={faDownload} />
-				&nbsp;Install missing versions
+				&nbsp;Download &amp; Install missing versions
 			</CButton>
 		</CAlert>
 	)

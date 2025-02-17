@@ -5,10 +5,11 @@ interface UserConfigHeadingRowProps {
 }
 export function UserConfigHeadingRow({ label }: UserConfigHeadingRowProps) {
 	return (
-		<tr>
-			<th colSpan={3} className="settings-category">
-				{label}
-			</th>
-		</tr>
+		<>
+			<tr className="settings-category-spacer"></tr>
+			<tr className="settings-category-row">
+				<th colSpan={3}>{label}</th>
+			</tr>
+		</>
 	)
 }

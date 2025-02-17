@@ -50,16 +50,18 @@ export function VariablesListPage() {
 
 	return (
 		<div className="variables-panel">
-			<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
-			<CButtonGroup size="sm">
-				<CButton color="primary" as={Link} to="/variables">
-					<FontAwesomeIcon icon={faArrowLeft} />
-					&nbsp; Go back
-				</CButton>
-				<CButton color="secondary" disabled>
-					{label}
-				</CButton>
-			</CButtonGroup>
+			<div>
+				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
+				<CButtonGroup size="sm">
+					<CButton color="primary" as={Link} to="/variables">
+						<FontAwesomeIcon icon={faArrowLeft} />
+						&nbsp; Go back
+					</CButton>
+					<CButton color="secondary" disabled>
+						{label}
+					</CButton>
+				</CButtonGroup>
+			</div>
 
 			<VariablesTable label={label} />
 			<br style={{ clear: 'both' }} />

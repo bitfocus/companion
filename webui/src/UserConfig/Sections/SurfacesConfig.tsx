@@ -1,8 +1,8 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { UserConfigHeadingRow } from './Components/UserConfigHeadingRow.js'
-import { UserConfigSwitchRow } from './Components/UserConfigSwitchRow.js'
-import { UserConfigProps } from './Components/Common.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
+import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
+import { UserConfigProps } from '../Components/Common.js'
 
 export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfigProps) {
 	return (
@@ -36,12 +36,6 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 				field="elgato_plugin_enable"
 			/>
 			<UserConfigSwitchRow userConfig={props} label="Enable connected X-keys" requiresRestart field="xkeys_enable" />
-			<UserConfigSwitchRow
-				userConfig={props}
-				label="Use old layout for X-keys"
-				requiresRestart
-				field="xkeys_legacy_layout"
-			/>
 			<UserConfigSwitchRow
 				userConfig={props}
 				label="Enable connected Loupedeck and Razer Stream Controller devices"
