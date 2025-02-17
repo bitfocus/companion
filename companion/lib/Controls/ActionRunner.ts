@@ -88,15 +88,11 @@ export class ActionRunner extends CoreBase {
 
 				if (extras.abortDelayed.aborted) break
 
-				if (actions.length > 0) {
-					// Run all the actions in parallel
-					await Promise.all(
-						actions.map(async (action) =>
-							this.#runAction(action, extras).catch((e) => {
-								this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
-							})
-						)
-					)
+				// Spawn all the actions in parallel
+				for (const action of actions) {
+					this.#runAction(action, extras).catch((e) => {
+						this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+					})
 				}
 			}
 		}
