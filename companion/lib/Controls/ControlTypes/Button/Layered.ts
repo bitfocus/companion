@@ -84,10 +84,6 @@ export class ControlButtonLayered
 	 */
 	#drawLayers: SomeButtonGraphicsLayer[] = cloneDeep(ControlButtonLayered.DefaultLayers)
 
-	// get baseStyle(): ButtonStyleProperties {
-	// 	return this.#baseStyle
-	// }
-
 	get actionSets(): ControlActionSetAndStepsManager {
 		return this.entities
 	}
@@ -142,6 +138,8 @@ export class ControlButtonLayered
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleModel | null {
+		// TODO-layered: update #last_draw_variables
+
 		return {
 			...this.getDrawStyleButtonStateProps(),
 

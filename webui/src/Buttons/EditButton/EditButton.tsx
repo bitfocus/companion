@@ -18,7 +18,7 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { LayeredButtonEditor } from './LayeredButtonEditor.js'
+import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
 
 interface EditButtonProps {
 	location: ControlLocation
