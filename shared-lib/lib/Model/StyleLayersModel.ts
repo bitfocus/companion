@@ -19,8 +19,8 @@ export enum ButtonGraphicsDecorationType {
 	FollowDefault = 'default',
 	TopBar = 'topbar',
 	// BottomBar = 'bottombar', // Future
-	// Border = 'border', // Future
-	None = 'none',
+	Border = 'border',
+	// None = 'none', // Future
 }
 
 export interface ButtonGraphicsTextLayer extends ButtonGraphicsLayerBase {
@@ -31,9 +31,9 @@ export interface ButtonGraphicsTextLayer extends ButtonGraphicsLayerBase {
 
 	fontsize: 'auto' | number // TODO - other values?
 
-	alignment: CompanionAlignment
-
 	color: number
+
+	alignment: CompanionAlignment
 
 	// Future ideas:
 	// minX, maxX, minY, maxY: number

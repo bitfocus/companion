@@ -539,7 +539,7 @@ export class GraphicsLayeredButtonRenderer {
 	static #shouldDrawTopBar(options: GraphicsOptions, backgroundLayer: ButtonGraphicsCanvasLayer | undefined) {
 		const decoration = backgroundLayer?.decoration
 		switch (decoration) {
-			case ButtonGraphicsDecorationType.None:
+			case ButtonGraphicsDecorationType.Border:
 				return false
 			case ButtonGraphicsDecorationType.TopBar:
 				return true
