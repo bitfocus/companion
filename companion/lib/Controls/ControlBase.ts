@@ -119,7 +119,7 @@ export abstract class ControlBase<TJson> {
 	/**
 	 * Get the size of the bitmap render of this control
 	 */
-	abstract getBitmapSize(): { width: number; height: number } | null
+	abstract getBitmapFeedbackSize(): { width: number; height: number } | null
 
 	/**
 	 * Get the complete style object of a button

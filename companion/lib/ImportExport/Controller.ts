@@ -1118,6 +1118,7 @@ export class ImportExportController {
 			}
 		}
 
+		// TODO-layered: reimplement for layered buttons
 		const result: NormalButtonModel = {
 			type: 'button',
 			options: cloneDeep(control.options),

@@ -1,8 +1,14 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import { SomeEntityModel } from './EntityModel.js'
+import { SomeButtonGraphicsLayer } from './StyleLayersModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
 
-export type SomeButtonModel = PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | NormalButtonModel
+export type SomeButtonModel =
+	| PageNumberButtonModel
+	| PageUpButtonModel
+	| PageDownButtonModel
+	| NormalButtonModel
+	| LayeredButtonModel
 
 export interface PageNumberButtonModel {
 	readonly type: 'pagenum'
@@ -15,16 +21,28 @@ export interface PageDownButtonModel {
 	readonly type: 'pagedown'
 }
 
-export interface NormalButtonModel {
+export interface ButtonModelBase {
+	feedbacks: SomeEntityModel[]
+
+	steps: NormalButtonSteps
+}
+
+export interface NormalButtonModel extends ButtonModelBase {
 	readonly type: 'button'
 
 	options: NormalButtonOptions
 
 	style: ButtonStyleProperties
+}
 
-	feedbacks: SomeEntityModel[]
+export interface LayeredButtonModel extends ButtonModelBase {
+	readonly type: 'button-layered'
 
-	steps: NormalButtonSteps
+	options: NormalButtonOptions
+
+	style: {
+		layers: SomeButtonGraphicsLayer[]
+	}
 }
 
 export type NormalButtonSteps = Record<

@@ -20,8 +20,20 @@ import { ParseAlignment, parseColor } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
 import type { GraphicsOptions } from './Controller.js'
-import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type {
+	DrawStyleButtonModel,
+	DrawStyleButtonStateProps,
+	DrawStyleLayeredButtonModel,
+	DrawStyleModel,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import {
+	ButtonGraphicsCanvasLayer,
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsImageLayer,
+	ButtonGraphicsTextLayer,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -66,7 +78,7 @@ export class GraphicsRenderer {
 
 		if (!options.remove_topbar) {
 			img.drawTextLine(2, 3, formatLocation(location), 'rgb(50, 50, 50)', 8)
-			img.horizontalLine(13.5, 'rgb(30, 30, 30)')
+			img.horizontalLine(13.5, { color: 'rgb(30, 30, 30)' })
 		}
 		// console.timeEnd('drawBlankImage')
 		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
@@ -80,7 +92,12 @@ export class GraphicsRenderer {
 		draw_style: DrawStyleModel['style'] | undefined,
 		drawStyle: DrawStyleModel
 	): ImageResult {
-		const draw_style2 = draw_style === 'button' ? (drawStyle.style === 'button' ? drawStyle : undefined) : draw_style
+		const draw_style2 =
+			draw_style === 'button' || draw_style === 'button-layered'
+				? drawStyle.style === 'button' || drawStyle.style === 'button-layered'
+					? drawStyle
+					: undefined
+				: draw_style
 
 		return new ImageResult(buffer, width, height, dataUrl, draw_style2)
 	}
@@ -121,8 +138,7 @@ export class GraphicsRenderer {
 						[36, 20],
 						[26, 30],
 					],
-					colorWhite,
-					2
+					{ color: colorWhite, width: 2 }
 				) // Arrow up path
 			}
 
@@ -141,8 +157,7 @@ export class GraphicsRenderer {
 						[36, 50],
 						[26, 40],
 					],
-					colorWhite,
-					2
+					{ color: colorWhite, width: 2 }
 				) // Arrow down path
 			}
 
@@ -166,6 +181,10 @@ export class GraphicsRenderer {
 			draw_style = 'button'
 
 			await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
+		} else if (drawStyle.style === 'button-layered') {
+			draw_style = 'button-layered'
+
+			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location)
 		}
 
 		// console.timeEnd('drawButtonImage')
@@ -213,8 +232,8 @@ export class GraphicsRenderer {
 				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
 
 				!showTopbar
-					? await img.drawFromPNGdata(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
-					: await img.drawFromPNGdata(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
+					? await img.drawFromImageBuffer(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
+					: await img.drawFromImageBuffer(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
 			} catch (e) {
 				console.error('error drawing image:', e)
 				img.box(0, 14, 71, 57, 'black')
@@ -222,7 +241,7 @@ export class GraphicsRenderer {
 					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
 					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
 
-				GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+				GraphicsRenderer.drawTopbar(img, showTopbar, drawStyle, location)
 				return
 			}
 		}
@@ -247,7 +266,7 @@ export class GraphicsRenderer {
 				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 
-			GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+			GraphicsRenderer.drawTopbar(img, showTopbar, drawStyle, location)
 			return
 		}
 
@@ -270,16 +289,16 @@ export class GraphicsRenderer {
 		}
 
 		// At last draw Topbar on top
-		GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+		GraphicsRenderer.drawTopbar(img, showTopbar, drawStyle, location)
 	}
 
 	/**
 	 * Draw the topbar onto an image for a button
 	 */
-	static #drawTopbar(
+	static drawTopbar(
 		img: Image,
 		showTopbar: boolean,
-		drawStyle: DrawStyleButtonModel,
+		drawStyle: DrawStyleButtonStateProps,
 		location: ControlLocation | undefined
 	) {
 		if (!showTopbar) {
@@ -289,7 +308,7 @@ export class GraphicsRenderer {
 		} else {
 			let step = ''
 			img.box(0, 0, 72, 13.5, colorBlack)
-			img.horizontalLine(13.5, colorButtonYellow)
+			img.horizontalLine(13.5, { color: colorButtonYellow })
 
 			if (typeof drawStyle.step_cycle === 'number' && location) {
 				step = `.${drawStyle.step_cycle}`
@@ -380,5 +399,156 @@ export class GraphicsRenderer {
 		}
 
 		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+	}
+}
+
+interface DrawBounds {
+	x: number
+	y: number
+
+	width: number
+	height: number
+
+	maxX: number
+	maxY: number
+}
+
+function createDrawBounds(x: number, y: number, width: number, height: number): DrawBounds {
+	return {
+		x,
+		y,
+		width,
+		height,
+		maxX: x + width,
+		maxY: y + height,
+	}
+}
+
+export class GraphicsLayeredButtonRenderer {
+	static async draw(
+		img: Image,
+		options: GraphicsOptions,
+		drawStyle: DrawStyleLayeredButtonModel,
+		location: ControlLocation | undefined
+	) {
+		const backgroundLayer = drawStyle.layers[0].type === 'canvas' ? drawStyle.layers[0] : undefined
+
+		const showTopBar = this.#shouldDrawTopBar(options, backgroundLayer)
+		const drawBounds = createDrawBounds(0, showTopBar ? 14 : 0, 72, showTopBar ? 58 : 72)
+
+		this.#drawLayerBackground(img, drawBounds, backgroundLayer)
+
+		for (const layer of drawStyle.layers) {
+			try {
+				switch (layer.type) {
+					case 'canvas':
+						// Skip the background layer, it's handled separately
+						break
+					case 'image':
+						await this.#drawLayerImage(img, drawBounds, layer)
+						break
+					case 'text':
+						this.#drawLayerText(img, drawBounds, layer)
+						break
+					default:
+						assertNever(layer)
+				}
+			} catch (e) {
+				// TODO - log/report error where? Or should this abandon the render and do a placeholder?
+			}
+		}
+
+		GraphicsRenderer.drawTopbar(img, showTopBar, drawStyle, location)
+	}
+
+	static #drawLayerBackground(
+		img: Image,
+		drawBounds: DrawBounds,
+		backgroundLayer: ButtonGraphicsCanvasLayer | undefined
+	) {
+		if (!backgroundLayer) return
+
+		img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundLayer.color))
+	}
+
+	static async #drawLayerImage(img: Image, drawBounds: DrawBounds, layer: ButtonGraphicsImageLayer) {
+		if (!layer.base64Image) return
+
+		try {
+			const png64 = layer.base64Image.startsWith('data:image/png;base64,')
+				? layer.base64Image.slice(22)
+				: layer.base64Image
+			let data = Buffer.from(png64, 'base64')
+			const [halign, valign] = ParseAlignment(layer.alignment || 'center:center')
+
+			await img.drawFromImageBuffer(
+				data,
+				drawBounds.x,
+				drawBounds.y,
+				drawBounds.width,
+				drawBounds.height,
+				halign,
+				valign,
+				'fit_or_shrink'
+			)
+		} catch (e) {
+			console.error('error drawing image:', e)
+
+			// Draw a thick red cross
+			img.drawPath(
+				[
+					[drawBounds.x, drawBounds.y],
+					[drawBounds.maxX, drawBounds.maxY],
+				],
+				{ color: 'red', width: 5 }
+			)
+			img.drawPath(
+				[
+					[drawBounds.x, drawBounds.maxY],
+					[drawBounds.maxX, drawBounds.y],
+				],
+				{ color: 'red', width: 5 }
+			)
+		}
+	}
+
+	static #drawLayerText(img: Image, drawBounds: DrawBounds, layer: ButtonGraphicsTextLayer) {
+		if (!layer.text) return
+
+		// Draw button text
+		const fontSize = Number(layer.fontsize) || 'auto'
+		const [halign, valign] = ParseAlignment(layer.alignment)
+
+		// Force some padding around the text
+		const marginX = 2
+		const marginY = 1
+
+		img.drawAlignedText(
+			drawBounds.x + marginX,
+			drawBounds.y + marginY,
+			drawBounds.width - 2 * marginX,
+			drawBounds.height - 2 * marginY,
+			layer.text,
+			parseColor(layer.color),
+			fontSize,
+			halign,
+			valign
+		)
+	}
+
+	static #shouldDrawTopBar(options: GraphicsOptions, backgroundLayer: ButtonGraphicsCanvasLayer | undefined) {
+		const decoration = backgroundLayer?.decoration
+		switch (decoration) {
+			case ButtonGraphicsDecorationType.None:
+				return false
+			case ButtonGraphicsDecorationType.TopBar:
+				return true
+			case ButtonGraphicsDecorationType.FollowDefault:
+			case undefined:
+				return !options.remove_topbar
+			default:
+				assertNever(decoration)
+				return !options.remove_topbar
+		}
 	}
 }

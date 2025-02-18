@@ -1,6 +1,6 @@
-import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawStyleButtonModel, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 
-export type ImageResultStyle = DrawStyleButtonModel | 'pagenum' | 'pageup' | 'pagedown'
+export type ImageResultStyle = DrawStyleButtonModel | DrawStyleLayeredButtonModel | 'pagenum' | 'pageup' | 'pagedown'
 
 export class ImageResult {
 	/**
@@ -52,7 +52,13 @@ export class ImageResult {
 
 	get bgcolor(): number {
 		if (typeof this.style === 'object') {
-			return this.style.bgcolor ?? 0
+			if (this.style.style === 'button') {
+				return this.style.bgcolor ?? 0
+			} else if (this.style.style === 'button-layered') {
+				return this.style.layers[0].type === 'canvas' ? this.style.layers[0].color : 0
+			} else {
+				return 0
+			}
 		} else {
 			return 0
 		}

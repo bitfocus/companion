@@ -1,4 +1,4 @@
-import { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
+import { ButtonModelBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
 	SomeEntityModel,
@@ -60,7 +60,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#steps.set('0', this.#getNewStepValue(null, null))
 	}
 
-	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean) {
+	loadStorage(storage: ButtonModelBase, skipSubscribe: boolean, isImport: boolean) {
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
 
 		// Future:	cleanup the steps/sets

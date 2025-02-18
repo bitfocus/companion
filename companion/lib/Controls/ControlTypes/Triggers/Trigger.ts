@@ -15,6 +15,7 @@ import type {
 	ControlWithEvents,
 	ControlWithOptions,
 	ControlWithoutActionSets,
+	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
@@ -53,6 +54,7 @@ export class ControlTrigger
 		ControlWithActions,
 		ControlWithEvents,
 		ControlWithoutStyle,
+		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
 		ControlWithoutPushed
@@ -63,6 +65,7 @@ export class ControlTrigger
 	readonly supportsEvents = true
 	readonly supportsEntities = true
 	readonly supportsStyle = false
+	readonly supportsLayeredStyle = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
@@ -748,7 +751,7 @@ export class ControlTrigger
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
 	}
-	getBitmapSize() {
+	getBitmapFeedbackSize() {
 		return null
 	}
 }

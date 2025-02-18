@@ -18,6 +18,7 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { LayeredButtonEditor } from './LayeredButtonEditor.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -173,7 +174,7 @@ const EditButtonContent = observer(function EditButton({
 
 				<ControlClearButton location={location} resetModalRef={resetModalRef} />
 				<MyErrorBoundary>
-					{config.type === 'button' && (
+					{(config.type === 'button' || config.type === 'button-layered') && (
 						<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
 					)}
 				</MyErrorBoundary>
@@ -203,11 +204,21 @@ const EditButtonContent = observer(function EditButton({
 			{config.type === 'button' && (
 				<NormalButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
 			)}
+
+			{config.type === 'button-layered' && (
+				<LayeredButtonEditor
+					config={config}
+					controlId={controlId}
+					runtimeProps={runtimeProps}
+					location={location}
+					previewImage={previewImage}
+				/>
+			)}
 		</>
 	)
 })
 
-const NormalButtonExtraTabs: ButtonEditorExtraTabs[] = [{ id: 'feedbacks', name: 'Feedbacks' }]
+const NormalButtonExtraTabs: ButtonEditorExtraTabs[] = [{ id: 'feedbacks', name: 'Feedbacks', position: 'end' }]
 
 function NormalButtonEditor({
 	config,

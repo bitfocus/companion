@@ -27,6 +27,7 @@ import type { ControlCommonEvents, ControlDependencies } from './ControlDependen
 import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
+import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -806,6 +807,37 @@ export class ControlsController extends CoreBase {
 		client.onPromise('controls:unsubscribe:learn', async () => {
 			client.leave(ActiveLearnRoom)
 		})
+
+		client.onPromise('controls:style:add-layer', async (controlId, type, index) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsLayeredStyle) {
+				return control.layeredStyleAddLayer(type, index)
+			} else {
+				throw new Error(`Control "${controlId}" does not support layer styles`)
+			}
+		})
+		client.onPromise('controls:style:remove-layer', async (controlId, layerId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsLayeredStyle) {
+				return control.layeredStyleRemoveLayer(layerId)
+			} else {
+				throw new Error(`Control "${controlId}" does not support layer styles`)
+			}
+		})
+		client.onPromise('controls:style:update-options', async (controlId, layerId, diff) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsLayeredStyle) {
+				return control.layeredStyleUpdateOptions(layerId, diff)
+			} else {
+				throw new Error(`Control "${controlId}" does not support layer styles`)
+			}
+		})
 	}
 
 	/**
@@ -826,6 +858,8 @@ export class ControlsController extends CoreBase {
 		if (category === 'all' || category === 'button') {
 			if (controlObj2?.type === 'button' || (controlType === 'button' && !controlObj2)) {
 				return new ControlButtonNormal(this.#createControlDependencies(), controlId, controlObj2, isImport)
+			} else if (controlObj2?.type === 'button-layered' || (controlType === 'button-layered' && !controlObj2)) {
+				return new ControlButtonLayered(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
 				return new ControlButtonPageNumber(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {

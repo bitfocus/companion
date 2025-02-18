@@ -7,6 +7,7 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithStyle | ControlWithoutStyle) &
+	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &
 	(ControlWithEntities | ControlWithoutEntities) &
 	(ControlWithActions | ControlWithoutActions) &
 	(ControlWithEvents | ControlWithoutEvents) &
@@ -27,6 +28,44 @@ export interface ControlWithStyle extends ControlBase<any> {
 	 * @returns true if any changes were made
 	 */
 	styleSetFields(diff: Record<string, any>): boolean
+
+	/**
+	 * Propagate variable changes
+	 * @param allChangedVariables - variables with changes
+	 */
+	onVariablesChanged(allChangedVariables: Set<string>): void
+}
+
+export interface ControlWithoutLayeredStyle extends ControlBase<any> {
+	readonly supportsLayeredStyle: false
+}
+
+export interface ControlWithLayeredStyle extends ControlBase<any> {
+	readonly supportsLayeredStyle: true
+
+	readonly button_status: ButtonStatus
+
+	/**
+	 * Add a layer to the layered style
+	 * @param type Layer type to add
+	 * @param index Index to insert the layer at, or null to append
+	 */
+	layeredStyleAddLayer(type: string, index: number | null): string
+
+	/**
+	 * Remove a layer from the layered style
+	 * @param id Layer id to remove
+	 * @returns true if the layer was removed
+	 */
+	layeredStyleRemoveLayer(id: string): boolean
+
+	/**
+	 * Update the options on a layer from the layered style
+	 * @param id Layer id to update
+	 * @param diff - config diff to apply
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateOptions(id: string, diff: Record<string, any>): boolean
 
 	/**
 	 * Propagate variable changes

@@ -35,6 +35,19 @@ const DEFAULT_FONTS = [
 
 type LineOrientation = 'inside' | 'center' | 'outside'
 
+type PointXY = [x: number, y: number]
+
+export interface LineStyle {
+	/**
+	 * Line color in CSS color string
+	 */
+	color: string
+	/**
+	 * Line width in pixels (defaults to 1)
+	 */
+	width?: number
+}
+
 /**
  * Class for generating an image and rendering some content to it
  */
@@ -57,14 +70,6 @@ export class Image {
 	 * @param oversampling a factor of how much more pixels the image should have in width and height
 	 */
 	constructor(width: number, height: number, oversampling: number) {
-		/* Defaults for custom images from modules */
-		if (width === undefined) {
-			width = 72
-		}
-		if (height === undefined) {
-			height = 58
-		}
-
 		if (oversampling === undefined) {
 			oversampling = 1
 		}
@@ -91,43 +96,30 @@ export class Image {
 
 	/**
 	 * draws a line between two given points
-	 * @param x1
-	 * @param y1
-	 * @param x2
-	 * @param y2
-	 * @param color CSS color string
-	 * @param lineWidth
 	 */
-	line(x1: number, y1: number, x2: number, y2: number, color: string, lineWidth = 1): boolean {
-		this.context2d.lineWidth = lineWidth
-		this.context2d.strokeStyle = color
+	line(x1: number, y1: number, x2: number, y2: number, style: LineStyle): void {
+		this.context2d.lineWidth = style.width ?? 1
+		this.context2d.strokeStyle = style.color
 		this.context2d.beginPath()
 		this.context2d.moveTo(x1, y1)
 		this.context2d.lineTo(x2, y2)
 		this.context2d.closePath()
 		this.context2d.stroke()
-
-		return true
 	}
 
 	/**
 	 * draws a horizontal line at given height from top
-	 * @param y
-	 * @param color CSS color string
-	 * @returns success
 	 */
-	horizontalLine(y: number, color: string): boolean {
-		return this.line(0, y, this.width, y, color)
+	horizontalLine(y: number, style: LineStyle): void {
+		return this.line(0, y, this.width, y, style)
 	}
 
 	/**
 	 * draws a vertical line at given distance from left
-	 * @param x
-	 * @param color CSS color string
 	 * @returns success
 	 */
-	verticalLine(x: number, color: string): boolean {
-		return this.line(x, 0, x, this.height, color)
+	verticalLine(x: number, style: LineStyle): void {
+		return this.line(x, 0, x, this.height, style)
 	}
 
 	/**
@@ -147,20 +139,19 @@ export class Image {
 		y1: number,
 		x2: number,
 		y2: number,
-		color?: string,
-		strokeColor?: string,
-		lineWidth = 1,
+		fillColor?: string,
+		lineStyle?: LineStyle,
 		lineOrientation: LineOrientation = 'inside'
 	): boolean {
 		if (x2 == x1 || y2 == y1) return false
 		let didDraw = false
-		if (color) {
-			this.context2d.fillStyle = color
+		if (fillColor) {
+			this.context2d.fillStyle = fillColor
 			this.context2d.fillRect(x1, y1, x2 - x1, y2 - y1)
 			didDraw = true
 		}
-		if (strokeColor) {
-			didDraw = didDraw || this.boxLine(x1, y1, x2, y2, strokeColor, lineWidth, lineOrientation)
+		if (lineStyle) {
+			didDraw = didDraw || this.boxLine(x1, y1, x2, y2, lineStyle, lineOrientation)
 		}
 
 		return didDraw
@@ -182,11 +173,12 @@ export class Image {
 		y1: number,
 		x2: number,
 		y2: number,
-		color: string,
-		lineWidth = 1,
+		lineStyle: LineStyle,
 		lineOrientation: LineOrientation = 'inside'
 	): boolean {
+		const lineWidth = lineStyle.width ?? 1
 		if (lineWidth <= 0) return false
+
 		const halfline = lineWidth / 2
 		switch (lineOrientation) {
 			case 'inside':
@@ -204,20 +196,16 @@ export class Image {
 		}
 
 		this.context2d.lineWidth = lineWidth
-		this.context2d.strokeStyle = color
+		this.context2d.strokeStyle = lineStyle.color
 		this.context2d.strokeRect(x1, y1, x2 - x1, y2 - y1)
 
-		if (lineWidth > 0) {
-			return true
-		} else {
-			return false
-		}
+		return true
 	}
 
 	/**
-	 * Draws an image to the canvas from PGN data
+	 * Draws an image to the canvas from a buffer
 	 * the image can be fitted and cropped to the canvas in many variations
-	 * @param data base64 encoded buffer with the raw PGN data
+	 * @param data buffer with the raw image data
 	 * @param xStart left position where to place the image
 	 * @param yStart top position where to place the image
 	 * @param width width of the bounding box where to place the image
@@ -226,7 +214,7 @@ export class Image {
 	 * @param valign vertical alignment of the image in the bounding box (defaults to center)
 	 * @param scale the size factor of the image. Number scales by specified amount, fill scales to fill the bounding box neglecting aspect ratio, crop scales to fill the bounding box and crop if necessary, fit scales to fit the bounding box with the longer side
 	 */
-	async drawFromPNGdata(
+	async drawFromImageBuffer(
 		data: Buffer,
 		xStart = 0,
 		yStart = 0,
@@ -236,17 +224,17 @@ export class Image {
 		valign: VerticalAlignment = 'center',
 		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink' = 1
 	): Promise<void> {
-		let png: CanvasImage | undefined
+		let canvasImage: CanvasImage | undefined
 
 		try {
-			png = await loadImage(data)
+			canvasImage = await loadImage(data)
 		} catch (e) {
 			console.log('Error loading image', e)
 			return
 		}
 
-		let imageWidth = png.width
-		let imageHeight = png.height
+		let imageWidth = canvasImage.width
+		let imageHeight = canvasImage.height
 
 		let calculatedScale = 1
 		let scaledImageWidth = imageWidth
@@ -356,7 +344,7 @@ export class Image {
 		}
 
 		this.context2d.drawImage(
-			png,
+			canvasImage,
 			source.x,
 			source.y,
 			source.w,
@@ -921,7 +909,7 @@ export class Image {
 	 */
 	drawBorder(depth = 1, color = 'red'): boolean {
 		if (depth <= 0) return false
-		return this.boxLine(0, 0, this.width, this.height, color, depth, 'inside')
+		return this.boxLine(0, 0, this.width, this.height, { color, width: depth }, 'inside')
 	}
 
 	/**
@@ -939,7 +927,7 @@ export class Image {
 		valign: VerticalAlignment = 'top'
 	): boolean {
 		if (depth == 0) return false
-		let points
+		let points: PointXY[] | undefined
 
 		if (halign == 'left' && valign == 'top') {
 			points = [
@@ -982,7 +970,9 @@ export class Image {
 	 * @param close if true close the path from last point to first point, if last and first point are identical path will be autoclosed
 	 * @returns success
 	 */
-	drawPath(pathPoints: number[][], color: string, lineWidth = 1, close = false): boolean {
+	drawPath(pathPoints: PointXY[], lineStyle: LineStyle, close = false): boolean {
+		const lineWidth = lineStyle.width ?? 1
+
 		if (lineWidth <= 0) return false
 		if (!Array.isArray(pathPoints) || pathPoints.length == 0) return false
 		this.context2d.beginPath()
@@ -995,7 +985,7 @@ export class Image {
 			this.context2d.closePath()
 		}
 
-		this.context2d.strokeStyle = color
+		this.context2d.strokeStyle = lineStyle.color
 		this.context2d.lineWidth = lineWidth
 		this.context2d.stroke()
 		return true
@@ -1007,7 +997,7 @@ export class Image {
 	 * @param color CSS color
 	 * @returns success
 	 */
-	drawFilledPath(pathPoints: number[][], color: string): boolean {
+	drawFilledPath(pathPoints: PointXY[], color: string): boolean {
 		if (!Array.isArray(pathPoints) || pathPoints.length == 0) return false
 		this.context2d.beginPath()
 		const [firstPoint, ...points] = pathPoints

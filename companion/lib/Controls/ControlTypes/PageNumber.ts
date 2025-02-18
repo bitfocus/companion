@@ -3,6 +3,7 @@ import type {
 	ControlWithoutActionSets,
 	ControlWithoutActions,
 	ControlWithoutEvents,
+	ControlWithoutLayeredStyle,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 	ControlWithoutStyle,
@@ -36,6 +37,7 @@ export class ControlButtonPageNumber
 	implements
 		ControlWithoutActions,
 		ControlWithoutStyle,
+		ControlWithoutLayeredStyle,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
 		ControlWithoutOptions,
@@ -46,6 +48,7 @@ export class ControlButtonPageNumber
 	readonly supportsActions = false
 	readonly supportsEntities = false
 	readonly supportsStyle = false
+	readonly supportsLayeredStyle = false
 	readonly supportsEvents = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = false
@@ -123,7 +126,7 @@ export class ControlButtonPageNumber
 		}
 	}
 
-	getBitmapSize() {
+	getBitmapFeedbackSize() {
 		return null
 	}
 	renameVariables(_labelFrom: string, _labelTo: string) {
