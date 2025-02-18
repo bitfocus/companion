@@ -1,9 +1,8 @@
 import { ButtonGraphicsImageLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { CForm, CFormLabel, CCol, CButtonGroup, CButton, CAlert } from '@coreui/react'
+import { CFormLabel, CCol, CButtonGroup, CButton, CAlert } from '@coreui/react'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useState } from 'react'
-import { PreventDefaultHandler } from '../../../util.js'
 import { useLayerMutatorCallback } from './StyleStore.js'
 import { AlignmentInputField } from '../../../Components/AlignmentInputField.js'
 import { PNGInputField } from '../../../Components/PNGInputField.js'
@@ -18,9 +17,7 @@ export const ImageLayerPropertiesEditor = observer(function ImageLayerProperties
 	layerProps: Readonly<ButtonGraphicsImageLayer>
 }) {
 	return (
-		<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
-			<CCol sm={12}>// TODO - common properties</CCol>
-
+		<>
 			<CFormLabel htmlFor="inputImage" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				Image
 			</CFormLabel>
@@ -34,7 +31,7 @@ export const ImageLayerPropertiesEditor = observer(function ImageLayerProperties
 			<CCol sm={8}>
 				<FieldImageAlignmentInput controlId={controlId} layerProps={layerProps} />
 			</CCol>
-		</CForm>
+		</>
 	)
 })
 

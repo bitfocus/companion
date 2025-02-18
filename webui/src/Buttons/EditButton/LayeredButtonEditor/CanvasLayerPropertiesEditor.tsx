@@ -2,11 +2,10 @@ import {
 	ButtonGraphicsCanvasLayer,
 	ButtonGraphicsDecorationType,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { CForm, CFormLabel, CCol } from '@coreui/react'
+import { CFormLabel, CCol } from '@coreui/react'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
-import { PreventDefaultHandler } from '../../../util.js'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 import { useLayerMutatorCallback } from './StyleStore.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
@@ -20,9 +19,7 @@ export const CanvasLayerPropertiesEditor = observer(function CanvasLayerProperti
 	layerProps: Readonly<ButtonGraphicsCanvasLayer>
 }) {
 	return (
-		<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
-			<CCol sm={12}>// TODO - common properties</CCol>
-
+		<>
 			<CFormLabel htmlFor="inputColor" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				Color
 			</CFormLabel>
@@ -36,7 +33,7 @@ export const CanvasLayerPropertiesEditor = observer(function CanvasLayerProperti
 			<CCol sm={8}>
 				<FieldDecorationInput controlId={controlId} layerProps={layerProps} />
 			</CCol>
-		</CForm>
+		</>
 	)
 })
 

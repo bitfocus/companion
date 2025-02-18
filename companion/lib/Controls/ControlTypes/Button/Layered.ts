@@ -53,12 +53,14 @@ export class ControlButtonLayered
 	static DefaultLayers: SomeButtonGraphicsLayer[] = [
 		{
 			id: 'canvas',
+			name: 'Canvas',
 			type: 'canvas',
 			color: 0x000000,
 			decoration: ButtonGraphicsDecorationType.FollowDefault,
 		},
 		{
 			id: 'text0',
+			name: 'Text',
 			type: 'text',
 			text: '',
 			isExpression: false,

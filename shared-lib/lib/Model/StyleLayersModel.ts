@@ -4,6 +4,7 @@ export type SomeButtonGraphicsLayer = ButtonGraphicsCanvasLayer | ButtonGraphics
 
 export interface ButtonGraphicsLayerBase {
 	id: string
+	name: string
 }
 
 export interface ButtonGraphicsCanvasLayer extends ButtonGraphicsLayerBase {

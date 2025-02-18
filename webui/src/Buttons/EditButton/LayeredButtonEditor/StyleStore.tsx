@@ -1,4 +1,4 @@
-import type { SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ButtonGraphicsLayerBase, SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { action, makeObservable, observable } from 'mobx'
 import { useCallback, useContext } from 'react'
 import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
@@ -37,7 +37,7 @@ export class LayeredStyleStore {
 	}
 }
 
-export function useLayerMutatorCallback<T extends SomeButtonGraphicsLayer, K extends keyof T>(
+export function useLayerMutatorCallback<T extends ButtonGraphicsLayerBase, K extends keyof T>(
 	controlId: string,
 	layerId: string,
 	property: K

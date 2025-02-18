@@ -1,5 +1,5 @@
 import { ButtonGraphicsTextLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { CForm, CFormLabel, CCol, CInputGroup, CButton } from '@coreui/react'
+import { CFormLabel, CCol, CInputGroup, CButton } from '@coreui/react'
 import { faDollarSign, faFont } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -9,7 +9,6 @@ import { InlineHelp } from '../../../Components/InlineHelp.js'
 import { TextInputField } from '../../../Components/TextInputField.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from '../../../Controls/OptionsInputField.js'
 import { ControlLocalVariables } from '../../../LocalVariableDefinitions.js'
-import { PreventDefaultHandler } from '../../../util.js'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 import { useLayerMutatorCallback } from './StyleStore.js'
 import { FONT_SIZES } from '../../../Constants.js'
@@ -25,33 +24,35 @@ export const TextLayerPropertiesEditor = observer(function TextLayerPropertiesEd
 	layerProps: Readonly<ButtonGraphicsTextLayer>
 }) {
 	return (
-		<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
-			<CCol sm={12}>// TODO - common properties</CCol>
+		<>
 			<CFormLabel htmlFor="inputText" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				<FieldTextLabel layerProps={layerProps} />
 			</CFormLabel>
 			<CCol sm={8}>
 				<FieldTextInput controlId={controlId} layerProps={layerProps} />
 			</CCol>
+
 			<CFormLabel htmlFor="inputFontSize" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				Font Size
 			</CFormLabel>
 			<CCol sm={8}>
 				<FieldFontSizeInput controlId={controlId} layerProps={layerProps} />
 			</CCol>
+
 			<CFormLabel htmlFor="inputColor" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				Color
 			</CFormLabel>
 			<CCol sm={8}>
 				<FieldTextColorInput controlId={controlId} layerProps={layerProps} />
 			</CCol>
+
 			<CFormLabel htmlFor="inputAlignment" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				Alignment
 			</CFormLabel>
 			<CCol sm={8}>
 				<FieldTextAlignmentInput controlId={controlId} layerProps={layerProps} />
 			</CCol>
-		</CForm>
+		</>
 	)
 })
 const textInputFeatures: InputFeatureIconsProps = {

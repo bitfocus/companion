@@ -117,7 +117,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 								}}
 								onClick={() => styleStore.setSelectedLayerId(layer.id)}
 							>
-								{layer.type} ({layer.id})
+								{layer.name ?? layer.type} ({layer.id})
 							</span>{' '}
 							<RemoveLayerButton controlId={controlId} layerId={layer.id} />
 						</li>
@@ -129,7 +129,6 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 			</div>
 			<div className="button-layer-options">
 				<hr />
-				<p>Selected: {styleStore.selectedLayerId}</p>
 
 				{layerProps && <LayerPropertiesEditor controlId={controlId} layerProps={layerProps} />}
 			</div>
