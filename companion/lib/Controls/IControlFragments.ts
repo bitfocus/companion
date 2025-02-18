@@ -2,7 +2,8 @@ import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
 import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js'
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
-import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithStyle | ControlWithoutStyle) &
@@ -15,6 +16,8 @@ export type SomeControl<TJson> = ControlBase<TJson> &
 
 export interface ControlWithStyle extends ControlBase<any> {
 	readonly supportsStyle: true
+
+	readonly baseStyle: ButtonStyleProperties
 
 	readonly button_status: ButtonStatus
 

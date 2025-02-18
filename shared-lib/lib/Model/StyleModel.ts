@@ -6,17 +6,19 @@ export type DrawStyleModel =
 	  }
 	| DrawStyleButtonModel
 
-export interface DrawStyleButtonModel extends ButtonStyleProperties {
-	style: 'button'
-
-	imageBuffers: DrawImageBuffer[]
-
+export interface DrawStyleButtonStateProps {
 	pushed: boolean
 	step_cycle: number | undefined
 	cloud: boolean | undefined
 	cloud_error: boolean | undefined
 	button_status: 'error' | 'warning' | 'good' | undefined
 	action_running: boolean | undefined
+}
+
+export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleButtonStateProps {
+	style: 'button'
+
+	imageBuffers: DrawImageBuffer[]
 }
 
 export interface DrawImageBuffer {

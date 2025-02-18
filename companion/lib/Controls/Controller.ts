@@ -457,9 +457,10 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+			if (!control.supportsEntities || !control.supportsStyle)
+				throw new Error(`Control "${controlId}" does not support entities or styles`)
 
-			return control.entities.entitySetStyleSelection(entityLocation, id, selected)
+			return control.entities.entitySetStyleSelection(entityLocation, control.baseStyle, id, selected)
 		})
 		client.onPromise('controls:entity:set-style-value', (controlId, entityLocation, id, key, value) => {
 			const control = this.getControl(controlId)
