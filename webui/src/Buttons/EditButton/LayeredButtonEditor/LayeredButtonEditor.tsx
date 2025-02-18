@@ -5,10 +5,13 @@ import { ControlOptionsEditor } from '../../../Controls/ControlOptionsEditor.js'
 import { MyErrorBoundary } from '../../../util.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from '../ButtonEditorTabs.js'
 import { ButtonPreviewBase } from '../../../Components/ButtonPreview.js'
-import { RemoveLayerButton, AddLayerOfTypeButton } from './Buttons.js'
+import { AddLayerOfTypeButton } from './Buttons.js'
 import { LayerPropertiesEditor } from './LayerPropertiesEditor.js'
 import { LayeredStyleStore } from './StyleStore.js'
 import { observer } from 'mobx-react-lite'
+import { LayerList } from './LayerList.js'
+import { NonIdealState } from '../../../Components/NonIdealState.js'
+import { faLayerGroup, faListNumeric } from '@fortawesome/free-solid-svg-icons'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },
@@ -108,29 +111,21 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 			</div>
 			<div className="button-layer-layerlist">
 				<p>Layerlist</p>
-				<ul>
-					{styleStore.layers.map((layer) => (
-						<li key={layer.id}>
-							<span
-								style={{
-									color: styleStore.selectedLayerId === layer.id ? 'red' : '',
-								}}
-								onClick={() => styleStore.setSelectedLayerId(layer.id)}
-							>
-								{layer.name ?? layer.type} ({layer.id})
-							</span>{' '}
-							<RemoveLayerButton controlId={controlId} layerId={layer.id} />
-						</li>
-					))}
-				</ul>
+				<LayerList styleStore={styleStore} controlId={controlId} />
+
 				<hr />
+
 				<AddLayerOfTypeButton controlId={controlId} layerType="text" label="Add text layer" styleStore={styleStore} />
 				<AddLayerOfTypeButton controlId={controlId} layerType="image" label="Add image layer" styleStore={styleStore} />
 			</div>
 			<div className="button-layer-options">
 				<hr />
 
-				{layerProps && <LayerPropertiesEditor controlId={controlId} layerProps={layerProps} />}
+				{layerProps ? (
+					<LayerPropertiesEditor controlId={controlId} layerProps={layerProps} />
+				) : (
+					<NonIdealState icon={faLayerGroup}>Select a layer from the list above to edit its properties</NonIdealState>
+				)}
 			</div>
 		</div>
 	)
