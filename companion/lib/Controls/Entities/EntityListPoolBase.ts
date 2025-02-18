@@ -11,8 +11,8 @@ import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { InstanceDefinitionsForEntity } from './Types.js'
+import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -44,8 +44,6 @@ export abstract class ControlEntityListPoolBase {
 	 * Trigger a redraw/invalidation of the control
 	 */
 	protected readonly triggerRedraw: () => void
-
-	abstract get baseStyle(): ButtonStyleProperties
 
 	protected constructor(props: ControlEntityListPoolProps) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
@@ -402,7 +400,12 @@ export abstract class ControlEntityListPoolBase {
 	 * @param id the id of the entity
 	 * @param selected the properties to be selected
 	 */
-	entitySetStyleSelection(listId: SomeSocketEntityLocation, id: string, selected: string[]): boolean {
+	entitySetStyleSelection(
+		listId: SomeSocketEntityLocation,
+		baseStyle: ButtonStyleProperties,
+		id: string,
+		selected: string[]
+	): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 
@@ -411,7 +414,7 @@ export abstract class ControlEntityListPoolBase {
 
 		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
-		if (entity.setStyleSelection(selected, this.baseStyle)) {
+		if (entity.setStyleSelection(selected, baseStyle)) {
 			this.commitChange()
 
 			return true

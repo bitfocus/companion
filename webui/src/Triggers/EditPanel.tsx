@@ -5,7 +5,6 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { LoadingRetryOrError, SocketContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
 import { ControlEntitiesEditor } from '../Controls/EntitiesEditor.js'
 import jsonPatch from 'fast-json-patch'
-import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
 import { cloneDeep } from 'lodash-es'
 import { TextInputField } from '../Components/index.js'
 import { TriggerEventEditor } from './EventEditor.js'
@@ -101,13 +100,6 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>
 						<TriggerConfig options={config.options} controlId={controlId} hotPressDown={hotPressDown} />
-
-						<ControlOptionsEditor
-							controlType={config.type}
-							options={config.options}
-							configRef={configRef}
-							controlId={controlId}
-						/>
 					</MyErrorBoundary>
 
 					{config && runtimeProps ? (

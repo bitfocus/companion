@@ -22,21 +22,6 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		runWhileHeld: [], // array of set ids
 	}
 
-	/**
-	 * The defaults style for a button
-	 */
-	static DefaultStyle: ButtonStyleProperties = {
-		text: '',
-		textExpression: false,
-		size: 'auto',
-		png64: null,
-		alignment: 'center:center',
-		pngalignment: 'center:center',
-		color: 0xffffff,
-		bgcolor: 0x000000,
-		show_topbar: 'default',
-	}
-
 	readonly #feedbacks: ControlEntityList
 
 	readonly #steps = new Map<string, ControlEntityListActionStep>()
@@ -48,19 +33,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 */
 	#current_step_id: string = '0'
 
-	/**
-	 * The base style without feedbacks applied
-	 */
-	#baseStyle: ButtonStyleProperties = cloneDeep(ControlEntityListPoolButton.DefaultStyle)
-
 	#hasRotaryActions = false
 
 	get currentStepId(): string {
 		return this.#current_step_id
-	}
-
-	get baseStyle(): ButtonStyleProperties {
-		return this.#baseStyle
 	}
 
 	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void) {
@@ -85,8 +61,6 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean) {
-		this.#baseStyle = Object.assign(this.#baseStyle, storage.style || {})
-
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
 
 		// Future:	cleanup the steps/sets
@@ -162,8 +136,8 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * Get the unparsed style for the feedbacks
 	 * Note: Does not clone the style
 	 */
-	getUnparsedFeedbackStyle(): UnparsedButtonStyle {
-		const styleBuilder = new FeedbackStyleBuilder(this.#baseStyle)
+	getUnparsedFeedbackStyle(baseStyle: ButtonStyleProperties): UnparsedButtonStyle {
+		const styleBuilder = new FeedbackStyleBuilder(baseStyle)
 		this.#feedbacks.buildFeedbackStyle(styleBuilder)
 		return styleBuilder.style
 	}

@@ -1,15 +1,12 @@
 import { ControlBase } from '../../ControlBase.js'
-import { GetButtonBitmapSize } from '../../../Resources/Util.js'
-import { cloneDeep } from 'lodash-es'
-import type { ControlWithOptions, ControlWithPushed, ControlWithStyle } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
+import type { ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
-import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Abstract class for a editable button control.
@@ -33,9 +30,8 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
  */
 export abstract class ButtonControlBase<TJson, TOptions extends Record<string, any>>
 	extends ControlBase<TJson>
-	implements ControlWithStyle, ControlWithOptions, ControlWithPushed
+	implements ControlWithOptions, ControlWithPushed
 {
-	readonly supportsStyle = true
 	readonly supportsEntities = true
 	readonly supportsOptions = true
 	readonly supportsPushed = true
@@ -44,6 +40,11 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * The defaults options for a button
 	 */
 	static DefaultOptions: ButtonOptionsBase = {}
+
+	/**
+	 * Button hold state for each surface
+	 */
+	#surfaceHoldState = new Map<string, SurfaceHoldState>()
 
 	/**
 	 * The current status of this button
@@ -59,11 +60,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Whether this button is currently pressed
 	 */
 	pushed = false
-
-	/**
-	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
-	 */
-	protected last_draw_variables: Set<string> | null = null
 
 	readonly entities: ControlEntityListPoolButton
 
@@ -97,6 +93,32 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		}
 
 		this.actionRunner.abortAll(exceptSignal)
+	}
+
+	/**
+	 * Abort any running 'while held' timers
+	 */
+	private abortRunningHoldTimers(surfaceId: string | undefined): void {
+		if (surfaceId) {
+			const existingState = this.#surfaceHoldState.get(surfaceId)
+			if (existingState) {
+				// Cancel any pending 'runWhileHeld' timers
+				for (const timer of existingState.timers) {
+					clearTimeout(timer)
+				}
+			}
+			this.#surfaceHoldState.delete(surfaceId)
+		} else {
+			for (const holdState of this.#surfaceHoldState.values()) {
+				if (holdState) {
+					// Cancel any pending 'runWhileHeld' timers
+					for (const timer of holdState.timers) {
+						clearTimeout(timer)
+					}
+				}
+			}
+			this.#surfaceHoldState.clear()
+		}
 	}
 
 	/**
@@ -148,6 +170,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.abortRunningHoldTimers(undefined)
+
 		this.entities.destroy()
 
 		super.destroy()
@@ -164,88 +188,34 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		}
 	}
 
-	/**
-	 * Get the size of the bitmap render of this control
-	 */
-	getBitmapSize(): { width: number; height: number } | null {
-		return GetButtonBitmapSize(this.deps.userconfig, this.entities.baseStyle)
-	}
-
-	/**
-	 * Get the complete style object of a button
-	 * @returns the processed style of the button
-	 */
-	getDrawStyle(): DrawStyleButtonModel {
-		let style = this.entities.getUnparsedFeedbackStyle()
-
-		if (style.text) {
-			// Block out the button text
-			const injectedVariableValues: CompanionVariableValues = {}
-			const location = this.deps.page.getLocationOfControlId(this.controlId)
-			if (location) {
-				// Ensure we don't enter into an infinite loop
-				// TODO - legacy location variables?
-				injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
-			}
-
-			if (style.textExpression) {
-				const parseResult = this.deps.variables.values.executeExpression(
-					style.text,
-					location,
-					undefined,
-					injectedVariableValues
-				)
-				if (parseResult.ok) {
-					style.text = parseResult.value + ''
-				} else {
-					this.logger.error(`Expression parse error: ${parseResult.error}`)
-					style.text = 'ERR'
-				}
-				this.last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-			} else {
-				const parseResult = this.deps.variables.values.parseVariables(style.text, location, injectedVariableValues)
-				style.text = parseResult.text
-				this.last_draw_variables = parseResult.variableIds.length > 0 ? new Set(parseResult.variableIds) : null
-			}
-		}
-
-		return {
+	protected getDrawStyleButtonStateProps(): DrawStyleButtonStateProps {
+		const result: DrawStyleButtonStateProps = {
 			cloud: false,
 			cloud_error: false,
-
-			...cloneDeep(style),
 
 			step_cycle: undefined,
 
 			pushed: !!this.pushed,
 			action_running: this.actionRunner.hasRunningChains,
 			button_status: this.button_status,
-
-			style: 'button',
 		}
-	}
 
-	/**
-	 * Propagate variable changes
-	 * @param allChangedVariables - variables with changes
-	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void {
-		if (this.last_draw_variables) {
-			for (const variable of allChangedVariables.values()) {
-				if (this.last_draw_variables.has(variable)) {
-					this.logger.silly('variable changed in button ' + this.controlId)
-
-					this.triggerRedraw()
-					return
-				}
-			}
+		if (this.entities.getStepIds().length > 1) {
+			result.step_cycle = this.entities.getActiveStepIndex() + 1
 		}
+
+		return result
 	}
 
 	/**
 	 * Update an option field of this control
 	 */
 	optionsSetField(key: string, value: any): boolean {
+		// Check if rotary_actions should be added/remove
+		if (key === 'rotaryActions') {
+			this.entities.setupRotaryActionSets(!!value, true)
+		}
+
 		// @ts-ignore
 		this.options[key] = value
 
@@ -267,26 +237,124 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	}
 
 	/**
-	 * Rename a connection for variables used in this control
-	 * @param labelFrom - the old connection short name
-	 * @param labelTo - the new connection short name
+	 * Execute a press of this control
+	 * @param pressed Whether the control is pressed
+	 * @param surfaceId The surface that initiated this press
+	 * @param force Trigger actions even if already in the state
 	 */
-	renameVariables(labelFrom: string, labelTo: string): void {
-		const allEntities = this.entities.getAllEntities()
+	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
+		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNext()
 
-		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			this.entities.baseStyle,
-			[],
-			allEntities,
-			[],
-			true
-		)
+		let pressedDuration = 0
+		let pressedStep = thisStepId
+		let holdState: SurfaceHoldState | undefined = undefined
+		if (surfaceId) {
+			// Calculate the press duration, or track when the press started
+			if (pressed) {
+				this.abortRunningHoldTimers(surfaceId)
 
-		// redraw if needed and save changes
-		this.commitChange(changed)
+				holdState = {
+					pressed: Date.now(),
+					step: thisStepId,
+					timers: [],
+				}
+				this.#surfaceHoldState.set(surfaceId, holdState)
+			} else {
+				const state = this.#surfaceHoldState.get(surfaceId)
+				if (state) {
+					pressedDuration = Date.now() - state.pressed
+					pressedStep = state.step
+
+					this.abortRunningHoldTimers(surfaceId)
+				}
+			}
+		}
+
+		const changed = this.setPushed(pressed, surfaceId)
+
+		// if the state has changed, the choose the set to execute
+		if (changed || force) {
+			// progress to the next step, if there is one, and the step hasnt already been changed
+			if (
+				thisStepId !== null &&
+				nextStepId !== null &&
+				this.options.stepAutoProgress &&
+				!pressed &&
+				(pressedStep === undefined || thisStepId === pressedStep)
+			) {
+				// update what the new step will be
+				this.entities.stepSelectCurrent(nextStepId)
+			}
+
+			// Make sure to execute for the step that was active when the press started
+			const step = pressedStep ? this.entities.getStepActions(pressedStep) : null
+			if (step) {
+				let actionSetId: ActionSetId = pressed ? 'down' : 'up'
+
+				const location = this.deps.page.getLocationOfControlId(this.controlId)
+
+				if (!pressed && pressedDuration) {
+					// find the correct set to execute on up
+
+					const setIds = Object.keys(step)
+						.map((id) => Number(id))
+						.filter((id) => !isNaN(id) && id < pressedDuration)
+					if (setIds.length) {
+						actionSetId = Math.max(...setIds)
+					}
+				}
+
+				const runActionSet = (setId: ActionSetId): void => {
+					const actions = step.sets.get(setId)
+					if (!actions) return
+
+					this.logger.silly(`found ${actions.length} actions`)
+					this.actionRunner.runActions(actions, {
+						surfaceId,
+						location,
+					})
+				}
+
+				if (pressed && holdState && holdState.timers.length === 0) {
+					// queue any 'runWhileHeld' timers
+					const times = [...step.options.runWhileHeld].sort()
+
+					for (const time of times) {
+						holdState.timers.push(
+							setTimeout(() => {
+								try {
+									runActionSet(time)
+								} catch (e) {
+									this.logger.warn(`hold actions execution failed: ${e}`)
+								}
+							}, time)
+						)
+					}
+				}
+
+				// Run the actions if it wasn't already run from being held
+				if (typeof actionSetId !== 'number' || !step.options.runWhileHeld.includes(actionSetId)) {
+					runActionSet(actionSetId)
+				}
+			}
+		}
+	}
+
+	/**
+	 * Execute a rotate of this control
+	 * @param direction Whether the control was rotated to the right
+	 * @param surfaceId The surface that initiated this rotate
+	 */
+	rotateControl(direction: boolean, surfaceId: string | undefined): void {
+		const actions = this.entities.getActionsToExecuteForSet(direction ? 'rotate_right' : 'rotate_left')
+
+		const location = this.deps.page.getLocationOfControlId(this.controlId)
+
+		this.logger.silly(`found ${actions.length} actions`)
+		this.actionRunner.runActions(actions, {
+			surfaceId,
+			location,
+		})
 	}
 
 	/**
@@ -319,36 +387,15 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	}
 
 	/**
-	 * Update the style fields of this control
-	 * @param diff - config diff to apply
-	 * @returns true if any changes were made
+	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
-	styleSetFields(diff: Record<string, any>): boolean {
-		if (diff.png64) {
-			// Strip the prefix off the base64 png
-			if (typeof diff.png64 === 'string' && diff.png64.match(/data:.*?image\/png/)) {
-				diff.png64 = diff.png64.replace(/^.*base64,/, '')
-			} else {
-				// this.logger.info('png64 is not a png url')
-				// Delete it
-				delete diff.png64
-			}
-		}
-
-		if (Object.keys(diff).length > 0) {
-			// Apply the diff
-			Object.assign(this.entities.baseStyle, diff)
-
-			if ('show_topbar' in diff) {
-				// Some feedbacks will need to redraw
-				this.entities.resubscribeEntities(EntityModelType.Feedback)
-			}
-
-			this.commitChange()
-
-			return true
-		} else {
-			return false
-		}
+	triggerLocationHasChanged(): void {
+		this.entities.resubscribeEntities(EntityModelType.Feedback, 'internal')
 	}
+}
+
+interface SurfaceHoldState {
+	pressed: number
+	step: string | null
+	timers: NodeJS.Timeout[]
 }

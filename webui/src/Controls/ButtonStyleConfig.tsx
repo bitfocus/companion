@@ -19,19 +19,12 @@ import { ControlLocalVariables } from '../LocalVariableDefinitions.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
-	controlType: string
 	style: ButtonStyleProperties | undefined
 	configRef: MutableRefObject<SomeButtonModel | undefined>
 	mainDialog?: boolean
 }
 
-export function ButtonStyleConfig({
-	controlId,
-	controlType,
-	style,
-	configRef,
-	mainDialog = false,
-}: ButtonStyleConfigProps) {
+export function ButtonStyleConfig({ controlId, style, configRef, mainDialog = false }: ButtonStyleConfigProps) {
 	const socket = useContext(SocketContext)
 
 	const [pngError, setPngError] = useState<string | null>(null)
@@ -75,32 +68,6 @@ export function ButtonStyleConfig({
 		[socket, controlId, configRef]
 	)
 	const clearPng = useCallback(() => setValueInner('png64', null), [setValueInner])
-
-	switch (controlType) {
-		case 'pageup':
-			return (
-				<>
-					<h4>Page up button</h4>
-					<p className="mt-3">No configuration available for page up buttons</p>
-				</>
-			)
-		case 'pagenum':
-			return (
-				<>
-					<h4>Page number button</h4>
-					<p className="mt-3">No configuration available for page number buttons</p>
-				</>
-			)
-		case 'pagedown':
-			return (
-				<>
-					<h4>Page down button</h4>
-					<p className="mt-3">No configuration available for page down buttons</p>
-				</>
-			)
-		default:
-		// See below
-	}
 
 	return (
 		<CCol sm={12} className="p-0 mt-0">
