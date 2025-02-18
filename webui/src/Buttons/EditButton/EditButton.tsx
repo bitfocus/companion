@@ -173,11 +173,9 @@ const EditButtonContent = observer(function EditButton({
 
 				<ControlClearButton location={location} resetModalRef={resetModalRef} />
 				<MyErrorBoundary>
-					<ControlHotPressButtons
-						location={location}
-						controlType={config.type}
-						showRotaries={'options' in config && config?.options?.rotaryActions}
-					/>
+					{config.type === 'button' && (
+						<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
+					)}
 				</MyErrorBoundary>
 			</CCol>
 
@@ -232,12 +230,7 @@ function NormalButtonEditor({
 			</MyErrorBoundary>
 			<MyErrorBoundary>
 				<div style={{ marginLeft: '5px' }}>
-					<ControlOptionsEditor
-						controlType={config.type}
-						options={config.options}
-						configRef={configRef}
-						controlId={controlId}
-					/>
+					<ControlOptionsEditor options={config.options} configRef={configRef} controlId={controlId} />
 				</div>
 			</MyErrorBoundary>
 			{runtimeProps && (

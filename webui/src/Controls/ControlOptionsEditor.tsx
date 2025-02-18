@@ -3,19 +3,14 @@ import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
 import { SocketContext } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { InlineHelp } from '../Components/InlineHelp.js'
+import { NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 interface ControlOptionsEditorProps {
 	controlId: string
-	controlType: string
-	options: Record<string, any> // TODO
+	options: NormalButtonOptions
 	configRef: MutableRefObject<any> // TODO
 }
 
-export function ControlOptionsEditor({
-	controlId,
-	controlType,
-	options,
-	configRef,
-}: ControlOptionsEditorProps): JSX.Element | null {
+export function ControlOptionsEditor({ controlId, options, configRef }: ControlOptionsEditorProps): JSX.Element | null {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
@@ -53,59 +48,41 @@ export function ControlOptionsEditor({
 		[setValueInner, configRef]
 	)
 
-	switch (controlType) {
-		case undefined:
-			return null
-		case 'pageup':
-			return null
-		case 'pagenum':
-			return null
-		case 'pagedown':
-			return null
-		default:
-		// See below
-	}
-
 	return (
 		<>
-			{' '}
 			<GenericConfirmModal ref={confirmRef} />
 			<div className="flex w-full gap-2rem flex-form">
-				{controlType === 'button' && (
-					<>
-						<div>
-							<CFormLabel>
-								<InlineHelp help="When this button has multiple steps, progress to the next step when the button is released">
-									Progress
-								</InlineHelp>
-							</CFormLabel>
-							<br />
-							<CFormSwitch
-								size="xl"
-								color="success"
-								checked={options.stepAutoProgress}
-								onChange={() => {
-									setStepAutoProgressValue(!options.stepAutoProgress)
-								}}
-							/>
-						</div>
+				<div>
+					<CFormLabel>
+						<InlineHelp help="When this button has multiple steps, progress to the next step when the button is released">
+							Progress
+						</InlineHelp>
+					</CFormLabel>
+					<br />
+					<CFormSwitch
+						size="xl"
+						color="success"
+						checked={options.stepAutoProgress}
+						onChange={() => {
+							setStepAutoProgressValue(!options.stepAutoProgress)
+						}}
+					/>
+				</div>
 
-						<div>
-							<CFormLabel>
-								<InlineHelp help="Make this button compatible with rotation events">Rotary Actions</InlineHelp>
-							</CFormLabel>
-							<br />
-							<CFormSwitch
-								size="xl"
-								color="success"
-								checked={options.rotaryActions}
-								onChange={() => {
-									setRotaryActions(!options.rotaryActions)
-								}}
-							/>
-						</div>
-					</>
-				)}
+				<div>
+					<CFormLabel>
+						<InlineHelp help="Make this button compatible with rotation events">Rotary Actions</InlineHelp>
+					</CFormLabel>
+					<br />
+					<CFormSwitch
+						size="xl"
+						color="success"
+						checked={options.rotaryActions}
+						onChange={() => {
+							setRotaryActions(!options.rotaryActions)
+						}}
+					/>
+				</div>
 			</div>
 		</>
 	)

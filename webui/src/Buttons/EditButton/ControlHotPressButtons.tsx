@@ -8,11 +8,9 @@ import { MyErrorBoundary } from '../../util.js'
 
 export function ControlHotPressButtons({
 	location,
-	controlType,
 	showRotaries,
 }: {
 	location: ControlLocation
-	controlType: string | boolean
 	showRotaries: boolean
 }) {
 	const { socket } = useContext(RootAppStoreContext)
@@ -37,8 +35,6 @@ export function ControlHotPressButtons({
 			.emitPromise('controls:hot-rotate', [location, true, 'edit'])
 			.catch((e) => console.error(`Hot rotate failed: ${e}`))
 	}, [socket, location])
-
-	if (controlType !== 'button') return null
 
 	return (
 		<>
