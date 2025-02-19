@@ -11,19 +11,19 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				id: nanoid(),
 				name: 'Text',
 				type: 'text',
-				text: '',
-				isExpression: false,
-				fontsize: 'auto',
-				alignment: 'center:center',
-				color: 0xffffff,
+
+				text: { value: '', isExpression: false },
+				color: { value: 0xffffff, isExpression: false },
+				alignment: { value: 'center:center', isExpression: false },
+				fontsize: { value: 'auto', isExpression: false },
 			}
 		case 'image':
 			return {
 				id: nanoid(),
 				name: 'Image',
 				type: 'image',
-				base64Image: null,
-				alignment: 'center:center',
+				base64Image: { value: null, isExpression: false },
+				alignment: { value: 'center:center', isExpression: false },
 			}
 		default:
 			assertNever(type)

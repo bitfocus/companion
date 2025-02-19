@@ -203,7 +203,14 @@ export interface ClientToBackendEventsMap {
 	'controls:style:add-element': (controlId: string, type: string, index: number | null) => string | false
 	'controls:style:remove-element': (controlId: string, elementId: string) => boolean
 	'controls:style:move-element': (controlId: string, elementId: string, newIndex: number) => boolean
-	'controls:style:update-options': (controlId: string, elementId: string, diff: Record<string, any>) => boolean
+	'controls:style:set-element-name': (controlId: string, elementId: string, name: string) => boolean
+	'controls:style:update-option-value': (controlId: string, elementId: string, key: string, value: any) => boolean
+	'controls:style:update-option-is-expression': (
+		controlId: string,
+		elementId: string,
+		key: string,
+		value: boolean
+	) => boolean
 
 	'triggers:create': () => string
 	'triggers:clone': (controlId: string) => string | false

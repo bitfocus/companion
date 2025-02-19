@@ -68,12 +68,30 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleMoveElement(id: string, newIndex: number): boolean
 
 	/**
-	 * Update the options on an element from the layered style
+	 * Update the type of an element in the layered style
 	 * @param id Element id to update
-	 * @param diff - config diff to apply
+	 * @param type New type for the element
+	 * @returns true if the element was updated
+	 */
+	layeredStyleSetElementName(id: string, name: string): boolean
+
+	/**
+	 * Update an option on an element from the layered style
+	 * @param id Element id to update
+	 * @param key Option key to update
+	 * @param value New value for the option
 	 * @returns true if any changes were made
 	 */
-	layeredStyleUpdateOptions(id: string, diff: Record<string, any>): boolean
+	layeredStyleUpdateOptionValue(id: string, key: string, value: any): boolean
+
+	/**
+	 * Update whether option on an element from the layered style is an expression
+	 * @param id Element id to update
+	 * @param key Option key to update
+	 * @param value Whether the value should be an expression
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateOptionIsExpression(id: string, key: string, value: boolean): boolean
 
 	/**
 	 * Propagate variable changes

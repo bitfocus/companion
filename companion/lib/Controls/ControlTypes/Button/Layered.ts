@@ -14,10 +14,13 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import {
 	ButtonGraphicsDecorationType,
+	ExpressionOrValue,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import { DrawStyleLayeredButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import { CreateElementOfType } from './LayerDefaults.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 /**
  * Class for the button control with layer based rendering.
@@ -58,18 +61,17 @@ export class ControlButtonLayered
 			id: 'canvas',
 			name: 'Canvas',
 			type: 'canvas',
-			color: 0x000000,
-			decoration: ButtonGraphicsDecorationType.FollowDefault,
+			color: { value: 0x000000, isExpression: false },
+			decoration: { value: ButtonGraphicsDecorationType.FollowDefault, isExpression: false },
 		},
 		{
 			id: 'text0',
 			name: 'Text',
 			type: 'text',
-			text: '',
-			isExpression: false,
-			color: 0xffffff,
-			alignment: 'center:center',
-			fontsize: 'auto',
+			text: { value: '', isExpression: false },
+			color: { value: 0xffffff, isExpression: false },
+			alignment: { value: 'center:center', isExpression: false },
+			fontsize: { value: 'auto', isExpression: false },
 		},
 	]
 
@@ -143,15 +145,33 @@ export class ControlButtonLayered
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleModel | null {
-		// TODO-layered: update #last_draw_variables
+		// Block out the button text
+		const injectedVariableValues: CompanionVariableValues = {}
+		const location = this.deps.page.getLocationOfControlId(this.controlId)
+		if (location) {
+			// Ensure we don't enter into an infinite loop
+			// TODO - legacy location variables?
+			// injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
+		}
+		// TODO-layered inject any new local variables
+
+		const executeExpression = (str: string, requiredType?: string) =>
+			this.deps.variables.values.executeExpression(str, location, requiredType, injectedVariableValues)
+
+		// Compute the new drawing
+		const { elements, usedVariables } = ConvertSomeButtonGraphicsElementForDrawing(
+			this.#drawElements,
+			executeExpression
+		)
+		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
 
 		return {
 			...this.getDrawStyleButtonStateProps(),
 
-			elements: this.#drawElements,
+			elements,
 
 			style: 'button-layered',
-		}
+		} satisfies DrawStyleLayeredButtonModel
 	}
 
 	/**
@@ -198,6 +218,18 @@ export class ControlButtonLayered
 		return true
 	}
 
+	layeredStyleSetElementName(id: string, name: string): boolean {
+		const element = this.#drawElements.find((element) => element.id === id)
+		if (!element) return false
+
+		element.name = name
+
+		// Save change without a redraw
+		this.commitChange(false)
+
+		return true
+	}
+
 	layeredStyleMoveElement(id: string, newIndex: number): boolean {
 		const indexOfElement = this.#drawElements.findIndex((element) => element.id === id)
 		if (indexOfElement === -1) return false
@@ -216,17 +248,46 @@ export class ControlButtonLayered
 		return true
 	}
 
-	layeredStyleUpdateOptions(id: string, diff: Record<string, any>): boolean {
-		// Prune some readonly properties
-		delete diff.id
-		delete diff.type
+	layeredStyleUpdateOptionValue(id: string, key: string, value: any): boolean {
+		// Ignore some fixed properties
+		if (key === 'id' || key === 'type' || key === 'name') return false
 
 		// Find the element
 		const element = this.#drawElements.find((element) => element.id === id)
 		if (!element) return false
 
-		// Apply the diff
-		Object.assign(element, diff)
+		// Fetch the property wrapper
+		const elementEntry = (element as any)[key] as ExpressionOrValue<any>
+		if (!elementEntry) return false
+
+		// Update the value
+		elementEntry.value = value
+
+		// Save change and redraw
+		this.commitChange(true)
+
+		return true
+	}
+
+	layeredStyleUpdateOptionIsExpression(id: string, key: string, value: boolean): boolean {
+		// Ignore some fixed properties
+		if (key === 'id' || key === 'type' || key === 'name') return false
+
+		// Find the element
+		const element = this.#drawElements.find((element) => element.id === id)
+		if (!element) return false
+
+		// Fetch the property wrapper
+		const elementEntry = (element as any)[key] as ExpressionOrValue<any>
+		if (!elementEntry) return false
+
+		// Preserve current resolved value
+		if (!elementEntry.isExpression && value) {
+			// TODO-layered implement this
+		}
+
+		// Update the value
+		elementEntry.isExpression = value
 
 		// Save change and redraw
 		this.commitChange(true)

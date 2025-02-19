@@ -838,12 +838,32 @@ export class ControlsController extends CoreBase {
 				throw new Error(`Control "${controlId}" does not support layer styles`)
 			}
 		})
-		client.onPromise('controls:style:update-options', async (controlId, elementId, diff) => {
+		client.onPromise('controls:style:set-element-name', async (controlId, elementId, name) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsLayeredStyle) {
-				return control.layeredStyleUpdateOptions(elementId, diff)
+				return control.layeredStyleSetElementName(elementId, name)
+			} else {
+				throw new Error(`Control "${controlId}" does not support layer styles`)
+			}
+		})
+		client.onPromise('controls:style:update-option-value', async (controlId, elementId, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsLayeredStyle) {
+				return control.layeredStyleUpdateOptionValue(elementId, key, value)
+			} else {
+				throw new Error(`Control "${controlId}" does not support layer styles`)
+			}
+		})
+		client.onPromise('controls:style:update-option-is-expression', async (controlId, elementId, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsLayeredStyle) {
+				return control.layeredStyleUpdateOptionIsExpression(elementId, key, value)
 			} else {
 				throw new Error(`Control "${controlId}" does not support layer styles`)
 			}

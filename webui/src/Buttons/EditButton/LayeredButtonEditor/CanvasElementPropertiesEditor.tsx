@@ -46,14 +46,18 @@ const FieldFillColorInput = observer(function FieldFillColorInput({
 }) {
 	const setColor = useElementMutatorCallback<ButtonGraphicsCanvasElement, 'color'>(controlId, elementProps.id, 'color')
 
-	return (
-		<ColorInputField
-			setValue={setColor as (color: number | string) => void}
-			value={elementProps.color ?? 0}
-			returnType="number"
-			helpText="Background color"
-		/>
-	)
+	if (elementProps.color.isExpression) {
+		return <p>TODO</p>
+	} else {
+		return (
+			<ColorInputField
+				setValue={setColor as (color: number | string) => void}
+				value={elementProps.color.value}
+				returnType="number"
+				helpText="Background color"
+			/>
+		)
+	}
 })
 
 const FieldDecorationInput = observer(function FieldDecorationInput({
@@ -69,13 +73,17 @@ const FieldDecorationInput = observer(function FieldDecorationInput({
 		'decoration'
 	)
 
-	return (
-		<DropdownInputField
-			choices={DecorationChoices}
-			setValue={setDecoration as (value: DropdownChoiceId) => void}
-			value={elementProps.decoration}
-		/>
-	)
+	if (elementProps.decoration.isExpression) {
+		return <p>TODO</p>
+	} else {
+		return (
+			<DropdownInputField
+				choices={DecorationChoices}
+				setValue={setDecoration as (value: DropdownChoiceId) => void}
+				value={elementProps.decoration.value}
+			/>
+		)
+	}
 })
 
 const DecorationChoices: DropdownChoice[] = [

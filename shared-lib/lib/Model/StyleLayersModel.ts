@@ -5,19 +5,32 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
 
+export type SomeButtonGraphicsDrawElement =
+	| ButtonGraphicsCanvasDrawElement
+	| ButtonGraphicsTextDrawElement
+	| ButtonGraphicsImageDrawElement
+
 export interface ButtonGraphicsElementBase {
 	id: string
 	name: string
 }
 
-export interface ButtonGraphicsCanvasElement extends ButtonGraphicsElementBase {
-	// Note: this is the background layer and can only be at the bottom of the stack
+export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
+export type MakeExpressionable<T extends { type: string }> = {
+	[P in keyof T]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
+}
+
+export interface ButtonGraphicsCanvasDrawElement {
+	// Note: this is the background element and can only be at the bottom of the stack
 	type: 'canvas'
 
 	color: number
 
 	decoration: ButtonGraphicsDecorationType // replaces show_topbar
 }
+export interface ButtonGraphicsCanvasElement
+	extends ButtonGraphicsElementBase,
+		MakeExpressionable<ButtonGraphicsCanvasDrawElement> {}
 
 export enum ButtonGraphicsDecorationType {
 	FollowDefault = 'default',
@@ -27,11 +40,10 @@ export enum ButtonGraphicsDecorationType {
 	// None = 'none', // Future
 }
 
-export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase {
+export interface ButtonGraphicsTextDrawElement {
 	type: 'text'
 
 	text: string
-	isExpression: boolean
 
 	fontsize: 'auto' | number // TODO - other values?
 
@@ -44,8 +56,11 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase {
 	// rotation: number
 	// outlineColor: number
 }
+export interface ButtonGraphicsTextElement
+	extends ButtonGraphicsElementBase,
+		MakeExpressionable<ButtonGraphicsTextDrawElement> {}
 
-export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase {
+export interface ButtonGraphicsImageDrawElement {
 	type: 'image'
 
 	base64Image: string | null
@@ -57,3 +72,6 @@ export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase {
 	// rotation: number
 	// crop: { x, y, width, height }
 }
+export interface ButtonGraphicsImageElement
+	extends ButtonGraphicsElementBase,
+		MakeExpressionable<ButtonGraphicsImageDrawElement> {}

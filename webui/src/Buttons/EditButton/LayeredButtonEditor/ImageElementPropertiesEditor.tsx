@@ -61,29 +61,33 @@ const FieldImagePickerInput = observer(function FieldImagePickerInput({
 		setImageData(null)
 	}, [setImageData])
 
-	return (
-		<>
-			<CButtonGroup className="png-browse">
-				<PNGInputField
-					onSelect={setImageDataAndClearError}
-					onError={setImageLoadError}
-					min={{ width: 8, height: 8 }}
-					max={{ width: 400, height: 400 }}
-					allowNonPng
-				/>
-				{clearImage && (
-					<CButton color="danger" disabled={!elementProps.base64Image} onClick={clearImage}>
-						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
+	if (elementProps.base64Image.isExpression) {
+		return <p>TODO</p>
+	} else {
+		return (
+			<>
+				<CButtonGroup className="png-browse">
+					<PNGInputField
+						onSelect={setImageDataAndClearError}
+						onError={setImageLoadError}
+						min={{ width: 8, height: 8 }}
+						max={{ width: 400, height: 400 }}
+						allowNonPng
+					/>
+					{clearImage && (
+						<CButton color="danger" disabled={!elementProps.base64Image} onClick={clearImage}>
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>
+					)}
+				</CButtonGroup>
+				{imageLoadError && (
+					<CAlert color="warning" dismissible>
+						{imageLoadError}
+					</CAlert>
 				)}
-			</CButtonGroup>
-			{imageLoadError && (
-				<CAlert color="warning" dismissible>
-					{imageLoadError}
-				</CAlert>
-			)}
-		</>
-	)
+			</>
+		)
+	}
 })
 
 const FieldImageAlignmentInput = observer(function FieldImageAlignmentInput({
@@ -99,5 +103,9 @@ const FieldImageAlignmentInput = observer(function FieldImageAlignmentInput({
 		'alignment'
 	)
 
-	return <AlignmentInputField setValue={setAlignmentValue} value={elementProps.alignment ?? 'center:center'} />
+	if (elementProps.alignment.isExpression) {
+		return <p>TODO</p>
+	} else {
+		return <AlignmentInputField setValue={setAlignmentValue} value={elementProps.alignment.value} />
+	}
 })

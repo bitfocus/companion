@@ -10,7 +10,7 @@ import { TextInputField } from '../../../Components/TextInputField.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from '../../../Controls/OptionsInputField.js'
 import { ControlLocalVariables } from '../../../LocalVariableDefinitions.js'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
-import { useElementMutatorCallback } from './StyleStore.js'
+import { useElementIsExpressionMutatorCallback, useElementMutatorCallback } from './StyleStore.js'
 import { FONT_SIZES } from '../../../Constants.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ColorInputField } from '../../../Components/ColorInputField.js'
@@ -61,7 +61,7 @@ const textInputFeatures: InputFeatureIconsProps = {
 }
 
 const FieldTextLabel = observer(function FieldTextLabel({ elementProps }: { elementProps: ButtonGraphicsTextElement }) {
-	if (elementProps.isExpression) {
+	if (elementProps.text.isExpression) {
 		return (
 			<InlineHelp help="You can read more about expressions in the Getting Started pages">
 				Button text expression
@@ -86,13 +86,13 @@ const FieldTextInput = observer(function FieldTextInput({
 	elementProps: ButtonGraphicsTextElement
 }) {
 	const setTextValue = useElementMutatorCallback<ButtonGraphicsTextElement, 'text'>(controlId, elementProps.id, 'text')
-	const setIsExpression = useElementMutatorCallback<ButtonGraphicsTextElement, 'isExpression'>(
+	const setIsExpression = useElementIsExpressionMutatorCallback<ButtonGraphicsTextElement, 'text'>(
 		controlId,
 		elementProps.id,
-		'isExpression'
+		'text'
 	)
 	const toggleExpression = useCallback(() => {
-		setIsExpression(!elementProps.isExpression)
+		setIsExpression(!elementProps.text.isExpression)
 	}, [setIsExpression, elementProps])
 
 	return (
@@ -100,19 +100,19 @@ const FieldTextInput = observer(function FieldTextInput({
 			<TextInputField
 				tooltip={'Button text'}
 				setValue={setTextValue}
-				value={elementProps.text ?? ''}
+				value={elementProps.text.value ?? ''}
 				useVariables
 				localVariables={ControlLocalVariables}
-				isExpression={elementProps.isExpression}
+				isExpression={elementProps.text.isExpression}
 				style={{ fontWeight: 'bold', fontSize: 18 }}
 			/>
 			<CButton
 				color="info"
 				variant="outline"
 				onClick={toggleExpression}
-				title={elementProps.isExpression ? 'Expression mode ' : 'String mode'}
+				title={elementProps.text.isExpression ? 'Expression mode ' : 'String mode'}
 			>
-				<FontAwesomeIcon icon={elementProps.isExpression ? faDollarSign : faFont} />
+				<FontAwesomeIcon icon={elementProps.text.isExpression ? faDollarSign : faFont} />
 			</CButton>
 		</CInputGroup>
 	)
@@ -131,16 +131,20 @@ const FieldFontSizeInput = observer(function FieldFontSizeInput({
 		'fontsize'
 	)
 
-	return (
-		<DropdownInputField
-			choices={FONT_SIZES}
-			setValue={setSizeValue as (value: DropdownChoiceId) => void}
-			value={elementProps.fontsize ?? 'auto'}
-			allowCustom={true}
-			disableEditingCustom={true}
-			regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
-		/>
-	)
+	if (elementProps.fontsize.isExpression) {
+		return <p>TODO</p>
+	} else {
+		return (
+			<DropdownInputField
+				choices={FONT_SIZES}
+				setValue={setSizeValue as (value: DropdownChoiceId) => void}
+				value={elementProps.fontsize.value}
+				allowCustom={true}
+				disableEditingCustom={true}
+				regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
+			/>
+		)
+	}
 })
 
 const FieldTextColorInput = observer(function FieldTextColorInput({
@@ -152,14 +156,18 @@ const FieldTextColorInput = observer(function FieldTextColorInput({
 }) {
 	const setColor = useElementMutatorCallback<ButtonGraphicsTextElement, 'color'>(controlId, elementProps.id, 'color')
 
-	return (
-		<ColorInputField
-			setValue={setColor as (color: number | string) => void}
-			value={elementProps.color ?? 0}
-			returnType="number"
-			helpText="Font color"
-		/>
-	)
+	if (elementProps.color.isExpression) {
+		return <p>TODO</p>
+	} else {
+		return (
+			<ColorInputField
+				setValue={setColor as (color: number | string) => void}
+				value={elementProps.color.value}
+				returnType="number"
+				helpText="Font color"
+			/>
+		)
+	}
 })
 
 const FieldTextAlignmentInput = observer(function FieldTextAlignmentInput({
@@ -174,6 +182,9 @@ const FieldTextAlignmentInput = observer(function FieldTextAlignmentInput({
 		elementProps.id,
 		'alignment'
 	)
-
-	return <AlignmentInputField setValue={setAlignmentValue} value={elementProps.alignment ?? 'center:center'} />
+	if (elementProps.alignment.isExpression) {
+		return <p>TODO</p>
+	} else {
+		return <AlignmentInputField setValue={setAlignmentValue} value={elementProps.alignment.value} />
+	}
 })

@@ -28,10 +28,10 @@ import type {
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
-	ButtonGraphicsCanvasElement,
+	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsDecorationType,
-	ButtonGraphicsImageElement,
-	ButtonGraphicsTextElement,
+	ButtonGraphicsImageDrawElement,
+	ButtonGraphicsTextDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
@@ -464,14 +464,14 @@ export class GraphicsLayeredButtonRenderer {
 	static #drawBackgroundElement(
 		img: Image,
 		drawBounds: DrawBounds,
-		backgroundElement: ButtonGraphicsCanvasElement | undefined
+		backgroundElement: ButtonGraphicsCanvasDrawElement | undefined
 	) {
 		if (!backgroundElement) return
 
 		img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
 	}
 
-	static async #drawImageElement(img: Image, drawBounds: DrawBounds, element: ButtonGraphicsImageElement) {
+	static async #drawImageElement(img: Image, drawBounds: DrawBounds, element: ButtonGraphicsImageDrawElement) {
 		if (!element.base64Image) return
 
 		try {
@@ -512,7 +512,7 @@ export class GraphicsLayeredButtonRenderer {
 		}
 	}
 
-	static #drawTextElement(img: Image, drawBounds: DrawBounds, element: ButtonGraphicsTextElement) {
+	static #drawTextElement(img: Image, drawBounds: DrawBounds, element: ButtonGraphicsTextDrawElement) {
 		if (!element.text) return
 
 		// Draw button text
@@ -536,7 +536,7 @@ export class GraphicsLayeredButtonRenderer {
 		)
 	}
 
-	static #shouldDrawTopBar(options: GraphicsOptions, backgroundElement: ButtonGraphicsCanvasElement | undefined) {
+	static #shouldDrawTopBar(options: GraphicsOptions, backgroundElement: ButtonGraphicsCanvasDrawElement | undefined) {
 		const decoration = backgroundElement?.decoration
 		switch (decoration) {
 			case ButtonGraphicsDecorationType.Border:
