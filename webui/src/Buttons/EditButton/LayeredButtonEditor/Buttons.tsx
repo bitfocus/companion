@@ -8,38 +8,6 @@ import { Tuck } from '../../../Components/Tuck.js'
 import { SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 
-export function AddLayerOfTypeButton({
-	controlId,
-	layerType,
-	label,
-	styleStore,
-}: {
-	controlId: string
-	layerType: string
-	label: string
-	styleStore: LayeredStyleStore
-}) {
-	const { socket } = useContext(RootAppStoreContext)
-
-	const addLayer = useCallback(() => {
-		socket
-			.emitPromise('controls:style:add-layer', [controlId, layerType, null])
-			.then((resId) => {
-				console.log('Added layer', resId)
-				if (resId) styleStore.setSelectedLayerId(resId)
-			})
-			.catch((e) => {
-				console.error('Failed to add layer', e)
-			})
-	}, [socket, controlId, layerType, styleStore])
-
-	return (
-		<CButton color="primary" onClick={addLayer}>
-			{label}
-		</CButton>
-	)
-}
-
 export function RemoveLayerButton({ controlId, layerId }: { controlId: string; layerId: string }) {
 	const { socket } = useContext(RootAppStoreContext)
 

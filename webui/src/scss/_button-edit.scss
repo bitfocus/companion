@@ -218,6 +218,7 @@ table.variables-table {
 
 		.button-layer-layerlist-table {
 			width: 100%;
+			max-width: 100%;
 			grid-template-columns: auto auto 1fr auto;
 
 			tr {
@@ -269,8 +270,13 @@ table.variables-table {
 				}
 			}
 
-			.clickable {
+			.layer-name {
 				cursor: pointer;
+
+				max-width: 0;
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
 			}
 		}
 	}

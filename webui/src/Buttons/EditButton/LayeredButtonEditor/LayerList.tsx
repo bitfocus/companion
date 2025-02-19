@@ -116,7 +116,7 @@ const LayerListItem = observer(function LayerListItem({
 				<td></td>
 				{/* <td></td> */}
 
-				<td className="clickable" onClick={() => styleStore.setSelectedLayerId(layer.id)}>
+				<td className="layer-name" onClick={() => styleStore.setSelectedLayerId(layer.id)}>
 					{layer.name || 'Background'}
 				</td>
 
@@ -134,7 +134,7 @@ const LayerListItem = observer(function LayerListItem({
 				<ToggleVisibilityButton controlId={controlId} layerId={layer.id} />
 			</td> */}
 
-			<td className="clickable" onClick={() => styleStore.setSelectedLayerId(layer.id)}>
+			<td className="layer-name" onClick={() => styleStore.setSelectedLayerId(layer.id)}>
 				{layer.name ?? layer.type}
 			</td>
 

@@ -5,7 +5,6 @@ import { ControlOptionsEditor } from '../../../Controls/ControlOptionsEditor.js'
 import { MyErrorBoundary } from '../../../util.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from '../ButtonEditorTabs.js'
 import { ButtonPreviewBase } from '../../../Components/ButtonPreview.js'
-import { AddLayerOfTypeButton } from './Buttons.js'
 import { LayerPropertiesEditor } from './LayerPropertiesEditor.js'
 import { LayeredStyleStore } from './StyleStore.js'
 import { observer } from 'mobx-react-lite'
@@ -113,9 +112,6 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 				<LayerList styleStore={styleStore} controlId={controlId} />
 
 				<hr />
-
-				<AddLayerOfTypeButton controlId={controlId} layerType="text" label="Add text layer" styleStore={styleStore} />
-				<AddLayerOfTypeButton controlId={controlId} layerType="image" label="Add image layer" styleStore={styleStore} />
 			</div>
 			<div className="button-layer-options">
 				<hr />
