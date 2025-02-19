@@ -60,6 +60,14 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleRemoveLayer(id: string): boolean
 
 	/**
+	 * Move a layer in the layered style
+	 * @param id Layer id to move
+	 * @param newIndex New index of the layer
+	 * @returns true if the layer was moved
+	 */
+	layeredStyleMoveLayer(id: string, newIndex: number): boolean
+
+	/**
 	 * Update the options on a layer from the layered style
 	 * @param id Layer id to update
 	 * @param diff - config diff to apply

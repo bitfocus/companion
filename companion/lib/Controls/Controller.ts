@@ -828,6 +828,16 @@ export class ControlsController extends CoreBase {
 				throw new Error(`Control "${controlId}" does not support layer styles`)
 			}
 		})
+		client.onPromise('controls:style:move-layer', async (controlId, layerId, newIndex) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsLayeredStyle) {
+				return control.layeredStyleMoveLayer(layerId, newIndex)
+			} else {
+				throw new Error(`Control "${controlId}" does not support layer styles`)
+			}
+		})
 		client.onPromise('controls:style:update-options', async (controlId, layerId, diff) => {
 			const control = this.getControl(controlId)
 			if (!control) return false

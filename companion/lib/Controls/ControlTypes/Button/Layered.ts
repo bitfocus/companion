@@ -195,6 +195,24 @@ export class ControlButtonLayered
 		return true
 	}
 
+	layeredStyleMoveLayer(id: string, newIndex: number): boolean {
+		const indexOfLayer = this.#drawLayers.findIndex((layer) => layer.id === id)
+		if (indexOfLayer === -1) return false
+
+		// Can't move to or from the first layer
+		if (indexOfLayer === 0 || newIndex === 0) return false
+
+		if (newIndex < 0 || newIndex >= this.#drawLayers.length) return false
+
+		const layer = this.#drawLayers.splice(indexOfLayer, 1)[0]
+		this.#drawLayers.splice(newIndex, 0, layer)
+
+		// Save change and redraw
+		this.commitChange(true)
+
+		return true
+	}
+
 	layeredStyleUpdateOptions(id: string, diff: Record<string, any>): boolean {
 		// Prune some readonly properties
 		delete diff.id

@@ -215,6 +215,64 @@ table.variables-table {
 
 	.button-layer-layerlist {
 		// TODO
+
+		.button-layer-layerlist-table {
+			width: 100%;
+			grid-template-columns: auto auto 1fr auto;
+
+			tr {
+				border-bottom: 1px solid #ddd;
+
+				td {
+					padding: 0 0.1rem;
+
+					align-content: center;
+				}
+
+				&.dragging {
+					opacity: 0.5;
+				}
+
+				&.last-row {
+					border-bottom: none;
+
+					td {
+						padding: 0.1rem;
+					}
+				}
+				&.selected-row {
+					background-color: #eeeeee;
+				}
+			}
+
+			th {
+				border-bottom: 1px solid #ccc;
+
+				padding: 0.15rem;
+
+				&.compact {
+					width: 0;
+				}
+			}
+
+			.td-reorder {
+				cursor: ns-resize;
+				background-color: #f7f7f7;
+
+				padding: 0 0.5rem;
+
+				// as narrow as possible
+				width: fit-content;
+
+				svg {
+					color: #333;
+				}
+			}
+
+			.clickable {
+				cursor: pointer;
+			}
+		}
 	}
 
 	.button-layer-options {

@@ -202,6 +202,7 @@ export interface ClientToBackendEventsMap {
 
 	'controls:style:add-layer': (controlId: string, type: string, index: number | null) => string | false
 	'controls:style:remove-layer': (controlId: string, layerId: string) => boolean
+	'controls:style:move-layer': (controlId: string, layerId: string, newIndex: number) => boolean
 	'controls:style:update-options': (controlId: string, layerId: string, diff: Record<string, any>) => boolean
 
 	'triggers:create': () => string
