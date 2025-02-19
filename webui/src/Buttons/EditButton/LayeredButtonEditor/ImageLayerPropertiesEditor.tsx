@@ -48,16 +48,16 @@ const FieldImagePickerInput = observer(function FieldImagePickerInput({
 		'base64Image'
 	)
 
-	const [pngError, setPngError] = useState<string | null>(null)
+	const [imageLoadError, setImageLoadError] = useState<string | null>(null)
 	const setImageDataAndClearError = useCallback(
 		(data: string | null) => {
-			setPngError(null)
+			setImageLoadError(null)
 			setImageData(data)
 		},
 		[setImageData]
 	)
-	const clearPng = useCallback(() => {
-		setPngError(null)
+	const clearImage = useCallback(() => {
+		setImageLoadError(null)
 		setImageData(null)
 	}, [setImageData])
 
@@ -66,19 +66,20 @@ const FieldImagePickerInput = observer(function FieldImagePickerInput({
 			<CButtonGroup className="png-browse">
 				<PNGInputField
 					onSelect={setImageDataAndClearError}
-					onError={setPngError}
+					onError={setImageLoadError}
 					min={{ width: 8, height: 8 }}
 					max={{ width: 400, height: 400 }}
+					allowNonPng
 				/>
-				{clearPng && (
-					<CButton color="danger" disabled={!layerProps.base64Image} onClick={clearPng}>
+				{clearImage && (
+					<CButton color="danger" disabled={!layerProps.base64Image} onClick={clearImage}>
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 				)}
 			</CButtonGroup>
-			{pngError && (
+			{imageLoadError && (
 				<CAlert color="warning" dismissible>
-					{pngError}
+					{imageLoadError}
 				</CAlert>
 			)}
 		</>

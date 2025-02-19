@@ -11,7 +11,7 @@ import { LayeredStyleStore } from './StyleStore.js'
 import { observer } from 'mobx-react-lite'
 import { LayerList } from './LayerList.js'
 import { NonIdealState } from '../../../Components/NonIdealState.js'
-import { faLayerGroup, faListNumeric } from '@fortawesome/free-solid-svg-icons'
+import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },
