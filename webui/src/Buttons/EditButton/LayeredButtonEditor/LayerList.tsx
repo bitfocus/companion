@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useRef } from 'react'
-import { RemoveLayerButton, ToggleVisibilityButton } from './Buttons.js'
+import { AddLayerDropdownButton, RemoveLayerButton } from './Buttons.js'
 import { LayeredStyleStore } from './StyleStore.js'
 import { SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -20,9 +20,11 @@ export const LayerList = observer(function LayerList({
 		<table className="button-layer-layerlist-table">
 			<thead>
 				<th className="compact">&nbsp;</th>
-				<th className="compact">&nbsp;</th>
+				{/* <th className="compact">&nbsp;</th> */}
 				<th>Name</th>
-				<th className="compact">&nbsp;</th>
+				<th className="compact">
+					<AddLayerDropdownButton styleStore={styleStore} controlId={controlId} />
+				</th>
 			</thead>
 
 			<tbody>
@@ -112,7 +114,7 @@ const LayerListItem = observer(function LayerListItem({
 		return (
 			<tr key={layer.id} ref={ref} className={classNames(commonClasses, 'last-row')}>
 				<td></td>
-				<td></td>
+				{/* <td></td> */}
 
 				<td className="clickable" onClick={() => styleStore.setSelectedLayerId(layer.id)}>
 					{layer.name || 'Background'}
@@ -128,9 +130,9 @@ const LayerListItem = observer(function LayerListItem({
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td>
+			{/* <td>
 				<ToggleVisibilityButton controlId={controlId} layerId={layer.id} />
-			</td>
+			</td> */}
 
 			<td className="clickable" onClick={() => styleStore.setSelectedLayerId(layer.id)}>
 				{layer.name ?? layer.type}
