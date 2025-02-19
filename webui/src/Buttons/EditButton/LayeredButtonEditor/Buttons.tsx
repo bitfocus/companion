@@ -7,24 +7,34 @@ import { faEye, faImage, faPlus, faT, faTrash } from '@fortawesome/free-solid-sv
 import { Tuck } from '../../../Components/Tuck.js'
 import { SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
+import { GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
 
-export function RemoveLayerButton({ controlId, layerId }: { controlId: string; layerId: string }) {
+export function RemoveLayerButton({
+	controlId,
+	layerId,
+	confirmModalRef,
+}: {
+	controlId: string
+	layerId: string
+	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+}) {
 	const { socket } = useContext(RootAppStoreContext)
 
-	const addLayer = useCallback(() => {
-		// TODO-layered prompt for confirmation
-		socket
-			.emitPromise('controls:style:remove-layer', [controlId, layerId])
-			.then((res) => {
-				console.log('Remove layer', res)
-			})
-			.catch((e) => {
-				console.error('Failed to remove layer', e)
-			})
+	const removeLayer = useCallback(() => {
+		confirmModalRef.current?.show('Remove Layer', 'Are you sure you want to remove this layer?', 'Remove', () => {
+			socket
+				.emitPromise('controls:style:remove-layer', [controlId, layerId])
+				.then((res) => {
+					console.log('Remove layer', res)
+				})
+				.catch((e) => {
+					console.error('Failed to remove layer', e)
+				})
+		})
 	}, [socket, controlId, layerId])
 
 	return (
-		<CButton color="white" size="sm" onClick={addLayer} title="Remove">
+		<CButton color="white" size="sm" onClick={removeLayer} title="Remove">
 			<FontAwesomeIcon icon={faTrash} />
 		</CButton>
 	)

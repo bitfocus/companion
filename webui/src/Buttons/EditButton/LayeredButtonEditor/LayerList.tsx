@@ -8,6 +8,7 @@ import { faSort } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { useDrop, useDrag } from 'react-dnd'
 import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
 
 export const LayerList = observer(function LayerList({
 	styleStore,
@@ -16,25 +17,36 @@ export const LayerList = observer(function LayerList({
 	styleStore: LayeredStyleStore
 	controlId: string
 }) {
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	return (
-		<table className="button-layer-layerlist-table">
-			<thead>
-				<th className="compact">&nbsp;</th>
-				{/* <th className="compact">&nbsp;</th> */}
-				<th>Name</th>
-				<th className="compact">
-					<AddLayerDropdownButton styleStore={styleStore} controlId={controlId} />
-				</th>
-			</thead>
+		<>
+			<GenericConfirmModal ref={confirmModalRef} />
+			<table className="button-layer-layerlist-table">
+				<thead>
+					<th className="compact">&nbsp;</th>
+					{/* <th className="compact">&nbsp;</th> */}
+					<th>Name</th>
+					<th className="compact">
+						<AddLayerDropdownButton styleStore={styleStore} controlId={controlId} />
+					</th>
+				</thead>
 
-			<tbody>
-				{styleStore.layers
-					.map((layer, i) => (
-						<LayerListItem key={layer.id} layer={layer} index={i} styleStore={styleStore} controlId={controlId} />
-					))
-					.toReversed()}
-			</tbody>
-		</table>
+				<tbody>
+					{styleStore.layers
+						.map((layer, i) => (
+							<LayerListItem
+								key={layer.id}
+								layer={layer}
+								index={i}
+								styleStore={styleStore}
+								confirmModalRef={confirmModalRef}
+								controlId={controlId}
+							/>
+						))
+						.toReversed()}
+				</tbody>
+			</table>
+		</>
 	)
 })
 
@@ -54,11 +66,13 @@ const LayerListItem = observer(function LayerListItem({
 	index,
 	styleStore,
 	controlId,
+	confirmModalRef,
 }: {
 	layer: SomeButtonGraphicsLayer
 	index: number
 	styleStore: LayeredStyleStore
 	controlId: string
+	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 }) {
 	const { socket } = useContext(RootAppStoreContext)
 
@@ -139,7 +153,7 @@ const LayerListItem = observer(function LayerListItem({
 			</td>
 
 			<td>
-				<RemoveLayerButton controlId={controlId} layerId={layer.id} />
+				<RemoveLayerButton controlId={controlId} layerId={layer.id} confirmModalRef={confirmModalRef} />
 			</td>
 		</tr>
 	)
