@@ -28,10 +28,10 @@ import type {
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
-	ButtonGraphicsCanvasLayer,
+	ButtonGraphicsCanvasElement,
 	ButtonGraphicsDecorationType,
-	ButtonGraphicsImageLayer,
-	ButtonGraphicsTextLayer,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsTextElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
@@ -431,27 +431,27 @@ export class GraphicsLayeredButtonRenderer {
 		drawStyle: DrawStyleLayeredButtonModel,
 		location: ControlLocation | undefined
 	) {
-		const backgroundLayer = drawStyle.layers[0].type === 'canvas' ? drawStyle.layers[0] : undefined
+		const backgroundElement = drawStyle.elements[0].type === 'canvas' ? drawStyle.elements[0] : undefined
 
-		const showTopBar = this.#shouldDrawTopBar(options, backgroundLayer)
+		const showTopBar = this.#shouldDrawTopBar(options, backgroundElement)
 		const drawBounds = createDrawBounds(0, showTopBar ? 14 : 0, 72, showTopBar ? 58 : 72)
 
-		this.#drawLayerBackground(img, drawBounds, backgroundLayer)
+		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
-		for (const layer of drawStyle.layers) {
+		for (const element of drawStyle.elements) {
 			try {
-				switch (layer.type) {
+				switch (element.type) {
 					case 'canvas':
-						// Skip the background layer, it's handled separately
+						// Skip the background element, it's handled separately
 						break
 					case 'image':
-						await this.#drawLayerImage(img, drawBounds, layer)
+						await this.#drawImageElement(img, drawBounds, element)
 						break
 					case 'text':
-						this.#drawLayerText(img, drawBounds, layer)
+						this.#drawTextElement(img, drawBounds, element)
 						break
 					default:
-						assertNever(layer)
+						assertNever(element)
 				}
 			} catch (e) {
 				// TODO - log/report error where? Or should this abandon the render and do a placeholder?
@@ -461,25 +461,25 @@ export class GraphicsLayeredButtonRenderer {
 		GraphicsRenderer.drawTopbar(img, showTopBar, drawStyle, location)
 	}
 
-	static #drawLayerBackground(
+	static #drawBackgroundElement(
 		img: Image,
 		drawBounds: DrawBounds,
-		backgroundLayer: ButtonGraphicsCanvasLayer | undefined
+		backgroundElement: ButtonGraphicsCanvasElement | undefined
 	) {
-		if (!backgroundLayer) return
+		if (!backgroundElement) return
 
-		img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundLayer.color))
+		img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
 	}
 
-	static async #drawLayerImage(img: Image, drawBounds: DrawBounds, layer: ButtonGraphicsImageLayer) {
-		if (!layer.base64Image) return
+	static async #drawImageElement(img: Image, drawBounds: DrawBounds, element: ButtonGraphicsImageElement) {
+		if (!element.base64Image) return
 
 		try {
-			const png64 = layer.base64Image.startsWith('data:image/png;base64,')
-				? layer.base64Image.slice(22)
-				: layer.base64Image
+			const png64 = element.base64Image.startsWith('data:image/png;base64,')
+				? element.base64Image.slice(22)
+				: element.base64Image
 			let data = Buffer.from(png64, 'base64')
-			const [halign, valign] = ParseAlignment(layer.alignment || 'center:center')
+			const [halign, valign] = ParseAlignment(element.alignment || 'center:center')
 
 			await img.drawFromImageBuffer(
 				data,
@@ -512,12 +512,12 @@ export class GraphicsLayeredButtonRenderer {
 		}
 	}
 
-	static #drawLayerText(img: Image, drawBounds: DrawBounds, layer: ButtonGraphicsTextLayer) {
-		if (!layer.text) return
+	static #drawTextElement(img: Image, drawBounds: DrawBounds, element: ButtonGraphicsTextElement) {
+		if (!element.text) return
 
 		// Draw button text
-		const fontSize = Number(layer.fontsize) || 'auto'
-		const [halign, valign] = ParseAlignment(layer.alignment)
+		const fontSize = Number(element.fontsize) || 'auto'
+		const [halign, valign] = ParseAlignment(element.alignment)
 
 		// Force some padding around the text
 		const marginX = 2
@@ -528,16 +528,16 @@ export class GraphicsLayeredButtonRenderer {
 			drawBounds.y + marginY,
 			drawBounds.width - 2 * marginX,
 			drawBounds.height - 2 * marginY,
-			layer.text,
-			parseColor(layer.color),
+			element.text,
+			parseColor(element.color),
 			fontSize,
 			halign,
 			valign
 		)
 	}
 
-	static #shouldDrawTopBar(options: GraphicsOptions, backgroundLayer: ButtonGraphicsCanvasLayer | undefined) {
-		const decoration = backgroundLayer?.decoration
+	static #shouldDrawTopBar(options: GraphicsOptions, backgroundElement: ButtonGraphicsCanvasElement | undefined) {
+		const decoration = backgroundElement?.decoration
 		switch (decoration) {
 			case ButtonGraphicsDecorationType.Border:
 				return false

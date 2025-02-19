@@ -46,30 +46,30 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	readonly button_status: ButtonStatus
 
 	/**
-	 * Add a layer to the layered style
-	 * @param type Layer type to add
-	 * @param index Index to insert the layer at, or null to append
+	 * Add an element to the layered style
+	 * @param type Element type to add
+	 * @param index Index to insert the element at, or null to append
 	 */
-	layeredStyleAddLayer(type: string, index: number | null): string
+	layeredStyleAddElement(type: string, index: number | null): string
 
 	/**
-	 * Remove a layer from the layered style
-	 * @param id Layer id to remove
-	 * @returns true if the layer was removed
+	 * Remove an element from the layered style
+	 * @param id Element id to remove
+	 * @returns true if the element was removed
 	 */
-	layeredStyleRemoveLayer(id: string): boolean
+	layeredStyleRemoveElement(id: string): boolean
 
 	/**
-	 * Move a layer in the layered style
-	 * @param id Layer id to move
-	 * @param newIndex New index of the layer
-	 * @returns true if the layer was moved
+	 * Move an element in the layered style
+	 * @param id Element id to move
+	 * @param newIndex New index of the element
+	 * @returns true if the element was moved
 	 */
-	layeredStyleMoveLayer(id: string, newIndex: number): boolean
+	layeredStyleMoveElement(id: string, newIndex: number): boolean
 
 	/**
-	 * Update the options on a layer from the layered style
-	 * @param id Layer id to update
+	 * Update the options on an element from the layered style
+	 * @param id Element id to update
 	 * @param diff - config diff to apply
 	 * @returns true if any changes were made
 	 */

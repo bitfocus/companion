@@ -5,10 +5,10 @@ import { ControlOptionsEditor } from '../../../Controls/ControlOptionsEditor.js'
 import { MyErrorBoundary } from '../../../util.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from '../ButtonEditorTabs.js'
 import { ButtonPreviewBase } from '../../../Components/ButtonPreview.js'
-import { LayerPropertiesEditor } from './LayerPropertiesEditor.js'
+import { ElementPropertiesEditor } from './ElementPropertiesEditor.js'
 import { LayeredStyleStore } from './StyleStore.js'
 import { observer } from 'mobx-react-lite'
-import { LayerList } from './LayerList.js'
+import { ElementsList } from './ElementsList.js'
 import { NonIdealState } from '../../../Components/NonIdealState.js'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 
@@ -100,26 +100,25 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	styleStore,
 	previewImage,
 }: LayeredButtonEditorStyleProps) {
-	const layerProps = styleStore.getSelectedLayer()
+	const elementProps = styleStore.getSelectedElement()
 
 	return (
 		<div className="button-layer-style-editor">
 			<div className="button-layer-preview">
-				PVW
 				<ButtonPreviewBase fixedSize preview={previewImage} />
 			</div>
-			<div className="button-layer-layerlist">
-				<LayerList styleStore={styleStore} controlId={controlId} />
-
-				<hr />
+			<div className="button-layer-elementlist">
+				<ElementsList styleStore={styleStore} controlId={controlId} />
 			</div>
 			<div className="button-layer-options">
 				<hr />
 
-				{layerProps ? (
-					<LayerPropertiesEditor controlId={controlId} layerProps={layerProps} />
+				{elementProps ? (
+					<ElementPropertiesEditor controlId={controlId} elementProps={elementProps} />
 				) : (
-					<NonIdealState icon={faLayerGroup}>Select a layer from the list above to edit its properties</NonIdealState>
+					<NonIdealState icon={faLayerGroup}>
+						Select an element from the list above to edit its properties
+					</NonIdealState>
 				)}
 			</div>
 		</div>

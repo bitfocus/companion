@@ -1,6 +1,6 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import { SomeEntityModel } from './EntityModel.js'
-import { SomeButtonGraphicsLayer } from './StyleLayersModel.js'
+import { SomeButtonGraphicsElement } from './StyleLayersModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
 
 export type SomeButtonModel =
@@ -41,7 +41,7 @@ export interface LayeredButtonModel extends ButtonModelBase {
 	options: NormalButtonOptions
 
 	style: {
-		layers: SomeButtonGraphicsLayer[]
+		layers: SomeButtonGraphicsElement[]
 	}
 }
 

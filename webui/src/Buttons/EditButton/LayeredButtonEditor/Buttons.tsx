@@ -5,55 +5,47 @@ import type { LayeredStyleStore } from './StyleStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faImage, faPlus, faT, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { Tuck } from '../../../Components/Tuck.js'
-import { SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
 
-export function RemoveLayerButton({
+export function RemoveElementButton({
 	controlId,
-	layerId,
+	elementId,
 	confirmModalRef,
 }: {
 	controlId: string
-	layerId: string
+	elementId: string
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 }) {
 	const { socket } = useContext(RootAppStoreContext)
 
-	const removeLayer = useCallback(() => {
-		confirmModalRef.current?.show('Remove Layer', 'Are you sure you want to remove this layer?', 'Remove', () => {
+	const removeElement = useCallback(() => {
+		confirmModalRef.current?.show('Remove Element', 'Are you sure you want to remove this element?', 'Remove', () => {
 			socket
-				.emitPromise('controls:style:remove-layer', [controlId, layerId])
+				.emitPromise('controls:style:remove-element', [controlId, elementId])
 				.then((res) => {
-					console.log('Remove layer', res)
+					console.log('Remove element', res)
 				})
 				.catch((e) => {
-					console.error('Failed to remove layer', e)
+					console.error('Failed to remove element', e)
 				})
 		})
-	}, [socket, controlId, layerId])
+	}, [socket, controlId, elementId])
 
 	return (
-		<CButton color="white" size="sm" onClick={removeLayer} title="Remove">
+		<CButton color="white" size="sm" onClick={removeElement} title="Remove">
 			<FontAwesomeIcon icon={faTrash} />
 		</CButton>
 	)
 }
 
-export function ToggleVisibilityButton({ controlId, layerId }: { controlId: string; layerId: string }) {
+export function ToggleVisibilityButton({ controlId, elementId }: { controlId: string; elementId: string }) {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const toggleVisibility = useCallback(() => {
-		// // TODO-layered prompt for confirmation
-		// socket
-		// 	.emitPromise('controls:style:remove-layer', [controlId, layerId])
-		// 	.then((res) => {
-		// 		console.log('Remove layer', res)
-		// 	})
-		// 	.catch((e) => {
-		// 		console.error('Failed to remove layer', e)
-		// 	})
-	}, [socket, controlId, layerId])
+		// TODO - implement
+	}, [socket, controlId, elementId])
 
 	return (
 		<CButton color="white" size="sm" onClick={toggleVisibility} title="Visible">
@@ -62,7 +54,7 @@ export function ToggleVisibilityButton({ controlId, layerId }: { controlId: stri
 	)
 }
 
-export function AddLayerDropdownButton({
+export function AddElementDropdownButton({
 	styleStore,
 	controlId,
 }: {
@@ -71,29 +63,29 @@ export function AddLayerDropdownButton({
 }) {
 	return (
 		<CPopover
-			content={<AddLayerDropdownPopoverContent styleStore={styleStore} controlId={controlId} />}
+			content={<AddElementDropdownPopoverContent styleStore={styleStore} controlId={controlId} />}
 			trigger="focus"
 			animation={false}
 			placement="bottom"
 			style={{ backgroundColor: 'white' }}
 		>
-			<CButton color="white" size="sm" title="Add new layer">
+			<CButton color="white" size="sm" title="Add element">
 				<FontAwesomeIcon icon={faPlus} />
 			</CButton>
 		</CPopover>
 	)
 }
 
-function AddLayerDropdownPopoverButton({
+function AddElementDropdownPopoverButton({
 	styleStore,
 	controlId,
-	layerType,
+	elementType,
 	label,
 	icon,
 }: {
 	styleStore: LayeredStyleStore
 	controlId: string
-	layerType: SomeButtonGraphicsLayer['type']
+	elementType: SomeButtonGraphicsElement['type']
 	label: string
 	icon: IconProp
 }) {
@@ -101,15 +93,15 @@ function AddLayerDropdownPopoverButton({
 
 	const addCallback = useCallback(() => {
 		socket
-			.emitPromise('controls:style:add-layer', [controlId, layerType, null])
+			.emitPromise('controls:style:add-element', [controlId, elementType, null])
 			.then((resId) => {
-				console.log('Added layer', resId)
-				if (resId) styleStore.setSelectedLayerId(resId)
+				console.log('Added element', resId)
+				if (resId) styleStore.setSelectedElementId(resId)
 			})
 			.catch((e) => {
-				console.error('Failed to add layer', e)
+				console.error('Failed to add element', e)
 			})
-	}, [socket, controlId, layerType, styleStore])
+	}, [socket, controlId, elementType, styleStore])
 
 	return (
 		<CButton onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
@@ -121,7 +113,7 @@ function AddLayerDropdownPopoverButton({
 	)
 }
 
-function AddLayerDropdownPopoverContent({
+function AddElementDropdownPopoverContent({
 	styleStore,
 	controlId,
 }: {
@@ -132,17 +124,17 @@ function AddLayerDropdownPopoverContent({
 		<>
 			{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
 			<CButtonGroup vertical>
-				<AddLayerDropdownPopoverButton
+				<AddElementDropdownPopoverButton
 					styleStore={styleStore}
 					controlId={controlId}
-					layerType="text"
+					elementType="text"
 					label="Text"
 					icon={faT}
 				/>
-				<AddLayerDropdownPopoverButton
+				<AddElementDropdownPopoverButton
 					styleStore={styleStore}
 					controlId={controlId}
-					layerType="image"
+					elementType="image"
 					label="Image"
 					icon={faImage}
 				/>

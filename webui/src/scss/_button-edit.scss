@@ -213,10 +213,10 @@ table.variables-table {
 		// TODO
 	}
 
-	.button-layer-layerlist {
+	.button-layer-elementlist {
 		// TODO
 
-		.button-layer-layerlist-table {
+		.button-layer-elementlist-table {
 			width: 100%;
 			max-width: 100%;
 			grid-template-columns: auto auto 1fr auto;
@@ -270,7 +270,7 @@ table.variables-table {
 				}
 			}
 
-			.layer-name {
+			.element-name {
 				cursor: pointer;
 
 				max-width: 0;

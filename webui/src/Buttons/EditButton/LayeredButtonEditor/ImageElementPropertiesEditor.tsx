@@ -1,20 +1,20 @@
-import { ButtonGraphicsImageLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ButtonGraphicsImageElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CFormLabel, CCol, CButtonGroup, CButton, CAlert } from '@coreui/react'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useState } from 'react'
-import { useLayerMutatorCallback } from './StyleStore.js'
+import { useElementMutatorCallback } from './StyleStore.js'
 import { AlignmentInputField } from '../../../Components/AlignmentInputField.js'
 import { PNGInputField } from '../../../Components/PNGInputField.js'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-export const ImageLayerPropertiesEditor = observer(function ImageLayerPropertiesEditor({
+export const ImageElementPropertiesEditor = observer(function ImageElementPropertiesEditor({
 	controlId,
-	layerProps,
+	elementProps,
 }: {
 	controlId: string
-	layerProps: Readonly<ButtonGraphicsImageLayer>
+	elementProps: Readonly<ButtonGraphicsImageElement>
 }) {
 	return (
 		<>
@@ -22,14 +22,14 @@ export const ImageLayerPropertiesEditor = observer(function ImageLayerProperties
 				Image
 			</CFormLabel>
 			<CCol sm={8}>
-				<FieldImagePickerInput controlId={controlId} layerProps={layerProps} />
+				<FieldImagePickerInput controlId={controlId} elementProps={elementProps} />
 			</CCol>
 
 			<CFormLabel htmlFor="inputAlignment" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				Alignment
 			</CFormLabel>
 			<CCol sm={8}>
-				<FieldImageAlignmentInput controlId={controlId} layerProps={layerProps} />
+				<FieldImageAlignmentInput controlId={controlId} elementProps={elementProps} />
 			</CCol>
 		</>
 	)
@@ -37,14 +37,14 @@ export const ImageLayerPropertiesEditor = observer(function ImageLayerProperties
 
 const FieldImagePickerInput = observer(function FieldImagePickerInput({
 	controlId,
-	layerProps,
+	elementProps,
 }: {
 	controlId: string
-	layerProps: ButtonGraphicsImageLayer
+	elementProps: ButtonGraphicsImageElement
 }) {
-	const setImageData = useLayerMutatorCallback<ButtonGraphicsImageLayer, 'base64Image'>(
+	const setImageData = useElementMutatorCallback<ButtonGraphicsImageElement, 'base64Image'>(
 		controlId,
-		layerProps.id,
+		elementProps.id,
 		'base64Image'
 	)
 
@@ -72,7 +72,7 @@ const FieldImagePickerInput = observer(function FieldImagePickerInput({
 					allowNonPng
 				/>
 				{clearImage && (
-					<CButton color="danger" disabled={!layerProps.base64Image} onClick={clearImage}>
+					<CButton color="danger" disabled={!elementProps.base64Image} onClick={clearImage}>
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 				)}
@@ -88,16 +88,16 @@ const FieldImagePickerInput = observer(function FieldImagePickerInput({
 
 const FieldImageAlignmentInput = observer(function FieldImageAlignmentInput({
 	controlId,
-	layerProps,
+	elementProps,
 }: {
 	controlId: string
-	layerProps: ButtonGraphicsImageLayer
+	elementProps: ButtonGraphicsImageElement
 }) {
-	const setAlignmentValue = useLayerMutatorCallback<ButtonGraphicsImageLayer, 'alignment'>(
+	const setAlignmentValue = useElementMutatorCallback<ButtonGraphicsImageElement, 'alignment'>(
 		controlId,
-		layerProps.id,
+		elementProps.id,
 		'alignment'
 	)
 
-	return <AlignmentInputField setValue={setAlignmentValue} value={layerProps.alignment ?? 'center:center'} />
+	return <AlignmentInputField setValue={setAlignmentValue} value={elementProps.alignment ?? 'center:center'} />
 })

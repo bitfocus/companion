@@ -808,42 +808,42 @@ export class ControlsController extends CoreBase {
 			client.leave(ActiveLearnRoom)
 		})
 
-		client.onPromise('controls:style:add-layer', async (controlId, type, index) => {
+		client.onPromise('controls:style:add-element', async (controlId, type, index) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsLayeredStyle) {
-				return control.layeredStyleAddLayer(type, index)
+				return control.layeredStyleAddElement(type, index)
 			} else {
 				throw new Error(`Control "${controlId}" does not support layer styles`)
 			}
 		})
-		client.onPromise('controls:style:remove-layer', async (controlId, layerId) => {
+		client.onPromise('controls:style:remove-element', async (controlId, elementId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsLayeredStyle) {
-				return control.layeredStyleRemoveLayer(layerId)
+				return control.layeredStyleRemoveElement(elementId)
 			} else {
 				throw new Error(`Control "${controlId}" does not support layer styles`)
 			}
 		})
-		client.onPromise('controls:style:move-layer', async (controlId, layerId, newIndex) => {
+		client.onPromise('controls:style:move-element', async (controlId, elementId, newIndex) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsLayeredStyle) {
-				return control.layeredStyleMoveLayer(layerId, newIndex)
+				return control.layeredStyleMoveElement(elementId, newIndex)
 			} else {
 				throw new Error(`Control "${controlId}" does not support layer styles`)
 			}
 		})
-		client.onPromise('controls:style:update-options', async (controlId, layerId, diff) => {
+		client.onPromise('controls:style:update-options', async (controlId, elementId, diff) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (control.supportsLayeredStyle) {
-				return control.layeredStyleUpdateOptions(layerId, diff)
+				return control.layeredStyleUpdateOptions(elementId, diff)
 			} else {
 				throw new Error(`Control "${controlId}" does not support layer styles`)
 			}

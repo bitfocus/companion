@@ -1,45 +1,48 @@
-import type { ButtonGraphicsLayerBase, SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type {
+	ButtonGraphicsElementBase,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import { action, makeObservable, observable } from 'mobx'
 import { useCallback, useContext } from 'react'
 import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 
 export class LayeredStyleStore {
-	readonly layers = observable.array<SomeButtonGraphicsLayer>([])
+	readonly elements = observable.array<SomeButtonGraphicsElement>([])
 
-	readonly #selectedLayerId = observable.box<string | null>(null)
+	readonly #selectedElementId = observable.box<string | null>(null)
 
-	get selectedLayerId(): string | null {
-		return this.#selectedLayerId.get()
+	get selectedElementId(): string | null {
+		return this.#selectedElementId.get()
 	}
 
 	constructor() {
 		makeObservable(this, {
 			updateData: action,
-			setSelectedLayerId: action,
+			setSelectedElementId: action,
 		})
 	}
 
-	public getLayerById(id: string): SomeButtonGraphicsLayer | undefined {
-		return this.layers.find((layer) => layer.id === id)
+	public getElementById(id: string): SomeButtonGraphicsElement | undefined {
+		return this.elements.find((element) => element.id === id)
 	}
 
-	public updateData(layers: SomeButtonGraphicsLayer[]) {
-		this.layers.replace(layers)
+	public updateData(elements: SomeButtonGraphicsElement[]) {
+		this.elements.replace(elements)
 	}
 
-	public setSelectedLayerId(id: string | null) {
+	public setSelectedElementId(id: string | null) {
 		console.log('set id', id)
-		this.#selectedLayerId.set(id)
+		this.#selectedElementId.set(id)
 	}
 
-	public getSelectedLayer(): SomeButtonGraphicsLayer | undefined {
-		return this.selectedLayerId ? this.getLayerById(this.selectedLayerId) : undefined
+	public getSelectedElement(): SomeButtonGraphicsElement | undefined {
+		return this.selectedElementId ? this.getElementById(this.selectedElementId) : undefined
 	}
 }
 
-export function useLayerMutatorCallback<T extends ButtonGraphicsLayerBase, K extends keyof T>(
+export function useElementMutatorCallback<T extends ButtonGraphicsElementBase, K extends keyof T>(
 	controlId: string,
-	layerId: string,
+	elementId: string,
 	property: K
 ) {
 	const { socket } = useContext(RootAppStoreContext)
@@ -47,14 +50,14 @@ export function useLayerMutatorCallback<T extends ButtonGraphicsLayerBase, K ext
 	return useCallback(
 		(value: T[K]) => {
 			socket
-				.emitPromise('controls:style:update-options', [controlId, layerId, { [property]: value }])
+				.emitPromise('controls:style:update-options', [controlId, elementId, { [property]: value }])
 				.then((res) => {
-					console.log('Update layer', res)
+					console.log('Update element', res)
 				})
 				.catch((e) => {
-					console.error('Failed to Update layer', e)
+					console.error('Failed to Update element', e)
 				})
 		},
-		[socket, controlId, layerId, property]
+		[socket, controlId, elementId, property]
 	)
 }

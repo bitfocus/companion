@@ -1,5 +1,5 @@
 import type { CompanionAlignment, CompanionTextSize } from '@companion-module/base'
-import { SomeButtonGraphicsLayer } from './StyleLayersModel.js'
+import { SomeButtonGraphicsElement } from './StyleLayersModel.js'
 
 export type DrawStyleModel =
 	| {
@@ -22,7 +22,7 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 
 	// imageBuffers: DrawImageBuffer[]
 
-	layers: SomeButtonGraphicsLayer[]
+	elements: SomeButtonGraphicsElement[]
 }
 
 export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleButtonStateProps {

@@ -200,10 +200,10 @@ export interface ClientToBackendEventsMap {
 	'controls:event:reorder': (controlId: string, dragIndex: number, hoverIndex: number) => boolean
 	'controls:event:add': (controlId: string, eventType: string) => boolean
 
-	'controls:style:add-layer': (controlId: string, type: string, index: number | null) => string | false
-	'controls:style:remove-layer': (controlId: string, layerId: string) => boolean
-	'controls:style:move-layer': (controlId: string, layerId: string, newIndex: number) => boolean
-	'controls:style:update-options': (controlId: string, layerId: string, diff: Record<string, any>) => boolean
+	'controls:style:add-element': (controlId: string, type: string, index: number | null) => string | false
+	'controls:style:remove-element': (controlId: string, elementId: string) => boolean
+	'controls:style:move-element': (controlId: string, elementId: string, newIndex: number) => boolean
+	'controls:style:update-options': (controlId: string, elementId: string, diff: Record<string, any>) => boolean
 
 	'triggers:create': () => string
 	'triggers:clone': (controlId: string) => string | false

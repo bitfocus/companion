@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useRef } from 'react'
-import { AddLayerDropdownButton, RemoveLayerButton } from './Buttons.js'
+import { AddElementDropdownButton, RemoveElementButton } from './Buttons.js'
 import { LayeredStyleStore } from './StyleStore.js'
-import { SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
@@ -10,7 +10,7 @@ import { useDrop, useDrag } from 'react-dnd'
 import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
 
-export const LayerList = observer(function LayerList({
+export const ElementsList = observer(function ElementsList({
 	styleStore,
 	controlId,
 }: {
@@ -21,22 +21,22 @@ export const LayerList = observer(function LayerList({
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModalRef} />
-			<table className="button-layer-layerlist-table">
+			<table className="button-layer-elementlist-table">
 				<thead>
 					<th className="compact">&nbsp;</th>
 					{/* <th className="compact">&nbsp;</th> */}
 					<th>Name</th>
 					<th className="compact">
-						<AddLayerDropdownButton styleStore={styleStore} controlId={controlId} />
+						<AddElementDropdownButton styleStore={styleStore} controlId={controlId} />
 					</th>
 				</thead>
 
 				<tbody>
-					{styleStore.layers
-						.map((layer, i) => (
-							<LayerListItem
-								key={layer.id}
-								layer={layer}
+					{styleStore.elements
+						.map((element, i) => (
+							<ElementListItem
+								key={element.id}
+								element={element}
 								index={i}
 								styleStore={styleStore}
 								confirmModalRef={confirmModalRef}
@@ -50,25 +50,25 @@ export const LayerList = observer(function LayerList({
 	)
 })
 
-const DRAG_ID = 'button-layer-item'
+const DRAG_ID = 'button-element-item'
 
-interface LayerListDragItem {
-	layerId: string
+interface ElementListDragItem {
+	elementId: string
 	index: number
 }
 
-interface LayerListRowDragStatus {
+interface ElementListRowDragStatus {
 	isDragging: boolean
 }
 
-const LayerListItem = observer(function LayerListItem({
-	layer,
+const ElementListItem = observer(function ElementListItem({
+	element,
 	index,
 	styleStore,
 	controlId,
 	confirmModalRef,
 }: {
-	layer: SomeButtonGraphicsLayer
+	element: SomeButtonGraphicsElement
 	index: number
 	styleStore: LayeredStyleStore
 	controlId: string
@@ -77,7 +77,7 @@ const LayerListItem = observer(function LayerListItem({
 	const { socket } = useContext(RootAppStoreContext)
 
 	const ref = useRef<HTMLTableRowElement>(null)
-	const [, drop] = useDrop<LayerListDragItem>({
+	const [, drop] = useDrop<ElementListDragItem>({
 		accept: DRAG_ID,
 		drop(item, monitor) {
 			if (!ref.current) {
@@ -88,17 +88,17 @@ const LayerListItem = observer(function LayerListItem({
 			if (!monitor.isOver({ shallow: true })) return
 
 			const hoverIndex = index
-			const hoverId = layer.id
+			const hoverId = element.id
 
 			// Don't replace items with themselves
-			if (item.layerId === hoverId || item.index === hoverIndex) {
+			if (item.elementId === hoverId || item.index === hoverIndex) {
 				return
 			}
 
 			// Time to actually perform the change
 			// serviceFactory.moveCard(item.listId, item.entityId, hoverOwnerId, index)
-			socket.emitPromise('controls:style:move-layer', [controlId, item.layerId, hoverIndex]).catch((e) => {
-				console.error('Failed to move layer', e)
+			socket.emitPromise('controls:style:move-element', [controlId, item.elementId, hoverIndex]).catch((e) => {
+				console.error('Failed to move element', e)
 			})
 
 			// Note: we're mutating the monitor item here!
@@ -108,11 +108,11 @@ const LayerListItem = observer(function LayerListItem({
 			item.index = hoverIndex
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag<LayerListDragItem, unknown, LayerListRowDragStatus>({
+	const [{ isDragging }, drag, preview] = useDrag<ElementListDragItem, unknown, ElementListRowDragStatus>({
 		type: DRAG_ID,
-		canDrag: layer.type !== 'canvas',
+		canDrag: element.type !== 'canvas',
 		item: {
-			layerId: layer.id,
+			elementId: element.id,
 			index: index,
 		},
 		collect: (monitor) => ({
@@ -121,17 +121,17 @@ const LayerListItem = observer(function LayerListItem({
 	})
 	preview(drop(ref))
 
-	let commonClasses = styleStore.selectedLayerId === layer.id ? 'selected-row' : ''
+	let commonClasses = styleStore.selectedElementId === element.id ? 'selected-row' : ''
 	if (isDragging) commonClasses += ' dragging'
 
-	if (layer.type === 'canvas') {
+	if (element.type === 'canvas') {
 		return (
-			<tr key={layer.id} ref={ref} className={classNames(commonClasses, 'last-row')}>
+			<tr key={element.id} ref={ref} className={classNames(commonClasses, 'last-row')}>
 				<td></td>
 				{/* <td></td> */}
 
-				<td className="layer-name" onClick={() => styleStore.setSelectedLayerId(layer.id)}>
-					{layer.name || 'Background'}
+				<td className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
+					{element.name || 'Background'}
 				</td>
 
 				<td></td>
@@ -140,20 +140,20 @@ const LayerListItem = observer(function LayerListItem({
 	}
 
 	return (
-		<tr key={layer.id} ref={ref} className={classNames(commonClasses, '')}>
+		<tr key={element.id} ref={ref} className={classNames(commonClasses, '')}>
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			{/* <td>
-				<ToggleVisibilityButton controlId={controlId} layerId={layer.id} />
+				<ToggleVisibilityButton controlId={controlId} elementId={element.id} />
 			</td> */}
 
-			<td className="layer-name" onClick={() => styleStore.setSelectedLayerId(layer.id)}>
-				{layer.name ?? layer.type}
+			<td className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
+				{element.name ?? element.type}
 			</td>
 
 			<td>
-				<RemoveLayerButton controlId={controlId} layerId={layer.id} confirmModalRef={confirmModalRef} />
+				<RemoveElementButton controlId={controlId} elementId={element.id} confirmModalRef={confirmModalRef} />
 			</td>
 		</tr>
 	)

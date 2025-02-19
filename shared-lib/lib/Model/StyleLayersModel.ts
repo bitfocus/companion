@@ -1,13 +1,16 @@
 import type { CompanionAlignment } from '@companion-module/base'
 
-export type SomeButtonGraphicsLayer = ButtonGraphicsCanvasLayer | ButtonGraphicsTextLayer | ButtonGraphicsImageLayer
+export type SomeButtonGraphicsElement =
+	| ButtonGraphicsCanvasElement
+	| ButtonGraphicsTextElement
+	| ButtonGraphicsImageElement
 
-export interface ButtonGraphicsLayerBase {
+export interface ButtonGraphicsElementBase {
 	id: string
 	name: string
 }
 
-export interface ButtonGraphicsCanvasLayer extends ButtonGraphicsLayerBase {
+export interface ButtonGraphicsCanvasElement extends ButtonGraphicsElementBase {
 	// Note: this is the background layer and can only be at the bottom of the stack
 	type: 'canvas'
 
@@ -24,7 +27,7 @@ export enum ButtonGraphicsDecorationType {
 	// None = 'none', // Future
 }
 
-export interface ButtonGraphicsTextLayer extends ButtonGraphicsLayerBase {
+export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase {
 	type: 'text'
 
 	text: string
@@ -42,7 +45,7 @@ export interface ButtonGraphicsTextLayer extends ButtonGraphicsLayerBase {
 	// outlineColor: number
 }
 
-export interface ButtonGraphicsImageLayer extends ButtonGraphicsLayerBase {
+export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase {
 	type: 'image'
 
 	base64Image: string | null

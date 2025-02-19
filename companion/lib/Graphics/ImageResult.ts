@@ -55,7 +55,7 @@ export class ImageResult {
 			if (this.style.style === 'button') {
 				return this.style.bgcolor ?? 0
 			} else if (this.style.style === 'button-layered') {
-				return this.style.layers[0].type === 'canvas' ? this.style.layers[0].color : 0
+				return this.style.elements[0].type === 'canvas' ? this.style.elements[0].color : 0
 			} else {
 				return 0
 			}

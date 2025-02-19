@@ -1,11 +1,11 @@
-import { SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { nanoid } from 'nanoid'
 
-export function CreateLayerOfType(type: SomeButtonGraphicsLayer['type']): SomeButtonGraphicsLayer {
+export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): SomeButtonGraphicsElement {
 	switch (type) {
 		case 'canvas':
-			throw new Error('Canvas layers can not be created')
+			throw new Error('Canvas c can not be created')
 		case 'text':
 			return {
 				id: nanoid(),
@@ -27,6 +27,6 @@ export function CreateLayerOfType(type: SomeButtonGraphicsLayer['type']): SomeBu
 			}
 		default:
 			assertNever(type)
-			throw new Error(`Unknown layer type: ${type}`)
+			throw new Error(`Unknown element type: ${type}`)
 	}
 }

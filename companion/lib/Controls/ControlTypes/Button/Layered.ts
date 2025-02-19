@@ -12,9 +12,12 @@ import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisito
 import type { LayeredButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
-import { ButtonGraphicsDecorationType, SomeButtonGraphicsLayer } from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import { CreateLayerOfType } from './LayerDefaults.js'
+import { CreateElementOfType } from './LayerDefaults.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -50,7 +53,7 @@ export class ControlButtonLayered
 	/**
 	 * The defaults style for a button
 	 */
-	static DefaultLayers: SomeButtonGraphicsLayer[] = [
+	static DefaultElements: SomeButtonGraphicsElement[] = [
 		{
 			id: 'canvas',
 			name: 'Canvas',
@@ -84,7 +87,7 @@ export class ControlButtonLayered
 	/**
 	 * The base style without feedbacks applied
 	 */
-	#drawLayers: SomeButtonGraphicsLayer[] = cloneDeep(ControlButtonLayered.DefaultLayers)
+	#drawElements: SomeButtonGraphicsElement[] = cloneDeep(ControlButtonLayered.DefaultElements)
 
 	get actionSets(): ControlActionSetAndStepsManager {
 		return this.entities
@@ -109,7 +112,7 @@ export class ControlButtonLayered
 			if (storage.type !== 'button-layered')
 				throw new Error(`Invalid type given to ControlButtonLayered: "${storage.type}"`)
 
-			this.#drawLayers = storage.style.layers || this.#drawLayers
+			this.#drawElements = storage.style.layers || this.#drawElements
 			this.options = Object.assign(this.options, storage.options || {})
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
 			this.entities.loadStorage(storage, true, isImport)
@@ -145,7 +148,7 @@ export class ControlButtonLayered
 		return {
 			...this.getDrawStyleButtonStateProps(),
 
-			layers: this.#drawLayers,
+			elements: this.#drawElements,
 
 			style: 'button-layered',
 		}
@@ -168,26 +171,26 @@ export class ControlButtonLayered
 		ReferencesVisitors.visitControlReferences(this.deps.internalModule, visitor, undefined, [], allEntities, [])
 	}
 
-	layeredStyleAddLayer(type: string, index: number | null): string {
-		const newLayer = CreateLayerOfType(type as SomeButtonGraphicsLayer['type'])
+	layeredStyleAddElement(type: string, index: number | null): string {
+		const newElement = CreateElementOfType(type as SomeButtonGraphicsElement['type'])
 
-		if (typeof index === 'number' && index >= 0 && index < this.#drawLayers.length) {
-			this.#drawLayers.splice(index, 0, newLayer)
+		if (typeof index === 'number' && index >= 0 && index < this.#drawElements.length) {
+			this.#drawElements.splice(index, 0, newElement)
 		} else {
-			this.#drawLayers.push(newLayer)
+			this.#drawElements.push(newElement)
 		}
 
 		// Save change and redraw
 		this.commitChange(true)
 
-		return newLayer.id
+		return newElement.id
 	}
 
-	layeredStyleRemoveLayer(id: string): boolean {
-		const indexOfLayer = this.#drawLayers.findIndex((layer) => layer.id === id)
-		if (indexOfLayer === -1) return false
+	layeredStyleRemoveElement(id: string): boolean {
+		const indexOfElement = this.#drawElements.findIndex((element) => element.id === id)
+		if (indexOfElement === -1) return false
 
-		this.#drawLayers.splice(indexOfLayer, 1)
+		this.#drawElements.splice(indexOfElement, 1)
 
 		// Save change and redraw
 		this.commitChange(true)
@@ -195,17 +198,17 @@ export class ControlButtonLayered
 		return true
 	}
 
-	layeredStyleMoveLayer(id: string, newIndex: number): boolean {
-		const indexOfLayer = this.#drawLayers.findIndex((layer) => layer.id === id)
-		if (indexOfLayer === -1) return false
+	layeredStyleMoveElement(id: string, newIndex: number): boolean {
+		const indexOfElement = this.#drawElements.findIndex((element) => element.id === id)
+		if (indexOfElement === -1) return false
 
-		// Can't move to or from the first layer
-		if (indexOfLayer === 0 || newIndex === 0) return false
+		// Can't move to or from the first element
+		if (indexOfElement === 0 || newIndex === 0) return false
 
-		if (newIndex < 0 || newIndex >= this.#drawLayers.length) return false
+		if (newIndex < 0 || newIndex >= this.#drawElements.length) return false
 
-		const layer = this.#drawLayers.splice(indexOfLayer, 1)[0]
-		this.#drawLayers.splice(newIndex, 0, layer)
+		const element = this.#drawElements.splice(indexOfElement, 1)[0]
+		this.#drawElements.splice(newIndex, 0, element)
 
 		// Save change and redraw
 		this.commitChange(true)
@@ -218,12 +221,12 @@ export class ControlButtonLayered
 		delete diff.id
 		delete diff.type
 
-		// Find the layer
-		const layer = this.#drawLayers.find((layer) => layer.id === id)
-		if (!layer) return false
+		// Find the element
+		const element = this.#drawElements.find((element) => element.id === id)
+		if (!element) return false
 
 		// Apply the diff
-		Object.assign(layer, diff)
+		Object.assign(element, diff)
 
 		// Save change and redraw
 		this.commitChange(true)
@@ -277,7 +280,7 @@ export class ControlButtonLayered
 	override toJSON(clone = true): LayeredButtonModel {
 		const obj: LayeredButtonModel = {
 			type: this.type,
-			style: { layers: this.#drawLayers },
+			style: { layers: this.#drawElements },
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),

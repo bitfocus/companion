@@ -1,5 +1,5 @@
 import {
-	ButtonGraphicsCanvasLayer,
+	ButtonGraphicsCanvasElement,
 	ButtonGraphicsDecorationType,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CFormLabel, CCol } from '@coreui/react'
@@ -7,16 +7,16 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
-import { useLayerMutatorCallback } from './StyleStore.js'
+import { useElementMutatorCallback } from './StyleStore.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { ColorInputField } from '../../../Components/ColorInputField.js'
 
-export const CanvasLayerPropertiesEditor = observer(function CanvasLayerPropertiesEditor({
+export const CanvasElementPropertiesEditor = observer(function CanvasElementPropertiesEditor({
 	controlId,
-	layerProps,
+	elementProps,
 }: {
 	controlId: string
-	layerProps: Readonly<ButtonGraphicsCanvasLayer>
+	elementProps: Readonly<ButtonGraphicsCanvasElement>
 }) {
 	return (
 		<>
@@ -24,14 +24,14 @@ export const CanvasLayerPropertiesEditor = observer(function CanvasLayerProperti
 				Color
 			</CFormLabel>
 			<CCol sm={8}>
-				<FieldFillColorInput controlId={controlId} layerProps={layerProps} />
+				<FieldFillColorInput controlId={controlId} elementProps={elementProps} />
 			</CCol>
 
 			<CFormLabel htmlFor="inputDecoration" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				Decoration
 			</CFormLabel>
 			<CCol sm={8}>
-				<FieldDecorationInput controlId={controlId} layerProps={layerProps} />
+				<FieldDecorationInput controlId={controlId} elementProps={elementProps} />
 			</CCol>
 		</>
 	)
@@ -39,17 +39,17 @@ export const CanvasLayerPropertiesEditor = observer(function CanvasLayerProperti
 
 const FieldFillColorInput = observer(function FieldFillColorInput({
 	controlId,
-	layerProps,
+	elementProps,
 }: {
 	controlId: string
-	layerProps: ButtonGraphicsCanvasLayer
+	elementProps: ButtonGraphicsCanvasElement
 }) {
-	const setColor = useLayerMutatorCallback<ButtonGraphicsCanvasLayer, 'color'>(controlId, layerProps.id, 'color')
+	const setColor = useElementMutatorCallback<ButtonGraphicsCanvasElement, 'color'>(controlId, elementProps.id, 'color')
 
 	return (
 		<ColorInputField
 			setValue={setColor as (color: number | string) => void}
-			value={layerProps.color ?? 0}
+			value={elementProps.color ?? 0}
 			returnType="number"
 			helpText="Background color"
 		/>
@@ -58,14 +58,14 @@ const FieldFillColorInput = observer(function FieldFillColorInput({
 
 const FieldDecorationInput = observer(function FieldDecorationInput({
 	controlId,
-	layerProps,
+	elementProps,
 }: {
 	controlId: string
-	layerProps: ButtonGraphicsCanvasLayer
+	elementProps: ButtonGraphicsCanvasElement
 }) {
-	const setDecoration = useLayerMutatorCallback<ButtonGraphicsCanvasLayer, 'decoration'>(
+	const setDecoration = useElementMutatorCallback<ButtonGraphicsCanvasElement, 'decoration'>(
 		controlId,
-		layerProps.id,
+		elementProps.id,
 		'decoration'
 	)
 
@@ -73,7 +73,7 @@ const FieldDecorationInput = observer(function FieldDecorationInput({
 		<DropdownInputField
 			choices={DecorationChoices}
 			setValue={setDecoration as (value: DropdownChoiceId) => void}
-			value={layerProps.decoration}
+			value={elementProps.decoration}
 		/>
 	)
 })
