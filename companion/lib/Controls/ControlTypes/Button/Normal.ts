@@ -72,7 +72,7 @@ export class ControlButtonNormal
 	/**
 	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
-	#last_draw_variables: Set<string> | null = null
+	#last_draw_variables: ReadonlySet<string> | null = null
 
 	/**
 	 * The base style without feedbacks applied

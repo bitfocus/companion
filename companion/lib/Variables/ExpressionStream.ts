@@ -5,6 +5,7 @@ import type {
 	ExecuteExpressionResult,
 	ExpressionStreamResult,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
+import { nanoid } from 'nanoid'
 
 export class VariablesExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
@@ -22,9 +23,8 @@ export class VariablesExpressionStream {
 	}
 
 	clientConnect(client: ClientSocket) {
-		client.onPromise('variables:stream-expression:subscribe', (subId, controlId, expression, requiredType) => {
-			if (!subId || typeof expression !== 'string') throw new Error('Invalid subId')
-
+		client.onPromise('variables:stream-expression:subscribe', (expression, controlId, requiredType) => {
+			const subId = nanoid()
 			const fullSubId = `${client.id}::${subId}`
 
 			const expressionId = `${controlId}::${expression}::${requiredType}`
@@ -36,7 +36,10 @@ export class VariablesExpressionStream {
 				this.#logger.debug(`Client "${client.id}" subscribed to existing session: ${expressionId}`)
 
 				// Retrun the latest value
-				return existingSession.latestResult
+				return {
+					subId,
+					result: existingSession.latestResult,
+				}
 			}
 
 			this.#logger.debug(`Client "${client.id}" subscribed to new session: ${expressionId}`)
@@ -53,7 +56,7 @@ export class VariablesExpressionStream {
 			}
 			this.#sessions.set(expressionId, newSession)
 
-			return convertExpressionResult(initialValue)
+			return { subId, result: convertExpressionResult(initialValue) }
 		})
 
 		client.onPromise('variables:stream-expression:unsubscribe', (subId) => {
@@ -94,8 +97,10 @@ export class VariablesExpressionStream {
 					session.latestResult = newValue
 
 					const convertedValue = convertExpressionResult(newValue)
-					for (const { subId, client } of session.clients.values()) {
-						client.emit('variables:stream-expression:update', subId, convertedValue)
+					for (const { client } of session.clients.values()) {
+						// TODO - ensure we only send it to each client once?
+						// TODO - maybe this should use rooms?
+						client.emit('variables:stream-expression:update', session.expression, convertedValue)
 					}
 
 					break

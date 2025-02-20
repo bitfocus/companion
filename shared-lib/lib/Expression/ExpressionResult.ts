@@ -2,12 +2,12 @@ export type ExecuteExpressionResult = ExecuteExpressionResultOk | ExecuteExpress
 export interface ExecuteExpressionResultOk {
 	ok: true
 	value: boolean | number | string | undefined
-	variableIds: Set<string>
+	variableIds: ReadonlySet<string>
 }
 export interface ExecuteExpressionResultError {
 	ok: false
 	error: string
-	variableIds: Set<string>
+	variableIds: ReadonlySet<string>
 }
 
 export type ExpressionStreamResult = ExpressionStreamResultOk | ExpressionStreamResultError
@@ -20,4 +20,9 @@ export interface ExpressionStreamResultError {
 	ok: false
 	error: string
 	// variableIds: Set<string>
+}
+
+export interface ExpressionStreamResultWithSubId {
+	subId: string
+	result: ExpressionStreamResult
 }

@@ -163,7 +163,7 @@ async function convertTextElementForDrawing(
 ): Promise<ButtonGraphicsTextDrawElement> {
 	const [fontsizeRaw, text, color, alignment] = await Promise.all([
 		helper.getUnknown(element.fontsize, 'auto'),
-		helper.getUnknown(element.text, 'ERR') + '', // TODO-layered better default value
+		helper.getUnknown(element.text, 'ERR'), // TODO-layered better default value
 		helper.getNumber(element.color, 0),
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
 	])
@@ -172,7 +172,7 @@ async function convertTextElementForDrawing(
 
 	return {
 		type: 'text',
-		text,
+		text: text + '',
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
 		color,
 		alignment,

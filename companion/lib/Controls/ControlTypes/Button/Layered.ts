@@ -158,8 +158,8 @@ export class ControlButtonLayered
 			// TODO - legacy location variables?
 			// injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
 		}
-		// TODO-layered inject any new local variables
 
+		// TODO-layered inject any new local variables
 		const executeExpression = async (str: string, requiredType?: string) =>
 			this.deps.variables.values.executeExpression(str, location, requiredType, injectedVariableValues)
 
@@ -289,8 +289,19 @@ export class ControlButtonLayered
 		const elementEntry = (element as any)[key] as ExpressionOrValue<any>
 		if (!elementEntry) return false
 
-		// Preserve current resolved value
 		if (!elementEntry.isExpression && value) {
+			// Make sure the value is expression safe
+			if (typeof elementEntry.value === 'string') {
+				// If its a string, it will need to be wrapped in quotes
+				elementEntry.value = `'${elementEntry.value}'`
+				// TODO-layered is this good enough?
+			} else if (typeof elementEntry.value === 'number' && key === 'color') {
+				// If its a color number, it is nicer to have it as a hex string
+				elementEntry.value = '0x' + elementEntry.value.toString(16)
+			}
+			// TODO-layered any mroe cases
+		} else if (elementEntry.isExpression && !value) {
+			// Preserve current resolved value
 			// TODO-layered implement this
 		}
 
