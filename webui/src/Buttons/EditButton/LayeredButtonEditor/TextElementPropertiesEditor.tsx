@@ -1,20 +1,16 @@
 import { ButtonGraphicsTextElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { CFormLabel, CCol, CInputGroup, CButton } from '@coreui/react'
-import { faDollarSign, faFont } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback } from 'react'
+import React from 'react'
 import { InlineHelp } from '../../../Components/InlineHelp.js'
 import { TextInputField } from '../../../Components/TextInputField.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from '../../../Controls/OptionsInputField.js'
 import { ControlLocalVariables } from '../../../LocalVariableDefinitions.js'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
-import { useElementIsExpressionMutatorCallback, useElementMutatorCallback } from './StyleStore.js'
 import { FONT_SIZES } from '../../../Constants.js'
-import { DropdownChoiceId } from '@companion-module/base'
+import { CompanionAlignment, DropdownChoiceId } from '@companion-module/base'
 import { ColorInputField } from '../../../Components/ColorInputField.js'
 import { AlignmentInputField } from '../../../Components/AlignmentInputField.js'
+import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 
 export const TextElementPropertiesEditor = observer(function TextElementPropertiesEditor({
 	controlId,
@@ -25,33 +21,26 @@ export const TextElementPropertiesEditor = observer(function TextElementProperti
 }) {
 	return (
 		<>
-			<CFormLabel htmlFor="inputText" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
-				<FieldTextLabel elementProps={elementProps} />
-			</CFormLabel>
-			<CCol sm={8}>
-				<FieldTextInput controlId={controlId} elementProps={elementProps} />
-			</CCol>
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				property="text"
+				label={<FieldTextLabel elementProps={elementProps} />}
+			>
+				{(elementProp, setValue) => <FieldTextInput elementProp={elementProp} setValue={setValue} />}
+			</FormPropertyField>
 
-			<CFormLabel htmlFor="inputFontSize" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
-				Font Size
-			</CFormLabel>
-			<CCol sm={8}>
-				<FieldFontSizeInput controlId={controlId} elementProps={elementProps} />
-			</CCol>
+			<FormPropertyField controlId={controlId} elementProps={elementProps} property="fontsize" label="Font Size">
+				{(elementProp, setValue) => <FieldFontSizeInput elementProp={elementProp} setValue={setValue} />}
+			</FormPropertyField>
 
-			<CFormLabel htmlFor="inputColor" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
-				Color
-			</CFormLabel>
-			<CCol sm={8}>
-				<FieldTextColorInput controlId={controlId} elementProps={elementProps} />
-			</CCol>
+			<FormPropertyField controlId={controlId} elementProps={elementProps} property="color" label="Color">
+				{(elementProp, setValue) => <FieldTextColorInput elementProp={elementProp} setValue={setValue} />}
+			</FormPropertyField>
 
-			<CFormLabel htmlFor="inputAlignment" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
-				Alignment
-			</CFormLabel>
-			<CCol sm={8}>
-				<FieldTextAlignmentInput controlId={controlId} elementProps={elementProps} />
-			</CCol>
+			<FormPropertyField controlId={controlId} elementProps={elementProps} property="alignment" label="Alignment">
+				{(elementProp, setValue) => <FieldTextAlignmentInput elementProp={elementProp} setValue={setValue} />}
+			</FormPropertyField>
 		</>
 	)
 })
@@ -79,112 +68,54 @@ const FieldTextLabel = observer(function FieldTextLabel({ elementProps }: { elem
 })
 
 const FieldTextInput = observer(function FieldTextInput({
-	controlId,
-	elementProps,
-}: {
-	controlId: string
-	elementProps: ButtonGraphicsTextElement
-}) {
-	const setTextValue = useElementMutatorCallback<ButtonGraphicsTextElement, 'text'>(controlId, elementProps.id, 'text')
-	const setIsExpression = useElementIsExpressionMutatorCallback<ButtonGraphicsTextElement, 'text'>(
-		controlId,
-		elementProps.id,
-		'text'
-	)
-	const toggleExpression = useCallback(() => {
-		setIsExpression(!elementProps.text.isExpression)
-	}, [setIsExpression, elementProps])
-
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsTextElement, 'text'>) {
 	return (
-		<CInputGroup>
-			<TextInputField
-				tooltip={'Button text'}
-				setValue={setTextValue}
-				value={elementProps.text.value ?? ''}
-				useVariables
-				localVariables={ControlLocalVariables}
-				isExpression={elementProps.text.isExpression}
-				style={{ fontWeight: 'bold', fontSize: 18 }}
-			/>
-			<CButton
-				color="info"
-				variant="outline"
-				onClick={toggleExpression}
-				title={elementProps.text.isExpression ? 'Expression mode ' : 'String mode'}
-			>
-				<FontAwesomeIcon icon={elementProps.text.isExpression ? faDollarSign : faFont} />
-			</CButton>
-		</CInputGroup>
+		<TextInputField
+			tooltip={'Button text'}
+			setValue={setValue}
+			value={elementProp.value ?? ''}
+			useVariables
+			localVariables={ControlLocalVariables}
+			isExpression={false}
+		/>
 	)
 })
 
 const FieldFontSizeInput = observer(function FieldFontSizeInput({
-	controlId,
-	elementProps,
-}: {
-	controlId: string
-	elementProps: ButtonGraphicsTextElement
-}) {
-	const setSizeValue = useElementMutatorCallback<ButtonGraphicsTextElement, 'fontsize'>(
-		controlId,
-		elementProps.id,
-		'fontsize'
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsTextElement, 'fontsize'>) {
+	return (
+		<DropdownInputField
+			choices={FONT_SIZES}
+			setValue={setValue as (value: DropdownChoiceId) => void}
+			value={elementProp.value}
+			allowCustom={true}
+			disableEditingCustom={true}
+			regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
+		/>
 	)
-
-	if (elementProps.fontsize.isExpression) {
-		return <p>TODO</p>
-	} else {
-		return (
-			<DropdownInputField
-				choices={FONT_SIZES}
-				setValue={setSizeValue as (value: DropdownChoiceId) => void}
-				value={elementProps.fontsize.value}
-				allowCustom={true}
-				disableEditingCustom={true}
-				regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
-			/>
-		)
-	}
 })
 
 const FieldTextColorInput = observer(function FieldTextColorInput({
-	controlId,
-	elementProps,
-}: {
-	controlId: string
-	elementProps: ButtonGraphicsTextElement
-}) {
-	const setColor = useElementMutatorCallback<ButtonGraphicsTextElement, 'color'>(controlId, elementProps.id, 'color')
-
-	if (elementProps.color.isExpression) {
-		return <p>TODO</p>
-	} else {
-		return (
-			<ColorInputField
-				setValue={setColor as (color: number | string) => void}
-				value={elementProps.color.value}
-				returnType="number"
-				helpText="Font color"
-			/>
-		)
-	}
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsTextElement, 'color'>) {
+	return (
+		<ColorInputField
+			setValue={setValue as (color: number | string) => void}
+			value={elementProp.value}
+			returnType="number"
+			helpText="Font color"
+		/>
+	)
 })
 
 const FieldTextAlignmentInput = observer(function FieldTextAlignmentInput({
-	controlId,
-	elementProps,
-}: {
-	controlId: string
-	elementProps: ButtonGraphicsTextElement
-}) {
-	const setAlignmentValue = useElementMutatorCallback<ButtonGraphicsTextElement, 'alignment'>(
-		controlId,
-		elementProps.id,
-		'alignment'
-	)
-	if (elementProps.alignment.isExpression) {
-		return <p>TODO</p>
-	} else {
-		return <AlignmentInputField setValue={setAlignmentValue} value={elementProps.alignment.value} />
-	}
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsTextElement, 'alignment'>) {
+	return <AlignmentInputField setValue={setValue} value={elementProp.value as CompanionAlignment} />
 })

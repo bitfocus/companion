@@ -214,8 +214,6 @@ table.variables-table {
 	}
 
 	.button-layer-elementlist {
-		// TODO
-
 		.button-layer-elementlist-table {
 			width: 100%;
 			max-width: 100%;
@@ -283,5 +281,23 @@ table.variables-table {
 
 	.button-layer-options {
 		// TODO
+
+		.field-with-expression {
+			display: flex;
+			gap: 0.5rem;
+
+			.expression-field {
+				flex-grow: 1;
+			}
+
+			.expression-toggle-button {
+				justify-self: flex-end;
+
+				.btn {
+					height: 100%;
+					width: 3em;
+				}
+			}
+		}
 	}
 }

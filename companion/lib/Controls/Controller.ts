@@ -1039,7 +1039,7 @@ export class ControlsController extends CoreBase {
 
 		if (allChangedVariablesSet.size > 0) {
 			for (const control of this.#controls.values()) {
-				if (control.supportsStyle) {
+				if (control.supportsStyle || control.supportsLayeredStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}
 			}
