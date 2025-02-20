@@ -43,8 +43,9 @@ import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } 
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
-import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
-import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
+import type { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
+import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
+import type { ExpressionStreamResult } from './Expression/ExpressionResult.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -349,6 +350,13 @@ export interface ClientToBackendEventsMap {
 	'modules-upgrade-to-other:unsubscribe': (moduleId: string) => void
 
 	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
+	'variables:stream-expression:subscribe': (
+		subId: string,
+		controlId: string | null,
+		expression: string,
+		requiredType: string | undefined
+	) => ExpressionStreamResult
+	'variables:stream-expression:unsubscribe': (subId: string) => void
 
 	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
 	'presets:unsubscribe': () => void
@@ -416,6 +424,8 @@ export interface BackendToClientEventsMap {
 
 	'bonjour:service:up': (svc: ClientBonjourService) => void
 	'bonjour:service:down': (subId: string, fqdn: string) => void
+
+	'variables:stream-expression:update': (subId: string, result: ExpressionStreamResult) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void
