@@ -227,7 +227,7 @@ export class CloudController {
 			if (control.type !== 'button') {
 				continue
 			}
-			const drawStyle = control.getDrawStyle()
+			const drawStyle = control.getLastDrawStyle()
 			if (!drawStyle || drawStyle.style !== 'button') {
 				continue
 			}

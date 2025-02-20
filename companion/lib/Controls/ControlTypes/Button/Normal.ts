@@ -133,7 +133,7 @@ export class ControlButtonNormal
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleButtonModel {
+	getLastDrawStyle(): DrawStyleButtonModel {
 		let style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
 
 		if (style.text) {

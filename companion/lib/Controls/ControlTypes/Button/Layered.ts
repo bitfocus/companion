@@ -140,11 +140,16 @@ export class ControlButtonLayered
 		// return GetButtonBitmapSize(this.deps.userconfig, this.#baseStyle)
 	}
 
+	#lastDrawStyle: DrawStyleModel | null = null
+	getLastDrawStyle(): DrawStyleModel | null {
+		return this.#lastDrawStyle
+	}
+
 	/**
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleModel | null {
+	async getDrawStyle(): Promise<DrawStyleModel | null> {
 		// Block out the button text
 		const injectedVariableValues: CompanionVariableValues = {}
 		const location = this.deps.page.getLocationOfControlId(this.controlId)
@@ -155,23 +160,26 @@ export class ControlButtonLayered
 		}
 		// TODO-layered inject any new local variables
 
-		const executeExpression = (str: string, requiredType?: string) =>
+		const executeExpression = async (str: string, requiredType?: string) =>
 			this.deps.variables.values.executeExpression(str, location, requiredType, injectedVariableValues)
 
 		// Compute the new drawing
-		const { elements, usedVariables } = ConvertSomeButtonGraphicsElementForDrawing(
+		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
 			this.#drawElements,
 			executeExpression
 		)
 		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
 
-		return {
+		const result: DrawStyleLayeredButtonModel = {
 			...this.getDrawStyleButtonStateProps(),
 
 			elements,
 
 			style: 'button-layered',
-		} satisfies DrawStyleLayeredButtonModel
+		}
+
+		this.#lastDrawStyle = result
+		return result
 	}
 
 	/**

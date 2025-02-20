@@ -27,6 +27,7 @@ import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
+import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Class for an interval trigger.
@@ -743,6 +744,10 @@ export class ControlTrigger
 		}
 
 		return false
+	}
+
+	getLastDrawStyle(): DrawStyleModel | null {
+		return null
 	}
 
 	/**

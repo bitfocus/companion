@@ -81,7 +81,7 @@ export class ControlButtonPageUp
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleModel {
+	getLastDrawStyle(): DrawStyleModel {
 		return {
 			style: 'pageup',
 		}

@@ -125,9 +125,15 @@ export abstract class ControlBase<TJson> {
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleModel | null {
-		return null
+	async getDrawStyle(): Promise<DrawStyleModel | null> {
+		return this.getLastDrawStyle()
 	}
+
+	/**
+	 * Get the complete style object from the last draw
+	 * @returns the last drawn style
+	 */
+	abstract getLastDrawStyle(): DrawStyleModel | null
 
 	/**
 	 * Emit a change to the runtime properties of this control.

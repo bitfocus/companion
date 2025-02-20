@@ -115,7 +115,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				const controlId = this.page.getControlIdAtOldBankIndex(pageNumber, bank)
 				const control = controlId ? this.controls.getControl(controlId) : undefined
 
-				let drawStyle = control?.getDrawStyle() || null
+				let drawStyle = control?.getLastDrawStyle() || null
 				if (drawStyle?.style !== 'button') drawStyle = null
 
 				children[bank] = new EmberModel.NumberedTreeNodeImpl(
@@ -218,7 +218,7 @@ export class ServiceEmberPlus extends ServiceBase {
 					const controlId = this.page.getControlIdAt(location)
 					const control = controlId ? this.controls.getControl(controlId) : undefined
 
-					let drawStyle = control?.getDrawStyle() || null
+					let drawStyle = control?.getLastDrawStyle() || null
 					if (drawStyle?.style !== 'button') drawStyle = null
 
 					rowColumns[colI] = new EmberModel.NumberedTreeNodeImpl(

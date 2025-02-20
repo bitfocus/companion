@@ -13,7 +13,7 @@ import {
 } from '../Model/StyleLayersModel.js'
 import { ALIGNMENT_OPTIONS } from '../Model/Alignment.js'
 
-type ExecuteExpressionFn = (str: string, requiredType?: string) => ExecuteExpressionResult
+type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
 
 class ExpressionHelper {
 	readonly #executeExpression: ExecuteExpressionFn
@@ -24,8 +24,11 @@ class ExpressionHelper {
 		this.#executeExpression = executeExpression
 	}
 
-	#executeExpressionAndTrackVariables(str: string, requiredType: string | undefined): ExecuteExpressionResult {
-		const result = this.#executeExpression(str, requiredType)
+	async #executeExpressionAndTrackVariables(
+		str: string,
+		requiredType: string | undefined
+	): Promise<ExecuteExpressionResult> {
+		const result = await this.#executeExpression(str, requiredType)
 
 		// Track the variables used in the expression, even when it failed
 		for (const variable of result.variableIds) {
@@ -35,13 +38,13 @@ class ExpressionHelper {
 		return result
 	}
 
-	getUnknown(
+	async getUnknown(
 		value: ExpressionOrValue<boolean | number | string | undefined>,
 		defaultValue: boolean | number | string | undefined
-	): boolean | number | string | undefined {
+	): Promise<boolean | number | string | undefined> {
 		if (!value.isExpression) return value.value
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, undefined)
+		const result = await this.#executeExpressionAndTrackVariables(value.value, undefined)
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -49,10 +52,10 @@ class ExpressionHelper {
 		return result.value
 	}
 
-	getNumber(value: ExpressionOrValue<number>, defaultValue: number): number {
+	async getNumber(value: ExpressionOrValue<number>, defaultValue: number): Promise<number> {
 		if (!value.isExpression) return value.value
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, 'number')
+		const result = await this.#executeExpressionAndTrackVariables(value.value, 'number')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -60,10 +63,10 @@ class ExpressionHelper {
 		return result.value as number
 	}
 
-	getString<T extends string | null | undefined>(value: ExpressionOrValue<T>, defaultValue: T): T {
+	async getString<T extends string | null | undefined>(value: ExpressionOrValue<T>, defaultValue: T): Promise<T> {
 		if (!value.isExpression) return value.value
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
+		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -71,10 +74,10 @@ class ExpressionHelper {
 		return result.value as T
 	}
 
-	getEnum<T extends string>(value: ExpressionOrValue<T>, values: T[], defaultValue: T): T {
+	async getEnum<T extends string>(value: ExpressionOrValue<T>, values: T[], defaultValue: T): Promise<T> {
 		if (!value.isExpression) return value.value
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
+		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -88,17 +91,17 @@ class ExpressionHelper {
 	}
 }
 
-export function ConvertSomeButtonGraphicsElementForDrawing(
+export async function ConvertSomeButtonGraphicsElementForDrawing(
 	elements: SomeButtonGraphicsElement[],
 	executeExpression: ExecuteExpressionFn
-): {
+): Promise<{
 	elements: SomeButtonGraphicsDrawElement[]
 	usedVariables: Set<string>
-} {
+}> {
 	const helper = new ExpressionHelper(executeExpression)
 
-	const newElements = elements
-		.map((element) => {
+	const newElements = await Promise.all(
+		elements.map((element) => {
 			switch (element.type) {
 				case 'canvas':
 					return convertCanvasElementForDrawing(helper, element)
@@ -110,52 +113,68 @@ export function ConvertSomeButtonGraphicsElementForDrawing(
 					return null
 			}
 		})
-		.filter((element) => element !== null)
+	)
 
 	return {
-		elements: newElements,
+		elements: newElements.filter((element) => element !== null),
 		usedVariables: helper.usedVariables,
 	}
 }
 
-function convertCanvasElementForDrawing(
+async function convertCanvasElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsCanvasElement
-): ButtonGraphicsCanvasDrawElement {
-	return {
-		type: 'canvas',
-		color: helper.getNumber(element.color, 0),
-		decoration: helper.getEnum(
+): Promise<ButtonGraphicsCanvasDrawElement> {
+	const [color, decoration] = await Promise.all([
+		helper.getNumber(element.color, 0),
+		helper.getEnum(
 			element.decoration,
 			Object.values(ButtonGraphicsDecorationType),
 			ButtonGraphicsDecorationType.FollowDefault
 		),
+	])
+
+	return {
+		type: 'canvas',
+		color,
+		decoration,
 	}
 }
 
-function convertImageElementForDrawing(
+async function convertImageElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsImageElement
-): ButtonGraphicsImageDrawElement {
+): Promise<ButtonGraphicsImageDrawElement> {
+	const [base64Image, alignment] = await Promise.all([
+		helper.getString<string | null>(element.base64Image, null),
+		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
+	])
+
 	return {
 		type: 'image',
-		base64Image: helper.getString<string | null>(element.base64Image, null),
-		alignment: helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
+		base64Image,
+		alignment,
 	}
 }
 
-function convertTextElementForDrawing(
+async function convertTextElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsTextElement
-): ButtonGraphicsTextDrawElement {
-	let fontsize = helper.getUnknown(element.fontsize, 'auto')
-	fontsize = Number(fontsize) || fontsize
+): Promise<ButtonGraphicsTextDrawElement> {
+	const [fontsizeRaw, text, color, alignment] = await Promise.all([
+		helper.getUnknown(element.fontsize, 'auto'),
+		helper.getUnknown(element.text, 'ERR') + '', // TODO-layered better default value
+		helper.getNumber(element.color, 0),
+		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
+	])
+
+	const fontsize = Number(fontsizeRaw) || fontsizeRaw
 
 	return {
 		type: 'text',
-		text: helper.getUnknown(element.text, 'ERR') + '', // TODO-layered better default value
+		text,
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
-		color: helper.getNumber(element.color, 0),
-		alignment: helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
+		color,
+		alignment,
 	}
 }

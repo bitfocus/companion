@@ -162,7 +162,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					const controlId = this.#pagesController.getControlIdAt(location)
 					const control = controlId ? this.#controlsController.getControl(controlId) : undefined
-					const buttonStyle = control?.getDrawStyle() ?? undefined
+					const buttonStyle = (await control?.getDrawStyle()) ?? undefined
 
 					if (location && locationIsInBounds) {
 						// Update the internal b_text_1_4 variable
