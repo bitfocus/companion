@@ -24,6 +24,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				type: 'image',
 				base64Image: { value: null, isExpression: false },
 				alignment: { value: 'center:center', isExpression: false },
+				fillMode: { value: 'fit_or_shrink', isExpression: false },
 			}
 		default:
 			assertNever(type)

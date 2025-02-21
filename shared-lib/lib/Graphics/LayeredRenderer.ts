@@ -8,7 +8,7 @@ import {
 	type ButtonGraphicsImageDrawElement,
 	type ButtonGraphicsTextDrawElement,
 } from '../Model/StyleLayersModel.js'
-import { ParseAlignment, parseColor, type GraphicsOptions } from './Util.js'
+import { DrawBounds, ParseAlignment, parseColor, type GraphicsOptions } from './Util.js'
 import { TopbarRenderer } from './TopbarRenderer.js'
 
 export class GraphicsLayeredButtonRenderer {
@@ -21,8 +21,11 @@ export class GraphicsLayeredButtonRenderer {
 		const backgroundElement = drawStyle.elements[0].type === 'canvas' ? drawStyle.elements[0] : undefined
 
 		const showTopBar = this.#shouldDrawTopBar(options, backgroundElement)
-		const topBarHeight = showTopBar ? Math.floor(0.2 * img.height) : 0
-		const drawBounds = createDrawBounds(0, topBarHeight, img.width, img.height - topBarHeight)
+		const topBarBounds = showTopBar
+			? new DrawBounds(0, 0, img.width, Math.max(TopbarRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * img.height)))
+			: null
+		const topBarHeight = topBarBounds?.height ?? 0
+		const drawBounds = new DrawBounds(0, topBarHeight, img.width, img.height - topBarHeight)
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
@@ -46,7 +49,7 @@ export class GraphicsLayeredButtonRenderer {
 			}
 		}
 
-		TopbarRenderer.draw(img, showTopBar, drawStyle, location)
+		TopbarRenderer.draw(img, drawStyle, location, topBarBounds)
 	}
 
 	static #drawBackgroundElement(
@@ -73,7 +76,7 @@ export class GraphicsLayeredButtonRenderer {
 				drawBounds.height,
 				halign,
 				valign,
-				'fit_or_shrink'
+				element.fillMode
 			)
 		} catch (e) {
 			console.error('error drawing image:', e)
@@ -100,12 +103,17 @@ export class GraphicsLayeredButtonRenderer {
 		if (!element.text) return
 
 		// Draw button text
-		const fontSize = Number(element.fontsize) || 'auto'
+		let fontSize: 'auto' | number = Number(element.fontsize) || 'auto'
 		const [halign, valign] = ParseAlignment(element.alignment)
 
 		// Force some padding around the text
 		const marginX = 2
 		const marginY = 1
+
+		if (typeof fontSize === 'number') {
+			// HACK: temporary scale until new font size scale is implemented
+			fontSize *= img.height / 72
+		}
 
 		img.drawAlignedText(
 			drawBounds.x + marginX,
@@ -134,27 +142,5 @@ export class GraphicsLayeredButtonRenderer {
 				assertNever(decoration)
 				return !options.remove_topbar
 		}
-	}
-}
-
-interface DrawBounds {
-	x: number
-	y: number
-
-	width: number
-	height: number
-
-	maxX: number
-	maxY: number
-}
-
-function createDrawBounds(x: number, y: number, width: number, height: number): DrawBounds {
-	return {
-		x,
-		y,
-		width,
-		height,
-		maxX: x + width,
-		maxY: y + height,
 	}
 }

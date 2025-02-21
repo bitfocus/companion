@@ -119,6 +119,15 @@ export class ControlButtonLayered
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
 			this.entities.loadStorage(storage, true, isImport)
 
+			// HACK: temporary fill in new properties
+			for (const element of this.#drawElements) {
+				switch (element.type) {
+					case 'image':
+						element.fillMode = element.fillMode || { value: 'fit_or_shrink', isExpression: false }
+						break
+				}
+			}
+
 			// Ensure control is stored before setup
 			if (isImport) setImmediate(() => this.postProcessImport())
 		}

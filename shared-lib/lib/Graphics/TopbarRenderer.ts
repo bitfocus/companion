@@ -2,6 +2,7 @@ import { formatLocation } from '../ControlId.js'
 import type { ControlLocation } from '../Model/Common.js'
 import type { DrawStyleButtonStateProps } from '../Model/StyleModel.js'
 import type { ImageBase } from './ImageBase.js'
+import { DrawBounds } from './Util.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorBlack = 'black'
@@ -28,36 +29,55 @@ const internalIcons = {
 }
 
 export class TopbarRenderer {
+	static readonly DEFAULT_HEIGHT = 14
+
 	/**
 	 * Draw the topbar onto an image for a button
 	 */
 	static draw(
 		img: ImageBase<any>,
-		showTopbar: boolean,
 		drawStyle: DrawStyleButtonStateProps,
-		location: ControlLocation | undefined
+		location: ControlLocation | undefined,
+		drawBounds: DrawBounds | null
 	) {
-		if (!showTopbar) {
+		const showTopBar = !!drawBounds && drawBounds.isValid()
+		if (!showTopBar) {
 			if (drawStyle.pushed) {
 				img.drawBorder(3, colorButtonYellow)
 			}
 		} else {
 			let step = ''
-			img.box(0, 0, 72, 13.5, colorBlack)
-			img.horizontalLine(13.5, { color: colorButtonYellow })
+			img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY - 0.5, colorBlack)
+			img.horizontalLine(drawBounds.maxY - 0.5, { color: colorButtonYellow })
 
 			if (typeof drawStyle.step_cycle === 'number' && location) {
 				step = `.${drawStyle.step_cycle}`
 			}
 
+			const locationDrawX = Math.round(drawBounds.width * 0.05) + drawBounds.x
+			const locationDrawY = Math.round(drawBounds.height * 0.15) + drawBounds.y
+			const locationDrawSize = Math.round(drawBounds.height * 0.65)
+
 			if (location === undefined) {
 				// Preview (no location)
-				img.drawTextLine(4, 2, `x.x${step}`, colorButtonYellow, 9)
+				img.drawTextLine(locationDrawX, locationDrawY, `x.x${step}`, colorButtonYellow, locationDrawSize)
 			} else if (drawStyle.pushed) {
-				img.box(0, 0, 72, 14, colorButtonYellow)
-				img.drawTextLine(4, 2, `${formatLocation(location)}${step}`, colorBlack, 9)
+				img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, colorButtonYellow)
+				img.drawTextLine(
+					locationDrawX,
+					locationDrawY,
+					`${formatLocation(location)}${step}`,
+					colorBlack,
+					locationDrawSize
+				)
 			} else {
-				img.drawTextLine(4, 2, `${formatLocation(location)}${step}`, colorButtonYellow, 9)
+				img.drawTextLine(
+					locationDrawX,
+					locationDrawY,
+					`${formatLocation(location)}${step}`,
+					colorButtonYellow,
+					locationDrawSize
+				)
 			}
 		}
 
@@ -65,10 +85,10 @@ export class TopbarRenderer {
 		let rightMax = 72
 
 		// first the cloud icon if present
-		if (drawStyle.cloud_error && showTopbar) {
+		if (drawStyle.cloud_error && showTopBar) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloudError)
 			rightMax -= 17
-		} else if (drawStyle.cloud && showTopbar) {
+		} else if (drawStyle.cloud && showTopBar) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloud)
 			rightMax -= 17
 		}

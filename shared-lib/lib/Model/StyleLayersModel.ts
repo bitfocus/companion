@@ -67,6 +67,8 @@ export interface ButtonGraphicsImageDrawElement {
 
 	alignment: CompanionAlignment
 
+	fillMode: 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
+
 	// Future ideas:
 	// width, height: number
 	// rotation: number

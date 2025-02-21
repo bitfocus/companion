@@ -146,15 +146,17 @@ async function convertImageElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsImageElement
 ): Promise<ButtonGraphicsImageDrawElement> {
-	const [base64Image, alignment] = await Promise.all([
+	const [base64Image, alignment, fillMode] = await Promise.all([
 		helper.getString<string | null>(element.base64Image, null),
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
+		helper.getEnum(element.fillMode, ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
 	])
 
 	return {
 		type: 'image',
 		base64Image,
 		alignment,
+		fillMode,
 	}
 }
 

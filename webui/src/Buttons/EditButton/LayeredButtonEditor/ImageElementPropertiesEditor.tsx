@@ -7,7 +7,8 @@ import { PNGInputField } from '../../../Components/PNGInputField.js'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { CompanionAlignment } from '@companion-module/base'
+import { CompanionAlignment, DropdownChoice, DropdownChoiceId } from '@companion-module/base'
+import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 
 export const ImageElementPropertiesEditor = observer(function ImageElementPropertiesEditor({
 	controlId,
@@ -24,6 +25,10 @@ export const ImageElementPropertiesEditor = observer(function ImageElementProper
 
 			<FormPropertyField controlId={controlId} elementProps={elementProps} property="alignment" label="Alignment">
 				{(elementProp, setValue) => <FieldImageAlignmentInput elementProp={elementProp} setValue={setValue} />}
+			</FormPropertyField>
+
+			<FormPropertyField controlId={controlId} elementProps={elementProps} property="fillMode" label="Fill Mode">
+				{(elementProp, setValue) => <FieldImageFillModeInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 		</>
 	)
@@ -77,3 +82,23 @@ const FieldImageAlignmentInput = observer(function FieldImageAlignmentInput({
 }: InputFieldCommonProps<ButtonGraphicsImageElement, 'alignment'>) {
 	return <AlignmentInputField setValue={setValue} value={elementProp.value as CompanionAlignment} />
 })
+
+const FieldImageFillModeInput = observer(function FieldImageFillModeInput({
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsImageElement, 'fillMode'>) {
+	return (
+		<DropdownInputField
+			choices={FillModeChoices}
+			setValue={setValue as (value: DropdownChoiceId) => void}
+			value={elementProp.value}
+		/>
+	)
+})
+
+const FillModeChoices: DropdownChoice[] = [
+	{ id: 'fit_or_shrink', label: 'Fit or Shrink' },
+	{ id: 'fit', label: 'Fit' },
+	{ id: 'fill', label: 'Fill' },
+	{ id: 'crop', label: 'Crop' },
+]

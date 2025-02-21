@@ -10,6 +10,31 @@ export interface GraphicsOptions {
 	remove_topbar: boolean
 }
 
+export class DrawBounds {
+	readonly x: number
+	readonly y: number
+
+	readonly width: number
+	readonly height: number
+
+	readonly maxX: number
+	readonly maxY: number
+
+	constructor(x: number, y: number, width: number, height: number) {
+		this.x = x
+		this.y = y
+		this.width = width
+		this.height = height
+
+		this.maxX = x + width
+		this.maxY = y + height
+	}
+
+	isValid(): boolean {
+		return this.width > 0 && this.height > 0
+	}
+}
+
 /**
  * Parse an alignment value
  * @param alignment

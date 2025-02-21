@@ -18,7 +18,7 @@
 import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
-import { type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
+import { DrawBounds, type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
@@ -31,6 +31,8 @@ const colorDarkGrey = 'rgba(15, 15, 15, 1)'
 // let lastDraw = 0
 
 export class GraphicsRenderer {
+	static TOPBAR_BOUNDS = new DrawBounds(0, 0, 72, TopbarRenderer.DEFAULT_HEIGHT)
+
 	/**
 	 * Draw the image for an empty button
 	 */
@@ -206,7 +208,7 @@ export class GraphicsRenderer {
 					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
 					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
 
-				TopbarRenderer.draw(img, showTopbar, drawStyle, location)
+				TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
 				return
 			}
 		}
@@ -231,7 +233,7 @@ export class GraphicsRenderer {
 				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 
-			TopbarRenderer.draw(img, showTopbar, drawStyle, location)
+			TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
 			return
 		}
 
@@ -254,7 +256,7 @@ export class GraphicsRenderer {
 		}
 
 		// At last draw Topbar on top
-		TopbarRenderer.draw(img, showTopbar, drawStyle, location)
+		TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
 	}
 
 	/**
