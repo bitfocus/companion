@@ -72,7 +72,7 @@ export class GraphicsRenderer {
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
-		const img = new Image(72, 72, 2)
+		const img = Image.create(72, 72, 2)
 
 		img.fillColor('black')
 
@@ -119,7 +119,7 @@ export class GraphicsRenderer {
 	}> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
-		const img = new Image(72, 72, 4)
+		const img = Image.create(72, 72, 4)
 
 		let draw_style: DrawStyleModel['style'] | undefined = undefined
 
@@ -381,7 +381,7 @@ export class GraphicsRenderer {
 	 * @param num Display number
 	 */
 	static drawPincodeNumber(num: number): ImageResult {
-		const img = new Image(72, 72, 3)
+		const img = Image.create(72, 72, 3)
 		img.fillColor(colorDarkGrey)
 		img.drawTextLineAligned(36, 36, `${num}`, colorWhite, 44, 'center', 'center')
 		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
@@ -391,7 +391,7 @@ export class GraphicsRenderer {
 	 * Draw pincode entry button
 	 */
 	static drawPincodeEntry(code: string | undefined): ImageResult {
-		const img = new Image(72, 72, 4)
+		const img = Image.create(72, 72, 4)
 		img.fillColor(colorDarkGrey)
 		img.drawTextLineAligned(36, 30, 'Lockout', colorButtonYellow, 14, 'center', 'center')
 		if (code !== undefined) {

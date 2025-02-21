@@ -16,7 +16,6 @@ import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
 import { useObserver } from 'mobx-react-lite'
 import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
-import exp from 'constants'
 
 const emptySet = new Set<string>()
 

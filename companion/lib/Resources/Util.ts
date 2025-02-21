@@ -7,6 +7,7 @@ import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@compani
 import type { CompanionAlignment, CompanionInputFieldBase } from '@companion-module/base'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 
 /**
  * Combine rgba components to a 32bit value
@@ -393,9 +394,6 @@ export function TrySplitVariableId(variableId: string): [string, string] | null 
 
 	return [label, variable]
 }
-
-export type HorizontalAlignment = 'left' | 'right' | 'center'
-export type VerticalAlignment = 'top' | 'bottom' | 'center'
 
 /**
  * Parse an alignment value
