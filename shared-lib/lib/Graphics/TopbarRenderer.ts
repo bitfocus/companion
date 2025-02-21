@@ -60,7 +60,7 @@ export class TopbarRenderer {
 
 			if (location === undefined) {
 				// Preview (no location)
-				img.drawTextLine(locationDrawX, locationDrawY, `x.x${step}`, colorButtonYellow, locationDrawSize)
+				img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, colorButtonYellow, locationDrawSize)
 			} else if (drawStyle.pushed) {
 				img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, colorButtonYellow)
 				img.drawTextLine(

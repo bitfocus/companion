@@ -20,11 +20,11 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 
 	return (
 		<div>
-			<LayeredButtonCanvas width={200} height={200} drawStyle={drawStyle} />
+			<LayeredButtonCanvas width={200} height={200} drawStyle={drawStyle} hiddenElements={styleStore.hiddenElements} />
 			&nbsp;&nbsp;
-			<LayeredButtonCanvas width={144} height={112} drawStyle={drawStyle} />
+			<LayeredButtonCanvas width={144} height={112} drawStyle={drawStyle} hiddenElements={styleStore.hiddenElements} />
 			&nbsp;&nbsp;
-			<LayeredButtonCanvas width={100} height={200} drawStyle={drawStyle} />
+			<LayeredButtonCanvas width={100} height={200} drawStyle={drawStyle} hiddenElements={styleStore.hiddenElements} />
 		</div>
 	)
 })
@@ -32,14 +32,16 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 interface RendererDrawCache {
 	image: GraphicsImage
 	debounce: PromiseDebounce<void, [DrawStyleLayeredButtonModel]>
+	hiddenElements: ReadonlySet<string>
 }
 
 interface LayeredButtonCanvasProps {
 	width: number
 	height: number
 	drawStyle: SomeButtonGraphicsDrawElement[] | null
+	hiddenElements: ReadonlySet<string>
 }
-function LayeredButtonCanvas({ width, height, drawStyle }: LayeredButtonCanvasProps) {
+function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: LayeredButtonCanvasProps) {
 	const drawCache = useRef<RendererDrawCache | null>(null)
 
 	const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
@@ -69,7 +71,8 @@ function LayeredButtonCanvas({ width, height, drawStyle }: LayeredButtonCanvasPr
 								remove_topbar: false,
 							},
 							style,
-							location
+							location,
+							drawCache.current!.hiddenElements
 						)
 
 						image.drawComplete()
@@ -77,8 +80,12 @@ function LayeredButtonCanvas({ width, height, drawStyle }: LayeredButtonCanvasPr
 						console.error('draw failed!', e)
 					}
 				}, 1),
+				hiddenElements: new Set(),
 			}
 		}
+
+		// Update any cached properties
+		drawCache.current.hiddenElements = hiddenElements
 
 		const { debounce } = drawCache.current
 
@@ -97,7 +104,7 @@ function LayeredButtonCanvas({ width, height, drawStyle }: LayeredButtonCanvasPr
 		}
 
 		debounce.trigger(drawStyleFull)
-	}, [canvas, drawStyle])
+	}, [canvas, drawStyle, hiddenElements])
 
 	return (
 		<canvas

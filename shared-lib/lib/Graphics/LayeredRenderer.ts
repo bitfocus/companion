@@ -16,7 +16,8 @@ export class GraphicsLayeredButtonRenderer {
 		img: ImageBase<any>,
 		options: GraphicsOptions,
 		drawStyle: DrawStyleLayeredButtonModel,
-		location: ControlLocation | undefined
+		location: ControlLocation | undefined,
+		layersToHide: ReadonlySet<string>
 	) {
 		const backgroundElement = drawStyle.elements[0].type === 'canvas' ? drawStyle.elements[0] : undefined
 
@@ -30,6 +31,9 @@ export class GraphicsLayeredButtonRenderer {
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
 		for (const element of drawStyle.elements) {
+			// Skip any elements which should be hidden
+			if (layersToHide.has(element.id)) continue
+
 			try {
 				switch (element.type) {
 					case 'canvas':

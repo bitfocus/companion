@@ -8,6 +8,7 @@ import { Tuck } from '../../../Components/Tuck.js'
 import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
+import { observer } from 'mobx-react-lite'
 
 export function RemoveElementButton({
 	controlId,
@@ -40,19 +41,33 @@ export function RemoveElementButton({
 	)
 }
 
-export function ToggleVisibilityButton({ controlId, elementId }: { controlId: string; elementId: string }) {
-	const { socket } = useContext(RootAppStoreContext)
+export const ToggleVisibilityButton = observer(function ToggleVisibilityButton({
+	styleStore,
+	controlId,
+	elementId,
+}: {
+	styleStore: LayeredStyleStore
+	controlId: string
+	elementId: string
+}) {
+	const toggleVisibility = useCallback(
+		() => styleStore.setElementVisibility(elementId),
+		[styleStore, controlId, elementId]
+	)
 
-	const toggleVisibility = useCallback(() => {
-		// TODO - implement
-	}, [socket, controlId, elementId])
+	const isVisible = styleStore.isElementVisible(elementId)
 
 	return (
-		<CButton color="white" size="sm" onClick={toggleVisibility} title="Visible">
-			<FontAwesomeIcon icon={faEye} style={{ opacity: 0.3 }} />
+		<CButton
+			color="white"
+			size="sm"
+			onClick={toggleVisibility}
+			title={isVisible ? 'Preview visible' : 'Preview hidden'}
+		>
+			<FontAwesomeIcon icon={faEye} style={{ opacity: isVisible ? undefined : 0.3 }} />
 		</CButton>
 	)
-}
+})
 
 export function AddElementDropdownButton({
 	styleStore,

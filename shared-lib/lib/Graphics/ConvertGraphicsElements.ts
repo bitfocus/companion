@@ -1,6 +1,7 @@
 import type { ExecuteExpressionResult } from '../Expression/ExpressionResult.js'
 import {
 	ButtonGraphicsDecorationType,
+	ButtonGraphicsDrawBase,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsImageElement,
 	ButtonGraphicsTextDrawElement,
@@ -125,7 +126,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 async function convertCanvasElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsCanvasElement
-): Promise<ButtonGraphicsCanvasDrawElement> {
+): Promise<ButtonGraphicsCanvasDrawElement & ButtonGraphicsDrawBase> {
 	const [color, decoration] = await Promise.all([
 		helper.getNumber(element.color, 0),
 		helper.getEnum(
@@ -136,6 +137,7 @@ async function convertCanvasElementForDrawing(
 	])
 
 	return {
+		id: element.id,
 		type: 'canvas',
 		color,
 		decoration,
@@ -145,7 +147,7 @@ async function convertCanvasElementForDrawing(
 async function convertImageElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsImageElement
-): Promise<ButtonGraphicsImageDrawElement> {
+): Promise<ButtonGraphicsImageDrawElement & ButtonGraphicsDrawBase> {
 	const [base64Image, alignment, fillMode] = await Promise.all([
 		helper.getString<string | null>(element.base64Image, null),
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
@@ -153,6 +155,7 @@ async function convertImageElementForDrawing(
 	])
 
 	return {
+		id: element.id,
 		type: 'image',
 		base64Image,
 		alignment,
@@ -163,7 +166,7 @@ async function convertImageElementForDrawing(
 async function convertTextElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsTextElement
-): Promise<ButtonGraphicsTextDrawElement> {
+): Promise<ButtonGraphicsTextDrawElement & ButtonGraphicsDrawBase> {
 	const [fontsizeRaw, text, color, alignment] = await Promise.all([
 		helper.getUnknown(element.fontsize, 'auto'),
 		helper.getUnknown(element.text, 'ERR'), // TODO-layered better default value
@@ -174,6 +177,7 @@ async function convertTextElementForDrawing(
 	const fontsize = Number(fontsizeRaw) || fontsizeRaw
 
 	return {
+		id: element.id,
 		type: 'text',
 		text: text + '',
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',

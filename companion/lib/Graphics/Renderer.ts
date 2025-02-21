@@ -28,7 +28,7 @@ const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
 const colorDarkGrey = 'rgba(15, 15, 15, 1)'
 
-// let lastDraw = 0
+const emptySet: ReadonlySet<string> = new Set()
 
 export class GraphicsRenderer {
 	static TOPBAR_BOUNDS = new DrawBounds(0, 0, 72, TopbarRenderer.DEFAULT_HEIGHT)
@@ -153,7 +153,7 @@ export class GraphicsRenderer {
 		} else if (drawStyle.style === 'button-layered') {
 			draw_style = 'button-layered'
 
-			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location)
+			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet)
 		}
 
 		// console.timeEnd('drawButtonImage')

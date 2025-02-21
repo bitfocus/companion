@@ -6,12 +6,16 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsImageElement
 
 export type SomeButtonGraphicsDrawElement =
-	| ButtonGraphicsCanvasDrawElement
-	| ButtonGraphicsTextDrawElement
-	| ButtonGraphicsImageDrawElement
+	| (ButtonGraphicsCanvasDrawElement & ButtonGraphicsDrawBase)
+	| (ButtonGraphicsTextDrawElement & ButtonGraphicsDrawBase)
+	| (ButtonGraphicsImageDrawElement & ButtonGraphicsDrawBase)
+
+export interface ButtonGraphicsDrawBase {
+	readonly id: string
+}
 
 export interface ButtonGraphicsElementBase {
-	id: string
+	readonly id: string
 	name: string
 }
 

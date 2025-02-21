@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useRef } from 'react'
-import { AddElementDropdownButton, RemoveElementButton } from './Buttons.js'
+import { AddElementDropdownButton, RemoveElementButton, ToggleVisibilityButton } from './Buttons.js'
 import { LayeredStyleStore } from './StyleStore.js'
 import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -24,9 +24,8 @@ export const ElementsList = observer(function ElementsList({
 			<table className="button-layer-elementlist-table">
 				<thead>
 					<th className="compact">&nbsp;</th>
-					{/* <th className="compact">&nbsp;</th> */}
 					<th>Name</th>
-					<th className="compact">
+					<th className="compact element-buttons">
 						<AddElementDropdownButton styleStore={styleStore} controlId={controlId} />
 					</th>
 				</thead>
@@ -128,7 +127,6 @@ const ElementListItem = observer(function ElementListItem({
 		return (
 			<tr key={element.id} ref={ref} className={classNames(commonClasses, 'last-row')}>
 				<td></td>
-				{/* <td></td> */}
 
 				<td className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
 					{element.name || 'Background'}
@@ -144,15 +142,13 @@ const ElementListItem = observer(function ElementListItem({
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			{/* <td>
-				<ToggleVisibilityButton controlId={controlId} elementId={element.id} />
-			</td> */}
 
 			<td className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
 				{element.name ?? element.type}
 			</td>
 
-			<td>
+			<td className="element-buttons">
+				<ToggleVisibilityButton styleStore={styleStore} controlId={controlId} elementId={element.id} />
 				<RemoveElementButton controlId={controlId} elementId={element.id} confirmModalRef={confirmModalRef} />
 			</td>
 		</tr>
