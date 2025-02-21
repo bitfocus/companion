@@ -166,7 +166,8 @@ export class ControlButtonLayered
 		// Compute the new drawing
 		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
 			this.#drawElements,
-			executeExpression
+			executeExpression,
+			true
 		)
 		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
 

@@ -76,8 +76,9 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 		this.#context2d.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
 	}
 
-	protected async loadImageBuffer(data: Uint8Array): Promise<CanvasImage> {
-		return loadImage(data)
+	protected async loadBase64Image(base64Image: string): Promise<CanvasImage> {
+		const png64 = base64Image.startsWith('data:image/png;base64,') ? base64Image.slice(22) : base64Image
+		return loadImage(Buffer.from(png64, 'base64'))
 	}
 
 	protected loadPixelBuffer(data: Uint8Array, width: number, height: number): CanvasImage | Canvas | null {

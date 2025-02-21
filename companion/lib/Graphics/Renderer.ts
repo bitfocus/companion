@@ -16,24 +16,16 @@
  */
 
 import { Image } from './Image.js'
-import { ParseAlignment, parseColor } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
-import type { GraphicsOptions } from './Controller.js'
+import { type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type {
 	DrawStyleButtonModel,
 	DrawStyleButtonStateProps,
-	DrawStyleLayeredButtonModel,
 	DrawStyleModel,
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import {
-	ButtonGraphicsCanvasDrawElement,
-	ButtonGraphicsDecorationType,
-	ButtonGraphicsImageDrawElement,
-	ButtonGraphicsTextDrawElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
-import { assertNever } from '@companion-app/shared/Util.js'
+import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -227,13 +219,11 @@ export class GraphicsRenderer {
 		// Draw background PNG if exists
 		if (drawStyle.png64 !== undefined && drawStyle.png64 !== null) {
 			try {
-				let png64 = drawStyle.png64.startsWith('data:image/png;base64,') ? drawStyle.png64.slice(22) : drawStyle.png64
-				let data = Buffer.from(png64, 'base64')
 				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
 
 				!showTopbar
-					? await img.drawFromImageBuffer(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
-					: await img.drawFromImageBuffer(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
+					? await img.drawBase64Image(drawStyle.png64, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
+					: await img.drawBase64Image(drawStyle.png64, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
 			} catch (e) {
 				console.error('error drawing image:', e)
 				img.box(0, 14, 71, 57, 'black')
@@ -399,156 +389,5 @@ export class GraphicsRenderer {
 		}
 
 		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
-	}
-}
-
-interface DrawBounds {
-	x: number
-	y: number
-
-	width: number
-	height: number
-
-	maxX: number
-	maxY: number
-}
-
-function createDrawBounds(x: number, y: number, width: number, height: number): DrawBounds {
-	return {
-		x,
-		y,
-		width,
-		height,
-		maxX: x + width,
-		maxY: y + height,
-	}
-}
-
-export class GraphicsLayeredButtonRenderer {
-	static async draw(
-		img: Image,
-		options: GraphicsOptions,
-		drawStyle: DrawStyleLayeredButtonModel,
-		location: ControlLocation | undefined
-	) {
-		const backgroundElement = drawStyle.elements[0].type === 'canvas' ? drawStyle.elements[0] : undefined
-
-		const showTopBar = this.#shouldDrawTopBar(options, backgroundElement)
-		const drawBounds = createDrawBounds(0, showTopBar ? 14 : 0, 72, showTopBar ? 58 : 72)
-
-		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
-
-		for (const element of drawStyle.elements) {
-			try {
-				switch (element.type) {
-					case 'canvas':
-						// Skip the background element, it's handled separately
-						break
-					case 'image':
-						await this.#drawImageElement(img, drawBounds, element)
-						break
-					case 'text':
-						this.#drawTextElement(img, drawBounds, element)
-						break
-					default:
-						assertNever(element)
-				}
-			} catch (e) {
-				// TODO - log/report error where? Or should this abandon the render and do a placeholder?
-			}
-		}
-
-		GraphicsRenderer.drawTopbar(img, showTopBar, drawStyle, location)
-	}
-
-	static #drawBackgroundElement(
-		img: Image,
-		drawBounds: DrawBounds,
-		backgroundElement: ButtonGraphicsCanvasDrawElement | undefined
-	) {
-		if (!backgroundElement) return
-
-		img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
-	}
-
-	static async #drawImageElement(img: Image, drawBounds: DrawBounds, element: ButtonGraphicsImageDrawElement) {
-		if (!element.base64Image) return
-
-		try {
-			const png64 = element.base64Image.startsWith('data:image/png;base64,')
-				? element.base64Image.slice(22)
-				: element.base64Image
-			let data = Buffer.from(png64, 'base64')
-			const [halign, valign] = ParseAlignment(element.alignment || 'center:center')
-
-			await img.drawFromImageBuffer(
-				data,
-				drawBounds.x,
-				drawBounds.y,
-				drawBounds.width,
-				drawBounds.height,
-				halign,
-				valign,
-				'fit_or_shrink'
-			)
-		} catch (e) {
-			console.error('error drawing image:', e)
-
-			// Draw a thick red cross
-			img.drawPath(
-				[
-					[drawBounds.x, drawBounds.y],
-					[drawBounds.maxX, drawBounds.maxY],
-				],
-				{ color: 'red', width: 5 }
-			)
-			img.drawPath(
-				[
-					[drawBounds.x, drawBounds.maxY],
-					[drawBounds.maxX, drawBounds.y],
-				],
-				{ color: 'red', width: 5 }
-			)
-		}
-	}
-
-	static #drawTextElement(img: Image, drawBounds: DrawBounds, element: ButtonGraphicsTextDrawElement) {
-		if (!element.text) return
-
-		// Draw button text
-		const fontSize = Number(element.fontsize) || 'auto'
-		const [halign, valign] = ParseAlignment(element.alignment)
-
-		// Force some padding around the text
-		const marginX = 2
-		const marginY = 1
-
-		img.drawAlignedText(
-			drawBounds.x + marginX,
-			drawBounds.y + marginY,
-			drawBounds.width - 2 * marginX,
-			drawBounds.height - 2 * marginY,
-			element.text,
-			parseColor(element.color),
-			fontSize,
-			halign,
-			valign
-		)
-	}
-
-	static #shouldDrawTopBar(options: GraphicsOptions, backgroundElement: ButtonGraphicsCanvasDrawElement | undefined) {
-		const decoration = backgroundElement?.decoration
-		switch (decoration) {
-			case ButtonGraphicsDecorationType.Border:
-				return false
-			case ButtonGraphicsDecorationType.TopBar:
-				return true
-			case ButtonGraphicsDecorationType.FollowDefault:
-			case undefined:
-				return !options.remove_topbar
-			default:
-				assertNever(decoration)
-				return !options.remove_topbar
-		}
 	}
 }

@@ -4,10 +4,9 @@ import { colord } from 'colord'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@companion-app/shared/Model/Options.js'
-import type { CompanionAlignment, CompanionInputFieldBase } from '@companion-module/base'
+import type { CompanionInputFieldBase } from '@companion-module/base'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 
 /**
  * Combine rgba components to a 32bit value
@@ -69,41 +68,6 @@ export const rgb = (r: number | string, g: number | string, b: number | string, 
 
 	if (isNaN(r) || isNaN(g) || isNaN(b)) return false
 	return ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff)
-}
-
-/**
- * Convert a 24bit/32bit number itno rgb components
- */
-export const rgbRev = (dec: number): { a: number; r: number; g: number; b: number } => {
-	dec = Math.floor(dec)
-	return {
-		a: dec > 0xffffff ? (255 - ((dec & 0xff000000) >>> 24)) / 255 : 1,
-		r: (dec & 0xff0000) >>> 16,
-		g: (dec & 0x00ff00) >>> 8,
-		b: dec & 0x0000ff,
-	}
-}
-
-/**
- * parse a Companion color number or a css color string and return a css color string
- * @param color
- * @param skipValidation defaults to false
- * @returns a css color string
- */
-export const parseColor = (color: number | string, skipValidation = false): string => {
-	if (typeof color === 'number' || (typeof color === 'string' && !isNaN(Number(color)))) {
-		const col = rgbRev(Number(color))
-		return `rgba(${col.r}, ${col.g}, ${col.b}, ${col.a})`
-	}
-	if (typeof color === 'string') {
-		if (skipValidation) return color
-		if (colord(color).isValid()) {
-			return color
-		} else {
-			return 'rgba(0, 0, 0, 0)'
-		}
-	}
-	return 'rgba(0, 0, 0, 0)'
 }
 
 /**
@@ -393,38 +357,6 @@ export function TrySplitVariableId(variableId: string): [string, string] | null 
 	const variable = variableId.substring(splitIndex + 1)
 
 	return [label, variable]
-}
-
-/**
- * Parse an alignment value
- * @param alignment
- * @param validate Throw if value is invalid
- */
-export function ParseAlignment(
-	alignment: string,
-	validate?: boolean
-): [horizontal: HorizontalAlignment, vertical: VerticalAlignment, full: CompanionAlignment] {
-	const [halignRaw, valignRaw] = alignment.toLowerCase().split(':', 2)
-
-	let halign: 'left' | 'right' | 'center'
-	if (halignRaw !== 'left' && halignRaw !== 'right' && halignRaw !== 'center') {
-		if (validate) throw new Error(`Invalid horizontal component: "${halignRaw}"`)
-
-		halign = 'center'
-	} else {
-		halign = halignRaw
-	}
-
-	let valign: 'top' | 'bottom' | 'center'
-	if (valignRaw !== 'top' && valignRaw !== 'bottom' && valignRaw !== 'center') {
-		if (validate) throw new Error(`Invalid vertical component: "${valignRaw}"`)
-
-		valign = 'center'
-	} else {
-		valign = valignRaw
-	}
-
-	return [halign, valign, `${halign}:${valign}`]
 }
 
 export function serializeIsVisibleFnSingle<T extends CompanionInputFieldBase | CompanionInputFieldBaseExtended>(

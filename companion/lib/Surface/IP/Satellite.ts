@@ -18,7 +18,8 @@ import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
+import { parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
+import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
 	BrightnessConfigField,

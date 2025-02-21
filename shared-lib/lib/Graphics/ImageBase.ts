@@ -17,8 +17,8 @@
 
 /// <reference lib="dom" />
 
+import type { MinimalLogger } from '../Logger.js'
 import type { HorizontalAlignment, VerticalAlignment } from './Util.js'
-import type winston from 'winston'
 
 const DEFAULT_FONTS = [
 	'Companion-sans',
@@ -59,7 +59,7 @@ export type CompanionImageContext2D = Omit<
  * Class for generating an image and rendering some content to it
  */
 export abstract class ImageBase<TDrawImageType extends { width: number; height: number }> {
-	protected readonly logger: winston.Logger
+	protected readonly logger: MinimalLogger
 
 	protected readonly context2d: CompanionImageContext2D
 
@@ -72,7 +72,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param height the height of the image in integer
 	 * @param oversampling a factor of how much more pixels the image should have in width and height
 	 */
-	protected constructor(logger: winston.Logger, context2d: CompanionImageContext2D, width: number, height: number) {
+	protected constructor(logger: MinimalLogger, context2d: CompanionImageContext2D, width: number, height: number) {
 		this.logger = logger
 
 		this.width = width
@@ -93,7 +93,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		dh: number
 	): void
 
-	protected abstract loadImageBuffer(data: Uint8Array): Promise<TDrawImageType>
+	protected abstract loadBase64Image(base64Image: string): Promise<TDrawImageType>
 
 	protected abstract loadPixelBuffer(data: Uint8Array, width: number, height: number): TDrawImageType | null
 
@@ -226,8 +226,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param valign vertical alignment of the image in the bounding box (defaults to center)
 	 * @param scale the size factor of the image. Number scales by specified amount, fill scales to fill the bounding box neglecting aspect ratio, crop scales to fill the bounding box and crop if necessary, fit scales to fit the bounding box with the longer side
 	 */
-	async drawFromImageBuffer(
-		data: Uint8Array,
+	async drawBase64Image(
+		base64Image: string,
 		xStart = 0,
 		yStart = 0,
 		width = 72,
@@ -239,7 +239,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let canvasImage: TDrawImageType | undefined
 
 		try {
-			canvasImage = await this.loadImageBuffer(data)
+			canvasImage = await this.loadBase64Image(base64Image)
 		} catch (e) {
 			console.log('Error loading image', e)
 			return

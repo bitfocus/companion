@@ -35,16 +35,11 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
+import type { GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
 const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADING === '1'
-
-export interface GraphicsOptions {
-	page_direction_flipped: boolean
-	page_plusminus: boolean
-	remove_topbar: boolean
-}
 
 /**
  * Generate full path to a font file, handling both packaged and non-packaged environments

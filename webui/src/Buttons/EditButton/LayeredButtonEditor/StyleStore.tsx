@@ -22,6 +22,8 @@ export class LayeredStyleStore {
 	}
 
 	public updateData(elements: SomeButtonGraphicsElement[]) {
+		console.log('update data')
+
 		this.elements.replace(elements)
 	}
 

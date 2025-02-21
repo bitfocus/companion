@@ -93,7 +93,8 @@ class ExpressionHelper {
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	elements: SomeButtonGraphicsElement[],
-	executeExpression: ExecuteExpressionFn
+	executeExpression: ExecuteExpressionFn,
+	_onlyEnabled: boolean
 ): Promise<{
 	elements: SomeButtonGraphicsDrawElement[]
 	usedVariables: Set<string>

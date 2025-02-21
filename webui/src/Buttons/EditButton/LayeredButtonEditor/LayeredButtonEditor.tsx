@@ -11,7 +11,7 @@ import { observer } from 'mobx-react-lite'
 import { ElementsList } from './ElementsList.js'
 import { NonIdealState } from '../../../Components/NonIdealState.js'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
-import { useLayeredButtonDrawStyleParser } from './Preview/DrawStyleParser.js'
+import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },
@@ -103,8 +103,6 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
 
-	const test = useLayeredButtonDrawStyleParser(controlId, styleStore)
-
 	return (
 		<div className="button-layer-style-editor">
 			<div className="button-layer-preview">
@@ -124,9 +122,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 					</NonIdealState>
 				)}
 
-				<div>
-					<code>{test ? JSON.stringify(test, undefined, 4) : 'no data'}</code>
-				</div>
+				<LayeredButtonPreviewRenderer controlId={controlId} styleStore={styleStore} />
 			</div>
 		</div>
 	)

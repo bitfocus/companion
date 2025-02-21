@@ -9,7 +9,7 @@ import {
 	ExpressionStreamResult,
 	ExpressionStreamResultWithSubId,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import { useContext, useEffect, useState } from 'react'
 import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
@@ -17,6 +17,7 @@ import { useObserver } from 'mobx-react-lite'
 import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
 
+const DRAW_DEBOUNCE = 50
 const emptySet = new Set<string>()
 
 class LayeredButtonDrawStyleParser {
@@ -58,6 +59,8 @@ class LayeredButtonDrawStyleParser {
 		if (this.#disposed) return
 
 		// Clone and store the raw elements
+		// TODO - it would be nice to skip this equality check, but the parent observer triggers too often..
+		if (isEqual(this.#rawElements, style)) return
 		this.#rawElements = cloneDeep(style)
 
 		// Queue update
@@ -95,7 +98,8 @@ class LayeredButtonDrawStyleParser {
 				this.#latestValues.set(str, newValuePromise)
 
 				return convertExpressionResult(await newValuePromise)
-			}
+			},
+			false
 		)
 
 		// Unsubscribe from any streams that are no longer used
@@ -108,7 +112,7 @@ class LayeredButtonDrawStyleParser {
 
 		// Emit the new elements
 		this.#changed(elements)
-	}, 10)
+	}, DRAW_DEBOUNCE)
 
 	#unsubscribeExpression(stream: ExpressionStreamResultWithSubId | Promise<ExpressionStreamResultWithSubId>): void {
 		Promise.resolve(stream)
@@ -158,6 +162,13 @@ function convertExpressionResult(fromValue: ExpressionStreamResultWithSubId): Ex
 	}
 }
 
+/**
+ * Hook to parse a layered button draw style, replacing any expressions with real values
+ * This subscribes to the necessary expressions on the backend, to update as the button should be redrawn
+ * @param controlId ControlId of the button to draw, if this is a control
+ * @param styleStore The store containing the style to be drawn
+ * @returns The parsed draw style, or null if not yet ready
+ */
 export function useLayeredButtonDrawStyleParser(
 	controlId: string | null,
 	styleStore: LayeredStyleStore
@@ -167,6 +178,9 @@ export function useLayeredButtonDrawStyleParser(
 	const [drawStyle, setDrawStyle] = useState<SomeButtonGraphicsDrawElement[] | null>(null)
 	const [parser, setParser] = useState<LayeredButtonDrawStyleParser | null>(null)
 
+	// Reset the draw style when the store changes
+	useEffect(() => setDrawStyle(null), [styleStore])
+
 	// This is weird, but we need the cleanup function, so can't use useMemo
 	useEffect(() => {
 		const parser = new LayeredButtonDrawStyleParser(socket, controlId, setDrawStyle)
@@ -174,8 +188,11 @@ export function useLayeredButtonDrawStyleParser(
 
 		setParser(parser)
 
-		return () => parser.dispose()
-	}, [socket, controlId, setDrawStyle])
+		return () => {
+			setParser(null)
+			parser.dispose()
+		}
+	}, [socket, controlId, styleStore, setDrawStyle])
 
 	// Trigger the update whenever the style changes
 	useObserver(() => parser?.updateStyle(toJS(styleStore.elements)))
