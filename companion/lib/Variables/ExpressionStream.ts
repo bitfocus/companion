@@ -23,6 +23,25 @@ export class VariablesExpressionStream {
 	}
 
 	clientConnect(client: ClientSocket) {
+		client.on('disconnect', () => {
+			// Remove from all subscriptions
+			for (const [expressionId, session] of this.#sessions) {
+				for (const [fullSubId, subClient] of session.clients) {
+					if (subClient === client) {
+						session.clients.delete(fullSubId)
+
+						this.#logger.debug(`Client "${client.id}" unsubscribed from session: ${expressionId}`)
+
+						if (session.clients.size === 0) {
+							this.#sessions.delete(expressionId)
+
+							this.#logger.debug(`Session "${expressionId}" has no more clients, terminated`)
+						}
+					}
+				}
+			}
+		})
+
 		client.onPromise('variables:stream-expression:subscribe', (expression, controlId, requiredType) => {
 			const subId = nanoid()
 			const fullSubId = `${client.id}::${subId}`
@@ -31,7 +50,7 @@ export class VariablesExpressionStream {
 			const existingSession = this.#sessions.get(expressionId)
 			if (existingSession) {
 				// Add to the existing session
-				existingSession.clients.set(fullSubId, { subId, client })
+				existingSession.clients.set(fullSubId, client)
 
 				this.#logger.debug(`Client "${client.id}" subscribed to existing session: ${expressionId}`)
 
@@ -52,7 +71,7 @@ export class VariablesExpressionStream {
 				requiredType,
 
 				latestResult: initialValue,
-				clients: new Map([[fullSubId, { subId, client }]]),
+				clients: new Map([[fullSubId, client]]),
 			}
 			this.#sessions.set(expressionId, newSession)
 
@@ -97,7 +116,7 @@ export class VariablesExpressionStream {
 					session.latestResult = newValue
 
 					const convertedValue = convertExpressionResult(newValue)
-					for (const { client } of session.clients.values()) {
+					for (const client of session.clients.values()) {
 						// TODO - ensure we only send it to each client once?
 						// TODO - maybe this should use rooms?
 						client.emit('variables:stream-expression:update', session.expression, convertedValue)
@@ -123,7 +142,7 @@ interface ExpressionStreamSession {
 
 	latestResult: ExecuteExpressionResult
 
-	readonly clients: Map<string, { subId: string; client: ClientSocket }>
+	readonly clients: Map<string, ClientSocket>
 }
 
 function convertExpressionResult(result: ExecuteExpressionResult): ExpressionStreamResult {
