@@ -115,10 +115,15 @@ export class VariablesExpressionStream {
 					const newValue = this.#executeExpression(session.expression, session.controlId, session.requiredType)
 					session.latestResult = newValue
 
+					const notifiedClients = new Set<string>()
+
 					const convertedValue = convertExpressionResult(newValue)
 					for (const client of session.clients.values()) {
-						// TODO - ensure we only send it to each client once?
-						// TODO - maybe this should use rooms?
+						// Ensure we only notify each client once
+						if (notifiedClients.has(client.id)) continue
+						notifiedClients.add(client.id)
+
+						// TODO - maybe this should use rooms instead?
 						client.emit('variables:stream-expression:update', session.expression, convertedValue)
 					}
 
