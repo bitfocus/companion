@@ -7,6 +7,7 @@ import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/La
 import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: string
@@ -29,12 +30,6 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 	)
 })
 
-interface RendererDrawCache {
-	image: GraphicsImage
-	debounce: PromiseDebounce<void, [DrawStyleLayeredButtonModel]>
-	hiddenElements: ReadonlySet<string>
-}
-
 interface LayeredButtonCanvasProps {
 	width: number
 	height: number
@@ -42,7 +37,7 @@ interface LayeredButtonCanvasProps {
 	hiddenElements: ReadonlySet<string>
 }
 function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: LayeredButtonCanvasProps) {
-	const drawCache = useRef<RendererDrawCache | null>(null)
+	const drawContext = useRef<RendererDrawContext | null>(null)
 
 	const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
 	useEffect(() => {
@@ -50,46 +45,13 @@ function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: Layer
 
 		if (!canvas || !drawStyle) return
 
-		if (!drawCache.current) {
-			const image = GraphicsImage.create(canvas)
-			if (!image) {
-				console.error('Failed to create image')
-				return
-			}
-
-			drawCache.current = {
-				image,
-				debounce: new PromiseDebounce(async (style) => {
-					try {
-						image.fillColor('#000000')
-
-						await GraphicsLayeredButtonRenderer.draw(
-							image,
-							{
-								page_direction_flipped: false,
-								page_plusminus: false,
-								remove_topbar: false,
-							},
-							style,
-							location,
-							drawCache.current!.hiddenElements
-						)
-
-						image.drawComplete()
-					} catch (e) {
-						console.error('draw failed!', e)
-					}
-				}, 1),
-				hiddenElements: new Set(),
-			}
-		}
+		// Setup the context on the first run
+		if (!drawContext.current) drawContext.current = new RendererDrawContext(canvas)
 
 		// Update any cached properties
-		drawCache.current.hiddenElements = hiddenElements
+		drawContext.current.setHiddenElements(hiddenElements)
 
-		const { debounce } = drawCache.current
-
-		const location = undefined
+		// Pass the new draw style to the context
 		const drawStyleFull: DrawStyleLayeredButtonModel = {
 			style: 'button-layered',
 
@@ -102,8 +64,7 @@ function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: Layer
 			button_status: 'warning',
 			action_running: true,
 		}
-
-		debounce.trigger(drawStyleFull)
+		drawContext.current.draw(drawStyleFull)
 	}, [canvas, drawStyle, hiddenElements])
 
 	return (
@@ -115,4 +76,56 @@ function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: Layer
 			height={height}
 		/>
 	)
+}
+
+class RendererDrawContext {
+	readonly #image: GraphicsImage
+	readonly #debounce: PromiseDebounce
+	readonly location: ControlLocation | undefined = undefined // TODO - populate this?
+
+	#hiddenElements: ReadonlySet<string>
+
+	constructor(canvas: HTMLCanvasElement) {
+		const image = GraphicsImage.create(canvas)
+		if (!image) throw new Error('Failed to create image')
+
+		this.#image = image
+		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1)
+		this.#hiddenElements = new Set()
+	}
+
+	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
+	#debounceDraw = async () => {
+		try {
+			if (!this.#lastDrawStyle) throw new Error('No draw style!')
+
+			this.#image.fillColor('#000000')
+
+			await GraphicsLayeredButtonRenderer.draw(
+				this.#image,
+				{
+					page_direction_flipped: false,
+					page_plusminus: false,
+					remove_topbar: false,
+				},
+				this.#lastDrawStyle,
+				this.location,
+				this.#hiddenElements
+			)
+
+			this.#image.drawComplete()
+		} catch (e) {
+			console.error('draw failed!', e)
+		}
+	}
+
+	setHiddenElements(hiddenElements: ReadonlySet<string>) {
+		this.#hiddenElements = hiddenElements
+		this.#debounce.trigger()
+	}
+
+	draw(drawStyleFull: DrawStyleLayeredButtonModel) {
+		this.#lastDrawStyle = drawStyleFull
+		this.#debounce.trigger()
+	}
 }
