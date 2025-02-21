@@ -159,20 +159,20 @@ export function useLayeredButtonDrawStyleParser(
 	const { socket } = useContext(RootAppStoreContext)
 
 	const [drawStyle, setDrawStyle] = useState<SomeButtonGraphicsDrawElement[] | null>(null)
+	const [parser, setParser] = useState<LayeredButtonDrawStyleParser | null>(null)
 
-	// Setup the parser
-	const parser = useMemo(
-		() => new LayeredButtonDrawStyleParser(socket, controlId, setDrawStyle),
-		[socket, controlId, setDrawStyle]
-	)
-
-	// Dispose the parser when the component unmounts
+	// This is weird, but we need the cleanup function, so can't use useMemo
 	useEffect(() => {
+		const parser = new LayeredButtonDrawStyleParser(socket, controlId, setDrawStyle)
+		parser.updateStyle(toJS(styleStore.elements))
+
+		setParser(parser)
+
 		return () => parser.dispose()
-	}, [parser])
+	}, [socket, controlId, setDrawStyle])
 
 	// Trigger the update whenever the style changes
-	useObserver(() => parser.updateStyle(toJS(styleStore.elements)))
+	useObserver(() => parser?.updateStyle(toJS(styleStore.elements)))
 
 	return drawStyle
 }
