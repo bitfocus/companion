@@ -11,11 +11,12 @@ import {
 } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { cloneDeep } from 'lodash-es'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
 import { useObserver } from 'mobx-react-lite'
 import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
+import exp from 'constants'
 
 const emptySet = new Set<string>()
 
@@ -49,10 +50,8 @@ class LayeredButtonDrawStyleParser {
 		this.#unsubSocket()
 
 		// Unsubscribe from all streams
-		for (const subId of this.#latestValues.keys()) {
-			this.#socket.emitPromise('variables:stream-expression:unsubscribe', [subId]).catch((e) => {
-				console.error('Failed to unsubscribe from stream', e)
-			})
+		for (const sub of this.#latestValues.values()) {
+			this.#unsubscribeExpression(sub)
 		}
 	}
 
@@ -101,18 +100,26 @@ class LayeredButtonDrawStyleParser {
 		)
 
 		// Unsubscribe from any streams that are no longer used
-		for (const subId of this.#latestValues.keys()) {
-			if (!referencedExpressions.has(subId)) {
-				this.#socket.emitPromise('variables:stream-expression:unsubscribe', [subId]).catch((e) => {
-					console.error('Failed to unsubscribe from stream', e)
-				})
-				this.#latestValues.delete(subId)
+		for (const [expression, sub] of this.#latestValues) {
+			if (!referencedExpressions.has(expression)) {
+				this.#unsubscribeExpression(sub)
+				this.#latestValues.delete(expression)
 			}
 		}
 
 		// Emit the new elements
 		this.#changed(elements)
 	}, 10)
+
+	#unsubscribeExpression(stream: ExpressionStreamResultWithSubId | Promise<ExpressionStreamResultWithSubId>): void {
+		Promise.resolve(stream)
+			.then((stream) => {
+				return this.#socket.emitPromise('variables:stream-expression:unsubscribe', [stream.subId])
+			})
+			.catch((e) => {
+				console.error('Failed to unsubscribe from stream', e)
+			})
+	}
 
 	#streamUpdate = (expression: string, result: ExpressionStreamResult) => {
 		if (this.#disposed) return
