@@ -6,17 +6,20 @@ import type {
 	ExpressionStreamResult,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { nanoid } from 'nanoid'
+import type { PageController } from '../Page/Controller.js'
 
 export class VariablesExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
 
 	// readonly #ioController: UIHandler
+	readonly #pageController: PageController
 	readonly #variablesController: VariablesValues
 
 	readonly #sessions = new Map<string, ExpressionStreamSession>()
 
-	constructor(_ioController: UIHandler, variablesController: VariablesValues) {
+	constructor(_ioController: UIHandler, pageController: PageController, variablesController: VariablesValues) {
 		// this.#ioController = ioController
+		this.#pageController = pageController
 		this.#variablesController = variablesController
 
 		this.#variablesController.on('variables_changed', this.#onValuesChanged)
@@ -133,9 +136,11 @@ export class VariablesExpressionStream {
 		}
 	}
 
-	#executeExpression = (expression: string, _controlId: string | null, requiredType: string | undefined) => {
-		// TODO - use the correct location/variables
-		return this.#variablesController.executeExpression(expression, undefined, requiredType, {}) // TODO properly
+	#executeExpression = (expression: string, controlId: string | null, requiredType: string | undefined) => {
+		const location = controlId ? this.#pageController.getLocationOfControlId(controlId) : undefined
+
+		// TODO - make reactive to control moving?
+		return this.#variablesController.executeExpression(expression, location, requiredType, {}) // TODO local values?
 	}
 }
 
