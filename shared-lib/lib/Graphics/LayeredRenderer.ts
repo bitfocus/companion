@@ -9,6 +9,7 @@ import {
 	type ButtonGraphicsTextDrawElement,
 } from '../Model/StyleLayersModel.js'
 import { ParseAlignment, parseColor, type GraphicsOptions } from './Util.js'
+import { TopbarRenderer } from './TopbarRenderer.js'
 
 export class GraphicsLayeredButtonRenderer {
 	static async draw(
@@ -20,7 +21,7 @@ export class GraphicsLayeredButtonRenderer {
 		const backgroundElement = drawStyle.elements[0].type === 'canvas' ? drawStyle.elements[0] : undefined
 
 		const showTopBar = this.#shouldDrawTopBar(options, backgroundElement)
-		const topBarHeight = showTopBar ? 14 : 0
+		const topBarHeight = showTopBar ? Math.floor(0.2 * img.height) : 0
 		const drawBounds = createDrawBounds(0, topBarHeight, img.width, img.height - topBarHeight)
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
@@ -45,8 +46,7 @@ export class GraphicsLayeredButtonRenderer {
 			}
 		}
 
-		// TODO - reenable this
-		// GraphicsRenderer.drawTopbar(img, showTopBar, drawStyle, location)
+		TopbarRenderer.draw(img, showTopBar, drawStyle, location)
 	}
 
 	static #drawBackgroundElement(

@@ -6,6 +6,7 @@ import { GraphicsImage } from './Image.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
+import { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: string
@@ -17,6 +18,28 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 }: LayeredButtonPreviewRendererProps) {
 	const drawStyle = useLayeredButtonDrawStyleParser(controlId, styleStore)
 
+	return (
+		<div>
+			<LayeredButtonCanvas width={200} height={200} drawStyle={drawStyle} />
+			&nbsp;&nbsp;
+			<LayeredButtonCanvas width={144} height={112} drawStyle={drawStyle} />
+			&nbsp;&nbsp;
+			<LayeredButtonCanvas width={100} height={200} drawStyle={drawStyle} />
+		</div>
+	)
+})
+
+interface RendererDrawCache {
+	image: GraphicsImage
+	debounce: PromiseDebounce<void, [DrawStyleLayeredButtonModel]>
+}
+
+interface LayeredButtonCanvasProps {
+	width: number
+	height: number
+	drawStyle: SomeButtonGraphicsDrawElement[] | null
+}
+function LayeredButtonCanvas({ width, height, drawStyle }: LayeredButtonCanvasProps) {
 	const drawCache = useRef<RendererDrawCache | null>(null)
 
 	const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
@@ -77,15 +100,12 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 	}, [canvas, drawStyle])
 
 	return (
-		<div>
-			<canvas ref={setCanvas} width={200} height={200} />
-
-			{/* <code>{drawStyle ? JSON.stringify(drawStyle, undefined, 4) : 'no data'}</code> */}
-		</div>
+		<canvas
+			// Use the dimensions as a key to force a redraw when they change
+			key={`${width}x${height}`}
+			ref={setCanvas}
+			width={width}
+			height={height}
+		/>
 	)
-})
-
-interface RendererDrawCache {
-	image: GraphicsImage
-	debounce: PromiseDebounce<void, [DrawStyleLayeredButtonModel]>
 }
