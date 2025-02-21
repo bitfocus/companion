@@ -1,5 +1,6 @@
 import { ImageBase } from '@companion-app/shared/Graphics/ImageBase.js'
 import type { MinimalLogger } from '@companion-app/shared/Logger.js'
+import { LastUsedCache } from './DrawStyleParser.js'
 
 const logger: MinimalLogger = {
 	error: (...args) => console.error(...args),
@@ -10,6 +11,8 @@ const logger: MinimalLogger = {
 
 export class GraphicsImage extends ImageBase<HTMLImageElement> {
 	readonly #context2d: CanvasRenderingContext2D
+
+	readonly #parseCache = new LastUsedCache<HTMLImageElement>()
 
 	private constructor(context2d: CanvasRenderingContext2D, width: number, height: number) {
 		super(logger, context2d, width, height)
@@ -46,10 +49,14 @@ export class GraphicsImage extends ImageBase<HTMLImageElement> {
 			base64Image = 'data:image/png;base64,' + base64Image
 		}
 
+		const cached = this.#parseCache.get(base64Image)
+		if (cached) return cached
+
 		return new Promise<HTMLImageElement>((resolve, reject) => {
 			const image = new Image()
 
 			image.onload = () => {
+				this.#parseCache.set(base64Image, image)
 				resolve(image)
 			}
 			image.onerror = (e) => {
@@ -62,5 +69,9 @@ export class GraphicsImage extends ImageBase<HTMLImageElement> {
 	protected loadPixelBuffer(_data: Uint8Array, _width: number, _height: number): HTMLImageElement | null {
 		// TODO - implement this
 		return null
+	}
+
+	public drawComplete() {
+		this.#parseCache.disposeUnused()
 	}
 }

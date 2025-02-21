@@ -5,6 +5,7 @@ import { LayeredStyleStore } from '../StyleStore.js'
 import { GraphicsImage } from './Image.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: string
@@ -31,10 +32,32 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 				return
 			}
 
-			drawCache.current = { image }
+			drawCache.current = {
+				image,
+				debounce: new PromiseDebounce(async (style) => {
+					try {
+						image.fillColor('#000000')
+
+						await GraphicsLayeredButtonRenderer.draw(
+							image,
+							{
+								page_direction_flipped: false,
+								page_plusminus: false,
+								remove_topbar: false,
+							},
+							style,
+							location
+						)
+
+						image.drawComplete()
+					} catch (e) {
+						console.error('draw failed!', e)
+					}
+				}, 1),
+			}
 		}
 
-		const { image } = drawCache.current
+		const { debounce } = drawCache.current
 
 		const location = undefined
 		const drawStyleFull: DrawStyleLayeredButtonModel = {
@@ -50,21 +73,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 			action_running: true,
 		}
 
-		try {
-			image.fillColor('#000000')
-			GraphicsLayeredButtonRenderer.draw(
-				image,
-				{
-					page_direction_flipped: false,
-					page_plusminus: false,
-					remove_topbar: false,
-				},
-				drawStyleFull,
-				location
-			)
-		} catch (e) {
-			console.error('draw failed!', e)
-		}
+		debounce.trigger(drawStyleFull)
 	}, [canvas, drawStyle])
 
 	return (
@@ -78,4 +87,5 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 
 interface RendererDrawCache {
 	image: GraphicsImage
+	debounce: PromiseDebounce<void, [DrawStyleLayeredButtonModel]>
 }

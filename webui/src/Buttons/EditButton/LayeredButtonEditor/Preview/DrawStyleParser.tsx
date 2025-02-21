@@ -64,7 +64,7 @@ class LayeredButtonDrawStyleParser {
 		this.#rawElements = cloneDeep(style)
 
 		// Queue update
-		this.#recalculateStyle.call()
+		this.#recalculateStyle.trigger()
 	}
 
 	#recalculateStyle = new PromiseDebounce(async () => {
@@ -142,7 +142,7 @@ class LayeredButtonDrawStyleParser {
 		}
 
 		// Queue update
-		this.#recalculateStyle.call()
+		this.#recalculateStyle.trigger()
 	}
 }
 
@@ -198,4 +198,44 @@ export function useLayeredButtonDrawStyleParser(
 	useObserver(() => parser?.updateStyle(toJS(styleStore.elements)))
 
 	return drawStyle
+}
+
+/**
+ * A cache that keeps track of the last used items, and disposes of unused items
+ */
+export class LastUsedCache<T> {
+	readonly #cache = new Map<
+		string,
+		{
+			data: T
+			dispose?: () => void
+		}
+	>()
+
+	readonly #usedSinceReset = new Set<string>()
+
+	get(key: string): T | undefined {
+		const entry = this.#cache.get(key)
+		if (!entry) return undefined
+
+		this.#usedSinceReset.add(key)
+		return entry.data
+	}
+
+	set(key: string, data: T, dispose?: () => void) {
+		this.#usedSinceReset.add(key)
+		this.#cache.set(key, { data, dispose })
+	}
+
+	disposeUnused() {
+		for (const [key, entry] of this.#cache) {
+			if (!this.#usedSinceReset.has(key)) {
+				this.#cache.delete(key)
+				entry.dispose?.()
+				console.log('dispose', key)
+			}
+		}
+
+		this.#usedSinceReset.clear()
+	}
 }
