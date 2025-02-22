@@ -68,6 +68,7 @@ export class ControlButtonLayered
 			id: 'text0',
 			name: 'Text',
 			type: 'text',
+			enabled: { value: true, isExpression: false },
 			text: { value: '', isExpression: false },
 			color: { value: 0xffffff, isExpression: false },
 			alignment: { value: 'center:center', isExpression: false },
@@ -124,6 +125,10 @@ export class ControlButtonLayered
 				switch (element.type) {
 					case 'image':
 						element.fillMode = element.fillMode || { value: 'fit_or_shrink', isExpression: false }
+						element.enabled = element.enabled || { value: true, isExpression: false }
+						break
+					case 'text':
+						element.enabled = element.enabled || { value: true, isExpression: false }
 						break
 				}
 			}

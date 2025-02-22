@@ -6,12 +6,13 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsImageElement
 
 export type SomeButtonGraphicsDrawElement =
-	| (ButtonGraphicsCanvasDrawElement & ButtonGraphicsDrawBase)
-	| (ButtonGraphicsTextDrawElement & ButtonGraphicsDrawBase)
-	| (ButtonGraphicsImageDrawElement & ButtonGraphicsDrawBase)
+	| ButtonGraphicsCanvasDrawElement
+	| ButtonGraphicsTextDrawElement
+	| ButtonGraphicsImageDrawElement
 
 export interface ButtonGraphicsDrawBase {
 	readonly id: string
+	enabled: boolean
 }
 
 export interface ButtonGraphicsElementBase {
@@ -21,10 +22,10 @@ export interface ButtonGraphicsElementBase {
 
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 export type MakeExpressionable<T extends { type: string }> = {
-	[P in keyof T]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
+	[P in keyof Omit<T, 'id'>]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
 }
 
-export interface ButtonGraphicsCanvasDrawElement {
+export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled'> {
 	// Note: this is the background element and can only be at the bottom of the stack
 	type: 'canvas'
 
@@ -44,7 +45,7 @@ export enum ButtonGraphicsDecorationType {
 	// None = 'none', // Future
 }
 
-export interface ButtonGraphicsTextDrawElement {
+export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase {
 	type: 'text'
 
 	text: string
@@ -64,7 +65,7 @@ export interface ButtonGraphicsTextElement
 	extends ButtonGraphicsElementBase,
 		MakeExpressionable<ButtonGraphicsTextDrawElement> {}
 
-export interface ButtonGraphicsImageDrawElement {
+export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase {
 	type: 'image'
 
 	base64Image: string | null

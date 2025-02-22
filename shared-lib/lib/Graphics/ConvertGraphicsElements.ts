@@ -1,7 +1,6 @@
 import type { ExecuteExpressionResult } from '../Expression/ExpressionResult.js'
 import {
 	ButtonGraphicsDecorationType,
-	ButtonGraphicsDrawBase,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsImageElement,
 	ButtonGraphicsTextDrawElement,
@@ -20,9 +19,11 @@ class ExpressionHelper {
 	readonly #executeExpression: ExecuteExpressionFn
 
 	readonly usedVariables = new Set<string>()
+	readonly onlyEnabled: boolean
 
-	constructor(executeExpression: ExecuteExpressionFn) {
+	constructor(executeExpression: ExecuteExpressionFn, onlyEnabled: boolean) {
 		this.#executeExpression = executeExpression
+		this.onlyEnabled = onlyEnabled
 	}
 
 	async #executeExpressionAndTrackVariables(
@@ -90,17 +91,28 @@ class ExpressionHelper {
 
 		return strValue as T
 	}
+
+	async getBoolean(value: ExpressionOrValue<boolean>, defaultValue: boolean): Promise<boolean> {
+		if (!value.isExpression) return value.value
+
+		const result = await this.#executeExpressionAndTrackVariables(value.value, 'boolean')
+		if (!result.ok) {
+			return defaultValue
+		}
+
+		return result.value as boolean
+	}
 }
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	elements: SomeButtonGraphicsElement[],
 	executeExpression: ExecuteExpressionFn,
-	_onlyEnabled: boolean
+	onlyEnabled: boolean
 ): Promise<{
 	elements: SomeButtonGraphicsDrawElement[]
 	usedVariables: Set<string>
 }> {
-	const helper = new ExpressionHelper(executeExpression)
+	const helper = new ExpressionHelper(executeExpression, onlyEnabled)
 
 	const newElements = await Promise.all(
 		elements.map((element) => {
@@ -126,7 +138,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 async function convertCanvasElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsCanvasElement
-): Promise<ButtonGraphicsCanvasDrawElement & ButtonGraphicsDrawBase> {
+): Promise<ButtonGraphicsCanvasDrawElement> {
 	const [color, decoration] = await Promise.all([
 		helper.getNumber(element.color, 0),
 		helper.getEnum(
@@ -147,16 +159,24 @@ async function convertCanvasElementForDrawing(
 async function convertImageElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsImageElement
-): Promise<ButtonGraphicsImageDrawElement & ButtonGraphicsDrawBase> {
+): Promise<ButtonGraphicsImageDrawElement | null> {
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = await helper.getBoolean(element.enabled, true)
+	if (!enabled && helper.onlyEnabled) return null
+
 	const [base64Image, alignment, fillMode] = await Promise.all([
 		helper.getString<string | null>(element.base64Image, null),
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
 		helper.getEnum(element.fillMode, ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
 	])
 
+	// If the image is not enabled, return null
+	if (!enabled) return null
+
 	return {
 		id: element.id,
 		type: 'image',
+		enabled,
 		base64Image,
 		alignment,
 		fillMode,
@@ -166,7 +186,11 @@ async function convertImageElementForDrawing(
 async function convertTextElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsTextElement
-): Promise<ButtonGraphicsTextDrawElement & ButtonGraphicsDrawBase> {
+): Promise<ButtonGraphicsTextDrawElement | null> {
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = await helper.getBoolean(element.enabled, true)
+	if (!enabled && helper.onlyEnabled) return null
+
 	const [fontsizeRaw, text, color, alignment] = await Promise.all([
 		helper.getUnknown(element.fontsize, 'auto'),
 		helper.getUnknown(element.text, 'ERR'), // TODO-layered better default value
@@ -174,11 +198,15 @@ async function convertTextElementForDrawing(
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
 	])
 
+	// If the text is not enabled, return null
+	if (!enabled) return null
+
 	const fontsize = Number(fontsizeRaw) || fontsizeRaw
 
 	return {
 		id: element.id,
 		type: 'text',
+		enabled,
 		text: text + '',
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
 		color,
