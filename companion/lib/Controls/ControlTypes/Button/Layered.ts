@@ -17,7 +17,7 @@ import {
 	ExpressionOrValue,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { DrawStyleLayeredButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
 import { CompanionVariableValues } from '@companion-module/base'
@@ -154,8 +154,8 @@ export class ControlButtonLayered
 		// return GetButtonBitmapSize(this.deps.userconfig, this.#baseStyle)
 	}
 
-	#lastDrawStyle: DrawStyleModel | null = null
-	getLastDrawStyle(): DrawStyleModel | null {
+	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
+	getLastDrawStyle(): DrawStyleLayeredButtonModel | null {
 		return this.#lastDrawStyle
 	}
 
@@ -163,7 +163,7 @@ export class ControlButtonLayered
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	async getDrawStyle(): Promise<DrawStyleModel | null> {
+	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
 		// Block out the button text
 		const injectedVariableValues: CompanionVariableValues = {}
 		const location = this.deps.page.getLocationOfControlId(this.controlId)
@@ -306,18 +306,31 @@ export class ControlButtonLayered
 
 		if (!elementEntry.isExpression && value) {
 			// Make sure the value is expression safe
-			if (typeof elementEntry.value === 'string') {
+			if (element.type === 'text' && key === 'text') {
+				// Skip, this is very hard to fixup perfectly
+			} else if (typeof elementEntry.value === 'string') {
 				// If its a string, it will need to be wrapped in quotes
+				// This is not always good enough, but is better than nothing
 				elementEntry.value = `'${elementEntry.value}'`
-				// TODO-layered is this good enough?
 			} else if (typeof elementEntry.value === 'number' && key === 'color') {
 				// If its a color number, it is nicer to have it as a hex string
 				elementEntry.value = '0x' + elementEntry.value.toString(16)
+			} else if (typeof elementEntry.value === 'boolean') {
+				elementEntry.value = elementEntry.value ? 'true' : 'false'
 			}
-			// TODO-layered any mroe cases
+			// Future: this may want more cases
 		} else if (elementEntry.isExpression && !value) {
 			// Preserve current resolved value
-			// TODO-layered implement this
+			const lastDrawStyle = this.getLastDrawStyle()
+			const lastDrawElement = lastDrawStyle?.elements.find((el) => el.id === id)
+
+			if (key === 'enabled' && !lastDrawElement) {
+				// Special case, element was presumably disabled
+				elementEntry.value = false as any
+			} else if (lastDrawElement) {
+				// The element was found, copy the value
+				elementEntry.value = lastDrawElement[key as keyof typeof lastDrawElement]
+			}
 		}
 
 		// Update the value

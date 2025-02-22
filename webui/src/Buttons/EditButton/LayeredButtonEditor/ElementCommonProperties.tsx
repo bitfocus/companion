@@ -28,20 +28,11 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 				<FieldElementNameInput controlId={controlId} elementProps={elementProps} />
 			</CCol>
 
-			{
-				elementProps.type !== 'canvas' && (
-					<FormPropertyField controlId={controlId} elementProps={elementProps} property="enabled" label="Enabled">
-						{(elementProp, setValue) => <FieldEnabledInput elementProp={elementProp} setValue={setValue} />}
-					</FormPropertyField>
-				)
-
-				/* <CFormLabel htmlFor="inputEnabled" className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
-				Enabled
-			</CFormLabel>
-			<CCol sm={8}>
-				<FieldElementNameInput controlId={controlId} elementProps={elementProps} />
-			</CCol> */
-			}
+			{elementProps.type !== 'canvas' && (
+				<FormPropertyField controlId={controlId} elementProps={elementProps} property="enabled" label="Enabled">
+					{(elementProp, setValue) => <FieldEnabledInput elementProp={elementProp} setValue={setValue} />}
+				</FormPropertyField>
+			)}
 		</>
 	)
 })
