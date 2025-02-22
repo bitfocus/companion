@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 import { CompanionAlignment, DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
+import { ElementBoundsProperties } from './ElementBoundsProperties.js'
 
 export const ImageElementPropertiesEditor = observer(function ImageElementPropertiesEditor({
 	controlId,
@@ -19,6 +20,8 @@ export const ImageElementPropertiesEditor = observer(function ImageElementProper
 }) {
 	return (
 		<>
+			<ElementBoundsProperties controlId={controlId} elementProps={elementProps} />
+
 			<FormPropertyField controlId={controlId} elementProps={elementProps} property="base64Image" label="Image">
 				{(elementProp, setValue) => <FieldImagePickerInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>

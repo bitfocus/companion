@@ -8,17 +8,22 @@
 export class PromiseDebounce<TResult = void, TArgs extends unknown[] = []> {
 	readonly #fn: (...args: TArgs) => Promise<TResult>
 	readonly #wait: number
+	readonly #maxWait: number | undefined
 
 	/** If an execution timeout has passed while  */
 	#pendingArgs: TArgs | null = null
 	#timeout: NodeJS.Timeout | undefined
+	#lastRun: number
 
 	#isExecuting = false
 	#waitingListeners: Listener<TResult>[] = []
 
-	constructor(fn: (...args: TArgs) => Promise<TResult>, wait: number) {
+	constructor(fn: (...args: TArgs) => Promise<TResult>, wait: number, maxWait?: number) {
 		this.#fn = fn
 		this.#wait = wait
+		this.#maxWait = maxWait
+
+		this.#lastRun = Date.now() - wait
 	}
 
 	/**
@@ -48,12 +53,19 @@ export class PromiseDebounce<TResult = void, TArgs extends unknown[] = []> {
 		// Clear an existing timeout
 		if (this.#timeout) clearTimeout(this.#timeout)
 
+		let waitTime = this.#wait
+		if (this.#maxWait !== undefined) {
+			// A max wait is set, so we need to check if the waitTime should be adjusted
+			const latestAllowedRun = this.#lastRun + this.#maxWait
+			waitTime = Math.min(this.#wait, latestAllowedRun - Date.now())
+		}
+
 		// Start a new one
 		this.#timeout = setTimeout(() => {
 			this.#timeout = undefined
 
 			this.executeFn(args)
-		}, this.#wait)
+		}, waitTime)
 	}
 
 	private executeFn(args: TArgs): void {
@@ -62,6 +74,8 @@ export class PromiseDebounce<TResult = void, TArgs extends unknown[] = []> {
 			this.#pendingArgs = args
 			return
 		}
+
+		this.#lastRun = Date.now()
 
 		// We have the clear to begin executing
 		this.#isExecuting = true

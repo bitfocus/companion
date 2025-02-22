@@ -1,10 +1,11 @@
 import type { ExecuteExpressionResult } from '../Expression/ExpressionResult.js'
 import {
 	ButtonGraphicsDecorationType,
-	ButtonGraphicsImageDrawElement,
-	ButtonGraphicsImageElement,
-	ButtonGraphicsTextDrawElement,
-	ButtonGraphicsTextElement,
+	type ButtonGraphicsDrawBounds,
+	type ButtonGraphicsImageDrawElement,
+	type ButtonGraphicsImageElement,
+	type ButtonGraphicsTextDrawElement,
+	type ButtonGraphicsTextElement,
 	type ButtonGraphicsCanvasDrawElement,
 	type ButtonGraphicsCanvasElement,
 	type ExpressionOrValue,
@@ -164,7 +165,8 @@ async function convertImageElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [base64Image, alignment, fillMode] = await Promise.all([
+	const [bounds, base64Image, alignment, fillMode] = await Promise.all([
+		convertDrawBounds(helper, element),
 		helper.getString<string | null>(element.base64Image, null),
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
 		helper.getEnum(element.fillMode, ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
@@ -177,6 +179,7 @@ async function convertImageElementForDrawing(
 		id: element.id,
 		type: 'image',
 		enabled,
+		...bounds,
 		base64Image,
 		alignment,
 		fillMode,
@@ -212,4 +215,18 @@ async function convertTextElementForDrawing(
 		color,
 		alignment,
 	}
+}
+
+async function convertDrawBounds(
+	helper: ExpressionHelper,
+	element: ButtonGraphicsImageElement
+): Promise<ButtonGraphicsDrawBounds> {
+	const [x, y, width, height] = await Promise.all([
+		helper.getNumber(element.x, 0),
+		helper.getNumber(element.y, 0),
+		helper.getNumber(element.width, 1),
+		helper.getNumber(element.height, 1),
+	])
+
+	return { x, y, width, height }
 }

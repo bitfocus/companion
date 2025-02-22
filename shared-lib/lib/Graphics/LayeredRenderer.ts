@@ -72,12 +72,14 @@ export class GraphicsLayeredButtonRenderer {
 		try {
 			const [halign, valign] = ParseAlignment(element.alignment || 'center:center')
 
+			const newBounds = drawBounds.compose(element.x, element.y, element.width, element.height)
+
 			await img.drawBase64Image(
 				element.base64Image,
-				drawBounds.x,
-				drawBounds.y,
-				drawBounds.width,
-				drawBounds.height,
+				newBounds.x,
+				newBounds.y,
+				newBounds.width,
+				newBounds.height,
 				halign,
 				valign,
 				element.fillMode

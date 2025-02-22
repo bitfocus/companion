@@ -119,15 +119,24 @@ export class ControlButtonLayered
 
 			// HACK: temporary fill in new properties
 			for (const element of this.#drawElements) {
-				switch (element.type) {
-					case 'image':
-						element.fillMode = element.fillMode || { value: 'fit_or_shrink', isExpression: false }
-						element.enabled = element.enabled || { value: true, isExpression: false }
-						break
-					case 'text':
-						element.enabled = element.enabled || { value: true, isExpression: false }
-						break
+				if (element.type !== 'canvas') {
+					const defaults = CreateElementOfType(element.type)
+					for (const key of Object.keys(defaults)) {
+						if (key === 'id' || key === 'type' || key === 'name') continue
+						if (!(key in element)) {
+							;(element as any)[key] = (defaults as any)[key]
+						}
+					}
 				}
+				// switch (element.type) {
+				// 	case 'image':
+				// 		element.fillMode = element.fillMode || { value: 'fit_or_shrink', isExpression: false }
+				// 		element.enabled = element.enabled || { value: true, isExpression: false }
+				// 		break
+				// 	case 'text':
+				// 		element.enabled = element.enabled || { value: true, isExpression: false }
+				// 		break
+				// }
 			}
 
 			// Ensure control is stored before setup

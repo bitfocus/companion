@@ -26,6 +26,13 @@ export interface ButtonGraphicsElementBase {
 	name: string
 }
 
+export interface ButtonGraphicsDrawBounds {
+	x: number
+	y: number
+	width: number
+	height: number
+}
+
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 export type MakeExpressionable<T extends { type: string }> = {
 	[P in keyof Omit<T, 'id'>]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
@@ -71,7 +78,7 @@ export interface ButtonGraphicsTextElement
 	extends ButtonGraphicsElementBase,
 		MakeExpressionable<ButtonGraphicsTextDrawElement> {}
 
-export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase {
+export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'image'
 
 	base64Image: string | null

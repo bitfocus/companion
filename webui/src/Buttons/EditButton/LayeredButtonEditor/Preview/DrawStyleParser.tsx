@@ -18,6 +18,7 @@ import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
 
 const DRAW_DEBOUNCE = 50
+const DRAW_DEBOUNCE_MAX = 100
 const emptySet = new Set<string>()
 
 class LayeredButtonDrawStyleParser {
@@ -67,52 +68,56 @@ class LayeredButtonDrawStyleParser {
 		this.#recalculateStyle.trigger()
 	}
 
-	#recalculateStyle = new PromiseDebounce(async () => {
-		const referencedExpressions = new Set<string>()
+	#recalculateStyle = new PromiseDebounce(
+		async () => {
+			const referencedExpressions = new Set<string>()
 
-		const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
-			this.#rawElements,
-			async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> => {
-				// Mark it as active, so we don't unsubscribe
-				referencedExpressions.add(str)
+			const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
+				this.#rawElements,
+				async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> => {
+					// Mark it as active, so we don't unsubscribe
+					referencedExpressions.add(str)
 
-				// Reuse existing value
-				const existing = this.#latestValues.get(str)
-				if (existing) return convertExpressionResult(await existing)
+					// Reuse existing value
+					const existing = this.#latestValues.get(str)
+					if (existing) return convertExpressionResult(await existing)
 
-				// Start a new stream
-				const newValuePromise = this.#socket
-					.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, requiredType])
-					.catch((e) => {
-						console.error('Failed to subscribe to expression', e)
-						return {
-							subId: '',
-							result: {
-								ok: false,
-								error: 'Failed to subscribe to expression',
-							},
-						} satisfies ExpressionStreamResultWithSubId
-					})
+					// Start a new stream
+					const newValuePromise = this.#socket
+						.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, requiredType])
+						.catch((e) => {
+							console.error('Failed to subscribe to expression', e)
+							return {
+								subId: '',
+								result: {
+									ok: false,
+									error: 'Failed to subscribe to expression',
+								},
+							} satisfies ExpressionStreamResultWithSubId
+						})
 
-				// Track the new value, to avoid duplicateion
-				this.#latestValues.set(str, newValuePromise)
+					// Track the new value, to avoid duplicateion
+					this.#latestValues.set(str, newValuePromise)
 
-				return convertExpressionResult(await newValuePromise)
-			},
-			false
-		)
+					return convertExpressionResult(await newValuePromise)
+				},
+				false
+			)
 
-		// Unsubscribe from any streams that are no longer used
-		for (const [expression, sub] of this.#latestValues) {
-			if (!referencedExpressions.has(expression)) {
-				this.#unsubscribeExpression(sub)
-				this.#latestValues.delete(expression)
+			// Unsubscribe from any streams that are no longer used
+			for (const [expression, sub] of this.#latestValues) {
+				if (!referencedExpressions.has(expression)) {
+					this.#unsubscribeExpression(sub)
+					this.#latestValues.delete(expression)
+				}
 			}
-		}
 
-		// Emit the new elements
-		this.#changed(elements)
-	}, DRAW_DEBOUNCE)
+			// Emit the new elements
+			this.#changed(elements)
+		},
+		DRAW_DEBOUNCE,
+		DRAW_DEBOUNCE_MAX
+	)
 
 	#unsubscribeExpression(stream: ExpressionStreamResultWithSubId | Promise<ExpressionStreamResultWithSubId>): void {
 		Promise.resolve(stream)

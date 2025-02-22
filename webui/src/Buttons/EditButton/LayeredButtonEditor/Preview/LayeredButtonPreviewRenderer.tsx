@@ -108,7 +108,7 @@ class RendererDrawContext {
 		if (!image) throw new Error('Failed to create image')
 
 		this.#image = image
-		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1)
+		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
 		this.#hiddenElements = new Set()
 	}
 

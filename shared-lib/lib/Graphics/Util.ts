@@ -33,6 +33,10 @@ export class DrawBounds {
 	isValid(): boolean {
 		return this.width > 0 && this.height > 0
 	}
+
+	compose(x: number, y: number, width: number, height: number): DrawBounds {
+		return new DrawBounds(this.x + x * this.width, this.y + y * this.height, width * this.width, height * this.height)
+	}
 }
 
 /**
