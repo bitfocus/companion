@@ -11,6 +11,7 @@ import { CompanionAlignment, DropdownChoiceId } from '@companion-module/base'
 import { ColorInputField } from '../../../Components/ColorInputField.js'
 import { AlignmentInputField } from '../../../Components/AlignmentInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
+import { ElementBoundsProperties } from './ElementBoundsProperties.js'
 
 export const TextElementPropertiesEditor = observer(function TextElementPropertiesEditor({
 	controlId,
@@ -21,6 +22,8 @@ export const TextElementPropertiesEditor = observer(function TextElementProperti
 }) {
 	return (
 		<>
+			<ElementBoundsProperties controlId={controlId} elementProps={elementProps} />
+
 			<FormPropertyField
 				controlId={controlId}
 				elementProps={elementProps}

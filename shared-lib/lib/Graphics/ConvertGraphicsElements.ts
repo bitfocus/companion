@@ -11,6 +11,7 @@ import {
 	type ExpressionOrValue,
 	type SomeButtonGraphicsDrawElement,
 	type SomeButtonGraphicsElement,
+	MakeExpressionable,
 } from '../Model/StyleLayersModel.js'
 import { ALIGNMENT_OPTIONS } from '../Model/Alignment.js'
 
@@ -194,7 +195,8 @@ async function convertTextElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [fontsizeRaw, text, color, alignment] = await Promise.all([
+	const [bounds, fontsizeRaw, text, color, alignment] = await Promise.all([
+		convertDrawBounds(helper, element),
 		helper.getUnknown(element.fontsize, 'auto'),
 		helper.getUnknown(element.text, 'ERR'), // TODO-layered better default value
 		helper.getNumber(element.color, 0),
@@ -210,6 +212,7 @@ async function convertTextElementForDrawing(
 		id: element.id,
 		type: 'text',
 		enabled,
+		...bounds,
 		text: text + '',
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
 		color,
@@ -219,7 +222,7 @@ async function convertTextElementForDrawing(
 
 async function convertDrawBounds(
 	helper: ExpressionHelper,
-	element: ButtonGraphicsImageElement
+	element: MakeExpressionable<ButtonGraphicsDrawBounds & { type: string }>
 ): Promise<ButtonGraphicsDrawBounds> {
 	const [x, y, width, height] = await Promise.all([
 		helper.getNumber(element.x, 0),

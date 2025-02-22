@@ -112,6 +112,8 @@ export class GraphicsLayeredButtonRenderer {
 		let fontSize: 'auto' | number = Number(element.fontsize) || 'auto'
 		const [halign, valign] = ParseAlignment(element.alignment)
 
+		const newBounds = drawBounds.compose(element.x, element.y, element.width, element.height)
+
 		// Force some padding around the text
 		const marginX = 2
 		const marginY = 1
@@ -122,10 +124,10 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		img.drawAlignedText(
-			drawBounds.x + marginX,
-			drawBounds.y + marginY,
-			drawBounds.width - 2 * marginX,
-			drawBounds.height - 2 * marginY,
+			newBounds.x + marginX,
+			newBounds.y + marginY,
+			newBounds.width - 2 * marginX,
+			newBounds.height - 2 * marginY,
 			element.text,
 			parseColor(element.color),
 			fontSize,

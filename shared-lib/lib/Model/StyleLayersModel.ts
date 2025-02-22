@@ -58,7 +58,7 @@ export enum ButtonGraphicsDecorationType {
 	// None = 'none', // Future
 }
 
-export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase {
+export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
 	text: string
