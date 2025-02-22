@@ -8,6 +8,7 @@ import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleMo
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import FontLoader from './FontLoader.js'
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: string
@@ -66,6 +67,22 @@ function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: Layer
 		}
 		drawContext.current.draw(drawStyleFull)
 	}, [canvas, drawStyle, hiddenElements])
+
+	// Ensure the fonts are loaded
+	// Future: maybe the first paint should be blocked until either the fonts are loaded, or a timeout is reached?
+	useEffect(() => {
+		const unsub = FontLoader.listenForFontLoad(() => {
+			console.log('font loaded!', Date.now())
+			if (drawContext.current) drawContext.current.redraw()
+		})
+
+		return () => {
+			if (unsub !== 'loaded') {
+				// Stop listening for font load events
+				return unsub()
+			}
+		}
+	}, [])
 
 	return (
 		<canvas
@@ -126,6 +143,10 @@ class RendererDrawContext {
 
 	draw(drawStyleFull: DrawStyleLayeredButtonModel) {
 		this.#lastDrawStyle = drawStyleFull
+		this.#debounce.trigger()
+	}
+
+	redraw() {
 		this.#debounce.trigger()
 	}
 }

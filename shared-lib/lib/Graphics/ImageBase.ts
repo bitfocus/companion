@@ -19,20 +19,7 @@
 
 import type { MinimalLogger } from '../Logger.js'
 import type { HorizontalAlignment, VerticalAlignment } from './Util.js'
-
-const DEFAULT_FONTS = [
-	'Companion-sans',
-	'Companion-symbols1',
-	'Companion-symbols2',
-	'Companion-symbols3',
-	'Companion-symbols4',
-	'Companion-symbols5',
-	'Companion-symbols6',
-	'Companion-gurmukhi',
-	'Companion-simplified-chinese',
-	'Companion-korean',
-	'Companion-emoji',
-].join(', ')
+import { DEFAULT_FONTS_STR } from './Fonts.js'
 
 export type LineOrientation = 'inside' | 'center' | 'outside'
 
@@ -396,7 +383,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		if (isNaN(fontsize)) return 0
 		if (fontsize < 3) return 0
 
-		this.context2d.font = `${fontsize}px ${DEFAULT_FONTS}`
+		this.context2d.font = `${fontsize}px ${DEFAULT_FONTS_STR}`
 
 		const metrics = this.context2d.measureText(text)
 
@@ -434,7 +421,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		if (text === undefined || text.length == 0) return 0
 		if (halignment != 'left' && halignment != 'center' && halignment != 'right') halignment = 'left'
 
-		this.context2d.font = `${fontsize}px ${DEFAULT_FONTS}`
+		this.context2d.font = `${fontsize}px ${DEFAULT_FONTS_STR}`
 		this.context2d.fillStyle = color
 		this.context2d.textAlign = halignment
 
@@ -558,7 +545,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 		//if (fontsize < 9) fontfamily = '7x5'
 		const fontLineHeight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
-		this.context2d.font = `${fontheight}px/${fontLineHeight}px ${DEFAULT_FONTS}`
+		this.context2d.font = `${fontheight}px/${fontLineHeight}px ${DEFAULT_FONTS_STR}`
 		// this.context2d.textWrap = false
 
 		// Measure the line height with a consistent string, to avoid issues with emoji being too tall

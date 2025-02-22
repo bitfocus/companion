@@ -36,21 +36,14 @@ import type { PageController } from '../Page/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
+import { FONT_DEFINITIONS } from './Fonts.js'
+import type Express from 'express'
+import compressionMiddleware from 'compression'
+import fs from 'fs'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
 const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADING === '1'
-
-/**
- * Generate full path to a font file, handling both packaged and non-packaged environments
- */
-function generateFontUrl(fontFilename: string): string {
-	if (isPackaged()) {
-		return path.join(__dirname, 'assets/Fonts', fontFilename)
-	} else {
-		return fileURLToPath(new URL(path.join('../../../assets/Fonts', fontFilename), import.meta.url))
-	}
-}
 
 interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
@@ -125,7 +118,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		controlsController: ControlsController,
 		pagesController: PageController,
 		userConfigController: DataUserConfig,
-		variableValuesController: VariablesValues
+		variableValuesController: VariablesValues,
+		internalApiRouter: Express.Router
 	) {
 		super()
 
@@ -229,21 +223,31 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		this.#logger.info('Loading fonts')
 
-		GlobalFonts.registerFromPath(generateFontUrl('Arimo-Regular.ttf'), 'Companion-sans')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansMono-wdth-wght.ttf'), 'Companion-mono')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSymbols-wght.ttf'), 'Companion-symbols1')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSymbols2-Regular.ttf'), 'Companion-symbols2')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansMath-Regular.ttf'), 'Companion-symbols3')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoMusic-Regular.ttf'), 'Companion-symbols4')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansLinearA-Regular.ttf'), 'Companion-symbols5')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansLinearB-Regular.ttf'), 'Companion-symbols6')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansGurmukhi-Regular.ttf'), 'Companion-gurmukhi')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSC-Regular.ttf'), 'Companion-simplified-chinese')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansKR-Regular.ttf'), 'Companion-korean')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoColorEmoji-compat.ttf'), 'Companion-emoji')
-		GlobalFonts.registerFromPath(generateFontUrl('pf_tempesta_seven.ttf'), '5x7')
+		for (const definition of FONT_DEFINITIONS) {
+			GlobalFonts.registerFromPath(definition.pathOnDisk, definition.name)
+		}
 
 		this.#logger.info('Fonts loaded')
+
+		// Serve font files to clients
+		internalApiRouter.get('/graphics/font/:font', compressionMiddleware(), (req, res) => {
+			const definition = FONT_DEFINITIONS.find((def) => def.name === req.params.font)
+			if (!definition) {
+				res.status(404).send('Font not found')
+				return
+			}
+
+			// Try and set the correct content type
+			if (definition.pathOnDisk.endsWith('.ttf')) {
+				res.setHeader('Content-Type', 'font/ttf')
+			}
+
+			// Cache aggressively
+			res.setHeader('Cache-Control', 'public, max-age=31536000')
+
+			this.#logger.debug(`Send font ${definition.name}`)
+			fs.createReadStream(definition.pathOnDisk).pipe(res)
+		})
 	}
 
 	/**

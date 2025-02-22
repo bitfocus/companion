@@ -17,7 +17,7 @@
     "@jsep-plugin/numbers": "^1.0.2",
     "@jsep-plugin/object": "^1.2.2",
     "@jsep-plugin/template": "^1.0.5",
-		"colord": "^2.9.3",
+    "colord": "^2.9.3",
     "jsep": "^1.4.0",
     "jsonpath-plus": "^10.3.0",
     "ps-tree": "^1.2.0",
