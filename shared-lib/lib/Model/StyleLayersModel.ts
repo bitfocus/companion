@@ -1,10 +1,16 @@
 import type { CompanionAlignment } from '@companion-module/base'
 
+/**
+ * The type of a button graphics element as stored in places where it can be edited
+ */
 export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCanvasElement
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
 
+/**
+ * The type of a button graphics element as used by the renderer, with any dynamic values resolved
+ */
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsTextDrawElement

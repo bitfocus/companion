@@ -18,6 +18,9 @@ function generateFontUrl(fontFilename: string): string {
 	}
 }
 
+/**
+ * The supported fonts for button drawing, these are loaded into the renderer at startup, and can be pulled by clients for preview rendering
+ */
 export const FONT_DEFINITIONS = [
 	{ pathOnDisk: generateFontUrl('Arimo-Regular.ttf'), name: 'Companion-sans' },
 	{ pathOnDisk: generateFontUrl('NotoSansMono-wdth-wght.ttf'), name: 'Companion-mono' },

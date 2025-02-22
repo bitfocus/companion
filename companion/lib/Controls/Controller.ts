@@ -812,61 +812,49 @@ export class ControlsController extends CoreBase {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsLayeredStyle) {
-				return control.layeredStyleAddElement(type, index)
-			} else {
-				throw new Error(`Control "${controlId}" does not support layer styles`)
-			}
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleAddElement(type, index)
 		})
 		client.onPromise('controls:style:remove-element', async (controlId, elementId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsLayeredStyle) {
-				return control.layeredStyleRemoveElement(elementId)
-			} else {
-				throw new Error(`Control "${controlId}" does not support layer styles`)
-			}
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleRemoveElement(elementId)
 		})
 		client.onPromise('controls:style:move-element', async (controlId, elementId, newIndex) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsLayeredStyle) {
-				return control.layeredStyleMoveElement(elementId, newIndex)
-			} else {
-				throw new Error(`Control "${controlId}" does not support layer styles`)
-			}
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleMoveElement(elementId, newIndex)
 		})
 		client.onPromise('controls:style:set-element-name', async (controlId, elementId, name) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsLayeredStyle) {
-				return control.layeredStyleSetElementName(elementId, name)
-			} else {
-				throw new Error(`Control "${controlId}" does not support layer styles`)
-			}
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleSetElementName(elementId, name)
 		})
 		client.onPromise('controls:style:update-option-value', async (controlId, elementId, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsLayeredStyle) {
-				return control.layeredStyleUpdateOptionValue(elementId, key, value)
-			} else {
-				throw new Error(`Control "${controlId}" does not support layer styles`)
-			}
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleUpdateOptionValue(elementId, key, value)
 		})
 		client.onPromise('controls:style:update-option-is-expression', async (controlId, elementId, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (control.supportsLayeredStyle) {
-				return control.layeredStyleUpdateOptionIsExpression(elementId, key, value)
-			} else {
-				throw new Error(`Control "${controlId}" does not support layer styles`)
-			}
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleUpdateOptionIsExpression(elementId, key, value)
 		})
 	}
 

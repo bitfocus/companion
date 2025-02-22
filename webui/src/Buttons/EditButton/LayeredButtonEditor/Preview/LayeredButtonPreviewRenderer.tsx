@@ -58,6 +58,7 @@ function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: Layer
 
 			elements: drawStyle,
 
+			// simulate some values:
 			pushed: false,
 			step_cycle: undefined,
 			cloud: undefined,

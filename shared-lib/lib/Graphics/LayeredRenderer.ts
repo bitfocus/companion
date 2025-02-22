@@ -115,7 +115,7 @@ export class GraphicsLayeredButtonRenderer {
 		const marginY = 1
 
 		if (typeof fontSize === 'number') {
-			// HACK: temporary scale until new font size scale is implemented
+			// TODO-layered HACK: temporary scale until new font size scale is implemented
 			fontSize *= img.height / 72
 		}
 

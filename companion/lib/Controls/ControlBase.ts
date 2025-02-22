@@ -131,6 +131,7 @@ export abstract class ControlBase<TJson> {
 
 	/**
 	 * Get the complete style object from the last draw
+	 * Note: This may or may not be a cached value produced from `getDrawStyle`
 	 * @returns the last drawn style
 	 */
 	abstract getLastDrawStyle(): DrawStyleModel | null

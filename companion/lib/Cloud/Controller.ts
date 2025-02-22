@@ -248,7 +248,7 @@ export class CloudController {
 					...drawStyle,
 					pushed: control.supportsPushed && control.pushed,
 					actions_running: drawStyle.action_running,
-					bank_status: (control.supportsStyle || control.supportsLayeredStyle) && control.button_status,
+					bank_status: drawStyle.button_status,
 					style: 'button',
 				},
 			})

@@ -68,6 +68,9 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		this.context2d = context2d
 	}
 
+	/**
+	 * Draw an image loaded with one of the load abstract load functions
+	 */
 	protected abstract drawImage(
 		image: TDrawImageType,
 		sx: number,
@@ -80,8 +83,16 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		dh: number
 	): void
 
+	/**
+	 * Load an image from a base64 string
+	 * This will later be drawn with drawImage
+	 */
 	protected abstract loadBase64Image(base64Image: string): Promise<TDrawImageType>
 
+	/**
+	 * Prepare a pixel buffer for drawing
+	 * This will later be drawn with drawImage
+	 */
 	protected abstract loadPixelBuffer(data: Uint8Array, width: number, height: number): TDrawImageType | null
 
 	/**

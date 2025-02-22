@@ -1,4 +1,3 @@
-import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
 import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js'
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
@@ -20,8 +19,6 @@ export interface ControlWithStyle extends ControlBase<any> {
 
 	readonly baseStyle: ButtonStyleProperties
 
-	readonly button_status: ButtonStatus
-
 	/**
 	 * Update the style fields of this control
 	 * @param diff - config diff to apply
@@ -42,8 +39,6 @@ export interface ControlWithoutLayeredStyle extends ControlBase<any> {
 
 export interface ControlWithLayeredStyle extends ControlBase<any> {
 	readonly supportsLayeredStyle: true
-
-	readonly button_status: ButtonStatus
 
 	/**
 	 * Add an element to the layered style

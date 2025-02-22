@@ -1,5 +1,5 @@
 import type { CompanionAlignment, CompanionTextSize } from '@companion-module/base'
-import { SomeButtonGraphicsDrawElement } from './StyleLayersModel.js'
+import type { SomeButtonGraphicsDrawElement } from './StyleLayersModel.js'
 
 export type DrawStyleModel =
 	| {
