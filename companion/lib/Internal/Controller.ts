@@ -610,7 +610,7 @@ export class InternalController {
 		useVariableFields: boolean
 	): {
 		location: ControlLocation | null
-		referencedVariables: string[]
+		referencedVariables: Set<string>
 	} {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 

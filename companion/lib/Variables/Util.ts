@@ -39,7 +39,7 @@ export type VariablesCache = Map<
 >
 export interface ParseVariablesResult {
 	text: string
-	variableIds: string[]
+	variableIds: Set<string>
 }
 export type ExecuteExpressionResult = ExecuteExpressionResultOk | ExecuteExpressionResultError
 interface ExecuteExpressionResultOk {
@@ -61,12 +61,12 @@ export function parseVariablesInString(
 	if (string === undefined || string === null || string === '') {
 		return {
 			text: string,
-			variableIds: [],
+			variableIds: new Set(),
 		}
 	}
 	if (typeof string !== 'string') string = `${string}`
 
-	const referencedVariableIds: string[] = []
+	const referencedVariableIds = new Set<string>()
 
 	let matchCount = 0
 	let matches: RegExpExecArray | null
@@ -86,7 +86,7 @@ export function parseVariablesInString(
 			variableId = variableId.substring(7)
 		}
 
-		referencedVariableIds.push(`${connectionLabel}:${variableId}`)
+		referencedVariableIds.add(`${connectionLabel}:${variableId}`)
 
 		let value: CompanionVariableValue | undefined
 		if (cachedVariableValues.has(fullId)) {
@@ -108,7 +108,10 @@ export function parseVariablesInString(
 			if (rawValue !== undefined) {
 				const result = parseVariablesInString(rawValue, rawVariableValues, cachedVariableValues)
 				value = result.text
-				referencedVariableIds.push(...result.variableIds)
+
+				for (const id of result.variableIds) {
+					referencedVariableIds.add(id)
+				}
 			} else {
 				// Variable has no value
 				value = VARIABLE_UNKNOWN_VALUE

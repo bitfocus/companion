@@ -160,7 +160,7 @@ export class ControlButtonNormal
 			} else {
 				const parseResult = parser.parseVariables(style.text)
 				style.text = parseResult.text
-				this.#last_draw_variables = parseResult.variableIds.length > 0 ? new Set(parseResult.variableIds) : null
+				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			}
 		}
 

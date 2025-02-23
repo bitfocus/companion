@@ -62,7 +62,7 @@ export class InternalVariables implements InternalModuleFragment {
 	/**
 	 * The dependencies of variables that should retrigger each feedback
 	 */
-	#variableSubscriptions = new Map<string, string[]>()
+	#variableSubscriptions = new Map<string, Set<string>>()
 
 	constructor(internalModule: InternalController, variableController: VariablesValues) {
 		this.#internalModule = internalModule
@@ -183,13 +183,13 @@ export class InternalVariables implements InternalModuleFragment {
 				feedback
 			)
 
-			this.#variableSubscriptions.set(feedback.id, [...result1.variableIds, ...result2.variableIds])
+			this.#variableSubscriptions.set(feedback.id, new Set([...result1.variableIds, ...result2.variableIds]))
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.definitionId == 'check_expression') {
 			const res = this.#variableController.executeExpression(feedback.options.expression, feedback.location, 'boolean')
 
-			this.#variableSubscriptions.set(feedback.id, Array.from(res.variableIds))
+			this.#variableSubscriptions.set(feedback.id, res.variableIds)
 
 			if (res.ok) {
 				return !!res.value

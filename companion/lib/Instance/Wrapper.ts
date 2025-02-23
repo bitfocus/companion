@@ -809,7 +809,7 @@ export class SocketEventsHandler {
 
 			return {
 				text: result.text,
-				variableIds: result.variableIds,
+				variableIds: Array.from(result.variableIds),
 			}
 		} catch (e: any) {
 			this.logger.error(`Parse variables failed: ${e}`)

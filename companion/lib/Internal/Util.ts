@@ -16,7 +16,7 @@ export function ParseInternalControlReference(
 	injectedVariableValues?: VariablesCache
 ): {
 	location: ControlLocation | null
-	referencedVariables: string[]
+	referencedVariables: Set<string>
 } {
 	const sanitisePageNumber = (pageNumber: number): number | null => {
 		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
@@ -79,7 +79,7 @@ export function ParseInternalControlReference(
 	}
 
 	let location: ControlLocation | null = null
-	let referencedVariables: string[] = []
+	let referencedVariables = new Set<string>()
 
 	switch (options.location_target) {
 		case 'this':
@@ -114,7 +114,7 @@ export function ParseInternalControlReference(
 				} else {
 					logger.warn(`${result.error}, in expression: "${options.location_expression}"`)
 				}
-				referencedVariables = Array.from(result.variableIds)
+				referencedVariables = result.variableIds
 			}
 			break
 	}
