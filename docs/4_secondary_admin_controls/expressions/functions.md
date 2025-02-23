@@ -144,7 +144,6 @@ eg `encode("Companion","hex")` gives `"436f6d70616e696f6e"`
 
 Decode a string from the requested format ('hex','base64'). If `enc` is missing, `latin1` will be used.
 
-
 eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
 **parseVariables(string)**
@@ -199,6 +198,10 @@ Check if an array includes a value
 
 If this encounters invalid input, it will return false
 
+**arrlen(obj)**
+
+Find the length of the given array.
+
 ##### Time operations
 
 **unixNow()**
@@ -212,7 +215,6 @@ Convert a timestamp of format 'HH:MM:SS' into the number of seconds it represent
 eg `00:10:15` gives 615
 
 You can do the reverse of this with `secondsToTimestamp(str)`
-
 
 **secondsToTimestamp(seconds, format)**
 

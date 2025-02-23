@@ -371,6 +371,20 @@ describe('functions', () => {
 			expect(ExpressionFunctions.arrayIncludes([true, false], 1)).toBe(false) // Boolean vs number
 			expect(ExpressionFunctions.arrayIncludes([true, false], 'true')).toBe(false) // Boolean vs string
 		})
+
+		it('arrlen', () => {
+			expect(ExpressionFunctions.arrlen()).toBe(0)
+			expect(ExpressionFunctions.arrlen('')).toBe(1)
+			expect(ExpressionFunctions.arrlen('a')).toBe(1)
+			expect(ExpressionFunctions.arrlen('abc')).toBe(1)
+			expect(ExpressionFunctions.arrlen(9)).toBe(1)
+			expect(ExpressionFunctions.arrlen([])).toBe(0)
+			expect(ExpressionFunctions.arrlen([9])).toBe(1)
+			expect(ExpressionFunctions.arrlen([9, 'a'])).toBe(2)
+			expect(ExpressionFunctions.arrlen(['a', 'c'])).toBe(2)
+			expect(ExpressionFunctions.arrlen(['ab', ''])).toBe(2)
+			expect(ExpressionFunctions.arrlen(['a', 'b', 'c'])).toBe(3)
+		})
 	})
 
 	describe('time', () => {
