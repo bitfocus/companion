@@ -17,7 +17,8 @@
 
 import LogController from '../Log/Controller.js'
 import EventEmitter from 'events'
-import { VARIABLE_UNKNOWN_VALUE, VariableValueData, VariablesCache, VariablesAndExpressionParser } from './Util.js'
+import { VARIABLE_UNKNOWN_VALUE, VariableValueData, VariablesCache } from './Util.js'
+import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'

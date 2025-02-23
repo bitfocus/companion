@@ -1,7 +1,7 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { Logger } from '../Log/Controller.js'
-import type { VariablesAndExpressionParser } from '../Variables/Util.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 /**
  *

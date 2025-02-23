@@ -26,7 +26,7 @@ import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 import { CompanionVariableValues } from '@companion-module/base'
-import { VariablesAndExpressionParser } from '../Variables/Util.js'
+import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
