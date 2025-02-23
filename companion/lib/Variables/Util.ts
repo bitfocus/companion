@@ -199,13 +199,17 @@ export class VariablesAndExpressionParser {
 			if (variable.type !== EntityModelType.LocalVariable || variable.connectionId !== 'internal') continue
 			if (!variable.options.name) continue
 
+			const fullId = `$(local:${variable.options.name})`
+
 			// TODO-localvariable: can this be made stricter?
 			const definitionId = variable.definitionId as LocalVariableEntityDefinitionType
 			switch (definitionId) {
+				case LocalVariableEntityDefinitionType.ConstantValue: {
+					this.#localValues.set(fullId, variable.options.value)
+					break
+				}
 				case LocalVariableEntityDefinitionType.DynamicExpression: {
 					let computedResult: CompanionVariableValue | undefined = undefined
-
-					const fullId = `$(local:${variable.options.name})`
 
 					const expression = variable.options.expression
 					this.#localValues.set(fullId, () => {

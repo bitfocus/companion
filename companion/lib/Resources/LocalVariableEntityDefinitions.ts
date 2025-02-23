@@ -3,6 +3,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 
 export enum LocalVariableEntityDefinitionType {
+	ConstantValue = 'constant-value',
 	DynamicExpression = 'dynamic-expression',
 }
 
@@ -25,6 +26,31 @@ const commonOptions: (InternalActionInputField | InternalFeedbackInputField)[] =
 ]
 
 export const LocalVariableEntityDefinitions: Record<LocalVariableEntityDefinitionType, ClientEntityDefinition> = {
+	[LocalVariableEntityDefinitionType.ConstantValue]: {
+		entityType: EntityModelType.LocalVariable,
+		label: 'Constant Value',
+		description: 'A constant value that can be used in other fields',
+		options: [
+			...commonOptions,
+			{
+				id: 'value',
+				label: 'Value',
+				type: 'textinput',
+				default: '1',
+				isExpression: false,
+				// useVariables: {
+				// 	local: true,
+				// },
+			},
+		],
+		feedbackType: null,
+		feedbackStyle: undefined,
+		hasLearn: false,
+		learnTimeout: undefined,
+		showInvert: false,
+		showButtonPreview: false,
+		supportsChildGroups: [],
+	},
 	[LocalVariableEntityDefinitionType.DynamicExpression]: {
 		entityType: EntityModelType.LocalVariable,
 		label: 'Reusable Expression',
