@@ -12,6 +12,7 @@ import { EntityChangeConnection } from './EntityChangeConnection.js'
 import { InlineHelp } from '../../Components/InlineHelp.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
+import { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -23,6 +24,7 @@ interface EntityCommonCellsProps {
 	definitionName: string
 	location: ControlLocation | undefined
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
 export function EntityCommonCells({
@@ -35,6 +37,7 @@ export function EntityCommonCells({
 	definitionName,
 	location,
 	readonly,
+	localVariablesStore,
 }: EntityCommonCellsProps) {
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
@@ -97,6 +100,7 @@ export function EntityCommonCells({
 								setValue={service.setValue}
 								visibility={optionVisibility[opt.id] ?? true}
 								readonly={readonly}
+								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -112,6 +116,7 @@ export function EntityCommonCells({
 								feedbackSpec={entityDefinition}
 								feedback={entity as FeedbackEntityModel}
 								setStylePropsValue={service.setStylePropsValue}
+								localVariablesStore={localVariablesStore}
 							/>
 						</>
 					)}

@@ -19,6 +19,7 @@ import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { LocalVariablesEditor } from './LocalVariablesEditor.js'
+import { useLocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -227,10 +228,18 @@ function NormalButtonEditor({
 	const configRef = useRef<SomeButtonModel>()
 	configRef.current = config || undefined // update the ref every render
 
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+
 	return (
 		<>
 			<MyErrorBoundary>
-				<ButtonStyleConfig style={config.style} configRef={configRef} controlId={controlId} mainDialog />
+				<ButtonStyleConfig
+					style={config.style}
+					configRef={configRef}
+					controlId={controlId}
+					localVariablesStore={localVariablesStore}
+					mainDialog
+				/>
 			</MyErrorBoundary>
 			<MyErrorBoundary>
 				<div style={{ marginLeft: '5px' }}>
@@ -246,6 +255,7 @@ function NormalButtonEditor({
 						runtimeProps={runtimeProps}
 						rotaryActions={config?.options?.rotaryActions}
 						extraTabs={NormalButtonExtraTabs}
+						localVariablesStore={localVariablesStore}
 					>
 						{(currentTab) => {
 							if (currentTab === 'feedbacks') {
@@ -262,6 +272,7 @@ function NormalButtonEditor({
 												entityType={EntityModelType.Feedback}
 												entityTypeLabel="feedback"
 												onlyFeedbackType={null}
+												localVariablesStore={localVariablesStore}
 											/>
 										</MyErrorBoundary>
 									</div>
@@ -274,6 +285,7 @@ function NormalButtonEditor({
 												controlId={controlId}
 												location={location}
 												variables={config.localVariables}
+												localVariablesStore={localVariablesStore}
 											/>
 										</MyErrorBoundary>
 									</div>

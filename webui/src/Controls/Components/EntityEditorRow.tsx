@@ -20,6 +20,7 @@ import { useDrop, useDrag } from 'react-dnd'
 import { checkDragState } from '../../util.js'
 import { EntityListDragItem } from './EntityListDropZone.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface EntityTableRowDragStatus {
 	isDragging: boolean
@@ -39,6 +40,7 @@ interface EntityTableRowProps {
 	onlyFeedbackType: ClientEntityDefinition['feedbackType']
 
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
 export const EntityTableRow = observer(function EntityTableRow({
@@ -53,6 +55,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 	entityTypeLabel,
 	onlyFeedbackType,
 	readonly,
+	localVariablesStore,
 }: EntityTableRowProps): JSX.Element | null {
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EntityListDragItem>({
@@ -138,6 +141,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 						serviceFactory={serviceFactory}
 						onlyFeedbackType={onlyFeedbackType}
 						readonly={readonly}
+						localVariablesStore={localVariablesStore}
 					/>
 				) : (
 					<p>Entity is not a {entityTypeLabel}!</p>
@@ -157,6 +161,7 @@ interface EntityEditorRowContentProps {
 	serviceFactory: IEntityEditorService
 	onlyFeedbackType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
 export const EntityEditorRowContent = observer(function EntityEditorRowContent({
@@ -169,6 +174,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	serviceFactory,
 	onlyFeedbackType,
 	readonly,
+	localVariablesStore,
 }: EntityEditorRowContentProps) {
 	const entityService = useControlEntityService(serviceFactory, entity)
 
@@ -219,6 +225,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						definitionName={definitionName}
 						location={location}
 						readonly={readonly}
+						localVariablesStore={localVariablesStore}
 					/>
 
 					<EntityManageChildGroups
@@ -228,6 +235,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						location={location}
 						serviceFactory={serviceFactory}
 						readonly={readonly}
+						localVariablesStore={localVariablesStore}
 					/>
 				</div>
 			)}

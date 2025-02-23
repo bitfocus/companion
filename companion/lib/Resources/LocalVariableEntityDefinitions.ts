@@ -11,12 +11,19 @@ const commonOptions: (InternalActionInputField | InternalFeedbackInputField)[] =
 		// regex: '/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/',
 		tooltip: 'The name of the variable. You must make sure this is unique on this control.',
 	},
+	{
+		id: 'description',
+		label: 'Description',
+		type: 'textinput',
+		default: '',
+		tooltip: 'A description of the variable',
+	},
 ]
 
 export const LocalVariableEntityDefinitions: Record<string, ClientEntityDefinition> = {
 	'dynamic-expression': {
 		entityType: EntityModelType.LocalVariable,
-		label: 'Dynamic Expression',
+		label: 'Reusable Expression',
 		description: 'A dynamic expression that can be used in other fields',
 		options: [
 			...commonOptions,

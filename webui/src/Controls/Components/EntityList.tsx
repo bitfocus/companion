@@ -9,6 +9,7 @@ import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefini
 import { EntityEditorHeading } from './EntityEditorHeadingProps.js'
 import { AddEntityPanel } from './AddEntityPanel.js'
 import { observer } from 'mobx-react-lite'
+import { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface EditableEntityListProps {
 	controlId: string
@@ -22,6 +23,7 @@ interface EditableEntityListProps {
 	entityTypeLabel: string
 	onlyFeedbackType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 export const EditableEntityList = observer(function EditableEntityList({
 	controlId,
@@ -35,6 +37,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 	entityTypeLabel,
 	onlyFeedbackType,
 	readonly,
+	localVariablesStore,
 }: EditableEntityListProps) {
 	const addEntity = useCallback(
 		(connectionId: string, definitionId: string) => serviceFactory.addEntity(connectionId, definitionId, ownerId),
@@ -60,6 +63,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 				onlyFeedbackType={onlyFeedbackType}
 				entities={entities}
 				serviceFactory={serviceFactory}
+				localVariablesStore={localVariablesStore}
 			/>
 			<AddEntityPanel
 				addEntity={addEntity}
@@ -82,6 +86,7 @@ interface MinimalEntityListProps {
 	entityTypeLabel: string
 	onlyFeedbackType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
 export const MinimalEntityList = observer(function MinimalEntityList({
@@ -94,6 +99,7 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 	entityTypeLabel,
 	onlyFeedbackType,
 	readonly,
+	localVariablesStore,
 }: MinimalEntityListProps) {
 	const dragId = `${controlId}_${entityType}`
 
@@ -116,6 +122,7 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 								entityTypeLabel={entityTypeLabel}
 								onlyFeedbackType={onlyFeedbackType}
 								readonly={readonly}
+								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>
 					))}

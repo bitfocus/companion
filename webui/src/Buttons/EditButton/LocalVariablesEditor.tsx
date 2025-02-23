@@ -3,13 +3,20 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CAlert } from '@coreui/react'
+import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
 interface LocalVariablesEditorProps {
 	controlId: string
 	location: ControlLocation | undefined
 	variables: SomeEntityModel[]
+	localVariablesStore: LocalVariablesStore
 }
-export function LocalVariablesEditor({ controlId, location, variables }: LocalVariablesEditorProps) {
+export function LocalVariablesEditor({
+	controlId,
+	location,
+	variables,
+	localVariablesStore,
+}: LocalVariablesEditorProps) {
 	return (
 		<>
 			<CAlert color="info" className="mb-2">
@@ -24,6 +31,7 @@ export function LocalVariablesEditor({ controlId, location, variables }: LocalVa
 				entityType={EntityModelType.LocalVariable}
 				entityTypeLabel="variable"
 				onlyFeedbackType={null}
+				localVariablesStore={localVariablesStore}
 			/>
 		</>
 	)

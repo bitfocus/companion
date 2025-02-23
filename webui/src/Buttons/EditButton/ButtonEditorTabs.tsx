@@ -10,6 +10,7 @@ import { GenericConfirmModalRef, GenericConfirmModal } from '../../Components/Ge
 import { useControlActionStepsAndSetsService } from '../../Services/Controls/ControlActionStepsAndSetsService.js'
 import { SocketContext } from '../../util.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
+import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
 export interface ButtonEditorExtraTabs {
 	id: string
@@ -22,6 +23,7 @@ interface ButtonEditorTabsProps {
 	steps: NormalButtonSteps
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
+	localVariablesStore: LocalVariablesStore
 	extraTabs?: ButtonEditorExtraTabs[]
 	children?: (currentTab: string) => React.ReactNode
 }
@@ -31,6 +33,7 @@ export function ButtonEditorTabs({
 	steps,
 	runtimeProps,
 	rotaryActions,
+	localVariablesStore,
 	extraTabs,
 	children,
 }: ButtonEditorTabsProps) {
@@ -119,6 +122,7 @@ export function ButtonEditorTabs({
 						selectedIndex={selectedIndex}
 						selectedKey={selectedKey}
 						selectedStepProps={selectedStepProps}
+						localVariablesStore={localVariablesStore}
 					/>
 				)}
 			</div>

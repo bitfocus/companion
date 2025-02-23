@@ -13,6 +13,7 @@ import { findAllEntityIdsDeep } from './Util.js'
 import { useControlEntitiesEditorService } from '../Services/Controls/ControlEntitiesService.js'
 import { EditableEntityList } from './Components/EntityList.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { LocalVariablesStore } from './LocalVariablesStore.js'
 
 interface ControlEntitiesEditorProps {
 	controlId: string
@@ -24,6 +25,7 @@ interface ControlEntitiesEditorProps {
 	entities: SomeEntityModel[] | undefined
 	heading: JSX.Element | string
 	headingActions?: JSX.Element[]
+	localVariablesStore: LocalVariablesStore | null
 }
 
 export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
@@ -36,6 +38,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	entities,
 	heading,
 	headingActions,
+	localVariablesStore,
 }: ControlEntitiesEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
@@ -63,6 +66,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 					entityTypeLabel={entityTypeLabel}
 					onlyFeedbackType={onlyFeedbackType}
 					readonly={false}
+					localVariablesStore={localVariablesStore}
 				/>
 			</PanelCollapseHelperProvider>
 		</div>

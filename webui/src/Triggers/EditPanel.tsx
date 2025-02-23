@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { useLocalVariablesStore } from '../Controls/LocalVariablesStore.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -91,6 +92,8 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 	const hasRuntimeProps = !!runtimeProps || runtimeProps === false
 	const dataReady = !loadError && !!config && hasRuntimeProps
 
+	const localVariablesStore = useLocalVariablesStore(controlId, null)
+
 	return (
 		<div className="edit-button-panel flex-form">
 			<GenericConfirmModal ref={resetModalRef} />
@@ -138,6 +141,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									entityTypeLabel="condition"
 									onlyFeedbackType="boolean"
 									location={undefined}
+									localVariablesStore={localVariablesStore}
 								/>
 							</MyErrorBoundary>
 
@@ -156,6 +160,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									entityType={EntityModelType.Action}
 									entityTypeLabel="action"
 									onlyFeedbackType={null}
+									localVariablesStore={localVariablesStore}
 								/>
 							</MyErrorBoundary>
 						</>
