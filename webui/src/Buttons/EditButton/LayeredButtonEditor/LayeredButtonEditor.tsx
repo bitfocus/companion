@@ -107,6 +107,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 		<div className="button-layer-style-editor">
 			<div className="button-layer-preview">
 				<ButtonPreviewBase fixedSize preview={previewImage} />
+				<LayeredButtonPreviewRenderer controlId={controlId} styleStore={styleStore} />
 			</div>
 			<div className="button-layer-elementlist">
 				<ElementsList styleStore={styleStore} controlId={controlId} />
@@ -121,8 +122,6 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						Select an element from the list above to edit its properties
 					</NonIdealState>
 				)}
-
-				<LayeredButtonPreviewRenderer controlId={controlId} styleStore={styleStore} />
 			</div>
 		</div>
 	)

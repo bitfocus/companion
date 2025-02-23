@@ -48,7 +48,9 @@ export class TopbarRenderer {
 		} else {
 			let step = ''
 			img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY - 0.5, colorBlack)
-			img.horizontalLine(drawBounds.maxY - 0.5, { color: colorButtonYellow })
+			img.line(drawBounds.x, drawBounds.maxY - 0.5, drawBounds.maxX, drawBounds.maxY - 0.5, {
+				color: colorButtonYellow,
+			})
 
 			if (typeof drawStyle.step_cycle === 'number' && location) {
 				step = `.${drawStyle.step_cycle}`

@@ -71,6 +71,10 @@ export class GraphicsImage extends ImageBase<HTMLImageElement> {
 		return null
 	}
 
+	public clear() {
+		this.#context2d.clearRect(0, 0, this.width, this.height)
+	}
+
 	public drawComplete() {
 		this.#parseCache.disposeUnused()
 	}

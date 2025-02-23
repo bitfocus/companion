@@ -153,7 +153,10 @@ export class GraphicsRenderer {
 		} else if (drawStyle.style === 'button-layered') {
 			draw_style = 'button-layered'
 
-			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet)
+			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
+				x: 0,
+				y: 0,
+			})
 		}
 
 		// console.timeEnd('drawButtonImage')

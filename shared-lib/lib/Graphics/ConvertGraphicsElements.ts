@@ -173,9 +173,6 @@ async function convertImageElementForDrawing(
 		helper.getEnum(element.fillMode, ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
 	])
 
-	// If the image is not enabled, return null
-	if (!enabled) return null
-
 	return {
 		id: element.id,
 		type: 'image',
@@ -202,9 +199,6 @@ async function convertTextElementForDrawing(
 		helper.getNumber(element.color, 0),
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
 	])
-
-	// If the text is not enabled, return null
-	if (!enabled) return null
 
 	const fontsize = Number(fontsizeRaw) || fontsizeRaw
 

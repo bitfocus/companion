@@ -10,6 +10,9 @@ import { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/Style
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import FontLoader from './FontLoader.js'
 
+const PAD_X = 10
+const PAD_Y = 10
+
 interface LayeredButtonPreviewRendererProps {
 	controlId: string
 	styleStore: LayeredStyleStore
@@ -22,11 +25,29 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 
 	return (
 		<div>
-			<LayeredButtonCanvas width={200} height={200} drawStyle={drawStyle} hiddenElements={styleStore.hiddenElements} />
+			<LayeredButtonCanvas
+				width={200}
+				height={200}
+				drawStyle={drawStyle}
+				hiddenElements={styleStore.hiddenElements}
+				selectedElementId={styleStore.selectedElementId}
+			/>
 			&nbsp;&nbsp;
-			<LayeredButtonCanvas width={144} height={112} drawStyle={drawStyle} hiddenElements={styleStore.hiddenElements} />
+			<LayeredButtonCanvas
+				width={144}
+				height={112}
+				drawStyle={drawStyle}
+				hiddenElements={styleStore.hiddenElements}
+				selectedElementId={styleStore.selectedElementId}
+			/>
 			&nbsp;&nbsp;
-			<LayeredButtonCanvas width={100} height={200} drawStyle={drawStyle} hiddenElements={styleStore.hiddenElements} />
+			<LayeredButtonCanvas
+				width={100}
+				height={200}
+				drawStyle={drawStyle}
+				hiddenElements={styleStore.hiddenElements}
+				selectedElementId={styleStore.selectedElementId}
+			/>
 		</div>
 	)
 })
@@ -36,8 +57,15 @@ interface LayeredButtonCanvasProps {
 	height: number
 	drawStyle: SomeButtonGraphicsDrawElement[] | null
 	hiddenElements: ReadonlySet<string>
+	selectedElementId: string | null
 }
-function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: LayeredButtonCanvasProps) {
+function LayeredButtonCanvas({
+	width,
+	height,
+	drawStyle,
+	hiddenElements,
+	selectedElementId,
+}: LayeredButtonCanvasProps) {
 	const drawContext = useRef<RendererDrawContext | null>(null)
 
 	const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
@@ -51,6 +79,7 @@ function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: Layer
 
 		// Update any cached properties
 		drawContext.current.setHiddenElements(hiddenElements)
+		drawContext.current.setSelectedElementId(selectedElementId)
 
 		// Pass the new draw style to the context
 		const drawStyleFull: DrawStyleLayeredButtonModel = {
@@ -67,7 +96,7 @@ function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: Layer
 			action_running: true,
 		}
 		drawContext.current.draw(drawStyleFull)
-	}, [canvas, drawStyle, hiddenElements])
+	}, [canvas, drawStyle, hiddenElements, selectedElementId])
 
 	// Ensure the fonts are loaded
 	// Future: maybe the first paint should be blocked until either the fonts are loaded, or a timeout is reached?
@@ -90,8 +119,8 @@ function LayeredButtonCanvas({ width, height, drawStyle, hiddenElements }: Layer
 			// Use the dimensions as a key to force a redraw when they change
 			key={`${width}x${height}`}
 			ref={setCanvas}
-			width={width}
-			height={height}
+			width={width + PAD_X * 2}
+			height={height + PAD_Y * 2}
 		/>
 	)
 }
@@ -101,7 +130,8 @@ class RendererDrawContext {
 	readonly #debounce: PromiseDebounce
 	readonly location: ControlLocation | undefined = undefined // TODO - populate this?
 
-	#hiddenElements: ReadonlySet<string>
+	#hiddenElements: ReadonlySet<string> = new Set()
+	#selectedElementId: string | null = null
 
 	constructor(canvas: HTMLCanvasElement) {
 		const image = GraphicsImage.create(canvas)
@@ -109,7 +139,6 @@ class RendererDrawContext {
 
 		this.#image = image
 		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
-		this.#hiddenElements = new Set()
 	}
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
@@ -117,7 +146,7 @@ class RendererDrawContext {
 		try {
 			if (!this.#lastDrawStyle) throw new Error('No draw style!')
 
-			this.#image.fillColor('#000000')
+			this.#image.clear()
 
 			await GraphicsLayeredButtonRenderer.draw(
 				this.#image,
@@ -128,7 +157,9 @@ class RendererDrawContext {
 				},
 				this.#lastDrawStyle,
 				this.location,
-				this.#hiddenElements
+				this.#hiddenElements,
+				this.#selectedElementId,
+				{ x: PAD_X, y: PAD_Y }
 			)
 
 			this.#image.drawComplete()
@@ -139,6 +170,11 @@ class RendererDrawContext {
 
 	setHiddenElements(hiddenElements: ReadonlySet<string>) {
 		this.#hiddenElements = hiddenElements
+		this.#debounce.trigger()
+	}
+
+	setSelectedElementId(selectedElementId: string | null) {
+		this.#selectedElementId = selectedElementId
 		this.#debounce.trigger()
 	}
 
