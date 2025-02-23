@@ -25,15 +25,18 @@ import {
 	ActionEntityModel,
 	EntityModelBase,
 	EntityModelType,
+	LocalVariableEntityModel,
 	SomeEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { LocalVariableEntityDefinitions } from '../Resources/LocalVaraibleDefinitions.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
 const FeedbacksRoom = 'feedback-definitions'
+const LocalVariablesRoom = 'local-variable-definitions'
 
 /**
  * Class to handle and store the 'definitions' produced by instances.
@@ -118,7 +121,12 @@ export class InstanceDefinitions {
 					client.join(FeedbacksRoom)
 
 					return this.#feedbackDefinitions
+				case EntityModelType.LocalVariable:
+					client.join(LocalVariablesRoom)
 
+					return {
+						internal: LocalVariableEntityDefinitions,
+					}
 				default:
 					assertNever(type)
 					return {}
@@ -131,6 +139,9 @@ export class InstanceDefinitions {
 					break
 				case EntityModelType.Feedback:
 					client.leave(FeedbacksRoom)
+					break
+				case EntityModelType.LocalVariable:
+					client.leave(LocalVariablesRoom)
 					break
 				default:
 					assertNever(type)
@@ -224,6 +235,12 @@ export class InstanceDefinitions {
 				return feedback
 			}
 
+			case EntityModelType.LocalVariable:
+				return {
+					...entity,
+					type: EntityModelType.LocalVariable,
+				} satisfies LocalVariableEntityModel
+
 			default:
 				assertNever(entityType)
 				return null
@@ -290,6 +307,9 @@ export class InstanceDefinitions {
 				return this.#actionDefinitions[connectionId]?.[definitionId]
 			case EntityModelType.Feedback:
 				return this.#feedbackDefinitions[connectionId]?.[definitionId]
+			case EntityModelType.LocalVariable:
+				// TODO-localvariables - implement
+				return undefined
 			default:
 				assertNever(entityType)
 				return undefined

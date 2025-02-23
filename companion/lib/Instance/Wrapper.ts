@@ -335,6 +335,9 @@ export class SocketEventsHandler {
 				return this.#actionUpdate(entity, controlId)
 			case EntityModelType.Feedback:
 				return this.#feedbackUpdate(entity, controlId)
+			case EntityModelType.LocalVariable:
+				// Not supported
+				throw new Error('Modules cannot have local variable entities')
 		}
 	}
 
@@ -430,6 +433,9 @@ export class SocketEventsHandler {
 
 					return msg.options
 				}
+				case EntityModelType.LocalVariable:
+					// Not supported
+					throw new Error('Modules cannot have local variable entities')
 				default:
 					assertNever(entity)
 					break
@@ -463,6 +469,9 @@ export class SocketEventsHandler {
 					},
 				})
 				break
+			case EntityModelType.LocalVariable:
+				// Not supported
+				throw new Error('Modules cannot have local variable entities')
 			default:
 				assertNever(oldEntity)
 				break

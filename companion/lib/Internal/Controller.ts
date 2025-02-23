@@ -152,6 +152,10 @@ export class InternalController {
 			case EntityModelType.Action: {
 				return this.#actionUpgrade(entity, controlId)
 			}
+			case EntityModelType.LocalVariable: {
+				// TODO-localvariable: Implement
+				return undefined
+			}
 			default:
 				assertNever(entity)
 				return undefined
@@ -323,6 +327,9 @@ export class InternalController {
 						options: entity.options,
 					})
 					break
+				case EntityModelType.LocalVariable:
+					// Not supported
+					break
 				default:
 					assertNever(entity)
 					break
@@ -345,6 +352,9 @@ export class InternalController {
 						action: entity.definitionId,
 						options: entity.rawOptions, // Ensure the options is not a copy/clone
 					})
+					break
+				case EntityModelType.LocalVariable:
+					// TODO-localvariable: Implement
 					break
 				default:
 					assertNever(entity.type)

@@ -78,6 +78,10 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 
 	const actionDefinitionsReady = useEntityDefinitionsSubscription(socket, rootStore.entityDefinitions.actions)
 	const feedbackDefinitionsReady = useEntityDefinitionsSubscription(socket, rootStore.entityDefinitions.feedbacks)
+	const localVariableDefinitionsReady = useEntityDefinitionsSubscription(
+		socket,
+		rootStore.entityDefinitions.localVariables
+	)
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
@@ -117,6 +121,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		variablesReady,
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
+		localVariableDefinitionsReady,
 		customVariablesReady,
 		userConfigReady,
 		surfacesReady,

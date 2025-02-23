@@ -1,14 +1,16 @@
 import { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
 
-export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
+export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel | LocalVariableEntityModel
 export type SomeReplaceableEntityModel =
 	| Pick<ActionEntityModel, 'id' | 'type' | 'definitionId' | 'options'>
 	| Pick<FeedbackEntityModel, 'id' | 'type' | 'definitionId' | 'style' | 'options' | 'isInverted'>
+	| Pick<LocalVariableEntityModel, 'id' | 'type' | 'definitionId' | 'options'>
 
 export enum EntityModelType {
 	Action = 'action',
 	Feedback = 'feedback',
+	LocalVariable = 'local-variable',
 }
 
 export interface ActionEntityModel extends EntityModelBase {
@@ -20,6 +22,16 @@ export interface FeedbackEntityModel extends EntityModelBase {
 
 	isInverted?: boolean
 	style?: Partial<ButtonStyleProperties>
+}
+
+export interface LocalVariableEntityModel extends EntityModelBase {
+	readonly type: EntityModelType.LocalVariable
+
+	// TODO - it would be nice to make these more concrete, but that breaks typings elsewhere
+	// connectionId: 'internal'
+	// headline?: string
+	// disabled?: false
+	// upgradeIndex?: undefined
 }
 
 export interface EntityModelBase {
