@@ -14,7 +14,7 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
-import { VariablesCache } from '../../../Variables/Util.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 /**
  * Class for the stepped button control.
@@ -132,29 +132,24 @@ export class ControlButtonNormal
 
 		if (style.text) {
 			// Block out the button text
-			const injectedVariableValues: VariablesCache = new Map()
+			const overrideVariableValues: CompanionVariableValues = {}
 
 			const location = this.deps.page.getLocationOfControlId(this.controlId)
 			if (location) {
 				// Ensure we don't enter into an infinite loop
 				// TODO - legacy location variables?
-				injectedVariableValues.set(
-					`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`,
-					'$RE'
-				)
+				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
 			}
 
 			// Inject the variable values
-			this.deps.variables.values.addInjectedVariablesForLocation(injectedVariableValues, location)
-			this.entities.addLocalVariableValues(injectedVariableValues)
+			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
+				location,
+				this.entities.getLocalVariableEntities(),
+				overrideVariableValues
+			)
 
 			if (style.textExpression) {
-				const parseResult = this.deps.variables.values.executeExpression(
-					style.text,
-					location,
-					undefined,
-					injectedVariableValues
-				)
+				const parseResult = parser.executeExpression(style.text, undefined)
 				if (parseResult.ok) {
 					style.text = parseResult.value + ''
 				} else {
@@ -163,7 +158,7 @@ export class ControlButtonNormal
 				}
 				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			} else {
-				const parseResult = this.deps.variables.values.parseVariables(style.text, location, injectedVariableValues)
+				const parseResult = parser.parseVariables(style.text)
 				style.text = parseResult.text
 				this.#last_draw_variables = parseResult.variableIds.length > 0 ? new Set(parseResult.variableIds) : null
 			}

@@ -46,7 +46,7 @@ import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
-import { VARIABLE_UNKNOWN_VALUE, VariablesCache } from '../Variables/Util.js'
+import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
@@ -56,13 +56,13 @@ import type {
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import type { LocalUSBDeviceOptions, SurfaceHandlerDependencies, SurfacePanel, SurfacePanelFactory } from './Types.js'
 import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -1103,32 +1103,34 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	#surfaceExecuteExpression(str: string, surfaceId: string, injectedVariableValues: VariablesCache | undefined) {
-		if (!injectedVariableValues) injectedVariableValues = new Map()
+	#surfaceExecuteExpression(
+		str: string,
+		surfaceId: string,
+		injectedVariableValues: CompanionVariableValues | undefined
+	) {
+		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
+			...injectedVariableValues,
+			...this.#getInjectedVariablesForSurfaceId(surfaceId),
+		})
 
-		this.#addInjectedVariablesForSurfaceId(injectedVariableValues, surfaceId)
-
-		return this.#handlerDependencies.variables.values.executeExpression(
-			str,
-			undefined,
-			undefined,
-			injectedVariableValues
-		)
+		return parser.executeExpression(str, undefined)
 	}
 
 	/**
 	 * Variables to inject based on location
 	 */
-	#addInjectedVariablesForSurfaceId(values: VariablesCache, surfaceId: string): void {
+	#getInjectedVariablesForSurfaceId(surfaceId: string): CompanionVariableValues {
 		const pageNumber = this.devicePageGet(surfaceId)
 
-		values.set('$(this:surface_id)', surfaceId)
+		return {
+			'$(this:surface_id)': surfaceId,
 
-		// Reactivity is triggered manually
-		values.set('$(this:page)', pageNumber)
+			// Reactivity is triggered manually
+			'$(this:page)': pageNumber,
 
-		// Reactivity happens for these because of references to the inner variables
-		values.set('$(this:page_name)', pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE)
+			// Reactivity happens for these because of references to the inner variables
+			'$(this:page_name)': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
+		}
 	}
 
 	exportAll(clone = true): any {

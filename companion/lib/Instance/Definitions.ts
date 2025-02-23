@@ -31,7 +31,10 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { LocalVariableEntityDefinitions } from '../Resources/LocalVariableEntityDefinitions.js'
+import {
+	LocalVariableEntityDefinitions,
+	LocalVariableEntityDefinitionType,
+} from '../Resources/LocalVariableEntityDefinitions.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -165,7 +168,8 @@ export class InstanceDefinitions {
 
 				if (style.text) {
 					if (style.textExpression) {
-						const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
+						const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
+						const parseResult = parser.executeExpression(style.text, undefined)
 						if (parseResult.ok) {
 							style.text = parseResult.value + ''
 						} else {
@@ -310,7 +314,7 @@ export class InstanceDefinitions {
 			case EntityModelType.LocalVariable:
 				// Only supported for internal module
 				if (connectionId !== 'internal') return undefined
-				return LocalVariableEntityDefinitions[definitionId]
+				return LocalVariableEntityDefinitions[definitionId as LocalVariableEntityDefinitionType]
 			default:
 				assertNever(entityType)
 				return undefined

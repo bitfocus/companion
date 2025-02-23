@@ -23,12 +23,14 @@ import {
 	VARIABLE_UNKNOWN_VALUE,
 	VariableValueData,
 	VariablesCache,
-	executeExpression,
+	VariablesAndExpressionParser,
 	parseVariablesInString,
+	executeExpression,
 } from './Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'
+import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>]
@@ -64,6 +66,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		controlLocation: ControlLocation | null | undefined,
 		injectedVariableValues?: VariablesCache
 	): ParseVariablesResult {
+		// TODO-localvariables avoid this mutation
 		injectedVariableValues = injectedVariableValues || new Map()
 		this.addInjectedVariablesForLocation(injectedVariableValues, controlLocation)
 
@@ -71,6 +74,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	}
 
 	/**
+	 * @deprecated
 	 * Parse and execute an expression in a string
 	 * @param str - String containing the expression to parse
 	 * @param controlLocation - Location of the control
@@ -84,10 +88,22 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		requiredType?: string,
 		injectedVariableValues?: VariablesCache
 	): ExecuteExpressionResult {
+		// TODO-localvariables avoid this mutation
 		injectedVariableValues = injectedVariableValues || new Map()
 		this.addInjectedVariablesForLocation(injectedVariableValues, controlLocation)
 
 		return executeExpression(str, this.#variableValues, requiredType, injectedVariableValues)
+	}
+
+	createVariablesAndExpressionParser(
+		controlLocation: ControlLocation | null | undefined,
+		localValues: SomeEntityModel[] | null,
+		overrideVariableValues: CompanionVariableValues | null
+	): VariablesAndExpressionParser {
+		const thisValues: VariablesCache = new Map()
+		this.addInjectedVariablesForLocation(thisValues, controlLocation)
+
+		return new VariablesAndExpressionParser(this.#variableValues, thisValues, localValues, overrideVariableValues)
 	}
 
 	forgetConnection(_id: string, label: string): void {
