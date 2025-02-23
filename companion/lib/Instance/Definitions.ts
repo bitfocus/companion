@@ -320,6 +320,7 @@ export class InstanceDefinitions {
 			},
 			feedbacks: [],
 			steps: {},
+			localVariables: {},
 		}
 		if (definition.steps) {
 			for (let i = 0; i < definition.steps.length; i++) {

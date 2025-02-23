@@ -12,7 +12,8 @@ import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
 import type { InstanceDefinitionsForEntity } from './Types.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { SomeLocalVariableDefinition } from '@companion-app/shared/Model/LocalVariables.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -511,5 +512,10 @@ export abstract class ControlEntityListPoolBase {
 		}
 
 		return connectionIds
+	}
+
+	getLocalVariables(): Record<string, SomeLocalVariableDefinition> {
+		// TODO-localvariables
+		return {}
 	}
 }
