@@ -1,6 +1,5 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
-import type { SomeLocalVariableDefinition } from './LocalVariables.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
 
 export type SomeButtonModel = PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | NormalButtonModel
@@ -27,7 +26,7 @@ export interface NormalButtonModel {
 
 	steps: NormalButtonSteps
 
-	localVariables: Record<string, SomeLocalVariableDefinition>
+	localVariables: SomeEntityModel[]
 }
 
 export type NormalButtonSteps = Record<

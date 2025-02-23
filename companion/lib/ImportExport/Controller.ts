@@ -1124,7 +1124,7 @@ export class ImportExportController {
 			style: cloneDeep(control.style),
 			feedbacks: [],
 			steps: {},
-			localVariables: {}, // TODO-localvariables
+			localVariables: [], // TODO-localvariables
 		}
 
 		if (control.feedbacks) {

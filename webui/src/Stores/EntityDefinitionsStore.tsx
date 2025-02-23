@@ -15,6 +15,7 @@ export class EntityDefinitionsStore {
 
 	readonly recentlyAddedActions: RecentlyUsedIdsStore
 	readonly recentlyAddedFeedbacks: RecentlyUsedIdsStore
+	readonly recentlyAddedLocalVariables: RecentlyUsedIdsStore
 
 	constructor() {
 		this.feedbacks = new EntityDefinitionsForTypeStore(EntityModelType.Feedback)
@@ -23,6 +24,7 @@ export class EntityDefinitionsStore {
 
 		this.recentlyAddedActions = new RecentlyUsedIdsStore('recent_actions', 20)
 		this.recentlyAddedFeedbacks = new RecentlyUsedIdsStore('recent_feedbacks', 20)
+		this.recentlyAddedLocalVariables = new RecentlyUsedIdsStore('recent_local_variables', 20)
 	}
 
 	getEntityDefinition(
@@ -54,7 +56,7 @@ export class EntityDefinitionsStore {
 			case EntityModelType.Feedback:
 				return this.recentlyAddedFeedbacks
 			case EntityModelType.LocalVariable:
-				throw new Error(`Local variables don't have recently used store`)
+				return this.recentlyAddedLocalVariables
 			default:
 				assertNever(entityType)
 				throw new Error(`Invalid entity type: ${entityType}`)

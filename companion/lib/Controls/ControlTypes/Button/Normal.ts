@@ -276,7 +276,7 @@ export class ControlButtonNormal
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
-			localVariables: this.entities.getLocalVariables(),
+			localVariables: this.entities.getLocalVariableEntities(),
 		}
 
 		return clone ? cloneDeep(obj) : obj

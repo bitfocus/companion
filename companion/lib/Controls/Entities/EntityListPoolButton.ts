@@ -23,6 +23,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	readonly #feedbacks: ControlEntityList
+	readonly #localVariables: ControlEntityList
 
 	readonly #steps = new Map<string, ControlEntityListActionStep>()
 
@@ -54,6 +55,16 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 				type: EntityModelType.Feedback,
 			}
 		)
+		this.#localVariables = new ControlEntityList(
+			props.instanceDefinitions,
+			props.internalModule,
+			props.moduleHost,
+			props.controlId,
+			null,
+			{
+				type: EntityModelType.LocalVariable,
+			}
+		)
 
 		this.#current_step_id = '0'
 
@@ -62,6 +73,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean) {
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
+		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
 
 		// Future:	cleanup the steps/sets
 		this.#steps.clear()
@@ -78,6 +90,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 */
 	getFeedbackEntities(): SomeEntityModel[] {
 		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	}
+
+	getLocalVariableEntities(): SomeEntityModel[] {
+		return this.#localVariables.getDirectEntities().map((ent) => ent.asEntityModel(true))
 	}
 
 	// /**
@@ -114,6 +130,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		if (listId === 'feedbacks') return this.#feedbacks
+		if (listId === 'local-variables') return this.#localVariables
 
 		if (typeof listId === 'object' && 'setId' in listId && 'stepId' in listId) {
 			return this.#steps.get(listId.stepId)?.sets.get(listId.setId)
@@ -123,7 +140,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	protected getAllEntityLists(): ControlEntityList[] {
-		const entityLists: ControlEntityList[] = [this.#feedbacks]
+		const entityLists: ControlEntityList[] = [this.#feedbacks, this.#localVariables]
 
 		for (const step of this.#steps.values()) {
 			entityLists.push(...Array.from(step.sets.values()))

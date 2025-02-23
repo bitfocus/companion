@@ -308,8 +308,9 @@ export class InstanceDefinitions {
 			case EntityModelType.Feedback:
 				return this.#feedbackDefinitions[connectionId]?.[definitionId]
 			case EntityModelType.LocalVariable:
-				// TODO-localvariables - implement
-				return undefined
+				// Only supported for internal module
+				if (connectionId !== 'internal') return undefined
+				return LocalVariableEntityDefinitions[definitionId]
 			default:
 				assertNever(entityType)
 				return undefined
@@ -340,7 +341,7 @@ export class InstanceDefinitions {
 			},
 			feedbacks: [],
 			steps: {},
-			localVariables: {},
+			localVariables: [],
 		}
 		if (definition.steps) {
 			for (let i = 0; i < definition.steps.length; i++) {

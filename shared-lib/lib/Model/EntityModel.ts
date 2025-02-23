@@ -73,6 +73,7 @@ export type SomeSocketEntityLocation =
 	// | 'trigger_events'
 	| 'feedbacks'
 	| 'trigger_actions'
+	| 'local-variables'
 	| {
 			// button actions
 			stepId: string
