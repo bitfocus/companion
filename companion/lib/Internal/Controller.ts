@@ -573,9 +573,8 @@ export class InternalController {
 			// ...injectedVariableValues,
 		}
 
-		const parser = this.#variablesController.values.createVariablesAndExpressionParser(
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
 			extras.location,
-			null,
 			injectedVariableValuesComplete
 		)
 
@@ -603,9 +602,8 @@ export class InternalController {
 			// ...injectedVariableValues,
 		}
 
-		const parser = this.#variablesController.values.createVariablesAndExpressionParser(
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
 			extras.location,
-			null,
 			injectedVariableValuesComplete
 		)
 
@@ -630,9 +628,8 @@ export class InternalController {
 			// ...injectedVariableValues,
 		}
 
-		const parser = this.#variablesController.values.createVariablesAndExpressionParser(
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
 			extras.location,
-			null,
 			injectedVariableValuesComplete
 		)
 

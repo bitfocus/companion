@@ -806,7 +806,7 @@ export class SocketEventsHandler {
 		try {
 			const location = msg.controlId ? this.#deps.page.getLocationOfControlId(msg.controlId) : null
 
-			const parser = this.#deps.variables.values.createVariablesAndExpressionParser(location, null, null)
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(location, null)
 			const result = parser.parseVariables(msg.text)
 
 			return {

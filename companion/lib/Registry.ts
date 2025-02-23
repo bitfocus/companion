@@ -261,7 +261,7 @@ export class Registry {
 			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
 			new InternalSystem(this.internalModule, this),
 			new InternalTriggers(this.internalModule, this.controls),
-			new InternalVariables(this.internalModule, this.variables.values)
+			new InternalVariables(this.internalModule, this.controls)
 		)
 		this.internalModule.init()
 

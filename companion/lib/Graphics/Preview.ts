@@ -117,6 +117,7 @@ export class GraphicsPreview {
 
 			if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
 
+			// TODO-localvariables this needs to consider local variables?
 			const parser = this.#variablesController.createVariablesAndExpressionParser(location, null, null)
 
 			// Do a resolve of the reference for the starting image

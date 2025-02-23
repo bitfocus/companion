@@ -201,10 +201,10 @@ export class VariablesAndExpressionParser {
 
 			const fullId = `$(local:${variable.options.name})`
 
-			// TODO-localvariable: can this be made stricter?
 			const definitionId = variable.definitionId as LocalVariableEntityDefinitionType
 			switch (definitionId) {
 				case LocalVariableEntityDefinitionType.ConstantValue: {
+					// Store the value directly
 					this.#localValues.set(fullId, variable.options.value)
 					break
 				}

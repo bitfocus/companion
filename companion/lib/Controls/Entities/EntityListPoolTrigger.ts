@@ -42,6 +42,11 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
 	}
 
+	getLocalVariableEntities(): SomeEntityModel[] {
+		// Not supported yet
+		return []
+	}
+
 	/**
 	 * Get direct the action instances
 	 */

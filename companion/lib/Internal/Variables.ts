@@ -17,7 +17,6 @@
 
 import LogController from '../Log/Controller.js'
 import type { InternalController } from './Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -28,6 +27,7 @@ import type {
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import type { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlsController } from '../Controls/Controller.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -57,16 +57,16 @@ function compareValues(op: any, value: any, value2: any): boolean {
 
 export class InternalVariables implements InternalModuleFragment {
 	readonly #internalModule: InternalController
-	readonly #variableController: VariablesValues
+	readonly #controlsController: ControlsController
 
 	/**
 	 * The dependencies of variables that should retrigger each feedback
 	 */
 	#variableSubscriptions = new Map<string, Set<string>>()
 
-	constructor(internalModule: InternalController, variableController: VariablesValues) {
+	constructor(internalModule: InternalController, controlsController: ControlsController) {
 		this.#internalModule = internalModule
-		this.#variableController = variableController
+		this.#controlsController = controlsController
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -187,7 +187,7 @@ export class InternalVariables implements InternalModuleFragment {
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.definitionId == 'check_expression') {
-			const parser = this.#variableController.createVariablesAndExpressionParser(feedback.location, null, null)
+			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.location, null)
 			const res = parser.executeExpression(feedback.options.expression, 'boolean')
 
 			this.#variableSubscriptions.set(feedback.id, res.variableIds)

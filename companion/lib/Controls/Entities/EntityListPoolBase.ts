@@ -92,6 +92,8 @@ export abstract class ControlEntityListPoolBase {
 	protected abstract getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined
 	protected abstract getAllEntityLists(): ControlEntityList[]
 
+	abstract getLocalVariableEntities(): SomeEntityModel[]
+
 	/**
 	 * Recursively get all the entities
 	 */
