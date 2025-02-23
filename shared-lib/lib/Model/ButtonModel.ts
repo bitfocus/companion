@@ -25,6 +25,8 @@ export interface NormalButtonModel {
 	feedbacks: SomeEntityModel[]
 
 	steps: NormalButtonSteps
+
+	localVariables: Record<string, LocalVariableDefinition>
 }
 
 export type NormalButtonSteps = Record<
@@ -43,3 +45,10 @@ export interface NormalButtonOptions extends ButtonOptionsBase {
 }
 
 export type ButtonStatus = 'good' | 'warning' | 'error'
+
+export interface LocalVariableDefinition {
+	description: string
+	// defaultValue: CompanionVariableValue
+	// persistCurrentValue: boolean
+	sortOrder: number
+}

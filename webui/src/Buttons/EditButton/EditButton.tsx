@@ -18,6 +18,7 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { LocalVariablesEditor } from './LocalVariablesEditor.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -207,7 +208,10 @@ const EditButtonContent = observer(function EditButton({
 	)
 })
 
-const NormalButtonExtraTabs: ButtonEditorExtraTabs[] = [{ id: 'feedbacks', name: 'Feedbacks' }]
+const NormalButtonExtraTabs: ButtonEditorExtraTabs[] = [
+	{ id: 'feedbacks', name: 'Feedbacks' },
+	{ id: 'variables', name: 'Local Variables' },
+]
 
 function NormalButtonEditor({
 	config,
@@ -258,6 +262,18 @@ function NormalButtonEditor({
 												entityType={EntityModelType.Feedback}
 												entityTypeLabel="feedback"
 												onlyFeedbackType={null}
+											/>
+										</MyErrorBoundary>
+									</div>
+								)
+							} else if (currentTab === 'variables') {
+								return (
+									<div className="mt-10">
+										<MyErrorBoundary>
+											<LocalVariablesEditor
+												controlId={controlId}
+												location={location}
+												variables={config.localVariables}
 											/>
 										</MyErrorBoundary>
 									</div>
