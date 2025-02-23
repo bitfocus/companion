@@ -6,7 +6,6 @@ import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
-import { ColorInputField } from '../../../Components/ColorInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 
 export const CanvasElementPropertiesEditor = observer(function CanvasElementPropertiesEditor({
@@ -18,9 +17,9 @@ export const CanvasElementPropertiesEditor = observer(function CanvasElementProp
 }) {
 	return (
 		<>
-			<FormPropertyField controlId={controlId} elementProps={elementProps} property="color" label="Color">
+			{/* <FormPropertyField controlId={controlId} elementProps={elementProps} property="color" label="Color">
 				{(elementProp, setValue) => <FieldFillColorInput elementProp={elementProp} setValue={setValue} />}
-			</FormPropertyField>
+			</FormPropertyField> */}
 
 			<FormPropertyField controlId={controlId} elementProps={elementProps} property="decoration" label="Decoration">
 				{(elementProp, setValue) => <FieldDecorationInput elementProp={elementProp} setValue={setValue} />}
@@ -29,19 +28,19 @@ export const CanvasElementPropertiesEditor = observer(function CanvasElementProp
 	)
 })
 
-const FieldFillColorInput = observer(function FieldFillColorInput({
-	elementProp,
-	setValue,
-}: InputFieldCommonProps<ButtonGraphicsCanvasElement, 'color'>) {
-	return (
-		<ColorInputField
-			setValue={setValue as (color: number | string) => void}
-			value={elementProp.value}
-			returnType="number"
-			helpText="Background color"
-		/>
-	)
-})
+// const FieldFillColorInput = observer(function FieldFillColorInput({
+// 	elementProp,
+// 	setValue,
+// }: InputFieldCommonProps<ButtonGraphicsCanvasElement, 'color'>) {
+// 	return (
+// 		<ColorInputField
+// 			setValue={setValue as (color: number | string) => void}
+// 			value={elementProp.value}
+// 			returnType="number"
+// 			helpText="Background color"
+// 		/>
+// 	)
+// })
 
 const FieldDecorationInput = observer(function FieldDecorationInput({
 	elementProp,

@@ -35,6 +35,18 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				alignment: { value: 'center:center', isExpression: false },
 				fillMode: { value: 'fit_or_shrink', isExpression: false },
 			}
+		case 'box':
+			return {
+				id: nanoid(),
+				name: 'Box',
+				type: 'box',
+				enabled: { value: true, isExpression: false },
+				x: { value: 0, isExpression: false },
+				y: { value: 0, isExpression: false },
+				width: { value: 1, isExpression: false },
+				height: { value: 1, isExpression: false },
+				color: { value: 0xff0000, isExpression: false },
+			}
 		default:
 			assertNever(type)
 			throw new Error(`Unknown element type: ${type}`)

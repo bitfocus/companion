@@ -54,8 +54,9 @@ export class ImageResult {
 		if (typeof this.style === 'object') {
 			if (this.style.style === 'button') {
 				return this.style.bgcolor ?? 0
-			} else if (this.style.style === 'button-layered') {
-				return this.style.elements[0].type === 'canvas' ? this.style.elements[0].color : 0
+				// TODO-layered reimplement this
+				// } else if (this.style.style === 'button-layered') {
+				// 	return this.style.elements[0].type === 'canvas' ? this.style.elements[0].color : 0
 			} else {
 				return 0
 			}

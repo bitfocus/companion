@@ -3,6 +3,7 @@ import type { ControlLocation } from '../Model/Common.js'
 import type { DrawStyleLayeredButtonModel } from '../Model/StyleModel.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
 import {
+	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsDecorationType,
 	type ButtonGraphicsCanvasDrawElement,
 	type ButtonGraphicsImageDrawElement,
@@ -57,6 +58,9 @@ export class GraphicsLayeredButtonRenderer {
 					case 'text':
 						elementBounds = this.#drawTextElement(img, drawBounds, element, skipDraw)
 						break
+					case 'box':
+						elementBounds = this.#drawBoxElement(img, drawBounds, element, skipDraw)
+						break
 					default:
 						assertNever(element)
 				}
@@ -75,13 +79,13 @@ export class GraphicsLayeredButtonRenderer {
 	}
 
 	static #drawBackgroundElement(
-		img: ImageBase<any>,
-		drawBounds: DrawBounds,
+		_img: ImageBase<any>,
+		_drawBounds: DrawBounds,
 		backgroundElement: ButtonGraphicsCanvasDrawElement | undefined
 	) {
 		if (!backgroundElement) return
 
-		img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
+		// img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
 	}
 
 	static async #drawImageElement(
@@ -165,6 +169,20 @@ export class GraphicsLayeredButtonRenderer {
 		)
 
 		// if (isSelected) this.#drawBoundsLines(img, newBounds)
+		return drawBounds
+	}
+
+	static #drawBoxElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsBoxDrawElement,
+		skipDraw: boolean
+	): DrawBounds {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw) return drawBounds
+
+		img.box(parentBounds.x, parentBounds.y, parentBounds.maxX, parentBounds.maxY, parseColor(element.color))
+
 		return drawBounds
 	}
 

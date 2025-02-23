@@ -12,6 +12,8 @@ import {
 	type SomeButtonGraphicsDrawElement,
 	type SomeButtonGraphicsElement,
 	MakeExpressionable,
+	ButtonGraphicsBoxDrawElement,
+	ButtonGraphicsBoxElement,
 } from '../Model/StyleLayersModel.js'
 import { ALIGNMENT_OPTIONS } from '../Model/Alignment.js'
 
@@ -125,6 +127,8 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 					return convertImageElementForDrawing(helper, element)
 				case 'text':
 					return convertTextElementForDrawing(helper, element)
+				case 'box':
+					return convertBoxElementForDrawing(helper, element)
 				default:
 					return null
 			}
@@ -141,8 +145,8 @@ async function convertCanvasElementForDrawing(
 	helper: ExpressionHelper,
 	element: ButtonGraphicsCanvasElement
 ): Promise<ButtonGraphicsCanvasDrawElement> {
-	const [color, decoration] = await Promise.all([
-		helper.getNumber(element.color, 0),
+	const [decoration] = await Promise.all([
+		// helper.getNumber(element.color, 0),
 		helper.getEnum(
 			element.decoration,
 			Object.values(ButtonGraphicsDecorationType),
@@ -153,7 +157,7 @@ async function convertCanvasElementForDrawing(
 	return {
 		id: element.id,
 		type: 'canvas',
-		color,
+		// color,
 		decoration,
 	}
 }
@@ -211,6 +215,25 @@ async function convertTextElementForDrawing(
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
 		color,
 		alignment,
+	}
+}
+
+async function convertBoxElementForDrawing(
+	helper: ExpressionHelper,
+	element: ButtonGraphicsBoxElement
+): Promise<ButtonGraphicsBoxDrawElement | null> {
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = await helper.getBoolean(element.enabled, true)
+	if (!enabled && helper.onlyEnabled) return null
+
+	const [bounds, color] = await Promise.all([convertDrawBounds(helper, element), helper.getNumber(element.color, 0)])
+
+	return {
+		id: element.id,
+		type: 'box',
+		enabled,
+		...bounds,
+		color,
 	}
 }
 

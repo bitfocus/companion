@@ -7,6 +7,7 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCanvasElement
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
+	| ButtonGraphicsBoxElement
 
 /**
  * The type of a button graphics element as used by the renderer, with any dynamic values resolved
@@ -15,6 +16,7 @@ export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsTextDrawElement
 	| ButtonGraphicsImageDrawElement
+	| ButtonGraphicsBoxDrawElement
 
 export interface ButtonGraphicsDrawBase {
 	readonly id: string
@@ -34,7 +36,7 @@ export interface ButtonGraphicsDrawBounds {
 }
 
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
-export type MakeExpressionable<T extends { type: string }> = {
+export type MakeExpressionable<T extends { type: string } /*TSkip extends keyof T = 'type'*/> = {
 	[P in keyof Omit<T, 'id'>]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
 }
 
@@ -42,13 +44,13 @@ export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDraw
 	// Note: this is the background element and can only be at the bottom of the stack
 	type: 'canvas'
 
-	color: number
+	// previewColor: number
 
 	decoration: ButtonGraphicsDecorationType // replaces show_topbar
 }
 export interface ButtonGraphicsCanvasElement
 	extends ButtonGraphicsElementBase,
-		MakeExpressionable<ButtonGraphicsCanvasDrawElement> {}
+		MakeExpressionable<ButtonGraphicsCanvasDrawElement /*, 'previewColor'*/> {}
 
 export enum ButtonGraphicsDecorationType {
 	FollowDefault = 'default',
@@ -95,3 +97,12 @@ export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, 
 export interface ButtonGraphicsImageElement
 	extends ButtonGraphicsElementBase,
 		MakeExpressionable<ButtonGraphicsImageDrawElement> {}
+
+export interface ButtonGraphicsBoxDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
+	type: 'box'
+
+	color: number
+}
+export interface ButtonGraphicsBoxElement
+	extends ButtonGraphicsElementBase,
+		MakeExpressionable<ButtonGraphicsBoxDrawElement> {}

@@ -7,6 +7,7 @@ import { CanvasElementPropertiesEditor } from './CanvasElementPropertiesEditor.j
 import { ImageElementPropertiesEditor } from './ImageElementPropertiesEditor.js'
 import { CForm } from '@coreui/react'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
+import { BoxElementPropertiesEditor } from './BoxElementPropertiesEditor.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
@@ -36,6 +37,8 @@ const ElementPropertiesEditorInner = observer(function ElementPropertiesEditorIn
 			return <TextElementPropertiesEditor controlId={controlId} elementProps={elementProps} />
 		case 'canvas':
 			return <CanvasElementPropertiesEditor controlId={controlId} elementProps={elementProps} />
+		case 'box':
+			return <BoxElementPropertiesEditor controlId={controlId} elementProps={elementProps} />
 		default:
 			assertNever(elementProps)
 			return <div>Unsupported element type!</div>
