@@ -27,7 +27,7 @@ import {
 	parseVariablesInString,
 } from './Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValue } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'
 
 interface VariablesValuesEvents {
@@ -64,11 +64,10 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		controlLocation: ControlLocation | null | undefined,
 		injectedVariableValues?: VariablesCache
 	): ParseVariablesResult {
-		const injectedVariableValuesComplete = {
-			...this.#getInjectedVariablesForLocation(controlLocation),
-			...injectedVariableValues,
-		}
-		return parseVariablesInString(str, this.#variableValues, injectedVariableValuesComplete)
+		injectedVariableValues = injectedVariableValues || new Map()
+		this.addInjectedVariablesForLocation(injectedVariableValues, controlLocation)
+
+		return parseVariablesInString(str, this.#variableValues, injectedVariableValues)
 	}
 
 	/**
@@ -83,14 +82,12 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		str: string,
 		controlLocation: ControlLocation | null | undefined,
 		requiredType?: string,
-		injectedVariableValues?: CompanionVariableValues
+		injectedVariableValues?: VariablesCache
 	): ExecuteExpressionResult {
-		const injectedVariableValuesComplete = {
-			...this.#getInjectedVariablesForLocation(controlLocation),
-			...injectedVariableValues,
-		}
+		injectedVariableValues = injectedVariableValues || new Map()
+		this.addInjectedVariablesForLocation(injectedVariableValues, controlLocation)
 
-		return executeExpression(str, this.#variableValues, requiredType, injectedVariableValuesComplete)
+		return executeExpression(str, this.#variableValues, requiredType, injectedVariableValues)
 	}
 
 	forgetConnection(_id: string, label: string): void {
@@ -179,16 +176,19 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	/**
 	 * Variables to inject based on location
 	 */
-	#getInjectedVariablesForLocation(location: ControlLocation | null | undefined): CompanionVariableValues {
-		return {
-			'$(this:page)': location?.pageNumber,
-			'$(this:column)': location?.column,
-			'$(this:row)': location?.row,
-			// Reactivity happens for these because of references to the inner variables
-			'$(this:page_name)': location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
-			'$(this:step)': location
-				? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})`
-				: VARIABLE_UNKNOWN_VALUE,
-		}
+	addInjectedVariablesForLocation(values: VariablesCache, location: ControlLocation | null | undefined): void {
+		values.set('$(this:page)', location?.pageNumber)
+		values.set('$(this:column)', location?.column)
+		values.set('$(this:row)', location?.row)
+
+		// Reactivity happens for these because of references to the inner variables
+		values.set(
+			'$(this:page_name)',
+			location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE
+		)
+		values.set(
+			'$(this:step)',
+			location ? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})` : VARIABLE_UNKNOWN_VALUE
+		)
 	}
 }

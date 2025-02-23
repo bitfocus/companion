@@ -13,8 +13,8 @@ import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
+import { VariablesCache } from '../../../Variables/Util.js'
 
 /**
  * Class for the stepped button control.
@@ -132,13 +132,21 @@ export class ControlButtonNormal
 
 		if (style.text) {
 			// Block out the button text
-			const injectedVariableValues: CompanionVariableValues = {}
+			const injectedVariableValues: VariablesCache = new Map()
+
 			const location = this.deps.page.getLocationOfControlId(this.controlId)
 			if (location) {
 				// Ensure we don't enter into an infinite loop
 				// TODO - legacy location variables?
-				injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
+				injectedVariableValues.set(
+					`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`,
+					'$RE'
+				)
 			}
+
+			// Inject the variable values
+			this.deps.variables.values.addInjectedVariablesForLocation(injectedVariableValues, location)
+			this.entities.addLocalVariableValues(injectedVariableValues)
 
 			if (style.textExpression) {
 				const parseResult = this.deps.variables.values.executeExpression(

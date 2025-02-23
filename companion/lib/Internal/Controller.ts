@@ -26,7 +26,7 @@ import type {
 	InternalVisitor,
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
 import type { ExecuteExpressionResult, VariablesCache } from '../Variables/Util.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
@@ -568,11 +568,10 @@ export class InternalController {
 	): ParseVariablesResult {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const injectedVariableValuesComplete = {
-			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			...injectedVariableValues,
-		}
-		return this.#variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
+		if (!injectedVariableValues) injectedVariableValues = new Map()
+		if (!('id' in extras)) this.#addInjectedVariablesForLocation(injectedVariableValues, extras)
+
+		return this.#variablesController.values.parseVariables(str, extras?.location, injectedVariableValues)
 	}
 
 	/**
@@ -587,19 +586,18 @@ export class InternalController {
 		str: string,
 		extras: RunActionExtras | FeedbackEntityModelExt,
 		requiredType?: string,
-		injectedVariableValues?: CompanionVariableValues
+		injectedVariableValues?: VariablesCache
 	): ExecuteExpressionResult {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const injectedVariableValuesComplete = {
-			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			...injectedVariableValues,
-		}
+		if (!injectedVariableValues) injectedVariableValues = new Map()
+		if (!('id' in extras)) this.#addInjectedVariablesForLocation(injectedVariableValues, extras)
+
 		return this.#variablesController.values.executeExpression(
 			String(str),
 			extras.location,
 			requiredType,
-			injectedVariableValuesComplete
+			injectedVariableValues
 		)
 	}
 
@@ -616,7 +614,8 @@ export class InternalController {
 	} {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const injectedVariableValues = 'id' in extras ? undefined : this.#getInjectedVariablesForLocation(extras)
+		const injectedVariableValues: VariablesCache = new Map()
+		if (!('id' in extras)) this.#addInjectedVariablesForLocation(injectedVariableValues, extras)
 
 		return ParseInternalControlReference(
 			this.#logger,
@@ -631,11 +630,9 @@ export class InternalController {
 	/**
 	 * Variables to inject based on an internal action
 	 */
-	#getInjectedVariablesForLocation(extras: RunActionExtras): CompanionVariableValues {
-		return {
-			// Doesn't need to be reactive, it's only for an action
-			'$(this:surface_id)': extras.surfaceId,
-		}
+	#addInjectedVariablesForLocation(values: VariablesCache, extras: RunActionExtras): void {
+		// Doesn't need to be reactive, it's only for an action
+		values.set('$(this:surface_id)', extras.surfaceId)
 	}
 
 	/**

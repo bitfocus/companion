@@ -46,7 +46,7 @@ import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
-import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
+import { VARIABLE_UNKNOWN_VALUE, VariablesCache } from '../Variables/Util.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
@@ -1103,37 +1103,32 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	#surfaceExecuteExpression(
-		str: string,
-		surfaceId: string,
-		injectedVariableValues: CompanionVariableValues | undefined
-	) {
-		const injectedVariableValuesComplete = {
-			...this.#getInjectedVariablesForSurfaceId(surfaceId),
-			...injectedVariableValues,
-		}
+	#surfaceExecuteExpression(str: string, surfaceId: string, injectedVariableValues: VariablesCache | undefined) {
+		if (!injectedVariableValues) injectedVariableValues = new Map()
+
+		this.#addInjectedVariablesForSurfaceId(injectedVariableValues, surfaceId)
 
 		return this.#handlerDependencies.variables.values.executeExpression(
 			str,
 			undefined,
 			undefined,
-			injectedVariableValuesComplete
+			injectedVariableValues
 		)
 	}
 
 	/**
 	 * Variables to inject based on location
 	 */
-	#getInjectedVariablesForSurfaceId(surfaceId: string): CompanionVariableValues {
+	#addInjectedVariablesForSurfaceId(values: VariablesCache, surfaceId: string): void {
 		const pageNumber = this.devicePageGet(surfaceId)
 
-		return {
-			'$(this:surface_id)': surfaceId,
-			// Reactivity is triggered manually
-			'$(this:page)': pageNumber,
-			// Reactivity happens for these because of references to the inner variables
-			'$(this:page_name)': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
-		}
+		values.set('$(this:surface_id)', surfaceId)
+
+		// Reactivity is triggered manually
+		values.set('$(this:page)', pageNumber)
+
+		// Reactivity happens for these because of references to the inner variables
+		values.set('$(this:page_name)', pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE)
 	}
 
 	exportAll(clone = true): any {

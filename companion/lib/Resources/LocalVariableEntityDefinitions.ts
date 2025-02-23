@@ -2,6 +2,10 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 
+export enum LocalVariableEntityDefinitionType {
+	DynamicExpression = 'dynamic-expression',
+}
+
 const commonOptions: (InternalActionInputField | InternalFeedbackInputField)[] = [
 	{
 		id: 'name',
@@ -20,8 +24,8 @@ const commonOptions: (InternalActionInputField | InternalFeedbackInputField)[] =
 	},
 ]
 
-export const LocalVariableEntityDefinitions: Record<string, ClientEntityDefinition> = {
-	'dynamic-expression': {
+export const LocalVariableEntityDefinitions: Record<LocalVariableEntityDefinitionType, ClientEntityDefinition> = {
+	[LocalVariableEntityDefinitionType.DynamicExpression]: {
 		entityType: EntityModelType.LocalVariable,
 		label: 'Reusable Expression',
 		description: 'A dynamic expression that can be used in other fields',

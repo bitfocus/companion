@@ -20,7 +20,7 @@ import { ExpressionFunctions } from '@companion-app/shared/Expression/Expression
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { SplitVariableId } from '../Resources/Util.js'
-import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValue } from '@companion-module/base'
 
 export const VARIABLE_UNKNOWN_VALUE = '$NA'
 
@@ -30,7 +30,7 @@ const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
 const logger = LogController.createLogger('Variables/Util')
 
 export type VariableValueData = Record<string, Record<string, CompanionVariableValue | undefined> | undefined>
-export type VariablesCache = Record<string, CompanionVariableValue | undefined>
+export type VariablesCache = Map<string, CompanionVariableValue | (() => CompanionVariableValue) | undefined>
 export interface ParseVariablesResult {
 	text: string
 	variableIds: string[]
@@ -50,7 +50,7 @@ interface ExecuteExpressionResultError {
 export function parseVariablesInString(
 	string: CompanionVariableValue,
 	rawVariableValues: VariableValueData,
-	cachedVariableValues: VariablesCache = {}
+	cachedVariableValues: VariablesCache
 ): ParseVariablesResult {
 	if (string === undefined || string === null || string === '') {
 		return {
@@ -82,28 +82,39 @@ export function parseVariablesInString(
 
 		referencedVariableIds.push(`${connectionLabel}:${variableId}`)
 
-		let cachedValue = cachedVariableValues[fullId]
-		if (cachedValue === undefined) {
+		let value: CompanionVariableValue | undefined
+		if (cachedVariableValues.has(fullId)) {
+			const cachedValue = cachedVariableValues.get(fullId)
+
+			if (typeof cachedValue === 'function') {
+				// Value is being lazy evaluated
+				value = cachedValue()
+				cachedVariableValues.set(fullId, value)
+			} else {
+				value = cachedValue
+			}
+		} else {
 			// Set a temporary value, to stop the recursion going deep
-			cachedVariableValues[fullId] = '$RE'
+			cachedVariableValues.set(fullId, '$RE')
 
 			// Fetch the raw value, and parse variables inside of it
 			const rawValue = rawVariableValues[connectionLabel]?.[variableId]
 			if (rawValue !== undefined) {
 				const result = parseVariablesInString(rawValue, rawVariableValues, cachedVariableValues)
-				cachedValue = result.text
+				value = result.text
 				referencedVariableIds.push(...result.variableIds)
-				if (cachedValue === undefined) cachedValue = ''
 			} else {
 				// Variable has no value
-				cachedValue = VARIABLE_UNKNOWN_VALUE
+				value = VARIABLE_UNKNOWN_VALUE
 			}
 
-			cachedVariableValues[fullId] = cachedValue
+			cachedVariableValues.set(fullId, value)
 		}
 
+		if (value === undefined) value = ''
+
 		// Pass a function, to avoid special interpreting of `$$` and other sequences
-		const cachedValueConst = cachedValue?.toString()
+		const cachedValueConst = value?.toString()
 		string = string.replace(fullId, () => cachedValueConst)
 	}
 
@@ -145,13 +156,13 @@ export function replaceAllVariables(string: string, newLabel: string): string {
  * @param str - String containing the expression to parse
  * @param rawVariableValues
  * @param requiredType - Fail if the result is not of specified type
- * @param injectedVariableValues - Inject some variable values
+ * @param cachedVariableValues - Inject some variable values
  */
 export function executeExpression(
 	str: string,
 	rawVariableValues: VariableValueData,
-	requiredType?: string,
-	injectedVariableValues?: CompanionVariableValues
+	requiredType: string | undefined,
+	cachedVariableValues: VariablesCache
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
 
@@ -159,9 +170,20 @@ export function executeExpression(
 		const getVariableValue = (variableId: string): CompanionVariableValue => {
 			referencedVariableIds.add(variableId)
 
+			const fullId = `$(${variableId})`
 			// First check for an injected value
-			let value = injectedVariableValues?.[`$(${variableId})`]
-			if (value === undefined) {
+			let value: CompanionVariableValue | undefined
+			if (cachedVariableValues.has(fullId)) {
+				const rawValue = cachedVariableValues.get(fullId)!
+
+				if (typeof rawValue === 'function') {
+					// Value is being lazy evaluated
+					value = rawValue()
+					cachedVariableValues.set(fullId, value)
+				} else {
+					value = rawValue
+				}
+			} else {
 				// No value, lookup the raw value
 				const [connectionLabel, variableName] = SplitVariableId(variableId)
 				if (connectionLabel == 'internal' && variableName.substring(0, 7) === 'custom_') {
@@ -169,6 +191,8 @@ export function executeExpression(
 				} else {
 					value = rawVariableValues[connectionLabel]?.[variableName]
 				}
+
+				cachedVariableValues.set(fullId, value)
 			}
 
 			// If its a string, make sure any references to other variables are resolved
@@ -179,7 +203,7 @@ export function executeExpression(
 					return getVariableValue(`${valueMatch[1]}:${valueMatch[2]}`)
 				} else {
 					// Fallback to parsing the string
-					const parsedValue = parseVariablesInString(value, rawVariableValues, injectedVariableValues)
+					const parsedValue = parseVariablesInString(value, rawVariableValues, cachedVariableValues)
 					value = parsedValue.text
 
 					for (const id of parsedValue.variableIds) {
@@ -197,7 +221,7 @@ export function executeExpression(
 		const functions = {
 			...ExpressionFunctions,
 			parseVariables: (str: string): string => {
-				const result = parseVariablesInString(str, rawVariableValues, injectedVariableValues)
+				const result = parseVariablesInString(str, rawVariableValues, cachedVariableValues)
 
 				// Track referenced variables
 				for (const varId of result.variableIds) {

@@ -1,5 +1,5 @@
 import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { action, computed, makeObservable, observable } from 'mobx'
+import { action, makeObservable, observable } from 'mobx'
 import { useEffect, useMemo } from 'react'
 import type { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import { computedFn } from 'mobx-utils'

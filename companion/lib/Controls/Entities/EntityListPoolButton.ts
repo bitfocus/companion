@@ -13,6 +13,9 @@ import type { ControlActionSetAndStepsManager } from './ControlActionSetAndSteps
 import { cloneDeep } from 'lodash-es'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
+import type { VariablesCache } from '../../Variables/Util.js'
+import { assertNever, CompanionVariableValue } from '@companion-module/base'
+import { LocalVariableEntityDefinitionType } from '../../Resources/LocalVariableEntityDefinitions.js'
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
 	/**
@@ -94,6 +97,39 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	getLocalVariableEntities(): SomeEntityModel[] {
 		return this.#localVariables.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	}
+
+	addLocalVariableValues(values: VariablesCache): void {
+		for (const variable of this.#localVariables.getDirectEntities()) {
+			if (variable.type !== EntityModelType.LocalVariable || variable.connectionId !== 'internal') continue
+			if (!variable.rawOptions.name) continue
+
+			// TODO-localvariable: can this be made stricter?
+			const definitionId = variable.definitionId as LocalVariableEntityDefinitionType
+			switch (definitionId) {
+				case LocalVariableEntityDefinitionType.DynamicExpression: {
+					let computedResult: CompanionVariableValue | undefined = undefined
+
+					const expression = variable.rawOptions.expression
+					values.set(`$(local:${variable.rawOptions.name})`, () => {
+						if (computedResult !== undefined) return computedResult
+
+						// make sure we don't get stuck in a loop
+						computedResult = '$RE'
+
+						computedResult = '123'
+
+						return computedResult
+					})
+
+					break
+				}
+				default: {
+					assertNever(definitionId)
+					this.logger.warn(`Unknown local variable type ${variable.definitionId}`)
+				}
+			}
+		}
 	}
 
 	// /**
