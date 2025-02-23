@@ -2,6 +2,7 @@ import React from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { CAlert } from '@coreui/react'
 
 interface LocalVariablesEditorProps {
 	controlId: string
@@ -9,17 +10,21 @@ interface LocalVariablesEditorProps {
 	variables: SomeEntityModel[]
 }
 export function LocalVariablesEditor({ controlId, location, variables }: LocalVariablesEditorProps) {
-	// return <p>TEST {controlId}</p>
 	return (
-		<ControlEntitiesEditor
-			heading="Local Variables"
-			controlId={controlId}
-			entities={variables}
-			location={location}
-			listId="local-variables"
-			entityType={EntityModelType.LocalVariable}
-			entityTypeLabel="variable"
-			onlyFeedbackType={null}
-		/>
+		<>
+			<CAlert color="info" className="mb-2">
+				This is a work in progress. Local variables are not supported in actions or feedbacks yet.
+			</CAlert>
+			<ControlEntitiesEditor
+				heading="Local Variables"
+				controlId={controlId}
+				entities={variables}
+				location={location}
+				listId="local-variables"
+				entityType={EntityModelType.LocalVariable}
+				entityTypeLabel="variable"
+				onlyFeedbackType={null}
+			/>
+		</>
 	)
 }

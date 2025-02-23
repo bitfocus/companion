@@ -31,7 +31,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { LocalVariableEntityDefinitions } from '../Resources/LocalVaraibleDefinitions.js'
+import { LocalVariableEntityDefinitions } from '../Resources/LocalVariableEntityDefinitions.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
