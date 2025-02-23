@@ -137,11 +137,10 @@ export class ControlButtonNormal
 			const location = this.deps.page.getLocationOfControlId(this.controlId)
 			if (location) {
 				// Ensure we don't enter into an infinite loop
-				// TODO - legacy location variables?
 				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
 			}
 
-			// Inject the variable values
+			// Setup the parser
 			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
 				location,
 				this.entities.getLocalVariableEntities(),

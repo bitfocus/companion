@@ -51,9 +51,14 @@ export class VariablesAndExpressionParser {
 	}
 
 	#bindLocalVariables(variables: SomeEntityModel[]) {
+		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+
 		for (const variable of variables) {
 			if (variable.type !== EntityModelType.LocalVariable || variable.connectionId !== 'internal') continue
 			if (!variable.options.name) continue
+
+			// Make sure the variable name is valid
+			if (!variable.id.match(idCheckRegex)) continue
 
 			const fullId = `$(local:${variable.options.name})`
 

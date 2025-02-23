@@ -21,6 +21,7 @@ export interface ControlEntityListPoolProps {
 	controlId: string
 	commitChange: (redraw?: boolean) => void
 	triggerRedraw: () => void
+	localVariablesChanged: ((changedVariables: Set<string>) => void) | null
 }
 
 export abstract class ControlEntityListPoolBase {
@@ -45,12 +46,18 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	protected readonly triggerRedraw: () => void
 
+	/**
+	 * Triggered when local variables have changed
+	 */
+	protected readonly localVariablesChanged: ((changedVariables: Set<string>) => void) | null
+
 	protected constructor(props: ControlEntityListPoolProps) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.controlId = props.controlId
 		this.commitChange = props.commitChange
 		this.triggerRedraw = props.triggerRedraw
+		this.localVariablesChanged = props.localVariablesChanged
 
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule
@@ -66,6 +73,31 @@ export abstract class ControlEntityListPoolBase {
 			null,
 			listDefinition
 		)
+	}
+
+	#entityToLocalVariableName(entity: ControlEntityInstance): string | null {
+		if (entity.type !== EntityModelType.LocalVariable) return null
+
+		return `local:${entity.rawOptions.name}`
+	}
+
+	protected tryTriggerLocalVariablesChanged(...entities: (ControlEntityInstance | string | null)[]) {
+		if (!this.localVariablesChanged) return
+
+		const changedIds = new Set<string>()
+
+		for (const entity of entities) {
+			if (!entity) continue
+
+			const fullId = typeof entity === 'string' ? entity : this.#entityToLocalVariableName(entity)
+			if (fullId) changedIds.add(fullId)
+		}
+
+		console.log('local var change', changedIds)
+
+		if (changedIds.size > 0) {
+			this.localVariablesChanged(changedIds)
+		}
 	}
 
 	/**
@@ -156,6 +188,8 @@ export abstract class ControlEntityListPoolBase {
 			entity.subscribe(true)
 		}
 
+		this.tryTriggerLocalVariablesChanged(...newEntities)
+
 		this.commitChange()
 
 		return true
@@ -170,6 +204,8 @@ export abstract class ControlEntityListPoolBase {
 
 		const entity = entityList.duplicateEntity(id)
 		if (!entity) return false
+
+		this.tryTriggerLocalVariablesChanged(entity)
 
 		this.commitChange(false)
 
@@ -187,6 +223,8 @@ export abstract class ControlEntityListPoolBase {
 		if (!entity) return false
 
 		entity.setEnabled(enabled)
+
+		this.tryTriggerLocalVariablesChanged(entity)
 
 		this.commitChange()
 
@@ -228,6 +266,8 @@ export abstract class ControlEntityListPoolBase {
 		const feedbackAfter = entityList.findById(id)
 		if (!feedbackAfter) return false
 
+		this.tryTriggerLocalVariablesChanged(entity)
+
 		this.commitChange(true)
 		return true
 	}
@@ -239,8 +279,11 @@ export abstract class ControlEntityListPoolBase {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 
-		if (entityList.removeEntity(id)) {
+		const removedEntity = entityList.removeEntity(id)
+		if (removedEntity) {
 			this.commitChange()
+
+			this.tryTriggerLocalVariablesChanged(removedEntity)
 
 			return true
 		} else {
@@ -303,7 +346,7 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Replace a feedback with an updated version
+	 * Replace an entity with an updated version
 	 */
 	entityReplace(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): ControlEntityInstance | undefined {
 		for (const childGroup of this.getAllEntityLists()) {
@@ -314,6 +357,8 @@ export abstract class ControlEntityListPoolBase {
 			if (entity.type !== newProps.type) return undefined
 
 			entity.replaceProps(newProps, skipNotifyModule)
+
+			this.tryTriggerLocalVariablesChanged(entity)
 
 			this.commitChange(true)
 
@@ -352,7 +397,11 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.findById(id)
 		if (!entity) return false
 
+		const oldLocalVariableName = this.#entityToLocalVariableName(entity)
+
 		entity.setOption(key, value)
+
+		this.tryTriggerLocalVariablesChanged(entity, oldLocalVariableName)
 
 		this.commitChange()
 

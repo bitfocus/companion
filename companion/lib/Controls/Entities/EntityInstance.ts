@@ -220,6 +220,8 @@ export class ControlEntityInstance {
 	 * Set whether this entity is enabled
 	 */
 	setEnabled(enabled: boolean): void {
+		if (this.type === EntityModelType.LocalVariable) return
+
 		this.#data.disabled = !enabled
 
 		// Remove from cached feedback values
@@ -246,6 +248,8 @@ export class ControlEntityInstance {
 	 * Set the connection of this entity
 	 */
 	setConnectionId(connectionId: string | number): void {
+		if (this.type === EntityModelType.LocalVariable) return
+
 		// TODO - why can this be a number?
 		connectionId = String(connectionId)
 
@@ -434,11 +438,12 @@ export class ControlEntityInstance {
 	/**
 	 * Remove a child entity
 	 */
-	removeChild(id: string): boolean {
+	removeChild(id: string): ControlEntityInstance | undefined {
 		for (const childGroup of this.#children.values()) {
-			if (childGroup.removeEntity(id)) return true
+			const removed = childGroup.removeEntity(id)
+			if (removed) return removed
 		}
-		return false
+		return undefined
 	}
 
 	/**
