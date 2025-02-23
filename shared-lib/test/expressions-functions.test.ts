@@ -320,6 +320,20 @@ describe('functions', () => {
 			expect(ExpressionFunctions.jsonstringify({ a: 1 })).toEqual('{"a":1}')
 			expect(ExpressionFunctions.jsonstringify([1, 2, 3])).toEqual('[1,2,3]')
 		})
+
+		it('arrlen', () => {
+			expect(ExpressionFunctions.arrlen()).toBe(0)
+			expect(ExpressionFunctions.arrlen('')).toBe(1)
+			expect(ExpressionFunctions.arrlen('a')).toBe(1)
+			expect(ExpressionFunctions.arrlen('abc')).toBe(1)
+			expect(ExpressionFunctions.arrlen(9)).toBe(1)
+			expect(ExpressionFunctions.arrlen([])).toBe(0)
+			expect(ExpressionFunctions.arrlen([9])).toBe(1)
+			expect(ExpressionFunctions.arrlen([9, 'a'])).toBe(2)
+			expect(ExpressionFunctions.arrlen(['a', 'c'])).toBe(2)
+			expect(ExpressionFunctions.arrlen(['ab', ''])).toBe(2)
+			expect(ExpressionFunctions.arrlen(['a', 'b', 'c'])).toBe(3)
+		})
 	})
 
 	describe('time', () => {

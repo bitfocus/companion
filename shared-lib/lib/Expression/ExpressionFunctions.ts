@@ -74,7 +74,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	// Bool operations
 	bool: (v) => !!v && v !== 'false' && v !== '0',
 
-	// Object operations
+	// Object/array operations
 	jsonpath: (obj, path) => {
 		const shouldParseInput = typeof obj === 'string'
 		if (shouldParseInput) {
@@ -114,6 +114,9 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		} catch (_e) {
 			return null
 		}
+	},
+	arrlen: (arr = []) => {
+		return (Array.isArray(arr) ? arr : [arr]).length
 	},
 
 	// Time operations

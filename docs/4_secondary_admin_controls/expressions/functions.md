@@ -110,7 +110,6 @@ Find the index of the first occurrence of a value within the provided string.
 
 Optionally provide an offset to start the search from.
 
-
 **lastIndexOf(val, find, offset)**
 
 Find the index of the last occurrence of a value within the provided string.
@@ -140,7 +139,6 @@ eg `encode("Companion","hex")` gives `"436f6d70616e696f6e"`
 **decode(str, enc)**
 
 Decode a string from the requested format ('hex','base64'). If `enc` is missing, `latin1` will be used.
-
 
 eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
@@ -190,6 +188,10 @@ If this encounters invalid input, it will return null instead of throwing an err
 
 eg: `jsonstringify({ a: 1 })` will be a string containing `{"a":1}`
 
+**arrlen(obj)**
+
+Find the length of the given array.
+
 ##### Time operations
 
 **unixNow()**
@@ -203,7 +205,6 @@ Convert a timestamp of format 'HH:MM:SS' into the number of seconds it represent
 eg `00:10:15` gives 615
 
 You can do the reverse of this with `secondsToTimestamp(str)`
-
 
 **secondsToTimestamp(seconds, format)**
 
