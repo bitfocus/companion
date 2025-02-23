@@ -117,8 +117,10 @@ export class GraphicsPreview {
 
 			if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
 
+			const parser = this.#variablesController.createVariablesAndExpressionParser(location, null, null)
+
 			// Do a resolve of the reference for the starting image
-			const result = ParseInternalControlReference(this.#logger, this.#variablesController, location, options, true)
+			const result = ParseInternalControlReference(this.#logger, parser, location, options, true)
 
 			// Track the subscription, to allow it to be invalidated
 			this.#buttonReferencePreviews.set(fullId, {
@@ -175,6 +177,8 @@ export class GraphicsPreview {
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.length) continue
 
+			const parser = this.#variablesController.createVariablesAndExpressionParser(previewSession.location, null, null)
+
 			const matchingChangedVariable = previewSession.referencedVariableIds.some((variable) =>
 				allChangedSet.has(variable)
 			)
@@ -183,7 +187,7 @@ export class GraphicsPreview {
 			// Resolve the new location
 			const result = ParseInternalControlReference(
 				this.#logger,
-				this.#variablesController,
+				parser,
 				previewSession.location,
 				previewSession.options,
 				true

@@ -1,19 +1,17 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { Logger } from '../Log/Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
-import type { VariablesCache } from '../Variables/Util.js'
+import type { VariablesAndExpressionParser } from '../Variables/Util.js'
 
 /**
  *
  */
 export function ParseInternalControlReference(
 	logger: Logger,
-	variablesController: VariablesValues,
+	parser: VariablesAndExpressionParser,
 	pressLocation: ControlLocation | undefined,
 	options: Record<string, any>,
-	useVariableFields: boolean,
-	injectedVariableValues?: VariablesCache
+	useVariableFields: boolean
 ): {
 	location: ControlLocation | null
 	referencedVariables: Set<string>
@@ -93,7 +91,7 @@ export function ParseInternalControlReference(
 			break
 		case 'text':
 			if (useVariableFields) {
-				const result = variablesController.parseVariables(options.location_text, pressLocation, injectedVariableValues)
+				const result = parser.parseVariables(options.location_text)
 
 				location = parseLocationString(result.text)
 				referencedVariables = result.variableIds
@@ -103,12 +101,7 @@ export function ParseInternalControlReference(
 			break
 		case 'expression':
 			if (useVariableFields) {
-				const result = variablesController.executeExpression(
-					options.location_expression,
-					pressLocation,
-					'string',
-					injectedVariableValues
-				)
+				const result = parser.executeExpression(options.location_expression, 'string')
 				if (result.ok) {
 					location = parseLocationString(String(result.value))
 				} else {

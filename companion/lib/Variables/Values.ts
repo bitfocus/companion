@@ -17,16 +17,7 @@
 
 import LogController from '../Log/Controller.js'
 import EventEmitter from 'events'
-import {
-	ExecuteExpressionResult,
-	ParseVariablesResult,
-	VARIABLE_UNKNOWN_VALUE,
-	VariableValueData,
-	VariablesCache,
-	VariablesAndExpressionParser,
-	parseVariablesInString,
-	executeExpression,
-} from './Util.js'
+import { VARIABLE_UNKNOWN_VALUE, VariableValueData, VariablesCache, VariablesAndExpressionParser } from './Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'
@@ -52,47 +43,6 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 	getCustomVariableValue(name: string): CompanionVariableValue | undefined {
 		return this.getVariableValue('custom', name)
-	}
-
-	/**
-	 * Parse the variables in a string
-	 * @param str - String to parse variables in
-	 * @param controlLocation - Location of the control
-	 * @param injectedVariableValues - Inject some variable values
-	 * @returns with variables replaced with values
-	 */
-	parseVariables(
-		str: string,
-		controlLocation: ControlLocation | null | undefined,
-		injectedVariableValues?: VariablesCache
-	): ParseVariablesResult {
-		// TODO-localvariables avoid this mutation
-		injectedVariableValues = injectedVariableValues || new Map()
-		this.addInjectedVariablesForLocation(injectedVariableValues, controlLocation)
-
-		return parseVariablesInString(str, this.#variableValues, injectedVariableValues)
-	}
-
-	/**
-	 * @deprecated
-	 * Parse and execute an expression in a string
-	 * @param str - String containing the expression to parse
-	 * @param controlLocation - Location of the control
-	 * @param requiredType - Fail if the result is not of specified type
-	 * @param injectedVariableValues - Inject some variable values
-	 * @returns result of the expression
-	 */
-	executeExpression(
-		str: string,
-		controlLocation: ControlLocation | null | undefined,
-		requiredType?: string,
-		injectedVariableValues?: VariablesCache
-	): ExecuteExpressionResult {
-		// TODO-localvariables avoid this mutation
-		injectedVariableValues = injectedVariableValues || new Map()
-		this.addInjectedVariablesForLocation(injectedVariableValues, controlLocation)
-
-		return executeExpression(str, this.#variableValues, requiredType, injectedVariableValues)
 	}
 
 	createVariablesAndExpressionParser(

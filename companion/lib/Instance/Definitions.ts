@@ -167,8 +167,8 @@ export class InstanceDefinitions {
 				}
 
 				if (style.text) {
+					const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
 					if (style.textExpression) {
-						const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
 						const parseResult = parser.executeExpression(style.text, undefined)
 						if (parseResult.ok) {
 							style.text = parseResult.value + ''
@@ -177,7 +177,7 @@ export class InstanceDefinitions {
 							style.text = 'ERR'
 						}
 					} else {
-						const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
+						const parseResult = parser.parseVariables(style.text)
 						style.text = parseResult.text
 					}
 				}

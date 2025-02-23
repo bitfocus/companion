@@ -26,9 +26,9 @@ import type {
 	InternalVisitor,
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
-import type { ExecuteExpressionResult, VariablesCache } from '../Variables/Util.js'
+import type { ExecuteExpressionResult } from '../Variables/Util.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -563,15 +563,23 @@ export class InternalController {
 	 */
 	parseVariablesForInternalActionOrFeedback(
 		str: string,
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		injectedVariableValues?: VariablesCache
+		extras: RunActionExtras | FeedbackEntityModelExt
+		// injectedVariableValues?: VariablesCache
 	): ParseVariablesResult {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		if (!injectedVariableValues) injectedVariableValues = new Map()
-		if (!('id' in extras)) this.#addInjectedVariablesForLocation(injectedVariableValues, extras)
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			// ...injectedVariableValues,
+		}
 
-		return this.#variablesController.values.parseVariables(str, extras?.location, injectedVariableValues)
+		const parser = this.#variablesController.values.createVariablesAndExpressionParser(
+			extras.location,
+			null,
+			injectedVariableValuesComplete
+		)
+
+		return parser.parseVariables(str)
 	}
 
 	/**
@@ -585,20 +593,23 @@ export class InternalController {
 	executeExpressionForInternalActionOrFeedback(
 		str: string,
 		extras: RunActionExtras | FeedbackEntityModelExt,
-		requiredType?: string,
-		injectedVariableValues?: VariablesCache
+		requiredType?: string
+		// injectedVariableValues?: VariablesCache
 	): ExecuteExpressionResult {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		if (!injectedVariableValues) injectedVariableValues = new Map()
-		if (!('id' in extras)) this.#addInjectedVariablesForLocation(injectedVariableValues, extras)
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			// ...injectedVariableValues,
+		}
 
-		return this.#variablesController.values.executeExpression(
-			String(str),
+		const parser = this.#variablesController.values.createVariablesAndExpressionParser(
 			extras.location,
-			requiredType,
-			injectedVariableValues
+			null,
+			injectedVariableValuesComplete
 		)
+
+		return parser.executeExpression(String(str), requiredType)
 	}
 
 	/**
@@ -614,25 +625,28 @@ export class InternalController {
 	} {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const injectedVariableValues: VariablesCache = new Map()
-		if (!('id' in extras)) this.#addInjectedVariablesForLocation(injectedVariableValues, extras)
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			// ...injectedVariableValues,
+		}
 
-		return ParseInternalControlReference(
-			this.#logger,
-			this.#variablesController.values,
+		const parser = this.#variablesController.values.createVariablesAndExpressionParser(
 			extras.location,
-			options,
-			useVariableFields,
-			injectedVariableValues
+			null,
+			injectedVariableValuesComplete
 		)
+
+		return ParseInternalControlReference(this.#logger, parser, extras.location, options, useVariableFields)
 	}
 
 	/**
 	 * Variables to inject based on an internal action
 	 */
-	#addInjectedVariablesForLocation(values: VariablesCache, extras: RunActionExtras): void {
-		// Doesn't need to be reactive, it's only for an action
-		values.set('$(this:surface_id)', extras.surfaceId)
+	#getInjectedVariablesForLocation(extras: RunActionExtras): CompanionVariableValues {
+		return {
+			// Doesn't need to be reactive, it's only for an action
+			'$(this:surface_id)': extras.surfaceId,
+		}
 	}
 
 	/**

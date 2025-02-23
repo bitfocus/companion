@@ -805,7 +805,9 @@ export class SocketEventsHandler {
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
 			const location = msg.controlId ? this.#deps.page.getLocationOfControlId(msg.controlId) : null
-			const result = this.#deps.variables.values.parseVariables(msg.text, location)
+
+			const parser = this.#deps.variables.values.createVariablesAndExpressionParser(location, null, null)
+			const result = parser.parseVariables(msg.text)
 
 			return {
 				text: result.text,

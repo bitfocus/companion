@@ -187,7 +187,8 @@ export class InternalVariables implements InternalModuleFragment {
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.definitionId == 'check_expression') {
-			const res = this.#variableController.executeExpression(feedback.options.expression, feedback.location, 'boolean')
+			const parser = this.#variableController.createVariablesAndExpressionParser(feedback.location, null, null)
+			const res = parser.executeExpression(feedback.options.expression, 'boolean')
 
 			this.#variableSubscriptions.set(feedback.id, res.variableIds)
 
