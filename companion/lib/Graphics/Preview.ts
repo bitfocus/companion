@@ -3,10 +3,10 @@ import { ControlConfigRoom } from '../Controls/ControlBase.js'
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
 import type { GraphicsController } from './Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { PageController } from '../Page/Controller.js'
-import { ImageResult } from './ImageResult.js'
+import type { ImageResult } from './ImageResult.js'
+import type { ControlsController } from '../Controls/Controller.js'
 
 /**
  * Get Socket.io room for preview updates
@@ -52,7 +52,7 @@ export class GraphicsPreview {
 	readonly #graphicsController: GraphicsController
 	readonly #ioController: UIHandler
 	readonly #pageController: PageController
-	readonly #variablesController: VariablesValues
+	readonly #controlsController: ControlsController
 
 	readonly #buttonReferencePreviews = new Map<string, PreviewSession>()
 
@@ -60,12 +60,12 @@ export class GraphicsPreview {
 		graphicsController: GraphicsController,
 		ioController: UIHandler,
 		pageController: PageController,
-		variablesController: VariablesValues
+		controlsController: ControlsController
 	) {
 		this.#graphicsController = graphicsController
 		this.#ioController = ioController
 		this.#pageController = pageController
-		this.#variablesController = variablesController
+		this.#controlsController = controlsController
 
 		this.#graphicsController.on('button_drawn', this.#updateButton.bind(this))
 	}
@@ -117,8 +117,7 @@ export class GraphicsPreview {
 
 			if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
 
-			// TODO-localvariables this needs to consider local variables?
-			const parser = this.#variablesController.createVariablesAndExpressionParser(location, null, null)
+			const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
 
 			// Do a resolve of the reference for the starting image
 			const result = ParseInternalControlReference(this.#logger, parser, location, options, true)
@@ -173,12 +172,16 @@ export class GraphicsPreview {
 		}
 	}
 
-	onVariablesChanged(allChangedSet: Set<string>): void {
+	onVariablesChanged(allChangedSet: Set<string>, fromControlId: string | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.length) continue
 
-			const parser = this.#variablesController.createVariablesAndExpressionParser(previewSession.location, null, null)
+			// const controlId = location?this.#pageController.getControlIdAt(location):undefined
+
+			// if (fromControlId && previewSession.)
+
+			const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.location, null)
 
 			const matchingChangedVariable = previewSession.referencedVariableIds.some((variable) =>
 				allChangedSet.has(variable)

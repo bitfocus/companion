@@ -26,6 +26,7 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 
 interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>]
+	local_variables_changed: [changed: Set<string>, fromControlId: string]
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {

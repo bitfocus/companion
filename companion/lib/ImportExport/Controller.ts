@@ -1125,11 +1125,15 @@ export class ImportExportController {
 			style: cloneDeep(control.style),
 			feedbacks: [],
 			steps: {},
-			localVariables: [], // TODO-localvariables
+			localVariables: [],
 		}
 
 		if (control.feedbacks) {
 			result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
+		}
+
+		if (control.localVariables) {
+			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
 		}
 
 		const allEntities: SomeEntityModel[] = [...result.feedbacks]
