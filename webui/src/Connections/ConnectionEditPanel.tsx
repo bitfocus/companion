@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError } from '../util.js'
+import { LoadingRetryOrError, useComputed } from '../util.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup } from '@coreui/react'
 import { TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
@@ -376,9 +376,9 @@ export function useConnectionVersionSelectOptions(
 	const upgradeToVersions = useModuleUpgradeToVersions(moduleId)
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
-	const latestBetaVersionn = getLatestVersion(moduleStoreInfo?.versions, true)
+	const latestBetaVersion = getLatestVersion(moduleStoreInfo?.versions, true)
 
-	return useMemo(() => {
+	return useComputed(() => {
 		const choices: DropdownChoiceInt[] = []
 
 		const listedVersions = new Set<string>()
@@ -407,13 +407,13 @@ export function useConnectionVersionSelectOptions(
 
 		if (
 			includeBeta &&
-			latestBetaVersionn &&
-			!listedVersions.has(latestBetaVersionn.id) &&
-			(!installedInfo?.betaVersion || semver.compare(latestBetaVersionn.id, installedInfo.betaVersion.versionId) > 0)
+			latestBetaVersion &&
+			!listedVersions.has(latestBetaVersion.id) &&
+			(!installedInfo?.betaVersion || semver.compare(latestBetaVersion.id, installedInfo.betaVersion.versionId) > 0)
 		) {
 			choices.push({
-				value: latestBetaVersionn.id,
-				label: `v${latestBetaVersionn.id} (Install latest beta)`,
+				value: latestBetaVersion.id,
+				label: `v${latestBetaVersion.id} (Install latest beta)`,
 			})
 		}
 
@@ -438,7 +438,7 @@ export function useConnectionVersionSelectOptions(
 		}
 
 		return [...replacementChoices, ...choices]
-	}, [installedInfo, upgradeToVersions, latestStableVersion, latestBetaVersionn, includeBeta])
+	}, [installedInfo, upgradeToVersions, latestStableVersion, latestBetaVersion, includeBeta])
 }
 
 export function doesConnectionVersionExist(
