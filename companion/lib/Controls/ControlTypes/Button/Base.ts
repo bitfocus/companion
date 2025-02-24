@@ -74,7 +74,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			{
 				controlId,
 				commitChange: this.commitChange.bind(this),
-				triggerRedraw: this.triggerRedraw.bind(this),
+				invalidateControl: this.triggerRedraw.bind(this),
+				localVariablesChanged: this.#onLocalVariablesChanged.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				moduleHost: deps.instance.moduleHost,
@@ -206,6 +207,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 
 		return result
 	}
+
+	#onLocalVariablesChanged(allChangedVariables: Set<string>): void {
+		this.deps.variables.values.emit('local_variables_changed', allChangedVariables, this.controlId)
+	}
+
+	abstract onVariablesChanged(allChangedVariables: Set<string>): void
 
 	/**
 	 * Update an option field of this control

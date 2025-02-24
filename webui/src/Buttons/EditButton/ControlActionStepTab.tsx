@@ -9,6 +9,7 @@ import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import { IControlActionStepsAndSetsService } from '../../Services/Controls/ControlActionStepsAndSetsService.js'
 import { MyErrorBoundary } from '../../util.js'
 import { EditActionsRelease } from './EditActionsRelease.js'
+import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
 export interface ControlActionStepTabProps {
 	service: IControlActionStepsAndSetsService
@@ -20,6 +21,7 @@ export interface ControlActionStepTabProps {
 	selectedIndex: number
 	selectedKey: string
 	selectedStepProps: NormalButtonSteps[0]
+	localVariablesStore: LocalVariablesStore
 }
 
 export function ControlActionStepTab({
@@ -32,6 +34,7 @@ export function ControlActionStepTab({
 	selectedIndex,
 	selectedKey,
 	selectedStepProps,
+	localVariablesStore,
 }: ControlActionStepTabProps) {
 	return (
 		<>
@@ -102,6 +105,7 @@ export function ControlActionStepTab({
 								entityType={EntityModelType.Action}
 								entityTypeLabel="action"
 								onlyFeedbackType={null}
+								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>
 
@@ -115,6 +119,7 @@ export function ControlActionStepTab({
 								entityType={EntityModelType.Action}
 								entityTypeLabel="action"
 								onlyFeedbackType={null}
+								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>
 					</>
@@ -132,6 +137,7 @@ export function ControlActionStepTab({
 								entityType={EntityModelType.Action}
 								entityTypeLabel="action"
 								onlyFeedbackType={null}
+								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>
 
@@ -142,6 +148,7 @@ export function ControlActionStepTab({
 							stepOptions={selectedStepProps.options}
 							stepId={selectedKey}
 							removeSet={service.removeSet}
+							localVariablesStore={localVariablesStore}
 						/>
 					</>
 				)}

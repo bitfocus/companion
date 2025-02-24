@@ -28,7 +28,7 @@ import type {
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
-import type { ExecuteExpressionResult, VariablesCache } from '../Variables/Util.js'
+import type { ExecuteExpressionResult } from '../Variables/Util.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -151,6 +151,10 @@ export class InternalController {
 			}
 			case EntityModelType.Action: {
 				return this.#actionUpgrade(entity, controlId)
+			}
+			case EntityModelType.LocalVariable: {
+				// Future: Implement when needed
+				return undefined
 			}
 			default:
 				assertNever(entity)
@@ -323,6 +327,9 @@ export class InternalController {
 						options: entity.options,
 					})
 					break
+				case EntityModelType.LocalVariable:
+					// Not supported
+					break
 				default:
 					assertNever(entity)
 					break
@@ -345,6 +352,9 @@ export class InternalController {
 						action: entity.definitionId,
 						options: entity.rawOptions, // Ensure the options is not a copy/clone
 					})
+					break
+				case EntityModelType.LocalVariable:
+					// Future: not needed yet
 					break
 				default:
 					assertNever(entity.type)
@@ -515,13 +525,13 @@ export class InternalController {
 		this.#variablesController.definitions.setVariableDefinitions('internal', variables)
 	}
 
-	variablesChanged(all_changed_variables_set: Set<string>): void {
+	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		// Inform all fragments
 		for (const fragment of this.#fragments) {
-			if ('variablesChanged' in fragment && typeof fragment.variablesChanged === 'function') {
-				fragment.variablesChanged(all_changed_variables_set)
+			if (typeof fragment.onVariablesChanged === 'function') {
+				fragment.onVariablesChanged(changedVariablesSet, fromControlId)
 			}
 		}
 
@@ -532,7 +542,7 @@ export class InternalController {
 			if (!feedback.referencedVariables || !feedback.referencedVariables.length) continue
 
 			// Check a referenced variable was changed
-			if (!feedback.referencedVariables.some((variable) => all_changed_variables_set.has(variable))) continue
+			if (!feedback.referencedVariables.some((variable) => changedVariablesSet.has(variable))) continue
 
 			newValues.push({
 				id: id,
@@ -553,16 +563,22 @@ export class InternalController {
 	 */
 	parseVariablesForInternalActionOrFeedback(
 		str: string,
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		injectedVariableValues?: VariablesCache
+		extras: RunActionExtras | FeedbackEntityModelExt
+		// injectedVariableValues?: VariablesCache
 	): ParseVariablesResult {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			...injectedVariableValues,
+			// ...injectedVariableValues,
 		}
-		return this.#variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
+
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
+			extras.location,
+			injectedVariableValuesComplete
+		)
+
+		return parser.parseVariables(str)
 	}
 
 	/**
@@ -576,21 +592,22 @@ export class InternalController {
 	executeExpressionForInternalActionOrFeedback(
 		str: string,
 		extras: RunActionExtras | FeedbackEntityModelExt,
-		requiredType?: string,
-		injectedVariableValues?: CompanionVariableValues
+		requiredType?: string
+		// injectedVariableValues?: VariablesCache
 	): ExecuteExpressionResult {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			...injectedVariableValues,
+			// ...injectedVariableValues,
 		}
-		return this.#variablesController.values.executeExpression(
-			String(str),
+
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
 			extras.location,
-			requiredType,
 			injectedVariableValuesComplete
 		)
+
+		return parser.executeExpression(String(str), requiredType)
 	}
 
 	/**
@@ -602,20 +619,21 @@ export class InternalController {
 		useVariableFields: boolean
 	): {
 		location: ControlLocation | null
-		referencedVariables: string[]
+		referencedVariables: Set<string>
 	} {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const injectedVariableValues = 'id' in extras ? undefined : this.#getInjectedVariablesForLocation(extras)
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			// ...injectedVariableValues,
+		}
 
-		return ParseInternalControlReference(
-			this.#logger,
-			this.#variablesController.values,
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
 			extras.location,
-			options,
-			useVariableFields,
-			injectedVariableValues
+			injectedVariableValuesComplete
 		)
+
+		return ParseInternalControlReference(this.#logger, parser, extras.location, options, useVariableFields)
 	}
 
 	/**

@@ -3,10 +3,10 @@ import { ControlConfigRoom } from '../Controls/ControlBase.js'
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
 import type { GraphicsController } from './Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { PageController } from '../Page/Controller.js'
-import { ImageResult } from './ImageResult.js'
+import type { ImageResult } from './ImageResult.js'
+import type { ControlsController } from '../Controls/Controller.js'
 
 /**
  * Get Socket.io room for preview updates
@@ -52,7 +52,7 @@ export class GraphicsPreview {
 	readonly #graphicsController: GraphicsController
 	readonly #ioController: UIHandler
 	readonly #pageController: PageController
-	readonly #variablesController: VariablesValues
+	readonly #controlsController: ControlsController
 
 	readonly #buttonReferencePreviews = new Map<string, PreviewSession>()
 
@@ -60,12 +60,12 @@ export class GraphicsPreview {
 		graphicsController: GraphicsController,
 		ioController: UIHandler,
 		pageController: PageController,
-		variablesController: VariablesValues
+		controlsController: ControlsController
 	) {
 		this.#graphicsController = graphicsController
 		this.#ioController = ioController
 		this.#pageController = pageController
-		this.#variablesController = variablesController
+		this.#controlsController = controlsController
 
 		this.#graphicsController.on('button_drawn', this.#updateButton.bind(this))
 	}
@@ -112,18 +112,21 @@ export class GraphicsPreview {
 			}
 		})
 
-		client.onPromise('preview:button-reference:subscribe', (id, location, options) => {
+		client.onPromise('preview:button-reference:subscribe', (id, controlId, options) => {
 			const fullId = `${client.id}::${id}`
 
 			if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
 
+			const location = this.#pageController.getLocationOfControlId(controlId)
+			const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+
 			// Do a resolve of the reference for the starting image
-			const result = ParseInternalControlReference(this.#logger, this.#variablesController, location, options, true)
+			const result = ParseInternalControlReference(this.#logger, parser, location, options, true)
 
 			// Track the subscription, to allow it to be invalidated
 			this.#buttonReferencePreviews.set(fullId, {
 				id,
-				location,
+				controlId,
 				options,
 				resolvedLocation: result.location,
 				referencedVariableIds: Array.from(result.referencedVariables),
@@ -170,58 +173,75 @@ export class GraphicsPreview {
 		}
 	}
 
-	onVariablesChanged(allChangedSet: Set<string>): void {
+	onControlIdsLocationChanged(controlIds: string[]): void {
+		const controlIdsSet = new Set(controlIds)
+
+		// Lookup any sessions
+		for (const previewSession of this.#buttonReferencePreviews.values()) {
+			if (!controlIdsSet.has(previewSession.controlId)) continue
+
+			// Recheck the reference
+			this.#triggerRecheck(previewSession)
+		}
+	}
+
+	onVariablesChanged(allChangedSet: Set<string>, fromControlId: string | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.length) continue
+
+			// If the changed variables belong to a control, only update if the query is for that control
+			if (fromControlId && previewSession.controlId != fromControlId) continue
 
 			const matchingChangedVariable = previewSession.referencedVariableIds.some((variable) =>
 				allChangedSet.has(variable)
 			)
 			if (!matchingChangedVariable) continue
 
-			// Resolve the new location
-			const result = ParseInternalControlReference(
-				this.#logger,
-				this.#variablesController,
-				previewSession.location,
-				previewSession.options,
-				true
-			)
-
-			const lastResolvedLocation = previewSession.resolvedLocation
-
-			previewSession.referencedVariableIds = Array.from(result.referencedVariables)
-			previewSession.resolvedLocation = result.location
-
-			if (!result.location) {
-				// Now has an invalid location
-				previewSession.client.emit(`preview:button-reference:update:${previewSession.id}`, null)
-				continue
-			}
-
-			// Check if it has changed
-			if (
-				lastResolvedLocation &&
-				result.location.pageNumber == lastResolvedLocation.pageNumber &&
-				result.location.row == lastResolvedLocation.row &&
-				result.location.column == lastResolvedLocation.column
-			)
-				continue
-
-			previewSession.client.emit(
-				`preview:button-reference:update:${previewSession.id}`,
-				this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
-			)
+			// Recheck the reference
+			this.#triggerRecheck(previewSession)
 		}
+	}
+
+	#triggerRecheck(previewSession: PreviewSession): void {
+		const location = this.#pageController.getLocationOfControlId(previewSession.controlId)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+
+		// Resolve the new location
+		const result = ParseInternalControlReference(this.#logger, parser, location, previewSession.options, true)
+
+		const lastResolvedLocation = previewSession.resolvedLocation
+
+		previewSession.referencedVariableIds = Array.from(result.referencedVariables)
+		previewSession.resolvedLocation = result.location
+
+		if (!result.location) {
+			// Now has an invalid location
+			previewSession.client.emit(`preview:button-reference:update:${previewSession.id}`, null)
+			return
+		}
+
+		// Check if it has changed
+		if (
+			lastResolvedLocation &&
+			result.location.pageNumber == lastResolvedLocation.pageNumber &&
+			result.location.row == lastResolvedLocation.row &&
+			result.location.column == lastResolvedLocation.column
+		)
+			return
+
+		previewSession.client.emit(
+			`preview:button-reference:update:${previewSession.id}`,
+			this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
+		)
 	}
 }
 
 interface PreviewSession {
-	id: string
-	location: ControlLocation | undefined
+	readonly id: string
+	readonly controlId: string
 	options: Record<string, any>
 	resolvedLocation: ControlLocation | null
 	referencedVariableIds: string[]
-	client: ClientSocket
+	readonly client: ClientSocket
 }

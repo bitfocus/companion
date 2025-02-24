@@ -12,7 +12,7 @@ import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
 import type { InstanceDefinitionsForEntity } from './Types.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -20,7 +20,8 @@ export interface ControlEntityListPoolProps {
 	moduleHost: ModuleHost
 	controlId: string
 	commitChange: (redraw?: boolean) => void
-	triggerRedraw: () => void
+	invalidateControl: () => void
+	localVariablesChanged: ((changedVariables: Set<string>) => void) | null
 }
 
 export abstract class ControlEntityListPoolBase {
@@ -43,14 +44,20 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Trigger a redraw/invalidation of the control
 	 */
-	protected readonly triggerRedraw: () => void
+	protected readonly invalidateControl: () => void
+
+	/**
+	 * Triggered when local variables have changed
+	 */
+	protected readonly localVariablesChanged: ((changedVariables: Set<string>) => void) | null
 
 	protected constructor(props: ControlEntityListPoolProps) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.controlId = props.controlId
 		this.commitChange = props.commitChange
-		this.triggerRedraw = props.triggerRedraw
+		this.invalidateControl = props.invalidateControl
+		this.localVariablesChanged = props.localVariablesChanged
 
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule
@@ -68,6 +75,36 @@ export abstract class ControlEntityListPoolBase {
 		)
 	}
 
+	#entityToLocalVariableName(entity: ControlEntityInstance): string | null {
+		if (entity.type !== EntityModelType.LocalVariable) return null
+
+		return `local:${entity.rawOptions.name}`
+	}
+
+	protected tryTriggerLocalVariablesChanged(entityList: ControlEntityList, oldVariableName?: string | null) {
+		if (!this.localVariablesChanged) return
+
+		// Only relevant for local variables
+		if (entityList.listDefinition.type !== EntityModelType.LocalVariable) return
+
+		const changedVariables = new Set<string>()
+
+		// Track an old name, if it was a rename
+		if (oldVariableName) changedVariables.add(oldVariableName)
+
+		// Track all entities as having changed
+		// Future: this is a bit of a 'brute force', as doing this granularly is not trivial to do in a generic/clean way
+		// As this is scoped to one control, hopefully this is not a big hit
+		for (const entity of entityList.getDirectEntities()) {
+			const variable = this.#entityToLocalVariableName(entity)
+			if (variable) changedVariables.add(variable)
+		}
+
+		if (changedVariables.size > 0) {
+			this.localVariablesChanged(changedVariables)
+		}
+	}
+
 	/**
 	 * Remove any tracked state for a connection
 	 */
@@ -76,7 +113,7 @@ export abstract class ControlEntityListPoolBase {
 		for (const list of this.getAllEntityLists()) {
 			if (list.clearCachedValueForConnectionId(connectionId)) changed = true
 		}
-		if (changed) this.triggerRedraw()
+		if (changed) this.invalidateControl()
 	}
 
 	/**
@@ -91,6 +128,8 @@ export abstract class ControlEntityListPoolBase {
 
 	protected abstract getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined
 	protected abstract getAllEntityLists(): ControlEntityList[]
+
+	abstract getLocalVariableEntities(): ControlEntityInstance[]
 
 	/**
 	 * Recursively get all the entities
@@ -154,6 +193,8 @@ export abstract class ControlEntityListPoolBase {
 			entity.subscribe(true)
 		}
 
+		this.tryTriggerLocalVariablesChanged(entityList)
+
 		this.commitChange()
 
 		return true
@@ -168,6 +209,8 @@ export abstract class ControlEntityListPoolBase {
 
 		const entity = entityList.duplicateEntity(id)
 		if (!entity) return false
+
+		this.tryTriggerLocalVariablesChanged(entityList)
 
 		this.commitChange(false)
 
@@ -185,6 +228,8 @@ export abstract class ControlEntityListPoolBase {
 		if (!entity) return false
 
 		entity.setEnabled(enabled)
+
+		this.tryTriggerLocalVariablesChanged(entityList)
 
 		this.commitChange()
 
@@ -226,6 +271,8 @@ export abstract class ControlEntityListPoolBase {
 		const feedbackAfter = entityList.findById(id)
 		if (!feedbackAfter) return false
 
+		this.tryTriggerLocalVariablesChanged(entityList)
+
 		this.commitChange(true)
 		return true
 	}
@@ -237,8 +284,11 @@ export abstract class ControlEntityListPoolBase {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 
-		if (entityList.removeEntity(id)) {
+		const removedEntity = entityList.removeEntity(id)
+		if (removedEntity) {
 			this.commitChange()
+
+			this.tryTriggerLocalVariablesChanged(entityList)
 
 			return true
 		} else {
@@ -301,17 +351,19 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Replace a feedback with an updated version
+	 * Replace an entity with an updated version
 	 */
 	entityReplace(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): ControlEntityInstance | undefined {
-		for (const childGroup of this.getAllEntityLists()) {
-			const entity = childGroup.findById(newProps.id)
+		for (const entityList of this.getAllEntityLists()) {
+			const entity = entityList.findById(newProps.id)
 			if (!entity) continue
 
 			// Ignore if the types do not match
 			if (entity.type !== newProps.type) return undefined
 
 			entity.replaceProps(newProps, skipNotifyModule)
+
+			this.tryTriggerLocalVariablesChanged(entityList)
 
 			this.commitChange(true)
 
@@ -350,7 +402,11 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.findById(id)
 		if (!entity) return false
 
+		const oldLocalVariableName = this.#entityToLocalVariableName(entity)
+
 		entity.setOption(key, value)
+
+		this.tryTriggerLocalVariablesChanged(entityList, oldLocalVariableName)
 
 		this.commitChange()
 
@@ -389,6 +445,8 @@ export abstract class ControlEntityListPoolBase {
 		if (!entity) return false
 
 		entity.setInverted(!!isInverted)
+
+		this.tryTriggerLocalVariablesChanged(entityList)
 
 		this.commitChange()
 
@@ -488,17 +546,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
-		let changed = false
-
-		for (const list of this.getAllEntityLists()) {
-			if (list.updateFeedbackValues(connectionId, newValues)) changed = true
-		}
-
-		if (changed) {
-			this.triggerRedraw()
-		}
-	}
+	abstract updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void
 
 	/**
 	 * Get all the connectionIds for actions and feedbacks which are active

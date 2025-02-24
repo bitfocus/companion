@@ -40,6 +40,11 @@ export class TriggersEventVariables {
 	readonly #eventBus: TriggerEvents
 
 	/**
+	 * The control id of the parent trigger
+	 */
+	readonly #controlId: string
+
+	/**
 	 * Execute the actions of the parent trigger
 	 */
 	readonly #executeActions: (nowTime: number, source: TriggerExecutionSource) => void
@@ -62,6 +67,7 @@ export class TriggersEventVariables {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Timer/${controlId}`)
 
 		this.#eventBus = eventBus
+		this.#controlId = controlId
 		this.#executeActions = executeActions
 
 		this.#eventBus.on('variables_changed', this.#onVariablesChanged)
@@ -85,7 +91,10 @@ export class TriggersEventVariables {
 	 * Handler for the variable_changed event
 	 * @param allChangedVariables Set of all the variables that have changed
 	 */
-	#onVariablesChanged = (allChangedVariables: Set<string>): void => {
+	#onVariablesChanged = (allChangedVariables: Set<string>, fromControlId: string | null): void => {
+		// If the event is from a control, but not the same control, ignore it
+		if (fromControlId && fromControlId !== this.#controlId) return
+
 		if (this.#enabled) {
 			let execute = false
 

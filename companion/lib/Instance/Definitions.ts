@@ -25,15 +25,21 @@ import {
 	ActionEntityModel,
 	EntityModelBase,
 	EntityModelType,
+	LocalVariableEntityModel,
 	SomeEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import {
+	LocalVariableEntityDefinitions,
+	LocalVariableEntityDefinitionType,
+} from '../Resources/LocalVariableEntityDefinitions.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
 const FeedbacksRoom = 'feedback-definitions'
+const LocalVariablesRoom = 'local-variable-definitions'
 
 /**
  * Class to handle and store the 'definitions' produced by instances.
@@ -118,7 +124,12 @@ export class InstanceDefinitions {
 					client.join(FeedbacksRoom)
 
 					return this.#feedbackDefinitions
+				case EntityModelType.LocalVariable:
+					client.join(LocalVariablesRoom)
 
+					return {
+						internal: LocalVariableEntityDefinitions,
+					}
 				default:
 					assertNever(type)
 					return {}
@@ -131,6 +142,9 @@ export class InstanceDefinitions {
 					break
 				case EntityModelType.Feedback:
 					client.leave(FeedbacksRoom)
+					break
+				case EntityModelType.LocalVariable:
+					client.leave(LocalVariablesRoom)
 					break
 				default:
 					assertNever(type)
@@ -153,8 +167,9 @@ export class InstanceDefinitions {
 				}
 
 				if (style.text) {
+					const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
 					if (style.textExpression) {
-						const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
+						const parseResult = parser.executeExpression(style.text, undefined)
 						if (parseResult.ok) {
 							style.text = parseResult.value + ''
 						} else {
@@ -162,7 +177,7 @@ export class InstanceDefinitions {
 							style.text = 'ERR'
 						}
 					} else {
-						const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
+						const parseResult = parser.parseVariables(style.text)
 						style.text = parseResult.text
 					}
 				}
@@ -223,6 +238,12 @@ export class InstanceDefinitions {
 
 				return feedback
 			}
+
+			case EntityModelType.LocalVariable:
+				return {
+					...entity,
+					type: EntityModelType.LocalVariable,
+				} satisfies LocalVariableEntityModel
 
 			default:
 				assertNever(entityType)
@@ -290,6 +311,10 @@ export class InstanceDefinitions {
 				return this.#actionDefinitions[connectionId]?.[definitionId]
 			case EntityModelType.Feedback:
 				return this.#feedbackDefinitions[connectionId]?.[definitionId]
+			case EntityModelType.LocalVariable:
+				// Only supported for internal module
+				if (connectionId !== 'internal') return undefined
+				return LocalVariableEntityDefinitions[definitionId as LocalVariableEntityDefinitionType]
 			default:
 				assertNever(entityType)
 				return undefined
@@ -320,6 +345,7 @@ export class InstanceDefinitions {
 			},
 			feedbacks: [],
 			steps: {},
+			localVariables: [],
 		}
 		if (definition.steps) {
 			for (let i = 0; i < definition.steps.length; i++) {

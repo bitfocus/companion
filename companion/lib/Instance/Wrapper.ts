@@ -335,6 +335,9 @@ export class SocketEventsHandler {
 				return this.#actionUpdate(entity, controlId)
 			case EntityModelType.Feedback:
 				return this.#feedbackUpdate(entity, controlId)
+			case EntityModelType.LocalVariable:
+				// Not supported
+				throw new Error('Modules cannot have local variable entities')
 		}
 	}
 
@@ -430,6 +433,9 @@ export class SocketEventsHandler {
 
 					return msg.options
 				}
+				case EntityModelType.LocalVariable:
+					// Not supported
+					throw new Error('Modules cannot have local variable entities')
 				default:
 					assertNever(entity)
 					break
@@ -463,6 +469,9 @@ export class SocketEventsHandler {
 					},
 				})
 				break
+			case EntityModelType.LocalVariable:
+				// Not supported
+				throw new Error('Modules cannot have local variable entities')
 			default:
 				assertNever(oldEntity)
 				break
@@ -796,11 +805,13 @@ export class SocketEventsHandler {
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
 			const location = msg.controlId ? this.#deps.page.getLocationOfControlId(msg.controlId) : null
-			const result = this.#deps.variables.values.parseVariables(msg.text, location)
+
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(location, null)
+			const result = parser.parseVariables(msg.text)
 
 			return {
 				text: result.text,
-				variableIds: result.variableIds,
+				variableIds: Array.from(result.variableIds),
 			}
 		} catch (e: any) {
 			this.logger.error(`Parse variables failed: ${e}`)

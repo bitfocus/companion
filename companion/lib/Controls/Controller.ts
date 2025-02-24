@@ -25,6 +25,8 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
+import { CompanionVariableValues } from '@companion-module/base'
+import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -955,12 +957,15 @@ export class ControlsController extends CoreBase {
 	/**
 	 * Propagate variable changes to the controls
 	 */
-	onVariablesChanged(allChangedVariablesSet: Set<string>): void {
+	onVariablesChanged(allChangedVariablesSet: Set<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
-		this.triggers.emit('variables_changed', allChangedVariablesSet)
+		this.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
 		if (allChangedVariablesSet.size > 0) {
 			for (const control of this.#controls.values()) {
+				// If the changes are local variables and from another control, ignore them
+				if (fromControlId && fromControlId !== control.controlId) continue
+
 				if (control.supportsStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}
@@ -1136,6 +1141,22 @@ export class ControlsController extends CoreBase {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)
 		}
+	}
+
+	createVariablesAndExpressionParser(
+		controlLocation: ControlLocation | null | undefined,
+		overrideVariableValues: CompanionVariableValues | null
+	): VariablesAndExpressionParser {
+		const controlId = controlLocation && this.page.getControlIdAt(controlLocation)
+		const control = controlId && this.getControl(controlId)
+
+		const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
+
+		return this.variablesController.values.createVariablesAndExpressionParser(
+			controlLocation,
+			variableEntities,
+			overrideVariableValues
+		)
 	}
 }
 

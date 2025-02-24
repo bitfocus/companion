@@ -11,6 +11,7 @@ import {
 	EditDurationGroupPropertiesModalRef,
 	EditDurationGroupPropertiesModal,
 } from './EditDurationGroupPropertiesModal.js'
+import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
 interface EditActionsReleaseProps {
 	controlId: string
@@ -19,6 +20,7 @@ interface EditActionsReleaseProps {
 	stepOptions: ActionStepOptions
 	stepId: string
 	removeSet: (stepId: string, setId: ActionSetId) => void
+	localVariablesStore: LocalVariablesStore
 }
 
 export function EditActionsRelease({
@@ -28,6 +30,7 @@ export function EditActionsRelease({
 	stepOptions,
 	stepId,
 	removeSet,
+	localVariablesStore,
 }: EditActionsReleaseProps) {
 	const socket = useContext(SocketContext)
 
@@ -89,6 +92,7 @@ export function EditActionsRelease({
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
 					onlyFeedbackType={null}
+					localVariablesStore={localVariablesStore}
 				/>
 			</MyErrorBoundary>
 		)
@@ -108,6 +112,7 @@ export function EditActionsRelease({
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
 					onlyFeedbackType={null}
+					localVariablesStore={localVariablesStore}
 				/>
 			</MyErrorBoundary>
 

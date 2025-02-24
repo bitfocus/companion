@@ -31,6 +31,10 @@ export class ControlEntityList {
 		return this.#ownerId
 	}
 
+	get listDefinition(): ControlEntityListDefinition {
+		return this.#listDefinition
+	}
+
 	constructor(
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
@@ -75,7 +79,7 @@ export class ControlEntityList {
 		// TODO - validate that the entities are of the correct type
 
 		this.#entities =
-			entities?.map(
+			entities?.map?.(
 				(entity) =>
 					new ControlEntityInstance(
 						this.#instanceDefinitions,
@@ -173,7 +177,7 @@ export class ControlEntityList {
 	/**
 	 * Remove a child entity
 	 */
-	removeEntity(id: string): boolean {
+	removeEntity(id: string): ControlEntityInstance | undefined {
 		const index = this.#entities.findIndex((entity) => entity.id === id)
 		if (index !== -1) {
 			const entity = this.#entities[index]
@@ -181,14 +185,15 @@ export class ControlEntityList {
 
 			entity.cleanup()
 
-			return true
+			return entity
 		}
 
 		for (const entity of this.#entities) {
-			if (entity.removeChild(id)) return true
+			const removed = entity.removeChild(id)
+			if (removed) return removed
 		}
 
-		return false
+		return undefined
 	}
 
 	/**

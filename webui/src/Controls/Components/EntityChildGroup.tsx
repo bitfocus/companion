@@ -17,6 +17,7 @@ import { PreventDefaultHandler } from '../../util.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
 import { EditableEntityList } from './EntityList.js'
+import { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface EntityManageChildGroupsProps {
 	entity: SomeEntityModel
@@ -25,6 +26,7 @@ interface EntityManageChildGroupsProps {
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
 export const EntityManageChildGroups = observer(function EntityManageChildGroups({
@@ -34,6 +36,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 	location,
 	serviceFactory,
 	readonly,
+	localVariablesStore,
 }: EntityManageChildGroupsProps) {
 	if (entity.connectionId !== 'internal') return null
 
@@ -51,6 +54,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 						parentId={entity.id}
 						parentServiceFactory={serviceFactory}
 						readonly={readonly}
+						localVariablesStore={localVariablesStore}
 					/>
 				))}
 			</div>
@@ -66,6 +70,7 @@ interface EntityManageChildGroupProps {
 	parentId: string
 	parentServiceFactory: IEntityEditorService
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
 const EntityManageChildGroup = observer(function EntityManageChildGroup({
@@ -76,6 +81,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	parentId,
 	parentServiceFactory,
 	readonly,
+	localVariablesStore,
 }: EntityManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
 
@@ -109,6 +115,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 				serviceFactory={serviceFactory}
 				ownerId={groupId}
 				readonly={readonly}
+				localVariablesStore={localVariablesStore}
 			/>
 		</CForm>
 	)

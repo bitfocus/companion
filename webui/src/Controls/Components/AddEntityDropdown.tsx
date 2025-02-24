@@ -8,11 +8,19 @@ import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
-const filterOptions: ReturnType<typeof createFilter<AddEntityOption>> = (candidate, input): boolean => {
+const filterOptionsRecent: ReturnType<typeof createFilter<AddEntityOption>> = (candidate, input): boolean => {
 	if (input) {
 		return !candidate.data.isRecent && (fuzzySingle(input, candidate.data.fuzzy)?.score ?? 0) >= 0.5
 	} else {
 		return candidate.data.isRecent
+	}
+}
+
+const filterOptionsSimple: ReturnType<typeof createFilter<AddEntityOption>> = (candidate, input): boolean => {
+	if (input) {
+		return (fuzzySingle(input, candidate.data.fuzzy)?.score ?? 0) >= 0.5
+	} else {
+		return true
 	}
 }
 
@@ -32,6 +40,7 @@ interface AddEntityDropdownProps {
 	entityTypeLabel: string
 	onlyFeedbackType: ClientEntityDefinition['feedbackType']
 	disabled: boolean
+	showAll: boolean
 }
 export const AddEntityDropdown = observer(function AddEntityDropdown({
 	onSelect,
@@ -39,6 +48,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	entityTypeLabel,
 	onlyFeedbackType,
 	disabled,
+	showAll,
 }: AddEntityDropdownProps) {
 	const { entityDefinitions, connections } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
@@ -63,32 +73,34 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			}
 		}
 
-		const recents: AddEntityOption[] = []
-		for (const definitionPair of recentlyUsedStore.recentIds) {
-			if (!definitionPair) continue
+		if (!showAll) {
+			const recents: AddEntityOption[] = []
+			for (const definitionPair of recentlyUsedStore.recentIds) {
+				if (!definitionPair) continue
 
-			const [connectionId, definitionId] = definitionPair.split(':', 2)
-			const definition = definitions.connections.get(connectionId)?.get(definitionId)
-			if (!definition) continue
+				const [connectionId, definitionId] = definitionPair.split(':', 2)
+				const definition = definitions.connections.get(connectionId)?.get(definitionId)
+				if (!definition) continue
 
-			if (onlyFeedbackType && definition.feedbackType !== onlyFeedbackType) continue
+				if (onlyFeedbackType && definition.feedbackType !== onlyFeedbackType) continue
 
-			const connectionLabel = connections.getLabel(connectionId) ?? connectionId
-			const optionLabel = `${connectionLabel}: ${definition.label}`
-			recents.push({
-				isRecent: true,
-				value: `${connectionId}:${definitionId}`,
-				label: optionLabel,
-				fuzzy: fuzzyPrepare(optionLabel),
+				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
+				const optionLabel = `${connectionLabel}: ${definition.label}`
+				recents.push({
+					isRecent: true,
+					value: `${connectionId}:${definitionId}`,
+					label: optionLabel,
+					fuzzy: fuzzyPrepare(optionLabel),
+				})
+			}
+			options.push({
+				label: 'Recently Used',
+				options: recents,
 			})
 		}
-		options.push({
-			label: 'Recently Used',
-			options: recents,
-		})
 
 		return options
-	}, [definitions, connections, recentlyUsedStore.recentIds, onlyFeedbackType])
+	}, [definitions, connections, recentlyUsedStore.recentIds, onlyFeedbackType, showAll])
 
 	const innerChange = useCallback(
 		(e: AddEntityOption | null) => {
@@ -127,7 +139,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			placeholder={`+ Add ${entityTypeLabel}`}
 			value={null}
 			onChange={innerChange}
-			filterOption={filterOptions}
+			filterOption={showAll ? filterOptionsSimple : filterOptionsRecent}
 			noOptionsMessage={noOptionsMessage}
 			isDisabled={disabled}
 		/>
