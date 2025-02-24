@@ -75,7 +75,7 @@ export class ControlEntityList {
 		// TODO - validate that the entities are of the correct type
 
 		this.#entities =
-			entities?.map(
+			entities?.map?.(
 				(entity) =>
 					new ControlEntityInstance(
 						this.#instanceDefinitions,

@@ -74,7 +74,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			{
 				controlId,
 				commitChange: this.commitChange.bind(this),
-				triggerRedraw: this.triggerRedraw.bind(this),
+				invalidateControl: this.triggerRedraw.bind(this),
 				localVariablesChanged: this.onLocalVariablesChanged.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,

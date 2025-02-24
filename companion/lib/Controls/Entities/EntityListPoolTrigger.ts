@@ -42,7 +42,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
 	}
 
-	getLocalVariableEntities(): SomeEntityModel[] {
+	getLocalVariableEntities(): ControlEntityInstance[] {
 		// Not supported yet
 		return []
 	}
@@ -62,5 +62,16 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 	protected getAllEntityLists(): ControlEntityList[] {
 		return [this.#feedbacks, this.#actions]
+	}
+
+	/**
+	 * Update the feedbacks on the button with new values
+	 * @param connectionId The instance the feedbacks are for
+	 * @param newValues The new feedback values
+	 */
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+		this.#actions.updateFeedbackValues(connectionId, newValues)
+
+		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues)) this.invalidateControl()
 	}
 }

@@ -20,7 +20,7 @@ export interface ControlEntityListPoolProps {
 	moduleHost: ModuleHost
 	controlId: string
 	commitChange: (redraw?: boolean) => void
-	triggerRedraw: () => void
+	invalidateControl: () => void
 	localVariablesChanged: ((changedVariables: Set<string>) => void) | null
 }
 
@@ -44,7 +44,7 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Trigger a redraw/invalidation of the control
 	 */
-	protected readonly triggerRedraw: () => void
+	protected readonly invalidateControl: () => void
 
 	/**
 	 * Triggered when local variables have changed
@@ -56,7 +56,7 @@ export abstract class ControlEntityListPoolBase {
 
 		this.controlId = props.controlId
 		this.commitChange = props.commitChange
-		this.triggerRedraw = props.triggerRedraw
+		this.invalidateControl = props.invalidateControl
 		this.localVariablesChanged = props.localVariablesChanged
 
 		this.#instanceDefinitions = props.instanceDefinitions
@@ -108,7 +108,7 @@ export abstract class ControlEntityListPoolBase {
 		for (const list of this.getAllEntityLists()) {
 			if (list.clearCachedValueForConnectionId(connectionId)) changed = true
 		}
-		if (changed) this.triggerRedraw()
+		if (changed) this.invalidateControl()
 	}
 
 	/**
@@ -124,7 +124,7 @@ export abstract class ControlEntityListPoolBase {
 	protected abstract getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined
 	protected abstract getAllEntityLists(): ControlEntityList[]
 
-	abstract getLocalVariableEntities(): SomeEntityModel[]
+	abstract getLocalVariableEntities(): ControlEntityInstance[]
 
 	/**
 	 * Recursively get all the entities
@@ -539,17 +539,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
-		let changed = false
-
-		for (const list of this.getAllEntityLists()) {
-			if (list.updateFeedbackValues(connectionId, newValues)) changed = true
-		}
-
-		if (changed) {
-			this.triggerRedraw()
-		}
-	}
+	abstract updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void
 
 	/**
 	 * Get all the connectionIds for actions and feedbacks which are active

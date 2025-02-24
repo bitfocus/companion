@@ -45,26 +45,8 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		this.#sendRuntimePropsChange = sendRuntimePropsChange
 
-		this.#feedbacks = new ControlEntityList(
-			props.instanceDefinitions,
-			props.internalModule,
-			props.moduleHost,
-			props.controlId,
-			null,
-			{
-				type: EntityModelType.Feedback,
-			}
-		)
-		this.#localVariables = new ControlEntityList(
-			props.instanceDefinitions,
-			props.internalModule,
-			props.moduleHost,
-			props.controlId,
-			null,
-			{
-				type: EntityModelType.LocalVariable,
-			}
-		)
+		this.#feedbacks = this.createEntityList({ type: EntityModelType.Feedback })
+		this.#localVariables = this.createEntityList({ type: EntityModelType.LocalVariable })
 
 		this.#current_step_id = '0'
 
@@ -92,8 +74,8 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
 	}
 
-	getLocalVariableEntities(): SomeEntityModel[] {
-		return this.#localVariables.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	getLocalVariableEntities(): ControlEntityInstance[] {
+		return this.#localVariables.getDirectEntities()
 	}
 
 	// /**
@@ -507,7 +489,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		this.#sendRuntimePropsChange()
 
-		this.triggerRedraw()
+		this.invalidateControl()
 
 		return true
 	}
@@ -595,6 +577,34 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return {
 			sets: sets,
 			options: step.options,
+		}
+	}
+
+	/**
+	 * Update the feedbacks on the button with new values
+	 * @param connectionId The instance the feedbacks are for
+	 * @param newValues The new feedback values
+	 */
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+		for (const step of this.#steps.values()) {
+			for (const set of step.sets.values()) {
+				set.updateFeedbackValues(connectionId, newValues)
+			}
+		}
+
+		const changedVariables = new Set<string>()
+		for (const variable of this.#localVariables.getDirectEntities()) {
+			if (variable.updateFeedbackValues(connectionId, newValues)) {
+				changedVariables.add(`local:${variable.rawOptions.name}`)
+			}
+		}
+
+		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues)) {
+			this.invalidateControl()
+		}
+
+		if (changedVariables.size > 0) {
+			this.localVariablesChanged?.(changedVariables)
 		}
 	}
 }

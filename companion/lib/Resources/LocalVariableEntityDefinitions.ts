@@ -5,6 +5,7 @@ import { InternalActionInputField, InternalFeedbackInputField } from '@companion
 export enum LocalVariableEntityDefinitionType {
 	ConstantValue = 'constant-value',
 	DynamicExpression = 'dynamic-expression',
+	Feedbacks = 'feedbacks',
 }
 
 const commonOptions: (InternalActionInputField | InternalFeedbackInputField)[] = [
@@ -75,5 +76,28 @@ export const LocalVariableEntityDefinitions: Record<LocalVariableEntityDefinitio
 		showInvert: false,
 		showButtonPreview: false,
 		supportsChildGroups: [],
+	},
+	[LocalVariableEntityDefinitionType.Feedbacks]: {
+		entityType: EntityModelType.LocalVariable,
+		label: 'Boolean Feedbacks',
+		description: 'A value defined by boolean feedbacks',
+		options: [...commonOptions],
+		feedbackType: null,
+		feedbackStyle: undefined,
+		hasLearn: false,
+		learnTimeout: undefined,
+		showInvert: false,
+		showButtonPreview: false,
+		supportsChildGroups: [
+			{
+				type: EntityModelType.Feedback,
+				groupId: 'feedbacks',
+				entityTypeLabel: 'feedback',
+				label: 'Feedbacks',
+				// hint?: string
+
+				booleanFeedbacksOnly: true,
+			},
+		],
 	},
 }

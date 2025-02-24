@@ -151,7 +151,7 @@ export class ControlTrigger
 		this.entities = new ControlEntityListPoolTrigger({
 			controlId,
 			commitChange: this.commitChange.bind(this),
-			triggerRedraw: this.triggerRedraw.bind(this),
+			invalidateControl: this.triggerRedraw.bind(this),
 			localVariablesChanged: null,
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,

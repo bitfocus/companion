@@ -1,4 +1,4 @@
-import { SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { type CompanionVariableValues, type CompanionVariableValue, assertNever } from '@companion-module/base'
 import { LocalVariableEntityDefinitionType } from '../Resources/LocalVariableEntityDefinitions.js'
 import type { ReadonlyDeep } from 'type-fest'
@@ -11,6 +11,8 @@ import {
 	parseVariablesInString,
 	VariableValueCache,
 } from './Util.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { booleanAnd } from '../Resources/Util.js'
 
 /**
  * A class to parse and execute expressions with variables
@@ -40,7 +42,7 @@ export class VariablesAndExpressionParser {
 	constructor(
 		rawVariableValues: ReadonlyDeep<VariableValueData>,
 		thisValues: VariablesCache,
-		localValues: SomeEntityModel[] | null,
+		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: CompanionVariableValues | null
 	) {
 		this.#rawVariableValues = rawVariableValues
@@ -50,29 +52,29 @@ export class VariablesAndExpressionParser {
 		if (localValues) this.#bindLocalVariables(localValues)
 	}
 
-	#bindLocalVariables(variables: SomeEntityModel[]) {
+	#bindLocalVariables(variables: ControlEntityInstance[]) {
 		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
 
 		for (const variable of variables) {
 			if (variable.type !== EntityModelType.LocalVariable || variable.connectionId !== 'internal') continue
-			if (!variable.options.name) continue
+			if (!variable.rawOptions.name) continue
 
 			// Make sure the variable name is valid
 			if (!variable.id.match(idCheckRegex)) continue
 
-			const fullId = `$(local:${variable.options.name})`
+			const fullId = `$(local:${variable.rawOptions.name})`
 
 			const definitionId = variable.definitionId as LocalVariableEntityDefinitionType
 			switch (definitionId) {
 				case LocalVariableEntityDefinitionType.ConstantValue: {
 					// Store the value directly
-					this.#localValues.set(fullId, variable.options.value)
+					this.#localValues.set(fullId, variable.rawOptions.value)
 					break
 				}
 				case LocalVariableEntityDefinitionType.DynamicExpression: {
 					let computedResult: CompanionVariableValue | undefined = undefined
 
-					const expression = variable.options.expression
+					const expression = variable.rawOptions.expression
 					this.#localValues.set(fullId, () => {
 						if (computedResult !== undefined) return computedResult
 
@@ -80,7 +82,7 @@ export class VariablesAndExpressionParser {
 						computedResult = '$RE'
 
 						const result = this.executeExpression(expression, undefined)
-						this.#localValuesReferences.set(`local:${variable.options.name}`, Array.from(result.variableIds))
+						this.#localValuesReferences.set(`local:${variable.rawOptions.name}`, Array.from(result.variableIds))
 						if (result.ok) {
 							computedResult = result.value
 						} else {
@@ -89,6 +91,25 @@ export class VariablesAndExpressionParser {
 						}
 
 						this.#localValues.set(fullId, computedResult)
+						return computedResult
+					})
+
+					break
+				}
+				case LocalVariableEntityDefinitionType.Feedbacks: {
+					let computedResult: boolean | undefined = undefined
+
+					this.#localValues.set(fullId, () => {
+						if (computedResult !== undefined) return computedResult
+
+						// make sure we don't get stuck in a loop
+						computedResult = false
+
+						const childValues = variable.getChildren('feedbacks')?.getChildBooleanFeedbackValues()
+						computedResult = booleanAnd(false, childValues ?? []) ?? false
+
+						this.#localValues.set(fullId, computedResult)
+
 						return computedResult
 					})
 
@@ -125,8 +146,6 @@ export class VariablesAndExpressionParser {
 		const result = executeExpression(str, this.#rawVariableValues, requiredType, this.#valueCacheAccessor)
 
 		this.#trackDeepReferences(result.variableIds)
-
-		console.log('exec', str, result)
 
 		return result
 	}

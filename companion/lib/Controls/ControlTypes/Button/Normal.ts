@@ -161,6 +161,8 @@ export class ControlButtonNormal
 				style.text = parseResult.text
 				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			}
+
+			console.log('draw', style.text, this.#last_draw_variables)
 		}
 
 		return {
@@ -220,6 +222,7 @@ export class ControlButtonNormal
 	 * @param allChangedVariables - variables with changes
 	 */
 	onVariablesChanged(allChangedVariables: Set<string>): void {
+		// console.log('change', allChangedVariables)
 		if (this.#last_draw_variables) {
 			for (const variable of allChangedVariables.values()) {
 				if (this.#last_draw_variables.has(variable)) {
@@ -278,7 +281,7 @@ export class ControlButtonNormal
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
-			localVariables: this.entities.getLocalVariableEntities(),
+			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
 		return clone ? cloneDeep(obj) : obj

@@ -22,7 +22,7 @@ import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'
-import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>]
@@ -48,7 +48,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
-		localValues: SomeEntityModel[] | null,
+		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: CompanionVariableValues | null
 	): VariablesAndExpressionParser {
 		const thisValues: VariablesCache = new Map()

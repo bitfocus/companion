@@ -29,6 +29,7 @@ import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalController } from './Controller.js'
 import { EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { booleanAnd } from '../Resources/Util.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
@@ -306,10 +307,4 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
-}
-
-function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean {
-	if (childValues.length === 0) return isInverted
-
-	return childValues.reduce((acc, val) => acc && val, true) === !isInverted
 }
