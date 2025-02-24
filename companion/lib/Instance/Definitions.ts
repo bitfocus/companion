@@ -23,7 +23,9 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import {
 	ActionEntityModel,
+	EntityModelBase,
 	EntityModelType,
+	SomeEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -178,68 +180,54 @@ export class InstanceDefinitions {
 	}
 
 	/**
-	 * Create a action item without saving
+	 * Create a entity item without saving
 	 * @param connectionId - the id of the instance
-	 * @param actionId - the id of the action
+	 * @param entityType - the type of the entity
+	 * @param definitionId - the id of the definition
 	 */
-	createActionItem(connectionId: string, actionId: string): ActionEntityModel | null {
-		const definition = this.getEntityDefinition(EntityModelType.Action, connectionId, actionId)
+	createEntityItem(connectionId: string, entityType: EntityModelType, definitionId: string): SomeEntityModel | null {
+		const definition = this.getEntityDefinition(entityType, connectionId, definitionId)
 		if (!definition) return null
 
-		const action: ActionEntityModel = {
-			type: EntityModelType.Action,
+		const entity: Omit<EntityModelBase, 'type'> = {
 			id: nanoid(),
-			definitionId: actionId,
+			definitionId: definitionId,
 			connectionId: connectionId,
 			options: {},
 		}
 
 		if (definition.options !== undefined && definition.options.length > 0) {
-			for (const j in definition.options) {
-				const opt = definition.options[j]
-				// @ts-ignore
-				action.options[opt.id] = cloneDeep(opt.default)
+			for (const opt of definition.options) {
+				entity.options[opt.id] = cloneDeep((opt as any).default)
 			}
 		}
 
-		return action
-	}
+		switch (entityType) {
+			case EntityModelType.Action:
+				return {
+					...entity,
+					type: EntityModelType.Action,
+				} satisfies ActionEntityModel
 
-	/**
-	 * Create a feedback item without saving for the UI
-	 * @param connectionId - the id of the connection
-	 * @param feedbackId - the id of the feedback
-	 * @param booleanOnly - whether the feedback must be boolean
-	 */
-	createFeedbackItem(connectionId: string, feedbackId: string, booleanOnly: boolean): FeedbackEntityModel | null {
-		const definition = this.getEntityDefinition(EntityModelType.Feedback, connectionId, feedbackId)
-		if (!definition) return null
+			case EntityModelType.Feedback: {
+				const feedback: FeedbackEntityModel = {
+					...entity,
+					type: EntityModelType.Feedback,
+					style: {},
+					isInverted: false,
+				}
 
-		if (booleanOnly && definition.feedbackType !== 'boolean') return null
+				if (/*!booleanOnly &&*/ definition.feedbackType === 'boolean' && definition.feedbackStyle) {
+					feedback.style = cloneDeep(definition.feedbackStyle)
+				}
 
-		const feedback: FeedbackEntityModel = {
-			type: EntityModelType.Feedback,
-			id: nanoid(),
-			definitionId: feedbackId,
-			connectionId: connectionId,
-			options: {},
-			style: {},
-			isInverted: false,
-		}
-
-		if (definition.options !== undefined && definition.options.length > 0) {
-			for (const j in definition.options) {
-				const opt = definition.options[j]
-				// @ts-ignore
-				feedback.options[opt.id] = cloneDeep(opt.default)
+				return feedback
 			}
-		}
 
-		if (!booleanOnly && definition.feedbackType === 'boolean' && definition.feedbackStyle) {
-			feedback.style = cloneDeep(definition.feedbackStyle)
+			default:
+				assertNever(entityType)
+				return null
 		}
-
-		return feedback
 	}
 
 	createEventItem(eventType: string): EventInstance | null {

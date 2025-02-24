@@ -24,8 +24,6 @@ import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { assertNever } from '@companion-app/shared/Util.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 
 export const TriggersListRoom = 'triggers:list'
@@ -334,19 +332,7 @@ export class ControlsController extends CoreBase {
 
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
-				let newEntity: SomeEntityModel | null = null
-				switch (entityTypeLabel) {
-					case EntityModelType.Action:
-						newEntity = this.instance.definitions.createActionItem(connectionId, entityDefinition)
-						break
-					case EntityModelType.Feedback:
-						newEntity = this.instance.definitions.createFeedbackItem(connectionId, entityDefinition, false) // TODO booleanOnly?
-						break
-					default:
-						assertNever(entityTypeLabel)
-						return false
-				}
-
+				const newEntity = this.instance.definitions.createEntityItem(connectionId, entityTypeLabel, entityDefinition)
 				if (!newEntity) return false
 
 				return control.entities.entityAdd(entityLocation, ownerId, newEntity)
