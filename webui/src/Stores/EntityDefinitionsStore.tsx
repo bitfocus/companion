@@ -16,8 +16,8 @@ export class EntityDefinitionsStore {
 	readonly recentlyAddedFeedbacks: RecentlyUsedIdsStore
 
 	constructor() {
-		this.feedbacks = new EntityDefinitionsForTypeStore()
-		this.actions = new EntityDefinitionsForTypeStore()
+		this.feedbacks = new EntityDefinitionsForTypeStore(EntityModelType.Feedback)
+		this.actions = new EntityDefinitionsForTypeStore(EntityModelType.Action)
 
 		this.recentlyAddedActions = new RecentlyUsedIdsStore('recent_actions', 20)
 		this.recentlyAddedFeedbacks = new RecentlyUsedIdsStore('recent_feedbacks', 20)
@@ -28,8 +28,7 @@ export class EntityDefinitionsStore {
 		connectionId: string,
 		entityId: string
 	): ClientEntityDefinition | undefined {
-		const entityDefinitions = entityType === EntityModelType.Action ? this.actions : this.feedbacks
-		return entityDefinitions.connections.get(connectionId)?.get(entityId)
+		return this.getEntityDefinitionsStore(entityType).connections.get(connectionId)?.get(entityId)
 	}
 
 	getEntityDefinitionsStore(entityType: EntityModelType): EntityDefinitionsForTypeStore {
@@ -59,6 +58,12 @@ export class EntityDefinitionsStore {
 
 export class EntityDefinitionsForTypeStore {
 	readonly connections = observable.map<string, ObservableMap<string, ClientEntityDefinition>>()
+
+	readonly entityType: EntityModelType
+
+	constructor(entityType: EntityModelType) {
+		this.entityType = entityType
+	}
 
 	public reset = action(
 		(newData: Record<string, Record<string, ClientEntityDefinition | undefined> | undefined> | null) => {

@@ -106,22 +106,34 @@ export class InstanceDefinitions {
 			client.leave(PresetsRoom)
 		})
 
-		client.onPromise('action-definitions:subscribe', () => {
-			client.join(ActionsRoom)
+		client.onPromise('entity-definitions:subscribe', (type) => {
+			switch (type) {
+				case EntityModelType.Action:
+					client.join(ActionsRoom)
 
-			return this.#actionDefinitions
-		})
-		client.onPromise('action-definitions:unsubscribe', () => {
-			client.leave(ActionsRoom)
-		})
+					return this.#actionDefinitions
+				case EntityModelType.Feedback:
+					client.join(FeedbacksRoom)
 
-		client.onPromise('feedback-definitions:subscribe', () => {
-			client.join(FeedbacksRoom)
+					return this.#feedbackDefinitions
 
-			return this.#feedbackDefinitions
+				default:
+					assertNever(type)
+					return {}
+			}
 		})
-		client.onPromise('feedback-definitions:unsubscribe', () => {
-			client.leave(FeedbacksRoom)
+		client.onPromise('entity-definitions:unsubscribe', (type) => {
+			switch (type) {
+				case EntityModelType.Action:
+					client.leave(ActionsRoom)
+					break
+				case EntityModelType.Feedback:
+					client.leave(FeedbacksRoom)
+					break
+				default:
+					assertNever(type)
+					break
+			}
 		})
 
 		client.onPromise('event-definitions:get', () => {
@@ -262,7 +274,7 @@ export class InstanceDefinitions {
 
 		delete this.#actionDefinitions[connectionId]
 		if (this.#io.countRoomMembers(ActionsRoom) > 0) {
-			this.#io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+			this.#io.emitToRoom(ActionsRoom, 'entity-definitions:update', EntityModelType.Action, {
 				type: 'forget-connection',
 				connectionId,
 			})
@@ -270,7 +282,7 @@ export class InstanceDefinitions {
 
 		delete this.#feedbackDefinitions[connectionId]
 		if (this.#io.countRoomMembers(FeedbacksRoom) > 0) {
-			this.#io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+			this.#io.emitToRoom(FeedbacksRoom, 'entity-definitions:update', EntityModelType.Feedback, {
 				type: 'forget-connection',
 				connectionId,
 			})
@@ -377,7 +389,7 @@ export class InstanceDefinitions {
 
 		if (this.#io.countRoomMembers(ActionsRoom) > 0) {
 			if (!lastActionDefinitions) {
-				this.#io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+				this.#io.emitToRoom(ActionsRoom, 'entity-definitions:update', EntityModelType.Action, {
 					type: 'add-connection',
 					connectionId,
 
@@ -386,7 +398,7 @@ export class InstanceDefinitions {
 			} else {
 				const diff = diffObjects(lastActionDefinitions, actionDefinitions || {})
 				if (diff) {
-					this.#io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+					this.#io.emitToRoom(ActionsRoom, 'entity-definitions:update', EntityModelType.Action, {
 						type: 'update-connection',
 						connectionId,
 
@@ -406,7 +418,7 @@ export class InstanceDefinitions {
 
 		if (this.#io.countRoomMembers(FeedbacksRoom) > 0) {
 			if (!lastFeedbackDefinitions) {
-				this.#io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+				this.#io.emitToRoom(FeedbacksRoom, 'entity-definitions:update', EntityModelType.Feedback, {
 					type: 'add-connection',
 					connectionId,
 
@@ -415,7 +427,7 @@ export class InstanceDefinitions {
 			} else {
 				const diff = diffObjects(lastFeedbackDefinitions, feedbackDefinitions || {})
 				if (diff) {
-					this.#io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+					this.#io.emitToRoom(FeedbacksRoom, 'entity-definitions:update', EntityModelType.Feedback, {
 						type: 'update-connection',
 						connectionId,
 
