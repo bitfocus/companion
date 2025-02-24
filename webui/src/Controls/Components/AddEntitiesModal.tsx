@@ -147,7 +147,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse({
 		return Array.from(items.entries())
 			.map(([id, info]) => {
 				if (!info || !info.label) return null
-				if (onlyType && (!('type' in info) || info.type !== onlyType)) return null
+				if (onlyType && (!('feedbackType' in info) || info.feedbackType !== onlyType)) return null
 
 				return {
 					fullId: `${connectionId}:${id}`,
