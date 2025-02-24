@@ -957,12 +957,15 @@ export class ControlsController extends CoreBase {
 	/**
 	 * Propagate variable changes to the controls
 	 */
-	onVariablesChanged(allChangedVariablesSet: Set<string>): void {
+	onVariablesChanged(allChangedVariablesSet: Set<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
-		this.triggers.emit('variables_changed', allChangedVariablesSet)
+		this.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
 		if (allChangedVariablesSet.size > 0) {
 			for (const control of this.#controls.values()) {
+				// If the changes are local variables and from another control, ignore them
+				if (fromControlId && fromControlId !== control.controlId) continue
+
 				if (control.supportsStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}

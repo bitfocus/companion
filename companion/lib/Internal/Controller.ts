@@ -525,13 +525,13 @@ export class InternalController {
 		this.#variablesController.definitions.setVariableDefinitions('internal', variables)
 	}
 
-	variablesChanged(all_changed_variables_set: Set<string>): void {
+	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		// Inform all fragments
 		for (const fragment of this.#fragments) {
-			if ('variablesChanged' in fragment && typeof fragment.variablesChanged === 'function') {
-				fragment.variablesChanged(all_changed_variables_set)
+			if (typeof fragment.onVariablesChanged === 'function') {
+				fragment.onVariablesChanged(changedVariablesSet, fromControlId)
 			}
 		}
 
@@ -542,7 +542,7 @@ export class InternalController {
 			if (!feedback.referencedVariables || !feedback.referencedVariables.length) continue
 
 			// Check a referenced variable was changed
-			if (!feedback.referencedVariables.some((variable) => all_changed_variables_set.has(variable))) continue
+			if (!feedback.referencedVariables.some((variable) => changedVariablesSet.has(variable))) continue
 
 			newValues.push({
 				id: id,

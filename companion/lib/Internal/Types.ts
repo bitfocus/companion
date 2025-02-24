@@ -69,6 +69,8 @@ export interface InternalModuleFragment {
 
 	getVariableDefinitions?: () => VariableDefinitionTmp[]
 	updateVariables?: () => void
+
+	onVariablesChanged?: (changedVariablesSet: Set<string>, fromControlId: string | null) => void
 }
 
 export interface ExecuteFeedbackResultWithReferences {

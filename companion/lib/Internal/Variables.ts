@@ -62,7 +62,7 @@ export class InternalVariables implements InternalModuleFragment {
 	/**
 	 * The dependencies of variables that should retrigger each feedback
 	 */
-	#variableSubscriptions = new Map<string, Set<string>>()
+	#variableSubscriptions = new Map<string, { controlId: string; variables: Set<string> }>()
 
 	constructor(internalModule: InternalController, controlsController: ControlsController) {
 		this.#internalModule = internalModule
@@ -170,7 +170,7 @@ export class InternalVariables implements InternalModuleFragment {
 				feedback
 			)
 
-			this.#variableSubscriptions.set(feedback.id, result.variableIds)
+			this.#variableSubscriptions.set(feedback.id, { controlId: feedback.controlId, variables: result.variableIds })
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
 		} else if (feedback.definitionId == 'variable_variable') {
@@ -183,14 +183,17 @@ export class InternalVariables implements InternalModuleFragment {
 				feedback
 			)
 
-			this.#variableSubscriptions.set(feedback.id, new Set([...result1.variableIds, ...result2.variableIds]))
+			this.#variableSubscriptions.set(feedback.id, {
+				controlId: feedback.controlId,
+				variables: new Set([...result1.variableIds, ...result2.variableIds]),
+			})
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.definitionId == 'check_expression') {
 			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.location, null)
 			const res = parser.executeExpression(feedback.options.expression, 'boolean')
 
-			this.#variableSubscriptions.set(feedback.id, res.variableIds)
+			this.#variableSubscriptions.set(feedback.id, { controlId: feedback.controlId, variables: res.variableIds })
 
 			if (res.ok) {
 				return !!res.value
@@ -210,23 +213,26 @@ export class InternalVariables implements InternalModuleFragment {
 	/**
 	 * Some variables have been changed
 	 */
-	variablesChanged(all_changed_variables_set: Set<string>): void {
+	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
 		/**
 		 * Danger: It is important to not do any debounces here.
 		 * Doing so will cause triggers which are 'on variable change' with a condition to check the variable value to break
 		 */
 
-		const affected_ids: string[] = []
-		for (const [id, names] of this.#variableSubscriptions.entries()) {
-			for (const name of names) {
-				if (all_changed_variables_set.has(name)) {
-					affected_ids.push(id)
+		const affectedFeedbackIds: string[] = []
+		for (const [id, { controlId, variables }] of this.#variableSubscriptions.entries()) {
+			// Skip if the changes are local variables from a different control
+			if (fromControlId && controlId !== fromControlId) continue
+
+			for (const name of variables) {
+				if (changedVariablesSet.has(name)) {
+					affectedFeedbackIds.push(id)
 					break
 				}
 			}
 		}
-		if (affected_ids.length > 0) {
-			this.#internalModule.checkFeedbacksById(...affected_ids)
+		if (affectedFeedbackIds.length > 0) {
+			this.#internalModule.checkFeedbacksById(...affectedFeedbackIds)
 		}
 	}
 

@@ -292,8 +292,8 @@ export class Registry {
 		})
 
 		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
-			this.internalModule.variablesChanged(all_changed_variables_set)
-			this.controls.onVariablesChanged(all_changed_variables_set)
+			this.internalModule.onVariablesChanged(all_changed_variables_set, null)
+			this.controls.onVariablesChanged(all_changed_variables_set, null)
 			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
 			this.#preview.onVariablesChanged(all_changed_variables_set)
 			this.surfaces.onVariablesChanged(all_changed_variables_set)
