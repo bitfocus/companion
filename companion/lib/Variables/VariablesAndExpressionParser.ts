@@ -13,12 +13,15 @@ import {
 } from './Util.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { booleanAnd } from '../Resources/Util.js'
+import LogController from '../Log/Controller.js'
 
 /**
  * A class to parse and execute expressions with variables
  * This allows for preparing any injected/lazy variables before executing multiple expressions
  */
 export class VariablesAndExpressionParser {
+	readonly #logger = LogController.createLogger('Variables/VariablesAndExpressionParser')
+
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
 	readonly #thisValues: VariablesCache
 	readonly #localValues: VariablesCache = new Map()
@@ -87,7 +90,7 @@ export class VariablesAndExpressionParser {
 							computedResult = result.value
 						} else {
 							computedResult = undefined
-							// TODO-localvariables better logging
+							this.#logger.warn(`${result.error}, in expression: "${expression}"`)
 						}
 
 						this.#localValues.set(fullId, computedResult)
@@ -117,8 +120,8 @@ export class VariablesAndExpressionParser {
 				}
 				default: {
 					assertNever(definitionId)
-					// TODO-localvariables better logging
-					console.warn(`Unknown local variable type ${variable.definitionId}`)
+					this.#logger.warn(`Unknown local variable type ${variable.definitionId}`)
+					break
 				}
 			}
 		}

@@ -153,7 +153,7 @@ export class InternalController {
 				return this.#actionUpgrade(entity, controlId)
 			}
 			case EntityModelType.LocalVariable: {
-				// TODO-localvariable: Implement
+				// Future: Implement when needed
 				return undefined
 			}
 			default:
@@ -354,7 +354,7 @@ export class InternalController {
 					})
 					break
 				case EntityModelType.LocalVariable:
-					// TODO-localvariable: Implement
+					// Future: not needed yet
 					break
 				default:
 					assertNever(entity.type)
