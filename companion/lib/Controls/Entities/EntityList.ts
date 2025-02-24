@@ -31,6 +31,10 @@ export class ControlEntityList {
 		return this.#ownerId
 	}
 
+	get listDefinition(): ControlEntityListDefinition {
+		return this.#listDefinition
+	}
+
 	constructor(
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,

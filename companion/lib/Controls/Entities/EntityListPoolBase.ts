@@ -81,22 +81,27 @@ export abstract class ControlEntityListPoolBase {
 		return `local:${entity.rawOptions.name}`
 	}
 
-	protected tryTriggerLocalVariablesChanged(...entities: (ControlEntityInstance | string | null)[]) {
+	protected tryTriggerLocalVariablesChanged(entityList: ControlEntityList, oldVariableName?: string | null) {
 		if (!this.localVariablesChanged) return
 
-		const changedIds = new Set<string>()
+		// Only relevant for local variables
+		if (entityList.listDefinition.type !== EntityModelType.LocalVariable) return
 
-		for (const entity of entities) {
-			if (!entity) continue
+		const changedVariables = new Set<string>()
 
-			const fullId = typeof entity === 'string' ? entity : this.#entityToLocalVariableName(entity)
-			if (fullId) changedIds.add(fullId)
+		// Track an old name, if it was a rename
+		if (oldVariableName) changedVariables.add(oldVariableName)
+
+		// Track all entities as having changed
+		// Future: this is a bit of a 'brute force', as doing this granularly is not trivial to do in a generic/clean way
+		// As this is scoped to one control, hopefully this is not a big hit
+		for (const entity of entityList.getDirectEntities()) {
+			const variable = this.#entityToLocalVariableName(entity)
+			if (variable) changedVariables.add(variable)
 		}
 
-		console.log('local var change', changedIds)
-
-		if (changedIds.size > 0) {
-			this.localVariablesChanged(changedIds)
+		if (changedVariables.size > 0) {
+			this.localVariablesChanged(changedVariables)
 		}
 	}
 
@@ -188,7 +193,7 @@ export abstract class ControlEntityListPoolBase {
 			entity.subscribe(true)
 		}
 
-		this.tryTriggerLocalVariablesChanged(...newEntities)
+		this.tryTriggerLocalVariablesChanged(entityList)
 
 		this.commitChange()
 
@@ -205,7 +210,7 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.duplicateEntity(id)
 		if (!entity) return false
 
-		this.tryTriggerLocalVariablesChanged(entity)
+		this.tryTriggerLocalVariablesChanged(entityList)
 
 		this.commitChange(false)
 
@@ -224,7 +229,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setEnabled(enabled)
 
-		this.tryTriggerLocalVariablesChanged(entity)
+		this.tryTriggerLocalVariablesChanged(entityList)
 
 		this.commitChange()
 
@@ -266,7 +271,7 @@ export abstract class ControlEntityListPoolBase {
 		const feedbackAfter = entityList.findById(id)
 		if (!feedbackAfter) return false
 
-		this.tryTriggerLocalVariablesChanged(entity)
+		this.tryTriggerLocalVariablesChanged(entityList)
 
 		this.commitChange(true)
 		return true
@@ -283,7 +288,7 @@ export abstract class ControlEntityListPoolBase {
 		if (removedEntity) {
 			this.commitChange()
 
-			this.tryTriggerLocalVariablesChanged(removedEntity)
+			this.tryTriggerLocalVariablesChanged(entityList)
 
 			return true
 		} else {
@@ -349,8 +354,8 @@ export abstract class ControlEntityListPoolBase {
 	 * Replace an entity with an updated version
 	 */
 	entityReplace(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): ControlEntityInstance | undefined {
-		for (const childGroup of this.getAllEntityLists()) {
-			const entity = childGroup.findById(newProps.id)
+		for (const entityList of this.getAllEntityLists()) {
+			const entity = entityList.findById(newProps.id)
 			if (!entity) continue
 
 			// Ignore if the types do not match
@@ -358,7 +363,7 @@ export abstract class ControlEntityListPoolBase {
 
 			entity.replaceProps(newProps, skipNotifyModule)
 
-			this.tryTriggerLocalVariablesChanged(entity)
+			this.tryTriggerLocalVariablesChanged(entityList)
 
 			this.commitChange(true)
 
@@ -401,7 +406,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setOption(key, value)
 
-		this.tryTriggerLocalVariablesChanged(entity, oldLocalVariableName)
+		this.tryTriggerLocalVariablesChanged(entityList, oldLocalVariableName)
 
 		this.commitChange()
 
@@ -440,6 +445,8 @@ export abstract class ControlEntityListPoolBase {
 		if (!entity) return false
 
 		entity.setInverted(!!isInverted)
+
+		this.tryTriggerLocalVariablesChanged(entityList)
 
 		this.commitChange()
 
