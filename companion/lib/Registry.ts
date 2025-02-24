@@ -304,6 +304,10 @@ export class Registry {
 			this.#preview.onVariablesChanged(all_changed_variables_set, fromControlId)
 		})
 
+		this.page.on('controlIdsMoved', (controlIds) => {
+			this.#preview.onControlIdsLocationChanged(controlIds)
+		})
+
 		// old 'modules_loaded' events
 		this.#metrics.startCycle()
 		this.ui.update.startCycle()

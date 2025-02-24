@@ -2,7 +2,6 @@ import { EntityModelType, FeedbackEntityModel, SomeEntityModel } from '@companio
 import React from 'react'
 import { IEntityEditorActionService } from '../../Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { LearnButton } from '../../Components/LearnButton.js'
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler, MyErrorBoundary } from '../../util.js'
@@ -22,7 +21,8 @@ interface EntityCommonCellsProps {
 	service: IEntityEditorActionService
 	headlineExpanded: boolean
 	definitionName: string
-	location: ControlLocation | undefined
+	isLocatedInGrid: boolean
+	controlId: string
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
 }
@@ -35,7 +35,8 @@ export function EntityCommonCells({
 	service,
 	headlineExpanded,
 	definitionName,
-	location,
+	isLocatedInGrid,
+	controlId,
 	readonly,
 	localVariablesStore,
 }: EntityCommonCellsProps) {
@@ -60,7 +61,7 @@ export function EntityCommonCells({
 			<div className="entity-cells-wrapper">
 				{showButtonPreview && (
 					<div className="cell-button-preview">
-						<OptionButtonPreview location={location} options={entity.options} />
+						<OptionButtonPreview controlId={controlId} options={entity.options} />
 					</div>
 				)}
 
@@ -92,7 +93,7 @@ export function EntityCommonCells({
 						<MyErrorBoundary key={i}>
 							<OptionsInputField
 								key={i}
-								isLocatedInGrid={!!location}
+								isLocatedInGrid={isLocatedInGrid}
 								entityType={entityType}
 								connectionId={entity.connectionId}
 								option={opt}

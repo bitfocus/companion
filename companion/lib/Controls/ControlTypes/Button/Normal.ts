@@ -161,8 +161,6 @@ export class ControlButtonNormal
 				style.text = parseResult.text
 				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			}
-
-			console.log('draw', style.text, this.#last_draw_variables)
 		}
 
 		return {

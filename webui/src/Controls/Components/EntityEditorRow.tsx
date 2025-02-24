@@ -223,7 +223,8 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						service={entityService}
 						headlineExpanded={headlineExpanded}
 						definitionName={definitionName}
-						location={location}
+						isLocatedInGrid={!!location}
+						controlId={controlId}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
 					/>

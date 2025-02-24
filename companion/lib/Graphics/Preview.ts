@@ -112,11 +112,12 @@ export class GraphicsPreview {
 			}
 		})
 
-		client.onPromise('preview:button-reference:subscribe', (id, location, options) => {
+		client.onPromise('preview:button-reference:subscribe', (id, controlId, options) => {
 			const fullId = `${client.id}::${id}`
 
 			if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
 
+			const location = this.#pageController.getLocationOfControlId(controlId)
 			const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
 
 			// Do a resolve of the reference for the starting image
@@ -125,7 +126,7 @@ export class GraphicsPreview {
 			// Track the subscription, to allow it to be invalidated
 			this.#buttonReferencePreviews.set(fullId, {
 				id,
-				location,
+				controlId,
 				options,
 				resolvedLocation: result.location,
 				referencedVariableIds: Array.from(result.referencedVariables),
@@ -172,64 +173,75 @@ export class GraphicsPreview {
 		}
 	}
 
+	onControlIdsLocationChanged(controlIds: string[]): void {
+		const controlIdsSet = new Set(controlIds)
+
+		// Lookup any sessions
+		for (const previewSession of this.#buttonReferencePreviews.values()) {
+			if (!controlIdsSet.has(previewSession.controlId)) continue
+
+			// Recheck the reference
+			this.#triggerRecheck(previewSession)
+		}
+	}
+
 	onVariablesChanged(allChangedSet: Set<string>, fromControlId: string | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.length) continue
 
-			// const controlId = location?this.#pageController.getControlIdAt(location):undefined
-
-			// if (fromControlId && previewSession.)
-
-			const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.location, null)
+			// If the changed variables belong to a control, only update if the query is for that control
+			if (fromControlId && previewSession.controlId != fromControlId) continue
 
 			const matchingChangedVariable = previewSession.referencedVariableIds.some((variable) =>
 				allChangedSet.has(variable)
 			)
 			if (!matchingChangedVariable) continue
 
-			// Resolve the new location
-			const result = ParseInternalControlReference(
-				this.#logger,
-				parser,
-				previewSession.location,
-				previewSession.options,
-				true
-			)
-
-			const lastResolvedLocation = previewSession.resolvedLocation
-
-			previewSession.referencedVariableIds = Array.from(result.referencedVariables)
-			previewSession.resolvedLocation = result.location
-
-			if (!result.location) {
-				// Now has an invalid location
-				previewSession.client.emit(`preview:button-reference:update:${previewSession.id}`, null)
-				continue
-			}
-
-			// Check if it has changed
-			if (
-				lastResolvedLocation &&
-				result.location.pageNumber == lastResolvedLocation.pageNumber &&
-				result.location.row == lastResolvedLocation.row &&
-				result.location.column == lastResolvedLocation.column
-			)
-				continue
-
-			previewSession.client.emit(
-				`preview:button-reference:update:${previewSession.id}`,
-				this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
-			)
+			// Recheck the reference
+			this.#triggerRecheck(previewSession)
 		}
+	}
+
+	#triggerRecheck(previewSession: PreviewSession): void {
+		const location = this.#pageController.getLocationOfControlId(previewSession.controlId)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+
+		// Resolve the new location
+		const result = ParseInternalControlReference(this.#logger, parser, location, previewSession.options, true)
+
+		const lastResolvedLocation = previewSession.resolvedLocation
+
+		previewSession.referencedVariableIds = Array.from(result.referencedVariables)
+		previewSession.resolvedLocation = result.location
+
+		if (!result.location) {
+			// Now has an invalid location
+			previewSession.client.emit(`preview:button-reference:update:${previewSession.id}`, null)
+			return
+		}
+
+		// Check if it has changed
+		if (
+			lastResolvedLocation &&
+			result.location.pageNumber == lastResolvedLocation.pageNumber &&
+			result.location.row == lastResolvedLocation.row &&
+			result.location.column == lastResolvedLocation.column
+		)
+			return
+
+		previewSession.client.emit(
+			`preview:button-reference:update:${previewSession.id}`,
+			this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
+		)
 	}
 }
 
 interface PreviewSession {
-	id: string
-	location: ControlLocation | undefined
+	readonly id: string
+	readonly controlId: string
 	options: Record<string, any>
 	resolvedLocation: ControlLocation | null
 	referencedVariableIds: string[]
-	client: ClientSocket
+	readonly client: ClientSocket
 }

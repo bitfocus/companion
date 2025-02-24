@@ -283,7 +283,7 @@ export interface ClientToBackendEventsMap {
 	'preview:location:unsubscribe': (location: ControlLocation, subId: string) => void
 	'preview:button-reference:subscribe': (
 		subId: string,
-		location: ControlLocation | undefined,
+		fromControlId: string,
 		options: Record<string, any>
 	) => string | null
 	'preview:button-reference:unsubscribe': (subId: string) => void
