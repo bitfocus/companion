@@ -227,7 +227,7 @@ export class CloudController {
 			if (control.type !== 'button') {
 				continue
 			}
-			const drawStyle = control.getDrawStyle()
+			const drawStyle = control.getLastDrawStyle()
 			if (!drawStyle || drawStyle.style !== 'button') {
 				continue
 			}
@@ -248,7 +248,7 @@ export class CloudController {
 					...drawStyle,
 					pushed: control.supportsPushed && control.pushed,
 					actions_running: drawStyle.action_running,
-					bank_status: control.supportsStyle && control.button_status,
+					bank_status: drawStyle.button_status,
 					style: 'button',
 				},
 			})

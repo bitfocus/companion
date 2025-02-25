@@ -6,6 +6,7 @@ import type {
 	ControlWithActions,
 	ControlWithStyle,
 	ControlWithoutEvents,
+	ControlWithoutLayeredStyle,
 } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { NormalButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
@@ -38,7 +39,12 @@ import { GetButtonBitmapSize } from '../../../Resources/Util.js'
  */
 export class ControlButtonNormal
 	extends ButtonControlBase<NormalButtonModel, NormalButtonOptions>
-	implements ControlWithStyle, ControlWithActions, ControlWithoutEvents, ControlWithActionSets
+	implements
+		ControlWithStyle,
+		ControlWithoutLayeredStyle,
+		ControlWithActions,
+		ControlWithoutEvents,
+		ControlWithActionSets
 {
 	readonly type = 'button'
 
@@ -66,7 +72,7 @@ export class ControlButtonNormal
 	/**
 	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
-	#last_draw_variables: Set<string> | null = null
+	#last_draw_variables: ReadonlySet<string> | null = null
 
 	/**
 	 * The base style without feedbacks applied
@@ -119,7 +125,7 @@ export class ControlButtonNormal
 	/**
 	 * Get the size of the bitmap render of this control
 	 */
-	getBitmapSize(): { width: number; height: number } | null {
+	getBitmapFeedbackSize(): { width: number; height: number } | null {
 		return GetButtonBitmapSize(this.deps.userconfig, this.#baseStyle)
 	}
 
@@ -127,7 +133,7 @@ export class ControlButtonNormal
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleButtonModel {
+	getLastDrawStyle(): DrawStyleButtonModel {
 		let style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
 
 		if (style.text) {

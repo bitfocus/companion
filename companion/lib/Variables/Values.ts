@@ -18,7 +18,6 @@
 import LogController from '../Log/Controller.js'
 import EventEmitter from 'events'
 import {
-	ExecuteExpressionResult,
 	ParseVariablesResult,
 	VARIABLE_UNKNOWN_VALUE,
 	VariableValueData,
@@ -26,6 +25,7 @@ import {
 	executeExpression,
 	parseVariablesInString,
 } from './Util.js'
+import { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'

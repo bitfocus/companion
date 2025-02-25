@@ -1,5 +1,5 @@
 import { CoreBase } from '../Core/Base.js'
-import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
+import { parseColorToNumber, rgb } from '../Resources/Util.js'
 import express from 'express'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import Express from 'express'
@@ -7,6 +7,7 @@ import type { UIExpress } from '../UI/Express.js'
 import type { Registry } from '../Registry.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 
 /**
  * Class providing the HTTP API.
