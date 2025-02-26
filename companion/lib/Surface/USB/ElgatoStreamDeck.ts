@@ -85,8 +85,8 @@ const LATEST_FIRMWARE_VERSIONS: FirmwareVersionInfo[] = [
 	// },
 ]
 const STREAMDECK_MODULES_SUPPORTING_UPDATES: ReadonlySet<DeviceModelId> = new Set([DeviceModelId.STUDIO])
-const STREAMDECK_UPDATE_DOWNLOAD_URL = 'http://api.bitfocus.io/v1/product/elgato-updater/download'
-const STREAMDECK_UPDATE_VERSIONS_URL = 'http://api.bitfocus.io/v1/product/elgato-updater/versions'
+const STREAMDECK_UPDATE_DOWNLOAD_URL = 'https://api.bitfocus.io/v1/product/elgato-updater/download'
+const STREAMDECK_UPDATE_VERSIONS_URL = 'https://api.bitfocus.io/v1/product/elgato-updater/versions'
 
 export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
