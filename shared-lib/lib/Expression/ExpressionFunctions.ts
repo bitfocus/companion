@@ -6,10 +6,12 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	// General operations
 	length: (v) => {
 		let len = 0
-		if (v === undefined) {
+		if (v === undefined || v === null) {
 			len = 0
 		} else if (Array.isArray(v)) {
 			len = v.length
+		} else if (typeof v === 'object') {
+			len = Object.keys(v).length
 		} else if (typeof v === 'number') {
 			len = (v + '').length
 		} else {
