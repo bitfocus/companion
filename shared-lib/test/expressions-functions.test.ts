@@ -10,6 +10,8 @@ describe('functions', () => {
 			expect(ExpressionFunctions.length('abc')).toBe(3)
 			expect(ExpressionFunctions.length(9)).toBe(1)
 			expect(ExpressionFunctions.length(99)).toBe(2)
+			expect(ExpressionFunctions.length(-123)).toBe(4)
+			expect(ExpressionFunctions.length(3.14)).toBe(4)
 			expect(ExpressionFunctions.length([])).toBe(0)
 			expect(ExpressionFunctions.length([9])).toBe(1)
 			expect(ExpressionFunctions.length([99])).toBe(1)
