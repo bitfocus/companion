@@ -16,6 +16,8 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 			len = (v + '').length
 		} else if (typeof v === 'bigint') {
 			len = v.toString().length
+		} else if (v instanceof RegExp) {
+			len = v.toString().length
 		} else {
 			len = v.length
 		}
