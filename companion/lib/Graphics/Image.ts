@@ -498,6 +498,7 @@ export class Image {
 
 		let displayText = text.toString().trim() // remove leading and trailing spaces for display
 
+		displayText = displayText.replaceAll('\r\n', '\n') // we only want \n as a linebreak
 		displayText = displayText.replaceAll('\\n', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayText = displayText.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayText = displayText.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
