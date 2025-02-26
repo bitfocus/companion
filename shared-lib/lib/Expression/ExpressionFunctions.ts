@@ -6,7 +6,9 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	// General operations
 	length: (v) => {
 		let len = 0
-		if (Array.isArray(v)) {
+		if (v === undefined) {
+			len = 0
+		} else if (Array.isArray(v)) {
 			len = v.length
 		} else if (typeof v === 'number') {
 			len = (v + '').length
