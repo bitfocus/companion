@@ -2,6 +2,25 @@ import { describe, it, expect } from 'vitest'
 import { ExpressionFunctions } from '../lib/Expression/ExpressionFunctions.js'
 
 describe('functions', () => {
+	describe('general', () => {
+		it('length', () => {
+			expect(ExpressionFunctions.length()).toBe(0)
+			expect(ExpressionFunctions.length('')).toBe(0)
+			expect(ExpressionFunctions.length('a')).toBe(1)
+			expect(ExpressionFunctions.length('abc')).toBe(3)
+			expect(ExpressionFunctions.length(9)).toBe(1)
+			expect(ExpressionFunctions.length(99)).toBe(2)
+			expect(ExpressionFunctions.length([])).toBe(0)
+			expect(ExpressionFunctions.length([9])).toBe(1)
+			expect(ExpressionFunctions.length([99])).toBe(1)
+			expect(ExpressionFunctions.length(['abc'])).toBe(1)
+			expect(ExpressionFunctions.length([9, 'a'])).toBe(2)
+			expect(ExpressionFunctions.length(['a', 'c'])).toBe(2)
+			expect(ExpressionFunctions.length(['ab', ''])).toBe(2)
+			expect(ExpressionFunctions.length(['a', 'b', 'c'])).toBe(3)
+		})
+	})
+
 	describe('number', () => {
 		it('round', () => {
 			expect(ExpressionFunctions.round(9.99)).toBe(10)
