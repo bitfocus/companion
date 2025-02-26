@@ -17,7 +17,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.length(3.14)).toBe(4)
 			expect(ExpressionFunctions.length(BigInt(1024))).toBe(4)
 			expect(ExpressionFunctions.length(BigInt(9007199254740991))).toBe(16)
-			expect(ExpressionFunctions.length(RegExp("ab+c", "i"))).toBe(7)
+			expect(ExpressionFunctions.length(new RegExp('ab+c', 'i'))).toBe(7)
 			expect(ExpressionFunctions.length([])).toBe(0)
 			expect(ExpressionFunctions.length([9])).toBe(1)
 			expect(ExpressionFunctions.length([99])).toBe(1)
