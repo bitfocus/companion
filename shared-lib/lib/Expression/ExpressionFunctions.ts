@@ -14,6 +14,8 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 			len = Object.keys(v).length
 		} else if (typeof v === 'number') {
 			len = (v + '').length
+		} else if (typeof v === 'bigint') {
+			len = v.toString().length
 		} else {
 			len = v.length
 		}
