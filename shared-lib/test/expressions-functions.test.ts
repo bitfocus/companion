@@ -18,6 +18,9 @@ describe('functions', () => {
 			expect(ExpressionFunctions.length(['a', 'c'])).toBe(2)
 			expect(ExpressionFunctions.length(['ab', ''])).toBe(2)
 			expect(ExpressionFunctions.length(['a', 'b', 'c'])).toBe(3)
+			expect(ExpressionFunctions.length({ a: 1 })).toBe(1)
+			expect(ExpressionFunctions.length({ a: 1, b: { c: 5, }, })).toBe(2)
+			expect(ExpressionFunctions.length({ a: ['a', 'c'], b: { c: 5, }, })).toBe(2)
 		})
 	})
 
