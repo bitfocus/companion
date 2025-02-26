@@ -8,10 +8,15 @@ describe('functions', () => {
 			expect(ExpressionFunctions.length('')).toBe(0)
 			expect(ExpressionFunctions.length('a')).toBe(1)
 			expect(ExpressionFunctions.length('abc')).toBe(3)
+			expect(ExpressionFunctions.length('ä')).toBe(1) // codepoint U+00E4, one grapheme
+			expect(ExpressionFunctions.length('̈a')).toBe(1) // codepoints U+0308 U+0061, one grapheme
+			expect(ExpressionFunctions.length('́̈a')).toBe(1) // codepoints U+0301 U+0308 U+0061, one grapheme
 			expect(ExpressionFunctions.length(9)).toBe(1)
 			expect(ExpressionFunctions.length(99)).toBe(2)
 			expect(ExpressionFunctions.length(-123)).toBe(4)
 			expect(ExpressionFunctions.length(3.14)).toBe(4)
+			expect(ExpressionFunctions.length(BigInt(1024))).toBe(4)
+			expect(ExpressionFunctions.length(BigInt(9007199254740991))).toBe(16)
 			expect(ExpressionFunctions.length([])).toBe(0)
 			expect(ExpressionFunctions.length([9])).toBe(1)
 			expect(ExpressionFunctions.length([99])).toBe(1)
@@ -19,7 +24,9 @@ describe('functions', () => {
 			expect(ExpressionFunctions.length([9, 'a'])).toBe(2)
 			expect(ExpressionFunctions.length(['a', 'c'])).toBe(2)
 			expect(ExpressionFunctions.length(['ab', ''])).toBe(2)
+			expect(ExpressionFunctions.length([1,,3])).toBe(3)
 			expect(ExpressionFunctions.length(['a', 'b', 'c'])).toBe(3)
+			expect(ExpressionFunctions.length(['a', ['b', 'b'], 'c'])).toBe(3)
 			expect(ExpressionFunctions.length({ a: 1 })).toBe(1)
 			expect(ExpressionFunctions.length({ a: 1, b: { c: 5 } })).toBe(2)
 			expect(ExpressionFunctions.length({ a: ['a', 'c'], b: { c: 5 } })).toBe(2)
