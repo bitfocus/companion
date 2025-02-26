@@ -3,6 +3,19 @@ import { JSONPath } from 'jsonpath-plus'
 
 // Note: when adding new functions, make sure to update the docs!
 export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
+	// General operations
+	length: (v) => {
+		let len = 0
+		if (Array.isArray(v)) {
+			len = v.length
+		} else if (typeof v === 'number') {
+			len = (v + '').length
+		} else {
+			len = v.length
+		}
+		return len
+	},
+
 	// Number operations
 	// TODO: round to fractionals, without fp issues
 	round: (v) => Math.round(v),
@@ -114,9 +127,6 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		} catch (_e) {
 			return null
 		}
-	},
-	arrlen: (arr = []) => {
-		return (Array.isArray(arr) ? arr : [arr]).length
 	},
 
 	// Time operations

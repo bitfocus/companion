@@ -2,6 +2,16 @@ There are various supported functions, and we are willing to add more. Let us kn
 
 The currently supported functions are:
 
+##### General operations
+
+**length(val)**
+
+Find the length of the item passed in.
+* For a strings it will return the number of unicode graphemes
+* For arrays, the number of elements
+* For JSON or other objects, it will return the number of properties
+* For numbers it will return the length of the string representation
+
 ##### Numeric operations
 
 **round(val)**
@@ -187,10 +197,6 @@ Convert an object into a json string.
 If this encounters invalid input, it will return null instead of throwing an error.
 
 eg: `jsonstringify({ a: 1 })` will be a string containing `{"a":1}`
-
-**arrlen(obj)**
-
-Find the length of the given array.
 
 ##### Time operations
 

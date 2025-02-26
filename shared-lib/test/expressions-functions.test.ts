@@ -2,6 +2,25 @@ import { describe, it, expect } from 'vitest'
 import { ExpressionFunctions } from '../lib/Expression/ExpressionFunctions.js'
 
 describe('functions', () => {
+	describe('general', () => {
+		it('length', () => {
+			expect(ExpressionFunctions.length()).toBe(0)
+			expect(ExpressionFunctions.length('')).toBe(0)
+			expect(ExpressionFunctions.length('a')).toBe(1)
+			expect(ExpressionFunctions.length('abc')).toBe(3)
+			expect(ExpressionFunctions.length(9)).toBe(1)
+			expect(ExpressionFunctions.length(99)).toBe(2)
+			expect(ExpressionFunctions.length([])).toBe(0)
+			expect(ExpressionFunctions.length([9])).toBe(1)
+			expect(ExpressionFunctions.length([99])).toBe(1)
+			expect(ExpressionFunctions.length(['abc'])).toBe(1)
+			expect(ExpressionFunctions.length([9, 'a'])).toBe(2)
+			expect(ExpressionFunctions.length(['a', 'c'])).toBe(2)
+			expect(ExpressionFunctions.length(['ab', ''])).toBe(2)
+			expect(ExpressionFunctions.length(['a', 'b', 'c'])).toBe(3)
+		})
+	})
+
 	describe('number', () => {
 		it('round', () => {
 			expect(ExpressionFunctions.round(9.99)).toBe(10)
@@ -319,20 +338,6 @@ describe('functions', () => {
 
 			expect(ExpressionFunctions.jsonstringify({ a: 1 })).toEqual('{"a":1}')
 			expect(ExpressionFunctions.jsonstringify([1, 2, 3])).toEqual('[1,2,3]')
-		})
-
-		it('arrlen', () => {
-			expect(ExpressionFunctions.arrlen()).toBe(0)
-			expect(ExpressionFunctions.arrlen('')).toBe(1)
-			expect(ExpressionFunctions.arrlen('a')).toBe(1)
-			expect(ExpressionFunctions.arrlen('abc')).toBe(1)
-			expect(ExpressionFunctions.arrlen(9)).toBe(1)
-			expect(ExpressionFunctions.arrlen([])).toBe(0)
-			expect(ExpressionFunctions.arrlen([9])).toBe(1)
-			expect(ExpressionFunctions.arrlen([9, 'a'])).toBe(2)
-			expect(ExpressionFunctions.arrlen(['a', 'c'])).toBe(2)
-			expect(ExpressionFunctions.arrlen(['ab', ''])).toBe(2)
-			expect(ExpressionFunctions.arrlen(['a', 'b', 'c'])).toBe(3)
 		})
 	})
 
