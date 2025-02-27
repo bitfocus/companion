@@ -27,6 +27,7 @@ interface EntityManageChildGroupsProps {
 	serviceFactory: IEntityEditorService
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 
 export const EntityManageChildGroups = observer(function EntityManageChildGroups({
@@ -37,6 +38,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 	serviceFactory,
 	readonly,
 	localVariablesStore,
+	isLocalVariablesList,
 }: EntityManageChildGroupsProps) {
 	if (entity.connectionId !== 'internal') return null
 
@@ -55,6 +57,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 						parentServiceFactory={serviceFactory}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
+						isLocalVariablesList={isLocalVariablesList}
 					/>
 				))}
 			</div>
@@ -71,6 +74,7 @@ interface EntityManageChildGroupProps {
 	parentServiceFactory: IEntityEditorService
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 
 const EntityManageChildGroup = observer(function EntityManageChildGroup({
@@ -82,6 +86,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	parentServiceFactory,
 	readonly,
 	localVariablesStore,
+	isLocalVariablesList,
 }: EntityManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
 
@@ -114,6 +119,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 				ownerId={groupId}
 				readonly={readonly}
 				localVariablesStore={localVariablesStore}
+				isLocalVariablesList={isLocalVariablesList}
 			/>
 		</CForm>
 	)

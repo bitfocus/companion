@@ -79,7 +79,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
-		return this.#localVariables.getDirectEntities()
+		return this.#localVariables.getAllEntities()
 	}
 
 	// /**

@@ -24,6 +24,7 @@ interface EditableEntityListProps {
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 export const EditableEntityList = observer(function EditableEntityList({
 	controlId,
@@ -38,6 +39,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 	feedbackListType,
 	readonly,
 	localVariablesStore,
+	isLocalVariablesList,
 }: EditableEntityListProps) {
 	const addEntity = useCallback(
 		(connectionId: string, definitionId: string) => serviceFactory.addEntity(connectionId, definitionId, ownerId),
@@ -64,6 +66,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 				entities={entities}
 				serviceFactory={serviceFactory}
 				localVariablesStore={localVariablesStore}
+				isLocalVariablesList={isLocalVariablesList}
 			/>
 			<AddEntityPanel
 				addEntity={addEntity}
@@ -87,6 +90,7 @@ interface MinimalEntityListProps {
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 
 export const MinimalEntityList = observer(function MinimalEntityList({
@@ -100,6 +104,7 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 	feedbackListType,
 	readonly,
 	localVariablesStore,
+	isLocalVariablesList,
 }: MinimalEntityListProps) {
 	const dragId = `${controlId}_${entityType}`
 
@@ -123,6 +128,7 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 								feedbackListType={feedbackListType}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
+								isLocalVariablesList={isLocalVariablesList}
 							/>
 						</MyErrorBoundary>
 					))}

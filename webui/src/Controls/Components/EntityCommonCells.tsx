@@ -28,6 +28,7 @@ interface EntityCommonCellsProps {
 	headlineExpanded: boolean
 	definitionName: string
 	isLocatedInGrid: boolean
+	isLocalVariablesList: boolean
 	controlId: string
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
@@ -42,6 +43,7 @@ export function EntityCommonCells({
 	headlineExpanded,
 	definitionName,
 	isLocatedInGrid,
+	isLocalVariablesList,
 	controlId,
 	readonly,
 	localVariablesStore,
@@ -72,19 +74,16 @@ export function EntityCommonCells({
 				)}
 
 				<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
-					{!!entity && entityType === EntityModelType.Feedback && feedbackListType === FeedbackEntitySubType.Value && (
+					{!!entity && isLocalVariablesList && (
 						<>
-							{/* TODO: Also show this for _ALL_ children */}
 							<MyErrorBoundary>
 								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
 									<InlineHelp help="The name to give this value as a local variable">Variable name</InlineHelp>
 								</CFormLabel>
 								<CCol sm={8}>
 									<TextInputField
-										// regex?: string
-										// tooltip?: string
+										// regex?: string TODO - validate value syntax
 										value={(entity as FeedbackEntityModel).variableName ?? ''}
-										// style?: React.CSSProperties
 										setValue={service.setVariableName}
 										// setValid?: (valid: boolean) => void
 										disabled={readonly}

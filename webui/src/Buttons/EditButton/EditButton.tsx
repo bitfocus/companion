@@ -273,6 +273,7 @@ function NormalButtonEditor({
 												entityTypeLabel="feedback"
 												feedbackListType={null}
 												localVariablesStore={localVariablesStore}
+												isLocalVariablesList={false}
 											/>
 										</MyErrorBoundary>
 									</div>

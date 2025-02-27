@@ -41,6 +41,7 @@ interface EntityTableRowProps {
 
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 
 export const EntityTableRow = observer(function EntityTableRow({
@@ -56,6 +57,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 	feedbackListType,
 	readonly,
 	localVariablesStore,
+	isLocalVariablesList,
 }: EntityTableRowProps): JSX.Element | null {
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EntityListDragItem>({
@@ -142,6 +144,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 						feedbackListType={feedbackListType}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
+						isLocalVariablesList={isLocalVariablesList}
 					/>
 				) : (
 					<p>Entity is not a {entityTypeLabel}!</p>
@@ -162,6 +165,7 @@ interface EntityEditorRowContentProps {
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 
 export const EntityEditorRowContent = observer(function EntityEditorRowContent({
@@ -175,6 +179,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	feedbackListType,
 	readonly,
 	localVariablesStore,
+	isLocalVariablesList,
 }: EntityEditorRowContentProps) {
 	const entityService = useControlEntityService(serviceFactory, entity)
 
@@ -224,6 +229,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						headlineExpanded={headlineExpanded}
 						definitionName={definitionName}
 						isLocatedInGrid={!!location}
+						isLocalVariablesList={isLocalVariablesList}
 						controlId={controlId}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
@@ -237,6 +243,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						serviceFactory={serviceFactory}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
+						isLocalVariablesList={isLocalVariablesList}
 					/>
 				</div>
 			)}
