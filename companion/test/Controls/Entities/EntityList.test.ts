@@ -519,7 +519,7 @@ describe('addEntity', () => {
 
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
-			feedbackType: 'advanced',
+			feedbackType: FeedbackEntitySubType.Advanced,
 		} as Partial<ClientEntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
@@ -557,7 +557,7 @@ describe('addEntity', () => {
 
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
-			feedbackType: 'boolean',
+			feedbackType: FeedbackEntitySubType.Boolean,
 		} as Partial<ClientEntityDefinition> as any)
 
 		const newInstance = list.addEntity(cloneDeep(newFeedback))

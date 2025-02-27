@@ -25,6 +25,7 @@ import {
 	ActionEntityModel,
 	EntityModelBase,
 	EntityModelType,
+	FeedbackEntitySubType,
 	LocalVariableEntityModel,
 	SomeEntityModel,
 	type FeedbackEntityModel,
@@ -232,7 +233,7 @@ export class InstanceDefinitions {
 					isInverted: false,
 				}
 
-				if (/*!booleanOnly &&*/ definition.feedbackType === 'boolean' && definition.feedbackStyle) {
+				if (/*!booleanOnly &&*/ definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
 					feedback.style = cloneDeep(definition.feedbackStyle)
 				}
 

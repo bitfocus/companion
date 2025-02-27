@@ -7,12 +7,12 @@ import { capitalize } from 'lodash-es'
 import { CModalExt } from '../../Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import { ObservableMap } from 'mobx'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
 interface AddEntitiesModalProps {
 	addEntity: (connectionId: string, definitionId: string) => void
-	onlyFeedbackType: 'boolean' | 'advanced' | null
+	onlyFeedbackType: FeedbackEntitySubType | null
 	entityType: EntityModelType
 	entityTypeLabel: string
 }

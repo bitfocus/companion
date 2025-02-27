@@ -2,6 +2,7 @@ import {
 	EntityModelType,
 	EntityOwner,
 	EntitySupportedChildGroupDefinition,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from './EntityInstance.js'
@@ -239,7 +240,11 @@ export class ControlEntityList {
 		// If a feedback list, check that the feedback is of the correct type
 		if (this.#listDefinition.type === EntityModelType.Feedback) {
 			const feedbackDefinition = entity.getEntityDefinition()
-			if (this.#listDefinition.booleanFeedbacksOnly && feedbackDefinition?.feedbackType !== 'boolean') return false
+			if (
+				this.#listDefinition.booleanFeedbacksOnly &&
+				feedbackDefinition?.feedbackType !== FeedbackEntitySubType.Boolean
+			)
+				return false
 		}
 
 		return true

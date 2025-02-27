@@ -4,6 +4,7 @@ import {
 	SomeEntityModel,
 	EntityOwner,
 	EntityModelType,
+	FeedbackEntitySubType,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { CForm } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -109,7 +110,9 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 				entityType={groupInfo.type}
 				entityTypeLabel={groupInfo.entityTypeLabel}
 				onlyFeedbackType={
-					groupInfo.type === EntityModelType.Feedback && groupInfo.booleanFeedbacksOnly ? 'boolean' : null
+					groupInfo.type === EntityModelType.Feedback && groupInfo.booleanFeedbacksOnly
+						? FeedbackEntitySubType.Boolean
+						: null
 				}
 				location={location}
 				serviceFactory={serviceFactory}

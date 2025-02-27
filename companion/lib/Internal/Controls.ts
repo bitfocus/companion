@@ -39,6 +39,7 @@ import type { InternalActionInputField, InternalFeedbackInputField } from '@comp
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
+	FeedbackEntitySubType,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -414,7 +415,7 @@ export class InternalControls implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			bank_style: {
-				feedbackType: 'advanced',
+				feedbackType: FeedbackEntitySubType.Advanced,
 				label: 'Button: Use another buttons style',
 				description: 'Imitate the style of another button',
 				showButtonPreview: true,
@@ -433,7 +434,7 @@ export class InternalControls implements InternalModuleFragment {
 				],
 			},
 			bank_pushed: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Button: When pushed',
 				description: 'Change style when a button is being pressed',
 				showButtonPreview: true,
@@ -453,7 +454,7 @@ export class InternalControls implements InternalModuleFragment {
 				],
 			},
 			bank_current_step: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Button: Check step',
 				description: 'Change style based on the current step of a button',
 				showButtonPreview: true,

@@ -13,6 +13,15 @@ export enum EntityModelType {
 	LocalVariable = 'local-variable',
 }
 
+export enum FeedbackEntitySubType {
+	Boolean = 'boolean',
+	Advanced = 'advanced',
+}
+
+export function isValidFeedbackEntitySubType(value: FeedbackEntitySubType | string): value is FeedbackEntitySubType {
+	return Object.values(FeedbackEntitySubType).includes(value as any)
+}
+
 export interface ActionEntityModel extends EntityModelBase {
 	readonly type: EntityModelType.Action
 }

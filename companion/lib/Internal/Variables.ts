@@ -26,7 +26,7 @@ import type {
 	InternalFeedbackDefinition,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
-import type { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlsController } from '../Controls/Controller.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
@@ -72,7 +72,7 @@ export class InternalVariables implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			variable_value: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Variable: Check value',
 				description: 'Change style based on the value of a variable',
 				feedbackStyle: {
@@ -110,7 +110,7 @@ export class InternalVariables implements InternalModuleFragment {
 			},
 
 			variable_variable: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Variable: Compare two variables',
 				description: 'Change style based on a variable compared to another variable',
 				feedbackStyle: {
@@ -136,7 +136,7 @@ export class InternalVariables implements InternalModuleFragment {
 			},
 
 			check_expression: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Variable: Check boolean expression',
 				description: 'Change style based on a boolean expression',
 				feedbackStyle: {

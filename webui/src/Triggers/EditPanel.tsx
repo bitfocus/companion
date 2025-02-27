@@ -11,7 +11,7 @@ import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { useLocalVariablesStore } from '../Controls/LocalVariablesStore.js'
 
 interface EditTriggerPanelProps {
@@ -139,7 +139,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									listId="feedbacks"
 									entityType={EntityModelType.Feedback}
 									entityTypeLabel="condition"
-									onlyFeedbackType="boolean"
+									onlyFeedbackType={FeedbackEntitySubType.Boolean}
 									location={undefined}
 									localVariablesStore={localVariablesStore}
 								/>

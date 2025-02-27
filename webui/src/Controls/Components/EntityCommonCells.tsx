@@ -1,4 +1,9 @@
-import { EntityModelType, FeedbackEntityModel, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	FeedbackEntityModel,
+	FeedbackEntitySubType,
+	SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import React from 'react'
 import { IEntityEditorActionService } from '../../Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
@@ -16,7 +21,7 @@ import { LocalVariablesStore } from '../LocalVariablesStore.js'
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
 	entityType: EntityModelType
-	onlyFeedbackType: 'boolean' | 'advanced' | null
+	onlyFeedbackType: FeedbackEntitySubType | null
 	entityDefinition: ClientEntityDefinition | undefined
 	service: IEntityEditorActionService
 	headlineExpanded: boolean
@@ -70,7 +75,7 @@ export function EntityCommonCells({
 
 					{!!entityDefinition &&
 						entityDefinition.entityType === EntityModelType.Feedback &&
-						entityDefinition.feedbackType === 'boolean' &&
+						entityDefinition.feedbackType === FeedbackEntitySubType.Boolean &&
 						entityDefinition.showInvert !== false && (
 							<MyErrorBoundary>
 								<CFormLabel htmlFor="colFormInvert" className="col-sm-4 col-form-label col-form-label-sm">

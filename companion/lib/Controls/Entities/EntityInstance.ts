@@ -3,6 +3,7 @@ import {
 	EntityModelType,
 	EntitySupportedChildGroupDefinition,
 	FeedbackEntityModel,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -16,6 +17,7 @@ import type { InternalVisitor } from '../../Internal/Types.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 export class ControlEntityInstance {
 	/**
@@ -345,7 +347,11 @@ export class ControlEntityInstance {
 		}
 
 		const definition = this.getEntityDefinition()
-		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+		if (
+			!definition ||
+			definition.entityType !== EntityModelType.Feedback ||
+			definition.feedbackType !== FeedbackEntitySubType.Boolean
+		)
 			return false
 
 		if (!feedbackData.style) feedbackData.style = {}
@@ -367,7 +373,11 @@ export class ControlEntityInstance {
 		const feedbackData = this.#data as FeedbackEntityModel
 
 		const definition = this.getEntityDefinition()
-		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+		if (
+			!definition ||
+			definition.entityType !== EntityModelType.Feedback ||
+			definition.feedbackType !== FeedbackEntitySubType.Boolean
+		)
 			return false
 
 		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.feedbackStyle || {}
@@ -650,10 +660,14 @@ export class ControlEntityInstance {
 			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
 		}
 
-		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+		if (
+			!definition ||
+			definition.entityType !== EntityModelType.Feedback ||
+			definition.feedbackType !== FeedbackEntitySubType.Boolean
+		)
 			return false
 
-		if (typeof this.#cachedFeedbackValue === 'boolean') {
+		if (typeof this.#cachedFeedbackValue === FeedbackEntitySubType.Boolean) {
 			const feedbackData = this.#data as FeedbackEntityModel
 			if (definition.showInvert && feedbackData.isInverted) return !this.#cachedFeedbackValue
 
@@ -677,19 +691,28 @@ export class ControlEntityInstance {
 		const definition = this.getEntityDefinition()
 		if (!definition || definition.entityType !== EntityModelType.Feedback) return
 
-		if (definition.feedbackType === 'boolean') {
-			if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
-		} else if (definition.feedbackType === 'advanced') {
-			// Special case to handle the internal 'logic' operators, which need to be done differently
-			if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
-				if (this.getBooleanFeedbackValue()) {
-					for (const child of this.#children.get('feedbacks')?.getDirectEntities() || []) {
-						child.buildFeedbackStyle(styleBuilder)
+		switch (definition.feedbackType) {
+			case FeedbackEntitySubType.Boolean:
+				if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
+				break
+			case FeedbackEntitySubType.Advanced:
+				// Special case to handle the internal 'logic' operators, which need to be done differently
+				if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
+					if (this.getBooleanFeedbackValue()) {
+						for (const child of this.#children.get('feedbacks')?.getDirectEntities() || []) {
+							child.buildFeedbackStyle(styleBuilder)
+						}
 					}
+				} else {
+					styleBuilder.applyComplexStyle(this.#cachedFeedbackValue)
 				}
-			} else {
-				styleBuilder.applyComplexStyle(this.#cachedFeedbackValue)
-			}
+				break
+			case null:
+				// Not a valid feedback
+				break
+			default:
+				assertNever(definition.feedbackType)
+				break
 		}
 	}
 

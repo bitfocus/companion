@@ -27,7 +27,7 @@ import type {
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalController } from './Controller.js'
-import { EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { booleanAnd } from '../Resources/Util.js'
 
@@ -45,7 +45,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			logic_operator: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Logic: Operation',
 				description: 'Combine multiple conditions',
 				feedbackStyle: {
@@ -80,7 +80,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 			},
 
 			logic_conditionalise_advanced: {
-				feedbackType: 'advanced',
+				feedbackType: FeedbackEntitySubType.Advanced,
 				label: 'Conditionalise existing feedbacks',
 				description: "Make 'advanced' feedbacks conditional",
 				feedbackStyle: undefined,
