@@ -209,6 +209,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	}
 
 	#onLocalVariablesChanged(allChangedVariables: Set<string>): void {
+		// Trigger the change after a short debounce, just in case we end up in an infinite loop
 		setImmediate(() => {
 			this.deps.variables.values.emit('local_variables_changed', allChangedVariables, this.controlId)
 		})

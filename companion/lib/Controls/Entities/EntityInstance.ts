@@ -676,10 +676,7 @@ export class ControlEntityInstance {
 			const childList = this.#children.get('default') ?? this.#children.get('children')
 			const childValues = childList?.getChildBooleanFeedbackValues() ?? []
 
-			const res = this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
-
-			console.log('cehck', this.asEntityModel(), childValues, res)
-			return res
+			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
 		}
 
 		if (
@@ -767,7 +764,7 @@ export class ControlEntityInstance {
 			const childrenChanged = childGroup.updateFeedbackValues(connectionId, newValues)
 			changed.push(...childrenChanged)
 
-			if (!thisChanged && isInternalLogicFeedback(this)) {
+			if (!thisChanged && isInternalLogicFeedback(this) && childrenChanged.length > 0) {
 				// If this is a logic operator, and one of its children changed, we need to re-evaluate
 				changed.push(this)
 			}
