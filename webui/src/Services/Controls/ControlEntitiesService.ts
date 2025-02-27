@@ -119,15 +119,11 @@ export function useControlEntitiesEditorService(
 				})
 			},
 
-			setEnabled:
-				entityModelType !== EntityModelType.LocalVariable
-					? (entityId: string, enabled: boolean) => {
-							socket.emitPromise('controls:entity:enabled', [controlId, listId, entityId, enabled]).catch((e) => {
-								console.error('Failed to enable/disable entity', e)
-							})
-						}
-					: undefined,
-
+			setEnabled: (entityId: string, enabled: boolean) => {
+				socket.emitPromise('controls:entity:enabled', [controlId, listId, entityId, enabled]).catch((e) => {
+					console.error('Failed to enable/disable entity', e)
+				})
+			},
 			setHeadline: (entityId: string, headline: string) => {
 				socket.emitPromise('controls:entity:set-headline', [controlId, listId, entityId, headline]).catch((e) => {
 					console.error('Failed to set entity headline', e)

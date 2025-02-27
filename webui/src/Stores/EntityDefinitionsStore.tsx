@@ -11,20 +11,16 @@ import { RecentlyUsedIdsStore } from './RecentlyUsedIdsStore.js'
 export class EntityDefinitionsStore {
 	readonly feedbacks: EntityDefinitionsForTypeStore
 	readonly actions: EntityDefinitionsForTypeStore
-	readonly localVariables: EntityDefinitionsForTypeStore
 
 	readonly recentlyAddedActions: RecentlyUsedIdsStore
 	readonly recentlyAddedFeedbacks: RecentlyUsedIdsStore
-	readonly recentlyAddedLocalVariables: RecentlyUsedIdsStore
 
 	constructor() {
 		this.feedbacks = new EntityDefinitionsForTypeStore(EntityModelType.Feedback)
 		this.actions = new EntityDefinitionsForTypeStore(EntityModelType.Action)
-		this.localVariables = new EntityDefinitionsForTypeStore(EntityModelType.LocalVariable)
 
 		this.recentlyAddedActions = new RecentlyUsedIdsStore('recent_actions', 20)
 		this.recentlyAddedFeedbacks = new RecentlyUsedIdsStore('recent_feedbacks', 20)
-		this.recentlyAddedLocalVariables = new RecentlyUsedIdsStore('recent_local_variables', 20)
 	}
 
 	getEntityDefinition(
@@ -41,8 +37,6 @@ export class EntityDefinitionsStore {
 				return this.actions
 			case EntityModelType.Feedback:
 				return this.feedbacks
-			case EntityModelType.LocalVariable:
-				return this.localVariables
 			default:
 				assertNever(entityType)
 				throw new Error(`Invalid entity type: ${entityType}`)
@@ -55,8 +49,6 @@ export class EntityDefinitionsStore {
 				return this.recentlyAddedActions
 			case EntityModelType.Feedback:
 				return this.recentlyAddedFeedbacks
-			case EntityModelType.LocalVariable:
-				return this.recentlyAddedLocalVariables
 			default:
 				assertNever(entityType)
 				throw new Error(`Invalid entity type: ${entityType}`)

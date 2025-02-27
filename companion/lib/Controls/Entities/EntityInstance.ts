@@ -82,13 +82,12 @@ export class ControlEntityInstance {
 	}
 
 	get localVariableName(): string | null {
-		if (this.type === EntityModelType.Feedback) {
-			const entity = this.#data as FeedbackEntityModel
-			if (entity.variableName) return `local:${entity.variableName}`
-		}
-		if (this.type === EntityModelType.LocalVariable) return `local:${this.rawOptions.name}`
+		if (this.type !== EntityModelType.Feedback) return null
 
-		return null
+		const entity = this.#data as FeedbackEntityModel
+		if (!entity.variableName) return null
+
+		return `local:${entity.variableName}`
 	}
 
 	/**
@@ -232,8 +231,6 @@ export class ControlEntityInstance {
 	 * Set whether this entity is enabled
 	 */
 	setEnabled(enabled: boolean): void {
-		if (this.type === EntityModelType.LocalVariable) return
-
 		this.#data.disabled = !enabled
 
 		// Remove from cached feedback values
@@ -260,8 +257,6 @@ export class ControlEntityInstance {
 	 * Set the connection of this entity
 	 */
 	setConnectionId(connectionId: string | number): void {
-		if (this.type === EntityModelType.LocalVariable) return
-
 		// TODO - why can this be a number?
 		connectionId = String(connectionId)
 

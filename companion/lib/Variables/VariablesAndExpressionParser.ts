@@ -1,6 +1,5 @@
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { type CompanionVariableValues, type CompanionVariableValue, assertNever } from '@companion-module/base'
-import { LocalVariableEntityDefinitionType } from '../Resources/LocalVariableEntityDefinitions.js'
 import type { ReadonlyDeep } from 'type-fest'
 import {
 	VariableValueData,
@@ -56,75 +55,60 @@ export class VariablesAndExpressionParser {
 	}
 
 	#bindLocalVariables(variables: ControlEntityInstance[]) {
-		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
-
-		for (const variable of variables) {
-			if (variable.type !== EntityModelType.LocalVariable || variable.connectionId !== 'internal') continue
-			if (!variable.rawOptions.name) continue
-
-			// Make sure the variable name is valid
-			if (!variable.id.match(idCheckRegex)) continue
-
-			const fullId = `$(local:${variable.rawOptions.name})`
-
-			const definitionId = variable.definitionId as LocalVariableEntityDefinitionType
-			switch (definitionId) {
-				case LocalVariableEntityDefinitionType.ConstantValue: {
-					// Store the value directly
-					this.#localValues.set(fullId, variable.rawOptions.value)
-					break
-				}
-				case LocalVariableEntityDefinitionType.DynamicExpression: {
-					let computedResult: CompanionVariableValue | undefined = undefined
-
-					const expression = variable.rawOptions.expression
-					this.#localValues.set(fullId, () => {
-						if (computedResult !== undefined) return computedResult
-
-						// make sure we don't get stuck in a loop
-						computedResult = '$RE'
-
-						const result = this.executeExpression(expression, undefined)
-						this.#localValuesReferences.set(`local:${variable.rawOptions.name}`, Array.from(result.variableIds))
-						if (result.ok) {
-							computedResult = result.value
-						} else {
-							computedResult = undefined
-							this.#logger.warn(`${result.error}, in expression: "${expression}"`)
-						}
-
-						this.#localValues.set(fullId, computedResult)
-						return computedResult
-					})
-
-					break
-				}
-				case LocalVariableEntityDefinitionType.Feedbacks: {
-					let computedResult: boolean | undefined = undefined
-
-					this.#localValues.set(fullId, () => {
-						if (computedResult !== undefined) return computedResult
-
-						// make sure we don't get stuck in a loop
-						computedResult = false
-
-						const childValues = variable.getChildren('feedbacks')?.getChildBooleanFeedbackValues()
-						computedResult = booleanAnd(false, childValues ?? []) ?? false
-
-						this.#localValues.set(fullId, computedResult)
-
-						return computedResult
-					})
-
-					break
-				}
-				default: {
-					assertNever(definitionId)
-					this.#logger.warn(`Unknown local variable type ${variable.definitionId}`)
-					break
-				}
-			}
-		}
+		// const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		// for (const variable of variables) {
+		// 	if (variable.type !== EntityModelType.LocalVariable || variable.connectionId !== 'internal') continue
+		// 	if (!variable.rawOptions.name) continue
+		// 	// Make sure the variable name is valid
+		// 	if (!variable.id.match(idCheckRegex)) continue
+		// 	const fullId = `$(local:${variable.rawOptions.name})`
+		// 	const definitionId = variable.definitionId as LocalVariableEntityDefinitionType
+		// 	switch (definitionId) {
+		// 		case LocalVariableEntityDefinitionType.ConstantValue: {
+		// 			// Store the value directly
+		// 			this.#localValues.set(fullId, variable.rawOptions.value)
+		// 			break
+		// 		}
+		// 		case LocalVariableEntityDefinitionType.DynamicExpression: {
+		// 			let computedResult: CompanionVariableValue | undefined = undefined
+		// 			const expression = variable.rawOptions.expression
+		// 			this.#localValues.set(fullId, () => {
+		// 				if (computedResult !== undefined) return computedResult
+		// 				// make sure we don't get stuck in a loop
+		// 				computedResult = '$RE'
+		// 				const result = this.executeExpression(expression, undefined)
+		// 				this.#localValuesReferences.set(`local:${variable.rawOptions.name}`, Array.from(result.variableIds))
+		// 				if (result.ok) {
+		// 					computedResult = result.value
+		// 				} else {
+		// 					computedResult = undefined
+		// 					this.#logger.warn(`${result.error}, in expression: "${expression}"`)
+		// 				}
+		// 				this.#localValues.set(fullId, computedResult)
+		// 				return computedResult
+		// 			})
+		// 			break
+		// 		}
+		// 		case LocalVariableEntityDefinitionType.Feedbacks: {
+		// 			let computedResult: boolean | undefined = undefined
+		// 			this.#localValues.set(fullId, () => {
+		// 				if (computedResult !== undefined) return computedResult
+		// 				// make sure we don't get stuck in a loop
+		// 				computedResult = false
+		// 				const childValues = variable.getChildren('feedbacks')?.getChildBooleanFeedbackValues()
+		// 				computedResult = booleanAnd(false, childValues ?? []) ?? false
+		// 				this.#localValues.set(fullId, computedResult)
+		// 				return computedResult
+		// 			})
+		// 			break
+		// 		}
+		// 		default: {
+		// 			assertNever(definitionId)
+		// 			this.#logger.warn(`Unknown local variable type ${variable.definitionId}`)
+		// 			break
+		// 		}
+		// 	}
+		// }
 	}
 
 	#trackDeepReferences(variableIds: Set<string>) {

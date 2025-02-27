@@ -33,33 +33,29 @@ export function AddEntityPanel({
 				entityTypeLabel={entityTypeLabel}
 				feedbackListType={feedbackListType}
 				disabled={readonly}
-				showAll={entityType === EntityModelType.LocalVariable}
+				showAll={false}
 			/>
-			{entityType !== EntityModelType.LocalVariable && (
-				<>
-					<CButton
-						color="primary"
-						onClick={showAddModal}
-						style={{
-							borderTopLeftRadius: 0,
-							borderBottomLeftRadius: 0,
-						}}
-						disabled={readonly}
-					>
-						<FontAwesomeIcon icon={faFolderOpen} />
-					</CButton>
+			<CButton
+				color="primary"
+				onClick={showAddModal}
+				style={{
+					borderTopLeftRadius: 0,
+					borderBottomLeftRadius: 0,
+				}}
+				disabled={readonly}
+			>
+				<FontAwesomeIcon icon={faFolderOpen} />
+			</CButton>
 
-					<MyErrorBoundary>
-						<AddEntitiesModal
-							ref={addEntitiesRef}
-							addEntity={addEntity}
-							entityType={entityType}
-							feedbackListType={feedbackListType}
-							entityTypeLabel={entityTypeLabel}
-						/>
-					</MyErrorBoundary>
-				</>
-			)}
+			<MyErrorBoundary>
+				<AddEntitiesModal
+					ref={addEntitiesRef}
+					addEntity={addEntity}
+					entityType={entityType}
+					feedbackListType={feedbackListType}
+					entityTypeLabel={entityTypeLabel}
+				/>
+			</MyErrorBoundary>
 		</div>
 	)
 }

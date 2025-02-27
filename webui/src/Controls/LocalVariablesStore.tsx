@@ -34,12 +34,12 @@ export class LocalVariablesStore {
 
 			const dynamicVariables: DropdownChoiceInt[] = []
 			for (const entity of this.#variables.values()) {
-				if (entity.type !== EntityModelType.LocalVariable) continue
-				if (!entity.options.name) continue
+				if (entity.type !== EntityModelType.Feedback) continue
+				if (!entity.variableName) continue
 
 				dynamicVariables.push({
-					value: `local:${entity.options.name}`,
-					label: entity.options.description || entity.options.name,
+					value: `local:${entity.variableName}`,
+					label: entity.headline || entity.variableName,
 				})
 			}
 
