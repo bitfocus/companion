@@ -56,6 +56,9 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			setInverted: (_entityId: string, _inverted: boolean) => {
 				// Not supported
 			},
+			setVariableName: (_entityId: string, _variableName: string) => {
+				// Not supported
+			},
 
 			setSelectedStyleProps: (_entityId: string, _keys: string[]) => {
 				// Not supported

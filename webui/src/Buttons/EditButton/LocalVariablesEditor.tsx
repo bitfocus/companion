@@ -1,7 +1,7 @@
 import React from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CAlert } from '@coreui/react'
 import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
@@ -28,9 +28,9 @@ export function LocalVariablesEditor({
 				entities={variables}
 				location={location}
 				listId="local-variables"
-				entityType={EntityModelType.LocalVariable}
+				entityType={EntityModelType.Feedback}
 				entityTypeLabel="variable"
-				onlyFeedbackType={null}
+				feedbackListType={FeedbackEntitySubType.Value}
 				localVariablesStore={localVariablesStore}
 			/>
 		</>

@@ -21,7 +21,7 @@ interface ControlEntitiesEditorProps {
 	listId: SomeSocketEntityLocation
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 	entities: SomeEntityModel[] | undefined
 	heading: JSX.Element | string
 	headingActions?: JSX.Element[]
@@ -34,7 +34,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	listId,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
+	feedbackListType,
 	entities,
 	heading,
 	headingActions,
@@ -64,7 +64,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 					ownerId={null}
 					entityType={entityType}
 					entityTypeLabel={entityTypeLabel}
-					onlyFeedbackType={onlyFeedbackType}
+					feedbackListType={feedbackListType}
 					readonly={false}
 					localVariablesStore={localVariablesStore}
 				/>

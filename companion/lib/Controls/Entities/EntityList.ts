@@ -9,8 +9,9 @@ import { ControlEntityInstance } from './EntityInstance.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
+import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
-export type ControlEntityListDefinition = Pick<EntitySupportedChildGroupDefinition, 'type' | 'booleanFeedbacksOnly'>
+export type ControlEntityListDefinition = Pick<EntitySupportedChildGroupDefinition, 'type' | 'feedbackListType'>
 
 export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
@@ -241,8 +242,8 @@ export class ControlEntityList {
 		if (this.#listDefinition.type === EntityModelType.Feedback) {
 			const feedbackDefinition = entity.getEntityDefinition()
 			if (
-				this.#listDefinition.booleanFeedbacksOnly &&
-				feedbackDefinition?.feedbackType !== FeedbackEntitySubType.Boolean
+				!feedbackDefinition ||
+				!canAddEntityToFeedbackList(this.#listDefinition.feedbackListType ?? null, feedbackDefinition)
 			)
 				return false
 		}
@@ -342,7 +343,10 @@ export class ControlEntityList {
 	 * Get the value of this feedback as a boolean
 	 */
 	getBooleanFeedbackValue(): boolean {
-		if (this.#listDefinition.type !== EntityModelType.Feedback || !this.#listDefinition.booleanFeedbacksOnly)
+		if (
+			this.#listDefinition.type !== EntityModelType.Feedback ||
+			this.#listDefinition.feedbackListType !== FeedbackEntitySubType.Boolean
+		)
 			throw new Error('ControlEntityList is not boolean feedbacks')
 
 		let result = true
@@ -357,7 +361,10 @@ export class ControlEntityList {
 	}
 
 	getChildBooleanFeedbackValues(): boolean[] {
-		if (this.#listDefinition.type !== EntityModelType.Feedback || !this.#listDefinition.booleanFeedbacksOnly)
+		if (
+			this.#listDefinition.type !== EntityModelType.Feedback ||
+			this.#listDefinition.feedbackListType !== FeedbackEntitySubType.Boolean
+		)
 			throw new Error('ControlEntityList is not boolean feedbacks')
 
 		const values: boolean[] = []
@@ -376,7 +383,7 @@ export class ControlEntityList {
 	 * Note: Does not clone the style
 	 */
 	buildFeedbackStyle(styleBuilder: FeedbackStyleBuilder): void {
-		if (this.#listDefinition.type !== EntityModelType.Feedback || this.#listDefinition.booleanFeedbacksOnly)
+		if (this.#listDefinition.type !== EntityModelType.Feedback || !!this.#listDefinition.feedbackListType)
 			throw new Error('ControlEntityList is not style feedbacks')
 
 		// Note: We don't need to consider children of the feedbacks here, as that can only be from boolean feedbacks which are handled by the `getBooleanValue`

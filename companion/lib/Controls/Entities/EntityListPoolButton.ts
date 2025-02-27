@@ -1,6 +1,7 @@
 import { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -46,7 +47,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#sendRuntimePropsChange = sendRuntimePropsChange
 
 		this.#feedbacks = this.createEntityList({ type: EntityModelType.Feedback })
-		this.#localVariables = this.createEntityList({ type: EntityModelType.LocalVariable })
+		this.#localVariables = this.createEntityList({
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Value,
+		})
 
 		this.#current_step_id = '0'
 

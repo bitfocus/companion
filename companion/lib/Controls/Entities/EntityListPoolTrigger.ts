@@ -1,5 +1,6 @@
 import {
 	EntityModelType,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -18,7 +19,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,
-			booleanFeedbacksOnly: true,
+			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
 		this.#actions = this.createEntityList({ type: EntityModelType.Action })
 	}

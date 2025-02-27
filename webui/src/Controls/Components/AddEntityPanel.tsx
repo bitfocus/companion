@@ -10,7 +10,7 @@ import { AddEntityDropdown } from './AddEntityDropdown.js'
 interface AddEntityPanelProps {
 	addEntity: (connectionId: string, definitionId: string) => void
 	entityType: EntityModelType
-	onlyFeedbackType: FeedbackEntitySubType | null
+	feedbackListType: FeedbackEntitySubType | null
 	entityTypeLabel: string
 	readonly: boolean
 }
@@ -18,7 +18,7 @@ interface AddEntityPanelProps {
 export function AddEntityPanel({
 	addEntity,
 	entityType,
-	onlyFeedbackType,
+	feedbackListType,
 	entityTypeLabel,
 	readonly,
 }: AddEntityPanelProps) {
@@ -31,7 +31,7 @@ export function AddEntityPanel({
 				onSelect={addEntity}
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
-				onlyFeedbackType={onlyFeedbackType}
+				feedbackListType={feedbackListType}
 				disabled={readonly}
 				showAll={entityType === EntityModelType.LocalVariable}
 			/>
@@ -54,7 +54,7 @@ export function AddEntityPanel({
 							ref={addEntitiesRef}
 							addEntity={addEntity}
 							entityType={entityType}
-							onlyFeedbackType={onlyFeedbackType}
+							feedbackListType={feedbackListType}
 							entityTypeLabel={entityTypeLabel}
 						/>
 					</MyErrorBoundary>

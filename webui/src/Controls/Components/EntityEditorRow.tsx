@@ -37,7 +37,7 @@ interface EntityTableRowProps {
 
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
@@ -53,7 +53,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 	serviceFactory,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
+	feedbackListType,
 	readonly,
 	localVariablesStore,
 }: EntityTableRowProps): JSX.Element | null {
@@ -139,7 +139,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 						location={location}
 						entity={entity}
 						serviceFactory={serviceFactory}
-						onlyFeedbackType={onlyFeedbackType}
+						feedbackListType={feedbackListType}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
 					/>
@@ -159,7 +159,7 @@ interface EntityEditorRowContentProps {
 	entity: SomeEntityModel
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
 }
@@ -172,7 +172,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	entity,
 	location,
 	serviceFactory,
-	onlyFeedbackType,
+	feedbackListType,
 	readonly,
 	localVariablesStore,
 }: EntityEditorRowContentProps) {
@@ -218,7 +218,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 					<EntityCommonCells
 						entity={entity}
 						entityType={entityType}
-						onlyFeedbackType={onlyFeedbackType}
+						feedbackListType={feedbackListType}
 						entityDefinition={entityDefinition}
 						service={entityService}
 						headlineExpanded={headlineExpanded}

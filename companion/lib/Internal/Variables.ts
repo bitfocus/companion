@@ -157,6 +157,25 @@ export class InternalVariables implements InternalModuleFragment {
 					},
 				],
 			},
+			expression_value: {
+				feedbackType: FeedbackEntitySubType.Value,
+				label: 'Evaluate Expression',
+				description: 'A dynamic expression that can be used in other fields',
+				feedbackStyle: undefined,
+				showInvert: false,
+				options: [
+					{
+						type: 'textinput',
+						label: 'Expression',
+						id: 'expression',
+						default: '2 > 1',
+						useVariables: {
+							local: true,
+						},
+						isExpression: true,
+					},
+				],
+			},
 		}
 	}
 
@@ -202,6 +221,20 @@ export class InternalVariables implements InternalModuleFragment {
 				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${res.error}`)
 
 				return false
+			}
+		} else if (feedback.definitionId == 'evaluate_expression') {
+			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.location, null)
+			const res = parser.executeExpression(feedback.options.expression, undefined)
+
+			this.#variableSubscriptions.set(feedback.id, { controlId: feedback.controlId, variables: res.variableIds })
+
+			if (res.ok) {
+				return res.value as any // TODO-localvariables fix
+			} else {
+				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
+				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${res.error}`)
+
+				return '$NA' as any // TODO-localvariables fix
 			}
 		}
 	}

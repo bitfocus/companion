@@ -17,11 +17,12 @@ import { InlineHelp } from '../../Components/InlineHelp.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
 import { LocalVariablesStore } from '../LocalVariablesStore.js'
+import { TextInputField } from '../../Components/TextInputField.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
 	entityType: EntityModelType
-	onlyFeedbackType: FeedbackEntitySubType | null
+	feedbackListType: FeedbackEntitySubType | null
 	entityDefinition: ClientEntityDefinition | undefined
 	service: IEntityEditorActionService
 	headlineExpanded: boolean
@@ -35,7 +36,7 @@ interface EntityCommonCellsProps {
 export function EntityCommonCells({
 	entity,
 	entityType,
-	onlyFeedbackType,
+	feedbackListType,
 	entityDefinition,
 	service,
 	headlineExpanded,
@@ -71,6 +72,28 @@ export function EntityCommonCells({
 				)}
 
 				<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
+					{!!entity && entityType === EntityModelType.Feedback && feedbackListType === FeedbackEntitySubType.Value && (
+						<>
+							{/* TODO: Also show this for _ALL_ children */}
+							<MyErrorBoundary>
+								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
+									<InlineHelp help="The name to give this value as a local variable">Variable name</InlineHelp>
+								</CFormLabel>
+								<CCol sm={8}>
+									<TextInputField
+										// regex?: string
+										// tooltip?: string
+										value={(entity as FeedbackEntityModel).variableName ?? ''}
+										// style?: React.CSSProperties
+										setValue={service.setVariableName}
+										// setValid?: (valid: boolean) => void
+										disabled={readonly}
+									/>
+								</CCol>
+							</MyErrorBoundary>
+						</>
+					)}
+
 					<EntityChangeConnection entityConnectionId={entity.connectionId} setConnectionId={service.setConnection} />
 
 					{!!entityDefinition &&
@@ -111,7 +134,7 @@ export function EntityCommonCells({
 						</MyErrorBoundary>
 					))}
 
-					{!!entity && entityType === EntityModelType.Feedback && onlyFeedbackType === null && (
+					{!!entity && entityType === EntityModelType.Feedback && feedbackListType === null && (
 						<>
 							<FeedbackManageStyles
 								feedbackSpec={entityDefinition}

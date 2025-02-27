@@ -81,6 +81,16 @@ export class ControlEntityInstance {
 		return this.#cachedFeedbackValue
 	}
 
+	get localVariableName(): string | null {
+		if (this.type === EntityModelType.Feedback) {
+			const entity = this.#data as FeedbackEntityModel
+			if (entity.variableName) return `local:${entity.variableName}`
+		}
+		if (this.type === EntityModelType.LocalVariable) return `local:${this.rawOptions.name}`
+
+		return null
+	}
+
 	/**
 	 * @param instanceDefinitions
 	 * @param internalModule
@@ -277,6 +287,19 @@ export class ControlEntityInstance {
 
 		// Don't need to resubscribe
 		// Don't need to clear cached value
+	}
+
+	/**
+	 * Set the variable name for this feedback
+	 */
+	setVariableName(variableName: string): void {
+		if (this.#data.type !== EntityModelType.Feedback) return
+
+		const thisData = this.#data as FeedbackEntityModel
+
+		thisData.variableName = variableName
+
+		// Don't need to resubscribe
 	}
 
 	/**
@@ -706,6 +729,9 @@ export class ControlEntityInstance {
 				} else {
 					styleBuilder.applyComplexStyle(this.#cachedFeedbackValue)
 				}
+				break
+			case FeedbackEntitySubType.Value:
+				// TODO-localvariables what should this do?
 				break
 			case null:
 				// Not a valid feedback

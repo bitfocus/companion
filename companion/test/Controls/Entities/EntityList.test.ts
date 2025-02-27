@@ -5,6 +5,7 @@ import {
 	EntityModelType,
 	EntityOwner,
 	FeedbackEntityModel,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { cloneDeep } from 'lodash-es'
@@ -495,7 +496,10 @@ describe('addEntity', () => {
 	})
 
 	test('add unknown feedback to boolean feedback list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback, booleanFeedbacksOnly: true })
+		const { list } = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Boolean,
+		})
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -514,7 +518,7 @@ describe('addEntity', () => {
 	test('add advanced feedback to boolean feedback list', () => {
 		const { list, getEntityDefinition } = createList('test01', null, {
 			type: EntityModelType.Feedback,
-			booleanFeedbacksOnly: true,
+			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
 
 		getEntityDefinition.mockReturnValueOnce({
@@ -542,7 +546,7 @@ describe('addEntity', () => {
 	test('add boolean feedback to boolean feedback list', () => {
 		const { list, getEntityDefinition } = createList('test01', null, {
 			type: EntityModelType.Feedback,
-			booleanFeedbacksOnly: true,
+			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
 
 		const newFeedback: FeedbackEntityModel = {
@@ -1203,7 +1207,7 @@ describe('verifyConnectionIds', () => {
 describe('getChildBooleanFeedbackValues', () => {
 	const { list, getEntityDefinition } = createList('test01', null, {
 		type: EntityModelType.Feedback,
-		booleanFeedbacksOnly: true,
+		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
@@ -1264,7 +1268,7 @@ describe('getChildBooleanFeedbackValues', () => {
 describe('getBooleanFeedbackValue', () => {
 	const { list, getEntityDefinition } = createList('test01', null, {
 		type: EntityModelType.Feedback,
-		booleanFeedbacksOnly: true,
+		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
@@ -1322,7 +1326,7 @@ describe('getBooleanFeedbackValue', () => {
 describe('getChildBooleanFeedbackValues', () => {
 	const { list, getEntityDefinition } = createList('test01', null, {
 		type: EntityModelType.Feedback,
-		booleanFeedbacksOnly: true,
+		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
@@ -1382,7 +1386,10 @@ describe('buildFeedbackStyle', () => {
 	})
 
 	test('invalid for boolean feedbacks list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback, booleanFeedbacksOnly: true })
+		const { list } = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Boolean,
+		})
 
 		const styleBuilder = mock<FeedbackStyleBuilder>()
 

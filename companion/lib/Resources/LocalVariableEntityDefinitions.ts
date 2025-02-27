@@ -1,5 +1,5 @@
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 
 export enum LocalVariableEntityDefinitionType {
@@ -96,7 +96,7 @@ export const LocalVariableEntityDefinitions: Record<LocalVariableEntityDefinitio
 				label: 'Feedbacks',
 				// hint?: string
 
-				booleanFeedbacksOnly: true,
+				feedbackListType: FeedbackEntitySubType.Boolean,
 			},
 		],
 	},

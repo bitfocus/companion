@@ -91,7 +91,7 @@ export function EditActionsRelease({
 					entities={actions}
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
-					onlyFeedbackType={null}
+					feedbackListType={null}
 					localVariablesStore={localVariablesStore}
 				/>
 			</MyErrorBoundary>
@@ -111,7 +111,7 @@ export function EditActionsRelease({
 					entities={action_sets['up']}
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
-					onlyFeedbackType={null}
+					feedbackListType={null}
 					localVariablesStore={localVariablesStore}
 				/>
 			</MyErrorBoundary>

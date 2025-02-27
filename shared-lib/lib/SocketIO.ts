@@ -146,6 +146,12 @@ export interface ClientToBackendEventsMap {
 		id: string,
 		isInverted: boolean
 	) => boolean
+	'controls:entity:set-variable-name': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		name: string
+	) => boolean
 	'controls:entity:set-option': (
 		controlId: string,
 		entityLocation: SomeSocketEntityLocation,

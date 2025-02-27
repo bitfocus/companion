@@ -75,17 +75,11 @@ export abstract class ControlEntityListPoolBase {
 		)
 	}
 
-	#entityToLocalVariableName(entity: ControlEntityInstance): string | null {
-		if (entity.type !== EntityModelType.LocalVariable) return null
-
-		return `local:${entity.rawOptions.name}`
-	}
-
 	protected tryTriggerLocalVariablesChanged(entityList: ControlEntityList, oldVariableName?: string | null) {
 		if (!this.localVariablesChanged) return
 
 		// Only relevant for local variables
-		if (entityList.listDefinition.type !== EntityModelType.LocalVariable) return
+		if (entityList.listDefinition.type !== EntityModelType.Feedback) return
 
 		const changedVariables = new Set<string>()
 
@@ -96,7 +90,7 @@ export abstract class ControlEntityListPoolBase {
 		// Future: this is a bit of a 'brute force', as doing this granularly is not trivial to do in a generic/clean way
 		// As this is scoped to one control, hopefully this is not a big hit
 		for (const entity of entityList.getDirectEntities()) {
-			const variable = this.#entityToLocalVariableName(entity)
+			const variable = entity.localVariableName
 			if (variable) changedVariables.add(variable)
 		}
 
@@ -402,7 +396,7 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.findById(id)
 		if (!entity) return false
 
-		const oldLocalVariableName = this.#entityToLocalVariableName(entity)
+		const oldLocalVariableName = entity.localVariableName
 
 		entity.setOption(key, value)
 
@@ -447,6 +441,24 @@ export abstract class ControlEntityListPoolBase {
 		entity.setInverted(!!isInverted)
 
 		this.tryTriggerLocalVariablesChanged(entityList)
+
+		this.commitChange()
+
+		return true
+	}
+
+	entitySetVariableName(listId: SomeSocketEntityLocation, id: string, name: string): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		const entity = entityList.findById(id)
+		if (!entity) return false
+
+		const oldLocalVariableName = entity.localVariableName
+
+		entity.setVariableName(name)
+
+		this.tryTriggerLocalVariablesChanged(entityList, oldLocalVariableName)
 
 		this.commitChange()
 

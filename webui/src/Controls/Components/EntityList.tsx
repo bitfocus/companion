@@ -21,7 +21,7 @@ interface EditableEntityListProps {
 	ownerId: EntityOwner | null
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
 }
@@ -35,7 +35,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 	ownerId,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
+	feedbackListType,
 	readonly,
 	localVariablesStore,
 }: EditableEntityListProps) {
@@ -60,7 +60,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 				readonly={readonly}
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
-				onlyFeedbackType={onlyFeedbackType}
+				feedbackListType={feedbackListType}
 				entities={entities}
 				serviceFactory={serviceFactory}
 				localVariablesStore={localVariablesStore}
@@ -68,7 +68,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 			<AddEntityPanel
 				addEntity={addEntity}
 				entityType={entityType}
-				onlyFeedbackType={onlyFeedbackType}
+				feedbackListType={feedbackListType}
 				entityTypeLabel={entityTypeLabel}
 				readonly={readonly}
 			/>
@@ -84,7 +84,7 @@ interface MinimalEntityListProps {
 	serviceFactory: IEntityEditorService
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
 }
@@ -97,7 +97,7 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 	serviceFactory,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
+	feedbackListType,
 	readonly,
 	localVariablesStore,
 }: MinimalEntityListProps) {
@@ -120,7 +120,7 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 								serviceFactory={serviceFactory}
 								entityType={entityType}
 								entityTypeLabel={entityTypeLabel}
-								onlyFeedbackType={onlyFeedbackType}
+								feedbackListType={feedbackListType}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
 							/>

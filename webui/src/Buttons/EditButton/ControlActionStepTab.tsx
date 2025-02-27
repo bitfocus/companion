@@ -104,7 +104,7 @@ export function ControlActionStepTab({
 								entities={selectedStepProps.action_sets['rotate_left']}
 								entityType={EntityModelType.Action}
 								entityTypeLabel="action"
-								onlyFeedbackType={null}
+								feedbackListType={null}
 								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>
@@ -118,7 +118,7 @@ export function ControlActionStepTab({
 								entities={selectedStepProps.action_sets['rotate_right']}
 								entityType={EntityModelType.Action}
 								entityTypeLabel="action"
-								onlyFeedbackType={null}
+								feedbackListType={null}
 								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>
@@ -136,7 +136,7 @@ export function ControlActionStepTab({
 								entities={selectedStepProps.action_sets['down']}
 								entityType={EntityModelType.Action}
 								entityTypeLabel="action"
-								onlyFeedbackType={null}
+								feedbackListType={null}
 								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>

@@ -7,6 +7,7 @@ import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
 const filterOptionsRecent: ReturnType<typeof createFilter<AddEntityOption>> = (candidate, input): boolean => {
 	if (input) {
@@ -38,7 +39,7 @@ interface AddEntityDropdownProps {
 	onSelect: (connectionId: string, definitionId: string) => void
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 	disabled: boolean
 	showAll: boolean
 }
@@ -46,7 +47,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	onSelect,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
+	feedbackListType,
 	disabled,
 	showAll,
 }: AddEntityDropdownProps) {
@@ -60,7 +61,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 		const options: Array<AddEntityOption | AddEntityGroup> = []
 		for (const [connectionId, entityDefinitions] of definitions.connections.entries()) {
 			for (const [definitionId, definition] of entityDefinitions.entries()) {
-				if (onlyFeedbackType && definition.feedbackType !== onlyFeedbackType) continue
+				if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
 
 				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 				const optionLabel = `${connectionLabel}: ${definition.label}`
@@ -82,7 +83,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				const definition = definitions.connections.get(connectionId)?.get(definitionId)
 				if (!definition) continue
 
-				if (onlyFeedbackType && definition.feedbackType !== onlyFeedbackType) continue
+				if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
 
 				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 				const optionLabel = `${connectionLabel}: ${definition.label}`
@@ -100,7 +101,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 		}
 
 		return options
-	}, [definitions, connections, recentlyUsedStore.recentIds, onlyFeedbackType, showAll])
+	}, [definitions, connections, recentlyUsedStore.recentIds, feedbackListType, showAll])
 
 	const innerChange = useCallback(
 		(e: AddEntityOption | null) => {

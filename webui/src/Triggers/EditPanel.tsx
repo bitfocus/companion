@@ -139,7 +139,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									listId="feedbacks"
 									entityType={EntityModelType.Feedback}
 									entityTypeLabel="condition"
-									onlyFeedbackType={FeedbackEntitySubType.Boolean}
+									feedbackListType={FeedbackEntitySubType.Boolean}
 									location={undefined}
 									localVariablesStore={localVariablesStore}
 								/>
@@ -159,7 +159,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 									entities={config.actions}
 									entityType={EntityModelType.Action}
 									entityTypeLabel="action"
-									onlyFeedbackType={null}
+									feedbackListType={null}
 									localVariablesStore={localVariablesStore}
 								/>
 							</MyErrorBoundary>

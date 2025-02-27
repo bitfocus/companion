@@ -430,6 +430,15 @@ export class ControlsController extends CoreBase {
 			return control.entities.entitySetInverted(entityLocation, id, isInverted)
 		})
 
+		client.onPromise('controls:entity:set-variable-name', (controlId, entityLocation, id, name) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+			return control.entities.entitySetVariableName(entityLocation, id, name)
+		})
+
 		client.onPromise(
 			'controls:entity:move',
 			(controlId, moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex) => {

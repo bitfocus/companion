@@ -71,7 +71,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
-						booleanFeedbacksOnly: true,
+						feedbackListType: FeedbackEntitySubType.Boolean,
 						groupId: 'default',
 						entityTypeLabel: 'condition',
 						label: '',
@@ -91,7 +91,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
-						booleanFeedbacksOnly: true,
+						feedbackListType: FeedbackEntitySubType.Boolean,
 						groupId: 'children',
 						entityTypeLabel: 'condition',
 						label: 'Condition',
@@ -165,7 +165,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
-						booleanFeedbacksOnly: true,
+						feedbackListType: FeedbackEntitySubType.Boolean,
 						groupId: 'condition',
 						label: 'When True',
 						entityTypeLabel: 'condition',

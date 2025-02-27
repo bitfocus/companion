@@ -271,7 +271,7 @@ function NormalButtonEditor({
 												listId="feedbacks"
 												entityType={EntityModelType.Feedback}
 												entityTypeLabel="feedback"
-												onlyFeedbackType={null}
+												feedbackListType={null}
 												localVariablesStore={localVariablesStore}
 											/>
 										</MyErrorBoundary>
