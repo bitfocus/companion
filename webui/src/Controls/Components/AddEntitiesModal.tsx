@@ -167,7 +167,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse({
 
 	searchResults.sort((a, b) => a.label.localeCompare(b.label))
 
-	if (!items || items.size === 0) {
+	if (allValues.length === 0) {
 		// Hide card if there are no actions which match
 		return null
 	} else {
