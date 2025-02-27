@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo } from 'react'
+import React, { memo, useCallback, useContext, useMemo } from 'react'
 import { SocketContext } from '../util.js'
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { useInView } from 'react-intersection-observer'
@@ -8,24 +8,19 @@ import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigM
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 export interface TabletGridSize extends UserConfigGridSize {
+	columnCount: number
+	rowCount: number
 	buttonCount: number
 }
 
-interface ButtonsFromPageProps {
+interface SectionOfButtonsProps {
 	pageNumber: number
 	displayColumns: number
 	gridSize: TabletGridSize
 	buttonSize: number
-	indexOffset: number
 }
 
-export function ButtonsFromPage({
-	pageNumber,
-	displayColumns,
-	gridSize,
-	buttonSize,
-	indexOffset,
-}: ButtonsFromPageProps) {
+export function SectionOfButtons({ pageNumber, displayColumns, gridSize, buttonSize }: SectionOfButtonsProps) {
 	const socket = useContext(SocketContext)
 
 	const buttonClick = useCallback(
@@ -44,18 +39,17 @@ export function ButtonsFromPage({
 	})
 
 	const buttonRows = Math.ceil(gridSize.buttonCount / displayColumns)
-	const firstRowIndex = Math.floor(indexOffset / displayColumns)
 	const inViewStyle = useMemo(
 		() => ({
 			height: `${buttonRows * buttonSize}px`,
-			top: `${firstRowIndex * buttonSize}px`,
+			top: `${buttonSize}px`,
 		}),
-		[buttonSize, buttonRows, firstRowIndex]
+		[buttonSize, buttonRows]
 	)
 
-	const buttonElements = []
+	const buttonElements: JSX.Element[] = []
 	if (inView) {
-		let indexCount = indexOffset
+		let indexCount = 0
 		for (let y = gridSize.minRow; y <= gridSize.maxRow; y++) {
 			for (let x = gridSize.minColumn; x <= gridSize.maxColumn; x++) {
 				const index = indexCount++
@@ -64,7 +58,7 @@ export function ButtonsFromPage({
 				const displayRow = Math.floor(index / displayColumns)
 				buttonElements.push(
 					<ButtonWrapper
-						key={`${x}_${y}`}
+						key={`${pageNumber}_${x}_${y}`}
 						pageNumber={pageNumber}
 						column={x}
 						row={y}
@@ -86,6 +80,40 @@ export function ButtonsFromPage({
 	)
 }
 
+interface ButtonsBlockProps {
+	displayRows: number
+	firstRowIndex: number
+	buttonSize: number
+}
+
+export function ButtonsBlock({
+	displayRows,
+	firstRowIndex,
+	buttonSize,
+	children,
+}: React.PropsWithChildren<ButtonsBlockProps>) {
+	const { ref: inViewRef, inView } = useInView({
+		rootMargin: '200%',
+		/* Optional options */
+		threshold: 0,
+	})
+
+	const inViewStyle = useMemo(
+		() => ({
+			height: `${displayRows * buttonSize}px`,
+			top: `${firstRowIndex * buttonSize}px`,
+		}),
+		[buttonSize, displayRows, firstRowIndex]
+	)
+
+	return (
+		<>
+			<div ref={inViewRef} className="page-in-view-tester" style={inViewStyle}></div>
+			{inView && children}
+		</>
+	)
+}
+
 interface ButtonWrapperProps {
 	pageNumber: number
 	column: number
@@ -95,7 +123,7 @@ interface ButtonWrapperProps {
 	displayRow: number
 	buttonClick: (location: ControlLocation, pressed: boolean) => void
 }
-function ButtonWrapper({
+export const ButtonWrapper = memo(function ButtonWrapper({
 	pageNumber,
 	column,
 	row,
@@ -128,4 +156,4 @@ function ButtonWrapper({
 			style={buttonStyle}
 		/>
 	)
-}
+})

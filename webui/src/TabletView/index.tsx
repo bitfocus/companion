@@ -9,10 +9,11 @@ import { usePagesInfoSubscription } from '../Hooks/usePagesInfoSubscription.js'
 import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
 import useElementclientSize from '../Hooks/useElementInnerSize.js'
 import { ConfigurePanel } from './ConfigurePanel.js'
-import { ButtonsFromPage } from './ButtonsFromPage.js'
+import { ButtonsBlock, ButtonWrapper, SectionOfButtons, TabletGridSize } from './ButtonsFromPage.js'
 import { PagesStore } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
 import { UserConfigStore } from '../Stores/UserConfigStore.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 export const TabletView = observer(function TabletView() {
 	const socket = useContext(SocketContext)
@@ -111,7 +112,7 @@ export const TabletView = observer(function TabletView() {
 		}
 	}
 
-	const gridSize = useMemo(() => {
+	const gridSize: TabletGridSize = useMemo(() => {
 		if (!rawGridSize)
 			return {
 				minColumn: 0,
@@ -168,15 +169,6 @@ export const TabletView = observer(function TabletView() {
 	const [elementSizeRef, pageSize] = useElementclientSize<HTMLDivElement>()
 	const buttonSize = pageSize.width / displayColumns
 
-	const rowsPerPage = Math.ceil((gridSize.columnCount * gridSize.rowCount) / displayColumns)
-	const pageHeight = rowsPerPage * buttonSize
-	const pageGroupStyle = useMemo(
-		() => ({
-			height: `${pageHeight}px`,
-		}),
-		[pageHeight]
-	)
-
 	return (
 		<div className="page-tablet">
 			<div className="scroller">
@@ -189,32 +181,22 @@ export const TabletView = observer(function TabletView() {
 								<CRow>
 									<CCol sm={12} className="buttongrid-row">
 										<div ref={elementSizeRef} className="buttons-holder">
-											{validPages.map((number, i) => (
-												<MyErrorBoundary key={i}>
-													{showPageHeadings ? (
-														<>
-															<PageHeading pagesStore={pagesStore} pageNumber={number} />
-															<div className="page-buttons" style={pageGroupStyle}>
-																<ButtonsFromPage
-																	pageNumber={number}
-																	indexOffset={0}
-																	displayColumns={displayColumns}
-																	gridSize={gridSize}
-																	buttonSize={buttonSize}
-																/>
-															</div>
-														</>
-													) : (
-														<ButtonsFromPage
-															pageNumber={number}
-															indexOffset={i * gridSize.columnCount * gridSize.rowCount}
-															displayColumns={displayColumns}
-															gridSize={gridSize}
-															buttonSize={buttonSize}
-														/>
-													)}
-												</MyErrorBoundary>
-											))}
+											{showPageHeadings ? (
+												<PagesWithHeadings
+													validPages={validPages}
+													displayColumns={displayColumns}
+													gridSize={gridSize}
+													buttonSize={buttonSize}
+													pagesStore={pagesStore}
+												/>
+											) : (
+												<InfiniteButtons
+													validPages={validPages}
+													displayColumns={displayColumns}
+													gridSize={gridSize}
+													buttonSize={buttonSize}
+												/>
+											)}
 										</div>
 									</CCol>
 								</CRow>
@@ -233,6 +215,118 @@ export const TabletView = observer(function TabletView() {
 		</div>
 	)
 })
+
+interface PagesWithHeadingsProps {
+	validPages: number[]
+	displayColumns: number
+	gridSize: TabletGridSize
+	buttonSize: number
+	pagesStore: PagesStore
+}
+const PagesWithHeadings = observer(function PagesWithHeadings({
+	validPages,
+	displayColumns,
+	gridSize,
+	buttonSize,
+	pagesStore,
+}: PagesWithHeadingsProps) {
+	const rowsPerPage = Math.ceil((gridSize.columnCount * gridSize.rowCount) / displayColumns)
+	const pageHeight = rowsPerPage * buttonSize
+	const pageGroupStyle = useMemo(
+		() => ({
+			height: `${pageHeight}px`,
+		}),
+		[pageHeight]
+	)
+
+	return (
+		<>
+			{validPages.map((number, i) => (
+				<MyErrorBoundary key={i}>
+					<PageHeading pagesStore={pagesStore} pageNumber={number} />
+					<div className="page-buttons" style={pageGroupStyle}>
+						<SectionOfButtons
+							pageNumber={number}
+							displayColumns={displayColumns}
+							gridSize={gridSize}
+							buttonSize={buttonSize}
+						/>
+					</div>
+				</MyErrorBoundary>
+			))}
+		</>
+	)
+})
+
+interface InfiniteButtonsProps {
+	validPages: number[]
+	displayColumns: number
+	gridSize: TabletGridSize
+	buttonSize: number
+}
+const InfiniteButtons = observer(function InfiniteButtons({
+	validPages,
+	displayColumns,
+	gridSize,
+	buttonSize,
+}: InfiniteButtonsProps) {
+	const socket = useContext(SocketContext)
+
+	const buttonClick = useCallback(
+		(location: ControlLocation, pressed: boolean) => {
+			socket
+				.emitPromise('controls:hot-press', [location, pressed, 'tablet'])
+				.catch((e) => console.error(`Hot press failed: ${e}`))
+		},
+		[socket]
+	)
+
+	const allLocations: ControlLocation[] = []
+	for (const pageNumber of validPages) {
+		for (let y = gridSize.minRow; y <= gridSize.maxRow; y++) {
+			for (let x = gridSize.minColumn; x <= gridSize.maxColumn; x++) {
+				allLocations.push({
+					pageNumber,
+					row: y,
+					column: x,
+				})
+			}
+		}
+	}
+
+	const rowsPerChunk = 2
+
+	return (
+		<>
+			{Array.from(chunks(allLocations, displayColumns * rowsPerChunk)).map((locations, i) => (
+				<MyErrorBoundary key={i}>
+					<ButtonsBlock displayRows={rowsPerChunk} firstRowIndex={i * rowsPerChunk} buttonSize={buttonSize}>
+						{locations.map((location, o) => {
+							return (
+								<ButtonWrapper
+									key={`${location.pageNumber}_${location.row}_${location.column}`}
+									pageNumber={location.pageNumber}
+									column={location.column}
+									row={location.row}
+									buttonSize={buttonSize}
+									displayColumn={o % displayColumns}
+									displayRow={i * rowsPerChunk + Math.floor(o / displayColumns)}
+									buttonClick={buttonClick}
+								/>
+							)
+						})}
+					</ButtonsBlock>
+				</MyErrorBoundary>
+			))}
+		</>
+	)
+})
+
+function* chunks<T>(arr: T[], n: number): Generator<T[], void> {
+	for (let i = 0; i < arr.length; i += n) {
+		yield arr.slice(i, i + n)
+	}
+}
 
 interface PageHeadingProps {
 	pagesStore: PagesStore
