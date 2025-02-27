@@ -51,14 +51,9 @@ export class VariablesAndExpressionParser {
 	}
 
 	#bindLocalVariables(entities: ControlEntityInstance[]) {
-		// const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
 		for (const entity of entities) {
 			const variableName = entity.localVariableName
 			if (!variableName) continue
-
-			// Make sure the variable name is valid
-			// TODO-localvariable fix this
-			// if (!variableName.match(idCheckRegex)) continue
 
 			// Push the cached values to the store
 			this.#localValues.set(
