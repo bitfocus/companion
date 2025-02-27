@@ -31,10 +31,7 @@ const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
 const logger = LogController.createLogger('Variables/Util')
 
 export type VariableValueData = Record<string, Record<string, CompanionVariableValue | undefined> | undefined>
-export type VariablesCache = Map<
-	string,
-	CompanionVariableValue | (() => CompanionVariableValue | undefined) | undefined
->
+export type VariablesCache = Map<string, CompanionVariableValue | undefined>
 export interface ParseVariablesResult {
 	text: string
 	variableIds: Set<string>
