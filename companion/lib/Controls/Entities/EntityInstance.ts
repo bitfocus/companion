@@ -671,11 +671,15 @@ export class ControlEntityInstance {
 		const definition = this.getEntityDefinition()
 
 		// Special case to handle the internal 'logic' operators, which need to be executed live
-		if (this.connectionId === 'internal' && this.#data.definitionId.startsWith('logic_')) {
+		if (isInternalLogicFeedback(this)) {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
-			const childValues = this.#children.get('children')?.getChildBooleanFeedbackValues() ?? []
+			const childList = this.#children.get('default') ?? this.#children.get('children')
+			const childValues = childList?.getChildBooleanFeedbackValues() ?? []
 
-			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
+			const res = this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
+
+			console.log('cehck', this.asEntityModel(), childValues, res)
+			return res
 		}
 
 		if (
@@ -745,6 +749,7 @@ export class ControlEntityInstance {
 	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
 		const changed: ControlEntityInstance[] = []
 
+		let thisChanged = false
 		if (
 			this.type === EntityModelType.Feedback &&
 			this.#data.connectionId === connectionId &&
@@ -754,11 +759,18 @@ export class ControlEntityInstance {
 			if (!isEqual(newValue, this.#cachedFeedbackValue)) {
 				this.#cachedFeedbackValue = newValue
 				changed.push(this)
+				thisChanged = true
 			}
 		}
 
 		for (const childGroup of this.#children.values()) {
-			changed.push(...childGroup.updateFeedbackValues(connectionId, newValues))
+			const childrenChanged = childGroup.updateFeedbackValues(connectionId, newValues)
+			changed.push(...childrenChanged)
+
+			if (!thisChanged && isInternalLogicFeedback(this)) {
+				// If this is a logic operator, and one of its children changed, we need to re-evaluate
+				changed.push(this)
+			}
 		}
 
 		return changed
@@ -775,4 +787,8 @@ export class ControlEntityInstance {
 			childGroup.getAllEnabledConnectionIds(connectionIds)
 		}
 	}
+}
+
+export function isInternalLogicFeedback(entity: ControlEntityInstance): boolean {
+	return entity.connectionId === 'internal' && entity.definitionId.startsWith('logic_')
 }

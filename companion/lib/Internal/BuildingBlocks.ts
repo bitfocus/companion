@@ -215,7 +215,8 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				case 'and':
 					return booleanAnd(!!feedback.isInverted, childValues)
 				case 'or':
-					return childValues.reduce((acc, val) => acc || val, false)
+					const isAnyTrue = childValues.reduce((acc, val) => acc || val, false)
+					return isAnyTrue === !feedback.isInverted
 				case 'xor':
 					const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
 					return isSingleTrue === !feedback.isInverted

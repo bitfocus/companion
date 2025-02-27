@@ -9,7 +9,7 @@ import {
 	parseVariablesInString,
 	VariableValueCache,
 } from './Util.js'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 /**
  * A class to parse and execute expressions with variables
@@ -61,7 +61,10 @@ export class VariablesAndExpressionParser {
 			// if (!variableName.match(idCheckRegex)) continue
 
 			// Push the cached values to the store
-			this.#localValues.set(`$(${variableName})`, entity.feedbackValue)
+			this.#localValues.set(
+				`$(${variableName})`,
+				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
+			)
 		}
 	}
 
