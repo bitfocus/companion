@@ -75,23 +75,17 @@ export abstract class ControlEntityListPoolBase {
 		)
 	}
 
-	protected tryTriggerLocalVariablesChanged(entityList: ControlEntityList, oldVariableName?: string | null) {
+	protected tryTriggerLocalVariablesChanged(...entitiesOrNames: (ControlEntityInstance | string | null)[]) {
 		if (!this.localVariablesChanged) return
 
-		// Only relevant for local variables
-		if (entityList.listDefinition.type !== EntityModelType.Feedback) return
+		if (entitiesOrNames.length === 0) return
 
 		const changedVariables = new Set<string>()
+		for (const entityOrName of entitiesOrNames) {
+			if (!entityOrName) continue
 
-		// Track an old name, if it was a rename
-		if (oldVariableName) changedVariables.add(oldVariableName)
-
-		// Track all entities as having changed
-		// Future: this is a bit of a 'brute force', as doing this granularly is not trivial to do in a generic/clean way
-		// As this is scoped to one control, hopefully this is not a big hit
-		for (const entity of entityList.getDirectEntities()) {
-			const variable = entity.localVariableName
-			if (variable) changedVariables.add(variable)
+			const variableName = typeof entityOrName === 'string' ? entityOrName : entityOrName.localVariableName
+			if (variableName) changedVariables.add(variableName)
 		}
 
 		if (changedVariables.size > 0) {
@@ -187,7 +181,7 @@ export abstract class ControlEntityListPoolBase {
 			entity.subscribe(true)
 		}
 
-		this.tryTriggerLocalVariablesChanged(entityList)
+		this.tryTriggerLocalVariablesChanged(...newEntities)
 
 		this.commitChange()
 
@@ -204,7 +198,7 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.duplicateEntity(id)
 		if (!entity) return false
 
-		this.tryTriggerLocalVariablesChanged(entityList)
+		this.tryTriggerLocalVariablesChanged(entity)
 
 		this.commitChange(false)
 
@@ -223,7 +217,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setEnabled(enabled)
 
-		this.tryTriggerLocalVariablesChanged(entityList)
+		this.tryTriggerLocalVariablesChanged(entity)
 
 		this.commitChange()
 
@@ -262,10 +256,10 @@ export abstract class ControlEntityListPoolBase {
 
 		// Time has passed due to the `await`
 		// So the entity may not still exist, meaning we should find it again to be sure
-		const feedbackAfter = entityList.findById(id)
-		if (!feedbackAfter) return false
+		const entityAfter = entityList.findById(id)
+		if (!entityAfter) return false
 
-		this.tryTriggerLocalVariablesChanged(entityList)
+		this.tryTriggerLocalVariablesChanged(entityAfter)
 
 		this.commitChange(true)
 		return true
@@ -282,7 +276,7 @@ export abstract class ControlEntityListPoolBase {
 		if (removedEntity) {
 			this.commitChange()
 
-			this.tryTriggerLocalVariablesChanged(entityList)
+			this.tryTriggerLocalVariablesChanged(removedEntity.localVariableName)
 
 			return true
 		} else {
@@ -357,7 +351,7 @@ export abstract class ControlEntityListPoolBase {
 
 			entity.replaceProps(newProps, skipNotifyModule)
 
-			this.tryTriggerLocalVariablesChanged(entityList)
+			this.tryTriggerLocalVariablesChanged(entity)
 
 			this.commitChange(true)
 
@@ -396,11 +390,9 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.findById(id)
 		if (!entity) return false
 
-		const oldLocalVariableName = entity.localVariableName
-
 		entity.setOption(key, value)
 
-		this.tryTriggerLocalVariablesChanged(entityList, oldLocalVariableName)
+		this.tryTriggerLocalVariablesChanged(entity)
 
 		this.commitChange()
 
@@ -440,7 +432,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setInverted(!!isInverted)
 
-		this.tryTriggerLocalVariablesChanged(entityList)
+		this.tryTriggerLocalVariablesChanged(entity)
 
 		this.commitChange()
 
@@ -458,7 +450,7 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setVariableName(name)
 
-		this.tryTriggerLocalVariablesChanged(entityList, oldLocalVariableName)
+		this.tryTriggerLocalVariablesChanged(entity, oldLocalVariableName)
 
 		this.commitChange()
 

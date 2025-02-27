@@ -596,15 +596,16 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			}
 		}
 
-		const changedVariables = new Set<string>()
-		for (const variable of this.#localVariables.getDirectEntities()) {
-			if (variable.updateFeedbackValues(connectionId, newValues)) {
-				changedVariables.add(`local:${variable.rawOptions.name}`)
-			}
+		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
+
+		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues).length > 0) {
+			this.invalidateControl()
 		}
 
-		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues)) {
-			this.invalidateControl()
+		const changedVariables = new Set<string>()
+		for (const entity of changedVariableEntities) {
+			const localName = entity.localVariableName
+			if (localName) changedVariables.add(localName)
 		}
 
 		if (changedVariables.size > 0) {

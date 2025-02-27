@@ -222,7 +222,7 @@ export class InternalVariables implements InternalModuleFragment {
 
 				return false
 			}
-		} else if (feedback.definitionId == 'evaluate_expression') {
+		} else if (feedback.definitionId == 'expression_value') {
 			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.location, null)
 			const res = parser.executeExpression(feedback.options.expression, undefined)
 

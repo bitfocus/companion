@@ -209,7 +209,9 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	}
 
 	#onLocalVariablesChanged(allChangedVariables: Set<string>): void {
-		this.deps.variables.values.emit('local_variables_changed', allChangedVariables, this.controlId)
+		setImmediate(() => {
+			this.deps.variables.values.emit('local_variables_changed', allChangedVariables, this.controlId)
+		})
 	}
 
 	abstract onVariablesChanged(allChangedVariables: Set<string>): void

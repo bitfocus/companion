@@ -398,11 +398,11 @@ export class ControlEntityList {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): boolean {
-		let changed = false
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
+		const changed: ControlEntityInstance[] = []
 
 		for (const entity of this.#entities) {
-			if (entity.updateFeedbackValues(connectionId, newValues)) changed = true
+			changed.push(...entity.updateFeedbackValues(connectionId, newValues))
 		}
 
 		return changed

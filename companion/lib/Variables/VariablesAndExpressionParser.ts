@@ -54,74 +54,80 @@ export class VariablesAndExpressionParser {
 		if (localValues) this.#bindLocalVariables(localValues)
 	}
 
-	#bindLocalVariables(variables: ControlEntityInstance[]) {
-		// const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
-		// for (const variable of variables) {
-		// 	if (variable.type !== EntityModelType.LocalVariable || variable.connectionId !== 'internal') continue
-		// 	if (!variable.rawOptions.name) continue
-		// 	// Make sure the variable name is valid
-		// 	if (!variable.id.match(idCheckRegex)) continue
-		// 	const fullId = `$(local:${variable.rawOptions.name})`
-		// 	const definitionId = variable.definitionId as LocalVariableEntityDefinitionType
-		// 	switch (definitionId) {
-		// 		case LocalVariableEntityDefinitionType.ConstantValue: {
-		// 			// Store the value directly
-		// 			this.#localValues.set(fullId, variable.rawOptions.value)
-		// 			break
-		// 		}
-		// 		case LocalVariableEntityDefinitionType.DynamicExpression: {
-		// 			let computedResult: CompanionVariableValue | undefined = undefined
-		// 			const expression = variable.rawOptions.expression
-		// 			this.#localValues.set(fullId, () => {
-		// 				if (computedResult !== undefined) return computedResult
-		// 				// make sure we don't get stuck in a loop
-		// 				computedResult = '$RE'
-		// 				const result = this.executeExpression(expression, undefined)
-		// 				this.#localValuesReferences.set(`local:${variable.rawOptions.name}`, Array.from(result.variableIds))
-		// 				if (result.ok) {
-		// 					computedResult = result.value
-		// 				} else {
-		// 					computedResult = undefined
-		// 					this.#logger.warn(`${result.error}, in expression: "${expression}"`)
-		// 				}
-		// 				this.#localValues.set(fullId, computedResult)
-		// 				return computedResult
-		// 			})
-		// 			break
-		// 		}
-		// 		case LocalVariableEntityDefinitionType.Feedbacks: {
-		// 			let computedResult: boolean | undefined = undefined
-		// 			this.#localValues.set(fullId, () => {
-		// 				if (computedResult !== undefined) return computedResult
-		// 				// make sure we don't get stuck in a loop
-		// 				computedResult = false
-		// 				const childValues = variable.getChildren('feedbacks')?.getChildBooleanFeedbackValues()
-		// 				computedResult = booleanAnd(false, childValues ?? []) ?? false
-		// 				this.#localValues.set(fullId, computedResult)
-		// 				return computedResult
-		// 			})
-		// 			break
-		// 		}
-		// 		default: {
-		// 			assertNever(definitionId)
-		// 			this.#logger.warn(`Unknown local variable type ${variable.definitionId}`)
-		// 			break
-		// 		}
-		// 	}
-		// }
-	}
+	#bindLocalVariables(entities: ControlEntityInstance[]) {
+		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		for (const entity of entities) {
+			if (!entity.localVariableName) continue
 
-	#trackDeepReferences(variableIds: Set<string>) {
-		// Make sure all references are tracked
-		for (const variableId of variableIds) {
-			const referenced = this.#localValuesReferences.get(variableId)
-			if (referenced) {
-				for (const id of referenced) {
-					variableIds.add(id)
-				}
-			}
+			// 	if (variable.type !== EntityModelType.LocalVariable || variable.connectionId !== 'internal') continue
+			// 	if (!variable.rawOptions.name) continue
+
+			// Make sure the variable name is valid
+			if (!entity.id.match(idCheckRegex)) continue
+
+			// Push the cached values to the store
+			this.#localValues.set(`$(${entity.localVariableName})`, entity.feedbackValue)
+
+			// 	const definitionId = variable.definitionId as LocalVariableEntityDefinitionType
+			// 	switch (definitionId) {
+			// 		case LocalVariableEntityDefinitionType.ConstantValue: {
+			// 			// Store the value directly
+			// 			this.#localValues.set(fullId, variable.rawOptions.value)
+			// 			break
+			// 		}
+			// 		case LocalVariableEntityDefinitionType.DynamicExpression: {
+			// 			let computedResult: CompanionVariableValue | undefined = undefined
+			// 			const expression = variable.rawOptions.expression
+			// 			this.#localValues.set(fullId, () => {
+			// 				if (computedResult !== undefined) return computedResult
+			// 				// make sure we don't get stuck in a loop
+			// 				computedResult = '$RE'
+			// 				const result = this.executeExpression(expression, undefined)
+			// 				this.#localValuesReferences.set(`local:${variable.rawOptions.name}`, Array.from(result.variableIds))
+			// 				if (result.ok) {
+			// 					computedResult = result.value
+			// 				} else {
+			// 					computedResult = undefined
+			// 					this.#logger.warn(`${result.error}, in expression: "${expression}"`)
+			// 				}
+			// 				this.#localValues.set(fullId, computedResult)
+			// 				return computedResult
+			// 			})
+			// 			break
+			// 		}
+			// 		case LocalVariableEntityDefinitionType.Feedbacks: {
+			// 			let computedResult: boolean | undefined = undefined
+			// 			this.#localValues.set(fullId, () => {
+			// 				if (computedResult !== undefined) return computedResult
+			// 				// make sure we don't get stuck in a loop
+			// 				computedResult = false
+			// 				const childValues = variable.getChildren('feedbacks')?.getChildBooleanFeedbackValues()
+			// 				computedResult = booleanAnd(false, childValues ?? []) ?? false
+			// 				this.#localValues.set(fullId, computedResult)
+			// 				return computedResult
+			// 			})
+			// 			break
+			// 		}
+			// 		default: {
+			// 			assertNever(definitionId)
+			// 			this.#logger.warn(`Unknown local variable type ${variable.definitionId}`)
+			// 			break
+			// 		}
+			// 	}
 		}
 	}
+
+	// #trackDeepReferences(variableIds: Set<string>) {
+	// 	// Make sure all references are tracked
+	// 	for (const variableId of variableIds) {
+	// 		const referenced = this.#localValuesReferences.get(variableId)
+	// 		if (referenced) {
+	// 			for (const id of referenced) {
+	// 				variableIds.add(id)
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	/**
 	 * Parse and execute an expression in a string
@@ -132,7 +138,7 @@ export class VariablesAndExpressionParser {
 	executeExpression(str: string, requiredType: string | undefined): ExecuteExpressionResult {
 		const result = executeExpression(str, this.#rawVariableValues, requiredType, this.#valueCacheAccessor)
 
-		this.#trackDeepReferences(result.variableIds)
+		// this.#trackDeepReferences(result.variableIds)
 
 		return result
 	}
@@ -145,7 +151,7 @@ export class VariablesAndExpressionParser {
 	parseVariables(str: string): ParseVariablesResult {
 		const result = parseVariablesInString(str, this.#rawVariableValues, this.#valueCacheAccessor)
 
-		this.#trackDeepReferences(result.variableIds)
+		// this.#trackDeepReferences(result.variableIds)
 
 		return result
 	}

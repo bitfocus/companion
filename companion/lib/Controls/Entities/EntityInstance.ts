@@ -82,7 +82,7 @@ export class ControlEntityInstance {
 	}
 
 	get localVariableName(): string | null {
-		if (this.type !== EntityModelType.Feedback) return null
+		if (this.type !== EntityModelType.Feedback || this.disabled) return null
 
 		const entity = this.#data as FeedbackEntityModel
 		if (!entity.variableName) return null
@@ -685,7 +685,7 @@ export class ControlEntityInstance {
 		)
 			return false
 
-		if (typeof this.#cachedFeedbackValue === FeedbackEntitySubType.Boolean) {
+		if (typeof this.#cachedFeedbackValue === 'boolean') {
 			const feedbackData = this.#data as FeedbackEntityModel
 			if (definition.showInvert && feedbackData.isInverted) return !this.#cachedFeedbackValue
 
@@ -742,8 +742,8 @@ export class ControlEntityInstance {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): boolean {
-		let changed = false
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
+		const changed: ControlEntityInstance[] = []
 
 		if (
 			this.type === EntityModelType.Feedback &&
@@ -753,12 +753,12 @@ export class ControlEntityInstance {
 			const newValue = newValues[this.#data.id]
 			if (!isEqual(newValue, this.#cachedFeedbackValue)) {
 				this.#cachedFeedbackValue = newValue
-				changed = true
+				changed.push(this)
 			}
 		}
 
 		for (const childGroup of this.#children.values()) {
-			if (childGroup.updateFeedbackValues(connectionId, newValues)) changed = true
+			changed.push(...childGroup.updateFeedbackValues(connectionId, newValues))
 		}
 
 		return changed
