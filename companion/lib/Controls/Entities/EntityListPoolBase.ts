@@ -6,13 +6,14 @@ import {
 	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlEntityInstance } from './EntityInstance.js'
+import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
 import type { InstanceDefinitionsForEntity } from './Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -118,6 +119,8 @@ export abstract class ControlEntityListPoolBase {
 	protected abstract getAllEntityLists(): ControlEntityList[]
 
 	abstract getLocalVariableEntities(): ControlEntityInstance[]
+
+	abstract getLocalVariableValues(): CompanionVariableValues
 
 	/**
 	 * Recursively get all the entities
@@ -439,6 +442,12 @@ export abstract class ControlEntityListPoolBase {
 		return true
 	}
 
+	/**
+	 * Set the local variable name for an entity
+	 * @param listId The list the entity is in
+	 * @param id The id of the entity
+	 * @param name The new name for the variable
+	 */
 	entitySetVariableName(listId: SomeSocketEntityLocation, id: string, name: string): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
@@ -453,6 +462,26 @@ export abstract class ControlEntityListPoolBase {
 		this.tryTriggerLocalVariablesChanged(entity, oldLocalVariableName)
 
 		this.commitChange()
+
+		return true
+	}
+
+	/**
+	 * Set the variable value for an entity, if this is a user local variable
+	 * @param listId The list the entity is in
+	 * @param id The id of the entity
+	 * @param value The new value for the variable
+	 */
+	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: any): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		const entity = entityList.findById(id)
+		if (!entity) return false
+
+		entity.setUserValue(value)
+
+		this.tryTriggerLocalVariablesChanged(entity)
 
 		return true
 	}

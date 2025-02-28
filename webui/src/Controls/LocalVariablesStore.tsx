@@ -1,13 +1,16 @@
 import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import { action, makeObservable, observable } from 'mobx'
-import { useEffect, useMemo } from 'react'
+import { useContext, useEffect, useMemo } from 'react'
 import type { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import { computedFn } from 'mobx-utils'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 export class LocalVariablesStore {
 	readonly controlId: string
 
 	#variables = observable.map<string, SomeEntityModel>()
+	#values = observable.map<string, CompanionVariableValue | undefined>()
 
 	constructor(controlId: string) {
 		this.controlId = controlId
@@ -19,6 +22,14 @@ export class LocalVariablesStore {
 
 	setEntities(localVariables: SomeEntityModel[]) {
 		this.#variables.replace(localVariables.map((v) => [v.id, v]))
+	}
+
+	setValues(values: CompanionVariableValues) {
+		this.#values.replace(Object.entries(values))
+	}
+
+	getValue = (variableName: string): CompanionVariableValue | undefined => {
+		return this.#values.get(variableName)
 	}
 
 	getOptions = computedFn(
@@ -49,11 +60,36 @@ export class LocalVariablesStore {
 }
 
 export function useLocalVariablesStore(controlId: string, localVariables: SomeEntityModel[] | null) {
+	const { socket } = useContext(RootAppStoreContext)
+
 	const store = useMemo(() => new LocalVariablesStore(controlId), [controlId])
 
 	useEffect(() => {
 		if (localVariables) store.setEntities(localVariables)
 	}, [store, localVariables])
+
+	useEffect(() => {
+		const doPoll = () => {
+			socket
+				.emitPromise('controls:local-variables-values', [controlId])
+				.then((values) => {
+					console.log('got', values)
+					store.setValues(values || {})
+				})
+				.catch((e) => {
+					store.setValues({})
+					console.log('Failed to fetch variable values: ', e)
+				})
+		}
+
+		doPoll()
+		const interval = setInterval(doPoll, 1000)
+
+		return () => {
+			store.setValues({})
+			clearInterval(interval)
+		}
+	}, [socket, store, controlId])
 
 	return store
 }

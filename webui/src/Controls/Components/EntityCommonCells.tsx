@@ -18,6 +18,7 @@ import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefini
 import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
 import { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { TextInputField } from '../../Components/TextInputField.js'
+import { observer } from 'mobx-react-lite'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -133,6 +134,13 @@ export function EntityCommonCells({
 						</MyErrorBoundary>
 					))}
 
+					<EntityLocalVariableValueField
+						entity={entity}
+						localVariablesStore={localVariablesStore}
+						readonly={readonly}
+						service={service}
+					/>
+
 					{!!entity && entityType === EntityModelType.Feedback && feedbackListType === null && (
 						<>
 							<FeedbackManageStyles
@@ -153,3 +161,41 @@ export function EntityCommonCells({
 		</>
 	)
 }
+
+const EntityLocalVariableValueField = observer(function EntityLocalVariableValueField({
+	entity,
+	localVariablesStore,
+	readonly,
+	service,
+}: {
+	entity: SomeEntityModel
+	localVariablesStore: LocalVariablesStore | null
+	readonly: boolean
+	service: IEntityEditorActionService
+}) {
+	if (
+		!localVariablesStore ||
+		!entity ||
+		entity.type !== EntityModelType.Feedback ||
+		entity.connectionId !== 'internal' ||
+		entity.definitionId !== 'user_value'
+	)
+		return null
+
+	const value = entity.variableName ? localVariablesStore.getValue(entity.variableName) : undefined
+	return (
+		<MyErrorBoundary>
+			<CFormLabel htmlFor="colFormInvert" className="col-sm-4 col-form-label col-form-label-sm">
+				Current Value
+			</CFormLabel>
+			<CCol sm={8}>
+				<TextInputField
+					disabled={!entity.variableName || readonly}
+					value={value === undefined ? '' : String(value)}
+					setValue={service.setVariableValue}
+					// setValid?: (valid: boolean) => void
+				/>
+			</CCol>
+		</MyErrorBoundary>
+	)
+})

@@ -8,6 +8,7 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList
@@ -46,6 +47,11 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	getLocalVariableEntities(): ControlEntityInstance[] {
 		// Not supported yet
 		return []
+	}
+
+	getLocalVariableValues(): CompanionVariableValues {
+		// Not supported yet
+		return {}
 	}
 
 	/**

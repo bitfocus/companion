@@ -439,6 +439,15 @@ export class ControlsController extends CoreBase {
 			return control.entities.entitySetVariableName(entityLocation, id, name)
 		})
 
+		client.onPromise('controls:entity:set-variable-value', (controlId, entityLocation, id, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+			return control.entities.entitySetVariableValue(entityLocation, id, value)
+		})
+
 		client.onPromise(
 			'controls:entity:move',
 			(controlId, moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex) => {
@@ -802,6 +811,15 @@ export class ControlsController extends CoreBase {
 		})
 		client.onPromise('controls:unsubscribe:learn', async () => {
 			client.leave(ActiveLearnRoom)
+		})
+
+		client.onPromise('controls:local-variables-values', (controlId) => {
+			const control = this.getControl(controlId)
+			if (!control) return {}
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+			return control.entities.getLocalVariableValues()
 		})
 	}
 

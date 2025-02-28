@@ -176,6 +176,22 @@ export class InternalVariables implements InternalModuleFragment {
 					},
 				],
 			},
+			user_value: {
+				feedbackType: FeedbackEntitySubType.Value,
+				label: 'User Value',
+				description: 'A value that can be used in other fields',
+				feedbackStyle: undefined,
+				showInvert: false,
+				options: [
+					{
+						type: 'textinput',
+						label: 'Startup Value',
+						id: 'startup_value',
+						default: '1',
+					},
+					// TODO - preserve value
+				],
+			},
 		}
 	}
 

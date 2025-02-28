@@ -14,6 +14,7 @@ import type { ControlActionSetAndStepsManager } from './ControlActionSetAndSteps
 import { cloneDeep } from 'lodash-es'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
 	/**
@@ -80,6 +81,22 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
 		return this.#localVariables.getAllEntities()
+	}
+
+	getLocalVariableValues(): CompanionVariableValues {
+		const entities = this.getLocalVariableEntities()
+
+		const values: CompanionVariableValues = {}
+
+		for (const entity of entities) {
+			const variableName = entity.localVariableName
+			if (variableName) {
+				// Strip off the prefix, as the ui doesn't expect that
+				values[variableName.slice('local:'.length)] = entity.feedbackValue
+			}
+		}
+
+		return values
 	}
 
 	// /**

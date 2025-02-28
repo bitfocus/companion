@@ -139,6 +139,8 @@ export class ControlEntityInstance {
 				}
 			}
 		}
+
+		this.#cachedFeedbackValue = this.#getStartupValue()
 	}
 
 	#getOrCreateChildGroupFromDefinition(listDefinition: EntitySupportedChildGroupDefinition): ControlEntityList {
@@ -231,6 +233,12 @@ export class ControlEntityInstance {
 		}
 	}
 
+	#getStartupValue(): any {
+		if (!isInternalUserValueFeedback(this)) return undefined
+
+		return this.#data.options.startup_value
+	}
+
 	/**
 	 * Set whether this entity is enabled
 	 */
@@ -238,7 +246,7 @@ export class ControlEntityInstance {
 		this.#data.disabled = !enabled
 
 		// Remove from cached feedback values
-		this.#cachedFeedbackValue = undefined
+		this.#cachedFeedbackValue = this.#getStartupValue()
 
 		// Inform relevant module
 		if (!this.#data.disabled) {
@@ -308,7 +316,9 @@ export class ControlEntityInstance {
 		this.#data.options = options
 
 		// Remove from cached feedback values
-		this.#cachedFeedbackValue = undefined
+		if (this.#getStartupValue() === undefined) {
+			this.#cachedFeedbackValue = undefined
+		}
 
 		// Inform relevant module
 		this.subscribe(false)
@@ -335,7 +345,9 @@ export class ControlEntityInstance {
 		this.#data.options[key] = value
 
 		// Remove from cached feedback values
-		this.#cachedFeedbackValue = undefined
+		if (this.#getStartupValue() === undefined) {
+			this.#cachedFeedbackValue = undefined
+		}
 
 		// Inform relevant module
 		this.subscribe(false)
@@ -650,7 +662,7 @@ export class ControlEntityInstance {
 		let changed = false
 
 		if (this.#data.connectionId === connectionId) {
-			this.#cachedFeedbackValue = undefined
+			this.#cachedFeedbackValue = this.#getStartupValue()
 
 			changed = true
 		}
@@ -754,7 +766,8 @@ export class ControlEntityInstance {
 		if (
 			this.type === EntityModelType.Feedback &&
 			this.#data.connectionId === connectionId &&
-			this.#data.id in newValues
+			this.#data.id in newValues &&
+			!isInternalUserValueFeedback(this)
 		) {
 			const newValue = newValues[this.#data.id]
 			if (!isEqual(newValue, this.#cachedFeedbackValue)) {
@@ -776,6 +789,20 @@ export class ControlEntityInstance {
 
 		return changed
 	}
+
+	/**
+	 * If this is the user value feedback, set the value
+	 */
+	setUserValue(value: any): void {
+		if (!isInternalUserValueFeedback(this)) return
+
+		this.#cachedFeedbackValue = value
+	}
+
+	getUserValue(): any {
+		return this.#cachedFeedbackValue
+	}
+
 	/**
 	 * Get all the connection ids that are enabled
 	 */
@@ -791,5 +818,17 @@ export class ControlEntityInstance {
 }
 
 export function isInternalLogicFeedback(entity: ControlEntityInstance): boolean {
-	return entity.connectionId === 'internal' && entity.definitionId.startsWith('logic_')
+	return (
+		entity.type === EntityModelType.Feedback &&
+		entity.connectionId === 'internal' &&
+		entity.definitionId.startsWith('logic_')
+	)
+}
+
+export function isInternalUserValueFeedback(entity: ControlEntityInstance): boolean {
+	return (
+		entity.type === EntityModelType.Feedback &&
+		entity.connectionId === 'internal' &&
+		entity.definitionId === 'user_value'
+	)
 }

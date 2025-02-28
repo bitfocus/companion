@@ -31,6 +31,7 @@ export interface IEntityEditorService {
 
 	setInverted: (entityId: string, inverted: boolean) => void
 	setVariableName: (entityId: string, name: string) => void
+	setVariableValue: (entityId: string, value: any) => void
 	setSelectedStyleProps: (entityId: string, keys: string[]) => void
 	setStylePropsValue: (entityId: string, key: string, value: any) => void
 }
@@ -46,6 +47,7 @@ export interface IEntityEditorActionService {
 
 	setInverted: (inverted: boolean) => void
 	setVariableName: (name: string) => void
+	setVariableValue: (value: any) => void
 	setSelectedStyleProps: (keys: string[]) => void
 	setStylePropsValue: (key: string, value: any) => void
 }
@@ -141,6 +143,11 @@ export function useControlEntitiesEditorService(
 					console.error('Failed to set entity variable name', e)
 				})
 			},
+			setVariableValue: (entityId: string, value: any) => {
+				socket.emitPromise('controls:entity:set-variable-value', [controlId, listId, entityId, value]).catch((e) => {
+					console.error('Failed to set entity variable value', e)
+				})
+			},
 
 			setSelectedStyleProps: (entityId: string, keys: string[]) => {
 				socket.emitPromise('controls:entity:set-style-selection', [controlId, listId, entityId, keys]).catch((e) => {
@@ -184,6 +191,7 @@ export function useControlEntityService(
 				: undefined,
 			setInverted: (inverted: boolean) => serviceFactory.setInverted(entityId, inverted),
 			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),
+			setVariableValue: (value: any) => serviceFactory.setVariableValue(entityId, value),
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
 			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 		}),

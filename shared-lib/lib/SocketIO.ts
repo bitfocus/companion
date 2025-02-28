@@ -152,6 +152,12 @@ export interface ClientToBackendEventsMap {
 		id: string,
 		name: string
 	) => boolean
+	'controls:entity:set-variable-value': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		value: any
+	) => boolean
 	'controls:entity:set-option': (
 		controlId: string,
 		entityLocation: SomeSocketEntityLocation,
@@ -205,6 +211,8 @@ export interface ClientToBackendEventsMap {
 	'controls:event:set-option': (controlId: string, eventId: string, key: string, val: any) => boolean
 	'controls:event:reorder': (controlId: string, dragIndex: number, hoverIndex: number) => boolean
 	'controls:event:add': (controlId: string, eventType: string) => boolean
+
+	'controls:local-variables-values': (controlId: string) => CompanionVariableValues | undefined
 
 	'triggers:create': () => string
 	'triggers:clone': (controlId: string) => string | false
