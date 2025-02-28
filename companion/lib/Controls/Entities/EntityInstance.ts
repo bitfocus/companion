@@ -756,7 +756,7 @@ export class ControlEntityInstance {
 				}
 				break
 			case FeedbackEntitySubType.Value:
-				// TODO-localvariables what should this do?
+				// Not valid for building a style
 				break
 			case null:
 				// Not a valid feedback

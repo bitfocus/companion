@@ -25,6 +25,7 @@ import type {
 	InternalVisitor,
 	InternalFeedbackDefinition,
 	InternalActionDefinition,
+	ExecuteFeedbackResultWithReferences,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import {
@@ -39,6 +40,7 @@ import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { PageController } from '../Page/Controller.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
+import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -292,7 +294,7 @@ export class InternalVariables implements InternalModuleFragment {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
+	executeFeedback(feedback: FeedbackEntityModelExt): boolean | ExecuteFeedbackResultWithReferences | void {
 		if (feedback.definitionId == 'variable_value') {
 			const result = this.#internalModule.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
@@ -339,12 +341,18 @@ export class InternalVariables implements InternalModuleFragment {
 			this.#variableSubscriptions.set(feedback.id, { controlId: feedback.controlId, variables: res.variableIds })
 
 			if (res.ok) {
-				return res.value as any // TODO-localvariables fix
+				return {
+					value: res.value,
+					referencedVariables: [], // TODO-localvariables fix
+				}
 			} else {
 				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
 				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${res.error}`)
 
-				return '$NA' as any // TODO-localvariables fix
+				return {
+					value: VARIABLE_UNKNOWN_VALUE,
+					referencedVariables: [], // TODO-localvariables fix
+				}
 			}
 		} else if (feedback.definitionId == 'user_value') {
 			// Not used

@@ -499,7 +499,7 @@ export class InternalControls implements InternalModuleFragment {
 				if (!feedback.options.properties) {
 					// TODO populate these properties instead
 					return {
-						value: cloneDeep(render.style),
+						value: cloneDeep(render.style) as any,
 						referencedVariables,
 					}
 				} else {

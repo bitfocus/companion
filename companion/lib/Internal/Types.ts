@@ -1,7 +1,11 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VisitorReferencesCollector } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
-import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
+import type {
+	CompanionFeedbackButtonStyleResult,
+	CompanionOptionValues,
+	CompanionVariableValue,
+} from '@companion-module/base'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
@@ -75,7 +79,7 @@ export interface InternalModuleFragment {
 
 export interface ExecuteFeedbackResultWithReferences {
 	referencedVariables: string[]
-	value: any
+	value: CompanionFeedbackButtonStyleResult | CompanionVariableValue | undefined
 }
 
 export type InternalActionDefinition = SetOptional<
