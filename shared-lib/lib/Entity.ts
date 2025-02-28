@@ -8,7 +8,7 @@ export function canAddEntityToFeedbackList(
 ): boolean {
 	switch (feedbackListType) {
 		case null:
-			// TODO-localvariable: Is this permanent?
+			// For now, match the old behavior
 			return definition.feedbackType !== FeedbackEntitySubType.Value
 		case FeedbackEntitySubType.Boolean:
 			return definition.feedbackType === FeedbackEntitySubType.Boolean

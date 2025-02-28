@@ -531,6 +531,9 @@ export class InternalController {
 		for (const [id, feedback] of this.#feedbacks.entries()) {
 			if (!feedback.referencedVariables || !feedback.referencedVariables.length) continue
 
+			// If a specific control is specified, only update feedbacks for that control
+			if (fromControlId && feedback.controlId !== fromControlId) continue
+
 			// Check a referenced variable was changed
 			if (!feedback.referencedVariables.some((variable) => changedVariablesSet.has(variable))) continue
 

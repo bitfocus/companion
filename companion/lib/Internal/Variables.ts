@@ -338,12 +338,10 @@ export class InternalVariables implements InternalModuleFragment {
 			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.location, null)
 			const res = parser.executeExpression(feedback.options.expression, undefined)
 
-			this.#variableSubscriptions.set(feedback.id, { controlId: feedback.controlId, variables: res.variableIds })
-
 			if (res.ok) {
 				return {
 					value: res.value,
-					referencedVariables: [], // TODO-localvariables fix
+					referencedVariables: Array.from(res.variableIds),
 				}
 			} else {
 				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
@@ -351,7 +349,7 @@ export class InternalVariables implements InternalModuleFragment {
 
 				return {
 					value: VARIABLE_UNKNOWN_VALUE,
-					referencedVariables: [], // TODO-localvariables fix
+					referencedVariables: Array.from(res.variableIds),
 				}
 			}
 		} else if (feedback.definitionId == 'user_value') {
