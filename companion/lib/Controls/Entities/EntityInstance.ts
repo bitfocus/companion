@@ -94,6 +94,19 @@ export class ControlEntityInstance {
 		return `local:${entity.variableName}`
 	}
 
+	get rawLocalVariableName(): string | null {
+		if (this.type !== EntityModelType.Feedback || this.disabled) return null
+
+		const entity = this.#data as FeedbackEntityModel
+		if (!entity.variableName) return null
+
+		// Check if the variable name is valid
+		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		if (!entity.variableName.match(idCheckRegex)) return null
+
+		return entity.variableName
+	}
+
 	/**
 	 * @param instanceDefinitions
 	 * @param internalModule

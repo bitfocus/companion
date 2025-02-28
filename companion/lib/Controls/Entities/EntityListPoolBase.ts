@@ -6,7 +6,7 @@ import {
 	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
+import type { ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
@@ -50,7 +50,7 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Triggered when local variables have changed
 	 */
-	protected readonly localVariablesChanged: ((changedVariables: Set<string>) => void) | null
+	readonly localVariablesChanged: ((changedVariables: Set<string>) => void) | null
 
 	protected constructor(props: ControlEntityListPoolProps) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
@@ -120,8 +120,21 @@ export abstract class ControlEntityListPoolBase {
 
 	abstract getLocalVariableEntities(): ControlEntityInstance[]
 
-	abstract getLocalVariableValues(): CompanionVariableValues
+	getLocalVariableValues(): CompanionVariableValues {
+		const entities = this.getLocalVariableEntities()
 
+		const values: CompanionVariableValues = {}
+
+		for (const entity of entities) {
+			const variableName = entity.localVariableName
+			if (variableName) {
+				// Strip off the prefix, as the ui doesn't expect that
+				values[variableName.slice('local:'.length)] = entity.feedbackValue
+			}
+		}
+
+		return values
+	}
 	/**
 	 * Recursively get all the entities
 	 */

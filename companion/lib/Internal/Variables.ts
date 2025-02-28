@@ -24,10 +24,21 @@ import type {
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalFeedbackDefinition,
+	InternalActionDefinition,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
-import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	FeedbackEntitySubType,
+	SomeSocketEntityLocation,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import { CHOICES_DYNAMIC_LOCATION } from './Util.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { PageController } from '../Page/Controller.js'
+import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -58,15 +69,24 @@ function compareValues(op: any, value: any, value2: any): boolean {
 export class InternalVariables implements InternalModuleFragment {
 	readonly #internalModule: InternalController
 	readonly #controlsController: ControlsController
+	readonly #pagesController: PageController
+	readonly #localVariablesChanged: (changedVariables: Set<string>, controlId: string) => void
 
 	/**
 	 * The dependencies of variables that should retrigger each feedback
 	 */
 	#variableSubscriptions = new Map<string, { controlId: string; variables: Set<string> }>()
 
-	constructor(internalModule: InternalController, controlsController: ControlsController) {
+	constructor(
+		internalModule: InternalController,
+		controlsController: ControlsController,
+		pagesController: PageController,
+		localVariablesChanged: (changedVariables: Set<string>, controlId: string) => void
+	) {
 		this.#internalModule = internalModule
 		this.#controlsController = controlsController
+		this.#pagesController = pagesController
+		this.#localVariablesChanged = localVariablesChanged
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -195,6 +215,80 @@ export class InternalVariables implements InternalModuleFragment {
 		}
 	}
 
+	getActionDefinitions(): Record<string, InternalActionDefinition> {
+		return {
+			local_variable_set_value: {
+				label: 'Local Variable: Set raw value',
+				description: undefined,
+				options: [
+					...CHOICES_DYNAMIC_LOCATION,
+
+					{
+						type: 'textinput',
+						label: 'Local variable',
+						id: 'name',
+					},
+					{
+						type: 'textinput',
+						label: 'Value',
+						id: 'value',
+						default: '',
+					},
+				],
+			},
+			local_variable_set_expression: {
+				label: 'Local Variable: Set with expression',
+				description: undefined,
+				options: [
+					...CHOICES_DYNAMIC_LOCATION,
+
+					{
+						type: 'textinput',
+						label: 'Local variable',
+						id: 'name',
+					},
+					{
+						type: 'textinput',
+						label: 'Expression',
+						id: 'expression',
+						default: '',
+						useVariables: {
+							local: true,
+						},
+						isExpression: true,
+					},
+				],
+			},
+
+			local_variable_reset_to_default: {
+				label: 'Local Variable: Reset to startup value',
+				description: undefined,
+				options: [
+					...CHOICES_DYNAMIC_LOCATION,
+
+					{
+						type: 'textinput',
+						label: 'Local variable',
+						id: 'name',
+					},
+				],
+			},
+			local_variable_sync_to_default: {
+				label: 'Local Variable: Write current value to startup value',
+				description: undefined,
+				options: [
+					...CHOICES_DYNAMIC_LOCATION,
+
+					{
+						type: 'textinput',
+						label: 'Local variable',
+						id: 'name',
+					},
+				],
+			},
+		}
+	}
+
 	/**
 	 * Get an updated value for a feedback
 	 */
@@ -252,11 +346,117 @@ export class InternalVariables implements InternalModuleFragment {
 
 				return '$NA' as any // TODO-localvariables fix
 			}
+		} else if (feedback.definitionId == 'user_value') {
+			// Not used
+			return false
 		}
 	}
 
 	forgetFeedback(feedback: FeedbackEntityModel): void {
 		this.#variableSubscriptions.delete(feedback.id)
+	}
+
+	#fetchLocationAndControlId(
+		options: Record<string, any>,
+		extras: RunActionExtras | FeedbackEntityModelExt,
+		useVariableFields = false
+	): {
+		theControlId: string | null
+		theLocation: ControlLocation | null
+		referencedVariables: string[]
+	} {
+		const result = this.#internalModule.parseInternalControlReferenceForActionOrFeedback(
+			extras,
+			options,
+			useVariableFields
+		)
+
+		const theControlId = result.location ? this.#pagesController.getControlIdAt(result.location) : null
+
+		return {
+			theControlId,
+			theLocation: result.location,
+			referencedVariables: Array.from(result.referencedVariables),
+		}
+	}
+
+	#updateLocalVariableValue(
+		action: ControlEntityInstance,
+		extras: RunActionExtras,
+		updateValue: (
+			variableEntity: ControlEntityInstance,
+			entityPool: ControlEntityListPoolBase,
+			listId: SomeSocketEntityLocation
+		) => boolean
+	) {
+		if (!action.rawOptions.name) return
+
+		const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
+		if (!theControlId) return
+
+		const control = this.#controlsController.getControl(theControlId)
+		if (!control || !control.supportsEntities) return
+
+		const variableEntity = control.entities
+			.getAllEntities()
+			.find((ent) => ent.rawLocalVariableName === action.rawOptions.name)
+		if (!variableEntity) return
+
+		const localVariableName = variableEntity.localVariableName
+		if (!localVariableName) return
+
+		if (!isInternalUserValueFeedback(variableEntity)) return
+
+		const changed = updateValue(variableEntity, control.entities, 'local-variables') // TODO - dynamic listId
+		if (!changed) return
+
+		this.#localVariablesChanged(new Set([localVariableName]), theControlId)
+	}
+
+	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
+		if (action.definitionId === 'local_variable_set_value') {
+			this.#updateLocalVariableValue(action, extras, (variableEntity) => {
+				variableEntity.setUserValue(action.rawOptions.value)
+
+				return true
+			})
+
+			return true
+		} else if (action.definitionId === 'local_variable_set_expression') {
+			this.#updateLocalVariableValue(action, extras, (variableEntity) => {
+				const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+					action.rawOptions.expression,
+					extras
+				)
+				if (result.ok) {
+					variableEntity.setUserValue(result.value)
+					return true
+				} else {
+					const logger = LogController.createLogger(`Internal/Variables/${extras.controlId}`)
+					logger.warn(`${result.error}, in expression: "${action.rawOptions.expression}"`)
+					return false
+				}
+			})
+
+			return true
+		} else if (action.definitionId === 'local_variable_reset_to_default') {
+			this.#updateLocalVariableValue(action, extras, (variableEntity) => {
+				variableEntity.setUserValue(variableEntity.rawOptions.startup_value)
+
+				return true
+			})
+
+			return true
+		} else if (action.definitionId === 'local_variable_sync_to_default') {
+			this.#updateLocalVariableValue(action, extras, (variableEntity, entityPool, listId) => {
+				entityPool.entrySetOptions(listId, variableEntity.id, 'startup_value', variableEntity.feedbackValue)
+
+				return false
+			})
+
+			return true
+		}
+		return false
 	}
 
 	/**

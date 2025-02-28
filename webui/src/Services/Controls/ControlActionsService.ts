@@ -59,6 +59,9 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			setVariableName: (_entityId: string, _variableName: string) => {
 				// Not supported
 			},
+			setVariableValue: (_entityId: string, _variableValue: string) => {
+				// Not supported
+			},
 
 			setSelectedStyleProps: (_entityId: string, _keys: string[]) => {
 				// Not supported
