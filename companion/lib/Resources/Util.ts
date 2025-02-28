@@ -435,3 +435,9 @@ export function serializeIsVisibleFnSingle<T extends CompanionInputFieldBase | C
 	// @ts-ignore
 	return serializeIsVisibleFn([field])[0]
 }
+
+export function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean {
+	if (childValues.length === 0) return isInverted
+
+	return childValues.reduce((acc, val) => acc && val, true) === !isInverted
+}

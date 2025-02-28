@@ -50,6 +50,7 @@ import {
 	ActionEntityModel,
 	EntityModelType,
 	FeedbackEntityModel,
+	isValidFeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -669,6 +670,8 @@ export class SocketEventsHandler {
 		const feedbacks: Record<string, ClientEntityDefinition> = {}
 
 		for (const rawFeedback of msg.feedbacks || []) {
+			if (!isValidFeedbackEntitySubType(rawFeedback.type)) continue
+
 			feedbacks[rawFeedback.id] = {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
@@ -796,11 +799,13 @@ export class SocketEventsHandler {
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
 			const location = msg.controlId ? this.#deps.page.getLocationOfControlId(msg.controlId) : null
-			const result = this.#deps.variables.values.parseVariables(msg.text, location)
+
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(location, null)
+			const result = parser.parseVariables(msg.text)
 
 			return {
 				text: result.text,
-				variableIds: result.variableIds,
+				variableIds: Array.from(result.variableIds),
 			}
 		} catch (e: any) {
 			this.logger.error(`Parse variables failed: ${e}`)

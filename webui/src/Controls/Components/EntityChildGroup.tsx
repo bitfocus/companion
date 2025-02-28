@@ -17,6 +17,7 @@ import { PreventDefaultHandler } from '../../util.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
 import { EditableEntityList } from './EntityList.js'
+import { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface EntityManageChildGroupsProps {
 	entity: SomeEntityModel
@@ -25,6 +26,8 @@ interface EntityManageChildGroupsProps {
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 
 export const EntityManageChildGroups = observer(function EntityManageChildGroups({
@@ -34,6 +37,8 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 	location,
 	serviceFactory,
 	readonly,
+	localVariablesStore,
+	isLocalVariablesList,
 }: EntityManageChildGroupsProps) {
 	if (entity.connectionId !== 'internal') return null
 
@@ -51,6 +56,8 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 						parentId={entity.id}
 						parentServiceFactory={serviceFactory}
 						readonly={readonly}
+						localVariablesStore={localVariablesStore}
+						isLocalVariablesList={isLocalVariablesList}
 					/>
 				))}
 			</div>
@@ -66,6 +73,8 @@ interface EntityManageChildGroupProps {
 	parentId: string
 	parentServiceFactory: IEntityEditorService
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 
 const EntityManageChildGroup = observer(function EntityManageChildGroup({
@@ -76,6 +85,8 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	parentId,
 	parentServiceFactory,
 	readonly,
+	localVariablesStore,
+	isLocalVariablesList,
 }: EntityManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
 
@@ -102,13 +113,13 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 				entities={entities}
 				entityType={groupInfo.type}
 				entityTypeLabel={groupInfo.entityTypeLabel}
-				onlyFeedbackType={
-					groupInfo.type === EntityModelType.Feedback && groupInfo.booleanFeedbacksOnly ? 'boolean' : null
-				}
+				feedbackListType={(groupInfo.type === EntityModelType.Feedback && groupInfo.feedbackListType) || null}
 				location={location}
 				serviceFactory={serviceFactory}
 				ownerId={groupId}
 				readonly={readonly}
+				localVariablesStore={localVariablesStore}
+				isLocalVariablesList={isLocalVariablesList}
 			/>
 		</CForm>
 	)

@@ -291,6 +291,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 									value={(event.options || {})[opt.id]}
 									setValue={service.setValue}
 									visibility={optionVisibility[opt.id] ?? true}
+									localVariablesStore={null}
 								/>
 							</MyErrorBoundary>
 						))}

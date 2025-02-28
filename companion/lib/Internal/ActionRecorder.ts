@@ -31,6 +31,7 @@ import type {
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 
 export class InternalActionRecorder implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/ActionRecorder')
@@ -273,7 +274,7 @@ export class InternalActionRecorder implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			action_recorder_check_connections: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Action Recorder: Check if specified connections are selected',
 				description: undefined,
 				feedbackStyle: {

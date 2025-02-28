@@ -10,7 +10,7 @@ interface TriggerEventsEvents {
 
 	trigger_enabled: [controlId: string, enabled: boolean]
 	control_press: [controlId: string, pressed: boolean, surfaceId: string | undefined]
-	variables_changed: [changed: Set<string>]
+	variables_changed: [changed: Set<string>, fromControlId: string | null]
 }
 
 /**
