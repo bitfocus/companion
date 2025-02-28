@@ -251,12 +251,6 @@ export class Registry {
 			this.variables
 		)
 
-		const onLocalVariablesChanged = (all_changed_variables_set: Set<string>, fromControlId: string) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.#preview.onVariablesChanged(all_changed_variables_set, fromControlId)
-		}
-
 		this.internalModule.addFragments(
 			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
 			new InternalInstance(this.internalModule, this.instance),
@@ -267,7 +261,7 @@ export class Registry {
 			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
 			new InternalSystem(this.internalModule, this),
 			new InternalTriggers(this.internalModule, this.controls),
-			new InternalVariables(this.internalModule, this.controls, this.page, onLocalVariablesChanged)
+			new InternalVariables(this.internalModule, this.controls, this.page)
 		)
 		this.internalModule.init()
 
@@ -304,7 +298,11 @@ export class Registry {
 			this.#preview.onVariablesChanged(all_changed_variables_set, null)
 			this.surfaces.onVariablesChanged(all_changed_variables_set)
 		})
-		this.variables.values.on('local_variables_changed', onLocalVariablesChanged)
+		this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
+			this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.#preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+		})
 
 		this.page.on('controlIdsMoved', (controlIds) => {
 			this.#preview.onControlIdsLocationChanged(controlIds)

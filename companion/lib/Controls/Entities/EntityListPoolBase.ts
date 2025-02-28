@@ -6,7 +6,7 @@ import {
 	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlEntityInstance } from './EntityInstance.js'
+import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
 import type { ModuleHost } from '../../Instance/Host.js'
 import type { InternalController } from '../../Internal/Controller.js'
@@ -492,7 +492,16 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.findById(id)
 		if (!entity) return false
 
+		if (!isInternalUserValueFeedback(entity)) return false
+
 		entity.setUserValue(value)
+
+		// Persist value if needed
+		if (entity.rawOptions.persist_value) {
+			entity.rawOptions.startup_value = value
+
+			this.commitChange()
+		}
 
 		this.tryTriggerLocalVariablesChanged(entity)
 

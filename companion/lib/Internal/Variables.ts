@@ -41,6 +41,7 @@ import type { PageController } from '../Page/Controller.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
+import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -72,7 +73,6 @@ export class InternalVariables implements InternalModuleFragment {
 	readonly #internalModule: InternalController
 	readonly #controlsController: ControlsController
 	readonly #pagesController: PageController
-	readonly #localVariablesChanged: (changedVariables: Set<string>, controlId: string) => void
 
 	/**
 	 * The dependencies of variables that should retrigger each feedback
@@ -82,13 +82,11 @@ export class InternalVariables implements InternalModuleFragment {
 	constructor(
 		internalModule: InternalController,
 		controlsController: ControlsController,
-		pagesController: PageController,
-		localVariablesChanged: (changedVariables: Set<string>, controlId: string) => void
+		pagesController: PageController
 	) {
 		this.#internalModule = internalModule
 		this.#controlsController = controlsController
 		this.#pagesController = pagesController
-		this.#localVariablesChanged = localVariablesChanged
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -205,13 +203,20 @@ export class InternalVariables implements InternalModuleFragment {
 				feedbackStyle: undefined,
 				showInvert: false,
 				options: [
-					{
+					serializeIsVisibleFnSingle({
 						type: 'textinput',
 						label: 'Startup Value',
 						id: 'startup_value',
 						default: '1',
+						isVisible: (options) => !options.persist_value,
+					}),
+					{
+						type: 'checkbox',
+						label: 'Persist value',
+						tooltip: 'If enabled, variable value will be saved and restored when Companion restarts.',
+						id: 'persist_value',
+						default: false,
 					},
-					// TODO - preserve value
 				],
 			},
 		}
@@ -390,10 +395,10 @@ export class InternalVariables implements InternalModuleFragment {
 		action: ControlEntityInstance,
 		extras: RunActionExtras,
 		updateValue: (
-			variableEntity: ControlEntityInstance,
 			entityPool: ControlEntityListPoolBase,
-			listId: SomeSocketEntityLocation
-		) => boolean
+			listId: SomeSocketEntityLocation,
+			variableEntity: ControlEntityInstance
+		) => void
 	) {
 		if (!action.rawOptions.name) return
 
@@ -413,51 +418,40 @@ export class InternalVariables implements InternalModuleFragment {
 
 		if (!isInternalUserValueFeedback(variableEntity)) return
 
-		const changed = updateValue(variableEntity, control.entities, 'local-variables') // TODO - dynamic listId
-		if (!changed) return
-
-		this.#localVariablesChanged(new Set([localVariableName]), theControlId)
+		updateValue(control.entities, 'local-variables', variableEntity) // TODO - dynamic listId
 	}
 
 	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
 		if (action.definitionId === 'local_variable_set_value') {
-			this.#updateLocalVariableValue(action, extras, (variableEntity) => {
-				variableEntity.setUserValue(action.rawOptions.value)
-
-				return true
+			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
+				entityPool.entitySetVariableValue(listId, variableEntity.id, action.rawOptions.value)
 			})
 
 			return true
 		} else if (action.definitionId === 'local_variable_set_expression') {
-			this.#updateLocalVariableValue(action, extras, (variableEntity) => {
+			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
 				const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
 					action.rawOptions.expression,
 					extras
 				)
 				if (result.ok) {
-					variableEntity.setUserValue(result.value)
-					return true
+					entityPool.entitySetVariableValue(listId, variableEntity.id, result.value)
 				} else {
 					const logger = LogController.createLogger(`Internal/Variables/${extras.controlId}`)
 					logger.warn(`${result.error}, in expression: "${action.rawOptions.expression}"`)
-					return false
 				}
 			})
 
 			return true
 		} else if (action.definitionId === 'local_variable_reset_to_default') {
-			this.#updateLocalVariableValue(action, extras, (variableEntity) => {
-				variableEntity.setUserValue(variableEntity.rawOptions.startup_value)
-
-				return true
+			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
+				entityPool.entitySetVariableValue(listId, variableEntity.id, variableEntity.rawOptions.startup_value)
 			})
 
 			return true
 		} else if (action.definitionId === 'local_variable_sync_to_default') {
-			this.#updateLocalVariableValue(action, extras, (variableEntity, entityPool, listId) => {
+			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
 				entityPool.entrySetOptions(listId, variableEntity.id, 'startup_value', variableEntity.feedbackValue)
-
-				return false
 			})
 
 			return true
