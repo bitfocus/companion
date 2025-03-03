@@ -10,16 +10,19 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 			len = 0
 		} else if (Array.isArray(v)) {
 			len = v.length
-		} else if (typeof v === 'object') {
-			len = Object.keys(v).length
 		} else if (typeof v === 'number') {
 			len = (v + '').length
 		} else if (typeof v === 'bigint') {
 			len = v.toString().length
+		} else if (typeof v === 'string') {
+			len = v.length
 		} else if (v instanceof RegExp) {
 			len = v.toString().length
+		} else if (typeof v === 'object') {
+			len = Object.keys(v).length
 		} else {
-			len = v.length
+			// If it's got to here, we don't know how to handle it
+			len = NaN
 		}
 		return len
 	},
