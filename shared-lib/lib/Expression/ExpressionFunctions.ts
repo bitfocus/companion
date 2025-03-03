@@ -1,5 +1,6 @@
 import { pad } from '../Util.js'
 import { JSONPath } from 'jsonpath-plus'
+import { countGraphemes } from 'unicode-segmenter/grapheme';
 
 // Note: when adding new functions, make sure to update the docs!
 export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
@@ -15,7 +16,8 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		} else if (typeof v === 'bigint') {
 			len = v.toString().length
 		} else if (typeof v === 'string') {
-			len = v.length
+			// So we handle UTF graphemes correctly
+			len = countGraphemes(v)
 		} else if (v instanceof RegExp) {
 			len = v.toString().length
 		} else if (typeof v === 'object') {
