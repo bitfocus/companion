@@ -30,6 +30,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 	const connectionEntityUpdate = vi.fn<ModuleHostForEntity['connectionEntityUpdate']>(async () => false)
 	const connectionEntityDelete = vi.fn<ModuleHostForEntity['connectionEntityDelete']>(async () => false)
 	const internalEntityUpdate = vi.fn<InternalControllerForEntity['entityUpdate']>()
+	const internalEntityUpgrade = vi.fn<InternalControllerForEntity['entityUpgrade']>()
 	const internalEntityDelete = vi.fn<InternalControllerForEntity['entityDelete']>()
 
 	const instanceDefinitions: InstanceDefinitionsForEntity = {
@@ -43,7 +44,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 	const internalController: InternalControllerForEntity = {
 		entityUpdate: internalEntityUpdate,
 		entityDelete: internalEntityDelete,
-		entityUpgrade: null as any,
+		entityUpgrade: internalEntityUpgrade,
 		executeLogicFeedback: null as any,
 	}
 
@@ -83,6 +84,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		connectionEntityUpdate,
 		connectionEntityDelete,
 		internalEntityUpdate,
+		internalEntityUpgrade,
 		internalEntityDelete,
 		instanceDefinitions,
 		internalController,
@@ -1197,8 +1199,6 @@ describe('verifyConnectionIds', () => {
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 	})
 })
-
-// TODO - postProcessImport
 
 describe('getChildBooleanFeedbackValues', () => {
 	const { list, getEntityDefinition } = createList('test01', null, {

@@ -34,12 +34,6 @@ export class ControlEntityInstance {
 
 	readonly #data: Omit<SomeEntityModel, 'children'>
 
-	// /**
-	//  * Cache of the children before the last fixup
-	//  * This is a bit of a hack, but we need to keep track of the children between the
-	//  */
-	// #previousChildren: SomeEntityModel['children']
-
 	/**
 	 * Value of the feedback when it was last executed
 	 */
@@ -217,9 +211,7 @@ export class ControlEntityInstance {
 			(!onlyType || this.#data.type === onlyType)
 		) {
 			if (this.#data.connectionId === 'internal') {
-				setImmediate(() => {
-					this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
-				})
+				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
 				this.#moduleHost.connectionEntityUpdate(this.asEntityModel(), this.#controlId).catch((e) => {
 					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
