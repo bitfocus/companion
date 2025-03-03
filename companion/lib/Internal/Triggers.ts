@@ -29,7 +29,7 @@ import type {
 import type { ControlsController } from '../Controls/Controller.js'
 import type { InternalController } from './Controller.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 export class InternalTriggers implements InternalModuleFragment {
@@ -108,7 +108,7 @@ export class InternalTriggers implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			trigger_enabled: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Trigger: When enabled or disabled',
 				description: undefined,
 				feedbackStyle: {

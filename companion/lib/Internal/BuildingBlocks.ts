@@ -27,8 +27,9 @@ import type {
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalController } from './Controller.js'
-import { EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { booleanAnd } from '../Resources/Util.js'
 
 export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
@@ -44,7 +45,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			logic_operator: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Logic: Operation',
 				description: 'Combine multiple conditions',
 				feedbackStyle: {
@@ -70,7 +71,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
-						booleanFeedbacksOnly: true,
+						feedbackListType: FeedbackEntitySubType.Boolean,
 						groupId: 'default',
 						entityTypeLabel: 'condition',
 						label: '',
@@ -79,7 +80,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 			},
 
 			logic_conditionalise_advanced: {
-				feedbackType: 'advanced',
+				feedbackType: FeedbackEntitySubType.Advanced,
 				label: 'Conditionalise existing feedbacks',
 				description: "Make 'advanced' feedbacks conditional",
 				feedbackStyle: undefined,
@@ -90,7 +91,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
-						booleanFeedbacksOnly: true,
+						feedbackListType: FeedbackEntitySubType.Boolean,
 						groupId: 'children',
 						entityTypeLabel: 'condition',
 						label: 'Condition',
@@ -164,7 +165,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
-						booleanFeedbacksOnly: true,
+						feedbackListType: FeedbackEntitySubType.Boolean,
 						groupId: 'condition',
 						label: 'When True',
 						entityTypeLabel: 'condition',
@@ -214,7 +215,8 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 				case 'and':
 					return booleanAnd(!!feedback.isInverted, childValues)
 				case 'or':
-					return childValues.reduce((acc, val) => acc || val, false)
+					const isAnyTrue = childValues.reduce((acc, val) => acc || val, false)
+					return isAnyTrue === !feedback.isInverted
 				case 'xor':
 					const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
 					return isSingleTrue === !feedback.isInverted
@@ -306,10 +308,4 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
-}
-
-function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean {
-	if (childValues.length === 0) return isInverted
-
-	return childValues.reduce((acc, val) => acc && val, true) === !isInverted
 }

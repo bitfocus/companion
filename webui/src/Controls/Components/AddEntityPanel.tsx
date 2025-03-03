@@ -4,13 +4,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useRef } from 'react'
 import { AddEntitiesModal, AddEntitiesModalRef } from './AddEntitiesModal.js'
 import { MyErrorBoundary } from '../../util.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { AddEntityDropdown } from './AddEntityDropdown.js'
 
 interface AddEntityPanelProps {
 	addEntity: (connectionId: string, definitionId: string) => void
 	entityType: EntityModelType
-	onlyFeedbackType: 'boolean' | 'advanced' | null
+	feedbackListType: FeedbackEntitySubType | null
 	entityTypeLabel: string
 	readonly: boolean
 }
@@ -18,7 +18,7 @@ interface AddEntityPanelProps {
 export function AddEntityPanel({
 	addEntity,
 	entityType,
-	onlyFeedbackType,
+	feedbackListType,
 	entityTypeLabel,
 	readonly,
 }: AddEntityPanelProps) {
@@ -31,8 +31,9 @@ export function AddEntityPanel({
 				onSelect={addEntity}
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
-				onlyFeedbackType={onlyFeedbackType}
+				feedbackListType={feedbackListType}
 				disabled={readonly}
+				showAll={false}
 			/>
 			<CButton
 				color="primary"
@@ -51,7 +52,7 @@ export function AddEntityPanel({
 					ref={addEntitiesRef}
 					addEntity={addEntity}
 					entityType={entityType}
-					onlyFeedbackType={onlyFeedbackType}
+					feedbackListType={feedbackListType}
 					entityTypeLabel={entityTypeLabel}
 				/>
 			</MyErrorBoundary>

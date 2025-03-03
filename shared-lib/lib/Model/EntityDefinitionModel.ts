@@ -1,4 +1,4 @@
-import type { EntityModelType, EntitySupportedChildGroupDefinition } from './EntityModel.js'
+import type { EntityModelType, EntitySupportedChildGroupDefinition, FeedbackEntitySubType } from './EntityModel.js'
 import type { InternalActionInputField, InternalFeedbackInputField } from './Options.js'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { ObjectsDiff } from './Common.js'
@@ -8,7 +8,7 @@ export interface ClientEntityDefinition {
 	label: string
 	description: string | undefined
 	options: (InternalActionInputField | InternalFeedbackInputField)[]
-	feedbackType: 'advanced' | 'boolean' | null
+	feedbackType: FeedbackEntitySubType | null
 	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
 	hasLearn: boolean
 	learnTimeout: number | undefined

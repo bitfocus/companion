@@ -30,6 +30,8 @@ export interface IEntityEditorService {
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
 
 	setInverted: (entityId: string, inverted: boolean) => void
+	setVariableName: (entityId: string, name: string) => void
+	setVariableValue: (entityId: string, value: any) => void
 	setSelectedStyleProps: (entityId: string, keys: string[]) => void
 	setStylePropsValue: (entityId: string, key: string, value: any) => void
 }
@@ -44,6 +46,8 @@ export interface IEntityEditorActionService {
 	setHeadline: ((headline: string) => void) | undefined
 
 	setInverted: (inverted: boolean) => void
+	setVariableName: (name: string) => void
+	setVariableValue: (value: any) => void
 	setSelectedStyleProps: (keys: string[]) => void
 	setStylePropsValue: (key: string, value: any) => void
 }
@@ -122,7 +126,6 @@ export function useControlEntitiesEditorService(
 					console.error('Failed to enable/disable entity', e)
 				})
 			},
-
 			setHeadline: (entityId: string, headline: string) => {
 				socket.emitPromise('controls:entity:set-headline', [controlId, listId, entityId, headline]).catch((e) => {
 					console.error('Failed to set entity headline', e)
@@ -132,6 +135,17 @@ export function useControlEntitiesEditorService(
 			setInverted: (entityId: string, inverted: boolean) => {
 				socket.emitPromise('controls:entity:set-inverted', [controlId, listId, entityId, inverted]).catch((e) => {
 					console.error('Failed to set entity inverted', e)
+				})
+			},
+
+			setVariableName: (entityId: string, name: string) => {
+				socket.emitPromise('controls:entity:set-variable-name', [controlId, listId, entityId, name]).catch((e) => {
+					console.error('Failed to set entity variable name', e)
+				})
+			},
+			setVariableValue: (entityId: string, value: any) => {
+				socket.emitPromise('controls:entity:set-variable-value', [controlId, listId, entityId, value]).catch((e) => {
+					console.error('Failed to set entity variable value', e)
 				})
 			},
 
@@ -176,6 +190,8 @@ export function useControlEntityService(
 				? (headline: string) => serviceFactory.setHeadline?.(entityId, headline)
 				: undefined,
 			setInverted: (inverted: boolean) => serviceFactory.setInverted(entityId, inverted),
+			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),
+			setVariableValue: (value: any) => serviceFactory.setVariableValue(entityId, value),
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
 			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 		}),
