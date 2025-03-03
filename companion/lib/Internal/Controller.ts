@@ -109,24 +109,7 @@ export class InternalController {
 			for (const entity of allEntities) {
 				if (entity.connectionId !== 'internal') continue
 
-				const newEntity = this.entityUpgrade(entity.asEntityModel(false), controlId)
-				if (newEntity) {
-					const updatedEntity = control.entities.entityReplace(newEntity)
-					if (updatedEntity && newEntity.children) {
-						// If the updated entity gained children, push them to the control
-						for (const [groupId, children] of Object.entries(newEntity.children)) {
-							if (!children) continue
-
-							for (const child of children) {
-								const childEntity = updatedEntity.addChild(groupId, child)
-
-								this.entityUpdate(childEntity.asEntityModel(), controlId)
-							}
-						}
-					}
-				}
-
-				this.entityUpdate(newEntity || entity.asEntityModel(), controlId)
+				this.entityUpdate(entity.asEntityModel(), controlId)
 			}
 		}
 
