@@ -228,9 +228,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	protected postProcessImport(): void {
-		this.entities.postProcessImport().catch((e) => {
-			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
-		})
+		this.entities.resubscribeEntities()
 
 		this.commitChange()
 		this.sendRuntimePropsChange()

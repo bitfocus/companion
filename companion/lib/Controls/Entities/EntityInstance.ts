@@ -557,27 +557,6 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	postProcessImport(): Promise<unknown>[] {
-		const ps: Promise<unknown>[] = []
-
-		if (this.#data.connectionId === 'internal') {
-			setImmediate(() => {
-				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
-			})
-		} else {
-			ps.push(this.#moduleHost.connectionEntityUpdate(this.asEntityModel(), this.#controlId))
-		}
-
-		for (const childGroup of this.#children.values()) {
-			ps.push(...childGroup.postProcessImport())
-		}
-
-		return ps
-	}
-
-	/**
 	 * Replace portions of the action with an updated version
 	 */
 	replaceProps(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): void {
