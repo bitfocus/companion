@@ -29,7 +29,7 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 			})
 	}, [connections, entityConnectionId])
 
-	if (connectionChoices.length === 0) return null
+	if (connectionChoices.length <= 1) return null
 
 	return (
 		<>
