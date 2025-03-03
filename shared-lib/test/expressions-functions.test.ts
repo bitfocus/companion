@@ -9,8 +9,8 @@ describe('functions', () => {
 			expect(ExpressionFunctions.length('a')).toBe(1)
 			expect(ExpressionFunctions.length('abc')).toBe(3)
 			expect(ExpressionFunctions.length('ä')).toBe(1) // codepoint U+00E4, one grapheme
-			// expect(ExpressionFunctions.length('̈a')).toBe(1) // codepoints U+0308 U+0061, one grapheme
-			// expect(ExpressionFunctions.length('́̈a')).toBe(1) // codepoints U+0301 U+0308 U+0061, one grapheme
+			expect(ExpressionFunctions.length('̈a')).toBe(1) // codepoints U+0308 U+0061, one grapheme
+			expect(ExpressionFunctions.length('́̈a')).toBe(1) // codepoints U+0301 U+0308 U+0061, one grapheme
 			expect(ExpressionFunctions.length(9)).toBe(1)
 			expect(ExpressionFunctions.length(99)).toBe(2)
 			expect(ExpressionFunctions.length(-123)).toBe(4)
