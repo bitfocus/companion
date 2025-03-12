@@ -35,7 +35,6 @@ import {
 	type CompanionHTTPRequest,
 	type CompanionInputFieldBase,
 	type CompanionOptionValues,
-	type CompanionVariableValue,
 	type LogLevel,
 } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -702,12 +701,7 @@ export class SocketEventsHandler {
 	async #handleSetVariableValues(msg: SetVariableValuesMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableValues before init was called`)
 
-		const variables: Record<string, CompanionVariableValue | undefined> = {}
-		for (const variable of msg.newValues) {
-			variables[variable.id] = variable.value
-		}
-
-		this.#deps.variables.values.setVariableValues(this.#label, variables)
+		this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 	}
 
 	/**
@@ -738,12 +732,7 @@ export class SocketEventsHandler {
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
-			const variables: Record<string, CompanionVariableValue | undefined> = {}
-			for (const variable of msg.newValues) {
-				variables[variable.id] = variable.value
-			}
-
-			this.#deps.variables.values.setVariableValues(this.#label, variables)
+			this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 		}
 
 		if (invalidIds.length > 0) {

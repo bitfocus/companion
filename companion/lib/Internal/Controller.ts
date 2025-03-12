@@ -46,6 +46,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { Complete } from '@companion-module/base/dist/util.js'
 import { InternalSystem } from './System.js'
+import type { VariableValueEntry } from '../Variables/Values.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -388,7 +389,13 @@ export class InternalController {
 	setVariables(variables: Record<string, CompanionVariableValue | undefined>): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		this.#variablesController.values.setVariableValues('internal', variables)
+		// This isn't ideal, but it's cheap enough and avoids updating the calling code
+		const valuesArr: VariableValueEntry[] = Object.entries(variables).map(([id, value]) => ({
+			id,
+			value,
+		}))
+
+		this.#variablesController.values.setVariableValues('internal', valuesArr)
 	}
 	/**
 	 * Recheck all feedbacks of specified types

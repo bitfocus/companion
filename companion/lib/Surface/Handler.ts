@@ -575,9 +575,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Set the value of a variable
 	 */
 	#onSetVariable(name: string, value: CompanionVariableValue): void {
-		this.#variables.values.setVariableValues('internal', {
-			[name]: value,
-		})
+		this.#variables.values.setVariableValues('internal', [{ id: name, value: value }])
 	}
 
 	/**

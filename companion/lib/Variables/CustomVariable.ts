@@ -17,7 +17,7 @@
 
 import LogController from '../Log/Controller.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
-import type { VariablesValues } from './Values.js'
+import type { VariablesValues, VariableValueEntry } from './Values.js'
 import type {
 	CustomVariablesModel,
 	CustomVariableUpdate,
@@ -174,9 +174,9 @@ export class VariablesCustomVariable {
 	init(): void {
 		// Load the startup values of custom variables
 		if (Object.keys(this.#custom_variables).length > 0) {
-			const newValues: Record<string, CompanionVariableValue> = {}
+			const newValues: VariableValueEntry[] = []
 			for (const [name, info] of Object.entries(this.#custom_variables)) {
-				newValues[name] = info.defaultValue || ''
+				newValues.push({ id: name, value: info.defaultValue || '' })
 			}
 			this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 		}
@@ -186,14 +186,14 @@ export class VariablesCustomVariable {
 	 * Replace all of the current custom variables with new ones
 	 */
 	replaceDefinitions(custom_variables: CustomVariablesModel): void {
-		const newValues: Record<string, CompanionVariableValue | undefined> = {}
+		const newValues: VariableValueEntry[] = []
 		// Mark the current variables as to be deleted
 		for (const name of Object.keys(this.#custom_variables || {})) {
-			newValues[name] = undefined
+			newValues.push({ id: name, value: undefined })
 		}
 		// Determine the initial values of the variables
 		for (const [name, info] of Object.entries(custom_variables || {})) {
-			newValues[name] = info.defaultValue || ''
+			newValues.push({ id: name, value: info.defaultValue || '' })
 		}
 
 		const namesBefore = Object.keys(this.#custom_variables)
@@ -358,9 +358,7 @@ export class VariablesCustomVariable {
 	 * Helper for setting the value of a custom variable
 	 */
 	#setValueInner(name: string, value: CompanionVariableValue | undefined): void {
-		this.#variableValues.setVariableValues(CUSTOM_LABEL, {
-			[name]: value,
-		})
+		this.#variableValues.setVariableValues(CUSTOM_LABEL, [{ id: name, value: value }])
 
 		this.#persistCustomVariableValue(name, value)
 	}
