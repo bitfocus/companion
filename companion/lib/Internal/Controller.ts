@@ -28,7 +28,7 @@ import type {
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
-import type { ExecuteExpressionResult } from '../Variables/Util.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -602,7 +602,7 @@ export class InternalController {
 		useVariableFields: boolean
 	): {
 		location: ControlLocation | null
-		referencedVariables: Set<string>
+		referencedVariables: ReadonlySet<string>
 	} {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 

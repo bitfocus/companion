@@ -16,7 +16,7 @@ export function ParseInternalControlReference(
 	useVariableFields: boolean
 ): {
 	location: ControlLocation | null
-	referencedVariables: Set<string>
+	referencedVariables: ReadonlySet<string>
 } {
 	const sanitisePageNumber = (pageNumber: number): number | null => {
 		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
@@ -79,7 +79,7 @@ export function ParseInternalControlReference(
 	}
 
 	let location: ControlLocation | null = null
-	let referencedVariables = new Set<string>()
+	let referencedVariables: ReadonlySet<string> = new Set<string>()
 
 	switch (options.location_target) {
 		case 'this':

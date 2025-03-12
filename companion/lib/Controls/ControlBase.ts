@@ -119,15 +119,22 @@ export abstract class ControlBase<TJson> {
 	/**
 	 * Get the size of the bitmap render of this control
 	 */
-	abstract getBitmapSize(): { width: number; height: number } | null
+	abstract getBitmapFeedbackSize(): { width: number; height: number } | null
 
 	/**
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleModel | null {
-		return null
+	async getDrawStyle(): Promise<DrawStyleModel | null> {
+		return this.getLastDrawStyle()
 	}
+
+	/**
+	 * Get the complete style object from the last draw
+	 * Note: This may or may not be a cached value produced from `getDrawStyle`
+	 * @returns the last drawn style
+	 */
+	abstract getLastDrawStyle(): DrawStyleModel | null
 
 	/**
 	 * Emit a change to the runtime properties of this control.

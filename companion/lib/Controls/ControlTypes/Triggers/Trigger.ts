@@ -15,6 +15,7 @@ import type {
 	ControlWithEvents,
 	ControlWithOptions,
 	ControlWithoutActionSets,
+	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
@@ -26,6 +27,7 @@ import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
+import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Class for an interval trigger.
@@ -53,6 +55,7 @@ export class ControlTrigger
 		ControlWithActions,
 		ControlWithEvents,
 		ControlWithoutStyle,
+		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
 		ControlWithoutPushed
@@ -63,6 +66,7 @@ export class ControlTrigger
 	readonly supportsEvents = true
 	readonly supportsEntities = true
 	readonly supportsStyle = false
+	readonly supportsLayeredStyle = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
@@ -737,13 +741,17 @@ export class ControlTrigger
 		return false
 	}
 
+	getLastDrawStyle(): DrawStyleModel | null {
+		return null
+	}
+
 	/**
 	 * Execute a press of this control
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
 	}
-	getBitmapSize() {
+	getBitmapFeedbackSize() {
 		return null
 	}
 }
