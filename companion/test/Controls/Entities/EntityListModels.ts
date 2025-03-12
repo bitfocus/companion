@@ -1,5 +1,5 @@
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { SomeEntityModel, EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 
 export function getAllModelsInTree(tree: SomeEntityModel[]): SomeEntityModel[] {
 	const result: SomeEntityModel[] = []
