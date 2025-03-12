@@ -3,14 +3,13 @@ import { SocketContext } from './util.js'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
-import { useActionDefinitionsSubscription } from './Hooks/useActionDefinitionsSubscription.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
 import { observable } from 'mobx'
 import { PagesStore } from './Stores/PagesStore.js'
 import { EventDefinitionsStore } from './Stores/EventDefinitionsStore.js'
 import { EntityDefinitionsStore } from './Stores/EntityDefinitionsStore.js'
-import { useFeedbackDefinitionsSubscription } from './Hooks/useFeedbackDefinitionsSubscription.js'
+import { useEntityDefinitionsSubscription } from './Hooks/useEntityDefinitionsSubscription.js'
 import { ModuleInfoStore } from './Stores/ModuleInfoStore.js'
 import { useModuleInfoSubscription } from './Hooks/useModuleInfoSubscription.js'
 import { TriggersListStore } from './Stores/TriggersListStore.js'
@@ -77,8 +76,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 
 	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
 
-	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.entityDefinitions.actions)
-	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.entityDefinitions.feedbacks)
+	const actionDefinitionsReady = useEntityDefinitionsSubscription(socket, rootStore.entityDefinitions.actions)
+	const feedbackDefinitionsReady = useEntityDefinitionsSubscription(socket, rootStore.entityDefinitions.feedbacks)
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)

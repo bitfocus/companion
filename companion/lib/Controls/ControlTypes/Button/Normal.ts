@@ -14,8 +14,8 @@ import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 /**
  * Class for the stepped button control.
@@ -138,21 +138,23 @@ export class ControlButtonNormal
 
 		if (style.text) {
 			// Block out the button text
-			const injectedVariableValues: CompanionVariableValues = {}
+			const overrideVariableValues: CompanionVariableValues = {}
+
 			const location = this.deps.page.getLocationOfControlId(this.controlId)
 			if (location) {
 				// Ensure we don't enter into an infinite loop
-				// TODO - legacy location variables?
-				injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
+				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
 			}
 
+			// Setup the parser
+			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
+				location,
+				this.entities.getLocalVariableEntities(),
+				overrideVariableValues
+			)
+
 			if (style.textExpression) {
-				const parseResult = this.deps.variables.values.executeExpression(
-					style.text,
-					location,
-					undefined,
-					injectedVariableValues
-				)
+				const parseResult = parser.executeExpression(style.text, undefined)
 				if (parseResult.ok) {
 					style.text = parseResult.value + ''
 				} else {
@@ -161,9 +163,9 @@ export class ControlButtonNormal
 				}
 				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			} else {
-				const parseResult = this.deps.variables.values.parseVariables(style.text, location, injectedVariableValues)
+				const parseResult = parser.parseVariables(style.text)
 				style.text = parseResult.text
-				this.#last_draw_variables = parseResult.variableIds.length > 0 ? new Set(parseResult.variableIds) : null
+				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			}
 		}
 
@@ -224,6 +226,7 @@ export class ControlButtonNormal
 	 * @param allChangedVariables - variables with changes
 	 */
 	onVariablesChanged(allChangedVariables: Set<string>): void {
+		// console.log('change', allChangedVariables)
 		if (this.#last_draw_variables) {
 			for (const variable of allChangedVariables.values()) {
 				if (this.#last_draw_variables.has(variable)) {
@@ -282,6 +285,7 @@ export class ControlButtonNormal
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
+			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
 		return clone ? cloneDeep(obj) : obj

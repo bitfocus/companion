@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import classnames from 'classnames'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
@@ -22,6 +22,8 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 		clickable: !!props.onClick,
 		right: !!props.right,
 	}
+
+	const preloadedImage = useImagePreloader(props.preview || null)
 
 	return (
 		<div
@@ -54,11 +56,11 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 				className="button-border"
 				ref={props.dragRef}
 				style={{
-					backgroundImage: props.preview ? `url(${props.preview})` : undefined,
+					backgroundImage: preloadedImage ? `url(${preloadedImage})` : undefined,
 				}}
 				title={props.title}
 			>
-				{!props.preview && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
+				{!preloadedImage && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
 			</div>
 		</div>
 	)
@@ -91,6 +93,8 @@ export const ButtonPreviewBase = React.memo(function ButtonPreview(props: Button
 		right: !!props.right,
 	}
 
+	const preloadedImage = useImagePreloader(props.preview || null)
+
 	return (
 		<div
 			ref={props.dropRef}
@@ -122,12 +126,38 @@ export const ButtonPreviewBase = React.memo(function ButtonPreview(props: Button
 				className="button-border"
 				ref={props.dragRef}
 				style={{
-					backgroundImage: props.preview ? `url(${props.preview})` : undefined,
+					backgroundImage: preloadedImage ? `url(${preloadedImage})` : undefined,
 				}}
 				title={props.title}
 			>
-				{!props.preview && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
+				{!preloadedImage && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
 			</div>
 		</div>
 	)
 })
+
+function useImagePreloader(imageUrl: string | null) {
+	const [preloadedImage, setPreloadedImage] = useState<string | null>(imageUrl)
+	useEffect(() => {
+		let aborted = false
+
+		if (!imageUrl) {
+			setPreloadedImage(imageUrl ?? null)
+			return
+		}
+
+		const image = new Image()
+		image.onload = () => {
+			if (!aborted) {
+				setPreloadedImage(imageUrl)
+			}
+		}
+		image.src = imageUrl
+
+		return () => {
+			aborted = false
+		}
+	}, [imageUrl])
+
+	return preloadedImage
+}

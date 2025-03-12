@@ -15,16 +15,24 @@ import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.js'
 import { InlineHelp } from '../Components/InlineHelp.js'
-import { ControlLocalVariables } from '../LocalVariableDefinitions.js'
+import { LocalVariablesStore } from './LocalVariablesStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface ButtonStyleConfigProps {
 	controlId: string
 	style: ButtonStyleProperties | undefined
 	configRef: MutableRefObject<SomeButtonModel | undefined>
+	localVariablesStore: LocalVariablesStore | null
 	mainDialog?: boolean
 }
 
-export function ButtonStyleConfig({ controlId, style, configRef, mainDialog = false }: ButtonStyleConfigProps) {
+export function ButtonStyleConfig({
+	controlId,
+	style,
+	configRef,
+	localVariablesStore,
+	mainDialog = false,
+}: ButtonStyleConfigProps) {
 	const socket = useContext(SocketContext)
 
 	const [pngError, setPngError] = useState<string | null>(null)
@@ -86,6 +94,7 @@ export function ButtonStyleConfig({ controlId, style, configRef, mainDialog = fa
 						setPngError={setPngError}
 						clearPng={clearPng}
 						mainDialog={mainDialog}
+						localVariablesStore={localVariablesStore}
 					/>
 				)}
 			</CForm>
@@ -101,9 +110,10 @@ interface ButtonStyleConfigFieldsProps {
 	clearPng: () => void
 	mainDialog?: boolean
 	showField?: (key: string) => boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
-export function ButtonStyleConfigFields({
+export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields({
 	values,
 	setValueInner,
 	setPng,
@@ -111,6 +121,7 @@ export function ButtonStyleConfigFields({
 	clearPng,
 	mainDialog,
 	showField,
+	localVariablesStore,
 }: ButtonStyleConfigFieldsProps) {
 	const setTextValue = useCallback((val: any) => setValueInner('text', val), [setValueInner])
 	const setSizeValue = useCallback((val: any) => setValueInner('size', val), [setValueInner])
@@ -137,6 +148,8 @@ export function ButtonStyleConfigFields({
 		local: true,
 	}
 
+	const textLocalVariables = localVariablesStore?.getOptions(null, true, true)
+
 	return (
 		<>
 			{showField2('text') && (
@@ -160,7 +173,7 @@ export function ButtonStyleConfigFields({
 							setValue={setTextValue}
 							value={values.text ?? ''}
 							useVariables
-							localVariables={ControlLocalVariables}
+							localVariables={textLocalVariables}
 							isExpression={values.textExpression}
 							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>
@@ -279,4 +292,4 @@ export function ButtonStyleConfigFields({
 			</div>
 		</>
 	)
-}
+})

@@ -2,14 +2,16 @@ import {
 	EntityModelType,
 	EntityOwner,
 	EntitySupportedChildGroupDefinition,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from './EntityInstance.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
+import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
-export type ControlEntityListDefinition = Pick<EntitySupportedChildGroupDefinition, 'type' | 'booleanFeedbacksOnly'>
+export type ControlEntityListDefinition = Pick<EntitySupportedChildGroupDefinition, 'type' | 'feedbackListType'>
 
 export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
@@ -29,6 +31,10 @@ export class ControlEntityList {
 
 	get ownerId(): EntityOwner | null {
 		return this.#ownerId
+	}
+
+	get listDefinition(): ControlEntityListDefinition {
+		return this.#listDefinition
 	}
 
 	constructor(
@@ -75,7 +81,7 @@ export class ControlEntityList {
 		// TODO - validate that the entities are of the correct type
 
 		this.#entities =
-			entities?.map(
+			entities?.map?.(
 				(entity) =>
 					new ControlEntityInstance(
 						this.#instanceDefinitions,
@@ -173,7 +179,7 @@ export class ControlEntityList {
 	/**
 	 * Remove a child entity
 	 */
-	removeEntity(id: string): boolean {
+	removeEntity(id: string): ControlEntityInstance | undefined {
 		const index = this.#entities.findIndex((entity) => entity.id === id)
 		if (index !== -1) {
 			const entity = this.#entities[index]
@@ -181,14 +187,15 @@ export class ControlEntityList {
 
 			entity.cleanup()
 
-			return true
+			return entity
 		}
 
 		for (const entity of this.#entities) {
-			if (entity.removeChild(id)) return true
+			const removed = entity.removeChild(id)
+			if (removed) return removed
 		}
 
-		return false
+		return undefined
 	}
 
 	/**
@@ -234,7 +241,11 @@ export class ControlEntityList {
 		// If a feedback list, check that the feedback is of the correct type
 		if (this.#listDefinition.type === EntityModelType.Feedback) {
 			const feedbackDefinition = entity.getEntityDefinition()
-			if (this.#listDefinition.booleanFeedbacksOnly && feedbackDefinition?.feedbackType !== 'boolean') return false
+			if (
+				!feedbackDefinition ||
+				!canAddEntityToFeedbackList(this.#listDefinition.feedbackListType ?? null, feedbackDefinition)
+			)
+				return false
 		}
 
 		return true
@@ -312,13 +323,6 @@ export class ControlEntityList {
 		return changed
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	postProcessImport(): Promise<unknown>[] {
-		return this.#entities.flatMap((entity) => entity.postProcessImport())
-	}
-
 	clearCachedValueForConnectionId(connectionId: string): boolean {
 		let changed = false
 		for (const entity of this.#entities) {
@@ -332,7 +336,10 @@ export class ControlEntityList {
 	 * Get the value of this feedback as a boolean
 	 */
 	getBooleanFeedbackValue(): boolean {
-		if (this.#listDefinition.type !== EntityModelType.Feedback || !this.#listDefinition.booleanFeedbacksOnly)
+		if (
+			this.#listDefinition.type !== EntityModelType.Feedback ||
+			this.#listDefinition.feedbackListType !== FeedbackEntitySubType.Boolean
+		)
 			throw new Error('ControlEntityList is not boolean feedbacks')
 
 		let result = true
@@ -347,7 +354,10 @@ export class ControlEntityList {
 	}
 
 	getChildBooleanFeedbackValues(): boolean[] {
-		if (this.#listDefinition.type !== EntityModelType.Feedback || !this.#listDefinition.booleanFeedbacksOnly)
+		if (
+			this.#listDefinition.type !== EntityModelType.Feedback ||
+			this.#listDefinition.feedbackListType !== FeedbackEntitySubType.Boolean
+		)
 			throw new Error('ControlEntityList is not boolean feedbacks')
 
 		const values: boolean[] = []
@@ -366,7 +376,7 @@ export class ControlEntityList {
 	 * Note: Does not clone the style
 	 */
 	buildFeedbackStyle(styleBuilder: FeedbackStyleBuilder): void {
-		if (this.#listDefinition.type !== EntityModelType.Feedback || this.#listDefinition.booleanFeedbacksOnly)
+		if (this.#listDefinition.type !== EntityModelType.Feedback || !!this.#listDefinition.feedbackListType)
 			throw new Error('ControlEntityList is not style feedbacks')
 
 		// Note: We don't need to consider children of the feedbacks here, as that can only be from boolean feedbacks which are handled by the `getBooleanValue`
@@ -381,11 +391,11 @@ export class ControlEntityList {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): boolean {
-		let changed = false
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
+		const changed: ControlEntityInstance[] = []
 
 		for (const entity of this.#entities) {
-			if (entity.updateFeedbackValues(connectionId, newValues)) changed = true
+			changed.push(...entity.updateFeedbackValues(connectionId, newValues))
 		}
 
 		return changed
@@ -398,5 +408,19 @@ export class ControlEntityList {
 		for (const entity of this.#entities) {
 			entity.getAllEnabledConnectionIds(connectionIds)
 		}
+	}
+
+	setVariableValue(name: string, value: any): boolean {
+		if (!name) return false
+
+		for (const entity of this.getAllEntities()) {
+			if (entity.rawLocalVariableName === name) {
+				entity.setUserValue(value)
+
+				return true
+			}
+		}
+
+		return false
 	}
 }

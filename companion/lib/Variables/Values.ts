@@ -17,21 +17,16 @@
 
 import LogController from '../Log/Controller.js'
 import EventEmitter from 'events'
-import {
-	ParseVariablesResult,
-	VARIABLE_UNKNOWN_VALUE,
-	VariableValueData,
-	VariablesCache,
-	executeExpression,
-	parseVariablesInString,
-} from './Util.js'
-import { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import { VARIABLE_UNKNOWN_VALUE, VariableValueData, VariablesCache } from './Util.js'
+import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { ClientSocket } from '../UI/Handler.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>]
+	local_variables_changed: [changed: Set<string>, fromControlId: string]
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
@@ -52,45 +47,15 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		return this.getVariableValue('custom', name)
 	}
 
-	/**
-	 * Parse the variables in a string
-	 * @param str - String to parse variables in
-	 * @param controlLocation - Location of the control
-	 * @param injectedVariableValues - Inject some variable values
-	 * @returns with variables replaced with values
-	 */
-	parseVariables(
-		str: string,
+	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
-		injectedVariableValues?: VariablesCache
-	): ParseVariablesResult {
-		const injectedVariableValuesComplete = {
-			...this.#getInjectedVariablesForLocation(controlLocation),
-			...injectedVariableValues,
-		}
-		return parseVariablesInString(str, this.#variableValues, injectedVariableValuesComplete)
-	}
+		localValues: ControlEntityInstance[] | null,
+		overrideVariableValues: CompanionVariableValues | null
+	): VariablesAndExpressionParser {
+		const thisValues: VariablesCache = new Map()
+		this.addInjectedVariablesForLocation(thisValues, controlLocation)
 
-	/**
-	 * Parse and execute an expression in a string
-	 * @param str - String containing the expression to parse
-	 * @param controlLocation - Location of the control
-	 * @param requiredType - Fail if the result is not of specified type
-	 * @param injectedVariableValues - Inject some variable values
-	 * @returns result of the expression
-	 */
-	executeExpression(
-		str: string,
-		controlLocation: ControlLocation | null | undefined,
-		requiredType?: string,
-		injectedVariableValues?: CompanionVariableValues
-	): ExecuteExpressionResult {
-		const injectedVariableValuesComplete = {
-			...this.#getInjectedVariablesForLocation(controlLocation),
-			...injectedVariableValues,
-		}
-
-		return executeExpression(str, this.#variableValues, requiredType, injectedVariableValuesComplete)
+		return new VariablesAndExpressionParser(this.#variableValues, thisValues, localValues, overrideVariableValues)
 	}
 
 	forgetConnection(_id: string, label: string): void {
@@ -140,25 +105,22 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		})
 	}
 
-	setVariableValues(label: string, variables: Record<string, CompanionVariableValue | undefined>): void {
+	setVariableValues(label: string, variables: VariableValueEntry[]): void {
 		const moduleValues = this.#variableValues[label] ?? {}
 		this.#variableValues[label] = moduleValues
 
 		const all_changed_variables_set = new Set<string>()
-		for (const variable in variables) {
-			// Note: explicitly using for-in here, as Object.entries is slow
-			const value = variables[variable]
+		for (const variable of variables) {
+			if (moduleValues[variable.id] !== variable.value) {
+				moduleValues[variable.id] = variable.value
 
-			if (moduleValues[variable] !== value) {
-				moduleValues[variable] = value
-
-				all_changed_variables_set.add(`${label}:${variable}`)
+				all_changed_variables_set.add(`${label}:${variable.id}`)
 				// Also report the old custom variable names as having changed
-				if (label === 'custom') all_changed_variables_set.add(`internal:custom_${variable}`)
+				if (label === 'custom') all_changed_variables_set.add(`internal:custom_${variable.id}`)
 
 				// Skip debug if it's just internal:time_* spamming.
-				if (this.#logger.isSillyEnabled() && !(label === 'internal' && variable.startsWith('time_'))) {
-					this.#logger.silly('Variable $(' + label + ':' + variable + ') is "' + value + '"')
+				if (this.#logger.isSillyEnabled() && !(label === 'internal' && variable.id.startsWith('time_'))) {
+					this.#logger.silly('Variable $(' + label + ':' + variable.id + ') is "' + variable.value + '"')
 				}
 			}
 		}
@@ -179,16 +141,24 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	/**
 	 * Variables to inject based on location
 	 */
-	#getInjectedVariablesForLocation(location: ControlLocation | null | undefined): CompanionVariableValues {
-		return {
-			'$(this:page)': location?.pageNumber,
-			'$(this:column)': location?.column,
-			'$(this:row)': location?.row,
-			// Reactivity happens for these because of references to the inner variables
-			'$(this:page_name)': location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
-			'$(this:step)': location
-				? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})`
-				: VARIABLE_UNKNOWN_VALUE,
-		}
+	addInjectedVariablesForLocation(values: VariablesCache, location: ControlLocation | null | undefined): void {
+		values.set('$(this:page)', location?.pageNumber)
+		values.set('$(this:column)', location?.column)
+		values.set('$(this:row)', location?.row)
+
+		// Reactivity happens for these because of references to the inner variables
+		values.set(
+			'$(this:page_name)',
+			location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE
+		)
+		values.set(
+			'$(this:step)',
+			location ? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})` : VARIABLE_UNKNOWN_VALUE
+		)
 	}
+}
+
+export interface VariableValueEntry {
+	id: string
+	value: CompanionVariableValue | undefined
 }

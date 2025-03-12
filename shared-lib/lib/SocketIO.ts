@@ -87,10 +87,10 @@ export interface ClientToBackendEventsMap {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'action-definitions:subscribe': () => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
-	'action-definitions:unsubscribe': () => void
-	'feedback-definitions:subscribe': () => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
-	'feedback-definitions:unsubscribe': () => void
+	'entity-definitions:subscribe': (
+		type: EntityModelType
+	) => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
+	'entity-definitions:unsubscribe': (type: EntityModelType) => void
 	'variable-definitions:subscribe': () => AllVariableDefinitions
 	'variable-definitions:unsubscribe': () => void
 	'triggers:subscribe': () => Record<string, ClientTriggerData | undefined>
@@ -146,6 +146,18 @@ export interface ClientToBackendEventsMap {
 		entityLocation: SomeSocketEntityLocation,
 		id: string,
 		isInverted: boolean
+	) => boolean
+	'controls:entity:set-variable-name': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		name: string
+	) => boolean
+	'controls:entity:set-variable-value': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		value: any
 	) => boolean
 	'controls:entity:set-option': (
 		controlId: string,
@@ -212,6 +224,8 @@ export interface ClientToBackendEventsMap {
 		key: string,
 		value: boolean
 	) => boolean
+
+	'controls:local-variables-values': (controlId: string) => CompanionVariableValues | undefined
 
 	'triggers:create': () => string
 	'triggers:clone': (controlId: string) => string | false
@@ -296,7 +310,7 @@ export interface ClientToBackendEventsMap {
 	'preview:location:unsubscribe': (location: ControlLocation, subId: string) => void
 	'preview:button-reference:subscribe': (
 		subId: string,
-		location: ControlLocation | undefined,
+		fromControlId: string,
 		options: Record<string, any>
 	) => string | null
 	'preview:button-reference:unsubscribe': (subId: string) => void
@@ -402,8 +416,7 @@ export interface BackendToClientEventsMap {
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
 	'triggers:update': (change: TriggersUpdate) => void
-	'action-definitions:update': (change: EntityDefinitionUpdate) => void
-	'feedback-definitions:update': (change: EntityDefinitionUpdate) => void
+	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void

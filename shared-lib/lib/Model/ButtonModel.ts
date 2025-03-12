@@ -1,6 +1,6 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
-import { SomeEntityModel } from './EntityModel.js'
-import { SomeButtonGraphicsElement } from './StyleLayersModel.js'
+import type { SomeEntityModel } from './EntityModel.js'
+import type { SomeButtonGraphicsElement } from './StyleLayersModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
 
 export type SomeButtonModel =
@@ -25,6 +25,8 @@ export interface ButtonModelBase {
 	feedbacks: SomeEntityModel[]
 
 	steps: NormalButtonSteps
+
+	localVariables: SomeEntityModel[]
 }
 
 export interface NormalButtonModel extends ButtonModelBase {

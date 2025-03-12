@@ -85,9 +85,13 @@ export function useModuleStoreInfo(moduleId: string | undefined): ModuleStoreMod
 		if (!moduleId) return
 
 		return modules.storeVersions.subscribeToModuleStoreVersions(moduleId)
-	}, [modules.storeVersions])
+	}, [modules.storeVersions, moduleId])
 
-	return useComputed(() => (moduleId ? modules.storeVersions.getModuleStoreVersions(moduleId) : null), [moduleId])
+	if (moduleId) {
+		return modules.storeVersions.getModuleStoreVersions(moduleId)
+	} else {
+		return null
+	}
 }
 
 export function useModuleUpgradeToVersions(moduleId: string | undefined): ModuleUpgradeToOtherVersion[] {

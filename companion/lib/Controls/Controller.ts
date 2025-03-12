@@ -24,10 +24,10 @@ import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { assertNever } from '@companion-app/shared/Util.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
+import { CompanionVariableValues } from '@companion-module/base'
+import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -335,19 +335,7 @@ export class ControlsController extends CoreBase {
 
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
-				let newEntity: SomeEntityModel | null = null
-				switch (entityTypeLabel) {
-					case EntityModelType.Action:
-						newEntity = this.instance.definitions.createActionItem(connectionId, entityDefinition)
-						break
-					case EntityModelType.Feedback:
-						newEntity = this.instance.definitions.createFeedbackItem(connectionId, entityDefinition, false) // TODO booleanOnly?
-						break
-					default:
-						assertNever(entityTypeLabel)
-						return false
-				}
-
+				const newEntity = this.instance.definitions.createEntityItem(connectionId, entityTypeLabel, entityDefinition)
 				if (!newEntity) return false
 
 				return control.entities.entityAdd(entityLocation, ownerId, newEntity)
@@ -441,6 +429,24 @@ export class ControlsController extends CoreBase {
 			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 			return control.entities.entitySetInverted(entityLocation, id, isInverted)
+		})
+
+		client.onPromise('controls:entity:set-variable-name', (controlId, entityLocation, id, name) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+			return control.entities.entitySetVariableName(entityLocation, id, name)
+		})
+
+		client.onPromise('controls:entity:set-variable-value', (controlId, entityLocation, id, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+			return control.entities.entitySetVariableValue(entityLocation, id, value)
 		})
 
 		client.onPromise(
@@ -856,6 +862,15 @@ export class ControlsController extends CoreBase {
 
 			return control.layeredStyleUpdateOptionIsExpression(elementId, key, value)
 		})
+
+		client.onPromise('controls:local-variables-values', (controlId) => {
+			const control = this.getControl(controlId)
+			if (!control) return {}
+
+			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+			return control.entities.getLocalVariableValues()
+		})
 	}
 
 	/**
@@ -1021,12 +1036,15 @@ export class ControlsController extends CoreBase {
 	/**
 	 * Propagate variable changes to the controls
 	 */
-	onVariablesChanged(allChangedVariablesSet: Set<string>): void {
+	onVariablesChanged(allChangedVariablesSet: Set<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
-		this.triggers.emit('variables_changed', allChangedVariablesSet)
+		this.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
 		if (allChangedVariablesSet.size > 0) {
 			for (const control of this.#controls.values()) {
+				// If the changes are local variables and from another control, ignore them
+				if (fromControlId && fromControlId !== control.controlId) continue
+
 				if (control.supportsStyle || control.supportsLayeredStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}
@@ -1202,6 +1220,22 @@ export class ControlsController extends CoreBase {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)
 		}
+	}
+
+	createVariablesAndExpressionParser(
+		controlLocation: ControlLocation | null | undefined,
+		overrideVariableValues: CompanionVariableValues | null
+	): VariablesAndExpressionParser {
+		const controlId = controlLocation && this.page.getControlIdAt(controlLocation)
+		const control = controlId && this.getControl(controlId)
+
+		const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
+
+		return this.variablesController.values.createVariablesAndExpressionParser(
+			controlLocation,
+			variableEntities,
+			overrideVariableValues
+		)
 	}
 }
 

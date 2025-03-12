@@ -1,6 +1,7 @@
 import { ButtonModelBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -23,6 +24,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	readonly #feedbacks: ControlEntityList
+	readonly #localVariables: ControlEntityList
 
 	readonly #steps = new Map<string, ControlEntityListActionStep>()
 
@@ -44,16 +46,11 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		this.#sendRuntimePropsChange = sendRuntimePropsChange
 
-		this.#feedbacks = new ControlEntityList(
-			props.instanceDefinitions,
-			props.internalModule,
-			props.moduleHost,
-			props.controlId,
-			null,
-			{
-				type: EntityModelType.Feedback,
-			}
-		)
+		this.#feedbacks = this.createEntityList({ type: EntityModelType.Feedback })
+		this.#localVariables = this.createEntityList({
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Value,
+		})
 
 		this.#current_step_id = '0'
 
@@ -62,6 +59,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	loadStorage(storage: ButtonModelBase, skipSubscribe: boolean, isImport: boolean) {
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
+		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
 
 		// Future:	cleanup the steps/sets
 		this.#steps.clear()
@@ -78,6 +76,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 */
 	getFeedbackEntities(): SomeEntityModel[] {
 		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	}
+
+	getLocalVariableEntities(): ControlEntityInstance[] {
+		return this.#localVariables.getAllEntities()
 	}
 
 	// /**
@@ -114,6 +116,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		if (listId === 'feedbacks') return this.#feedbacks
+		if (listId === 'local-variables') return this.#localVariables
 
 		if (typeof listId === 'object' && 'setId' in listId && 'stepId' in listId) {
 			return this.#steps.get(listId.stepId)?.sets.get(listId.setId)
@@ -123,7 +126,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	protected getAllEntityLists(): ControlEntityList[] {
-		const entityLists: ControlEntityList[] = [this.#feedbacks]
+		const entityLists: ControlEntityList[] = [this.#feedbacks, this.#localVariables]
 
 		for (const step of this.#steps.values()) {
 			entityLists.push(...Array.from(step.sets.values()))
@@ -297,18 +300,21 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	): ControlEntityListActionStep {
 		const options = existingOptions || cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
 
-		const downList = this.#createActionEntityList(existingActions?.down || [], true, !!existingActions)
-		const upList = this.#createActionEntityList(existingActions?.up || [], true, !!existingActions)
+		const downList = this.#createActionEntityList(existingActions?.down || [], false, !!existingActions)
+		const upList = this.#createActionEntityList(existingActions?.up || [], false, !!existingActions)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
 		sets.set('down', downList)
 		sets.set('up', upList)
 
 		if (this.#hasRotaryActions) {
-			sets.set('rotate_left', this.#createActionEntityList(existingActions?.rotate_left || [], true, !!existingActions))
+			sets.set(
+				'rotate_left',
+				this.#createActionEntityList(existingActions?.rotate_left || [], false, !!existingActions)
+			)
 			sets.set(
 				'rotate_right',
-				this.#createActionEntityList(existingActions?.rotate_right || [], true, !!existingActions)
+				this.#createActionEntityList(existingActions?.rotate_right || [], false, !!existingActions)
 			)
 		}
 
@@ -317,7 +323,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			if (typeof setIdNumber === 'number') {
 				sets.set(
 					setIdNumber,
-					this.#createActionEntityList(existingActions?.[setIdNumber] || [], true, !!existingActions)
+					this.#createActionEntityList(existingActions?.[setIdNumber] || [], false, !!existingActions)
 				)
 			}
 		}
@@ -410,11 +416,6 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const newStepId = `${max + 1}`
 		this.#steps.set(newStepId, newStep)
 
-		// Treat it as an import, to make any ids unique
-		Promise.all(Array.from(newStep.sets.values()).map((set) => set.postProcessImport())).catch((e) => {
-			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
-		})
-
 		// Ensure the ui knows which step is current
 		this.#sendRuntimePropsChange()
 
@@ -490,7 +491,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		this.#sendRuntimePropsChange()
 
-		this.triggerRedraw()
+		this.invalidateControl()
 
 		return true
 	}
@@ -578,6 +579,35 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return {
 			sets: sets,
 			options: step.options,
+		}
+	}
+
+	/**
+	 * Update the feedbacks on the button with new values
+	 * @param connectionId The instance the feedbacks are for
+	 * @param newValues The new feedback values
+	 */
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+		for (const step of this.#steps.values()) {
+			for (const set of step.sets.values()) {
+				set.updateFeedbackValues(connectionId, newValues)
+			}
+		}
+
+		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
+
+		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues).length > 0) {
+			this.invalidateControl()
+		}
+
+		const changedVariables = new Set<string>()
+		for (const entity of changedVariableEntities) {
+			const localName = entity.localVariableName
+			if (localName) changedVariables.add(localName)
+		}
+
+		if (changedVariables.size > 0) {
+			this.localVariablesChanged?.(changedVariables)
 		}
 	}
 }

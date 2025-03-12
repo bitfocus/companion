@@ -3,10 +3,9 @@ import { nanoid } from 'nanoid'
 import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { SocketContext } from '../util.js'
 import { useDeepCompareEffect } from 'use-deep-compare'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 interface OptionButtonPreviewProps {
-	location: ControlLocation | undefined
+	controlId: string
 	options: Record<string, any>
 }
 
@@ -15,14 +14,14 @@ interface OptionButtonPreviewProps {
  * @param {string} param.location where this preview is located (if any)
  * @returns
  */
-export function OptionButtonPreview({ location, options }: OptionButtonPreviewProps) {
+export function OptionButtonPreview({ controlId, options }: OptionButtonPreviewProps) {
 	const socket = useContext(SocketContext)
 
 	const [image, setImage] = useState<string | null>(null)
 	useDeepCompareEffect(() => {
 		const id = nanoid()
 		socket
-			.emitPromise('preview:button-reference:subscribe', [id, location, options])
+			.emitPromise('preview:button-reference:subscribe', [id, controlId, options])
 			.then((newImage) => {
 				console.log('got image', newImage)
 				setImage(newImage)

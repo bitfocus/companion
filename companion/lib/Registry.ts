@@ -206,7 +206,7 @@ export class Registry {
 
 		this.page = new PageController(this)
 		this.controls = new ControlsController(this, controlEvents)
-		this.variables = new VariablesController(this.db, this.io, this.page)
+		this.variables = new VariablesController(this.db, this.io, this.page, this.controls)
 		this.graphics = new GraphicsController(
 			this.controls,
 			this.page,
@@ -214,7 +214,7 @@ export class Registry {
 			this.variables.values,
 			this.internalApiRouter
 		)
-		this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
+		this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.controls)
 		this.surfaces = new SurfaceController(
 			this.db,
 			{
@@ -267,7 +267,7 @@ export class Registry {
 			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
 			new InternalSystem(this.internalModule, this),
 			new InternalTriggers(this.internalModule, this.controls),
-			new InternalVariables(this.internalModule, this.variables.values)
+			new InternalVariables(this.internalModule, this.controls, this.page)
 		)
 		this.internalModule.init()
 
@@ -298,11 +298,20 @@ export class Registry {
 		})
 
 		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
-			this.internalModule.variablesChanged(all_changed_variables_set)
-			this.controls.onVariablesChanged(all_changed_variables_set)
+			this.internalModule.onVariablesChanged(all_changed_variables_set, null)
+			this.controls.onVariablesChanged(all_changed_variables_set, null)
 			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-			this.#preview.onVariablesChanged(all_changed_variables_set)
+			this.#preview.onVariablesChanged(all_changed_variables_set, null)
 			this.surfaces.onVariablesChanged(all_changed_variables_set)
+		})
+		this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
+			this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.#preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+		})
+
+		this.page.on('controlIdsMoved', (controlIds) => {
+			this.#preview.onControlIdsLocationChanged(controlIds)
 		})
 
 		// old 'modules_loaded' events

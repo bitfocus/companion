@@ -193,9 +193,14 @@ export class ControlButtonLayered
 			// injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
 		}
 
+		const parser = this.deps.variables.values.createVariablesAndExpressionParser(
+			location,
+			this.entities.getLocalVariableEntities(),
+			injectedVariableValues
+		)
+
 		// TODO-layered inject any new local variables
-		const executeExpression = async (str: string, requiredType?: string) =>
-			this.deps.variables.values.executeExpression(str, location, requiredType, injectedVariableValues)
+		const executeExpression = async (str: string, requiredType?: string) => parser.executeExpression(str, requiredType)
 
 		// Compute the new drawing
 		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -412,6 +417,7 @@ export class ControlButtonLayered
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
+			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
 		return clone ? cloneDeep(obj) : obj

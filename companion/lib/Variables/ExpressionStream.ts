@@ -7,6 +7,7 @@ import type {
 } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { nanoid } from 'nanoid'
 import type { PageController } from '../Page/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
 
 export class VariablesExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
@@ -14,13 +15,20 @@ export class VariablesExpressionStream {
 	// readonly #ioController: UIHandler
 	readonly #pageController: PageController
 	readonly #variablesController: VariablesValues
+	readonly #controlsController: ControlsController
 
 	readonly #sessions = new Map<string, ExpressionStreamSession>()
 
-	constructor(_ioController: UIHandler, pageController: PageController, variablesController: VariablesValues) {
+	constructor(
+		_ioController: UIHandler,
+		pageController: PageController,
+		variablesController: VariablesValues,
+		controlsController: ControlsController
+	) {
 		// this.#ioController = ioController
 		this.#pageController = pageController
 		this.#variablesController = variablesController
+		this.#controlsController = controlsController
 
 		this.#variablesController.on('variables_changed', this.#onValuesChanged)
 	}
@@ -138,9 +146,10 @@ export class VariablesExpressionStream {
 
 	#executeExpression = (expression: string, controlId: string | null, requiredType: string | undefined) => {
 		const location = controlId ? this.#pageController.getLocationOfControlId(controlId) : undefined
+		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
 
 		// TODO - make reactive to control moving?
-		return this.#variablesController.executeExpression(expression, location, requiredType, {}) // TODO local values?
+		return parser.executeExpression(expression, requiredType)
 	}
 }
 

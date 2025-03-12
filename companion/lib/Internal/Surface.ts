@@ -34,7 +34,7 @@ import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
-import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
@@ -632,7 +632,7 @@ export class InternalSurface implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			surface_on_page: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Surface: When on the selected page',
 				description: 'Change style when a surface is on the selected page',
 				feedbackStyle: {

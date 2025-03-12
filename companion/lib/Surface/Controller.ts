@@ -56,13 +56,13 @@ import type {
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import type { LocalUSBDeviceOptions, SurfaceHandlerDependencies, SurfacePanel, SurfacePanelFactory } from './Types.js'
 import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -1108,17 +1108,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		surfaceId: string,
 		injectedVariableValues: CompanionVariableValues | undefined
 	) {
-		const injectedVariableValuesComplete = {
-			...this.#getInjectedVariablesForSurfaceId(surfaceId),
+		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
 			...injectedVariableValues,
-		}
+			...this.#getInjectedVariablesForSurfaceId(surfaceId),
+		})
 
-		return this.#handlerDependencies.variables.values.executeExpression(
-			str,
-			undefined,
-			undefined,
-			injectedVariableValuesComplete
-		)
+		return parser.executeExpression(str, undefined)
 	}
 
 	/**
@@ -1129,8 +1124,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		return {
 			'$(this:surface_id)': surfaceId,
+
 			// Reactivity is triggered manually
 			'$(this:page)': pageNumber,
+
 			// Reactivity happens for these because of references to the inner variables
 			'$(this:page_name)': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
 		}

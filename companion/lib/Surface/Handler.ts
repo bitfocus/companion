@@ -55,8 +55,6 @@ const PINCODE_NUMBER_POSITIONS: [number, number][] = [
 	[3, 0],
 ]
 
-const PINCODE_CODE_POSITION: [number, number] = [0, 1]
-
 const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL: [number, number][] = [
 	// 0
 	[5, 1],
@@ -72,6 +70,21 @@ const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL: [number, number][] = [
 	[2, 0],
 	[3, 0],
 	[4, 0],
+]
+
+const PINCODE_NUMBER_POSITIONS_SDS: [number, number][] = [
+	// 0 1 2 3 4
+	[2, 1],
+	[3, 1],
+	[4, 1],
+	[5, 1],
+	[6, 1],
+	// 5 6 7 8 9
+	[2, 0],
+	[3, 0],
+	[4, 0],
+	[5, 0],
+	[6, 0],
 ]
 
 /**
@@ -197,7 +210,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#recreateLogger()
 
 		this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS
-		this.#pincodeCodePosition = PINCODE_CODE_POSITION
+		this.#pincodeCodePosition = [0, 1]
 
 		// some surfaces need different positions for the pincode numbers
 		if (
@@ -208,10 +221,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		) {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [4, 2]
-		}
-		if (this.panel.info.type === 'Loupedeck CT') {
+		} else if (this.panel.info.type === 'Loupedeck CT') {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [3, 4]
+		} else if (this.panel.info.type === 'Stream Deck Studio' || this.panel.info.type === 'Elgato Stream Deck Studio') {
+			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SDS
+			this.#pincodeCodePosition = [1, 0]
 		}
 
 		if (this.#surfaceConfig.config.never_lock) {
@@ -560,9 +575,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Set the value of a variable
 	 */
 	#onSetVariable(name: string, value: CompanionVariableValue): void {
-		this.#variables.values.setVariableValues('internal', {
-			[name]: value,
-		})
+		this.#variables.values.setVariableValues('internal', [{ id: name, value: value }])
 	}
 
 	/**

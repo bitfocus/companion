@@ -33,7 +33,6 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => setData(null), [])
 		const doAction = useCallback(() => {
-			setData(null)
 			setShow(false)
 
 			// completion callback

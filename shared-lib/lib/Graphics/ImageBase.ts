@@ -485,6 +485,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
 		if (!displayTextStr) return true
 
+		displayTextStr = displayTextStr.replaceAll('\r\n', '\n') // we only want \n as a linebreak
 		displayTextStr = displayTextStr.replaceAll('\\n', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
