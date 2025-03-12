@@ -31,6 +31,7 @@ export class VariablesExpressionStream {
 		this.#controlsController = controlsController
 
 		this.#variablesController.on('variables_changed', this.#onValuesChanged)
+		this.#variablesController.on('local_variables_changed', this.#onValuesChanged)
 	}
 
 	clientConnect(client: ClientSocket) {
@@ -114,8 +115,10 @@ export class VariablesExpressionStream {
 		})
 	}
 
-	#onValuesChanged = (changed: Set<string>) => {
+	#onValuesChanged = (changed: Set<string>, fromControlId?: string) => {
 		for (const [expressionId, session] of this.#sessions) {
+			if (fromControlId && session.controlId !== fromControlId) continue
+
 			for (const variableId of changed) {
 				if (session.latestResult.variableIds.has(variableId)) {
 					// There is some overlap, re-evaluate the expression
