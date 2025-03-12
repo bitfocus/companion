@@ -7,6 +7,7 @@ import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ImageResult } from './ImageResult.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { VariableUpdateReason } from '../Variables/Values.js'
 
 /**
  * Get Socket.io room for preview updates
@@ -185,7 +186,7 @@ export class GraphicsPreview {
 		}
 	}
 
-	onVariablesChanged(allChangedSet: Set<string>, fromControlId: string | null): void {
+	onVariablesChanged(allChangedSet: Map<string, VariableUpdateReason>, fromControlId: string | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.length) continue

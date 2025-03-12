@@ -6,7 +6,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { ControlEntityList } from './EntityList.js'
-import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import { ControlEntityListPoolBase, ControlEntityListPoolProps, NewFeedbackValue } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
@@ -69,9 +69,14 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
-		this.#actions.updateFeedbackValues(connectionId, newValues)
+	updateFeedbackValues(connectionId: string, newValues: NewFeedbackValue[]): void {
+		const feedbackValues: Record<string, NewFeedbackValue> = {}
+		for (const val of newValues) {
+			feedbackValues[val.entityId] = val
+		}
 
-		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues)) this.invalidateControl()
+		this.#actions.updateFeedbackValues(connectionId, feedbackValues)
+
+		if (this.#feedbacks.updateFeedbackValues(connectionId, feedbackValues)) this.invalidateControl()
 	}
 }

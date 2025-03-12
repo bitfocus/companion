@@ -7,13 +7,14 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 import { ControlEntityList } from './EntityList.js'
-import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import { ControlEntityListPoolBase, ControlEntityListPoolProps, NewFeedbackValue } from './EntityListPoolBase.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
 import { cloneDeep } from 'lodash-es'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
+import type { VariableUpdateReason } from '../../Variables/Values.js'
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
 	/**
@@ -589,23 +590,33 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+	updateFeedbackValues(connectionId: string, newValues: NewFeedbackValue[]): void {
+		const feedbackValues: Record<string, NewFeedbackValue> = {}
+		for (const val of newValues) {
+			feedbackValues[val.entityId] = val
+		}
+
 		for (const step of this.#steps.values()) {
 			for (const set of step.sets.values()) {
-				set.updateFeedbackValues(connectionId, newValues)
+				set.updateFeedbackValues(connectionId, feedbackValues)
 			}
 		}
 
-		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
+		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, feedbackValues)
 
-		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues).length > 0) {
+		if (this.#feedbacks.updateFeedbackValues(connectionId, feedbackValues).length > 0) {
 			this.invalidateControl()
 		}
 
-		const changedVariables = new Set<string>()
+		const changedVariables = new Map<string, VariableUpdateReason>()
 		for (const entity of changedVariableEntities) {
+			const updateState = feedbackValues[entity.id]
 			const localName = entity.localVariableName
-			if (localName) changedVariables.add(localName)
+			if (localName)
+				changedVariables.set(localName, {
+					controlId: this.controlId,
+					changeSourceVariables: updateState.updateState?.changeSourceVariables ?? [],
+				})
 		}
 
 		if (changedVariables.size > 0) {

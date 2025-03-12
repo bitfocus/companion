@@ -223,9 +223,9 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>) {
+	onVariablesChanged(allChangedVariables: Map<string, unknown>) {
 		if (this.#lastTbarDrawReferencedVariables) {
-			for (const variable of allChangedVariables.values()) {
+			for (const variable of allChangedVariables.keys()) {
 				if (this.#lastTbarDrawReferencedVariables.has(variable)) {
 					this.#logger.silly('variable changed in tbar')
 					this.#triggerRedrawTbar()

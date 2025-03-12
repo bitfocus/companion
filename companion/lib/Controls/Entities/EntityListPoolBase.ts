@@ -13,7 +13,8 @@ import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
 import type { InstanceDefinitionsForEntity } from './Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type { VariableUpdateReason } from '../../Variables/Values.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -22,7 +23,7 @@ export interface ControlEntityListPoolProps {
 	controlId: string
 	commitChange: (redraw?: boolean) => void
 	invalidateControl: () => void
-	localVariablesChanged: ((changedVariables: Set<string>) => void) | null
+	localVariablesChanged: ((changedVariables: Map<string, VariableUpdateReason>) => void) | null
 }
 
 export abstract class ControlEntityListPoolBase {
@@ -50,7 +51,7 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Triggered when local variables have changed
 	 */
-	readonly localVariablesChanged: ((changedVariables: Set<string>) => void) | null
+	readonly localVariablesChanged: ((changedVariables: Map<string, VariableUpdateReason>) => void) | null
 
 	protected constructor(props: ControlEntityListPoolProps) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
@@ -81,12 +82,16 @@ export abstract class ControlEntityListPoolBase {
 
 		if (entitiesOrNames.length === 0) return
 
-		const changedVariables = new Set<string>()
+		const changedVariables = new Map<string, VariableUpdateReason>()
 		for (const entityOrName of entitiesOrNames) {
 			if (!entityOrName) continue
 
 			const variableName = typeof entityOrName === 'string' ? entityOrName : entityOrName.localVariableName
-			if (variableName) changedVariables.add(variableName)
+			if (variableName)
+				changedVariables.set(variableName, {
+					controlId: this.controlId,
+					changeSourceVariables: [variableName],
+				})
 		}
 
 		if (changedVariables.size > 0) {
@@ -601,7 +606,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	abstract updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void
+	abstract updateFeedbackValues(connectionId: string, newValues: NewFeedbackValue[]): void
 
 	/**
 	 * Get all the connectionIds for actions and feedbacks which are active
@@ -615,4 +620,11 @@ export abstract class ControlEntityListPoolBase {
 
 		return connectionIds
 	}
+}
+
+export interface NewFeedbackValue {
+	entityId: string
+	controlId: string
+	value: any
+	updateState: VariableUpdateReason | null
 }

@@ -56,6 +56,7 @@ import {
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { NewFeedbackValue } from '../Controls/Entities/EntityListPoolBase.js'
 
 const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
 
@@ -696,7 +697,18 @@ export class SocketEventsHandler {
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
-		this.#deps.controls.updateFeedbackValues(this.connectionId, msg.values)
+		this.#deps.controls.updateFeedbackValues(
+			this.connectionId,
+			msg.values.map(
+				(v) =>
+					({
+						controlId: v.controlId,
+						entityId: v.id,
+						value: v.value,
+						updateState: null,
+					}) satisfies NewFeedbackValue
+			)
+		)
 	}
 
 	/**

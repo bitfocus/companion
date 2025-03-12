@@ -42,6 +42,7 @@ import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Cont
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
 import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
+import type { VariableUpdateReason } from '../Variables/Values.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -462,7 +463,7 @@ export class InternalVariables implements InternalModuleFragment {
 	/**
 	 * Some variables have been changed
 	 */
-	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
+	onVariablesChanged(changedVariablesSet: Map<string, VariableUpdateReason>, fromControlId: string | null): string[] {
 		/**
 		 * Danger: It is important to not do any debounces here.
 		 * Doing so will cause triggers which are 'on variable change' with a condition to check the variable value to break
@@ -480,9 +481,8 @@ export class InternalVariables implements InternalModuleFragment {
 				}
 			}
 		}
-		if (affectedFeedbackIds.length > 0) {
-			this.#internalModule.checkFeedbacksById(...affectedFeedbackIds)
-		}
+
+		return affectedFeedbackIds
 	}
 
 	/**

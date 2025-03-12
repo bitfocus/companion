@@ -240,8 +240,8 @@ export class ModuleHost {
 	 * Send a list of changed variables to all active instances.
 	 * This will trigger feedbacks using variables to be rechecked
 	 */
-	onVariablesChanged(all_changed_variables_set: Set<string>): void {
-		const changedVariableIds = Array.from(all_changed_variables_set)
+	onVariablesChanged(all_changed_variables_set: Map<string, unknown>): void {
+		const changedVariableIds = Array.from(all_changed_variables_set.keys())
 
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady) {

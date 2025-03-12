@@ -24,6 +24,7 @@ import type { SurfaceController } from './Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { PageController } from '../Page/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { VariableUpdateReason } from '../Variables/Values.js'
 
 export class SurfaceGroup {
 	/**
@@ -291,8 +292,16 @@ export class SurfaceGroup {
 
 		this.#surfaceController.emit('group_page', this.groupId, newPageId)
 
+		const updateReason: VariableUpdateReason = {
+			controlId: null,
+			changeSourceVariables: [],
+		}
+
 		// Future: this is not ideal, but is the best approach for this reactivity for now
-		const changedVariables = new Set(['this:page', 'this:page_name'])
+		const changedVariables = new Map([
+			['this:page', updateReason],
+			['this:page_name', updateReason],
+		])
 
 		for (const surfaceHandler of this.surfaceHandlers) {
 			surfaceHandler.storeNewDevicePage(newPageId, defer)

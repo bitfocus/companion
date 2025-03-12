@@ -91,7 +91,7 @@ export class TriggersEventVariables {
 	 * Handler for the variable_changed event
 	 * @param allChangedVariables Set of all the variables that have changed
 	 */
-	#onVariablesChanged = (allChangedVariables: Set<string>, fromControlId: string | null): void => {
+	#onVariablesChanged = (allChangedVariables: Map<string, unknown>, fromControlId: string | null): void => {
 		// If the event is from a control, but not the same control, ignore it
 		if (fromControlId && fromControlId !== this.#controlId) return
 
