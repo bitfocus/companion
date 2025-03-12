@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useCallback, useContext } from 'react'
 import { TextInputField } from '../../../Components/TextInputField.js'
-import { ControlLocalVariables } from '../../../Controls/LocalVariablesStore.js'
+import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 
@@ -22,12 +22,13 @@ interface FormPropertyFieldProps<TObj, TKey extends keyof TObj> {
 	elementProps: TObj
 	property: TKey
 	label: string | React.ReactNode
+	localVariablesStore: LocalVariablesStore
 	children: (elementProp: { value: ExtractValue<TObj[TKey]> }, setValue: SetValueFn<TObj, TKey>) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField<
 	TObj extends ButtonGraphicsElementBase,
 	TKey extends string & keyof TObj,
->({ controlId, elementProps, property, label, children }: FormPropertyFieldProps<TObj, TKey>) {
+>({ controlId, elementProps, property, label, localVariablesStore, children }: FormPropertyFieldProps<TObj, TKey>) {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const elementId = elementProps.id
@@ -73,7 +74,7 @@ export const FormPropertyField = observer(function FormPropertyField<
 							setValue={setValue as (value: string) => void}
 							value={elementProp.value ?? ''}
 							useVariables
-							localVariables={ControlLocalVariables}
+							localVariables={localVariablesStore.getOptions(null, false, true)}
 							isExpression
 						/>
 					) : (

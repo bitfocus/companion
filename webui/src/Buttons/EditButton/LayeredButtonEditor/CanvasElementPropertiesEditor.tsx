@@ -7,13 +7,16 @@ import React from 'react'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
+import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
 
 export const CanvasElementPropertiesEditor = observer(function CanvasElementPropertiesEditor({
 	controlId,
 	elementProps,
+	localVariablesStore,
 }: {
 	controlId: string
 	elementProps: Readonly<ButtonGraphicsCanvasElement>
+	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
@@ -21,7 +24,13 @@ export const CanvasElementPropertiesEditor = observer(function CanvasElementProp
 				{(elementProp, setValue) => <FieldFillColorInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField> */}
 
-			<FormPropertyField controlId={controlId} elementProps={elementProps} property="decoration" label="Decoration">
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="decoration"
+				label="Decoration"
+			>
 				{(elementProp, setValue) => <FieldDecorationInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 		</>

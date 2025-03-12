@@ -12,9 +12,12 @@ import { ElementsList } from './ElementsList.js'
 import { NonIdealState } from '../../../Components/NonIdealState.js'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
+import { LocalVariablesEditor } from '../LocalVariablesEditor.js'
+import { LocalVariablesStore, useLocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },
+	{ id: 'variables', name: 'Local Variables', position: 'end' },
 	{ id: 'options', name: 'Options', position: 'end' },
 ]
 
@@ -43,6 +46,8 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 		styleStore.updateData(config.style?.layers || [])
 	}, [config.style?.layers])
 
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+
 	return (
 		<>
 			{runtimeProps && (
@@ -54,6 +59,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 						runtimeProps={runtimeProps}
 						rotaryActions={config?.options?.rotaryActions}
 						extraTabs={LayeredButtonExtraTabs}
+						localVariablesStore={localVariablesStore}
 					>
 						{(currentTab) => {
 							if (currentTab === 'style') {
@@ -65,6 +71,22 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 												controlId={controlId}
 												styleStore={styleStore}
 												previewImage={previewImage}
+												localVariablesStore={localVariablesStore}
+											/>
+										</MyErrorBoundary>
+									</div>
+								)
+							}
+
+							if (currentTab === 'variables') {
+								return (
+									<div className="mt-10">
+										<MyErrorBoundary>
+											<LocalVariablesEditor
+												controlId={controlId}
+												location={location}
+												variables={config.localVariables}
+												localVariablesStore={localVariablesStore}
 											/>
 										</MyErrorBoundary>
 									</div>
@@ -95,11 +117,13 @@ interface LayeredButtonEditorStyleProps {
 	controlId: string
 	styleStore: LayeredStyleStore
 	previewImage: string | null
+	localVariablesStore: LocalVariablesStore
 }
 const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	controlId,
 	styleStore,
 	previewImage,
+	localVariablesStore,
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
 
@@ -116,7 +140,11 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 				<hr />
 
 				{elementProps ? (
-					<ElementPropertiesEditor controlId={controlId} elementProps={elementProps} />
+					<ElementPropertiesEditor
+						controlId={controlId}
+						elementProps={elementProps}
+						localVariablesStore={localVariablesStore}
+					/>
 				) : (
 					<NonIdealState icon={faLayerGroup}>
 						Select an element from the list above to edit its properties

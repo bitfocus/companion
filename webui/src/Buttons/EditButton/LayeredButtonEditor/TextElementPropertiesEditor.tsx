@@ -4,7 +4,7 @@ import React from 'react'
 import { InlineHelp } from '../../../Components/InlineHelp.js'
 import { TextInputField } from '../../../Components/TextInputField.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from '../../../Controls/OptionsInputField.js'
-import { ControlLocalVariables } from '../../../Controls/LocalVariablesStore.js'
+import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 import { FONT_SIZES } from '../../../Constants.js'
 import { CompanionAlignment, DropdownChoiceId } from '@companion-module/base'
@@ -16,32 +16,59 @@ import { ElementBoundsProperties } from './ElementBoundsProperties.js'
 export const TextElementPropertiesEditor = observer(function TextElementPropertiesEditor({
 	controlId,
 	elementProps,
+	localVariablesStore,
 }: {
 	controlId: string
 	elementProps: Readonly<ButtonGraphicsTextElement>
+	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
-			<ElementBoundsProperties controlId={controlId} elementProps={elementProps} />
+			<ElementBoundsProperties
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+			/>
 
 			<FormPropertyField
 				controlId={controlId}
 				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
 				property="text"
 				label={<FieldTextLabel elementProps={elementProps} />}
 			>
-				{(elementProp, setValue) => <FieldTextInput elementProp={elementProp} setValue={setValue} />}
+				{(elementProp, setValue) => (
+					<FieldTextInput elementProp={elementProp} localVariablesStore={localVariablesStore} setValue={setValue} />
+				)}
 			</FormPropertyField>
 
-			<FormPropertyField controlId={controlId} elementProps={elementProps} property="fontsize" label="Font Size">
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="fontsize"
+				label="Font Size"
+			>
 				{(elementProp, setValue) => <FieldFontSizeInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField controlId={controlId} elementProps={elementProps} property="color" label="Color">
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="color"
+				label="Color"
+			>
 				{(elementProp, setValue) => <FieldTextColorInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField controlId={controlId} elementProps={elementProps} property="alignment" label="Alignment">
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="alignment"
+				label="Alignment"
+			>
 				{(elementProp, setValue) => <FieldTextAlignmentInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 		</>
@@ -70,17 +97,22 @@ const FieldTextLabel = observer(function FieldTextLabel({ elementProps }: { elem
 	}
 })
 
+interface FieldTextInputProps extends InputFieldCommonProps<ButtonGraphicsTextElement, 'text'> {
+	localVariablesStore: LocalVariablesStore
+}
+
 const FieldTextInput = observer(function FieldTextInput({
 	elementProp,
 	setValue,
-}: InputFieldCommonProps<ButtonGraphicsTextElement, 'text'>) {
+	localVariablesStore,
+}: FieldTextInputProps) {
 	return (
 		<TextInputField
 			tooltip={'Button text'}
 			setValue={setValue}
 			value={elementProp.value ?? ''}
 			useVariables
-			localVariables={ControlLocalVariables}
+			localVariables={localVariablesStore.getOptions(null, false, true)}
 			isExpression={false}
 		/>
 	)

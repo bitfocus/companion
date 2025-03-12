@@ -10,27 +10,52 @@ import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUti
 import { CompanionAlignment, DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 import { ElementBoundsProperties } from './ElementBoundsProperties.js'
+import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
 
 export const ImageElementPropertiesEditor = observer(function ImageElementPropertiesEditor({
 	controlId,
 	elementProps,
+	localVariablesStore,
 }: {
 	controlId: string
 	elementProps: Readonly<ButtonGraphicsImageElement>
+	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
-			<ElementBoundsProperties controlId={controlId} elementProps={elementProps} />
+			<ElementBoundsProperties
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+			/>
 
-			<FormPropertyField controlId={controlId} elementProps={elementProps} property="base64Image" label="Image">
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="base64Image"
+				label="Image"
+			>
 				{(elementProp, setValue) => <FieldImagePickerInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField controlId={controlId} elementProps={elementProps} property="alignment" label="Alignment">
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="alignment"
+				label="Alignment"
+			>
 				{(elementProp, setValue) => <FieldImageAlignmentInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField controlId={controlId} elementProps={elementProps} property="fillMode" label="Fill Mode">
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="fillMode"
+				label="Fill Mode"
+			>
 				{(elementProp, setValue) => <FieldImageFillModeInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 		</>

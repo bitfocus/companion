@@ -11,13 +11,16 @@ import { TextInputField } from '../../../Components/TextInputField.js'
 import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 import { CheckboxInputField } from '../../../Components/CheckboxInputField.js'
+import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	controlId,
 	elementProps,
+	localVariablesStore,
 }: {
 	controlId: string
 	elementProps: Readonly<SomeButtonGraphicsElement>
+	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
@@ -29,7 +32,13 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 			</CCol>
 
 			{elementProps.type !== 'canvas' && (
-				<FormPropertyField controlId={controlId} elementProps={elementProps} property="enabled" label="Enabled">
+				<FormPropertyField
+					controlId={controlId}
+					elementProps={elementProps}
+					localVariablesStore={localVariablesStore}
+					property="enabled"
+					label="Enabled"
+				>
 					{(elementProp, setValue) => <FieldEnabledInput elementProp={elementProp} setValue={setValue} />}
 				</FormPropertyField>
 			)}
