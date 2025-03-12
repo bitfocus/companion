@@ -7,12 +7,13 @@ import { capitalize } from 'lodash-es'
 import { CModalExt } from '../../Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import { ObservableMap } from 'mobx'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
 interface AddEntitiesModalProps {
 	addEntity: (connectionId: string, definitionId: string) => void
-	onlyFeedbackType: 'boolean' | 'advanced' | null
+	feedbackListType: FeedbackEntitySubType | null
 	entityType: EntityModelType
 	entityTypeLabel: string
 }
@@ -22,7 +23,7 @@ export interface AddEntitiesModalRef {
 
 export const AddEntitiesModal = observer(
 	forwardRef<AddEntitiesModalRef, AddEntitiesModalProps>(function AddFeedbacksModal(
-		{ addEntity, onlyFeedbackType, entityType, entityTypeLabel },
+		{ addEntity, feedbackListType, entityType, entityTypeLabel },
 		ref
 	) {
 		const { entityDefinitions } = useContext(RootAppStoreContext)
@@ -92,7 +93,7 @@ export const AddEntitiesModal = observer(
 							itemName={`${entityTypeLabel}s`}
 							expanded={!!filter || expanded[connectionId]}
 							filter={filter}
-							onlyFeedbackType={onlyFeedbackType}
+							feedbackListType={feedbackListType}
 							doToggle={toggleExpanded}
 							doAdd={addAndTrackRecentUsage}
 						/>
@@ -120,7 +121,7 @@ interface ConnectionCollapseProps {
 	itemName: string
 	expanded: boolean
 	filter: string
-	onlyFeedbackType: string | null
+	feedbackListType: FeedbackEntitySubType | null
 	doToggle: (connectionId: string) => void
 	doAdd: (itemId: string) => void
 }
@@ -131,7 +132,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse({
 	itemName,
 	expanded,
 	filter,
-	onlyFeedbackType: onlyType,
+	feedbackListType,
 	doToggle,
 	doAdd,
 }: ConnectionCollapseProps) {
@@ -147,7 +148,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse({
 		return Array.from(items.entries())
 			.map(([id, info]) => {
 				if (!info || !info.label) return null
-				if (onlyType && (!('feedbackType' in info) || info.feedbackType !== onlyType)) return null
+				if (!canAddEntityToFeedbackList(feedbackListType, info)) return null
 
 				return {
 					fullId: `${connectionId}:${id}`,
@@ -156,7 +157,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse({
 				}
 			})
 			.filter((v): v is ConnectionItem => !!v)
-	}, [items, onlyType])
+	}, [items, feedbackListType])
 
 	const searchResults = filter
 		? fuzzySearch(filter, allValues, {
@@ -167,7 +168,7 @@ const ConnectionCollapse = observer(function ConnectionCollapse({
 
 	searchResults.sort((a, b) => a.label.localeCompare(b.label))
 
-	if (!items || items.size === 0) {
+	if (allValues.length === 0) {
 		// Hide card if there are no actions which match
 		return null
 	} else {

@@ -3,6 +3,7 @@ import {
 	EntityModelType,
 	EntitySupportedChildGroupDefinition,
 	FeedbackEntityModel,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -16,6 +17,7 @@ import type { InternalVisitor } from '../../Internal/Types.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 export class ControlEntityInstance {
 	/**
@@ -79,6 +81,32 @@ export class ControlEntityInstance {
 		return this.#cachedFeedbackValue
 	}
 
+	get localVariableName(): string | null {
+		if (this.type !== EntityModelType.Feedback || this.disabled) return null
+
+		const entity = this.#data as FeedbackEntityModel
+		if (!entity.variableName) return null
+
+		// Check if the variable name is valid
+		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		if (!entity.variableName.match(idCheckRegex)) return null
+
+		return `local:${entity.variableName}`
+	}
+
+	get rawLocalVariableName(): string | null {
+		if (this.type !== EntityModelType.Feedback || this.disabled) return null
+
+		const entity = this.#data as FeedbackEntityModel
+		if (!entity.variableName) return null
+
+		// Check if the variable name is valid
+		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		if (!entity.variableName.match(idCheckRegex)) return null
+
+		return entity.variableName
+	}
+
 	/**
 	 * @param instanceDefinitions
 	 * @param internalModule
@@ -124,6 +152,8 @@ export class ControlEntityInstance {
 				}
 			}
 		}
+
+		this.#cachedFeedbackValue = this.#getStartupValue()
 	}
 
 	#getOrCreateChildGroupFromDefinition(listDefinition: EntitySupportedChildGroupDefinition): ControlEntityList {
@@ -216,6 +246,12 @@ export class ControlEntityInstance {
 		}
 	}
 
+	#getStartupValue(): any {
+		if (!isInternalUserValueFeedback(this)) return undefined
+
+		return this.#data.options.startup_value
+	}
+
 	/**
 	 * Set whether this entity is enabled
 	 */
@@ -223,7 +259,7 @@ export class ControlEntityInstance {
 		this.#data.disabled = !enabled
 
 		// Remove from cached feedback values
-		this.#cachedFeedbackValue = undefined
+		this.#cachedFeedbackValue = this.#getStartupValue()
 
 		// Inform relevant module
 		if (!this.#data.disabled) {
@@ -274,13 +310,28 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Set the variable name for this feedback
+	 */
+	setVariableName(variableName: string): void {
+		if (this.#data.type !== EntityModelType.Feedback) return
+
+		const thisData = this.#data as FeedbackEntityModel
+
+		thisData.variableName = variableName
+
+		// Don't need to resubscribe
+	}
+
+	/**
 	 * Set the options for this entity
 	 */
 	setOptions(options: Record<string, any>): void {
 		this.#data.options = options
 
 		// Remove from cached feedback values
-		this.#cachedFeedbackValue = undefined
+		if (this.#getStartupValue() === undefined) {
+			this.#cachedFeedbackValue = undefined
+		}
 
 		// Inform relevant module
 		this.subscribe(false)
@@ -307,7 +358,9 @@ export class ControlEntityInstance {
 		this.#data.options[key] = value
 
 		// Remove from cached feedback values
-		this.#cachedFeedbackValue = undefined
+		if (this.#getStartupValue() === undefined) {
+			this.#cachedFeedbackValue = undefined
+		}
 
 		// Inform relevant module
 		this.subscribe(false)
@@ -341,7 +394,11 @@ export class ControlEntityInstance {
 		}
 
 		const definition = this.getEntityDefinition()
-		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+		if (
+			!definition ||
+			definition.entityType !== EntityModelType.Feedback ||
+			definition.feedbackType !== FeedbackEntitySubType.Boolean
+		)
 			return false
 
 		if (!feedbackData.style) feedbackData.style = {}
@@ -363,7 +420,11 @@ export class ControlEntityInstance {
 		const feedbackData = this.#data as FeedbackEntityModel
 
 		const definition = this.getEntityDefinition()
-		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+		if (
+			!definition ||
+			definition.entityType !== EntityModelType.Feedback ||
+			definition.feedbackType !== FeedbackEntitySubType.Boolean
+		)
 			return false
 
 		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.feedbackStyle || {}
@@ -434,11 +495,12 @@ export class ControlEntityInstance {
 	/**
 	 * Remove a child entity
 	 */
-	removeChild(id: string): boolean {
+	removeChild(id: string): ControlEntityInstance | undefined {
 		for (const childGroup of this.#children.values()) {
-			if (childGroup.removeEntity(id)) return true
+			const removed = childGroup.removeEntity(id)
+			if (removed) return removed
 		}
-		return false
+		return undefined
 	}
 
 	/**
@@ -613,7 +675,7 @@ export class ControlEntityInstance {
 		let changed = false
 
 		if (this.#data.connectionId === connectionId) {
-			this.#cachedFeedbackValue = undefined
+			this.#cachedFeedbackValue = this.#getStartupValue()
 
 			changed = true
 		}
@@ -638,14 +700,19 @@ export class ControlEntityInstance {
 		const definition = this.getEntityDefinition()
 
 		// Special case to handle the internal 'logic' operators, which need to be executed live
-		if (this.connectionId === 'internal' && this.#data.definitionId.startsWith('logic_')) {
+		if (isInternalLogicFeedback(this)) {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
-			const childValues = this.#children.get('children')?.getChildBooleanFeedbackValues() ?? []
+			const childList = this.#children.get('default') ?? this.#children.get('children')
+			const childValues = childList?.getChildBooleanFeedbackValues() ?? []
 
 			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
 		}
 
-		if (!definition || definition.entityType !== EntityModelType.Feedback || definition.feedbackType !== 'boolean')
+		if (
+			!definition ||
+			definition.entityType !== EntityModelType.Feedback ||
+			definition.feedbackType !== FeedbackEntitySubType.Boolean
+		)
 			return false
 
 		if (typeof this.#cachedFeedbackValue === 'boolean') {
@@ -672,19 +739,31 @@ export class ControlEntityInstance {
 		const definition = this.getEntityDefinition()
 		if (!definition || definition.entityType !== EntityModelType.Feedback) return
 
-		if (definition.feedbackType === 'boolean') {
-			if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
-		} else if (definition.feedbackType === 'advanced') {
-			// Special case to handle the internal 'logic' operators, which need to be done differently
-			if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
-				if (this.getBooleanFeedbackValue()) {
-					for (const child of this.#children.get('feedbacks')?.getDirectEntities() || []) {
-						child.buildFeedbackStyle(styleBuilder)
+		switch (definition.feedbackType) {
+			case FeedbackEntitySubType.Boolean:
+				if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
+				break
+			case FeedbackEntitySubType.Advanced:
+				// Special case to handle the internal 'logic' operators, which need to be done differently
+				if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
+					if (this.getBooleanFeedbackValue()) {
+						for (const child of this.#children.get('feedbacks')?.getDirectEntities() || []) {
+							child.buildFeedbackStyle(styleBuilder)
+						}
 					}
+				} else {
+					styleBuilder.applyComplexStyle(this.#cachedFeedbackValue)
 				}
-			} else {
-				styleBuilder.applyComplexStyle(this.#cachedFeedbackValue)
-			}
+				break
+			case FeedbackEntitySubType.Value:
+				// Not valid for building a style
+				break
+			case null:
+				// Not a valid feedback
+				break
+			default:
+				assertNever(definition.feedbackType)
+				break
 		}
 	}
 
@@ -693,27 +772,50 @@ export class ControlEntityInstance {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): boolean {
-		let changed = false
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
+		const changed: ControlEntityInstance[] = []
 
+		let thisChanged = false
 		if (
 			this.type === EntityModelType.Feedback &&
 			this.#data.connectionId === connectionId &&
-			this.#data.id in newValues
+			this.#data.id in newValues &&
+			!isInternalUserValueFeedback(this)
 		) {
 			const newValue = newValues[this.#data.id]
 			if (!isEqual(newValue, this.#cachedFeedbackValue)) {
 				this.#cachedFeedbackValue = newValue
-				changed = true
+				changed.push(this)
+				thisChanged = true
 			}
 		}
 
 		for (const childGroup of this.#children.values()) {
-			if (childGroup.updateFeedbackValues(connectionId, newValues)) changed = true
+			const childrenChanged = childGroup.updateFeedbackValues(connectionId, newValues)
+			changed.push(...childrenChanged)
+
+			if (!thisChanged && isInternalLogicFeedback(this) && childrenChanged.length > 0) {
+				// If this is a logic operator, and one of its children changed, we need to re-evaluate
+				changed.push(this)
+			}
 		}
 
 		return changed
 	}
+
+	/**
+	 * If this is the user value feedback, set the value
+	 */
+	setUserValue(value: any): void {
+		if (!isInternalUserValueFeedback(this)) return
+
+		this.#cachedFeedbackValue = value
+	}
+
+	getUserValue(): any {
+		return this.#cachedFeedbackValue
+	}
+
 	/**
 	 * Get all the connection ids that are enabled
 	 */
@@ -726,4 +828,20 @@ export class ControlEntityInstance {
 			childGroup.getAllEnabledConnectionIds(connectionIds)
 		}
 	}
+}
+
+export function isInternalLogicFeedback(entity: ControlEntityInstance): boolean {
+	return (
+		entity.type === EntityModelType.Feedback &&
+		entity.connectionId === 'internal' &&
+		entity.definitionId.startsWith('logic_')
+	)
+}
+
+export function isInternalUserValueFeedback(entity: ControlEntityInstance): boolean {
+	return (
+		entity.type === EntityModelType.Feedback &&
+		entity.connectionId === 'internal' &&
+		entity.definitionId === 'user_value'
+	)
 }

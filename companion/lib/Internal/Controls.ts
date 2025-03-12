@@ -35,52 +35,17 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
+import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
+	FeedbackEntitySubType,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { nanoid } from 'nanoid'
-
-const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
-	{
-		type: 'dropdown',
-		label: 'Target',
-		id: 'location_target',
-		default: 'this',
-		choices: [
-			{ id: 'this', label: 'This button' },
-			{ id: 'text', label: 'From text' },
-			{ id: 'expression', label: 'From expression' },
-		],
-	},
-	serializeIsVisibleFnSingle({
-		type: 'textinput',
-		label: 'Location (text with variables)',
-		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
-		id: 'location_text',
-		default: '$(this:page)/$(this:row)/$(this:column)',
-		isVisible: (options) => options.location_target === 'text',
-		useVariables: {
-			local: true,
-		},
-	}),
-	serializeIsVisibleFnSingle({
-		type: 'textinput',
-		label: 'Location (expression)',
-		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
-		id: 'location_expression',
-		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
-		isVisible: (options) => options.location_target === 'expression',
-		useVariables: {
-			local: true,
-		},
-		isExpression: true,
-	}),
-]
+import { CHOICES_DYNAMIC_LOCATION } from './Util.js'
 
 const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
@@ -414,7 +379,7 @@ export class InternalControls implements InternalModuleFragment {
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			bank_style: {
-				feedbackType: 'advanced',
+				feedbackType: FeedbackEntitySubType.Advanced,
 				label: 'Button: Use another buttons style',
 				description: 'Imitate the style of another button',
 				showButtonPreview: true,
@@ -433,7 +398,7 @@ export class InternalControls implements InternalModuleFragment {
 				],
 			},
 			bank_pushed: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Button: When pushed',
 				description: 'Change style when a button is being pressed',
 				showButtonPreview: true,
@@ -453,7 +418,7 @@ export class InternalControls implements InternalModuleFragment {
 				],
 			},
 			bank_current_step: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Button: Check step',
 				description: 'Change style based on the current step of a button',
 				showButtonPreview: true,
@@ -534,7 +499,7 @@ export class InternalControls implements InternalModuleFragment {
 				if (!feedback.options.properties) {
 					// TODO populate these properties instead
 					return {
-						value: cloneDeep(render.style),
+						value: cloneDeep(render.style) as any,
 						referencedVariables,
 					}
 				} else {

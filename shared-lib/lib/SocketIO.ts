@@ -146,6 +146,18 @@ export interface ClientToBackendEventsMap {
 		id: string,
 		isInverted: boolean
 	) => boolean
+	'controls:entity:set-variable-name': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		name: string
+	) => boolean
+	'controls:entity:set-variable-value': (
+		controlId: string,
+		entityLocation: SomeSocketEntityLocation,
+		id: string,
+		value: any
+	) => boolean
 	'controls:entity:set-option': (
 		controlId: string,
 		entityLocation: SomeSocketEntityLocation,
@@ -199,6 +211,8 @@ export interface ClientToBackendEventsMap {
 	'controls:event:set-option': (controlId: string, eventId: string, key: string, val: any) => boolean
 	'controls:event:reorder': (controlId: string, dragIndex: number, hoverIndex: number) => boolean
 	'controls:event:add': (controlId: string, eventType: string) => boolean
+
+	'controls:local-variables-values': (controlId: string) => CompanionVariableValues | undefined
 
 	'triggers:create': () => string
 	'triggers:clone': (controlId: string) => string | false
@@ -283,7 +297,7 @@ export interface ClientToBackendEventsMap {
 	'preview:location:unsubscribe': (location: ControlLocation, subId: string) => void
 	'preview:button-reference:subscribe': (
 		subId: string,
-		location: ControlLocation | undefined,
+		fromControlId: string,
 		options: Record<string, any>
 	) => string | null
 	'preview:button-reference:unsubscribe': (subId: string) => void

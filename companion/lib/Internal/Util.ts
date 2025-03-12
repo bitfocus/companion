@@ -1,22 +1,22 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { Logger } from '../Log/Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
-import type { VariablesCache } from '../Variables/Util.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
+import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 
 /**
  *
  */
 export function ParseInternalControlReference(
 	logger: Logger,
-	variablesController: VariablesValues,
+	parser: VariablesAndExpressionParser,
 	pressLocation: ControlLocation | undefined,
 	options: Record<string, any>,
-	useVariableFields: boolean,
-	injectedVariableValues?: VariablesCache
+	useVariableFields: boolean
 ): {
 	location: ControlLocation | null
-	referencedVariables: string[]
+	referencedVariables: Set<string>
 } {
 	const sanitisePageNumber = (pageNumber: number): number | null => {
 		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
@@ -79,7 +79,7 @@ export function ParseInternalControlReference(
 	}
 
 	let location: ControlLocation | null = null
-	let referencedVariables: string[] = []
+	let referencedVariables = new Set<string>()
 
 	switch (options.location_target) {
 		case 'this':
@@ -93,7 +93,7 @@ export function ParseInternalControlReference(
 			break
 		case 'text':
 			if (useVariableFields) {
-				const result = variablesController.parseVariables(options.location_text, pressLocation, injectedVariableValues)
+				const result = parser.parseVariables(options.location_text)
 
 				location = parseLocationString(result.text)
 				referencedVariables = result.variableIds
@@ -103,21 +103,53 @@ export function ParseInternalControlReference(
 			break
 		case 'expression':
 			if (useVariableFields) {
-				const result = variablesController.executeExpression(
-					options.location_expression,
-					pressLocation,
-					'string',
-					injectedVariableValues
-				)
+				const result = parser.executeExpression(options.location_expression, 'string')
 				if (result.ok) {
 					location = parseLocationString(String(result.value))
 				} else {
 					logger.warn(`${result.error}, in expression: "${options.location_expression}"`)
 				}
-				referencedVariables = Array.from(result.variableIds)
+				referencedVariables = result.variableIds
 			}
 			break
 	}
 
 	return { location, referencedVariables }
 }
+
+export const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
+	{
+		type: 'dropdown',
+		label: 'Target',
+		id: 'location_target',
+		default: 'this',
+		choices: [
+			{ id: 'this', label: 'This button' },
+			{ id: 'text', label: 'From text' },
+			{ id: 'expression', label: 'From expression' },
+		],
+	},
+	serializeIsVisibleFnSingle({
+		type: 'textinput',
+		label: 'Location (text with variables)',
+		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
+		id: 'location_text',
+		default: '$(this:page)/$(this:row)/$(this:column)',
+		isVisible: (options) => options.location_target === 'text',
+		useVariables: {
+			local: true,
+		},
+	}),
+	serializeIsVisibleFnSingle({
+		type: 'textinput',
+		label: 'Location (expression)',
+		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
+		id: 'location_expression',
+		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
+		isVisible: (options) => options.location_target === 'expression',
+		useVariables: {
+			local: true,
+		},
+		isExpression: true,
+	}),
+]

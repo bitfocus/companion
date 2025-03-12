@@ -9,6 +9,7 @@ import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefini
 import { EntityEditorHeading } from './EntityEditorHeadingProps.js'
 import { AddEntityPanel } from './AddEntityPanel.js'
 import { observer } from 'mobx-react-lite'
+import { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface EditableEntityListProps {
 	controlId: string
@@ -20,8 +21,10 @@ interface EditableEntityListProps {
 	ownerId: EntityOwner | null
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 export const EditableEntityList = observer(function EditableEntityList({
 	controlId,
@@ -33,8 +36,10 @@ export const EditableEntityList = observer(function EditableEntityList({
 	ownerId,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
+	feedbackListType,
 	readonly,
+	localVariablesStore,
+	isLocalVariablesList,
 }: EditableEntityListProps) {
 	const addEntity = useCallback(
 		(connectionId: string, definitionId: string) => serviceFactory.addEntity(connectionId, definitionId, ownerId),
@@ -57,14 +62,16 @@ export const EditableEntityList = observer(function EditableEntityList({
 				readonly={readonly}
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
-				onlyFeedbackType={onlyFeedbackType}
+				feedbackListType={feedbackListType}
 				entities={entities}
 				serviceFactory={serviceFactory}
+				localVariablesStore={localVariablesStore}
+				isLocalVariablesList={isLocalVariablesList}
 			/>
 			<AddEntityPanel
 				addEntity={addEntity}
 				entityType={entityType}
-				onlyFeedbackType={onlyFeedbackType}
+				feedbackListType={feedbackListType}
 				entityTypeLabel={entityTypeLabel}
 				readonly={readonly}
 			/>
@@ -80,8 +87,10 @@ interface MinimalEntityListProps {
 	serviceFactory: IEntityEditorService
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
+	isLocalVariablesList: boolean
 }
 
 export const MinimalEntityList = observer(function MinimalEntityList({
@@ -92,8 +101,10 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 	serviceFactory,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
+	feedbackListType,
 	readonly,
+	localVariablesStore,
+	isLocalVariablesList,
 }: MinimalEntityListProps) {
 	const dragId = `${controlId}_${entityType}`
 
@@ -114,8 +125,10 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 								serviceFactory={serviceFactory}
 								entityType={entityType}
 								entityTypeLabel={entityTypeLabel}
-								onlyFeedbackType={onlyFeedbackType}
+								feedbackListType={feedbackListType}
 								readonly={readonly}
+								localVariablesStore={localVariablesStore}
+								isLocalVariablesList={isLocalVariablesList}
 							/>
 						</MyErrorBoundary>
 					))}

@@ -7,12 +7,14 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PageModel, PageModelChangesItem } from '@companion-app/shared/Model/PageModel.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
+import _ from 'lodash'
 
 const PagesRoom = 'pages'
 
 interface PageControllerEvents {
 	pagecount: [count: number]
 	pageindexchange: [pageIds: Set<string>]
+	controlIdsMoved: [controlIds: string[]]
 
 	name: [pageNumber: number, name: string | undefined]
 }
@@ -207,11 +209,11 @@ export class PageController extends CoreBase<PageControllerEvents> {
 
 		if (pageNumber === 1 && this.getPageCount() == 1) throw new Error(`Can't delete last page`)
 
-		const removedControls = this.getAllControlIdsOnPage(pageNumber)
-
 		// Fetch the page and ensure it exists
 		const pageInfo = this.getPageInfo(pageNumber)
-		if (!pageInfo) return removedControls
+		if (!pageInfo) return []
+
+		const removedControls = this.getAllControlIdsOnPage(pageNumber)
 
 		// Delete the info for the page
 		delete this.#pagesById[pageInfo.id]
@@ -236,6 +238,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		// inform other interested controllers
 		this.emit('pagecount', this.getPageCount())
 		this.emit('pageindexchange', changedPageIds)
+		this.emit('controlIdsMoved', removedControls)
 
 		return removedControls
 	}
@@ -463,6 +466,8 @@ export class PageController extends CoreBase<PageControllerEvents> {
 				],
 			})
 
+			this.emit('controlIdsMoved', _.compact([oldControlId, controlId]))
+
 			return true
 		} else {
 			return false
@@ -555,11 +560,11 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	resetPage(pageNumber: number, redraw = true): string[] {
 		this.logger.silly('Reset page ' + pageNumber)
 
-		const removedControls = this.getAllControlIdsOnPage(pageNumber)
-
 		// Fetch the page and ensure it exists
 		const pageInfo = this.getPageInfo(pageNumber)
-		if (!pageInfo) return removedControls
+		if (!pageInfo) return []
+
+		const removedControls = this.getAllControlIdsOnPage(pageNumber)
 
 		const controlChanges: PageModelChangesItem['controls'] = []
 
@@ -592,6 +597,8 @@ export class PageController extends CoreBase<PageControllerEvents> {
 				},
 			],
 		})
+
+		this.emit('controlIdsMoved', removedControls)
 
 		return removedControls
 	}

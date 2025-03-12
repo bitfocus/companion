@@ -266,7 +266,8 @@ export class ImportExportController {
 		const generateFilename = (filename: string, exportType: string, fileExt: string): string => {
 			//If the user isn't using their default file name, don't append any extra info in file name since it was a manual choice
 			const useDefault = filename == this.#userConfigController.getKey('default_export_filename')
-			const parsedName = this.#variablesController.values.parseVariables(filename, null).text
+			const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
+			const parsedName = parser.parseVariables(filename).text
 
 			return parsedName && parsedName !== 'undefined'
 				? `${parsedName}${exportType && useDefault ? '_' + exportType : ''}.${fileExt}`
@@ -1124,10 +1125,15 @@ export class ImportExportController {
 			style: cloneDeep(control.style),
 			feedbacks: [],
 			steps: {},
+			localVariables: [],
 		}
 
 		if (control.feedbacks) {
 			result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
+		}
+
+		if (control.localVariables) {
+			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
 		}
 
 		const allEntities: SomeEntityModel[] = [...result.feedbacks]

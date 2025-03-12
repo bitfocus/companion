@@ -25,6 +25,7 @@ import {
 	ActionEntityModel,
 	EntityModelBase,
 	EntityModelType,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -118,7 +119,6 @@ export class InstanceDefinitions {
 					client.join(FeedbacksRoom)
 
 					return this.#feedbackDefinitions
-
 				default:
 					assertNever(type)
 					return {}
@@ -153,8 +153,9 @@ export class InstanceDefinitions {
 				}
 
 				if (style.text) {
+					const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
 					if (style.textExpression) {
-						const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
+						const parseResult = parser.executeExpression(style.text, undefined)
 						if (parseResult.ok) {
 							style.text = parseResult.value + ''
 						} else {
@@ -162,7 +163,7 @@ export class InstanceDefinitions {
 							style.text = 'ERR'
 						}
 					} else {
-						const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
+						const parseResult = parser.parseVariables(style.text)
 						style.text = parseResult.text
 					}
 				}
@@ -217,7 +218,7 @@ export class InstanceDefinitions {
 					isInverted: false,
 				}
 
-				if (/*!booleanOnly &&*/ definition.feedbackType === 'boolean' && definition.feedbackStyle) {
+				if (/*!booleanOnly &&*/ definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
 					feedback.style = cloneDeep(definition.feedbackStyle)
 				}
 
@@ -320,6 +321,7 @@ export class InstanceDefinitions {
 			},
 			feedbacks: [],
 			steps: {},
+			localVariables: [],
 		}
 		if (definition.steps) {
 			for (let i = 0; i < definition.steps.length; i++) {
