@@ -513,13 +513,7 @@ export class ControlTrigger
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	postProcessImport(): void {
-		const ps = []
-
-		ps.push(this.entities.postProcessImport())
-
-		Promise.all(ps).catch((e) => {
-			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
-		})
+		this.entities.resubscribeEntities()
 
 		this.commitChange()
 		this.sendRuntimePropsChange()

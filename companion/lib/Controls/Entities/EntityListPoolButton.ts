@@ -300,18 +300,21 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	): ControlEntityListActionStep {
 		const options = existingOptions || cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
 
-		const downList = this.#createActionEntityList(existingActions?.down || [], true, !!existingActions)
-		const upList = this.#createActionEntityList(existingActions?.up || [], true, !!existingActions)
+		const downList = this.#createActionEntityList(existingActions?.down || [], false, !!existingActions)
+		const upList = this.#createActionEntityList(existingActions?.up || [], false, !!existingActions)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
 		sets.set('down', downList)
 		sets.set('up', upList)
 
 		if (this.#hasRotaryActions) {
-			sets.set('rotate_left', this.#createActionEntityList(existingActions?.rotate_left || [], true, !!existingActions))
+			sets.set(
+				'rotate_left',
+				this.#createActionEntityList(existingActions?.rotate_left || [], false, !!existingActions)
+			)
 			sets.set(
 				'rotate_right',
-				this.#createActionEntityList(existingActions?.rotate_right || [], true, !!existingActions)
+				this.#createActionEntityList(existingActions?.rotate_right || [], false, !!existingActions)
 			)
 		}
 
@@ -320,7 +323,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			if (typeof setIdNumber === 'number') {
 				sets.set(
 					setIdNumber,
-					this.#createActionEntityList(existingActions?.[setIdNumber] || [], true, !!existingActions)
+					this.#createActionEntityList(existingActions?.[setIdNumber] || [], false, !!existingActions)
 				)
 			}
 		}
@@ -412,11 +415,6 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		const newStepId = `${max + 1}`
 		this.#steps.set(newStepId, newStep)
-
-		// Treat it as an import, to make any ids unique
-		Promise.all(Array.from(newStep.sets.values()).map((set) => set.postProcessImport())).catch((e) => {
-			this.logger.silly(`stepDuplicate failed postProcessImport for ${this.controlId} failed: ${e.message}`)
-		})
 
 		// Ensure the ui knows which step is current
 		this.#sendRuntimePropsChange()

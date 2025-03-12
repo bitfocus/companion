@@ -142,11 +142,22 @@ export class ControlEntityInstance {
 		}
 
 		if (data.connectionId === 'internal') {
+			let children = { ...data.children }
+
+			// Perform the upgrade conversion now.
+			// If we do this later, then any children will end up discarded
+			const newProps = this.#internalModule.entityUpgrade(this.#data, this.#controlId)
+			if (newProps) {
+				this.replaceProps(newProps, false)
+
+				children = { ...children, ...newProps.children }
+			}
+
 			const supportedChildGroups = this.getSupportedChildGroupDefinitions()
 			for (const groupDefinition of supportedChildGroups) {
 				try {
 					const childGroup = this.#getOrCreateChildGroupFromDefinition(groupDefinition)
-					childGroup.loadStorage(data.children?.[groupDefinition.groupId] ?? [], true, isCloned)
+					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], true, isCloned)
 				} catch (e: any) {
 					this.#logger.error(`Error loading child entity group: ${e.message}`)
 				}
@@ -224,9 +235,8 @@ export class ControlEntityInstance {
 	 * @param onlyConnectionId If set, only re-subscribe entities for this connection
 	 */
 	subscribe(recursive: boolean, onlyType?: EntityModelType, onlyConnectionId?: string): void {
-		if (this.#data.disabled) return
-
 		if (
+			!this.#data.disabled &&
 			(!onlyConnectionId || this.#data.connectionId === onlyConnectionId) &&
 			(!onlyType || this.#data.type === onlyType)
 		) {
@@ -598,31 +608,6 @@ export class ControlEntityInstance {
 			}
 		}
 		return changed
-	}
-
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	postProcessImport(): Promise<unknown>[] {
-		const ps: Promise<unknown>[] = []
-
-		if (this.#data.connectionId === 'internal') {
-			const newProps = this.#internalModule.entityUpgrade(this.asEntityModel(), this.#controlId)
-			if (newProps) {
-				this.replaceProps(newProps, false)
-			}
-			setImmediate(() => {
-				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
-			})
-		} else {
-			ps.push(this.#moduleHost.connectionEntityUpdate(this.asEntityModel(), this.#controlId))
-		}
-
-		for (const childGroup of this.#children.values()) {
-			ps.push(...childGroup.postProcessImport())
-		}
-
-		return ps
 	}
 
 	/**

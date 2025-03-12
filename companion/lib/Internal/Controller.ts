@@ -46,6 +46,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { Complete } from '@companion-module/base/dist/util.js'
 import { InternalSystem } from './System.js'
+import type { VariableValueEntry } from '../Variables/Values.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -109,24 +110,7 @@ export class InternalController {
 			for (const entity of allEntities) {
 				if (entity.connectionId !== 'internal') continue
 
-				const newEntity = this.entityUpgrade(entity.asEntityModel(false), controlId)
-				if (newEntity) {
-					const updatedEntity = control.entities.entityReplace(newEntity)
-					if (updatedEntity && newEntity.children) {
-						// If the updated entity gained children, push them to the control
-						for (const [groupId, children] of Object.entries(newEntity.children)) {
-							if (!children) continue
-
-							for (const child of children) {
-								const childEntity = updatedEntity.addChild(groupId, child)
-
-								this.entityUpdate(childEntity.asEntityModel(), controlId)
-							}
-						}
-					}
-				}
-
-				this.entityUpdate(newEntity || entity.asEntityModel(), controlId)
+				this.entityUpdate(entity.asEntityModel(), controlId)
 			}
 		}
 
@@ -405,7 +389,13 @@ export class InternalController {
 	setVariables(variables: Record<string, CompanionVariableValue | undefined>): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		this.#variablesController.values.setVariableValues('internal', variables)
+		// This isn't ideal, but it's cheap enough and avoids updating the calling code
+		const valuesArr: VariableValueEntry[] = Object.entries(variables).map(([id, value]) => ({
+			id,
+			value,
+		}))
+
+		this.#variablesController.values.setVariableValues('internal', valuesArr)
 	}
 	/**
 	 * Recheck all feedbacks of specified types

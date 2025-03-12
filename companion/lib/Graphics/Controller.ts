@@ -34,7 +34,7 @@ import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
+import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
@@ -117,7 +117,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			const values = this.#pendingVariables
 			if (values) {
 				this.#pendingVariables = null
-				this.#variableValuesController.setVariableValues('internal', values)
+
+				// This isn't ideal, but ensures we don't report duplicate changes
+				const valuesArr: VariableValueEntry[] = Object.entries(values).map(([id, value]) => ({
+					id,
+					value,
+				}))
+
+				this.#variableValuesController.setVariableValues('internal', valuesArr)
 			}
 		},
 		{
