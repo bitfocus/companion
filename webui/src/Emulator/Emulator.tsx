@@ -115,7 +115,7 @@ export const Emulator = observer(function Emulator() {
 		const onKeyDown = (e: KeyboardEvent) => {
 			if (!emulatorId) return
 
-			const xy = keymap[e.code] ?? keymap[e.charCode]
+			const xy = keymap[e.code] ?? keymap[e.keyCode]
 			if (xy) {
 				socket.emitPromise('emulator:press', [emulatorId, ...xy]).catch((e: any) => {
 					console.error('press failed', e)
@@ -127,7 +127,7 @@ export const Emulator = observer(function Emulator() {
 		const onKeyUp = (e: KeyboardEvent) => {
 			if (!emulatorId) return
 
-			const xy = keymap[e.code] ?? keymap[e.charCode]
+			const xy = keymap[e.code] ?? keymap[e.keyCode]
 			if (xy) {
 				socket.emitPromise('emulator:release', [emulatorId, ...xy]).catch((e: any) => {
 					console.error('release failed', e)
