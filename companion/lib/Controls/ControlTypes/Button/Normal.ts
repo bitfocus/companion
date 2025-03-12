@@ -14,8 +14,7 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
-import type { CompanionVariableValues } from '@companion-module/base'
-import type { VariableUpdateReason } from '../../../Variables/Values.js'
+import { CompanionVariableValues } from '@companion-module/base'
 
 /**
  * Class for the stepped button control.
@@ -220,10 +219,10 @@ export class ControlButtonNormal
 	 * Propagate variable changes
 	 * @param allChangedVariables - variables with changes
 	 */
-	onVariablesChanged(allChangedVariables: Map<string, VariableUpdateReason>): void {
+	onVariablesChanged(allChangedVariables: Set<string>): void {
 		// console.log('change', allChangedVariables)
 		if (this.#last_draw_variables) {
-			for (const variable of allChangedVariables.keys()) {
+			for (const variable of allChangedVariables.values()) {
 				if (this.#last_draw_variables.has(variable)) {
 					this.logger.silly('variable changed in button ' + this.controlId)
 

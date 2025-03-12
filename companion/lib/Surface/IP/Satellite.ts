@@ -343,11 +343,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(allChangedVariables: Map<string, unknown>): void {
+	onVariablesChanged(allChangedVariables: Set<string>): void {
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			if (!outputVariable.lastReferencedVariables) continue
 
-			for (const variable of allChangedVariables.keys()) {
+			for (const variable of allChangedVariables.values()) {
 				if (!outputVariable.lastReferencedVariables.has(variable)) continue
 
 				// There is a change, recalculate and send the value

@@ -4,7 +4,6 @@ import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { VariableUpdateReason } from '../Variables/Values.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithStyle | ControlWithoutStyle) &
@@ -33,7 +32,7 @@ export interface ControlWithStyle extends ControlBase<any> {
 	 * Propagate variable changes
 	 * @param allChangedVariables - variables with changes
 	 */
-	onVariablesChanged(allChangedVariables: Map<string, VariableUpdateReason>): void
+	onVariablesChanged(allChangedVariables: Set<string>): void
 }
 
 export interface ControlWithoutStyle extends ControlBase<any> {

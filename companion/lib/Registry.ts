@@ -298,10 +298,10 @@ export class Registry {
 			this.#preview.onVariablesChanged(all_changed_variables_set, null)
 			this.surfaces.onVariablesChanged(all_changed_variables_set)
 		})
-		this.variables.values.on('local_variables_changed', (all_changed_variables_set, controlId) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, controlId)
-			this.controls.onVariablesChanged(all_changed_variables_set, controlId)
-			this.#preview.onVariablesChanged(all_changed_variables_set, controlId)
+		this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
+			this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.#preview.onVariablesChanged(all_changed_variables_set, fromControlId)
 		})
 
 		this.page.on('controlIdsMoved', (controlIds) => {

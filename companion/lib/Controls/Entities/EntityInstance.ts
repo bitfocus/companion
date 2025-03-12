@@ -18,7 +18,6 @@ import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { NewFeedbackValue } from './EntityListPoolBase.js'
 
 export class ControlEntityInstance {
 	/**
@@ -707,8 +706,6 @@ export class ControlEntityInstance {
 			const childValues = childList?.getChildBooleanFeedbackValues() ?? []
 
 			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
-			// } else if (isInternalExpressionFeedback(this)) {
-			// TODO - implement this
 		}
 
 		if (
@@ -775,7 +772,7 @@ export class ControlEntityInstance {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, NewFeedbackValue>): ControlEntityInstance[] {
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
 		const changed: ControlEntityInstance[] = []
 
 		let thisChanged = false
@@ -786,14 +783,8 @@ export class ControlEntityInstance {
 			!isInternalUserValueFeedback(this)
 		) {
 			const newValue = newValues[this.#data.id]
-
-			const discardUpdateFromSelf =
-				newValue.updateState &&
-				this.localVariableName &&
-				newValue.updateState.changeSourceVariables.includes(this.localVariableName)
-
-			if (!discardUpdateFromSelf && !isEqual(newValue.value, this.#cachedFeedbackValue)) {
-				this.#cachedFeedbackValue = newValue.value
+			if (!isEqual(newValue, this.#cachedFeedbackValue)) {
+				this.#cachedFeedbackValue = newValue
 				changed.push(this)
 				thisChanged = true
 			}

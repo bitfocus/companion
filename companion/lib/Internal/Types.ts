@@ -11,7 +11,6 @@ import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import type { VariableUpdateReason } from '../Variables/Values.js'
 
 export interface FeedbackEntityModelExt extends FeedbackEntityModel {
 	controlId: string
@@ -75,10 +74,7 @@ export interface InternalModuleFragment {
 	getVariableDefinitions?: () => VariableDefinitionTmp[]
 	updateVariables?: () => void
 
-	onVariablesChanged?: (
-		changedVariablesSet: Map<string, VariableUpdateReason>,
-		fromControlId: string | null
-	) => string[]
+	onVariablesChanged?: (changedVariablesSet: Set<string>, fromControlId: string | null) => void
 }
 
 export interface ExecuteFeedbackResultWithReferences {

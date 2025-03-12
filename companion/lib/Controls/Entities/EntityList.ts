@@ -10,7 +10,6 @@ import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
-import { NewFeedbackValue } from './EntityListPoolBase.js'
 
 export type ControlEntityListDefinition = Pick<EntitySupportedChildGroupDefinition, 'type' | 'feedbackListType'>
 
@@ -399,7 +398,7 @@ export class ControlEntityList {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, NewFeedbackValue>): ControlEntityInstance[] {
+	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
 		const changed: ControlEntityInstance[] = []
 
 		for (const entity of this.#entities) {

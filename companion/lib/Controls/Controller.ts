@@ -27,8 +27,6 @@ import type { ControlCommonEvents, ControlDependencies } from './ControlDependen
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
-import type { NewFeedbackValue } from './Entities/EntityListPoolBase.js'
-import type { VariableUpdateReason } from '../Variables/Values.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -986,7 +984,7 @@ export class ControlsController extends CoreBase {
 	/**
 	 * Propagate variable changes to the controls
 	 */
-	onVariablesChanged(allChangedVariablesSet: Map<string, VariableUpdateReason>, fromControlId: string | null): void {
+	onVariablesChanged(allChangedVariablesSet: Set<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
 		this.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
@@ -1121,12 +1119,12 @@ export class ControlsController extends CoreBase {
 	updateFeedbackValues(connectionId: string, result: NewFeedbackValue[]): void {
 		if (result.length === 0) return
 
-		const values: Record<string, NewFeedbackValue[]> = {}
+		const values: Record<string, Record<string, any>> = {}
 
 		for (const item of result) {
-			if (!values[item.controlId]) values[item.controlId] = []
+			if (!values[item.controlId]) values[item.controlId] = {}
 
-			values[item.controlId].push(item)
+			values[item.controlId][item.id] = item.value
 		}
 
 		// Pass values to controls
@@ -1137,36 +1135,6 @@ export class ControlsController extends CoreBase {
 			}
 		}
 	}
-
-	// /**
-	//  * Update values for some feedbacks
-	//  * @param connectionId
-	//  * @param result - object containing new values for the feedbacks that have changed
-	//  */
-	// updateSingleInternalFeedbackValues(
-	// 	controlId: string,
-	// 	entityId: string,
-	// 	value: any,
-	// 	sourceState: LocalVariablesUpdateReason
-	// ): void {
-	// 	if (result.length === 0) return
-
-	// 	const values: Record<string, Record<string, any>> = {}
-
-	// 	for (const item of result) {
-	// 		if (!values[item.controlId]) values[item.controlId] = {}
-
-	// 		values[item.controlId][item.id] = item.value
-	// 	}
-
-	// 	// Pass values to controls
-	// 	for (const [controlId, newValues] of Object.entries(values)) {
-	// 		const control = this.getControl(controlId)
-	// 		if (control && control.supportsEntities) {
-	// 			control.entities.updateFeedbackValues(connectionId, newValues)
-	// 		}
-	// 	}
-	// }
 
 	/**
 	 * Verify a controlId is valid for the current id scheme and grid size
@@ -1217,4 +1185,10 @@ export class ControlsController extends CoreBase {
 			overrideVariableValues
 		)
 	}
+}
+
+export interface NewFeedbackValue {
+	id: string
+	controlId: string
+	value: any
 }

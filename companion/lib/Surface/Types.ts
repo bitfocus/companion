@@ -45,7 +45,7 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	drawMany?: (entries: DrawButtonItem[]) => void
 	setConfig(config: any, force?: boolean): void
 	getDefaultConfig?: () => any
-	onVariablesChanged?: (allChangedVariables: Map<string, unknown>) => void
+	onVariablesChanged?: (allChangedVariables: Set<string>) => void
 	quit(): void
 	checkForFirmwareUpdates?: (latestVersions?: unknown) => Promise<void>
 }

@@ -25,15 +25,8 @@ import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 interface VariablesValuesEvents {
-	variables_changed: [changed: Map<string, VariableUpdateReason>]
-	local_variables_changed: [changed: Map<string, VariableUpdateReason>, fromControlId: string]
-}
-
-export interface VariableUpdateReason {
-	// The controlId that triggered the update
-	controlId: string | null
-	// Track the variables that have changed in this update, to ensure we don't trigger a loop
-	changeSourceVariables: string[]
+	variables_changed: [changed: Set<string>]
+	local_variables_changed: [changed: Set<string>, fromControlId: string]
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
@@ -67,17 +60,12 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 	forgetConnection(_id: string, label: string): void {
 		if (label !== undefined) {
-			const updateReason: VariableUpdateReason = {
-				controlId: null,
-				changeSourceVariables: [],
-			}
-
 			const valuesForLabel = this.#variableValues[label]
 			if (valuesForLabel !== undefined) {
-				const removed_variables = new Map<string, VariableUpdateReason>()
+				const removed_variables = new Set<string>()
 				for (let variable in valuesForLabel) {
 					valuesForLabel[variable] = undefined
-					removed_variables.set(`${label}:${variable}`, updateReason)
+					removed_variables.add(`${label}:${variable}`)
 				}
 				this.#emitVariablesChanged(removed_variables)
 			}
@@ -90,22 +78,17 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		const valuesTo = this.#variableValues[labelTo] || {}
 		this.#variableValues[labelTo] = valuesTo
 
-		const updateReason: VariableUpdateReason = {
-			controlId: null,
-			changeSourceVariables: [],
-		}
-
 		// Move variable values, and track the 'diff'
 		const valuesFrom = this.#variableValues[labelFrom]
 		if (valuesFrom !== undefined) {
-			const all_changed_variables_set = new Map<string, VariableUpdateReason>()
+			const all_changed_variables_set = new Set<string>()
 
 			for (let variable in valuesFrom) {
 				valuesTo[variable] = valuesFrom[variable]
 				delete valuesFrom[variable]
 
-				all_changed_variables_set.set(`${labelFrom}:${variable}`, updateReason)
-				all_changed_variables_set.set(`${labelTo}:${variable}`, updateReason)
+				all_changed_variables_set.add(`${labelFrom}:${variable}`)
+				all_changed_variables_set.add(`${labelTo}:${variable}`)
 			}
 
 			delete this.#variableValues[labelFrom]
@@ -126,12 +109,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		const moduleValues = this.#variableValues[label] ?? {}
 		this.#variableValues[label] = moduleValues
 
-		const updateReason: VariableUpdateReason = {
-			controlId: null,
-			changeSourceVariables: [],
-		}
-
-		const all_changed_variables_set = new Map<string, VariableUpdateReason>()
+		const all_changed_variables_set = new Set<string>()
 		for (const variable in variables) {
 			// Note: explicitly using for-in here, as Object.entries is slow
 			const value = variables[variable]
@@ -139,9 +117,9 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			if (moduleValues[variable] !== value) {
 				moduleValues[variable] = value
 
-				all_changed_variables_set.set(`${label}:${variable}`, updateReason)
+				all_changed_variables_set.add(`${label}:${variable}`)
 				// Also report the old custom variable names as having changed
-				if (label === 'custom') all_changed_variables_set.set(`internal:custom_${variable}`, updateReason)
+				if (label === 'custom') all_changed_variables_set.add(`internal:custom_${variable}`)
 
 				// Skip debug if it's just internal:time_* spamming.
 				if (this.#logger.isSillyEnabled() && !(label === 'internal' && variable.startsWith('time_'))) {
@@ -153,7 +131,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		this.#emitVariablesChanged(all_changed_variables_set)
 	}
 
-	#emitVariablesChanged(all_changed_variables_set: Map<string, VariableUpdateReason>) {
+	#emitVariablesChanged(all_changed_variables_set: Set<string>) {
 		try {
 			if (all_changed_variables_set.size > 0) {
 				this.emit('variables_changed', all_changed_variables_set)
