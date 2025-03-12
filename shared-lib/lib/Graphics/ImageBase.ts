@@ -758,7 +758,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				break
 			case 'center':
 				this.context2d.textAlign = 'center'
-				xAnchor = (x + w) / 2
+				xAnchor = x + w / 2
 				break
 			case 'right':
 				this.context2d.textAlign = 'right'

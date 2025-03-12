@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useCallback, useContext } from 'react'
 import { TextInputField } from '../../../Components/TextInputField.js'
-import { ControlLocalVariables } from '../../../LocalVariableDefinitions.js'
+import { ControlLocalVariables } from '../../../Controls/LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 
