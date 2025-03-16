@@ -23,6 +23,7 @@ import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { TopbarRenderer } from '@companion-app/shared/Graphics/TopbarRenderer.js'
+import { isPromise } from 'util/types'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -33,6 +34,35 @@ const emptySet: ReadonlySet<string> = new Set()
 export class GraphicsRenderer {
 	static TOPBAR_BOUNDS = new DrawBounds(0, 0, 72, TopbarRenderer.DEFAULT_HEIGHT)
 
+	static #IMAGE_CACHE = new Map<string, Image[]>()
+
+	/**
+	 * Get a cached Image instance.
+	 * Note: This assumes that the image is modified sync
+	 */
+	static #getCachedImage<T>(width: number, height: number, oversampling: number, fcn: (image: Image) => T): T {
+		const key = `${width}x${height}x${oversampling}`
+
+		let pool = GraphicsRenderer.#IMAGE_CACHE.get(key)
+		if (!pool) {
+			pool = []
+			GraphicsRenderer.#IMAGE_CACHE.set(key, pool)
+		}
+
+		const img = pool.pop() || Image.create(width, height, oversampling)
+
+		const res = fcn(img)
+		if (isPromise(res)) {
+			res.finally(() => {
+				pool.push(img)
+			})
+			return res
+		} else {
+			pool.push(img)
+			return res
+		}
+	}
+
 	/**
 	 * Draw the image for an empty button
 	 */
@@ -41,16 +71,16 @@ export class GraphicsRenderer {
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
-		const img = Image.create(72, 72, 2)
+		return this.#getCachedImage(72, 72, 2, (img) => {
+			img.fillColor('black')
 
-		img.fillColor('black')
-
-		if (!options.remove_topbar) {
-			img.drawTextLine(2, 3, formatLocation(location), 'rgb(50, 50, 50)', 8)
-			img.horizontalLine(13.5, { color: 'rgb(30, 30, 30)' })
-		}
-		// console.timeEnd('drawBlankImage')
-		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+			if (!options.remove_topbar) {
+				img.drawTextLine(2, 3, formatLocation(location), 'rgb(50, 50, 50)', 8)
+				img.horizontalLine(13.5, { color: 'rgb(30, 30, 30)' })
+			}
+			// console.timeEnd('drawBlankImage')
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+		})
 	}
 
 	static wrapDrawButtonImage(
@@ -88,85 +118,85 @@ export class GraphicsRenderer {
 	}> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
-		const img = Image.create(72, 72, 4)
+		return this.#getCachedImage(72, 72, 4, async (img) => {
+			let draw_style: DrawStyleModel['style'] | undefined = undefined
 
-		let draw_style: DrawStyleModel['style'] | undefined = undefined
+			// special button types
+			if (drawStyle.style == 'pageup') {
+				draw_style = 'pageup'
 
-		// special button types
-		if (drawStyle.style == 'pageup') {
-			draw_style = 'pageup'
+				img.fillColor(colorDarkGrey)
 
-			img.fillColor(colorDarkGrey)
+				if (options.page_plusminus) {
+					img.drawTextLine(31, 20, options.page_direction_flipped ? '–' : '+', colorWhite, 18)
+				} else {
+					img.drawPath(
+						[
+							[46, 30],
+							[36, 20],
+							[26, 30],
+						],
+						{ color: colorWhite, width: 2 }
+					) // Arrow up path
+				}
 
-			if (options.page_plusminus) {
-				img.drawTextLine(31, 20, options.page_direction_flipped ? '–' : '+', colorWhite, 18)
-			} else {
-				img.drawPath(
-					[
-						[46, 30],
-						[36, 20],
-						[26, 30],
-					],
-					{ color: colorWhite, width: 2 }
-				) // Arrow up path
+				img.drawTextLineAligned(36, 39, 'UP', colorButtonYellow, 10, 'center', 'top')
+			} else if (drawStyle.style == 'pagedown') {
+				draw_style = 'pagedown'
+
+				img.fillColor(colorDarkGrey)
+
+				if (options.page_plusminus) {
+					img.drawTextLine(31, 36, options.page_direction_flipped ? '+' : '–', colorWhite, 18)
+				} else {
+					img.drawPath(
+						[
+							[46, 40],
+							[36, 50],
+							[26, 40],
+						],
+						{ color: colorWhite, width: 2 }
+					) // Arrow down path
+				}
+
+				img.drawTextLineAligned(36, 23, 'DOWN', colorButtonYellow, 10, 'center', 'top')
+			} else if (drawStyle.style == 'pagenum') {
+				draw_style = 'pagenum'
+
+				img.fillColor(colorDarkGrey)
+
+				if (location === undefined) {
+					// Preview (no location)
+					img.drawTextLineAligned(36, 18, 'PAGE', colorButtonYellow, 10, 'center', 'top')
+					img.drawTextLineAligned(36, 32, 'x', colorWhite, 18, 'center', 'top')
+				} else if (!pagename || pagename.toLowerCase() == 'page') {
+					img.drawTextLine(23, 18, 'PAGE', colorButtonYellow, 10)
+					img.drawTextLineAligned(36, 32, '' + location.pageNumber, colorWhite, 18, 'center', 'top')
+				} else {
+					img.drawAlignedText(0, 0, 72, 72, pagename, colorWhite, 18, 'center', 'center')
+				}
+			} else if (drawStyle.style === 'button') {
+				draw_style = 'button'
+
+				await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
+			} else if (drawStyle.style === 'button-layered') {
+				draw_style = 'button-layered'
+
+				await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
+					x: 0,
+					y: 0,
+				})
 			}
 
-			img.drawTextLineAligned(36, 39, 'UP', colorButtonYellow, 10, 'center', 'top')
-		} else if (drawStyle.style == 'pagedown') {
-			draw_style = 'pagedown'
-
-			img.fillColor(colorDarkGrey)
-
-			if (options.page_plusminus) {
-				img.drawTextLine(31, 36, options.page_direction_flipped ? '+' : '–', colorWhite, 18)
-			} else {
-				img.drawPath(
-					[
-						[46, 40],
-						[36, 50],
-						[26, 40],
-					],
-					{ color: colorWhite, width: 2 }
-				) // Arrow down path
+			// console.timeEnd('drawButtonImage')
+			return {
+				buffer: img.buffer(),
+				width: img.realwidth,
+				height: img.realheight,
+				dataUrl: img.toDataURLSync(),
+				draw_style,
 			}
-
-			img.drawTextLineAligned(36, 23, 'DOWN', colorButtonYellow, 10, 'center', 'top')
-		} else if (drawStyle.style == 'pagenum') {
-			draw_style = 'pagenum'
-
-			img.fillColor(colorDarkGrey)
-
-			if (location === undefined) {
-				// Preview (no location)
-				img.drawTextLineAligned(36, 18, 'PAGE', colorButtonYellow, 10, 'center', 'top')
-				img.drawTextLineAligned(36, 32, 'x', colorWhite, 18, 'center', 'top')
-			} else if (!pagename || pagename.toLowerCase() == 'page') {
-				img.drawTextLine(23, 18, 'PAGE', colorButtonYellow, 10)
-				img.drawTextLineAligned(36, 32, '' + location.pageNumber, colorWhite, 18, 'center', 'top')
-			} else {
-				img.drawAlignedText(0, 0, 72, 72, pagename, colorWhite, 18, 'center', 'center')
-			}
-		} else if (drawStyle.style === 'button') {
-			draw_style = 'button'
-
-			await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
-		} else if (drawStyle.style === 'button-layered') {
-			draw_style = 'button-layered'
-
-			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
-				x: 0,
-				y: 0,
-			})
-		}
-
-		// console.timeEnd('drawButtonImage')
-		return {
-			buffer: img.buffer(),
-			width: img.realwidth,
-			height: img.realheight,
-			dataUrl: img.toDataURLSync(),
-			draw_style,
-		}
+		})
 	}
 
 	/**
@@ -267,23 +297,25 @@ export class GraphicsRenderer {
 	 * @param num Display number
 	 */
 	static drawPincodeNumber(num: number): ImageResult {
-		const img = Image.create(72, 72, 3)
-		img.fillColor(colorDarkGrey)
-		img.drawTextLineAligned(36, 36, `${num}`, colorWhite, 44, 'center', 'center')
-		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+		return this.#getCachedImage(72, 72, 3, (img) => {
+			img.fillColor(colorDarkGrey)
+			img.drawTextLineAligned(36, 36, `${num}`, colorWhite, 44, 'center', 'center')
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+		})
 	}
 
 	/**
 	 * Draw pincode entry button
 	 */
 	static drawPincodeEntry(code: string | undefined): ImageResult {
-		const img = Image.create(72, 72, 4)
-		img.fillColor(colorDarkGrey)
-		img.drawTextLineAligned(36, 30, 'Lockout', colorButtonYellow, 14, 'center', 'center')
-		if (code !== undefined) {
-			img.drawAlignedText(0, 15, 72, 72, code.replace(/[a-z0-9]/gi, '*'), colorWhite, 18, 'center', 'center')
-		}
+		return this.#getCachedImage(72, 72, 4, (img) => {
+			img.fillColor(colorDarkGrey)
+			img.drawTextLineAligned(36, 30, 'Lockout', colorButtonYellow, 14, 'center', 'center')
+			if (code !== undefined) {
+				img.drawAlignedText(0, 15, 72, 72, code.replace(/[a-z0-9]/gi, '*'), colorWhite, 18, 'center', 'center')
+			}
 
-		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+		})
 	}
 }
