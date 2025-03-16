@@ -21,6 +21,8 @@ export type SomeButtonGraphicsDrawElement =
 export interface ButtonGraphicsDrawBase {
 	readonly id: string
 	enabled: boolean
+	/* 0-100 */
+	opacity: number
 }
 
 export interface ButtonGraphicsElementBase {
@@ -40,7 +42,7 @@ export type MakeExpressionable<T extends { type: string } /*TSkip extends keyof 
 	[P in keyof Omit<T, 'id'>]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
 }
 
-export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled'> {
+export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled' | 'opacity'> {
 	// Note: this is the background element and can only be at the bottom of the stack
 	type: 'canvas'
 

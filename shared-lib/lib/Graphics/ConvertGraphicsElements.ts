@@ -170,7 +170,8 @@ async function convertImageElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [bounds, base64Image, alignment, fillMode] = await Promise.all([
+	const [opacity, bounds, base64Image, alignment, fillMode] = await Promise.all([
+		helper.getNumber(element.opacity, 100),
 		convertDrawBounds(helper, element),
 		helper.getString<string | null>(element.base64Image, null),
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
@@ -181,6 +182,7 @@ async function convertImageElementForDrawing(
 		id: element.id,
 		type: 'image',
 		enabled,
+		opacity,
 		...bounds,
 		base64Image,
 		alignment,
@@ -196,7 +198,8 @@ async function convertTextElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [bounds, fontsizeRaw, text, color, alignment] = await Promise.all([
+	const [opacity, bounds, fontsizeRaw, text, color, alignment] = await Promise.all([
+		helper.getNumber(element.opacity, 100),
 		convertDrawBounds(helper, element),
 		helper.getUnknown(element.fontsize, 'auto'),
 		helper.getUnknown(element.text, 'ERR'), // TODO-layered better default value
@@ -210,6 +213,7 @@ async function convertTextElementForDrawing(
 		id: element.id,
 		type: 'text',
 		enabled,
+		opacity,
 		...bounds,
 		text: text + '',
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
@@ -226,12 +230,17 @@ async function convertBoxElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [bounds, color] = await Promise.all([convertDrawBounds(helper, element), helper.getNumber(element.color, 0)])
+	const [opacity, bounds, color] = await Promise.all([
+		helper.getNumber(element.opacity, 100),
+		convertDrawBounds(helper, element),
+		helper.getNumber(element.color, 0),
+	])
 
 	return {
 		id: element.id,
 		type: 'box',
 		enabled,
+		opacity,
 		...bounds,
 		color,
 	}

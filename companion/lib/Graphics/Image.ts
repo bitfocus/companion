@@ -17,9 +17,35 @@
 
 import { Canvas, ImageData, Image as CanvasImage, loadImage, SKRSContext2D } from '@napi-rs/canvas'
 import LogController from '../Log/Controller.js'
-import { ImageBase, LineStyle } from '@companion-app/shared/Graphics/ImageBase.js'
+import { ImageBase, ImagePoolBase, LineStyle } from '@companion-app/shared/Graphics/ImageBase.js'
 
 export { LineStyle }
+
+class ImagePool extends ImagePoolBase<Image> {
+	readonly #width: number
+	readonly #height: number
+	readonly #oversampling: number
+
+	constructor(width: number, height: number, oversampling: number) {
+		super()
+
+		this.#width = width
+		this.#height = height
+		this.#oversampling = oversampling
+	}
+
+	createImage(): Image {
+		const realwidth = this.#width * this.#oversampling
+		const realheight = this.#height * this.#oversampling
+
+		const canvas = new Canvas(realwidth, realheight)
+		const context2d = canvas.getContext('2d')
+		context2d.scale(this.#oversampling, this.#oversampling)
+		context2d.textWrap = false
+
+		return new Image(this, canvas, context2d, this.#width, this.#height, realwidth, realheight)
+	}
+}
 
 /**
  * Class for generating an image and rendering some content to it
@@ -31,7 +57,12 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	readonly realwidth: number
 	readonly realheight: number
 
-	private constructor(
+	protected get canvasImage(): Canvas {
+		return this.#canvas
+	}
+
+	constructor(
+		pool: ImagePool,
 		canvas: Canvas,
 		context2d: SKRSContext2D,
 		width: number,
@@ -39,7 +70,7 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 		realwidth: number,
 		realheight: number
 	) {
-		super(LogController.createLogger('Graphics/Image'), context2d, width, height)
+		super(LogController.createLogger('Graphics/Image'), pool, context2d, width, height)
 
 		this.#canvas = canvas
 		this.#context2d = context2d
@@ -51,15 +82,8 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	static create(width: number, height: number, oversampling: number): Image {
 		if (oversampling === undefined) oversampling = 1
 
-		const realwidth = width * oversampling
-		const realheight = height * oversampling
-
-		const canvas = new Canvas(realwidth, realheight)
-		const context2d = canvas.getContext('2d')
-		context2d.scale(oversampling, oversampling)
-		context2d.textWrap = false
-
-		return new Image(canvas, context2d, width, height, realwidth, realheight)
+		const pool = new ImagePool(width, height, oversampling)
+		return pool.createImage()
 	}
 
 	protected drawImage(

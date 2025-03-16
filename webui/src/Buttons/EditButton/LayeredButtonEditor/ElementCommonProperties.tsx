@@ -12,6 +12,7 @@ import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 import { CheckboxInputField } from '../../../Components/CheckboxInputField.js'
 import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { NumberInputField } from '../../../Components/NumberInputField.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	controlId,
@@ -32,15 +33,27 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 			</CCol>
 
 			{elementProps.type !== 'canvas' && (
-				<FormPropertyField
-					controlId={controlId}
-					elementProps={elementProps}
-					localVariablesStore={localVariablesStore}
-					property="enabled"
-					label="Enabled"
-				>
-					{(elementProp, setValue) => <FieldEnabledInput elementProp={elementProp} setValue={setValue} />}
-				</FormPropertyField>
+				<>
+					<FormPropertyField
+						controlId={controlId}
+						elementProps={elementProps}
+						localVariablesStore={localVariablesStore}
+						property="enabled"
+						label="Enabled"
+					>
+						{(elementProp, setValue) => <FieldEnabledInput elementProp={elementProp} setValue={setValue} />}
+					</FormPropertyField>
+
+					<FormPropertyField
+						controlId={controlId}
+						elementProps={elementProps}
+						localVariablesStore={localVariablesStore}
+						property="opacity"
+						label="Opacity"
+					>
+						{(elementProp, setValue) => <FieldOpacityInput elementProp={elementProp} setValue={setValue} />}
+					</FormPropertyField>
+				</>
 			)}
 		</>
 	)
@@ -77,4 +90,11 @@ const FieldEnabledInput = observer(function FieldEnabledInput({
 	setValue,
 }: InputFieldCommonProps<ButtonGraphicsTextElement, 'enabled'>) {
 	return <CheckboxInputField setValue={setValue} value={Boolean(elementProp.value)} />
+})
+
+const FieldOpacityInput = observer(function FieldOpacityInput({
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsTextElement, 'opacity'>) {
+	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} min={0} max={100} step={1} range />
 })

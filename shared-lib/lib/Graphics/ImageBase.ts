@@ -43,10 +43,34 @@ export type CompanionImageContext2D = Omit<
 >
 
 /**
+ * A simple image pool, to allow for using temporary images for compositing purposes
+ * This should minimise GC pressure by reusing the same image object
+ */
+export abstract class ImagePoolBase<TImage extends ImageBase<any>> {
+	#pool: TImage[] = []
+
+	abstract createImage(): TImage
+
+	usingImage<T>(fcn: (img: TImage) => T): T {
+		let image = this.#pool.pop() || this.createImage()
+
+		try {
+			image.clear()
+
+			return fcn(image)
+		} finally {
+			this.#pool.push(image)
+		}
+	}
+}
+
+/**
  * Class for generating an image and rendering some content to it
  */
 export abstract class ImageBase<TDrawImageType extends { width: number; height: number }> {
 	protected readonly logger: MinimalLogger
+
+	readonly #imagePool: ImagePoolBase<ImageBase<TDrawImageType>>
 
 	protected readonly context2d: CompanionImageContext2D
 
@@ -54,18 +78,70 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	readonly height: number
 
 	/**
+	 * Get the canvas image object, so that it can be drawn to another ImageBase instance
+	 */
+	protected abstract get canvasImage(): TDrawImageType
+
+	/**
 	 * Create an image
 	 * @param width the width of the image in integer
 	 * @param height the height of the image in integer
 	 * @param oversampling a factor of how much more pixels the image should have in width and height
 	 */
-	protected constructor(logger: MinimalLogger, context2d: CompanionImageContext2D, width: number, height: number) {
+	protected constructor(
+		logger: MinimalLogger,
+		pool: ImagePoolBase<ImageBase<TDrawImageType>>,
+		context2d: CompanionImageContext2D,
+		width: number,
+		height: number
+	) {
 		this.logger = logger
+
+		this.#imagePool = pool
 
 		this.width = width
 		this.height = height
 
 		this.context2d = context2d
+	}
+
+	/**
+	 * Draw to a temporary image layer, before compositing it to the main image with a given alpha
+	 * This allows for complex drawing sequences to be flattened with the correct combined alpha
+	 */
+	async usingTemporaryLayer(
+		compositeAlpha: number,
+		fcn: (img: ImageBase<TDrawImageType>) => Promise<void>
+	): Promise<void> {
+		return this.#imagePool.usingImage(async (img) => {
+			await fcn(img)
+
+			await this.usingAlpha(compositeAlpha, async () => {
+				this.drawImage(img.canvasImage, 0, 0, img.width, img.height, 0, 0, this.width, this.height)
+			})
+		})
+	}
+
+	/**
+	 * Perform some drawing with a given alpha.
+	 * Note: This affects the whole canvas drawing operations, it should contain a single operation otherwise the composition of each draw will not correctly combine colours
+	 */
+	async usingAlpha(alpha: number, fcn: () => Promise<void>): Promise<void> {
+		const oldAlpha = this.context2d.globalAlpha
+		this.context2d.globalAlpha = alpha
+
+		try {
+			await fcn()
+		} finally {
+			this.context2d.globalAlpha = oldAlpha
+		}
+	}
+
+	/**
+	 * Clear the image, resetting to a fully transparent and empty state
+	 */
+	clear(): void {
+		this.context2d.clearRect(0, 0, this.width, this.height)
 	}
 
 	/**

@@ -1,4 +1,4 @@
-import { ImageBase } from '@companion-app/shared/Graphics/ImageBase.js'
+import { ImageBase, ImagePoolBase } from '@companion-app/shared/Graphics/ImageBase.js'
 import type { MinimalLogger } from '@companion-app/shared/Logger.js'
 import { LastUsedCache } from './DrawStyleParser.js'
 
@@ -9,14 +9,49 @@ const logger: MinimalLogger = {
 	debug: (...args) => console.debug(...args),
 }
 
-export class GraphicsImage extends ImageBase<HTMLImageElement> {
+class GraphicsImagePool extends ImagePoolBase<GraphicsImage> {
+	readonly #width: number
+	readonly #height: number
+
+	constructor(width: number, height: number) {
+		super()
+
+		this.#width = width
+		this.#height = height
+	}
+
+	createImage(): GraphicsImage {
+		const canvas = document.createElement('canvas')
+		canvas.width = this.#width
+		canvas.height = this.#height
+
+		const context2d = canvas.getContext('2d')
+		if (!context2d) throw new Error('Failed to get 2d context')
+
+		return new GraphicsImage(this, canvas, context2d, this.#width, this.#height)
+	}
+}
+
+export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElement> {
+	readonly #canvas: HTMLCanvasElement
 	readonly #context2d: CanvasRenderingContext2D
 
 	readonly #parseCache = new LastUsedCache<HTMLImageElement>()
 
-	private constructor(context2d: CanvasRenderingContext2D, width: number, height: number) {
-		super(logger, context2d, width, height)
+	protected get canvasImage(): HTMLCanvasElement {
+		return this.#canvas
+	}
 
+	constructor(
+		pool: GraphicsImagePool,
+		canvas: HTMLCanvasElement,
+		context2d: CanvasRenderingContext2D,
+		width: number,
+		height: number
+	) {
+		super(logger, pool, context2d, width, height)
+
+		this.#canvas = canvas
 		this.#context2d = context2d
 	}
 
@@ -27,11 +62,12 @@ export class GraphicsImage extends ImageBase<HTMLImageElement> {
 		const width = canvas.width
 		const height = canvas.height
 
-		return new GraphicsImage(context2d, width, height)
+		const pool = new GraphicsImagePool(width, height)
+		return new GraphicsImage(pool, canvas, context2d, width, height)
 	}
 
 	protected drawImage(
-		image: HTMLImageElement,
+		image: HTMLImageElement | HTMLCanvasElement,
 		sx: number,
 		sy: number,
 		sw: number,
@@ -69,10 +105,6 @@ export class GraphicsImage extends ImageBase<HTMLImageElement> {
 	protected loadPixelBuffer(_data: Uint8Array, _width: number, _height: number): HTMLImageElement | null {
 		// TODO - implement this
 		return null
-	}
-
-	public clear() {
-		this.#context2d.clearRect(0, 0, this.width, this.height)
 	}
 
 	public drawComplete() {

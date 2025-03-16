@@ -51,15 +51,17 @@ export class GraphicsLayeredButtonRenderer {
 
 			let elementBounds: DrawBounds | null = null
 			try {
+				// const tmpImage =
 				switch (element.type) {
 					case 'image':
 						elementBounds = await this.#drawImageElement(img, drawBounds, element, skipDraw)
+
 						break
 					case 'text':
-						elementBounds = this.#drawTextElement(img, drawBounds, element, skipDraw)
+						elementBounds = await this.#drawTextElement(img, drawBounds, element, skipDraw)
 						break
 					case 'box':
-						elementBounds = this.#drawBoxElement(img, drawBounds, element, skipDraw)
+						elementBounds = await this.#drawBoxElement(img, drawBounds, element, skipDraw)
 						break
 					default:
 						assertNever(element)
@@ -98,48 +100,53 @@ export class GraphicsLayeredButtonRenderer {
 		if (skipDraw || !element.base64Image) return drawBounds
 
 		try {
+			const imageData = element.base64Image
 			const [halign, valign] = ParseAlignment(element.alignment || 'center:center')
 
-			await img.drawBase64Image(
-				element.base64Image,
-				drawBounds.x,
-				drawBounds.y,
-				drawBounds.width,
-				drawBounds.height,
-				halign,
-				valign,
-				element.fillMode
-			)
+			await img.usingAlpha(element.opacity / 100, async () => {
+				await img.drawBase64Image(
+					imageData,
+					drawBounds.x,
+					drawBounds.y,
+					drawBounds.width,
+					drawBounds.height,
+					halign,
+					valign,
+					element.fillMode
+				)
+			})
 		} catch (e) {
 			console.error('error drawing image:', e)
 
-			// Draw a thick red cross
-			img.drawPath(
-				[
-					[parentBounds.x, parentBounds.y],
-					[parentBounds.maxX, parentBounds.maxY],
-				],
-				{ color: 'red', width: 5 }
-			)
-			img.drawPath(
-				[
-					[parentBounds.x, parentBounds.maxY],
-					[parentBounds.maxX, parentBounds.y],
-				],
-				{ color: 'red', width: 5 }
-			)
+			await img.usingTemporaryLayer(element.opacity / 100, async (img) => {
+				// Draw a thick red cross
+				img.drawPath(
+					[
+						[parentBounds.x, parentBounds.y],
+						[parentBounds.maxX, parentBounds.maxY],
+					],
+					{ color: 'red', width: 5 }
+				)
+				img.drawPath(
+					[
+						[parentBounds.x, parentBounds.maxY],
+						[parentBounds.maxX, parentBounds.y],
+					],
+					{ color: 'red', width: 5 }
+				)
+			})
 		}
 
 		// if (isSelected) this.#drawBoundsLines(img, newBounds)
 		return drawBounds
 	}
 
-	static #drawTextElement(
+	static async #drawTextElement(
 		img: ImageBase<any>,
 		parentBounds: DrawBounds,
 		element: ButtonGraphicsTextDrawElement,
 		skipDraw: boolean
-	): DrawBounds {
+	): Promise<DrawBounds> {
 		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
 		if (skipDraw || !element.text) return drawBounds
 
@@ -156,32 +163,36 @@ export class GraphicsLayeredButtonRenderer {
 			fontSize *= img.height / 72
 		}
 
-		img.drawAlignedText(
-			drawBounds.x + marginX,
-			drawBounds.y + marginY,
-			drawBounds.width - 2 * marginX,
-			drawBounds.height - 2 * marginY,
-			element.text,
-			parseColor(element.color),
-			fontSize,
-			halign,
-			valign
-		)
+		await img.usingAlpha(element.opacity / 100, async () => {
+			img.drawAlignedText(
+				drawBounds.x + marginX,
+				drawBounds.y + marginY,
+				drawBounds.width - 2 * marginX,
+				drawBounds.height - 2 * marginY,
+				element.text,
+				parseColor(element.color),
+				fontSize,
+				halign,
+				valign
+			)
+		})
 
 		// if (isSelected) this.#drawBoundsLines(img, newBounds)
 		return drawBounds
 	}
 
-	static #drawBoxElement(
+	static async #drawBoxElement(
 		img: ImageBase<any>,
 		parentBounds: DrawBounds,
 		element: ButtonGraphicsBoxDrawElement,
 		skipDraw: boolean
-	): DrawBounds {
+	): Promise<DrawBounds> {
 		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
 		if (skipDraw) return drawBounds
 
-		img.box(parentBounds.x, parentBounds.y, parentBounds.maxX, parentBounds.maxY, parseColor(element.color))
+		await img.usingAlpha(element.opacity / 100, async () => {
+			img.box(parentBounds.x, parentBounds.y, parentBounds.maxX, parentBounds.maxY, parseColor(element.color))
+		})
 
 		return drawBounds
 	}
