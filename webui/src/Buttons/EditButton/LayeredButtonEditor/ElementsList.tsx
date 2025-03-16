@@ -21,32 +21,30 @@ export const ElementsList = observer(function ElementsList({
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModalRef} />
-			<table className="button-layer-elementlist-table">
-				<thead>
-					<th className="compact">&nbsp;</th>
-					<th>Name</th>
-					<th className="compact element-buttons">
+			<div className="button-layer-elementlist-table2">
+				<div className="button-layer-elementlist-table-row heading">
+					<div className="td-reorder-placeholder">&nbsp;</div>
+					<div>Name</div>
+					<div></div>
+					<div className="element-buttons">
 						<AddElementDropdownButton styleStore={styleStore} controlId={controlId} />
-					</th>
-				</thead>
-
-				<tbody>
-					{styleStore.elements
-						.map((element, i) => (
-							<ElementListItem
-								key={element.id}
-								element={element}
-								parentElementId={null}
-								index={i}
-								depth={0}
-								styleStore={styleStore}
-								confirmModalRef={confirmModalRef}
-								controlId={controlId}
-							/>
-						))
-						.toReversed()}
-				</tbody>
-			</table>
+					</div>
+				</div>
+				{styleStore.elements
+					.map((element, i) => (
+						<ElementListItem
+							key={element.id}
+							element={element}
+							parentElementId={null}
+							index={i}
+							depth={0}
+							styleStore={styleStore}
+							confirmModalRef={confirmModalRef}
+							controlId={controlId}
+						/>
+					))
+					.toReversed()}
+			</div>
 		</>
 	)
 })
@@ -136,34 +134,50 @@ const ElementListItem = observer(function ElementListItem({
 
 	if (element.type === 'canvas') {
 		return (
-			<tr key={element.id} ref={ref} className={classNames(commonClasses, 'last-row')}>
-				<td></td>
+			<div
+				key={element.id}
+				ref={ref}
+				className={classNames(commonClasses, 'button-layer-elementlist-table-row last-row')}
+			>
+				<div className="td-reorder-placeholder"></div>
 
-				<td className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
+				<div className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
 					{element.name || 'Background'}
-				</td>
+				</div>
 
-				<td></td>
-			</tr>
+				<div></div>
+			</div>
 		)
 	}
 
 	return (
 		<>
-			<tr key={element.id} ref={ref} className={classNames(commonClasses, '')}>
-				<td ref={drag} className="td-reorder">
+			<div
+				key={element.id}
+				ref={ref}
+				className={classNames(commonClasses, 'button-layer-elementlist-table-row')}
+				style={{
+					// @ts-expect-error custom variable
+					'--elementlist-depth': depth,
+				}}
+			>
+				<div ref={drag} className="td-reorder">
 					<FontAwesomeIcon icon={faSort} />
-				</td>
+				</div>
 
-				<td className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
-					{element.name ?? element.type} - {depth}
-				</td>
+				<div className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
+					{element.name ?? element.type}
+				</div>
 
-				<td className="element-buttons">
+				<div className="element-buttons">
 					<ToggleVisibilityButton styleStore={styleStore} controlId={controlId} elementId={element.id} />
 					<RemoveElementButton controlId={controlId} elementId={element.id} confirmModalRef={confirmModalRef} />
-				</td>
-			</tr>
+				</div>
+			</div>
+
+			{element.type === 'group' && element.children.length === 0 && (
+				<ElementListItemPlaceholder parentElementId={element.id} controlId={controlId} />
+			)}
 			{element.type === 'group' &&
 				element.children
 					.map((child, i) => (
@@ -179,9 +193,6 @@ const ElementListItem = observer(function ElementListItem({
 						/>
 					))
 					.toReversed()}
-			{element.type === 'group' && element.children.length === 0 && (
-				<ElementListItemPlaceholder parentElementId={element.id} controlId={controlId} />
-			)}
 		</>
 	)
 })
@@ -232,12 +243,12 @@ const ElementListItemPlaceholder = observer(function ElementListItemPlaceholder(
 	drop(ref)
 
 	return (
-		<tr key={`${parentElementId}-placeholder`} ref={ref}>
-			<td></td>
+		<div key={`${parentElementId}-placeholder`} ref={ref} className="button-layer-elementlist-table-row">
+			<div className="td-reorder-placeholder"></div>
 
-			<td className="element-name">Empty group</td>
+			<div className="element-name">Empty group</div>
 
-			<td></td>
-		</tr>
+			<div></div>
+		</div>
 	)
 })
