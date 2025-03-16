@@ -5,6 +5,8 @@ import type { ImageBase, LineStyle } from './ImageBase.js'
 import {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsDecorationType,
+	ButtonGraphicsGroupDrawElement,
+	SomeButtonGraphicsDrawElement,
 	type ButtonGraphicsCanvasDrawElement,
 	type ButtonGraphicsImageDrawElement,
 	type ButtonGraphicsTextDrawElement,
@@ -41,21 +43,57 @@ export class GraphicsLayeredButtonRenderer {
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
-		let selectedElementBounds: DrawBounds | null = null
+		const selectedElementBounds = await this.#drawElements(
+			img,
+			drawStyle.elements,
+			elementsToHide,
+			selectedElementId,
+			drawBounds,
+			false
+		)
 
-		for (const element of drawStyle.elements) {
+		TopbarRenderer.draw(img, drawStyle, location, topBarBounds)
+
+		// Draw a border around the selected element, do this last so it's on top
+		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)
+	}
+
+	static async #drawElements(
+		img: ImageBase<any>,
+		elements: SomeButtonGraphicsDrawElement[],
+		elementsToHide: ReadonlySet<string>,
+		selectedElementId: string | null,
+		drawBounds: DrawBounds,
+		skipDrawParent: boolean
+	): Promise<DrawBounds | null> {
+		let selectedElementBounds: DrawBounds | null = null
+		for (const element of elements) {
 			// Skip the background element, it's handled separately
 			if (element.type === 'canvas') continue
 
-			const skipDraw = elementsToHide.has(element.id) || !element.enabled
+			const skipDraw = skipDrawParent || elementsToHide.has(element.id) || !element.enabled
 
 			let elementBounds: DrawBounds | null = null
 			try {
 				// const tmpImage =
 				switch (element.type) {
-					case 'group':
-						// TODO - implement group drawing
+					case 'group': {
+						await img.usingTemporaryLayer(element.opacity / 100, async (img) => {
+							elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
+
+							// Propogte the selected
+							const childElementBounds = await this.#drawElements(
+								img,
+								element.children,
+								elementsToHide,
+								selectedElementId,
+								elementBounds,
+								skipDraw
+							)
+							if (childElementBounds) selectedElementBounds = childElementBounds
+						})
 						break
+					}
 					case 'image':
 						elementBounds = await this.#drawImageElement(img, drawBounds, element, skipDraw)
 
@@ -77,10 +115,7 @@ export class GraphicsLayeredButtonRenderer {
 			if (element.id === selectedElementId) selectedElementBounds = elementBounds
 		}
 
-		TopbarRenderer.draw(img, drawStyle, location, topBarBounds)
-
-		// Draw a border around the selected element, do this last so it's on top
-		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)
+		return selectedElementBounds
 	}
 
 	static #drawBackgroundElement(
@@ -91,6 +126,18 @@ export class GraphicsLayeredButtonRenderer {
 		if (!backgroundElement) return
 
 		// img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
+	}
+
+	static async #drawGroupElement(
+		_img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsGroupDrawElement,
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw) return drawBounds
+
+		return drawBounds
 	}
 
 	static async #drawImageElement(

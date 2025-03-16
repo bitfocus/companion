@@ -830,13 +830,13 @@ export class ControlsController extends CoreBase {
 
 			return control.layeredStyleRemoveElement(elementId)
 		})
-		client.onPromise('controls:style:move-element', async (controlId, elementId, newIndex) => {
+		client.onPromise('controls:style:move-element', async (controlId, elementId, parentElementId, newIndex) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
 			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
 
-			return control.layeredStyleMoveElement(elementId, newIndex)
+			return control.layeredStyleMoveElement(elementId, parentElementId, newIndex)
 		})
 		client.onPromise('controls:style:set-element-name', async (controlId, elementId, name) => {
 			const control = this.getControl(controlId)

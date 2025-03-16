@@ -57,10 +57,11 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	/**
 	 * Move an element in the layered style
 	 * @param id Element id to move
+	 * @param parentElementId Parent element id to move the element to
 	 * @param newIndex New index of the element
 	 * @returns true if the element was moved
 	 */
-	layeredStyleMoveElement(id: string, newIndex: number): boolean
+	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean
 
 	/**
 	 * Update the type of an element in the layered style

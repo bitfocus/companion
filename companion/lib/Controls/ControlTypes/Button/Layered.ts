@@ -14,6 +14,7 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import {
 	ButtonGraphicsDecorationType,
+	ButtonGraphicsGroupElement,
 	ExpressionOrValue,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -257,10 +258,12 @@ export class ControlButtonLayered
 	}
 
 	layeredStyleRemoveElement(id: string): boolean {
-		const indexOfElement = this.#drawElements.findIndex((element) => element.id === id)
-		if (indexOfElement === -1) return false
+		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
+		if (!currentElementLocation) return false
 
-		this.#drawElements.splice(indexOfElement, 1)
+		const { indexOfElement, currentParentElementArray } = currentElementLocation
+
+		currentParentElementArray.splice(indexOfElement, 1)
 
 		// Save change and redraw
 		this.commitChange(true)
@@ -269,8 +272,10 @@ export class ControlButtonLayered
 	}
 
 	layeredStyleSetElementName(id: string, name: string): boolean {
-		const element = this.#drawElements.find((element) => element.id === id)
-		if (!element) return false
+		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
+		if (!currentElementLocation) return false
+
+		const { element } = currentElementLocation
 
 		element.name = name
 
@@ -280,17 +285,69 @@ export class ControlButtonLayered
 		return true
 	}
 
-	layeredStyleMoveElement(id: string, newIndex: number): boolean {
-		const indexOfElement = this.#drawElements.findIndex((element) => element.id === id)
-		if (indexOfElement === -1) return false
+	#findElementIndexAndParent(
+		searchInElements: SomeButtonGraphicsElement[],
+		parentId: string | null,
+		searchId: string
+	): {
+		indexOfElement: number
+		element: SomeButtonGraphicsElement
+		currentParentElementId: string | null
+		currentParentElementArray: SomeButtonGraphicsElement[]
+	} | null {
+		const indexOfElement = searchInElements.findIndex((element) => element.id === searchId)
+		if (indexOfElement !== -1)
+			return {
+				indexOfElement: indexOfElement,
+				element: searchInElements[indexOfElement],
+				currentParentElementId: parentId,
+				currentParentElementArray: searchInElements,
+			}
+
+		for (const element of searchInElements) {
+			if (element.type !== 'group') continue
+
+			const result = this.#findElementIndexAndParent(element.children, element.id, searchId)
+			if (result) return result
+		}
+
+		return null
+	}
+	#findGroupElementById(
+		searchInElements: SomeButtonGraphicsElement[],
+		searchId: string
+	): ButtonGraphicsGroupElement | null {
+		for (const element of searchInElements) {
+			if (element.type !== 'group') continue
+
+			if (element.id === searchId) return element
+			const result = this.#findGroupElementById(element.children, searchId)
+			if (result) return result
+		}
+
+		return null
+	}
+
+	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean {
+		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
+		if (!currentElementLocation) return false
+		const { indexOfElement, currentParentElementId, currentParentElementArray } = currentElementLocation
 
 		// Can't move to or from the first element
-		if (indexOfElement === 0 || newIndex === 0) return false
+		if ((indexOfElement === 0 && currentParentElementId === null) || (newIndex === 0 && parentElementId === null))
+			return false
 
-		if (newIndex < 0 || newIndex >= this.#drawElements.length) return false
+		const targetElementArray = parentElementId
+			? this.#findGroupElementById(this.#drawElements, parentElementId)?.children
+			: this.#drawElements
 
-		const element = this.#drawElements.splice(indexOfElement, 1)[0]
-		this.#drawElements.splice(newIndex, 0, element)
+		// Make sure the target parent exists
+		if (!targetElementArray) return false
+
+		if (newIndex < 0 || newIndex > targetElementArray.length) return false
+
+		const element = currentParentElementArray.splice(indexOfElement, 1)[0]
+		targetElementArray.splice(newIndex, 0, element)
 
 		// Save change and redraw
 		this.commitChange(true)
@@ -303,8 +360,10 @@ export class ControlButtonLayered
 		if (key === 'id' || key === 'type' || key === 'name') return false
 
 		// Find the element
-		const element = this.#drawElements.find((element) => element.id === id)
-		if (!element) return false
+		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
+		if (!currentElementLocation) return false
+
+		const { element } = currentElementLocation
 
 		// Fetch the property wrapper
 		const elementEntry = (element as any)[key] as ExpressionOrValue<any>
@@ -324,8 +383,10 @@ export class ControlButtonLayered
 		if (key === 'id' || key === 'type' || key === 'name') return false
 
 		// Find the element
-		const element = this.#drawElements.find((element) => element.id === id)
-		if (!element) return false
+		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
+		if (!currentElementLocation) return false
+
+		const { element } = currentElementLocation
 
 		// Fetch the property wrapper
 		const elementEntry = (element as any)[key] as ExpressionOrValue<any>
@@ -387,6 +448,8 @@ export class ControlButtonLayered
 			[],
 			true
 		)
+
+		// TODO-layered fixup style
 
 		// redraw if needed and save changes
 		this.commitChange(changed)

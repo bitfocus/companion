@@ -25,8 +25,18 @@ export class LayeredStyleStore {
 		})
 	}
 
-	public getElementById(id: string): SomeButtonGraphicsElement | undefined {
-		return this.elements.find((element) => element.id === id)
+	static #findElementById(
+		elementsToSearch: SomeButtonGraphicsElement[],
+		id: string
+	): SomeButtonGraphicsElement | undefined {
+		for (const element of elementsToSearch) {
+			if (element.id === id) return element
+			if (element.type === 'group') {
+				const found = this.#findElementById(element.children, id)
+				if (found) return found
+			}
+		}
+		return undefined
 	}
 
 	public updateData(elements: SomeButtonGraphicsElement[]) {
@@ -40,7 +50,9 @@ export class LayeredStyleStore {
 	}
 
 	public getSelectedElement(): SomeButtonGraphicsElement | undefined {
-		return this.selectedElementId ? this.getElementById(this.selectedElementId) : undefined
+		return this.selectedElementId
+			? LayeredStyleStore.#findElementById(this.elements, this.selectedElementId)
+			: undefined
 	}
 
 	public setElementVisibility(layer: string, visible?: boolean) {
