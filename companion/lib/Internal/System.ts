@@ -33,6 +33,9 @@ import type { Registry } from '../Registry.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { promisify } from 'util'
+
+const execAsync = promisify(exec)
 
 async function getHostnameVariables() {
 	const values: CompanionVariableValues = {}
@@ -268,26 +271,22 @@ export class InternalSystem implements InternalModuleFragment {
 				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.path, extras).text
 				this.#logger.silly(`Running path: '${path}'`)
 
-				exec(
-					path,
-					{
+				try {
+					const { stdout } = await execAsync(path, {
 						timeout: action.rawOptions.timeout ?? 5000,
-					},
-					(error, stdout, _stderr) => {
-						if (error) {
-							this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
-							this.#logger.silly(error)
-						}
+					})
 
-						// Trim EOL character(s) appended by the OS
-						if (typeof stdout === 'string' && stdout.endsWith(os.EOL))
-							stdout = stdout.substring(0, stdout.length - os.EOL.length)
+					// Trim EOL character(s) appended by the OS
+					let stdoutStr = stdout.toString()
+					if (stdoutStr.endsWith(os.EOL)) stdoutStr = stdoutStr.substring(0, stdoutStr.length - os.EOL.length)
 
-						if (action.rawOptions.targetVariable) {
-							this.#variableController.custom.setValue(action.rawOptions.targetVariable, stdout)
-						}
+					if (action.rawOptions.targetVariable) {
+						this.#variableController.custom.setValue(action.rawOptions.targetVariable, stdoutStr)
 					}
-				)
+				} catch (error) {
+					this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
+					this.#logger.silly(error)
+				}
 			}
 			return true
 		} else if (action.definitionId === 'custom_log') {
