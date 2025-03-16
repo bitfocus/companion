@@ -172,7 +172,7 @@ const EditButtonContent = observer(function EditButton({
 	return (
 		<>
 			<CCol sm={12}>
-				<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
+				<ButtonPreviewBase fixedSize preview={previewImage} right={true} className="button-zero-display-height" />
 
 				<ControlClearButton location={location} resetModalRef={resetModalRef} />
 				<MyErrorBoundary>
@@ -208,13 +208,7 @@ const EditButtonContent = observer(function EditButton({
 			)}
 
 			{config.type === 'button-layered' && (
-				<LayeredButtonEditor
-					config={config}
-					controlId={controlId}
-					runtimeProps={runtimeProps}
-					location={location}
-					previewImage={previewImage}
-				/>
+				<LayeredButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
 			)}
 		</>
 	)

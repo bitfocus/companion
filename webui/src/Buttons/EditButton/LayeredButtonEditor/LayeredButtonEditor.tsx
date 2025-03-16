@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { ControlOptionsEditor } from '../../../Controls/ControlOptionsEditor.js'
 import { MyErrorBoundary } from '../../../util.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from '../ButtonEditorTabs.js'
-import { ButtonPreviewBase } from '../../../Components/ButtonPreview.js'
 import { ElementPropertiesEditor } from './ElementPropertiesEditor.js'
 import { LayeredStyleStore } from './StyleStore.js'
 import { observer } from 'mobx-react-lite'
@@ -26,13 +25,11 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	controlId,
 	runtimeProps,
 	location,
-	previewImage,
 }: {
 	config: LayeredButtonModel
 	controlId: string
 	runtimeProps: Record<string, any> | false
 	location: ControlLocation
-	previewImage: string | null
 }) {
 	const configRef = useRef<SomeButtonModel>()
 	configRef.current = config || undefined // update the ref every render
@@ -49,7 +46,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
 
 	return (
-		<>
+		<div className="mt-4 grow flex flex-column">
 			{runtimeProps && (
 				<MyErrorBoundary>
 					<ButtonEditorTabs
@@ -64,13 +61,12 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 						{(currentTab) => {
 							if (currentTab === 'style') {
 								return (
-									<div className="mt-10">
+									<div className="mt-10 h-100">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<LayeredButtonEditorStyle
 												controlId={controlId}
 												styleStore={styleStore}
-												previewImage={previewImage}
 												localVariablesStore={localVariablesStore}
 											/>
 										</MyErrorBoundary>
@@ -109,28 +105,27 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 					</ButtonEditorTabs>
 				</MyErrorBoundary>
 			)}
-		</>
+		</div>
 	)
 })
 
 interface LayeredButtonEditorStyleProps {
 	controlId: string
 	styleStore: LayeredStyleStore
-	previewImage: string | null
+	// previewImage: string | null
 	localVariablesStore: LocalVariablesStore
 }
 const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	controlId,
 	styleStore,
-	previewImage,
 	localVariablesStore,
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
 
 	return (
-		<div className="button-layer-style-editor">
+		<div className="button-layer-style-editor h-100">
 			<div className="button-layer-preview">
-				<ButtonPreviewBase fixedSize preview={previewImage} />
+				{/* <ButtonPreviewBase fixedSize preview={previewImage} /> */}
 				<LayeredButtonPreviewRenderer controlId={controlId} styleStore={styleStore} />
 			</div>
 			<div className="button-layer-elementlist">

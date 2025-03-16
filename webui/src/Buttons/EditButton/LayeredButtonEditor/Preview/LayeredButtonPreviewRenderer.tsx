@@ -41,13 +41,13 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 				selectedElementId={styleStore.selectedElementId}
 			/>
 			&nbsp;&nbsp;
-			<LayeredButtonCanvas
+			{/* <LayeredButtonCanvas
 				width={100}
 				height={200}
 				drawStyle={drawStyle}
 				hiddenElements={styleStore.hiddenElements}
 				selectedElementId={styleStore.selectedElementId}
-			/>
+			/> */}
 		</div>
 	)
 })

@@ -110,6 +110,9 @@ form.row > * {
 	min-height: 300px;
 	max-height: 100%;
 
+	display: flex;
+	flex-direction: column;
+
 	&.no-height-limit {
 		max-height: unset;
 	}
@@ -124,6 +127,10 @@ form.row > * {
 
 	.tab-pane {
 		padding: 1rem 1rem 1rem 1rem;
+
+		// display: flex;
+		// flex-direction: column;
+		flex-grow: 1;
 
 		// Make absolute positioned child components be relative to this
 		position: relative;
@@ -143,6 +150,8 @@ form.row > * {
 	.edit-sticky-body {
 		--raw-height: 0px;
 		min-height: calc(var(--raw-height) - 2.1rem);
+
+		flex-grow: 1;
 	}
 }
 

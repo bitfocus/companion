@@ -72,7 +72,7 @@ export function ButtonEditorTabs({
 	const selectedStepProps = selectedKey ? steps[selectedKey] : undefined
 
 	return (
-		<div key="button">
+		<>
 			<GenericConfirmModal ref={confirmRef} />
 
 			<div className={'row-heading'}>
@@ -147,7 +147,7 @@ export function ButtonEditorTabs({
 					/>
 				)}
 			</div>
-		</div>
+		</>
 	)
 }
 
