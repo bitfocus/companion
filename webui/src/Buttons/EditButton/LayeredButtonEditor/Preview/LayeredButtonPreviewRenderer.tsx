@@ -148,6 +148,21 @@ class RendererDrawContext {
 
 			this.#image.clear()
 
+			// draw checkerboard
+			const box_size = 10
+			const max_x = this.#image.width - PAD_X * 2
+			const max_y = this.#image.height - PAD_Y * 2
+			for (let x = 0; x < Math.ceil(max_x / box_size); x++) {
+				for (let y = 0; y < Math.ceil(max_y / box_size); y++) {
+					if (x % 2 === y % 2) continue
+
+					const x2 = Math.min(PAD_X + (x + 1) * box_size, max_x + PAD_X)
+					const y2 = Math.min(PAD_Y + (y + 1) * box_size, max_y + PAD_Y)
+
+					this.#image.box(PAD_X + x * box_size, PAD_Y + y * box_size, x2, y2, 'rgba(0,0,0,0.1)')
+				}
+			}
+
 			await GraphicsLayeredButtonRenderer.draw(
 				this.#image,
 				{
