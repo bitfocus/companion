@@ -50,6 +50,19 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				height: { value: 1, isExpression: false },
 				color: { value: 0xff0000, isExpression: false },
 			}
+		case 'group':
+			return {
+				id: nanoid(),
+				name: 'Group',
+				type: 'group',
+				enabled: { value: true, isExpression: false },
+				opacity: { value: 100, isExpression: false },
+				x: { value: 0, isExpression: false },
+				y: { value: 0, isExpression: false },
+				width: { value: 1, isExpression: false },
+				height: { value: 1, isExpression: false },
+				children: [],
+			}
 		default:
 			assertNever(type)
 			throw new Error(`Unknown element type: ${type}`)

@@ -9,6 +9,7 @@ import { CForm } from '@coreui/react'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
 import { BoxElementPropertiesEditor } from './BoxElementPropertiesEditor.js'
 import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { GroupElementPropertiesEditor } from './GroupElementPropertiesEditor.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
@@ -62,6 +63,14 @@ const ElementPropertiesEditorInner = observer(function ElementPropertiesEditorIn
 		case 'canvas':
 			return (
 				<CanvasElementPropertiesEditor
+					controlId={controlId}
+					elementProps={elementProps}
+					localVariablesStore={localVariablesStore}
+				/>
+			)
+		case 'group':
+			return (
+				<GroupElementPropertiesEditor
 					controlId={controlId}
 					elementProps={elementProps}
 					localVariablesStore={localVariablesStore}

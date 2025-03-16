@@ -3,7 +3,7 @@ import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 import type { LayeredStyleStore } from './StyleStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faImage, faPlus, faSquare, faT, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faImage, faLayerGroup, faPlus, faSquare, faT, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { Tuck } from '../../../Components/Tuck.js'
 import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
@@ -139,6 +139,13 @@ function AddElementDropdownPopoverContent({
 		<>
 			{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
 			<CButtonGroup vertical>
+				<AddElementDropdownPopoverButton
+					styleStore={styleStore}
+					controlId={controlId}
+					elementType="group"
+					label="Group"
+					icon={faLayerGroup}
+				/>
 				<AddElementDropdownPopoverButton
 					styleStore={styleStore}
 					controlId={controlId}

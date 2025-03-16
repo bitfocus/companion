@@ -14,8 +14,11 @@ import {
 	MakeExpressionable,
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsBoxElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsGroupDrawElement,
 } from '../Model/StyleLayersModel.js'
 import { ALIGNMENT_OPTIONS } from '../Model/Alignment.js'
+import { assertNever } from '../Util.js'
 
 type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
 
@@ -118,11 +121,25 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 }> {
 	const helper = new ExpressionHelper(executeExpression, onlyEnabled)
 
+	const newElements = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(helper, elements)
+
+	return {
+		elements: newElements,
+		usedVariables: helper.usedVariables,
+	}
+}
+
+async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
+	helper: ExpressionHelper,
+	elements: SomeButtonGraphicsElement[]
+): Promise<SomeButtonGraphicsDrawElement[]> {
 	const newElements = await Promise.all(
 		elements.map((element) => {
 			switch (element.type) {
 				case 'canvas':
 					return convertCanvasElementForDrawing(helper, element)
+				case 'group':
+					return convertGroupElementForDrawing(helper, element)
 				case 'image':
 					return convertImageElementForDrawing(helper, element)
 				case 'text':
@@ -130,15 +147,13 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 				case 'box':
 					return convertBoxElementForDrawing(helper, element)
 				default:
+					assertNever(element)
 					return null
 			}
 		})
 	)
 
-	return {
-		elements: newElements.filter((element) => element !== null),
-		usedVariables: helper.usedVariables,
-	}
+	return newElements.filter((element) => element !== null)
 }
 
 async function convertCanvasElementForDrawing(
@@ -159,6 +174,30 @@ async function convertCanvasElementForDrawing(
 		type: 'canvas',
 		// color,
 		decoration,
+	}
+}
+
+async function convertGroupElementForDrawing(
+	helper: ExpressionHelper,
+	element: ButtonGraphicsGroupElement
+): Promise<ButtonGraphicsGroupDrawElement | null> {
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = await helper.getBoolean(element.enabled, true)
+	if (!enabled && helper.onlyEnabled) return null
+
+	const [opacity, bounds, children] = await Promise.all([
+		helper.getNumber(element.opacity, 100),
+		convertDrawBounds(helper, element),
+		ConvertSomeButtonGraphicsElementForDrawingWithHelper(helper, element.children),
+	])
+
+	return {
+		id: element.id,
+		type: 'group',
+		enabled,
+		opacity,
+		...bounds,
+		children,
 	}
 }
 

@@ -53,6 +53,9 @@ export class GraphicsLayeredButtonRenderer {
 			try {
 				// const tmpImage =
 				switch (element.type) {
+					case 'group':
+						// TODO - implement group drawing
+						break
 					case 'image':
 						elementBounds = await this.#drawImageElement(img, drawBounds, element, skipDraw)
 

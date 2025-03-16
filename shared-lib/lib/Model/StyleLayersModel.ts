@@ -5,6 +5,7 @@ import type { CompanionAlignment } from '@companion-module/base'
  */
 export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCanvasElement
+	| ButtonGraphicsGroupElement
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
 	| ButtonGraphicsBoxElement
@@ -14,6 +15,7 @@ export type SomeButtonGraphicsElement =
  */
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
+	| ButtonGraphicsGroupDrawElement
 	| ButtonGraphicsTextDrawElement
 	| ButtonGraphicsImageDrawElement
 	| ButtonGraphicsBoxDrawElement
@@ -60,6 +62,17 @@ export enum ButtonGraphicsDecorationType {
 	// BottomBar = 'bottombar', // Future
 	Border = 'border',
 	// None = 'none', // Future
+}
+
+export interface ButtonGraphicsGroupDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
+	type: 'group'
+
+	children: SomeButtonGraphicsDrawElement[]
+}
+export interface ButtonGraphicsGroupElement
+	extends ButtonGraphicsElementBase,
+		MakeExpressionable<Omit<ButtonGraphicsGroupDrawElement, 'children'>> {
+	children: SomeButtonGraphicsElement[]
 }
 
 export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
