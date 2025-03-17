@@ -1,9 +1,34 @@
+import type { InternalController } from '../../Internal/Controller.js'
 import { TrySplitVariableId } from '../Util.js'
+import { VisitorReferencesBase } from './VisitorReferencesBase.js'
+
+export class VisitorReferencesUpdater extends VisitorReferencesBase<VisitorReferencesUpdaterVisitor> {
+	constructor(
+		internalModule: InternalController,
+		connectionLabelsRemap: Record<string, string> | undefined,
+		connectionIdRemap: Record<string, string> | undefined
+	) {
+		super(internalModule, new VisitorReferencesUpdaterVisitor(connectionLabelsRemap, connectionIdRemap))
+	}
+
+	recheckChangedFeedbacks(): this {
+		// Trigger the feedbacks to be rechecked, this will cause a redraw if needed
+		if (this.visitor.changedFeedbackIds.size > 0) {
+			this.internalModule.checkFeedbacksById(...this.visitor.changedFeedbackIds)
+		}
+
+		return this
+	}
+
+	hasChanges(): boolean {
+		return this.visitor.changed
+	}
+}
 
 /**
  * Visit property on actions and feedbacks, and update any references used
  */
-export class VisitorReferencesUpdater {
+export class VisitorReferencesUpdaterVisitor {
 	/**
 	 * connection label remapping
 	 */

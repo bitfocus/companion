@@ -1,6 +1,5 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep, omit } from 'lodash-es'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
@@ -8,7 +7,8 @@ import type {
 	ControlWithoutEvents,
 	ControlWithoutLayeredStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { NormalButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -193,9 +193,9 @@ export class ControlButtonNormal
 			foundConnectionIds.add(entity.connectionId)
 		}
 
-		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
-
-		ReferencesVisitors.visitControlReferences(this.deps.internalModule, visitor, this.#baseStyle, [], allEntities, [])
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels)
+			.visitButtonDrawStlye(this.#baseStyle)
+			.visitEntities(allEntities, [])
 	}
 
 	/**
@@ -207,15 +207,11 @@ export class ControlButtonNormal
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			this.#baseStyle,
-			[],
-			allEntities,
-			[],
-			true
-		)
+		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+			.visitButtonDrawStlye(this.#baseStyle)
+			.visitEntities(allEntities, [])
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
 		// redraw if needed and save changes
 		this.commitChange(changed)

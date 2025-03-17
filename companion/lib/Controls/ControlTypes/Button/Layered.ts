@@ -1,6 +1,5 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep } from 'lodash-es'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
@@ -8,7 +7,8 @@ import type {
 	ControlWithoutEvents,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { LayeredButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
@@ -234,9 +234,9 @@ export class ControlButtonLayered
 			foundConnectionIds.add(entity.connectionId)
 		}
 
-		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
-
-		ReferencesVisitors.visitControlReferences(this.deps.internalModule, visitor, undefined, [], allEntities, [])
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels)
+			.visitEntities(allEntities, [])
+			.visitDrawElements(this.#drawElements)
 	}
 
 	layeredStyleAddElement(type: string, index: number | null): string {
@@ -436,17 +436,11 @@ export class ControlButtonLayered
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			undefined,
-			[],
-			allEntities,
-			[],
-			true
-		)
-
-		// TODO-layered fixup style
+		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+			.visitEntities(allEntities, [])
+			.visitDrawElements(this.#drawElements)
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
 		// redraw if needed and save changes
 		this.commitChange(changed)

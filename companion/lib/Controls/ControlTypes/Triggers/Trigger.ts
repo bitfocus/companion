@@ -8,7 +8,6 @@ import { TriggersEventMisc } from './Events/Misc.js'
 import { clamp } from '../../../Resources/Util.js'
 import { TriggersEventVariables } from './Events/Variable.js'
 import { nanoid } from 'nanoid'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
@@ -19,7 +18,8 @@ import type {
 	ControlWithoutPushed,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -252,16 +252,9 @@ export class ControlTrigger
 			foundConnectionIds.add(entities.connectionId)
 		}
 
-		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
-
-		ReferencesVisitors.visitControlReferences(
-			this.deps.internalModule,
-			visitor,
-			undefined,
-			[],
-			allEntities,
-			this.events
-		)
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels)
+			.visitEntities(allEntities, [])
+			.visitEvents(this.events)
 	}
 
 	/**
@@ -382,15 +375,11 @@ export class ControlTrigger
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			undefined,
-			[],
-			allEntities,
-			this.events,
-			true
-		)
+		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+			.visitEntities(allEntities, [])
+			.visitEvents(this.events)
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
 		// 'redraw' if needed and save changes
 		this.commitChange(changed)

@@ -241,7 +241,7 @@ async function convertTextElementForDrawing(
 		helper.getNumber(element.opacity, 100),
 		convertDrawBounds(helper, element),
 		helper.getUnknown(element.fontsize, 'auto'),
-		helper.getUnknown(element.text, 'ERR'), // TODO-layered better default value
+		helper.getUnknown(element.text, 'ERR'),
 		helper.getNumber(element.color, 0),
 		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
 	])
