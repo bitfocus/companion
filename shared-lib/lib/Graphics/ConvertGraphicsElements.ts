@@ -17,8 +17,8 @@ import {
 	ButtonGraphicsGroupElement,
 	ButtonGraphicsGroupDrawElement,
 } from '../Model/StyleLayersModel.js'
-import { ALIGNMENT_OPTIONS } from '../Model/Alignment.js'
 import { assertNever } from '../Util.js'
+import { HorizontalAlignment, VerticalAlignment } from './Util.js'
 
 type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
 
@@ -108,6 +108,51 @@ class ExpressionHelper {
 		}
 
 		return result.value as boolean
+	}
+
+	async getHorizontalAlignment(value: ExpressionOrValue<HorizontalAlignment>): Promise<HorizontalAlignment> {
+		if (!value.isExpression) {
+			return this.getEnum<HorizontalAlignment>(value, ['left', 'center', 'right'], 'center')
+		}
+
+		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
+		if (!result.ok) return 'center'
+
+		const firstChar = String(result.value).trim().toLowerCase()[0]
+		switch (firstChar) {
+			case 'l':
+			case 's':
+				return 'left'
+
+			case 'r':
+			case 'e':
+				return 'right'
+
+			default:
+				return 'center'
+		}
+	}
+	async getVerticalAlignment(value: ExpressionOrValue<VerticalAlignment>): Promise<VerticalAlignment> {
+		if (!value.isExpression) {
+			return this.getEnum<VerticalAlignment>(value, ['top', 'center', 'bottom'], 'center')
+		}
+
+		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
+		if (!result.ok) return 'center'
+
+		const firstChar = String(result.value).trim().toLowerCase()[0]
+		switch (firstChar) {
+			case 't':
+			case 's':
+				return 'top'
+
+			case 'b':
+			case 'e':
+				return 'bottom'
+
+			default:
+				return 'center'
+		}
 	}
 }
 
@@ -209,11 +254,12 @@ async function convertImageElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [opacity, bounds, base64Image, alignment, fillMode] = await Promise.all([
+	const [opacity, bounds, base64Image, halign, valign, fillMode] = await Promise.all([
 		helper.getNumber(element.opacity, 100),
 		convertDrawBounds(helper, element),
 		helper.getString<string | null>(element.base64Image, null),
-		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
+		helper.getHorizontalAlignment(element.halign),
+		helper.getVerticalAlignment(element.valign),
 		helper.getEnum(element.fillMode, ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
 	])
 
@@ -224,7 +270,8 @@ async function convertImageElementForDrawing(
 		opacity,
 		...bounds,
 		base64Image,
-		alignment,
+		halign,
+		valign,
 		fillMode,
 	}
 }
@@ -237,13 +284,14 @@ async function convertTextElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [opacity, bounds, fontsizeRaw, text, color, alignment] = await Promise.all([
+	const [opacity, bounds, fontsizeRaw, text, color, halign, valign] = await Promise.all([
 		helper.getNumber(element.opacity, 100),
 		convertDrawBounds(helper, element),
 		helper.getUnknown(element.fontsize, 'auto'),
 		helper.getUnknown(element.text, 'ERR'),
 		helper.getNumber(element.color, 0),
-		helper.getEnum(element.alignment, ALIGNMENT_OPTIONS, 'center:center'),
+		helper.getHorizontalAlignment(element.halign),
+		helper.getVerticalAlignment(element.valign),
 	])
 
 	const fontsize = Number(fontsizeRaw) || fontsizeRaw
@@ -257,7 +305,8 @@ async function convertTextElementForDrawing(
 		text: text + '',
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
 		color,
-		alignment,
+		halign,
+		valign,
 	}
 }
 

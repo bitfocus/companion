@@ -2,7 +2,11 @@ import { ButtonGraphicsImageElement } from '@companion-app/shared/Model/StyleLay
 import { CButtonGroup, CButton, CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useState } from 'react'
-import { AlignmentInputField } from '../../../Components/AlignmentInputField.js'
+import {
+	AlignmentInputField,
+	HorizontalAlignmentInputField,
+	VerticalAlignmentInputField,
+} from '../../../Components/AlignmentInputField.js'
 import { PNGInputField } from '../../../Components/PNGInputField.js'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -43,10 +47,22 @@ export const ImageElementPropertiesEditor = observer(function ImageElementProper
 				controlId={controlId}
 				elementProps={elementProps}
 				localVariablesStore={localVariablesStore}
-				property="alignment"
-				label="Alignment"
+				property="halign"
+				label="Horizontal Alignment"
 			>
-				{(elementProp, setValue) => <FieldImageAlignmentInput elementProp={elementProp} setValue={setValue} />}
+				{(elementProp, setValue) => (
+					<FieldImageHorizontalAlignmentInput elementProp={elementProp} setValue={setValue} />
+				)}
+			</FormPropertyField>
+
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="valign"
+				label="Vertical Alignment"
+			>
+				{(elementProp, setValue) => <FieldImageVerticalAlignmentInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
 			<FormPropertyField
@@ -104,11 +120,18 @@ const FieldImagePickerInput = observer(function FieldImagePickerInput({
 	)
 })
 
-const FieldImageAlignmentInput = observer(function FieldImageAlignmentInput({
+const FieldImageHorizontalAlignmentInput = observer(function FieldImageHorizontalAlignmentInput({
 	elementProp,
 	setValue,
-}: InputFieldCommonProps<ButtonGraphicsImageElement, 'alignment'>) {
-	return <AlignmentInputField setValue={setValue} value={elementProp.value as CompanionAlignment} />
+}: InputFieldCommonProps<ButtonGraphicsImageElement, 'halign'>) {
+	return <HorizontalAlignmentInputField setValue={setValue} value={elementProp.value} />
+})
+
+const FieldImageVerticalAlignmentInput = observer(function FieldImageVerticalAlignmentInput({
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsImageElement, 'valign'>) {
+	return <VerticalAlignmentInputField setValue={setValue} value={elementProp.value} />
 })
 
 const FieldImageFillModeInput = observer(function FieldImageFillModeInput({

@@ -1,5 +1,3 @@
-import type { CompanionAlignment } from '@companion-module/base'
-
 /**
  * The type of a button graphics element as stored in places where it can be edited
  */
@@ -75,6 +73,9 @@ export interface ButtonGraphicsGroupElement
 	children: SomeButtonGraphicsElement[]
 }
 
+export type HorizontalAlignment = 'left' | 'center' | 'right'
+export type VerticalAlignment = 'top' | 'center' | 'bottom'
+
 export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
@@ -84,7 +85,8 @@ export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, B
 
 	color: number
 
-	alignment: CompanionAlignment
+	halign: HorizontalAlignment
+	valign: VerticalAlignment
 
 	// Future ideas:
 	// minX, maxX, minY, maxY: number
@@ -100,7 +102,8 @@ export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, 
 
 	base64Image: string | null
 
-	alignment: CompanionAlignment
+	halign: HorizontalAlignment
+	valign: VerticalAlignment
 
 	fillMode: 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
 

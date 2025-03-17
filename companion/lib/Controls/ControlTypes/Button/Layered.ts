@@ -85,7 +85,8 @@ export class ControlButtonLayered
 			height: { value: 1, isExpression: false },
 			text: { value: '', isExpression: false },
 			color: { value: 0xffffff, isExpression: false },
-			alignment: { value: 'center:center', isExpression: false },
+			halign: { value: 'center', isExpression: false },
+			valign: { value: 'center', isExpression: false },
 			fontsize: { value: 'auto', isExpression: false },
 		},
 	]

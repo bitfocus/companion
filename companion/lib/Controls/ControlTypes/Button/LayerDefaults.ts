@@ -19,7 +19,8 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				height: { value: 1, isExpression: false },
 				text: { value: '', isExpression: false },
 				color: { value: 0xffffff, isExpression: false },
-				alignment: { value: 'center:center', isExpression: false },
+				halign: { value: 'center', isExpression: false },
+				valign: { value: 'center', isExpression: false },
 				fontsize: { value: 'auto', isExpression: false },
 			}
 		case 'image':
@@ -34,7 +35,8 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				width: { value: 1, isExpression: false },
 				height: { value: 1, isExpression: false },
 				base64Image: { value: null, isExpression: false },
-				alignment: { value: 'center:center', isExpression: false },
+				halign: { value: 'center', isExpression: false },
+				valign: { value: 'center', isExpression: false },
 				fillMode: { value: 'fit_or_shrink', isExpression: false },
 			}
 		case 'box':

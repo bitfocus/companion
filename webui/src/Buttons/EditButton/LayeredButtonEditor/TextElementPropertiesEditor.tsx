@@ -6,10 +6,9 @@ import { TextInputField } from '../../../Components/TextInputField.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from '../../../Controls/OptionsInputField.js'
 import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
-import { FONT_SIZES } from '../../../Constants.js'
-import { CompanionAlignment, DropdownChoiceId } from '@companion-module/base'
+import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { ColorInputField } from '../../../Components/ColorInputField.js'
-import { AlignmentInputField } from '../../../Components/AlignmentInputField.js'
+import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '../../../Components/AlignmentInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 import { ElementBoundsProperties } from './ElementBoundsProperties.js'
 
@@ -47,7 +46,7 @@ export const TextElementPropertiesEditor = observer(function TextElementProperti
 				elementProps={elementProps}
 				localVariablesStore={localVariablesStore}
 				property="fontsize"
-				label="Font Size"
+				label="Text Size"
 			>
 				{(elementProp, setValue) => <FieldFontSizeInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
@@ -66,10 +65,20 @@ export const TextElementPropertiesEditor = observer(function TextElementProperti
 				controlId={controlId}
 				elementProps={elementProps}
 				localVariablesStore={localVariablesStore}
-				property="alignment"
-				label="Alignment"
+				property="halign"
+				label="Horizontal Alignment"
 			>
-				{(elementProp, setValue) => <FieldTextAlignmentInput elementProp={elementProp} setValue={setValue} />}
+				{(elementProp, setValue) => <FieldTextHorizontalAlignmentInput elementProp={elementProp} setValue={setValue} />}
+			</FormPropertyField>
+
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
+				property="valign"
+				label="Vertical Alignment"
+			>
+				{(elementProp, setValue) => <FieldTextVerticalAlignmentInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 		</>
 	)
@@ -118,6 +127,16 @@ const FieldTextInput = observer(function FieldTextInput({
 	)
 })
 
+const FONT_SIZES: DropdownChoice[] = [
+	{ id: 'auto', label: 'Auto' },
+	{ id: '10', label: '10%' },
+	{ id: '15', label: '15%' },
+	{ id: '25', label: '25%' },
+	{ id: '33', label: '33%' },
+	{ id: '50', label: '50%' },
+	{ id: '100', label: '100%' },
+]
+
 const FieldFontSizeInput = observer(function FieldFontSizeInput({
 	elementProp,
 	setValue,
@@ -129,7 +148,7 @@ const FieldFontSizeInput = observer(function FieldFontSizeInput({
 			value={elementProp.value}
 			allowCustom={true}
 			disableEditingCustom={true}
-			regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
+			regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)?$/i'}
 		/>
 	)
 })
@@ -148,9 +167,16 @@ const FieldTextColorInput = observer(function FieldTextColorInput({
 	)
 })
 
-const FieldTextAlignmentInput = observer(function FieldTextAlignmentInput({
+const FieldTextHorizontalAlignmentInput = observer(function FieldTextHorizontalAlignmentInput({
 	elementProp,
 	setValue,
-}: InputFieldCommonProps<ButtonGraphicsTextElement, 'alignment'>) {
-	return <AlignmentInputField setValue={setValue} value={elementProp.value as CompanionAlignment} />
+}: InputFieldCommonProps<ButtonGraphicsTextElement, 'halign'>) {
+	return <HorizontalAlignmentInputField setValue={setValue} value={elementProp.value} />
+})
+
+const FieldTextVerticalAlignmentInput = observer(function FieldTextVerticalAlignmentInput({
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsTextElement, 'valign'>) {
+	return <VerticalAlignmentInputField setValue={setValue} value={elementProp.value} />
 })

@@ -578,9 +578,9 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		} else if (fontheight < 3) {
 			// block out some tiny fontsizes
 			fontheight = 3
-		} else if (fontheight > 120) {
+		} else if (fontheight > this.height) {
 			// block out some giant fontsizes
-			fontheight = 120
+			fontheight = this.height
 		}
 
 		// get needed fontsize

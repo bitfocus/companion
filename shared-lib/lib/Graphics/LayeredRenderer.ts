@@ -11,7 +11,7 @@ import {
 	type ButtonGraphicsImageDrawElement,
 	type ButtonGraphicsTextDrawElement,
 } from '../Model/StyleLayersModel.js'
-import { DrawBounds, ParseAlignment, parseColor, type GraphicsOptions } from './Util.js'
+import { DrawBounds, parseColor, type GraphicsOptions } from './Util.js'
 import { TopbarRenderer } from './TopbarRenderer.js'
 
 export class GraphicsLayeredButtonRenderer {
@@ -49,6 +49,7 @@ export class GraphicsLayeredButtonRenderer {
 			elementsToHide,
 			selectedElementId,
 			drawBounds,
+			drawBounds,
 			false
 		)
 
@@ -63,6 +64,7 @@ export class GraphicsLayeredButtonRenderer {
 		elements: SomeButtonGraphicsDrawElement[],
 		elementsToHide: ReadonlySet<string>,
 		selectedElementId: string | null,
+		rootBounds: DrawBounds,
 		drawBounds: DrawBounds,
 		skipDrawParent: boolean
 	): Promise<DrawBounds | null> {
@@ -87,6 +89,7 @@ export class GraphicsLayeredButtonRenderer {
 								element.children,
 								elementsToHide,
 								selectedElementId,
+								rootBounds,
 								elementBounds,
 								skipDraw
 							)
@@ -99,7 +102,7 @@ export class GraphicsLayeredButtonRenderer {
 
 						break
 					case 'text':
-						elementBounds = await this.#drawTextElement(img, drawBounds, element, skipDraw)
+						elementBounds = await this.#drawTextElement(img, rootBounds, drawBounds, element, skipDraw)
 						break
 					case 'box':
 						elementBounds = await this.#drawBoxElement(img, drawBounds, element, skipDraw)
@@ -151,7 +154,6 @@ export class GraphicsLayeredButtonRenderer {
 
 		try {
 			const imageData = element.base64Image
-			const [halign, valign] = ParseAlignment(element.alignment || 'center:center')
 
 			await img.usingAlpha(element.opacity / 100, async () => {
 				await img.drawBase64Image(
@@ -160,8 +162,8 @@ export class GraphicsLayeredButtonRenderer {
 					drawBounds.y,
 					drawBounds.width,
 					drawBounds.height,
-					halign,
-					valign,
+					element.halign,
+					element.valign,
 					element.fillMode
 				)
 			})
@@ -193,6 +195,7 @@ export class GraphicsLayeredButtonRenderer {
 
 	static async #drawTextElement(
 		img: ImageBase<any>,
+		rootBounds: DrawBounds,
 		parentBounds: DrawBounds,
 		element: ButtonGraphicsTextDrawElement,
 		skipDraw: boolean
@@ -202,15 +205,15 @@ export class GraphicsLayeredButtonRenderer {
 
 		// Draw button text
 		let fontSize: 'auto' | number = Number(element.fontsize) || 'auto'
-		const [halign, valign] = ParseAlignment(element.alignment)
 
 		// Force some padding around the text
 		const marginX = 2
 		const marginY = 1
 
 		if (typeof fontSize === 'number') {
-			// TODO-layered HACK: temporary scale until new font size scale is implemented
-			fontSize *= img.height / 72
+			// Scale font to be a percentage relative to the height of the usable button space
+			// Future: should this be relative to the bounds of the text element?
+			fontSize *= rootBounds.height / 100 / 1.2
 		}
 
 		await img.usingAlpha(element.opacity / 100, async () => {
@@ -222,8 +225,8 @@ export class GraphicsLayeredButtonRenderer {
 				element.text,
 				parseColor(element.color),
 				fontSize,
-				halign,
-				valign
+				element.halign,
+				element.valign
 			)
 		})
 
