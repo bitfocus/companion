@@ -66,6 +66,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 										<MyErrorBoundary>
 											<LayeredButtonEditorStyle
 												controlId={controlId}
+												location={location}
 												styleStore={styleStore}
 												localVariablesStore={localVariablesStore}
 											/>
@@ -111,12 +112,14 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 interface LayeredButtonEditorStyleProps {
 	controlId: string
+	location: ControlLocation
 	styleStore: LayeredStyleStore
 	// previewImage: string | null
 	localVariablesStore: LocalVariablesStore
 }
 const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	controlId,
+	location,
 	styleStore,
 	localVariablesStore,
 }: LayeredButtonEditorStyleProps) {
@@ -126,7 +129,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 		<div className="button-layer-style-editor h-100">
 			<div className="button-layer-preview">
 				{/* <ButtonPreviewBase fixedSize preview={previewImage} /> */}
-				<LayeredButtonPreviewRenderer controlId={controlId} styleStore={styleStore} />
+				<LayeredButtonPreviewRenderer controlId={controlId} location={location} styleStore={styleStore} />
 			</div>
 			<div className="button-layer-elementlist">
 				<ElementsList styleStore={styleStore} controlId={controlId} />

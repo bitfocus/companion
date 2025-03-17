@@ -196,19 +196,18 @@ export class ControlButtonLayered
 			// injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
 		}
 
+		console.log('parse', location)
+
 		const parser = this.deps.variables.values.createVariablesAndExpressionParser(
 			location,
 			this.entities.getLocalVariableEntities(),
 			injectedVariableValues
 		)
 
-		// TODO-layered inject any new local variables
-		const executeExpression = async (str: string, requiredType?: string) => parser.executeExpression(str, requiredType)
-
 		// Compute the new drawing
 		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
 			this.#drawElements,
-			executeExpression,
+			async (str: string, requiredType?: string) => parser.executeExpression(str, requiredType),
 			true
 		)
 		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null

@@ -6,7 +6,6 @@ import { GraphicsImage } from './Image.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
-import { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import FontLoader from './FontLoader.js'
 
@@ -15,10 +14,12 @@ const PAD_Y = 10
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: string
+	location: ControlLocation
 	styleStore: LayeredStyleStore
 }
 export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPreviewRenderer({
 	controlId,
+	location,
 	styleStore,
 }: LayeredButtonPreviewRendererProps) {
 	const drawStyle = useLayeredButtonDrawStyleParser(controlId, styleStore)
@@ -29,6 +30,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 		<LayeredButtonCanvas
 			width={200}
 			height={200}
+			location={location}
 			drawStyle={drawStyle}
 			hiddenElements={styleStore.hiddenElements}
 			selectedElementId={styleStore.selectedElementId}
@@ -39,13 +41,15 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 interface LayeredButtonCanvasProps {
 	width: number
 	height: number
-	drawStyle: SomeButtonGraphicsDrawElement[] | null
+	location: ControlLocation
+	drawStyle: DrawStyleLayeredButtonModel | null
 	hiddenElements: ReadonlySet<string>
 	selectedElementId: string | null
 }
 function LayeredButtonCanvas({
 	width,
 	height,
+	location,
 	drawStyle,
 	hiddenElements,
 	selectedElementId,
@@ -54,33 +58,18 @@ function LayeredButtonCanvas({
 
 	const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
 	useEffect(() => {
-		console.log('draw!', Date.now())
-
 		if (!canvas || !drawStyle) return
 
 		// Setup the context on the first run
-		if (!drawContext.current) drawContext.current = new RendererDrawContext(canvas)
+		if (!drawContext.current) drawContext.current = new RendererDrawContext(canvas, location)
 
 		// Update any cached properties
 		drawContext.current.setHiddenElements(hiddenElements)
 		drawContext.current.setSelectedElementId(selectedElementId)
 
 		// Pass the new draw style to the context
-		const drawStyleFull: DrawStyleLayeredButtonModel = {
-			style: 'button-layered',
-
-			elements: drawStyle,
-
-			// simulate some values:
-			pushed: false,
-			step_cycle: undefined,
-			cloud: undefined,
-			cloud_error: undefined,
-			button_status: 'warning',
-			action_running: true,
-		}
-		drawContext.current.draw(drawStyleFull)
-	}, [canvas, drawStyle, hiddenElements, selectedElementId])
+		drawContext.current.draw(drawStyle)
+	}, [canvas, location, drawStyle, hiddenElements, selectedElementId])
 
 	// Ensure the fonts are loaded
 	// Future: maybe the first paint should be blocked until either the fonts are loaded, or a timeout is reached?
@@ -112,17 +101,18 @@ function LayeredButtonCanvas({
 class RendererDrawContext {
 	readonly #image: GraphicsImage
 	readonly #debounce: PromiseDebounce
-	readonly location: ControlLocation | undefined = undefined // TODO - populate this?
+	readonly location: ControlLocation
 
 	#hiddenElements: ReadonlySet<string> = new Set()
 	#selectedElementId: string | null = null
 
-	constructor(canvas: HTMLCanvasElement) {
+	constructor(canvas: HTMLCanvasElement, location: ControlLocation) {
 		const image = GraphicsImage.create(canvas)
 		if (!image) throw new Error('Failed to create image')
 
 		this.#image = image
 		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
+		this.location = location
 	}
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null

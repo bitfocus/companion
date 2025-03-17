@@ -1,8 +1,5 @@
 import type { CompanionSocketWrapped } from '../../../../util.js'
-import type {
-	SomeButtonGraphicsDrawElement,
-	SomeButtonGraphicsElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
 import {
 	ExecuteExpressionResult,
@@ -16,6 +13,7 @@ import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
 import { useObserver } from 'mobx-react-lite'
 import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
+import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 
 const DRAW_DEBOUNCE = 50
 const DRAW_DEBOUNCE_MAX = 100
@@ -25,7 +23,7 @@ class LayeredButtonDrawStyleParser {
 	// readonly #parsedId = nanoid()
 	readonly #socket: CompanionSocketWrapped
 	readonly #controlId: string | null
-	readonly #changed: (style: SomeButtonGraphicsDrawElement[]) => void
+	readonly #changed: (style: DrawStyleLayeredButtonModel) => void
 	readonly #unsubSocket: () => void
 
 	readonly #latestValues = new Map<string, ExpressionStreamResultWithSubId | Promise<ExpressionStreamResultWithSubId>>()
@@ -36,7 +34,7 @@ class LayeredButtonDrawStyleParser {
 	constructor(
 		socket: CompanionSocketWrapped,
 		controlId: string | null,
-		changed: (style: SomeButtonGraphicsDrawElement[]) => void
+		changed: (style: DrawStyleLayeredButtonModel) => void
 	) {
 		this.#socket = socket
 		this.#controlId = controlId
@@ -71,38 +69,45 @@ class LayeredButtonDrawStyleParser {
 	#recalculateStyle = new PromiseDebounce(
 		async () => {
 			const referencedExpressions = new Set<string>()
+			const parseExpression = async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> => {
+				// Mark it as active, so we don't unsubscribe
+				referencedExpressions.add(str)
 
-			const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
-				this.#rawElements,
-				async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> => {
-					// Mark it as active, so we don't unsubscribe
-					referencedExpressions.add(str)
+				// Reuse existing value
+				const existing = this.#latestValues.get(str)
+				if (existing) return convertExpressionResult(await existing)
 
-					// Reuse existing value
-					const existing = this.#latestValues.get(str)
-					if (existing) return convertExpressionResult(await existing)
+				// Start a new stream
+				const newValuePromise = this.#socket
+					.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, requiredType])
+					.catch((e) => {
+						console.error('Failed to subscribe to expression', e)
+						return {
+							subId: '',
+							result: {
+								ok: false,
+								error: 'Failed to subscribe to expression',
+							},
+						} satisfies ExpressionStreamResultWithSubId
+					})
 
-					// Start a new stream
-					const newValuePromise = this.#socket
-						.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, requiredType])
-						.catch((e) => {
-							console.error('Failed to subscribe to expression', e)
-							return {
-								subId: '',
-								result: {
-									ok: false,
-									error: 'Failed to subscribe to expression',
-								},
-							} satisfies ExpressionStreamResultWithSubId
-						})
+				// Track the new value, to avoid duplicateion
+				this.#latestValues.set(str, newValuePromise)
 
-					// Track the new value, to avoid duplicateion
-					this.#latestValues.set(str, newValuePromise)
+				return convertExpressionResult(await newValuePromise)
+			}
 
-					return convertExpressionResult(await newValuePromise)
-				},
-				false
-			)
+			const [{ elements }, thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] =
+				await Promise.all([
+					ConvertSomeButtonGraphicsElementForDrawing(this.#rawElements, parseExpression, false),
+					parseExpression('$(this:pushed)', 'boolean'),
+					parseExpression('$(this:step_count)', 'number'),
+					parseExpression('$(this:step_count) > 1 ? $(this:step) : 0', 'number'),
+					parseExpression('$(this:button_status)', 'string'),
+					parseExpression('$(this:actions_running)', 'boolean'),
+				])
+
+			console.log('Parsed elements', elements, thisPushed, thisPushed.ok ? Boolean(thisPushed.value) : false)
 
 			// Unsubscribe from any streams that are no longer used
 			for (const [expression, sub] of this.#latestValues) {
@@ -113,7 +118,23 @@ class LayeredButtonDrawStyleParser {
 			}
 
 			// Emit the new elements
-			this.#changed(elements)
+			this.#changed({
+				style: 'button-layered',
+
+				elements,
+
+				pushed: thisPushed.ok ? Boolean(thisPushed.value) : false,
+				step_count: thisStepCount.ok ? Number(thisStepCount.value) : 1,
+				step_cycle: thisStep.ok && thisStep.value ? Number(thisStep.value) : undefined,
+
+				cloud: undefined,
+				cloud_error: undefined,
+
+				button_status: thisButtonStatus.ok
+					? (String(thisButtonStatus.value) as 'error' | 'warning' | 'good')
+					: undefined,
+				action_running: thisActionsRunning.ok ? Boolean(thisActionsRunning.value) : undefined,
+			})
 		},
 		DRAW_DEBOUNCE,
 		DRAW_DEBOUNCE_MAX
@@ -177,10 +198,10 @@ function convertExpressionResult(fromValue: ExpressionStreamResultWithSubId): Ex
 export function useLayeredButtonDrawStyleParser(
 	controlId: string | null,
 	styleStore: LayeredStyleStore
-): SomeButtonGraphicsDrawElement[] | null {
+): DrawStyleLayeredButtonModel | null {
 	const { socket } = useContext(RootAppStoreContext)
 
-	const [drawStyle, setDrawStyle] = useState<SomeButtonGraphicsDrawElement[] | null>(null)
+	const [drawStyle, setDrawStyle] = useState<DrawStyleLayeredButtonModel | null>(null)
 	const [parser, setParser] = useState<LayeredButtonDrawStyleParser | null>(null)
 
 	// Reset the draw style when the store changes

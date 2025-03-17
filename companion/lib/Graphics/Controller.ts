@@ -173,9 +173,31 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								values[`b_text_${location.pageNumber}_${bankIndex}`] =
 									buttonStyle?.style === 'button' ? buttonStyle.text : undefined
 
+							values[`b_pushed_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
+									? buttonStyle.pushed
+									: undefined
+
 							// Update step
 							values[`b_step_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' ? (buttonStyle.step_cycle ?? 1) : undefined
+								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
+									? (buttonStyle.step_cycle ?? 1)
+									: undefined
+
+							values[`b_step_count_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
+									? (buttonStyle.step_count ?? 1)
+									: undefined
+
+							values[`b_actions_running_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
+									? (buttonStyle.action_running ?? false)
+									: undefined
+
+							values[`b_status_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
+									? (buttonStyle.button_status ?? 'good')
+									: undefined
 
 							// Submit the updated values
 							if (this.#pendingVariables) {
@@ -326,6 +348,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			cloud_error: false,
 			button_status: undefined,
 			step_cycle: undefined,
+			step_count: 1,
 			action_running: false,
 
 			show_topbar: buttonStyle.show_topbar,
