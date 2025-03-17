@@ -23,32 +23,16 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 }: LayeredButtonPreviewRendererProps) {
 	const drawStyle = useLayeredButtonDrawStyleParser(controlId, styleStore)
 
+	// Future: dynamic sizes
+
 	return (
-		<div>
-			<LayeredButtonCanvas
-				width={200}
-				height={200}
-				drawStyle={drawStyle}
-				hiddenElements={styleStore.hiddenElements}
-				selectedElementId={styleStore.selectedElementId}
-			/>
-			&nbsp;&nbsp;
-			<LayeredButtonCanvas
-				width={144}
-				height={112}
-				drawStyle={drawStyle}
-				hiddenElements={styleStore.hiddenElements}
-				selectedElementId={styleStore.selectedElementId}
-			/>
-			&nbsp;&nbsp;
-			{/* <LayeredButtonCanvas
-				width={100}
-				height={200}
-				drawStyle={drawStyle}
-				hiddenElements={styleStore.hiddenElements}
-				selectedElementId={styleStore.selectedElementId}
-			/> */}
-		</div>
+		<LayeredButtonCanvas
+			width={200}
+			height={200}
+			drawStyle={drawStyle}
+			hiddenElements={styleStore.hiddenElements}
+			selectedElementId={styleStore.selectedElementId}
+		/>
 	)
 })
 

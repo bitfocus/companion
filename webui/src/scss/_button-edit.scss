@@ -220,13 +220,25 @@ table.variables-table {
 .button-layer-style-editor {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 1fr 1.5fr;
+	grid-template-rows: minmax(30vh, 300px) 1fr;
 
 	.button-layer-preview {
-		// TODO
+		text-align: center;
+		align-content: center;
 	}
 
 	.button-layer-elementlist {
+		.button-layer-elementlist-table {
+			overflow-y: scroll;
+			max-height: 100%;
+
+			.heading {
+				position: sticky;
+				top: 0;
+				background-color: #fff;
+			}
+		}
+
 		.button-layer-elementlist-table-row {
 			display: grid;
 			grid-template-columns: auto 1fr auto auto;

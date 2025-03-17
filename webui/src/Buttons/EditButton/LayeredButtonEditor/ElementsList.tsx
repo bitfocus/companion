@@ -21,7 +21,7 @@ export const ElementsList = observer(function ElementsList({
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModalRef} />
-			<div className="button-layer-elementlist-table2">
+			<div className="button-layer-elementlist-table">
 				<div className="button-layer-elementlist-table-row heading">
 					<div className="td-reorder-placeholder">&nbsp;</div>
 					<div>Name</div>
