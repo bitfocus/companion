@@ -107,8 +107,6 @@ class LayeredButtonDrawStyleParser {
 					parseExpression('$(this:actions_running)', 'boolean'),
 				])
 
-			console.log('Parsed elements', elements, thisPushed, thisPushed.ok ? Boolean(thisPushed.value) : false)
-
 			// Unsubscribe from any streams that are no longer used
 			for (const [expression, sub] of this.#latestValues) {
 				if (!referencedExpressions.has(expression)) {
@@ -130,9 +128,10 @@ class LayeredButtonDrawStyleParser {
 				cloud: undefined,
 				cloud_error: undefined,
 
-				button_status: thisButtonStatus.ok
-					? (String(thisButtonStatus.value) as 'error' | 'warning' | 'good')
-					: undefined,
+				button_status: 'warning',
+				// button_status: thisButtonStatus.ok
+				// 	? (String(thisButtonStatus.value) as 'error' | 'warning' | 'good')
+				// 	: undefined,
 				action_running: thisActionsRunning.ok ? Boolean(thisActionsRunning.value) : undefined,
 			})
 		},

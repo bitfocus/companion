@@ -196,8 +196,6 @@ export class ControlButtonLayered
 			// injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
 		}
 
-		console.log('parse', location)
-
 		const parser = this.deps.variables.values.createVariablesAndExpressionParser(
 			location,
 			this.entities.getLocalVariableEntities(),

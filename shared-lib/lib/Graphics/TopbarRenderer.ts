@@ -84,9 +84,15 @@ export class TopbarRenderer {
 		}
 
 		// Draw status icons from right to left
-		let rightMax = 72
+
+		// TODO-layered fix this
+		if (!drawBounds) return
+
+		// const iconHeight
+		let rightMax = drawBounds.x + drawBounds.width
 
 		// first the cloud icon if present
+		// TODO-layered fix this
 		if (drawStyle.cloud_error && showTopBar) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloudError)
 			rightMax -= 17
@@ -96,23 +102,31 @@ export class TopbarRenderer {
 		}
 
 		// next error or warning icon
+		const iconSize = Math.floor(drawBounds.height * 0.65)
+		const iconPadding = Math.floor(drawBounds.height * 0.175)
 		if (location) {
 			switch (drawStyle.button_status) {
 				case 'error':
-					img.box(rightMax - 10, 3, rightMax - 2, 11, 'red')
-					rightMax -= 10
+					img.box(
+						rightMax - iconSize - iconPadding,
+						drawBounds.y + iconPadding,
+						rightMax - iconPadding,
+						drawBounds.y + iconPadding + iconSize,
+						'red'
+					)
+					rightMax -= iconSize + iconPadding
 					break
 				case 'warning':
-					img.drawFilledPath(
-						[
-							[rightMax - 10, 11],
-							[rightMax - 2, 11],
-							[rightMax - 6, 3],
-						],
-						'rgb(255, 127, 0)'
+					img.drawTextLineAligned(
+						rightMax - iconSize + iconPadding,
+						drawBounds.y + iconPadding + iconSize,
+						'⚠️',
+						colorBlack,
+						Math.floor(iconSize * 0.8),
+						'center',
+						'bottom'
 					)
-					img.drawTextLineAligned(rightMax - 6, 11, '!', colorBlack, 7, 'center', 'bottom')
-					rightMax -= 10
+					rightMax -= iconSize + iconPadding
 					break
 			}
 
@@ -123,13 +137,13 @@ export class TopbarRenderer {
 				if (drawStyle.pushed) iconcolor = colorBlack
 				img.drawFilledPath(
 					[
-						[rightMax - 8, 3],
-						[rightMax - 2, 7],
-						[rightMax - 8, 11],
+						[rightMax - iconSize, drawBounds.y + iconPadding],
+						[rightMax - iconPadding, drawBounds.y + iconPadding + iconSize / 2],
+						[rightMax - iconSize, drawBounds.y + iconPadding + iconSize],
 					],
 					iconcolor
 				)
-				rightMax -= 8
+				rightMax -= iconSize
 			}
 		}
 	}
