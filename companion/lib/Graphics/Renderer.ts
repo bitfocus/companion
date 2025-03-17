@@ -71,7 +71,7 @@ export class GraphicsRenderer {
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
-		return this.#getCachedImage(72, 72, 2, (img) => {
+		return GraphicsRenderer.#getCachedImage(72, 72, 2, (img) => {
 			img.fillColor('black')
 
 			if (!options.remove_topbar) {
@@ -118,7 +118,7 @@ export class GraphicsRenderer {
 	}> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
-		return this.#getCachedImage(72, 72, 4, async (img) => {
+		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
 			let draw_style: DrawStyleModel['style'] | undefined = undefined
 
 			// special button types
@@ -297,7 +297,7 @@ export class GraphicsRenderer {
 	 * @param num Display number
 	 */
 	static drawPincodeNumber(num: number): ImageResult {
-		return this.#getCachedImage(72, 72, 3, (img) => {
+		return GraphicsRenderer.#getCachedImage(72, 72, 3, (img) => {
 			img.fillColor(colorDarkGrey)
 			img.drawTextLineAligned(36, 36, `${num}`, colorWhite, 44, 'center', 'center')
 			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
@@ -308,7 +308,7 @@ export class GraphicsRenderer {
 	 * Draw pincode entry button
 	 */
 	static drawPincodeEntry(code: string | undefined): ImageResult {
-		return this.#getCachedImage(72, 72, 4, (img) => {
+		return GraphicsRenderer.#getCachedImage(72, 72, 4, (img) => {
 			img.fillColor(colorDarkGrey)
 			img.drawTextLineAligned(36, 30, 'Lockout', colorButtonYellow, 14, 'center', 'center')
 			if (code !== undefined) {
