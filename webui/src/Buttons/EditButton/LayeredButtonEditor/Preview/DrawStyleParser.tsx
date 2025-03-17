@@ -128,10 +128,9 @@ class LayeredButtonDrawStyleParser {
 				cloud: undefined,
 				cloud_error: undefined,
 
-				button_status: 'warning',
-				// button_status: thisButtonStatus.ok
-				// 	? (String(thisButtonStatus.value) as 'error' | 'warning' | 'good')
-				// 	: undefined,
+				button_status: thisButtonStatus.ok
+					? (String(thisButtonStatus.value) as 'error' | 'warning' | 'good')
+					: undefined,
 				action_running: thisActionsRunning.ok ? Boolean(thisActionsRunning.value) : undefined,
 			})
 		},
