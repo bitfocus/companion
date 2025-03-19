@@ -50,7 +50,11 @@ async function fetchSingleVersion(platformInfo, nodeVersion) {
 		if (isZip) {
 			const tmpDir = path.join(cacheRuntimeDir, `tmp-${nodeVersion}`)
 			await fs.remove(tmpDir)
-			await $`Expand-Archive ${toPosix(tarPath)} -DestinationPath ${toPosix(tmpDir)}`
+			if (process.platform === 'win32') {
+				await $`Expand-Archive ${toPosix(tarPath)} -DestinationPath ${toPosix(tmpDir)}`
+			} else {
+				await $`unzip ${toPosix(tarPath)} -d ${toPosix(tmpDir)}`
+			}
 			await fs.move(
 				path.join(tmpDir, `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${platformInfo.runtimeArch}`),
 				runtimeDir
