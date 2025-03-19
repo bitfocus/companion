@@ -295,9 +295,8 @@ export async function transformButtonImage(
 
 	// pad, in case a button is non-square
 	const dimensions = image.getCurrentDimensions()
-	const maxDimension = Math.max(dimensions.width, dimensions.height)
-	const xOffset = (targetWidth - maxDimension) / 2
-	const yOffset = (targetHeight - maxDimension) / 2
+	const xOffset = (targetWidth - dimensions.width) / 2
+	const yOffset = (targetHeight - dimensions.height) / 2
 	image = image.pad(Math.floor(xOffset), Math.ceil(xOffset), Math.floor(yOffset), Math.ceil(yOffset), {
 		red: 0,
 		green: 0,

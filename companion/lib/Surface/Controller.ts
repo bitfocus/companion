@@ -43,6 +43,7 @@ import { SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
+import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
@@ -66,6 +67,8 @@ import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
+// WSL does not feature kernel HID support, we need to use libusb driver there
+// HID.setDriverType('libusb')
 HID.devices()
 
 const SurfacesRoom = 'surfaces'
@@ -884,6 +887,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					HID.devicesAsync().then(async (deviceInfos) =>
 						Promise.allSettled(
 							deviceInfos.map(async (deviceInfo) => {
+								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
 									if (!ignoreStreamDeck) {
 										if (getStreamDeckDeviceInfo(deviceInfo)) {
@@ -939,7 +943,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										if (this.#handlerDependencies.userconfig.getKey('mystrix_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
 										}
-									}
+									} else if (
+										(deviceInfo.vendorId === 0x6602 || deviceInfo.vendorId === 0x6603) && // Mirabox
+										(deviceInfo.productId === 0x1001 || deviceInfo.productId === 0x1007 || deviceInfo.productId === 0x1005 || deviceInfo.productId === 0x1006) && // Stream Dock N4 or 293V3
+										deviceInfo.interface === 0
+									) {
+										if (this.#handlerDependencies.userconfig.getKey('mirabox_streamdock_enable')) {
+											await this.#addDevice(deviceInfo.path, {}, 'mirabox-streamdock', SurfaceUSBMiraboxStreamDock)
+										}
+									} 
 								}
 							})
 						)
