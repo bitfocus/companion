@@ -294,7 +294,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 				if (!pressed && pressedDuration) {
 					// find the correct set to execute on up
 
-					const setIds = Object.keys(step)
+					const setIds = Array.from(step.sets.keys())
 						.map((id) => Number(id))
 						.filter((id) => !isNaN(id) && id < pressedDuration)
 					if (setIds.length) {
