@@ -1,5 +1,28 @@
 # Bitfocus Companion
 
+## Companion v3.5.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- fix emulator keymap for clickers #3328
+- add pincode layout for SDS #3330
+- fix web buttons irregular column count causing some buttons to not work #3303
+- fix \r\n drawing with extra space #3315
+
+### 🐞 MODULE FIXES
+
+- cedar-dns8d
+- colorlight-processor
+- focusrite-mp8r
+- generic-osc
+- generic-swp02
+- imimot-mitti
+- interspace-mastercuev7
+- renewedvision-propresenter-api
+- stagetec-rcp
+- studiocoast-vmix
+- twitch-api
+
 ## Companion v3.5.2 - Release Notes
 
 ### 🐞 BUG FIXES
