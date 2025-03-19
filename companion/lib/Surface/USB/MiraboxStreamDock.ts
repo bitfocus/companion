@@ -52,7 +52,6 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 
-
 	constructor(devicePath: string, streamDock: StreamDock) {
 		super()
 
@@ -67,7 +66,12 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 
 		this.logger.debug(`Adding Mirabox ${this.#streamDock.productName} device: ${devicePath}`)
 
-		const configFields: CompanionSurfaceConfigField[] = [...OffsetConfigFields, BrightnessConfigField, LegacyRotationConfigField, ...LockConfigFields]
+		const configFields: CompanionSurfaceConfigField[] = [
+			...OffsetConfigFields,
+			BrightnessConfigField,
+			LegacyRotationConfigField,
+			...LockConfigFields,
+		]
 
 		// if (streamDock.productName.includes('N4')) {
 		// 	configFields.push({
@@ -87,7 +91,6 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 		// 		default: '1234',
 		// 	})
 		// }
-
 
 		this.info = {
 			type: `Mirabox ${this.#streamDock.productName}`,
@@ -168,7 +171,6 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 		this.#streamDock.on('rotate', (control, amount) => {
 			this.emit('rotate', control.column, control.row, amount > 0)
 		})
-
 	}
 
 	async #init() {
@@ -182,11 +184,10 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 	 * Open a Stream Dock
 	 */
 	static async create(devicePath: string): Promise<SurfaceUSBMiraboxStreamDock> {
-
 		const device = await HIDAsync.open(devicePath)
 
 		if (!device) {
-			throw('Device not found')
+			throw 'Device not found'
 		}
 		const info = await device.getDeviceInfo()
 		const streamDock = new StreamDock(info, device)
@@ -217,7 +218,6 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 			throw e
 		}
 	}
-
 
 	/**
 	 * Process the information from the GUI and what is saved in database
@@ -266,7 +266,6 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 	draw(x: number, y: number, render: ImageResult): void {
 		this.#writeQueue.queue(`${x}_${y}`, x, y, render)
 	}
-
 }
 
 interface StreamDockModelDefinition {
@@ -277,15 +276,14 @@ interface StreamDockModelDefinition {
 
 /**
  * Class Definition for the Mirabox Stream Dock
- * 
+ *
  */
 class StreamDock extends EventEmitter {
-
 	static models = {
 		'293V3': {
 			productName: 'Stream Dock 293V3',
 			pid: 0x1001,
-			
+
 			inputs: [
 				{
 					type: 'button',
@@ -392,7 +390,6 @@ class StreamDock extends EventEmitter {
 					column: 4,
 					name: 'Button 15',
 				},
-				
 			],
 			outputs: [
 				{
@@ -530,10 +527,7 @@ class StreamDock extends EventEmitter {
 					resolutionx: 112,
 					resolutiony: 112,
 				},
-				
 			],
-
-
 		},
 		'N4-1234': {
 			productName: 'Stream Dock N4',
@@ -844,7 +838,8 @@ class StreamDock extends EventEmitter {
 					name: 'Strip 2',
 					resolutionx: 176,
 					resolutiony: 124,
-				},{
+				},
+				{
 					type: 'lcd',
 					id: 0x03,
 					row: 2,
@@ -852,7 +847,8 @@ class StreamDock extends EventEmitter {
 					name: 'Strip 3',
 					resolutionx: 176,
 					resolutiony: 124,
-				},{
+				},
+				{
 					type: 'lcd',
 					id: 0x04,
 					row: 2,
@@ -1172,7 +1168,8 @@ class StreamDock extends EventEmitter {
 					name: 'Strip 2',
 					resolutionx: 176,
 					resolutiony: 124,
-				},{
+				},
+				{
 					type: 'lcd',
 					id: 0x03,
 					row: 2,
@@ -1180,7 +1177,8 @@ class StreamDock extends EventEmitter {
 					name: 'Strip 3',
 					resolutionx: 176,
 					resolutiony: 124,
-				},{
+				},
+				{
 					type: 'lcd',
 					id: 0x04,
 					row: 2,
@@ -1196,19 +1194,19 @@ class StreamDock extends EventEmitter {
 	private static cmdPrefix = [0x43, 0x52, 0x54, 0, 0]
 	private static packetSize = 1024
 
-  private info: Device
+	private info: Device
 	private device: HIDAsync
-	private model: StreamDockModelDefinition = {productName: 'Unknown Stream Dock', inputs:[], outputs: []}
-  
+	private model: StreamDockModelDefinition = { productName: 'Unknown Stream Dock', inputs: [], outputs: [] }
+
 	constructor(deviceInfo: Device, device: HIDAsync) {
 		super()
 
-    this.info = deviceInfo
+		this.info = deviceInfo
 		this.device = device
 
 		this.device.on('error', (error) => {
-			console.error(`Error: ${error}`)
-			this.emit('remove')
+			console.error(`Stream Dock Error: ${error}`)
+			this.emit('error', error)
 		})
 
 		if (this.info.productId === 0x1005 || this.info.productId === 0x1006) {
@@ -1216,19 +1214,19 @@ class StreamDock extends EventEmitter {
 			this.model = StreamDock.models['293V3']
 		} else if (this.info.productId === 0x1001 || this.info.productId === 0x1007) {
 			// modelType = 'N4'
-			this.model = StreamDock.models['N4-1234']	
+			this.model = StreamDock.models['N4-1234']
 		} else {
 			// this.modelType = 'Unknown'
 			this.emit('remove')
 		}
-		
+
 		this.device.on('data', (data) => {
 			// console.log(`received data ${Array.from(data).slice(0,16).map(d => (d as number).toString(16))}`)
 			if (data.length >= 11) {
 				const functionRaw = data[9]
 				const parameterRaw = data[10]
-				
-				const action = this.model.inputs.find(input => {
+
+				const action = this.model.inputs.find((input) => {
 					return input.id === functionRaw
 				})
 
@@ -1250,28 +1248,24 @@ class StreamDock extends EventEmitter {
 					} else if (action.type === 'swipeRight') {
 						this.emit('rotate', action, 1)
 					} else {
-						console.error(`Unknown action received: ${parameterRaw} from ${this.info.path}`)	
+						console.error(`Unknown action received: ${parameterRaw} from ${this.info.path}`)
 					}
-
 				}
 			}
 		})
-
-
-  }
+	}
 
 	/**
-	 * Sends a command to the device  
-	 * 
+	 * Sends a command to the device
+	 *
 	 * The command will be packetized in packeges of packetSize bytes. Smaller commands are zero-padded, larger commands are chunked.
 	 * @param data the data to be sent
 	 * @param prefix optional prefix. If not set, the default prefix will be used
 	 */
 	async sendCmd(data: Buffer | Array<number>, prefix = StreamDock.cmdPrefix) {
-		
-    if (!Buffer.isBuffer(data)) {
-			data = Buffer.from(data);
-    }
+		if (!Buffer.isBuffer(data)) {
+			data = Buffer.from(data)
+		}
 
 		const writebuffer = Buffer.alloc(StreamDock.packetSize)
 		const prefixbuffer = Buffer.from(prefix)
@@ -1279,22 +1273,23 @@ class StreamDock extends EventEmitter {
 		prefixbuffer.copy(writebuffer, 0, 0)
 		data.copy(writebuffer, prefixbuffer.byteLength)
 		if (writebuffer.byteLength != StreamDock.packetSize) {
-			console.error(`Data lenght problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `)
+			console.error(
+				`Data lenght problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
+			)
 		}
-    await this.writeRaw(writebuffer)
+		await this.writeRaw(writebuffer)
 
 		if (data.byteLength + prefixbuffer.byteLength > StreamDock.packetSize) {
 			const remain = data.subarray(StreamDock.packetSize - prefixbuffer.byteLength)
 			await this.sendCmd(remain, [])
-		} 
-
-  }
+		}
+	}
 
 	/**
 	 * Sets the different layout variations of the stream dock N4
-	 * @param layout 
+	 * @param layout
 	 */
-	setLayout(layout: '1234'|'1245') {
+	setLayout(layout: '1234' | '1245') {
 		if (this.model?.productName === 'Stream Dock N4') {
 			const newmodel = StreamDock.models[`N4-${layout}`]
 			if (newmodel !== undefined) {
@@ -1303,9 +1298,9 @@ class StreamDock extends EventEmitter {
 		}
 	}
 
-  get serialNumber() {
+	get serialNumber() {
 		return this.info.serialNumber
-  }
+	}
 
 	get productName() {
 		return this.model.productName ?? 'Unknown'
@@ -1315,14 +1310,21 @@ class StreamDock extends EventEmitter {
 	 * The amount of columns found in the surface
 	 */
 	get columns() {
-		return Math.max(...this.model.inputs.map(input => input.column), ...this.model.outputs.map(output => output.column)) + 1
+		return (
+			Math.max(
+				...this.model.inputs.map((input) => input.column),
+				...this.model.outputs.map((output) => output.column)
+			) + 1
+		)
 	}
 
 	/**
 	 * The amount of rows found in the surface
 	 */
 	get rows() {
-		return Math.max(...this.model.inputs.map(input => input.row), ...this.model.outputs.map(output => output.row)) + 1
+		return (
+			Math.max(...this.model.inputs.map((input) => input.row), ...this.model.outputs.map((output) => output.row)) + 1
+		)
 	}
 
 	get outputs() {
@@ -1330,33 +1332,33 @@ class StreamDock extends EventEmitter {
 	}
 
 	async writeRaw(data: Buffer | Array<number>) {
-    this.device.write(data)
+		this.device.write(data)
 	}
 
-  async wakeScreen() {
-    await this.sendCmd([0x44, 0x49, 0x53])
-  }
+	async wakeScreen() {
+		await this.sendCmd([0x44, 0x49, 0x53])
+	}
 
-  async clearPanel() {
-    await this.sendCmd([0x43, 0x4C, 0x45, 0,0,0, 0xff])
-  }
+	async clearPanel() {
+		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0, 0xff])
+	}
 
-  async refresh() {
-    await this.sendCmd([0x53, 0x54, 0x50])
-  }
+	async refresh() {
+		await this.sendCmd([0x53, 0x54, 0x50])
+	}
 
-  async setBrightness(value: number) {
+	async setBrightness(value: number) {
 		const clamped = Math.max(Math.min(value, 100), 0)
-		const y = Math.pow(clamped / 100, 0.75) 
-		
+		const y = Math.pow(clamped / 100, 0.75)
+
 		const brightness = Math.round(y * 100)
 
 		await this.sendCmd([0x4c, 0x49, 0x47, 0, 0, brightness])
-  }
+	}
 
-  async setKeyImage(column: number, row: number, imageBuffer: Buffer) {
-		const output = this.outputs.find(output => output.row === row && output.column === column)
-		
+	async setKeyImage(column: number, row: number, imageBuffer: Buffer) {
+		const output = this.outputs.find((output) => output.row === row && output.column === column)
+
 		if (!output) return
 
 		// console.log('sending image', column, row, output.id)
@@ -1365,7 +1367,8 @@ class StreamDock extends EventEmitter {
 		let size = 0xffffff
 		let quality: number
 
-		for (quality = 90; quality > 11; quality -= 10) { // 90% quality will fit almost all images in the 10k limit
+		for (quality = 90; quality > 11; quality -= 10) {
+			// 90% quality will fit almost all images in the 10k limit
 			let options = {
 				format: jpg.FORMAT_RGB,
 				width: output.resolutionx,
@@ -1379,36 +1382,46 @@ class StreamDock extends EventEmitter {
 			} catch (error) {
 				console.error(`compressing jpg at position ${row}/${column} failed`, error)
 			}
-	
+
 			// console.log('imgData', Array.from(imgData).map(d => d.toString(16).padStart(2, '0')).join(' '))
-	    
+
 			size = imgData.byteLength
 			if (size <= 10240) break
 		}
 
 		if (size > 10240) {
 			imgData = imgData.subarray(0, 10240)
-			console.error(`Streamdock image at position ${row}/${column} could not be compressed to 10KB or less, truncating to 10KB`)
+			console.error(
+				`Streamdock image at position ${row}/${column} could not be compressed to 10KB or less, truncating to 10KB`
+			)
 		}
 
 		// console.log(`image ${row}/${column} size ${size}B compression ${quality}%`)
-		
-    await this.sendCmd([0x42, 0x41, 0x54, (size >> 24) & 0xff, (size >> 16) & 0xff, (size >> 8) & 0xff, size & 0xff, output.id])
-    await this.sendCmd(imgData, [])
-    await this.refresh()
-  }
 
-  async clearKeyImage(keyId: number) {
-    await this.sendCmd([0x43, 0x4C, 0x45, 0,0,0, keyId])
-  }
+		await this.sendCmd([
+			0x42,
+			0x41,
+			0x54,
+			(size >> 24) & 0xff,
+			(size >> 16) & 0xff,
+			(size >> 8) & 0xff,
+			size & 0xff,
+			output.id,
+		])
+		await this.sendCmd(imgData, [])
+		await this.refresh()
+	}
+
+	async clearKeyImage(keyId: number) {
+		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0, keyId])
+	}
 
 	async sendHeartbeat() {
-		await this.sendCmd([0x43, 0x4F, 0x4E, 0x4E, 0x45, 0x43, 0x54])
+		await this.sendCmd([0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54])
 	}
 
 	async close() {
-		await this.sendCmd([0x43, 0x4C, 0x45, 0,0, 0x44, 0x43])
+		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0x44, 0x43])
 		return this.device.close()
 	}
-
 }

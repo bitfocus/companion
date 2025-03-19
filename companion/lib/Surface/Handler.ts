@@ -228,7 +228,18 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SDS
 			this.#pincodeCodePosition = [1, 0]
 		} else if (this.panel.info.type === 'Mirabox Stream Dock N4') {
-			this.#pincodeNumberPositions = [[4,1],[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1]]
+			this.#pincodeNumberPositions = [
+				[4, 1],
+				[0, 0],
+				[1, 0],
+				[2, 0],
+				[3, 0],
+				[4, 0],
+				[0, 1],
+				[1, 1],
+				[2, 1],
+				[3, 1],
+			]
 			this.#pincodeCodePosition = [4, 2]
 		}
 
