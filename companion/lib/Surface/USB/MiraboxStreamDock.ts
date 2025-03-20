@@ -22,12 +22,12 @@ import imageRs from '@julusian/image-rs'
 import jpg from '@julusian/jpeg-turbo'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { transformButtonImage } from '../../Resources/Util.js'
+import { offsetRotation, transformButtonImage } from '../../Resources/Util.js'
 import {
-	OffsetConfigFields,
 	BrightnessConfigField,
-	LegacyRotationConfigField,
 	LockConfigFields,
+	OffsetConfigFields,
+	RotationConfigField,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
@@ -43,11 +43,6 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 	readonly #streamDock: StreamDock
 
 	readonly #writeQueue: ImageWriteQueue<string, [number, number, ImageResult]>
-
-	/**
-	 * Whether to cleanup the deck on quit
-	 */
-	#shouldCleanupOnQuit = true
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
@@ -69,7 +64,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 		const configFields: CompanionSurfaceConfigField[] = [
 			...OffsetConfigFields,
 			BrightnessConfigField,
-			LegacyRotationConfigField,
+			RotationConfigField,
 			...LockConfigFields,
 		]
 
@@ -121,7 +116,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 					try {
 						newbuffer = await transformButtonImage(
 							render,
-							this.config.rotation + 180,
+							offsetRotation(this.config.rotation, 180),
 							output.resolutionx,
 							output.resolutiony,
 							imageRs.PixelFormat.Rgb
@@ -229,16 +224,14 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 				this.logger.debug(`Set brightness failed: ${e}`)
 			})
 		}
-		if ((force || this.config.layout != config.layout) && config.layout !== undefined) {
-			//this.#streamDock.setLayout(config.layout)
-		}
+		// if ((force || this.config.layout != config.layout) && config.layout !== undefined) {
+		// 	//this.#streamDock.setLayout(config.layout)
+		// }
 
 		this.config = config
 	}
 
 	quit(): void {
-		if (!this.#shouldCleanupOnQuit) return
-
 		this.#streamDock
 			.clearPanel()
 			.catch((e) => {
@@ -1244,7 +1237,7 @@ class StreamDock extends EventEmitter {
 					} else if (action.type === 'rotateRight') {
 						this.emit('rotate', action, 1)
 					} else if (action.type === 'swipeLeft') {
-						this.emit('rotate', action, 1)
+						this.emit('rotate', action, -1)
 					} else if (action.type === 'swipeRight') {
 						this.emit('rotate', action, 1)
 					} else {
