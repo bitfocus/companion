@@ -190,7 +190,7 @@ export class Registry {
 		LogController.init(this.appInfo, this.ui.io)
 
 		this.db = new DataDatabase(this.appInfo.configDir)
-		this.#data = new DataController(this)
+		this.#data = new DataController(this.appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 	}
 
@@ -222,7 +222,7 @@ export class Registry {
 			this.io
 		)
 
-		const oscSender = new ServiceOscSender(this)
+		const oscSender = new ServiceOscSender(this.userconfig)
 		this.instance = new InstanceController(
 			this.appInfo,
 			this.io,
@@ -296,6 +296,26 @@ export class Registry {
 			this.io,
 			this.page
 		)
+
+		this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
+			this.io.emitToAll('set_userconfig_key', key, value)
+			setImmediate(() => {
+				// give the change a chance to be pushed to the ui first
+				this.graphics.updateUserConfig(key, value)
+				this.services.updateUserConfig(key, value)
+				this.surfaces.updateUserConfig(key, value)
+			})
+
+			if (checkControlsInBounds) {
+				const controlsToRemove = this.page.findAllOutOfBoundsControls()
+
+				for (const controlId of controlsToRemove) {
+					this.controls.deleteControl(controlId)
+				}
+
+				this.graphics.discardAllOutOfBoundsControls()
+			}
+		})
 
 		this.ui.io.on('clientConnect', (client) => {
 			LogController.clientConnect(client)

@@ -1,7 +1,7 @@
 import OSC from 'osc'
 import { ServiceOscBase } from './OscBase.js'
-import type { Registry } from '../Registry.js'
 import { OSCSomeArguments } from '@companion-module/base'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
  * Class providing OSC send services.
@@ -24,8 +24,8 @@ import { OSCSomeArguments } from '@companion-module/base'
  * disclosing the source code of your own applications.
  */
 export class ServiceOscSender extends ServiceOscBase {
-	constructor(registry: Registry) {
-		super(registry.userconfig, 'Service/OscSender', null, null)
+	constructor(userconfig: DataUserConfig) {
+		super(userconfig, 'Service/OscSender', null, null)
 
 		this.port = 0
 
