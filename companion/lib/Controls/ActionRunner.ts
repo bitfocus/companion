@@ -76,6 +76,8 @@ export class ActionRunner extends CoreBase {
 		} else {
 			const groupedActions = this.#splitActionsAroundWaits(actions)
 
+			const ps: Promise<void>[] = []
+
 			for (const { waitAction, actions } of groupedActions) {
 				if (extras.abortDelayed.aborted) break
 
@@ -90,11 +92,16 @@ export class ActionRunner extends CoreBase {
 
 				// Spawn all the actions in parallel
 				for (const action of actions) {
-					this.#runAction(action, extras).catch((e) => {
-						this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
-					})
+					ps.push(
+						this.#runAction(action, extras).catch((e) => {
+							this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+						})
+					)
 				}
 			}
+
+			// Await all the actions, so that the abort signal is respected and the promise is pending until all actions are done
+			await Promise.all(ps)
 		}
 	}
 
