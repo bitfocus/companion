@@ -1,12 +1,16 @@
-import { CoreBase } from '../Core/Base.js'
 import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
 import express from 'express'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import Express from 'express'
 import type { UIExpress } from '../UI/Express.js'
-import type { Registry } from '../Registry.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import LogController from '../Log/Controller.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { PageController } from '../Page/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
 
 /**
  * Class providing the HTTP API.
@@ -29,7 +33,15 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class ServiceHttpApi extends CoreBase {
+export class ServiceHttpApi {
+	logger = LogController.createLogger('Service/HttpApi')
+
+	readonly #userconfigController: DataUserConfig
+	readonly #pageController: PageController
+	readonly #controlController: ControlsController
+	readonly #surfaceController: SurfaceController
+	readonly #variablesController: VariablesController
+
 	/**
 	 * new Api express router
 	 */
@@ -45,8 +57,19 @@ export class ServiceHttpApi extends CoreBase {
 	 */
 	readonly #express: UIExpress
 
-	constructor(registry: Registry, express: UIExpress) {
-		super(registry, 'Service/HttpApi')
+	constructor(
+		userconfigController: DataUserConfig,
+		pageController: PageController,
+		controlController: ControlsController,
+		surfaceController: SurfaceController,
+		variablesController: VariablesController,
+		express: UIExpress
+	) {
+		this.#userconfigController = userconfigController
+		this.#pageController = pageController
+		this.#controlController = controlController
+		this.#surfaceController = surfaceController
+		this.#variablesController = variablesController
 
 		this.#express = express
 		this.#apiRouter = Express.Router()
@@ -54,7 +77,7 @@ export class ServiceHttpApi extends CoreBase {
 
 		this.#apiRouter.use((_req, res, next) => {
 			// Check that the API is enabled
-			if (this.userconfig.getKey('http_api_enabled')) {
+			if (this.#userconfigController.getKey('http_api_enabled')) {
 				// Continue
 				next()
 			} else {
@@ -71,7 +94,10 @@ export class ServiceHttpApi extends CoreBase {
 	}
 
 	#isLegacyRouteAllowed() {
-		return !!(this.userconfig.getKey('http_api_enabled') && this.userconfig.getKey('http_legacy_api_enabled'))
+		return !!(
+			this.#userconfigController.getKey('http_api_enabled') &&
+			this.#userconfigController.getKey('http_legacy_api_enabled')
+		)
 	}
 
 	#setupLegacyHttpRoutes() {
@@ -99,18 +125,21 @@ export class ServiceHttpApi extends CoreBase {
 
 			this.logger.info(`Got HTTP /press/bank/ (trigger) page ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+			const controlId = this.#pageController.getControlIdAtOldBankIndex(
+				Number(req.params.page),
+				Number(req.params.bank)
+			)
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
 				return
 			}
 
-			this.controls.pressControl(controlId, true, 'http')
+			this.#controlController.pressControl(controlId, true, 'http')
 
 			setTimeout(() => {
 				this.logger.info(`Auto releasing HTTP /press/bank/ page ${req.params.page} button ${req.params.bank}`)
-				this.controls.pressControl(controlId, false, 'http')
+				this.#controlController.pressControl(controlId, false, 'http')
 			}, 20)
 
 			res.send('ok')
@@ -129,27 +158,33 @@ export class ServiceHttpApi extends CoreBase {
 			if (req.params.direction == 'down') {
 				this.logger.info(`Got HTTP /press/bank/ (DOWN) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+				const controlId = this.#pageController.getControlIdAtOldBankIndex(
+					Number(req.params.page),
+					Number(req.params.bank)
+				)
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
 					return
 				}
 
-				this.controls.pressControl(controlId, true, 'http')
+				this.#controlController.pressControl(controlId, true, 'http')
 
 				res.send('ok')
 			} else if (req.params.direction == 'up') {
 				this.logger.info(`Got HTTP /press/bank/ (UP) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+				const controlId = this.#pageController.getControlIdAtOldBankIndex(
+					Number(req.params.page),
+					Number(req.params.bank)
+				)
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
 					return
 				}
 
-				this.controls.pressControl(controlId, false, 'http')
+				this.#controlController.pressControl(controlId, false, 'http')
 
 				res.send('ok')
 			} else {
@@ -169,7 +204,7 @@ export class ServiceHttpApi extends CoreBase {
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.info('Got HTTP /rescan')
-			return this.surfaces.triggerRefreshDevices().then(
+			return this.#surfaceController.triggerRefreshDevices().then(
 				() => {
 					res.send('ok')
 				},
@@ -191,14 +226,17 @@ export class ServiceHttpApi extends CoreBase {
 
 			this.logger.info(`Got HTTP /style/bank ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+			const controlId = this.#pageController.getControlIdAtOldBankIndex(
+				Number(req.params.page),
+				Number(req.params.bank)
+			)
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
 				return
 			}
 
-			const control = this.controls.getControl(controlId)
+			const control = this.#controlController.getControl(controlId)
 
 			if (!control || !control.supportsStyle) {
 				res.status(404)
@@ -281,7 +319,7 @@ export class ServiceHttpApi extends CoreBase {
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value}`)
-			const result = this.variablesController.custom.setValue(req.params.name, String(req.query.value))
+			const result = this.#variablesController.custom.setValue(req.params.name, String(req.query.value))
 			if (result) {
 				res.send(result)
 			} else {
@@ -323,7 +361,7 @@ export class ServiceHttpApi extends CoreBase {
 	 */
 	#surfacesRescan = (_req: express.Request, res: express.Response): void => {
 		this.logger.info('Got HTTP surface rescan')
-		this.surfaces.triggerRefreshDevices().then(
+		this.#surfaceController.triggerRefreshDevices().then(
 			() => {
 				res.send('ok')
 			},
@@ -343,7 +381,7 @@ export class ServiceHttpApi extends CoreBase {
 			column: Number(req.params.column),
 		}
 
-		const controlId = this.page.getControlIdAt(location)
+		const controlId = this.#pageController.getControlIdAt(location)
 
 		return {
 			location,
@@ -363,12 +401,12 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.controls.pressControl(controlId, true, 'http')
+		this.#controlController.pressControl(controlId, true, 'http')
 
 		setTimeout(() => {
 			this.logger.info(`Auto releasing HTTP control press ${formatLocation(location)} - ${controlId}`)
 
-			this.controls.pressControl(controlId, false, 'http')
+			this.#controlController.pressControl(controlId, false, 'http')
 		}, 20)
 
 		res.send('ok')
@@ -386,7 +424,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.controls.pressControl(controlId, true, 'http')
+		this.#controlController.pressControl(controlId, true, 'http')
 
 		res.send('ok')
 	}
@@ -403,7 +441,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.controls.pressControl(controlId, false, 'http')
+		this.#controlController.pressControl(controlId, false, 'http')
 
 		res.send('ok')
 	}
@@ -420,7 +458,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.controls.rotateControl(controlId, false, 'http')
+		this.#controlController.rotateControl(controlId, false, 'http')
 
 		res.send('ok')
 	}
@@ -437,7 +475,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		this.controls.rotateControl(controlId, true, 'http')
+		this.#controlController.rotateControl(controlId, true, 'http')
 
 		res.send('ok')
 	}
@@ -455,7 +493,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		const control = this.controls.getControl(controlId)
+		const control = this.#controlController.getControl(controlId)
 		if (!control || !control.supportsActionSets) {
 			res.status(204).send('No control')
 			return
@@ -481,7 +519,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		const control = this.controls.getControl(controlId)
+		const control = this.#controlController.getControl(controlId)
 		if (!control || !control.supportsStyle) {
 			res.status(204).send('No control')
 			return
@@ -565,7 +603,7 @@ export class ServiceHttpApi extends CoreBase {
 			return
 		}
 
-		const result = this.variablesController.custom.setValue(variableName, variableValue)
+		const result = this.#variablesController.custom.setValue(variableName, variableValue)
 		if (result) {
 			res.status(404).send('Not found')
 		} else {
@@ -581,7 +619,7 @@ export class ServiceHttpApi extends CoreBase {
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
 
-		const result = this.variablesController.custom.getValue(variableName)
+		const result = this.#variablesController.custom.getValue(variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {
@@ -601,7 +639,7 @@ export class ServiceHttpApi extends CoreBase {
 
 		this.logger.debug(`Got HTTP module variable get value name "${connectionLabel}:${variableName}"`)
 
-		const result = this.variablesController.values.getVariableValue(connectionLabel, variableName)
+		const result = this.#variablesController.values.getVariableValue(connectionLabel, variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {

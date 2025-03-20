@@ -34,7 +34,7 @@ export class ServiceSatelliteTcp extends ServiceBase {
 	constructor(registry: Registry) {
 		super(registry, 'Service/SatelliteTcp', null, null)
 
-		this.#api = new ServiceSatelliteApi(registry)
+		this.#api = new ServiceSatelliteApi(registry.appInfo, registry.surfaces)
 
 		this.port = 16622
 

@@ -34,11 +34,9 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
 
 	readonly #internalModule: InternalController
-	readonly #actionRunner: ActionRunner
 
-	constructor(internalModule: InternalController, actionRunner: ActionRunner) {
+	constructor(internalModule: InternalController) {
 		this.#internalModule = internalModule
-		this.#actionRunner = actionRunner
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -230,7 +228,11 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> | boolean {
+	executeAction(
+		action: ControlEntityInstance,
+		extras: RunActionExtras,
+		actionRunner: ActionRunner
+	): Promise<boolean> | boolean {
 		if (action.definitionId === 'wait') {
 			if (extras.abortDelayed.aborted) return true
 
@@ -277,7 +279,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 
 			const childActions = action.getChildren('default')?.getDirectEntities() ?? []
 
-			return this.#actionRunner
+			return actionRunner
 				.runMultipleActions(childActions, newExtras, executeSequential)
 				.catch((e) => {
 					this.#logger.error(`Failed to run actions: ${e.message}`)
@@ -292,7 +294,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 			const childActions = action.getChildren(executeGroup)?.getDirectEntities() ?? []
 			const executeSequential = extras.executionMode === 'sequential'
 
-			return this.#actionRunner
+			return actionRunner
 				.runMultipleActions(childActions, extras, executeSequential)
 				.catch((e) => {
 					this.#logger.error(`Failed to run actions: ${e.message}`)

@@ -259,7 +259,7 @@ export class Registry {
 			new InternalCustomVariables(this.internalModule, this.variables),
 			new InternalPage(this.internalModule, this.page),
 			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
-			new InternalSystem(this.internalModule, this),
+			new InternalSystem(this.internalModule, this.variables, this.exit.bind(this)),
 			new InternalTriggers(this.internalModule, this.controls),
 			new InternalVariables(this.internalModule, this.variables.values)
 		)

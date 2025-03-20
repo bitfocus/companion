@@ -32,7 +32,7 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 	constructor(registry: Registry) {
 		super(registry, 'Service/SatelliteWebsocket', null, null)
 
-		this.#api = new ServiceSatelliteApi(registry)
+		this.#api = new ServiceSatelliteApi(registry.appInfo, registry.surfaces)
 
 		this.port = 16623
 

@@ -29,7 +29,6 @@ import type {
 	InternalModuleFragment,
 	InternalVisitor,
 } from './Types.js'
-import type { Registry } from '../Registry.js'
 import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
@@ -95,17 +94,21 @@ export class InternalSystem implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/System')
 	readonly #customMessageLogger = LogController.createLogger('Custom')
 
-	readonly #registry: Registry
 	readonly #internalModule: InternalController
 	readonly #variableController: VariablesController
+	readonly #requestExit: (fromInternal: boolean, restart: boolean) => void
 
 	#interfacesDefinitions: VariableDefinitionTmp[] = []
 	#interfacesValues: CompanionVariableValues = {}
 
-	constructor(internalModule: InternalController, registry: Registry) {
+	constructor(
+		internalModule: InternalController,
+		variableController: VariablesController,
+		requestExit: (fromInternal: boolean, restart: boolean) => void
+	) {
 		this.#internalModule = internalModule
-		this.#registry = registry
-		this.#variableController = registry.variables
+		this.#variableController = variableController
+		this.#requestExit = requestExit
 
 		// Update interfaces on an interval, but also soon after launch
 		setInterval(() => this.#updateNetworkVariables(), 30000)
@@ -298,10 +301,10 @@ export class InternalSystem implements InternalModuleFragment {
 
 			return true
 		} else if (action.definitionId === 'app_restart') {
-			this.#registry.exit(true, true)
+			this.#requestExit(true, true)
 			return true
 		} else if (action.definitionId === 'app_exit') {
-			this.#registry.exit(true, false)
+			this.#requestExit(true, false)
 			return true
 		} else {
 			return false

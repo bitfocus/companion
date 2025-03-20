@@ -56,7 +56,14 @@ export class ServiceController {
 	readonly surfaceDiscovery: ServiceSurfaceDiscovery
 
 	constructor(registry: Registry, oscSender: ServiceOscSender, controlEvents: EventEmitter<ControlCommonEvents>) {
-		this.httpApi = new ServiceHttpApi(registry, registry.ui.express)
+		this.httpApi = new ServiceHttpApi(
+			registry.userconfig,
+			registry.page,
+			registry.controls,
+			registry.surfaces,
+			registry.variables,
+			registry.ui.express
+		)
 		this.https = new ServiceHttps(registry, registry.ui.express)
 		this.oscSender = oscSender
 		this.oscListener = new ServiceOscListener(registry)

@@ -75,7 +75,7 @@ export class InternalController {
 		this.#variablesController = variablesController
 
 		// More get added from elsewhere
-		this.#buildingBlocksFragment = new InternalBuildingBlocks(this, this.#controlsController.actionRunner)
+		this.#buildingBlocksFragment = new InternalBuildingBlocks(this)
 		this.#fragments = [this.#buildingBlocksFragment]
 	}
 
@@ -355,7 +355,7 @@ export class InternalController {
 		for (const fragment of this.#fragments) {
 			if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
 				try {
-					let value = fragment.executeAction(action, extras)
+					let value = fragment.executeAction(action, extras, this.#controlsController.actionRunner)
 					// Only await if it is a promise, to avoid unnecessary async pauses
 					value = value instanceof Promise ? await value : value
 

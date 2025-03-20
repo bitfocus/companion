@@ -7,6 +7,7 @@ import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
 
 export interface FeedbackEntityModelExt extends FeedbackEntityModel {
 	controlId: string
@@ -41,7 +42,11 @@ export interface InternalModuleFragment {
 	 * Run a single internal action
 	 * @returns Whether the action was handled
 	 */
-	executeAction?(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> | boolean
+	executeAction?(
+		action: ControlEntityInstance,
+		extras: RunActionExtras,
+		actionRunner: ActionRunner
+	): Promise<boolean> | boolean
 
 	/**
 	 * Perform an upgrade for an action
