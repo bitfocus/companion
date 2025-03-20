@@ -1,4 +1,3 @@
-import { CoreBase } from '../Core/Base.js'
 import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
@@ -25,6 +24,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
+import LogController from '../Log/Controller.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -51,7 +51,9 @@ type SomeControlModel = SomeButtonModel | TriggerModel
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class ControlsController extends CoreBase {
+export class ControlsController {
+	readonly #logger = LogController.createLogger('Controls/Controller')
+
 	readonly #registry: Registry
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
@@ -81,8 +83,6 @@ export class ControlsController extends CoreBase {
 	readonly #activeLearnRequests = new Set<string>()
 
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
-		super(registry, 'Controls/Controller')
-
 		this.#registry = registry
 		this.#controlEvents = controlEvents
 
@@ -162,9 +162,9 @@ export class ControlsController extends CoreBase {
 
 			setImmediate(() => {
 				// Send the preview image shortly after
-				const location = this.page.getLocationOfControlId(controlId)
+				const location = this.#registry.page.getLocationOfControlId(controlId)
 				if (location) {
-					const img = this.graphics.getCachedRenderOrGeneratePlaceholder(location)
+					const img = this.#registry.graphics.getCachedRenderOrGeneratePlaceholder(location)
 					// TODO - rework this to use the shared render cache concept
 					client.emit(`controls:preview-${controlId}`, img?.asDataUrl)
 				}
@@ -182,7 +182,7 @@ export class ControlsController extends CoreBase {
 		})
 
 		client.onPromise('controls:reset', (location, type) => {
-			const controlId = this.page.getControlIdAt(location)
+			const controlId = this.#registry.page.getControlIdAt(location)
 
 			if (controlId) {
 				this.deleteControl(controlId)
@@ -202,10 +202,10 @@ export class ControlsController extends CoreBase {
 				return false
 
 			// Make sure target page number is valid
-			if (!this.page.isPageValid(toLocation.pageNumber)) return false
+			if (!this.#registry.page.isPageValid(toLocation.pageNumber)) return false
 
 			// Make sure there is something to copy
-			const fromControlId = this.page.getControlIdAt(fromLocation)
+			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
 			if (!fromControlId) return false
 
 			const fromControl = this.getControl(fromControlId)
@@ -213,7 +213,7 @@ export class ControlsController extends CoreBase {
 			const controlJson = fromControl.toJSON(true)
 
 			// Delete the control at the destination
-			const toControlId = this.page.getControlIdAt(toLocation)
+			const toControlId = this.#registry.page.getControlIdAt(toLocation)
 			if (toControlId) {
 				this.deleteControl(toControlId)
 			}
@@ -223,7 +223,7 @@ export class ControlsController extends CoreBase {
 			if (newControl) {
 				this.#controls.set(newControlId, newControl)
 
-				this.page.setControlIdAt(toLocation, newControlId)
+				this.#registry.page.setControlIdAt(toLocation, newControlId)
 
 				newControl.triggerRedraw()
 
@@ -242,29 +242,29 @@ export class ControlsController extends CoreBase {
 				return false
 
 			// Make sure target page number is valid
-			if (!this.page.isPageValid(toLocation.pageNumber)) return false
+			if (!this.#registry.page.isPageValid(toLocation.pageNumber)) return false
 
 			// Make sure there is something to move
-			const fromControlId = this.page.getControlIdAt(fromLocation)
+			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
 			if (!fromControlId) return false
 
 			// Delete the control at the destination
-			const toControlId = this.page.getControlIdAt(toLocation)
+			const toControlId = this.#registry.page.getControlIdAt(toLocation)
 			if (toControlId) {
 				this.deleteControl(toControlId)
 			}
 
 			// Perform the move
-			this.page.setControlIdAt(fromLocation, null)
-			this.page.setControlIdAt(toLocation, fromControlId)
+			this.#registry.page.setControlIdAt(fromLocation, null)
+			this.#registry.page.setControlIdAt(toLocation, fromControlId)
 
 			// Inform the control it was moved
 			const control = this.getControl(fromControlId)
 			if (control) control.triggerLocationHasChanged()
 
 			// Force a redraw
-			this.graphics.invalidateButton(fromLocation)
-			this.graphics.invalidateButton(toLocation)
+			this.#registry.graphics.invalidateButton(fromLocation)
+			this.#registry.graphics.invalidateButton(toLocation)
 
 			return false
 		})
@@ -278,16 +278,20 @@ export class ControlsController extends CoreBase {
 				return false
 
 			// Make sure both page numbers are valid
-			if (!this.page.isPageValid(toLocation.pageNumber) || !this.page.isPageValid(fromLocation.pageNumber)) return false
+			if (
+				!this.#registry.page.isPageValid(toLocation.pageNumber) ||
+				!this.#registry.page.isPageValid(fromLocation.pageNumber)
+			)
+				return false
 
 			// Find the ids to move
-			const fromControlId = this.page.getControlIdAt(fromLocation)
-			const toControlId = this.page.getControlIdAt(toLocation)
+			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
+			const toControlId = this.#registry.page.getControlIdAt(toLocation)
 
 			// Perform the swap
-			this.page.setControlIdAt(toLocation, null)
-			this.page.setControlIdAt(fromLocation, toControlId)
-			this.page.setControlIdAt(toLocation, fromControlId)
+			this.#registry.page.setControlIdAt(toLocation, null)
+			this.#registry.page.setControlIdAt(fromLocation, toControlId)
+			this.#registry.page.setControlIdAt(toLocation, fromControlId)
 
 			// Inform the controls they were moved
 			const controlA = fromControlId && this.getControl(fromControlId)
@@ -296,8 +300,8 @@ export class ControlsController extends CoreBase {
 			if (controlB) controlB.triggerLocationHasChanged()
 
 			// Force a redraw
-			this.graphics.invalidateButton(fromLocation)
-			this.graphics.invalidateButton(toLocation)
+			this.#registry.graphics.invalidateButton(fromLocation)
+			this.#registry.graphics.invalidateButton(toLocation)
 
 			return true
 		})
@@ -332,7 +336,11 @@ export class ControlsController extends CoreBase {
 
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
-				const newEntity = this.instance.definitions.createEntityItem(connectionId, entityTypeLabel, entityDefinition)
+				const newEntity = this.#registry.instance.definitions.createEntityItem(
+					connectionId,
+					entityTypeLabel,
+					entityDefinition
+				)
 				if (!newEntity) return false
 
 				return control.entities.entityAdd(entityLocation, ownerId, newEntity)
@@ -352,7 +360,7 @@ export class ControlsController extends CoreBase {
 				control.entities
 					.entityLearn(entityLocation, id)
 					.catch((e) => {
-						this.logger.error(`Learn failed: ${e}`)
+						this.#logger.error(`Learn failed: ${e}`)
 					})
 					.then(() => {
 						this.#setIsLearning(id, false)
@@ -458,19 +466,19 @@ export class ControlsController extends CoreBase {
 		})
 
 		client.onPromise('controls:hot-press', (location, direction, surfaceId) => {
-			this.logger.silly(`being told from gui to hot press ${formatLocation(location)} ${direction} ${surfaceId}`)
+			this.#logger.silly(`being told from gui to hot press ${formatLocation(location)} ${direction} ${surfaceId}`)
 			if (!surfaceId) throw new Error('Missing surfaceId')
 
-			const controlId = this.page.getControlIdAt(location)
+			const controlId = this.#registry.page.getControlIdAt(location)
 			if (!controlId) return
 
 			this.pressControl(controlId, direction, `hot:${surfaceId}`)
 		})
 
 		client.onPromise('controls:hot-rotate', (location, direction, surfaceId) => {
-			this.logger.silly(`being told from gui to hot rotate ${formatLocation(location)} ${direction} ${surfaceId}`)
+			this.#logger.silly(`being told from gui to hot rotate ${formatLocation(location)} ${direction} ${surfaceId}`)
 
-			const controlId = this.page.getControlIdAt(location)
+			const controlId = this.#registry.page.getControlIdAt(location)
 			if (!controlId) return
 
 			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
@@ -632,7 +640,7 @@ export class ControlsController extends CoreBase {
 
 				this.#controls.delete(controlId)
 
-				this.db.deleteTableKey('controls', controlId)
+				this.#registry.db.deleteTableKey('controls', controlId)
 
 				return true
 			}
@@ -707,7 +715,7 @@ export class ControlsController extends CoreBase {
 			if (!control) return false
 
 			if (control.supportsEvents) {
-				const eventItem = this.instance.definitions.createEventItem(eventType)
+				const eventItem = this.#registry.instance.definitions.createEventItem(eventType)
 				if (eventItem) {
 					return control.eventAdd(eventItem)
 				} else {
@@ -828,7 +836,7 @@ export class ControlsController extends CoreBase {
 		}
 
 		// Unknown type
-		this.logger.warn(`Cannot create control "${controlId}" of unknown type "${controlType}"`)
+		this.#logger.warn(`Cannot create control "${controlId}" of unknown type "${controlType}"`)
 		return null
 	}
 
@@ -891,7 +899,7 @@ export class ControlsController extends CoreBase {
 		}
 
 		// Delete old control at the coordinate
-		const oldControlId = this.page.getControlIdAt(location)
+		const oldControlId = this.#registry.page.getControlIdAt(location)
 		if (oldControlId) {
 			this.deleteControl(oldControlId)
 		}
@@ -901,7 +909,7 @@ export class ControlsController extends CoreBase {
 		if (newControl) {
 			this.#controls.set(newControlId, newControl)
 
-			this.page.setControlIdAt(location, newControlId)
+			this.#registry.page.setControlIdAt(location, newControlId)
 
 			newControl.triggerRedraw()
 
@@ -943,7 +951,7 @@ export class ControlsController extends CoreBase {
 	 */
 	init(): void {
 		// Init all the control classes
-		const config: Record<string, SomeControlModel> = this.db.getTable('controls')
+		const config: Record<string, SomeControlModel> = this.#registry.db.getTable('controls')
 		for (const [controlId, controlObj] of Object.entries(config)) {
 			if (controlObj && controlObj.type) {
 				const inst = this.#createClassForControl(controlId, 'all', controlObj, false)
@@ -1024,18 +1032,18 @@ export class ControlsController extends CoreBase {
 			control.destroy()
 			this.#controls.delete(controlId)
 
-			this.db.deleteTableKey('controls', controlId)
+			this.#registry.db.deleteTableKey('controls', controlId)
 		}
 
-		const location = this.page.getLocationOfControlId(controlId)
+		const location = this.#registry.page.getLocationOfControlId(controlId)
 		if (location) {
-			this.page.setControlIdAt(location, null)
+			this.#registry.page.setControlIdAt(location, null)
 
 			// Notify interested parties
-			this.services.emberplus.updateButtonState(location, false, undefined)
+			this.#controlEvents.emit('updateButtonState', location, false, undefined)
 
 			// Force a redraw
-			this.graphics.invalidateButton(location)
+			this.#registry.graphics.invalidateButton(location)
 		}
 	}
 
@@ -1048,20 +1056,20 @@ export class ControlsController extends CoreBase {
 	 * @access public
 	 */
 	createButtonControl(location: ControlLocation, newType: string): string | null {
-		if (!this.page.isPageValid(location.pageNumber)) return null
+		if (!this.#registry.page.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
 		const newControl = this.#createClassForControl(controlId, 'button', newType, false)
 		if (!newControl) return null
 
 		this.#controls.set(controlId, newControl)
-		this.page.setControlIdAt(location, controlId)
+		this.#registry.page.setControlIdAt(location, controlId)
 
 		// Notify interested parties
-		this.services.emberplus.updateButtonState(location, false, undefined)
+		this.#controlEvents.emit('updateButtonState', location, false, undefined)
 
 		// Force a redraw
-		this.graphics.invalidateButton(location)
+		this.#registry.graphics.invalidateButton(location)
 
 		return controlId
 	}
@@ -1072,10 +1080,10 @@ export class ControlsController extends CoreBase {
 	#setIsLearning(id: string, isActive: boolean): void {
 		if (isActive) {
 			this.#activeLearnRequests.add(id)
-			this.io.emitToRoom(ActiveLearnRoom, 'learn:add', id)
+			this.#registry.io.emitToRoom(ActiveLearnRoom, 'learn:add', id)
 		} else {
 			this.#activeLearnRequests.delete(id)
-			this.io.emitToRoom(ActiveLearnRoom, 'learn:remove', id)
+			this.#registry.io.emitToRoom(ActiveLearnRoom, 'learn:remove', id)
 		}
 	}
 
@@ -1129,7 +1137,7 @@ export class ControlsController extends CoreBase {
 	 * @access public
 	 */
 	verifyConnectionIds(): void {
-		const knownConnectionIds = new Set(this.instance.getAllInstanceIds())
+		const knownConnectionIds = new Set(this.#registry.instance.getAllInstanceIds())
 		knownConnectionIds.add('internal')
 
 		for (const control of this.#controls.values()) {
