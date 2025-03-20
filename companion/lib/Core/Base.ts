@@ -1,13 +1,10 @@
 import { EventEmitter } from 'events'
 import LogController, { Logger } from '../Log/Controller.js'
 import type { AppInfo, Registry } from '../Registry.js'
-import type { VariablesController } from '../Variables/Controller.js'
-import type { InternalController } from '../Internal/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { ServiceController } from '../Service/Controller.js'
 import type { UIHandler } from '../UI/Handler.js'
-import type { InstanceController } from '../Instance/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -86,13 +83,6 @@ export abstract class CoreBase<TEvents extends EventMap<TEvents> = never> extend
 	}
 
 	/**
-	 * The core instance controller
-	 */
-	protected get instance(): InstanceController {
-		return this.#registry.instance
-	}
-
-	/**
 	 * The core interface client
 	 * TODO: make protected/private
 	 */
@@ -127,19 +117,5 @@ export abstract class CoreBase<TEvents extends EventMap<TEvents> = never> extend
 	 */
 	protected get userconfig(): DataUserConfig {
 		return this.#registry.userconfig
-	}
-
-	/**
-	 * The internal module
-	 */
-	protected get internalModule(): InternalController {
-		return this.#registry.internalModule
-	}
-
-	/**
-	 * The variables controller
-	 */
-	protected get variablesController(): VariablesController {
-		return this.#registry.variables
 	}
 }

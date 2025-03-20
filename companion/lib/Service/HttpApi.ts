@@ -7,10 +7,9 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { PageController } from '../Page/Controller.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import type { SurfaceController } from '../Surface/Controller.js'
-import type { VariablesController } from '../Variables/Controller.js'
+import type { ServiceApi } from './ServiceApi.js'
+
+const HTTP_API_SURFACE_ID = 'http'
 
 /**
  * Class providing the HTTP API.
@@ -36,11 +35,9 @@ import type { VariablesController } from '../Variables/Controller.js'
 export class ServiceHttpApi {
 	logger = LogController.createLogger('Service/HttpApi')
 
+	readonly #serviceApi: ServiceApi
+
 	readonly #userconfigController: DataUserConfig
-	readonly #pageController: PageController
-	readonly #controlController: ControlsController
-	readonly #surfaceController: SurfaceController
-	readonly #variablesController: VariablesController
 
 	/**
 	 * new Api express router
@@ -57,19 +54,10 @@ export class ServiceHttpApi {
 	 */
 	readonly #express: UIExpress
 
-	constructor(
-		userconfigController: DataUserConfig,
-		pageController: PageController,
-		controlController: ControlsController,
-		surfaceController: SurfaceController,
-		variablesController: VariablesController,
-		express: UIExpress
-	) {
+	constructor(serviceApi: ServiceApi, userconfigController: DataUserConfig, express: UIExpress) {
+		this.#serviceApi = serviceApi
+
 		this.#userconfigController = userconfigController
-		this.#pageController = pageController
-		this.#controlController = controlController
-		this.#surfaceController = surfaceController
-		this.#variablesController = variablesController
 
 		this.#express = express
 		this.#apiRouter = Express.Router()
@@ -125,21 +113,18 @@ export class ServiceHttpApi {
 
 			this.logger.info(`Got HTTP /press/bank/ (trigger) page ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.#pageController.getControlIdAtOldBankIndex(
-				Number(req.params.page),
-				Number(req.params.bank)
-			)
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
 				return
 			}
 
-			this.#controlController.pressControl(controlId, true, 'http')
+			this.#serviceApi.pressControl(controlId, true, HTTP_API_SURFACE_ID)
 
 			setTimeout(() => {
 				this.logger.info(`Auto releasing HTTP /press/bank/ page ${req.params.page} button ${req.params.bank}`)
-				this.#controlController.pressControl(controlId, false, 'http')
+				this.#serviceApi.pressControl(controlId, false, HTTP_API_SURFACE_ID)
 			}, 20)
 
 			res.send('ok')
@@ -158,33 +143,27 @@ export class ServiceHttpApi {
 			if (req.params.direction == 'down') {
 				this.logger.info(`Got HTTP /press/bank/ (DOWN) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.#pageController.getControlIdAtOldBankIndex(
-					Number(req.params.page),
-					Number(req.params.bank)
-				)
+				const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
 					return
 				}
 
-				this.#controlController.pressControl(controlId, true, 'http')
+				this.#serviceApi.pressControl(controlId, true, HTTP_API_SURFACE_ID)
 
 				res.send('ok')
 			} else if (req.params.direction == 'up') {
 				this.logger.info(`Got HTTP /press/bank/ (UP) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.#pageController.getControlIdAtOldBankIndex(
-					Number(req.params.page),
-					Number(req.params.bank)
-				)
+				const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
 					return
 				}
 
-				this.#controlController.pressControl(controlId, false, 'http')
+				this.#serviceApi.pressControl(controlId, false, HTTP_API_SURFACE_ID)
 
 				res.send('ok')
 			} else {
@@ -204,7 +183,7 @@ export class ServiceHttpApi {
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.info('Got HTTP /rescan')
-			return this.#surfaceController.triggerRefreshDevices().then(
+			return this.#serviceApi.triggerRescanForSurfaces().then(
 				() => {
 					res.send('ok')
 				},
@@ -226,19 +205,16 @@ export class ServiceHttpApi {
 
 			this.logger.info(`Got HTTP /style/bank ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.#pageController.getControlIdAtOldBankIndex(
-				Number(req.params.page),
-				Number(req.params.bank)
-			)
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
 				return
 			}
 
-			const control = this.#controlController.getControl(controlId)
+			const control = this.#serviceApi.getControl(controlId)
 
-			if (!control || !control.supportsStyle) {
+			if (!control || !control.setStyleFields) {
 				res.status(404)
 				res.send('Not found')
 				return
@@ -302,7 +278,7 @@ export class ServiceHttpApi {
 			}
 
 			if (Object.keys(newFields).length > 0) {
-				control.styleSetFields(newFields)
+				control.setStyleFields(newFields)
 			}
 
 			res.send('ok')
@@ -319,7 +295,7 @@ export class ServiceHttpApi {
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value}`)
-			const result = this.#variablesController.custom.setValue(req.params.name, String(req.query.value))
+			const result = this.#serviceApi.setCustomVariableValue(req.params.name, String(req.query.value))
 			if (result) {
 				res.send(result)
 			} else {
@@ -361,7 +337,7 @@ export class ServiceHttpApi {
 	 */
 	#surfacesRescan = (_req: express.Request, res: express.Response): void => {
 		this.logger.info('Got HTTP surface rescan')
-		this.#surfaceController.triggerRefreshDevices().then(
+		this.#serviceApi.triggerRescanForSurfaces().then(
 			() => {
 				res.send('ok')
 			},
@@ -381,7 +357,7 @@ export class ServiceHttpApi {
 			column: Number(req.params.column),
 		}
 
-		const controlId = this.#pageController.getControlIdAt(location)
+		const controlId = this.#serviceApi.getControlIdAt(location)
 
 		return {
 			location,
@@ -401,12 +377,12 @@ export class ServiceHttpApi {
 			return
 		}
 
-		this.#controlController.pressControl(controlId, true, 'http')
+		this.#serviceApi.pressControl(controlId, true, HTTP_API_SURFACE_ID)
 
 		setTimeout(() => {
 			this.logger.info(`Auto releasing HTTP control press ${formatLocation(location)} - ${controlId}`)
 
-			this.#controlController.pressControl(controlId, false, 'http')
+			this.#serviceApi.pressControl(controlId, false, HTTP_API_SURFACE_ID)
 		}, 20)
 
 		res.send('ok')
@@ -424,7 +400,7 @@ export class ServiceHttpApi {
 			return
 		}
 
-		this.#controlController.pressControl(controlId, true, 'http')
+		this.#serviceApi.pressControl(controlId, true, HTTP_API_SURFACE_ID)
 
 		res.send('ok')
 	}
@@ -441,7 +417,7 @@ export class ServiceHttpApi {
 			return
 		}
 
-		this.#controlController.pressControl(controlId, false, 'http')
+		this.#serviceApi.pressControl(controlId, false, HTTP_API_SURFACE_ID)
 
 		res.send('ok')
 	}
@@ -458,7 +434,7 @@ export class ServiceHttpApi {
 			return
 		}
 
-		this.#controlController.rotateControl(controlId, false, 'http')
+		this.#serviceApi.rotateControl(controlId, false, HTTP_API_SURFACE_ID)
 
 		res.send('ok')
 	}
@@ -475,7 +451,7 @@ export class ServiceHttpApi {
 			return
 		}
 
-		this.#controlController.rotateControl(controlId, true, 'http')
+		this.#serviceApi.rotateControl(controlId, true, HTTP_API_SURFACE_ID)
 
 		res.send('ok')
 	}
@@ -493,13 +469,13 @@ export class ServiceHttpApi {
 			return
 		}
 
-		const control = this.#controlController.getControl(controlId)
-		if (!control || !control.supportsActionSets) {
+		const control = this.#serviceApi.getControl(controlId)
+		if (!control || !control.setCurrentStep) {
 			res.status(204).send('No control')
 			return
 		}
 
-		if (!control.actionSets.stepMakeCurrent(step)) {
+		if (!control.setCurrentStep(step)) {
 			res.status(400).send('Bad step')
 			return
 		}
@@ -519,8 +495,8 @@ export class ServiceHttpApi {
 			return
 		}
 
-		const control = this.#controlController.getControl(controlId)
-		if (!control || !control.supportsStyle) {
+		const control = this.#serviceApi.getControl(controlId)
+		if (!control || !control.setStyleFields) {
 			res.status(204).send('No control')
 			return
 		}
@@ -577,7 +553,7 @@ export class ServiceHttpApi {
 		}
 
 		if (Object.keys(newFields).length > 0) {
-			control.styleSetFields(newFields)
+			control.setStyleFields(newFields)
 		}
 
 		// TODO - return style
@@ -603,7 +579,7 @@ export class ServiceHttpApi {
 			return
 		}
 
-		const result = this.#variablesController.custom.setValue(variableName, variableValue)
+		const result = this.#serviceApi.setCustomVariableValue(variableName, variableValue)
 		if (result) {
 			res.status(404).send('Not found')
 		} else {
@@ -619,7 +595,7 @@ export class ServiceHttpApi {
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
 
-		const result = this.#variablesController.custom.getValue(variableName)
+		const result = this.#serviceApi.getCustomVariableValue(variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {
@@ -639,7 +615,7 @@ export class ServiceHttpApi {
 
 		this.logger.debug(`Got HTTP module variable get value name "${connectionLabel}:${variableName}"`)
 
-		const result = this.#variablesController.values.getVariableValue(connectionLabel, variableName)
+		const result = this.#serviceApi.getConnectionVariableValue(connectionLabel, variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {

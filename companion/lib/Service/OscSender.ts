@@ -25,7 +25,7 @@ import { OSCSomeArguments } from '@companion-module/base'
  */
 export class ServiceOscSender extends ServiceOscBase {
 	constructor(registry: Registry) {
-		super(registry, 'Service/OscSender', null, null)
+		super(registry.userconfig, 'Service/OscSender', null, null)
 
 		this.port = 0
 

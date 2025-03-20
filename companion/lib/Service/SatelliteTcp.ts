@@ -1,8 +1,10 @@
 import { ServiceBase } from './Base.js'
 import net, { Socket } from 'net'
 import LogController from '../Log/Controller.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo } from '../Registry.js'
 import { SatelliteSocketWrapper, ServiceSatelliteApi } from './SatelliteApi.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { SurfaceController } from '../Surface/Controller.js'
 
 /**
  * Class providing the Satellite/Remote Surface api over tcp.
@@ -31,10 +33,10 @@ export class ServiceSatelliteTcp extends ServiceBase {
 
 	readonly #clients = new Set<Socket>()
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/SatelliteTcp', null, null)
+	constructor(appInfo: AppInfo, surfaceController: SurfaceController, userconfig: DataUserConfig) {
+		super(userconfig, 'Service/SatelliteTcp', null, null)
 
-		this.#api = new ServiceSatelliteApi(registry.appInfo, registry.surfaces)
+		this.#api = new ServiceSatelliteApi(appInfo, surfaceController)
 
 		this.port = 16622
 

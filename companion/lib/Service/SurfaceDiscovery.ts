@@ -3,10 +3,10 @@ import { ServiceBase } from './Base.js'
 import { Bonjour, Browser, Service } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
 import { StreamDeckTcpDefinition, StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
-import type { Registry } from '../Registry.js'
 import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { DropdownChoice } from '@companion-module/base'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 const SurfaceDiscoveryRoom = 'surfaces:discovery'
 
@@ -31,6 +31,8 @@ const SurfaceDiscoveryRoom = 'surfaces:discovery'
  * disclosing the source code of your own applications.
  */
 export class ServiceSurfaceDiscovery extends ServiceBase {
+	readonly #io: UIHandler
+
 	#bonjour = new Bonjour()
 
 	#satelliteBrowser: Browser | undefined
@@ -38,8 +40,10 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 
 	#satelliteExpireInterval: NodeJS.Timeout | undefined
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/SurfaceDiscovery', 'discoveryEnabled', null)
+	constructor(userconfig: DataUserConfig, io: UIHandler) {
+		super(userconfig, 'Service/SurfaceDiscovery', 'discoveryEnabled', null)
+
+		this.#io = io
 
 		this.init()
 	}
@@ -85,7 +89,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 						`Found streamdeck tcp device ${streamdeck.name} at ${streamdeck.address}:${streamdeck.port}`
 					)
 
-					this.io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
+					this.#io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
 						type: 'update',
 						info: uiService,
 					})
@@ -95,7 +99,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
 
-					this.io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
+					this.#io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
 						type: 'remove',
 						itemId: uiService.id,
 					})
@@ -129,14 +133,14 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			}
 		}
 
-		this.io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
+		this.#io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
 			type: 'update',
 			info: this.#convertSatelliteServiceForUi(service),
 		})
 	}
 
 	#forgetSatelliteService(service: Service) {
-		this.io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
+		this.#io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
 			type: 'remove',
 			itemId: this.#convertSatelliteServiceForUi(service).id,
 		})

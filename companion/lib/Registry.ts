@@ -33,6 +33,7 @@ import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
+import { ServiceApi } from './Service/ServiceApi.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -265,8 +266,27 @@ export class Registry {
 		)
 		this.internalModule.init()
 
+		const serviceApi = new ServiceApi(
+			this.appInfo,
+			this.page,
+			this.controls,
+			this.surfaces,
+			this.variables,
+			this.graphics
+		)
+
 		this.#metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
-		this.services = new ServiceController(this, oscSender, controlEvents)
+		this.services = new ServiceController(
+			serviceApi,
+			this.userconfig,
+			oscSender,
+			controlEvents,
+			this.surfaces,
+			this.page,
+			this.instance,
+			this.io,
+			this.ui.express
+		)
 		this.#cloud = new CloudController(
 			this.appInfo,
 			this.db,
@@ -297,6 +317,10 @@ export class Registry {
 			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
 			this.#preview.onVariablesChanged(all_changed_variables_set)
 			this.surfaces.onVariablesChanged(all_changed_variables_set)
+		})
+
+		this.graphics.on('button_drawn', (location, render) => {
+			this.services.onButtonDrawn(location, render)
 		})
 
 		// old 'modules_loaded' events
