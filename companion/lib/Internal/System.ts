@@ -27,12 +27,14 @@ import type {
 	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalModuleFragment,
+	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { promisify } from 'util'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
 const execAsync = promisify(exec)
 
@@ -90,11 +92,11 @@ async function getNetworkVariables() {
 	return { definitions, values }
 }
 
-export class InternalSystem implements InternalModuleFragment {
+export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/System')
 	readonly #customMessageLogger = LogController.createLogger('Custom')
 
-	readonly #internalModule: InternalController
+	readonly #internalUtils: InternalModuleUtils
 	readonly #variableController: VariablesController
 	readonly #requestExit: (fromInternal: boolean, restart: boolean) => void
 
@@ -102,11 +104,13 @@ export class InternalSystem implements InternalModuleFragment {
 	#interfacesValues: CompanionVariableValues = {}
 
 	constructor(
-		internalModule: InternalController,
+		internalUtils: InternalModuleUtils,
 		variableController: VariablesController,
 		requestExit: (fromInternal: boolean, restart: boolean) => void
 	) {
-		this.#internalModule = internalModule
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#variableController = variableController
 		this.#requestExit = requestExit
 
@@ -125,14 +129,14 @@ export class InternalSystem implements InternalModuleFragment {
 
 	async #updateHostnameVariablesAtStartup() {
 		let latestVariables = await getHostnameVariables()
-		this.#internalModule.setVariables(latestVariables)
+		this.emit('setVariables', latestVariables)
 
 		const updateVariables = () => {
 			getHostnameVariables()
 				.then((newVariables) => {
 					if (Object.keys(newVariables).length > 1 && !isEqual(newVariables, latestVariables)) {
 						latestVariables = newVariables
-						this.#internalModule.setVariables(newVariables)
+						this.emit('setVariables', newVariables)
 					}
 				})
 				.catch((e) => {
@@ -154,12 +158,12 @@ export class InternalSystem implements InternalModuleFragment {
 			.then((info) => {
 				if (!isEqual(info.definitions, this.#interfacesDefinitions)) {
 					this.#interfacesDefinitions = info.definitions
-					this.#internalModule.regenerateVariables()
+					this.emit('regenerateVariables')
 				}
 
 				if (!isEqual(info.values, this.#interfacesValues)) {
 					this.#interfacesValues = info.values
-					this.#internalModule.setVariables(info.values)
+					this.emit('setVariables', info.values)
 				}
 			})
 			.catch((e) => {
@@ -175,7 +179,7 @@ export class InternalSystem implements InternalModuleFragment {
 	 * @param bindIp The IP address being bound to
 	 */
 	updateBindIp(bindIp: string) {
-		this.#internalModule.setVariables({
+		this.emit('setVariables', {
 			bind_ip: bindIp,
 		})
 	}
@@ -271,7 +275,7 @@ export class InternalSystem implements InternalModuleFragment {
 	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> {
 		if (action.definitionId === 'exec') {
 			if (action.rawOptions.path) {
-				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.path, extras).text
+				const path = this.#internalUtils.parseVariablesForInternalActionOrFeedback(action.rawOptions.path, extras).text
 				this.#logger.silly(`Running path: '${path}'`)
 
 				try {
@@ -293,7 +297,7 @@ export class InternalSystem implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId === 'custom_log') {
-			const message = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+			const message = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 				action.rawOptions.message,
 				extras
 			).text

@@ -15,17 +15,22 @@
  *
  */
 
-import type { InternalController } from './Controller.js'
-import type { ActionForVisitor, FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	ActionForVisitor,
+	FeedbackForVisitor,
+	InternalModuleFragment,
+	InternalModuleFragmentEvents,
+	InternalVisitor,
+} from './Types.js'
 import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import { EventEmitter } from 'events'
+import type { InternalModuleUtils } from './Util.js'
 
-export class InternalTime implements InternalModuleFragment {
-	readonly #internalModule: InternalController
-
+export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #startTime = Math.floor(Date.now() / 1000)
 
-	constructor(internalModule: InternalController) {
-		this.#internalModule = internalModule
+	constructor(_internalUtils: InternalModuleUtils) {
+		super()
 
 		setInterval(() => {
 			this.updateVariables()
@@ -120,7 +125,7 @@ export class InternalTime implements InternalModuleFragment {
 
 		const uptime = ts - this.#startTime
 
-		this.#internalModule.setVariables({
+		this.emit('setVariables', {
 			date_iso: `${year}-${month}-${day}`,
 			date_y: year,
 			date_m: month,

@@ -41,7 +41,7 @@ interface PageControllerEvents {
 export class PageController extends EventEmitter<PageControllerEvents> {
 	readonly #logger = LogController.createLogger('Page/Controller')
 
-	readonly #registry: Registry
+	readonly #registry: Pick<Registry, 'io' | 'db' | 'graphics' | 'controls' | 'userconfig'>
 
 	/**
 	 * Cache the location of each control
@@ -612,7 +612,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				...location,
 				pageNumber,
 			}
-			const oldControlId = this.#registry.page.getControlIdAt(fullLocation)
+			const oldControlId = this.getControlIdAt(fullLocation)
 			if (oldControlId) this.#registry.controls.deleteControl(oldControlId)
 
 			this.#registry.controls.createButtonControl(fullLocation, type)

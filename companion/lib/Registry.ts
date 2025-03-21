@@ -19,16 +19,6 @@ import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
-import { InternalActionRecorder } from './Internal/ActionRecorder.js'
-import { InternalControls } from './Internal/Controls.js'
-import { InternalCustomVariables } from './Internal/CustomVariables.js'
-import { InternalInstance } from './Internal/Instance.js'
-import { InternalPage } from './Internal/Page.js'
-import { InternalSurface } from './Internal/Surface.js'
-import { InternalSystem } from './Internal/System.js'
-import { InternalTime } from './Internal/Time.js'
-import { InternalTriggers } from './Internal/Triggers.js'
-import { InternalVariables } from './Internal/Variables.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
@@ -237,7 +227,15 @@ export class Registry {
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
-		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
+		this.internalModule = new InternalController(
+			this.controls,
+			this.page,
+			this.instance,
+			this.variables,
+			this.surfaces,
+			this.graphics,
+			this.exit.bind(this)
+		)
 		this.#importExport = new ImportExportController(
 			this.appInfo,
 			this.internalApiRouter,
@@ -251,20 +249,6 @@ export class Registry {
 			this.userconfig,
 			this.variables
 		)
-
-		this.internalModule.addFragments(
-			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
-			new InternalInstance(this.internalModule, this.instance),
-			new InternalTime(this.internalModule),
-			new InternalControls(this.internalModule, this.graphics, this.controls, this.page),
-			new InternalCustomVariables(this.internalModule, this.variables),
-			new InternalPage(this.internalModule, this.page),
-			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
-			new InternalSystem(this.internalModule, this.variables, this.exit.bind(this)),
-			new InternalTriggers(this.internalModule, this.controls),
-			new InternalVariables(this.internalModule, this.variables.values)
-		)
-		this.internalModule.init()
 
 		const serviceApi = new ServiceApi(
 			this.appInfo,

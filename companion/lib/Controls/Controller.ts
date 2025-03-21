@@ -54,7 +54,10 @@ type SomeControlModel = SomeButtonModel | TriggerModel
 export class ControlsController {
 	readonly #logger = LogController.createLogger('Controls/Controller')
 
-	readonly #registry: Registry
+	readonly #registry: Pick<
+		Registry,
+		'db' | 'page' | 'ui' | 'io' | 'graphics' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
+	>
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
 	/**

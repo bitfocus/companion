@@ -25,24 +25,26 @@ import type {
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
+	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { InternalController } from './Controller.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { EventEmitter } from 'events'
+import type { InternalModuleUtils } from './Util.js'
 
-export class InternalTriggers implements InternalModuleFragment {
+export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #controlsController: ControlsController
-	readonly #internalModule: InternalController
 
-	constructor(internalModule: InternalController, controlsController: ControlsController) {
-		this.#internalModule = internalModule
+	constructor(_internalUtils: InternalModuleUtils, controlsController: ControlsController) {
+		super()
+
 		this.#controlsController = controlsController
 
 		const debounceCheckFeedbacks = debounceFn(
 			() => {
-				this.#internalModule.checkFeedbacks('trigger_enabled')
+				this.emit('checkFeedbacks', 'trigger_enabled')
 			},
 			{
 				maxWait: 100,

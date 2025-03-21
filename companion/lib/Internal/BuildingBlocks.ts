@@ -23,20 +23,27 @@ import type {
 	InternalFeedbackDefinition,
 	InternalActionDefinition,
 	ActionForVisitor,
+	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { InternalController } from './Controller.js'
 import { EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
-export class InternalBuildingBlocks implements InternalModuleFragment {
+export class InternalBuildingBlocks
+	extends EventEmitter<InternalModuleFragmentEvents>
+	implements InternalModuleFragment
+{
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
 
-	readonly #internalModule: InternalController
+	readonly #internalUtils: InternalModuleUtils
 
-	constructor(internalModule: InternalController) {
-		this.#internalModule = internalModule
+	constructor(internalUtils: InternalModuleUtils) {
+		super()
+
+		this.#internalUtils = internalUtils
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -236,7 +243,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		if (action.definitionId === 'wait') {
 			if (extras.abortDelayed.aborted) return true
 
-			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 				action.rawOptions.time,
 				extras,
 				'number'

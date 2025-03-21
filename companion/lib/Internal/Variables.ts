@@ -16,7 +16,6 @@
  */
 
 import LogController from '../Log/Controller.js'
-import type { InternalController } from './Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ActionForVisitor,
@@ -25,9 +24,12 @@ import type {
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalFeedbackDefinition,
+	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import type { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -55,8 +57,8 @@ function compareValues(op: any, value: any, value2: any): boolean {
 	}
 }
 
-export class InternalVariables implements InternalModuleFragment {
-	readonly #internalModule: InternalController
+export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
+	readonly #internalUtils: InternalModuleUtils
 	readonly #variableController: VariablesValues
 
 	/**
@@ -64,8 +66,10 @@ export class InternalVariables implements InternalModuleFragment {
 	 */
 	#variableSubscriptions = new Map<string, string[]>()
 
-	constructor(internalModule: InternalController, variableController: VariablesValues) {
-		this.#internalModule = internalModule
+	constructor(internalUtils: InternalModuleUtils, variableController: VariablesValues) {
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#variableController = variableController
 	}
 
@@ -165,7 +169,7 @@ export class InternalVariables implements InternalModuleFragment {
 	 */
 	executeFeedback(feedback: FeedbackEntityModelExt): boolean | void {
 		if (feedback.definitionId == 'variable_value') {
-			const result = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+			const result = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
 				feedback
 			)
@@ -174,11 +178,11 @@ export class InternalVariables implements InternalModuleFragment {
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
 		} else if (feedback.definitionId == 'variable_variable') {
-			const result1 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+			const result1 = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
 				feedback
 			)
-			const result2 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+			const result2 = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable2})`,
 				feedback
 			)
@@ -225,7 +229,7 @@ export class InternalVariables implements InternalModuleFragment {
 			}
 		}
 		if (affected_ids.length > 0) {
-			this.#internalModule.checkFeedbacksById(...affected_ids)
+			this.emit('checkFeedbacksById', ...affected_ids)
 		}
 	}
 

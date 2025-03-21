@@ -27,8 +27,8 @@ import type {
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
+	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { InternalController } from './Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
@@ -36,6 +36,8 @@ import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper
 import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
@@ -121,10 +123,10 @@ const CHOICES_PAGE_WITH_VARIABLES: InternalActionInputField[] = [
 	}),
 ]
 
-export class InternalSurface implements InternalModuleFragment {
+export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/Surface')
 
-	readonly #internalModule: InternalController
+	readonly #internalUtils: InternalModuleUtils
 	readonly #controlsController: ControlsController
 	readonly #surfaceController: SurfaceController
 	readonly #pageController: PageController
@@ -135,25 +137,27 @@ export class InternalSurface implements InternalModuleFragment {
 	readonly #pageHistory = new Map<string, { history: string[]; index: number }>()
 
 	constructor(
-		internalModule: InternalController,
+		internalUtils: InternalModuleUtils,
 		surfaceController: SurfaceController,
 		controlsController: ControlsController,
 		pageController: PageController
 	) {
-		this.#internalModule = internalModule
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#surfaceController = surfaceController
 		this.#controlsController = controlsController
 		this.#pageController = pageController
 
 		setImmediate(() => {
-			this.#internalModule.setVariables({
+			this.emit('setVariables', {
 				't-bar': 0,
 				jog: 0,
 				shuttle: 0,
 			})
 		})
 
-		const debounceUpdateVariableDefinitions = debounceFn(() => this.#internalModule.regenerateVariables(), {
+		const debounceUpdateVariableDefinitions = debounceFn(() => this.emit('regenerateVariables'), {
 			maxWait: 100,
 			wait: 20,
 			after: true,
@@ -166,7 +170,7 @@ export class InternalSurface implements InternalModuleFragment {
 
 		this.#surfaceController.on('surface_page', () => {
 			debounceUpdateVariables()
-			this.#internalModule.checkFeedbacks('surface_on_page')
+			this.emit('checkFeedbacks', 'surface_on_page')
 		})
 		this.#surfaceController.on('group_page', () => debounceUpdateVariables())
 
@@ -199,7 +203,7 @@ export class InternalSurface implements InternalModuleFragment {
 		let surfaceId: string | undefined = options.controller + ''
 
 		if (useVariableFields && options.controller_from_variable) {
-			surfaceId = this.#internalModule.parseVariablesForInternalActionOrFeedback(options.controller_variable, info).text
+			surfaceId = this.#internalUtils.parseVariablesForInternalActionOrFeedback(options.controller_variable, info).text
 		}
 
 		surfaceId = surfaceId.trim()
@@ -218,7 +222,7 @@ export class InternalSurface implements InternalModuleFragment {
 		let thePageNumber: number | string | undefined = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 				options.page_variable,
 				extras,
 				'number'
@@ -337,7 +341,7 @@ export class InternalSurface implements InternalModuleFragment {
 			}
 		}
 
-		this.#internalModule.setVariables(values)
+		this.emit('setVariables', values)
 	}
 
 	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
@@ -473,7 +477,7 @@ export class InternalSurface implements InternalModuleFragment {
 		} else if (action.definitionId === 'set_page_byindex') {
 			let surfaceIndex = action.rawOptions.controller
 			if (action.rawOptions.controller_from_variable) {
-				surfaceIndex = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				surfaceIndex = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 					action.rawOptions.controller_variable,
 					extras
 				).text
