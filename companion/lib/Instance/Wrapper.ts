@@ -54,8 +54,7 @@ import {
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-
-const range1_2_0OrLater = new semver.Range('>=1.2.0-0', { includePrerelease: true })
+import { doesModuleExpectLabelUpdates } from './ApiVersions.js'
 
 export interface InstanceModuleWrapperDependencies {
 	readonly controls: ControlsController
@@ -111,7 +110,7 @@ export class SocketEventsHandler {
 
 		this.connectionId = connectionId
 		this.#label = connectionId // Give a default label until init is called
-		this.#expectsLabelUpdates = range1_2_0OrLater.test(apiVersion)
+		this.#expectsLabelUpdates = doesModuleExpectLabelUpdates(apiVersion)
 
 		const funcs: IpcEventHandlers<ModuleToHostEventsV0> = {
 			'log-message': this.#handleLogMessage.bind(this),
