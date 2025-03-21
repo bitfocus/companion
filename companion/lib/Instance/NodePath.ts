@@ -2,6 +2,8 @@ import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'node:url'
 import path from 'path'
+import type { ModuleManifest } from '@companion-module/base'
+import { doesModuleSupportPermissionsModel } from './ApiVersions.js'
 
 // This isn't used once webpacked, but avoiding including it in the final build becomes messy
 const nodeVersionsStr = fs.readFileSync(new URL('../../../nodejs-versions.json', import.meta.url)).toString()
@@ -25,4 +27,34 @@ export async function getNodeJsPath(runtimeType: string): Promise<string | null>
 	if (!(await fs.pathExists(nodePath))) return null
 
 	return nodePath
+}
+
+export function getNodeJsPermissionArguments(
+	manifest: ModuleManifest,
+	moduleApiVersion: string,
+	moduleDir: string
+): string[] {
+	// Not supported by node18
+	if (manifest.runtime.type === 'node18' || !doesModuleSupportPermissionsModel(moduleApiVersion)) return []
+
+	const args = [
+		'--permission',
+		// Always allow read access to the module source directory
+		`--allow-fs-read=${moduleDir}`,
+	]
+
+	const manifestPermissions = manifest.runtime.permissions
+	if (manifestPermissions) {
+		if (manifestPermissions['worker-threads']) args.push('--allow-worker')
+		if (manifestPermissions['child-process'] || manifestPermissions['native-addons']) args.push('--allow-child-process')
+		if (manifestPermissions['native-addons']) args.push('--allow-addons')
+		if (manifestPermissions['native-addons'] || manifestPermissions['filesystem']) {
+			// Note: Using native addons usually means probing random filesystem paths to check the current platform
+
+			// Future: This should be scoped to some limited directories as specified by the user in the connection settings
+			args.push('--allow-fs-read=*', '--allow-fs-write=*')
+		}
+	}
+
+	return args
 }

@@ -49,7 +49,7 @@
 	"dependencies": {
 		"@blackmagic-controller/node": "^0.1.1",
 		"@companion-app/shared": "*",
-		"@companion-module/base": "^1.12.0-0",
+		"@companion-module/base": "^1.12.0-2",
 		"@elgato-stream-deck/node": "^7.1.2",
 		"@elgato-stream-deck/tcp": "^7.1.2",
 		"@julusian/bonjour-service": "^1.3.0-2",
