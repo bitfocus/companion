@@ -29,8 +29,8 @@ import type {
 	ActionForVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
+	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { InternalController } from './Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
@@ -45,7 +45,8 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { nanoid } from 'nanoid'
-import { CHOICES_DYNAMIC_LOCATION } from './Util.js'
+import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
 const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
@@ -83,19 +84,21 @@ const ButtonStylePropertiesExt = [
 	{ id: 'imageBuffers', label: 'Image buffers' },
 ]
 
-export class InternalControls implements InternalModuleFragment {
-	readonly #internalModule: InternalController
+export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
+	readonly #internalUtils: InternalModuleUtils
 	readonly #graphicsController: GraphicsController
 	readonly #controlsController: ControlsController
 	readonly #pagesController: PageController
 
 	constructor(
-		internalModule: InternalController,
+		internalUtils: InternalModuleUtils,
 		graphicsController: GraphicsController,
 		controlsController: ControlsController,
 		pagesController: PageController
 	) {
-		this.#internalModule = internalModule
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#graphicsController = graphicsController
 		this.#controlsController = controlsController
 		this.#pagesController = pagesController
@@ -103,7 +106,7 @@ export class InternalControls implements InternalModuleFragment {
 		const debounceCheckFeedbacks = debounceFn(
 			() => {
 				// TODO - can we make this more specific? This could invalidate a lot of stuff unnecessarily..
-				this.#internalModule.checkFeedbacks('bank_style', 'bank_pushed', 'bank_current_step')
+				this.emit('checkFeedbacks', 'bank_style', 'bank_pushed', 'bank_current_step')
 			},
 			{
 				maxWait: 100,
@@ -121,7 +124,7 @@ export class InternalControls implements InternalModuleFragment {
 		let thePage = options.page
 
 		if (options.page_from_variable) {
-			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 				options.page_variable,
 				extras,
 				'number'
@@ -146,7 +149,7 @@ export class InternalControls implements InternalModuleFragment {
 		theLocation: ControlLocation | null
 		referencedVariables: string[]
 	} {
-		const result = this.#internalModule.parseInternalControlReferenceForActionOrFeedback(
+		const result = this.#internalUtils.parseInternalControlReferenceForActionOrFeedback(
 			extras,
 			options,
 			useVariableFields
@@ -165,7 +168,7 @@ export class InternalControls implements InternalModuleFragment {
 		let theStep = options.step
 
 		if (options.step_from_expression) {
-			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 				options.step_expression,
 				extras,
 				'number'

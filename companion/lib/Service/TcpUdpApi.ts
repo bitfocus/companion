@@ -1,10 +1,11 @@
-import { CoreBase } from '../Core/Base.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { RegexRouter } from './RegexRouter.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { Registry } from '../Registry.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { ServiceApi } from './ServiceApi.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import LogController from '../Log/Controller.js'
 
 /**
  * Common API command processing for {@link ServiceTcp} and {@link ServiceUdp}.
@@ -26,7 +27,12 @@ import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigMode
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class ServiceTcpUdpApi extends CoreBase {
+export class ServiceTcpUdpApi {
+	protected readonly logger = LogController.createLogger('Service/Api')
+
+	readonly #serviceApi: ServiceApi
+	readonly #userconfig: DataUserConfig
+
 	/**
 	 * Message router
 	 */
@@ -51,8 +57,14 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * @param protocolName - the protocol name
 	 * @param legacyRoutesEnableKey - Userconfig key to enable/disable legacy routes
 	 */
-	constructor(registry: Registry, protocolName: string, legacyRoutesEnableKey: keyof UserConfigModel | null) {
-		super(registry, 'Service/Api')
+	constructor(
+		serviceApi: ServiceApi,
+		userconfig: DataUserConfig,
+		protocolName: string,
+		legacyRoutesEnableKey: keyof UserConfigModel | null
+	) {
+		this.#serviceApi = serviceApi
+		this.#userconfig = userconfig
 
 		this.#router = new RegexRouter(() => {
 			throw new ApiMessageError('Syntax error')
@@ -65,7 +77,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	}
 
 	#checkLegacyRouteAllowed() {
-		if (this.#legacyRoutesEnableKey && !this.userconfig.getKey(this.#legacyRoutesEnableKey)) {
+		if (this.#legacyRoutesEnableKey && !this.#userconfig.getKey(this.#legacyRoutesEnableKey)) {
 			throw new ApiMessageError('Deprecated commands are disabled')
 		}
 	}
@@ -77,10 +89,10 @@ export class ServiceTcpUdpApi extends CoreBase {
 			const page = Number(match.page)
 			const surfaceId = match.surfaceId
 
-			const pageId = this.page.getPageInfo(page)?.id
+			const pageId = this.#serviceApi.getPageIdForNumber(page)
 			if (!pageId) return 'Page not found'
 
-			this.surfaces.devicePageSet(surfaceId, pageId)
+			this.#serviceApi.surfaceSetPage(surfaceId, pageId)
 
 			return `If ${surfaceId} is connected`
 		})
@@ -90,7 +102,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 			const surfaceId = match.surfaceId
 
-			this.surfaces.devicePageUp(surfaceId)
+			this.#serviceApi.surfacePageUp(surfaceId)
 
 			return `If ${surfaceId} is connected`
 		})
@@ -100,7 +112,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 			const surfaceId = match.surfaceId
 
-			this.surfaces.devicePageDown(surfaceId)
+			this.#serviceApi.surfacePageDown(surfaceId)
 
 			return `If ${surfaceId} is connected`
 		})
@@ -108,30 +120,30 @@ export class ServiceTcpUdpApi extends CoreBase {
 		this.#router.addPath('bank-press :page :bank', (match) => {
 			this.#checkLegacyRouteAllowed()
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) throw new ApiMessageError('Page/bank out of range')
 
 			this.logger.info(`Got bank-press (trigger) ${controlId}`)
 
-			if (!this.controls.pressControl(controlId, true, this.#protocolName)) {
+			if (!this.#serviceApi.pressControl(controlId, true, this.#protocolName)) {
 				throw new ApiMessageError('Page/bank out of range')
 			}
 
 			setTimeout(() => {
 				this.logger.info(`Auto releasing bank-press ${controlId}`)
-				this.controls.pressControl(controlId, false, this.#protocolName)
+				this.#serviceApi.pressControl(controlId, false, this.#protocolName)
 			}, 20)
 		})
 
 		this.#router.addPath('bank-down :page :bank', (match) => {
 			this.#checkLegacyRouteAllowed()
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) throw new ApiMessageError('Page/bank out of range')
 
 			this.logger.info(`Got bank-down (trigger) ${controlId}`)
 
-			if (!this.controls.pressControl(controlId, true, this.#protocolName)) {
+			if (!this.#serviceApi.pressControl(controlId, true, this.#protocolName)) {
 				throw new ApiMessageError('Page/bank out of range')
 			}
 		})
@@ -139,12 +151,12 @@ export class ServiceTcpUdpApi extends CoreBase {
 		this.#router.addPath('bank-up :page :bank', (match) => {
 			this.#checkLegacyRouteAllowed()
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) throw new ApiMessageError('Page/bank out of range')
 
 			this.logger.info(`Got bank-up (trigger) ${controlId}`)
 
-			if (!this.controls.pressControl(controlId, false, this.#protocolName)) {
+			if (!this.#serviceApi.pressControl(controlId, false, this.#protocolName)) {
 				throw new ApiMessageError('Page/bank out of range')
 			}
 		})
@@ -152,7 +164,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 		this.#router.addPath('bank-step :page :bank :step', (match) => {
 			this.#checkLegacyRouteAllowed()
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) throw new ApiMessageError('Page/bank out of range')
 
 			const step = Number(match.step)
@@ -161,24 +173,24 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 			if (isNaN(step) || step <= 0) throw new ApiMessageError('Step out of range')
 
-			const control = this.controls.getControl(controlId)
-			if (!control || !control.supportsActionSets) throw new ApiMessageError('Invalid control')
+			const control = this.#serviceApi.getControl(controlId)
+			if (!control || !control.setCurrentStep) throw new ApiMessageError('Invalid control')
 
-			if (!control.actionSets.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
+			if (!control.setCurrentStep(step)) throw new ApiMessageError('Step out of range')
 		})
 
 		this.#router.addPath('style bank :page :bank text{ *text}', (match) => {
 			this.#checkLegacyRouteAllowed()
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) throw new ApiMessageError('Page/bank out of range')
 
-			const control = this.controls.getControl(controlId)
+			const control = this.#serviceApi.getControl(controlId)
 
-			if (control && control.supportsStyle) {
+			if (control && control.setStyleFields) {
 				const text = match.text || ''
 
-				control.styleSetFields({ text: text })
+				control.setStyleFields({ text: text })
 			} else {
 				throw new ApiMessageError('Page/bank out of range')
 			}
@@ -187,16 +199,16 @@ export class ServiceTcpUdpApi extends CoreBase {
 		this.#router.addPath('style bank :page :bank bgcolor #:color', (match) => {
 			this.#checkLegacyRouteAllowed()
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) throw new ApiMessageError('Page/bank out of range')
 
 			const color = parseInt(match.color, 16)
 			if (isNaN(color)) throw new ApiMessageError('Invalid color')
 
-			const control = this.controls.getControl(controlId)
+			const control = this.#serviceApi.getControl(controlId)
 
-			if (control && control.supportsStyle) {
-				control.styleSetFields({ bgcolor: color })
+			if (control && control.setStyleFields) {
+				control.setStyleFields({ bgcolor: color })
 			} else {
 				throw new ApiMessageError('Page/bank out of range')
 			}
@@ -205,16 +217,16 @@ export class ServiceTcpUdpApi extends CoreBase {
 		this.#router.addPath('style bank :page :bank color #:color', (match) => {
 			this.#checkLegacyRouteAllowed()
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) throw new ApiMessageError('Page/bank out of range')
 
 			const color = parseInt(match.color, 16)
 			if (isNaN(color)) throw new ApiMessageError('Invalid color')
 
-			const control = this.controls.getControl(controlId)
+			const control = this.#serviceApi.getControl(controlId)
 
-			if (control && control.supportsStyle) {
-				control.styleSetFields({ color: color })
+			if (control && control.setStyleFields) {
+				control.setStyleFields({ color: color })
 			} else {
 				throw new ApiMessageError('Page/bank out of range')
 			}
@@ -226,7 +238,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			this.logger.debug('Rescanning USB')
 
 			try {
-				await this.surfaces.triggerRefreshDevices()
+				await this.#serviceApi.triggerRescanForSurfaces()
 			} catch (e) {
 				throw new ApiMessageError('Scan failed')
 			}
@@ -265,10 +277,10 @@ export class ServiceTcpUdpApi extends CoreBase {
 		const page = Number(match.page)
 		const surfaceId = match.surfaceId
 
-		const pageId = this.page.getPageInfo(page)?.id
+		const pageId = this.#serviceApi.getPageIdForNumber(page)
 		if (!pageId) return 'Page not found'
 
-		this.surfaces.devicePageSet(surfaceId, pageId)
+		this.#serviceApi.surfaceSetPage(surfaceId, pageId)
 
 		return `If ${surfaceId} is connected`
 	}
@@ -279,7 +291,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	#surfacePageUp = (match: Record<string, string>): string => {
 		const surfaceId = match.surfaceId
 
-		this.surfaces.devicePageUp(surfaceId)
+		this.#serviceApi.surfacePageUp(surfaceId)
 
 		return `If ${surfaceId} is connected`
 	}
@@ -290,7 +302,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	#surfacePageDown = (match: Record<string, string>): string => {
 		const surfaceId = match.surfaceId
 
-		this.surfaces.devicePageDown(surfaceId)
+		this.#serviceApi.surfacePageDown(surfaceId)
 
 		return `If ${surfaceId} is connected`
 	}
@@ -303,13 +315,13 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 		this.logger.info(`Got location press at ${formatLocation(location)} (${controlId})`)
 
-		if (!controlId || !this.controls.pressControl(controlId, true, this.#protocolName)) {
+		if (!controlId || !this.#serviceApi.pressControl(controlId, true, this.#protocolName)) {
 			throw new ApiMessageError('No control at location')
 		}
 
 		setTimeout(() => {
 			this.logger.info(`Auto releasing ${formatLocation(location)} (${controlId})`)
-			this.controls.pressControl(controlId, false, this.#protocolName)
+			this.#serviceApi.pressControl(controlId, false, this.#protocolName)
 		}, 20)
 	}
 
@@ -321,7 +333,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 		this.logger.info(`Got location down at ${formatLocation(location)} (${controlId})`)
 
-		if (!controlId || !this.controls.pressControl(controlId, true, this.#protocolName)) {
+		if (!controlId || !this.#serviceApi.pressControl(controlId, true, this.#protocolName)) {
 			throw new ApiMessageError('No control at location')
 		}
 	}
@@ -334,7 +346,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 		this.logger.info(`Got location up at ${formatLocation(location)} (${controlId})`)
 
-		if (!controlId || !this.controls.pressControl(controlId, false, this.#protocolName)) {
+		if (!controlId || !this.#serviceApi.pressControl(controlId, false, this.#protocolName)) {
 			throw new ApiMessageError('No control at location')
 		}
 	}
@@ -347,7 +359,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 		this.logger.info(`Got location rotate-left at ${formatLocation(location)} (${controlId})`)
 
-		if (!controlId || !this.controls.rotateControl(controlId, false, this.#protocolName)) {
+		if (!controlId || !this.#serviceApi.rotateControl(controlId, false, this.#protocolName)) {
 			throw new ApiMessageError('No control at location')
 		}
 	}
@@ -360,7 +372,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 
 		this.logger.info(`Got location rotate-right at ${formatLocation(location)} (${controlId})`)
 
-		if (!controlId || !this.controls.rotateControl(controlId, true, this.#protocolName)) {
+		if (!controlId || !this.#serviceApi.rotateControl(controlId, true, this.#protocolName)) {
 			throw new ApiMessageError('No control at location')
 		}
 	}
@@ -377,12 +389,12 @@ export class ServiceTcpUdpApi extends CoreBase {
 			throw new ApiMessageError('No control at location')
 		}
 
-		const control = this.controls.getControl(controlId)
-		if (!control || !control.supportsActionSets) {
+		const control = this.#serviceApi.getControl(controlId)
+		if (!control || !control.setCurrentStep) {
 			throw new ApiMessageError('No control at location')
 		}
 
-		if (!control.actionSets.stepMakeCurrent(step)) throw new ApiMessageError('Step out of range')
+		if (!control.setCurrentStep(step)) throw new ApiMessageError('Step out of range')
 	}
 
 	/**
@@ -396,11 +408,11 @@ export class ServiceTcpUdpApi extends CoreBase {
 			throw new ApiMessageError('No control at location')
 		}
 
-		const control = this.controls.getControl(controlId)
-		if (control && control.supportsStyle) {
+		const control = this.#serviceApi.getControl(controlId)
+		if (control && control.setStyleFields) {
 			const text = match.text || ''
 
-			control.styleSetFields({ text: text })
+			control.setStyleFields({ text: text })
 		} else {
 			throw new ApiMessageError('No control at location')
 		}
@@ -417,11 +429,11 @@ export class ServiceTcpUdpApi extends CoreBase {
 			throw new ApiMessageError('No control at location')
 		}
 
-		const control = this.controls.getControl(controlId)
-		if (control && control.supportsStyle) {
+		const control = this.#serviceApi.getControl(controlId)
+		if (control && control.setStyleFields) {
 			const color = parseColorToNumber(match.color)
 
-			control.styleSetFields({ color: color })
+			control.setStyleFields({ color: color })
 		} else {
 			throw new ApiMessageError('No control at location')
 		}
@@ -438,11 +450,11 @@ export class ServiceTcpUdpApi extends CoreBase {
 			throw new ApiMessageError('No control at location')
 		}
 
-		const control = this.controls.getControl(controlId)
-		if (control && control.supportsStyle) {
+		const control = this.#serviceApi.getControl(controlId)
+		if (control && control.setStyleFields) {
 			const color = parseColorToNumber(match.bgcolor)
 
-			control.styleSetFields({ bgcolor: color })
+			control.setStyleFields({ bgcolor: color })
 		} else {
 			throw new ApiMessageError('No control at location')
 		}
@@ -455,7 +467,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 		this.logger.debug('Rescanning USB')
 
 		try {
-			await this.surfaces.triggerRefreshDevices()
+			await this.#serviceApi.triggerRescanForSurfaces()
 		} catch (e) {
 			throw new ApiMessageError('Scan failed')
 		}
@@ -465,7 +477,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * Perform custom variable set value
 	 */
 	#customVariableSetValue = (match: Record<string, string>): void => {
-		const result = this.variablesController.custom.setValue(match.name, match.value ?? '')
+		const result = this.#serviceApi.setCustomVariableValue(match.name, match.value ?? '')
 		if (result) {
 			throw new ApiMessageError(result)
 		}
@@ -485,7 +497,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 			// Match previous behaviour
 			throw new ApiMessageError('Syntax error')
 
-		const controlId = this.page.getControlIdAt(location)
+		const controlId = this.#serviceApi.getControlIdAt(location)
 
 		return {
 			location,

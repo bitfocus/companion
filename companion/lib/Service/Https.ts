@@ -2,7 +2,8 @@ import _https from 'https'
 import fs from 'fs'
 import { ServiceBase } from './Base.js'
 import type { UIExpress } from '../UI/Express.js'
-import type { Registry } from '../Registry.js'
+import type { UIHandler } from '../UI/Handler.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
  * Class providing the HTTPS web interface.
@@ -34,12 +35,14 @@ export class ServiceHttps extends ServiceBase {
 	 * The web application framework
 	 */
 	readonly #express: UIExpress
+	readonly #io: UIHandler
 
 	#server: _https.Server | undefined = undefined
 
-	constructor(registry: Registry, express: UIExpress) {
-		super(registry, 'Service/Https', 'https_enabled', 'https_port')
+	constructor(userconfig: DataUserConfig, express: UIExpress, io: UIHandler) {
+		super(userconfig, 'Service/Https', 'https_enabled', 'https_port')
 		this.#express = express
+		this.#io = io
 
 		this.port = 8443
 
@@ -138,7 +141,7 @@ export class ServiceHttps extends ServiceBase {
 			this.#server = _https.createServer(credentials, this.#express.app)
 			this.#server.on('error', this.handleSocketError.bind(this))
 			this.#server.listen(this.port, this.#bindIP ?? undefined)
-			this.io.bindToHttps(this.#server)
+			this.#io.bindToHttps(this.#server)
 
 			// this.server.log = (...args) => {
 			// 	this.logger.silly('log', 'https', ...args)

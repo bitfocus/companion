@@ -455,14 +455,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (!rawObj) return undefined
 
 		const obj = minimal
-			? {
+			? ({
 					instance_type: rawObj.instance_type,
 					label: rawObj.label,
 					lastUpgradeIndex: rawObj.lastUpgradeIndex,
-				}
-			: {
+				} satisfies ExportInstanceMinimalv6)
+			: ({
 					...rawObj,
-				}
+					moduleVersionId: rawObj.moduleVersionId ?? undefined,
+				} satisfies ExportInstanceFullv6)
 
 		return clone ? cloneDeep(obj) : obj
 	}

@@ -17,7 +17,7 @@
 
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
 import { cloneDeep } from 'lodash-es'
-import { ParseInternalControlReference } from './Util.js'
+import { InternalModuleUtils } from './Util.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -26,11 +26,8 @@ import type {
 	InternalVisitor,
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
-import type { ExecuteExpressionResult } from '../Variables/Util.js'
-import type { ParseVariablesResult } from '../Variables/Util.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { PageController } from '../Page/Controller.js'
@@ -47,6 +44,18 @@ import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefini
 import { Complete } from '@companion-module/base/dist/util.js'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import { InternalActionRecorder } from './ActionRecorder.js'
+import { InternalInstance } from './Instance.js'
+import { InternalTime } from './Time.js'
+import { InternalControls } from './Controls.js'
+import { InternalCustomVariables } from './CustomVariables.js'
+import { InternalPage } from './Page.js'
+import { InternalSurface } from './Surface.js'
+import { InternalTriggers } from './Triggers.js'
+import { InternalVariables } from './Variables.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -66,33 +75,53 @@ export class InternalController {
 	constructor(
 		controlsController: ControlsController,
 		pageController: PageController,
-		instanceDefinitions: InstanceDefinitions,
-		variablesController: VariablesController
+		instanceController: InstanceController,
+		variablesController: VariablesController,
+		surfaceController: SurfaceController,
+		graphicsController: GraphicsController,
+		requestExit: (fromInternal: boolean, restart: boolean) => void
 	) {
 		this.#controlsController = controlsController
 		this.#pageController = pageController
-		this.#instanceDefinitions = instanceDefinitions
+		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
 
-		// More get added from elsewhere
-		this.#buildingBlocksFragment = new InternalBuildingBlocks(this, this.#controlsController.actionRunner)
-		this.#fragments = [this.#buildingBlocksFragment]
+		const internalUtils = new InternalModuleUtils(controlsController)
+
+		this.#buildingBlocksFragment = new InternalBuildingBlocks(internalUtils)
+		this.#fragments = [
+			this.#buildingBlocksFragment,
+			new InternalActionRecorder(internalUtils, controlsController.actionRecorder, pageController),
+			new InternalInstance(internalUtils, instanceController),
+			new InternalTime(internalUtils),
+			new InternalControls(internalUtils, graphicsController, controlsController, pageController),
+			new InternalCustomVariables(internalUtils, variablesController),
+			new InternalPage(internalUtils, pageController),
+			new InternalSurface(internalUtils, surfaceController, controlsController, pageController),
+			new InternalSystem(internalUtils, variablesController, requestExit),
+			new InternalTriggers(internalUtils, controlsController),
+			new InternalVariables(internalUtils, controlsController, pageController),
+		]
+
+		this.#init()
 	}
 
-	addFragments(...fragments: InternalModuleFragment[]): void {
-		if (this.#initialized) throw new Error(`InternalController has been initialized`)
-
-		this.#fragments.push(...fragments)
-	}
-
-	init(): void {
+	#init(): void {
 		if (this.#initialized) throw new Error(`InternalController already initialized`)
 		this.#initialized = true
+
+		// Listen for events from the fragments
+		for (const fragment of this.#fragments) {
+			fragment.on('checkFeedbacks', (...types) => this.#checkFeedbacks(...types))
+			fragment.on('checkFeedbacksById', (...ids) => this.checkFeedbacksById(...ids))
+			fragment.on('regenerateVariables', () => this.#regenerateVariables())
+			fragment.on('setVariables', (variables) => this.#setVariables(variables))
+		}
 
 		// Set everything up
 		this.#regenerateActions()
 		this.#regenerateFeedbacks()
-		this.regenerateVariables()
+		this.#regenerateVariables()
 	}
 
 	/**
@@ -355,7 +384,7 @@ export class InternalController {
 		for (const fragment of this.#fragments) {
 			if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
 				try {
-					let value = fragment.executeAction(action, extras)
+					let value = fragment.executeAction(action, extras, this.#controlsController.actionRunner)
 					// Only await if it is a promise, to avoid unnecessary async pauses
 					value = value instanceof Promise ? await value : value
 
@@ -386,7 +415,7 @@ export class InternalController {
 	/**
 	 * Set internal variable values
 	 */
-	setVariables(variables: Record<string, CompanionVariableValue | undefined>): void {
+	#setVariables(variables: Record<string, CompanionVariableValue | undefined>): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		// This isn't ideal, but it's cheap enough and avoids updating the calling code
@@ -400,7 +429,7 @@ export class InternalController {
 	/**
 	 * Recheck all feedbacks of specified types
 	 */
-	checkFeedbacks(...types: string[]): void {
+	#checkFeedbacks(...types: string[]): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const typesSet = new Set(types)
@@ -491,7 +520,7 @@ export class InternalController {
 
 		this.#instanceDefinitions.setFeedbackDefinitions('internal', feedbacks)
 	}
-	regenerateVariables(): void {
+	#regenerateVariables(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const variables = []
@@ -535,98 +564,6 @@ export class InternalController {
 		}
 
 		this.#controlsController.updateFeedbackValues('internal', newValues)
-	}
-
-	/**
-	 * Parse the variables in a string
-	 * @param str - String to parse variables in
-	 * @param extras
-	 * @param injectedVariableValues - Inject some variable values
-	 * @returns with variables replaced with values
-	 */
-	parseVariablesForInternalActionOrFeedback(
-		str: string,
-		extras: RunActionExtras | FeedbackEntityModelExt
-		// injectedVariableValues?: VariablesCache
-	): ParseVariablesResult {
-		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-
-		const injectedVariableValuesComplete = {
-			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			// ...injectedVariableValues,
-		}
-
-		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.location,
-			injectedVariableValuesComplete
-		)
-
-		return parser.parseVariables(str)
-	}
-
-	/**
-	 * Parse and execute an expression in a string
-	 * @param str - String containing the expression to parse
-	 * @param extras
-	 * @param requiredType - Fail if the result is not of specified type
-	 * @param injectedVariableValues - Inject some variable values
-	 * @returns result of the expression
-	 */
-	executeExpressionForInternalActionOrFeedback(
-		str: string,
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		requiredType?: string
-		// injectedVariableValues?: VariablesCache
-	): ExecuteExpressionResult {
-		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-
-		const injectedVariableValuesComplete = {
-			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			// ...injectedVariableValues,
-		}
-
-		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.location,
-			injectedVariableValuesComplete
-		)
-
-		return parser.executeExpression(String(str), requiredType)
-	}
-
-	/**
-	 *
-	 */
-	parseInternalControlReferenceForActionOrFeedback(
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		options: Record<string, any>,
-		useVariableFields: boolean
-	): {
-		location: ControlLocation | null
-		referencedVariables: Set<string>
-	} {
-		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-
-		const injectedVariableValuesComplete = {
-			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			// ...injectedVariableValues,
-		}
-
-		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.location,
-			injectedVariableValuesComplete
-		)
-
-		return ParseInternalControlReference(this.#logger, parser, extras.location, options, useVariableFields)
-	}
-
-	/**
-	 * Variables to inject based on an internal action
-	 */
-	#getInjectedVariablesForLocation(extras: RunActionExtras): CompanionVariableValues {
-		return {
-			// Doesn't need to be reactive, it's only for an action
-			'$(this:surface_id)': extras.surfaceId,
-		}
 	}
 
 	/**

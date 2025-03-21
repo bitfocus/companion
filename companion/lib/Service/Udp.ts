@@ -1,6 +1,7 @@
 import { ServiceTcpUdpApi } from './TcpUdpApi.js'
 import { DgramRemoteInfo, ServiceUdpBase } from './UdpBase.js'
-import type { Registry } from '../Registry.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ServiceApi } from './ServiceApi.js'
 
 /**
  * Class providing the UDP api.
@@ -28,12 +29,12 @@ export class ServiceUdp extends ServiceUdpBase {
 	 */
 	readonly #api: ServiceTcpUdpApi
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/Udp', 'udp_enabled', 'udp_listen_port')
+	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig) {
+		super(userconfig, 'Service/Udp', 'udp_enabled', 'udp_listen_port')
 
 		this.port = 16759
 
-		this.#api = new ServiceTcpUdpApi(registry, 'udp', 'udp_legacy_api_enabled')
+		this.#api = new ServiceTcpUdpApi(serviceApi, userconfig, 'udp', 'udp_legacy_api_enabled')
 
 		this.init()
 	}

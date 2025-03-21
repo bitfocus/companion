@@ -2,9 +2,8 @@ import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
 import { ApiMessageError, ServiceTcpUdpApi } from '../../lib/Service/TcpUdpApi'
 import { rgb } from '../../lib/Resources/Util'
-import type { Registry } from '../../lib/Registry'
-import type { ControlButtonNormal } from '../../lib/Controls/ControlTypes/Button/Normal'
-import type { ControlEntityListPoolButton } from '../../lib/Controls/Entities/EntityListPoolButton'
+import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi'
+import type { DataUserConfig } from '../../lib/Data/UserConfig'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -14,37 +13,15 @@ const mockOptions = {
 
 describe('TcpUdpApi', () => {
 	function createService() {
-		// const logger = mock(
-		// 	{
-		// 		info: vi.fn(),
-		// 		debug: vi.fn(),
-		// 	},
-		// 	mockOptions
-		// )
-		// const logController = mock(
-		// 	{
-		// 		createLogger: () => logger,
-		// 	},
-		// 	mockOptions
-		// )
-		const registry = mockDeep<Registry>(mockOptions, {
-			// log: logController,
-			surfaces: mock({}, mockOptions),
-			page: mock({}, mockOptions),
-			controls: mock({}, mockOptions),
-			variables: mock(
-				{
-					custom: mock({}, mockOptions),
-				},
-				mockOptions
-			),
-		})
+		const serviceApi = mockDeep<ServiceApi>(mockOptions)
+		const userconfig = mockDeep<DataUserConfig>(mockOptions)
 
-		const service = new ServiceTcpUdpApi(registry, 'fake-proto', null)
+		const service = new ServiceTcpUdpApi(serviceApi, userconfig, 'fake-proto', null)
 		const router = service.router
 
 		return {
-			registry,
+			serviceApi,
+			userconfig,
 			router,
 			service,
 			// logger,
@@ -54,23 +31,23 @@ describe('TcpUdpApi', () => {
 	describe('surfaces', () => {
 		describe('rescan', () => {
 			test('ok', async () => {
-				const { router, registry } = createService()
-				registry.surfaces.triggerRefreshDevices.mockResolvedValue(undefined)
+				const { router, serviceApi } = createService()
+				serviceApi.triggerRescanForSurfaces.mockResolvedValue(undefined)
 
 				// Perform the request
 				await router.processMessage('surfaces rescan')
 
-				expect(registry.surfaces.triggerRefreshDevices).toHaveBeenCalledTimes(1)
+				expect(serviceApi.triggerRescanForSurfaces).toHaveBeenCalledTimes(1)
 			})
 
 			test('failed', async () => {
-				const { router, registry } = createService()
-				registry.surfaces.triggerRefreshDevices.mockRejectedValue('internal error')
+				const { router, serviceApi } = createService()
+				serviceApi.triggerRescanForSurfaces.mockRejectedValue('internal error')
 
 				// Perform the request
 				await expect(router.processMessage('surfaces rescan')).rejects.toEqual(new ApiMessageError('Scan failed'))
 
-				expect(registry.surfaces.triggerRefreshDevices).toHaveBeenCalledTimes(1)
+				expect(serviceApi.triggerRescanForSurfaces).toHaveBeenCalledTimes(1)
 			})
 		})
 	})
@@ -78,9 +55,9 @@ describe('TcpUdpApi', () => {
 	describe('custom-variable', () => {
 		describe('set value', () => {
 			test('ok from query', async () => {
-				const { router, registry } = createService()
+				const { router, serviceApi } = createService()
 
-				const mockFn = registry.variables.custom.setValue
+				const mockFn = serviceApi.setCustomVariableValue
 				mockFn.mockReturnValue(null)
 
 				// Perform the request
@@ -91,9 +68,9 @@ describe('TcpUdpApi', () => {
 			})
 
 			test('ok from query with slash', async () => {
-				const { router, registry } = createService()
+				const { router, serviceApi } = createService()
 
-				const mockFn = registry.variables.custom.setValue
+				const mockFn = serviceApi.setCustomVariableValue
 				mockFn.mockReturnValue(null)
 
 				// Perform the request
@@ -104,9 +81,9 @@ describe('TcpUdpApi', () => {
 			})
 
 			test('ok empty', async () => {
-				const { router, registry } = createService()
+				const { router, serviceApi } = createService()
 
-				const mockFn = registry.variables.custom.setValue
+				const mockFn = serviceApi.setCustomVariableValue
 				mockFn.mockReturnValue(null)
 
 				// Perform the request
@@ -121,155 +98,155 @@ describe('TcpUdpApi', () => {
 	describe('controls by location', () => {
 		describe('down', () => {
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
-				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				const mockControl = mock<ServiceApiControl>({}, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 down')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 down')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
 			})
 
 			test('bad page', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1a/2/3 down')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2a/3 down')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3a down')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
 
 		describe('up', () => {
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
-				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				const mockControl = mock<ServiceApiControl>({}, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 up')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 up')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
 			})
 
 			test('bad page', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1a/2/3 up')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2a/3 up')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3a up')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
 
@@ -279,372 +256,350 @@ describe('TcpUdpApi', () => {
 			})
 
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 press')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 press')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
 
 				vi.advanceTimersByTime(100)
 
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(2)
-				expect(registry.controls.pressControl).toHaveBeenLastCalledWith('control123', false, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
+				expect(serviceApi.pressControl).toHaveBeenLastCalledWith('control123', false, 'fake-proto')
 			})
 
 			test('bad page', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1a/2/3 press')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2a/3 press')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.pressControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3a press')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
 
 		describe('rotate left', () => {
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 rotate-left')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.rotateControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 rotate-left')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.rotateControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
+				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
 			})
 
 			test('bad page', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.rotateControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1a/2/3 rotate-left')).rejects.toEqual(
 					new ApiMessageError('Syntax error')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.rotateControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2a/3 rotate-left')).rejects.toEqual(
 					new ApiMessageError('Syntax error')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.rotateControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3a rotate-left')).rejects.toEqual(
 					new ApiMessageError('Syntax error')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
 
 		describe('rotate right', () => {
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 rotate-right')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.rotateControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 rotate-right')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.rotateControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
+				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
 			})
 
 			test('bad page', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.rotateControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1a/2/3 rotate-right')).rejects.toEqual(
 					new ApiMessageError('Syntax error')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.rotateControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2a/3 rotate-right')).rejects.toEqual(
 					new ApiMessageError('Syntax error')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-				registry.controls.rotateControl.mockReturnValue(true)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3a rotate-right')).rejects.toEqual(
 					new ApiMessageError('Syntax error')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
 
 		describe('set step', () => {
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 set-step 2')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('no payload', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('test')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('test')
 
-				const mockControlEntities = mock<ControlEntityListPoolButton>(
-					{
-						stepMakeCurrent: vi.fn(),
-					},
-					mockOptions
-				)
-				const mockControl = mock<ControlButtonNormal>(
-					{
-						actionSets: mockControlEntities,
-					},
-					mockOptions
-				)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				const mockControl = mock<ServiceApiControl>({}, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 step')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
-				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(0)
+				expect(mockControl.setCurrentStep).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
 
-				const mockControlEntities = mock<ControlEntityListPoolButton>(
-					{
-						stepMakeCurrent: vi.fn(),
-					},
-					mockOptions
-				)
-				const mockControl = mock<ControlButtonNormal>(
-					{
-						actionSets: mockControlEntities,
-					},
-					mockOptions
-				)
-				registry.controls.getControl.mockReturnValue(mockControl)
-				mockControlEntities.stepMakeCurrent.mockReturnValue(true)
+				const mockControl = mock<ServiceApiControl>({}, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
+				mockControl.setCurrentStep = vi.fn().mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 set-step 2')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
-				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledTimes(1)
-				expect(mockControlEntities.stepMakeCurrent).toHaveBeenCalledWith(2)
+				expect(mockControl.setCurrentStep).toHaveBeenCalledTimes(1)
+				expect(mockControl.setCurrentStep).toHaveBeenCalledWith(2)
 			})
 
 			test('bad page', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
 
-				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				const mockControl = mock<ServiceApiControl>({}, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				expect(router.processMessage('location 1a/2/3 set-step 2')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad row', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
 
-				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				const mockControl = mock<ServiceApiControl>({}, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2a/3 set-step 2')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
 
 			test('bad column', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('control123')
 
-				const mockControl = mock<ControlButtonNormal>({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				const mockControl = mock<ServiceApiControl>({}, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3a set-step 2')).rejects.toEqual(new ApiMessageError('Syntax error'))
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
 		})
 
 		describe('set style: text', () => {
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 style text abc')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
@@ -652,105 +607,105 @@ describe('TcpUdpApi', () => {
 			})
 
 			test('ok', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('abc')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('abc')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControl = mock<ServiceApiControl>(
 					{
-						styleSetFields: vi.fn(),
+						setStyleFields: vi.fn(),
 					},
 					mockOptions
 				)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 style text def two')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
 
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
 
-				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
-				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: 'def two' })
+				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ text: 'def two' })
 			})
 
 			test('ok with slash', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('abc')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('abc')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControl = mock<ServiceApiControl>(
 					{
-						styleSetFields: vi.fn(),
+						setStyleFields: vi.fn(),
 					},
 					mockOptions
 				)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 style text de/f two')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
 
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
 
-				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
-				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: 'de/f two' })
+				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ text: 'de/f two' })
 			})
 
 			test('ok no text', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('abc')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('abc')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControl = mock<ServiceApiControl>(
 					{
-						styleSetFields: vi.fn(),
+						setStyleFields: vi.fn(),
 					},
 					mockOptions
 				)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 style text')
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
 
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
 
-				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
-				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: '' })
+				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ text: '' })
 			})
 		})
 
 		describe('set style: color', () => {
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 style color abc')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
@@ -758,32 +713,32 @@ describe('TcpUdpApi', () => {
 			})
 
 			async function runColor(input, expected) {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('abc')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('abc')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControl = mock<ServiceApiControl>(
 					{
-						styleSetFields: vi.fn(),
+						setStyleFields: vi.fn(),
 					},
 					mockOptions
 				)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				router.processMessage(`location 1/2/3 style color ${input}`)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
 
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
 
-				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
-				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ color: expected })
+				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ color: expected })
 			}
 
 			test('ok hex', async () => {
@@ -797,15 +752,15 @@ describe('TcpUdpApi', () => {
 
 		describe('set style: bgcolor', () => {
 			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(null)
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
 				expect(router.processMessage('location 1/2/3 style bgcolor abc')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
@@ -813,32 +768,32 @@ describe('TcpUdpApi', () => {
 			})
 
 			async function runColor(input, expected) {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('abc')
+				const { router, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue('abc')
 
-				const mockControl = mock<ControlButtonNormal>(
+				const mockControl = mock<ServiceApiControl>(
 					{
-						styleSetFields: vi.fn(),
+						setStyleFields: vi.fn(),
 					},
 					mockOptions
 				)
-				registry.controls.getControl.mockReturnValue(mockControl)
+				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
 				router.processMessage(`location 1/2/3 style bgcolor ${input}`)
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
 					row: 2,
 					column: 3,
 				})
 
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
 
-				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
-				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ bgcolor: expected })
+				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ bgcolor: expected })
 			}
 
 			test('ok hex', async () => {

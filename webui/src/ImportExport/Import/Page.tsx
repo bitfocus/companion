@@ -180,7 +180,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 				</MyErrorBoundary>
 			</CCol>
 
-			<CCol xs={12}>
+			<CCol xs={12} className="mt-2">
 				<CButton color="warning" onClick={doImport2} disabled={isRunning}>
 					{pageNumber == -1 ? 'Import to new page' : `Import to page ${pageNumber}`}
 				</CButton>

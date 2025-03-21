@@ -19,20 +19,11 @@ import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
-import { InternalActionRecorder } from './Internal/ActionRecorder.js'
-import { InternalControls } from './Internal/Controls.js'
-import { InternalCustomVariables } from './Internal/CustomVariables.js'
-import { InternalInstance } from './Internal/Instance.js'
-import { InternalPage } from './Internal/Page.js'
-import { InternalSurface } from './Internal/Surface.js'
-import { InternalSystem } from './Internal/System.js'
-import { InternalTime } from './Internal/Time.js'
-import { InternalTriggers } from './Internal/Triggers.js'
-import { InternalVariables } from './Internal/Variables.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
+import { ServiceApi } from './Service/ServiceApi.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -120,7 +111,7 @@ export class Registry {
 	/**
 	 * The core service controller
 	 */
-	services!: ServiceController
+	#services!: ServiceController
 	/**
 	 * The core device controller
 	 */
@@ -152,11 +143,11 @@ export class Registry {
 	/**
 	 * Express Router for /int api endpoints
 	 */
-	readonly internalApiRouter = express.Router()
+	readonly #internalApiRouter = express.Router()
 
 	variables!: VariablesController
 
-	readonly appInfo: AppInfo
+	readonly #appInfo: AppInfo
 
 	/**
 	 * Create a new application <code>Registry</code>
@@ -173,7 +164,7 @@ export class Registry {
 		this.#logger.info(`Build ${buildNumber}`)
 		this.#logger.info(`configuration directory: ${configDir}`)
 
-		this.appInfo = {
+		this.#appInfo = {
 			configDir: configDir,
 			modulesDir: modulesDir,
 			machineId: machineId,
@@ -184,12 +175,12 @@ export class Registry {
 
 		this.#logger.debug('constructing core modules')
 
-		this.ui = new UIController(this.appInfo, this.internalApiRouter)
+		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		this.io = this.ui.io
-		LogController.init(this.appInfo, this.ui.io)
+		LogController.init(this.#appInfo, this.ui.io)
 
-		this.db = new DataDatabase(this.appInfo.configDir)
-		this.#data = new DataController(this)
+		this.db = new DataDatabase(this.#appInfo.configDir)
+		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 	}
 
@@ -221,13 +212,13 @@ export class Registry {
 			this.io
 		)
 
-		const oscSender = new ServiceOscSender(this)
+		const oscSender = new ServiceOscSender(this.userconfig)
 		this.instance = new InstanceController(
-			this.appInfo,
+			this.#appInfo,
 			this.io,
 			this.db,
 			this.#data.cache,
-			this.internalApiRouter,
+			this.#internalApiRouter,
 			this.controls,
 			this.graphics,
 			this.page,
@@ -236,10 +227,18 @@ export class Registry {
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
-		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
+		this.internalModule = new InternalController(
+			this.controls,
+			this.page,
+			this.instance,
+			this.variables,
+			this.surfaces,
+			this.graphics,
+			this.exit.bind(this)
+		)
 		this.#importExport = new ImportExportController(
-			this.appInfo,
-			this.internalApiRouter,
+			this.#appInfo,
+			this.#internalApiRouter,
 			this.io,
 			this.controls,
 			this.graphics,
@@ -251,24 +250,29 @@ export class Registry {
 			this.variables
 		)
 
-		this.internalModule.addFragments(
-			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
-			new InternalInstance(this.internalModule, this.instance),
-			new InternalTime(this.internalModule),
-			new InternalControls(this.internalModule, this.graphics, this.controls, this.page),
-			new InternalCustomVariables(this.internalModule, this.variables),
-			new InternalPage(this.internalModule, this.page),
-			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
-			new InternalSystem(this.internalModule, this),
-			new InternalTriggers(this.internalModule, this.controls),
-			new InternalVariables(this.internalModule, this.controls, this.page)
+		const serviceApi = new ServiceApi(
+			this.#appInfo,
+			this.page,
+			this.controls,
+			this.surfaces,
+			this.variables,
+			this.graphics
 		)
-		this.internalModule.init()
 
-		this.#metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
-		this.services = new ServiceController(this, oscSender, controlEvents)
+		this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
+		this.#services = new ServiceController(
+			serviceApi,
+			this.userconfig,
+			oscSender,
+			controlEvents,
+			this.surfaces,
+			this.page,
+			this.instance,
+			this.io,
+			this.ui.express
+		)
 		this.#cloud = new CloudController(
-			this.appInfo,
+			this.#appInfo,
 			this.db,
 			this.#data.cache,
 			this.controls,
@@ -276,6 +280,26 @@ export class Registry {
 			this.io,
 			this.page
 		)
+
+		this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
+			this.io.emitToAll('set_userconfig_key', key, value)
+			setImmediate(() => {
+				// give the change a chance to be pushed to the ui first
+				this.graphics.updateUserConfig(key, value)
+				this.#services.updateUserConfig(key, value)
+				this.surfaces.updateUserConfig(key, value)
+			})
+
+			if (checkControlsInBounds) {
+				const controlsToRemove = this.page.findAllOutOfBoundsControls()
+
+				for (const controlId of controlsToRemove) {
+					this.controls.deleteControl(controlId)
+				}
+
+				this.graphics.discardAllOutOfBoundsControls()
+			}
+		})
 
 		this.ui.io.on('clientConnect', (client) => {
 			LogController.clientConnect(client)
@@ -287,7 +311,7 @@ export class Registry {
 			this.surfaces.clientConnect(client)
 			this.instance.clientConnect(client)
 			this.#cloud.clientConnect(client)
-			this.services.clientConnect(client)
+			this.#services.clientConnect(client)
 			this.#importExport.clientConnect(client)
 		})
 
@@ -306,6 +330,10 @@ export class Registry {
 
 		this.page.on('controlIdsMoved', (controlIds) => {
 			this.#preview.onControlIdsLocationChanged(controlIds)
+		})
+
+		this.graphics.on('button_drawn', (location, render) => {
+			this.#services.onButtonDrawn(location, render)
 		})
 
 		// old 'modules_loaded' events
@@ -412,7 +440,7 @@ export class Registry {
 
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
-		this.services.https.updateBindIp(bindIp)
+		this.#services.https.updateBindIp(bindIp)
 		this.internalModule.updateBindIp(bindIp)
 	}
 }

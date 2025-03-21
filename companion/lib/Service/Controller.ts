@@ -12,11 +12,18 @@ import { ServiceSurfaceDiscovery } from './SurfaceDiscovery.js'
 import { ServiceTcp } from './Tcp.js'
 import { ServiceUdp } from './Udp.js'
 import { ServiceVideohubPanel } from './VideohubPanel.js'
-import type { Registry } from '../Registry.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import { ServiceSatelliteWebsocket } from './SatelliteWebsocket.js'
 import type { EventEmitter } from 'events'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import type { ServiceApi } from './ServiceApi.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { UIExpress } from '../UI/Express.js'
 
 /**
  * Class that manages all of the services.
@@ -55,26 +62,42 @@ export class ServiceController {
 	readonly bonjourDiscovery: ServiceBonjourDiscovery
 	readonly surfaceDiscovery: ServiceSurfaceDiscovery
 
-	constructor(registry: Registry, oscSender: ServiceOscSender, controlEvents: EventEmitter<ControlCommonEvents>) {
-		this.httpApi = new ServiceHttpApi(registry, registry.ui.express)
-		this.https = new ServiceHttps(registry, registry.ui.express)
+	constructor(
+		serviceApi: ServiceApi,
+		userconfig: DataUserConfig,
+		oscSender: ServiceOscSender,
+		controlEvents: EventEmitter<ControlCommonEvents>,
+		surfaceController: SurfaceController,
+		pageController: PageController,
+		instanceController: InstanceController,
+		io: UIHandler,
+		express: UIExpress
+	) {
+		this.httpApi = new ServiceHttpApi(serviceApi, userconfig, express)
+		this.https = new ServiceHttps(userconfig, express, io)
 		this.oscSender = oscSender
-		this.oscListener = new ServiceOscListener(registry)
-		this.tcp = new ServiceTcp(registry)
-		this.udp = new ServiceUdp(registry)
-		this.emberplus = new ServiceEmberPlus(registry)
-		this.artnet = new ServiceArtnet(registry)
-		this.rosstalk = new ServiceRosstalk(registry)
-		this.satelliteTcp = new ServiceSatelliteTcp(registry)
-		this.satelliteWebsocket = new ServiceSatelliteWebsocket(registry)
-		this.elgatoPlugin = new ServiceElgatoPlugin(registry)
-		this.videohubPanel = new ServiceVideohubPanel(registry)
-		this.bonjourDiscovery = new ServiceBonjourDiscovery(registry)
-		this.surfaceDiscovery = new ServiceSurfaceDiscovery(registry)
+		this.oscListener = new ServiceOscListener(serviceApi, userconfig)
+		this.tcp = new ServiceTcp(serviceApi, userconfig)
+		this.udp = new ServiceUdp(serviceApi, userconfig)
+		this.emberplus = new ServiceEmberPlus(serviceApi, userconfig, pageController)
+		this.artnet = new ServiceArtnet(serviceApi, userconfig)
+		this.rosstalk = new ServiceRosstalk(serviceApi, userconfig)
+		this.satelliteTcp = new ServiceSatelliteTcp(serviceApi.appInfo, surfaceController, userconfig)
+		this.satelliteWebsocket = new ServiceSatelliteWebsocket(serviceApi.appInfo, surfaceController, userconfig)
+		this.elgatoPlugin = new ServiceElgatoPlugin(serviceApi, surfaceController, userconfig)
+		this.videohubPanel = new ServiceVideohubPanel(surfaceController, userconfig)
+		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, io, instanceController)
+		this.surfaceDiscovery = new ServiceSurfaceDiscovery(userconfig, io)
 
 		controlEvents.on('updateButtonState', (location, pushed, surfaceId) => {
 			this.emberplus.updateButtonState(location, pushed, surfaceId)
 		})
+	}
+
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		this.tcp.onButtonDrawn(location, render)
+		this.emberplus.onButtonDrawn(location, render)
+		this.elgatoPlugin.onButtonDrawn(location, render)
 	}
 
 	/**

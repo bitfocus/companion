@@ -1,9 +1,9 @@
-import { CoreBase } from '../Core/Base.js'
 import type { Registry } from '../Registry.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
+import LogController from '../Log/Controller.js'
 
 /**
  * Class to handle execution of actions.
@@ -25,28 +25,32 @@ import type { ControlEntityInstance } from './Entities/EntityInstance.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class ActionRunner extends CoreBase {
-	constructor(registry: Registry) {
-		super(registry, 'Control/ActionRunner')
+export class ActionRunner {
+	readonly #logger = LogController.createLogger('Control/ActionRunner')
+
+	readonly #registry: Pick<Registry, 'internalModule' | 'instance'>
+
+	constructor(registry: Pick<Registry, 'internalModule' | 'instance'>) {
+		this.#registry = registry
 	}
 
 	/**
 	 * Run a single action
 	 */
 	async #runAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
-		this.logger.silly('Running action', action)
+		this.#logger.silly('Running action', action)
 
 		if (action.connectionId === 'internal') {
-			await this.internalModule.executeAction(action, extras)
+			await this.#registry.internalModule.executeAction(action, extras)
 		} else {
-			const instance = this.instance.moduleHost.getChild(action.connectionId)
+			const instance = this.#registry.instance.moduleHost.getChild(action.connectionId)
 			if (instance) {
 				const entityModel = action.asEntityModel(false)
 				if (entityModel.type !== EntityModelType.Action)
 					throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
 				await instance.actionRun(entityModel, extras)
 			} else {
-				this.logger.silly('trying to run action on a missing instance.', action)
+				this.#logger.silly('trying to run action on a missing instance.', action)
 			}
 		}
 	}
@@ -70,11 +74,13 @@ export class ActionRunner extends CoreBase {
 			for (const action of actions) {
 				if (extras.abortDelayed.aborted) break
 				await this.#runAction(action, extras).catch((e) => {
-					this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+					this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
 				})
 			}
 		} else {
 			const groupedActions = this.#splitActionsAroundWaits(actions)
+
+			const ps: Promise<void>[] = []
 
 			for (const { waitAction, actions } of groupedActions) {
 				if (extras.abortDelayed.aborted) break
@@ -82,7 +88,7 @@ export class ActionRunner extends CoreBase {
 				if (waitAction) {
 					// Perform the wait action
 					await this.#runAction(waitAction, extras).catch((e) => {
-						this.logger.silly(`Error executing action for ${waitAction.connectionId}: ${e.message ?? e}`)
+						this.#logger.silly(`Error executing action for ${waitAction.connectionId}: ${e.message ?? e}`)
 					})
 				}
 
@@ -90,11 +96,16 @@ export class ActionRunner extends CoreBase {
 
 				// Spawn all the actions in parallel
 				for (const action of actions) {
-					this.#runAction(action, extras).catch((e) => {
-						this.logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
-					})
+					ps.push(
+						this.#runAction(action, extras).catch((e) => {
+							this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+						})
+					)
 				}
 			}
+
+			// Await all the actions, so that the abort signal is respected and the promise is pending until all actions are done
+			await Promise.all(ps)
 		}
 	}
 

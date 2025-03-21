@@ -23,23 +23,28 @@ import type {
 	InternalFeedbackDefinition,
 	InternalActionDefinition,
 	ActionForVisitor,
+	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { InternalController } from './Controller.js'
 import { EntityModelType, FeedbackEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { InternalModuleUtils } from './Util.js'
 import { booleanAnd } from '../Resources/Util.js'
+import { EventEmitter } from 'events'
 
-export class InternalBuildingBlocks implements InternalModuleFragment {
+export class InternalBuildingBlocks
+	extends EventEmitter<InternalModuleFragmentEvents>
+	implements InternalModuleFragment
+{
 	readonly #logger = LogController.createLogger('Internal/BuildingBlocks')
 
-	readonly #internalModule: InternalController
-	readonly #actionRunner: ActionRunner
+	readonly #internalUtils: InternalModuleUtils
 
-	constructor(internalModule: InternalController, actionRunner: ActionRunner) {
-		this.#internalModule = internalModule
-		this.#actionRunner = actionRunner
+	constructor(internalUtils: InternalModuleUtils) {
+		super()
+
+		this.#internalUtils = internalUtils
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -232,11 +237,15 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 		}
 	}
 
-	executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> | boolean {
+	executeAction(
+		action: ControlEntityInstance,
+		extras: RunActionExtras,
+		actionRunner: ActionRunner
+	): Promise<boolean> | boolean {
 		if (action.definitionId === 'wait') {
 			if (extras.abortDelayed.aborted) return true
 
-			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 				action.rawOptions.time,
 				extras,
 				'number'
@@ -279,7 +288,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 
 			const childActions = action.getChildren('default')?.getDirectEntities() ?? []
 
-			return this.#actionRunner
+			return actionRunner
 				.runMultipleActions(childActions, newExtras, executeSequential)
 				.catch((e) => {
 					this.#logger.error(`Failed to run actions: ${e.message}`)
@@ -294,7 +303,7 @@ export class InternalBuildingBlocks implements InternalModuleFragment {
 			const childActions = action.getChildren(executeGroup)?.getDirectEntities() ?? []
 			const executeSequential = extras.executionMode === 'sequential'
 
-			return this.#actionRunner
+			return actionRunner
 				.runMultipleActions(childActions, extras, executeSequential)
 				.catch((e) => {
 					this.#logger.error(`Failed to run actions: ${e.message}`)

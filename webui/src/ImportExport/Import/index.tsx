@@ -41,7 +41,7 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps) {
 	)
 
 	return (
-		<div>
+		<div className="import-wizard">
 			<h4>
 				Import Configuration
 				<CButton color="danger" size="sm" onClick={clearImport}>

@@ -1,5 +1,6 @@
-import type { Registry } from '../Registry.js'
+import type { ServiceApi } from './ServiceApi.js'
 import { ServiceUdpBase, DgramRemoteInfo } from './UdpBase.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
  * Class providing the Artnet api.
@@ -22,12 +23,16 @@ import { ServiceUdpBase, DgramRemoteInfo } from './UdpBase.js'
  * disclosing the source code of your own applications.
  */
 export class ServiceArtnet extends ServiceUdpBase {
+	readonly #serviceApi: ServiceApi
+
 	#currentPage: number = 0
 	#currentBank: number = 0
 	#currentDir: number = 0
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/Artnet', 'artnet_enabled', null)
+	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig) {
+		super(userconfig, 'Service/Artnet', 'artnet_enabled', null)
+
+		this.#serviceApi = serviceApi
 
 		this.port = 6454
 
@@ -69,15 +74,15 @@ export class ServiceArtnet extends ServiceUdpBase {
 							return
 						}
 
-						const controlId = this.page.getControlIdAtOldBankIndex(dmxPage, dmxBank)
+						const controlId = this.#serviceApi.getControlIdAtOldBankIndex(dmxPage, dmxBank)
 						if (controlId) {
 							// down
 							if (dmxDir > 128) {
-								this.controls.pressControl(controlId, false, 'artnet')
+								this.#serviceApi.pressControl(controlId, false, 'artnet')
 							}
 							// up
 							else if (dmxDir >= 10) {
-								this.controls.pressControl(controlId, true, 'artnet')
+								this.#serviceApi.pressControl(controlId, true, 'artnet')
 							}
 							// nothing.
 							else {

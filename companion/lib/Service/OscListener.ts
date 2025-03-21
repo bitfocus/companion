@@ -1,7 +1,8 @@
 import { ServiceOscBase } from './OscBase.js'
 import { ServiceOscApi } from './OscApi.js'
-import type { Registry } from '../Registry.js'
-import { OscReceivedMessage } from 'osc'
+import type { OscReceivedMessage } from 'osc'
+import type { ServiceApi } from './ServiceApi.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
  * Class providing OSC receive services.
@@ -29,14 +30,14 @@ export class ServiceOscListener extends ServiceOscBase {
 	 */
 	readonly #api: ServiceOscApi
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/OscListener', 'osc_enabled', 'osc_listen_port')
+	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig) {
+		super(userconfig, 'Service/OscListener', 'osc_enabled', 'osc_listen_port')
 
 		this.port = 12321
 
 		this.init()
 
-		this.#api = new ServiceOscApi(registry)
+		this.#api = new ServiceOscApi(serviceApi, userconfig)
 	}
 
 	/**

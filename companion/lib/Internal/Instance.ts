@@ -16,7 +16,6 @@
  */
 
 import debounceFn from 'debounce-fn'
-import type { InternalController } from './Controller.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
@@ -28,13 +27,15 @@ import type {
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
+	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { EventEmitter } from 'events'
+import type { InternalModuleUtils } from './Util.js'
 
-export class InternalInstance implements InternalModuleFragment {
-	readonly #internalModule: InternalController
+export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #instanceController: InstanceController
 
 	#instanceStatuses: Record<string, ConnectionStatusEntry> = {}
@@ -46,7 +47,7 @@ export class InternalInstance implements InternalModuleFragment {
 
 	#debounceCheckFeedbacks = debounceFn(
 		(): void => {
-			this.#internalModule.checkFeedbacks('instance_status', 'instance_custom_state')
+			this.emit('checkFeedbacks', 'instance_status', 'instance_custom_state')
 		},
 		{
 			maxWait: 100,
@@ -57,7 +58,7 @@ export class InternalInstance implements InternalModuleFragment {
 
 	#debounceRegenerateVariables = debounceFn(
 		(): void => {
-			this.#internalModule.regenerateVariables()
+			this.emit('regenerateVariables')
 			this.updateVariables()
 		},
 		{
@@ -67,8 +68,9 @@ export class InternalInstance implements InternalModuleFragment {
 		}
 	)
 
-	constructor(internalModule: InternalController, instanceController: InstanceController) {
-		this.#internalModule = internalModule
+	constructor(_internalUrils: InternalModuleUtils, instanceController: InstanceController) {
+		super()
+
 		this.#instanceController = instanceController
 
 		this.#instanceController.status.on('status_change', this.#calculateInstanceErrors.bind(this))
@@ -342,7 +344,7 @@ export class InternalInstance implements InternalModuleFragment {
 			}
 		}
 
-		this.#internalModule.setVariables(values)
+		this.emit('setVariables', values)
 	}
 
 	#calculateInstanceErrors(instanceStatuses: Record<string, ConnectionStatusEntry>): void {

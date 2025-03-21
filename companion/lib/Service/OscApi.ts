@@ -1,10 +1,13 @@
-import { CoreBase } from '../Core/Base.js'
 import { parseColorToNumber, rgb } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { RegexRouter } from './RegexRouter.js'
-import type { Registry } from '../Registry.js'
 import type { OscReceivedMessage } from 'osc'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ServiceApi } from './ServiceApi.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import LogController from '../Log/Controller.js'
+
+const OSC_API_SURFACE_ID = 'osc'
 
 /**
  * Class providing the OSC API.
@@ -26,7 +29,12 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class ServiceOscApi extends CoreBase {
+export class ServiceOscApi {
+	readonly #logger = LogController.createLogger('Service/OscApi')
+
+	readonly #serviceApi: ServiceApi
+	readonly #userconfig: DataUserConfig
+
 	/**
 	 * Message router
 	 */
@@ -36,8 +44,9 @@ export class ServiceOscApi extends CoreBase {
 		return this.#router
 	}
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/OscApi')
+	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig) {
+		this.#serviceApi = serviceApi
+		this.#userconfig = userconfig
 
 		this.#router = new RegexRouter()
 
@@ -46,29 +55,29 @@ export class ServiceOscApi extends CoreBase {
 	}
 
 	#isLegacyRouteAllowed(): boolean {
-		return !!this.userconfig.getKey('osc_legacy_api_enabled')
+		return !!this.#userconfig.getKey('osc_legacy_api_enabled')
 	}
 
 	#setupLegacyOscRoutes(): void {
 		this.#router.addPath('/press/bank/:page/:bank', (match: Record<string, string>, message: OscReceivedMessage) => {
 			if (!this.#isLegacyRouteAllowed()) return
 
-			const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 			if (!controlId) return
 
 			if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == 1) {
-				this.logger.info(`Got /press/bank/ (press) for ${controlId}`)
-				this.controls.pressControl(controlId, true, undefined)
+				this.#logger.info(`Got /press/bank/ (press) for ${controlId}`)
+				this.#serviceApi.pressControl(controlId, true, OSC_API_SURFACE_ID)
 			} else if (message.args.length > 0 && message.args[0].type == 'i' && message.args[0].value == 0) {
-				this.logger.info(`Got /press/bank/ (release) for ${controlId}`)
-				this.controls.pressControl(controlId, false, undefined)
+				this.#logger.info(`Got /press/bank/ (release) for ${controlId}`)
+				this.#serviceApi.pressControl(controlId, false, OSC_API_SURFACE_ID)
 			} else {
-				this.logger.info(`Got /press/bank/ (trigger)${controlId}`)
-				this.controls.pressControl(controlId, true, undefined)
+				this.#logger.info(`Got /press/bank/ (trigger)${controlId}`)
+				this.#serviceApi.pressControl(controlId, true, OSC_API_SURFACE_ID)
 
 				setTimeout(() => {
-					this.logger.info(`Auto releasing /press/bank/ (trigger)${controlId}`)
-					this.controls.pressControl(controlId, false, undefined)
+					this.#logger.info(`Auto releasing /press/bank/ (trigger)${controlId}`)
+					this.#serviceApi.pressControl(controlId, false, OSC_API_SURFACE_ID)
 				}, 20)
 			}
 		})
@@ -81,15 +90,15 @@ export class ServiceOscApi extends CoreBase {
 				const g = message.args[1].value
 				const b = message.args[2].value
 				if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+					const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 					if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/bgcolor for ${controlId}`)
-						control.styleSetFields({ bgcolor: rgb(r, g, b) })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						this.#logger.info(`Got /style/bgcolor for ${controlId}`)
+						control.setStyleFields({ bgcolor: rgb(r, g, b) })
 					} else {
-						this.logger.info(`Got /style/bgcolor for unknown control: ${controlId}`)
+						this.#logger.info(`Got /style/bgcolor for unknown control: ${controlId}`)
 					}
 				}
 			}
@@ -103,15 +112,15 @@ export class ServiceOscApi extends CoreBase {
 				const g = message.args[1].value
 				const b = message.args[2].value
 				if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+					const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 					if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/color for ${controlId}`)
-						control.styleSetFields({ color: rgb(r, g, b) })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						this.#logger.info(`Got /style/color for ${controlId}`)
+						control.setStyleFields({ color: rgb(r, g, b) })
 					} else {
-						this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						this.#logger.info(`Got /style/color for unknown control: ${controlId}`)
 					}
 				}
 			}
@@ -123,15 +132,15 @@ export class ServiceOscApi extends CoreBase {
 			if (message.args.length > 0) {
 				const text = message.args[0].value
 				if (typeof text === 'string') {
-					const controlId = this.page.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
+					const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(match.page), Number(match.bank))
 					if (!controlId) return
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						this.logger.info(`Got /style/text for ${controlId}`)
-						control.styleSetFields({ text: text })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						this.#logger.info(`Got /style/text for ${controlId}`)
+						control.setStyleFields({ text: text })
 					} else {
-						this.logger.info(`Got /style/color for unknown control: ${controlId}`)
+						this.#logger.info(`Got /style/color for unknown control: ${controlId}`)
 					}
 				}
 			}
@@ -140,9 +149,9 @@ export class ServiceOscApi extends CoreBase {
 		this.#router.addPath('/rescan', (_match: Record<string, string>, _message: OscReceivedMessage) => {
 			if (!this.#isLegacyRouteAllowed()) return
 
-			this.logger.info('Got /rescan 1')
-			this.surfaces.triggerRefreshDevices().catch(() => {
-				this.logger.debug('Scan failed')
+			this.#logger.info('Got /rescan 1')
+			this.#serviceApi.triggerRescanForSurfaces().catch(() => {
+				this.#logger.debug('Scan failed')
 			})
 		})
 	}
@@ -171,9 +180,9 @@ export class ServiceOscApi extends CoreBase {
 	 * Perform surfaces rescan
 	 */
 	#surfacesRescan = (): void => {
-		this.logger.info('Got OSC surface rescan')
-		this.surfaces.triggerRefreshDevices().catch(() => {
-			this.logger.debug('Scan failed')
+		this.#logger.info('Got OSC surface rescan')
+		this.#serviceApi.triggerRescanForSurfaces().catch(() => {
+			this.#logger.debug('Scan failed')
 		})
 	}
 
@@ -187,7 +196,7 @@ export class ServiceOscApi extends CoreBase {
 			column: Number(match.column),
 		}
 
-		const controlId = this.page.getControlIdAt(location)
+		const controlId = this.#serviceApi.getControlIdAt(location)
 
 		return {
 			location,
@@ -200,15 +209,15 @@ export class ServiceOscApi extends CoreBase {
 	 */
 	#locationPress = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
-		this.logger.info(`Got OSC control press ${formatLocation(location)} - ${controlId}`)
+		this.#logger.info(`Got OSC control press ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.controls.pressControl(controlId, true, 'osc')
+		this.#serviceApi.pressControl(controlId, true, 'osc')
 
 		setTimeout(() => {
-			this.logger.info(`Auto releasing OSC control press ${formatLocation(location)} - ${controlId}`)
+			this.#logger.info(`Auto releasing OSC control press ${formatLocation(location)} - ${controlId}`)
 
-			this.controls.pressControl(controlId, false, 'osc')
+			this.#serviceApi.pressControl(controlId, false, 'osc')
 		}, 20)
 	}
 
@@ -217,10 +226,10 @@ export class ServiceOscApi extends CoreBase {
 	 */
 	#locationDown = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
-		this.logger.info(`Got OSC control down ${formatLocation(location)} - ${controlId}`)
+		this.#logger.info(`Got OSC control down ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.controls.pressControl(controlId, true, 'osc')
+		this.#serviceApi.pressControl(controlId, true, 'osc')
 	}
 
 	/**
@@ -228,10 +237,10 @@ export class ServiceOscApi extends CoreBase {
 	 */
 	#locationUp = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
-		this.logger.info(`Got OSC control up ${formatLocation(location)} - ${controlId}`)
+		this.#logger.info(`Got OSC control up ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.controls.pressControl(controlId, false, 'osc')
+		this.#serviceApi.pressControl(controlId, false, 'osc')
 	}
 
 	/**
@@ -239,10 +248,10 @@ export class ServiceOscApi extends CoreBase {
 	 */
 	#locationRotateLeft = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
-		this.logger.info(`Got OSC control rotate left ${formatLocation(location)} - ${controlId}`)
+		this.#logger.info(`Got OSC control rotate left ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.controls.rotateControl(controlId, false, 'osc')
+		this.#serviceApi.rotateControl(controlId, false, 'osc')
 	}
 
 	/**
@@ -250,10 +259,10 @@ export class ServiceOscApi extends CoreBase {
 	 */
 	#locationRotateRight = (match: Record<string, string>, _message: OscReceivedMessage): void => {
 		const { location, controlId } = this.#locationParse(match)
-		this.logger.info(`Got OSC control rotate right ${formatLocation(location)} - ${controlId}`)
+		this.#logger.info(`Got OSC control rotate right ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.controls.rotateControl(controlId, true, 'osc')
+		this.#serviceApi.rotateControl(controlId, true, 'osc')
 	}
 
 	/**
@@ -265,15 +274,15 @@ export class ServiceOscApi extends CoreBase {
 		const { location, controlId } = this.#locationParse(match)
 		const step = Number(message.args[0]?.value)
 
-		this.logger.info(`Got OSC control step ${formatLocation(location)} - ${controlId} to ${step}`)
+		this.#logger.info(`Got OSC control step ${formatLocation(location)} - ${controlId} to ${step}`)
 		if (!controlId) return
 
-		const control = this.controls.getControl(controlId)
-		if (!control || !control.supportsActionSets) {
+		const control = this.#serviceApi.getControl(controlId)
+		if (!control || !control.setCurrentStep) {
 			return
 		}
 
-		control.actionSets.stepMakeCurrent(step)
+		control.setCurrentStep(step)
 	}
 
 	/**
@@ -284,13 +293,13 @@ export class ServiceOscApi extends CoreBase {
 
 		const text = message.args[0]?.value
 		const { location, controlId } = this.#locationParse(match)
-		this.logger.info(`Got OSC control set text ${formatLocation(location)} - ${controlId}`)
+		this.#logger.info(`Got OSC control set text ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		const control = this.controls.getControl(controlId)
-		if (!control || !control.supportsStyle) return
+		const control = this.#serviceApi.getControl(controlId)
+		if (!control || !control.setStyleFields) return
 
-		control.styleSetFields({ text: text })
+		control.setStyleFields({ text: text })
 	}
 
 	/**
@@ -300,11 +309,11 @@ export class ServiceOscApi extends CoreBase {
 		if (message.args.length === 0) return
 
 		const { location, controlId } = this.#locationParse(match)
-		this.logger.info(`Got OSC control set color ${formatLocation(location)} - ${controlId}`)
+		this.#logger.info(`Got OSC control set color ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		const control = this.controls.getControl(controlId)
-		if (!control || !control.supportsStyle) return
+		const control = this.#serviceApi.getControl(controlId)
+		if (!control || !control.setStyleFields) return
 
 		let color: number | false = false
 		if (message.args.length === 3) {
@@ -319,7 +328,7 @@ export class ServiceOscApi extends CoreBase {
 		}
 
 		if (color !== false) {
-			control.styleSetFields({ color })
+			control.setStyleFields({ color })
 		}
 	}
 	/**
@@ -329,11 +338,11 @@ export class ServiceOscApi extends CoreBase {
 		if (message.args.length === 0) return
 
 		const { location, controlId } = this.#locationParse(match)
-		this.logger.info(`Got OSC control set bgcolor ${formatLocation(location)} - ${controlId}`)
+		this.#logger.info(`Got OSC control set bgcolor ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		const control = this.controls.getControl(controlId)
-		if (!control || !control.supportsStyle) return
+		const control = this.#serviceApi.getControl(controlId)
+		if (!control || !control.setStyleFields) return
 
 		let color: number | false = false
 		if (message.args.length === 3) {
@@ -348,7 +357,7 @@ export class ServiceOscApi extends CoreBase {
 		}
 
 		if (color !== false) {
-			control.styleSetFields({ bgcolor: color })
+			control.setStyleFields({ bgcolor: color })
 		}
 	}
 
@@ -359,9 +368,9 @@ export class ServiceOscApi extends CoreBase {
 		const variableName = match.name
 		const variableValue = message.args?.[0]?.value
 
-		this.logger.debug(`Got HTTP custom variable set value name "${variableName}" to value "${variableValue}"`)
+		this.#logger.debug(`Got HTTP custom variable set value name "${variableName}" to value "${variableValue}"`)
 		if (variableValue === undefined) return
 
-		this.variablesController.custom.setValue(variableName, variableValue.toString())
+		this.#serviceApi.setCustomVariableValue(variableName, variableValue.toString())
 	}
 }
