@@ -18,7 +18,8 @@ import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
+import { parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
+import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
 	BrightnessConfigField,
@@ -60,7 +61,7 @@ interface SatelliteInputVariableInfo {
 }
 interface SatelliteOutputVariableInfo {
 	id: string
-	lastReferencedVariables: Set<string> | null
+	lastReferencedVariables: ReadonlySet<string> | null
 	lastValue: any
 	triggerUpdate?: () => void
 }
@@ -221,7 +222,14 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			if (this.#streamColors) {
 				let bgcolor = 'rgb(0,0,0)'
 				let fgcolor = 'rgb(0,0,0)'
-				if (style && typeof style !== 'string' && style.color !== undefined && style.bgcolor !== undefined) {
+				// TODO-layered: reimplement for layered buttons
+				if (
+					style &&
+					typeof style !== 'string' &&
+					style.style === 'button' &&
+					style.color !== undefined &&
+					style.bgcolor !== undefined
+				) {
 					bgcolor = parseColor(style.bgcolor).replaceAll(' ', '')
 					fgcolor = parseColor(style.color).replaceAll(' ', '')
 				}
@@ -241,11 +249,13 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 				}
 			}
 			if (this.#streamText) {
-				const text = (typeof style !== 'string' && style?.text) || ''
+				// TODO-layered: reimplement for layered buttons
+				const text = (typeof style !== 'string' && style?.style === 'button' && style?.text) || ''
 				params['TEXT'] = Buffer.from(text).toString('base64')
 			}
 			if (this.#streamTextStyle) {
-				params['FONT_SIZE'] = style && typeof style !== 'string' ? style.size : 'auto'
+				// TODO-layered: reimplement for layered buttons
+				params['FONT_SIZE'] = style && typeof style !== 'string' && style?.style === 'button' ? style.size : 'auto'
 			}
 
 			let type = 'BUTTON'

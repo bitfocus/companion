@@ -24,6 +24,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
+import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import LogController from '../Log/Controller.js'
@@ -824,6 +825,55 @@ export class ControlsController {
 			client.leave(ActiveLearnRoom)
 		})
 
+		client.onPromise('controls:style:add-element', async (controlId, type, index) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleAddElement(type, index)
+		})
+		client.onPromise('controls:style:remove-element', async (controlId, elementId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleRemoveElement(elementId)
+		})
+		client.onPromise('controls:style:move-element', async (controlId, elementId, parentElementId, newIndex) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleMoveElement(elementId, parentElementId, newIndex)
+		})
+		client.onPromise('controls:style:set-element-name', async (controlId, elementId, name) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleSetElementName(elementId, name)
+		})
+		client.onPromise('controls:style:update-option-value', async (controlId, elementId, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleUpdateOptionValue(elementId, key, value)
+		})
+		client.onPromise('controls:style:update-option-is-expression', async (controlId, elementId, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleUpdateOptionIsExpression(elementId, key, value)
+		})
+
 		client.onPromise('controls:local-variables-values', (controlId) => {
 			const control = this.getControl(controlId)
 			if (!control) return {}
@@ -852,6 +902,8 @@ export class ControlsController {
 		if (category === 'all' || category === 'button') {
 			if (controlObj2?.type === 'button' || (controlType === 'button' && !controlObj2)) {
 				return new ControlButtonNormal(this.#createControlDependencies(), controlId, controlObj2, isImport)
+			} else if (controlObj2?.type === 'button-layered' || (controlType === 'button-layered' && !controlObj2)) {
+				return new ControlButtonLayered(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
 				return new ControlButtonPageNumber(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {
@@ -1004,7 +1056,7 @@ export class ControlsController {
 				// If the changes are local variables and from another control, ignore them
 				if (fromControlId && fromControlId !== control.controlId) continue
 
-				if (control.supportsStyle) {
+				if (control.supportsStyle || control.supportsLayeredStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}
 			}

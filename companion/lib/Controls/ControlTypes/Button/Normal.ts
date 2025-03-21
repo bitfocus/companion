@@ -1,13 +1,14 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep, omit } from 'lodash-es'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
 	ControlWithStyle,
 	ControlWithoutEvents,
+	ControlWithoutLayeredStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { NormalButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -38,7 +39,12 @@ import { CompanionVariableValues } from '@companion-module/base'
  */
 export class ControlButtonNormal
 	extends ButtonControlBase<NormalButtonModel, NormalButtonOptions>
-	implements ControlWithStyle, ControlWithActions, ControlWithoutEvents, ControlWithActionSets
+	implements
+		ControlWithStyle,
+		ControlWithoutLayeredStyle,
+		ControlWithActions,
+		ControlWithoutEvents,
+		ControlWithActionSets
 {
 	readonly type = 'button'
 
@@ -66,7 +72,7 @@ export class ControlButtonNormal
 	/**
 	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
-	#last_draw_variables: Set<string> | null = null
+	#last_draw_variables: ReadonlySet<string> | null = null
 
 	/**
 	 * The base style without feedbacks applied
@@ -119,7 +125,7 @@ export class ControlButtonNormal
 	/**
 	 * Get the size of the bitmap render of this control
 	 */
-	getBitmapSize(): { width: number; height: number } | null {
+	getBitmapFeedbackSize(): { width: number; height: number } | null {
 		return GetButtonBitmapSize(this.deps.userconfig, this.#baseStyle)
 	}
 
@@ -127,7 +133,7 @@ export class ControlButtonNormal
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleButtonModel {
+	getLastDrawStyle(): DrawStyleButtonModel {
 		let style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
 
 		if (style.text) {
@@ -187,9 +193,9 @@ export class ControlButtonNormal
 			foundConnectionIds.add(entity.connectionId)
 		}
 
-		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
-
-		ReferencesVisitors.visitControlReferences(this.deps.internalModule, visitor, this.#baseStyle, [], allEntities, [])
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels)
+			.visitButtonDrawStlye(this.#baseStyle)
+			.visitEntities(allEntities, [])
 	}
 
 	/**
@@ -201,15 +207,11 @@ export class ControlButtonNormal
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			this.#baseStyle,
-			[],
-			allEntities,
-			[],
-			true
-		)
+		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+			.visitButtonDrawStlye(this.#baseStyle)
+			.visitEntities(allEntities, [])
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
 		// redraw if needed and save changes
 		this.commitChange(changed)

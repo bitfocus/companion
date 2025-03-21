@@ -1,4 +1,3 @@
-import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlBase } from './ControlBase.js'
 import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js'
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
@@ -7,6 +6,7 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithStyle | ControlWithoutStyle) &
+	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &
 	(ControlWithEntities | ControlWithoutEntities) &
 	(ControlWithActions | ControlWithoutActions) &
 	(ControlWithEvents | ControlWithoutEvents) &
@@ -19,14 +19,75 @@ export interface ControlWithStyle extends ControlBase<any> {
 
 	readonly baseStyle: ButtonStyleProperties
 
-	readonly button_status: ButtonStatus
-
 	/**
 	 * Update the style fields of this control
 	 * @param diff - config diff to apply
 	 * @returns true if any changes were made
 	 */
 	styleSetFields(diff: Record<string, any>): boolean
+
+	/**
+	 * Propagate variable changes
+	 * @param allChangedVariables - variables with changes
+	 */
+	onVariablesChanged(allChangedVariables: Set<string>): void
+}
+
+export interface ControlWithoutLayeredStyle extends ControlBase<any> {
+	readonly supportsLayeredStyle: false
+}
+
+export interface ControlWithLayeredStyle extends ControlBase<any> {
+	readonly supportsLayeredStyle: true
+
+	/**
+	 * Add an element to the layered style
+	 * @param type Element type to add
+	 * @param index Index to insert the element at, or null to append
+	 */
+	layeredStyleAddElement(type: string, index: number | null): string
+
+	/**
+	 * Remove an element from the layered style
+	 * @param id Element id to remove
+	 * @returns true if the element was removed
+	 */
+	layeredStyleRemoveElement(id: string): boolean
+
+	/**
+	 * Move an element in the layered style
+	 * @param id Element id to move
+	 * @param parentElementId Parent element id to move the element to
+	 * @param newIndex New index of the element
+	 * @returns true if the element was moved
+	 */
+	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean
+
+	/**
+	 * Update the type of an element in the layered style
+	 * @param id Element id to update
+	 * @param type New type for the element
+	 * @returns true if the element was updated
+	 */
+	layeredStyleSetElementName(id: string, name: string): boolean
+
+	/**
+	 * Update an option on an element from the layered style
+	 * @param id Element id to update
+	 * @param key Option key to update
+	 * @param value New value for the option
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateOptionValue(id: string, key: string, value: any): boolean
+
+	/**
+	 * Update whether option on an element from the layered style is an expression
+	 * @param id Element id to update
+	 * @param key Option key to update
+	 * @param value Whether the value should be an expression
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateOptionIsExpression(id: string, key: string, value: boolean): boolean
 
 	/**
 	 * Propagate variable changes

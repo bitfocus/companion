@@ -1,18 +1,29 @@
 import type { CompanionAlignment, CompanionTextSize } from '@companion-module/base'
+import type { SomeButtonGraphicsDrawElement } from './StyleLayersModel.js'
 
 export type DrawStyleModel =
 	| {
 			style: 'pageup' | 'pagedown' | 'pagenum'
 	  }
 	| DrawStyleButtonModel
+	| DrawStyleLayeredButtonModel
 
 export interface DrawStyleButtonStateProps {
 	pushed: boolean
 	step_cycle: number | undefined
+	step_count: number
 	cloud: boolean | undefined
 	cloud_error: boolean | undefined
 	button_status: 'error' | 'warning' | 'good' | undefined
 	action_running: boolean | undefined
+}
+
+export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
+	style: 'button-layered'
+
+	// imageBuffers: DrawImageBuffer[]
+
+	elements: SomeButtonGraphicsDrawElement[]
 }
 
 export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleButtonStateProps {

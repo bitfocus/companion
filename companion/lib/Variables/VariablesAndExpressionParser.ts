@@ -3,13 +3,13 @@ import type { ReadonlyDeep } from 'type-fest'
 import {
 	VariableValueData,
 	VariablesCache,
-	ExecuteExpressionResult,
 	executeExpression,
 	ParseVariablesResult,
 	parseVariablesInString,
 	VariableValueCache,
 } from './Util.js'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 
 /**
  * A class to parse and execute expressions with variables

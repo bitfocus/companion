@@ -1,9 +1,21 @@
+import type { InternalController } from '../../Internal/Controller.js'
 import { TrySplitVariableId } from '../Util.js'
+import { VisitorReferencesBase } from './VisitorReferencesBase.js'
+
+export class VisitorReferencesCollector extends VisitorReferencesBase<VisitorReferencesCollectorVisitor> {
+	constructor(
+		internalModule: InternalController,
+		foundConnectionIds: Set<string> | undefined,
+		foundConnectionLabels: Set<string> | undefined
+	) {
+		super(internalModule, new VisitorReferencesCollectorVisitor(foundConnectionIds, foundConnectionLabels))
+	}
+}
 
 /**
  * Visit property on actions and feedbacks, and collect any references used
  */
-export class VisitorReferencesCollector {
+export class VisitorReferencesCollectorVisitor {
 	/**
 	 * Referenced connection labels
 	 */

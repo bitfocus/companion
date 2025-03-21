@@ -15,6 +15,7 @@ import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 export interface ButtonEditorExtraTabs {
 	id: string
 	name: string
+	position: 'start' | 'end'
 }
 
 interface ButtonEditorTabsProps {
@@ -45,7 +46,13 @@ export function ButtonEditorTabs({
 		const tabKeys: string[] = [...stepKeys.map((s) => `step:${s}`)]
 
 		if (extraTabs) {
-			tabKeys.push(...extraTabs.map((t) => t.id))
+			for (const tab of extraTabs) {
+				if (tab.position === 'start') {
+					tabKeys.unshift(tab.id)
+				} else {
+					tabKeys.push(tab.id)
+				}
+			}
 		}
 
 		return tabKeys
@@ -65,11 +72,22 @@ export function ButtonEditorTabs({
 	const selectedStepProps = selectedKey ? steps[selectedKey] : undefined
 
 	return (
-		<div key="button">
+		<>
 			<GenericConfirmModal ref={confirmRef} />
 
 			<div className={'row-heading'}>
 				<CNav variant="tabs">
+					{extraTabs?.map(
+						(tab) =>
+							tab.position === 'start' && (
+								<CNavItem key={tab.id} className="nav-steps-special">
+									<CNavLink active={selectedStep === tab.id} onClick={() => setSelectedStep(tab.id)}>
+										{tab.name}
+									</CNavLink>
+								</CNavItem>
+							)
+					)}
+
 					{stepKeys.map((stepId, i) => (
 						<ActionSetTab
 							key={stepId}
@@ -87,13 +105,16 @@ export function ButtonEditorTabs({
 						/>
 					))}
 
-					{extraTabs?.map((tab) => (
-						<CNavItem key={tab.id} className="nav-steps-special">
-							<CNavLink active={selectedStep === tab.id} onClick={() => setSelectedStep(tab.id)}>
-								{tab.name}
-							</CNavLink>
-						</CNavItem>
-					))}
+					{extraTabs?.map(
+						(tab) =>
+							tab.position === 'end' && (
+								<CNavItem key={tab.id} className="nav-steps-special">
+									<CNavLink active={selectedStep === tab.id} onClick={() => setSelectedStep(tab.id)}>
+										{tab.name}
+									</CNavLink>
+								</CNavItem>
+							)
+					)}
 
 					{stepKeys.length === 1 && (
 						<div className="nav-last">
@@ -126,7 +147,7 @@ export function ButtonEditorTabs({
 					/>
 				)}
 			</div>
-		</div>
+		</>
 	)
 }
 

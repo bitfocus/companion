@@ -79,7 +79,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	/**
 	 * The dependencies of variables that should retrigger each feedback
 	 */
-	#variableSubscriptions = new Map<string, { controlId: string; variables: Set<string> }>()
+	#variableSubscriptions = new Map<string, { controlId: string; variables: ReadonlySet<string> }>()
 
 	constructor(
 		internalUtils: InternalModuleUtils,

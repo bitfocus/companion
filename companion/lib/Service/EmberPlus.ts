@@ -122,7 +122,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				const controlId = this.#pageController.getControlIdAtOldBankIndex(pageNumber, bank)
 				const control = controlId ? this.#serviceApi.getControl(controlId) : undefined
 
-				let drawStyle = control?.getDrawStyle?.() || null
+				let drawStyle = control?.getLastDrawStyle?.() || null
 				if (drawStyle?.style !== 'button') drawStyle = null
 
 				children[bank] = new EmberModel.NumberedTreeNodeImpl(
@@ -225,7 +225,7 @@ export class ServiceEmberPlus extends ServiceBase {
 					const controlId = this.#pageController.getControlIdAt(location)
 					const control = controlId ? this.#serviceApi.getControl(controlId) : undefined
 
-					let drawStyle = control?.getDrawStyle?.() || null
+					let drawStyle = control?.getLastDrawStyle?.() || null
 					if (drawStyle?.style !== 'button') drawStyle = null
 
 					rowColumns[colI] = new EmberModel.NumberedTreeNodeImpl(
@@ -551,7 +551,8 @@ export class ServiceEmberPlus extends ServiceBase {
 		if (!this.#server) return
 		//this.logger.info(`Updating ${page}.${bank} label ${this.banks[page][bank].text}`)
 
-		const style = typeof render.style !== 'string' ? render.style : undefined
+		// TODO-layered: reimplement for layered buttons
+		const style = typeof render.style !== 'string' && render.style?.style === 'button' ? render.style : undefined
 
 		// New 'location' path
 		const gridSize = this.userconfig.getKey('gridSize')

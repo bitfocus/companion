@@ -4,11 +4,12 @@ import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpr
 import { InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import LogController, { type Logger } from '../Log/Controller.js'
-import type { ExecuteExpressionResult, ParseVariablesResult } from '../Variables/Util.js'
+import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { FeedbackEntityModelExt } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 
 /**
  *
@@ -21,7 +22,7 @@ export function ParseInternalControlReference(
 	useVariableFields: boolean
 ): {
 	location: ControlLocation | null
-	referencedVariables: Set<string>
+	referencedVariables: ReadonlySet<string>
 } {
 	const sanitisePageNumber = (pageNumber: number): number | null => {
 		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
@@ -84,7 +85,7 @@ export function ParseInternalControlReference(
 	}
 
 	let location: ControlLocation | null = null
-	let referencedVariables = new Set<string>()
+	let referencedVariables: ReadonlySet<string> = new Set<string>()
 
 	switch (options.location_target) {
 		case 'this':
@@ -229,7 +230,7 @@ export class InternalModuleUtils {
 		useVariableFields: boolean
 	): {
 		location: ControlLocation | null
-		referencedVariables: Set<string>
+		referencedVariables: ReadonlySet<string>
 	} {
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),

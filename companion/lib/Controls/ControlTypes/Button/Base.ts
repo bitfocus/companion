@@ -196,13 +196,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			cloud_error: false,
 
 			step_cycle: undefined,
+			step_count: this.entities.getStepIds().length,
 
 			pushed: !!this.pushed,
 			action_running: this.actionRunner.hasRunningChains,
 			button_status: this.button_status,
 		}
 
-		if (this.entities.getStepIds().length > 1) {
+		if (result.step_count > 1) {
 			result.step_cycle = this.entities.getActiveStepIndex() + 1
 		}
 
