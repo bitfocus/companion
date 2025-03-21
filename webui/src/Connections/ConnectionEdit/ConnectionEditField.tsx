@@ -6,14 +6,14 @@ import {
 	MultiDropdownInputField,
 	NumberInputField,
 	TextInputField,
-} from '../Components/index.js'
+} from '../../Components/index.js'
 import sanitizeHtml from 'sanitize-html'
-import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField.js'
+import { BonjourDeviceInputField } from '../../Components/BonjourDeviceInputField.js'
 import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 
 interface ConnectionEditFieldProps {
 	label: React.ReactNode
-	setValue: (key: string, value: any) => void
+	setValue: (value: any) => void
 	setValid: (key: string, valid: boolean) => void
 	definition: ExtendedInputField | ExtendedConfigField
 	value: any
@@ -29,7 +29,6 @@ export function ConnectionEditField({
 	connectionId,
 }: ConnectionEditFieldProps) {
 	const id = definition.id
-	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
 	const setValid2 = useCallback((valid: boolean) => setValid(id, valid), [setValid, id])
 
 	const fieldType = definition.type
@@ -65,7 +64,7 @@ export function ConnectionEditField({
 					value={value}
 					regex={definition.regex}
 					required={definition.required}
-					setValue={setValue2}
+					setValue={setValue}
 					setValid={setValid2}
 				/>
 			)
@@ -79,7 +78,7 @@ export function ConnectionEditField({
 					step={definition.step}
 					range={definition.range}
 					value={value}
-					setValue={setValue2}
+					setValue={setValue}
 					setValid={setValid2}
 				/>
 			)
@@ -93,7 +92,7 @@ export function ConnectionEditField({
 						size="xl"
 						title={definition.tooltip} // nocommit: this needs fixing
 						onChange={() => {
-							setValue2(!value)
+							setValue(!value)
 							//setValid2(true)
 						}}
 					/>
@@ -108,7 +107,7 @@ export function ConnectionEditField({
 					minChoicesForSearch={definition.minChoicesForSearch}
 					regex={definition.regex}
 					value={value}
-					setValue={setValue2}
+					setValue={setValue}
 					setValid={setValid2}
 				/>
 			)
@@ -123,7 +122,7 @@ export function ConnectionEditField({
 					maxSelection={definition.maxSelection}
 					regex={definition.regex}
 					value={value}
-					setValue={setValue2}
+					setValue={setValue}
 					setValid={setValid2}
 				/>
 			)
@@ -132,7 +131,7 @@ export function ConnectionEditField({
 				<ColorInputField
 					label={label}
 					value={value}
-					setValue={setValue2}
+					setValue={setValue}
 					setValid={setValid2}
 					enableAlpha={definition.enableAlpha ?? false}
 					returnType={definition.returnType ?? 'number'}
@@ -146,7 +145,7 @@ export function ConnectionEditField({
 				<BonjourDeviceInputField
 					label={label}
 					value={value}
-					setValue={setValue2}
+					setValue={setValue}
 					connectionId={connectionId}
 					queryId={definition.id}
 				/>
