@@ -57,6 +57,22 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 		)
 	}
 
+	if (
+		oldConfig.setup_wizard === 0 ||
+		oldConfig.mirabox_streamdock_enable !== newConfig.mirabox_streamdock_enable ||
+		typeof oldConfig.mirabox_streamdock_enable !== 'boolean'
+	) {
+		changes.push(
+			newConfig.mirabox_streamdock_enable ? (
+				<li>Mirabox Stream Dock hardware will be detected by Companion.</li>
+			) : (
+				<li>
+					Mirabox Stream Dock hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be detected by Companion.
+				</li>
+			)
+		)
+	}
+
 	if (oldConfig.setup_wizard === 0 || oldConfig.contour_shuttle_enable !== newConfig.contour_shuttle_enable) {
 		changes.push(
 			newConfig.contour_shuttle_enable ? (

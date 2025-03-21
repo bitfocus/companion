@@ -273,6 +273,10 @@
 				"file": "7_surfaces/loupedeck-live.md"
 			},
 			{
+				"label": "Mirabox Stream Dock",
+				"file": "7_surfaces/mirabox_streamdock.md"
+			},
+			{
 				"label": "Contour Shuttle",
 				"file": "7_surfaces/contour_shuttle.md"
 			},

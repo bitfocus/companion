@@ -44,6 +44,12 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 			/>
 			<UserConfigSwitchRow
 				userConfig={props}
+				label="Enable connected Mirabox Stream Dock devices"
+				requiresRestart
+				field="mirabox_streamdock_enable"
+			/>
+			<UserConfigSwitchRow
+				userConfig={props}
 				label="Enable connected Contour Shuttle"
 				requiresRestart
 				field="contour_shuttle_enable"
