@@ -1,0 +1,9 @@
+.import-wizard {
+	display: grid;
+	grid-template-rows: auto auto 1fr;
+	overflow-y: hidden;
+
+	> .tab-content {
+		overflow-y: scroll;
+	}
+}
