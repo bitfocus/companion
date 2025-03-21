@@ -351,7 +351,11 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					</>
 				)}
 				{connectionShouldBeRunning && !query.isSuccess && (
-					<LoadingRetryOrError error={query.error?.message} dataReady={false} doRetry={query.refetch} />
+					<LoadingRetryOrError
+						error={!query.isRefetching ? query.error?.message : undefined}
+						dataReady={false}
+						doRetry={query.refetch}
+					/>
 				)}
 
 				<form.Subscribe
