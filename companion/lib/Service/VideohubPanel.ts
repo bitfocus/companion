@@ -2,7 +2,8 @@ import { ServiceBase } from './Base.js'
 // @ts-ignore
 import VideohubServer from 'videohub-server'
 import type { SurfaceIPVideohubPanel } from '../Surface/IP/VideohubPanel.js'
-import type { Registry } from '../Registry.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { SurfaceController } from '../Surface/Controller.js'
 
 /**
  * Class providing the Videohub Server api.
@@ -25,6 +26,8 @@ import type { Registry } from '../Registry.js'
  * disclosing the source code of your own applications.
  */
 export class ServiceVideohubPanel extends ServiceBase {
+	readonly #surfaceController: SurfaceController
+
 	#server: VideohubServer | undefined = undefined
 
 	/**
@@ -32,8 +35,10 @@ export class ServiceVideohubPanel extends ServiceBase {
 	 */
 	readonly #devices = new Map<string, VideohubPanelWrapper>()
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/VideohubPanel', 'videohub_panel_enabled', null)
+	constructor(surfaceController: SurfaceController, userconfig: DataUserConfig) {
+		super(userconfig, 'Service/VideohubPanel', 'videohub_panel_enabled', null)
+
+		this.#surfaceController = surfaceController
 
 		this.init()
 	}
@@ -73,7 +78,7 @@ export class ServiceVideohubPanel extends ServiceBase {
 		const fullId = `videohub:${id}`
 		this.logger.info(`Panel "${fullId}" connected from ${remoteAddress}`)
 
-		const device = this.surfaces.addVideohubPanelDevice({
+		const device = this.#surfaceController.addVideohubPanelDevice({
 			path: fullId,
 			remoteAddress: remoteAddress,
 			productName: `Videohub ${info.model}`,
@@ -98,7 +103,7 @@ export class ServiceVideohubPanel extends ServiceBase {
 		this.logger.info(`Panel "${fullId}" disconnected from`)
 
 		this.#devices.delete(fullId)
-		this.surfaces.removeDevice(fullId)
+		this.#surfaceController.removeDevice(fullId)
 	}
 
 	/**

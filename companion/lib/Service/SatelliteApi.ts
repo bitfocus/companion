@@ -1,4 +1,3 @@
-import { CoreBase } from '../Core/Base.js'
 import {
 	isFalsey,
 	isTruthy,
@@ -9,7 +8,8 @@ import {
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import { Logger } from '../Log/Controller.js'
 import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../Surface/IP/Satellite.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo } from '../Registry.js'
+import type { SurfaceController } from '../Surface/Controller.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -92,14 +92,20 @@ export interface SatelliteInitSocketResult {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class ServiceSatelliteApi extends CoreBase {
+export class ServiceSatelliteApi {
+	// readonly #logger = LogController.createLogger('Service/SatelliteApi')
+
+	readonly #appInfo: AppInfo
+	readonly #surfaceController: SurfaceController
+
 	/**
 	 * The remote devices
 	 */
 	#devices = new Map<string, SatelliteDevice>()
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/SatelliteApi')
+	constructor(appInfo: AppInfo, surfaceController: SurfaceController) {
+		this.#appInfo = appInfo
+		this.#surfaceController = surfaceController
 	}
 
 	/**
@@ -163,7 +169,7 @@ export class ServiceSatelliteApi extends CoreBase {
 			return this.#formatAndSendError(socket, messageName, id, 'Invalid VARIABLES')
 		}
 
-		const device = this.surfaces.addSatelliteDevice({
+		const device = this.#surfaceController.addSatelliteDevice({
 			path: id,
 			gridSize: {
 				columns: keysPerRow,
@@ -252,7 +258,7 @@ export class ServiceSatelliteApi extends CoreBase {
 		socketLogger.info(`new connection`)
 
 		socket.sendMessage('BEGIN', null, null, {
-			CompanionVersion: this.appInfo.appBuild,
+			CompanionVersion: this.#appInfo.appBuild,
 			ApiVersion: API_VERSION,
 		})
 
@@ -279,7 +285,7 @@ export class ServiceSatelliteApi extends CoreBase {
 				let count = 0
 				for (let [key, device] of this.#devices.entries()) {
 					if (device.socket === socket) {
-						this.surfaces.removeDevice(device.id)
+						this.#surfaceController.removeDevice(device.id)
 						this.#devices.delete(key)
 						count++
 					}
@@ -414,7 +420,7 @@ export class ServiceSatelliteApi extends CoreBase {
 
 		socketLogger.info(`remove surface "${id}"`)
 
-		this.surfaces.removeDevice(id)
+		this.#surfaceController.removeDevice(id)
 		this.#devices.delete(id)
 		socket.sendMessage(messageName, 'OK', id, {})
 	}

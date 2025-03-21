@@ -23,21 +23,28 @@ import type {
 	InternalVisitor,
 	InternalActionDefinition,
 	ActionForVisitor,
+	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
-export class InternalCustomVariables implements InternalModuleFragment {
+export class InternalCustomVariables
+	extends EventEmitter<InternalModuleFragmentEvents>
+	implements InternalModuleFragment
+{
 	readonly #logger = LogController.createLogger('Internal/CustomVariables')
 
-	readonly #internalModule: InternalController
+	readonly #internalUtils: InternalModuleUtils
 	readonly #variableController: VariablesController
 
-	constructor(internalModule: InternalController, variableController: VariablesController) {
-		this.#internalModule = internalModule
+	constructor(internalUtils: InternalModuleUtils, variableController: VariablesController) {
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#variableController = variableController
 	}
 
@@ -268,7 +275,7 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId === 'custom_variable_set_expression') {
-			const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const result = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 				action.rawOptions.expression,
 				extras
 			)

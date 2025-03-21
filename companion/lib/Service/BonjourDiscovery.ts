@@ -3,9 +3,10 @@ import { ServiceBase } from './Base.js'
 import { Bonjour, Browser } from '@julusian/bonjour-service'
 import { nanoid } from 'nanoid'
 import { isIPv4 } from 'net'
-import type { Registry } from '../Registry.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { InstanceController } from '../Instance/Controller.js'
 
 /**
  * Generate socket.io room name
@@ -35,6 +36,9 @@ function BonjourRoom(id: string): string {
  * disclosing the source code of your own applications.
  */
 export class ServiceBonjourDiscovery extends ServiceBase {
+	readonly #io: UIHandler
+	readonly #instanceController: InstanceController
+
 	/**
 	 * Active browsers running
 	 */
@@ -42,8 +46,11 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 	#server: Bonjour | undefined
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/BonjourDiscovery', null, null)
+	constructor(userconfig: DataUserConfig, io: UIHandler, instanceController: InstanceController) {
+		super(userconfig, 'Service/BonjourDiscovery', null, null)
+
+		this.#io = io
+		this.#instanceController = instanceController
 
 		this.init()
 	}
@@ -115,7 +122,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 	#joinOrCreateSession(client: ClientSocket, connectionId: string, queryId: string): string[] {
 		if (!this.#server) throw new Error('Bonjour not running')
 
-		const manifest = this.instance.getManifestForInstance(connectionId)
+		const manifest = this.#instanceController.getManifestForInstance(connectionId)
 		let bonjourQueries = manifest?.bonjourQueries?.[queryId]
 		if (!bonjourQueries) throw new Error('Missing bonjour query')
 
@@ -177,10 +184,10 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 				// Setup event handlers
 				browser.on('up', (svc) => {
 					const uiSvc = this.#convertService(id, svc)
-					if (uiSvc) this.io.emitToRoom(room, `bonjour:service:up`, uiSvc)
+					if (uiSvc) this.#io.emitToRoom(room, `bonjour:service:up`, uiSvc)
 				})
 				browser.on('down', (svc) => {
-					this.io.emitToRoom(room, `bonjour:service:down`, id, svc.fqdn)
+					this.#io.emitToRoom(room, `bonjour:service:down`, id, svc.fqdn)
 				})
 
 				// Report to client

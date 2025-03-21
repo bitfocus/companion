@@ -73,7 +73,7 @@ export function ImportTriggersTab({ snapshot, connectionRemap, setConnectionRema
 	return (
 		<>
 			<h4>Triggers</h4>
-			<table className="table table-responsive-sm">
+			<table className="table table-responsive-sm mb-4">
 				<thead>
 					<tr>
 						<th>&nbsp;</th>
@@ -96,7 +96,7 @@ export function ImportTriggersTab({ snapshot, connectionRemap, setConnectionRema
 
 			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 
-			<div>
+			<div className="mt-2">
 				<CButtonGroup style={{ float: 'right' }}>
 					<CButton color="info" onClick={selectAllTriggers}>
 						Select all

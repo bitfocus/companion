@@ -16,7 +16,6 @@
  */
 
 import LogController from '../Log/Controller.js'
-import type { InternalController } from './Controller.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -26,6 +25,7 @@ import type {
 	InternalFeedbackDefinition,
 	InternalActionDefinition,
 	ExecuteFeedbackResultWithReferences,
+	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import {
@@ -42,6 +42,8 @@ import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Cont
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
 import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -69,8 +71,8 @@ function compareValues(op: any, value: any, value2: any): boolean {
 	}
 }
 
-export class InternalVariables implements InternalModuleFragment {
-	readonly #internalModule: InternalController
+export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
+	readonly #internalUtils: InternalModuleUtils
 	readonly #controlsController: ControlsController
 	readonly #pagesController: PageController
 
@@ -80,11 +82,13 @@ export class InternalVariables implements InternalModuleFragment {
 	#variableSubscriptions = new Map<string, { controlId: string; variables: ReadonlySet<string> }>()
 
 	constructor(
-		internalModule: InternalController,
+		internalUtils: InternalModuleUtils,
 		controlsController: ControlsController,
 		pagesController: PageController
 	) {
-		this.#internalModule = internalModule
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#controlsController = controlsController
 		this.#pagesController = pagesController
 	}
@@ -301,7 +305,7 @@ export class InternalVariables implements InternalModuleFragment {
 	 */
 	executeFeedback(feedback: FeedbackEntityModelExt): boolean | ExecuteFeedbackResultWithReferences | void {
 		if (feedback.definitionId == 'variable_value') {
-			const result = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+			const result = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
 				feedback
 			)
@@ -310,11 +314,11 @@ export class InternalVariables implements InternalModuleFragment {
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
 		} else if (feedback.definitionId == 'variable_variable') {
-			const result1 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+			const result1 = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable})`,
 				feedback
 			)
-			const result2 = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+			const result2 = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 				`$(${feedback.options.variable2})`,
 				feedback
 			)
@@ -376,7 +380,7 @@ export class InternalVariables implements InternalModuleFragment {
 		theLocation: ControlLocation | null
 		referencedVariables: string[]
 	} {
-		const result = this.#internalModule.parseInternalControlReferenceForActionOrFeedback(
+		const result = this.#internalUtils.parseInternalControlReferenceForActionOrFeedback(
 			extras,
 			options,
 			useVariableFields
@@ -430,7 +434,7 @@ export class InternalVariables implements InternalModuleFragment {
 			return true
 		} else if (action.definitionId === 'local_variable_set_expression') {
 			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+				const result = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 					action.rawOptions.expression,
 					extras
 				)
@@ -481,7 +485,7 @@ export class InternalVariables implements InternalModuleFragment {
 			}
 		}
 		if (affectedFeedbackIds.length > 0) {
-			this.#internalModule.checkFeedbacksById(...affectedFeedbackIds)
+			this.emit('checkFeedbacksById', ...affectedFeedbackIds)
 		}
 	}
 

@@ -1,8 +1,10 @@
 import { ServiceBase } from './Base.js'
 import LogController from '../Log/Controller.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo } from '../Registry.js'
 import { SatelliteSocketWrapper, ServiceSatelliteApi } from './SatelliteApi.js'
 import { WebSocketServer, WebSocket } from 'ws'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { SurfaceController } from '../Surface/Controller.js'
 
 /**
  * Class providing the Satellite/Remote Surface api over websockets.
@@ -29,10 +31,10 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 
 	#server: WebSocketServer | undefined = undefined
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/SatelliteWebsocket', null, null)
+	constructor(appInfo: AppInfo, surfaceController: SurfaceController, userconfig: DataUserConfig) {
+		super(userconfig, 'Service/SatelliteWebsocket', null, null)
 
-		this.#api = new ServiceSatelliteApi(registry)
+		this.#api = new ServiceSatelliteApi(appInfo, surfaceController)
 
 		this.port = 16623
 
