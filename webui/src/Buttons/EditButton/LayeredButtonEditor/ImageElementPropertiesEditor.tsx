@@ -2,16 +2,12 @@ import { ButtonGraphicsImageElement } from '@companion-app/shared/Model/StyleLay
 import { CButtonGroup, CButton, CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useState } from 'react'
-import {
-	AlignmentInputField,
-	HorizontalAlignmentInputField,
-	VerticalAlignmentInputField,
-} from '../../../Components/AlignmentInputField.js'
+import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '../../../Components/AlignmentInputField.js'
 import { PNGInputField } from '../../../Components/PNGInputField.js'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { CompanionAlignment, DropdownChoice, DropdownChoiceId } from '@companion-module/base'
+import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 import { ElementBoundsProperties } from './ElementBoundsProperties.js'
 import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
