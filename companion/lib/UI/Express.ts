@@ -72,11 +72,11 @@ export class UIExpress {
 			next()
 		})
 
+		// parse application/json
+		this.app.use(Express.json({ strict: false }))
+
 		// parse application/x-www-form-urlencoded
 		this.app.use(Express.urlencoded({ extended: false }))
-
-		// parse application/json
-		this.app.use(Express.json())
 
 		// parse text/plain
 		this.app.use(Express.text())

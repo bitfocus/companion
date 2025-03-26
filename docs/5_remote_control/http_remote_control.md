@@ -50,7 +50,7 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Path: `/api/custom-variable/<name>/value?value=<value>`  
 - Change custom variable value  
   Method: POST  
-  Path: `/api/custom-variable/<name>/value`
+  Path: `/api/custom-variable/<name>/value`  
   Body: `<value>`  
 - Get custom variable value  
   Method: GET  
@@ -70,10 +70,28 @@ Change the text of row 0 column 4 on page 2 to TEST:
 POST `/api/location/1/0/4/style?text=TEST`
 
 Change the text of row 1, column 4 on page 2 to TEST, background color to #ffffff, text color to #000000 and font size to 28px:  
-POST `/api/location/2/1/4/style` with body `{ "text": "TEST", "bgcolor": "#ffffff", "color": "#000000", "size": 28 }`
+POST `/api/location/2/1/4/style`  
+Body: `{ "text": "TEST", "bgcolor": "#ffffff", "color": "#000000", "size": 28 }`
 
-Change custom variable "cue" to value "intro":  
+Change custom variable "cue" to value "intro" by URL:  
 POST `/api/custom-variable/cue/value?value=intro`
+
+Change custom variable "cue" to value "Some text" by body:  
+POST `/api/custom-variable/cue/value`  
+Content-Type `text/plain`  
+Body: `Some text`
+
+Change custom variable "cue" to value "Some text" by body using JSON:  
+POST `/api/custom-variable/cue/value`  
+Content-Type `application/json`  
+Body: `"Some text"` - Text needs to be enclosed in double quotes, quotes in the text need to be escaped with a backslash.
+
+Change custom variable "data" to a JSON object: 
+POST `/api/custom-variable/data/value`  
+Content-Type `application/json`  
+Body: `{"name":"Douglas", "answer":42}` - Body needs to be a valid JSON.  
+The object will be stored in the variable value and will not be converted to a string. You can also use the data types boolean, number, array or null. JSON does not support sending undefined as a value, but we interpret an empty body as undefined, properties of an object can of course be undefined.  
+
 
 **Deprecated Commands**
 
