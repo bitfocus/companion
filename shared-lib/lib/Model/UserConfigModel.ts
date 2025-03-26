@@ -9,6 +9,7 @@ export interface UserConfigModel {
 	elgato_plugin_enable: boolean // Also disables local streamdeck
 	usb_hotplug: boolean
 	loupedeck_enable: boolean
+	mirabox_streamdock_enable: boolean
 	contour_shuttle_enable: boolean
 	vec_footpedal_enable: boolean
 	blackmagic_controller_enable: boolean
