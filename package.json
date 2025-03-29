@@ -1,7 +1,7 @@
 {
   "name": "@companion-app/workspace",
   "version": "4.0.0",
-  "packageManager": "yarn@4.7.0",
+  "packageManager": "yarn@4.8.0",
   "workspaces": [
     "companion",
     "shared-lib",
@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@inquirer/prompts": "^7.4.0",
-    "@types/node": "^22.13.10",
+    "@types/node": "^22.13.14",
     "@types/ps-tree": "^1.1.6",
     "@vitest/coverage-v8": "^3.0.9",
     "@vitest/ui": "^3.0.9",
@@ -51,8 +51,8 @@
     "typescript": "~5.8.2",
     "vitest": "^3.0.9",
     "vitest-mock-extended": "^2.0.2",
-    "yaml": "^2.7.0",
-    "zx": "^8.4.1"
+    "yaml": "^2.7.1",
+    "zx": "^8.4.2"
   },
   "resolutions": {
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
