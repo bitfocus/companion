@@ -179,11 +179,13 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 	 * Open a Stream Dock
 	 */
 	static async create(devicePath: string): Promise<SurfaceUSBMiraboxStreamDock> {
-		const device = await HIDAsync.open(devicePath)
-
-		if (!device) {
+		const device = await HIDAsync.open(devicePath).catch(() => {
 			throw 'Device not found'
-		}
+		})
+
+		// if (!device) {
+		// 	throw('Device not found')
+		// }
 		const info = await device.getDeviceInfo()
 		const streamDock = new StreamDock(info, device)
 
@@ -210,7 +212,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 		} catch (e) {
 			await streamDock.close().catch(() => null)
 
-			throw e
+			throw 'Opening Stream Dock failed ' + e
 		}
 	}
 
@@ -1249,9 +1251,9 @@ class StreamDock extends EventEmitter {
 	}
 
 	/**
-	 * Sends a command to the device
+	 * Sends a command to the device async
 	 *
-	 * The command will be packetized in packeges of packetSize bytes. Smaller commands are zero-padded, larger commands are chunked.
+	 * The command will be packetized in packeges of packetSize bytes. Smaller commands are zero-padded, larger commands are chunked. The packets might be written interrupted by other writes.
 	 * @param data the data to be sent
 	 * @param prefix optional prefix. If not set, the default prefix will be used
 	 */
@@ -1260,22 +1262,67 @@ class StreamDock extends EventEmitter {
 			data = Buffer.from(data)
 		}
 
-		const writebuffer = Buffer.alloc(StreamDock.packetSize)
 		const prefixbuffer = Buffer.from(prefix)
+		// const writebuffer = Buffer.concat([prefixbuffer, data], StreamDock.packetSize)
+		const writebuffer = Buffer.concat([Buffer.from([0]), prefixbuffer, data], StreamDock.packetSize + 1)
 
-		prefixbuffer.copy(writebuffer, 0, 0)
-		data.copy(writebuffer, prefixbuffer.byteLength)
-		if (writebuffer.byteLength != StreamDock.packetSize) {
+		// if (writebuffer.byteLength != StreamDock.packetSize) {
+		if (writebuffer.byteLength != StreamDock.packetSize + 1) {
 			console.error(
 				`Data lenght problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
 			)
 		}
-		await this.writeRaw(writebuffer)
+		await this.writeRaw(writebuffer).catch((e) => {
+			throw 'Sending command to Stream Dock failed ' + e
+		})
 
 		if (data.byteLength + prefixbuffer.byteLength > StreamDock.packetSize) {
 			const remain = data.subarray(StreamDock.packetSize - prefixbuffer.byteLength)
-			await this.sendCmd(remain, [])
+			await this.sendCmd(remain, []).catch((e) => {
+				console.error('Sending remaining data to Stream Dock failed ' + e)
+			})
 		}
+	}
+
+	/**
+	 * Sends a command to the device sync
+	 *
+	 * The command will be packetized in packeges of packetSize bytes. Smaller commands are zero-padded, larger commands are chunked.
+	 * @param data the data to be sent
+	 * @param prefix optional prefix. If not set, the default prefix will be used
+	 */
+	sendCmdSync(data: Buffer | Array<number>, prefix = StreamDock.cmdPrefix): Promise<void> {
+		if (!Buffer.isBuffer(data)) {
+			data = Buffer.from(data)
+		}
+
+		const prefixbuffer = Buffer.from(prefix)
+		// const writebuffer = Buffer.concat([prefixbuffer, data], StreamDock.packetSize)
+		const writebuffer = Buffer.concat([Buffer.from([0]), prefixbuffer, data], StreamDock.packetSize + 1)
+
+		// if (writebuffer.byteLength != StreamDock.packetSize) {
+		if (writebuffer.byteLength != StreamDock.packetSize + 1) {
+			console.error(
+				`Data lenght problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
+			)
+		}
+		let writepr, sendpr
+		writepr = this.writeRaw(writebuffer)
+
+		if (data.byteLength + prefixbuffer.byteLength > StreamDock.packetSize) {
+			const remain = data.subarray(StreamDock.packetSize - prefixbuffer.byteLength)
+			sendpr = this.sendCmdSync(remain, [])
+		}
+
+		if (sendpr instanceof Promise) {
+			return sendpr
+		}
+
+		if (writepr instanceof Promise) {
+			return writepr
+		}
+
+		return Promise.reject('Unknown error during sync send')
 	}
 
 	/**
@@ -1324,20 +1371,33 @@ class StreamDock extends EventEmitter {
 		return this.model.outputs
 	}
 
-	async writeRaw(data: Buffer | Array<number>) {
-		this.device.write(data)
+	async writeRaw(data: Buffer | Array<number>): Promise<void> {
+		const written = await this.device.write(data).catch(() => {
+			throw 'Write to Stream Dock failed!'
+		})
+		if (typeof written === 'number' && written !== data.length) {
+			return Promise.reject('Write to Stream Dock failed')
+		} else {
+			return Promise.resolve()
+		}
 	}
 
 	async wakeScreen() {
-		await this.sendCmd([0x44, 0x49, 0x53])
+		await this.sendCmd([0x44, 0x49, 0x53]).catch((e) => {
+			console.error('Sending wake screen to Stream Dock failed ' + e)
+		})
 	}
 
 	async clearPanel() {
-		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0, 0xff])
+		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0, 0xff]).catch((e) => {
+			console.error('Sending clear panel to Stream Dock failed ' + e)
+		})
 	}
 
 	async refresh() {
-		await this.sendCmd([0x53, 0x54, 0x50])
+		await this.sendCmd([0x53, 0x54, 0x50]).catch((e) => {
+			console.error('Sending refresh to Stream Dock failed ' + e)
+		})
 	}
 
 	async setBrightness(value: number) {
@@ -1346,7 +1406,9 @@ class StreamDock extends EventEmitter {
 
 		const brightness = Math.round(y * 100)
 
-		await this.sendCmd([0x4c, 0x49, 0x47, 0, 0, brightness])
+		await this.sendCmd([0x4c, 0x49, 0x47, 0, 0, brightness]).catch((e) => {
+			console.error('Sending brightness to Stream Dock failed ' + e)
+		})
 	}
 
 	async setKeyImage(column: number, row: number, imageBuffer: Buffer) {
@@ -1391,7 +1453,7 @@ class StreamDock extends EventEmitter {
 
 		// console.log(`image ${row}/${column} size ${size}B compression ${quality}%`)
 
-		await this.sendCmd([
+		this.sendCmdSync([
 			0x42,
 			0x41,
 			0x54,
@@ -1400,21 +1462,31 @@ class StreamDock extends EventEmitter {
 			(size >> 8) & 0xff,
 			size & 0xff,
 			output.id,
-		])
-		await this.sendCmd(imgData, [])
+		]).catch((e) => {
+			console.error('Sending set image command to Stream Dock failed ' + e)
+		})
+		this.sendCmdSync(imgData, []).catch((e) => {
+			console.error('Sending image data to Stream Dock failed ' + e)
+		})
 		await this.refresh()
 	}
 
 	async clearKeyImage(keyId: number) {
-		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0, keyId])
+		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0, keyId]).catch((e) => {
+			console.error('Sending clear key image to Stream Dock failed ' + e)
+		})
 	}
 
 	async sendHeartbeat() {
-		await this.sendCmd([0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54])
+		await this.sendCmd([0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54]).catch((e) => {
+			console.error('Sending heartbeat to Stream Dock failed ' + e)
+		})
 	}
 
 	async close() {
-		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0x44, 0x43])
-		return this.device.close()
+		await this.sendCmd([0x43, 0x4c, 0x45, 0, 0, 0x44, 0x43]).catch((e) => {
+			console.error('Sending close to Stream Dock failed ' + e)
+		})
+		await this.device.close()
 	}
 }

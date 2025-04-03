@@ -726,7 +726,9 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		try {
 			this.panel.quit()
-		} catch (e) {}
+		} catch (e) {
+			this.#logger.silly('Error quitting panel', e)
+		}
 
 		// Fetch the surfaceId before destroying the panel
 		const surfaceId = this.surfaceId
