@@ -25,6 +25,7 @@ interface ImportPageWizardProps {
 	connectionRemap: Record<string, string | undefined>
 	setConnectionRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 	doImport: (importPageNumber: number, pageNumber: number, connectionRemap: Record<string, string | undefined>) => void
+	className?: string
 }
 
 export const ImportPageWizard = observer(function ImportPageWizard({
@@ -32,6 +33,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 	connectionRemap,
 	setConnectionRemap,
 	doImport,
+	className,
 }: ImportPageWizardProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
 
@@ -108,7 +110,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 	console.log('sn', snapshotPageOptions, snapshot)
 
 	return (
-		<CRow className="">
+		<CRow className={className}>
 			<CCol xs={12} xl={6}>
 				<h5>Source Page</h5>
 				<MyErrorBoundary>
