@@ -274,6 +274,9 @@ function ActionRowDropPlaceholder({ setId, parentId, dragId, actionCount, moveCa
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
+			// Can't move into itself
+			if (item.actionId === parentId) return
+
 			moveCard(item.stepId, item.setId, item.actionId, parentId, 0)
 
 			item.setId = setId
@@ -378,6 +381,9 @@ const ActionTableRow = observer(function ActionTableRow({
 			) {
 				return
 			}
+
+			// Can't move into itself
+			if (item.actionId === hoverParentId) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(item.stepId, item.setId, item.actionId, hoverParentId, index)
