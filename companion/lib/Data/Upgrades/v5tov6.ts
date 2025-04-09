@@ -7,6 +7,7 @@ import type {
 	ExportFullv6,
 	ExportPageContentv6,
 	ExportPageModelv6,
+	ExportTriggerContentv6,
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
@@ -51,6 +52,10 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 			}
 		}
 
+		if (newObj.triggers) {
+			newObj.triggers = convertTriggersDelays(newObj.triggers)
+		}
+
 		return newObj
 	} else if (obj.type == 'page') {
 		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 6 }
@@ -61,15 +66,7 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 	} else if (obj.type == 'trigger_list') {
 		const newObj: ExportTriggersListv6 = { ...cloneDeep(obj), version: 6 }
 
-		for (const trigger of Object.values<any>(newObj.triggers)) {
-			for (const [id, action_set] of Object.entries<any>(trigger.action_sets)) {
-				trigger.action_sets[id] = convertActionsDelay(action_set, trigger.options?.relativeDelay)
-			}
-
-			if (trigger.options) {
-				delete trigger.options?.relativeDelay
-			}
-		}
+		newObj.triggers = convertTriggersDelays(newObj.triggers)
 
 		return newObj
 	} else {
@@ -99,6 +96,22 @@ function convertPageActionsDelays(page: ExportPageContentv4): ExportPageContentv
 	}
 
 	return page
+}
+
+function convertTriggersDelays(
+	triggers: Record<string, ExportTriggerContentv6>
+): Record<string, ExportTriggerContentv6> {
+	for (const trigger of Object.values<any>(triggers)) {
+		for (const [id, action_set] of Object.entries<any>(trigger.action_sets)) {
+			trigger.action_sets[id] = convertActionsDelay(action_set, trigger.options?.relativeDelay)
+		}
+
+		if (trigger.options) {
+			delete trigger.options?.relativeDelay
+		}
+	}
+
+	return triggers
 }
 
 function convertActionsDelay(actions: any[], relativeDelays: boolean | undefined): any[] {
