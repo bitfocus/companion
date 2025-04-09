@@ -11,7 +11,7 @@ export function useAllConnectionProducts(modules: ModuleInfoStore): FuzzyProduct
 		// Start with all installed modules
 		for (const moduleInfo of modules.modules.values()) {
 			for (const product of moduleInfo.display.products) {
-				const latestVersion = moduleInfo.stableVersion ?? moduleInfo.betaVersion
+				const latestVersion = moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.devVersion
 				const key = `${moduleInfo.display.id}-${product}`
 				allProducts[key] = {
 					id: moduleInfo.display.id,

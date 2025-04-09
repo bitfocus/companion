@@ -3,6 +3,7 @@ import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faAsterisk,
+	faEyeSlash,
 	faPlus,
 	faQuestionCircle,
 	faSync,
@@ -56,6 +57,37 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 		availableDeprecated: false,
 		availableBeta: false,
 	})
+	const allHidden = Object.values(visibleVersions.visibility).every((v) => !v)
+
+	const versionRows = allVersionNumbers
+		.map((versionId) => {
+			const storeInfo = storeModuleVersions.get(versionId)
+			const installedInfo = installedModuleVersions.get(versionId)
+			if (storeInfo) {
+				// Hide based on visibility settings
+				if (storeInfo.deprecationReason && !visibleVersions.visibility.availableDeprecated) return null
+				if (storeInfo.releaseChannel === 'beta' && !visibleVersions.visibility.availableBeta) return null
+
+				if (
+					!storeInfo.deprecationReason &&
+					storeInfo.releaseChannel === 'stable' &&
+					!installedInfo &&
+					!visibleVersions.visibility.availableStable
+				)
+					return null
+			}
+
+			return (
+				<ModuleVersionRow
+					key={versionId}
+					moduleId={moduleId}
+					versionId={versionId}
+					storeInfo={storeInfo}
+					installedInfo={installedInfo}
+				/>
+			)
+		})
+		.filter((r) => !!r)
 
 	return (
 		<table className="table-tight table-responsive-sm">
@@ -73,41 +105,23 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 				</tr>
 			</thead>
 			<tbody>
-				{allVersionNumbers.map((versionId) => {
-					const storeInfo = storeModuleVersions.get(versionId)
-					const installedInfo = installedModuleVersions.get(versionId)
-					if (storeInfo) {
-						// Hide based on visibility settings
-						if (storeInfo.deprecationReason && !visibleVersions.visibility.availableDeprecated) return null
-						if (storeInfo.releaseChannel === 'beta' && !visibleVersions.visibility.availableBeta) return null
-
-						if (
-							!storeInfo.deprecationReason &&
-							storeInfo.releaseChannel === 'stable' &&
-							!installedInfo &&
-							!visibleVersions.visibility.availableStable
-						)
-							return null
-					}
-
-					return (
-						<ModuleVersionRow
-							key={versionId}
-							moduleId={moduleId}
-							versionId={versionId}
-							storeInfo={storeInfo}
-							installedInfo={installedInfo}
-						/>
-					)
-				})}
-				{/* {hiddenCount > 0 && (
-			<tr>
-				<td colSpan={4} style={{ padding: '10px 5px' }}>
-					<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-					<strong>{hiddenCount} Modules are hidden</strong>
-				</td>
-			</tr>
-		)} */}
+				{versionRows}
+				{!allHidden && versionRows.length === 0 && (
+					<tr>
+						<td colSpan={4} style={{ padding: '10px 5px' }}>
+							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
+							<strong>There are no matching versions for the current filters</strong>
+						</td>
+					</tr>
+				)}
+				{allHidden && (
+					<tr>
+						<td colSpan={4} style={{ padding: '10px 5px' }}>
+							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
+							<strong>All versions are hidden by the filters</strong>
+						</td>
+					</tr>
+				)}
 			</tbody>
 		</table>
 	)
