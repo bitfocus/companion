@@ -212,12 +212,13 @@ const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
 		const hasCurrent = allProducts.find((p) => p.id === value)
 		if (!hasCurrent) choices.push({ id: value, label: `Unknown module: ${value}` })
 
-		// Push all the products
+		// Push all the products. Use an object as an easy way to deduplicate by id
+		const choicesObj: Record<string, DropdownChoice> = {}
 		for (const product of allProducts) {
-			choices.push({ id: product.id, label: product.name })
+			choicesObj[product.id] = { id: product.id, label: product.name }
 		}
 
-		return choices
+		return Object.values(choicesObj).sort((a, b) => a.label.localeCompare(b.label))
 	}, [allProducts, value])
 
 	return (
