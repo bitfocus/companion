@@ -300,6 +300,7 @@ export class InternalSurface implements InternalModuleFragment {
 		return variables
 	}
 
+	#lastUpdateVariableNames: ReadonlySet<string> = new Set()
 	updateVariables(): void {
 		const values: CompanionVariableValues = {}
 
@@ -331,6 +332,23 @@ export class InternalSurface implements InternalModuleFragment {
 					(surfaceGroupPageId && this.#pageController.getPageNumber(surfaceGroupPageId)) || '0'
 			}
 		}
+
+		const idsBeingSetThisRun = new Set(
+			Object.entries(values)
+				.filter(([_key, value]) => value !== undefined)
+				.map(([key]) => key)
+		)
+
+		// Clear any variables which were set last run, but not this time
+		for (const variableName of this.#lastUpdateVariableNames) {
+			if (!idsBeingSetThisRun.has(variableName)) {
+				values[variableName] = undefined
+			}
+		}
+
+		console.log('settings', values)
+
+		this.#lastUpdateVariableNames = idsBeingSetThisRun
 
 		this.#internalModule.setVariables(values)
 	}
