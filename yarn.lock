@@ -4105,6 +4105,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shuttle-lib/core@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@shuttle-lib/core@npm:0.1.1"
+  dependencies:
+    eventemitter3: "npm:^5.0.1"
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/2bc26421821c531958438e5b1821ed9cdfa53789bdfdd13952ee90608f81684769bad2708aec75659cb82547050f6c9812f1ea7169ca5ecdf7d0992fc8a0c619
+  languageName: node
+  linkType: hard
+
 "@sindresorhus/is@npm:^4.0.0":
   version: 4.6.0
   resolution: "@sindresorhus/is@npm:4.6.0"
@@ -7081,7 +7091,7 @@ asn1@evs-broadcast/node-asn1:
     path-to-regexp: "npm:^8.2.0"
     selfsigned: "npm:^2.4.1"
     semver: "npm:^7.7.1"
-    shuttle-control-usb: "npm:^1.5.0"
+    shuttle-node: "npm:^0.1.1"
     socket.io: "npm:^4.8.1"
     socketcluster-client: "npm:^19.2.3"
     supertest: "npm:^7.1.0"
@@ -14205,13 +14215,19 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"shuttle-control-usb@npm:^1.5.0":
-  version: 1.5.0
-  resolution: "shuttle-control-usb@npm:1.5.0"
+"shuttle-node@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "shuttle-node@npm:0.1.1"
   dependencies:
-    node-hid: "npm:^3.1.0"
-    usb: "npm:^2.9.0"
-  checksum: 10c0/7cb21a1157b3081921273e7cc3508ab73914c99432374dbc04c7cbc586cab892e347f4782e962d5420dca375be064250df73118592639e744b8023f9d821e2a5
+    "@shuttle-lib/core": "npm:0.1.1"
+    eventemitter3: "npm:^5.0.1"
+    node-hid: "npm:^3.1.2"
+    tslib: "npm:^2.8.1"
+    usb: "npm:^2.15.0"
+  dependenciesMeta:
+    usb:
+      optional: true
+  checksum: 10c0/d151ad6b10bb74f6d106c9ba6cf2844eb51baefd00ae77cb00cb1da22e54d9bc7e5836e7d75cf7411f7c6759a170d6dba444cafa7115175bae65f93ba9feb1d5
   languageName: node
   linkType: hard
 

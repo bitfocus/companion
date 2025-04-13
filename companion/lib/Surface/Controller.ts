@@ -25,7 +25,7 @@ import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
-import shuttleControlUSB from 'shuttle-control-usb'
+import { isAShuttleDevice } from 'shuttle-node'
 // @ts-ignore
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
@@ -911,12 +911,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'xkeys', SurfaceUSBXKeys)
 										}
-									} else if (
-										deviceInfo.vendorId === shuttleControlUSB.vids.CONTOUR &&
-										(deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEXPRESS ||
-											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V1 ||
-											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V2)
-									) {
+									} else if (isAShuttleDevice(deviceInfo)) {
 										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
 										}
