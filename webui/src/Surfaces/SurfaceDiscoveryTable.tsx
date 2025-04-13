@@ -174,17 +174,22 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 			<td>{surfaceInfo.name}</td>
 			<td>Companion Satellite</td>
 			<td>
-				{addresses.map((address) => (
-					<p key={address} className="p-no-margin">
-						{surfaceInfo.apiEnabled ? (
-							<a href={`http://${address}:${surfaceInfo.port}`} target="_new">
-								{address}
-							</a>
-						) : (
-							address
-						)}
-					</p>
-				))}
+				{addresses.map((address) => {
+					// Ensure ipv6 is formatted correctly for links
+					const linkAddress = address.includes(':') ? `[${address}]` : address
+
+					return (
+						<p key={address} className="p-no-margin">
+							{surfaceInfo.apiEnabled ? (
+								<a href={`http://${linkAddress}:${surfaceInfo.port}`} target="_new">
+									{address}
+								</a>
+							) : (
+								address
+							)}
+						</p>
+					)
+				})}
 			</td>
 			<td>
 				<CButtonGroup>
