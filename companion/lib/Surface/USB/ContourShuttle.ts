@@ -162,7 +162,10 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 		this.#logger.debug(`Adding Contour Shuttle USB device ${devicePath}`)
 
 		// The devices don't have serialnumbers, so fake something based on the path. Not the most stable, but the best we can do
-		const fakeDeviceId = crypto.createHash('sha1').update(devicePath).digest('hex')
+		const fakeDeviceId = crypto
+			.createHash('sha1')
+			.update(`${contourShuttle.info.productModelId}-${devicePath}`)
+			.digest('hex')
 
 		this.info = {
 			type: `Contour Shuttle ${contourShuttle.info.name}`,
