@@ -45,15 +45,15 @@ export const keyboardKeymap: KeyMap = {
 }
 
 export const logitecKeymap: KeyMap = {
-	33: [1, 0], // PageUp
-	34: [2, 0], // PageDown
-	190: [3, 0], // Period - Clashes with above
+	PageUp: [1, 0],
+	PageDown: [2, 0],
+	Period: [3, 0], // Clashes with above
 	116: [1, 1], // F5?
 	27: [2, 1], // Escape
 }
 
 export const dsanMastercueKeymap: KeyMap = {
-	37: [1, 0], // ArrowLeft
-	39: [2, 0], // ArrowRight
-	66: [3, 0], // KeyB - Clashes with above
+	ArrowLeft: [1, 0],
+	ArrowRight: [2, 0],
+	KeyB: [3, 0], // Clashes with above
 }
