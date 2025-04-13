@@ -350,7 +350,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 					<CButton
 						color="white"
 						href={`/int/export/triggers/single/${exportId}`}
-						target="_new"
+						target="_blank"
 						disabled={!exportId}
 						title="Export"
 					>

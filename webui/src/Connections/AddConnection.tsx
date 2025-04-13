@@ -148,7 +148,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 				<p>
 					Companion currently supports {modules.count} different things, and the list grows every day. If you can't find
 					the device you're looking for, please{' '}
-					<a target="_new" href="https://bfoc.us/5xcykgx03n">
+					<a target="_blank" href="https://bfoc.us/5xcykgx03n">
 						add a request
 					</a>{' '}
 					on GitHub

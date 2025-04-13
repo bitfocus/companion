@@ -97,7 +97,7 @@ export const LogPanel = memo(function LogPanel() {
 								}}
 								size="sm"
 								href={`/int/export/log`}
-								target="_new"
+								target="_blank"
 							>
 								<FontAwesomeIcon icon={faFileExport} /> Export log
 							</CButton>

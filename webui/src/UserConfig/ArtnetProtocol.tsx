@@ -7,17 +7,17 @@ export function ArtnetProtocol() {
 	return (
 		<>
 			<p>
-				<CButton color="success" href="/Bitfocus_Companion_v20.d4" target="_new">
+				<CButton color="success" href="/Bitfocus_Companion_v20.d4" target="_blank">
 					<FontAwesomeIcon icon={faFileImport} /> Download Avolites Fixture file (v2.0)
 				</CButton>
 			</p>
 			<p>
-				<CButton color="success" href="/bitfocus@companion_v2.0@00.xml" target="_new">
+				<CButton color="success" href="/bitfocus@companion_v2.0@00.xml" target="_blank">
 					<FontAwesomeIcon icon={faFileImport} /> Download GrandMA2 Fixture file (v2.0)
 				</CButton>
 			</p>
 			<p>
-				<CButton color="success" href="/Bitfocus Companion Fixture.v3f" target="_new">
+				<CButton color="success" href="/Bitfocus Companion Fixture.v3f" target="_blank">
 					<FontAwesomeIcon icon={faFileImport} /> Download Vista Fixture file (v2.0)
 				</CButton>
 			</p>

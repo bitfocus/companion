@@ -53,28 +53,28 @@ export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: My
 				<CNavItem href="#" onClick={showWizard2}>
 					<FontAwesomeIcon className="nav-icon" icon={faHatWizard} /> Configuration Wizard
 				</CNavItem>
-				<CNavItem target="_new" href="/emulators">
+				<CNavItem target="_blank" href="/emulators">
 					<FontAwesomeIcon className="nav-icon" icon={faGamepad} /> Emulator
 				</CNavItem>
 
-				<CNavItem target="_new" href="/tablet">
+				<CNavItem target="_blank" href="/tablet">
 					<FontAwesomeIcon className="nav-icon" icon={faTabletAlt} /> Web buttons
 				</CNavItem>
 
-				<CNavItem target="_new" href="https://bfoc.us/fiobkz0yqs">
+				<CNavItem target="_blank" href="https://bfoc.us/fiobkz0yqs">
 					<FontAwesomeIcon className="nav-icon" icon={faBug} /> Bugs & Features
 				</CNavItem>
-				<CNavItem target="_new" href="https://bfoc.us/qjk0reeqmy">
+				<CNavItem target="_blank" href="https://bfoc.us/qjk0reeqmy">
 					<FontAwesomeIcon className="nav-icon" icon={faUsers} /> Community Forum
 				</CNavItem>
-				<CNavItem target="_new" href="https://bfoc.us/ke7e9dqgaz">
+				<CNavItem target="_blank" href="https://bfoc.us/ke7e9dqgaz">
 					<FontAwesomeIcon className="nav-icon" icon={faComments} /> Slack Chat
 				</CNavItem>
-				<CNavItem target="_new" href="https://bfoc.us/ccfbf8wm2x">
+				<CNavItem target="_blank" href="https://bfoc.us/ccfbf8wm2x">
 					<FontAwesomeIcon className="nav-icon" icon={faDollarSign} /> Donate
 				</CNavItem>
 
-				<CNavItem target="_new" href="/getting-started">
+				<CNavItem target="_blank" href="/getting-started">
 					<FontAwesomeIcon className="nav-icon" icon={faInfo} /> Getting Started
 				</CNavItem>
 				<CNavItem href="#" onClick={whatsNewOpen}>

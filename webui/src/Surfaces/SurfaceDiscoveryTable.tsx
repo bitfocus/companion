@@ -181,7 +181,7 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 					return (
 						<p key={address} className="p-no-margin">
 							{surfaceInfo.apiEnabled ? (
-								<a href={`http://${linkAddress}:${surfaceInfo.port}`} target="_new">
+								<a href={`http://${linkAddress}:${surfaceInfo.port}`} target="_blank">
 									{address}
 								</a>
 							) : (
