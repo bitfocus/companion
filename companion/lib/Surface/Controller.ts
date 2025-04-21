@@ -864,7 +864,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				// Make sure we don't try to take over stream deck devices when the stream deck application
 				// is running on windows.
 				if (!streamdeckDisabled && process.platform === 'win32') {
-					const list = await findProcess('name', 'Stream Deck')
+					const list = await findProcess('name', '\\StreamDeck.exe')
 					if (typeof list === 'object' && list.length > 0) {
 						streamDeckSoftwareRunning = true
 						this.#logger.silly('Elgato software detected, ignoring stream decks')
