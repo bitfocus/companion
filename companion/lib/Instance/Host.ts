@@ -407,8 +407,8 @@ export class ModuleHost {
 						child.authToken = nanoid()
 						child.skipApiVersionCheck = !moduleInfo.isPackaged
 
-						const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint)
-						const jsFullPath = path.join(moduleInfo.basePath, jsPath)
+						const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
+						const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
 						if (!(await fs.pathExists(jsFullPath))) {
 							this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
 							return
