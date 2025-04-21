@@ -1,5 +1,29 @@
 # Bitfocus Companion
 
+## Companion v3.5.4 - Release Notes
+
+### 🐞 BUG FIXES
+
+- dragging action group can disappear #3367
+- full import disappearning delays #3365
+- clear variables about surfaces when disconnected #3362
+- external links not always opening in new tabs
+- surface discovery not handling ipv6 correctly
+- emulator keymap for presenter controller incorrect #3359
+- feedbacks breaking when expressions fail to parse#3386
+- handle pasted variable names better in some input fields #3390
+- improve resilience of elgato software check on windows #3261
+
+### 🐞 MODULE FIXES
+
+- generic-swp08
+- haivision-connectdvr
+- roland-vr120hd
+- neutrik-dpro
+- ntp-technology-dot
+- smodetech-smodelive
+- vitec-avediaplayer9300-series
+
 ## Companion v3.5.3 - Release Notes
 
 ### 🐞 BUG FIXES
