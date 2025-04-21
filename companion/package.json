@@ -43,7 +43,7 @@
 		"@types/ws": "^8.18.1",
 		"supertest": "^7.1.0",
 		"typescript": "~5.8.3",
-		"webpack": "^5.99.5",
+		"webpack": "^5.99.6",
 		"webpack-cli": "^6.0.1"
 	},
 	"dependencies": {
@@ -58,7 +58,7 @@
 		"@julusian/segfault-raub": "^2.3.1",
 		"@loupedeck/node": "^1.2.0",
 		"@napi-rs/canvas": "^0.1.68",
-		"@sentry/node": "^9.12.0",
+		"@sentry/node": "^9.13.0",
 		"archiver": "^7.0.1",
 		"better-sqlite3": "^11.9.1",
 		"bufferutil": "^4.0.9",
@@ -95,7 +95,7 @@
 		"systeminformation": "^5.25.11",
 		"tar-fs": "^3.0.8",
 		"tar-stream": "^3.1.7",
-		"type-fest": "^4.39.1",
+		"type-fest": "^4.40.0",
 		"usb": "^2.15.0",
 		"uuid": "^11.1.0",
 		"vec-footpedal": "^2.0.1",
