@@ -25,7 +25,7 @@ export function useConnectionVersionSelectOptions(
 				if (!includeBeta && version.isBeta) continue
 
 				let label = version.displayName
-				if (installedInfo.stableVersion?.versionId === version.versionId) {
+				if (latestStableVersion && latestStableVersion.id === version.versionId) {
 					label += ' (Latest stable)'
 				}
 
