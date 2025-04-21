@@ -1,6 +1,6 @@
 {
 	"name": "companion",
-	"version": "3.5.3",
+	"version": "3.5.4",
 	"description": "Companion",
 	"main": "main.js",
 	"type": "module",
