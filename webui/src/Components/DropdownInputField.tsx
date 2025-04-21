@@ -2,7 +2,7 @@ import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
 import React, { createContext, useContext, useMemo, useEffect, useCallback, memo } from 'react'
-import Select, { createFilter } from 'react-select'
+import Select, { createFilter, components } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
@@ -27,6 +27,7 @@ interface DropdownInputFieldProps<Multi extends boolean> {
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	helpText?: string
+	onPasteIntercept?: (value: string) => string
 }
 
 interface DropdownChoiceInt {
@@ -50,6 +51,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	setValid,
 	disabled,
 	helpText,
+	onPasteIntercept,
 }: DropdownInputFieldProps<Multi>) {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -168,6 +170,30 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 		[setValue, setValid, value, multiple, minSelection, maxSelection, isValueValid]
 	)
 
+	const onPaste = useCallback(
+		(e: React.ClipboardEvent) => {
+			if (!e.clipboardData || !onPasteIntercept) return
+
+			const rawValue = e.clipboardData.getData('text')
+			const newValue = onPasteIntercept(rawValue)
+
+			// Nothing changed, let default behaviour happen
+			if (newValue === rawValue) return
+
+			e.preventDefault()
+			// console.log('Intercept paste', rawValue, 'to', newValue)
+
+			// Set the value of the input, using the native setter
+			const target = e.currentTarget as HTMLInputElement
+			const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+			nativeInputValueSetter.call(target, newValue)
+
+			// Dispatch a change event
+			target.dispatchEvent(new Event('input', { bubbles: true }))
+		},
+		[onPasteIntercept]
+	)
+
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 
 	const selectProps: Partial<CreatableProps<any, any, any>> = {
@@ -185,7 +211,10 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 		value: isMultiple ? currentValue : currentValue[0],
 		onChange: onChange,
 		filterOption: createFilter({ ignoreAccents: false }),
-		components: { MenuList: WindowedMenuList },
+		components: {
+			MenuList: WindowedMenuList,
+			Input: (props) => <components.Input {...props} onPaste={onPaste} />,
+		},
 	}
 
 	const isValidNewOption = useCallback(
@@ -204,12 +233,6 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	)
 	const formatCreateLabel = useCallback((v: string | number) => `Use "${v}"`, [])
 
-	console.log(
-		'a',
-		isValueValid(isMultiple && currentValue ? (currentValue.map((v) => v.value) ?? []) : currentValue[0]?.value),
-		regex,
-		compiledRegex
-	)
 	return (
 		<div
 			className={classNames(
