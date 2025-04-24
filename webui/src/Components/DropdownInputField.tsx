@@ -122,30 +122,6 @@ export const DropdownInputField = memo(function DropdownInputField({
 		[setValue, setValid, isValueValid]
 	)
 
-	const onPaste = useCallback(
-		(e: React.ClipboardEvent) => {
-			if (!e.clipboardData || !onPasteIntercept) return
-
-			const rawValue = e.clipboardData.getData('text')
-			const newValue = onPasteIntercept(rawValue)
-
-			// Nothing changed, let default behaviour happen
-			if (newValue === rawValue) return
-
-			e.preventDefault()
-			// console.log('Intercept paste', rawValue, 'to', newValue)
-
-			// Set the value of the input, using the native setter
-			const target = e.currentTarget as HTMLInputElement
-			const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
-			nativeInputValueSetter.call(target, newValue)
-
-			// Dispatch a change event
-			target.dispatchEvent(new Event('input', { bubbles: true }))
-		},
-		[onPasteIntercept]
-	)
-
 	const inputComponent = useMemo(() => {
 		const onPaste = (e: React.ClipboardEvent) => {
 			if (!e.clipboardData || !onPasteIntercept) return
