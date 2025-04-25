@@ -372,7 +372,8 @@ export interface ClientToBackendEventsMap {
 	'variables:stream-expression:subscribe': (
 		expression: string,
 		controlId: string | null,
-		requiredType: string | undefined
+		requiredType: string | undefined,
+		isVariableString: boolean
 	) => ExpressionStreamResultWithSubId
 	'variables:stream-expression:unsubscribe': (subId: string) => void
 
@@ -442,7 +443,11 @@ export interface BackendToClientEventsMap {
 	'bonjour:service:up': (svc: ClientBonjourService) => void
 	'bonjour:service:down': (subId: string, fqdn: string) => void
 
-	'variables:stream-expression:update': (expression: string, result: ExpressionStreamResult) => void
+	'variables:stream-expression:update': (
+		expression: string,
+		result: ExpressionStreamResult,
+		isVariableString: boolean
+	) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void

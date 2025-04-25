@@ -21,15 +21,18 @@ import { assertNever } from '../Util.js'
 import { HorizontalAlignment, VerticalAlignment } from './Util.js'
 
 type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
+type ParseVariablesFn = (str: string) => Promise<ExecuteExpressionResult>
 
 class ExpressionHelper {
 	readonly #executeExpression: ExecuteExpressionFn
+	readonly #parseVariables: ParseVariablesFn
 
 	readonly usedVariables = new Set<string>()
 	readonly onlyEnabled: boolean
 
-	constructor(executeExpression: ExecuteExpressionFn, onlyEnabled: boolean) {
+	constructor(executeExpression: ExecuteExpressionFn, parseVariables: ParseVariablesFn, onlyEnabled: boolean) {
 		this.#executeExpression = executeExpression
+		this.#parseVariables = parseVariables
 		this.onlyEnabled = onlyEnabled
 	}
 
@@ -45,6 +48,21 @@ class ExpressionHelper {
 		}
 
 		return result
+	}
+
+	async parseVariablesInString(str: string, defaultValue: string): Promise<string> {
+		const result = await this.#parseVariables(str)
+
+		// Track the variables used in the expression, even when it failed
+		for (const variable of result.variableIds) {
+			this.usedVariables.add(variable)
+		}
+
+		if (!result.ok) {
+			return defaultValue
+		}
+
+		return String(result.value)
 	}
 
 	async getUnknown(
@@ -159,12 +177,13 @@ class ExpressionHelper {
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	elements: SomeButtonGraphicsElement[],
 	executeExpression: ExecuteExpressionFn,
+	parseVariables: ParseVariablesFn,
 	onlyEnabled: boolean
 ): Promise<{
 	elements: SomeButtonGraphicsDrawElement[]
 	usedVariables: Set<string>
 }> {
-	const helper = new ExpressionHelper(executeExpression, onlyEnabled)
+	const helper = new ExpressionHelper(executeExpression, parseVariables, onlyEnabled)
 
 	const newElements = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(helper, elements)
 
@@ -288,7 +307,9 @@ async function convertTextElementForDrawing(
 		helper.getNumber(element.opacity, 100),
 		convertDrawBounds(helper, element),
 		helper.getUnknown(element.fontsize, 'auto'),
-		helper.getUnknown(element.text, 'ERR'),
+		element.text.isExpression
+			? helper.getUnknown(element.text, 'ERR')
+			: helper.parseVariablesInString(element.text.value, 'ERR'),
 		helper.getNumber(element.color, 0),
 		helper.getHorizontalAlignment(element.halign),
 		helper.getVerticalAlignment(element.valign),

@@ -26,3 +26,8 @@ export interface ExpressionStreamResultWithSubId {
 	subId: string
 	result: ExpressionStreamResult
 }
+
+export interface ParseVariablesResult {
+	text: string
+	variableIds: ReadonlySet<string>
+}

@@ -207,6 +207,14 @@ export class ControlButtonLayered
 		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
 			this.#drawElements,
 			async (str: string, requiredType?: string) => parser.executeExpression(str, requiredType),
+			async (str: string) => {
+				const res = parser.parseVariables(str)
+				return {
+					ok: true,
+					value: res.text,
+					variableIds: res.variableIds,
+				}
+			},
 			true
 		)
 		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null

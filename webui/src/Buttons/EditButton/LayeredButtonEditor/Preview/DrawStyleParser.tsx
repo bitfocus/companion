@@ -70,16 +70,18 @@ class LayeredButtonDrawStyleParser {
 		async () => {
 			const referencedExpressions = new Set<string>()
 			const parseExpression = async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> => {
+				const streamId = `expression::${str}`
+
 				// Mark it as active, so we don't unsubscribe
-				referencedExpressions.add(str)
+				referencedExpressions.add(streamId)
 
 				// Reuse existing value
-				const existing = this.#latestValues.get(str)
+				const existing = this.#latestValues.get(streamId)
 				if (existing) return convertExpressionResult(await existing)
 
 				// Start a new stream
 				const newValuePromise = this.#socket
-					.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, requiredType])
+					.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, requiredType, false])
 					.catch((e) => {
 						console.error('Failed to subscribe to expression', e)
 						return {
@@ -92,14 +94,43 @@ class LayeredButtonDrawStyleParser {
 					})
 
 				// Track the new value, to avoid duplicateion
-				this.#latestValues.set(str, newValuePromise)
+				this.#latestValues.set(streamId, newValuePromise)
+
+				return convertExpressionResult(await newValuePromise)
+			}
+			const parseVariablesInString = async (str: string): Promise<ExecuteExpressionResult> => {
+				const streamId = `variable::${str}`
+
+				// Mark it as active, so we don't unsubscribe
+				referencedExpressions.add(streamId)
+
+				// Reuse existing value
+				const existing = this.#latestValues.get(streamId)
+				if (existing) return convertExpressionResult(await existing)
+
+				// Start a new stream
+				const newValuePromise = this.#socket
+					.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, undefined, true])
+					.catch((e) => {
+						console.error('Failed to subscribe to expression', e)
+						return {
+							subId: '',
+							result: {
+								ok: false,
+								error: 'Failed to subscribe to string',
+							},
+						} satisfies ExpressionStreamResultWithSubId
+					})
+
+				// Track the new value, to avoid duplicateion
+				this.#latestValues.set(streamId, newValuePromise)
 
 				return convertExpressionResult(await newValuePromise)
 			}
 
 			const [{ elements }, thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] =
 				await Promise.all([
-					ConvertSomeButtonGraphicsElementForDrawing(this.#rawElements, parseExpression, false),
+					ConvertSomeButtonGraphicsElementForDrawing(this.#rawElements, parseExpression, parseVariablesInString, false),
 					parseExpression('$(this:pushed)', 'boolean'),
 					parseExpression('$(this:step_count)', 'number'),
 					parseExpression('$(this:step_count) > 1 ? $(this:step) : 0', 'number'),
@@ -148,21 +179,22 @@ class LayeredButtonDrawStyleParser {
 			})
 	}
 
-	#streamUpdate = (expression: string, result: ExpressionStreamResult) => {
+	#streamUpdate = (expression: string, result: ExpressionStreamResult, isVariableString: boolean) => {
 		if (this.#disposed) return
 
-		const existing = this.#latestValues.get(expression)
+		const streamId = `${isVariableString ? 'variable' : 'expression'}::${expression}`
+		const existing = this.#latestValues.get(streamId)
 		if (!existing) return
 
 		if (existing instanceof Promise) {
 			// Chain the promise, as we need to preserve the subId
 			this.#latestValues.set(
-				expression,
+				streamId,
 				existing.then((old) => ({ ...old, result }))
 			)
 		} else {
 			// Update to a concrete value
-			this.#latestValues.set(expression, { ...existing, result })
+			this.#latestValues.set(streamId, { ...existing, result })
 		}
 
 		// Queue update

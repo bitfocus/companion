@@ -54,41 +54,47 @@ export class VariablesExpressionStream {
 			}
 		})
 
-		client.onPromise('variables:stream-expression:subscribe', (expression, controlId, requiredType) => {
-			const subId = nanoid()
-			const fullSubId = `${client.id}::${subId}`
+		client.onPromise(
+			'variables:stream-expression:subscribe',
+			(expression, controlId, requiredType, isVariableString) => {
+				const subId = nanoid()
+				const fullSubId = `${client.id}::${subId}`
 
-			const expressionId = `${controlId}::${expression}::${requiredType}`
-			const existingSession = this.#sessions.get(expressionId)
-			if (existingSession) {
-				// Add to the existing session
-				existingSession.clients.set(fullSubId, client)
+				const expressionId = `${controlId}::${expression}::${requiredType}::${isVariableString ? 'variable' : 'expression'}`
+				const existingSession = this.#sessions.get(expressionId)
+				if (existingSession) {
+					// Add to the existing session
+					existingSession.clients.set(fullSubId, client)
 
-				this.#logger.debug(`Client "${client.id}" subscribed to existing session: ${expressionId}`)
+					this.#logger.debug(`Client "${client.id}" subscribed to existing session: ${expressionId}`)
 
-				// Retrun the latest value
-				return {
-					subId,
-					result: existingSession.latestResult,
+					// Retrun the latest value
+					return {
+						subId,
+						result: existingSession.latestResult,
+					}
 				}
+
+				this.#logger.debug(`Client "${client.id}" subscribed to new session: ${expressionId}`)
+
+				const initialValue = isVariableString
+					? this.#parseVariables(expression, controlId)
+					: this.#executeExpression(expression, controlId, requiredType)
+				const newSession: ExpressionStreamSession = {
+					expressionId,
+					controlId,
+					expression,
+					requiredType,
+					isVariableString,
+
+					latestResult: initialValue,
+					clients: new Map([[fullSubId, client]]),
+				}
+				this.#sessions.set(expressionId, newSession)
+
+				return { subId, result: convertExpressionResult(initialValue) }
 			}
-
-			this.#logger.debug(`Client "${client.id}" subscribed to new session: ${expressionId}`)
-
-			const initialValue = this.#executeExpression(expression, controlId, requiredType)
-			const newSession: ExpressionStreamSession = {
-				expressionId,
-				controlId,
-				expression,
-				requiredType,
-
-				latestResult: initialValue,
-				clients: new Map([[fullSubId, client]]),
-			}
-			this.#sessions.set(expressionId, newSession)
-
-			return { subId, result: convertExpressionResult(initialValue) }
-		})
+		)
 
 		client.onPromise('variables:stream-expression:unsubscribe', (subId) => {
 			if (!subId) throw new Error('Invalid')
@@ -138,7 +144,12 @@ export class VariablesExpressionStream {
 						notifiedClients.add(client.id)
 
 						// TODO - maybe this should use rooms instead?
-						client.emit('variables:stream-expression:update', session.expression, convertedValue)
+						client.emit(
+							'variables:stream-expression:update',
+							session.expression,
+							convertedValue,
+							session.isVariableString
+						)
 					}
 
 					break
@@ -147,12 +158,29 @@ export class VariablesExpressionStream {
 		}
 	}
 
-	#executeExpression = (expression: string, controlId: string | null, requiredType: string | undefined) => {
+	#executeExpression = (
+		expression: string,
+		controlId: string | null,
+		requiredType: string | undefined
+	): ExecuteExpressionResult => {
 		const location = controlId ? this.#pageController.getLocationOfControlId(controlId) : undefined
 		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
 
 		// TODO - make reactive to control moving?
 		return parser.executeExpression(expression, requiredType)
+	}
+
+	#parseVariables = (str: string, controlId: string | null): ExecuteExpressionResult => {
+		const location = controlId ? this.#pageController.getLocationOfControlId(controlId) : undefined
+		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+
+		// TODO - make reactive to control moving?
+		const res = parser.parseVariables(str)
+		return {
+			ok: true,
+			value: res.text,
+			variableIds: res.variableIds,
+		}
 	}
 }
 
@@ -161,6 +189,7 @@ interface ExpressionStreamSession {
 	readonly controlId: string | null
 	readonly expression: string
 	readonly requiredType: string | undefined
+	readonly isVariableString: boolean
 
 	latestResult: ExecuteExpressionResult
 
