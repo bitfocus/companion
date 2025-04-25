@@ -113,6 +113,13 @@
 		top: 0;
 	}
 
+	&.variables-table-max-33 {
+		th {
+			max-width: 50%;
+			min-width: 20%;
+		}
+	}
+
 	.variable-dragging {
 		opacity: 0.5;
 	}

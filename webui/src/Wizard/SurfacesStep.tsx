@@ -51,6 +51,14 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 
 			<div className="indent3">
 				<CFormCheck
+					label="Mirabox Stream Dock USB Devices"
+					checked={config.mirabox_streamdock_enable}
+					onChange={(e) => setValue('mirabox_streamdock_enable', e.currentTarget.checked)}
+				/>
+			</div>
+
+			<div className="indent3">
+				<CFormCheck
 					label="Contour Shuttle USB Devices"
 					checked={config.contour_shuttle_enable}
 					onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}

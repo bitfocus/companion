@@ -12,16 +12,16 @@ import {
 } from '@coreui/react'
 import { faCog } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { CModalExt } from '../Components/CModalExt.js'
+import { CModalExt } from '../../Components/CModalExt.js'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { useAllConnectionProducts } from '../Hooks/useFilteredProducts.js'
-import { DropdownInputField } from '../Components/DropdownInputField.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { useAllConnectionProducts } from '../../Hooks/useFilteredProducts.js'
+import { DropdownInputField } from '../../Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
-import { useComputed } from '../util.js'
-import { useConnectionVersionSelectOptions } from './ConnectionEditPanel.js'
-import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
+import { useComputed } from '../../util.js'
+import { useConnectionVersionSelectOptions } from './useConnectionVersionSelectOptions.js'
+import { ModuleVersionsRefresh } from '../ModuleVersionsRefresh.js'
 
 interface ConnectionForceVersionButtonProps {
 	connectionId: string
@@ -212,12 +212,13 @@ const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
 		const hasCurrent = allProducts.find((p) => p.id === value)
 		if (!hasCurrent) choices.push({ id: value, label: `Unknown module: ${value}` })
 
-		// Push all the products
+		// Push all the products. Use an object as an easy way to deduplicate by id
+		const choicesObj: Record<string, DropdownChoice> = {}
 		for (const product of allProducts) {
-			choices.push({ id: product.id, label: product.name })
+			choicesObj[product.id] = { id: product.id, label: product.name }
 		}
 
-		return choices
+		return Object.values(choicesObj).sort((a, b) => a.label.localeCompare(b.label))
 	}, [allProducts, value])
 
 	return (

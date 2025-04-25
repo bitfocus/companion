@@ -16,11 +16,13 @@
  */
 
 import EventEmitter from 'events'
-import shuttleControlUSB, { type ShuttleDeviceInfo } from 'shuttle-control-usb'
+import crypto from 'crypto'
+import { Shuttle, setupShuttle, ProductModelId } from 'shuttle-node'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 interface ShuttleModelInfo {
 	totalCols: number
@@ -122,7 +124,7 @@ const contourShuttleProV2Info: ShuttleModelInfo = {
 }
 
 function buttonToXy(modelInfo: ShuttleModelInfo, info: number): [number, number] | undefined {
-	return modelInfo.buttons[info - 1]
+	return modelInfo.buttons[info]
 }
 
 const configFields: CompanionSurfaceConfigField[] = [
@@ -135,7 +137,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
 
-	private readonly contourShuttle: typeof shuttleControlUSB
+	private readonly contourShuttle: Shuttle
 	private readonly modelInfo: ShuttleModelInfo
 
 	config: Record<string, any>
@@ -143,12 +145,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 
-	constructor(
-		devicePath: string,
-		contourShuttle: typeof shuttleControlUSB,
-		modelInfo: ShuttleModelInfo,
-		deviceInfo: ShuttleDeviceInfo
-	) {
+	constructor(devicePath: string, contourShuttle: Shuttle, modelInfo: ShuttleModelInfo) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/ContourShuttle/${devicePath}`)
@@ -160,13 +157,21 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			// No config currently present
 		}
 
+		contourShuttle.devicePath
+
 		this.#logger.debug(`Adding Contour Shuttle USB device ${devicePath}`)
 
+		// The devices don't have serialnumbers, so fake something based on the path. Not the most stable, but the best we can do
+		const fakeDeviceId = crypto
+			.createHash('sha1')
+			.update(`${contourShuttle.info.productModelId}-${devicePath}`)
+			.digest('hex')
+
 		this.info = {
-			type: `Contour Shuttle ${deviceInfo.name}`,
+			type: `Contour Shuttle ${contourShuttle.info.name}`,
 			devicePath: devicePath,
 			configFields: configFields,
-			deviceId: `contourshuttle:${deviceInfo.id}`,
+			deviceId: `contourshuttle:${fakeDeviceId}`,
 		}
 
 		this.gridSize = {
@@ -179,7 +184,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			this.emit('remove')
 		})
 
-		this.contourShuttle.on('buttondown', (info) => {
+		this.contourShuttle.on('down', (info) => {
 			const xy = buttonToXy(this.modelInfo, info)
 			if (xy === undefined) {
 				return
@@ -188,7 +193,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			this.emit('click', ...xy, true)
 		})
 
-		this.contourShuttle.on('buttonup', (info) => {
+		this.contourShuttle.on('up', (info) => {
 			const xy = buttonToXy(this.modelInfo, info)
 			if (xy === undefined) {
 				return
@@ -197,7 +202,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			this.emit('click', ...xy, false)
 		})
 
-		this.contourShuttle.on('jog-dir', (delta) => {
+		this.contourShuttle.on('jog', (delta) => {
 			const xy = this.modelInfo.jog
 			if (xy === undefined) {
 				return
@@ -212,14 +217,17 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			}, 20)
 		})
 
-		this.contourShuttle.on('shuttle-trans', (previous, current) => {
+		let lastShuttle = 0
+		this.contourShuttle.on('shuttle', (shuttle) => {
 			const xy = this.modelInfo.shuttle
 			if (xy === undefined) {
 				return
 			}
 
-			this.emit('rotate', ...xy, previous < current)
-			this.emit('setVariable', 'shuttle', current)
+			this.emit('rotate', ...xy, lastShuttle < shuttle)
+			lastShuttle = shuttle
+
+			this.emit('setVariable', 'shuttle', shuttle)
 		})
 
 		this.contourShuttle.on('disconnected', () => {
@@ -231,40 +239,31 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 	 * Open a countour shuttle
 	 */
 	static async create(devicePath: string): Promise<SurfaceUSBContourShuttle> {
-		// TODO: this doesn't work now that we aren't using threads. This will be completely broken when trying to use more than one
+		const contourShuttle = await setupShuttle(devicePath)
 
-		const contourShuttle = shuttleControlUSB
-		// We're doing device search via Companion so don't run it here too
-		contourShuttle.start(false)
 		try {
-			let deviceInfo = null
-			let info = null
-			contourShuttle.connect(devicePath)
-			deviceInfo = contourShuttle.getDeviceByPath(devicePath)
-			if (!deviceInfo) throw new Error('Device not found!')
+			let info: ShuttleModelInfo
 
-			switch (deviceInfo.name) {
-				case 'ShuttleXpress':
+			switch (contourShuttle.info.productModelId) {
+				case ProductModelId.ShuttleXpress:
 					info = contourShuttleXpressInfo
 					break
-				case 'ShuttlePro v1':
+				case ProductModelId.ShuttleProV1:
 					info = contourShuttleProV1Info
 					break
-				case 'ShuttlePro v2':
+				case ProductModelId.ShuttleProV2:
 					info = contourShuttleProV2Info
 					break
 				default:
-					throw new Error(`Unknown Contour Shuttle device detected: ${deviceInfo.name}`)
-			}
-			if (!info) {
-				throw new Error('Unsupported model')
+					assertNever(contourShuttle.info.productModelId)
+					throw new Error(`Unknown Contour Shuttle device detected: ${contourShuttle.info.name}`)
 			}
 
-			const self = new SurfaceUSBContourShuttle(devicePath, contourShuttle, info, deviceInfo)
+			const self = new SurfaceUSBContourShuttle(devicePath, contourShuttle, info)
 
 			return self
 		} catch (e) {
-			contourShuttle.stop()
+			contourShuttle.close()
 
 			throw e
 		}
@@ -280,7 +279,9 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 	}
 
 	quit() {
-		this.contourShuttle.stop()
+		this.contourShuttle.close().catch((e) => {
+			this.#logger.error(`Failed to close contour shuttle: ${e}`)
+		})
 	}
 
 	draw() {

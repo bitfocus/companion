@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react'
+import React, { useCallback, useContext, useMemo } from 'react'
 import { DropdownInputField, MultiDropdownInputField } from '../Components/index.js'
 import { useComputed } from '../util.js'
 import TimePicker from 'react-time-picker'
@@ -280,6 +280,16 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 
 	const hasMatch = choices.find((c) => c.id === value)
 
+	const onPasteIntercept = useCallback((pastedValue: string) => {
+		let value = pastedValue.trim()
+		if (value.length === 0) return pastedValue
+		if (value.startsWith('$(') && value.endsWith(')')) {
+			value = value.slice(2, -1)
+		}
+
+		return value
+	}, [])
+
 	return (
 		<DropdownInputField
 			className={hasMatch ? '' : 'select-warning'}
@@ -289,6 +299,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			setValue={setValue}
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
+			onPasteIntercept={onPasteIntercept}
 		/>
 	)
 })

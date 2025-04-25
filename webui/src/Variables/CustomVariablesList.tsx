@@ -401,6 +401,9 @@ function CustomVariableRow({
 	})
 	preview(drop(ref))
 
+	const valueStr = typeof value !== 'string' ? JSON.stringify(value, undefined, '\t') || '' : value
+	const compactValue = valueStr.length > 100 ? `${valueStr.substring(0, 100)}...` : valueStr
+
 	return (
 		<tr ref={ref} className={isDragging ? 'variable-dragging' : ''}>
 			<td ref={drag} className="td-reorder">
@@ -419,7 +422,7 @@ function CustomVariableRow({
 						</div>
 						{isCollapsed && (
 							<div className="cell-header-item grow">
-								{value?.length > 0 && (
+								{compactValue.length > 0 && (
 									<>
 										<code
 											style={{
@@ -433,9 +436,9 @@ function CustomVariableRow({
 											}}
 											title={value}
 										>
-											{value?.length > 100 ? `${value.substring(0, 100)}...` : value}
+											{compactValue}
 										</code>
-										<CopyToClipboard text={`${value?.length > 0 ? value : ' '}`} onCopy={onCopied}>
+										<CopyToClipboard text={valueStr} onCopy={onCopied}>
 											<CButton size="sm" title="Copy current variable value">
 												<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
 											</CButton>

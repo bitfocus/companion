@@ -19,7 +19,7 @@ RUN case ${TARGETPLATFORM} in \
     "linux/arm64")  ARCH=arm64  ;; \
     *) echo "Unsupported platform ${TARGETPLATFORM}"; exit 9 ;; \
     esac \
-    && curl https://s3.bitfocus.io/builds/companion/companion-linux-${ARCH}-${build_name}.tar.gz --output /tmp/companion-build.tar.gz \
+    && curl https://s4.bitfocus.io/builds/companion/companion-linux-${ARCH}-${build_name}.tar.gz --output /tmp/companion-build.tar.gz \
     && mkdir /tmp/companion \
     && tar -xzf /tmp/companion-build.tar.gz --strip-components=1 -C /tmp/companion \
     && mv /tmp/companion/resources /app \

@@ -108,7 +108,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 				</CButton>
 			</CInputGroup>
 			<div className="variables-table-scroller ">
-				<table className="table table-responsive-sm variables-table">
+				<table className="table table-responsive-sm variables-table variables-table-max-33">
 					<thead>
 						<tr>
 							<th>Variable</th>
@@ -160,8 +160,10 @@ const VariablesTableRow = observer(function VariablesTableRow({
 	onCopied,
 	panelCollapseHelper,
 }: VariablesTableRowProps) {
-	const value = typeof valueRaw !== 'string' ? valueRaw + '' : valueRaw
+	const value = typeof valueRaw !== 'string' ? JSON.stringify(valueRaw, undefined, '\t') || '' : valueRaw
 	const compactValue = value.length > 100 ? `${value.substring(0, 100)}...` : value
+
+	console.log('value', value, compactValue)
 
 	// Split display value into the lines
 	const displayValue = panelCollapseHelper.isPanelCollapsed(variable.name) ? compactValue : value

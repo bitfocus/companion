@@ -1,7 +1,7 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { useModuleStoreInfo, useModuleUpgradeToVersions } from '../Modules/ModuleManagePanel.js'
-import { getLatestVersion } from './ConnectionEditPanel.js'
+import { getLatestVersion } from './ConnectionEdit/VersionUtil.js'
 import semver from 'semver'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { faCircleUp } from '@fortawesome/free-solid-svg-icons'

@@ -567,15 +567,36 @@ export class ServiceHttpApi {
 	#customVariableSetValue = (req: express.Request, res: express.Response): void => {
 		const variableName = req.params.name
 		let variableValue = null
+		let variableError = true
 
 		if (req.query.value !== undefined) {
 			variableValue = req.query.value
+			variableError = false
+		} else if (req.headers['content-type']?.toLowerCase() === 'application/json') {
+			if (
+				req.body !== undefined &&
+				(typeof req.body === 'string' ||
+					(typeof req.body === 'object' && Object.keys(req.body).length > 0) ||
+					typeof req.body === 'number' ||
+					typeof req.body === 'boolean' ||
+					typeof req.body === 'bigint')
+			) {
+				variableValue = req.body
+			} else if (typeof req.body === 'object' && Object.keys(req.body).length == 0) {
+				variableValue = undefined
+			} else {
+				variableValue = null
+			}
+			variableError = false
 		} else if (req.body && typeof req.body !== 'object') {
 			variableValue = req.body.toString().trim()
+			variableError = false
 		}
 
-		this.logger.debug(`Got HTTP custom variable set value name "${variableName}" to value "${variableValue}"`)
-		if (variableValue === null) {
+		this.logger.debug(
+			`Got HTTP custom variable set value name "${variableName}" to value ${JSON.stringify(variableValue)}`
+		)
+		if (variableError) {
 			res.status(400).send('No value')
 			return
 		}

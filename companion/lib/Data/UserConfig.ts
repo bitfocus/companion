@@ -50,6 +50,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		elgato_plugin_enable: false, // Also disables local streamdeck
 		usb_hotplug: true,
 		loupedeck_enable: false,
+		mirabox_streamdock_enable: true,
 		contour_shuttle_enable: false,
 		vec_footpedal_enable: false,
 		blackmagic_controller_enable: false,

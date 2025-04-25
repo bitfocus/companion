@@ -259,41 +259,56 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		try {
 			this.#io.emitToAll('modules-store:info:progress', moduleId, 0)
 
-			const { data, error } = await ModuleOpenApiClient.GET('/v1/companion/modules/{moduleType}/{moduleName}', {
-				params: {
-					path: {
-						moduleType: 'connection',
-						moduleName: moduleId,
+			const { data, error, response } = await ModuleOpenApiClient.GET(
+				'/v1/companion/modules/{moduleType}/{moduleName}',
+				{
+					params: {
+						path: {
+							moduleType: 'connection',
+							moduleName: moduleId,
+						},
 					},
-				},
-			})
+				}
+			)
 			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.5)
 
-			if (error) throw new Error(`Failed to fetch module info: ${error?.error ?? JSON.stringify(error)}`)
+			if (response.status === 404) {
+				// If the store returns 404, then don't throw an error, this is normal
+				moduleData = {
+					id: moduleId,
+					lastUpdated: Date.now(),
+					lastUpdateAttempt: Date.now(),
+					updateWarning: null,
 
-			moduleData = {
-				id: moduleId,
-				lastUpdated: Date.now(),
-				lastUpdateAttempt: Date.now(),
-				updateWarning: null,
+					versions: [],
+				}
+			} else {
+				if (error) throw new Error(`Failed to fetch module info: ${error?.error ?? JSON.stringify(error)}`)
 
-				versions: data.versions.map(
-					(data) =>
-						({
-							id: data.id.startsWith('v') ? data.id.slice(1) : data.id,
-							releaseChannel: data.isPrerelease ? 'beta' : 'stable',
-							releasedAt: data.releasedAt,
+				moduleData = {
+					id: moduleId,
+					lastUpdated: Date.now(),
+					lastUpdateAttempt: Date.now(),
+					updateWarning: null,
 
-							tarUrl: data.tarUrl ?? null,
-							tarSha: data.tarSha ?? null,
+					versions: data.versions.map(
+						(data) =>
+							({
+								id: data.id.startsWith('v') ? data.id.slice(1) : data.id,
+								releaseChannel: data.isPrerelease ? 'beta' : 'stable',
+								releasedAt: data.releasedAt,
 
-							deprecationReason: data.deprecationReason ?? null,
+								tarUrl: data.tarUrl ?? null,
+								tarSha: data.tarSha ?? null,
 
-							apiVersion: data.apiVersion,
+								deprecationReason: data.deprecationReason ?? null,
 
-							helpUrl: data.helpUrl ?? null,
-						}) satisfies Complete<ModuleStoreModuleInfoVersion>
-				),
+								apiVersion: data.apiVersion,
+
+								helpUrl: data.helpUrl ?? null,
+							}) satisfies Complete<ModuleStoreModuleInfoVersion>
+					),
+				}
 			}
 		} catch (e: any) {
 			// This could be on an always offline system
@@ -308,6 +323,8 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 				versions: [],
 			}
+
+			console.log('err', e)
 
 			moduleData.lastUpdateAttempt = Date.now()
 			moduleData.updateWarning = 'Failed to update the module version list from the store'

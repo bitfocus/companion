@@ -162,7 +162,8 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 	const { helpViewer } = useContext(RootAppStoreContext)
 
 	const addConnectionClick = useCallback(() => addConnection(moduleInfo), [addConnection, moduleInfo])
-	const showVersion =
+	const showHelpForVersion =
+		moduleInfo.installedInfo?.devVersion ??
 		moduleInfo.installedInfo?.stableVersion ??
 		moduleInfo.installedInfo?.betaVersion ??
 		moduleInfo.installedInfo?.installedVersions?.[0] ??
@@ -170,9 +171,9 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 
 	const showHelpClick = useCallback(
 		() =>
-			showVersion?.helpPath &&
-			helpViewer.current?.showFromUrl(moduleInfo.id, showVersion.versionId, showVersion.helpPath),
-		[helpViewer, moduleInfo.id, showVersion]
+			showHelpForVersion?.helpPath &&
+			helpViewer.current?.showFromUrl(moduleInfo.id, showHelpForVersion.versionId, showHelpForVersion.helpPath),
+		[helpViewer, moduleInfo.id, showHelpForVersion]
 	)
 
 	return (
@@ -204,7 +205,7 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 					<FontAwesomeIcon icon={faGithub} />
 				</WindowLinkOpen>
 			)}
-			{showVersion?.helpPath && (
+			{showHelpForVersion?.helpPath && (
 				<div className="float_right" onClick={showHelpClick}>
 					<FontAwesomeIcon icon={faQuestionCircle} />
 				</div>
