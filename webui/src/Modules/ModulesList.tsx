@@ -35,11 +35,15 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	const [filter, setFilter] = useState('')
 
-	const allProducts = useAllConnectionProducts(modules)
+	const allProducts = useAllConnectionProducts(modules, true)
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {
-			if (p.installedInfo.installedVersions.length > 0 && visibleModules.visibility.installed) isVisible = true
+			if (
+				(p.installedInfo.installedVersions.length > 0 || p.installedInfo.devVersion) &&
+				visibleModules.visibility.installed
+			)
+				isVisible = true
 		}
 		if (
 			p.storeInfo &&

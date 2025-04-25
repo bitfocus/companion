@@ -4,7 +4,7 @@
  * @returns 'safe' version of the label
  */
 export function makeLabelSafe(label: string): string {
-	return label.replace(/[^\w-]/gi, '_')
+	return label.trim().replace(/[^\w-]/gi, '_')
 }
 
 /**

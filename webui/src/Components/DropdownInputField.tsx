@@ -2,7 +2,7 @@ import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
 import React, { createContext, useContext, useMemo, useEffect, useCallback, memo, useState } from 'react'
-import Select, { createFilter, InputActionMeta } from 'react-select'
+import Select, { createFilter, InputActionMeta, components } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
@@ -25,6 +25,7 @@ interface DropdownInputFieldProps {
 	disabled?: boolean
 	helpText?: string
 	onBlur?: () => void
+	onPasteIntercept?: (value: string) => string
 }
 
 interface DropdownChoiceInt {
@@ -48,6 +49,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 	disabled,
 	helpText,
 	onBlur,
+	onPasteIntercept,
 }: DropdownInputFieldProps) {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -120,6 +122,31 @@ export const DropdownInputField = memo(function DropdownInputField({
 		[setValue, setValid, isValueValid]
 	)
 
+	const inputComponent = useMemo(() => {
+		const onPaste = (e: React.ClipboardEvent) => {
+			if (!e.clipboardData || !onPasteIntercept) return
+
+			const rawValue = e.clipboardData.getData('text')
+			const newValue = onPasteIntercept(rawValue)
+
+			// Nothing changed, let default behaviour happen
+			if (newValue === rawValue) return
+
+			e.preventDefault()
+			// console.log('Intercept paste', rawValue, 'to', newValue)
+
+			// Set the value of the input, using the native setter
+			const target = e.currentTarget as HTMLInputElement
+			const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+			nativeInputValueSetter.call(target, newValue)
+
+			// Dispatch a change event
+			target.dispatchEvent(new Event('input', { bubbles: true }))
+		}
+
+		return (props: any) => <components.Input {...props} onPaste={onPaste} />
+	}, [onPasteIntercept])
+
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 
 	// const selectRef = useRef<any>(null)
@@ -140,7 +167,10 @@ export const DropdownInputField = memo(function DropdownInputField({
 		value: currentValue,
 		onChange: onChange,
 		filterOption: createFilter({ ignoreAccents: false }),
-		components: { MenuList: WindowedMenuList },
+		components: {
+			MenuList: WindowedMenuList,
+			Input: inputComponent,
+		},
 		onBlur: onBlur,
 	}
 

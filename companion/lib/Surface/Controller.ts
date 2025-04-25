@@ -25,7 +25,7 @@ import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
-import shuttleControlUSB from 'shuttle-control-usb'
+import { isAShuttleDevice } from 'shuttle-node'
 // @ts-ignore
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
@@ -43,6 +43,7 @@ import { SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
+import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
@@ -863,7 +864,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				// Make sure we don't try to take over stream deck devices when the stream deck application
 				// is running on windows.
 				if (!streamdeckDisabled && process.platform === 'win32') {
-					const list = await findProcess('name', 'Stream Deck')
+					const list = await findProcess('name', '\\StreamDeck.exe')
 					if (typeof list === 'object' && list.length > 0) {
 						streamDeckSoftwareRunning = true
 						this.#logger.silly('Elgato software detected, ignoring stream decks')
@@ -884,6 +885,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					HID.devicesAsync().then(async (deviceInfos) =>
 						Promise.allSettled(
 							deviceInfos.map(async (deviceInfo) => {
+								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
 									if (!ignoreStreamDeck) {
 										if (getStreamDeckDeviceInfo(deviceInfo)) {
@@ -909,12 +911,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'xkeys', SurfaceUSBXKeys)
 										}
-									} else if (
-										deviceInfo.vendorId === shuttleControlUSB.vids.CONTOUR &&
-										(deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEXPRESS ||
-											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V1 ||
-											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V2)
-									) {
+									} else if (isAShuttleDevice(deviceInfo)) {
 										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
 										}
@@ -938,6 +935,17 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 									) {
 										if (this.#handlerDependencies.userconfig.getKey('mystrix_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
+										}
+									} else if (
+										(deviceInfo.vendorId === 0x6602 || deviceInfo.vendorId === 0x6603) && // Mirabox
+										(deviceInfo.productId === 0x1001 ||
+											deviceInfo.productId === 0x1007 ||
+											deviceInfo.productId === 0x1005 ||
+											deviceInfo.productId === 0x1006) && // Stream Dock N4 or 293V3
+										deviceInfo.interface === 0
+									) {
+										if (this.#handlerDependencies.userconfig.getKey('mirabox_streamdock_enable')) {
+											await this.#addDevice(deviceInfo.path, {}, 'mirabox-streamdock', SurfaceUSBMiraboxStreamDock)
 										}
 									}
 								}

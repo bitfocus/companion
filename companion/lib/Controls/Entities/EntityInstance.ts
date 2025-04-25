@@ -687,8 +687,8 @@ export class ControlEntityInstance {
 		// Special case to handle the internal 'logic' operators, which need to be executed live
 		if (isInternalLogicFeedback(this)) {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
-			const childList = this.#children.get('default') ?? this.#children.get('children')
-			const childValues = childList?.getChildBooleanFeedbackValues() ?? []
+			const childGroup = this.#children.get('default') || this.#children.get('children')
+			const childValues = childGroup?.getChildBooleanFeedbackValues() ?? []
 
 			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
 		}
