@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 $primary: #d50215;
 $secondary: #ccc;
 $body-bg: #333;
@@ -11,7 +13,7 @@ $header-color: #fff;
 $header-brand-color: #fff;
 $header-brand-hover-color: #fff;
 $sidebar-bg: #111;
-$sidebar-brand-bg: adjust-color($header-bg, $lightness: -10%);
+$sidebar-brand-bg: color.adjust($header-bg, $lightness: -10%);
 
 $form-switch-color: #fff;
 $form-switch-checked-color: #fff;
