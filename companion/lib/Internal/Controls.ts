@@ -16,7 +16,6 @@
  */
 
 import { cloneDeep } from 'lodash-es'
-import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import { oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
@@ -59,39 +58,45 @@ const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
 			{ id: 'expression', label: 'From expression' },
 		],
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'textinput',
 		label: 'Location (text with variables)',
 		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
 		id: 'location_text',
 		default: '$(this:page)/$(this:row)/$(this:column)',
-		isVisible: (options) => options.location_target === 'text',
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) === "text"',
+		},
 		useVariables: {
 			local: true,
 		},
-	}),
-	serializeIsVisibleFnSingle({
+	},
+	{
 		type: 'textinput',
 		label: 'Location (expression)',
 		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
 		id: 'location_expression',
 		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
-		isVisible: (options) => options.location_target === 'expression',
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) === "expression"',
+		},
 		useVariables: {
 			local: true,
 		},
 		isExpression: true,
-	}),
+	},
 ]
 
 const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use variables for step',
+		label: 'Use expression for step',
 		id: 'step_from_expression',
 		default: false,
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'number',
 		label: 'Step',
 		tooltip: 'Which Step?',
@@ -99,19 +104,25 @@ const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 		default: 1,
 		min: 1,
 		max: Number.MAX_SAFE_INTEGER,
-		isVisible: (options) => !options.step_from_expression,
-	}),
-	serializeIsVisibleFnSingle({
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!$(options:step_from_expression)',
+		},
+	},
+	{
 		type: 'textinput',
 		label: 'Step (expression)',
 		id: 'step_expression',
 		default: '1',
-		isVisible: (options) => !!options.step_from_expression,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!!$(options:step_from_expression)',
+		},
 		useVariables: {
 			local: true,
 		},
 		isExpression: true,
-	}),
+	},
 ]
 
 const ButtonStylePropertiesExt = [
@@ -319,7 +330,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 
 			panic_bank: {
-				label: 'Actions: Abort delayed actions on a button',
+				label: 'Actions: Abort button runs',
 				description: undefined,
 				showButtonPreview: true,
 				options: [
@@ -333,7 +344,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			panic_page: {
-				label: 'Actions: Abort all delayed actions on a page',
+				label: 'Actions: Abort all button runs on a page',
 				description: undefined,
 				options: [
 					{
@@ -342,26 +353,32 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						id: 'page_from_variable',
 						default: false,
 					},
-					serializeIsVisibleFnSingle({
+					{
 						type: 'internal:page',
 						label: 'Page',
 						id: 'page',
 						includeStartup: false,
 						includeDirection: false,
 						default: 0,
-						isVisible: (options) => !options.page_from_variable,
-					}),
-					serializeIsVisibleFnSingle({
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!$(options:page_from_variable)',
+						},
+					},
+					{
 						type: 'textinput',
 						label: 'Page (expression)',
 						id: 'page_variable',
 						default: '1',
-						isVisible: (options) => !!options.page_from_variable,
 						useVariables: {
 							local: true,
 						},
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!!$(options:page_from_variable)',
+						},
 						isExpression: true,
-					}),
+					},
 					{
 						type: 'checkbox',
 						label: 'Skip this button?',
@@ -371,7 +388,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			panic_trigger: {
-				label: 'Actions: Abort delayed actions on a trigger',
+				label: 'Actions: Abort trigger runs',
 				description: undefined,
 				options: [
 					{
@@ -384,7 +401,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			panic: {
-				label: 'Actions: Abort all delayed actions on buttons and triggers',
+				label: 'Actions: Abort all button and trigger runs',
 				description: undefined,
 				options: [],
 			},

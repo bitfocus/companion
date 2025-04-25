@@ -27,11 +27,13 @@ import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
+	EncodeIsVisible,
 } from '@companion-module/base/dist/host-api/api.js'
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
 	assertNever,
+	SomeCompanionActionInputField,
 	type CompanionHTTPRequest,
 	type CompanionInputFieldBase,
 	type CompanionOptionValues,
@@ -55,6 +57,7 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { doesModuleExpectLabelUpdates } from './ApiVersions.js'
+import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 
 export interface InstanceModuleWrapperDependencies {
 	readonly controls: ControlsController
@@ -643,8 +646,7 @@ export class SocketEventsHandler {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				// @companion-module-base exposes these through a mapping that loses the differentiation between types
-				options: (rawAction.options || []) as any[],
+				options: translateOptionsIsVisible(rawAction.options || []),
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
 
@@ -671,8 +673,7 @@ export class SocketEventsHandler {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				description: rawFeedback.description,
-				// @companion-module-base exposes these through a mapping that loses the differentiation between types
-				options: (rawFeedback.options || []) as any[],
+				options: translateOptionsIsVisible(rawFeedback.options || []),
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLearn: !!rawFeedback.hasLearn,
@@ -942,6 +943,24 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 
 	// Nothing looked to be a user defined invert field
 	return true
+}
+
+function translateOptionsIsVisible(
+	options?: EncodeIsVisible<SomeCompanionActionInputField>[]
+): (InternalActionInputField | InternalFeedbackInputField)[] {
+	// @companion-module-base exposes these through a mapping that loses the differentiation between types
+	return (options || []).map((o) => ({
+		...(o as any),
+		isVisibleFn: undefined,
+		isVisibleData: undefined,
+		isVisibleUi: o.isVisibleFn
+			? ({
+					type: 'function',
+					fn: o.isVisibleFn,
+					data: o.isVisibleData,
+				} satisfies InternalActionInputField['isVisibleUi'])
+			: undefined,
+	}))
 }
 
 export interface RunActionExtras {

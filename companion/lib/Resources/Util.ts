@@ -1,10 +1,8 @@
-import { serializeIsVisibleFn } from '@companion-module/base/dist/internal/base.js'
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@companion-app/shared/Model/Options.js'
-import type { CompanionAlignment, CompanionInputFieldBase } from '@companion-module/base'
+import type { CompanionAlignment } from '@companion-module/base'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 
@@ -462,11 +460,4 @@ export function ParseAlignment(
 	}
 
 	return [halign, valign, `${halign}:${valign}`]
-}
-
-export function serializeIsVisibleFnSingle<T extends CompanionInputFieldBase | CompanionInputFieldBaseExtended>(
-	field: T
-): EncodeIsVisible2<T> {
-	// @ts-ignore
-	return serializeIsVisibleFn([field])[0]
 }

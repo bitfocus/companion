@@ -17,7 +17,6 @@
 
 import { combineRgb, CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
-import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
 import type {
 	ActionForVisitor,
@@ -42,85 +41,103 @@ import { EventEmitter } from 'events'
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use variables for surface',
+		label: 'Use expression for surface',
 		id: 'controller_from_variable',
 		default: false,
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'internal:surface_serial',
 		label: 'Surface / group',
 		id: 'controller',
 		default: 'self',
 		includeSelf: true,
-		isVisible: (options) => !options.controller_from_variable,
-	}),
-	serializeIsVisibleFnSingle({
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!$(options:controller_from_variable)',
+		},
+	},
+	{
 		type: 'textinput',
 		label: 'Surface / group',
 		id: 'controller_variable',
 		default: 'self',
-		isVisible: (options) => !!options.controller_from_variable,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!!$(options:controller_from_variable)',
+		},
 		useVariables: {
 			local: true,
 		},
-	}),
+	},
 ]
 
 const CHOICES_SURFACE_ID_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use variables for surface',
+		label: 'Use expression for surface',
 		id: 'controller_from_variable',
 		default: false,
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'internal:surface_serial',
 		label: 'Surface / group',
 		id: 'controller',
 		default: 'self',
 		includeSelf: true,
 		useRawSurfaces: true,
-		isVisible: (options) => !options.controller_from_variable,
-	}),
-	serializeIsVisibleFnSingle({
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!$(options:controller_from_variable)',
+		},
+	},
+	{
 		type: 'textinput',
 		label: 'Surface / group',
 		id: 'controller_variable',
 		default: 'self',
-		isVisible: (options) => !!options.controller_from_variable,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!!$(options:controller_from_variable)',
+		},
 		useVariables: {
 			local: true,
 		},
-	}),
+	},
 ]
 
 const CHOICES_PAGE_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use variables for page',
+		label: 'Use expression for page',
 		id: 'page_from_variable',
 		default: false,
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'internal:page',
 		label: 'Page',
 		id: 'page',
 		includeStartup: true,
 		includeDirection: true,
 		default: 0,
-		isVisible: (options) => !options.page_from_variable,
-	}),
-	serializeIsVisibleFnSingle({
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!$(options:page_from_variable)',
+		},
+	},
+	{
 		type: 'textinput',
 		label: 'Page (expression)',
 		id: 'page_variable',
 		default: '1',
-		isVisible: (options) => !!options.page_from_variable,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!!$(options:page_from_variable)',
+		},
 		useVariables: {
 			local: true,
 		},
 		isExpression: true,
-	}),
+	},
 ]
 
 export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
@@ -408,7 +425,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						id: 'controller_from_variable',
 						default: false,
 					},
-					serializeIsVisibleFnSingle({
+					{
 						type: 'number',
 						label: 'Surface / group index',
 						id: 'controller',
@@ -417,19 +434,25 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						max: 100,
 						default: 0,
 						range: false,
-						isVisible: (options) => !options.controller_from_variable,
-					}),
-					serializeIsVisibleFnSingle({
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!$(options:controller_from_variable)',
+						},
+					},
+					{
 						type: 'textinput',
 						label: 'Surface / group index',
 						id: 'controller_variable',
 						tooltip: 'Check the ID column in the surfaces tab',
 						default: '0',
-						isVisible: (options) => !!options.controller_from_variable,
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!!$(options:controller_from_variable)',
+						},
 						useVariables: {
 							local: true,
 						},
-					}),
+					},
 
 					...CHOICES_PAGE_WITH_VARIABLES,
 				],
