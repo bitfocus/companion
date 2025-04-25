@@ -43,7 +43,7 @@
 		"@types/ws": "^8.18.1",
 		"supertest": "^7.1.0",
 		"typescript": "~5.8.3",
-		"webpack": "^5.99.6",
+		"webpack": "^5.99.7",
 		"webpack-cli": "^6.0.1"
 	},
 	"dependencies": {
@@ -58,7 +58,7 @@
 		"@julusian/segfault-raub": "^2.3.1",
 		"@loupedeck/node": "^1.2.0",
 		"@napi-rs/canvas": "^0.1.68",
-		"@sentry/node": "^9.13.0",
+		"@sentry/node": "^9.14.0",
 		"archiver": "^7.0.1",
 		"better-sqlite3": "^11.9.1",
 		"bufferutil": "^4.0.9",
