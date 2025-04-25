@@ -334,7 +334,20 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
+					{
+						type: 'dropdown',
+						label: 'Target',
+						id: 'location_target',
+						default: 'this',
+						choices: [
+							{ id: 'this', label: 'This button: except this run' },
+							{ id: 'this:only-this-run', label: 'This button: only this run' },
+							{ id: 'this:all-runs', label: 'This button: all runs' },
+							{ id: 'text', label: 'From text' },
+							{ id: 'expression', label: 'From expression' },
+						],
+					},
+					...CHOICES_DYNAMIC_LOCATION.slice(1),
 					{
 						type: 'checkbox',
 						label: 'Skip release actions?',
@@ -381,9 +394,21 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					},
 					{
 						type: 'checkbox',
-						label: 'Skip this button?',
+						label: 'Except this button',
+						tooltip: 'When checked, actions on the current button will not be aborted',
 						id: 'ignoreSelf',
 						default: false,
+					},
+					{
+						type: 'checkbox',
+						label: 'Ignore current run',
+						tooltip: 'When checked, the current run will not be aborted',
+						id: 'ignoreCurrent',
+						default: true,
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!$(options:ignoreSelf)',
+						},
 					},
 				],
 			},
@@ -395,7 +420,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:trigger',
 						label: 'Trigger',
 						id: 'trigger_id',
-						includeSelf: true,
+						includeSelf: 'abort',
 						default: 'self',
 					},
 				],
@@ -403,7 +428,15 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			panic: {
 				label: 'Actions: Abort all button and trigger runs',
 				description: undefined,
-				options: [],
+				options: [
+					{
+						type: 'checkbox',
+						label: 'Ignore current run',
+						tooltip: 'When checked, the current run will not be aborted',
+						id: 'ignoreCurrent',
+						default: true,
+					},
+				],
 			},
 
 			bank_current_step: {
@@ -862,7 +895,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsActions) {
-				control.abortDelayedActions(action.rawOptions.unlatch, extras.abortDelayed)
+				const rawControlId = action.rawOptions.location_target
+				if (rawControlId === 'this') {
+					control.abortDelayedActions(action.rawOptions.unlatch, extras.abortDelayed)
+				} else if (rawControlId === 'this:only-this-run') {
+					control.abortDelayedActionsSingle(action.rawOptions.unlatch, extras.abortDelayed)
+				} else {
+					control.abortDelayedActions(action.rawOptions.unlatch, null)
+				}
 			}
 
 			return true
@@ -876,25 +916,32 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 				const control = this.#controlsController.getControl(controlId)
 				if (control && control.supportsActions) {
-					control.abortDelayedActions(false, extras.abortDelayed)
+					control.abortDelayedActions(false, action.rawOptions.ignoreCurrent ? extras.abortDelayed : null)
 				}
 			}
 
 			return true
 		} else if (action.definitionId === 'panic_trigger') {
-			let controlId = action.rawOptions.trigger_id
-			if (controlId === 'self') controlId = extras.controlId
+			const rawControlId = action.rawOptions.trigger_id
+			let controlId = rawControlId
+			if (controlId === 'self' || controlId?.startsWith('self:')) controlId = extras.controlId
 
 			if (controlId && ParseControlId(controlId)?.type === 'trigger') {
 				const control = this.#controlsController.getControl(controlId)
 				if (control && control.supportsActions) {
-					control.abortDelayedActions(false, extras.abortDelayed)
+					if (rawControlId === 'self') {
+						control.abortDelayedActions(false, extras.abortDelayed)
+					} else if (rawControlId === 'self:only-this-run') {
+						control.abortDelayedActionsSingle(false, extras.abortDelayed)
+					} else {
+						control.abortDelayedActions(false, null)
+					}
 				}
 			}
 
 			return true
 		} else if (action.definitionId === 'panic') {
-			this.#controlsController.abortAllDelayedActions(extras.abortDelayed)
+			this.#controlsController.abortAllDelayedActions(action.rawOptions.ignoreCurrent ? extras.abortDelayed : null)
 			return true
 		} else if (action.definitionId == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)

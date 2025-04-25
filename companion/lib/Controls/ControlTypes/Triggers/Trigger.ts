@@ -192,6 +192,10 @@ export class ControlTrigger
 		this.#actionRunner.abortAll(exceptSignal)
 	}
 
+	abortDelayedActionsSingle(_skip_up: boolean, exceptSignal: AbortSignal): void {
+		this.#actionRunner.abortSingle(exceptSignal)
+	}
+
 	/**
 	 * Remove any tracked state for a connection
 	 */

@@ -44,7 +44,7 @@ export interface InternalInputFieldCustomVariable extends CompanionInputFieldBas
 }
 export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtended {
 	type: 'internal:trigger'
-	includeSelf?: boolean
+	includeSelf?: boolean | 'abort'
 	default?: string
 }
 export interface InternalInputFieldConnectionId extends CompanionInputFieldBaseExtended {

@@ -187,6 +187,7 @@ export class ControlActionRunner {
 		if (this.#runningChains.size === 0) {
 			return false
 		}
+		console.log('Aborted many actions', this.#runningChains.size, exceptSignal)
 
 		for (const [chainId, controller] of this.#runningChains.entries()) {
 			// Skip the chain if it's the one we're supposed to ignore
@@ -194,6 +195,27 @@ export class ControlActionRunner {
 
 			controller.abort()
 			this.#runningChains.delete(chainId)
+			console.log('Aborted an action', chainId)
+		}
+
+		this.#triggerRedraw()
+
+		return true
+	}
+
+	abortSingle(exceptSignal: AbortSignal): boolean {
+		if (this.#runningChains.size === 0) {
+			return false
+		}
+
+		console.log('Aborting single action', this.#runningChains.size, exceptSignal)
+		for (const [chainId, controller] of this.#runningChains.entries()) {
+			// Skip the chain if it's not the one we're supposed to abort
+			if (exceptSignal !== controller.signal) continue
+
+			controller.abort()
+			this.#runningChains.delete(chainId)
+			console.log('Aborted single action', chainId)
 		}
 
 		this.#triggerRedraw()

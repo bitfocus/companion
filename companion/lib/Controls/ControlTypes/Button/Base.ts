@@ -95,6 +95,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		this.actionRunner.abortAll(exceptSignal)
 	}
 
+	abortDelayedActionsSingle(skip_up: boolean, exceptSignal: AbortSignal): void {
+		if (skip_up) {
+			this.setPushed(false)
+		}
+
+		this.actionRunner.abortSingle(exceptSignal)
+	}
+
 	/**
 	 * Abort any running 'while held' timers
 	 */
