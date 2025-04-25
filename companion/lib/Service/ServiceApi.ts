@@ -121,7 +121,7 @@ export class ServiceApi {
 
 			setCurrentStep: control.supportsActionSets ? (step) => control.actionSets.stepMakeCurrent(step) : undefined,
 
-			getDrawStyle: control.supportsStyle ? () => control.getDrawStyle() : undefined,
+			getLastDrawStyle: control.supportsStyle ? () => control.getLastDrawStyle() : undefined,
 			setStyleFields: control.supportsStyle ? (diff) => control.styleSetFields(diff) : undefined,
 		}
 	}
@@ -162,6 +162,6 @@ export interface ServiceApiControl {
 
 	setCurrentStep: ((step: number) => boolean) | undefined
 
-	getDrawStyle: (() => DrawStyleModel | null) | undefined
+	getLastDrawStyle: (() => DrawStyleModel | null) | undefined
 	setStyleFields: ((diff: Record<string, any>) => void) | undefined
 }

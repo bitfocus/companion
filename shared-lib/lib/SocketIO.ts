@@ -43,8 +43,9 @@ import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } 
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
-import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
-import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
+import type { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
+import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
+import type { ExpressionStreamResult, ExpressionStreamResultWithSubId } from './Expression/ExpressionResult.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -212,6 +213,23 @@ export interface ClientToBackendEventsMap {
 	'controls:event:reorder': (controlId: string, dragIndex: number, hoverIndex: number) => boolean
 	'controls:event:add': (controlId: string, eventType: string) => boolean
 
+	'controls:style:add-element': (controlId: string, type: string, index: number | null) => string | false
+	'controls:style:remove-element': (controlId: string, elementId: string) => boolean
+	'controls:style:move-element': (
+		controlId: string,
+		elementId: string,
+		parentElementId: string | null,
+		newIndex: number
+	) => boolean
+	'controls:style:set-element-name': (controlId: string, elementId: string, name: string) => boolean
+	'controls:style:update-option-value': (controlId: string, elementId: string, key: string, value: any) => boolean
+	'controls:style:update-option-is-expression': (
+		controlId: string,
+		elementId: string,
+		key: string,
+		value: boolean
+	) => boolean
+
 	'controls:local-variables-values': (controlId: string) => CompanionVariableValues | undefined
 
 	'triggers:create': () => string
@@ -351,6 +369,13 @@ export interface ClientToBackendEventsMap {
 	'modules-upgrade-to-other:unsubscribe': (moduleId: string) => void
 
 	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
+	'variables:stream-expression:subscribe': (
+		expression: string,
+		controlId: string | null,
+		requiredType: string | undefined,
+		isVariableString: boolean
+	) => ExpressionStreamResultWithSubId
+	'variables:stream-expression:unsubscribe': (subId: string) => void
 
 	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
 	'presets:unsubscribe': () => void
@@ -417,6 +442,12 @@ export interface BackendToClientEventsMap {
 
 	'bonjour:service:up': (svc: ClientBonjourService) => void
 	'bonjour:service:down': (subId: string, fqdn: string) => void
+
+	'variables:stream-expression:update': (
+		expression: string,
+		result: ExpressionStreamResult,
+		isVariableString: boolean
+	) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void

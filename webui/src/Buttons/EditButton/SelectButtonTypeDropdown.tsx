@@ -75,6 +75,7 @@ export function SelectButtonTypeDropdown({
 				<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
+				<CDropdownItem onClick={() => setButtonType('button-layered')}>Layered button (Experimental)</CDropdownItem>
 			</CDropdownMenu>
 		</CDropdown>
 	)

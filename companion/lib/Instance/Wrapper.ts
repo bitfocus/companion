@@ -235,7 +235,7 @@ export class SocketEventsHandler {
 			const controlEntities = control.entities.getAllEntities()
 			if (!controlEntities || controlEntities.length === 0) continue
 
-			const imageSize = control.getBitmapSize()
+			const imageSize = control.getBitmapFeedbackSize()
 			for (const entity of controlEntities) {
 				if (entity.type !== EntityModelType.Feedback) continue
 
@@ -356,7 +356,7 @@ export class SocketEventsHandler {
 
 					isInverted: !!feedback.isInverted,
 
-					image: control?.getBitmapSize() ?? undefined,
+					image: control?.getBitmapFeedbackSize() ?? undefined,
 
 					upgradeIndex: feedback.upgradeIndex ?? null,
 					disabled: !!feedback.disabled,
@@ -417,7 +417,7 @@ export class SocketEventsHandler {
 
 								isInverted: !!entity.isInverted,
 
-								image: control?.getBitmapSize() ?? undefined,
+								image: control?.getBitmapFeedbackSize() ?? undefined,
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,

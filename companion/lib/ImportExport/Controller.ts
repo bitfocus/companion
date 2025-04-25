@@ -30,7 +30,7 @@ import zlib from 'node:zlib'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
 import LogController, { Logger } from '../Log/Controller.js'
-import { ReferencesVisitors } from '../Resources/Visitors/ReferencesVisitors.js'
+import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import { nanoid } from 'nanoid'
 import type express from 'express'
 import type { ParsedQs } from 'qs'
@@ -1083,18 +1083,9 @@ export class ImportExportController {
 			result.actions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.actions))
 		}
 
-		ReferencesVisitors.fixupControlReferences(
-			this.#internalModule,
-			{
-				connectionLabels: connectionLabelRemap,
-				connectionIds: connectionIdRemap,
-			},
-			undefined,
-			result.condition.concat(result.actions),
-			[],
-			result.events || [],
-			false
-		)
+		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
+			.visitEntities([], result.condition.concat(result.actions))
+			.visitEvents(result.events || [])
 
 		return result
 	}
@@ -1119,6 +1110,7 @@ export class ImportExportController {
 			}
 		}
 
+		// TODO-layered: reimplement for layered buttons
 		const result: NormalButtonModel = {
 			type: 'button',
 			options: cloneDeep(control.options),
@@ -1165,18 +1157,9 @@ export class ImportExportController {
 			}
 		}
 
-		ReferencesVisitors.fixupControlReferences(
-			this.#internalModule,
-			{
-				connectionLabels: connectionLabelRemap,
-				connectionIds: connectionIdRemap,
-			},
-			result.style,
-			allEntities,
-			[],
-			[],
-			false
-		)
+		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
+			.visitButtonDrawStlye(result.style)
+			.visitEntities([], allEntities)
 
 		return result
 	}

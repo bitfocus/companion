@@ -19,6 +19,7 @@ import LogController from '../Log/Controller.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { SplitVariableId } from '../Resources/Util.js'
 import { type CompanionVariableValue } from '@companion-module/base'
 import { ReadonlyDeep } from 'type-fest'
@@ -34,17 +35,6 @@ export type VariableValueData = Record<string, Record<string, CompanionVariableV
 export type VariablesCache = Map<string, CompanionVariableValue | undefined>
 export interface ParseVariablesResult {
 	text: string
-	variableIds: Set<string>
-}
-export type ExecuteExpressionResult = ExecuteExpressionResultOk | ExecuteExpressionResultError
-interface ExecuteExpressionResultOk {
-	ok: true
-	value: boolean | number | string | undefined
-	variableIds: Set<string>
-}
-interface ExecuteExpressionResultError {
-	ok: false
-	error: string
 	variableIds: Set<string>
 }
 

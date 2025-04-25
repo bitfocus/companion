@@ -200,8 +200,14 @@ export class Registry {
 
 			this.page = new PageController(this)
 			this.controls = new ControlsController(this, controlEvents)
-			this.variables = new VariablesController(this.db, this.io)
-			this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
+			this.variables = new VariablesController(this.db, this.io, this.page, this.controls)
+			this.graphics = new GraphicsController(
+				this.controls,
+				this.page,
+				this.userconfig,
+				this.variables.values,
+				this.#internalApiRouter
+			)
 			this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.controls)
 			this.surfaces = new SurfaceController(
 				this.db,

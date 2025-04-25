@@ -71,7 +71,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	/**
 	 * The variables referenced in the last draw of the tbar. Whenever one of these changes, a redraw should be performed
 	 */
-	#lastTbarDrawReferencedVariables: Set<string> | null = null
+	#lastTbarDrawReferencedVariables: ReadonlySet<string> | null = null
 
 	constructor(
 		executeExpression: SurfaceExecuteExpressionFn,

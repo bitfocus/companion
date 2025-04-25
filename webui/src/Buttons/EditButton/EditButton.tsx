@@ -18,6 +18,7 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
 import { LocalVariablesEditor } from './LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
@@ -171,11 +172,11 @@ const EditButtonContent = observer(function EditButton({
 	return (
 		<>
 			<CCol sm={12}>
-				<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
+				<ButtonPreviewBase fixedSize preview={previewImage} right={true} className="button-zero-display-height" />
 
 				<ControlClearButton location={location} resetModalRef={resetModalRef} />
 				<MyErrorBoundary>
-					{config.type === 'button' && (
+					{(config.type === 'button' || config.type === 'button-layered') && (
 						<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
 					)}
 				</MyErrorBoundary>
@@ -205,13 +206,17 @@ const EditButtonContent = observer(function EditButton({
 			{config.type === 'button' && (
 				<NormalButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
 			)}
+
+			{config.type === 'button-layered' && (
+				<LayeredButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
+			)}
 		</>
 	)
 })
 
 const NormalButtonExtraTabs: ButtonEditorExtraTabs[] = [
-	{ id: 'feedbacks', name: 'Feedbacks' },
-	{ id: 'variables', name: 'Local Variables' },
+	{ id: 'feedbacks', name: 'Feedbacks', position: 'end' },
+	{ id: 'variables', name: 'Local Variables', position: 'end' },
 ]
 
 function NormalButtonEditor({

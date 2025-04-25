@@ -8,17 +8,18 @@ import { TriggersEventMisc } from './Events/Misc.js'
 import { clamp } from '../../../Resources/Util.js'
 import { TriggersEventVariables } from './Events/Variable.js'
 import { nanoid } from 'nanoid'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
 	ControlWithEvents,
 	ControlWithOptions,
 	ControlWithoutActionSets,
+	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -26,6 +27,7 @@ import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
+import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Class for an interval trigger.
@@ -53,6 +55,7 @@ export class ControlTrigger
 		ControlWithActions,
 		ControlWithEvents,
 		ControlWithoutStyle,
+		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
 		ControlWithoutPushed
@@ -63,6 +66,7 @@ export class ControlTrigger
 	readonly supportsEvents = true
 	readonly supportsEntities = true
 	readonly supportsStyle = false
+	readonly supportsLayeredStyle = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
@@ -248,16 +252,9 @@ export class ControlTrigger
 			foundConnectionIds.add(entities.connectionId)
 		}
 
-		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
-
-		ReferencesVisitors.visitControlReferences(
-			this.deps.internalModule,
-			visitor,
-			undefined,
-			[],
-			allEntities,
-			this.events
-		)
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels)
+			.visitEntities(allEntities, [])
+			.visitEvents(this.events)
 	}
 
 	/**
@@ -378,15 +375,11 @@ export class ControlTrigger
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			undefined,
-			[],
-			allEntities,
-			this.events,
-			true
-		)
+		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+			.visitEntities(allEntities, [])
+			.visitEvents(this.events)
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
 		// 'redraw' if needed and save changes
 		this.commitChange(changed)
@@ -737,13 +730,17 @@ export class ControlTrigger
 		return false
 	}
 
+	getLastDrawStyle(): DrawStyleModel | null {
+		return null
+	}
+
 	/**
 	 * Execute a press of this control
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
 	}
-	getBitmapSize() {
+	getBitmapFeedbackSize() {
 		return null
 	}
 }

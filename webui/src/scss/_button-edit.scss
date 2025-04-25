@@ -1,11 +1,20 @@
 .edit-button-panel {
 	margin-right: -0.5rem;
+	height: 100%;
+
+	display: flex;
+	flex-direction: column;
+
 	h4 {
 		margin-top: 1rem;
 	}
 
 	svg {
 		font-size: 1rem;
+	}
+
+	.button-zero-display-height {
+		margin-bottom: -100%;
 	}
 }
 
@@ -205,5 +214,115 @@ table.variables-table {
 	p.no-entries {
 		padding: 0.75rem;
 		margin: 0;
+	}
+}
+
+.button-layer-style-editor {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: minmax(30vh, 300px) 1fr;
+
+	.button-layer-preview {
+		text-align: center;
+		align-content: center;
+	}
+
+	.button-layer-elementlist {
+		.button-layer-elementlist-table {
+			overflow-y: scroll;
+			max-height: 100%;
+
+			.heading {
+				position: sticky;
+				top: 0;
+				background-color: #fff;
+			}
+		}
+
+		.button-layer-elementlist-table-row {
+			display: grid;
+			grid-template-columns: auto 1fr auto auto;
+
+			border-bottom: 1px solid rgb(221, 221, 221);
+
+			align-items: center;
+			column-gap: 0.2rem;
+
+			--elementlist-depth: 0;
+			margin-left: calc(var(--elementlist-depth) * 1.75em);
+
+			.td-reorder,
+			.td-reorder-placeholder {
+				padding: 0 0.5rem;
+
+				// as narrow as possible
+				width: 1.75em;
+			}
+
+			.td-reorder {
+				cursor: ns-resize;
+				background-color: #f7f7f7;
+
+				height: 100%;
+				align-content: center;
+
+				svg {
+					color: #333;
+				}
+			}
+
+			&.heading {
+				font-weight: bold;
+				padding-right: 0.2rem;
+			}
+
+			&.dragging {
+				opacity: 0.5;
+			}
+
+			&.last-row {
+				border-bottom: none;
+			}
+			&.selected-row {
+				background-color: #eeeeee;
+			}
+
+			.element-name {
+				cursor: pointer;
+
+				padding: 0.1rem 0;
+
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+			}
+
+			.element-buttons {
+				text-align: right;
+				white-space: nowrap;
+			}
+		}
+	}
+
+	.button-layer-options {
+		grid-column: 1 / span 2;
+
+		.field-with-expression {
+			display: flex;
+			gap: 0.5rem;
+
+			.expression-field {
+				flex-grow: 1;
+			}
+
+			.expression-toggle-button {
+				justify-self: flex-end;
+
+				.btn {
+					height: 100%;
+					width: 3em;
+				}
+			}
+		}
 	}
 }
