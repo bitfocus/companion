@@ -1,5 +1,5 @@
-import React, { RefObject, useCallback, useContext, useRef } from 'react'
-import { CAlert, CButton, CButtonGroup, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
+import React, { RefObject, useCallback, useContext, useRef, useState } from 'react'
+import { CAlert, CButton, CButtonGroup, CFormSelect, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
 import { useComputed } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -17,6 +17,9 @@ import {
 	faDownload,
 	faTriangleExclamation,
 	faPowerOff,
+	faCaretDown,
+	faCaretRight,
+	faLayerGroup,
 } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -47,6 +50,19 @@ interface ConnectionsListProps {
 	selectedConnectionId: string | null
 }
 
+// Add new interfaces for connection groups
+interface ConnectionGroup {
+	id: string
+	name: string
+	connectionIds: string[]
+	expanded: boolean
+}
+
+interface ConnectionGroupState {
+	groups: ConnectionGroup[]
+	ungroupedConnections: string[]
+}
+
 export const ConnectionsList = observer(function ConnectionsList({
 	doConfigureConnection,
 	connectionStatus,
@@ -56,6 +72,96 @@ export const ConnectionsList = observer(function ConnectionsList({
 
 	const deleteModalRef = useRef<GenericConfirmModalRef>(null)
 	const variablesModalRef = useRef<ConnectionVariablesModalRef>(null)
+
+	// State for connection groups
+	const [groupsState, setGroupsState] = useState<ConnectionGroupState>(() => {
+		// This would typically load from a stored configuration
+		// For now, initialize with all connections ungrouped
+		return {
+			groups: [],
+			ungroupedConnections: Array.from(connections.connections.keys()),
+		}
+	})
+
+	// Create a new empty group
+	const addNewGroup = useCallback(() => {
+		setGroupsState((prevState) => {
+			const newGroup: ConnectionGroup = {
+				id: `group-${Date.now()}`,
+				name: 'New Group',
+				connectionIds: [],
+				expanded: true,
+			}
+			return {
+				...prevState,
+				groups: [...prevState.groups, newGroup],
+			}
+		})
+	}, [])
+
+	// Toggle group expansion
+	const toggleGroupExpanded = useCallback((groupId: string) => {
+		setGroupsState((prevState) => {
+			return {
+				...prevState,
+				groups: prevState.groups.map((group) =>
+					group.id === groupId ? { ...group, expanded: !group.expanded } : group
+				),
+			}
+		})
+	}, [])
+
+	// Move a connection to a group
+	const moveConnectionToGroup = useCallback((connectionId: string, groupId: string | null) => {
+		setGroupsState((prevState) => {
+			// Remove the connection from its current location (group or ungrouped)
+			const updatedGroups = prevState.groups.map((group) => ({
+				...group,
+				connectionIds: group.connectionIds.filter((id) => id !== connectionId),
+			}))
+
+			const updatedUngrouped = prevState.ungroupedConnections.filter((id) => id !== connectionId)
+
+			// Add to the target group or to ungrouped
+			if (groupId === null) {
+				updatedUngrouped.push(connectionId)
+			} else {
+				const targetGroupIndex = updatedGroups.findIndex((g) => g.id === groupId)
+				if (targetGroupIndex !== -1) {
+					updatedGroups[targetGroupIndex] = {
+						...updatedGroups[targetGroupIndex],
+						connectionIds: [...updatedGroups[targetGroupIndex].connectionIds, connectionId],
+					}
+				}
+			}
+
+			return {
+				groups: updatedGroups,
+				ungroupedConnections: updatedUngrouped,
+			}
+		})
+	}, [])
+
+	// Rename a group
+	const renameGroup = useCallback((groupId: string, newName: string) => {
+		setGroupsState((prevState) => ({
+			...prevState,
+			groups: prevState.groups.map((group) => (group.id === groupId ? { ...group, name: newName } : group)),
+		}))
+	}, [])
+
+	// Delete a group and move its connections to ungrouped
+	const deleteGroup = useCallback((groupId: string) => {
+		setGroupsState((prevState) => {
+			const groupToDelete = prevState.groups.find((g) => g.id === groupId)
+			if (!groupToDelete) return prevState
+
+			return {
+				groups: prevState.groups.filter((g) => g.id !== groupId),
+				ungroupedConnections: [...prevState.ungroupedConnections, ...groupToDelete.connectionIds],
+			}
+		})
+	}, [])
 
 	const doShowVariables = useCallback((connectionId: string) => {
 		variablesModalRef.current?.show(connectionId)
@@ -89,40 +195,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 	)
 
 	let visibleCount = 0
-
-	const rows = Array.from(connections.connections.entries())
-		.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-		.map(([id, connection]) => {
-			const status = connectionStatus?.[id]
-
-			if (!visibleConnections.visibility.disabled && connection.enabled === false) {
-				return undefined
-			} else if (status) {
-				if (!visibleConnections.visibility.ok && status.category === 'good') {
-					return undefined
-				} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
-					return undefined
-				} else if (!visibleConnections.visibility.error && status.category === 'error') {
-					return undefined
-				}
-			}
-
-			visibleCount++
-
-			return (
-				<ConnectionsTableRow
-					key={id}
-					id={id}
-					connection={connection}
-					connectionStatus={status}
-					showVariables={doShowVariables}
-					deleteModalRef={deleteModalRef}
-					configureConnection={doConfigureConnection}
-					moveRow={moveRow}
-					isSelected={id === selectedConnectionId}
-				/>
-			)
-		})
+	// Calculate number of hidden connections
 	const hiddenCount = connections.count - visibleCount
 
 	return (
@@ -138,6 +211,12 @@ export const ConnectionsList = observer(function ConnectionsList({
 
 			<GenericConfirmModal ref={deleteModalRef} />
 			<ConnectionVariablesModal ref={variablesModalRef} />
+
+			<div className="connection-group-actions mb-2">
+				<CButton color="primary" size="sm" onClick={addNewGroup}>
+					<FontAwesomeIcon icon={faLayerGroup} /> Add Group
+				</CButton>
+			</div>
 
 			<table className="table-tight table-responsive-sm">
 				<thead>
@@ -156,10 +235,107 @@ export const ConnectionsList = observer(function ConnectionsList({
 					</tr>
 				</thead>
 				<tbody>
-					{rows}
+					{/* Render grouped connections */}
+					{groupsState.groups.map((group) => (
+						<React.Fragment key={group.id}>
+							<ConnectionGroupRow
+								group={group}
+								toggleExpanded={toggleGroupExpanded}
+								renameGroup={renameGroup}
+								deleteGroup={deleteGroup}
+							/>
+
+							{group.expanded &&
+								group.connectionIds.map((connectionId) => {
+									const connection = connections.connections.get(connectionId)
+									const status = connectionStatus?.[connectionId]
+
+									if (!connection) return null
+
+									// Apply visibility filters
+									if (!visibleConnections.visibility.disabled && connection.enabled === false) {
+										return null
+									} else if (status) {
+										if (!visibleConnections.visibility.ok && status.category === 'good') {
+											return null
+										} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
+											return null
+										} else if (!visibleConnections.visibility.error && status.category === 'error') {
+											return null
+										}
+									}
+
+									visibleCount++
+
+									return (
+										<ConnectionsTableRow
+											key={connectionId}
+											id={connectionId}
+											connection={connection}
+											connectionStatus={status}
+											showVariables={doShowVariables}
+											deleteModalRef={deleteModalRef}
+											configureConnection={doConfigureConnection}
+											moveRow={moveRow}
+											isSelected={connectionId === selectedConnectionId}
+											groups={groupsState.groups}
+											moveConnectionToGroup={moveConnectionToGroup}
+										/>
+									)
+								})}
+						</React.Fragment>
+					))}
+
+					{/* Render ungrouped connections */}
+					{groupsState.ungroupedConnections.length > 0 && (
+						<tr className="connection-group-header">
+							<td colSpan={6}>
+								<span className="group-name">Ungrouped Connections</span>
+							</td>
+						</tr>
+					)}
+
+					{groupsState.ungroupedConnections.map((connectionId) => {
+						const connection = connections.connections.get(connectionId)
+						const status = connectionStatus?.[connectionId]
+
+						if (!connection) return null
+
+						// Apply visibility filters
+						if (!visibleConnections.visibility.disabled && connection.enabled === false) {
+							return null
+						} else if (status) {
+							if (!visibleConnections.visibility.ok && status.category === 'good') {
+								return null
+							} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
+								return null
+							} else if (!visibleConnections.visibility.error && status.category === 'error') {
+								return null
+							}
+						}
+
+						visibleCount++
+
+						return (
+							<ConnectionsTableRow
+								key={connectionId}
+								id={connectionId}
+								connection={connection}
+								connectionStatus={status}
+								showVariables={doShowVariables}
+								deleteModalRef={deleteModalRef}
+								configureConnection={doConfigureConnection}
+								moveRow={moveRow}
+								isSelected={connectionId === selectedConnectionId}
+								groups={groupsState.groups}
+								moveConnectionToGroup={moveConnectionToGroup}
+							/>
+						)
+					})}
+
 					{hiddenCount > 0 && (
 						<tr>
-							<td colSpan={4} style={{ padding: '10px 5px' }}>
+							<td colSpan={6} style={{ padding: '10px 5px' }}>
 								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 								<strong>{hiddenCount} Connections are hidden</strong>
 							</td>
@@ -167,7 +343,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 					)}
 					{connections.count === 0 && (
 						<tr>
-							<td colSpan={4}>
+							<td colSpan={6}>
 								<NonIdealState icon={faPlug}>
 									You haven't set up any connections yet. <br />
 									Try adding something from the list <span className="d-xl-none">below</span>
@@ -198,6 +374,8 @@ interface ConnectionsTableRowProps {
 	deleteModalRef: RefObject<GenericConfirmModalRef>
 	moveRow: (itemId: string, targetId: string) => void
 	isSelected: boolean
+	groups?: ConnectionGroup[]
+	moveConnectionToGroup?: (connectionId: string, groupId: string | null) => void
 }
 
 const ConnectionsTableRow = observer(function ConnectionsTableRow({
@@ -209,6 +387,8 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	deleteModalRef,
 	moveRow,
 	isSelected,
+	groups,
+	moveConnectionToGroup,
 }: ConnectionsTableRowProps) {
 	const { socket, helpViewer, modules, variablesStore } = useContext(RootAppStoreContext)
 
@@ -284,6 +464,14 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			moduleVersion?.helpPath &&
 			helpViewer.current?.showFromUrl(connection.instance_type, moduleVersion.versionId, moduleVersion.helpPath),
 		[helpViewer, connection.instance_type, moduleVersion]
+	)
+
+	const handleGroupChange = useCallback(
+		(e: React.ChangeEvent<HTMLSelectElement>) => {
+			const newGroupId = e.target.value === 'ungrouped' ? null : e.target.value
+			moveConnectionToGroup?.(id, newGroupId)
+		},
+		[id, moveConnectionToGroup]
 	)
 
 	return (
@@ -419,6 +607,19 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					</CPopover>
 				</div>
 			</td>
+			<td>
+				<CFormSelect
+					value={groups?.find((group) => group.connectionIds.includes(id))?.id || 'ungrouped'}
+					onChange={handleGroupChange}
+				>
+					<option value="ungrouped">Ungrouped</option>
+					{groups?.map((group) => (
+						<option key={group.id} value={group.id}>
+							{group.name}
+						</option>
+					))}
+				</CFormSelect>
+			</td>
 		</tr>
 	)
 })
@@ -527,3 +728,58 @@ const MissingVersionsWarning = observer(function MissingVersionsWarning() {
 		</CAlert>
 	)
 })
+
+interface ConnectionGroupRowProps {
+	group: ConnectionGroup
+	toggleExpanded: (groupId: string) => void
+	renameGroup: (groupId: string, newName: string) => void
+	deleteGroup: (groupId: string) => void
+}
+
+const ConnectionGroupRow: React.FC<ConnectionGroupRowProps> = ({ group, toggleExpanded, renameGroup, deleteGroup }) => {
+	const [isEditing, setIsEditing] = useState(false)
+	const [newName, setNewName] = useState(group.name)
+
+	const handleRename = () => {
+		renameGroup(group.id, newName)
+		setIsEditing(false)
+	}
+
+	return (
+		<tr className="connection-group-header">
+			<td colSpan={5}>
+				<div className="d-flex align-items-center">
+					<CButton color="link" onClick={() => toggleExpanded(group.id)}>
+						<FontAwesomeIcon icon={group.expanded ? faCaretDown : faCaretRight} />
+					</CButton>
+					{isEditing ? (
+						<div className="d-flex align-items-center">
+							<input
+								type="text"
+								value={newName}
+								onChange={(e) => setNewName(e.target.value)}
+								onBlur={handleRename}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter') {
+										handleRename()
+									}
+								}}
+								autoFocus
+							/>
+							<CButton color="link" onClick={handleRename}>
+								<FontAwesomeIcon icon={faCheckCircle} />
+							</CButton>
+						</div>
+					) : (
+						<span className="group-name" onClick={() => setIsEditing(true)}>
+							{group.name}
+						</span>
+					)}
+					<CButton color="link" onClick={() => deleteGroup(group.id)}>
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
+				</div>
+			</td>
+		</tr>
+	)
+}
