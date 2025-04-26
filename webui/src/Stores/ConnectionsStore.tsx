@@ -1,9 +1,15 @@
 import { observable, action } from 'mobx'
 import { assertNever } from '../util.js'
-import type { ClientConnectionsUpdate, ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type {
+	ClientConnectionsUpdate,
+	ClientConnectionConfig,
+	ConnectionGroup,
+	ConnectionGroupsUpdate,
+} from '@companion-app/shared/Model/Connections.js'
 
 export class ConnectionsStore {
 	readonly connections = observable.map<string, ClientConnectionConfig>()
+	readonly groups = observable.map<string, ConnectionGroup>()
 
 	public get count() {
 		return this.connections.size
@@ -21,7 +27,7 @@ export class ConnectionsStore {
 		return Array.from(this.connections.entries()).filter(([_id, info]) => info && info.instance_type === moduleType)
 	}
 
-	public reset = action((newData: Record<string, ClientConnectionConfig | undefined> | null) => {
+	public resetConnections = action((newData: Record<string, ClientConnectionConfig | undefined> | null) => {
 		this.connections.clear()
 
 		if (newData) {
@@ -33,7 +39,7 @@ export class ConnectionsStore {
 		}
 	})
 
-	public applyChange = action((changes: ClientConnectionsUpdate[]) => {
+	public applyConnectionsChange = action((changes: ClientConnectionsUpdate[]) => {
 		for (const change of changes) {
 			const changeType = change.type
 			switch (change.type) {
@@ -51,7 +57,44 @@ export class ConnectionsStore {
 					break
 				}
 				default:
-					console.error(`Unknown action definitions change: ${changeType}`)
+					console.error(`Unknown connection change: ${changeType}`)
+					assertNever(change)
+					break
+			}
+		}
+	})
+
+	public resetGroups = action((newData: Record<string, ConnectionGroup | undefined> | null) => {
+		this.groups.clear()
+
+		if (newData) {
+			for (const [groupId, group] of Object.entries(newData)) {
+				if (!group) continue
+
+				this.groups.set(groupId, group)
+			}
+		}
+	})
+
+	public applyGroupsChange = action((changes: ConnectionGroupsUpdate[]) => {
+		for (const change of changes) {
+			const changeType = change.type
+			switch (change.type) {
+				// case 'add':
+				// 	this.connections.set(change.id, change.info)
+				// 	break
+				case 'remove':
+					this.groups.delete(change.id)
+					break
+				case 'update': {
+					// const oldObj = this.connections.get(change.id)
+					// if (!oldObj) throw new Error(`Got update for unknown module: ${change.id}`)
+
+					this.groups.set(change.id, change.info)
+					break
+				}
+				default:
+					console.error(`Unknown connection groups change: ${changeType}`)
 					assertNever(change)
 					break
 			}
