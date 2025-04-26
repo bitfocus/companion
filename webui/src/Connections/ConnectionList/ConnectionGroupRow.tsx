@@ -1,10 +1,11 @@
 import { ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
 import { CButton } from '@coreui/react'
-import { faCaretRight, faCaretDown, faCheckCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCaretRight, faCaretDown, faCheckCircle, faTrash, faPencilAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { PanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
+import { TextInputField } from '../../Components/TextInputField.js'
 
 interface ConnectionGroupRowProps {
 	group: ConnectionGroup
@@ -21,46 +22,53 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 	collapseHelper,
 }: ConnectionGroupRowProps) {
 	const [isEditing, setIsEditing] = useState(false)
-	const [newName, setNewName] = useState(group.label)
 
-	const handleRename = () => {
-		renameGroup(group.id, newName)
-		setIsEditing(false)
-	}
+	const handleSetName = useCallback((name: string) => renameGroup(group.id, name), [renameGroup, group.id])
+	const handleNameFieldBlur = useCallback(
+		() =>
+			// Delay to ensure if the check is clicked it doesn't fire twice
+			setTimeout(() => {
+				setIsEditing(false)
+			}, 100),
+		[]
+	)
 
 	return (
 		<tr className="connection-group-header">
 			<td colSpan={5}>
-				<div className="d-flex align-items-center">
-					<CButton color="link" onClick={() => toggleExpanded(group.id)}>
-						<FontAwesomeIcon icon={collapseHelper.isPanelCollapsed(null, group.id) ? faCaretRight : faCaretDown} />
-					</CButton>
-					{isEditing ? (
-						<div className="d-flex align-items-center">
-							<input
-								type="text"
-								value={newName}
-								onChange={(e) => setNewName(e.target.value)}
-								onBlur={handleRename}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter') {
-										handleRename()
-									}
-								}}
+				<div className="d-flex align-items-center justify-content-between">
+					<div className="d-flex align-items-center">
+						<CButton color="link" onClick={() => toggleExpanded(group.id)}>
+							<FontAwesomeIcon icon={collapseHelper.isPanelCollapsed(null, group.id) ? faCaretRight : faCaretDown} />
+						</CButton>
+						{isEditing ? (
+							<TextInputField
+								value={group.label ?? ''}
+								placeholder={`Give this group a name`}
+								setValue={handleSetName}
+								onBlur={handleNameFieldBlur}
 								autoFocus
 							/>
-							<CButton color="link" onClick={handleRename}>
+						) : (
+							<span className="group-name" onClick={() => toggleExpanded(group.id)}>
+								{group.label}
+							</span>
+						)}
+					</div>
+					<div className="d-flex align-items-center">
+						{isEditing ? (
+							<CButton color="link" onClick={handleNameFieldBlur}>
 								<FontAwesomeIcon icon={faCheckCircle} />
 							</CButton>
-						</div>
-					) : (
-						<span className="group-name" onClick={() => setIsEditing(true)}>
-							{group.label}
-						</span>
-					)}
-					<CButton color="link" onClick={() => deleteGroup(group.id)}>
-						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
+						) : (
+							<CButton color="link" onClick={() => setIsEditing(true)}>
+								<FontAwesomeIcon icon={faPencilAlt} />
+							</CButton>
+						)}
+						<CButton color="link" onClick={() => deleteGroup(group.id)}>
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>
+					</div>
 				</div>
 			</td>
 		</tr>
