@@ -4,7 +4,6 @@ import { faCaretRight, faCaretDown, faCheckCircle, faTrash, faPencilAlt } from '
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useState } from 'react'
-import { PanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import { TextInputField } from '../../Components/TextInputField.js'
 
 interface ConnectionGroupRowProps {
@@ -12,16 +11,18 @@ interface ConnectionGroupRowProps {
 	toggleExpanded: (groupId: string) => void
 	renameGroup: (groupId: string, newName: string) => void
 	deleteGroup: (groupId: string) => void
-	collapseHelper: PanelCollapseHelper
+	isCollapsed: boolean
 }
 export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 	group,
 	toggleExpanded,
 	renameGroup,
 	deleteGroup,
-	collapseHelper,
+	isCollapsed,
 }: ConnectionGroupRowProps) {
 	const [isEditing, setIsEditing] = useState(false)
+
+	const toggleExpanded2 = useCallback(() => toggleExpanded(group.id), [toggleExpanded, group.id])
 
 	const handleSetName = useCallback((name: string) => renameGroup(group.id, name), [renameGroup, group.id])
 	const handleNameFieldBlur = useCallback(
@@ -38,8 +39,8 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 			<td colSpan={5}>
 				<div className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
-						<CButton color="link" onClick={() => toggleExpanded(group.id)}>
-							<FontAwesomeIcon icon={collapseHelper.isPanelCollapsed(null, group.id) ? faCaretRight : faCaretDown} />
+						<CButton color="link" onClick={toggleExpanded2}>
+							<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} />
 						</CButton>
 						{isEditing ? (
 							<TextInputField
@@ -50,7 +51,7 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 								autoFocus
 							/>
 						) : (
-							<span className="group-name" onClick={() => toggleExpanded(group.id)}>
+							<span className="group-name" onClick={toggleExpanded2}>
 								{group.label}
 							</span>
 						)}

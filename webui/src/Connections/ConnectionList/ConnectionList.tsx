@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef, useMemo } from 'react'
+import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEyeSlash, faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
@@ -8,11 +8,13 @@ import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.j
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../../Components/NonIdealState.js'
-import { useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
+import { TableVisibilityHelper, useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
 import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { ConnectionGroupRow } from './ConnectionGroupRow.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -54,24 +56,6 @@ export const ConnectionsList = observer(function ConnectionsList({
 		[collapseHelper]
 	)
 
-	// Move a connection to a group
-	const moveConnectionToGroup = useCallback(
-		(connectionId: string, groupId: string | null) => {
-			// TODO: This would be implemented in the backend
-			socket
-				.emitPromise('connection-groups:move-connection', [
-					{
-						connectionId,
-						groupId,
-					},
-				])
-				.catch((e) => {
-					console.error('Failed to move connection to group', e)
-				})
-		},
-		[socket]
-	)
-
 	// Rename a group
 	const renameGroup = useCallback(
 		(groupId: string, newName: string) => {
@@ -92,10 +76,6 @@ export const ConnectionsList = observer(function ConnectionsList({
 		[socket]
 	)
 
-	const doShowVariables = useCallback((connectionId: string) => {
-		variablesModalRef.current?.show(connectionId)
-	}, [])
-
 	const visibleConnections = useTableVisibilityHelper<VisibleConnectionsState>('connections_visible', {
 		disabled: true,
 		ok: true,
@@ -103,37 +83,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 		error: true,
 	})
 
-	const moveRow = useCallback(
-		(itemId: string, targetId: string) => {
-			const rawIds = Array.from(connections.connections.entries())
-				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-				.map(([id]) => id)
-
-			const itemIndex = rawIds.indexOf(itemId)
-			const targetIndex = rawIds.indexOf(targetId)
-			if (itemIndex === -1 || targetIndex === -1) return
-
-			const newIds = rawIds.filter((id) => id !== itemId)
-			newIds.splice(targetIndex, 0, itemId)
-
-			socket.emitPromise('connections:set-order', [newIds]).catch((e) => {
-				console.error('Reorder failed', e)
-			})
-		},
-		[socket, connections]
-	)
-
-	// Get list of ungrouped connections - any connection not in a group
-	const ungroupedConnections = useMemo(() => {
-		// Filter connections that don't have a groupId property
-		return Array.from(connections.connections.entries())
-			.filter(([_, connection]) => !connection.groupId)
-			.map(([id]) => id)
-	}, [connections.connections])
-
-	let visibleCount = 0
-	// Calculate number of hidden connections
-	const hiddenCount = connections.count - visibleCount
+	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections)
 
 	return (
 		<div>
@@ -173,54 +123,44 @@ export const ConnectionsList = observer(function ConnectionsList({
 				</thead>
 				<tbody>
 					{/* Render grouped connections */}
-					{Array.from(connections.groups.entries()).map(([groupId, group]) => (
-						<React.Fragment key={groupId}>
-							<ConnectionGroupRow
-								group={group}
-								toggleExpanded={toggleGroupExpanded}
-								renameGroup={renameGroup}
-								deleteGroup={deleteGroup}
-								collapseHelper={collapseHelper}
-							/>
+					{Array.from(connections.groups.entries()).map(([groupId, group]) => {
+						const isCollapsed = collapseHelper.isPanelCollapsed(null, groupId)
 
-							{!collapseHelper.isPanelCollapsed(null, groupId) &&
-								Array.from(connections.connections.entries())
-									.filter(([_, connection]) => connection.groupId === groupId)
-									.map(([connectionId, connection]) => {
-										const status = connectionStatus?.[connectionId]
+						const connectionsInGroup = groupedConnections.get(groupId) || []
 
-										// Apply visibility filters
-										if (!visibleConnections.visibility.disabled && connection.enabled === false) {
-											return null
-										} else if (status) {
-											if (!visibleConnections.visibility.ok && status.category === 'good') {
-												return null
-											} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
-												return null
-											} else if (!visibleConnections.visibility.error && status.category === 'error') {
-												return null
-											}
-										}
+						return (
+							<React.Fragment key={groupId}>
+								<ConnectionGroupRow
+									group={group}
+									toggleExpanded={toggleGroupExpanded}
+									renameGroup={renameGroup}
+									deleteGroup={deleteGroup}
+									isCollapsed={isCollapsed}
+								/>
 
-										visibleCount++
+								{!isCollapsed && connectionsInGroup.length === 0 && (
+									<tr>
+										<td colSpan={6} style={{ padding: '10px 5px' }}>
+											<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+											<strong>There are no connections in this group</strong>
+										</td>
+									</tr>
+								)}
 
-										return (
-											<ConnectionsTableRow
-												key={connectionId}
-												id={connectionId}
-												connection={connection}
-												connectionStatus={status}
-												showVariables={doShowVariables}
-												deleteModalRef={deleteModalRef}
-												configureConnection={doConfigureConnection}
-												moveRow={moveRow}
-												isSelected={connectionId === selectedConnectionId}
-												moveConnectionToGroup={moveConnectionToGroup}
-											/>
-										)
-									})}
-						</React.Fragment>
-					))}
+								{!isCollapsed && (
+									<ConnectionsInGroup
+										doConfigureConnection={doConfigureConnection}
+										connectionStatus={connectionStatus}
+										selectedConnectionId={selectedConnectionId}
+										connections={connectionsInGroup}
+										visibleConnections={visibleConnections}
+										variablesModalRef={variablesModalRef}
+										deleteModalRef={deleteModalRef}
+									/>
+								)}
+							</React.Fragment>
+						)
+					})}
 
 					{/* Render ungrouped connections */}
 					{ungroupedConnections.length > 0 && (
@@ -231,51 +171,16 @@ export const ConnectionsList = observer(function ConnectionsList({
 						</tr>
 					)}
 
-					{ungroupedConnections.map((connectionId) => {
-						const connection = connections.connections.get(connectionId)
-						const status = connectionStatus?.[connectionId]
+					<ConnectionsInGroup
+						doConfigureConnection={doConfigureConnection}
+						connectionStatus={connectionStatus}
+						selectedConnectionId={selectedConnectionId}
+						connections={ungroupedConnections}
+						visibleConnections={visibleConnections}
+						variablesModalRef={variablesModalRef}
+						deleteModalRef={deleteModalRef}
+					/>
 
-						if (!connection) return null
-
-						// Apply visibility filters
-						if (!visibleConnections.visibility.disabled && connection.enabled === false) {
-							return null
-						} else if (status) {
-							if (!visibleConnections.visibility.ok && status.category === 'good') {
-								return null
-							} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
-								return null
-							} else if (!visibleConnections.visibility.error && status.category === 'error') {
-								return null
-							}
-						}
-
-						visibleCount++
-
-						return (
-							<ConnectionsTableRow
-								key={connectionId}
-								id={connectionId}
-								connection={connection}
-								connectionStatus={status}
-								showVariables={doShowVariables}
-								deleteModalRef={deleteModalRef}
-								configureConnection={doConfigureConnection}
-								moveRow={moveRow}
-								isSelected={connectionId === selectedConnectionId}
-								moveConnectionToGroup={moveConnectionToGroup}
-							/>
-						)
-					})}
-
-					{hiddenCount > 0 && (
-						<tr>
-							<td colSpan={6} style={{ padding: '10px 5px' }}>
-								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-								<strong>{hiddenCount} Connections are hidden</strong>
-							</td>
-						</tr>
-					)}
 					{connections.count === 0 && (
 						<tr>
 							<td colSpan={6}>
@@ -298,4 +203,154 @@ export interface ConnectionDragItem {
 }
 export interface ConnectionDragStatus {
 	isDragging: boolean
+}
+
+interface ClientConnectionConfigWithId extends ClientConnectionConfig {
+	id: string
+}
+function getGroupedConnections(connections: ConnectionsStore) {
+	const validGroupIds = new Set(connections.groups.keys())
+	const groupedConnections = new Map<string, ClientConnectionConfigWithId[]>()
+	const ungroupedConnections: ClientConnectionConfigWithId[] = []
+	for (const [connectionId, connection] of connections.connections) {
+		if (connection.groupId && validGroupIds.has(connection.groupId)) {
+			if (!groupedConnections.has(connection.groupId)) {
+				groupedConnections.set(connection.groupId, [])
+			}
+			groupedConnections.get(connection.groupId)!.push({ ...connection, id: connectionId })
+		} else {
+			ungroupedConnections.push({ ...connection, id: connectionId })
+		}
+	}
+
+	// sort All connections by sortOrder
+	ungroupedConnections.sort((a, b) => a.sortOrder - b.sortOrder)
+	for (const connections of groupedConnections.values()) {
+		connections.sort((a, b) => a.sortOrder - b.sortOrder)
+	}
+
+	return {
+		groupedConnections,
+		ungroupedConnections,
+	}
+}
+
+function ConnectionsInGroup({
+	doConfigureConnection,
+	connectionStatus,
+	selectedConnectionId,
+	connections,
+	visibleConnections,
+	variablesModalRef,
+	deleteModalRef,
+}: {
+	doConfigureConnection: (connectionId: string | null) => void
+	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
+	selectedConnectionId: string | null
+	connections: ClientConnectionConfigWithId[]
+	visibleConnections: TableVisibilityHelper<VisibleConnectionsState>
+	variablesModalRef: React.RefObject<ConnectionVariablesModalRef>
+	deleteModalRef: React.RefObject<GenericConfirmModalRef>
+}) {
+	const { socket } = useContext(RootAppStoreContext)
+
+	const doShowVariables = useCallback((connectionId: string) => {
+		variablesModalRef.current?.show(connectionId)
+	}, [])
+
+	// Move a connection to a group
+	const moveConnectionToGroup = useCallback(
+		(connectionId: string, groupId: string | null) => {
+			// TODO: This would be implemented in the backend
+			socket
+				.emitPromise('connection-groups:move-connection', [
+					{
+						connectionId,
+						groupId,
+					},
+				])
+				.catch((e) => {
+					console.error('Failed to move connection to group', e)
+				})
+		},
+		[socket]
+	)
+
+	const moveRow = useCallback(
+		(itemId: string, targetId: string) => {
+			console.error('moveRow not implemented', itemId, targetId)
+
+			// const rawIds = Array.from(connections.connections.entries())
+			// 	.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+			// 	.map(([id]) => id)
+
+			// const itemIndex = rawIds.indexOf(itemId)
+			// const targetIndex = rawIds.indexOf(targetId)
+			// if (itemIndex === -1 || targetIndex === -1) return
+
+			// const newIds = rawIds.filter((id) => id !== itemId)
+			// newIds.splice(targetIndex, 0, itemId)
+
+			// socket.emitPromise('connections:set-order', [newIds]).catch((e) => {
+			// 	console.error('Reorder failed', e)
+			// })
+		},
+		[socket, connections]
+	)
+
+	let visibleCount = 0
+
+	const connectionRows = connections
+		.map((connection) => {
+			const status = connectionStatus?.[connection.id]
+
+			// Apply visibility filters
+			if (!visibleConnections.visibility.disabled && connection.enabled === false) {
+				return null
+			} else if (status) {
+				if (!visibleConnections.visibility.ok && status.category === 'good') {
+					return null
+				} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
+					return null
+				} else if (!visibleConnections.visibility.error && status.category === 'error') {
+					return null
+				}
+			}
+
+			visibleCount++
+
+			return (
+				<ConnectionsTableRow
+					key={connection.id}
+					id={connection.id}
+					connection={connection}
+					connectionStatus={status}
+					showVariables={doShowVariables}
+					deleteModalRef={deleteModalRef}
+					configureConnection={doConfigureConnection}
+					moveRow={moveRow}
+					isSelected={connection.id === selectedConnectionId}
+					moveConnectionToGroup={moveConnectionToGroup}
+				/>
+			)
+		})
+		.filter((row) => row !== null)
+
+	// Calculate number of hidden connections
+	const hiddenCount = connections.length - visibleCount
+
+	return (
+		<>
+			{connectionRows}
+
+			{hiddenCount > 0 && (
+				<tr>
+					<td colSpan={6} style={{ padding: '10px 5px' }}>
+						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+						<strong>{hiddenCount} Connections are hidden</strong>
+					</td>
+				</tr>
+			)}
+		</>
+	)
 }
