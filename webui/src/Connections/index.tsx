@@ -1,7 +1,7 @@
 import { CCol, CRow, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { MyErrorBoundary } from '../util.js'
-import { ConnectionsList } from './ConnectionList.js'
+import { ConnectionsList } from './ConnectionList/ConnectionList.js'
 import { AddConnectionsPanel } from './AddConnectionPanel.js'
 import { ConnectionEditPanel } from './ConnectionEdit/ConnectionEditPanel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
