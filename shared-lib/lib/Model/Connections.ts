@@ -20,6 +20,12 @@ export interface ClientConnectionConfig {
 	hasRecordActionsHandler: boolean
 }
 
+export interface ConnectionGroup {
+	id: string
+	label: string
+	sortOrder: number
+}
+
 export enum ConnectionUpdatePolicy {
 	Manual = 'manual',
 	Stable = 'stable',
@@ -44,4 +50,18 @@ export interface ClientConnectionsUpdateUpdateOp {
 
 	// patch: JsonPatchOperation[]
 	info: ClientConnectionConfig
+}
+
+export type ConnectionGroupsUpdate = ConnectionGroupsUpdateUpdateOp | ConnectionGroupsUpdateRemoveOp
+
+export interface ConnectionGroupsUpdateRemoveOp {
+	type: 'remove'
+	id: string
+}
+
+export interface ConnectionGroupsUpdateUpdateOp {
+	type: 'update'
+	id: string
+
+	info: ConnectionGroup
 }

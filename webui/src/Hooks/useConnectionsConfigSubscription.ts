@@ -6,26 +6,26 @@ export function useConnectionsConfigSubscription(socket: CompanionSocketWrapped,
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
-		store.reset(null)
+		store.resetConnections(null)
 		setReady(false)
 
 		socket
 			.emitPromise('connections:subscribe', [])
 			.then((connections) => {
-				store.reset(connections)
+				store.resetConnections(connections)
 				setReady(true)
 			})
 			.catch((e) => {
-				store.reset(null)
+				store.resetConnections(null)
 				console.error('Failed to load connections list', e)
 			})
 
 		const unsubUpdates = socket.on('connections:patch', (change) => {
-			store.applyChange(change)
+			store.applyConnectionsChange(change)
 		})
 
 		return () => {
-			store.reset(null)
+			store.resetConnections(null)
 			unsubUpdates()
 
 			socket.emitPromise('connections:unsubscribe', []).catch((e) => {
