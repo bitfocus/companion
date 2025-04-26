@@ -8,6 +8,7 @@ export interface ConnectionConfig {
 	sortOrder: number
 	moduleVersionId: string | null
 	updatePolicy: ConnectionUpdatePolicy // TODO - upgrade script
+	groupId?: string
 }
 
 export interface ClientConnectionConfig {
@@ -18,6 +19,7 @@ export interface ClientConnectionConfig {
 	enabled: boolean
 	sortOrder: number
 	hasRecordActionsHandler: boolean
+	groupId?: string
 }
 
 export interface ConnectionGroup {

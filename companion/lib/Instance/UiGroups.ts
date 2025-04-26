@@ -4,7 +4,7 @@ import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { nanoid } from 'nanoid'
 
-const ConnectionGroupTable = 'connection-groups'
+const ConnectionGroupTable = 'connection_groups'
 const ConnectionGroupRoom = 'connection-groups'
 export class InstanceUiGroups {
 	readonly #io: UIHandler
@@ -18,6 +18,9 @@ export class InstanceUiGroups {
 		this.#io = io
 		this.#db = db
 		this.#configStore = configStore
+
+		// Ensure the table exists
+		this.#db.store.prepare(`CREATE TABLE IF NOT EXISTS ${ConnectionGroupTable} (id STRING UNIQUE, value STRING);`).run()
 
 		this.#data = this.#db.getTable(ConnectionGroupTable)
 	}
