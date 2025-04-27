@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useState } from 'react'
 import { TextInputField } from '../../Components/TextInputField.js'
+import { useConnectionListDragging } from './ConnectionListDropZone.js'
 
 interface ConnectionGroupRowProps {
 	group: ConnectionGroup
@@ -34,8 +35,10 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 		[]
 	)
 
+	const { drop } = useConnectionListDragging(group.id, -1)
+
 	return (
-		<tr className="connection-group-header">
+		<tr ref={drop} className="connection-group-header">
 			<td colSpan={5}>
 				<div className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">

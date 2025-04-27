@@ -192,8 +192,13 @@ export class ConnectionConfigStore {
 			.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
 			.map(([id]) => id)
 
-		// Insert the connection at the drop index
-		sortedConnectionIds.splice(dropIndex, 0, connectionId)
+		if (dropIndex < 0) {
+			// Push the connection to the end of the array
+			sortedConnectionIds.push(connectionId)
+		} else {
+			// Insert the connection at the drop index
+			sortedConnectionIds.splice(dropIndex, 0, connectionId)
+		}
 
 		// update the sort order of the connections in the store, tracking which ones changed
 		sortedConnectionIds.forEach((id, index) => {

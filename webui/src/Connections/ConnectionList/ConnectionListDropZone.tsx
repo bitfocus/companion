@@ -3,7 +3,7 @@ import { useDrop } from 'react-dnd'
 import { ConnectionDragItem } from './ConnectionList.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
-export function useConnectionListDragging(groupId: string | null) {
+export function useConnectionListDragging(groupId: string | null, dropIndex: number = 0) {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const [isDragging, drop] = useDrop<ConnectionDragItem, unknown, boolean>({
@@ -16,12 +16,12 @@ export function useConnectionListDragging(groupId: string | null) {
 			// if (ownerId && isEqual(item.connectionId, ownerId.parentId)) return
 
 			// Time to actually perform the action
-			socket.emitPromise('connections:reorder', [groupId, item.connectionId, 0]).catch((e) => {
+			socket.emitPromise('connections:reorder', [groupId, item.connectionId, dropIndex]).catch((e) => {
 				console.error('Reorder failed', e)
 			})
 
 			// item.listId = listId
-			item.index = 0
+			item.index = dropIndex
 			item.groupId = groupId
 		},
 	})
