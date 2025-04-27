@@ -10,6 +10,7 @@ function convertDatabaseToV8(db: DataStoreBase, logger: Logger) {
 	if (!db.store) return
 
 	convertCustomVariablesToTable(db, logger)
+	convertConnectionsToTable(db, logger)
 
 	// const controls = db.getTable('controls')
 
@@ -32,6 +33,19 @@ function convertCustomVariablesToTable(db: DataStoreBase, _logger: Logger) {
 		}
 	}
 	db.deleteKey('custom_variables')
+}
+
+function convertConnectionsToTable(db: DataStoreBase, _logger: Logger) {
+	// Create table
+	db.store.prepare(`CREATE TABLE IF NOT EXISTS connections (id STRING UNIQUE, value STRING);`).run()
+
+	const oldConnections = db.getKey('instance')
+	if (oldConnections) {
+		for (const [id, data] of Object.entries(oldConnections)) {
+			db.setTableKey('connections', id, data)
+		}
+	}
+	db.deleteKey('instance')
 }
 
 function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
