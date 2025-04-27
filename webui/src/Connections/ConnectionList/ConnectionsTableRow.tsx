@@ -24,30 +24,29 @@ import { UpdateConnectionToLatestButton } from '../UpdateConnectionToLatestButto
 import { getModuleVersionInfoForConnection } from '../Util.js'
 import { ConnectionDragItem, ConnectionDragStatus } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
+import { checkDragState } from '../../util.js'
 
 interface ConnectionsTableRowProps {
 	id: string
+	index: number
 	connection: ClientConnectionConfig
 	connectionStatus: ConnectionStatusEntry | undefined
 	showVariables: (label: string) => void
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
-	moveRow: (itemId: string, targetId: string) => void
 	isSelected: boolean
-	moveConnectionToGroup?: (connectionId: string, groupId: string | null) => void
 }
 export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	id,
+	index,
 	connection,
 	connectionStatus,
 	showVariables,
 	configureConnection,
 	deleteModalRef,
-	moveRow,
 	isSelected,
-	moveConnectionToGroup,
 }: ConnectionsTableRowProps) {
-	const { socket, helpViewer, modules, variablesStore, connections } = useContext(RootAppStoreContext)
+	const { socket, helpViewer, modules, variablesStore } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.modules.get(connection.instance_type)
 
@@ -81,23 +80,38 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const ref = useRef(null)
 	const [, drop] = useDrop<ConnectionDragItem>({
 		accept: 'connection',
-		hover(item, _monitor) {
+		hover(item, monitor) {
 			if (!ref.current) {
 				return
 			}
+
+			if (!checkDragState(item, monitor, id)) return
+
 			// Don't replace items with themselves
-			if (item.id === id) {
+			if (item.connectionId === id) {
 				return
 			}
 
 			// Time to actually perform the action
-			moveRow(item.id, id)
+			socket.emitPromise('connections:reorder', [connection.groupId ?? null, item.connectionId, index]).catch((e) => {
+				console.error('Reorder failed', e)
+			})
+
+			// Note: we're mutating the monitor item here!
+			// Generally it's better to avoid mutations,
+			// but it's good here for the sake of performance
+			// to avoid expensive index searches.
+			item.index = index
+			item.groupId = connection.groupId ?? null
 		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag<ConnectionDragItem, unknown, ConnectionDragStatus>({
 		type: 'connection',
 		item: {
-			id,
+			connectionId: id,
+			groupId: connection.groupId ?? null,
+			index,
+			dragState: null,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),

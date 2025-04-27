@@ -19,7 +19,7 @@ export interface ClientConnectionConfig {
 	enabled: boolean
 	sortOrder: number
 	hasRecordActionsHandler: boolean
-	groupId?: string
+	groupId: string | null
 }
 
 export interface ConnectionGroup {

@@ -680,10 +680,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return connectionInfo[0]
 		})
 
-		client.onPromise('connections:set-order', async (connectionIds) => {
-			if (!Array.isArray(connectionIds)) throw new Error('Expected array of ids')
-
-			this.#configStore.setOrder(connectionIds)
+		client.onPromise('connections:reorder', async (groupId, connectionId, dropIndex) => {
+			console.log('Reorder', groupId, connectionId, dropIndex)
+			this.#configStore.moveConnection(groupId, connectionId, dropIndex)
 		})
 
 		client.onPromise('connection-debug:subscribe', (connectionId) => {
