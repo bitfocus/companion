@@ -77,6 +77,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly connectionApiRouter = express.Router()
 
+	get groups(): InstanceUiGroups {
+		return this.#uiGroupsController
+	}
+
 	constructor(
 		appInfo: AppInfo,
 		io: UIHandler,

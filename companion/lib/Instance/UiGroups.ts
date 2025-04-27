@@ -26,8 +26,20 @@ export class InstanceUiGroups {
 		this.#data = this.#db.getTable(ConnectionGroupTable)
 	}
 
+	/**
+	 * Discard all groups and put all connections back to the default group
+	 */
 	discardAllGroups(): void {
 		this.#db.emptyTable(ConnectionGroupTable)
+
+		this.removeUnknownGroupReferences()
+	}
+
+	/**
+	 * Ensure that all groupIds in connections are valid groups
+	 */
+	removeUnknownGroupReferences(): void {
+		this.#configStore.cleanUnkownGroupIds(Object.keys(this.#data))
 	}
 
 	/**
@@ -81,7 +93,7 @@ export class InstanceUiGroups {
 			])
 
 			// Ensure any connections are moved back to the default group
-			this.#configStore.cleanUnkownGroupIds(Object.keys(this.#data))
+			this.removeUnknownGroupReferences()
 		})
 
 		client.onPromise('connection-groups:set-name', (groupId: string, groupName: string) => {
