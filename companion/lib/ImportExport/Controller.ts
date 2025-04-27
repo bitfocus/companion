@@ -436,8 +436,8 @@ export class ImportExportController {
 			}
 
 			if (!config || !isFalsey(config.surfaces)) {
-				exp.surfaces = this.#surfacesController.exportAll(false)
-				exp.surfaceGroups = this.#surfacesController.exportAllGroups(false)
+				exp.surfaces = this.#surfacesController.exportAll()
+				exp.surfaceGroups = this.#surfacesController.exportAllGroups()
 			}
 
 			return exp

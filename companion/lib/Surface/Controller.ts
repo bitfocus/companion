@@ -52,6 +52,7 @@ import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
 	SurfaceConfig,
+	SurfaceGroupConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
@@ -64,6 +65,7 @@ import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -88,7 +90,8 @@ export interface SurfaceControllerEvents {
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
-	readonly #db: DataDatabase
+	readonly #dbTableSurfaces: DataStoreTableView<Record<string, SurfaceConfig>>
+	readonly #dbTableGroups: DataStoreTableView<Record<string, SurfaceGroupConfig>>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 	readonly #io: UIHandler
 
@@ -140,7 +143,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies, io: UIHandler) {
 		super()
 
-		this.#db = db
+		this.#dbTableSurfaces = db.getTableView('surfaces')
+		this.#dbTableGroups = db.getTableView('surface_groups')
 		this.#handlerDependencies = handlerDependencies
 		this.#io = io
 
@@ -151,11 +155,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		setImmediate(() => {
 			// Setup groups
-			const groupsConfigs = this.#db.getKey('surface_groups', {})
+			const groupsConfigs = this.#dbTableGroups.all()
 			for (const groupId of Object.keys(groupsConfigs)) {
 				const newGroup = new SurfaceGroup(
 					this,
-					this.#db,
+					this.#dbTableGroups,
 					this.#handlerDependencies.page,
 					this.#handlerDependencies.userconfig,
 					groupId,
@@ -166,7 +170,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 
 			// Setup defined emulators
-			const instances = this.#db.getKey('deviceconfig', {}) || {}
+			const instances = this.#dbTableSurfaces.all()
 			for (const id of Object.keys(instances)) {
 				// If the id starts with 'emulator:' then re-add it
 				if (id.startsWith('emulator:')) {
@@ -438,10 +442,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 
 			// Find a disconnected surface
-			const configs = this.#db.getKey('deviceconfig', {})
-			if (configs[id]) {
-				configs[id].name = name
-				this.#db.setKey('deviceconfig', configs)
+			const surfaceConfig = this.#dbTableSurfaces.get(id)
+			if (surfaceConfig) {
+				surfaceConfig.name = name
+				this.#dbTableSurfaces.set(id, surfaceConfig)
 				this.updateDevicesList()
 				return
 			}
@@ -515,7 +519,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			const newGroup = new SurfaceGroup(
 				this,
-				this.#db,
+				this.#dbTableGroups,
 				this.#handlerDependencies.page,
 				this.#handlerDependencies.userconfig,
 				groupId,
@@ -615,7 +619,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			const newGroup = new SurfaceGroup(
 				this,
-				this.#db,
+				this.#dbTableGroups,
 				this.#handlerDependencies.page,
 				this.#handlerDependencies.userconfig,
 				surfaceGroupId,
@@ -652,8 +656,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @returns Config object, or undefined
 	 */
 	getDeviceConfig(surfaceId: string): SurfaceConfig | undefined {
-		const config = this.#db.getKey('deviceconfig', {})
-		return config[surfaceId]
+		return this.#dbTableSurfaces.get(surfaceId)
 	}
 
 	/**
@@ -661,16 +664,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @returns Already had config
 	 */
 	setDeviceConfig(surfaceId: string, surfaceConfig: any | undefined): boolean {
-		const config = this.#db.getKey('deviceconfig', {})
-		const exists = !!config[surfaceId]
+		const exists = !!this.#dbTableSurfaces.get(surfaceId)
 
 		if (surfaceConfig) {
-			config[surfaceId] = surfaceConfig
+			this.#dbTableSurfaces.set(surfaceId, surfaceConfig)
 		} else {
-			delete config[surfaceId]
+			this.#dbTableSurfaces.delete(surfaceId)
 		}
 
-		this.#db.setKey('deviceconfig', config)
 		return exists
 	}
 
@@ -757,7 +758,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 
 		// Add any automatic groups for offline surfaces
-		const config: Record<string, any> = this.#db.getKey('deviceconfig', {})
+		const config = this.#dbTableSurfaces.all()
 		for (const [surfaceId, surface] of Object.entries(config)) {
 			if (mappedSurfaceId.has(surfaceId)) continue
 
@@ -784,8 +785,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	async reset(): Promise<void> {
 		// Each active handler will re-add itself when doing the save as part of its own reset
-		this.#db.setKey('deviceconfig', {})
-		this.#db.setKey('surface_groups', {})
+		this.#dbTableGroups.clear()
+		this.#dbTableSurfaces.clear()
 		this.#outboundController.reset()
 
 		// Wait for the surfaces to disconnect before clearing their config
@@ -1144,14 +1145,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	exportAll(clone = true): any {
-		const obj = this.#db.getKey('deviceconfig', {}) || {}
-		return clone ? cloneDeep(obj) : obj
+	exportAll(): any {
+		return this.#dbTableSurfaces.all()
 	}
 
-	exportAllGroups(clone = true): any {
-		const obj = this.#db.getKey('surface_groups', {}) || {}
-		return clone ? cloneDeep(obj) : obj
+	exportAllGroups(): any {
+		return this.#dbTableGroups.all()
 	}
 
 	/**
@@ -1164,7 +1163,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				// Group does not exist
 				group = new SurfaceGroup(
 					this,
-					this.#db,
+					this.#dbTableGroups,
 					this.#handlerDependencies.page,
 					this.#handlerDependencies.userconfig,
 					id,

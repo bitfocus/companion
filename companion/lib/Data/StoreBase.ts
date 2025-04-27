@@ -4,6 +4,7 @@ import { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
 import { createSqliteDatabase } from './Util.js'
+import { cloneDeep } from 'lodash-es'
 
 enum DatabaseStartupState {
 	Normal = 0,
@@ -582,9 +583,9 @@ export abstract class DataStoreBase {
 				return this.getTableKey(tableName, String(id))
 			},
 			getOrDefault: (id, defaultValue) => {
-				const value = this.getTableKey(tableName, String(id), defaultValue)
+				const value = this.getTableKey(tableName, String(id))
 				if (value === undefined) {
-					this.setTableKey(tableName, String(id), defaultValue)
+					this.setTableKey(tableName, String(id), cloneDeep(defaultValue))
 					return defaultValue
 				}
 				return value
