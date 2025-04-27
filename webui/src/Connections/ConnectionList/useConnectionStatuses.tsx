@@ -1,13 +1,13 @@
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { ObservableMap, observable, runInAction } from 'mobx'
-import { useContext, useEffect } from 'react'
+import { useContext, useEffect, useMemo } from 'react'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { assertNever } from '../../util.js'
 
 export function useConnectionStatuses(): ObservableMap<string, ConnectionStatusEntry> {
 	const { socket } = useContext(RootAppStoreContext)
 
-	const connectionStatuses = observable.map<string, ConnectionStatusEntry>()
+	const connectionStatuses = useMemo(() => observable.map<string, ConnectionStatusEntry>(), [])
 
 	useEffect(() => {
 		let mounted = true
@@ -52,7 +52,7 @@ export function useConnectionStatuses(): ObservableMap<string, ConnectionStatusE
 				connectionStatuses.clear()
 			})
 		}
-	}, [socket])
+	}, [socket, connectionStatuses])
 
 	return connectionStatuses
 }
