@@ -16,7 +16,7 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 export type SomeControlModel = SomeButtonModel | TriggerModel
 
 export interface ControlDependencies {
-	readonly dbTable: DataStoreTableView<SomeControlModel>
+	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 	readonly io: UIHandler
 
 	readonly graphics: GraphicsController

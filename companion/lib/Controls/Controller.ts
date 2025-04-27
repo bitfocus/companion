@@ -84,13 +84,13 @@ export class ControlsController {
 	 */
 	readonly #activeLearnRequests = new Set<string>()
 
-	readonly #dbTable: DataStoreTableView<SomeControlModel>
+	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
 		this.#registry = registry
 		this.#controlEvents = controlEvents
 
-		this.#dbTable = registry.db.getTableView<SomeControlModel>('controls')
+		this.#dbTable = registry.db.getTableView('controls')
 
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)

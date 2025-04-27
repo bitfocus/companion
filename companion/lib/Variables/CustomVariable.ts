@@ -41,7 +41,7 @@ export class VariablesCustomVariable {
 	 */
 	#custom_variables: CustomVariablesModel
 
-	readonly #dbTable: DataStoreTableView<CustomVariableDefinition>
+	readonly #dbTable: DataStoreTableView<Record<string, CustomVariableDefinition>>
 	readonly #io: UIHandler
 
 	constructor(db: DataDatabase, io: UIHandler, variableValues: VariablesValues) {

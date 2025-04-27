@@ -569,24 +569,32 @@ export abstract class DataStoreBase {
 		}
 	}
 
-	public getTableView<IRowType>(tableName: string): DataStoreTableView<IRowType> {
+	public getTableView<TableContent extends Record<string, any>>(tableName: string): DataStoreTableView<TableContent> {
 		this.validateTable(tableName)
 
 		return {
 			tableName,
 
-			all: (): Record<string, IRowType> => {
-				return this.getTable(tableName) as Record<string, IRowType>
+			all: () => {
+				return this.getTable(tableName) as any
 			},
-			get: (id: string): IRowType | undefined => {
-				return this.getTableKey(tableName, id) as IRowType | undefined
+			get: (id) => {
+				return this.getTableKey(tableName, String(id))
+			},
+			getOrDefault: (id, defaultValue) => {
+				const value = this.getTableKey(tableName, String(id), defaultValue)
+				if (value === undefined) {
+					this.setTableKey(tableName, String(id), defaultValue)
+					return defaultValue
+				}
+				return value
 			},
 
-			set: (id: string, value: IRowType): void => {
-				this.setTableKey(tableName, id, value)
+			set: (id, value): void => {
+				this.setTableKey(tableName, String(id), value)
 			},
-			delete: (id: string): void => {
-				this.deleteTableKey(tableName, id)
+			delete: (id): void => {
+				this.deleteTableKey(tableName, String(id))
 			},
 			clear: (): void => {
 				this.emptyTable(tableName)
@@ -595,16 +603,17 @@ export abstract class DataStoreBase {
 	}
 }
 
-export interface DataStoreTableView<IRowType> {
+export interface DataStoreTableView<TableContent extends Record<string, any>> {
 	readonly tableName: string
 
-	all(): Record<string, IRowType>
+	all(): TableContent
 
-	get(id: string): IRowType | undefined
+	get<T extends keyof TableContent>(id: T): TableContent[T] | undefined
+	getOrDefault<T extends keyof TableContent>(id: T, defaultValue: TableContent[T]): TableContent[T]
 
-	set(id: string, value: IRowType): void
+	set<T extends keyof TableContent>(id: T, value: TableContent[T]): void
 
-	delete(id: string): void
+	delete(id: keyof TableContent): void
 
 	clear(): void
 }

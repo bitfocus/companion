@@ -14,6 +14,7 @@ import type { DataDatabase } from '../Data/Database.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 
 const CLOUD_URL = 'https://api.bitfocus.io/v1'
 const CLOUD_TABLE: string = 'cloud'
@@ -49,11 +50,23 @@ function generateMachineId() {
  * disclosing the source code of your own applications.
  */
 
+interface CloudAuthData {
+	token: string
+	user: string
+	connections: { [region: string]: boolean }
+	cloudActive: boolean
+}
+
+interface CloudDbTable {
+	uuid: string
+	auth: CloudAuthData
+}
+
 export class CloudController {
 	readonly #logger = LogController.createLogger('Cloud/Controller')
 
 	readonly appInfo: AppInfo
-	readonly #db: DataDatabase
+	readonly #dbTable: DataStoreTableView<CloudDbTable>
 	readonly #cache: DataCache
 	readonly controls: ControlsController
 	readonly #graphics: GraphicsController
@@ -67,7 +80,7 @@ export class CloudController {
 	/**
 	 * The cloud data store
 	 */
-	data: { token: string; user: string; connections: { [region: string]: boolean }; cloudActive: boolean }
+	data: CloudAuthData
 	/**
 	 * Protocol version
 	 */
@@ -115,14 +128,14 @@ export class CloudController {
 		page: PageController
 	) {
 		this.appInfo = appInfo
-		this.#db = db
+		this.#dbTable = db.getTableView(CLOUD_TABLE)
 		this.#cache = cache
 		this.controls = controls
 		this.#graphics = graphics
 		this.io = io
 		this.page = page
 
-		this.data = this.#db.getTableKey(CLOUD_TABLE, 'auth', {
+		this.data = this.#dbTable.getOrDefault('auth', {
 			token: '',
 			user: '',
 			connections: {},
@@ -130,7 +143,7 @@ export class CloudController {
 		})
 
 		this.companionId = appInfo.machineId
-		const uuid = this.#db.getTableKey(CLOUD_TABLE, 'uuid', generateMachineId())
+		const uuid = this.#dbTable.getOrDefault('uuid', generateMachineId())
 		this.#setState({ uuid })
 
 		const regions = this.#cache.getKey('cloud_servers', {})
@@ -346,7 +359,7 @@ export class CloudController {
 	async #handleCloudRegenerateUUID(_client: ClientSocket): Promise<void> {
 		const newUuid = v4()
 		this.#setState({ uuid: newUuid })
-		this.#db.setTableKey(CLOUD_TABLE, 'uuid', newUuid)
+		this.#dbTable.set('uuid', newUuid)
 
 		this.#setState({ cloudActive: false })
 		await delay(1000)
@@ -408,7 +421,7 @@ export class CloudController {
 			if (responseObject.token !== undefined) {
 				this.data.token = responseObject.token
 				this.data.user = email
-				this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+				this.#dbTable.set('auth', this.data)
 				this.#setState({ authenticated: true, authenticating: false, authenticatedAs: email, error: null })
 				this.#readConnections(this.data.connections)
 			} else {
@@ -431,7 +444,7 @@ export class CloudController {
 		this.data.token = ''
 		this.data.connections = {}
 		this.data.cloudActive = false
-		this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+		this.#dbTable.set('auth', this.data)
 
 		this.#setState({
 			authenticated: false,
@@ -470,7 +483,7 @@ export class CloudController {
 
 			if (result.token) {
 				this.data.token = result.token
-				this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+				this.#dbTable.set('auth', this.data)
 				this.#setState({
 					authenticated: true,
 					authenticatedAs: result.customer?.email,
@@ -582,7 +595,7 @@ export class CloudController {
 
 		this.data.connections[region] = enabled
 
-		this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+		this.#dbTable.set('auth', this.data)
 	}
 
 	/**
@@ -608,7 +621,7 @@ export class CloudController {
 
 		if (oldState.cloudActive !== newState.cloudActive) {
 			this.data.cloudActive = newState.cloudActive
-			this.#db.setTableKey(CLOUD_TABLE, 'auth', this.data)
+			this.#dbTable.set('auth', this.data)
 
 			if (newState.authenticated) {
 				for (let region in this.#regionInstances) {
