@@ -1,5 +1,5 @@
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
-import type { ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
+import type { ConnectionGroup, ConnectionGroupsUpdate } from '@companion-app/shared/Model/Connections.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { nanoid } from 'nanoid'
@@ -31,6 +31,17 @@ export class InstanceUiGroups {
 	 */
 	discardAllGroups(): void {
 		this.#db.emptyTable(ConnectionGroupTable)
+
+		const changes: ConnectionGroupsUpdate[] = []
+		for (const groupId of Object.keys(this.#data)) {
+			changes.push({
+				type: 'remove',
+				id: groupId,
+			})
+		}
+		this.#data = {}
+
+		this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', changes)
 
 		this.removeUnknownGroupReferences()
 	}
