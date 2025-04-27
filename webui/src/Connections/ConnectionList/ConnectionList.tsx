@@ -1,24 +1,25 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEyeSlash, faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../../Components/NonIdealState.js'
-import { TableVisibilityHelper, useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
+import { useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
 import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
-import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { ConnectionGroupRow } from './ConnectionGroupRow.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
 import { DragState } from '../../util.js'
+import { useConnectionListApi } from './ConnectionListApi.js'
+import { ConnectionsInGroup } from './ConnectionsInGroup.js'
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
 
-interface VisibleConnectionsState {
+export interface VisibleConnectionsState {
 	disabled: boolean
 	ok: boolean
 	warning: boolean
@@ -36,53 +37,19 @@ export const ConnectionsList = observer(function ConnectionsList({
 	connectionStatus,
 	selectedConnectionId,
 }: ConnectionsListProps) {
-	const { connections, socket } = useContext(RootAppStoreContext)
+	const { connections } = useContext(RootAppStoreContext)
 
-	const deleteModalRef = useRef<GenericConfirmModalRef>(null)
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const variablesModalRef = useRef<ConnectionVariablesModalRef>(null)
 
 	const collapseHelper = usePanelCollapseHelper('connection-groups', Array.from(connections.groups.keys()), true)
 
-	// Create a new empty group - use the socket connection to call the backend
-	const addNewGroup = useCallback(() => {
-		socket.emitPromise('connection-groups:add', ['New Group']).catch((e) => {
-			console.error('Failed to add group', e)
-		})
-	}, [socket])
-
 	// Toggle group expansion
 	const toggleGroupExpanded = useCallback(
 		(groupId: string) => {
-			collapseHelper.setPanelCollapsed(groupId, !collapseHelper.isPanelCollapsed(null, groupId))
+			collapseHelper.togglePanelCollapsed(null, groupId)
 		},
 		[collapseHelper]
-	)
-
-	// Rename a group
-	const renameGroup = useCallback(
-		(groupId: string, newName: string) => {
-			socket.emitPromise('connection-groups:set-name', [groupId, newName]).catch((e) => {
-				console.error('Failed to rename group', e)
-			})
-		},
-		[socket]
-	)
-
-	// Delete a group and move its connections to ungrouped
-	const deleteGroup = useCallback(
-		(groupId: string) => {
-			deleteModalRef.current?.show(
-				'Delete Group',
-				'Are you sure you want to delete this group? All connections in this group will be moved to Ungrouped Connections.',
-				'Delete',
-				() => {
-					socket.emitPromise('connection-groups:remove', [groupId]).catch((e) => {
-						console.error('Failed to delete group', e)
-					})
-				}
-			)
-		},
-		[socket, deleteModalRef]
 	)
 
 	const visibleConnections = useTableVisibilityHelper<VisibleConnectionsState>('connections_visible', {
@@ -93,6 +60,10 @@ export const ConnectionsList = observer(function ConnectionsList({
 	})
 
 	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections)
+
+	const connectionListApi = useConnectionListApi(confirmModalRef)
+
+	const { isDragging } = useConnectionListDragging(null)
 
 	return (
 		<div>
@@ -105,11 +76,11 @@ export const ConnectionsList = observer(function ConnectionsList({
 
 			<MissingVersionsWarning />
 
-			<GenericConfirmModal ref={deleteModalRef} />
+			<GenericConfirmModal ref={confirmModalRef} />
 			<ConnectionVariablesModal ref={variablesModalRef} />
 
 			<div className="connection-group-actions mb-2">
-				<CButton color="primary" size="sm" onClick={addNewGroup}>
+				<CButton color="primary" size="sm" onClick={connectionListApi.addNewGroup}>
 					<FontAwesomeIcon icon={faLayerGroup} /> Add Group
 				</CButton>
 			</div>
@@ -142,8 +113,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 								<ConnectionGroupRow
 									group={group}
 									toggleExpanded={toggleGroupExpanded}
-									renameGroup={renameGroup}
-									deleteGroup={deleteGroup}
+									connectionListApi={connectionListApi}
 									isCollapsed={isCollapsed}
 								/>
 
@@ -156,7 +126,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 										groupId={groupId}
 										visibleConnections={visibleConnections}
 										variablesModalRef={variablesModalRef}
-										deleteModalRef={deleteModalRef}
+										deleteModalRef={confirmModalRef}
 										showNoConnectionsMessage
 									/>
 								)}
@@ -166,16 +136,15 @@ export const ConnectionsList = observer(function ConnectionsList({
 
 					{/* Render ungrouped connections */}
 
+					{(isDragging || ungroupedConnections.length > 0) && connections.groups.size > 0 && (
+						<tr className="connection-group-header">
+							<td colSpan={6}>
+								<span className="group-name">Ungrouped Connections</span>
+							</td>
+						</tr>
+					)}
+
 					<ConnectionsInGroup
-						headingRow={
-							connections.groups.size > 0 && (
-								<tr className="connection-group-header">
-									<td colSpan={6}>
-										<span className="group-name">Ungrouped Connections</span>
-									</td>
-								</tr>
-							)
-						}
 						doConfigureConnection={doConfigureConnection}
 						connectionStatus={connectionStatus}
 						selectedConnectionId={selectedConnectionId}
@@ -183,7 +152,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 						groupId={null}
 						visibleConnections={visibleConnections}
 						variablesModalRef={variablesModalRef}
-						deleteModalRef={deleteModalRef}
+						deleteModalRef={confirmModalRef}
 						showNoConnectionsMessage={false}
 					/>
 
@@ -215,7 +184,7 @@ export interface ConnectionDragStatus {
 	isDragging: boolean
 }
 
-interface ClientConnectionConfigWithId extends ClientConnectionConfig {
+export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 	id: string
 }
 function getGroupedConnections(connections: ConnectionsStore) {
@@ -243,108 +212,4 @@ function getGroupedConnections(connections: ConnectionsStore) {
 		groupedConnections,
 		ungroupedConnections,
 	}
-}
-
-function ConnectionsInGroup({
-	headingRow,
-	doConfigureConnection,
-	connectionStatus,
-	selectedConnectionId,
-	connections,
-	groupId,
-	visibleConnections,
-	variablesModalRef,
-	deleteModalRef,
-	showNoConnectionsMessage,
-}: {
-	headingRow?: React.ReactNode
-	doConfigureConnection: (connectionId: string | null) => void
-	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
-	selectedConnectionId: string | null
-	connections: ClientConnectionConfigWithId[]
-	groupId: string | null
-	visibleConnections: TableVisibilityHelper<VisibleConnectionsState>
-	variablesModalRef: React.RefObject<ConnectionVariablesModalRef>
-	deleteModalRef: React.RefObject<GenericConfirmModalRef>
-	showNoConnectionsMessage: boolean
-}) {
-	const doShowVariables = useCallback((connectionId: string) => {
-		variablesModalRef.current?.show(connectionId)
-	}, [])
-
-	let visibleCount = 0
-
-	const connectionRows = connections
-		.map((connection, index) => {
-			const status = connectionStatus?.[connection.id]
-
-			// Apply visibility filters
-			if (!visibleConnections.visibility.disabled && connection.enabled === false) {
-				return null
-			} else if (status) {
-				if (!visibleConnections.visibility.ok && status.category === 'good') {
-					return null
-				} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
-					return null
-				} else if (!visibleConnections.visibility.error && status.category === 'error') {
-					return null
-				}
-			}
-
-			visibleCount++
-
-			return (
-				<ConnectionsTableRow
-					key={connection.id}
-					id={connection.id}
-					index={index}
-					connection={connection}
-					connectionStatus={status}
-					showVariables={doShowVariables}
-					deleteModalRef={deleteModalRef}
-					configureConnection={doConfigureConnection}
-					isSelected={connection.id === selectedConnectionId}
-				/>
-			)
-		})
-		.filter((row) => row !== null)
-
-	// Calculate number of hidden connections
-	const hiddenCount = connections.length - visibleCount
-
-	const { isDragging, drop } = useConnectionListDragging(groupId)
-
-	return (
-		<>
-			{(isDragging || connections.length > 0) && headingRow}
-
-			{connectionRows}
-
-			{isDragging && connections.length === 0 && (
-				<tr ref={drop} className="connectionlist-dropzone">
-					<td colSpan={6}>
-						<p>Drop connection here</p>
-					</td>
-				</tr>
-			)}
-
-			{hiddenCount > 0 && (
-				<tr>
-					<td colSpan={6} style={{ padding: '10px 5px' }}>
-						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-						<strong>{hiddenCount} Connections are hidden</strong>
-					</td>
-				</tr>
-			)}
-
-			{showNoConnectionsMessage && connections.length === 0 && !isDragging && (
-				<tr>
-					<td colSpan={6} style={{ padding: '10px 5px' }}>
-						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-						<strong>There are no connections in this group</strong>
-					</td>
-				</tr>
-			)}
-		</>
-	)
 }

@@ -4,12 +4,16 @@ import { faCheckCircle, faTriangleExclamation, faPowerOff } from '@fortawesome/f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { InlineHelp } from '../../Components/InlineHelp.js'
+import { observer } from 'mobx-react-lite'
 
 interface ConnectionStatusCellProps {
 	isEnabled: boolean
 	status: ConnectionStatusEntry | undefined
 }
-export function ConnectionStatusCell({ isEnabled, status }: ConnectionStatusCellProps) {
+export const ConnectionStatusCell = observer(function ConnectionStatusCell({
+	isEnabled,
+	status,
+}: ConnectionStatusCellProps) {
 	if (isEnabled) {
 		const messageStr =
 			!!status &&
@@ -58,4 +62,4 @@ export function ConnectionStatusCell({ isEnabled, status }: ConnectionStatusCell
 	} else {
 		return <FontAwesomeIcon icon={faPowerOff} color={'gray'} size="2xl" />
 	}
-}
+})
