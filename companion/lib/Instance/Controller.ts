@@ -681,7 +681,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		client.onPromise('connections:reorder', async (groupId, connectionId, dropIndex) => {
-			console.log('Reorder', groupId, connectionId, dropIndex)
 			this.#configStore.moveConnection(groupId, connectionId, dropIndex)
 		})
 

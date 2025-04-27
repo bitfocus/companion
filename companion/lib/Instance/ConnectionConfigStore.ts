@@ -220,8 +220,6 @@ export class ConnectionConfigStore {
 		// Insert the connection at the drop index
 		sortedConnectionIds.splice(dropIndex, 0, connectionId)
 
-		console.log('new order,', sortedConnectionIds)
-
 		// update the sort order of the connections in the store, tracking which ones changed
 		sortedConnectionIds.forEach((id, index) => {
 			const entry = this.#store[id]
@@ -238,8 +236,6 @@ export class ConnectionConfigStore {
 				changedIds.push(connectionId)
 			}
 		}
-
-		console.log('changed,', changedIds)
 
 		// persist the changes
 		if (changedIds.length > 0) {
