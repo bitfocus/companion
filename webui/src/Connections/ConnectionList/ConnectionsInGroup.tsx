@@ -9,10 +9,11 @@ import { ClientConnectionConfigWithId, VisibleConnectionsState } from './Connect
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { observer } from 'mobx-react-lite'
+import { ObservableMap } from 'mobx'
 
 interface ConnectionsInGroupProps {
 	doConfigureConnection: (connectionId: string | null) => void
-	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
+	connectionStatuses: ObservableMap<string, ConnectionStatusEntry>
 	selectedConnectionId: string | null
 	connections: ClientConnectionConfigWithId[]
 	groupId: string | null
@@ -24,7 +25,7 @@ interface ConnectionsInGroupProps {
 
 export const ConnectionsInGroup = observer(function ConnectionsInGroup({
 	doConfigureConnection,
-	connectionStatus,
+	connectionStatuses,
 	selectedConnectionId,
 	connections,
 	groupId,
@@ -41,7 +42,7 @@ export const ConnectionsInGroup = observer(function ConnectionsInGroup({
 
 	const connectionRows = connections
 		.map((connection, index) => {
-			const status = connectionStatus?.[connection.id]
+			const status = connectionStatuses.get(connection.id)
 
 			// Apply visibility filters
 			if (!visibleConnections.visibility.disabled && connection.enabled === false) {

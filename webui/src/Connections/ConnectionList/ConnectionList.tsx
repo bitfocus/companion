@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../../Components/NonIdealState.js'
@@ -18,6 +17,7 @@ import { DragState } from '../../util.js'
 import { useConnectionListApi } from './ConnectionListApi.js'
 import { ConnectionsInGroup } from './ConnectionsInGroup.js'
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
+import { useConnectionStatuses } from './useConnectionStatuses.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -28,16 +28,16 @@ export interface VisibleConnectionsState {
 
 interface ConnectionsListProps {
 	doConfigureConnection: (connectionId: string | null) => void
-	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
 }
 
 export const ConnectionsList = observer(function ConnectionsList({
 	doConfigureConnection,
-	connectionStatus,
 	selectedConnectionId,
 }: ConnectionsListProps) {
 	const { connections } = useContext(RootAppStoreContext)
+
+	const connectionStatuses = useConnectionStatuses()
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const variablesModalRef = useRef<ConnectionVariablesModalRef>(null)
@@ -120,7 +120,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 								{!isCollapsed && (
 									<ConnectionsInGroup
 										doConfigureConnection={doConfigureConnection}
-										connectionStatus={connectionStatus}
+										connectionStatuses={connectionStatuses}
 										selectedConnectionId={selectedConnectionId}
 										connections={connectionsInGroup}
 										groupId={groupId}
@@ -146,7 +146,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 
 					<ConnectionsInGroup
 						doConfigureConnection={doConfigureConnection}
-						connectionStatus={connectionStatus}
+						connectionStatuses={connectionStatuses}
 						selectedConnectionId={selectedConnectionId}
 						connections={ungroupedConnections}
 						groupId={null}

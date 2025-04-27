@@ -8,6 +8,7 @@ import type {
 	ClientEditConnectionConfig,
 	ClientEventDefinition,
 	ConnectionStatusEntry,
+	ConnectionStatusUpdate,
 	ControlLocation,
 	EmulatorConfig,
 	EmulatorImage,
@@ -402,7 +403,7 @@ export interface BackendToClientEventsMap {
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
-	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
+	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
 
 	'surfaces:discovery:update': (update: SurfacesDiscoveryUpdate) => void
 
