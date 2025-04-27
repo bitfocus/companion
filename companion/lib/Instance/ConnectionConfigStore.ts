@@ -178,31 +178,6 @@ export class ConnectionConfigStore {
 		return label
 	}
 
-	// setOrder(connectionIds: string[]): void {
-	// 	// This is a bit naive, but should be sufficient if the client behaves
-
-	// 	// Update the order based on the ids provided
-	// 	connectionIds.forEach((id, index) => {
-	// 		const entry = this.#store[id]
-	// 		if (entry) entry.sortOrder = index
-	// 	})
-
-	// 	// Make sure all not provided are at the end in their original order
-	// 	const allKnownIds = Object.entries(this.#store)
-	// 		.filter((entry): entry is [string, ConnectionConfig] => entry[1] !== undefined)
-	// 		.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-	// 		.map(([id]) => id)
-	// 	let nextIndex = connectionIds.length
-	// 	for (const id of allKnownIds) {
-	// 		if (!connectionIds.includes(id)) {
-	// 			const entry = this.#store[id]
-	// 			if (entry) entry.sortOrder = nextIndex++
-	// 		}
-	// 	}
-
-	// 	this.commitChanges(connectionIds)
-	// }
-
 	moveConnection(groupId: string | null, connectionId: string, dropIndex: number): boolean {
 		const thisConnection = this.#store[connectionId]
 		if (!thisConnection) return false
