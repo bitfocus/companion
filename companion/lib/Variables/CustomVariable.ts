@@ -19,6 +19,7 @@ import LogController from '../Log/Controller.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import type { VariablesValues, VariableValueEntry } from './Values.js'
 import type {
+	CustomVariableDefinition,
 	CustomVariablesModel,
 	CustomVariableUpdate,
 	CustomVariableUpdateRemoveOp,
@@ -26,6 +27,7 @@ import type {
 import type { DataDatabase } from '../Data/Database.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 const CustomVariablesRoom = 'custom-variables'
 const CUSTOM_LABEL = 'custom'
@@ -39,15 +41,15 @@ export class VariablesCustomVariable {
 	 */
 	#custom_variables: CustomVariablesModel
 
-	readonly #db: DataDatabase
+	readonly #dbTable: DataStoreTableView<CustomVariableDefinition>
 	readonly #io: UIHandler
 
 	constructor(db: DataDatabase, io: UIHandler, variableValues: VariablesValues) {
-		this.#db = db
+		this.#dbTable = db.getTableView('custom_variables')
 		this.#io = io
 		this.#variableValues = variableValues
 
-		this.#custom_variables = this.#db.getKey('custom_variables', {})
+		this.#custom_variables = this.#dbTable.all()
 	}
 
 	/**
@@ -117,7 +119,7 @@ export class VariablesCustomVariable {
 			sortOrder: highestSortOrder + 1,
 		}
 
-		this.#doSave()
+		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
 
@@ -133,7 +135,7 @@ export class VariablesCustomVariable {
 	deleteVariable(name: string): void {
 		delete this.#custom_variables[name]
 
-		this.#doSave()
+		this.#dbTable.delete(name)
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
@@ -145,13 +147,6 @@ export class VariablesCustomVariable {
 		}
 
 		this.#setValueInner(name, undefined)
-	}
-
-	/**
-	 * Save the current custom variables
-	 */
-	#doSave(): void {
-		this.#db.setKey('custom_variables', this.#custom_variables)
 	}
 
 	/**
@@ -199,38 +194,39 @@ export class VariablesCustomVariable {
 		const namesBefore = Object.keys(this.#custom_variables)
 
 		this.#custom_variables = custom_variables || {}
-		this.#doSave()
+
+		const changes: CustomVariableUpdate[] = []
+
+		// Add inserts
+		for (const [id, info] of Object.entries(this.#custom_variables)) {
+			if (!info) continue
+
+			this.#dbTable.set(id, info)
+
+			changes.push({
+				type: 'update',
+				itemId: id,
+				info,
+			})
+		}
+
+		// Add deletes
+		for (const id of namesBefore) {
+			if (this.#custom_variables[id]) continue // Replaced
+
+			this.#dbTable.delete(id)
+
+			changes.push({
+				type: 'remove',
+				itemId: id,
+			})
+		}
 
 		// apply the default values
 		this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const changes: CustomVariableUpdate[] = []
-
-			// Add inserts
-			for (const [id, info] of Object.entries(this.#custom_variables)) {
-				if (!info) continue
-
-				changes.push({
-					type: 'update',
-					itemId: id,
-					info,
-				})
-			}
-
-			// Add deletes
-			for (const id of namesBefore) {
-				if (this.#custom_variables[id]) continue // Replaced
-
-				changes.push({
-					type: 'remove',
-					itemId: id,
-				})
-			}
-
-			if (changes.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
-			}
+		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
 		}
 	}
 
@@ -241,7 +237,7 @@ export class VariablesCustomVariable {
 		const namesBefore = Object.keys(this.#custom_variables)
 
 		this.#custom_variables = {}
-		this.#doSave()
+		this.#dbTable.clear()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && namesBefore.length > 0) {
 			this.#io.emitToRoom(
@@ -271,7 +267,7 @@ export class VariablesCustomVariable {
 			this.#custom_variables[name].defaultValue = value ?? ''
 		}
 
-		this.#doSave()
+		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
 
@@ -311,22 +307,22 @@ export class VariablesCustomVariable {
 			}
 		}
 
-		this.#doSave()
+		const changes: CustomVariableUpdate[] = []
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const changes: CustomVariableUpdate[] = []
+		// Add inserts
+		for (const [id, info] of Object.entries(this.#custom_variables)) {
+			if (!info) continue
 
-			// Add inserts
-			for (const [id, info] of Object.entries(this.#custom_variables)) {
-				if (!info) continue
+			this.#dbTable.set(id, info)
 
-				changes.push({
-					type: 'update',
-					itemId: id,
-					info,
-				})
-			}
+			changes.push({
+				type: 'update',
+				itemId: id,
+				info,
+			})
+		}
 
+		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
 		}
 	}
@@ -376,7 +372,7 @@ export class VariablesCustomVariable {
 
 		this.#custom_variables[name].description = description
 
-		this.#doSave()
+		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
 
@@ -403,7 +399,7 @@ export class VariablesCustomVariable {
 			this.#logger.silly(`Set default value "${name}":${value}`)
 			this.#custom_variables[name].defaultValue = value ?? ''
 
-			this.#doSave()
+			this.#dbTable.set(name, this.#custom_variables[name])
 
 			this.#emitUpdateOneVariable(name)
 		}
@@ -422,7 +418,7 @@ export class VariablesCustomVariable {
 
 		this.#custom_variables[name].defaultValue = value
 
-		this.#doSave()
+		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
 
@@ -436,7 +432,7 @@ export class VariablesCustomVariable {
 		if (this.#custom_variables[name] && this.#custom_variables[name].persistCurrentValue) {
 			this.#custom_variables[name].defaultValue = value ?? ''
 
-			this.#doSave()
+			this.#dbTable.set(name, this.#custom_variables[name])
 
 			this.#emitUpdateOneVariable(name)
 		}

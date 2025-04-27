@@ -307,6 +307,26 @@ export abstract class DataStoreBase {
 	}
 
 	/**
+	 * Remove all rows from a table
+	 * @param table - the table to be emptied
+	 */
+	public emptyTable(table: string): void {
+		this.validateTable(table)
+
+		const query = this.prepareStatement(`empty-${table}`, `DELETE FROM ${table}`)
+
+		this.logger.silly(`Empty table: ${table}`)
+
+		try {
+			query.run({})
+		} catch (e: any) {
+			this.logger.warn(`Error emptying ${table}: ${e.message}`)
+		}
+
+		this.setDirty()
+	}
+
+	/**
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected abstract loadDefaults(): void
@@ -568,6 +588,9 @@ export abstract class DataStoreBase {
 			delete: (id: string): void => {
 				this.deleteTableKey(tableName, id)
 			},
+			clear: (): void => {
+				this.emptyTable(tableName)
+			},
 		}
 	}
 }
@@ -582,4 +605,6 @@ export interface DataStoreTableView<IRowType> {
 	set(id: string, value: IRowType): void
 
 	delete(id: string): void
+
+	clear(): void
 }
