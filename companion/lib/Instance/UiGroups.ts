@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid'
 
 const ConnectionGroupTable = 'connection_groups'
 const ConnectionGroupRoom = 'connection-groups'
+
 export class InstanceUiGroups {
 	readonly #io: UIHandler
 	readonly #db: DataDatabase
@@ -23,6 +24,10 @@ export class InstanceUiGroups {
 		this.#db.store.prepare(`CREATE TABLE IF NOT EXISTS ${ConnectionGroupTable} (id STRING UNIQUE, value STRING);`).run()
 
 		this.#data = this.#db.getTable(ConnectionGroupTable)
+	}
+
+	discardAllGroups(): void {
+		this.#db.emptyTable(ConnectionGroupTable)
 	}
 
 	/**

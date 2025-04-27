@@ -959,7 +959,7 @@ export class ImportExportController {
 		}
 
 		if (!config || config.connections) {
-			await this.#instancesController.deleteAllInstances()
+			await this.#instancesController.deleteAllInstances(true)
 		}
 
 		if (!config || config.surfaces) {

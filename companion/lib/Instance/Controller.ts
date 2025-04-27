@@ -384,10 +384,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController.forgetConnection(id)
 	}
 
-	async deleteAllInstances(): Promise<void> {
-		const ps = []
+	async deleteAllInstances(deleteGroups: boolean): Promise<void> {
+		const ps: Promise<void>[] = []
 		for (const instanceId of this.#configStore.getAllInstanceIds()) {
 			ps.push(this.deleteInstance(instanceId))
+		}
+
+		if (deleteGroups) {
+			this.#uiGroupsController.discardAllGroups()
 		}
 
 		await Promise.all(ps)
