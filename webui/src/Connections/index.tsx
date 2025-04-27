@@ -1,5 +1,5 @@
 import { CCol, CRow, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
-import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
+import React, { memo, useCallback, useState } from 'react'
 import { MyErrorBoundary } from '../util.js'
 import { ConnectionsList } from './ConnectionList/ConnectionList.js'
 import { AddConnectionsPanel } from './AddConnectionPanel.js'
@@ -7,15 +7,9 @@ import { ConnectionEditPanel } from './ConnectionEdit/ConnectionEditPanel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
-import jsonPatch from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
-import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
-	const { socket } = useContext(RootAppStoreContext)
-
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState<'add' | 'edit'>('add')
 	const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null)
@@ -35,41 +29,10 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		setActiveTab(connectionId ? 'edit' : 'add')
 	}, [])
 
-	const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatusEntry> | undefined>()
-	useEffect(() => {
-		let mounted = true
-		socket
-			.emitPromise('connections:get-statuses', [])
-			.then((statuses) => {
-				if (!mounted) return
-				setConnectionStatus(statuses)
-			})
-			.catch((e) => {
-				console.error(`Failed to load connection statuses`, e)
-			})
-
-		const unsubStatuses = socket.on('connections:patch-statuses', (patch) => {
-			if (!mounted) return
-			setConnectionStatus((oldStatuses) => {
-				if (!oldStatuses) return oldStatuses
-				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
-			})
-		})
-
-		return () => {
-			mounted = false
-			unsubStatuses()
-		}
-	}, [socket])
-
 	return (
 		<CRow className="connections-page split-panels">
 			<CCol xl={6} className="connections-panel primary-panel">
-				<ConnectionsList
-					connectionStatus={connectionStatus}
-					doConfigureConnection={doConfigureConnection}
-					selectedConnectionId={selectedConnectionId}
-				/>
+				<ConnectionsList doConfigureConnection={doConfigureConnection} selectedConnectionId={selectedConnectionId} />
 			</CCol>
 
 			<CCol xl={6} className="connections-panel secondary-panel add-connections-panel">
