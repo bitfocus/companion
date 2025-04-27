@@ -1,18 +1,9 @@
-import React, { useContext, useDeferredValue } from 'react'
+import { useContext, useDeferredValue } from 'react'
 import { useDrop } from 'react-dnd'
 import { ConnectionDragItem } from './ConnectionList.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
-interface ConnectionDropPlaceholderZoneProps {
-	groupId: string | null
-	connectionCount: number
-}
-
-export function ConnectionDropPlaceholderZone({
-	groupId,
-	connectionCount,
-	children,
-}: React.PropsWithChildren<ConnectionDropPlaceholderZoneProps>) {
+export function useConnectionListDragging(groupId: string | null) {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const [isDragging, drop] = useDrop<ConnectionDragItem, unknown, boolean>({
@@ -41,13 +32,8 @@ export function ConnectionDropPlaceholderZone({
 	// https://issues.chromium.org/issues/41150279
 	const isDraggingDeferred = useDeferredValue(isDragging)
 
-	if (!isDraggingDeferred || connectionCount > 0) return <>{children}</>
-
-	return (
-		<tr ref={drop} className="connectionlist-dropzone">
-			<td colSpan={6}>
-				<p>Drop connection here</p>
-			</td>
-		</tr>
-	)
+	return {
+		isDragging: isDraggingDeferred,
+		drop,
+	}
 }

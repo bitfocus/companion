@@ -16,7 +16,7 @@ import { ConnectionGroupRow } from './ConnectionGroupRow.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
 import { DragState } from '../../util.js'
-import { ConnectionDropPlaceholderZone } from './ConnectionListDropZone.js'
+import { useConnectionListDragging } from './ConnectionListDropZone.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -158,15 +158,17 @@ export const ConnectionsList = observer(function ConnectionsList({
 					})}
 
 					{/* Render ungrouped connections */}
-					{ungroupedConnections.length > 0 && connections.groups.size > 0 && (
-						<tr className="connection-group-header">
-							<td colSpan={6}>
-								<span className="group-name">Ungrouped Connections</span>
-							</td>
-						</tr>
-					)}
 
 					<ConnectionsInGroup
+						headingRow={
+							connections.groups.size > 0 && (
+								<tr className="connection-group-header">
+									<td colSpan={6}>
+										<span className="group-name">Ungrouped Connections</span>
+									</td>
+								</tr>
+							)
+						}
 						doConfigureConnection={doConfigureConnection}
 						connectionStatus={connectionStatus}
 						selectedConnectionId={selectedConnectionId}
@@ -237,6 +239,7 @@ function getGroupedConnections(connections: ConnectionsStore) {
 }
 
 function ConnectionsInGroup({
+	headingRow,
 	doConfigureConnection,
 	connectionStatus,
 	selectedConnectionId,
@@ -247,6 +250,7 @@ function ConnectionsInGroup({
 	deleteModalRef,
 	showNoConnectionsMessage,
 }: {
+	headingRow?: React.ReactNode
 	doConfigureConnection: (connectionId: string | null) => void
 	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
@@ -301,29 +305,39 @@ function ConnectionsInGroup({
 	// Calculate number of hidden connections
 	const hiddenCount = connections.length - visibleCount
 
+	const { isDragging, drop } = useConnectionListDragging(groupId)
+
 	return (
 		<>
+			{(isDragging || connections.length > 0) && headingRow}
+
 			{connectionRows}
 
-			<ConnectionDropPlaceholderZone groupId={groupId} connectionCount={connections.length}>
-				{hiddenCount > 0 && (
-					<tr>
-						<td colSpan={6} style={{ padding: '10px 5px' }}>
-							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-							<strong>{hiddenCount} Connections are hidden</strong>
-						</td>
-					</tr>
-				)}
+			{isDragging && connections.length === 0 && (
+				<tr ref={drop} className="connectionlist-dropzone">
+					<td colSpan={6}>
+						<p>Drop connection here</p>
+					</td>
+				</tr>
+			)}
 
-				{showNoConnectionsMessage && connections.length === 0 && (
-					<tr>
-						<td colSpan={6} style={{ padding: '10px 5px' }}>
-							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-							<strong>There are no connections in this group</strong>
-						</td>
-					</tr>
-				)}
-			</ConnectionDropPlaceholderZone>
+			{hiddenCount > 0 && (
+				<tr>
+					<td colSpan={6} style={{ padding: '10px 5px' }}>
+						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+						<strong>{hiddenCount} Connections are hidden</strong>
+					</td>
+				</tr>
+			)}
+
+			{showNoConnectionsMessage && connections.length === 0 && !isDragging && (
+				<tr>
+					<td colSpan={6} style={{ padding: '10px 5px' }}>
+						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+						<strong>There are no connections in this group</strong>
+					</td>
+				</tr>
+			)}
 		</>
 	)
 }
