@@ -548,4 +548,38 @@ export abstract class DataStoreBase {
 			}
 		}
 	}
+
+	public getTableView<IRowType>(tableName: string): DataStoreTableView<IRowType> {
+		this.validateTable(tableName)
+
+		return {
+			tableName,
+
+			all: (): Record<string, IRowType> => {
+				return this.getTable(tableName) as Record<string, IRowType>
+			},
+			get: (id: string): IRowType | undefined => {
+				return this.getTableKey(tableName, id) as IRowType | undefined
+			},
+
+			set: (id: string, value: IRowType): void => {
+				this.setTableKey(tableName, id, value)
+			},
+			delete: (id: string): void => {
+				this.deleteTableKey(tableName, id)
+			},
+		}
+	}
+}
+
+export interface DataStoreTableView<IRowType> {
+	readonly tableName: string
+
+	all(): Record<string, IRowType>
+
+	get(id: string): IRowType | undefined
+
+	set(id: string, value: IRowType): void
+
+	delete(id: string): void
 }

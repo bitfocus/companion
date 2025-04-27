@@ -76,7 +76,7 @@ export abstract class ControlBase<TJson> {
 		const newJson = this.toJSON(true)
 
 		// Save to db
-		this.deps.db.setTableKey('controls', this.controlId, newJson as any)
+		this.deps.dbTable.set(this.controlId, newJson as any)
 
 		// Now broadcast to any interested clients
 		const roomName = ControlConfigRoom(this.controlId)
