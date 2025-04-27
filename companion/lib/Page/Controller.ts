@@ -8,6 +8,7 @@ import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 const PagesRoom = 'pages'
 
@@ -41,7 +42,8 @@ interface PageControllerEvents {
 export class PageController extends EventEmitter<PageControllerEvents> {
 	readonly #logger = LogController.createLogger('Page/Controller')
 
-	readonly #registry: Pick<Registry, 'io' | 'db' | 'graphics' | 'controls' | 'userconfig'>
+	readonly #registry: Pick<Registry, 'io' | 'graphics' | 'controls' | 'userconfig'>
+	readonly #dbTable: DataStoreTableView<Record<number, PageModel>>
 
 	/**
 	 * Cache the location of each control
@@ -62,10 +64,9 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		super()
 
 		this.#registry = registry
+		this.#dbTable = registry.db.getTableView('pages')
 
-		const rawPageData = this.#registry.db.getKey('page', {}) ?? {}
-
-		this.#setupPages(rawPageData)
+		this.#setupPages(this.#dbTable.all())
 	}
 
 	/**
@@ -683,10 +684,14 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * Commit changes to a page entry
 	 */
 	#commitChanges(pageNumbers: number[], redraw = true): void {
-		this.#registry.db.setKey('page', this.getAll(false))
-
 		for (const pageNumber of pageNumbers) {
 			const pageInfo = this.getPageInfo(pageNumber)
+
+			if (pageInfo) {
+				this.#dbTable.set(pageNumber, pageInfo)
+			} else {
+				this.#dbTable.delete(pageNumber)
+			}
 
 			this.emit('name', pageNumber, pageInfo ? (pageInfo.name ?? '') : undefined)
 
@@ -764,7 +769,6 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 */
 	#setupPages(rawPageData: Record<string, PageModel>): void {
 		// Load existing data
-		let changedIds = false
 		for (let i = 1; true; i++) {
 			const pageInfo = rawPageData[i]
 			if (!pageInfo) break
@@ -772,15 +776,14 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			// Ensure each page has an id defined
 			if (!pageInfo.id) {
 				pageInfo.id = nanoid()
-				changedIds = true
+
+				// Save the changes
+				this.#dbTable.set(i, pageInfo)
 			}
 
 			this.#pagesById[pageInfo.id] = pageInfo
 			this.#pageIds.push(pageInfo.id)
 		}
-
-		// If the id of any page was added, save the changes
-		if (changedIds) this.#registry.db.setKey('page', this.getAll(false))
 
 		// Default values
 		if (this.#pageIds.length === 0) {
@@ -794,7 +797,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			this.#pagesById[newPageInfo.id] = newPageInfo
 			this.#pageIds = [newPageInfo.id]
 
-			this.#registry.db.setKey('page', { 1: newPageInfo })
+			this.#dbTable.set(1, newPageInfo)
 
 			setImmediate(() => {
 				this.createPageDefaultNavButtons(1)

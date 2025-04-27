@@ -6,46 +6,25 @@ import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 /**
  * do the database upgrades to convert from the v6 to the v7 format
  */
-function convertDatabaseToV8(db: DataStoreBase, logger: Logger) {
+function convertDatabaseToV8(db: DataStoreBase, _logger: Logger) {
 	if (!db.store) return
 
-	convertCustomVariablesToTable(db, logger)
-	convertConnectionsToTable(db, logger)
-
-	// const controls = db.getTable('controls')
-
-	// for (const [controlId, control] of Object.entries(controls)) {
-	// 	// Fixup control
-	// 	fixupControlEntities(control)
-
-	// 	db.setTableKey('controls', controlId, control)
-	// }
+	convertRowToTable(db, 'custom_variables', 'custom_variables')
+	convertRowToTable(db, 'connections', 'instance')
+	convertRowToTable(db, 'pages', 'page')
 }
 
-function convertCustomVariablesToTable(db: DataStoreBase, _logger: Logger) {
+function convertRowToTable(db: DataStoreBase, tableName: string, oldKey: string) {
 	// Create table
-	db.store.prepare(`CREATE TABLE IF NOT EXISTS custom_variables (id STRING UNIQUE, value STRING);`).run()
+	db.store.prepare(`CREATE TABLE IF NOT EXISTS ${tableName} (id STRING UNIQUE, value STRING);`).run()
 
-	const oldCustomVariables = db.getKey('custom_variables')
+	const oldCustomVariables = db.getKey(oldKey)
 	if (oldCustomVariables) {
 		for (const [id, data] of Object.entries(oldCustomVariables)) {
-			db.setTableKey('custom_variables', id, data)
+			db.setTableKey(tableName, id, data)
 		}
 	}
-	db.deleteKey('custom_variables')
-}
-
-function convertConnectionsToTable(db: DataStoreBase, _logger: Logger) {
-	// Create table
-	db.store.prepare(`CREATE TABLE IF NOT EXISTS connections (id STRING UNIQUE, value STRING);`).run()
-
-	const oldConnections = db.getKey('instance')
-	if (oldConnections) {
-		for (const [id, data] of Object.entries(oldConnections)) {
-			db.setTableKey('connections', id, data)
-		}
-	}
-	db.deleteKey('instance')
+	db.deleteKey(oldKey)
 }
 
 function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
