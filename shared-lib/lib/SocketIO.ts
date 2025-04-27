@@ -323,7 +323,7 @@ export interface ClientToBackendEventsMap {
 		newModuleId: string,
 		versionId: string | null
 	) => string | null
-	'connections:set-order': (sortedIds: string[]) => void
+	'connections:reorder': (groupId: string | null, connectionId: string, dropIndex: number) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 

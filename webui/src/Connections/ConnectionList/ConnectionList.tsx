@@ -15,6 +15,8 @@ import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { ConnectionGroupRow } from './ConnectionGroupRow.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
+import { DragState } from '../../util.js'
+import { ConnectionDropPlaceholderZone } from './ConnectionListDropZone.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -138,24 +140,17 @@ export const ConnectionsList = observer(function ConnectionsList({
 									isCollapsed={isCollapsed}
 								/>
 
-								{!isCollapsed && connectionsInGroup.length === 0 && (
-									<tr>
-										<td colSpan={6} style={{ padding: '10px 5px' }}>
-											<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-											<strong>There are no connections in this group</strong>
-										</td>
-									</tr>
-								)}
-
 								{!isCollapsed && (
 									<ConnectionsInGroup
 										doConfigureConnection={doConfigureConnection}
 										connectionStatus={connectionStatus}
 										selectedConnectionId={selectedConnectionId}
 										connections={connectionsInGroup}
+										groupId={groupId}
 										visibleConnections={visibleConnections}
 										variablesModalRef={variablesModalRef}
 										deleteModalRef={deleteModalRef}
+										showNoConnectionsMessage
 									/>
 								)}
 							</React.Fragment>
@@ -163,7 +158,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 					})}
 
 					{/* Render ungrouped connections */}
-					{ungroupedConnections.length > 0 && (
+					{ungroupedConnections.length > 0 && connections.groups.size > 0 && (
 						<tr className="connection-group-header">
 							<td colSpan={6}>
 								<span className="group-name">Ungrouped Connections</span>
@@ -176,9 +171,11 @@ export const ConnectionsList = observer(function ConnectionsList({
 						connectionStatus={connectionStatus}
 						selectedConnectionId={selectedConnectionId}
 						connections={ungroupedConnections}
+						groupId={null}
 						visibleConnections={visibleConnections}
 						variablesModalRef={variablesModalRef}
 						deleteModalRef={deleteModalRef}
+						showNoConnectionsMessage={false}
 					/>
 
 					{connections.count === 0 && (
@@ -199,7 +196,11 @@ export const ConnectionsList = observer(function ConnectionsList({
 })
 
 export interface ConnectionDragItem {
-	id: string
+	connectionId: string
+	groupId: string | null
+	index: number
+
+	dragState: DragState | null
 }
 export interface ConnectionDragStatus {
 	isDragging: boolean
@@ -240,68 +241,30 @@ function ConnectionsInGroup({
 	connectionStatus,
 	selectedConnectionId,
 	connections,
+	groupId,
 	visibleConnections,
 	variablesModalRef,
 	deleteModalRef,
+	showNoConnectionsMessage,
 }: {
 	doConfigureConnection: (connectionId: string | null) => void
 	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
 	connections: ClientConnectionConfigWithId[]
+	groupId: string | null
 	visibleConnections: TableVisibilityHelper<VisibleConnectionsState>
 	variablesModalRef: React.RefObject<ConnectionVariablesModalRef>
 	deleteModalRef: React.RefObject<GenericConfirmModalRef>
+	showNoConnectionsMessage: boolean
 }) {
-	const { socket } = useContext(RootAppStoreContext)
-
 	const doShowVariables = useCallback((connectionId: string) => {
 		variablesModalRef.current?.show(connectionId)
 	}, [])
 
-	// Move a connection to a group
-	const moveConnectionToGroup = useCallback(
-		(connectionId: string, groupId: string | null) => {
-			// TODO: This would be implemented in the backend
-			socket
-				.emitPromise('connection-groups:move-connection', [
-					{
-						connectionId,
-						groupId,
-					},
-				])
-				.catch((e) => {
-					console.error('Failed to move connection to group', e)
-				})
-		},
-		[socket]
-	)
-
-	const moveRow = useCallback(
-		(itemId: string, targetId: string) => {
-			console.error('moveRow not implemented', itemId, targetId)
-
-			// const rawIds = Array.from(connections.connections.entries())
-			// 	.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-			// 	.map(([id]) => id)
-
-			// const itemIndex = rawIds.indexOf(itemId)
-			// const targetIndex = rawIds.indexOf(targetId)
-			// if (itemIndex === -1 || targetIndex === -1) return
-
-			// const newIds = rawIds.filter((id) => id !== itemId)
-			// newIds.splice(targetIndex, 0, itemId)
-
-			// socket.emitPromise('connections:set-order', [newIds]).catch((e) => {
-			// 	console.error('Reorder failed', e)
-			// })
-		},
-		[socket, connections]
-	)
-
 	let visibleCount = 0
 
 	const connectionRows = connections
-		.map((connection) => {
+		.map((connection, index) => {
 			const status = connectionStatus?.[connection.id]
 
 			// Apply visibility filters
@@ -323,14 +286,13 @@ function ConnectionsInGroup({
 				<ConnectionsTableRow
 					key={connection.id}
 					id={connection.id}
+					index={index}
 					connection={connection}
 					connectionStatus={status}
 					showVariables={doShowVariables}
 					deleteModalRef={deleteModalRef}
 					configureConnection={doConfigureConnection}
-					moveRow={moveRow}
 					isSelected={connection.id === selectedConnectionId}
-					moveConnectionToGroup={moveConnectionToGroup}
 				/>
 			)
 		})
@@ -343,14 +305,25 @@ function ConnectionsInGroup({
 		<>
 			{connectionRows}
 
-			{hiddenCount > 0 && (
-				<tr>
-					<td colSpan={6} style={{ padding: '10px 5px' }}>
-						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-						<strong>{hiddenCount} Connections are hidden</strong>
-					</td>
-				</tr>
-			)}
+			<ConnectionDropPlaceholderZone groupId={groupId} connectionCount={connections.length}>
+				{hiddenCount > 0 && (
+					<tr>
+						<td colSpan={6} style={{ padding: '10px 5px' }}>
+							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+							<strong>{hiddenCount} Connections are hidden</strong>
+						</td>
+					</tr>
+				)}
+
+				{showNoConnectionsMessage && connections.length === 0 && (
+					<tr>
+						<td colSpan={6} style={{ padding: '10px 5px' }}>
+							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+							<strong>There are no connections in this group</strong>
+						</td>
+					</tr>
+				)}
+			</ConnectionDropPlaceholderZone>
 		</>
 	)
 }

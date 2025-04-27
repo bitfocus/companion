@@ -74,6 +74,9 @@ export class InstanceUiGroups {
 					id: groupId,
 				},
 			])
+
+			// Ensure any connections are moved back to the default group
+			this.#configStore.cleanUnkownGroupIds(Object.keys(this.#data))
 		})
 
 		client.onPromise('connection-groups:set-name', (groupId: string, groupName: string) => {

@@ -124,6 +124,7 @@ export class ConnectionConfigStore {
 				label: config.label,
 				enabled: config.enabled,
 				sortOrder: config.sortOrder,
+				groupId: config.groupId ?? null,
 
 				// Runtime properties
 				hasRecordActionsHandler: false, // Filled in later
@@ -177,28 +178,99 @@ export class ConnectionConfigStore {
 		return label
 	}
 
-	setOrder(connectionIds: string[]): void {
-		// This is a bit naive, but should be sufficient if the client behaves
+	// setOrder(connectionIds: string[]): void {
+	// 	// This is a bit naive, but should be sufficient if the client behaves
 
-		// Update the order based on the ids provided
-		connectionIds.forEach((id, index) => {
-			const entry = this.#store.get(id)
-			if (entry) entry.sortOrder = index
+	// 	// Update the order based on the ids provided
+	// 	connectionIds.forEach((id, index) => {
+	// 		const entry = this.#store[id]
+	// 		if (entry) entry.sortOrder = index
+	// 	})
+
+	// 	// Make sure all not provided are at the end in their original order
+	// 	const allKnownIds = Object.entries(this.#store)
+	// 		.filter((entry): entry is [string, ConnectionConfig] => entry[1] !== undefined)
+	// 		.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+	// 		.map(([id]) => id)
+	// 	let nextIndex = connectionIds.length
+	// 	for (const id of allKnownIds) {
+	// 		if (!connectionIds.includes(id)) {
+	// 			const entry = this.#store[id]
+	// 			if (entry) entry.sortOrder = nextIndex++
+	// 		}
+	// 	}
+
+	// 	this.commitChanges(connectionIds)
+	// }
+
+	moveConnection(groupId: string | null, connectionId: string, dropIndex: number): boolean {
+		const thisConnection = this.#store[connectionId]
+		if (!thisConnection) return false
+
+		const changedIds: string[] = []
+
+		// find all the other connections with the matching groupId
+		const sortedConnectionIds = Object.entries(this.#store)
+			.filter(
+				([id, config]) => config && ((!config.groupId && !groupId) || config.groupId === groupId) && id !== connectionId
+			)
+			.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
+			.map(([id]) => id)
+
+		// Insert the connection at the drop index
+		sortedConnectionIds.splice(dropIndex, 0, connectionId)
+
+		console.log('new order,', sortedConnectionIds)
+
+		// update the sort order of the connections in the store, tracking which ones changed
+		sortedConnectionIds.forEach((id, index) => {
+			const entry = this.#store[id]
+			if (entry && entry.sortOrder !== index) {
+				entry.sortOrder = index
+				changedIds.push(id)
+			}
 		})
 
-		// Make sure all not provided are at the end in their original order
-		const allKnownIds = Array.from(this.#store)
-			.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-			.map(([id]) => id)
-		let nextIndex = connectionIds.length
-		for (const id of allKnownIds) {
-			if (!connectionIds.includes(id)) {
-				const entry = this.#store.get(id)
-				if (entry) entry.sortOrder = nextIndex++
+		// Also update the group ID of the connection being moved if needed
+		if (thisConnection.groupId !== groupId) {
+			thisConnection.groupId = groupId ?? undefined
+			if (!changedIds.includes(connectionId)) {
+				changedIds.push(connectionId)
 			}
 		}
 
-		this.commitChanges(connectionIds)
+		console.log('changed,', changedIds)
+
+		// persist the changes
+		if (changedIds.length > 0) {
+			this.commitChanges(changedIds)
+		}
+
+		return true
+	}
+
+	cleanUnkownGroupIds(validGroupIds: string[]): void {
+		const changedIds: string[] = []
+
+		// Figure out the first sort order
+		let nextSortOrder = 0
+		for (const config of Object.values(this.#store)) {
+			if (config && !config?.groupId) {
+				nextSortOrder = Math.max(nextSortOrder, config.sortOrder + 1)
+			}
+		}
+
+		// Validate the group IDs, and do something sensible with the sort order
+		// Future: maybe this could try to preserve the order in some way?
+		for (const [id, config] of Object.entries(this.#store)) {
+			if (config && config.groupId && !validGroupIds.includes(config.groupId)) {
+				config.groupId = undefined
+				config.sortOrder = nextSortOrder++
+				changedIds.push(id)
+			}
+		}
+
+		this.commitChanges(changedIds)
 	}
 
 	findActiveUsagesOfModule(moduleId: string): { connectionIds: string[]; labels: string[] } {
