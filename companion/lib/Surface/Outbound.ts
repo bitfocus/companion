@@ -6,6 +6,7 @@ import type { SurfaceController } from './Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { OutboundSurfaceInfo, OutboundSurfacesUpdateRemoveOp } from '@companion-app/shared/Model/Surfaces.js'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 const OutboundSurfacesRoom = 'surfaces:outbound'
 
@@ -20,7 +21,7 @@ export class SurfaceOutboundController {
 	/**
 	 * The core database library
 	 */
-	readonly #db: DataDatabase
+	readonly #dbTable: DataStoreTableView<Record<string, OutboundSurfaceInfo>>
 
 	/**
 	 * The core interface client
@@ -36,7 +37,7 @@ export class SurfaceOutboundController {
 
 	constructor(controller: SurfaceController, db: DataDatabase, io: UIHandler) {
 		this.#controller = controller
-		this.#db = db
+		this.#dbTable = db.getTableView('surfaces_remote')
 		this.#io = io
 
 		// @ts-ignore why is this failing?
@@ -57,16 +58,12 @@ export class SurfaceOutboundController {
 		})
 	}
 
-	#saveToDb() {
-		this.#db.setKey('outbound_surfaces', this.#storage)
-	}
-
 	/**
 	 * Initialize the module, loading the configuration from the db
 	 * @access public
 	 */
 	init(): void {
-		this.#storage = this.#db.getKey('outbound_surfaces', {})
+		this.#storage = this.#dbTable.all()
 
 		for (const surfaceInfo of Object.values(this.#storage)) {
 			try {
@@ -116,7 +113,7 @@ export class SurfaceOutboundController {
 				displayName: name ?? '',
 			}
 			this.#storage[id] = newInfo
-			this.#saveToDb()
+			this.#dbTable.set(id, newInfo)
 
 			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
 				{
@@ -137,7 +134,7 @@ export class SurfaceOutboundController {
 			if (!surfaceInfo) return // Not found, pretend all was ok
 
 			delete this.#storage[id]
-			this.#saveToDb()
+			this.#dbTable.delete(id)
 
 			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
 				{
@@ -154,7 +151,7 @@ export class SurfaceOutboundController {
 			if (!surfaceInfo) throw new Error('Surface not found')
 
 			surfaceInfo.displayName = name ?? ''
-			this.#saveToDb()
+			this.#dbTable.set(id, surfaceInfo)
 
 			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
 				{
@@ -179,7 +176,7 @@ export class SurfaceOutboundController {
 		}
 
 		this.#storage = {}
-		this.#saveToDb()
+		this.#dbTable.clear()
 	}
 
 	quit(): void {

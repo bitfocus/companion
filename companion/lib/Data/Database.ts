@@ -2,7 +2,7 @@ import { DataStoreBase } from './StoreBase.js'
 import { DataLegacyDatabase } from './Legacy/Database.js'
 import { upgradeStartup } from './Upgrade.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
-import { createTables as createTablesV5 } from './Schema/v5.js'
+import { createTables as createTablesV8 } from './Schema/v8.js'
 
 /**
  * The class that manages the applications's main database
@@ -40,7 +40,7 @@ export class DataDatabase extends DataStoreBase {
 	 * Create the database tables
 	 */
 	protected create(): void {
-		createTablesV5(this.store, this.defaultTable, this.logger)
+		createTablesV8(this.store, this.defaultTable, this.logger)
 	}
 
 	/**

@@ -14,6 +14,7 @@ function convertDatabaseToV8(db: DataStoreBase, _logger: Logger) {
 	convertRowToTable(db, 'pages', 'page')
 	convertRowToTable(db, 'surfaces', 'deviceconfig')
 	convertRowToTable(db, 'surface_groups', 'surface_groups')
+	convertRowToTable(db, 'surfaces_remote', 'outbound_surfaces')
 }
 
 function convertRowToTable(db: DataStoreBase, tableName: string, oldKey: string) {
