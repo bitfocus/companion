@@ -1,4 +1,4 @@
-import { DatabaseDefault, DataStoreBase } from './StoreBase.js'
+import { DataStoreBase } from './StoreBase.js'
 import { DataLegacyDatabase } from './Legacy/Database.js'
 import { upgradeStartup } from './Upgrade.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
@@ -26,15 +26,6 @@ import { createTables as createTablesV5 } from './Schema/v5.js'
  */
 export class DataDatabase extends DataStoreBase {
 	/**
-	 * The stored defaults for a new db
-	 */
-	static Defaults: DatabaseDefault = {
-		main: {
-			page_config_version: 6,
-		},
-	}
-
-	/**
 	 * @param configDir - the root config directory
 	 */
 	constructor(configDir: string) {
@@ -56,11 +47,7 @@ export class DataDatabase extends DataStoreBase {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		for (const [key, value] of Object.entries(DataDatabase.Defaults)) {
-			for (const [key2, value2] of Object.entries(value)) {
-				this.setTableKey(key, key2, value2)
-			}
-		}
+		this.setTableKey(this.defaultTable, 'page_config_version', 6)
 
 		this.isFirstRun = true
 	}

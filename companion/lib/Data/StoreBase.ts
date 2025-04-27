@@ -5,13 +5,16 @@ import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
 import { createSqliteDatabase } from './Util.js'
 
-export type DatabaseDefault = Record<string, any>
-
 enum DatabaseStartupState {
 	Normal = 0,
 	Reset = 1,
 	RAM = 2,
 	Fatal = 3,
+}
+
+interface ITableRow {
+	id: string
+	value: string
 }
 
 /**
@@ -93,7 +96,7 @@ export abstract class DataStoreBase {
 	/**
 	 * Saved queries
 	 */
-	private statementCache: Record<string, Statement> = {}
+	private statementCache = new Map<string, Statement>()
 	/**
 	 * The SQLite database
 	 */
@@ -143,32 +146,48 @@ export abstract class DataStoreBase {
 	}
 
 	/**
+	 * Prepare and cache a statement
+	 */
+	private prepareStatement<BindParameters extends unknown[]>(
+		cacheKey: string,
+		queryStr: string
+	): Statement<BindParameters, ITableRow> {
+		const cached = this.statementCache.get(cacheKey)
+		if (cached) return cached as any
+
+		const query = this.store.prepare<BindParameters, ITableRow>(queryStr)
+		this.statementCache.set(cacheKey, query)
+		return query
+	}
+
+	private validateTable(table: string): void {
+		if (!table || typeof table !== 'string') throw new Error('Invalid table name')
+	}
+
+	private validateKey(key: string): void {
+		if (!key || typeof key !== 'string') throw new Error('Invalid key')
+	}
+
+	/**
 	 * Delete a key/value pair from a table
 	 * @param table - the table to delete from
 	 * @param key - the key to be delete
 	 */
 	public deleteTableKey(table: string, key: string): void {
-		if (table.length > 0 && key.length > 0) {
-			let query: Statement
-			const cacheKey = `delete-${table}`
+		this.validateTable(table)
+		this.validateKey(key)
 
-			if (this.statementCache[cacheKey]) {
-				query = this.statementCache[cacheKey]
-			} else {
-				query = this.store.prepare(`DELETE FROM ${table} WHERE id = @id`)
-				this.statementCache[cacheKey] = query
-			}
+		const query = this.prepareStatement(`delete-${table}`, `DELETE FROM ${table} WHERE id = @id`)
 
-			this.logger.silly(`Delete key: ${table} - ${key}`)
+		this.logger.silly(`Delete key: ${table} - ${key}`)
 
-			try {
-				query.run({ id: key })
-			} catch (e: any) {
-				this.logger.warn(`Error deleting ${table} - ${key}: ${e.message}`)
-			}
-
-			this.setDirty()
+		try {
+			query.run({ id: key })
+		} catch (e: any) {
+			this.logger.warn(`Error deleting ${table} - ${key}: ${e.message}`)
 		}
+
+		this.setDirty()
 	}
 
 	/**
@@ -194,29 +213,25 @@ export abstract class DataStoreBase {
 	 * @returns the rows
 	 */
 	public getTable(table: string): Record<string, any> {
+		this.validateTable(table)
+
 		let out: Record<string, any> = {}
 
-		if (table.length > 0) {
-			const query = this.store.prepare(`SELECT id, value FROM ${table}`)
-			this.logger.silly(`Get table: ${table}`)
+		const query = this.prepareStatement(`get-all-${table}`, `SELECT id, value FROM ${table}`)
+		this.logger.silly(`Get table: ${table}`)
 
-			try {
-				const rows = query.all()
-
-				if (rows.length > 0) {
-					for (const record of Object.values(rows)) {
-						try {
-							/** @ts-ignore */
-							out[record.id] = JSON.parse(record.value)
-						} catch (e) {
-							/** @ts-ignore */
-							out[record.id] = record.value
-						}
-					}
+		try {
+			const rows = query.all()
+			for (const record of rows) {
+				try {
+					out[record.id] = JSON.parse(record.value)
+				} catch (e) {
+					/** @ts-ignore */
+					out[record.id] = record.value
 				}
-			} catch (e: any) {
-				this.logger.warn(`Error getting ${table}: ${e.message}`)
 			}
+		} catch (e: any) {
+			this.logger.warn(`Error getting ${table}: ${e.message}`)
 		}
 
 		return out
@@ -230,41 +245,34 @@ export abstract class DataStoreBase {
 	 * @returns the value
 	 */
 	public getTableKey(table: string, key: string, defaultValue?: any): any {
+		this.validateTable(table)
+		this.validateKey(key)
+
 		let out
 
-		if (table.length > 0 && key.length > 0) {
-			let query: Statement
-			const cacheKey = `get-${table}`
+		const query = this.prepareStatement(`get-${table}`, `SELECT value FROM ${table} WHERE id = @id`)
 
-			if (this.statementCache[cacheKey]) {
-				query = this.statementCache[cacheKey]
-			} else {
-				query = this.store.prepare(`SELECT value FROM ${table} WHERE id = @id`)
-				this.statementCache[cacheKey] = query
-			}
+		this.logger.silly(`Get table key: ${table} - ${key}`)
 
-			this.logger.silly(`Get table key: ${table} - ${key}`)
-
-			try {
-				const row = query.get({ id: key })
-				/** @ts-ignore */
-				if (row && row.value) {
-					try {
-						/** @ts-ignore */
-						out = JSON.parse(row.value)
-					} catch (e) {
-						/** @ts-ignore */
-						out = row.value
-					}
-				} else {
-					this.logger.silly(`Get table key: ${table} - ${key} failover`)
-					this.setTableKey(table, key, defaultValue)
-					out = defaultValue
+		try {
+			const row = query.get({ id: key })
+			if (row && row.value) {
+				try {
+					/** @ts-ignore */
+					out = JSON.parse(row.value)
+				} catch (e) {
+					/** @ts-ignore */
+					out = row.value
 				}
-			} catch (e: any) {
-				this.logger.warn(`Error getting ${table} - ${key}: ${e.message}`)
+			} else {
+				this.logger.silly(`Get table key: ${table} - ${key} failover`)
+				this.setTableKey(table, key, defaultValue)
+				out = defaultValue
 			}
+		} catch (e: any) {
+			this.logger.warn(`Error getting ${table} - ${key}: ${e.message}`)
 		}
+
 		return out
 	}
 
@@ -273,10 +281,14 @@ export abstract class DataStoreBase {
 	 * @param key - the key to be checked
 	 */
 	public hasKey(key: string): boolean {
-		let row
+		this.validateKey(key)
 
-		const query = this.store.prepare(`SELECT id FROM ${this.defaultTable} WHERE id = @id`)
-		row = query.get({ id: key })
+		const query = this.prepareStatement(
+			`has-${this.defaultTable}`,
+			`SELECT id FROM ${this.defaultTable} WHERE id = @id`
+		)
+
+		const row = query.get({ id: key })
 
 		return !!row
 	}
@@ -360,33 +372,27 @@ export abstract class DataStoreBase {
 	 * @param value - the object to save
 	 */
 	public setTableKey(table: string, key: string, value: any): void {
-		if (table.length > 0 && key.length > 0 && value) {
-			if (typeof value === 'object') {
-				value = JSON.stringify(value)
-			}
+		this.validateTable(table)
+		this.validateKey(key)
 
-			let query: Statement
-			const cacheKey = `set-${table}`
-
-			if (this.statementCache[cacheKey]) {
-				query = this.statementCache[cacheKey]
-			} else {
-				query = this.store.prepare(
-					`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
-				)
-				this.statementCache[cacheKey] = query
-			}
-
-			this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
-
-			try {
-				query.run({ id: key, value: value })
-			} catch (e: any) {
-				this.logger.warn(`Error updating ${table} - ${key}: ${e.message}`)
-			}
-
-			this.setDirty()
+		if (typeof value === 'object') {
+			value = JSON.stringify(value)
 		}
+
+		const query = this.prepareStatement(
+			`set-${table}`,
+			`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
+		)
+
+		this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
+
+		try {
+			query.run({ id: key, value: value })
+		} catch (e: any) {
+			this.logger.warn(`Error updating ${table} - ${key}: ${e.message}`)
+		}
+
+		this.setDirty()
 	}
 
 	/**

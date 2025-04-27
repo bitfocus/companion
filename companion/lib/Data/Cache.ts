@@ -1,4 +1,4 @@
-import { DatabaseDefault, DataStoreBase } from './StoreBase.js'
+import { DataStoreBase } from './StoreBase.js'
 import { DataLegacyCache } from './Legacy/Cache.js'
 
 /**
@@ -22,15 +22,6 @@ import { DataLegacyCache } from './Legacy/Cache.js'
  * disclosing the source code of your own applications.
  */
 export class DataCache extends DataStoreBase {
-	/**
-	 * The stored defaults for a new cache
-	 */
-	static Defaults: DatabaseDefault = {
-		main: {
-			cloud_servers: {},
-		},
-	}
-
 	/**
 	 * @param configDir - the root config directory
 	 */
@@ -60,11 +51,7 @@ export class DataCache extends DataStoreBase {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		for (const [key, value] of Object.entries(DataCache.Defaults)) {
-			for (const [key2, value2] of Object.entries(value)) {
-				this.setTableKey(key, key2, value2)
-			}
-		}
+		this.setTableKey(this.defaultTable, 'cloud_servers', {})
 
 		this.isFirstRun = true
 	}
