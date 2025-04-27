@@ -71,11 +71,18 @@ export const ConnectionsList = observer(function ConnectionsList({
 	// Delete a group and move its connections to ungrouped
 	const deleteGroup = useCallback(
 		(groupId: string) => {
-			socket.emitPromise('connection-groups:remove', [groupId]).catch((e) => {
-				console.error('Failed to delete group', e)
-			})
+			deleteModalRef.current?.show(
+				'Delete Group',
+				'Are you sure you want to delete this group? All connections in this group will be moved to Ungrouped Connections.',
+				'Delete',
+				() => {
+					socket.emitPromise('connection-groups:remove', [groupId]).catch((e) => {
+						console.error('Failed to delete group', e)
+					})
+				}
+			)
 		},
-		[socket]
+		[socket, deleteModalRef]
 	)
 
 	const visibleConnections = useTableVisibilityHelper<VisibleConnectionsState>('connections_visible', {
