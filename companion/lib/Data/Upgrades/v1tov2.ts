@@ -5,11 +5,13 @@ import type { Logger } from '../../Log/Controller.js'
 /**
  * do the database upgrades to convert from the v1 to the v2 format
  */
-function convertDatabase15To32(db: DataStoreBase, _logger: Logger): void {
-	const oldBankConfig = db.getKey('bank', {})
-	const oldActions = db.getKey('bank_actions', {})
-	const oldReleaseActions = db.getKey('bank_release_actions', {})
-	const oldFeedbacks = db.getKey('feedbacks', {})
+function convertDatabase15To32(db: DataStoreBase<any>, _logger: Logger): void {
+	const mainTable = db.defaultTableView
+
+	const oldBankConfig = mainTable.getOrDefault('bank', {})
+	const oldActions = mainTable.getOrDefault('bank_actions', {})
+	const oldReleaseActions = mainTable.getOrDefault('bank_release_actions', {})
+	const oldFeedbacks = mainTable.getOrDefault('feedbacks', {})
 
 	for (let page = 1; page <= LEGACY_PAGE_COUNT; page++) {
 		const obj = {
@@ -27,12 +29,12 @@ function convertDatabase15To32(db: DataStoreBase, _logger: Logger): void {
 		oldFeedbacks[page] = res.feedbacks
 	}
 
-	db.setKey('bank', oldBankConfig)
-	db.setKey('bank_actions', oldActions)
-	db.setKey('bank_release_actions', oldReleaseActions)
-	db.setKey('feedbacks', oldFeedbacks)
+	mainTable.set('bank', oldBankConfig)
+	mainTable.set('bank_actions', oldActions)
+	mainTable.set('bank_release_actions', oldReleaseActions)
+	mainTable.set('feedbacks', oldFeedbacks)
 
-	db.setKey('page_config_version', 2)
+	mainTable.set('page_config_version', 2)
 }
 
 function convertPage15To32(oldObj: any): any {

@@ -3,6 +3,12 @@ import { DataLegacyDatabase } from './Legacy/Database.js'
 import { upgradeStartup } from './Upgrade.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
 import { createTables as createTablesV8 } from './Schema/v8.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+
+export interface DataDatabaseDefaultTable {
+	page_config_version: number
+	userconfig: UserConfigModel
+}
 
 /**
  * The class that manages the applications's main database
@@ -24,7 +30,7 @@ import { createTables as createTablesV8 } from './Schema/v8.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class DataDatabase extends DataStoreBase {
+export class DataDatabase extends DataStoreBase<DataDatabaseDefaultTable> {
 	/**
 	 * @param configDir - the root config directory
 	 */
@@ -47,7 +53,7 @@ export class DataDatabase extends DataStoreBase {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		this.setTableKey(this.defaultTable, 'page_config_version', 6)
+		this.defaultTableView.set('page_config_version', 6)
 
 		this.isFirstRun = true
 	}
@@ -63,7 +69,7 @@ export class DataDatabase extends DataStoreBase {
 		const data = legacyDB.getAll()
 
 		for (const [key, value] of Object.entries(data)) {
-			this.setKey(key, value)
+			this.defaultTableView.set(key as any, value)
 		}
 	}
 }

@@ -29,7 +29,7 @@ const targetVersion = allUpgrades.length + 1
  * This has the raw db object before anything else has gotten access, so no need to worry about other components getting confused
  */
 export function upgradeStartup(db: DataDatabase): void {
-	const currentVersion = db.getKey('page_config_version', 1)
+	const currentVersion = db.defaultTableView.getOrDefault('page_config_version', 1)
 
 	// Ensure that the db isnt too new
 	if (currentVersion > targetVersion) {
@@ -49,12 +49,12 @@ export function upgradeStartup(db: DataDatabase): void {
 			allUpgrades[i - 1].upgradeStartup(db, logger)
 
 			// Record that the upgrade has been done
-			db.setKey('page_config_version', i + 1)
+			db.defaultTableView.set('page_config_version', i + 1)
 		}
 	}
 
 	// Debug: uncomment to force the upgrade to run again
-	db.setKey('page_config_version', targetVersion - 1)
+	db.defaultTableView.set('page_config_version', targetVersion - 1)
 }
 
 /**

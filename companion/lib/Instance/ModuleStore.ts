@@ -6,13 +6,14 @@ import type {
 	ModuleStoreModuleInfoStore,
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
-import type { DataCache } from '../Data/Cache.js'
+import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import createClient from 'openapi-fetch'
 import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import { Complete } from '@companion-module/base/dist/util.js'
 import EventEmitter from 'events'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
@@ -36,9 +37,8 @@ export interface ModuleStoreServiceEvents {
 export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 	readonly #logger = LogController.createLogger('Instance/ModuleStoreService')
 
-	/**
-	 */
-	readonly #cacheStore: DataCache
+	readonly #cacheStore: DataStoreTableView<DataCacheDefaultTable>
+	readonly #cacheTable: DataStoreTableView<Record<string, ModuleStoreModuleInfoStore>>
 
 	/**
 	 * The core interface client
@@ -55,9 +55,10 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		super()
 
 		this.#io = io
-		this.#cacheStore = cacheStore
+		this.#cacheStore = cacheStore.defaultTableView
+		this.#cacheTable = cacheStore.getTableView(CacheStoreModuleTable)
 
-		this.#listStore = cacheStore.getKey(CacheStoreListKey, {
+		this.#listStore = this.#cacheStore.getOrDefault(CacheStoreListKey, {
 			lastUpdated: 0,
 			lastUpdateAttempt: 0,
 			updateWarning: null,
@@ -65,13 +66,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 			modules: {},
 		} satisfies ModuleStoreListCacheStore)
 
-		// HACK: ensure the table exists
-		const cloud = cacheStore.store.prepare(
-			`CREATE TABLE IF NOT EXISTS ${CacheStoreModuleTable} (id STRING UNIQUE, value STRING);`
-		)
-		cloud.run()
-
-		this.#infoStore = new Map(Object.entries(cacheStore.getTable(CacheStoreModuleTable) ?? {}))
+		this.#infoStore = new Map(Object.entries(this.#cacheTable.all()))
 
 		// If this is the first time we're running, refresh the store data now
 		if (this.#listStore.lastUpdated === 0) {
@@ -227,7 +222,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 				this.#listStore.updateWarning = 'Failed to update the module list from the store'
 			})
 			.finally(() => {
-				this.#cacheStore.setKey(CacheStoreListKey, this.#listStore)
+				this.#cacheStore.set(CacheStoreListKey, this.#listStore)
 
 				// Update clients
 				this.#io.emitToRoom(ModuleStoreListRoom, 'modules-store:list:data', this.#listStore)
@@ -332,7 +327,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 		// Store value and update the cache on disk
 		this.#infoStore.set(moduleId, moduleData)
-		this.#cacheStore.setTableKey(CacheStoreModuleTable, moduleId, moduleData)
+		this.#cacheTable.set(moduleId, moduleData)
 
 		// Update clients
 		this.#io.emitToRoom(ModuleStoreInfoRoom(moduleId), 'modules-store:info:data', moduleId, moduleData)

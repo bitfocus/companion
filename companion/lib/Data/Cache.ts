@@ -1,5 +1,11 @@
 import { DataStoreBase } from './StoreBase.js'
 import { DataLegacyCache } from './Legacy/Cache.js'
+import type { ModuleStoreListCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
+
+export interface DataCacheDefaultTable {
+	cloud_servers: Record<string, unknown>
+	module_store_list: ModuleStoreListCacheStore
+}
 
 /**
  * The class that manages the applications's disk cache
@@ -21,7 +27,7 @@ import { DataLegacyCache } from './Legacy/Cache.js'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export class DataCache extends DataStoreBase {
+export class DataCache extends DataStoreBase<DataCacheDefaultTable> {
 	/**
 	 * @param configDir - the root config directory
 	 */
@@ -51,7 +57,7 @@ export class DataCache extends DataStoreBase {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		this.setTableKey(this.defaultTable, 'cloud_servers', {})
+		this.defaultTableView.set('cloud_servers', {})
 
 		this.isFirstRun = true
 	}
@@ -67,7 +73,7 @@ export class DataCache extends DataStoreBase {
 		const data = legacyDB.getAll()
 
 		for (const [key, value] of Object.entries(data)) {
-			this.setKey(key, value)
+			this.defaultTableView.set(key as any, value)
 		}
 	}
 }

@@ -1,7 +1,7 @@
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Resources/Constants.js'
-import type { DataStoreBase } from '../StoreBase.js'
+import type { DataStoreBase, DataStoreTableView } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 
 function convertInstanceToV3(obj: any): any {
@@ -24,9 +24,9 @@ function convertInstanceToV3(obj: any): any {
 	}
 }
 
-function convertInstancesToV3(db: DataStoreBase) {
-	if (db.hasKey('instance')) {
-		const instances = db.getKey('instance')
+function convertInstancesToV3(mainTable: DataStoreTableView<any>) {
+	const instances = mainTable.get('instance')
+	if (instances) {
 		// Delete the old internal module, as it is truly internal now
 		delete instances['bitfocus-companion']
 
@@ -36,7 +36,7 @@ function convertInstancesToV3(db: DataStoreBase) {
 			if (typeof instances[id].sortOrder !== 'number') instances[id].sortOrder = i++
 		}
 
-		db.setKey('instance', instances)
+		mainTable.set('instance', instances)
 	}
 }
 
@@ -44,14 +44,14 @@ function CreateBankControlIdOld(page: number, bank: number): string {
 	return `bank:${page}-${bank}`
 }
 
-function convertToControls(db: DataStoreBase): void {
-	if (!db.hasKey('controls')) {
-		const oldBankConfig = db.getKey('bank', {})
-		const oldActions = db.getKey('bank_actions', {})
-		const oldReleaseActions = db.getKey('bank_release_actions', {})
-		const oldRotateLeftActions = db.getKey('bank_rotate_left_actions', {})
-		const oldRotateRightActions = db.getKey('bank_rotate_right_actions', {})
-		const oldDeviceonfig = db.getKey('deviceconfig', {})
+function convertToControls(mainTable: DataStoreTableView<any>): void {
+	if (!mainTable.get('controls')) {
+		const oldBankConfig = mainTable.get('bank') ?? {}
+		const oldActions = mainTable.get('bank_actions') ?? {}
+		const oldReleaseActions = mainTable.get('bank_release_actions') ?? {}
+		const oldRotateLeftActions = mainTable.get('bank_rotate_left_actions') ?? {}
+		const oldRotateRightActions = mainTable.get('bank_rotate_right_actions') ?? {}
+		const oldDeviceonfig = mainTable.get('deviceconfig') ?? {}
 
 		const newSteps: any = {}
 
@@ -71,11 +71,11 @@ function convertToControls(db: DataStoreBase): void {
 		}
 
 		// Update the db
-		db.deleteKey('bank_actions')
-		db.deleteKey('bank_release_actions')
+		mainTable.delete('bank_actions')
+		mainTable.delete('bank_release_actions')
 
-		const oldConfig = db.getKey('bank', {})
-		const oldFeedbacks = db.getKey('feedbacks', {})
+		const oldConfig = mainTable.get('bank') ?? {}
+		const oldFeedbacks = mainTable.get('feedbacks') ?? {}
 
 		const newControls: any = {}
 		for (let page = 1; page <= LEGACY_PAGE_COUNT; page++) {
@@ -99,25 +99,26 @@ function convertToControls(db: DataStoreBase): void {
 			oldDeviceonfig['emulator'] = undefined
 		}
 
-		db.deleteKey('bank')
-		db.deleteKey('feedbacks')
-		db.deleteKey('bank_action_sets')
-		db.deleteKey('bank_rotate_left_actions')
-		db.deleteKey('bank_rotate_right_actions')
-		db.setKey('controls', newControls)
-		db.setKey('deviceconfig', oldDeviceonfig)
+		mainTable.delete('bank')
+		mainTable.delete('feedbacks')
+		mainTable.delete('bank_action_sets')
+		mainTable.delete('bank_rotate_left_actions')
+		mainTable.delete('bank_rotate_right_actions')
+		mainTable.set('controls', newControls)
+		mainTable.set('deviceconfig', oldDeviceonfig)
 
-		db.setKey('page_config_version', 3)
+		mainTable.set('page_config_version', 3)
 	}
 
 	// patch v3 pre https://github.com/bitfocus/companion/pull/2187
-	const controls = db.getKey('controls')
+	const controls = mainTable.get('controls')
 	if (controls) {
 		for (const control of Object.values(controls)) {
 			if (control) {
 				fixUpControl(control)
 			}
 		}
+		mainTable.set('controls', controls)
 	}
 }
 
@@ -301,10 +302,10 @@ function convertTriggerToControl(logger: Logger, entry: any, index: number): any
 	return control
 }
 
-function convertSchedulerToControls(db: DataStoreBase, logger: Logger) {
-	if (db.hasKey('scheduler')) {
-		let controls = db.getKey('controls')
-		let scheduler = db.getKey('scheduler')
+function convertSchedulerToControls(mainTable: DataStoreTableView<any>, logger: Logger) {
+	let scheduler = mainTable.get('scheduler')
+	if (scheduler) {
+		let controls = mainTable.get('controls') ?? {}
 
 		if (Array.isArray(scheduler)) {
 			// Convert into an object
@@ -321,16 +322,15 @@ function convertSchedulerToControls(db: DataStoreBase, logger: Logger) {
 			}
 		})
 
-		db.setKey('controls', controls)
-		db.deleteKey('scheduler')
+		mainTable.set('controls', controls)
+		mainTable.delete('scheduler')
 	}
 }
 
-function convertEmulatorToV3(db: DataStoreBase): void {
-	if (db.hasKey('userconfig')) {
-		const userconfig = db.getKey('userconfig')
-
-		const instances = db.getKey('deviceconfig')
+function convertEmulatorToV3(mainTable: DataStoreTableView<any>): void {
+	const userconfig = mainTable.get('userconfig')
+	if (userconfig) {
+		const instances = mainTable.get('deviceconfig')
 		if (instances['emulator'] && instances['emulator'].config) {
 			instances['emulator'].config.emulator_control_enable = userconfig.emulator_control_enable ?? false
 			instances['emulator'].config.emulator_prompt_fullscreen = userconfig.emulator_prompt_fullscreen ?? false
@@ -341,11 +341,13 @@ function convertEmulatorToV3(db: DataStoreBase): void {
 			instances['emulator:emulator'].integrationType = 'emulator'
 			delete instances['emulator']
 		}
+
+		mainTable.set('deviceconfig', instances)
 	}
 }
 
-function convertSurfacesToV3(db: DataStoreBase) {
-	const devices = db.getKey('deviceconfig')
+function convertSurfacesToV3(mainTable: DataStoreTableView<any>) {
+	const devices = mainTable.get('deviceconfig')
 	if (!devices) return
 
 	// Ignore satellite for now, as that has not been updated, and no colon
@@ -363,20 +365,24 @@ function convertSurfacesToV3(db: DataStoreBase) {
 			delete devices[key]
 		}
 	}
+
+	mainTable.set('deviceconfig', devices)
 }
 
 /**
  * do the database upgrades to convert from the v2 to the v3 format
  */
-function convertDatabaseToV3(db: DataStoreBase, logger: Logger): void {
-	convertInstancesToV3(db)
+function convertDatabaseToV3(db: DataStoreBase<any>, logger: Logger): void {
+	const mainTable = db.defaultTableView
 
-	convertToControls(db)
+	convertInstancesToV3(mainTable)
 
-	convertSchedulerToControls(db, logger)
+	convertToControls(mainTable)
 
-	convertEmulatorToV3(db)
-	convertSurfacesToV3(db)
+	convertSchedulerToControls(mainTable, logger)
+
+	convertEmulatorToV3(mainTable)
+	convertSurfacesToV3(mainTable)
 }
 
 function convertPageToV3(oldObj: any) {

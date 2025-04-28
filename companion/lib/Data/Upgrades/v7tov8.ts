@@ -6,7 +6,7 @@ import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 /**
  * do the database upgrades to convert from the v6 to the v7 format
  */
-function convertDatabaseToV8(db: DataStoreBase, _logger: Logger) {
+function convertDatabaseToV8(db: DataStoreBase<any>, _logger: Logger) {
 	if (!db.store) return
 
 	convertRowToTable(db, 'custom_variables', 'custom_variables')
@@ -17,17 +17,19 @@ function convertDatabaseToV8(db: DataStoreBase, _logger: Logger) {
 	convertRowToTable(db, 'surfaces_remote', 'outbound_surfaces')
 }
 
-function convertRowToTable(db: DataStoreBase, tableName: string, oldKey: string) {
+function convertRowToTable(db: DataStoreBase<any>, tableName: string, oldKey: string) {
 	// Create table
-	db.store.prepare(`CREATE TABLE IF NOT EXISTS ${tableName} (id STRING UNIQUE, value STRING);`).run()
+	const tableView = db.getTableView(tableName)
 
-	const oldCustomVariables = db.getKey(oldKey)
-	if (oldCustomVariables) {
-		for (const [id, data] of Object.entries(oldCustomVariables)) {
-			db.setTableKey(tableName, id, data)
+	const mainTable = db.defaultTableView
+
+	const oldValues = mainTable.get(oldKey)
+	if (oldValues) {
+		for (const [id, data] of Object.entries(oldValues)) {
+			tableView.set(id, data)
 		}
 	}
-	db.deleteKey(oldKey)
+	mainTable.delete(oldKey)
 }
 
 function convertImportToV8(obj: SomeExportv4): SomeExportv6 {

@@ -4,8 +4,9 @@ import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigMode
 import type { ClientSocket } from '../UI/Handler.js'
 import type { pki } from 'node-forge'
 import { EventEmitter } from 'events'
-import type { DataDatabase } from './Database.js'
+import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
 import LogController from '../Log/Controller.js'
+import { DataStoreTableView } from './StoreBase.js'
 
 export interface DataUserConfigEvents {
 	keyChanged: [key: keyof UserConfigModel, value: any, checkControlsInBounds: boolean]
@@ -35,6 +36,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	readonly #logger = LogController.createLogger('Data/UserConfig')
 
 	readonly #db: DataDatabase
+	readonly #dbTable: DataStoreTableView<DataDatabaseDefaultTable>
 
 	/**
 	 * The defaults for the user config fields
@@ -128,8 +130,9 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		super()
 
 		this.#db = db
+		this.#dbTable = db.defaultTableView
 
-		this.#data = this.#db.getKey('userconfig', cloneDeep(DataUserConfig.Defaults))
+		this.#data = this.#dbTable.getOrDefault('userconfig', cloneDeep(DataUserConfig.Defaults))
 
 		this.#populateMissingForExistingDb()
 
@@ -146,7 +149,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		// make sure the db has an updated copy
 		if (save) {
-			this.#db.setKey('userconfig', this.#data)
+			this.#dbTable.set('userconfig', this.#data)
 		}
 	}
 
@@ -365,7 +368,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		// @ts-ignore
 		this.#data[key] = value
 		if (save) {
-			this.#db.setKey('userconfig', this.#data)
+			this.#dbTable.set('userconfig', this.#data)
 		}
 
 		this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
@@ -384,7 +387,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				this.setKey(key, objects[key], false)
 			}
 
-			this.#db.setKey('userconfig', this.#data)
+			this.#dbTable.set('userconfig', this.#data)
 		}
 	}
 

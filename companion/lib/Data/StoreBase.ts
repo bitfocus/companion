@@ -4,7 +4,6 @@ import { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
 import { createSqliteDatabase } from './Util.js'
-import { cloneDeep } from 'lodash-es'
 
 enum DatabaseStartupState {
 	Normal = 0,
@@ -39,7 +38,7 @@ interface ITableRow {
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export abstract class DataStoreBase {
+export abstract class DataStoreBase<TDefaultTableContent extends Record<string, any>> {
 	protected readonly logger: Logger
 	/**
 	 * The time to use for the save interval
@@ -97,7 +96,7 @@ export abstract class DataStoreBase {
 	/**
 	 * Saved queries
 	 */
-	private statementCache = new Map<string, Statement>()
+	private tableCache = new Map<string, DataStoreTableView<any>>()
 	/**
 	 * The SQLite database
 	 */
@@ -139,192 +138,10 @@ export abstract class DataStoreBase {
 	}
 
 	/**
-	 * Delete a key/value pair from the default table
-	 * @param key - the key to be delete
-	 */
-	public deleteKey(key: string): void {
-		this.deleteTableKey(this.defaultTable, key)
-	}
-
-	/**
-	 * Prepare and cache a statement
-	 */
-	private prepareStatement<BindParameters extends unknown[]>(
-		cacheKey: string,
-		queryStr: string
-	): Statement<BindParameters, ITableRow> {
-		const cached = this.statementCache.get(cacheKey)
-		if (cached) return cached as any
-
-		const query = this.store.prepare<BindParameters, ITableRow>(queryStr)
-		this.statementCache.set(cacheKey, query)
-		return query
-	}
-
-	private validateTable(table: string): void {
-		if (!table || typeof table !== 'string') throw new Error('Invalid table name')
-	}
-
-	private validateKey(key: string): void {
-		if (!key || typeof key !== 'string') throw new Error('Invalid key')
-	}
-
-	/**
-	 * Delete a key/value pair from a table
-	 * @param table - the table to delete from
-	 * @param key - the key to be delete
-	 */
-	public deleteTableKey(table: string, key: string): void {
-		this.validateTable(table)
-		this.validateKey(key)
-
-		const query = this.prepareStatement(`delete-${table}`, `DELETE FROM ${table} WHERE id = @id`)
-
-		this.logger.silly(`Delete key: ${table} - ${key}`)
-
-		try {
-			query.run({ id: key })
-		} catch (e: any) {
-			this.logger.warn(`Error deleting ${table} - ${key}: ${e.message}`)
-		}
-
-		this.setDirty()
-	}
-
-	/**
 	 * @returns the 'is first run' flag
 	 */
 	public getIsFirstRun(): boolean {
 		return this.isFirstRun
-	}
-
-	/**
-	 * Get a value from the default table
-	 * @param key - the to be retrieved
-	 * @param defaultValue  - the default value to use if the key doens't exist
-	 * @returns the value
-	 */
-	public getKey(key: string, defaultValue?: any): any {
-		return this.getTableKey(this.defaultTable, key, defaultValue)
-	}
-
-	/**
-	 * Get all rows from a table
-	 * @param table - the table to get from
-	 * @returns the rows
-	 */
-	public getTable(table: string): Record<string, any> {
-		this.validateTable(table)
-
-		let out: Record<string, any> = {}
-
-		const query = this.prepareStatement(`get-all-${table}`, `SELECT id, value FROM ${table}`)
-		this.logger.silly(`Get table: ${table}`)
-
-		try {
-			const rows = query.all()
-			for (const record of rows) {
-				try {
-					out[record.id] = JSON.parse(record.value)
-				} catch (e) {
-					/** @ts-ignore */
-					out[record.id] = record.value
-				}
-			}
-		} catch (e: any) {
-			this.logger.warn(`Error getting ${table}: ${e.message}`)
-		}
-
-		return out
-	}
-
-	/**
-	 * Get a value from a table
-	 * @param table - the table to get from
-	 * @param key - the key to be retrieved
-	 * @param defaultValue - the default value to use if the key doesn't exist
-	 * @returns the value
-	 */
-	public getTableKey(table: string, key: string, defaultValue?: any): any {
-		this.validateTable(table)
-		this.validateKey(key)
-
-		let out
-
-		const query = this.prepareStatement(`get-${table}`, `SELECT value FROM ${table} WHERE id = @id`)
-
-		this.logger.silly(`Get table key: ${table} - ${key}`)
-
-		try {
-			const row = query.get({ id: key })
-			if (row && row.value) {
-				try {
-					/** @ts-ignore */
-					out = JSON.parse(row.value)
-				} catch (e) {
-					/** @ts-ignore */
-					out = row.value
-				}
-			} else {
-				this.logger.silly(`Get table key: ${table} - ${key} failover`)
-				this.setTableKey(table, key, defaultValue)
-				out = defaultValue
-			}
-		} catch (e: any) {
-			this.logger.warn(`Error getting ${table} - ${key}: ${e.message}`)
-		}
-
-		return out
-	}
-
-	/**
-	 * Checks if the main table has a value
-	 * @param key - the key to be checked
-	 */
-	public hasKey(key: string): boolean {
-		this.validateKey(key)
-
-		const query = this.prepareStatement(
-			`has-${this.defaultTable}`,
-			`SELECT id FROM ${this.defaultTable} WHERE id = @id`
-		)
-
-		const row = query.get({ id: key })
-
-		return !!row
-	}
-
-	/**
-	 * Import raw data into a table
-	 * @param table - the table to import to
-	 * @param data - the data
-	 */
-	public importTable(table: string, data: any) {
-		if (typeof data === 'object') {
-			for (const [key, value] of Object.entries(data)) {
-				this.setTableKey(table, key, value)
-			}
-		}
-	}
-
-	/**
-	 * Remove all rows from a table
-	 * @param table - the table to be emptied
-	 */
-	public emptyTable(table: string): void {
-		this.validateTable(table)
-
-		const query = this.prepareStatement(`empty-${table}`, `DELETE FROM ${table}`)
-
-		this.logger.silly(`Empty table: ${table}`)
-
-		try {
-			query.run({})
-		} catch (e: any) {
-			this.logger.warn(`Error emptying ${table}: ${e.message}`)
-		}
-
-		this.setDirty()
 	}
 
 	/**
@@ -378,45 +195,6 @@ export abstract class DataStoreBase {
 	}
 
 	/**
-	 * Save/update a key/value pair to the default table
-	 * @param key - the key to save under
-	 * @param value - the object to save
-	 */
-	public setKey(key: string, value: any): void {
-		this.setTableKey(this.defaultTable, key, value)
-	}
-
-	/**
-	 * Save/update a key/value pair to a table
-	 * @param table - the table to save in
-	 * @param key - the key to save under
-	 * @param value - the object to save
-	 */
-	public setTableKey(table: string, key: string, value: any): void {
-		this.validateTable(table)
-		this.validateKey(key)
-
-		if (typeof value === 'object') {
-			value = JSON.stringify(value)
-		}
-
-		const query = this.prepareStatement(
-			`set-${table}`,
-			`INSERT INTO ${table} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
-		)
-
-		this.logger.silly(`Set table key ${table} - ${key} - ${value}`)
-
-		try {
-			query.run({ id: key, value: value })
-		} catch (e: any) {
-			this.logger.warn(`Error updating ${table} - ${key}: ${e.message}`)
-		}
-
-		this.setDirty()
-	}
-
-	/**
 	 * Update the startup state to a new state if that new state is higher
 	 * @param newState - the new state
 	 */
@@ -431,8 +209,9 @@ export abstract class DataStoreBase {
 	protected startSQLite(): void {
 		if (this.cfgDir == ':memory:') {
 			this.store = createSqliteDatabase(this.cfgDir)
+			this.tableCache.clear()
 			this.create()
-			this.getKey('test')
+			this.defaultTableView.get('test')
 			this.loadDefaults()
 		} else {
 			if (fs.existsSync(this.cfgFile)) {
@@ -440,7 +219,8 @@ export abstract class DataStoreBase {
 
 				try {
 					this.store = this.#createDatabase(this.cfgFile)
-					this.getKey('test')
+					this.tableCache.clear()
+					this.defaultTableView.get('test')
 				} catch (e) {
 					try {
 						try {
@@ -465,9 +245,10 @@ export abstract class DataStoreBase {
 			} else if (fs.existsSync(this.cfgLegacyFile)) {
 				try {
 					this.store = this.#createDatabase(this.cfgFile)
+					this.tableCache.clear()
 					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
 					this.migrateFileToSqlite()
-					this.getKey('test')
+					this.defaultTableView.get('test')
 				} catch (e: any) {
 					this.setStartupState(DatabaseStartupState.Reset)
 					this.logger.error(e.message)
@@ -482,9 +263,10 @@ export abstract class DataStoreBase {
 		if (!this.store) {
 			try {
 				this.store = createSqliteDatabase(':memory:')
+				this.tableCache.clear()
 				this.setStartupState(DatabaseStartupState.RAM)
 				this.create()
-				this.getKey('test')
+				this.defaultTableView.get('test')
 				this.loadDefaults()
 			} catch (e: any) {
 				this.setStartupState(DatabaseStartupState.Fatal)
@@ -537,7 +319,8 @@ export abstract class DataStoreBase {
 
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
 				this.store = this.#createDatabase(this.cfgFile)
-				this.getKey('test')
+				this.tableCache.clear()
+				this.defaultTableView.get('test')
 			} catch (e: any) {
 				this.setStartupState(DatabaseStartupState.Reset)
 				this.logger.error(e.message)
@@ -561,8 +344,9 @@ export abstract class DataStoreBase {
 		} finally {
 			try {
 				this.store = this.#createDatabase(this.cfgFile)
+				this.tableCache.clear()
 				this.create()
-				this.getKey('test')
+				this.defaultTableView.get('test')
 				this.loadDefaults()
 			} catch (e: any) {
 				this.logger.error(e.message)
@@ -570,51 +354,232 @@ export abstract class DataStoreBase {
 		}
 	}
 
+	get defaultTableView(): DataStoreTableView<TDefaultTableContent> {
+		return this.getTableView(this.defaultTable)
+	}
+
 	public getTableView<TableContent extends Record<string, any>>(tableName: string): DataStoreTableView<TableContent> {
-		this.validateTable(tableName)
+		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
 
-		return {
-			tableName,
+		const cachedTable = this.tableCache.get(tableName)
+		if (cachedTable) return cachedTable
 
-			all: () => {
-				return this.getTable(tableName) as any
-			},
-			get: (id) => {
-				return this.getTableKey(tableName, String(id))
-			},
-			getOrDefault: (id, defaultValue) => {
-				const value = this.getTableKey(tableName, String(id))
-				if (value === undefined) {
-					this.setTableKey(tableName, String(id), cloneDeep(defaultValue))
-					return defaultValue
-				}
-				return value
-			},
+		const newTable = new DataStoreTableView<TableContent>(this.logger, this.store, tableName, () => this.setDirty())
+		this.tableCache.set(tableName, newTable)
 
-			set: (id, value): void => {
-				this.setTableKey(tableName, String(id), value)
-			},
-			delete: (id): void => {
-				this.deleteTableKey(tableName, String(id))
-			},
-			clear: (): void => {
-				this.emptyTable(tableName)
-			},
-		}
+		return newTable
 	}
 }
 
-export interface DataStoreTableView<TableContent extends Record<string, any>> {
+type ValueIfJsonEncodable<T> = T extends number | { [key: string]: any } ? T : never
+type ValueIfString<T> = T extends string ? T : never
+
+export class DataStoreTableView<TableContent extends Record<string, any>> {
+	readonly #logger: Logger
+
+	readonly #store: SQLiteDB
 	readonly tableName: string
+	readonly #triggerDirty: () => void
 
-	all(): TableContent
+	readonly #deleteByIdQuery: Statement<[{ id: string }], ITableRow>
+	readonly #emptyTableQuery: Statement<[], ITableRow>
+	readonly #getAllQuery: Statement<[], ITableRow>
+	readonly #getByIdQuery: Statement<[{ id: string }], ITableRow>
+	readonly #setByIdQuery: Statement<[{ id: string; value: string }], ITableRow>
 
-	get<T extends keyof TableContent>(id: T): TableContent[T] | undefined
-	getOrDefault<T extends keyof TableContent>(id: T, defaultValue: TableContent[T]): TableContent[T]
+	constructor(logger: Logger, store: SQLiteDB, tableName: string, triggerDirty: () => void) {
+		this.#logger = logger.child({ source: tableName })
+		this.#store = store
+		this.tableName = tableName
+		this.#triggerDirty = triggerDirty
 
-	set<T extends keyof TableContent>(id: T, value: TableContent[T]): void
+		// Ensure the table exists
+		this.#store.prepare(`CREATE TABLE IF NOT EXISTS ${tableName} (id STRING UNIQUE, value STRING);`).run()
 
-	delete(id: keyof TableContent): void
+		this.#deleteByIdQuery = this.#store.prepare(`DELETE FROM ${tableName} WHERE id = @id`)
+		this.#emptyTableQuery = this.#store.prepare(`DELETE FROM ${tableName}`)
+		this.#getAllQuery = this.#store.prepare(`SELECT id, value FROM ${tableName}`)
+		this.#getByIdQuery = this.#store.prepare(`SELECT value FROM ${tableName} WHERE id = @id`)
+		this.#setByIdQuery = this.#store.prepare(
+			`INSERT INTO ${tableName} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
+		)
+	}
 
-	clear(): void
+	private validateKey(key: string | number | Symbol): asserts key is string {
+		if (!key || typeof key !== 'string') throw new Error('Invalid key')
+	}
+
+	/**
+	 * Get all rows from the table
+	 */
+	all(): TableContent {
+		// TODO - how to make this safe for json vs string?
+
+		let out: TableContent = {} as any
+
+		this.#logger.silly(`Get table`)
+
+		try {
+			const rows = this.#getAllQuery.all()
+			for (const record of rows) {
+				try {
+					/** @ts-ignore */
+					out[record.id] = JSON.parse(record.value)
+				} catch (e) {
+					/** @ts-ignore */
+					out[record.id] = record.value
+				}
+			}
+		} catch (e: any) {
+			this.#logger.warn(`Error getting: ${e.message}`)
+		}
+
+		return out
+	}
+
+	private getTableKeyRaw(key: string): string | undefined {
+		this.#logger.silly(`Get table key: ${key}`)
+
+		try {
+			const row = this.#getByIdQuery.get({ id: key })
+			return row?.value
+		} catch (e: any) {
+			this.#logger.warn(`Error getting ${key}: ${e.message}`)
+			return undefined
+		}
+	}
+
+	/**
+	 * Save/update a key/value pair to a table
+	 * @param key - the key to save under
+	 * @param value - the object to save
+	 */
+	private setTableKeyRaw(key: string, value: string): void {
+		this.#logger.silly(`Set table key ${key} - ${value}`)
+
+		try {
+			this.#setByIdQuery.run({ id: key, value: value })
+		} catch (e: any) {
+			this.#logger.warn(`Error updating ${key}: ${e.message}`)
+		}
+
+		this.#triggerDirty()
+	}
+
+	/**
+	 * Get a value from the table
+	 * @param id - the key to be retrieved
+	 */
+	get<T extends keyof TableContent>(id: T): ValueIfJsonEncodable<TableContent[T]> | undefined {
+		this.validateKey(id)
+
+		const value = this.getTableKeyRaw(id)
+		if (!value) return undefined
+
+		try {
+			return JSON.parse(value)
+		} catch (e: any) {
+			this.#logger.warn(`Error parsing ${id}: ${e.message}`)
+			return undefined
+		}
+	}
+
+	/**
+	 * Get a value from the table or set a default value
+	 * @param id - the key to be retrieved
+	 * @param defaultValue - the default value to store if the key doesn't exist
+	 */
+	getOrDefault<T extends keyof TableContent>(
+		id: T,
+		defaultValue: ValueIfJsonEncodable<TableContent[T]>
+	): ValueIfJsonEncodable<TableContent[T]> {
+		this.validateKey(id)
+
+		const value = this.getTableKeyRaw(id)
+		if (value === undefined) {
+			this.setTableKeyRaw(id, JSON.stringify(defaultValue))
+			return defaultValue
+		}
+
+		try {
+			return JSON.parse(value)
+		} catch (e: any) {
+			this.#logger.warn(`Error parsing ${String(id)}: ${e.message}`)
+			return defaultValue
+		}
+	}
+
+	/**
+	 * Get a value from the table or set a default value
+	 * @param id - the key to be retrieved
+	 * @param defaultValue - the default value to store if the key doesn't exist
+	 */
+	getPrimitiveOrDefault<T extends keyof TableContent>(
+		id: T,
+		defaultValue: ValueIfString<TableContent[T]>
+	): ValueIfString<TableContent[T]> {
+		this.validateKey(id)
+
+		const value = this.getTableKeyRaw(id)
+		if (value === undefined) {
+			this.setTableKeyRaw(id, defaultValue)
+			return defaultValue
+		}
+		return value as any // The types match, but TS doesn't know that
+	}
+
+	/**
+	 * Set a value in the table
+	 * @param id - the key to be set
+	 * @param value - the value to be set
+	 */
+	set<T extends keyof TableContent>(id: T, value: ValueIfJsonEncodable<TableContent[T]>): void {
+		this.validateKey(id)
+
+		this.setTableKeyRaw(id, JSON.stringify(value))
+	}
+
+	/**
+	 * Set a value in the table
+	 * @param id - the key to be set
+	 * @param value - the value to be set
+	 */
+	setPrimitive<T extends keyof TableContent>(id: T, value: ValueIfString<TableContent[T]>): void {
+		this.validateKey(id)
+
+		this.setTableKeyRaw(id, value)
+	}
+
+	/**
+	 * Delete a value from the table
+	 * @param id - the key to be deleted
+	 */
+	delete(id: keyof TableContent): void {
+		this.validateKey(id)
+
+		this.#logger.silly(`Delete key: ${id}`)
+
+		try {
+			this.#deleteByIdQuery.run({ id })
+		} catch (e: any) {
+			this.#logger.warn(`Error deleting ${id}: ${e.message}`)
+		}
+
+		this.#triggerDirty()
+	}
+
+	/**
+	 * Clear all values from the table
+	 */
+	clear(): void {
+		this.#logger.silly(`Empty table`)
+
+		try {
+			this.#emptyTableQuery.run()
+		} catch (e: any) {
+			this.#logger.warn(`Error emptying: ${e.message}`)
+		}
+
+		this.#triggerDirty()
+	}
 }

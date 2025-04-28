@@ -17,16 +17,16 @@ import { Complete } from '@companion-module/base/dist/util.js'
 /**
  * do the database upgrades to convert from the v6 to the v7 format
  */
-function convertDatabaseToV7(db: DataStoreBase, _logger: Logger) {
+function convertDatabaseToV7(db: DataStoreBase<any>, _logger: Logger) {
 	if (!db.store) return
 
-	const controls = db.getTable('controls')
+	const controlsTable = db.getTableView('controls')
 
-	for (const [controlId, control] of Object.entries(controls)) {
+	for (const [controlId, control] of Object.entries(controlsTable.all())) {
 		// Fixup control
 		fixupControlEntities(control)
 
-		db.setTableKey('controls', controlId, control)
+		controlsTable.set(controlId, control)
 	}
 }
 

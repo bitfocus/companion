@@ -5,7 +5,7 @@ import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { delay } from '../Resources/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { AppInfo } from '../Registry.js'
-import type { DataCache } from '../Data/Cache.js'
+import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import nodeMachineId from 'node-machine-id'
@@ -67,7 +67,7 @@ export class CloudController {
 
 	readonly appInfo: AppInfo
 	readonly #dbTable: DataStoreTableView<CloudDbTable>
-	readonly #cache: DataCache
+	readonly #cacheTable: DataStoreTableView<DataCacheDefaultTable>
 	readonly controls: ControlsController
 	readonly #graphics: GraphicsController
 	readonly io: UIHandler
@@ -129,7 +129,7 @@ export class CloudController {
 	) {
 		this.appInfo = appInfo
 		this.#dbTable = db.getTableView(CLOUD_TABLE)
-		this.#cache = cache
+		this.#cacheTable = cache.defaultTableView
 		this.controls = controls
 		this.#graphics = graphics
 		this.io = io
@@ -143,10 +143,10 @@ export class CloudController {
 		})
 
 		this.companionId = appInfo.machineId
-		const uuid = this.#dbTable.getOrDefault('uuid', generateMachineId())
+		const uuid = this.#dbTable.getPrimitiveOrDefault('uuid', generateMachineId())
 		this.#setState({ uuid })
 
-		const regions = this.#cache.getKey('cloud_servers', {})
+		const regions = this.#cacheTable.getOrDefault('cloud_servers', {})
 
 		if (regions !== undefined) {
 			for (const region of Object.values<any>(regions)) {
@@ -292,7 +292,7 @@ export class CloudController {
 			if (result.regions) {
 				const regions = result.regions
 
-				this.#cache.setKey('cloud_servers', regions)
+				this.#cacheTable.set('cloud_servers', regions)
 
 				CloudController.availableRegions = {}
 
@@ -359,7 +359,7 @@ export class CloudController {
 	async #handleCloudRegenerateUUID(_client: ClientSocket): Promise<void> {
 		const newUuid = v4()
 		this.#setState({ uuid: newUuid })
-		this.#dbTable.set('uuid', newUuid)
+		this.#dbTable.setPrimitive('uuid', newUuid)
 
 		this.#setState({ cloudActive: false })
 		await delay(1000)
