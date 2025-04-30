@@ -409,10 +409,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 			if (this.panel.supportsLocking) {
 				this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
-			} else {
-				if (!skipDraw) {
-					this.#drawPage()
-				}
+			}
+
+			if (!skipDraw) {
+				this.#drawPage()
 			}
 		}
 	}
