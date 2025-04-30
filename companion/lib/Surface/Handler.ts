@@ -34,7 +34,7 @@ import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel } from './Types.js'
+import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanelFull } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { PanelDefaults } from './Config.js'
 
@@ -181,12 +181,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	readonly #variables: VariablesController
 
-	readonly panel: SurfacePanel
+	readonly panel: SurfacePanelFull
 
 	constructor(
 		surfaceController: SurfaceController,
 		deps: SurfaceHandlerDependencies,
-		panel: SurfacePanel,
+		panel: SurfacePanelFull,
 		surfaceConfig: SurfaceConfig
 	) {
 		super()
@@ -306,6 +306,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#drawPage() {
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
+				if (this.panel.supportsLocking) return
+
 				const buffers = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
 				this.panel.clearDeck()
 
@@ -396,14 +398,20 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	setLocked(locked: boolean, skipDraw = false): void {
 		// skip if surface can't be locked
-		if (this.#surfaceConfig.config.never_lock) return
+		if (this.#surfaceConfig.config.never_lock && locked) return
 
 		// If it changed, redraw
 		if (this.#isSurfaceLocked != locked) {
 			this.#isSurfaceLocked = !!locked
 
-			if (!skipDraw) {
-				this.#drawPage()
+			if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
+
+			if (this.panel.supportsLocking) {
+				this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
+			} else {
+				if (!skipDraw) {
+					this.#drawPage()
+				}
 			}
 		}
 	}
@@ -511,7 +519,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					this.#controls.pressControl(controlId, pressed, this.surfaceId)
 				}
 				this.#logger.debug(`Button ${thisPage}/${coordinate} ${pressed ? 'pressed' : 'released'}`)
-			} else {
+			} else if (!this.panel.supportsLocking) {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
 					if (pressCode !== -1) {
@@ -658,7 +666,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (newconfig.rotation != this.#surfaceConfig.config.rotation) redraw = true
 
 		if (newconfig.never_lock && newconfig.never_lock != this.#surfaceConfig.config.never_lock) {
-			this.#isSurfaceLocked = false
+			this.setLocked(false, true)
 			redraw = true
 		}
 

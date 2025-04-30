@@ -462,6 +462,10 @@ class SurfaceIPSatelliteWithLocking extends SurfaceIPSatelliteBase implements Su
 	readonly supportsLocking = true
 
 	setLocked(locked: boolean, characterCount: number): void {
+		if (locked) {
+			this.clearDeck()
+		}
+
 		this.logger.silly(`locked: ${locked} - ${characterCount}`)
 		if (this.socket !== undefined) {
 			this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {

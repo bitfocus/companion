@@ -162,7 +162,8 @@ export class ServiceSatelliteApi {
 		const streamText = params.TEXT !== undefined && isTruthy(params.TEXT)
 		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
-		const supportsLockedState = params.PINCODE_LOCK !== undefined && isTruthy(params.PINCODE_LOCK)
+		const supportsLockedState =
+			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
 
 		let transferVariables: SatelliteTransferableValue[]
 		try {
