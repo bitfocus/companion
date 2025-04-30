@@ -14,7 +14,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { ExecuteExpressionResult } from '../Variables/Util.js'
 
 export type SurfacePanelFactory = {
-	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
+	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanelFull>
 }
 
 export interface LocalUSBDeviceOptions {
@@ -37,6 +37,8 @@ export interface SurfacePanelInfo {
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 }
 
+export type SurfacePanelFull = SurfacePanel & (SurfacePanelWithLocking | SurfacePanelWithoutLocking)
+
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
@@ -49,6 +51,16 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	quit(): void
 	checkForFirmwareUpdates?: (latestVersions?: unknown) => Promise<void>
 }
+
+export interface SurfacePanelWithoutLocking {
+	readonly supportsLocking: false
+}
+export interface SurfacePanelWithLocking {
+	readonly supportsLocking: true
+
+	setLocked: (locked: boolean, characterCount: number) => void
+}
+
 export interface DrawButtonItem {
 	x: number
 	y: number

@@ -20,7 +20,7 @@ import vecFootpedal, { VecFootpedalDeviceInfo } from 'vec-footpedal'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo, SurfacePanelWithoutLocking } from '../Types.js'
 
 type XYValue = [x: number, y: number]
 interface ModelInfo {
@@ -53,8 +53,13 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceUSBVECFootpedal extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
+export class SurfaceUSBVECFootpedal
+	extends EventEmitter<SurfacePanelEvents>
+	implements SurfacePanel, SurfacePanelWithoutLocking
+{
 	readonly #logger: Logger
+
+	readonly supportsLocking = false
 
 	config: Record<string, any>
 

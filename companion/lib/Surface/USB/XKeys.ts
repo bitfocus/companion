@@ -24,7 +24,13 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { LocalUSBDeviceOptions, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type {
+	LocalUSBDeviceOptions,
+	SurfacePanel,
+	SurfacePanelEvents,
+	SurfacePanelInfo,
+	SurfacePanelWithoutLocking,
+} from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 const configFields: CompanionSurfaceConfigField[] = [
@@ -40,8 +46,13 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
+export class SurfaceUSBXKeys
+	extends EventEmitter<SurfacePanelEvents>
+	implements SurfacePanel, SurfacePanelWithoutLocking
+{
 	readonly #logger: Logger
+
+	readonly supportsLocking = false
 
 	config: Record<string, any> = {}
 

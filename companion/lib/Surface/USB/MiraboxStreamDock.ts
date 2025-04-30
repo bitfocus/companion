@@ -30,13 +30,18 @@ import {
 	RotationConfigField,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo, SurfacePanelWithoutLocking } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 const setTimeoutPromise = util.promisify(setTimeout)
 
-export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
+export class SurfaceUSBMiraboxStreamDock
+	extends EventEmitter<SurfacePanelEvents>
+	implements SurfacePanel, SurfacePanelWithoutLocking
+{
 	public logger: Logger
+
+	readonly supportsLocking = false
 
 	config: Record<string, any> = {}
 

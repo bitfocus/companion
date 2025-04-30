@@ -7,7 +7,7 @@ import {
 } from '../Resources/Util.js'
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import { Logger } from '../Log/Controller.js'
-import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../Surface/IP/Satellite.js'
+import type { SatelliteTransferableValue, SurfaceIPSatelliteBase } from '../Surface/IP/Satellite.js'
 import type { AppInfo } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 
@@ -28,8 +28,9 @@ import type { SurfaceController } from '../Surface/Controller.js'
  * 1.7.0 - Support for transferable values. This allows surfaces to emit and consume values that don't align with a control in the grid.
  *       - allow surface to opt out of brightness slider and messages
  * 1.7.1 - Respond with variable name in SET-VARIABLE-VALUE success message
+ * 1.8.0 - Add support for remote surface to handle display of locked state
  */
-const API_VERSION = '1.7.1'
+const API_VERSION = '1.8.0'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
@@ -161,6 +162,7 @@ export class ServiceSatelliteApi {
 		const streamText = params.TEXT !== undefined && isTruthy(params.TEXT)
 		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
+		const supportsLockedState = params.PINCODE_LOCK !== undefined && isTruthy(params.PINCODE_LOCK)
 
 		let transferVariables: SatelliteTransferableValue[]
 		try {
@@ -184,6 +186,7 @@ export class ServiceSatelliteApi {
 			streamText,
 			streamTextStyle,
 			transferVariables,
+			supportsLockedState,
 		})
 
 		this.#devices.set(id, {
@@ -429,7 +432,7 @@ export class ServiceSatelliteApi {
 interface SatelliteDevice {
 	id: string
 	socket: SatelliteSocketWrapper
-	device: SurfaceIPSatellite
+	device: SurfaceIPSatelliteBase
 }
 
 function parseTransferableValues(input: string | true | undefined): SatelliteTransferableValue[] {

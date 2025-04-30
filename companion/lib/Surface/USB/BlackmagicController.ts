@@ -30,6 +30,7 @@ import type {
 	SurfacePanel,
 	SurfacePanelEvents,
 	SurfacePanelInfo,
+	SurfacePanelWithoutLocking,
 } from '../Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { BlackmagicControllerSetButtonColorValue } from '@blackmagic-controller/core'
@@ -54,8 +55,13 @@ const configFields: CompanionSurfaceConfigField[] = [
 	},
 ]
 
-export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
+export class SurfaceUSBBlackmagicController
+	extends EventEmitter<SurfacePanelEvents>
+	implements SurfacePanel, SurfacePanelWithoutLocking
+{
 	readonly #logger: Logger
+
+	readonly supportsLocking = false
 
 	readonly #executeExpression: SurfaceExecuteExpressionFn
 

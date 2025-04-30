@@ -21,7 +21,7 @@ import { Shuttle, setupShuttle, ProductModelId } from 'shuttle-node'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo, SurfacePanelWithoutLocking } from '../Types.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
 interface ShuttleModelInfo {
@@ -134,8 +134,13 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
+export class SurfaceUSBContourShuttle
+	extends EventEmitter<SurfacePanelEvents>
+	implements SurfacePanel, SurfacePanelWithoutLocking
+{
 	readonly #logger: Logger
+
+	readonly supportsLocking = false
 
 	private readonly contourShuttle: Shuttle
 	private readonly modelInfo: ShuttleModelInfo

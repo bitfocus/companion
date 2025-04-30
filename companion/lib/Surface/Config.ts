@@ -1,5 +1,5 @@
 import type { SurfaceConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel } from './Types.js'
+import type { SurfacePanelFull } from './Types.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { cloneDeep } from 'lodash-es'
 
@@ -17,7 +17,7 @@ export const PanelDefaults: SurfacePanelConfig = {
 
 export function createOrSanitizeSurfaceHandlerConfig(
 	integrationType: string,
-	panel: SurfacePanel,
+	panel: SurfacePanelFull,
 	existingConfig: SurfaceConfig | undefined,
 	gridSize: UserConfigGridSize
 ): SurfaceConfig {

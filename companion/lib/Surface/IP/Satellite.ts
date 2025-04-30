@@ -31,7 +31,14 @@ import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type {
+	SurfaceExecuteExpressionFn,
+	SurfacePanel,
+	SurfacePanelEvents,
+	SurfacePanelInfo,
+	SurfacePanelWithLocking,
+	SurfacePanelWithoutLocking,
+} from '../Types.js'
 import type { ImageResult, ImageResultStyle } from '../../Graphics/ImageResult.js'
 import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
 
@@ -47,6 +54,7 @@ export interface SatelliteDeviceInfo {
 	streamText: boolean
 	streamTextStyle: boolean
 	transferVariables: SatelliteTransferableValue[]
+	supportsLockedState: boolean
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -113,8 +121,19 @@ function generateConfigFields(
 	return fields
 }
 
-export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
-	readonly #logger = LogController.createLogger('Surface/IP/Satellite')
+export function createSatelliteSurfaceHandler(
+	deviceInfo: SatelliteDeviceInfo,
+	executeExpression: SurfaceExecuteExpressionFn
+) {
+	if (deviceInfo.supportsLockedState) {
+		return new SurfaceIPSatelliteWithLocking(deviceInfo, executeExpression)
+	} else {
+		return new SurfaceIPSatelliteWithoutLocking(deviceInfo, executeExpression)
+	}
+}
+
+export class SurfaceIPSatelliteBase extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
+	protected readonly logger = LogController.createLogger('Surface/IP/Satellite')
 
 	readonly #executeExpression: SurfaceExecuteExpressionFn
 	readonly #writeQueue: ImageWriteQueue<number, [import('../../Graphics/ImageResult.js').ImageResult]>
@@ -163,6 +182,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#streamText = deviceInfo.streamText
 		this.#streamTextStyle = deviceInfo.streamTextStyle
 
+		console.log('Satellite device info:', deviceInfo)
+
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,
@@ -176,14 +197,14 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			location: deviceInfo.socket.remoteAddress,
 		}
 
-		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
+		this.logger.info(`Adding Satellite device "${this.deviceId}"`)
 
 		this.#config = {
 			rotation: 0,
 			brightness: 100,
 		}
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, render) => {
+		this.#writeQueue = new ImageWriteQueue(this.logger, async (key, render) => {
 			const targetSize = this.#streamBitmapSize
 			if (!targetSize) return
 
@@ -198,7 +219,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 				this.#sendDraw(key, newbuffer, render.style)
 			} catch (e: any) {
-				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+				this.logger.debug(`scale image failed: ${e}\n${e.stack}`)
 				this.emit('remove')
 				return
 			}
@@ -235,7 +256,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			}
 			if (this.#streamBitmapSize) {
 				if (buffer === undefined || buffer.length == 0) {
-					this.#logger.warn('buffer has invalid size')
+					this.logger.warn('buffer has invalid size')
 				} else {
 					params['BITMAP'] = buffer.toString('base64')
 				}
@@ -332,11 +353,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	}
 
 	clearDeck(): void {
-		this.#logger.silly('elgato.prototype.clearDeck()')
+		this.logger.silly('elgato.prototype.clearDeck()')
 		if (this.socket !== undefined) {
 			this.socket.sendMessage('KEYS-CLEAR', null, this.deviceId, {})
 		} else {
-			this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
+			this.logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
 		}
 	}
 
@@ -369,7 +390,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					if (parseResult.ok) {
 						expressionResult = parseResult.value
 					} else {
-						this.#logger.error(`expression parse error: ${parseResult.error}`)
+						this.logger.error(`expression parse error: ${parseResult.error}`)
 						expressionResult = VARIABLE_UNKNOWN_VALUE
 					}
 
@@ -386,7 +407,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 							VALUE: base64Value,
 						})
 					} else {
-						this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
+						this.logger.debug('trying to emit to nonexistent socket: ', this.deviceId)
 					}
 				},
 				{
@@ -424,10 +445,28 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 * @param value 0-100
 	 */
 	#setBrightness(value: number): void {
-		this.#logger.silly('brightness: ' + value)
+		this.logger.silly('brightness: ' + value)
 		if (this.socket !== undefined) {
 			this.socket.sendMessage('BRIGHTNESS', null, this.deviceId, {
 				VALUE: value,
+			})
+		}
+	}
+}
+
+class SurfaceIPSatelliteWithoutLocking extends SurfaceIPSatelliteBase implements SurfacePanelWithoutLocking {
+	readonly supportsLocking = false
+}
+
+class SurfaceIPSatelliteWithLocking extends SurfaceIPSatelliteBase implements SurfacePanelWithLocking {
+	readonly supportsLocking = true
+
+	setLocked(locked: boolean, characterCount: number): void {
+		this.logger.silly(`locked: ${locked} - ${characterCount}`)
+		if (this.socket !== undefined) {
+			this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {
+				LOCKED: locked,
+				CHARACTER_COUNT: characterCount,
 			})
 		}
 	}

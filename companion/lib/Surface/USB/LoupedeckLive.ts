@@ -36,7 +36,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo, SurfacePanelWithoutLocking } from '../Types.js'
 import { ImageResult } from '../../Graphics/ImageResult.js'
 
 interface ModelInfo {
@@ -151,8 +151,13 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
+export class SurfaceUSBLoupedeckLive
+	extends EventEmitter<SurfacePanelEvents>
+	implements SurfacePanel, SurfacePanelWithoutLocking
+{
 	readonly #logger: Logger
+
+	readonly supportsLocking = false
 
 	/**
 	 * Loupdeck device handle
