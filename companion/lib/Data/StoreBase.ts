@@ -1,20 +1,36 @@
-import fs from 'fs-extra'
 import path from 'path'
 import { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import LogController, { Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
-import { createSqliteDatabase } from './Util.js'
-
-enum DatabaseStartupState {
-	Normal = 0,
-	Reset = 1,
-	RAM = 2,
-	Fatal = 3,
-}
+import { DatabaseStartupState, loadSqliteDatabase } from './SqliteLoader.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 interface ITableRow {
 	id: string
 	value: string
+}
+
+export interface DataStorePaths {
+	/**
+	 * The full backup file path
+	 */
+	readonly cfgBakFile: string
+	/**
+	 * The full corrupt file path
+	 */
+	readonly cfgCorruptFile: string
+	/**
+	 * The config directory
+	 */
+	readonly cfgDir: string
+	/**
+	 * The full main file path
+	 */
+	readonly cfgFile: string
+	/**
+	 * The full main legacy file path
+	 */
+	readonly cfgLegacyFile: string
 }
 
 /**
@@ -48,26 +64,12 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * The interval to fire a backup to disk when dirty
 	 */
 	private readonly backupInterval: number = 60000
+
 	/**
-	 * The full backup file path
+	 * The paths to the config directory and files
 	 */
-	private readonly cfgBakFile: string = ''
-	/**
-	 * The full corrupt file path
-	 */
-	private readonly cfgCorruptFile: string = ''
-	/**
-	 * The config directory
-	 */
-	public readonly cfgDir: string
-	/**
-	 * The full main file path
-	 */
-	private readonly cfgFile: string = ''
-	/**
-	 * The full main legacy file path
-	 */
-	private readonly cfgLegacyFile: string = ''
+	protected readonly cfgPaths: DataStorePaths
+
 	/**
 	 * The default table to dump keys when one isn't specified
 	 */
@@ -80,7 +82,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	/**
 	 * Flag if this database was created fresh on this run
 	 */
-	protected isFirstRun = false
+	private isFirstRun = false
 	/**
 	 * Timestamp of last save to disk
 	 */
@@ -90,10 +92,6 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 */
 	protected readonly name: string = ''
 	/**
-	 * The startup state of the database
-	 */
-	protected startupState: DatabaseStartupState = DatabaseStartupState.Normal
-	/**
 	 * Saved queries
 	 */
 	private tableCache = new Map<string, DataStoreTableView<any>>()
@@ -101,6 +99,13 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * The SQLite database
 	 */
 	public store!: SQLiteDB
+
+	/**
+	 * The config directory
+	 */
+	get cfgDir(): string {
+		return this.cfgPaths.cfgDir
+	}
 
 	/**
 	 * This needs to be called in the extending class
@@ -113,15 +118,25 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	constructor(configDir: string, name: string, defaultTable: string, debug: string) {
 		this.logger = LogController.createLogger(debug)
 
-		this.cfgDir = configDir
 		this.name = name
 		this.defaultTable = defaultTable
 
 		if (configDir != ':memory:') {
-			this.cfgFile = path.join(this.cfgDir, this.name + '.sqlite')
-			this.cfgBakFile = path.join(this.cfgDir, this.name + '.sqlite.bak')
-			this.cfgCorruptFile = path.join(this.cfgDir, this.name + '.corrupt')
-			this.cfgLegacyFile = path.join(this.cfgDir, this.name)
+			this.cfgPaths = {
+				cfgDir: configDir,
+				cfgFile: path.join(configDir, this.name + '.sqlite'),
+				cfgBakFile: path.join(configDir, this.name + '.sqlite.bak'),
+				cfgCorruptFile: path.join(configDir, this.name + '.corrupt'),
+				cfgLegacyFile: path.join(configDir, this.name),
+			}
+		} else {
+			this.cfgPaths = {
+				cfgDir: configDir,
+				cfgFile: '',
+				cfgBakFile: '',
+				cfgCorruptFile: '',
+				cfgLegacyFile: '',
+			}
 		}
 	}
 
@@ -159,7 +174,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 */
 	private saveBackup(): void {
 		this.store
-			?.backup(`${this.cfgBakFile}`)
+			?.backup(`${this.cfgPaths.cfgBakFile}`)
 			.then(() => {
 				// perform a flush of the WAL file. It may be a little aggressive for this to be a TRUNCATE vs FULL, but it ensures the WAL doesn't grow infinitly
 				this.store.pragma('wal_checkpoint(TRUNCATE)')
@@ -195,163 +210,55 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	}
 
 	/**
-	 * Update the startup state to a new state if that new state is higher
-	 * @param newState - the new state
-	 */
-	protected setStartupState(newState: DatabaseStartupState): void {
-		this.startupState = this.startupState > newState ? this.startupState : newState
-	}
-
-	/**
 	 * Attempt to load the database from disk
 	 * @access protected
 	 */
 	protected startSQLite(): void {
-		if (this.cfgDir == ':memory:') {
-			this.store = createSqliteDatabase(this.cfgDir)
+		try {
+			const loadState = loadSqliteDatabase(this.logger, this.cfgPaths, this.name)
+
+			this.store = loadState.store
 			this.tableCache.clear()
-			this.create()
-			this.defaultTableView.get('test')
-			this.loadDefaults()
-		} else {
-			if (fs.existsSync(this.cfgFile)) {
-				this.logger.silly(`${this.cfgFile} exists. trying to read`)
 
-				try {
-					this.store = this.#createDatabase(this.cfgFile)
-					this.tableCache.clear()
+			switch (loadState.state) {
+				case DatabaseStartupState.RAM:
+					this.create()
 					this.defaultTableView.get('test')
-				} catch (e) {
-					try {
-						try {
-							if (fs.existsSync(this.cfgCorruptFile)) {
-								fs.rmSync(this.cfgCorruptFile)
-							}
+					this.isFirstRun = true
+					this.loadDefaults()
 
-							fs.moveSync(this.cfgFile, this.cfgCorruptFile)
-							this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
-						} catch (e: any) {
-							this.logger.error(`${this.name} could not be parsed.  A copy could not be saved.`)
-						}
-					} catch (err) {
-						this.logger.silly(`${this.name} load Error making or deleting corrupted backup: ${err}`)
-					}
+					showErrorMessage(
+						'Error starting companion',
+						`Could not write to database ${this.name}.  Companion is running in RAM and will not be saved upon exiting.`
+					)
+					console.error(`Could not create/load database ${this.name}.  Running in RAM`)
+					break
+				case DatabaseStartupState.Reset:
+					this.create()
+					this.defaultTableView.get('test')
+					this.isFirstRun = true
+					this.loadDefaults()
 
-					this.startSQLiteWithBackup()
-				}
-			} else if (fs.existsSync(this.cfgBakFile)) {
-				this.logger.warn(`${this.name} is missing.  Attempting to recover the configuration.`)
-				this.startSQLiteWithBackup()
-			} else if (fs.existsSync(this.cfgLegacyFile)) {
-				try {
-					this.store = this.#createDatabase(this.cfgFile)
-					this.tableCache.clear()
-					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
+					showErrorMessage('Error starting companion', `Could not load database ${this.name}. Resetting configuration.`)
+					console.error(`Could not load database ${this.name}.`)
+					break
+				case DatabaseStartupState.Normal:
+					this.defaultTableView.get('test')
+					break
+				case DatabaseStartupState.NeedsUpgrade:
 					this.migrateFileToSqlite()
 					this.defaultTableView.get('test')
-				} catch (e: any) {
-					this.setStartupState(DatabaseStartupState.Reset)
-					this.logger.error(e.message)
-					this.startSQLiteWithDefaults()
-				}
-			} else {
-				this.logger.silly(this.cfgFile, `doesn't exist. loading defaults`)
-				this.startSQLiteWithDefaults()
+					break
+				default:
+					assertNever(loadState.state)
+					break
 			}
-		}
-
-		if (!this.store) {
-			try {
-				this.store = createSqliteDatabase(':memory:')
-				this.tableCache.clear()
-				this.setStartupState(DatabaseStartupState.RAM)
-				this.create()
-				this.defaultTableView.get('test')
-				this.loadDefaults()
-			} catch (e: any) {
-				this.setStartupState(DatabaseStartupState.Fatal)
-			}
-		}
-
-		switch (this.startupState) {
-			case DatabaseStartupState.Fatal:
-				showFatalError('Error starting companion', `Could not create a functional database(${this.name}).  Exiting...`)
-				console.error(`Could not create/load database ${this.name}.  Exiting...`)
-				break
-			case DatabaseStartupState.RAM:
-				showErrorMessage(
-					'Error starting companion',
-					`Could not write to database ${this.name}.  Companion is running in RAM and will not be saved upon exiting.`
-				)
-				console.error(`Could not create/load database ${this.name}.  Running in RAM`)
-				break
-			case DatabaseStartupState.Reset:
-				showErrorMessage('Error starting companion', `Could not load database ${this.name}. Resetting configuration.`)
-				console.error(`Could not load database ${this.name}.`)
-				break
+		} catch (e: any) {
+			console.error(`Could not create/load database ${this.name}.  Exiting...`)
+			showFatalError('Error starting companion', `Could not create a functional database(${this.name}).  Exiting...`)
 		}
 
 		this.setBackupCycle()
-	}
-
-	#createDatabase(filename: string) {
-		const db = createSqliteDatabase(filename)
-
-		try {
-			db.pragma('journal_mode = WAL')
-		} catch (err) {
-			this.logger.warn(`Error setting journal mode: ${err}`)
-		}
-
-		return db
-	}
-
-	/**
-	 * Attempt to load the backup file from disk as a recovery
-	 */
-	private startSQLiteWithBackup(): void {
-		if (fs.existsSync(this.cfgBakFile)) {
-			this.logger.silly(`${this.cfgBakFile} exists. trying to read`)
-			try {
-				try {
-					fs.rmSync(this.cfgFile)
-				} catch (e) {}
-
-				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
-				this.store = this.#createDatabase(this.cfgFile)
-				this.tableCache.clear()
-				this.defaultTableView.get('test')
-			} catch (e: any) {
-				this.setStartupState(DatabaseStartupState.Reset)
-				this.logger.error(e.message)
-				this.startSQLiteWithDefaults()
-			}
-		} else {
-			this.setStartupState(DatabaseStartupState.Reset)
-			this.startSQLiteWithDefaults()
-		}
-	}
-
-	/**
-	 * Attempt to start a fresh DB and load the defaults
-	 */
-	private startSQLiteWithDefaults(): void {
-		try {
-			if (fs.existsSync(this.cfgFile)) {
-				fs.rmSync(this.cfgFile)
-			}
-		} catch (e: any) {
-		} finally {
-			try {
-				this.store = this.#createDatabase(this.cfgFile)
-				this.tableCache.clear()
-				this.create()
-				this.defaultTableView.get('test')
-				this.loadDefaults()
-			} catch (e: any) {
-				this.logger.error(e.message)
-			}
-		}
 	}
 
 	get defaultTableView(): DataStoreTableView<TDefaultTableContent> {
