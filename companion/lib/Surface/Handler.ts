@@ -307,7 +307,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#drawPage() {
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
-				if (this.panel.supportsLocking) return
+				if (this.panel.supportsLocking) {
+					this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
+					return
+				}
 
 				const buffers = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
 				this.panel.clearDeck()
@@ -406,10 +409,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			this.#isSurfaceLocked = !!locked
 
 			if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
-
-			if (this.panel.supportsLocking) {
-				this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
-			}
 
 			if (!skipDraw) {
 				this.#drawPage()
