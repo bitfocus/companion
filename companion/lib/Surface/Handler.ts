@@ -252,6 +252,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		this.panel.on('click', this.#onDeviceClick.bind(this))
 		this.panel.on('rotate', this.#onDeviceRotate.bind(this))
+		this.panel.on('pincodeKey', this.#onDevicePincodeKey.bind(this))
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
 		this.panel.on('setVariable', this.#onSetVariable.bind(this))
@@ -523,29 +524,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
 					if (pressCode !== -1) {
-						this.#currentPincodeEntry += pressCode.toString()
+						this.#onDevicePincodeKey(pressCode)
 					}
-
-					if (this.#currentPincodeEntry == this.#userconfig.getKey('pin').toString()) {
-						this.#currentPincodeEntry = ''
-
-						this.emit('unlocked')
-					} else if (this.#currentPincodeEntry.length >= this.#userconfig.getKey('pin').toString().length) {
-						this.#currentPincodeEntry = ''
-					}
-				}
-
-				if (this.#isSurfaceLocked) {
-					// Update lockout button
-					const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
-
-					this.#drawButtons([
-						{
-							x: this.#pincodeCodePosition[0],
-							y: this.#pincodeCodePosition[1],
-							image: datap.code,
-						},
-					])
 				}
 			}
 		} catch (e) {
@@ -590,6 +570,39 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			}
 		} catch (e) {
 			this.#logger.error(`Click failed: ${e}`)
+		}
+	}
+
+	#onDevicePincodeKey(pressCode: number): void {
+		if (!this.panel) return
+
+		pressCode = Number(pressCode)
+		if (isNaN(pressCode) || pressCode < 0 || pressCode > 9) throw new Error('Invalid key')
+
+		this.#currentPincodeEntry += pressCode.toString()
+
+		if (this.#currentPincodeEntry == this.#userconfig.getKey('pin').toString()) {
+			this.#currentPincodeEntry = ''
+
+			this.emit('unlocked')
+		} else if (this.#currentPincodeEntry.length >= this.#userconfig.getKey('pin').toString().length) {
+			this.#currentPincodeEntry = ''
+		}
+
+		if (!this.#isSurfaceLocked) return
+
+		if (this.panel.supportsLocking) {
+			this.panel.setLocked(true, this.#currentPincodeEntry.length)
+		} else {
+			const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
+
+			this.#drawButtons([
+				{
+					x: this.#pincodeCodePosition[0],
+					y: this.#pincodeCodePosition[1],
+					image: datap.code,
+				},
+			])
 		}
 	}
 

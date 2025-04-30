@@ -330,6 +330,10 @@ export class SurfaceIPSatelliteBase extends EventEmitter<SurfacePanelEvents> imp
 		this.emit('click', column, row, state)
 	}
 
+	doPincodeKey(pincodeKey: number): void {
+		this.emit('pincodeKey', pincodeKey)
+	}
+
 	/**
 	 * Produce a rotation event
 	 */

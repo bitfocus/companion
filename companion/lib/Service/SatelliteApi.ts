@@ -238,6 +238,9 @@ export class ServiceSatelliteApi {
 			case 'SET-VARIABLE-VALUE':
 				this.#setVariableValue(socket, params)
 				break
+			case 'PINCODE-KEY':
+				this.#pincodeKey(socket, params)
+				break
 			case 'PING':
 				socket.sendMessage(`PONG ${body}`, null, null, {})
 				break
@@ -362,6 +365,30 @@ export class ServiceSatelliteApi {
 		const pressed = !isFalsey(params.PRESSED)
 
 		device.device.doButton(...xy, pressed)
+		socket.sendMessage(messageName, 'OK', id, {})
+	}
+
+	/**
+	 * Process a pincode key command
+	 */
+	#pincodeKey(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'PINCODE-KEY'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
+		const key = params.KEY
+		if (!key) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
+		}
+
+		const keyNumber = Number(key)
+		if (isNaN(keyNumber) || keyNumber < 0 || keyNumber > 9) {
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
+		}
+
+		device.device.doPincodeKey(keyNumber)
+
 		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
