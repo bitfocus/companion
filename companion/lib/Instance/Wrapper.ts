@@ -641,6 +641,8 @@ export class SocketEventsHandler {
 	async #handleSetActionDefinitions(msg: SetActionDefinitionsMessage): Promise<void> {
 		const actions: Record<string, ClientEntityDefinition> = {}
 
+		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
+
 		for (const rawAction of msg.actions || []) {
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
@@ -667,6 +669,8 @@ export class SocketEventsHandler {
 	 */
 	async #handleSetFeedbackDefinitions(msg: SetFeedbackDefinitionsMessage): Promise<void> {
 		const feedbacks: Record<string, ClientEntityDefinition> = {}
+
+		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
 
 		for (const rawFeedback of msg.feedbacks || []) {
 			feedbacks[rawFeedback.id] = {
@@ -728,6 +732,8 @@ export class SocketEventsHandler {
 				}
 			}
 		}
+
+		this.#sendToModuleLog('debug', `Updating veriable definitions (${newVariables.length} variables)`)
 
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
