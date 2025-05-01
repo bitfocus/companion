@@ -955,18 +955,30 @@ function translateOptionsIsVisible(
 	options?: EncodeIsVisible<SomeCompanionActionInputField>[]
 ): (InternalActionInputField | InternalFeedbackInputField)[] {
 	// @companion-module-base exposes these through a mapping that loses the differentiation between types
-	return (options || []).map((o) => ({
-		...(o as any),
-		isVisibleFn: undefined,
-		isVisibleData: undefined,
-		isVisibleUi: o.isVisibleFn
-			? ({
-					type: 'function',
-					fn: o.isVisibleFn,
-					data: o.isVisibleData,
-				} satisfies InternalActionInputField['isVisibleUi'])
-			: undefined,
-	}))
+	return (options || []).map((o) => {
+		let isVisibleUi: InternalFeedbackInputField['isVisibleUi'] | undefined = undefined
+		if (o.isVisibleFn && o.isVisibleFnType === 'expression') {
+			isVisibleUi = {
+				type: 'expression',
+				fn: o.isVisibleFn,
+				data: undefined,
+			}
+		} else if (o.isVisibleFn) {
+			// Either type: 'function' or undefined (backwards compat)
+			isVisibleUi = {
+				type: 'function',
+				fn: o.isVisibleFn,
+				data: o.isVisibleData,
+			}
+		}
+
+		return {
+			...(o as any),
+			isVisibleFn: undefined,
+			isVisibleData: undefined,
+			isVisibleUi,
+		}
+	})
 }
 
 export interface RunActionExtras {
