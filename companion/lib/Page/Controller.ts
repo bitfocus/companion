@@ -43,7 +43,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	readonly #logger = LogController.createLogger('Page/Controller')
 
 	readonly #registry: Pick<Registry, 'io' | 'graphics' | 'controls' | 'userconfig'>
-	readonly #dbTable: DataStoreTableView<Record<number, PageModel>>
+	readonly #dbTable: DataStoreTableView<Record<string, PageModel>>
 
 	/**
 	 * Cache the location of each control
@@ -688,9 +688,9 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			const pageInfo = this.getPageInfo(pageNumber)
 
 			if (pageInfo) {
-				this.#dbTable.set(pageNumber, pageInfo)
+				this.#dbTable.set(`${pageNumber}`, pageInfo)
 			} else {
-				this.#dbTable.delete(pageNumber)
+				this.#dbTable.delete(`${pageNumber}`)
 			}
 
 			this.emit('name', pageNumber, pageInfo ? (pageInfo.name ?? '') : undefined)
@@ -778,7 +778,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				pageInfo.id = nanoid()
 
 				// Save the changes
-				this.#dbTable.set(i, pageInfo)
+				this.#dbTable.set(`${i}`, pageInfo)
 			}
 
 			this.#pagesById[pageInfo.id] = pageInfo
@@ -797,7 +797,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			this.#pagesById[newPageInfo.id] = newPageInfo
 			this.#pageIds = [newPageInfo.id]
 
-			this.#dbTable.set(1, newPageInfo)
+			this.#dbTable.set('1', newPageInfo)
 
 			setImmediate(() => {
 				this.createPageDefaultNavButtons(1)
