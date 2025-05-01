@@ -372,8 +372,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			}
 		}
 
-		console.log('settings', values)
-
 		this.#lastUpdateVariableNames = idsBeingSetThisRun
 
 		this.emit('setVariables', values)
