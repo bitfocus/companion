@@ -73,17 +73,17 @@ interface FirmwareVersionInfo {
  * The latest firmware versions for the SDS at the time this was last updated
  */
 const LATEST_FIRMWARE_VERSIONS: FirmwareVersionInfo[] = [
-	// Tool is not ready, so there are no versions to compare
-	// {
-	// 	// Studio
-	// 	productIds: [0x00aa],
-	// 	versions: {
-	// 		AP2: '1.05.009',
-	// 		ENCODER_AP2: '1.01.012',
-	// 		ENCODER_LD: '1.01.006',
-	// 	},
-	// },
+	{
+		// Studio
+		productIds: [0x00aa],
+		versions: {
+			AP2: '1.05.012',
+			ENCODER_AP2: '1.01.012',
+			ENCODER_LD: '1.01.006',
+		},
+	},
 ]
+
 const STREAMDECK_MODULES_SUPPORTING_UPDATES: ReadonlySet<DeviceModelId> = new Set([DeviceModelId.STUDIO])
 const STREAMDECK_UPDATE_DOWNLOAD_URL = 'https://api.bitfocus.io/v1/product/elgato-updater/download'
 const STREAMDECK_UPDATE_VERSIONS_URL = 'https://api.bitfocus.io/v1/product/elgato-updater/versions'
