@@ -345,7 +345,7 @@ export async function transformButtonImage(
 /**
  * Show an fatal error message to the user, and exit
  */
-export function showFatalError(title: string, message: string): never {
+export function showFatalError(title: string, message: string): void {
 	sendOverIpc({
 		messageType: 'fatal-error',
 		title,

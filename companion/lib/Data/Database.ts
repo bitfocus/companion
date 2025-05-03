@@ -54,6 +54,8 @@ export class DataDatabase extends DataStoreBase<DataDatabaseDefaultTable> {
 	 */
 	protected loadDefaults(): void {
 		this.defaultTableView.set('page_config_version', 6)
+
+		this.isFirstRun = true
 	}
 
 	/**

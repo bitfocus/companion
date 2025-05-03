@@ -58,6 +58,8 @@ export class DataCache extends DataStoreBase<DataCacheDefaultTable> {
 	 */
 	protected loadDefaults(): void {
 		this.defaultTableView.set('cloud_servers', {})
+
+		this.isFirstRun = true
 	}
 
 	/**
