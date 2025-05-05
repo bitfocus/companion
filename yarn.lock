@@ -3129,10 +3129,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/babel-plugin-component-annotate@npm:3.3.1":
-  version: 3.3.1
-  resolution: "@sentry/babel-plugin-component-annotate@npm:3.3.1"
-  checksum: 10c0/f7be2e93be57f6391cbf01b04f0ccb5fc60f939cd3b834269748b70c38cc9dbaba288539afa19f066b9b4bf32cf6c3ef7ad86505d8370d5ac062bfd93940c7a1
+"@sentry/babel-plugin-component-annotate@npm:3.4.0":
+  version: 3.4.0
+  resolution: "@sentry/babel-plugin-component-annotate@npm:3.4.0"
+  checksum: 10c0/facdd2d6646914b648c225d011891980d20f04bd95c7e3e3ef5fe41ff9249361914f1183f831a9679cff3c962f3476ae464fdf582c8eb5da497d0f211cfc8b58
   languageName: node
   linkType: hard
 
@@ -3149,19 +3149,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/bundler-plugin-core@npm:3.3.1":
-  version: 3.3.1
-  resolution: "@sentry/bundler-plugin-core@npm:3.3.1"
+"@sentry/bundler-plugin-core@npm:3.4.0":
+  version: 3.4.0
+  resolution: "@sentry/bundler-plugin-core@npm:3.4.0"
   dependencies:
     "@babel/core": "npm:^7.18.5"
-    "@sentry/babel-plugin-component-annotate": "npm:3.3.1"
+    "@sentry/babel-plugin-component-annotate": "npm:3.4.0"
     "@sentry/cli": "npm:2.42.2"
     dotenv: "npm:^16.3.1"
     find-up: "npm:^5.0.0"
     glob: "npm:^9.3.2"
     magic-string: "npm:0.30.8"
     unplugin: "npm:1.0.1"
-  checksum: 10c0/d16829d4996d5869eb503866c043a85ffe49f3c9b42c745b9356f6978c02ad3c8b37bc8f5f49e18a948394c876ce11099d264eb81f149cfea4912883a5fe779b
+  checksum: 10c0/c2e3a450085a5d0bfbd24e9ea1de61ca25118d3fe5aa9c9f2c0925cf1d1ad84981c1c500b64bbfbb13b31eda039333aaa1f3012eb18e4285620a3341202b0c2a
   languageName: node
   linkType: hard
 
@@ -3393,16 +3393,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/webpack-plugin@npm:^3.3.1":
-  version: 3.3.1
-  resolution: "@sentry/webpack-plugin@npm:3.3.1"
+"@sentry/webpack-plugin@npm:^3.4.0":
+  version: 3.4.0
+  resolution: "@sentry/webpack-plugin@npm:3.4.0"
   dependencies:
-    "@sentry/bundler-plugin-core": "npm:3.3.1"
+    "@sentry/bundler-plugin-core": "npm:3.4.0"
     unplugin: "npm:1.0.1"
     uuid: "npm:^9.0.0"
   peerDependencies:
     webpack: ">=4.40.0"
-  checksum: 10c0/c3e9db6bfd7b03ae3f1655a8543b21002555c655da2d54fcb73c068bc870b141c632eba8f8d38e495354981689553d649ab859acf9ee21e949cc6c1cd1ccb491
+  checksum: 10c0/3216abe61883b6a6f2a51c920bdad0daaf71b1d060d3927bc6af7159dbc614568fdc9c56495952f7bcd91c605edb31b90859e0ad299d9be833878a2397fcbdbc
   languageName: node
   linkType: hard
 
@@ -6374,7 +6374,7 @@ asn1@evs-broadcast/node-asn1:
     "@loupedeck/node": "npm:^1.2.0"
     "@napi-rs/canvas": "npm:^0.1.68"
     "@sentry/node": "npm:^9.14.0"
-    "@sentry/webpack-plugin": "npm:^3.3.1"
+    "@sentry/webpack-plugin": "npm:^3.4.0"
     "@types/archiver": "npm:^6.0.3"
     "@types/better-sqlite3": "npm:^7.6.13"
     "@types/cors": "npm:^2.8.17"
