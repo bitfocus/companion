@@ -28,6 +28,7 @@ if (platformInfo.nodeArch) {
 const nodeVersions = await fetchNodejs(platformInfo)
 
 const runtimesDir = 'dist/node-runtimes/'
+const latestRuntimeDir = path.join(runtimesDir, 'node22')
 await fs.remove(runtimesDir)
 await fs.mkdirp(runtimesDir)
 
@@ -38,7 +39,7 @@ for (const [name, extractedPath] of nodeVersions) {
 
 if (platformInfo.runtimePlatform === 'linux') {
 	// Create a symlink for the 'main' runtime, to make script maintainence easier
-	await fs.createSymlink(path.join(runtimesDir, 'node22'), path.join(runtimesDir, 'main'))
+	await fs.createSymlink(latestRuntimeDir, path.join(runtimesDir, 'main'))
 }
 
 // Install dependencies
@@ -75,7 +76,12 @@ if (platformInfo.runtimePlatform === 'win') {
 }
 
 if (!process.env.SKIP_LAUNCH_CHECK) {
-	const launchCheck = await $`node dist/main.js check-launches`.exitCode
+	const nodeExePath =
+		platformInfo.runtimePlatform === 'win'
+			? path.join(latestRuntimeDir, 'node.exe')
+			: path.join(latestRuntimeDir, 'bin/node')
+
+	const launchCheck = await $`${nodeExePath} dist/main.js check-launches`.exitCode
 	if (launchCheck !== 89) throw new Error("Launch check failed. Build looks like it won't launch!")
 }
 
