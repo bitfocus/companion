@@ -10,7 +10,7 @@ import { createRequire } from 'module'
 
 const require = createRequire(import.meta.url)
 
-$.verbose = true
+// $.verbose = true
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
