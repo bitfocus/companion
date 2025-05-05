@@ -1262,6 +1262,8 @@ __metadata:
     "@fortawesome/react-fontawesome": "npm:^0.2.2"
     "@hello-pangea/color-picker": "https://github.com/Julusian/color-picker/releases/download/v3.3.0-julusian.0/hello-pangea-color-picker-v3.3.0-julusian.0.tgz"
     "@popperjs/core": "npm:^2.11.8"
+    "@sentry/react": "npm:^9.15.0"
+    "@sentry/vite-plugin": "npm:^3.4.0"
     "@tanstack/react-form": "npm:^1.7.0"
     "@tanstack/react-query": "npm:^5.74.4"
     "@tanstack/react-router": "npm:^1.117.1"
@@ -1321,7 +1323,6 @@ __metadata:
     use-deep-compare: "npm:^1.3.0"
     usehooks-ts: "npm:^3.1.1"
     vite: "npm:^6.3.4"
-    vite-plugin-env-compatible: "npm:^2.0.1"
   languageName: unknown
   linkType: soft
 
@@ -3100,12 +3101,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry-internal/browser-utils@npm:9.15.0":
+  version: 9.15.0
+  resolution: "@sentry-internal/browser-utils@npm:9.15.0"
+  dependencies:
+    "@sentry/core": "npm:9.15.0"
+  checksum: 10c0/64636016692cf3c99bb439b8bfea78582b1f839323f2ab2187839766b97b13c992c2520fd985e7829abf3a6f7be4aa224a5ab76c43df9965dc50dbf8c2b86395
+  languageName: node
+  linkType: hard
+
 "@sentry-internal/feedback@npm:9.11.0":
   version: 9.11.0
   resolution: "@sentry-internal/feedback@npm:9.11.0"
   dependencies:
     "@sentry/core": "npm:9.11.0"
   checksum: 10c0/5b3a091c30b8536b1836089a86721942d49beebc7e77887986c52e58ed49772de51b5376e33278ade1f8c48e66cc9ba0d8b5fd0d9d66dc3ced60028002c8ac50
+  languageName: node
+  linkType: hard
+
+"@sentry-internal/feedback@npm:9.15.0":
+  version: 9.15.0
+  resolution: "@sentry-internal/feedback@npm:9.15.0"
+  dependencies:
+    "@sentry/core": "npm:9.15.0"
+  checksum: 10c0/50ae17caa98ed7267fc2f572b0b27c8966a0da52a9854a1c3bee4603bb62c01160699421f027127441ef86cd09561742899229a2680e7f80cb4d4176944d734f
   languageName: node
   linkType: hard
 
@@ -3119,6 +3138,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry-internal/replay-canvas@npm:9.15.0":
+  version: 9.15.0
+  resolution: "@sentry-internal/replay-canvas@npm:9.15.0"
+  dependencies:
+    "@sentry-internal/replay": "npm:9.15.0"
+    "@sentry/core": "npm:9.15.0"
+  checksum: 10c0/911e49526ff0a4e121323a7e908c16aed0bc8da3752e8c57d84ff528bd199c57e353574a53e673c6024d7321b2df62152f579d2d977a7d88dc8e28f0fac1d810
+  languageName: node
+  linkType: hard
+
 "@sentry-internal/replay@npm:9.11.0":
   version: 9.11.0
   resolution: "@sentry-internal/replay@npm:9.11.0"
@@ -3126,6 +3155,16 @@ __metadata:
     "@sentry-internal/browser-utils": "npm:9.11.0"
     "@sentry/core": "npm:9.11.0"
   checksum: 10c0/568eb8ba32710a8bb9e8fb4566c3365672f437f661c13da5ffcba6f55932e23774031388f545ddc517ed8a37759048a9b57ce400d2d8c62ff1146b41ce92d9f5
+  languageName: node
+  linkType: hard
+
+"@sentry-internal/replay@npm:9.15.0":
+  version: 9.15.0
+  resolution: "@sentry-internal/replay@npm:9.15.0"
+  dependencies:
+    "@sentry-internal/browser-utils": "npm:9.15.0"
+    "@sentry/core": "npm:9.15.0"
+  checksum: 10c0/474beaa0b93e49920c37a483bb02ba73df2190ba0cb77ebcf6b0a2ff663ea9b4e74f7f504d75da8c1a72505faf8301ec4ad42f950aaf4b3116bd223bdb870c3f
   languageName: node
   linkType: hard
 
@@ -3146,6 +3185,19 @@ __metadata:
     "@sentry-internal/replay-canvas": "npm:9.11.0"
     "@sentry/core": "npm:9.11.0"
   checksum: 10c0/6e5563aea64dc3c3f07eca213d1d9fd540a8d2ba10cf9d86d0cda1c3833fbe940813860213adbe221c848bc935d3304aa6abd8aae72225158723fc7defbe137c
+  languageName: node
+  linkType: hard
+
+"@sentry/browser@npm:9.15.0":
+  version: 9.15.0
+  resolution: "@sentry/browser@npm:9.15.0"
+  dependencies:
+    "@sentry-internal/browser-utils": "npm:9.15.0"
+    "@sentry-internal/feedback": "npm:9.15.0"
+    "@sentry-internal/replay": "npm:9.15.0"
+    "@sentry-internal/replay-canvas": "npm:9.15.0"
+    "@sentry/core": "npm:9.15.0"
+  checksum: 10c0/fb30b5b8a12ff6ba4b531de0abd9078e9c2100e0d1d82a4b15f00043a1383eecda6933c665c75ab7ca6ed6e41f4de3d1ff472aa8dd5151297e09da14de0c8a42
   languageName: node
   linkType: hard
 
@@ -3262,6 +3314,13 @@ __metadata:
   version: 9.14.0
   resolution: "@sentry/core@npm:9.14.0"
   checksum: 10c0/9008e876d6f1b863852380013466f7dfaed19f864aa840d8cc3b65f22f2347abf0a02d7048cdd0ab746f0648931f375748891b68103d69e48e54ead11e199e1d
+  languageName: node
+  linkType: hard
+
+"@sentry/core@npm:9.15.0":
+  version: 9.15.0
+  resolution: "@sentry/core@npm:9.15.0"
+  checksum: 10c0/4287bb2ed348c9ff0989eb2b740a9713e3c0e13a15fe856c51419e6db259d799c6ae1c3a825f35feadca9cc78e2f7cf27363753b287846bc9ab56933148544e5
   languageName: node
   linkType: hard
 
@@ -3390,6 +3449,29 @@ __metadata:
     "@opentelemetry/sdk-trace-base": ^1.30.1
     "@opentelemetry/semantic-conventions": ^1.28.0
   checksum: 10c0/db1c90520e3bae29833d36022913a70b1e29faeb8425c6fcf1931041e86c3b3bc0c244c9c43c78a34345ed57b0cc9a7e215dafaecbc054abf28397240d8d6ed0
+  languageName: node
+  linkType: hard
+
+"@sentry/react@npm:^9.15.0":
+  version: 9.15.0
+  resolution: "@sentry/react@npm:9.15.0"
+  dependencies:
+    "@sentry/browser": "npm:9.15.0"
+    "@sentry/core": "npm:9.15.0"
+    hoist-non-react-statics: "npm:^3.3.2"
+  peerDependencies:
+    react: ^16.14.0 || 17.x || 18.x || 19.x
+  checksum: 10c0/0f17757461441960aee35e90dafb9e4068c908aac489c4ad2938c0730315591712939e45b6a2ab13cdbe21f165bb5ab0a4a39da3fb970e38be54b511153d8e8e
+  languageName: node
+  linkType: hard
+
+"@sentry/vite-plugin@npm:^3.4.0":
+  version: 3.4.0
+  resolution: "@sentry/vite-plugin@npm:3.4.0"
+  dependencies:
+    "@sentry/bundler-plugin-core": "npm:3.4.0"
+    unplugin: "npm:1.0.1"
+  checksum: 10c0/f4ecf79f0b685646bb2d4ec1adb1c8e7da14863479fa1671f65c6a1ccf9cf6376dd09fd01affa2b0a333c950abb575528a8b1a5f7340a3dc0da3467caa3c9a12
   languageName: node
   linkType: hard
 
@@ -7117,26 +7199,12 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"dotenv-expand@npm:5.1.0":
-  version: 5.1.0
-  resolution: "dotenv-expand@npm:5.1.0"
-  checksum: 10c0/24ac633de853ef474d0421cc639328b7134109c8dc2baaa5e3afb7495af5e9237136d7e6971e55668e4dce915487eb140967cdd2b3e99aa439e0f6bf8b56faeb
-  languageName: node
-  linkType: hard
-
 "dotenv-expand@npm:^11.0.6":
   version: 11.0.7
   resolution: "dotenv-expand@npm:11.0.7"
   dependencies:
     dotenv: "npm:^16.4.5"
   checksum: 10c0/d80b8a7be085edf351270b96ac0e794bc3ddd7f36157912939577cb4d33ba6492ebee349d59798b71b90e36f498d24a2a564fb4aa00073b2ef4c2a3a49c467b1
-  languageName: node
-  linkType: hard
-
-"dotenv@npm:8.2.0":
-  version: 8.2.0
-  resolution: "dotenv@npm:8.2.0"
-  checksum: 10c0/b6a07a2c400b13ad4e59c34e4682256e6bb846469781a3963b36861ee608ed312e6125c4a7635a9edcf957bb294a6966e218f0e26b82ff0bda9184211d4bc141
   languageName: node
   linkType: hard
 
@@ -14819,16 +14887,6 @@ asn1@evs-broadcast/node-asn1:
   bin:
     vite-node: vite-node.mjs
   checksum: 10c0/eb0788b43a241c69ca23ba6cf5ab5226157947938dc4e02247b2008e1fd425e45a347d3caac7d53e0b804beb4c9e97395908fd87c1f23bda1590e1b011c63edb
-  languageName: node
-  linkType: hard
-
-"vite-plugin-env-compatible@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "vite-plugin-env-compatible@npm:2.0.1"
-  dependencies:
-    dotenv: "npm:8.2.0"
-    dotenv-expand: "npm:5.1.0"
-  checksum: 10c0/356ddda4d9d8d3e26053392cba374f9bdc0804c74816eb88d2384df817c921d697519bad272feffcfb4fa8dda38a5ea7f8a6802eaf4fd65caa74171c9df6ff12
   languageName: node
   linkType: hard
 
