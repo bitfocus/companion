@@ -81,7 +81,8 @@ if (!process.env.SKIP_LAUNCH_CHECK) {
 			? path.join(latestRuntimeDir, 'node.exe')
 			: path.join(latestRuntimeDir, 'bin/node')
 
-	const launchCheck = await $`${nodeExePath} dist/main.js check-launches`.exitCode
+	// Note: the ./${nodeExePath} syntax is a workaround for windows
+	const launchCheck = await $`./${nodeExePath} dist/main.js check-launches`.exitCode
 	if (launchCheck !== 89) throw new Error("Launch check failed. Build looks like it won't launch!")
 }
 
