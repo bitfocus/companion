@@ -179,7 +179,7 @@ export class ConnectionConfigStore {
 	}
 
 	moveConnection(groupId: string | null, connectionId: string, dropIndex: number): boolean {
-		const thisConnection = this.#store[connectionId]
+		const thisConnection = this.#store.get(connectionId)
 		if (!thisConnection) return false
 
 		const changedIds: string[] = []
@@ -202,7 +202,7 @@ export class ConnectionConfigStore {
 
 		// update the sort order of the connections in the store, tracking which ones changed
 		sortedConnectionIds.forEach((id, index) => {
-			const entry = this.#store[id]
+			const entry = this.#store.get(id)
 			if (entry && entry.sortOrder !== index) {
 				entry.sortOrder = index
 				changedIds.push(id)
