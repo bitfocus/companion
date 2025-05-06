@@ -6,6 +6,7 @@ export interface ConnectionListApi {
 	addNewGroup: () => void
 	renameGroup: (groupId: string, newName: string) => void
 	deleteGroup: (groupId: string) => void
+	reorderGroup: (groupId: string, dropIndex: number) => void
 }
 
 export function useConnectionListApi(confirmModalRef: React.RefObject<GenericConfirmModalRef>): ConnectionListApi {
@@ -37,6 +38,12 @@ export function useConnectionListApi(confirmModalRef: React.RefObject<GenericCon
 							})
 						}
 					)
+					},
+				
+				reorderGroup: (groupId: string, dropIndex: number) => {
+					socket.emitPromise('connection-groups:reorder', [groupId, dropIndex]).catch((e) => {
+						console.error('Failed to reorder group', e)
+					})
 				},
 			}) satisfies ConnectionListApi,
 		[socket, confirmModalRef]

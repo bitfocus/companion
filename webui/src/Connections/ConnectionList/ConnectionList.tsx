@@ -103,36 +103,39 @@ export const ConnectionsList = observer(function ConnectionsList({
 				</thead>
 				<tbody>
 					{/* Render grouped connections */}
-					{Array.from(connections.groups.entries()).map(([groupId, group]) => {
-						const isCollapsed = collapseHelper.isPanelCollapsed(null, groupId)
+					{Array.from(connections.groups.entries())
+						.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+						.map(([groupId, group], index) => {
+							const isCollapsed = collapseHelper.isPanelCollapsed(null, groupId)
 
-						const connectionsInGroup = groupedConnections.get(groupId) || []
+							const connectionsInGroup = groupedConnections.get(groupId) || []
 
-						return (
-							<React.Fragment key={groupId}>
-								<ConnectionGroupRow
-									group={group}
-									toggleExpanded={toggleGroupExpanded}
-									connectionListApi={connectionListApi}
-									isCollapsed={isCollapsed}
-								/>
-
-								{!isCollapsed && (
-									<ConnectionsInGroup
-										doConfigureConnection={doConfigureConnection}
-										connectionStatuses={connectionStatuses}
-										selectedConnectionId={selectedConnectionId}
-										connections={connectionsInGroup}
-										groupId={groupId}
-										visibleConnections={visibleConnections}
-										variablesModalRef={variablesModalRef}
-										deleteModalRef={confirmModalRef}
-										showNoConnectionsMessage
+							return (
+								<React.Fragment key={groupId}>
+									<ConnectionGroupRow
+										group={group}
+										toggleExpanded={toggleGroupExpanded}
+										connectionListApi={connectionListApi}
+										isCollapsed={isCollapsed}
+										index={index}
 									/>
-								)}
-							</React.Fragment>
-						)
-					})}
+
+									{!isCollapsed && (
+										<ConnectionsInGroup
+											doConfigureConnection={doConfigureConnection}
+											connectionStatuses={connectionStatuses}
+											selectedConnectionId={selectedConnectionId}
+											connections={connectionsInGroup}
+											groupId={groupId}
+											visibleConnections={visibleConnections}
+											variablesModalRef={variablesModalRef}
+											deleteModalRef={confirmModalRef}
+											showNoConnectionsMessage
+										/>
+									)}
+								</React.Fragment>
+							)
+						})}
 
 					{/* Render ungrouped connections */}
 
@@ -181,6 +184,15 @@ export interface ConnectionDragItem {
 	dragState: DragState | null
 }
 export interface ConnectionDragStatus {
+	isDragging: boolean
+}
+
+export interface ConnectionGroupDragItem {
+	groupId: string
+	index: number
+	dragState: DragState | null
+}
+export interface ConnectionGroupDragStatus {
 	isDragging: boolean
 }
 

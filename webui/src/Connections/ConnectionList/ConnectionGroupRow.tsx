@@ -1,10 +1,20 @@
 import { ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
 import { CButton } from '@coreui/react'
-import { faCaretRight, faCaretDown, faCheckCircle, faTrash, faPencilAlt } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCaretRight,
+	faCaretDown,
+	faCheckCircle,
+	faTrash,
+	faPencilAlt,
+	faSort,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
+import { useDrag, useDrop } from 'react-dnd'
 import { TextInputField } from '../../Components/TextInputField.js'
+import { checkDragState } from '../../util.js'
+import { ConnectionGroupDragItem, ConnectionGroupDragStatus } from './ConnectionList.js'
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
 import { ConnectionListApi } from './ConnectionListApi.js'
 
@@ -13,12 +23,14 @@ interface ConnectionGroupRowProps {
 	toggleExpanded: (groupId: string) => void
 	connectionListApi: ConnectionListApi
 	isCollapsed: boolean
+	index: number
 }
 export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 	group,
 	toggleExpanded,
 	connectionListApi,
 	isCollapsed,
+	index,
 }: ConnectionGroupRowProps) {
 	const [isEditing, setIsEditing] = useState(false)
 
@@ -58,12 +70,58 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 		[connectionListApi.deleteGroup, group.id]
 	)
 
-	const { drop } = useConnectionListDragging(group.id, -1)
+	const { drop: dropInto } = useConnectionListDragging(group.id, -1)
+
+	// For group drag-and-drop
+	const ref = useRef(null)
+	const [, drop] = useDrop<ConnectionGroupDragItem>({
+		accept: 'connection-group',
+		hover(item, monitor) {
+			if (!ref.current) {
+				return
+			}
+
+			if (!checkDragState(item, monitor, group.id)) return
+
+			// Don't replace items with themselves
+			if (item.groupId === group.id) {
+				return
+			}
+
+			// Time to actually perform the action
+			connectionListApi.reorderGroup(item.groupId, index)
+
+			// Note: we're mutating the monitor item here!
+			// Generally it's better to avoid mutations,
+			// but it's good here for the sake of performance
+			// to avoid expensive index searches.
+			item.index = index
+		},
+	})
+
+	const [{ isDragging }, drag, preview] = useDrag<ConnectionGroupDragItem, unknown, ConnectionGroupDragStatus>({
+		type: 'connection-group',
+		item: {
+			groupId: group.id,
+			index,
+			dragState: null,
+		},
+		collect: (monitor) => ({
+			isDragging: monitor.isDragging(),
+		}),
+	})
+
+	// Apply both drop handlers and drag
+	preview(drop(dropInto(ref)))
 
 	return (
-		<tr ref={drop} className="connection-group-header" onClick={toggleExpanded2}>
-			<td>
-				<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} />
+		<tr
+			ref={ref}
+			className={`connection-group-header ${isDragging ? 'connectionlist-dragging' : ''}`}
+			onClick={toggleExpanded2}
+		>
+			<td ref={drag} className="td-reorder">
+				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td colSpan={5}>
 				<div className="d-flex align-items-center justify-content-between">
@@ -77,7 +135,10 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 								autoFocus
 							/>
 						) : (
-							<span className="group-name">{group.label}</span>
+							<>
+								<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} style={{ marginRight: '0.5em' }} />
+								<span className="group-name">{group.label}</span>
+							</>
 						)}
 					</div>
 					<div className="d-flex align-items-center">
