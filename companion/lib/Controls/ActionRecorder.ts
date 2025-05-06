@@ -402,6 +402,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			const session = this.#currentSession
 
 			if (session.connectionIds.includes(connectionId)) {
+				const currentUpgradeIndex = this.#registry.instance.getInstanceConfig(connectionId)?.lastUpgradeIndex
+
 				const newAction: RecordActionEntityModel = {
 					type: EntityModelType.Action,
 					id: nanoid(),
@@ -410,6 +412,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 					options: options,
 
 					uniquenessId,
+					upgradeIndex: currentUpgradeIndex,
 				}
 				const delayAction: RecordActionEntityModel = {
 					type: EntityModelType.Action,
@@ -420,6 +423,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 						time: delay,
 					},
 					uniquenessId: undefined,
+					upgradeIndex: undefined,
 				}
 
 				// Replace existing action with matching uniquenessId, or push to end of the list

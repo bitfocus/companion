@@ -63,6 +63,17 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Get the upgrade index of this entity.
+	 * This _should_ always be defined now, but it may be msising for older entities
+	 *
+	 * Prior to 4.0, this was only stored for entities which were awaiting an upgrade.
+	 * Since 4.0, this should always be set.
+	 */
+	get upgradeIndex(): number | undefined {
+		return this.#data.upgradeIndex
+	}
+
+	/**
 	 * Get the id of the connection this action belongs to
 	 */
 	get connectionId(): string {
@@ -243,7 +254,7 @@ export class ControlEntityInstance {
 			if (this.#data.connectionId === 'internal') {
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
-				this.#moduleHost.connectionEntityUpdate(this.asEntityModel(), this.#controlId).catch((e) => {
+				this.#moduleHost.connectionEntityUpdate(this, this.#controlId).catch((e) => {
 					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 				})
 			}
@@ -345,6 +356,16 @@ export class ControlEntityInstance {
 
 		// Inform relevant module
 		this.subscribe(false)
+	}
+
+	/**
+	 * Set the upgradeIndex for this entity or throw an error if it is already set
+	 */
+	setMissingUpgradeIndex(upgradeIndex: number): void {
+		if (this.#data.upgradeIndex !== undefined)
+			throw new Error(`Entity ${this.#data.id} already has an upgrade index set`)
+
+		this.#data.upgradeIndex = upgradeIndex
 	}
 
 	/**
@@ -618,6 +639,7 @@ export class ControlEntityInstance {
 	replaceProps(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): void {
 		this.#data.definitionId = newProps.definitionId
 		this.#data.options = newProps.options
+		this.#data.upgradeIndex = newProps.upgradeIndex
 
 		if (this.#data.type === EntityModelType.Feedback) {
 			const feedbackData = this.#data as FeedbackEntityModel
@@ -625,8 +647,6 @@ export class ControlEntityInstance {
 			feedbackData.isInverted = !!newPropsData.isInverted
 			feedbackData.style = Object.keys(feedbackData.style || {}).length > 0 ? feedbackData.style : newPropsData.style
 		}
-
-		delete this.#data.upgradeIndex
 
 		if (!skipNotifyModule) {
 			this.subscribe(false)
