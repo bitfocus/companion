@@ -38,8 +38,8 @@ export function useConnectionListApi(confirmModalRef: React.RefObject<GenericCon
 							})
 						}
 					)
-					},
-				
+				},
+
 				reorderGroup: (groupId: string, dropIndex: number) => {
 					socket.emitPromise('connection-groups:reorder', [groupId, dropIndex]).catch((e) => {
 						console.error('Failed to reorder group', e)
