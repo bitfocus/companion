@@ -47,6 +47,7 @@ export interface SatelliteDeviceInfo {
 	streamText: boolean
 	streamTextStyle: boolean
 	transferVariables: SatelliteTransferableValue[]
+	supportsLockedState: boolean
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -208,7 +209,22 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			this.#triggerOutputVariable(name, outputVariable)
 		}
+
+		if (deviceInfo.supportsLockedState) {
+			this.setLocked = (locked: boolean, characterCount: number): void => {
+				this.#logger.silly(`locked: ${locked} - ${characterCount}`)
+				if (this.socket !== undefined) {
+					this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {
+						LOCKED: locked,
+						CHARACTER_COUNT: characterCount,
+					})
+				}
+			}
+		}
 	}
+
+	// Override the base type, it may be defined by the constructor
+	setLocked: SurfacePanel['setLocked']
 
 	quit(): void {}
 
@@ -307,6 +323,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 */
 	doButton(column: number, row: number, state: boolean): void {
 		this.emit('click', column, row, state)
+	}
+
+	doPincodeKey(pincodeKey: number): void {
+		this.emit('pincodeKey', pincodeKey)
 	}
 
 	/**
