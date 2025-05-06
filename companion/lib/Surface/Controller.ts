@@ -32,7 +32,7 @@ import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
-import { SurfaceIPSatelliteBase, SatelliteDeviceInfo, createSatelliteSurfaceHandler } from './IP/Satellite.js'
+import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
 import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
 import { SurfaceUSBXKeys } from './USB/XKeys.js'
@@ -58,12 +58,7 @@ import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type {
-	LocalUSBDeviceOptions,
-	SurfaceHandlerDependencies,
-	SurfacePanelFull,
-	SurfacePanelFactory,
-} from './Types.js'
+import type { LocalUSBDeviceOptions, SurfaceHandlerDependencies, SurfacePanel, SurfacePanelFactory } from './Types.js'
 import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
@@ -312,7 +307,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Create a `SurfaceHandler` for a `SurfacePanel`
 	 */
-	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanelFull): void {
+	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): void {
 		const existingSurfaceConfig = this.getDeviceConfig(panel.info.deviceId)
 		if (!existingSurfaceConfig) {
 			this.#logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
@@ -1018,10 +1013,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Add a satellite device
 	 */
-	addSatelliteDevice(deviceInfo: SatelliteDeviceInfo): SurfaceIPSatelliteBase {
+	addSatelliteDevice(deviceInfo: SatelliteDeviceInfo): SurfaceIPSatellite {
 		this.removeDevice(deviceInfo.path)
 
-		const device = createSatelliteSurfaceHandler(deviceInfo, this.#surfaceExecuteExpression.bind(this))
+		const device = new SurfaceIPSatellite(deviceInfo, this.#surfaceExecuteExpression.bind(this))
 
 		this.#createSurfaceHandler(deviceInfo.path, 'satellite', device)
 

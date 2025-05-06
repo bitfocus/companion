@@ -19,7 +19,7 @@ import { EventEmitter } from 'events'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { colorToRgb, RgbColor } from './Util.js'
 import HID from 'node-hid'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo, SurfacePanelWithoutLocking } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
@@ -29,13 +29,8 @@ import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
  * It uses a specific OS available from https://github.com/203Electronics/MatrixOS
  * This driver targets the Matrix OS's Companion APP,
  */
-export class SurfaceUSB203SystemsMystrix
-	extends EventEmitter<SurfacePanelEvents>
-	implements SurfacePanel, SurfacePanelWithoutLocking
-{
+export class SurfaceUSB203SystemsMystrix extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
-
-	readonly supportsLocking = false
 
 	config: Record<string, any> = {}
 

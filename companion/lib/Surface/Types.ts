@@ -14,7 +14,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { ExecuteExpressionResult } from '../Variables/Util.js'
 
 export type SurfacePanelFactory = {
-	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanelFull>
+	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
 }
 
 export interface LocalUSBDeviceOptions {
@@ -37,8 +37,6 @@ export interface SurfacePanelInfo {
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 }
 
-export type SurfacePanelFull = SurfacePanel & (SurfacePanelWithLocking | SurfacePanelWithoutLocking)
-
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
@@ -50,15 +48,12 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void
 	quit(): void
 	checkForFirmwareUpdates?: (latestVersions?: unknown) => Promise<void>
-}
 
-export interface SurfacePanelWithoutLocking {
-	readonly supportsLocking: false
-}
-export interface SurfacePanelWithLocking {
-	readonly supportsLocking: true
-
-	setLocked: (locked: boolean, characterCount: number) => void
+	/**
+	 * If the surface will handle locking display of the locking state itself, this method should be implemented.
+	 * If defined, it will be called when the lock state changes.
+	 */
+	setLocked?: (locked: boolean, characterCount: number) => void
 }
 
 export interface DrawButtonItem {

@@ -24,7 +24,7 @@ import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../Co
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { EmulatorConfig, EmulatorImage, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
 import type { UIHandler, ClientSocket } from '../../UI/Handler.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo, SurfacePanelWithoutLocking } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 export function EmulatorRoom(id: string): string {
@@ -75,13 +75,8 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
-export class SurfaceIPElgatoEmulator
-	extends EventEmitter<SurfacePanelEvents>
-	implements SurfacePanel, SurfacePanelWithoutLocking
-{
+export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger = LogController.createLogger('Surface/IP/ElgatoEmulator')
-
-	readonly supportsLocking = false
 
 	readonly #emulatorId: string
 

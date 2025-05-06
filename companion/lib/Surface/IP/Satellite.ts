@@ -31,14 +31,7 @@ import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type {
-	SurfaceExecuteExpressionFn,
-	SurfacePanel,
-	SurfacePanelEvents,
-	SurfacePanelInfo,
-	SurfacePanelWithLocking,
-	SurfacePanelWithoutLocking,
-} from '../Types.js'
+import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult, ImageResultStyle } from '../../Graphics/ImageResult.js'
 import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
 
@@ -121,18 +114,7 @@ function generateConfigFields(
 	return fields
 }
 
-export function createSatelliteSurfaceHandler(
-	deviceInfo: SatelliteDeviceInfo,
-	executeExpression: SurfaceExecuteExpressionFn
-) {
-	if (deviceInfo.supportsLockedState) {
-		return new SurfaceIPSatelliteWithLocking(deviceInfo, executeExpression)
-	} else {
-		return new SurfaceIPSatelliteWithoutLocking(deviceInfo, executeExpression)
-	}
-}
-
-export class SurfaceIPSatelliteBase extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
+export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	protected readonly logger = LogController.createLogger('Surface/IP/Satellite')
 
 	readonly #executeExpression: SurfaceExecuteExpressionFn
@@ -182,8 +164,6 @@ export class SurfaceIPSatelliteBase extends EventEmitter<SurfacePanelEvents> imp
 		this.#streamText = deviceInfo.streamText
 		this.#streamTextStyle = deviceInfo.streamTextStyle
 
-		console.log('Satellite device info:', deviceInfo)
-
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,
@@ -229,7 +209,22 @@ export class SurfaceIPSatelliteBase extends EventEmitter<SurfacePanelEvents> imp
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			this.#triggerOutputVariable(name, outputVariable)
 		}
+
+		if (deviceInfo.supportsLockedState) {
+			this.setLocked = (locked: boolean, characterCount: number): void => {
+				this.logger.silly(`locked: ${locked} - ${characterCount}`)
+				if (this.socket !== undefined) {
+					this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {
+						LOCKED: locked,
+						CHARACTER_COUNT: characterCount,
+					})
+				}
+			}
+		}
 	}
+
+	// Override the base type, it may be defined by the constructor
+	setLocked: SurfacePanel['setLocked']
 
 	quit(): void {}
 
@@ -453,24 +448,6 @@ export class SurfaceIPSatelliteBase extends EventEmitter<SurfacePanelEvents> imp
 		if (this.socket !== undefined) {
 			this.socket.sendMessage('BRIGHTNESS', null, this.deviceId, {
 				VALUE: value,
-			})
-		}
-	}
-}
-
-class SurfaceIPSatelliteWithoutLocking extends SurfaceIPSatelliteBase implements SurfacePanelWithoutLocking {
-	readonly supportsLocking = false
-}
-
-class SurfaceIPSatelliteWithLocking extends SurfaceIPSatelliteBase implements SurfacePanelWithLocking {
-	readonly supportsLocking = true
-
-	setLocked(locked: boolean, characterCount: number): void {
-		this.logger.silly(`locked: ${locked} - ${characterCount}`)
-		if (this.socket !== undefined) {
-			this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {
-				LOCKED: locked,
-				CHARACTER_COUNT: characterCount,
 			})
 		}
 	}

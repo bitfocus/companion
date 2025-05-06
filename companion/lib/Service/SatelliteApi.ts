@@ -7,7 +7,7 @@ import {
 } from '../Resources/Util.js'
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import { Logger } from '../Log/Controller.js'
-import type { SatelliteTransferableValue, SurfaceIPSatelliteBase } from '../Surface/IP/Satellite.js'
+import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../Surface/IP/Satellite.js'
 import type { AppInfo } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 
@@ -460,7 +460,7 @@ export class ServiceSatelliteApi {
 interface SatelliteDevice {
 	id: string
 	socket: SatelliteSocketWrapper
-	device: SurfaceIPSatelliteBase
+	device: SurfaceIPSatellite
 }
 
 function parseTransferableValues(input: string | true | undefined): SatelliteTransferableValue[] {

@@ -34,7 +34,7 @@ import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanelFull } from './Types.js'
+import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { PanelDefaults } from './Config.js'
 
@@ -181,12 +181,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	readonly #variables: VariablesController
 
-	readonly panel: SurfacePanelFull
+	readonly panel: SurfacePanel
 
 	constructor(
 		surfaceController: SurfaceController,
 		deps: SurfaceHandlerDependencies,
-		panel: SurfacePanelFull,
+		panel: SurfacePanel,
 		surfaceConfig: SurfaceConfig
 	) {
 		super()
@@ -307,7 +307,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#drawPage() {
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
-				if (this.panel.supportsLocking) {
+				if (!!this.panel.setLocked) {
 					this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
 					return
 				}
@@ -411,7 +411,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
 
 			if (!skipDraw) {
-				if (!this.#isSurfaceLocked && this.panel.supportsLocking) {
+				if (!this.#isSurfaceLocked && !!this.panel.setLocked) {
 					this.panel.setLocked(false, this.#currentPincodeEntry.length)
 				}
 
@@ -523,7 +523,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					this.#controls.pressControl(controlId, pressed, this.surfaceId)
 				}
 				this.#logger.debug(`Button ${thisPage}/${coordinate} ${pressed ? 'pressed' : 'released'}`)
-			} else if (!this.panel.supportsLocking) {
+			} else if (!this.panel.setLocked) {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
 					if (pressCode !== -1) {
@@ -594,7 +594,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		if (!this.#isSurfaceLocked) return
 
-		if (this.panel.supportsLocking) {
+		if (!!this.panel.setLocked) {
 			this.panel.setLocked(true, this.#currentPincodeEntry.length)
 		} else {
 			const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)

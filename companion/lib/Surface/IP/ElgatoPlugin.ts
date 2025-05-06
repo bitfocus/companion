@@ -20,20 +20,15 @@ import { EventEmitter } from 'events'
 import { oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { convertPanelIndexToXY } from '../Util.js'
 import { LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo, SurfacePanelWithoutLocking } from '../Types.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { PageController } from '../../Page/Controller.js'
 import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
-export class SurfaceIPElgatoPlugin
-	extends EventEmitter<SurfacePanelEvents>
-	implements SurfacePanel, SurfacePanelWithoutLocking
-{
+export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger = LogController.createLogger('Surface/IP/ElgatoPlugin')
-
-	readonly supportsLocking = false
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize = {
