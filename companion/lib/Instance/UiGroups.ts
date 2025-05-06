@@ -2,35 +2,32 @@ import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { ConnectionGroup, ConnectionGroupsUpdate } from '@companion-app/shared/Model/Connections.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { nanoid } from 'nanoid'
 
-const ConnectionGroupTable = 'connection_groups'
 const ConnectionGroupRoom = 'connection-groups'
 
 export class InstanceUiGroups {
 	readonly #io: UIHandler
-	readonly #db: DataDatabase
+	readonly #dbTable: DataStoreTableView<Record<string, ConnectionGroup>>
 
 	readonly #configStore: ConnectionConfigStore
 
-	#data: Record<string, ConnectionGroup> = {}
+	#data: Record<string, ConnectionGroup>
 
 	constructor(io: UIHandler, db: DataDatabase, configStore: ConnectionConfigStore) {
 		this.#io = io
-		this.#db = db
+		this.#dbTable = db.getTableView('connection_groups')
 		this.#configStore = configStore
 
-		// Ensure the table exists
-		this.#db.store.prepare(`CREATE TABLE IF NOT EXISTS ${ConnectionGroupTable} (id STRING UNIQUE, value STRING);`).run()
-
-		this.#data = this.#db.getTable(ConnectionGroupTable)
+		this.#data = this.#dbTable.all()
 	}
 
 	/**
 	 * Discard all groups and put all connections back to the default group
 	 */
 	discardAllGroups(): void {
-		this.#db.emptyTable(ConnectionGroupTable)
+		this.#dbTable.clear()
 
 		const changes: ConnectionGroupsUpdate[] = []
 		for (const groupId of Object.keys(this.#data)) {
@@ -76,7 +73,7 @@ export class InstanceUiGroups {
 			}
 
 			this.#data[newId] = newGroup
-			this.#db.setTableKey(ConnectionGroupTable, newId, newGroup)
+			this.#dbTable.set(newId, newGroup)
 
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
 				{
@@ -94,7 +91,7 @@ export class InstanceUiGroups {
 			if (!this.#data[groupId]) return
 
 			delete this.#data[groupId]
-			this.#db.deleteTableKey(ConnectionGroupTable, groupId)
+			this.#dbTable.delete(groupId)
 
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
 				{
@@ -112,7 +109,7 @@ export class InstanceUiGroups {
 			if (!group) throw new Error(`Group ${groupId} not found`)
 
 			group.label = groupName
-			this.#db.setTableKey(ConnectionGroupTable, groupId, group)
+			this.#dbTable.set(groupId, group)
 
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
 				{
