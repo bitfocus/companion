@@ -119,5 +119,43 @@ export class InstanceUiGroups {
 				},
 			])
 		})
+
+		client.onPromise('connection-groups:reorder', (groupId: string, dropIndex: number) => {
+			// If no group, nothing to do
+			const thisGroup = this.#data[groupId]
+			if (!thisGroup) return
+
+			const changes: ConnectionGroupsUpdate[] = []
+
+			// Get all groups sorted by their current sortOrder
+			const sortedGroups = Object.entries(this.#data)
+				.filter(([id]) => id !== groupId)
+				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+
+			// Insert the group being moved at the drop index
+			if (dropIndex < 0) {
+				sortedGroups.push([groupId, thisGroup])
+			} else {
+				sortedGroups.splice(dropIndex, 0, [groupId, thisGroup])
+			}
+
+			// Update the sortOrder of all groups based on their new position
+			sortedGroups.forEach(([id, group], index) => {
+				if (group.sortOrder !== index) {
+					group.sortOrder = index
+					this.#dbTable.set(id, group)
+					changes.push({
+						type: 'update',
+						id,
+						info: group,
+					})
+				}
+			})
+
+			// Notify clients of the changes
+			if (changes.length > 0) {
+				this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', changes)
+			}
+		})
 	}
 }

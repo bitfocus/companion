@@ -330,8 +330,8 @@ export interface ClientToBackendEventsMap {
 
 	'connection-groups:add': (groupName: string) => string
 	'connection-groups:remove': (groupId: string) => void
-	// 'connection-groups:set-order': (groupIds: string[]) => void
 	'connection-groups:set-name': (groupId: string, groupName: string) => void
+	'connection-groups:reorder': (groupId: string, dropIndex: number) => void
 
 	'modules:install-all-missing': () => void
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
