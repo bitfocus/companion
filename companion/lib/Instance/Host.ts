@@ -17,6 +17,7 @@ import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js
 import { CompanionOptionValues } from '@companion-module/base'
 import { Serializable } from 'child_process'
 import { createRequire } from 'module'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 const require = createRequire(import.meta.url)
 
@@ -248,7 +249,7 @@ export class ModuleHost {
 
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady) {
-				child.handler.sendVariablesChanged(changedVariableIds).catch((e) => {
+				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds).catch((e) => {
 					this.#logger.warn(`sendVariablesChanged failed for "${child.connectionId}": ${e}`)
 				})
 			}
@@ -529,11 +530,11 @@ export class ModuleHost {
 		})
 	}
 
-	async connectionEntityUpdate(entityModel: SomeEntityModel, controlId: string): Promise<boolean> {
-		const connection = this.getChild(entityModel.connectionId, true)
+	async connectionEntityUpdate(entity: ControlEntityInstance, controlId: string): Promise<boolean> {
+		const connection = this.getChild(entity.connectionId, true)
 		if (!connection) return false
 
-		await connection.entityUpdate(entityModel, controlId)
+		await connection.entityUpdate(entity, controlId)
 
 		return true
 	}

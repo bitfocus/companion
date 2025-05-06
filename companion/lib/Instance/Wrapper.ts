@@ -56,8 +56,10 @@ import {
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import { doesModuleExpectLabelUpdates } from './ApiVersions.js'
+import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from './ApiVersions.js'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
+import { InstanceEntityManager } from './EntityManager.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
 export interface InstanceModuleWrapperDependencies {
 	readonly controls: ControlsController
@@ -87,6 +89,10 @@ export class SocketEventsHandler {
 	hasRecordActionsHandler: boolean = false
 
 	#expectsLabelUpdates: boolean = false
+
+	readonly #entityManager: InstanceEntityManager | null
+
+	#currentUpgradeIndex: number | null = null
 
 	/**
 	 * Current label of the connection
@@ -147,6 +153,16 @@ export class SocketEventsHandler {
 			5000
 		)
 
+		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
+			? new InstanceEntityManager(
+					this.#ipcWrapper,
+					this.#deps.controls,
+					this.#deps.variables.values,
+					this.#deps.page,
+					this.connectionId
+				)
+			: null
+
 		const messageHandler = (msg: any) => {
 			this.#ipcWrapper.receivedMessage(msg)
 		}
@@ -164,8 +180,24 @@ export class SocketEventsHandler {
 		this.logger = LogController.createLogger(`Instance/Wrapper/${config.label}`)
 		this.#label = config.label
 
-		const allFeedbacks = this.#getAllFeedbackInstances()
-		const allActions = this.#getAllActionInstances()
+		const allFeedbacks = this.#entityManager ? {} : this.#getAllFeedbackInstances()
+		const allActions = this.#entityManager ? {} : this.#getAllActionInstances()
+
+		// Ensure each entity knows its upgradeIndex
+		const allControls = this.#deps.controls.getAllControls()
+		for (const [controlId, control] of allControls.entries()) {
+			if (!control.supportsEntities) continue
+
+			for (const entity of control.entities.getAllEntities()) {
+				if (entity.connectionId !== this.connectionId) continue
+
+				if (entity.upgradeIndex === undefined) {
+					entity.setMissingUpgradeIndex(config.lastUpgradeIndex)
+				}
+
+				this.#entityManager?.trackEntity(entity, controlId)
+			}
+		}
 
 		const msg = await this.#ipcWrapper.sendWithCb(
 			'init',
@@ -187,8 +219,10 @@ export class SocketEventsHandler {
 		// Save the resulting values
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
-		config.lastUpgradeIndex = msg.newUpgradeIndex
+		this.#currentUpgradeIndex = config.lastUpgradeIndex = msg.newUpgradeIndex
 		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig)
+
+		this.#entityManager?.start(config.lastUpgradeIndex)
 	}
 
 	/**
@@ -266,6 +300,11 @@ export class SocketEventsHandler {
 	 * @access public - needs to be re-run when the topbar setting changes
 	 */
 	async sendAllFeedbackInstances(): Promise<void> {
+		if (this.#entityManager) {
+			this.#entityManager.resendFeedbacks()
+			return
+		}
+
 		const msg = {
 			feedbacks: this.#getAllFeedbackInstances(),
 		}
@@ -277,7 +316,12 @@ export class SocketEventsHandler {
 	 * Send the list of changed variables to the child process
 	 * @access public - called whenever variables change
 	 */
-	async sendVariablesChanged(changedVariableIds: string[]): Promise<void> {
+	async sendVariablesChanged(changedVariableIdSet: Set<string>, changedVariableIds: string[]): Promise<void> {
+		if (this.#entityManager) {
+			this.#entityManager.onVariablesChanged(changedVariableIdSet)
+			return
+		}
+
 		// Future: only inform module of variables it parsed and should react to.
 		// This will help avoid excess work when variables are not interesting to a module.
 
@@ -330,12 +374,21 @@ export class SocketEventsHandler {
 	// 	await this.ipcWrapper.sendWithCb('updateActions', msg)
 	// }
 
-	entityUpdate(entity: SomeEntityModel, controlId: string): Promise<void> {
-		switch (entity.type) {
+	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
+		if (this.#entityManager) {
+			if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
+			if (entity.disabled) return
+
+			this.#entityManager.trackEntity(entity, controlId)
+			return
+		}
+
+		const entityModel = entity.asEntityModel(false)
+		switch (entityModel.type) {
 			case EntityModelType.Action:
-				return this.#actionUpdate(entity, controlId)
+				return this.#actionUpdate(entityModel, controlId)
 			case EntityModelType.Feedback:
-				return this.#feedbackUpdate(entity, controlId)
+				return this.#feedbackUpdate(entityModel, controlId)
 		}
 	}
 
@@ -447,6 +500,11 @@ export class SocketEventsHandler {
 	async entityDelete(oldEntity: SomeEntityModel): Promise<void> {
 		if (oldEntity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
+		if (this.#entityManager) {
+			this.#entityManager.forgetEntity(oldEntity.id)
+			return
+		}
+
 		switch (oldEntity.type) {
 			case EntityModelType.Action:
 				await this.#ipcWrapper.sendWithCb('updateActions', {
@@ -498,7 +556,23 @@ export class SocketEventsHandler {
 	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 
+		// TODO - preparse options
+
 		try {
+			let actionOptions = action.options
+			if (this.#entityManager) {
+				// This means the new flow is being done, and the options must be parsed at this stage
+				const actionDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
+					EntityModelType.Action,
+					this.connectionId,
+					action.definitionId
+				)
+				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
+
+				// Note: for actions, this case doesn't need to be reactive
+				actionOptions = this.#entityManager.parseOptionsObject(actionDefinition, actionOptions, extras.location)
+			}
+
 			await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
 					id: action.id,
@@ -545,6 +619,8 @@ export class SocketEventsHandler {
 	 */
 	cleanup(): void {
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
+
+		this.#entityManager?.destroy()
 	}
 
 	/**
@@ -839,6 +915,11 @@ export class SocketEventsHandler {
 	 * Handle the module informing us of some actions/feedbacks which have been run through upgrade scripts
 	 */
 	async #handleUpgradedItems(msg: UpgradedDataResponseMessage): Promise<void> {
+		if (this.#entityManager) {
+			this.logger.error(`Module should not be using 'upgradedItems' as it uses the new upgrade flow`)
+			throw new Error(`Module should not be using 'upgradedItems' as it uses the new upgrade flow`)
+		}
+
 		try {
 			// TODO - we should batch these changes when there are multiple on one control (to void excessive redrawing)
 
@@ -855,6 +936,7 @@ export class SocketEventsHandler {
 								options: feedback.options,
 								style: feedback.style,
 								isInverted: feedback.isInverted,
+								upgradeIndex: feedback.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
 							},
 							true
 						)
@@ -875,6 +957,7 @@ export class SocketEventsHandler {
 								id: action.id,
 								definitionId: action.actionId,
 								options: action.options,
+								upgradeIndex: action.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
 							},
 							true
 						)
@@ -955,18 +1038,30 @@ function translateOptionsIsVisible(
 	options?: EncodeIsVisible<SomeCompanionActionInputField>[]
 ): (InternalActionInputField | InternalFeedbackInputField)[] {
 	// @companion-module-base exposes these through a mapping that loses the differentiation between types
-	return (options || []).map((o) => ({
-		...(o as any),
-		isVisibleFn: undefined,
-		isVisibleData: undefined,
-		isVisibleUi: o.isVisibleFn
-			? ({
-					type: 'function',
-					fn: o.isVisibleFn,
-					data: o.isVisibleData,
-				} satisfies InternalActionInputField['isVisibleUi'])
-			: undefined,
-	}))
+	return (options || []).map((o) => {
+		let isVisibleUi: InternalFeedbackInputField['isVisibleUi'] | undefined = undefined
+		if (o.isVisibleFn && o.isVisibleFnType === 'expression') {
+			isVisibleUi = {
+				type: 'expression',
+				fn: o.isVisibleFn,
+				data: undefined,
+			}
+		} else if (o.isVisibleFn) {
+			// Either type: 'function' or undefined (backwards compat)
+			isVisibleUi = {
+				type: 'function',
+				fn: o.isVisibleFn,
+				data: o.isVisibleData,
+			}
+		}
+
+		return {
+			...(o as any),
+			isVisibleFn: undefined,
+			isVisibleData: undefined,
+			isVisibleUi,
+		}
+	})
 }
 
 export interface RunActionExtras {

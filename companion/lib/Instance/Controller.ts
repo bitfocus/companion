@@ -102,7 +102,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
-		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
+		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values, this.#configStore)
 		this.status = new InstanceStatus(io, controls)
 		this.modules = new InstanceModules(io, this, apiRouter, appInfo.modulesDir)
 		this.moduleHost = new ModuleHost(

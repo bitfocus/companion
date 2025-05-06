@@ -3,8 +3,8 @@ import type { ButtonStyleProperties } from './StyleModel.js'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel =
-	| Pick<ActionEntityModel, 'id' | 'type' | 'definitionId' | 'options'>
-	| Pick<FeedbackEntityModel, 'id' | 'type' | 'definitionId' | 'style' | 'options' | 'isInverted'>
+	| Pick<ActionEntityModel, 'id' | 'type' | 'definitionId' | 'options' | 'upgradeIndex'>
+	| Pick<FeedbackEntityModel, 'id' | 'type' | 'definitionId' | 'style' | 'options' | 'isInverted' | 'upgradeIndex'>
 
 export enum EntityModelType {
 	Action = 'action',
@@ -31,7 +31,7 @@ export interface EntityModelBase {
 	headline?: string
 	options: Record<string, any>
 	disabled?: boolean
-	upgradeIndex?: number
+	upgradeIndex: number | undefined
 
 	/**
 	 * Some internal entities can have children, one or more set of them
