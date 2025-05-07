@@ -1,5 +1,3 @@
-import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { CFormSwitch, CPopover, CButtonGroup, CButton } from '@coreui/react'
 import {
 	faSort,
@@ -22,15 +20,14 @@ import { windowLinkOpen } from '../../Helpers/Window.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { UpdateConnectionToLatestButton } from '../UpdateConnectionToLatestButton.js'
 import { getModuleVersionInfoForConnection } from '../Util.js'
-import { ConnectionDragItem, ConnectionDragStatus } from './ConnectionList.js'
+import { ClientConnectionConfigWithId, ConnectionDragItem, ConnectionDragStatus } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { checkDragState } from '../../util.js'
 
 interface ConnectionsTableRowProps {
 	id: string
 	index: number
-	connection: ClientConnectionConfig
-	connectionStatus: ConnectionStatusEntry | undefined
+	connection: ClientConnectionConfigWithId
 	showVariables: (label: string) => void
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
@@ -40,7 +37,6 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	id,
 	index,
 	connection,
-	connectionStatus,
 	showVariables,
 	configureConnection,
 	deleteModalRef,
@@ -180,7 +176,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 				<UpdateConnectionToLatestButton connection={connection} />
 			</td>
 			<td className="hand" onClick={doEdit}>
-				<ConnectionStatusCell isEnabled={isEnabled} status={connectionStatus} />
+				<ConnectionStatusCell isEnabled={isEnabled} status={connection.status} />
 			</td>
 			<td className="action-buttons">
 				<div style={{ display: 'flex' }}>

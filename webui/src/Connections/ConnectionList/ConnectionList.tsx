@@ -18,6 +18,8 @@ import { useConnectionListApi } from './ConnectionListApi.js'
 import { ConnectionsInGroup } from './ConnectionsInGroup.js'
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
 import { useConnectionStatuses } from './useConnectionStatuses.js'
+import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import { ObservableMap } from 'mobx'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -59,7 +61,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 		error: true,
 	})
 
-	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections)
+	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections, connectionStatuses)
 
 	const connectionListApi = useConnectionListApi(confirmModalRef)
 
@@ -198,19 +200,24 @@ export interface ConnectionGroupDragStatus {
 
 export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 	id: string
+	status: ConnectionStatusEntry | undefined
 }
-function getGroupedConnections(connections: ConnectionsStore) {
+function getGroupedConnections(
+	connections: ConnectionsStore,
+	connectionStatuses: ObservableMap<string, ConnectionStatusEntry>
+) {
 	const validGroupIds = new Set(connections.groups.keys())
 	const groupedConnections = new Map<string, ClientConnectionConfigWithId[]>()
 	const ungroupedConnections: ClientConnectionConfigWithId[] = []
 	for (const [connectionId, connection] of connections.connections) {
+		const status = connectionStatuses.get(connectionId)
 		if (connection.groupId && validGroupIds.has(connection.groupId)) {
 			if (!groupedConnections.has(connection.groupId)) {
 				groupedConnections.set(connection.groupId, [])
 			}
-			groupedConnections.get(connection.groupId)!.push({ ...connection, id: connectionId })
+			groupedConnections.get(connection.groupId)!.push({ ...connection, id: connectionId, status })
 		} else {
-			ungroupedConnections.push({ ...connection, id: connectionId })
+			ungroupedConnections.push({ ...connection, id: connectionId, status })
 		}
 	}
 

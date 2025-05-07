@@ -1,7 +1,7 @@
 import { useContext, useMemo } from 'react'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { GroupApi } from '../../Components/CollapsibleGroupRow.js'
+import { GroupApi } from '../../Components/GroupingTable/CollapsibleGroupRow.js'
 
 export interface ConnectionListApi extends GroupApi {
 	// setGroupEnabled: (groupId: string, enabled: boolean) => void
