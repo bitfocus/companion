@@ -43,16 +43,10 @@ export class ConnectionsStore {
 		for (const change of changes) {
 			const changeType = change.type
 			switch (change.type) {
-				// case 'add':
-				// 	this.connections.set(change.id, change.info)
-				// 	break
 				case 'remove':
 					this.connections.delete(change.id)
 					break
 				case 'update': {
-					// const oldObj = this.connections.get(change.id)
-					// if (!oldObj) throw new Error(`Got update for unknown module: ${change.id}`)
-
 					this.connections.set(change.id, change.info)
 					break
 				}
@@ -80,16 +74,10 @@ export class ConnectionsStore {
 		for (const change of changes) {
 			const changeType = change.type
 			switch (change.type) {
-				// case 'add':
-				// 	this.connections.set(change.id, change.info)
-				// 	break
 				case 'remove':
 					this.groups.delete(change.id)
 					break
 				case 'update': {
-					// const oldObj = this.connections.get(change.id)
-					// if (!oldObj) throw new Error(`Got update for unknown module: ${change.id}`)
-
 					this.groups.set(change.id, change.info)
 					break
 				}
