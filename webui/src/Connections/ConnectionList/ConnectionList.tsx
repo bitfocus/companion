@@ -140,7 +140,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 					{/* Render ungrouped connections */}
 
 					{(isDragging || ungroupedConnections.length > 0) && connections.groups.size > 0 && (
-						<tr className="connection-group-header">
+						<tr className="collapsible-group-header">
 							<td colSpan={6}>
 								<span className="group-name">Ungrouped Connections</span>
 							</td>

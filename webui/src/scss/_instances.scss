@@ -188,35 +188,3 @@
 .connection-group-actions {
 	margin-bottom: 1rem;
 }
-
-.connection-group-header {
-	background-color: #f0f0f0;
-	font-weight: 600;
-
-	td {
-		padding: 8px 10px;
-	}
-
-	.td-reorder {
-		background-color: #f0f0f0;
-	}
-
-	.group-name {
-		font-size: 1.1em;
-		margin-left: 5px;
-		cursor: pointer;
-
-		&:hover {
-			text-decoration: underline;
-		}
-	}
-
-	.btn-link {
-		padding: 0 6px;
-		color: #666;
-
-		&:hover {
-			color: #333;
-		}
-	}
-}
