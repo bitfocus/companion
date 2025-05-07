@@ -1,6 +1,3 @@
-import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback } from 'react'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { TableVisibilityHelper } from '../../Components/TableVisibility.js'
@@ -9,11 +6,10 @@ import { ClientConnectionConfigWithId, VisibleConnectionsState } from './Connect
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { observer } from 'mobx-react-lite'
-import { ObservableMap } from 'mobx'
+import { CollapsibleGroupContents } from '../../Components/GroupingTable/CollapsibleGroupContents.js'
 
 interface ConnectionsInGroupProps {
 	doConfigureConnection: (connectionId: string | null) => void
-	connectionStatuses: ObservableMap<string, ConnectionStatusEntry>
 	selectedConnectionId: string | null
 	connections: ClientConnectionConfigWithId[]
 	groupId: string | null
@@ -25,7 +21,6 @@ interface ConnectionsInGroupProps {
 
 export const ConnectionsInGroup = observer(function ConnectionsInGroup({
 	doConfigureConnection,
-	connectionStatuses,
 	selectedConnectionId,
 	connections,
 	groupId,
@@ -38,77 +33,43 @@ export const ConnectionsInGroup = observer(function ConnectionsInGroup({
 		variablesModalRef.current?.show(connectionId)
 	}, [])
 
-	let visibleCount = 0
-
-	const connectionRows = connections
-		.map((connection, index) => {
-			const status = connectionStatuses.get(connection.id)
-
-			// Apply visibility filters
-			if (!visibleConnections.visibility.disabled && connection.enabled === false) {
-				return null
-			} else if (status) {
-				if (!visibleConnections.visibility.ok && status.category === 'good') {
-					return null
-				} else if (!visibleConnections.visibility.warning && status.category === 'warning') {
-					return null
-				} else if (!visibleConnections.visibility.error && status.category === 'error') {
-					return null
-				}
-			}
-
-			visibleCount++
-
-			return (
-				<ConnectionsTableRow
-					key={connection.id}
-					id={connection.id}
-					index={index}
-					connection={connection}
-					connectionStatus={status}
-					showVariables={doShowVariables}
-					deleteModalRef={deleteModalRef}
-					configureConnection={doConfigureConnection}
-					isSelected={connection.id === selectedConnectionId}
-				/>
-			)
-		})
-		.filter((row) => row !== null)
-
-	// Calculate number of hidden connections
-	const hiddenCount = connections.length - visibleCount
-
 	const { isDragging, drop } = useConnectionListDragging(groupId)
 
 	return (
-		<>
-			{connectionRows}
+		<CollapsibleGroupContents<ClientConnectionConfigWithId>
+			items={connections}
+			showNoItemsMessage={showNoConnectionsMessage}
+			itemName="connection"
+			isDragging={isDragging}
+			drop={drop}
+		>
+			{(connection, index) => {
+				// Apply visibility filters
+				if (!visibleConnections.visibility.disabled && connection.enabled === false) {
+					return null
+				} else if (connection.status) {
+					if (!visibleConnections.visibility.ok && connection.status.category === 'good') {
+						return null
+					} else if (!visibleConnections.visibility.warning && connection.status.category === 'warning') {
+						return null
+					} else if (!visibleConnections.visibility.error && connection.status.category === 'error') {
+						return null
+					}
+				}
 
-			{isDragging && connections.length === 0 && (
-				<tr ref={drop} className="connectionlist-dropzone">
-					<td colSpan={6}>
-						<p>Drop connection here</p>
-					</td>
-				</tr>
-			)}
-
-			{hiddenCount > 0 && (
-				<tr>
-					<td colSpan={6} style={{ padding: '10px 5px' }}>
-						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-						<strong>{hiddenCount} Connections are hidden</strong>
-					</td>
-				</tr>
-			)}
-
-			{showNoConnectionsMessage && connections.length === 0 && !isDragging && (
-				<tr>
-					<td colSpan={6} style={{ padding: '10px 5px' }}>
-						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-						<strong>There are no connections in this group</strong>
-					</td>
-				</tr>
-			)}
-		</>
+				return (
+					<ConnectionsTableRow
+						key={connection.id}
+						id={connection.id}
+						index={index}
+						connection={connection}
+						showVariables={doShowVariables}
+						deleteModalRef={deleteModalRef}
+						configureConnection={doConfigureConnection}
+						isSelected={connection.id === selectedConnectionId}
+					/>
+				)
+			}}
+		</CollapsibleGroupContents>
 	)
 })

@@ -10,9 +10,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { TextInputField } from './TextInputField.js'
+import { TextInputField } from '../TextInputField.js'
 import { ConnectDropTarget, useDrag, useDrop } from 'react-dnd'
-import { checkDragState } from '../util.js'
+import { checkDragState } from '../../util.js'
 
 export interface CollapsibleGroup {
 	id: string
@@ -37,8 +37,8 @@ export interface GroupApi {
 	reorderGroup: (groupId: string, dropIndex: number) => void
 }
 
-export interface CollapsibleGroupRowProps<T extends CollapsibleGroup> {
-	group: T
+export interface CollapsibleGroupRowProps {
+	group: CollapsibleGroup
 	isCollapsed: boolean
 	toggleExpanded: (groupId: string) => void
 	groupApi: GroupApi
@@ -48,7 +48,7 @@ export interface CollapsibleGroupRowProps<T extends CollapsibleGroup> {
 	dropInto?: ConnectDropTarget
 }
 
-export const CollapsibleGroupRow = observer(function CollapsibleGroupRow<T extends CollapsibleGroup>({
+export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
 	group,
 	isCollapsed,
 	toggleExpanded,
@@ -58,7 +58,7 @@ export const CollapsibleGroupRow = observer(function CollapsibleGroupRow<T exten
 	colSpan = 4,
 	dropInto,
 	children,
-}: React.PropsWithChildren<CollapsibleGroupRowProps<T>>) {
+}: React.PropsWithChildren<CollapsibleGroupRowProps>) {
 	const [isEditing, setIsEditing] = useState(false)
 
 	const toggleExpanded2 = useCallback(() => {
