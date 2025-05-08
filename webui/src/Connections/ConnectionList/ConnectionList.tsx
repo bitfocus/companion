@@ -44,6 +44,11 @@ export const ConnectionsList = observer(function ConnectionsList({
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const variablesModalRef = useRef<ConnectionVariablesModalRef>(null)
 
+	const showConnectionVariables = useCallback(
+		(connectionId: string) => variablesModalRef.current?.show(connectionId),
+		[]
+	)
+
 	const collapseHelper = usePanelCollapseHelper('connection-groups', Array.from(connections.groups.keys()), true)
 
 	// Toggle group expansion
@@ -125,12 +130,11 @@ export const ConnectionsList = observer(function ConnectionsList({
 									{!isCollapsed && (
 										<ConnectionsInGroup
 											doConfigureConnection={doConfigureConnection}
-											connectionStatuses={connectionStatuses}
 											selectedConnectionId={selectedConnectionId}
 											connections={connectionsInGroup}
 											groupId={groupId}
 											visibleConnections={visibleConnections}
-											variablesModalRef={variablesModalRef}
+											showConnectionVariables={showConnectionVariables}
 											deleteModalRef={confirmModalRef}
 											showNoConnectionsMessage
 										/>
@@ -151,12 +155,11 @@ export const ConnectionsList = observer(function ConnectionsList({
 
 					<ConnectionsInGroup
 						doConfigureConnection={doConfigureConnection}
-						connectionStatuses={connectionStatuses}
 						selectedConnectionId={selectedConnectionId}
 						connections={ungroupedConnections}
 						groupId={null}
 						visibleConnections={visibleConnections}
-						variablesModalRef={variablesModalRef}
+						showConnectionVariables={showConnectionVariables}
 						deleteModalRef={confirmModalRef}
 						showNoConnectionsMessage={false}
 					/>
