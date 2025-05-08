@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { LoadingRetryOrError } from '../../util.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
 import { useOptionsAndIsVisible } from '../../Hooks/useOptionsAndIsVisible.js'
@@ -18,6 +18,7 @@ import { useConnectionVersionSelectOptions } from './useConnectionVersionSelectO
 import { useConnectionCurrentConfig } from './useConnectionCurrentConfig.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 import { useForm } from '@tanstack/react-form'
+import { NonIdealState } from '../../Components/NonIdealState.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -308,7 +309,9 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 				{!connectionShouldBeRunning && (
 					<CCol xs={12}>
-						<p>Connection config cannot be edited while disabled</p>
+						<NonIdealState icon={faGear}>
+							<p>You cannot edit the config of a connection while it is disabled</p>
+						</NonIdealState>
 					</CCol>
 				)}
 

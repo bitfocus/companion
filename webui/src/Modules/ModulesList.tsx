@@ -116,7 +116,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				Here you can view and manage the modules you have installed.
 				<br />
 				If you have an active internet connection, you can search for and install modules to support additional devices.
-				If you can't find the device you're looking for, please{' '}
+				If you can't find the device you're looking for, you can{' '}
 				<a target="_blank" href="https://github.com/bitfocus/companion-module-requests">
 					add a request
 				</a>{' '}
