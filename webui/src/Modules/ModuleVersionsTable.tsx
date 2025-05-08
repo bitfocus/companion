@@ -7,7 +7,7 @@ import {
 	faPlus,
 	faQuestionCircle,
 	faSync,
-	faToiletsPortable,
+	faCircleMinus,
 	faTrash,
 	faWarning,
 } from '@fortawesome/free-solid-svg-icons'
@@ -284,7 +284,9 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 	}, [socket, moduleId, versionId])
 
 	if (!hasTarUrl) {
-		return <FontAwesomeIcon icon={faToiletsPortable} className="disabled" title="Module is no longer available" />
+		return (
+			<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" title="Module is no longer available" />
+		)
 	}
 
 	if (!isModuleApiVersionCompatible(apiVersion)) {
