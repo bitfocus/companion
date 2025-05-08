@@ -1,7 +1,6 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { TableVisibilityHelper } from '../../Components/TableVisibility.js'
-import { ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
 import { ClientConnectionConfigWithId, VisibleConnectionsState } from './ConnectionList.js'
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
@@ -14,7 +13,7 @@ interface ConnectionsInGroupProps {
 	connections: ClientConnectionConfigWithId[]
 	groupId: string | null
 	visibleConnections: TableVisibilityHelper<VisibleConnectionsState>
-	variablesModalRef: React.RefObject<ConnectionVariablesModalRef>
+	showConnectionVariables: (connectionId: string) => void
 	deleteModalRef: React.RefObject<GenericConfirmModalRef>
 	showNoConnectionsMessage: boolean
 }
@@ -25,14 +24,10 @@ export const ConnectionsInGroup = observer(function ConnectionsInGroup({
 	connections,
 	groupId,
 	visibleConnections,
-	variablesModalRef,
+	showConnectionVariables,
 	deleteModalRef,
 	showNoConnectionsMessage,
 }: ConnectionsInGroupProps) {
-	const doShowVariables = useCallback((connectionId: string) => {
-		variablesModalRef.current?.show(connectionId)
-	}, [])
-
 	const { isDragging, drop } = useConnectionListDragging(groupId)
 
 	return (
@@ -63,7 +58,7 @@ export const ConnectionsInGroup = observer(function ConnectionsInGroup({
 						id={connection.id}
 						index={index}
 						connection={connection}
-						showVariables={doShowVariables}
+						showVariables={showConnectionVariables}
 						deleteModalRef={deleteModalRef}
 						configureConnection={doConfigureConnection}
 						isSelected={connection.id === selectedConnectionId}
