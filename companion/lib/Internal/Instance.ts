@@ -121,6 +121,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						label: 'Connection',
 						id: 'instance_id',
 						multiple: false,
+						includeGroups: true,
 					},
 					{
 						type: 'dropdown',
@@ -153,6 +154,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						label: 'Connection or All',
 						id: 'instance_id',
 						includeAll: true,
+						includeGroups: true,
 						multiple: false,
 					},
 					{
@@ -241,14 +243,47 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 
 	executeAction(action: ControlEntityInstance, _extras: RunActionExtras): boolean {
 		if (action.definitionId === 'instance_control') {
+			const connectionId = action.rawOptions.instance_id
+			if (connectionId.startsWith('group:')) {
+				// Get the group ID by removing the 'group:' prefix
+				let groupId = connectionId.substring(6)
+				if (groupId === 'ungrouped') groupId = null
+
+				const connectionIds = this.#instanceController.getConnectionsIdsInGroup(groupId)
+				if (!connectionIds || connectionIds.length === 0) {
+					// No connections found in the group
+					return true
+				}
+
+				// Determine the new state for all connections in the group
+				let newState = action.rawOptions.enable === 'true'
+
+				if (action.rawOptions.enable === 'toggle') {
+					// For toggle, we'll check if all are enabled and if so, disable all
+					// Otherwise, enable all (if mixed or all disabled)
+					const configs = connectionIds
+						.map((id) => this.#instanceController.getInstanceConfig(id))
+						.filter((config) => !!config)
+
+					newState = !configs.every((config) => !!config.enabled)
+				}
+
+				// Apply the action to all connections in the group
+				for (const id of connectionIds) {
+					this.#instanceController.enableDisableInstance(id, newState)
+				}
+
+				return true
+			}
+
 			let newState = action.rawOptions.enable == 'true'
 			if (action.rawOptions.enable == 'toggle') {
-				const curState = this.#instanceController.getConnectionStatus(action.rawOptions.instance_id)
+				const curState = this.#instanceController.getConnectionStatus(connectionId)
 
 				newState = !curState?.category
 			}
 
-			this.#instanceController.enableDisableInstance(action.rawOptions.instance_id, newState)
+			this.#instanceController.enableDisableInstance(connectionId, newState)
 			return true
 		} else {
 			return false
@@ -275,6 +310,63 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				return {
 					color: feedback.options.ok_fg,
 					bgcolor: feedback.options.ok_bg,
+				}
+			}
+
+			// Check if this is for a group of connections
+			if (feedback.options.instance_id.startsWith('group:')) {
+				// Get the group ID by removing the 'group:' prefix
+				let groupId: string | null = feedback.options.instance_id.substring(6)
+				if (groupId === 'ungrouped') groupId = null
+
+				// Get all connections in this group
+				const connectionIds = this.#instanceController.getConnectionsIdsInGroup(groupId)
+				if (!connectionIds || connectionIds.length === 0) {
+					// No connections found in the group, treat as disabled
+					return {
+						color: feedback.options.disabled_fg,
+						bgcolor: feedback.options.disabled_bg,
+					}
+				}
+
+				// Check status of all connections in the group
+				let hasError = false
+				let hasWarning = false
+				let hasOk = false
+
+				for (const id of connectionIds) {
+					const status = this.#instanceStatuses[id]?.category
+					if (status === 'error') {
+						hasError = true
+					} else if (status === 'warning') {
+						hasWarning = true
+					} else if (status === 'good') {
+						hasOk = true
+					}
+				}
+
+				// Prioritize errors, then warnings, then OK status
+				if (hasError) {
+					return {
+						color: feedback.options.error_fg,
+						bgcolor: feedback.options.error_bg,
+					}
+				} else if (hasWarning) {
+					return {
+						color: feedback.options.warning_fg,
+						bgcolor: feedback.options.warning_bg,
+					}
+				} else if (hasOk) {
+					return {
+						color: feedback.options.ok_fg,
+						bgcolor: feedback.options.ok_bg,
+					}
+				} else {
+					// All connections are disabled
+					return {
+						color: feedback.options.disabled_fg,
+						bgcolor: feedback.options.disabled_bg,
+					}
 				}
 			}
 
@@ -376,7 +468,11 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		for (const action of actions) {
 			try {
 				if (action.action === 'instance_control') {
-					visitor.visitConnectionId(action.options, 'instance_id')
+					if (String(action.options.instance_id).startsWith('group:')) {
+						// Future
+					} else {
+						visitor.visitConnectionId(action.options, 'instance_id')
+					}
 				}
 			} catch (e) {
 				//Ignore
@@ -386,7 +482,11 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			try {
 				if (feedback.type === 'instance_status') {
 					if (feedback.options.instance_id !== 'all') {
-						visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)
+						if (String(feedback.options.instance_id).startsWith('group:')) {
+							// Future
+						} else {
+							visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)
+						}
 					}
 				} else if (feedback.type === 'instance_custom_state') {
 					visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)

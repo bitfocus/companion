@@ -50,6 +50,7 @@ export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtend
 export interface InternalInputFieldConnectionId extends CompanionInputFieldBaseExtended {
 	type: 'internal:connection_id'
 	multiple: boolean
+	includeGroups?: boolean
 	includeAll?: boolean
 	filterActionsRecorder?: boolean
 	default?: string[]

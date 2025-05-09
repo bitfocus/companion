@@ -25,6 +25,7 @@ export function InternalModuleField(
 					multiple={option.multiple}
 					setValue={setValue}
 					filterActionsRecorder={option.filterActionsRecorder}
+					includeGroups={option.includeGroups}
 				/>
 			)
 		case 'internal:page':
@@ -87,6 +88,7 @@ interface InternalConnectionIdDropdownProps {
 	disabled: boolean
 	multiple: boolean
 	filterActionsRecorder: boolean | undefined
+	includeGroups: boolean | undefined
 }
 
 const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropdown({
@@ -96,11 +98,21 @@ const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropd
 	disabled,
 	multiple,
 	filterActionsRecorder,
+	includeGroups,
 }: Readonly<InternalConnectionIdDropdownProps>) {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const choices = useComputed(() => {
 		const connectionChoices = []
+
+		// Add groups at the beginning if requested
+		if (includeGroups) {
+			for (const [groupId, group] of connections.groups) {
+				connectionChoices.push({ id: `group:${groupId}`, label: `${group.label} (Group)` })
+			}
+			connectionChoices.push({ id: `group:ungrouped`, label: `Ungrouped (Group)` })
+		}
+
 		if (includeAll) {
 			connectionChoices.push({ id: 'all', label: 'All Connections' })
 		}
@@ -111,7 +123,7 @@ const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropd
 			connectionChoices.push({ id, label: config.label ?? id })
 		}
 		return connectionChoices
-	}, [connections, includeAll, filterActionsRecorder])
+	}, [connections, includeAll, filterActionsRecorder, includeGroups])
 
 	if (multiple) {
 		return <MultiDropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />

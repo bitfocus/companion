@@ -34,6 +34,9 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 	const closeConfigurePanel = useCallback(() => doConfigureConnection(null), [doConfigureConnection])
 
 	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)
+	const connectionGroupEnabled = connectionInfo?.groupId
+		? !!connections.groups.get(connectionInfo.groupId)?.enabled
+		: true
 
 	const moduleInfo = connectionInfo && modules.modules.get(connectionInfo.instance_type)
 
@@ -51,6 +54,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 		<ConnectionEditPanelInner
 			connectionId={connectionId}
 			connectionInfo={connectionInfo}
+			connectionGroupEnabled={connectionGroupEnabled}
 			moduleInfo={moduleInfo}
 			closeConfigurePanel={closeConfigurePanel}
 		/>
@@ -60,6 +64,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 interface ConnectionEditPanelInnerProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig
+	connectionGroupEnabled: boolean
 	moduleInfo: ClientModuleInfo | undefined
 	closeConfigurePanel: () => void
 }
@@ -67,13 +72,14 @@ interface ConnectionEditPanelInnerProps {
 const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	connectionId,
 	connectionInfo,
+	connectionGroupEnabled,
 	moduleInfo,
 	closeConfigurePanel,
 }: ConnectionEditPanelInnerProps) {
 	const { socket, modules } = useContext(RootAppStoreContext)
 
 	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, connectionInfo.moduleVersionId)
-	const connectionShouldBeRunning = connectionInfo.enabled && connectionVersionExists
+	const connectionShouldBeRunning = connectionInfo.enabled && connectionVersionExists && connectionGroupEnabled
 
 	const isModuleOnStore = !!modules.storeList.get(connectionInfo.instance_type)
 	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true)

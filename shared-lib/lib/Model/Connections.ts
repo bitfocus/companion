@@ -8,6 +8,7 @@ export interface ConnectionConfig {
 	sortOrder: number
 	moduleVersionId: string | null
 	updatePolicy: ConnectionUpdatePolicy // TODO - upgrade script
+	groupId?: string
 }
 
 export interface ClientConnectionConfig {
@@ -18,6 +19,14 @@ export interface ClientConnectionConfig {
 	enabled: boolean
 	sortOrder: number
 	hasRecordActionsHandler: boolean
+	groupId: string | null
+}
+
+export interface ConnectionGroup {
+	id: string
+	label: string
+	sortOrder: number
+	enabled: boolean
 }
 
 export enum ConnectionUpdatePolicy {
@@ -44,4 +53,18 @@ export interface ClientConnectionsUpdateUpdateOp {
 
 	// patch: JsonPatchOperation[]
 	info: ClientConnectionConfig
+}
+
+export type ConnectionGroupsUpdate = ConnectionGroupsUpdateUpdateOp | ConnectionGroupsUpdateRemoveOp
+
+export interface ConnectionGroupsUpdateRemoveOp {
+	type: 'remove'
+	id: string
+}
+
+export interface ConnectionGroupsUpdateUpdateOp {
+	type: 'update'
+	id: string
+
+	info: ConnectionGroup
 }
