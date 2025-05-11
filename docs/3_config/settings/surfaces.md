@@ -24,8 +24,8 @@ More details on supported surfaces are available in the chapter on [Surfaces](#7
 - **Enable connected Contour Shuttle**
   Whether to enable support for connecting to Contour Shuttle devices.
 
-- **Enable connected Blackmagic Atem Micro Panel**
-  Whether to enable support for connecting to Blackmagic Atem Micro Panel devices.
+- **Enable connected Blackmagic Atem Micro Panel and Resolve Replay Editor**
+  Whether to enable support for connecting to Blackmagic Atem Micro Panel and Resolve Replay Editor devices.
   When this is enabled you must not have the Atem software open, as it will conflict.
 
 - **Enable connected VEC Footpedal**

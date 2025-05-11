@@ -47,7 +47,7 @@
 		"webpack-cli": "^6.0.1"
 	},
 	"dependencies": {
-		"@blackmagic-controller/node": "^0.1.1",
+		"@blackmagic-controller/node": "^0.2.0",
 		"@companion-app/shared": "*",
 		"@companion-module/base": "^1.12.0",
 		"@elgato-stream-deck/node": "^7.1.2",

@@ -48,3 +48,4 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="05f3", ATTRS{idProduct}=="00ff", MODE:="666
 
 # blackmagic panels
 KERNEL=="hidraw*", ATTRS{idVendor}=="1edb", ATTRS{idProduct}=="bef0", MODE:="660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="1edb", ATTRS{idProduct}=="da11", MODE:="660", TAG+="uaccess"
