@@ -5,6 +5,9 @@ on:
   # Run every week
   schedule:
     - cron: '43 5 * * 0'
+  push:
+    tags:
+      - '**'
 
 jobs:
   build:
