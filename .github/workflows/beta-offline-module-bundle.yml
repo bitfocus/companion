@@ -36,6 +36,7 @@ jobs:
 
           yarn --immutable
 
+          yarn build:writefile
           yarn build:ts
         env:
           CI: 1
