@@ -242,6 +242,7 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           USE_HARD_LINKS: false
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Determine files to upload
         id: filenames
@@ -323,6 +324,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           USE_HARD_LINKS: false
           SKIP_LAUNCH_CHECK: true
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Determine files to upload
         id: filenames
