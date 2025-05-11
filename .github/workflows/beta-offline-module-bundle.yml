@@ -1,0 +1,72 @@
+name: Beta offline module bundle
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  # Run every week
+  schedule:
+    - cron: '43 5 * * 0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+
+      - name: Cache build sources
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: linux-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+
+      - name: prepare source
+        run: |
+          corepack enable
+
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
+
+          yarn build:ts
+        env:
+          CI: 1
+
+      - name: Package modules
+        id: filenames
+        shell: bash
+        run: |
+          VERSION=$(cat ./dist/BUILD)
+
+          yarn zx tools/prepare_offline_module_bundle.mts
+
+          echo "sourcename=offline-bundle.tar.gz" >> $GITHUB_OUTPUT
+          echo "targetname=companion-offline-module-bundle-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Upload build
+        id: upload
+        uses: bitfocus/actions/upload-and-notify@main
+        with:
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: main
+          dev-branch: develop
+
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion-offline-module-bundle
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
+
+          api-product: companion-offline-module-bundle
+          api-target: 'generic'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}

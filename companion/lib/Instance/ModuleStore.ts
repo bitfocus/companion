@@ -9,17 +9,16 @@ import type {
 import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import createClient from 'openapi-fetch'
+import createClient, { Client } from 'openapi-fetch'
 import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import { Complete } from '@companion-module/base/dist/util.js'
 import EventEmitter from 'events'
 import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { AppInfo } from '../Registry.js'
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
 	: 'https://developer.bitfocus.io/api'
-
-const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({ baseUrl })
 
 const ModuleStoreListRoom = 'module-store:list'
 const ModuleStoreInfoRoom = (moduleId: string) => `module-store:info:${moduleId}`
@@ -40,6 +39,8 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 	readonly #cacheStore: DataStoreTableView<DataCacheDefaultTable>
 	readonly #cacheTable: DataStoreTableView<Record<string, ModuleStoreModuleInfoStore>>
 
+	readonly #openApiClient: Client<ModuleStoreOpenApiPaths>
+
 	/**
 	 * The core interface client
 	 */
@@ -51,7 +52,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 	#infoStore = new Map<string, ModuleStoreModuleInfoStore>()
 
-	constructor(io: UIHandler, cacheStore: DataCache) {
+	constructor(appInfo: AppInfo, io: UIHandler, cacheStore: DataCache) {
 		super()
 
 		this.#io = io
@@ -67,6 +68,16 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		} satisfies ModuleStoreListCacheStore)
 
 		this.#infoStore = new Map(Object.entries(this.#cacheTable.all()))
+
+		this.#openApiClient = createClient<ModuleStoreOpenApiPaths>({
+			baseUrl,
+			headers: {
+				'User-Agent': `Companion ${appInfo.appVersion}`,
+				'Companion-App-Build': appInfo.appBuild,
+				'Companion-App-Version': appInfo.appVersion,
+				'Companion-Machine-Id': appInfo.machineId,
+			},
+		})
 
 		// If this is the first time we're running, refresh the store data now
 		if (this.#listStore.lastUpdated === 0) {
@@ -175,7 +186,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 			.then(async () => {
 				this.#io.emitToAll('modules-store:list:progress', 0)
 
-				const { data, error } = await ModuleOpenApiClient.GET('/v1/companion/modules/{moduleType}', {
+				const { data, error } = await this.#openApiClient.GET('/v1/companion/modules/{moduleType}', {
 					params: {
 						path: {
 							moduleType: 'connection',
@@ -254,7 +265,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		try {
 			this.#io.emitToAll('modules-store:info:progress', moduleId, 0)
 
-			const { data, error, response } = await ModuleOpenApiClient.GET(
+			const { data, error, response } = await this.#openApiClient.GET(
 				'/v1/companion/modules/{moduleType}/{moduleName}',
 				{
 					params: {
