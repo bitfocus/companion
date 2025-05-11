@@ -117,7 +117,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.modules,
 			this.#configStore
 		)
-		this.modulesStore = new ModuleStoreService(io, cache)
+		this.modulesStore = new ModuleStoreService(appInfo, io, cache)
 		this.userModulesManager = new InstanceInstalledModulesManager(
 			appInfo,
 			db,
