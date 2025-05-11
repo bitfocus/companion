@@ -47,7 +47,7 @@ jobs:
         run: |
           VERSION=$(cat ./BUILD)
 
-          yarn zx tools/prepare_offline_module_bundle.mts
+          yarn tsx tools/prepare_offline_module_bundle.mts
 
           echo "sourcename=offline-bundle.tar.gz" >> $GITHUB_OUTPUT
           echo "targetname=companion-offline-module-bundle-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
