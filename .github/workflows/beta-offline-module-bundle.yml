@@ -1,4 +1,4 @@
-name: Beta offline module bundle
+name: Package offline module bundle
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
