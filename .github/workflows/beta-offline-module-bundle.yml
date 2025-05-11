@@ -45,7 +45,7 @@ jobs:
         id: filenames
         shell: bash
         run: |
-          VERSION=$(cat ./dist/BUILD)
+          VERSION=$(cat ./BUILD)
 
           yarn zx tools/prepare_offline_module_bundle.mts
 
