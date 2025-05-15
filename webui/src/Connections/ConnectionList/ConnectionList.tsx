@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButton, CButtonGroup, CPopover } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
@@ -10,16 +10,16 @@ import { NonIdealState } from '../../Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
 import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
-import { ConnectionGroupRow } from './ConnectionGroupRow.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
 import { DragState } from '../../util.js'
 import { useConnectionListApi } from './ConnectionListApi.js'
 import { ConnectionsInGroup } from './ConnectionsInGroup.js'
-import { useConnectionListDragging } from './ConnectionListDropZone.js'
+import { useConnectionListDragging, useGroupListDragging } from './ConnectionListDropZone.js'
 import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { ObservableMap } from 'mobx'
+import { ConnectionGroups } from './ConnectionGroups.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -66,11 +66,15 @@ export const ConnectionsList = observer(function ConnectionsList({
 		error: true,
 	})
 
-	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections, connectionStatuses)
+	const { groupedConnections, ungroupedConnections, groupTree } = getGroupedConnections(connections, connectionStatuses)
 
 	const connectionListApi = useConnectionListApi(confirmModalRef)
 
+	// Setup connection drag and drop
 	const { isDragging } = useConnectionListDragging(null)
+
+	// Setup group drag and drop for root level
+	const { isOver: isGroupOver, canDrop: canDropGroup, drop: dropGroupToRoot } = useGroupListDragging(null)
 
 	return (
 		<div>
@@ -87,12 +91,15 @@ export const ConnectionsList = observer(function ConnectionsList({
 			<ConnectionVariablesModal ref={variablesModalRef} />
 
 			<div className="connection-group-actions mb-2">
-				<CButton color="primary" size="sm" onClick={connectionListApi.addNewGroup}>
+				<CButton color="primary" size="sm" onClick={() => connectionListApi.addNewGroup('New Group')}>
 					<FontAwesomeIcon icon={faLayerGroup} /> Add Group
 				</CButton>
 			</div>
 
-			<table className="table-tight table-responsive-sm">
+			<table
+				ref={dropGroupToRoot}
+				className={`table-tight table-responsive-sm ${isGroupOver && canDropGroup ? 'group-drop-root-target' : ''}`}
+			>
 				<thead>
 					<tr>
 						<th className="fit">&nbsp;</th>
@@ -109,42 +116,23 @@ export const ConnectionsList = observer(function ConnectionsList({
 					</tr>
 				</thead>
 				<tbody>
-					{/* Render grouped connections */}
-					{Array.from(connections.groups.entries())
-						.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-						.map(([groupId, group], index) => {
-							const isCollapsed = collapseHelper.isPanelCollapsed(null, groupId)
-
-							const connectionsInGroup = groupedConnections.get(groupId) || []
-
-							return (
-								<React.Fragment key={groupId}>
-									<ConnectionGroupRow
-										group={group}
-										toggleExpanded={toggleGroupExpanded}
-										connectionListApi={connectionListApi}
-										isCollapsed={isCollapsed}
-										index={index}
-									/>
-
-									{!isCollapsed && (
-										<ConnectionsInGroup
-											doConfigureConnection={doConfigureConnection}
-											selectedConnectionId={selectedConnectionId}
-											connections={connectionsInGroup}
-											groupId={groupId}
-											visibleConnections={visibleConnections}
-											showConnectionVariables={showConnectionVariables}
-											deleteModalRef={confirmModalRef}
-											showNoConnectionsMessage
-										/>
-									)}
-								</React.Fragment>
-							)
-						})}
+					{/* Render root level groups and their nested content */}
+					<ConnectionGroups
+						parentId={null}
+						groupTree={groupTree}
+						groups={connections.groups}
+						connectionListApi={connectionListApi}
+						collapseHelper={collapseHelper}
+						toggleGroupExpanded={toggleGroupExpanded}
+						groupedConnections={groupedConnections}
+						doConfigureConnection={doConfigureConnection}
+						selectedConnectionId={selectedConnectionId}
+						visibleConnections={visibleConnections}
+						showConnectionVariables={showConnectionVariables}
+						deleteModalRef={confirmModalRef}
+					/>
 
 					{/* Render ungrouped connections */}
-
 					{(isDragging || ungroupedConnections.length > 0) && connections.groups.size > 0 && (
 						<tr className="collapsible-group-header">
 							<td colSpan={6}>
@@ -205,26 +193,60 @@ export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 	id: string
 	status: ConnectionStatusEntry | undefined
 }
+
+interface GroupedConnectionsData {
+	groupedConnections: Map<string, ClientConnectionConfigWithId[]>
+	ungroupedConnections: ClientConnectionConfigWithId[]
+	groupTree: Map<string | null, string[]>
+}
+
 function getGroupedConnections(
 	connections: ConnectionsStore,
 	connectionStatuses: ObservableMap<string, ConnectionStatusEntry>
-) {
+): GroupedConnectionsData {
 	const validGroupIds = new Set(connections.groups.keys())
 	const groupedConnections = new Map<string, ClientConnectionConfigWithId[]>()
 	const ungroupedConnections: ClientConnectionConfigWithId[] = []
+
+	// Build group hierarchy tree (parent -> children)
+	const groupTree = new Map<string | null, string[]>()
+	groupTree.set(null, []) // Root level groups
+
+	// Initialize empty arrays for all groups
+	for (const groupId of validGroupIds) {
+		groupedConnections.set(groupId, [])
+		groupTree.set(groupId, [])
+	}
+
+	// Add groups to their parent's children list
+	for (const [groupId, group] of connections.groups) {
+		const parentId = group.parentId || null
+		if (!groupTree.has(parentId)) {
+			groupTree.set(parentId, [])
+		}
+		groupTree.get(parentId)!.push(groupId)
+	}
+
+	// Sort children of each parent by sortOrder
+	for (const [parentId, children] of groupTree.entries()) {
+		children.sort((a, b) => {
+			const groupA = connections.groups.get(a)!
+			const groupB = connections.groups.get(b)!
+			return groupA.sortOrder - groupB.sortOrder
+		})
+	}
+
+	// Assign connections to their groups
 	for (const [connectionId, connection] of connections.connections) {
 		const status = connectionStatuses.get(connectionId)
 		if (connection.groupId && validGroupIds.has(connection.groupId)) {
-			if (!groupedConnections.has(connection.groupId)) {
-				groupedConnections.set(connection.groupId, [])
-			}
 			groupedConnections.get(connection.groupId)!.push({ ...connection, id: connectionId, status })
 		} else {
 			ungroupedConnections.push({ ...connection, id: connectionId, status })
 		}
 	}
 
-	// sort All connections by sortOrder
+	// Sort connections by sortOrder within each group
 	ungroupedConnections.sort((a, b) => a.sortOrder - b.sortOrder)
 	for (const connections of groupedConnections.values()) {
 		connections.sort((a, b) => a.sortOrder - b.sortOrder)
@@ -233,5 +255,6 @@ function getGroupedConnections(
 	return {
 		groupedConnections,
 		ungroupedConnections,
+		groupTree,
 	}
 }

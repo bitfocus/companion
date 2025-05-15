@@ -37,3 +37,36 @@ export function useConnectionListDragging(groupId: string | null, dropIndex: num
 		drop,
 	}
 }
+
+// For handling group drag and drop, including parent-child relationships
+export function useGroupListDragging(groupId: string | null) {
+	const { socket } = useContext(RootAppStoreContext)
+
+	const [{ isOver, canDrop }, drop] = useDrop<
+		{ groupId: string; parentId: string | null },
+		unknown,
+		{ isOver: boolean; canDrop: boolean }
+	>({
+		accept: 'connection-group',
+		collect: (monitor) => ({
+			isOver: monitor.isOver(),
+			canDrop: monitor.canDrop(),
+		}),
+		drop(item, _monitor) {
+			// If this is the root area (groupId is null), make the dropped group top-level
+			if (groupId === null && item.parentId !== null) {
+				socket.emitPromise('connection-groups:reorder', [item.groupId, null, -1]).catch((e) => {
+					console.error('Failed to set group parent', e)
+				})
+				return { parentChanged: true }
+			}
+			return {} // Always return an object
+		},
+	})
+
+	return {
+		isOver,
+		canDrop,
+		drop,
+	}
+}

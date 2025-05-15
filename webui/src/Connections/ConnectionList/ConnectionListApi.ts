@@ -3,9 +3,7 @@ import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { GroupApi } from '../../Components/GroupingTable/CollapsibleGroupRow.js'
 
-export interface ConnectionListApi extends GroupApi {
-	// setGroupEnabled: (groupId: string, enabled: boolean) => void
-}
+export interface ConnectionListApi extends GroupApi {}
 
 export function useConnectionListApi(confirmModalRef: React.RefObject<GenericConfirmModalRef>): ConnectionListApi {
 	const { socket } = useContext(RootAppStoreContext)
@@ -13,8 +11,8 @@ export function useConnectionListApi(confirmModalRef: React.RefObject<GenericCon
 	return useMemo(
 		() =>
 			({
-				addNewGroup: () => {
-					socket.emitPromise('connection-groups:add', ['New Group']).catch((e) => {
+				addNewGroup: (groupName = 'New Group') => {
+					socket.emitPromise('connection-groups:add', [groupName]).catch((e) => {
 						console.error('Failed to add group', e)
 					})
 				},
@@ -38,8 +36,8 @@ export function useConnectionListApi(confirmModalRef: React.RefObject<GenericCon
 					)
 				},
 
-				reorderGroup: (groupId: string, dropIndex: number) => {
-					socket.emitPromise('connection-groups:reorder', [groupId, dropIndex]).catch((e) => {
+				moveGroup: (groupId: string, parentId: string | null, dropIndex: number) => {
+					socket.emitPromise('connection-groups:reorder', [groupId, parentId, dropIndex]).catch((e) => {
 						console.error('Failed to reorder group', e)
 					})
 				},

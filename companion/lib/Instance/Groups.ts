@@ -21,6 +21,14 @@ export class InstanceGroups {
 		this.#configStore = configStore
 
 		this.#data = this.#dbTable.all()
+
+		// Initialize parentId field for any existing groups that don't have it
+		for (const groupId in this.#data) {
+			if (!('parentId' in this.#data[groupId])) {
+				this.#data[groupId].parentId = null
+				this.#dbTable.set(groupId, this.#data[groupId])
+			}
+		}
 	}
 
 	/**
@@ -51,6 +59,45 @@ export class InstanceGroups {
 	}
 
 	/**
+	 * Check if setting parentId would create a circular reference
+	 * @param groupId The group that would be moved
+	 * @param newParentId The proposed new parent ID
+	 * @returns true if a circular reference would be created, false otherwise
+	 */
+	wouldCreateCircularReference(groupId: string, newParentId: string | null): boolean {
+		if (newParentId === null) return false // Null parent can't create a circular ref
+		if (groupId === newParentId) return true // Direct self-reference
+
+		// Check if any of newParentId's ancestors is the groupId
+		let currentId: string | null = newParentId
+		const visited = new Set<string>()
+
+		while (currentId !== null) {
+			if (visited.has(currentId)) {
+				// Found an existing circular reference in the ancestry
+				return true
+			}
+
+			visited.add(currentId)
+
+			if (currentId === groupId) {
+				// Found our original group in the ancestry - would create a cycle
+				return true
+			}
+
+			const group = this.#data[currentId]
+			if (!group) {
+				// Invalid parent reference, can't continue checking
+				return false
+			}
+
+			currentId = group.parentId
+		}
+
+		return false
+	}
+
+	/**
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
@@ -70,6 +117,7 @@ export class InstanceGroups {
 				id: newId,
 				label: groupName,
 				sortOrder: Math.max(0, ...Object.values(this.#data).map((group) => group.sortOrder)) + 1,
+				parentId: null,
 			}
 
 			this.#data[newId] = newGroup
@@ -100,6 +148,21 @@ export class InstanceGroups {
 				},
 			])
 
+			// Update any groups that had this as parent
+			const childGroups = Object.entries(this.#data).filter(([, group]) => group.parentId === groupId)
+			for (const [childId, childGroup] of childGroups) {
+				childGroup.parentId = null
+				this.#dbTable.set(childId, childGroup)
+
+				this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
+					{
+						type: 'update',
+						id: childId,
+						info: childGroup,
+					},
+				])
+			}
+
 			// Ensure any connections are moved back to the default group
 			this.removeUnknownGroupReferences()
 		})
@@ -120,16 +183,41 @@ export class InstanceGroups {
 			])
 		})
 
-		client.onPromise('connection-groups:reorder', (groupId: string, dropIndex: number) => {
+		client.onPromise('connection-groups:reorder', (groupId: string, parentId: string | null, dropIndex: number) => {
 			// If no group, nothing to do
 			const thisGroup = this.#data[groupId]
-			if (!thisGroup) return
+			if (!thisGroup) throw new Error(`Group ${groupId} not found`)
 
 			const changes: ConnectionGroupsUpdate[] = []
+			const originalParentId = thisGroup.parentId
 
-			// Get all groups sorted by their current sortOrder
+			// Handle parent change if needed
+			if (parentId !== originalParentId) {
+				// Check if the parent exists (unless it's null)
+				if (parentId !== null && !this.#data[parentId]) {
+					throw new Error(`Parent group ${parentId} not found`)
+				}
+
+				// Check for circular references
+				if (this.wouldCreateCircularReference(groupId, parentId)) {
+					throw new Error('Cannot set parent: would create a circular reference')
+				}
+
+				// Update the parent
+				thisGroup.parentId = parentId
+				this.#dbTable.set(groupId, thisGroup)
+
+				// Add to changes
+				changes.push({
+					type: 'update',
+					id: groupId,
+					info: thisGroup,
+				})
+			}
+
+			// Get all groups with the same NEW parent (excluding this group) sorted by their current sortOrder
 			const sortedGroups = Object.entries(this.#data)
-				.filter(([id]) => id !== groupId)
+				.filter(([id, group]) => id !== groupId && group.parentId === parentId)
 				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
 
 			// Insert the group being moved at the drop index
@@ -144,11 +232,21 @@ export class InstanceGroups {
 				if (group.sortOrder !== index) {
 					group.sortOrder = index
 					this.#dbTable.set(id, group)
-					changes.push({
-						type: 'update',
-						id,
-						info: group,
-					})
+
+					// Only add to changes if not already included
+					if (id !== groupId || !changes.some((change) => change.id === id)) {
+						changes.push({
+							type: 'update',
+							id,
+							info: group,
+						})
+					} else {
+						// Update the existing entry in changes
+						const existingChange = changes.find((change) => change.id === id)
+						if (existingChange && existingChange.type === 'update') {
+							existingChange.info = group
+						}
+					}
 				}
 			})
 
