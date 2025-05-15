@@ -445,7 +445,7 @@ export class ModuleHost {
 							child.isReady = false
 							child.handler?.cleanup()
 
-							this.#logger.debug(`Connection "${config.label}" started`)
+							this.#logger.info(`Connection "${config.label}" started process ${monitor.child?.pid}`)
 							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection started **')
 						})
 						monitor.on('stop', () => {
