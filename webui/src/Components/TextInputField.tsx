@@ -28,6 +28,8 @@ interface TextInputFieldProps {
 	useVariables?: boolean
 	localVariables?: DropdownChoiceInt[]
 	isExpression?: boolean
+	autoFocus?: boolean
+	onBlur?: () => void
 }
 
 export const TextInputField = observer(function TextInputField({
@@ -44,6 +46,8 @@ export const TextInputField = observer(function TextInputField({
 	useVariables,
 	localVariables,
 	isExpression,
+	autoFocus,
+	onBlur,
 }: TextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
@@ -115,7 +119,10 @@ export const TextInputField = observer(function TextInputField({
 	const currentValueRef = useRef<string>()
 	currentValueRef.current = value ?? ''
 	const focusStoreValue = useCallback(() => setTmpValue(currentValueRef.current ?? ''), [])
-	const blurClearValue = useCallback(() => setTmpValue(null), [])
+	const blurClearValue = useCallback(() => {
+		setTmpValue(null)
+		onBlur?.()
+	}, [])
 
 	const showValue = (tmpValue ?? value ?? '').toString()
 
@@ -141,6 +148,7 @@ export const TextInputField = observer(function TextInputField({
 						title={tooltip}
 						disabled={disabled}
 						multiline={isExpression}
+						autoFocus={autoFocus}
 					/>
 				</>
 			) : (
@@ -155,6 +163,7 @@ export const TextInputField = observer(function TextInputField({
 					onFocus={focusStoreValue}
 					onBlur={blurClearValue}
 					placeholder={placeholder}
+					autoFocus={autoFocus}
 				/>
 			)}
 		</>
@@ -202,6 +211,7 @@ interface VariablesSelectProps {
 	title: string | undefined
 	disabled: boolean | undefined
 	multiline: boolean | undefined
+	autoFocus: boolean | undefined
 }
 
 const VariablesSelect = observer(function VariablesSelect({
@@ -215,6 +225,7 @@ const VariablesSelect = observer(function VariablesSelect({
 	title,
 	disabled,
 	multiline,
+	autoFocus,
 }: Readonly<VariablesSelectProps>) {
 	const { variablesStore } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
@@ -317,6 +328,7 @@ const VariablesSelect = observer(function VariablesSelect({
 				backspaceRemovesValue={false}
 				filterOption={createFilter({ ignoreAccents: false })}
 				openMenuOnArrows={false}
+				autoFocus={autoFocus}
 			/>
 		</VariablesSelectContext.Provider>
 	)

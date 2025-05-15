@@ -28,6 +28,7 @@ import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscr
 import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
 import { ViewControlStore } from './Stores/ViewControlStore.js'
 import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
+import { useConnectionGroupsConfigSubscription } from './Hooks/useConnectionGroupsConfigSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -81,6 +82,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
+	const connectionGroupsReady = useConnectionGroupsConfigSubscription(socket, rootStore.connections)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfigReady = useUserConfigSubscription(socket, rootStore.userConfig)
@@ -114,6 +116,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		moduleInfoReady,
 		moduleStoreReady,
 		connectionsReady,
+		connectionGroupsReady,
 		variablesReady,
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
