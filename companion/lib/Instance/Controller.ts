@@ -40,7 +40,7 @@ import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
-import { InstanceUiGroups } from './UiGroups.js'
+import { InstanceGroups } from './Groups.js'
 
 const InstancesRoom = 'instances'
 
@@ -61,7 +61,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #io: UIHandler
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
-	readonly #uiGroupsController: InstanceUiGroups
+	readonly #groupsController: InstanceGroups
 
 	readonly #configStore: ConnectionConfigStore
 
@@ -77,8 +77,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly connectionApiRouter = express.Router()
 
-	get groups(): InstanceUiGroups {
-		return this.#uiGroupsController
+	get groups(): InstanceGroups {
+		return this.#groupsController
 	}
 
 	constructor(
@@ -100,7 +100,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController = controls
 
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
-		this.#uiGroupsController = new InstanceUiGroups(io, db, this.#configStore)
+		this.#groupsController = new InstanceGroups(io, db, this.#configStore)
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
@@ -394,7 +394,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		if (deleteGroups) {
-			this.#uiGroupsController.discardAllGroups()
+			this.#groupsController.discardAllGroups()
 		}
 
 		await Promise.all(ps)
@@ -546,7 +546,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.modules.clientConnect(client)
 		this.modulesStore.clientConnect(client)
 		this.userModulesManager.clientConnect(client)
-		this.#uiGroupsController.clientConnect(client)
+		this.#groupsController.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)
