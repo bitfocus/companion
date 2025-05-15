@@ -7,7 +7,7 @@ import { nanoid } from 'nanoid'
 
 const ConnectionGroupRoom = 'connection-groups'
 
-export class InstanceUiGroups {
+export class InstanceGroups {
 	readonly #io: UIHandler
 	readonly #dbTable: DataStoreTableView<Record<string, ConnectionGroup>>
 
