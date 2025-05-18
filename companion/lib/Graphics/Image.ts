@@ -554,7 +554,7 @@ export class Image {
 		//if (fontsize < 9) fontfamily = '7x5'
 		const fontLineHeight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
 		this.context2d.font = `${fontheight}px/${fontLineHeight}px ${DEFAULT_FONTS}`
-		this.context2d.textWrap = false
+		// this.context2d.textWrap = false
 
 		// Measure the line height with a consistent string, to avoid issues with emoji being too tall
 		const lineHeightSample = this.context2d.measureText('A')
