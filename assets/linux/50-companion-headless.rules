@@ -49,3 +49,12 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="05f3", ATTRS{idProduct}=="00ff", MODE:="666
 # blackmagic panels
 KERNEL=="hidraw*", ATTRS{idVendor}=="1edb", ATTRS{idProduct}=="bef0", MODE:="660", GROUP="companion"
 KERNEL=="hidraw*", ATTRS{idVendor}=="1edb", ATTRS{idProduct}=="da11", MODE:="660", GROUP="companion"
+# mirabox streamdock
+KERNEL=="hidraw*", ATTRS{idVendor}=="6602", ATTRS{idProduct}=="1001", MODE:="660", GROUP="companion"
+KERNEL=="hidraw*", ATTRS{idVendor}=="6602", ATTRS{idProduct}=="1005", MODE:="660", GROUP="companion"
+KERNEL=="hidraw*", ATTRS{idVendor}=="6602", ATTRS{idProduct}=="1006", MODE:="660", GROUP="companion"
+KERNEL=="hidraw*", ATTRS{idVendor}=="6602", ATTRS{idProduct}=="1007", MODE:="660", GROUP="companion"
+KERNEL=="hidraw*", ATTRS{idVendor}=="6603", ATTRS{idProduct}=="1001", MODE:="660", GROUP="companion"
+KERNEL=="hidraw*", ATTRS{idVendor}=="6603", ATTRS{idProduct}=="1005", MODE:="660", GROUP="companion"
+KERNEL=="hidraw*", ATTRS{idVendor}=="6603", ATTRS{idProduct}=="1006", MODE:="660", GROUP="companion"
+KERNEL=="hidraw*", ATTRS{idVendor}=="6603", ATTRS{idProduct}=="1007", MODE:="660", GROUP="companion"
