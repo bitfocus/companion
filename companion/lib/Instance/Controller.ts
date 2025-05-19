@@ -40,6 +40,7 @@ import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
+import { translateOptionsIsVisible } from './Wrapper.js'
 
 const InstancesRoom = 'instances'
 
@@ -558,7 +559,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				const fields: any = await instance.requestConfigFields()
 
 				return {
-					fields,
+					fields: translateOptionsIsVisible(fields) as any[],
 					config: instanceConf.config,
 				}
 			} catch (e: any) {

@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
-import { useOptionsAndIsVisible } from '../../Hooks/useOptionsAndIsVisible.js'
+import { useOptionsAndIsVisible, useOptionsAndIsVisibleFns } from '../../Hooks/useOptionsAndIsVisible.js'
 import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -172,9 +172,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	)
 	useEffect(() => form.setFieldValue('updatePolicy', connectionInfo.updatePolicy), [form, connectionInfo.updatePolicy])
 
-	const [configOptions, fieldVisibility] = useOptionsAndIsVisible<ExtendedInputField & { width: number }>(
-		query.data?.fields,
-		form.state.values.config
+	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ExtendedInputField & { width: number }>(
+		query.data?.fields
 	)
 
 	// Future: This checking validity flow is horrible, and should be reworked to be more tanstack-form native
@@ -318,38 +317,48 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 				{connectionShouldBeRunning && query.isSuccess && (
 					<>
 						{configOptions.map((fieldInfo) => (
-							<form.Field
-								key={fieldInfo.id}
-								name={`config.${fieldInfo.id}`}
-								children={(field) => (
-									<CCol
-										className={`fieldtype-${fieldInfo.type}`}
-										sm={fieldInfo.width}
-										style={{ display: fieldVisibility[fieldInfo.id] === false ? 'none' : undefined }}
-									>
-										<ConnectionEditField
-											label={
-												<>
-													{fieldInfo.label}
-													{fieldInfo.tooltip && (
-														<FontAwesomeIcon
-															style={{ marginLeft: '5px' }}
-															icon={faQuestionCircle}
-															title={fieldInfo.tooltip}
-														/>
-													)}
-												</>
-											}
-											definition={fieldInfo}
-											value={field.state.value}
-											// valid={validFields[field.id] ?? false}
-											setValue={field.handleChange}
-											setValid={setValid}
-											connectionId={connectionId}
-										/>
-									</CCol>
+							<form.Subscribe
+								selector={(state) => {
+									const fn = isVisibleFns[fieldInfo.id]
+									if (!fn) return true
+									return !!fn(state.values.config)
+								}}
+							>
+								{(isVisible) => (
+									<form.Field
+										key={fieldInfo.id}
+										name={`config.${fieldInfo.id}`}
+										children={(field) => (
+											<CCol
+												className={`fieldtype-${fieldInfo.type}`}
+												sm={fieldInfo.width}
+												style={{ display: !isVisible ? 'none' : undefined }}
+											>
+												<ConnectionEditField
+													label={
+														<>
+															{fieldInfo.label}
+															{fieldInfo.tooltip && (
+																<FontAwesomeIcon
+																	style={{ marginLeft: '5px' }}
+																	icon={faQuestionCircle}
+																	title={fieldInfo.tooltip}
+																/>
+															)}
+														</>
+													}
+													definition={fieldInfo}
+													value={field.state.value}
+													// valid={validFields[field.id] ?? false}
+													setValue={field.handleChange}
+													setValid={setValid}
+													connectionId={connectionId}
+												/>
+											</CCol>
+										)}
+									/>
 								)}
-							/>
+							</form.Subscribe>
 						))}
 					</>
 				)}

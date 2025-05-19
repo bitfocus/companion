@@ -951,7 +951,7 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 	return true
 }
 
-function translateOptionsIsVisible(
+export function translateOptionsIsVisible(
 	options?: EncodeIsVisible<SomeCompanionActionInputField>[]
 ): (InternalActionInputField | InternalFeedbackInputField)[] {
 	// @companion-module-base exposes these through a mapping that loses the differentiation between types

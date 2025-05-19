@@ -14,8 +14,40 @@ export function useOptionsAndIsVisible<
 	itemOptions: Array<T> | undefined | null,
 	optionValues: CompanionOptionValues | undefined | null
 ): [options: Array<T>, optionVisibility: Record<string, boolean | undefined>] {
+	const [options, isVisibleFns] = useOptionsAndIsVisibleFns(itemOptions)
+
 	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean | undefined>>({})
 
+	useEffect(() => {
+		const visibility: Record<string, boolean> = {}
+
+		if (optionValues) {
+			for (const [id, entry] of Object.entries(isVisibleFns)) {
+				try {
+					if (entry && typeof entry === 'function') {
+						visibility[id] = entry(cloneDeep(toJS(optionValues)))
+					}
+				} catch (e) {
+					console.error('Failed to check visibility', e)
+				}
+			}
+		}
+
+		setOptionVisibility(visibility)
+
+		return () => {
+			setOptionVisibility({})
+		}
+	}, [isVisibleFns, optionValues])
+
+	return [options, optionVisibility]
+}
+
+export function useOptionsAndIsVisibleFns<
+	T extends ExtendedInputField | InternalInputField = ExtendedInputField | InternalInputField,
+>(
+	itemOptions: Array<T> | undefined | null
+): [options: Array<T>, isVisibleFns: Record<string, ((options: CompanionOptionValues) => boolean) | undefined>] {
 	const [options, isVisibleFns] = useMemo(() => {
 		const options = itemOptions ?? []
 		const isVisibleFns: Record<string, (options: CompanionOptionValues) => boolean> = {}
@@ -71,27 +103,5 @@ export function useOptionsAndIsVisible<
 		return [options, isVisibleFns]
 	}, [itemOptions])
 
-	useEffect(() => {
-		const visibility: Record<string, boolean> = {}
-
-		if (optionValues) {
-			for (const [id, entry] of Object.entries(isVisibleFns)) {
-				try {
-					if (entry && typeof entry === 'function') {
-						visibility[id] = entry(cloneDeep(toJS(optionValues)))
-					}
-				} catch (e) {
-					console.error('Failed to check visibility', e)
-				}
-			}
-		}
-
-		setOptionVisibility(visibility)
-
-		return () => {
-			setOptionVisibility({})
-		}
-	}, [isVisibleFns, optionValues])
-
-	return [options, optionVisibility]
+	return [options, isVisibleFns]
 }
