@@ -31,6 +31,7 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig(props: 
 						label="Session Timeout (minutes, 0 for no timeout)"
 						field="admin_timeout"
 						min={0}
+						max={24 * 60}
 					/>
 
 					<UserConfigTextInputRow userConfig={props} label="Password" field="admin_password" />

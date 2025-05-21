@@ -305,8 +305,10 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 		})
 	}
 
+	const cappedTimeout = Math.min(timeoutMinutes, 24 * 60) // cap to 24 hours
+
 	useIdleTimer({
-		timeout: timeoutMinutes * 60 * 1000 - TOAST_DURATION,
+		timeout: cappedTimeout * 60 * 1000 - TOAST_DURATION,
 		onIdle: handleIdle,
 		onActive: handleOnActive,
 		onAction: handleAction,
