@@ -52,9 +52,11 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
 }
 
 // Setup support for HTTP_PROXY before anything might use it
-// HACK: This is temporary and should be removed once https://github.com/nodejs/node/pull/57165 has been backported to node 22
-const envHttpProxyAgent = new EnvHttpProxyAgent()
-setGlobalDispatcher(envHttpProxyAgent)
+if (process.env.NODE_USE_ENV_PROXY) {
+	// HACK: This is temporary and should be removed once https://github.com/nodejs/node/pull/57165 has been backported to node 22
+	const envHttpProxyAgent = new EnvHttpProxyAgent()
+	setGlobalDispatcher(envHttpProxyAgent)
+}
 
 /**
  * The core controller that sets up all the controllers needed
