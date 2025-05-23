@@ -1,4 +1,4 @@
-Many modules allow for using variables in input fields. A select few places support a new concept of expressions too. We hope to make these available in more places over time.
+Many modules allow for using variables in input fields. A select few places support a new concept of expressions too (including button text when in expression mode). We hope to make these available in more places over time.
 
 The key difference is that expressions are capable of a lot more, but are more complex to write.
 
