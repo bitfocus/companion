@@ -13,9 +13,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
-import sanitizeHtml from 'sanitize-html'
 import { DropdownChoiceInt, ControlLocalVariables, InternalActionLocalVariables } from '../LocalVariableDefinitions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { StaticTextFieldText } from './StaticTextField.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -159,17 +159,7 @@ export function OptionsInputField({
 			break
 		}
 		case 'static-text': {
-			control = ''
-			if (option.value && option.value != option.label) {
-				const descriptionHtml = {
-					__html: sanitizeHtml(option.value ?? '', {
-						allowedTags: sanitizeHtml.defaults.allowedTags.concat([]),
-						disallowedTagsMode: 'escape',
-					}),
-				}
-
-				control = <p title={option.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
-			}
+			control = <StaticTextFieldText {...option} />
 
 			if (!!option.label) {
 				control = (
