@@ -57,7 +57,7 @@
 		"@julusian/jpeg-turbo": "^2.2.0",
 		"@julusian/segfault-raub": "^2.3.1",
 		"@loupedeck/node": "^1.2.0",
-		"@napi-rs/canvas": "^0.1.70",
+		"@napi-rs/canvas": "0.1.68",
 		"@sentry/node": "^9.19.0",
 		"archiver": "^7.0.1",
 		"better-sqlite3": "^11.10.0",
