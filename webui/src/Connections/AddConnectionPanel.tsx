@@ -193,23 +193,26 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 					&nbsp;
 				</>
 			)}
-			<div className="grow">{moduleInfo.name}</div>
-			{/* // TODO: align in columns? */}
-			{!!moduleInfo.storeInfo && (
-				<WindowLinkOpen className="float_right" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
-					<FontAwesomeIcon icon={faExternalLink} />
-				</WindowLinkOpen>
-			)}
-			{!!moduleInfo.storeInfo?.githubUrl && (
-				<WindowLinkOpen className="float_right" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
-					<FontAwesomeIcon icon={faGithub} />
-				</WindowLinkOpen>
-			)}
-			{showHelpForVersion?.helpPath && (
-				<div className="float_right" onClick={showHelpClick}>
-					<FontAwesomeIcon icon={faQuestionCircle} />
-				</div>
-			)}
+			<div className="grow" style={{ alignContent: 'center' }}>
+				{moduleInfo.name}
+			</div>
+			<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+				{!!moduleInfo.storeInfo && (
+					<WindowLinkOpen className="m-0" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
+						<FontAwesomeIcon icon={faExternalLink} />
+					</WindowLinkOpen>
+				)}
+				{!!moduleInfo.storeInfo?.githubUrl && (
+					<WindowLinkOpen className="m-0" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
+						<FontAwesomeIcon icon={faGithub} />
+					</WindowLinkOpen>
+				)}
+				{showHelpForVersion?.helpPath && (
+					<div className="m-0" onClick={showHelpClick}>
+						<FontAwesomeIcon icon={faQuestionCircle} />
+					</div>
+				)}
+			</div>
 		</div>
 	)
 }
