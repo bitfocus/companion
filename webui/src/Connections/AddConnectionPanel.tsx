@@ -177,7 +177,7 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 	)
 
 	return (
-		<div>
+		<div className="flex">
 			<CButton color="primary" onClick={addConnectionClick}>
 				Add
 			</CButton>
@@ -193,7 +193,7 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 					&nbsp;
 				</>
 			)}
-			{moduleInfo.name}
+			<div className="grow">{moduleInfo.name}</div>
 			{/* // TODO: align in columns? */}
 			{!!moduleInfo.storeInfo && (
 				<WindowLinkOpen className="float_right" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
