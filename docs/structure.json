@@ -260,7 +260,17 @@
 	},
 	{
 		"label": "Modules",
-		"file": "6_modules.md"
+		"file": "6_modules.md",
+		"children": [
+			{
+				"label": "Module list",
+				"file": "6_modules/list.md"
+			},
+			{
+				"label": "Managing a module",
+				"file": "6_modules/manage.md"
+			}
+		]
 	},
 	{
 		"label": "Surfaces",
