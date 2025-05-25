@@ -190,6 +190,12 @@ If this encounters invalid input, it will return null instead of throwing an err
 
 eg: `jsonstringify({ a: 1 })` will be a string containing `{"a":1}`
 
+**arrayIncludes(arr, val)**
+
+Check if an array includes a value
+
+If this encounters invalid input, it will return false
+
 ##### Time operations
 
 **unixNow()**
