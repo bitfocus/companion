@@ -41,7 +41,17 @@
 		"children": [
 			{
 				"label": "Connections",
-				"file": "3_config/connections.md"
+				"file": "3_config/connections.md",
+				"children": [
+					{
+						"label": "Adding a connection",
+						"file": "3_config/connections/creating.md"
+					},
+					{
+						"label": "Configuring a connection",
+						"file": "3_config/connections/configuring.md"
+					}
+				]
 			},
 			{
 				"label": "Buttons",
