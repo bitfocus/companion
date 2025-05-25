@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import classnames from 'classnames'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
@@ -23,27 +23,41 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 		right: !!props.right,
 	}
 
+	const hasPointerEvents = 'onpointerdown' in window
+
+	const doPress = useCallback(
+		(e: React.UIEvent) => {
+			e.preventDefault()
+			e.stopPropagation()
+
+			props.onClick?.(props.location, true)
+		},
+		[props.onClick]
+	)
+	const doRelease = useCallback(
+		(e: React.UIEvent) => {
+			e.preventDefault()
+			e.stopPropagation()
+
+			props.onClick?.(props.location, false)
+		},
+		[props.onClick]
+	)
+
 	return (
 		<div
 			ref={props.dropRef}
 			className={classnames(classes)}
 			style={props.style}
-			onMouseDown={() => props?.onClick?.(props.location, true)}
-			onMouseUp={() => props?.onClick?.(props.location, false)}
-			onTouchStart={(e) => {
-				e.preventDefault()
-				props?.onClick?.(props.location, true)
-			}}
-			onTouchEnd={(e) => {
-				e.preventDefault()
-				props?.onClick?.(props.location, false)
-			}}
-			onTouchCancel={(e) => {
-				e.preventDefault()
-				e.stopPropagation()
-
-				props?.onClick?.(props.location, false)
-			}}
+			// Prefer the newer pointer events
+			onPointerDown={hasPointerEvents ? doPress : undefined}
+			onPointerUp={hasPointerEvents ? doRelease : undefined}
+			// Setup the older mouse and touch events for compatibility
+			onMouseDown={!hasPointerEvents ? doPress : undefined}
+			onMouseUp={!hasPointerEvents ? doRelease : undefined}
+			onTouchStart={!hasPointerEvents ? doPress : undefined}
+			onTouchEnd={!hasPointerEvents ? doRelease : undefined}
+			onTouchCancel={!hasPointerEvents ? doRelease : undefined}
 			onContextMenu={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
