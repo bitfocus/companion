@@ -49,7 +49,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 		[]
 	)
 
-	const collapseHelper = usePanelCollapseHelper('connection-groups', Array.from(connections.groups.keys()), true)
+	const collapseHelper = usePanelCollapseHelper('connection-groups', connections.allGroupIds, true)
 
 	// Toggle group expansion
 	const toggleGroupExpanded = useCallback(
@@ -66,7 +66,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 		error: true,
 	})
 
-	const { groupedConnections, ungroupedConnections, groupTree } = getGroupedConnections(connections, connectionStatuses)
+	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections, connectionStatuses)
 
 	const connectionListApi = useConnectionListApi(confirmModalRef)
 
@@ -118,9 +118,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 				<tbody>
 					{/* Render root level groups and their nested content */}
 					<ConnectionGroups
-						parentId={null}
-						groupTree={groupTree}
-						groups={connections.groups}
+						groups={connections.rootGroups()}
 						connectionListApi={connectionListApi}
 						collapseHelper={collapseHelper}
 						toggleGroupExpanded={toggleGroupExpanded}
@@ -197,43 +195,19 @@ export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 interface GroupedConnectionsData {
 	groupedConnections: Map<string, ClientConnectionConfigWithId[]>
 	ungroupedConnections: ClientConnectionConfigWithId[]
-	groupTree: Map<string | null, string[]>
 }
 
 function getGroupedConnections(
 	connections: ConnectionsStore,
 	connectionStatuses: ObservableMap<string, ConnectionStatusEntry>
 ): GroupedConnectionsData {
-	const validGroupIds = new Set(connections.groups.keys())
+	const validGroupIds = new Set(connections.allGroupIds)
 	const groupedConnections = new Map<string, ClientConnectionConfigWithId[]>()
 	const ungroupedConnections: ClientConnectionConfigWithId[] = []
-
-	// Build group hierarchy tree (parent -> children)
-	const groupTree = new Map<string | null, string[]>()
-	groupTree.set(null, []) // Root level groups
 
 	// Initialize empty arrays for all groups
 	for (const groupId of validGroupIds) {
 		groupedConnections.set(groupId, [])
-		groupTree.set(groupId, [])
-	}
-
-	// Add groups to their parent's children list
-	for (const [groupId, group] of connections.groups) {
-		const parentId = group.parentId || null
-		if (!groupTree.has(parentId)) {
-			groupTree.set(parentId, [])
-		}
-		groupTree.get(parentId)!.push(groupId)
-	}
-
-	// Sort children of each parent by sortOrder
-	for (const [parentId, children] of groupTree.entries()) {
-		children.sort((a, b) => {
-			const groupA = connections.groups.get(a)!
-			const groupB = connections.groups.get(b)!
-			return groupA.sortOrder - groupB.sortOrder
-		})
 	}
 
 	// Assign connections to their groups
@@ -255,6 +229,5 @@ function getGroupedConnections(
 	return {
 		groupedConnections,
 		ungroupedConnections,
-		groupTree,
 	}
 }

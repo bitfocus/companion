@@ -5,16 +5,14 @@ import { ConnectionsInGroup } from './ConnectionsInGroup.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 import { TableVisibilityHelper } from '../../Components/TableVisibility.js'
 import { ClientConnectionConfigWithId, VisibleConnectionsState } from './ConnectionList.js'
-import { CollapseHelper } from '../../Helpers/CollapseHelper.js'
+import { PanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import { ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionListApi } from './ConnectionListApi.js'
 
 interface ConnectionGroupsProps {
-	parentId: string | null
-	groupTree: Map<string | null, string[]>
-	groups: Map<string, ConnectionGroup>
+	groups: ConnectionGroup[]
 	connectionListApi: ConnectionListApi
-	collapseHelper: CollapseHelper
+	collapseHelper: PanelCollapseHelper
 	toggleGroupExpanded: (groupId: string) => void
 	groupedConnections: Map<string, ClientConnectionConfigWithId[]>
 	doConfigureConnection: (connectionId: string | null) => void
@@ -26,8 +24,6 @@ interface ConnectionGroupsProps {
 }
 
 export const ConnectionGroups = observer(function ConnectionGroups({
-	parentId,
-	groupTree,
 	groups,
 	connectionListApi,
 	collapseHelper,
@@ -40,22 +36,16 @@ export const ConnectionGroups = observer(function ConnectionGroups({
 	deleteModalRef,
 	nestingLevel = 0,
 }: ConnectionGroupsProps) {
-	// Get child groups of current parent
-	const childGroupIds = groupTree.get(parentId) || []
-
-	if (childGroupIds.length === 0) return null
+	if (groups.length === 0) return null
 
 	return (
 		<>
-			{childGroupIds.map((groupId, index) => {
-				const group = groups.get(groupId)
-				if (!group) return null
-
-				const isCollapsed = collapseHelper.isPanelCollapsed(null, groupId)
-				const connectionsInGroup = groupedConnections.get(groupId) || []
+			{groups.map((group, index) => {
+				const isCollapsed = collapseHelper.isPanelCollapsed(null, group.id)
+				const connectionsInGroup = groupedConnections.get(group.id) || []
 
 				return (
-					<React.Fragment key={groupId}>
+					<React.Fragment key={group.id}>
 						<ConnectionGroupRow
 							group={group}
 							toggleExpanded={toggleGroupExpanded}
@@ -71,7 +61,7 @@ export const ConnectionGroups = observer(function ConnectionGroups({
 									doConfigureConnection={doConfigureConnection}
 									selectedConnectionId={selectedConnectionId}
 									connections={connectionsInGroup}
-									groupId={groupId}
+									groupId={group.id}
 									visibleConnections={visibleConnections}
 									showConnectionVariables={showConnectionVariables}
 									deleteModalRef={deleteModalRef}
@@ -81,9 +71,7 @@ export const ConnectionGroups = observer(function ConnectionGroups({
 
 								{/* Render nested groups */}
 								<ConnectionGroups
-									parentId={groupId}
-									groupTree={groupTree}
-									groups={groups}
+									groups={group.children || []}
 									connectionListApi={connectionListApi}
 									collapseHelper={collapseHelper}
 									toggleGroupExpanded={toggleGroupExpanded}

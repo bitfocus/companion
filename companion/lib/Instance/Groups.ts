@@ -13,22 +13,15 @@ export class InstanceGroups {
 
 	readonly #configStore: ConnectionConfigStore
 
-	#data: Record<string, ConnectionGroup>
+	#data: Map<string, ConnectionGroup>
 
 	constructor(io: UIHandler, db: DataDatabase, configStore: ConnectionConfigStore) {
 		this.#io = io
 		this.#dbTable = db.getTableView('connection_groups')
 		this.#configStore = configStore
 
-		this.#data = this.#dbTable.all()
-
-		// Initialize parentId field for any existing groups that don't have it
-		for (const groupId in this.#data) {
-			if (!('parentId' in this.#data[groupId])) {
-				this.#data[groupId].parentId = null
-				this.#dbTable.set(groupId, this.#data[groupId])
-			}
-		}
+		// Note: Storing in the database like this is not optimal, but it is much simpler
+		this.#data = new Map(Object.entries(this.#dbTable.all()))
 	}
 
 	/**
@@ -38,13 +31,13 @@ export class InstanceGroups {
 		this.#dbTable.clear()
 
 		const changes: ConnectionGroupsUpdate[] = []
-		for (const groupId of Object.keys(this.#data)) {
+		for (const groupId of this.#data.keys()) {
 			changes.push({
 				type: 'remove',
 				id: groupId,
 			})
 		}
-		this.#data = {}
+		this.#data.clear()
 
 		this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', changes)
 
@@ -85,7 +78,7 @@ export class InstanceGroups {
 				return true
 			}
 
-			const group = this.#data[currentId]
+			const group = this.#data.get(currentId)
 			if (!group) {
 				// Invalid parent reference, can't continue checking
 				return false
@@ -104,7 +97,7 @@ export class InstanceGroups {
 		client.onPromise('connection-groups:subscribe', () => {
 			client.join(ConnectionGroupRoom)
 
-			return this.#data
+			return Object.fromEntries(this.#data.entries())
 		})
 
 		client.onPromise('connection-groups:unsubscribe', () => {
@@ -117,17 +110,21 @@ export class InstanceGroups {
 				id: newId,
 				label: groupName,
 				sortOrder: Math.max(0, ...Object.values(this.#data).map((group) => group.sortOrder)) + 1,
-				parentId: null,
+				// parentId: null,
+				children: [],
 			}
 
-			this.#data[newId] = newGroup
+			this.#data.set(newId, newGroup)
 			this.#dbTable.set(newId, newGroup)
 
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
 				{
 					type: 'update',
 					id: newId,
-					info: newGroup,
+					info: {
+						...newGroup,
+						children: [], // Group can't have children at creation time
+					},
 				},
 			])
 
@@ -135,30 +132,60 @@ export class InstanceGroups {
 		})
 
 		client.onPromise('connection-groups:remove', (groupId: string) => {
-			// If no group, nothing to do
-			if (!this.#data[groupId]) return
+			const matchedGroup = this.#findGroupAndParent(groupId)
+			if (!matchedGroup) return
 
-			delete this.#data[groupId]
-			this.#dbTable.delete(groupId)
+			if (!matchedGroup[1]) {
+				// This was a root level group, so we can remove it directly
+				this.#data.delete(groupId)
+				this.#dbTable.delete(groupId)
 
-			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
-				{
-					type: 'remove',
-					id: groupId,
-				},
-			])
+				// Move all the children to the root level
+				const group = matchedGroup[2]
+				for (const child of group.children) {
+					this.#data.set(child.id, child)
+					this.#dbTable.set(child.id, child)
+				}
 
-			// Update any groups that had this as parent
-			const childGroups = Object.entries(this.#data).filter(([, group]) => group.parentId === groupId)
-			for (const [childId, childGroup] of childGroups) {
-				childGroup.parentId = null
-				this.#dbTable.set(childId, childGroup)
+				// TODO - update sortOrder of the root groups
+
+				// Inform the ui of the shuffle
+				this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
+					{
+						type: 'remove',
+						id: groupId,
+					},
+					...group.children.map(
+						(child) =>
+							({
+								type: 'update',
+								id: child.id,
+								info: child,
+							}) satisfies ConnectionGroupsUpdate
+					),
+				])
+			} else {
+				// The group exists, depeer in the hierarchy
+				const [rootGroup, parentGroup, group] = matchedGroup
+
+				const index = parentGroup.children.findIndex((child) => child.id === group.id)
+				if (index === -1) {
+					throw new Error(`Group ${groupId} not found in parent ${parentGroup.id}`)
+				}
+
+				parentGroup.children.splice(index, 1, ...group.children) // Remove the group, and rehome its children
+
+				group.children.forEach((child, i) => {
+					child.sortOrder = i // Reset sortOrder for children
+				})
+
+				this.#dbTable.set(rootGroup.id, rootGroup)
 
 				this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
 					{
 						type: 'update',
-						id: childId,
-						info: childGroup,
+						id: rootGroup.id,
+						info: rootGroup,
 					},
 				])
 			}
@@ -168,92 +195,120 @@ export class InstanceGroups {
 		})
 
 		client.onPromise('connection-groups:set-name', (groupId: string, groupName: string) => {
-			const group = this.#data[groupId]
-			if (!group) throw new Error(`Group ${groupId} not found`)
+			const matchedGroup = this.#findGroupAndParent(groupId)
+			if (!matchedGroup) throw new Error(`Group ${groupId} not found`)
 
-			group.label = groupName
-			this.#dbTable.set(groupId, group)
+			matchedGroup[2].label = groupName
+			this.#dbTable.set(matchedGroup[0].id, matchedGroup[0])
 
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', [
 				{
 					type: 'update',
-					id: groupId,
-					info: group,
+					id: matchedGroup[0].id,
+					info: matchedGroup[0],
 				},
 			])
 		})
 
 		client.onPromise('connection-groups:reorder', (groupId: string, parentId: string | null, dropIndex: number) => {
-			// If no group, nothing to do
-			const thisGroup = this.#data[groupId]
-			if (!thisGroup) throw new Error(`Group ${groupId} not found`)
-
-			const changes: ConnectionGroupsUpdate[] = []
-			const originalParentId = thisGroup.parentId
-
-			// Handle parent change if needed
-			if (parentId !== originalParentId) {
-				// Check if the parent exists (unless it's null)
-				if (parentId !== null && !this.#data[parentId]) {
-					throw new Error(`Parent group ${parentId} not found`)
-				}
-
-				// Check for circular references
-				if (this.wouldCreateCircularReference(groupId, parentId)) {
-					throw new Error('Cannot set parent: would create a circular reference')
-				}
-
-				// Update the parent
-				thisGroup.parentId = parentId
-				this.#dbTable.set(groupId, thisGroup)
-
-				// Add to changes
-				changes.push({
-					type: 'update',
-					id: groupId,
-					info: thisGroup,
-				})
-			}
-
-			// Get all groups with the same NEW parent (excluding this group) sorted by their current sortOrder
-			const sortedGroups = Object.entries(this.#data)
-				.filter(([id, group]) => id !== groupId && group.parentId === parentId)
-				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-
-			// Insert the group being moved at the drop index
-			if (dropIndex < 0) {
-				sortedGroups.push([groupId, thisGroup])
-			} else {
-				sortedGroups.splice(dropIndex, 0, [groupId, thisGroup])
-			}
-
-			// Update the sortOrder of all groups based on their new position
-			sortedGroups.forEach(([id, group], index) => {
-				if (group.sortOrder !== index) {
-					group.sortOrder = index
-					this.#dbTable.set(id, group)
-
-					// Only add to changes if not already included
-					if (id !== groupId || !changes.some((change) => change.id === id)) {
-						changes.push({
-							type: 'update',
-							id,
-							info: group,
-						})
-					} else {
-						// Update the existing entry in changes
-						const existingChange = changes.find((change) => change.id === id)
-						if (existingChange && existingChange.type === 'update') {
-							existingChange.info = group
-						}
-					}
-				}
-			})
-
-			// Notify clients of the changes
-			if (changes.length > 0) {
-				this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', changes)
-			}
+			// // If no group, nothing to do
+			// const thisGroup = this.#data[groupId]
+			// if (!thisGroup) throw new Error(`Group ${groupId} not found`)
+			// const changes: ConnectionGroupsUpdate[] = []
+			// const originalParentId = thisGroup.parentId
+			// // Handle parent change if needed
+			// if (parentId !== originalParentId) {
+			// 	// Check if the parent exists (unless it's null)
+			// 	if (parentId !== null && !this.#data[parentId]) {
+			// 		throw new Error(`Parent group ${parentId} not found`)
+			// 	}
+			// 	// Check for circular references
+			// 	if (this.wouldCreateCircularReference(groupId, parentId)) {
+			// 		throw new Error('Cannot set parent: would create a circular reference')
+			// 	}
+			// 	// Update the parent
+			// 	thisGroup.parentId = parentId
+			// 	this.#dbTable.set(groupId, thisGroup)
+			// 	// Add to changes
+			// 	changes.push({
+			// 		type: 'update',
+			// 		id: groupId,
+			// 		info: thisGroup,
+			// 	})
+			// }
+			// // Get all groups with the same NEW parent (excluding this group) sorted by their current sortOrder
+			// const sortedGroups = Object.entries(this.#data)
+			// 	.filter(([id, group]) => id !== groupId && group.parentId === parentId)
+			// 	.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+			// // Insert the group being moved at the drop index
+			// if (dropIndex < 0) {
+			// 	sortedGroups.push([groupId, thisGroup])
+			// } else {
+			// 	sortedGroups.splice(dropIndex, 0, [groupId, thisGroup])
+			// }
+			// // Update the sortOrder of all groups based on their new position
+			// sortedGroups.forEach(([id, group], index) => {
+			// 	if (group.sortOrder !== index) {
+			// 		group.sortOrder = index
+			// 		this.#dbTable.set(id, group)
+			// 		// Only add to changes if not already included
+			// 		if (id !== groupId || !changes.some((change) => change.id === id)) {
+			// 			changes.push({
+			// 				type: 'update',
+			// 				id,
+			// 				info: group,
+			// 			})
+			// 		} else {
+			// 			// Update the existing entry in changes
+			// 			const existingChange = changes.find((change) => change.id === id)
+			// 			if (existingChange && existingChange.type === 'update') {
+			// 				existingChange.info = group
+			// 			}
+			// 		}
+			// 	}
+			// })
+			// // Notify clients of the changes
+			// if (changes.length > 0) {
+			// 	this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:patch', changes)
+			// }
 		})
+	}
+
+	#findGroupAndParent(
+		groupId: string
+	): [rootGroup: ConnectionGroup, parent: ConnectionGroup | null, group: ConnectionGroup] | null {
+		const findGroup = (
+			parentGroup: ConnectionGroup,
+			candidate: ConnectionGroup
+		): [parent: ConnectionGroup, group: ConnectionGroup] | null => {
+			// Check if this candidate is the group we are looking for
+			if (candidate.id === groupId) {
+				return [parentGroup, candidate]
+			}
+
+			// Search through the children of this candidate
+			for (const child of candidate.children) {
+				const found = findGroup(candidate, child)
+				if (found) return found
+			}
+
+			return null
+		}
+
+		for (const group of this.#data.values()) {
+			const found = findGroup(group, group)
+			if (!found) continue // Not the group we are looking for
+
+			if (found[0].id === found[1].id) {
+				// This is the root group
+				// Return null for root group parent
+				return [group, null, found[1]]
+			}
+
+			// Found the group and its parent
+			return [group, found[0], found[1]]
+		}
+
+		return null
 	}
 }

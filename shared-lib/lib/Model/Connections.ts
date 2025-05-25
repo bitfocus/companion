@@ -26,8 +26,13 @@ export interface ConnectionGroup {
 	id: string
 	label: string
 	sortOrder: number
-	parentId: string | null
+	// parentId: string | null
+	children: ConnectionGroup[]
 }
+
+// export interface UiConnectionGroup extends ConnectionGroup {
+// 	children: UiConnectionGroup[]
+// }
 
 export enum ConnectionUpdatePolicy {
 	Manual = 'manual',

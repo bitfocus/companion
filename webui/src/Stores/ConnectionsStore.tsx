@@ -15,6 +15,25 @@ export class ConnectionsStore {
 		return this.connections.size
 	}
 
+	public get allGroupIds(): string[] {
+		const groupIds: string[] = []
+
+		const collectGroupIds = (groups: Iterable<ConnectionGroup>): void => {
+			for (const group of groups || []) {
+				groupIds.push(group.id)
+				collectGroupIds(group.children)
+			}
+		}
+
+		collectGroupIds(this.groups.values())
+
+		return groupIds
+	}
+
+	public rootGroups(): ConnectionGroup[] {
+		return Array.from(this.groups.values()).sort((a, b) => a.sortOrder - b.sortOrder)
+	}
+
 	public getInfo(connectionId: string): ClientConnectionConfig | undefined {
 		return this.connections.get(connectionId)
 	}

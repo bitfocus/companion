@@ -45,8 +45,8 @@ import type {
 	ClientConnectionsUpdate,
 	ClientConnectionConfig,
 	ConnectionUpdatePolicy,
-	ConnectionGroup,
 	ConnectionGroupsUpdate,
+	ConnectionGroup,
 } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'

@@ -32,16 +32,7 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 	const { connections } = useContext(RootAppStoreContext)
 
 	// Check if this group has children
-	const hasChildren = Array.from(connections.groups.values()).some((g) => g.parentId === group.id)
-
-	// Handler to create a new subgroup
-	const handleAddSubgroup = useCallback(
-		(e: React.MouseEvent) => {
-			e.stopPropagation()
-			connectionListApi.addNewGroup(`${group.label} Subgroup`, group.id)
-		},
-		[connectionListApi, group]
-	)
+	const hasChildren = group.children || []
 
 	// Apply indentation based on nesting level
 	const indentStyle = {
