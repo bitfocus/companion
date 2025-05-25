@@ -8,8 +8,10 @@ import { ClientConnectionConfigWithId, VisibleConnectionsState } from './Connect
 import { PanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import { ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionListApi } from './ConnectionListApi.js'
+import { useGroupListDragging } from './ConnectionListDropZone.js'
 
 interface ConnectionGroupsProps {
+	parentId: string | null
 	groups: ConnectionGroup[]
 	connectionListApi: ConnectionListApi
 	collapseHelper: PanelCollapseHelper
@@ -24,6 +26,7 @@ interface ConnectionGroupsProps {
 }
 
 export const ConnectionGroups = observer(function ConnectionGroups({
+	parentId,
 	groups,
 	connectionListApi,
 	collapseHelper,
@@ -37,6 +40,8 @@ export const ConnectionGroups = observer(function ConnectionGroups({
 	nestingLevel = 0,
 }: ConnectionGroupsProps) {
 	if (groups.length === 0) return null
+
+	// const isDragging = useGroupListDragging(parentId) // TODO - is this sane?
 
 	return (
 		<>
@@ -59,6 +64,7 @@ export const ConnectionGroups = observer(function ConnectionGroups({
 							<>
 								{/* Render nested groups */}
 								<ConnectionGroups
+									parentId={group.id}
 									groups={group.children || []}
 									connectionListApi={connectionListApi}
 									collapseHelper={collapseHelper}

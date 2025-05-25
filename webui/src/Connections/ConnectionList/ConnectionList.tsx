@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup, CPopover } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
@@ -123,6 +123,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 				<tbody>
 					{/* Render root level groups and their nested content */}
 					<ConnectionGroups
+						parentId={null}
 						groups={connections.rootGroups()}
 						connectionListApi={connectionListApi}
 						collapseHelper={collapseHelper}
