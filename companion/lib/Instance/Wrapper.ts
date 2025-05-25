@@ -733,7 +733,7 @@ export class SocketEventsHandler {
 			}
 		}
 
-		this.#sendToModuleLog('debug', `Updating veriable definitions (${newVariables.length} variables)`)
+		this.#sendToModuleLog('debug', `Updating variable definitions (${newVariables.length} variables)`)
 
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 

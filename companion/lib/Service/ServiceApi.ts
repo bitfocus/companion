@@ -86,7 +86,7 @@ export class ServiceApi {
 	}
 
 	/**
-	 * Get the if ot the control at the given page and bank index
+	 * Get the if of the control at the given page and bank index
 	 */
 	getControlIdAtOldBankIndex(page: number, bank: number): string | null {
 		return this.#pageController.getControlIdAtOldBankIndex(page, bank)

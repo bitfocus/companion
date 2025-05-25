@@ -8,7 +8,7 @@
   They no longer ship with companion, you can either import an offline module bundle, or install them within companion from the store.
   This allows them to be updated independently
 - Support for the legacy xkeys layouts has been removed.
-  The new layouts have been the default behaviour since 3.2, and accurately reflect the real layout instead of trying to squeeze the layout into multipls 32 button pages.
+  The new layouts have been the default behaviour since 3.2, and accurately reflect the real layout instead of trying to squeeze the layout into multiple 32 button pages.
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 

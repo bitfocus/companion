@@ -300,7 +300,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	}
 
 	/**
-	 * An conncetion has just started/stopped, make sure it is aware if it should be recording
+	 * An connection has just started/stopped, make sure it is aware if it should be recording
 	 * @param connectionId
 	 * @param running Whether it is now running
 	 */

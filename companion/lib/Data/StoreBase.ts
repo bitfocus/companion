@@ -156,7 +156,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		this.store
 			?.backup(`${this.cfgBakFile}`)
 			.then(() => {
-				// perform a flush of the WAL file. It may be a little aggressive for this to be a TRUNCATE vs FULL, but it ensures the WAL doesn't grow infinitly
+				// perform a flush of the WAL file. It may be a little aggressive for this to be a TRUNCATE vs FULL, but it ensures the WAL doesn't grow infinitely
 				this.store.pragma('wal_checkpoint(TRUNCATE)')
 
 				this.lastsave = Date.now()

@@ -323,7 +323,7 @@ export abstract class ControlEntityListPoolBase {
 
 	/**
 	 * Replace all the entities in a list
-	 * @param lsitId the list to update
+	 * @param listId the list to update
 	 * @param newEntities entities to populate
 	 */
 	entityReplaceAll(listId: SomeSocketEntityLocation, entities: SomeEntityModel[]): boolean {
