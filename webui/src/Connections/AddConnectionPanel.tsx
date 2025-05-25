@@ -90,11 +90,11 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 				{modules.storeList.size > 0 ? (
 					<p>
 						Companion currently supports over {modules.storeList.size} different things, and the list grows every day.
-						If you can't find the device you're looking for, you can{' '}
-						<a target="_blank" href="https://bfoc.us/5xcykgx03n">
-							add a request
+						If you can't find the device you're looking for, we have{' '}
+						<a target="_blank" href="/getting-started#6_modules.md">
+							some guidance
 						</a>{' '}
-						on GitHub
+						on ways to get support for your device.
 					</p>
 				) : (
 					<p>

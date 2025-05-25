@@ -116,11 +116,11 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				Here you can view and manage the modules you have installed.
 				<br />
 				If you have an active internet connection, you can search for and install modules to support additional devices.
-				If you can't find the device you're looking for, you can{' '}
-				<a target="_blank" href="https://github.com/bitfocus/companion-module-requests">
-					add a request
+				If you can't find the device you're looking for, we have{' '}
+				<a target="_blank" href="/getting-started#6_modules.md">
+					some guidance
 				</a>{' '}
-				on GitHub.
+				on ways to get support for your device.
 				<br />
 				If you are on an offline system, you can download the latest module bundle from the{' '}
 				<a href="https://user.bitfocus.io/download" target="_blank">
