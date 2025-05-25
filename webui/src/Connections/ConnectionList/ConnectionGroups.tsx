@@ -57,18 +57,6 @@ export const ConnectionGroups = observer(function ConnectionGroups({
 
 						{!isCollapsed && (
 							<>
-								<ConnectionsInGroup
-									doConfigureConnection={doConfigureConnection}
-									selectedConnectionId={selectedConnectionId}
-									connections={connectionsInGroup}
-									groupId={group.id}
-									visibleConnections={visibleConnections}
-									showConnectionVariables={showConnectionVariables}
-									deleteModalRef={deleteModalRef}
-									showNoConnectionsMessage
-									nestingLevel={nestingLevel}
-								/>
-
 								{/* Render nested groups */}
 								<ConnectionGroups
 									groups={group.children || []}
@@ -82,6 +70,18 @@ export const ConnectionGroups = observer(function ConnectionGroups({
 									showConnectionVariables={showConnectionVariables}
 									deleteModalRef={deleteModalRef}
 									nestingLevel={nestingLevel + 1}
+								/>
+
+								<ConnectionsInGroup
+									doConfigureConnection={doConfigureConnection}
+									selectedConnectionId={selectedConnectionId}
+									connections={connectionsInGroup}
+									groupId={group.id}
+									visibleConnections={visibleConnections}
+									showConnectionVariables={showConnectionVariables}
+									deleteModalRef={deleteModalRef}
+									showNoConnectionsMessage
+									nestingLevel={nestingLevel}
 								/>
 							</>
 						)}

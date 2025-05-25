@@ -60,16 +60,16 @@ export interface ClientConnectionsUpdateUpdateOp {
 	info: ClientConnectionConfig
 }
 
-export type ConnectionGroupsUpdate = ConnectionGroupsUpdateUpdateOp | ConnectionGroupsUpdateRemoveOp
+// export type ConnectionGroupsUpdate = ConnectionGroupsUpdateUpdateOp | ConnectionGroupsUpdateRemoveOp
 
-export interface ConnectionGroupsUpdateRemoveOp {
-	type: 'remove'
-	id: string
-}
+// export interface ConnectionGroupsUpdateRemoveOp {
+// 	type: 'remove'
+// 	id: string
+// }
 
-export interface ConnectionGroupsUpdateUpdateOp {
-	type: 'update'
-	id: string
+// export interface ConnectionGroupsUpdateUpdateOp {
+// 	type: 'update'
+// 	id: string
 
-	info: ConnectionGroup
-}
+// 	info: ConnectionGroup
+// }

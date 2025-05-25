@@ -4,7 +4,6 @@ import type {
 	ClientConnectionsUpdate,
 	ClientConnectionConfig,
 	ConnectionGroup,
-	ConnectionGroupsUpdate,
 } from '@companion-app/shared/Model/Connections.js'
 
 export class ConnectionsStore {
@@ -77,34 +76,34 @@ export class ConnectionsStore {
 		}
 	})
 
-	public resetGroups = action((newData: Record<string, ConnectionGroup | undefined> | null) => {
+	public resetGroups = action((newData: ConnectionGroup[] | null) => {
 		this.groups.clear()
 
 		if (newData) {
-			for (const [groupId, group] of Object.entries(newData)) {
+			for (const group of newData) {
 				if (!group) continue
 
-				this.groups.set(groupId, group)
+				this.groups.set(group.id, group)
 			}
 		}
 	})
 
-	public applyGroupsChange = action((changes: ConnectionGroupsUpdate[]) => {
-		for (const change of changes) {
-			const changeType = change.type
-			switch (change.type) {
-				case 'remove':
-					this.groups.delete(change.id)
-					break
-				case 'update': {
-					this.groups.set(change.id, change.info)
-					break
-				}
-				default:
-					console.error(`Unknown connection groups change: ${changeType}`)
-					assertNever(change)
-					break
-			}
-		}
-	})
+	// public applyGroupsChange = action((changes: ConnectionGroupsUpdate[]) => {
+	// 	for (const change of changes) {
+	// 		const changeType = change.type
+	// 		switch (change.type) {
+	// 			case 'remove':
+	// 				this.groups.delete(change.id)
+	// 				break
+	// 			case 'update': {
+	// 				this.groups.set(change.id, change.info)
+	// 				break
+	// 			}
+	// 			default:
+	// 				console.error(`Unknown connection groups change: ${changeType}`)
+	// 				assertNever(change)
+	// 				break
+	// 		}
+	// 	}
+	// })
 }

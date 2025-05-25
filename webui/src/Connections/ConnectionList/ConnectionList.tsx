@@ -18,7 +18,7 @@ import { ConnectionsInGroup } from './ConnectionsInGroup.js'
 import { useConnectionListDragging, useGroupListDragging } from './ConnectionListDropZone.js'
 import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { ObservableMap } from 'mobx'
+import { ObservableMap, toJS } from 'mobx'
 import { ConnectionGroups } from './ConnectionGroups.js'
 
 export interface VisibleConnectionsState {
@@ -67,6 +67,11 @@ export const ConnectionsList = observer(function ConnectionsList({
 	})
 
 	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections, connectionStatuses)
+
+	console.log(
+		'groups',
+		connections.rootGroups().map((k) => toJS(k))
+	)
 
 	const connectionListApi = useConnectionListApi(confirmModalRef)
 

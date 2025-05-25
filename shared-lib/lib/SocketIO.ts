@@ -45,7 +45,6 @@ import type {
 	ClientConnectionsUpdate,
 	ClientConnectionConfig,
 	ConnectionUpdatePolicy,
-	ConnectionGroupsUpdate,
 	ConnectionGroup,
 } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
@@ -93,7 +92,7 @@ export interface ClientToBackendEventsMap {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'connection-groups:subscribe': () => Record<string, ConnectionGroup>
+	'connection-groups:subscribe': () => ConnectionGroup[]
 	'connection-groups:unsubscribe': () => void
 	'entity-definitions:subscribe': (
 		type: EntityModelType
@@ -394,7 +393,7 @@ export interface BackendToClientEventsMap {
 	[selectedSessionId: `action-recorder:session:update:${string}`]: (patch: JsonPatchOperation[]) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
-	'connection-groups:patch': (patch: ConnectionGroupsUpdate[]) => void
+	'connection-groups:update': (patch: ConnectionGroup[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void

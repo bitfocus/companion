@@ -23,8 +23,8 @@ export function useConnectionGroupsConfigSubscription(
 				console.error('Failed to load connection groups list', e)
 			})
 
-		const unsubUpdates = socket.on('connection-groups:patch', (change) => {
-			store.applyGroupsChange(change)
+		const unsubUpdates = socket.on('connection-groups:update', (update) => {
+			store.resetGroups(update)
 		})
 
 		return () => {
