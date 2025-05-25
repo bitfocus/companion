@@ -199,6 +199,8 @@ describe('functions', () => {
 			expect(ExpressionFunctions.indexOf('something else', 'ng el')).toBe(7)
 			expect(ExpressionFunctions.indexOf('somethingelse', 'ng el')).toBe(-1)
 			expect(ExpressionFunctions.indexOf('1234512345', '34')).toBe(2)
+			expect(ExpressionFunctions.indexOf('1234512345', '34', 2)).toBe(2)
+			expect(ExpressionFunctions.indexOf('1234512345', '34', 3)).toBe(7)
 		})
 
 		it('lastIndexOf', () => {
@@ -210,6 +212,8 @@ describe('functions', () => {
 			expect(ExpressionFunctions.lastIndexOf('something else', 'ng el')).toBe(7)
 			expect(ExpressionFunctions.lastIndexOf('somethingelse', 'ng el')).toBe(-1)
 			expect(ExpressionFunctions.lastIndexOf('1234512345', '34')).toBe(7)
+			expect(ExpressionFunctions.lastIndexOf('1234512345', '34', 7)).toBe(7)
+			expect(ExpressionFunctions.lastIndexOf('1234512345', '34', 6)).toBe(2)
 		})
 
 		it('toUpperCase', () => {
