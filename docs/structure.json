@@ -193,8 +193,16 @@
 				"file": "4_secondary_admin_controls/dynamic_variables.md"
 			},
 			{
+				"label": "Internal variables",
+				"file": "4_secondary_admin_controls/internal_variables.md"
+			},
+			{
 				"label": "Custom variables",
 				"file": "4_secondary_admin_controls/custom_variables.md"
+			},
+			{
+				"label": "Local variables",
+				"file": "4_secondary_admin_controls/local_variables.md"
 			},
 			{
 				"label": "Expressions",
