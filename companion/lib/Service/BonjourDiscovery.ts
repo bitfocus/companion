@@ -93,11 +93,11 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		client.on('bonjour:unsubscribe', (subIds) => this.#leaveSession(client, subIds))
 	}
 
-	#convertService(id: string, svc: any): ClientBonjourService | null {
+	#convertService(id: string, svc: any, filter: BonjourBrowserFilter): ClientBonjourService | null {
 		// Future: whether to include ipv4, ipv6 should be configurable, but this is fine for now
 		const addresses = svc.addresses.filter((addr: string) => isIPv4(addr))
 		if (addresses.length === 0) return null
-
+		if (filter.port && svc.port !== filter.port) return null
 		return {
 			subId: id,
 			fqdn: svc.fqdn,
@@ -129,6 +129,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 			const filter = {
 				type: query.type,
 				protocol: query.protocol,
+				port: query.port,
 				txt: query.txt,
 			}
 			if (typeof filter.type !== 'string' || !filter.type) throw new Error('Invalid type for bonjour query')
@@ -153,7 +154,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 					// After this message, send already known services to the client
 					setImmediate(() => {
 						for (const svc of session.browser.services) {
-							const uiSvc = this.#convertService(id, svc)
+							const uiSvc = this.#convertService(id, svc, filter)
 							if (uiSvc) client.emit(`bonjour:service:up`, uiSvc)
 						}
 					})
@@ -178,7 +179,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 				// Setup event handlers
 				browser.on('up', (svc) => {
-					const uiSvc = this.#convertService(id, svc)
+					const uiSvc = this.#convertService(id, svc, filter)
 					if (uiSvc) this.#io.emitToRoom(room, `bonjour:service:up`, uiSvc)
 				})
 				browser.on('down', (svc) => {
@@ -236,5 +237,6 @@ interface BonjourBrowserSession {
 interface BonjourBrowserFilter {
 	type: string
 	protocol: 'tcp' | 'udp'
+	port: number | undefined
 	txt: Record<string, string> | undefined
 }
