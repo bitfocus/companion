@@ -108,14 +108,17 @@ eg `includes("Companion is great!", "great")` gives `true`
 
 Find the index of the first occurrence of a value within the provided string.
 
-Optionally provide an offset to start the search from.
+Optionally provide an offset to begin the search from, otherwise it starts from position 0 (the beginning).
 
+If the value isn't found, it will return -1, otherwise the index of the first occurence.
 
 **lastIndexOf(val, find, offset)**
 
-Find the index of the last occurrence of a value within the provided string.
+Find the index of the last occurrence of a value within the provided string, searching from the end.
 
-Optionally provide an offset to start the search from.
+Optionally provide an offset to begin the search from, searching from the end.
+
+If the value isn't found, it will return -1, otherwise the index of the last occurence. The beginning is position 0.
 
 **toUpperCase(val)**
 
