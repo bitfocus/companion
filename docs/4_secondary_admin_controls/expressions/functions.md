@@ -149,9 +149,9 @@ eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
 **parseVariables(string)**
 
-In some scenarios it can be beneficial to have nested variables. This is not supported in the expression syntax.
+In some scenarios it can be beneficial to have nested variables (a bit like pointers). This is not supported in the expression syntax.
 
-Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax.
+Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax. It will also still handle template strings too.
 
 eg `parseVariables('$(custom:$(custom:b))')`
 
