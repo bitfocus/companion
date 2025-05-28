@@ -51,7 +51,7 @@ export function useGroupListDragging(groupId: string | null) {
 		collect: (monitor) => ({
 			isOver: monitor.isOver(),
 			canDrop: monitor.canDrop(),
-			dragGroupId: monitor.getItem()?.groupId,
+			dragGroupId: monitor.canDrop() ? monitor.getItem()?.groupId : undefined,
 		}),
 		hover(item, _monitor) {
 			// If this is the root area (groupId is null), make the dropped group top-level

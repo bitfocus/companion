@@ -28,6 +28,13 @@
 			color: #333;
 		}
 	}
+
+	.collapsible-group-header-drag {
+		position: relative;
+		cursor: ns-resize;
+
+		margin-right: 0.75rem;
+	}
 }
 
 .collapsible-list-dropzone {

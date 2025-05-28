@@ -9,7 +9,7 @@ import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 
-export const ConnectionsPage = memo(function ConnectionsPage() {
+export function ConnectionsPage() {
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState<'add' | 'edit'>('add')
 	const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null)
@@ -75,4 +75,4 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 			</CCol>
 		</CRow>
 	)
-})
+}

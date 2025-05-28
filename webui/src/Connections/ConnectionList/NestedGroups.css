@@ -32,10 +32,6 @@
 
 
 
-.td-reorder {
-  position: relative;
-  cursor: grab;
-}
 
 /* Style while actively dragging */
 .td-reorder:active {

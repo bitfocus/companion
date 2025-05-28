@@ -8,18 +8,18 @@ import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../../Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
-import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperProvider, usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
 import { DragState } from '../../util.js'
 import { useConnectionListApi } from './ConnectionListApi.js'
 import { ConnectionsInGroup } from './ConnectionsInGroup.js'
-import { useConnectionListDragging, useGroupListDragging } from './ConnectionListDropZone.js'
+import { useConnectionListDragging } from './ConnectionListDropZone.js'
 import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { ObservableMap, toJS } from 'mobx'
-import { ConnectionGroups } from './ConnectionGroups.js'
+import { ConnectionGroupsArray } from './ConnectionGroups.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -47,16 +47,6 @@ export const ConnectionsList = observer(function ConnectionsList({
 	const showConnectionVariables = useCallback(
 		(connectionId: string) => variablesModalRef.current?.show(connectionId),
 		[]
-	)
-
-	const collapseHelper = usePanelCollapseHelper('connection-groups', connections.allGroupIds, true)
-
-	// Toggle group expansion
-	const toggleGroupExpanded = useCallback(
-		(groupId: string) => {
-			collapseHelper.togglePanelCollapsed(null, groupId)
-		},
-		[collapseHelper]
 	)
 
 	const visibleConnections = useTableVisibilityHelper<VisibleConnectionsState>('connections_visible', {
@@ -115,19 +105,23 @@ export const ConnectionsList = observer(function ConnectionsList({
 				</thead>
 				<tbody>
 					{/* Render root level groups and their nested content */}
-					<ConnectionGroups
-						parentId={null}
-						groups={connections.rootGroups()}
-						connectionListApi={connectionListApi}
-						collapseHelper={collapseHelper}
-						toggleGroupExpanded={toggleGroupExpanded}
-						groupedConnections={groupedConnections}
-						doConfigureConnection={doConfigureConnection}
-						selectedConnectionId={selectedConnectionId}
-						visibleConnections={visibleConnections}
-						showConnectionVariables={showConnectionVariables}
-						deleteModalRef={confirmModalRef}
-					/>
+					<PanelCollapseHelperProvider
+						storageId="connection-groups"
+						knownPanelIds={connections.allGroupIds}
+						defaultCollapsed
+					>
+						<ConnectionGroupsArray
+							groups={connections.rootGroups()}
+							connectionListApi={connectionListApi}
+							groupedConnections={groupedConnections}
+							doConfigureConnection={doConfigureConnection}
+							selectedConnectionId={selectedConnectionId}
+							visibleConnections={visibleConnections}
+							showConnectionVariables={showConnectionVariables}
+							deleteModalRef={confirmModalRef}
+							nestingLevel={0}
+						/>
+					</PanelCollapseHelperProvider>
 
 					{/* Render ungrouped connections */}
 					{(isDragging || ungroupedConnections.length > 0) && connections.groups.size > 0 && (

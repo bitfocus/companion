@@ -10,7 +10,7 @@ import { ConnectDropTarget } from 'react-dnd'
 
 interface ConnectionGroupRowProps {
 	group: ConnectionGroup
-	toggleExpanded: (groupId: string) => void
+	toggleExpanded: () => void
 	connectionListApi: ConnectionListApi
 	isCollapsed: boolean
 	index: number
@@ -27,11 +27,9 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 	const { drop: dropConnectionInto } = useConnectionListDragging(group.id, -1)
 	const { isOver, canDrop, drop: dropGroupInto } = useGroupListDragging(group.id)
 
-	// Check if this group has children
-	const hasChildren = group.children || []
-
 	// Apply indentation based on nesting level
 	const indentStyle = {
+		// TODO - tidy this hack
 		paddingLeft: nestingLevel > 0 ? `${nestingLevel * 20}px` : undefined,
 	}
 

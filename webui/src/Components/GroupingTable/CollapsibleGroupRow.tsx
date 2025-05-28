@@ -42,7 +42,7 @@ export interface GroupApi {
 export interface CollapsibleGroupRowProps {
 	group: CollapsibleGroup
 	isCollapsed: boolean
-	toggleExpanded: (groupId: string) => void
+	toggleExpanded: () => void
 	groupApi: GroupApi
 	index: number
 	acceptDragType: string
@@ -69,8 +69,8 @@ export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
 
 	const toggleExpanded2 = useCallback(() => {
 		if (isEditing) return
-		toggleExpanded(group.id)
-	}, [toggleExpanded, group.id, isEditing])
+		toggleExpanded()
+	}, [toggleExpanded, isEditing])
 
 	const handleSetName = useCallback((name: string) => groupApi.renameGroup(group.id, name), [groupApi, group.id])
 
@@ -172,11 +172,11 @@ export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
 			)}
 			onClick={toggleExpanded2}
 		>
-			<td ref={drag} className="td-reorder">
-				<FontAwesomeIcon icon={faSort} />
-			</td>
-			<td colSpan={colSpan}>
+			<td colSpan={colSpan + 1}>
 				<div className="d-flex align-items-center justify-content-between" style={indentStyle}>
+					<div ref={drag} className="collapsible-group-header-drag">
+						<FontAwesomeIcon icon={faSort} />
+					</div>
 					<div className="d-flex align-items-center flex-grow-1">
 						{isEditing ? (
 							<TextInputField

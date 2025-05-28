@@ -4,6 +4,7 @@ import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { nanoid } from 'nanoid'
+import { group } from 'console'
 
 const ConnectionGroupRoom = 'connection-groups'
 
@@ -178,6 +179,10 @@ export class InstanceGroups {
 		})
 
 		client.onPromise('connection-groups:reorder', (groupId: string, parentId: string | null, dropIndex: number) => {
+			if (groupId === parentId) {
+				throw new Error(`Cannot move group ${groupId} to itself`)
+			}
+
 			const matchedGroup = this.#findGroupAndParent(groupId)
 			if (!matchedGroup) throw new Error(`Group ${groupId} not found`)
 

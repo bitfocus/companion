@@ -147,7 +147,11 @@ export function usePanelCollapseHelperContextForPanel(ownerId: string | null, pa
 		// doExpand: useCallback(() => panelCollapseHelper.setPanelCollapsed(panelId, false), [panelCollapseHelper, panelId]),
 		setCollapsed: useCallback(
 			(collapsed: boolean) => panelCollapseHelper.setPanelCollapsed(panelId, collapsed),
-			[panelCollapseHelper]
+			[panelCollapseHelper, panelId]
+		),
+		toggleCollapsed: useCallback(
+			() => panelCollapseHelper.togglePanelCollapsed(ownerId, panelId),
+			[panelCollapseHelper, ownerId, panelId]
 		),
 		isCollapsed: panelCollapseHelper.isPanelCollapsed(ownerId, panelId),
 	}
