@@ -42,20 +42,26 @@ export function useConnectionListDragging(groupId: string | null, dropIndex: num
 export function useGroupListDragging(groupId: string | null) {
 	const { socket } = useContext(RootAppStoreContext)
 
-	const [{ isOver, canDrop }, drop] = useDrop<
+	const [{ isOver, canDrop, dragGroupId }, drop] = useDrop<
 		{ groupId: string; parentId: string | null },
 		unknown,
-		{ isOver: boolean; canDrop: boolean }
+		{ isOver: boolean; canDrop: boolean; dragGroupId: string | undefined }
 	>({
 		accept: 'connection-group',
 		collect: (monitor) => ({
 			isOver: monitor.isOver(),
 			canDrop: monitor.canDrop(),
+			dragGroupId: monitor.getItem()?.groupId,
 		}),
-		drop(item, _monitor) {
+		hover(item, _monitor) {
 			// If this is the root area (groupId is null), make the dropped group top-level
-			if (groupId === null && item.parentId !== null) {
-				socket.emitPromise('connection-groups:reorder', [item.groupId, null, -1]).catch((e) => {
+
+			console.log('hover', groupId, item.groupId)
+
+			if (groupId === item.parentId) return // Don't allow dropping into the same group
+
+			if (item.groupId !== null) {
+				socket.emitPromise('connection-groups:reorder', [item.groupId, groupId, -1]).catch((e) => {
 					console.error('Failed to set group parent', e)
 				})
 				return { parentChanged: true }
@@ -67,6 +73,7 @@ export function useGroupListDragging(groupId: string | null) {
 	return {
 		isOver,
 		canDrop,
+		dragGroupId,
 		drop,
 	}
 }

@@ -75,11 +75,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 
 	const connectionListApi = useConnectionListApi(confirmModalRef)
 
-	// Setup connection drag and drop
 	const { isDragging } = useConnectionListDragging(null)
-
-	// Setup group drag and drop for root level
-	const { isOver: isGroupOver, canDrop: canDropGroup, drop: dropGroupToRoot } = useGroupListDragging(null)
 
 	return (
 		<div>
@@ -101,10 +97,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 				</CButton>
 			</div>
 
-			<table
-				ref={dropGroupToRoot}
-				className={`table-tight table-responsive-sm ${isGroupOver && canDropGroup ? 'group-drop-root-target' : ''}`}
-			>
+			<table className="table-tight table-responsive-sm">
 				<thead>
 					<tr>
 						<th className="fit">&nbsp;</th>

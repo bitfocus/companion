@@ -24,83 +24,13 @@
   z-index: 1;
 }
 
-.connection-group-status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 5px;
-  font-size: 0.8em;
-  border-radius: 10px;
-  padding: 0 5px;
-  min-width: 25px;
-  height: 20px;
-  background-color: #eee;
-  color: #555;
-}
-
-.connections-tree-view {
-  margin-bottom: 15px;
-}
-
-.nested-indent {
-  border-left: 1px solid #eee;
-  margin-left: 10px;
-}
-
-.group-has-children::after {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #aaa;
-  margin-left: 5px;
-  margin-right: 5px;
-  vertical-align: middle;
-}
-
-/* Drag and drop styles */
-.collapsible-group-header.drop-target {
-  background-color: rgba(0, 123, 255, 0.1);
-  border: 2px dashed rgba(0, 123, 255, 0.5);
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
-  position: relative;
-  z-index: 10;
-}
 
 .collapsible-group-header.dragging {
   opacity: 0.5;
 }
 
-.group-drop-root-target {
-  border: 2px dashed rgba(0, 123, 255, 0.5);
-  background-color: rgba(0, 123, 255, 0.05);
-}
 
-/* Helper text for drag and drop */
-.drop-target::after {
-  content: 'Drop to make child';
-  position: absolute;
-  right: 10px;
-  padding: 2px 8px;
-  background: rgba(0, 123, 255, 0.8);
-  color: white;
-  border-radius: 4px;
-  font-size: 0.8em;
-}
 
-.group-drop-root-target::after {
-  content: 'Drop to move to root level';
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 2px 8px;
-  background: rgba(0, 123, 255, 0.8);
-  color: white;
-  border-radius: 4px;
-  font-size: 0.8em;
-  z-index: 100;
-}
 
 .td-reorder {
   position: relative;

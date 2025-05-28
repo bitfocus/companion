@@ -207,6 +207,8 @@ export class InstanceGroups {
 			// Inform the ui of the shuffle
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:update', this.#data)
 
+			console.log('handled?')
+
 			// Future: perform side effects like updating enabled statuses
 		})
 	}

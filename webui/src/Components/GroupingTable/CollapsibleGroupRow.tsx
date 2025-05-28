@@ -13,6 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { TextInputField } from '../TextInputField.js'
 import { ConnectDropTarget, useDrag, useDrop } from 'react-dnd'
 import { checkDragState } from '../../util.js'
+import classNames from 'classnames'
 
 export interface CollapsibleGroup {
 	id: string
@@ -162,7 +163,13 @@ export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
 	return (
 		<tr
 			ref={ref}
-			className={`collapsible-group-header ${isDragging ? 'dragging' : ''} ${isOver ? 'drop-target' : ''} ${className || ''}`}
+			className={classNames(
+				'collapsible-group-header',
+				{
+					dragging: isDragging,
+				},
+				className
+			)}
 			onClick={toggleExpanded2}
 		>
 			<td ref={drag} className="td-reorder">
