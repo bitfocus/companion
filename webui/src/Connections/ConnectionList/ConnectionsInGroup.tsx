@@ -37,6 +37,7 @@ export const ConnectionsInGroup = observer(function ConnectionsInGroup({
 			items={connections}
 			showNoItemsMessage={showNoConnectionsMessage}
 			itemName="connection"
+			nestingLevel={nestingLevel}
 			isDragging={isDragging}
 			drop={drop}
 		>

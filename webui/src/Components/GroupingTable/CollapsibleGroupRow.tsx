@@ -178,8 +178,8 @@ export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
 		>
 			<td colSpan={colSpan + 1}>
 				<div
-					className={classNames('d-flex align-items-center justify-content-between collapsible-group-header-content', {
-						nested: nestingLevel > 0,
+					className={classNames('d-flex align-items-center justify-content-between', {
+						'collapsible-group-nesting': nestingLevel > 0,
 					})}
 				>
 					<div ref={drag} className="collapsible-group-header-drag">

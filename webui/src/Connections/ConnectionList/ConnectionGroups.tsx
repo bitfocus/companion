@@ -126,7 +126,7 @@ const ConnectionGroupSingle = observer(function ConnectionGroupSingle({
 						visibleConnections={visibleConnections}
 						showConnectionVariables={showConnectionVariables}
 						deleteModalRef={deleteModalRef}
-						showNoConnectionsMessage
+						showNoConnectionsMessage={group.children.length === 0}
 						nestingLevel={nestingLevel}
 					/>
 				</>
