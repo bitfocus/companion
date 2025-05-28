@@ -2,12 +2,22 @@
 	background-color: #f0f0f0;
 	font-weight: 600;
 
+	--group-nesting-level: 0;
+
+	&.dragging {
+		opacity: 0.5;
+	}
+
 	td {
 		padding: 8px 10px;
 	}
 
 	.td-reorder {
 		background-color: #f0f0f0;
+	}
+
+	.caret-icon {
+		cursor: pointer;
 	}
 
 	.group-name {
@@ -34,6 +44,36 @@
 		cursor: ns-resize;
 
 		margin-right: 0.75rem;
+	}
+
+	.collapsible-group-header-content {
+		padding-left: calc(var(--group-nesting-level) * 10px);
+
+		&.nested {
+			position: relative;
+		}
+
+		&.nested:before {
+			content: '';
+			position: absolute;
+			left: 0px;
+			top: -20px;
+			height: calc(100% + 30px);
+			width: 1px;
+			background-color: #ccc;
+			z-index: 1;
+		}
+
+		&.nested:after {
+			content: '';
+			position: absolute;
+			left: 0px;
+			top: 50%;
+			width: calc(var(--group-nesting-level) * 10px - 5px);
+			height: 1px;
+			background-color: #ccc;
+			z-index: 1;
+		}
 	}
 }
 

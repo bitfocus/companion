@@ -4,8 +4,6 @@ import React from 'react'
 import { useConnectionListDragging, useGroupListDragging } from './ConnectionListDropZone.js'
 import { ConnectionListApi } from './ConnectionListApi.js'
 import { CollapsibleGroupRow } from '../../Components/GroupingTable/CollapsibleGroupRow.js'
-import classNames from 'classnames'
-import './NestedGroups.css'
 import { ConnectDropTarget } from 'react-dnd'
 
 interface ConnectionGroupRowProps {
@@ -14,7 +12,7 @@ interface ConnectionGroupRowProps {
 	connectionListApi: ConnectionListApi
 	isCollapsed: boolean
 	index: number
-	nestingLevel?: number
+	nestingLevel: number
 }
 export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 	group,
@@ -26,12 +24,6 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 }: ConnectionGroupRowProps) {
 	const { drop: dropConnectionInto } = useConnectionListDragging(group.id, -1)
 	const { isOver, canDrop, drop: dropGroupInto } = useGroupListDragging(group.id)
-
-	// Apply indentation based on nesting level
-	const indentStyle = {
-		// TODO - tidy this hack
-		paddingLeft: nestingLevel > 0 ? `${nestingLevel * 20}px` : undefined,
-	}
 
 	// Function that combines both drop targets
 	let combinedDropInto: ConnectDropTarget = dropConnectionInto
@@ -46,10 +38,7 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 			acceptDragType="connection-group"
 			groupApi={connectionListApi}
 			dropInto={combinedDropInto}
-			indentStyle={indentStyle}
-			className={classNames({
-				'connection-group-nested': nestingLevel > 0,
-			})}
+			nestingLevel={nestingLevel}
 		/>
 	)
 })

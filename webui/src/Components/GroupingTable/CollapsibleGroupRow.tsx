@@ -48,8 +48,8 @@ export interface CollapsibleGroupRowProps {
 	acceptDragType: string
 	colSpan?: number
 	dropInto?: ConnectDropTarget
-	indentStyle?: CSSProperties
 	className?: string
+	nestingLevel: number
 }
 
 export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
@@ -61,8 +61,8 @@ export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
 	acceptDragType,
 	colSpan = 4,
 	dropInto,
-	indentStyle,
 	className,
+	nestingLevel,
 	children,
 }: React.PropsWithChildren<CollapsibleGroupRowProps>) {
 	const [isEditing, setIsEditing] = useState(false)
@@ -170,10 +170,18 @@ export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
 				},
 				className
 			)}
+			style={{
+				// @ts-expect-error variables are not typed
+				'--group-nesting-level': nestingLevel,
+			}}
 			onClick={toggleExpanded2}
 		>
 			<td colSpan={colSpan + 1}>
-				<div className="d-flex align-items-center justify-content-between" style={indentStyle}>
+				<div
+					className={classNames('d-flex align-items-center justify-content-between collapsible-group-header-content', {
+						nested: nestingLevel > 0,
+					})}
+				>
 					<div ref={drag} className="collapsible-group-header-drag">
 						<FontAwesomeIcon icon={faSort} />
 					</div>
