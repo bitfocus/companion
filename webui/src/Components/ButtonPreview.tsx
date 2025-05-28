@@ -32,7 +32,7 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 
 			props.onClick?.(props.location, true)
 		},
-		[props.onClick]
+		[props.onClick, props.location]
 	)
 	const doRelease = useCallback(
 		(e: React.UIEvent) => {
@@ -41,7 +41,7 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 
 			props.onClick?.(props.location, false)
 		},
-		[props.onClick]
+		[props.onClick, props.location]
 	)
 
 	return (
