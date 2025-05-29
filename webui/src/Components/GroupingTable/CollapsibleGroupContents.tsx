@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { ConnectDropTarget } from 'react-dnd'
-import { CollapsibleListDropZone } from './CollapsibleListDropZone.js'
+import { GroupingTableDropZone } from './GroupingTableDropZone.js'
 import classNames from 'classnames'
 
 interface CollapsibleGroupContentsProps<TItem> {
@@ -49,7 +49,7 @@ export const CollapsibleGroupContents = observer(function CollapsibleGroupConten
 		<>
 			{itemRows}
 
-			{isDragging && items.length === 0 && <CollapsibleListDropZone drop={drop} itemName={itemName} />}
+			{isDragging && items.length === 0 && <GroupingTableDropZone drop={drop} itemName={itemName} />}
 
 			{hiddenCount > 0 && (
 				<tr

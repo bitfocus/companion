@@ -14,7 +14,7 @@ import { TextInputField } from '../TextInputField.js'
 import { ConnectDropTarget, useDrag, useDrop } from 'react-dnd'
 import { checkDragState } from '../../util.js'
 import classNames from 'classnames'
-import type { CollapsibleGroup, GroupApi } from './Types.js'
+import type { GroupingTableGroup, GroupApi } from './Types.js'
 
 export interface DragItem {
 	groupId: string
@@ -23,8 +23,8 @@ export interface DragItem {
 	parentId?: string | null
 }
 
-export interface CollapsibleGroupRowProps {
-	group: CollapsibleGroup
+export interface GroupingTableGroupRowProps {
+	group: GroupingTableGroup
 	isCollapsed: boolean
 	toggleExpanded: () => void
 	groupApi: GroupApi
@@ -36,7 +36,7 @@ export interface CollapsibleGroupRowProps {
 	nestingLevel: number
 }
 
-export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
+export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 	group,
 	isCollapsed,
 	toggleExpanded,
@@ -48,7 +48,7 @@ export const CollapsibleGroupRow = observer(function CollapsibleGroupRow({
 	className,
 	nestingLevel,
 	children,
-}: React.PropsWithChildren<CollapsibleGroupRowProps>) {
+}: React.PropsWithChildren<GroupingTableGroupRowProps>) {
 	const [isEditing, setIsEditing] = useState(false)
 
 	const toggleExpanded2 = useCallback(() => {

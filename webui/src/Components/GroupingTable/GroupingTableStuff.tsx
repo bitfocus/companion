@@ -1,36 +1,30 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { usePanelCollapseHelperContextForPanel } from '../../Helpers/CollapseHelper.js'
-import { CollapsibleListDropZone } from '../../Components/GroupingTable/CollapsibleListDropZone.js'
-import { CollabsibleGroupItems } from './CollapsibleGroupItems.js'
-import type { CollapsibleGroup, CollapsibleGroupItem, GroupApi } from './Types.js'
+import { GroupingTableDropZone } from './GroupingTableDropZone.js'
+import { CollabsibleGroupItems } from './GroupingTableItems.js'
+import type { GroupingTableGroup, GroupingTableItem, GroupApi } from './Types.js'
 import { useGroupListGroupDragging } from './useGroupDragging.js'
-import { CollapsibleGroupRow } from './CollapsibleGroupRow.js'
+import { GroupingTableGroupRow } from './GroupingTableGroupRow.js'
 import { ConnectDropTarget } from 'react-dnd'
 import { useGroupListItemDragging } from './useItemDragging.js'
+import { useGroupingTableContext } from './GroupingTableContext.js'
 
-interface CollapsibleGroupsArrayProps<TGroup extends CollapsibleGroup, TItem extends CollapsibleGroupItem> {
-	ItemRow: React.ComponentType<{ item: TItem; index: number; nestingLevel: number }>
-	itemName: string
-	groupApi: GroupApi
-
+interface GroupingTableGroupArrayProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem> {
 	groups: TGroup[]
 	groupedItems: Map<string, TItem[]>
 	nestingLevel: number
 }
 
-export const CollapsibleGroupsArray = observer(function CollapsibleGroupsArray<
-	TGroup extends CollapsibleGroup,
-	TItem extends CollapsibleGroupItem,
->({ ItemRow, itemName, groupApi, groups, groupedItems, nestingLevel }: CollapsibleGroupsArrayProps<TGroup, TItem>) {
+export const GroupingTableGroupArray = observer(function GroupingTableGroupArray<
+	TGroup extends GroupingTableGroup,
+	TItem extends GroupingTableItem,
+>({ groups, groupedItems, nestingLevel }: GroupingTableGroupArrayProps<TGroup, TItem>) {
 	return (
 		<>
 			{groups.map((childGroup, childIndex) => (
-				<CollapsibleGroupSingle
+				<GroupingTableGroupSingle
 					key={childGroup.id}
-					ItemRow={ItemRow}
-					itemName={itemName}
-					groupApi={groupApi}
 					index={childIndex}
 					group={childGroup}
 					groupedItems={groupedItems}
@@ -41,11 +35,7 @@ export const CollapsibleGroupsArray = observer(function CollapsibleGroupsArray<
 	)
 })
 
-interface CollapsibleGroupSingleProps<TGroup extends CollapsibleGroup, TItem extends CollapsibleGroupItem> {
-	ItemRow: React.ComponentType<{ item: TItem; index: number; nestingLevel: number }>
-	itemName: string
-	groupApi: GroupApi
-
+interface GroupingTableGroupSingleProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem> {
 	index: number
 	group: TGroup
 	groupedItems: Map<string, TItem[]>
@@ -53,19 +43,13 @@ interface CollapsibleGroupSingleProps<TGroup extends CollapsibleGroup, TItem ext
 }
 
 // Note: mobx seems to get upset when a component is called recursively, without an intermediate component
-const CollapsibleGroupSingle = observer(function CollapsibleGroupSingle<
-	TGroup extends CollapsibleGroup,
-	TItem extends CollapsibleGroupItem,
->({
-	ItemRow,
-	itemName,
-	groupApi,
-	index,
-	group,
-	groupedItems,
-	nestingLevel = 0,
-}: CollapsibleGroupSingleProps<TGroup, TItem>) {
-	const { isOver, canDrop, dragGroupId, drop } = useGroupListGroupDragging(groupApi, group.id)
+const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
+	TGroup extends GroupingTableGroup,
+	TItem extends GroupingTableItem,
+>({ index, group, groupedItems, nestingLevel = 0 }: GroupingTableGroupSingleProps<TGroup, TItem>) {
+	const { dragId, groupApi } = useGroupingTableContext<TItem>()
+
+	const { isOver, canDrop, dragGroupId, drop } = useGroupListGroupDragging(groupApi, dragId, group.id)
 
 	const collapseHelper = usePanelCollapseHelperContextForPanel(null, group.id)
 
@@ -74,7 +58,7 @@ const CollapsibleGroupSingle = observer(function CollapsibleGroupSingle<
 
 	return (
 		<>
-			<CollapsibleGroupRow2
+			<GroupingTableGroupRow2
 				groupApi={groupApi}
 				group={group}
 				toggleExpanded={collapseHelper.toggleCollapsed}
@@ -85,24 +69,18 @@ const CollapsibleGroupSingle = observer(function CollapsibleGroupSingle<
 
 			{!isCollapsed && (
 				<>
-					<CollapsibleGroupsArray
-						ItemRow={ItemRow}
-						itemName={itemName}
-						groupApi={groupApi}
+					<GroupingTableGroupArray
 						groups={group.children}
 						groupedItems={groupedItems}
 						nestingLevel={nestingLevel + 1}
 					/>
 
 					{canDrop && (!group.children || group.children.length === 0) ? (
-						<CollapsibleListDropZone drop={drop} itemName="group" />
+						<GroupingTableDropZone drop={drop} itemName="group" />
 					) : null}
 
 					{/* Render connections in this group */}
 					<CollabsibleGroupItems
-						ItemRow={ItemRow}
-						itemName={itemName}
-						groupApi={groupApi}
 						items={itemsInGroup}
 						groupId={group.id}
 						showNoItemsMessage={group.children.length === 0}
@@ -114,31 +92,32 @@ const CollapsibleGroupSingle = observer(function CollapsibleGroupSingle<
 	)
 })
 
-interface CollapsibleGroupRow2Props {
-	group: CollapsibleGroup
+interface GroupingTableGroupRow2Props {
+	group: GroupingTableGroup
 	toggleExpanded: () => void
 	groupApi: GroupApi
 	isCollapsed: boolean
 	index: number
 	nestingLevel: number
 }
-const CollapsibleGroupRow2 = observer(function CollapsibleGroupRow2({
+const GroupingTableGroupRow2 = observer(function GroupingTableGroupRow2({
 	group,
 	toggleExpanded,
 	groupApi,
 	isCollapsed,
 	index,
 	nestingLevel,
-}: CollapsibleGroupRow2Props) {
-	const { drop: dropConnectionInto } = useGroupListItemDragging(groupApi, group.id, -1)
-	const { isOver, canDrop, drop: dropGroupInto } = useGroupListGroupDragging(groupApi, group.id)
+}: GroupingTableGroupRow2Props) {
+	const { dragId } = useGroupingTableContext<GroupingTableItem>()
+	const { drop: dropConnectionInto } = useGroupListItemDragging(groupApi, dragId, group.id, -1)
+	const { isOver, canDrop, drop: dropGroupInto } = useGroupListGroupDragging(groupApi, dragId, group.id)
 
 	// Function that combines both drop targets
 	let combinedDropInto: ConnectDropTarget = dropConnectionInto
 	if (isCollapsed) combinedDropInto = (ref: any) => dropGroupInto(dropConnectionInto(ref))
 
 	return (
-		<CollapsibleGroupRow
+		<GroupingTableGroupRow
 			group={group}
 			isCollapsed={isCollapsed}
 			toggleExpanded={toggleExpanded}

@@ -14,9 +14,14 @@ export interface GroupingTableItemDragStatus {
 	isDragging: boolean
 }
 
-export function useGroupListItemDragging(groupApi: GroupApi, groupId: string | null, dropIndex: number = 0) {
+export function useGroupListItemDragging(
+	groupApi: GroupApi,
+	dragId: string,
+	groupId: string | null,
+	dropIndex: number = 0
+) {
 	const [isDragging, drop] = useDrop<GroupingTableItemDragItem, unknown, boolean>({
-		accept: 'connection',
+		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},

@@ -1,30 +1,26 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { CollapsibleGroupContents } from '../../Components/GroupingTable/CollapsibleGroupContents.js'
-import type { CollapsibleGroupItem, GroupApi } from './Types.js'
+import { CollapsibleGroupContents } from './CollapsibleGroupContents.js'
+import type { GroupingTableItem } from './Types.js'
 import { useGroupListItemDragging } from './useItemDragging.js'
+import { useGroupingTableContext } from './GroupingTableContext.js'
 
-interface CollabsibleGroupItemsProps<TItem extends CollapsibleGroupItem> {
-	ItemRow: React.ComponentType<{ item: TItem; index: number; nestingLevel: number }>
-	itemName: string
-	groupApi: GroupApi
-
+interface CollabsibleGroupItemsProps<TItem extends GroupingTableItem> {
 	items: TItem[]
 	groupId: string | null
 	showNoItemsMessage: boolean
 	nestingLevel?: number
 }
 
-export const CollabsibleGroupItems = observer(function CollabsibleGroupItems<TItem extends CollapsibleGroupItem>({
-	ItemRow,
-	itemName,
-	groupApi,
+export const CollabsibleGroupItems = observer(function CollabsibleGroupItems<TItem extends GroupingTableItem>({
 	items,
 	groupId,
 	showNoItemsMessage,
 	nestingLevel = 0,
 }: CollabsibleGroupItemsProps<TItem>) {
-	const { isDragging, drop } = useGroupListItemDragging(groupApi, groupId)
+	const { dragId, groupApi, itemName, ItemRow } = useGroupingTableContext<TItem>()
+
+	const { isDragging, drop } = useGroupListItemDragging(groupApi, dragId, groupId)
 
 	return (
 		<CollapsibleGroupContents<TItem>

@@ -9,7 +9,7 @@ import { usePanelCollapseHelperContextForPanel } from '../../Helpers/CollapseHel
 import { ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionListApi } from './ConnectionListApi.js'
 import { useGroupListDragging } from './ConnectionListDropZone.js'
-import { CollapsibleListDropZone } from '../../Components/GroupingTable/CollapsibleListDropZone.js'
+import { GroupingTableDropZone } from '../../Components/GroupingTable/GroupingTableDropZone.js'
 
 interface ConnectionGroupsArrayProps {
 	groups: ConnectionGroup[]
@@ -114,7 +114,7 @@ const ConnectionGroupSingle = observer(function ConnectionGroupSingle({
 					/>
 
 					{canDrop && (!group.children || group.children.length === 0) ? (
-						<CollapsibleListDropZone drop={drop} itemName="group" />
+						<GroupingTableDropZone drop={drop} itemName="group" />
 					) : null}
 
 					{/* Render connections in this group */}

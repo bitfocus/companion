@@ -19,7 +19,7 @@ import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { ObservableMap } from 'mobx'
 import { ConnectionGroupsArray } from './ConnectionGroups.js'
-import { CollapsibleGroupTable } from '../../Components/GroupingTable/CollapsibleGroupTable.js'
+import { GroupingTable } from '../../Components/GroupingTable/GroupingTable.js'
 import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
 import { useComputed } from '../../util.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
@@ -107,11 +107,12 @@ export const ConnectionsList = observer(function ConnectionsList({
 					configureConnection={doConfigureConnection}
 					selectedConnectionId={selectedConnectionId}
 				>
-					<CollapsibleGroupTable<ConnectionGroup, ClientConnectionConfigWithId>
+					<GroupingTable<ConnectionGroup, ClientConnectionConfigWithId>
 						Heading={ConnectionListTableHeading}
 						NoContent={ConnectionListNoConnections}
 						ItemRow={ConnectionListItem}
 						itemName="connection"
+						dragId="connection"
 						groupApi={connectionListApi}
 						groups={connections.rootGroups()}
 						items={allConnections}

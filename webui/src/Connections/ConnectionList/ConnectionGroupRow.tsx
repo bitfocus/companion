@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { useConnectionListDragging, useGroupListDragging } from './ConnectionListDropZone.js'
 import { ConnectionListApi } from './ConnectionListApi.js'
-import { CollapsibleGroupRow } from '../../Components/GroupingTable/CollapsibleGroupRow.js'
+import { GroupingTableGroupRow } from '../../Components/GroupingTable/GroupingTableGroupRow.js'
 import { ConnectDropTarget } from 'react-dnd'
 
 interface ConnectionGroupRowProps {
@@ -30,7 +30,7 @@ export const ConnectionGroupRow = observer(function ConnectionGroupRow({
 	if (isCollapsed) combinedDropInto = (ref: any) => dropGroupInto(dropConnectionInto(ref))
 
 	return (
-		<CollapsibleGroupRow
+		<GroupingTableGroupRow
 			group={group}
 			isCollapsed={isCollapsed}
 			toggleExpanded={toggleExpanded}

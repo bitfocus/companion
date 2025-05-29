@@ -9,14 +9,14 @@ export interface GroupApi {
 	moveItemToGroup: (itemId: string, groupId: string | null, dropIndex: number) => void
 }
 
-export interface CollapsibleGroup {
+export interface GroupingTableGroup {
 	id: string
 	label?: string
 	sortOrder?: number
 	children: this[]
 }
 
-export interface CollapsibleGroupItem {
+export interface GroupingTableItem {
 	id: string
 	groupId: string | null
 	sortOrder: number

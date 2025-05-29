@@ -1,7 +1,7 @@
 import React from 'react'
 import { ConnectDropTarget } from 'react-dnd'
 
-export function CollapsibleListDropZone({ drop, itemName }: { drop: ConnectDropTarget | undefined; itemName: string }) {
+export function GroupingTableDropZone({ drop, itemName }: { drop: ConnectDropTarget | undefined; itemName: string }) {
 	return (
 		<tr ref={drop} className="collapsible-list-dropzone">
 			<td colSpan={6}>
