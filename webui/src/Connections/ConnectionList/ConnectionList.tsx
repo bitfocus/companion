@@ -10,15 +10,19 @@ import { NonIdealState } from '../../Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ClientConnectionConfig, ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
 import { useConnectionListApi } from './ConnectionListApi.js'
 import { ConnectionsInGroup } from './ConnectionsInGroup.js'
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
 import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { ObservableMap, toJS } from 'mobx'
+import { ObservableMap } from 'mobx'
 import { ConnectionGroupsArray } from './ConnectionGroups.js'
+import { CollapsibleGroupTable } from '../../Components/GroupingTable/CollapsibleGroupTable.js'
+import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
+import { useComputed } from '../../util.js'
+import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -57,14 +61,20 @@ export const ConnectionsList = observer(function ConnectionsList({
 
 	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections, connectionStatuses)
 
-	console.log(
-		'groups',
-		connections.rootGroups().map((k) => toJS(k))
-	)
-
 	const connectionListApi = useConnectionListApi(confirmModalRef)
 
 	const { isDragging } = useConnectionListDragging(null)
+
+	const allConnections = useComputed(() => {
+		const allConnections: ClientConnectionConfigWithId[] = []
+
+		for (const [connectionId, connection] of connections.connections) {
+			const status = connectionStatuses.get(connectionId)
+			allConnections.push({ ...connection, id: connectionId, status })
+		}
+
+		return allConnections
+	}, [connections.connections, connectionStatuses])
 
 	return (
 		<div>
@@ -85,76 +95,82 @@ export const ConnectionsList = observer(function ConnectionsList({
 					<FontAwesomeIcon icon={faLayerGroup} /> Add Group
 				</CButton>
 			</div>
-
-			<table className="table-tight table-responsive-sm">
-				<thead>
-					<tr>
-						<th colSpan={2} className="ps-4">
-							Connection
-						</th>
-						<th colSpan={4} className="fit">
-							<CButtonGroup className="table-header-buttons">
-								<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
-								<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
-								<VisibilityButton {...visibleConnections} keyId="warning" color="warning" label="Warning" />
-								<VisibilityButton {...visibleConnections} keyId="error" color="danger" label="Error" />
-							</CButtonGroup>
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{/* Render root level groups and their nested content */}
-					<PanelCollapseHelperProvider
-						storageId="connection-groups"
-						knownPanelIds={connections.allGroupIds}
-						defaultCollapsed
-					>
-						<ConnectionGroupsArray
-							groups={connections.rootGroups()}
-							connectionListApi={connectionListApi}
-							groupedConnections={groupedConnections}
-							doConfigureConnection={doConfigureConnection}
-							selectedConnectionId={selectedConnectionId}
-							visibleConnections={visibleConnections}
-							showConnectionVariables={showConnectionVariables}
-							deleteModalRef={confirmModalRef}
-							nestingLevel={0}
-						/>
-					</PanelCollapseHelperProvider>
-
-					{/* Render ungrouped connections */}
-					{(isDragging || ungroupedConnections.length > 0) && connections.groups.size > 0 && (
-						<tr className="collapsible-group-header">
-							<td colSpan={6}>
-								<span className="group-name">Ungrouped Connections</span>
-							</td>
-						</tr>
-					)}
-
-					<ConnectionsInGroup
-						doConfigureConnection={doConfigureConnection}
-						selectedConnectionId={selectedConnectionId}
-						connections={ungroupedConnections}
-						groupId={null}
-						visibleConnections={visibleConnections}
-						showConnectionVariables={showConnectionVariables}
-						deleteModalRef={confirmModalRef}
-						showNoConnectionsMessage={false}
+			<PanelCollapseHelperProvider
+				storageId="connection-groups"
+				knownPanelIds={connections.allGroupIds}
+				defaultCollapsed
+			>
+				<ConnectionListContextProvider
+					visibleConnections={visibleConnections}
+					showVariables={showConnectionVariables}
+					deleteModalRef={confirmModalRef}
+					configureConnection={doConfigureConnection}
+					selectedConnectionId={selectedConnectionId}
+				>
+					<CollapsibleGroupTable<ConnectionGroup, ClientConnectionConfigWithId>
+						Heading={ConnectionListTableHeading}
+						NoContent={ConnectionListNoConnections}
+						ItemRow={ConnectionListItem}
+						itemName="connection"
+						groupApi={connectionListApi}
+						groups={connections.rootGroups()}
+						items={allConnections}
 					/>
 
-					{connections.count === 0 && (
-						<tr>
-							<td colSpan={6}>
-								<NonIdealState icon={faPlug}>
-									You haven't set up any connections yet. <br />
-									Try adding something from the list <span className="d-xl-none">below</span>
-									<span className="d-none d-xl-inline">to the right</span>.
-								</NonIdealState>
-							</td>
-						</tr>
-					)}
-				</tbody>
-			</table>
+					<table className="table-tight table-responsive-sm">
+						<thead>
+							<tr>
+								<th colSpan={2} className="ps-4">
+									Connection
+								</th>
+								<th colSpan={4} className="fit">
+									<CButtonGroup className="table-header-buttons">
+										<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
+										<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
+										<VisibilityButton {...visibleConnections} keyId="warning" color="warning" label="Warning" />
+										<VisibilityButton {...visibleConnections} keyId="error" color="danger" label="Error" />
+									</CButtonGroup>
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{/* Render root level groups and their nested content */}
+
+							<ConnectionGroupsArray
+								groups={connections.rootGroups()}
+								connectionListApi={connectionListApi}
+								groupedConnections={groupedConnections}
+								doConfigureConnection={doConfigureConnection}
+								selectedConnectionId={selectedConnectionId}
+								visibleConnections={visibleConnections}
+								showConnectionVariables={showConnectionVariables}
+								deleteModalRef={confirmModalRef}
+								nestingLevel={0}
+							/>
+
+							{/* Render ungrouped connections */}
+							{(isDragging || ungroupedConnections.length > 0) && connections.groups.size > 0 && (
+								<tr className="collapsible-group-header">
+									<td colSpan={6}>
+										<span className="group-name">Ungrouped Connections</span>
+									</td>
+								</tr>
+							)}
+
+							<ConnectionsInGroup
+								doConfigureConnection={doConfigureConnection}
+								selectedConnectionId={selectedConnectionId}
+								connections={ungroupedConnections}
+								groupId={null}
+								visibleConnections={visibleConnections}
+								showConnectionVariables={showConnectionVariables}
+								deleteModalRef={confirmModalRef}
+								showNoConnectionsMessage={false}
+							/>
+						</tbody>
+					</table>
+				</ConnectionListContextProvider>
+			</PanelCollapseHelperProvider>
 		</div>
 	)
 })
@@ -202,4 +218,72 @@ function getGroupedConnections(
 		groupedConnections,
 		ungroupedConnections,
 	}
+}
+
+function ConnectionListTableHeading() {
+	const { visibleConnections } = useConnectionListContext()
+
+	return (
+		<div className="flex flex-row">
+			<div className="grow">Connection</div>
+			<div className="no-break">
+				<CButtonGroup className="table-header-buttons">
+					<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
+					<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
+					<VisibilityButton {...visibleConnections} keyId="warning" color="warning" label="Warning" />
+					<VisibilityButton {...visibleConnections} keyId="error" color="danger" label="Error" />
+				</CButtonGroup>
+			</div>
+		</div>
+	)
+}
+
+function ConnectionListNoConnections() {
+	return (
+		<NonIdealState icon={faPlug}>
+			You haven't set up any connections yet. <br />
+			Try adding something from the list <span className="d-xl-none">below</span>
+			<span className="d-none d-xl-inline">to the right</span>.
+		</NonIdealState>
+	)
+}
+
+function ConnectionListItem({
+	item: connection,
+	index,
+	nestingLevel,
+}: {
+	item: ClientConnectionConfigWithId
+	index: number
+	nestingLevel: number // TODO - should this be here?
+}) {
+	const { visibleConnections, showVariables, deleteModalRef, configureConnection, selectedConnectionId } =
+		useConnectionListContext()
+
+	// Apply visibility filters
+	if (!visibleConnections.visibility.disabled && connection.enabled === false) {
+		return null
+	} else if (connection.status) {
+		if (!visibleConnections.visibility.ok && connection.status.category === 'good') {
+			return null
+		} else if (!visibleConnections.visibility.warning && connection.status.category === 'warning') {
+			return null
+		} else if (!visibleConnections.visibility.error && connection.status.category === 'error') {
+			return null
+		}
+	}
+
+	return (
+		<ConnectionsTableRow
+			key={connection.id}
+			id={connection.id}
+			index={index}
+			connection={connection}
+			showVariables={showVariables}
+			deleteModalRef={deleteModalRef}
+			configureConnection={configureConnection}
+			isSelected={connection.id === selectedConnectionId}
+			nestingLevel={nestingLevel}
+		/>
+	)
 }

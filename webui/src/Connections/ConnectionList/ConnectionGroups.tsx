@@ -114,7 +114,7 @@ const ConnectionGroupSingle = observer(function ConnectionGroupSingle({
 					/>
 
 					{canDrop && (!group.children || group.children.length === 0) ? (
-						<CollapsibleListDropZone drop={drop} itemName={'group'} />
+						<CollapsibleListDropZone drop={drop} itemName="group" />
 					) : null}
 
 					{/* Render connections in this group */}

@@ -1,3 +1,19 @@
+.collapsible-group-table {
+	border: 1px solid #ddd;
+	border-collapse: collapse;
+	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
+
+	.collapsible-group-table-header {
+		background-color: #f0f0f0;
+		padding: 6px 10px;
+		padding-left: 20px;
+
+		border-bottom: 1px solid #ddd;
+
+		font-weight: 700;
+	}
+}
+
 .collapsible-group-header {
 	background-color: #f0f0f0;
 	font-weight: 600;

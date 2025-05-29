@@ -14,29 +14,13 @@ import { TextInputField } from '../TextInputField.js'
 import { ConnectDropTarget, useDrag, useDrop } from 'react-dnd'
 import { checkDragState } from '../../util.js'
 import classNames from 'classnames'
-
-export interface CollapsibleGroup {
-	id: string
-	label?: string
-	sortOrder?: number
-	[key: string]: any
-}
+import type { CollapsibleGroup, GroupApi } from './Types.js'
 
 export interface DragItem {
 	groupId: string
 	index: number
 	dragState: any
 	parentId?: string | null
-}
-
-/**
- * Generic group API interface for reusable collapsible group operations
- */
-export interface GroupApi {
-	addNewGroup: (groupName?: string) => void
-	renameGroup: (groupId: string, newName: string) => void
-	deleteGroup: (groupId: string) => void
-	moveGroup: (groupId: string, parentId: string | null, dropIndex: number) => void
 }
 
 export interface CollapsibleGroupRowProps {

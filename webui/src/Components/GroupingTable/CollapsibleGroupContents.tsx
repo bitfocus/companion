@@ -87,7 +87,7 @@ export const CollapsibleGroupContents = observer(function CollapsibleGroupConten
 							})}
 						>
 							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-							<strong>This groups is empty</strong>
+							<strong>This group is empty</strong>
 						</div>
 					</td>
 				</tr>

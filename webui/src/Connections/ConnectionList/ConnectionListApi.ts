@@ -1,7 +1,7 @@
 import { useContext, useMemo } from 'react'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { GroupApi } from '../../Components/GroupingTable/CollapsibleGroupRow.js'
+import { GroupApi } from '../../Components/GroupingTable/Types.js'
 
 export interface ConnectionListApi extends GroupApi {}
 
@@ -39,6 +39,11 @@ export function useConnectionListApi(confirmModalRef: React.RefObject<GenericCon
 				moveGroup: (groupId: string, parentId: string | null, dropIndex: number) => {
 					socket.emitPromise('connection-groups:reorder', [groupId, parentId, dropIndex]).catch((e) => {
 						console.error('Failed to reorder group', e)
+					})
+				},
+				moveItemToGroup: (itemId: string, groupId: string | null, dropIndex: number) => {
+					socket.emitPromise('connections:reorder', [groupId, itemId, dropIndex]).catch((e) => {
+						console.error('Reorder failed', e)
 					})
 				},
 			}) satisfies ConnectionListApi,
