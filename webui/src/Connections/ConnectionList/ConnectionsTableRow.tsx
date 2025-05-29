@@ -153,33 +153,29 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td onClick={doEdit} className="hand" style={indentationStyle}>
-				<b>{connection.label}</b>
+				<div className="flex flex-column">
+					<b>{connection.label}</b>
+					{moduleInfo ? (
+						<span>
+							{moduleInfo.display.manufacturer ?? ''}: {moduleInfo.display.products?.join('; ') ?? ''}{' '}
+						</span>
+					) : (
+						<span>{connection.instance_type}</span>
+					)}
+				</div>
 			</td>
-			<td onClick={doEdit} className="hand">
-				{moduleInfo ? (
+			<td onClick={doEdit} className="hand no-break">
+				{moduleVersion?.isLegacy && (
 					<>
-						{moduleInfo.display.shortname ?? ''}
-						<br />
-						{moduleInfo.display.manufacturer ?? ''}
-						<br />
-						{moduleVersion?.isLegacy && (
-							<>
-								<FontAwesomeIcon
-									icon={faExclamationTriangle}
-									color="#f80"
-									title="This module has not been updated for Companion 3.0, and may not work fully"
-								/>{' '}
-							</>
-						)}
-						{moduleVersion?.displayName ?? connection.moduleVersionId}
-					</>
-				) : (
-					<>
-						{connection.instance_type}
-						<br />
-						{connection.moduleVersionId}
+						<FontAwesomeIcon
+							icon={faExclamationTriangle}
+							color="#f80"
+							title="This module has not been updated for Companion 3.0, and may not work fully"
+						/>{' '}
 					</>
 				)}
+				{moduleVersion?.displayName ?? connection.moduleVersionId}
+
 				<UpdateConnectionToLatestButton connection={connection} />
 			</td>
 			<td className="hand" onClick={doEdit}>

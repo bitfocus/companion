@@ -91,9 +91,8 @@ export const ConnectionsList = observer(function ConnectionsList({
 				<thead>
 					<tr>
 						<th className="fit">&nbsp;</th>
-						<th>Label</th>
-						<th>Module</th>
-						<th colSpan={3} className="fit">
+						<th>Connection</th>
+						<th colSpan={4} className="fit">
 							<CButtonGroup className="table-header-buttons">
 								<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
 								<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
