@@ -90,8 +90,9 @@ export const ConnectionsList = observer(function ConnectionsList({
 			<table className="table-tight table-responsive-sm">
 				<thead>
 					<tr>
-						<th className="fit">&nbsp;</th>
-						<th>Connection</th>
+						<th colSpan={2} className="ps-4">
+							Connection
+						</th>
 						<th colSpan={4} className="fit">
 							<CButtonGroup className="table-header-buttons">
 								<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />

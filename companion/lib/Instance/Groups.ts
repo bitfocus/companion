@@ -180,7 +180,8 @@ export class InstanceGroups {
 
 		client.onPromise('connection-groups:reorder', (groupId: string, parentId: string | null, dropIndex: number) => {
 			if (groupId === parentId) {
-				throw new Error(`Cannot move group ${groupId} to itself`)
+				// Cannot move a group into itself
+				return
 			}
 
 			const matchedGroup = this.#findGroupAndParent(groupId)

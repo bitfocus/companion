@@ -149,43 +149,42 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 				'connectionlist-selected': isSelected,
 			})}
 		>
-			<td ref={drag} className="td-reorder">
-				<FontAwesomeIcon icon={faSort} />
-			</td>
-			<td onClick={doEdit} className="hand" style={indentationStyle}>
-				<div className="flex flex-column">
-					<b>{connection.label}</b>
-					{moduleInfo ? (
-						<span>
-							{moduleInfo.display.manufacturer ?? ''}: {moduleInfo.display.products?.join('; ') ?? ''}{' '}
-						</span>
-					) : (
-						<span>{connection.instance_type}</span>
-					)}
-				</div>
-			</td>
-			<td onClick={doEdit} className="hand no-break">
-				{moduleVersion?.isLegacy && (
-					<>
-						<FontAwesomeIcon
-							icon={faExclamationTriangle}
-							color="#f80"
-							title="This module has not been updated for Companion 3.0, and may not work fully"
-						/>{' '}
-					</>
-				)}
-				{moduleVersion?.displayName ?? connection.moduleVersionId}
+			<td onClick={doEdit} className="hand" style={indentationStyle} colSpan={6}>
+				<div className="flex flex-row align-items-center gap-2">
+					<div ref={drag} className="td-reorder">
+						<FontAwesomeIcon icon={faSort} />
+					</div>
+					<div className="flex flex-column grow">
+						<b>{connection.label}</b>
+						{moduleInfo ? (
+							<span>
+								{moduleInfo.display.manufacturer ?? ''}: {moduleInfo.display.products?.join('; ') ?? ''}{' '}
+							</span>
+						) : (
+							<span>{connection.instance_type}</span>
+						)}
+					</div>
 
-				<UpdateConnectionToLatestButton connection={connection} />
-			</td>
-			<td className="hand" onClick={doEdit}>
-				<ConnectionStatusCell isEnabled={isEnabled} status={connection.status} />
-			</td>
-			<td className="action-buttons">
-				<div style={{ display: 'flex' }}>
-					<div>
+					<div className="no-break">
+						{moduleVersion?.isLegacy && (
+							<>
+								<FontAwesomeIcon
+									icon={faExclamationTriangle}
+									color="#f80"
+									title="This module has not been updated for Companion 3.0, and may not work fully"
+								/>{' '}
+							</>
+						)}
+						{moduleVersion?.displayName ?? connection.moduleVersionId}
+
+						<UpdateConnectionToLatestButton connection={connection} />
+					</div>
+					<div className="ms-2">
+						<ConnectionStatusCell isEnabled={isEnabled} status={connection.status} />
+					</div>
+					<div className="flex">
 						<CFormSwitch
-							className="connection-enabled-switch"
+							className="ms-2"
 							disabled={!moduleInfo || !moduleVersion}
 							color="success"
 							checked={isEnabled}
@@ -193,80 +192,80 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 							size="xl"
 							title={isEnabled ? 'Disable connection' : 'Enable connection'}
 						/>
+						<CPopover
+							trigger="focus"
+							placement="right"
+							style={{ backgroundColor: 'white' }}
+							content={
+								<>
+									{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
+									<CButtonGroup vertical>
+										<CButton
+											onMouseDown={doShowHelp}
+											color="secondary"
+											title="Help"
+											disabled={!moduleVersion?.helpPath}
+											style={{ textAlign: 'left' }}
+										>
+											<Tuck>
+												<FontAwesomeIcon icon={faQuestionCircle} />
+											</Tuck>
+											Help
+										</CButton>
+
+										<CButton
+											onMouseDown={openBugUrl}
+											color="secondary"
+											title="Issue Tracker"
+											disabled={!moduleInfo?.display?.bugUrl}
+											style={{ textAlign: 'left' }}
+										>
+											<Tuck>
+												<FontAwesomeIcon icon={faBug} />
+											</Tuck>
+											Known issues
+										</CButton>
+
+										<CButton
+											onMouseDown={doShowVariables}
+											title="Variables"
+											color="secondary"
+											disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
+											style={{ textAlign: 'left' }}
+										>
+											<Tuck>
+												<FontAwesomeIcon icon={faDollarSign} />
+											</Tuck>
+											Variables
+										</CButton>
+
+										<CButton
+											onMouseDown={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
+											title="Logs"
+											color="secondary"
+											style={{ textAlign: 'left' }}
+										>
+											<Tuck>
+												<FontAwesomeIcon icon={faTerminal} />
+											</Tuck>
+											View logs
+										</CButton>
+
+										<CButton onMouseDown={doDelete} title="Delete" color="secondary" style={{ textAlign: 'left' }}>
+											<Tuck>
+												<FontAwesomeIcon icon={faTrash} />
+											</Tuck>
+											Delete
+										</CButton>
+									</CButtonGroup>
+								</>
+							}
+						>
+							<CButton color="secondary" style={{ padding: '3px 16px' }} onClick={(e) => e.currentTarget.focus()}>
+								<FontAwesomeIcon icon={faEllipsisV} />
+							</CButton>
+						</CPopover>
 					</div>
-					<CPopover
-						trigger="focus"
-						placement="right"
-						style={{ backgroundColor: 'white' }}
-						content={
-							<>
-								{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
-								<CButtonGroup vertical>
-									<CButton
-										onMouseDown={doShowHelp}
-										color="secondary"
-										title="Help"
-										disabled={!moduleVersion?.helpPath}
-										style={{ textAlign: 'left' }}
-									>
-										<Tuck>
-											<FontAwesomeIcon icon={faQuestionCircle} />
-										</Tuck>
-										Help
-									</CButton>
-
-									<CButton
-										onMouseDown={openBugUrl}
-										color="secondary"
-										title="Issue Tracker"
-										disabled={!moduleInfo?.display?.bugUrl}
-										style={{ textAlign: 'left' }}
-									>
-										<Tuck>
-											<FontAwesomeIcon icon={faBug} />
-										</Tuck>
-										Known issues
-									</CButton>
-
-									<CButton
-										onMouseDown={doShowVariables}
-										title="Variables"
-										color="secondary"
-										disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
-										style={{ textAlign: 'left' }}
-									>
-										<Tuck>
-											<FontAwesomeIcon icon={faDollarSign} />
-										</Tuck>
-										Variables
-									</CButton>
-
-									<CButton
-										onMouseDown={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
-										title="Logs"
-										color="secondary"
-										style={{ textAlign: 'left' }}
-									>
-										<Tuck>
-											<FontAwesomeIcon icon={faTerminal} />
-										</Tuck>
-										View logs
-									</CButton>
-
-									<CButton onMouseDown={doDelete} title="Delete" color="secondary" style={{ textAlign: 'left' }}>
-										<Tuck>
-											<FontAwesomeIcon icon={faTrash} />
-										</Tuck>
-										Delete
-									</CButton>
-								</CButtonGroup>
-							</>
-						}
-					>
-						<CButton color="secondary" style={{ padding: '3px 16px' }} onClick={(e) => e.currentTarget.focus()}>
-							<FontAwesomeIcon icon={faEllipsisV} />
-						</CButton>
-					</CPopover>
 				</div>
 			</td>
 		</tr>
