@@ -4,7 +4,6 @@ import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { nanoid } from 'nanoid'
-import { group } from 'console'
 
 const ConnectionGroupRoom = 'connection-groups'
 
@@ -27,6 +26,8 @@ export class InstanceGroups {
 			data.children = data.children || []
 			data.children.sort((a, b) => a.sortOrder - b.sortOrder)
 		}
+
+		console.log('init', this.#data)
 	}
 
 	/**
@@ -210,10 +211,14 @@ export class InstanceGroups {
 				child.sortOrder = i // Reset sortOrder for children
 			})
 
+			// Update the database
+			// Note: this is being lazy, by writing every row, it could be optimized
+			for (const row of this.#data) {
+				this.#dbTable.set(row.id, row)
+			}
+
 			// Inform the ui of the shuffle
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:update', this.#data)
-
-			console.log('handled?')
 
 			// Future: perform side effects like updating enabled statuses
 		})

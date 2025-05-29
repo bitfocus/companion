@@ -1,7 +1,27 @@
 import { useContext, useDeferredValue } from 'react'
 import { useDrop } from 'react-dnd'
-import { ConnectionDragItem } from './ConnectionList.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { checkDragState, DragState } from '../../util.js'
+
+export interface ConnectionDragItem {
+	connectionId: string
+	groupId: string | null
+	index: number
+
+	dragState: DragState | null
+}
+export interface ConnectionDragStatus {
+	isDragging: boolean
+}
+
+export interface ConnectionGroupDragItem {
+	groupId: string
+	parentId: string | null
+	dragState: DragState | null
+}
+export interface ConnectionGroupDragStatus {
+	isDragging: boolean
+}
 
 export function useConnectionListDragging(groupId: string | null, dropIndex: number = 0) {
 	const { socket } = useContext(RootAppStoreContext)
@@ -43,7 +63,7 @@ export function useGroupListDragging(groupId: string | null) {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const [{ isOver, canDrop, dragGroupId }, drop] = useDrop<
-		{ groupId: string; parentId: string | null },
+		ConnectionGroupDragItem,
 		unknown,
 		{ isOver: boolean; canDrop: boolean; dragGroupId: string | undefined }
 	>({
@@ -53,10 +73,15 @@ export function useGroupListDragging(groupId: string | null) {
 			canDrop: monitor.canDrop(),
 			dragGroupId: monitor.canDrop() ? monitor.getItem()?.groupId : undefined,
 		}),
-		hover(item, _monitor) {
+		hover(item, monitor) {
 			// If this is the root area (groupId is null), make the dropped group top-level
 
 			console.log('hover', groupId, item.groupId)
+
+			// Ensure the hover targets this element, and not a child element
+			if (!monitor.isOver({ shallow: true })) return
+
+			if (!checkDragState(item, monitor, `${groupId}-content`)) return
 
 			if (groupId === item.parentId) return // Don't allow dropping into the same group
 

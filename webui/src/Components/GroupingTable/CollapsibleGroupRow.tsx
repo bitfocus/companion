@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, CSSProperties } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { CButton } from '@coreui/react'
 import {
 	faCaretRight,

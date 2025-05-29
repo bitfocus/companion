@@ -1,5 +1,5 @@
 import { CCol, CRow, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
-import React, { memo, useCallback, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { MyErrorBoundary } from '../util.js'
 import { ConnectionsList } from './ConnectionList/ConnectionList.js'
 import { AddConnectionsPanel } from './AddConnectionPanel.js'

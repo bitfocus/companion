@@ -8,11 +8,10 @@ import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../../Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
-import { PanelCollapseHelperProvider, usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
-import { DragState } from '../../util.js'
 import { useConnectionListApi } from './ConnectionListApi.js'
 import { ConnectionsInGroup } from './ConnectionsInGroup.js'
 import { useConnectionListDragging } from './ConnectionListDropZone.js'
@@ -159,26 +158,6 @@ export const ConnectionsList = observer(function ConnectionsList({
 		</div>
 	)
 })
-
-export interface ConnectionDragItem {
-	connectionId: string
-	groupId: string | null
-	index: number
-
-	dragState: DragState | null
-}
-export interface ConnectionDragStatus {
-	isDragging: boolean
-}
-
-export interface ConnectionGroupDragItem {
-	groupId: string
-	index: number
-	dragState: DragState | null
-}
-export interface ConnectionGroupDragStatus {
-	isDragging: boolean
-}
 
 export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 	id: string

@@ -20,9 +20,10 @@ import { windowLinkOpen } from '../../Helpers/Window.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { UpdateConnectionToLatestButton } from '../UpdateConnectionToLatestButton.js'
 import { getModuleVersionInfoForConnection } from '../Util.js'
-import { ClientConnectionConfigWithId, ConnectionDragItem, ConnectionDragStatus } from './ConnectionList.js'
+import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { checkDragState } from '../../util.js'
+import { ConnectionDragItem, ConnectionDragStatus } from './ConnectionListDropZone.js'
 
 interface ConnectionsTableRowProps {
 	id: string
@@ -158,7 +159,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 						<b>{connection.label}</b>
 						{moduleInfo ? (
 							<span>
-								{moduleInfo.display.manufacturer ?? ''}: {moduleInfo.display.products?.join('; ') ?? ''}{' '}
+								{moduleInfo.display.manufacturer ?? ''}: {moduleInfo.display.products?.join('; ') ?? ''}
 							</span>
 						) : (
 							<span>{connection.instance_type}</span>
