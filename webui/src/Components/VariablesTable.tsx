@@ -9,6 +9,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { VariableDefinitionExt } from '../Stores/VariablesStore.js'
 import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
+import { VariableTypeIcon } from './VariableTypeIcon.js'
 
 interface VariablesTableProps {
 	label: string
@@ -176,6 +177,31 @@ const VariablesTableRow = observer(function VariablesTableRow({
 		}
 	})
 
+	let typeDescription = 'unknown'
+	let iconPath = 'unknown'
+	if (typeof valueRaw === 'string') {
+		iconPath = 'string'
+		typeDescription = 'Text string'
+	} else if (valueRaw === undefined) {
+		iconPath = 'undefined'
+		typeDescription = 'Undefined'
+	} else if (valueRaw === null) {
+		iconPath = 'null'
+		typeDescription = 'Null'
+	} else if (typeof valueRaw === 'number' && isNaN(valueRaw)) {
+		iconPath = 'NaN'
+		typeDescription = 'Not a Number'
+	} else if (typeof valueRaw === 'number') {
+		iconPath = 'number'
+		typeDescription = 'Numeric value'
+	} else if (typeof valueRaw === 'boolean') {
+		iconPath = 'boolean'
+		typeDescription = 'Boolean value'
+	} else if (typeof valueRaw === 'object') {
+		iconPath = 'object'
+		typeDescription = 'JSON Object or Array'
+	}
+
 	return (
 		<tr>
 			<td>
@@ -191,21 +217,42 @@ const VariablesTableRow = observer(function VariablesTableRow({
 			<td>{variable.label}</td>
 			<td>
 				{
-					/*elms === '' || elms === null || elms === undefined */ lines.length === 0 ||
-					valueRaw === undefined ||
-					valueRaw === null ? (
+					/*elms === '' || elms === null || elms === undefined */ lines.length === 0 ? (
 						'(empty)'
 					) : (
-						<div style={{ display: 'inline' }}>
+						<div
+							style={{
+								display: 'inline',
+							}}
+						>
+							<span
+								style={{
+									backgroundColor: 'rgba(0,0,200,1)',
+									borderRadius: '6px 0 0 6px',
+									padding: '4px',
+									height: '24px',
+									display: 'inline-block',
+									lineHeight: '14px',
+								}}
+								title={`Variable type: ${typeDescription}`}
+							>
+								<VariableTypeIcon
+									width={12}
+									height={12}
+									icon={iconPath}
+									fill="#ffffff"
+									style={{ verticalAlign: '-1px' }}
+								/>
+							</span>
 							<code
 								style={{
 									backgroundColor: 'rgba(0,0,200,0.1)',
 									color: 'rgba(0,0,200,1)',
-									fontWeight: 'normal',
-									fontSize: 14,
 									padding: '4px',
+									borderRadius: '0 6px 6px 0',
+									fontSize: 14,
+									fontWeight: 'normal',
 									lineHeight: '2em',
-									borderRadius: '6px',
 								}}
 								title={value}
 							>
