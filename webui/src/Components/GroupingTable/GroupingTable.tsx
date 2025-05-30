@@ -26,6 +26,7 @@ export const GroupingTable = observer(function GroupingTable<
 	itemName,
 	dragId,
 	groupApi,
+	selectedItemId,
 
 	groups,
 	items,
@@ -35,7 +36,13 @@ export const GroupingTable = observer(function GroupingTable<
 	const { isDragging } = useGroupListItemDrop(groupApi, dragId, null, null, 0) // Assuming null for root level groups
 
 	return (
-		<GroupingTableContextProvider ItemRow={ItemRow} itemName={itemName} groupApi={groupApi} dragId={dragId}>
+		<GroupingTableContextProvider
+			ItemRow={ItemRow}
+			itemName={itemName}
+			groupApi={groupApi}
+			dragId={dragId}
+			selectedItemId={selectedItemId}
+		>
 			<div className="grouping-table">
 				<div className="grouping-table-header">
 					<Heading />

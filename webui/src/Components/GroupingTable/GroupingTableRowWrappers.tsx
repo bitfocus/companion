@@ -7,7 +7,7 @@ import { useGroupingTableContext } from './GroupingTableContext.js'
 import { GroupingTableNestingRow } from './GroupingTableNestingRow.js'
 import type { GroupingTableGroup, GroupingTableItem } from './Types.js'
 import { useGroupListItemDrop, GroupingTableItemDragItem } from './useItemDrop.js'
-import { GroupingTableGroupDragItem, useGroupListGroupDrop } from './useGroupDrop.js'
+import { GroupingTableGroupDragItem } from './useGroupDrop.js'
 import { observer } from 'mobx-react-lite'
 
 export const GroupingTableItemRow = observer(function GroupingTableItemRow<TItem extends GroupingTableItem>({
@@ -20,7 +20,7 @@ export const GroupingTableItemRow = observer(function GroupingTableItemRow<TItem
 	index: number
 	nestingLevel: number
 }>) {
-	const { dragId, groupApi } = useGroupingTableContext<TItem>()
+	const { dragId, groupApi, selectedItemId } = useGroupingTableContext<TItem>()
 
 	const { drop } = useGroupListItemDrop(groupApi, dragId, item.groupId, item.id, index)
 	const [{ isDragging }, drag, preview] = useDrag<GroupingTableItemDragItem, unknown, { isDragging: boolean }>({
@@ -36,15 +36,13 @@ export const GroupingTableItemRow = observer(function GroupingTableItemRow<TItem
 		}),
 	})
 
-	const isSelected = false // TODO - implement this
-
 	return (
 		<GroupingTableRowBase
 			drag={drag}
 			drop={drop}
 			preview={preview}
 			isDragging={isDragging}
-			isSelected={isSelected}
+			isSelected={item.id === selectedItemId}
 			nestingLevel={nestingLevel}
 			className="grouping-table-row-item"
 		>
@@ -58,24 +56,19 @@ export const GroupingTableGroupRowWrapper = observer(function GroupingTableGroup
 >({
 	group,
 	parentId,
-	index,
 	nestingLevel,
 	children,
 }: React.PropsWithChildren<{
 	group: TGroup
 	parentId: string | null
-	index: number
 	nestingLevel: number
 }>) {
 	const { dragId, groupApi } = useGroupingTableContext<GroupingTableItem>()
 
-	const { drop } = useGroupListGroupDrop(groupApi, dragId, group.id)
-	const { drop: dropItemInto } = useGroupListItemDrop(groupApi, dragId, group.id, null, -1)
-
-	const combinedDrop: ConnectDropTarget = (node) => drop(dropItemInto(node))
+	const { drop } = useGroupListItemDrop(groupApi, dragId, group.id, null, -1)
 
 	const [{ isDragging }, drag, preview] = useDrag<GroupingTableGroupDragItem, unknown, { isDragging: boolean }>({
-		type: dragId,
+		type: `${dragId}-group`,
 		item: {
 			groupId: group.id,
 			parentId: parentId,
@@ -89,7 +82,7 @@ export const GroupingTableGroupRowWrapper = observer(function GroupingTableGroup
 	return (
 		<GroupingTableRowBase
 			drag={drag}
-			drop={combinedDrop}
+			drop={drop}
 			preview={preview}
 			isDragging={isDragging}
 			isSelected={false}

@@ -98,7 +98,6 @@ export const ConnectionsList = observer(function ConnectionsList({
 					showVariables={showConnectionVariables}
 					deleteModalRef={confirmModalRef}
 					configureConnection={doConfigureConnection}
-					selectedConnectionId={selectedConnectionId}
 				>
 					<GroupingTable<ConnectionGroup, ClientConnectionConfigWithId>
 						Heading={ConnectionListTableHeading}
@@ -109,6 +108,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 						groupApi={connectionListApi}
 						groups={connections.rootGroups()}
 						items={allConnections}
+						selectedItemId={selectedConnectionId}
 					/>
 				</ConnectionListContextProvider>
 			</PanelCollapseHelperProvider>
@@ -149,9 +149,8 @@ function ConnectionListNoConnections() {
 	)
 }
 
-function ConnectionListItem({ item: connection, index }: { item: ClientConnectionConfigWithId; index: number }) {
-	const { visibleConnections, showVariables, deleteModalRef, configureConnection, selectedConnectionId } =
-		useConnectionListContext()
+function ConnectionListItem({ item: connection }: { item: ClientConnectionConfigWithId; index: number }) {
+	const { visibleConnections, showVariables, deleteModalRef, configureConnection } = useConnectionListContext()
 
 	// Apply visibility filters
 	if (!visibleConnections.visibility.disabled && connection.enabled === false) {
@@ -170,12 +169,10 @@ function ConnectionListItem({ item: connection, index }: { item: ClientConnectio
 		<ConnectionsTableRow
 			key={connection.id}
 			id={connection.id}
-			index={index}
 			connection={connection}
 			showVariables={showVariables}
 			deleteModalRef={deleteModalRef}
 			configureConnection={configureConnection}
-			isSelected={connection.id === selectedConnectionId}
 		/>
 	)
 }

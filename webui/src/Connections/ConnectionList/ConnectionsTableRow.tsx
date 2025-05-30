@@ -22,21 +22,17 @@ import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 
 interface ConnectionsTableRowProps {
 	id: string
-	index: number
 	connection: ClientConnectionConfigWithId
 	showVariables: (label: string) => void
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
-	isSelected: boolean
 }
 export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	id,
-	index,
 	connection,
 	showVariables,
 	configureConnection,
 	deleteModalRef,
-	isSelected,
 }: ConnectionsTableRowProps) {
 	const { socket, helpViewer, modules, variablesStore } = useContext(RootAppStoreContext)
 

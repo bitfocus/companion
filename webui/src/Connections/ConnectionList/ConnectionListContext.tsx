@@ -8,7 +8,6 @@ export interface ConnectionListContextType {
 	showVariables: (label: string) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
 	configureConnection: (connectionId: string | null) => void
-	selectedConnectionId: string | null
 }
 
 const ConnectionListContext = createContext<ConnectionListContextType | null>(null)
@@ -28,7 +27,6 @@ export function ConnectionListContextProvider({
 	showVariables,
 	deleteModalRef,
 	configureConnection,
-	selectedConnectionId,
 	children,
 }: React.PropsWithChildren<ConnectionListContextProviderProps>) {
 	const value = useMemo<ConnectionListContextType>(() => {
@@ -37,14 +35,12 @@ export function ConnectionListContextProvider({
 			showVariables,
 			deleteModalRef,
 			configureConnection,
-			selectedConnectionId,
 		}
 	}, [
 		visibleConnections, // TODO - is this too reactive?
 		showVariables,
 		deleteModalRef,
 		configureConnection,
-		selectedConnectionId,
 	])
 
 	return <ConnectionListContext.Provider value={value}>{children}</ConnectionListContext.Provider>

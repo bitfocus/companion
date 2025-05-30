@@ -21,10 +21,9 @@ export const GroupingTableGroupsList = observer(function GroupingTableGroupsList
 >({ groups, parentId, groupedItems, nestingLevel }: GroupingTableGroupsListProps<TGroup, TItem>) {
 	return (
 		<>
-			{groups.map((childGroup, childIndex) => (
+			{groups.map((childGroup) => (
 				<GroupingTableGroupSingle
 					key={childGroup.id}
-					index={childIndex}
 					group={childGroup}
 					parentId={parentId}
 					groupedItems={groupedItems}
@@ -36,21 +35,20 @@ export const GroupingTableGroupsList = observer(function GroupingTableGroupsList
 })
 
 interface GroupingTableGroupSingleProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem> {
-	index: number
 	group: TGroup
 	parentId: string | null
 	groupedItems: Map<string, TItem[]>
-	nestingLevel?: number
+	nestingLevel: number
 }
 
 // Note: mobx seems to get upset when a component is called recursively, without an intermediate component
 const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 	TGroup extends GroupingTableGroup,
 	TItem extends GroupingTableItem,
->({ index, group, parentId, groupedItems, nestingLevel = 0 }: GroupingTableGroupSingleProps<TGroup, TItem>) {
+>({ group, parentId, groupedItems, nestingLevel }: GroupingTableGroupSingleProps<TGroup, TItem>) {
 	const { dragId, groupApi } = useGroupingTableContext<TItem>()
 
-	const { isOver, canDrop, dragGroupId, drop } = useGroupListGroupDrop(groupApi, dragId, group.id)
+	const { canDrop, dragGroupId, drop } = useGroupListGroupDrop(groupApi, dragId, group.id)
 
 	const collapseHelper = usePanelCollapseHelperContextForPanel(null, group.id)
 
@@ -65,7 +63,6 @@ const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 				parentId={parentId}
 				toggleExpanded={collapseHelper.toggleCollapsed}
 				isCollapsed={isCollapsed}
-				index={index}
 				nestingLevel={nestingLevel}
 			/>
 

@@ -13,7 +13,6 @@ export interface GroupingTableGroupRowProps {
 	isCollapsed: boolean
 	toggleExpanded: () => void
 	groupApi: GroupApi
-	index: number
 	nestingLevel: number
 }
 
@@ -23,7 +22,6 @@ export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 	isCollapsed,
 	toggleExpanded,
 	groupApi,
-	index,
 	nestingLevel,
 	children,
 }: React.PropsWithChildren<GroupingTableGroupRowProps>) {
@@ -63,7 +61,7 @@ export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 	)
 
 	return (
-		<GroupingTableGroupRowWrapper group={group} parentId={parentId} index={index} nestingLevel={nestingLevel}>
+		<GroupingTableGroupRowWrapper group={group} parentId={parentId} nestingLevel={nestingLevel}>
 			<div className="d-flex align-items-center justify-content-between" onClick={toggleExpanded2}>
 				<div className="d-flex align-items-center flex-grow-1">
 					{isEditing ? (
