@@ -53,6 +53,7 @@ export const CollapsibleGroupContents = observer(function CollapsibleGroupConten
 
 			{hiddenCount > 0 && (
 				<tr
+					className="collapsible-group-table-row"
 					style={{
 						// @ts-expect-error variables are not typed
 						'--group-nesting-level': nestingLevel,

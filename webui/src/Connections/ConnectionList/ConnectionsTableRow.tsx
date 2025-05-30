@@ -23,7 +23,10 @@ import { getModuleVersionInfoForConnection } from '../Util.js'
 import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { checkDragState } from '../../util.js'
-import { ConnectionDragItem, ConnectionDragStatus } from './ConnectionListDropZone.js'
+import {
+	GroupingTableItemDragItem,
+	GroupingTableItemDragStatus,
+} from '../../Components/GroupingTable/useItemDragging.js'
 
 interface ConnectionsTableRowProps {
 	id: string
@@ -77,7 +80,8 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label])
 
 	const ref = useRef(null)
-	const [, drop] = useDrop<ConnectionDragItem>({
+	// TODO - avoid this dnd usage...
+	const [, drop] = useDrop<GroupingTableItemDragItem>({
 		accept: 'connection',
 		hover(item, monitor) {
 			if (!ref.current) {
@@ -87,12 +91,12 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			if (!checkDragState(item, monitor, id)) return
 
 			// Don't replace items with themselves
-			if (item.connectionId === id) {
+			if (item.itemId === id) {
 				return
 			}
 
 			// Time to actually perform the action
-			socket.emitPromise('connections:reorder', [connection.groupId ?? null, item.connectionId, index]).catch((e) => {
+			socket.emitPromise('connections:reorder', [connection.groupId ?? null, item.itemId, index]).catch((e) => {
 				console.error('Reorder failed', e)
 			})
 
@@ -104,10 +108,10 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			item.groupId = connection.groupId ?? null
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag<ConnectionDragItem, unknown, ConnectionDragStatus>({
+	const [{ isDragging }, drag, preview] = useDrag<GroupingTableItemDragItem, unknown, GroupingTableItemDragStatus>({
 		type: 'connection',
 		item: {
-			connectionId: id,
+			itemId: id,
 			groupId: connection.groupId ?? null,
 			index,
 			dragState: null,

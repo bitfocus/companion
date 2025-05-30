@@ -11,14 +11,9 @@ import { useTableVisibilityHelper, VisibilityButton } from '../../Components/Tab
 import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
 import { ClientConnectionConfig, ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
-import { ConnectionsStore } from '../../Stores/ConnectionsStore.js'
 import { useConnectionListApi } from './ConnectionListApi.js'
-import { ConnectionsInGroup } from './ConnectionsInGroup.js'
-import { useConnectionListDragging } from './ConnectionListDropZone.js'
 import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { ObservableMap } from 'mobx'
-import { ConnectionGroupsArray } from './ConnectionGroups.js'
 import { GroupingTable } from '../../Components/GroupingTable/GroupingTable.js'
 import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
 import { useComputed } from '../../util.js'
@@ -59,11 +54,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 		error: true,
 	})
 
-	const { groupedConnections, ungroupedConnections } = getGroupedConnections(connections, connectionStatuses)
-
 	const connectionListApi = useConnectionListApi(confirmModalRef)
-
-	const { isDragging } = useConnectionListDragging(null)
 
 	const allConnections = useComputed(() => {
 		const allConnections: ClientConnectionConfigWithId[] = []
@@ -117,59 +108,6 @@ export const ConnectionsList = observer(function ConnectionsList({
 						groups={connections.rootGroups()}
 						items={allConnections}
 					/>
-
-					<table className="table-tight table-responsive-sm">
-						<thead>
-							<tr>
-								<th colSpan={2} className="ps-4">
-									Connection
-								</th>
-								<th colSpan={4} className="fit">
-									<CButtonGroup className="table-header-buttons">
-										<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
-										<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
-										<VisibilityButton {...visibleConnections} keyId="warning" color="warning" label="Warning" />
-										<VisibilityButton {...visibleConnections} keyId="error" color="danger" label="Error" />
-									</CButtonGroup>
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{/* Render root level groups and their nested content */}
-
-							<ConnectionGroupsArray
-								groups={connections.rootGroups()}
-								connectionListApi={connectionListApi}
-								groupedConnections={groupedConnections}
-								doConfigureConnection={doConfigureConnection}
-								selectedConnectionId={selectedConnectionId}
-								visibleConnections={visibleConnections}
-								showConnectionVariables={showConnectionVariables}
-								deleteModalRef={confirmModalRef}
-								nestingLevel={0}
-							/>
-
-							{/* Render ungrouped connections */}
-							{(isDragging || ungroupedConnections.length > 0) && connections.groups.size > 0 && (
-								<tr className="collapsible-group-header">
-									<td colSpan={6}>
-										<span className="group-name">Ungrouped Connections</span>
-									</td>
-								</tr>
-							)}
-
-							<ConnectionsInGroup
-								doConfigureConnection={doConfigureConnection}
-								selectedConnectionId={selectedConnectionId}
-								connections={ungroupedConnections}
-								groupId={null}
-								visibleConnections={visibleConnections}
-								showConnectionVariables={showConnectionVariables}
-								deleteModalRef={confirmModalRef}
-								showNoConnectionsMessage={false}
-							/>
-						</tbody>
-					</table>
 				</ConnectionListContextProvider>
 			</PanelCollapseHelperProvider>
 		</div>
@@ -179,46 +117,6 @@ export const ConnectionsList = observer(function ConnectionsList({
 export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 	id: string
 	status: ConnectionStatusEntry | undefined
-}
-
-interface GroupedConnectionsData {
-	groupedConnections: Map<string, ClientConnectionConfigWithId[]>
-	ungroupedConnections: ClientConnectionConfigWithId[]
-}
-
-function getGroupedConnections(
-	connections: ConnectionsStore,
-	connectionStatuses: ObservableMap<string, ConnectionStatusEntry>
-): GroupedConnectionsData {
-	const validGroupIds = new Set(connections.allGroupIds)
-	const groupedConnections = new Map<string, ClientConnectionConfigWithId[]>()
-	const ungroupedConnections: ClientConnectionConfigWithId[] = []
-
-	// Initialize empty arrays for all groups
-	for (const groupId of validGroupIds) {
-		groupedConnections.set(groupId, [])
-	}
-
-	// Assign connections to their groups
-	for (const [connectionId, connection] of connections.connections) {
-		const status = connectionStatuses.get(connectionId)
-		if (connection.groupId && validGroupIds.has(connection.groupId)) {
-			groupedConnections.get(connection.groupId)!.push({ ...connection, id: connectionId, status })
-		} else {
-			ungroupedConnections.push({ ...connection, id: connectionId, status })
-		}
-	}
-
-	// Sort connections by sortOrder within each group
-	ungroupedConnections.sort((a, b) => a.sortOrder - b.sortOrder)
-	for (const connections of groupedConnections.values()) {
-		connections.sort((a, b) => a.sortOrder - b.sortOrder)
-	}
-
-	return {
-		groupedConnections,
-		ungroupedConnections,
-	}
 }
 
 function ConnectionListTableHeading() {
