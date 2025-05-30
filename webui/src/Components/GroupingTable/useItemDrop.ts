@@ -14,7 +14,7 @@ export interface GroupingTableItemDragStatus {
 	isDragging: boolean
 }
 
-export function useGroupListItemDragging(
+export function useGroupListItemDrop(
 	groupApi: GroupApi,
 	dragId: string,
 	groupId: string | null,

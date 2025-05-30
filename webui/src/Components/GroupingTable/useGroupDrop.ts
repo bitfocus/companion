@@ -12,7 +12,7 @@ export interface GroupingTableGroupDragItem {
 // }
 
 // For handling group drag and drop, including parent-child relationships
-export function useGroupListGroupDragging(groupApi: GroupApi, dragId: string, groupId: string | null) {
+export function useGroupListGroupDrop(groupApi: GroupApi, dragId: string, groupId: string | null) {
 	const [{ isOver, canDrop, dragGroupId }, drop] = useDrop<
 		GroupingTableGroupDragItem,
 		unknown,

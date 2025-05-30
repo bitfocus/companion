@@ -2,7 +2,7 @@ import React from 'react'
 import { capitalize } from 'lodash-es'
 import { GroupingTableGroupsList } from './GroupingTableGroupsList.js'
 import type { GroupingTableGroup, GroupingTableItem } from './Types.js'
-import { useGroupListItemDragging } from './useItemDragging.js'
+import { useGroupListItemDrop } from './useItemDrop.js'
 import { GroupingTableContextProvider, GroupingTableContextType } from './GroupingTableContext.js'
 import { GroupingTableGroupContents } from './GroupingTableGroupContents.js'
 
@@ -28,7 +28,7 @@ export function GroupingTable<TGroup extends GroupingTableGroup, TItem extends G
 }: GroupingTableProps<TGroup, TItem>) {
 	const { groupedItems, ungroupedItems } = getGroupedItems(items, new Set(groups.map((g) => g.id)))
 
-	const { isDragging } = useGroupListItemDragging(groupApi, dragId, null) // Assuming null for root level groups
+	const { isDragging } = useGroupListItemDrop(groupApi, dragId, null) // Assuming null for root level groups
 
 	return (
 		<GroupingTableContextProvider ItemRow={ItemRow} itemName={itemName} groupApi={groupApi} dragId={dragId}>
@@ -37,7 +37,7 @@ export function GroupingTable<TGroup extends GroupingTableGroup, TItem extends G
 					<Heading />
 				</div>
 
-				<GroupingTableGroupsList groups={groups} groupedItems={groupedItems} nestingLevel={0} />
+				<GroupingTableGroupsList groups={groups} parentId={null} groupedItems={groupedItems} nestingLevel={0} />
 
 				{(isDragging || ungroupedItems.length > 0) && groups.length > 0 && (
 					<div className="grouping-table-ungrouped-header">

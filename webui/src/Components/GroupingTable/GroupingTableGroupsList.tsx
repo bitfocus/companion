@@ -2,16 +2,15 @@ import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { usePanelCollapseHelperContextForPanel } from '../../Helpers/CollapseHelper.js'
 import { GroupingTableDropZone } from './GroupingTableDropZone.js'
-import type { GroupingTableGroup, GroupingTableItem, GroupApi } from './Types.js'
-import { useGroupListGroupDragging } from './useGroupDragging.js'
+import type { GroupingTableGroup, GroupingTableItem } from './Types.js'
+import { useGroupListGroupDrop } from './useGroupDrop.js'
 import { GroupingTableGroupRow } from './GroupingTableGroupRow.js'
-import { ConnectDropTarget } from 'react-dnd'
-import { useGroupListItemDragging } from './useItemDragging.js'
 import { useGroupingTableContext } from './GroupingTableContext.js'
 import { GroupingTableGroupContents } from './GroupingTableGroupContents.js'
 
 interface GroupingTableGroupsListProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem> {
 	groups: TGroup[]
+	parentId: string | null
 	groupedItems: Map<string, TItem[]>
 	nestingLevel: number
 }
@@ -19,7 +18,7 @@ interface GroupingTableGroupsListProps<TGroup extends GroupingTableGroup, TItem 
 export const GroupingTableGroupsList = observer(function GroupingTableGroupsList<
 	TGroup extends GroupingTableGroup,
 	TItem extends GroupingTableItem,
->({ groups, groupedItems, nestingLevel }: GroupingTableGroupsListProps<TGroup, TItem>) {
+>({ groups, parentId, groupedItems, nestingLevel }: GroupingTableGroupsListProps<TGroup, TItem>) {
 	return (
 		<>
 			{groups.map((childGroup, childIndex) => (
@@ -27,6 +26,7 @@ export const GroupingTableGroupsList = observer(function GroupingTableGroupsList
 					key={childGroup.id}
 					index={childIndex}
 					group={childGroup}
+					parentId={parentId}
 					groupedItems={groupedItems}
 					nestingLevel={nestingLevel}
 				/>
@@ -38,6 +38,7 @@ export const GroupingTableGroupsList = observer(function GroupingTableGroupsList
 interface GroupingTableGroupSingleProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem> {
 	index: number
 	group: TGroup
+	parentId: string | null
 	groupedItems: Map<string, TItem[]>
 	nestingLevel?: number
 }
@@ -46,10 +47,10 @@ interface GroupingTableGroupSingleProps<TGroup extends GroupingTableGroup, TItem
 const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 	TGroup extends GroupingTableGroup,
 	TItem extends GroupingTableItem,
->({ index, group, groupedItems, nestingLevel = 0 }: GroupingTableGroupSingleProps<TGroup, TItem>) {
+>({ index, group, parentId, groupedItems, nestingLevel = 0 }: GroupingTableGroupSingleProps<TGroup, TItem>) {
 	const { dragId, groupApi } = useGroupingTableContext<TItem>()
 
-	const { isOver, canDrop, dragGroupId, drop } = useGroupListGroupDragging(groupApi, dragId, group.id)
+	const { isOver, canDrop, dragGroupId, drop } = useGroupListGroupDrop(groupApi, dragId, group.id)
 
 	const collapseHelper = usePanelCollapseHelperContextForPanel(null, group.id)
 
@@ -58,9 +59,10 @@ const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 
 	return (
 		<>
-			<GroupingTableGroupRow2
+			<GroupingTableGroupRow
 				groupApi={groupApi}
 				group={group}
+				parentId={parentId}
 				toggleExpanded={collapseHelper.toggleCollapsed}
 				isCollapsed={isCollapsed}
 				index={index}
@@ -71,6 +73,7 @@ const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 				<>
 					<GroupingTableGroupsList
 						groups={group.children}
+						parentId={group.id}
 						groupedItems={groupedItems}
 						nestingLevel={nestingLevel + 1}
 					/>
@@ -89,42 +92,5 @@ const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 				</>
 			)}
 		</>
-	)
-})
-
-interface GroupingTableGroupRow2Props {
-	group: GroupingTableGroup
-	toggleExpanded: () => void
-	groupApi: GroupApi
-	isCollapsed: boolean
-	index: number
-	nestingLevel: number
-}
-const GroupingTableGroupRow2 = observer(function GroupingTableGroupRow2({
-	group,
-	toggleExpanded,
-	groupApi,
-	isCollapsed,
-	index,
-	nestingLevel,
-}: GroupingTableGroupRow2Props) {
-	const { dragId } = useGroupingTableContext<GroupingTableItem>()
-	const { drop: dropConnectionInto } = useGroupListItemDragging(groupApi, dragId, group.id, -1)
-	const { isOver, canDrop, drop: dropGroupInto } = useGroupListGroupDragging(groupApi, dragId, group.id)
-
-	// Function that combines both drop targets
-	let combinedDropInto: ConnectDropTarget = dropConnectionInto
-	if (isCollapsed) combinedDropInto = (ref: any) => dropGroupInto(dropConnectionInto(ref))
-
-	return (
-		<GroupingTableGroupRow
-			group={group}
-			isCollapsed={isCollapsed}
-			toggleExpanded={toggleExpanded}
-			index={index}
-			groupApi={groupApi}
-			dropInto={combinedDropInto}
-			nestingLevel={nestingLevel}
-		/>
 	)
 })

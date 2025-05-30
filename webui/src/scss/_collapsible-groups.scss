@@ -3,6 +3,8 @@
 	border-collapse: collapse;
 	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
 
+	--group-nesting-level: 0;
+
 	.grouping-table-header,
 	.grouping-table-ungrouped-header {
 		background-color: #f0f0f0;
@@ -14,7 +16,7 @@
 		font-weight: 700;
 	}
 
-	.grouping-table-row {
+	.grouping-table-row-item {
 		padding: 5px 10px;
 		border-bottom: 1px solid #ddd;
 
@@ -39,50 +41,59 @@
 			background-color: rgba(200, 200, 200, 0.1);
 		}
 	}
-}
 
-.collapsible-group-header {
-	background-color: #f0f0f0;
-	font-weight: 600;
+	.grouping-table-row-group {
+		padding: 5px 10px;
+		border-bottom: 1px solid #ddd;
 
-	--group-nesting-level: 0;
+		background-color: #f0f0f0;
+		font-weight: 600;
 
-	&.dragging {
-		opacity: 0.5;
-	}
-
-	td {
-		padding: 8px 10px;
-	}
-
-	.caret-icon {
-		cursor: pointer;
-	}
-
-	.group-name {
-		font-size: 1.1em;
-		margin-left: 5px;
-		cursor: pointer;
-
-		&:hover {
-			text-decoration: underline;
+		.caret-icon {
+			cursor: pointer;
 		}
-	}
 
-	.btn-link {
-		padding: 0 6px;
-		color: #666;
+		.group-name {
+			font-size: 1.1em;
+			margin-left: 5px;
+			cursor: pointer;
 
-		&:hover {
-			color: #333;
+			&:hover {
+				text-decoration: underline;
+			}
 		}
-	}
 
-	.collapsible-group-header-drag {
-		position: relative;
-		cursor: ns-resize;
+		.btn-link {
+			padding: 0 6px;
+			color: #666;
 
-		margin-right: 0.75rem;
+			&:hover {
+				color: #333;
+			}
+		}
+
+		.row-reorder-handle {
+			position: relative;
+			cursor: ns-resize;
+
+			margin-right: 0.75rem;
+		}
+
+		// &.row-dragging {
+		// 	opacity: 0.5;
+		// }
+
+		// &.row-selected {
+		// 	background-color: rgba(200, 200, 200, 0.35);
+
+		// 	&:hover {
+		// 		background-color: rgba(200, 200, 200, 0.3) !important;
+		// 	}
+		// }
+
+		// &.row-notdragging:hover {
+		// 	background-color: rgba(200, 200, 200, 0.1);
+		// }
 	}
 }
 

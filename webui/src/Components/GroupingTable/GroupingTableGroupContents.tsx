@@ -6,7 +6,7 @@ import { GroupingTableDropZone } from './GroupingTableDropZone.js'
 import { GroupingTableItemRow } from './GroupingTableRowWrappers.js'
 import { GroupingTableNestingRow } from './GroupingTableNestingRow.js'
 import { GroupingTableItem } from './Types.js'
-import { useGroupListItemDragging } from './useItemDragging.js'
+import { useGroupListItemDrop } from './useItemDrop.js'
 import { useGroupingTableContext } from './GroupingTableContext.js'
 
 interface GroupingTableGroupContentsProps<TItem extends GroupingTableItem> {
@@ -21,7 +21,7 @@ export const GroupingTableGroupContents = observer(function GroupingTableGroupCo
 >({ items, groupId, showNoItemsMessage, nestingLevel }: GroupingTableGroupContentsProps<TItem>) {
 	const { dragId, groupApi, itemName, ItemRow } = useGroupingTableContext<TItem>()
 
-	const { isDragging, drop } = useGroupListItemDragging(groupApi, dragId, groupId)
+	const { isDragging, drop } = useGroupListItemDrop(groupApi, dragId, groupId)
 
 	let visibleCount = 0
 
@@ -58,7 +58,7 @@ export const GroupingTableGroupContents = observer(function GroupingTableGroupCo
 			)}
 
 			{hiddenCount > 0 && (
-				<div className="grouping-table-row">
+				<div className="grouping-table-row-item">
 					<GroupingTableNestingRow nestingLevel={nestingLevel}>
 						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 						<strong>
@@ -69,7 +69,7 @@ export const GroupingTableGroupContents = observer(function GroupingTableGroupCo
 			)}
 
 			{showNoItemsMessage && items.length === 0 && !isDragging && (
-				<div className="grouping-table-row">
+				<div className="grouping-table-row-item">
 					<GroupingTableNestingRow nestingLevel={nestingLevel}>
 						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 						<strong>This group is empty</strong>
