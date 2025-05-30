@@ -12,7 +12,7 @@ export function GroupingTableDropZone({
 	nestingLevel: number
 }) {
 	return (
-		<div ref={drop} className="collapsible-list-dropzone">
+		<div ref={drop} className="grouping-table-dropzone">
 			<GroupingTableNestingRow nestingLevel={nestingLevel}>
 				<p>Drop {itemName} here</p>
 			</GroupingTableNestingRow>

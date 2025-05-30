@@ -9,7 +9,7 @@ export function GroupingTableNestingRow({ nestingLevel, children }: React.PropsW
 				'--group-nesting-level': nestingLevel,
 			}}
 			className={classNames('flex flex-row align-items-center', {
-				'collapsible-group-nesting': nestingLevel > 0,
+				'grouping-table-nesting': nestingLevel > 0,
 			})}
 		>
 			{children}
