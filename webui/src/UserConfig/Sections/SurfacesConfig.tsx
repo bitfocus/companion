@@ -16,7 +16,7 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 					<>
 						Watch for Discoverable Remote Surfaces
 						<br />
-						Such as Companion Satellite and Stream Deck Studio
+						Such as Companion Satellite, Stream Deck Studio and Stream Deck Network Dock
 					</>
 				}
 				field="discoveryEnabled"
