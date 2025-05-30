@@ -76,7 +76,7 @@ const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 					/>
 
 					{canDrop && (!group.children || group.children.length === 0) ? (
-						<GroupingTableDropZone drop={drop} itemName="group" nestingLevel={nestingLevel} />
+						<GroupingTableDropZone drop={drop} itemName="group" nestingLevel={nestingLevel + 1} />
 					) : null}
 
 					{/* Render connections in this group */}
@@ -84,7 +84,7 @@ const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 						items={itemsInGroup}
 						groupId={group.id}
 						showNoItemsMessage={group.children.length === 0}
-						nestingLevel={nestingLevel}
+						nestingLevel={nestingLevel + 1}
 					/>
 				</>
 			)}

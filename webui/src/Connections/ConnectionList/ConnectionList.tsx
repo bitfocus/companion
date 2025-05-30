@@ -7,7 +7,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../../Components/Ge
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../../Components/NonIdealState.js'
-import { useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
+import { TableVisibilityHelper, useTableVisibilityHelper, VisibilityButton } from '../../Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
 import { ClientConnectionConfig, ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
@@ -102,7 +102,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 					<GroupingTable<ConnectionGroup, ClientConnectionConfigWithId>
 						Heading={ConnectionListTableHeading}
 						NoContent={ConnectionListNoConnections}
-						ItemRow={ConnectionListItem}
+						ItemRow={(item) => ConnectionListItemWrapper(visibleConnections, item)}
 						itemName="connection"
 						dragId="connection"
 						groupApi={connectionListApi}
@@ -149,30 +149,22 @@ function ConnectionListNoConnections() {
 	)
 }
 
-function ConnectionListItem({ item: connection }: { item: ClientConnectionConfigWithId; index: number }) {
-	const { visibleConnections, showVariables, deleteModalRef, configureConnection } = useConnectionListContext()
-
+function ConnectionListItemWrapper(
+	visibleConnections: TableVisibilityHelper<VisibleConnectionsState>,
+	item: ClientConnectionConfigWithId
+) {
 	// Apply visibility filters
-	if (!visibleConnections.visibility.disabled && connection.enabled === false) {
+	if (!visibleConnections.visibility.disabled && item.enabled === false) {
 		return null
-	} else if (connection.status) {
-		if (!visibleConnections.visibility.ok && connection.status.category === 'good') {
+	} else if (item.status) {
+		if (!visibleConnections.visibility.ok && item.status.category === 'good') {
 			return null
-		} else if (!visibleConnections.visibility.warning && connection.status.category === 'warning') {
+		} else if (!visibleConnections.visibility.warning && item.status.category === 'warning') {
 			return null
-		} else if (!visibleConnections.visibility.error && connection.status.category === 'error') {
+		} else if (!visibleConnections.visibility.error && item.status.category === 'error') {
 			return null
 		}
 	}
 
-	return (
-		<ConnectionsTableRow
-			key={connection.id}
-			id={connection.id}
-			connection={connection}
-			showVariables={showVariables}
-			deleteModalRef={deleteModalRef}
-			configureConnection={configureConnection}
-		/>
-	)
+	return <ConnectionsTableRow connection={item} />
 }

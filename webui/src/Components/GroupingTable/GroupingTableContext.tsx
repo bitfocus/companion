@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo } from 'react'
 import type { GroupApi, GroupingTableItem } from './Types.js'
 
 export interface GroupingTableContextType<TItem extends GroupingTableItem> {
-	ItemRow: React.ComponentType<{ item: TItem; index: number }>
+	ItemRow: (item: TItem, index: number) => React.ReactNode | null
 	itemName: string
 	dragId: string
 	groupApi: GroupApi

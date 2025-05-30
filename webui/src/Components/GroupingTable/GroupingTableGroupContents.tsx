@@ -26,10 +26,8 @@ export const GroupingTableGroupContents = observer(function GroupingTableGroupCo
 	let visibleCount = 0
 
 	const itemRows = items
-		// .sort((a, b) => a.sortOrder - b.sortOrder)
 		.map((item, index) => {
-			// TODO - this no longer works, because it returns a react node, not null...
-			const childNode = <ItemRow item={item} index={index} />
+			const childNode = ItemRow(item, index)
 
 			// Apply visibility filters
 			if (!childNode) {
@@ -39,7 +37,7 @@ export const GroupingTableGroupContents = observer(function GroupingTableGroupCo
 			visibleCount++
 
 			return (
-				<GroupingTableItemRow<TItem> item={item} index={index} nestingLevel={nestingLevel}>
+				<GroupingTableItemRow<TItem> key={item.id} item={item} index={index} nestingLevel={nestingLevel}>
 					{childNode}
 				</GroupingTableItemRow>
 			)

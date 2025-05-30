@@ -10,8 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { RefObject, useContext, useCallback } from 'react'
-import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
+import React, { useContext, useCallback } from 'react'
 import { Tuck } from '../../Components/Tuck.js'
 import { windowLinkOpen } from '../../Helpers/Window.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
@@ -19,23 +18,16 @@ import { UpdateConnectionToLatestButton } from '../UpdateConnectionToLatestButto
 import { getModuleVersionInfoForConnection } from '../Util.js'
 import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
+import { useConnectionListContext } from './ConnectionListContext.js'
 
 interface ConnectionsTableRowProps {
-	id: string
 	connection: ClientConnectionConfigWithId
-	showVariables: (label: string) => void
-	configureConnection: (connectionId: string | null) => void
-	deleteModalRef: RefObject<GenericConfirmModalRef>
 }
-export const ConnectionsTableRow = observer(function ConnectionsTableRow({
-	id,
-	connection,
-	showVariables,
-	configureConnection,
-	deleteModalRef,
-}: ConnectionsTableRowProps) {
+export const ConnectionsTableRow = observer(function ConnectionsTableRow({ connection }: ConnectionsTableRowProps) {
 	const { socket, helpViewer, modules, variablesStore } = useContext(RootAppStoreContext)
+	const { showVariables, deleteModalRef, configureConnection } = useConnectionListContext()
 
+	const id = connection.id
 	const moduleInfo = modules.modules.get(connection.instance_type)
 
 	const isEnabled = connection.enabled === undefined || connection.enabled
