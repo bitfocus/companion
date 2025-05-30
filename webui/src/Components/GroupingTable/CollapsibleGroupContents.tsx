@@ -2,34 +2,37 @@ import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { ConnectDropTarget } from 'react-dnd'
 import { GroupingTableDropZone } from './GroupingTableDropZone.js'
 import classNames from 'classnames'
+import { GroupingTableItemRow, GroupingTableNestingRow } from './GroupingTableStuff.js'
+import { GroupingTableItem } from './Types.js'
+import { useGroupListItemDragging } from './useItemDragging.js'
+import { useGroupingTableContext } from './GroupingTableContext.js'
 
-interface CollapsibleGroupContentsProps<TItem> {
+interface CollapsibleGroupContentsProps<TItem extends GroupingTableItem> {
 	items: TItem[]
+	groupId: string | null
 	showNoItemsMessage: boolean
-	itemName: string
 	nestingLevel: number
-	isDragging?: boolean
-	drop?: ConnectDropTarget
-	children: (item: TItem, index: number) => React.ReactNode
 }
 
-export const CollapsibleGroupContents = observer(function CollapsibleGroupContents<TItem>({
+export const CollapsibleGroupContents = observer(function CollapsibleGroupContents<TItem extends GroupingTableItem>({
 	items,
+	groupId,
 	showNoItemsMessage,
-	itemName,
 	nestingLevel,
-	isDragging,
-	drop,
-	children,
 }: CollapsibleGroupContentsProps<TItem>) {
+	const { dragId, groupApi, itemName, ItemRow } = useGroupingTableContext<TItem>()
+
+	const { isDragging, drop } = useGroupListItemDragging(groupApi, dragId, groupId)
+
 	let visibleCount = 0
 
 	const itemRows = items
+		// .sort((a, b) => a.sortOrder - b.sortOrder)
 		.map((item, index) => {
-			const childNode = children(item, index)
+			// TODO - this no longer works, because it returns a react node, not null...
+			const childNode = <ItemRow item={item} index={index} nestingLevel={nestingLevel} />
 
 			// Apply visibility filters
 			if (!childNode) {
@@ -38,7 +41,11 @@ export const CollapsibleGroupContents = observer(function CollapsibleGroupConten
 
 			visibleCount++
 
-			return children(item, index)
+			return (
+				<GroupingTableItemRow<TItem> item={item} index={index} nestingLevel={nestingLevel}>
+					{childNode}
+				</GroupingTableItemRow>
+			)
 		})
 		.filter((row) => row !== null)
 
@@ -49,49 +56,26 @@ export const CollapsibleGroupContents = observer(function CollapsibleGroupConten
 		<>
 			{itemRows}
 
-			{isDragging && items.length === 0 && <GroupingTableDropZone drop={drop} itemName={itemName} />}
+			{isDragging && items.length === 0 && (
+				<GroupingTableNestingRow nestingLevel={nestingLevel}>
+					<GroupingTableDropZone drop={drop} itemName={itemName} />
+				</GroupingTableNestingRow>
+			)}
 
 			{hiddenCount > 0 && (
-				<tr
-					className="collapsible-group-table-row"
-					style={{
-						// @ts-expect-error variables are not typed
-						'--group-nesting-level': nestingLevel,
-					}}
-				>
-					<td colSpan={6} style={{ padding: '10px' }}>
-						<div
-							className={classNames({
-								'collapsible-group-nesting': nestingLevel > 0,
-							})}
-						>
-							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-							<strong>
-								{hiddenCount} {itemName}s are hidden
-							</strong>
-						</div>
-					</td>
-				</tr>
+				<GroupingTableNestingRow nestingLevel={nestingLevel} className="grouping-table-row">
+					<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+					<strong>
+						{hiddenCount} {itemName}s are hidden
+					</strong>
+				</GroupingTableNestingRow>
 			)}
 
 			{showNoItemsMessage && items.length === 0 && !isDragging && (
-				<tr
-					style={{
-						// @ts-expect-error variables are not typed
-						'--group-nesting-level': nestingLevel,
-					}}
-				>
-					<td colSpan={6} style={{ padding: '10px' }}>
-						<div
-							className={classNames({
-								'collapsible-group-nesting': nestingLevel > 0,
-							})}
-						>
-							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-							<strong>This group is empty</strong>
-						</div>
-					</td>
-				</tr>
+				<GroupingTableNestingRow nestingLevel={nestingLevel} className="grouping-table-row">
+					<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+					<strong>This group is empty</strong>
+				</GroupingTableNestingRow>
 			)}
 		</>
 	)

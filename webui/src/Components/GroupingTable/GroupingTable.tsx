@@ -1,10 +1,10 @@
 import React from 'react'
-import { CollabsibleGroupItems } from './GroupingTableItems.js'
 import { capitalize } from 'lodash-es'
 import { GroupingTableGroupArray } from './GroupingTableStuff.js'
 import type { GroupingTableGroup, GroupingTableItem } from './Types.js'
 import { useGroupListItemDragging } from './useItemDragging.js'
 import { GroupingTableContextProvider, GroupingTableContextType } from './GroupingTableContext.js'
+import { CollapsibleGroupContents } from './CollapsibleGroupContents.js'
 
 interface GroupingTableProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem>
 	extends GroupingTableContextType<TItem> {
@@ -40,12 +40,12 @@ export function GroupingTable<TGroup extends GroupingTableGroup, TItem extends G
 				<GroupingTableGroupArray groups={groups} groupedItems={groupedItems} nestingLevel={0} />
 
 				{(isDragging || ungroupedItems.length > 0) && groups.length > 0 && (
-					<div>
+					<div className="grouping-table-ungrouped-header">
 						<span className="group-name">Ungrouped {capitalize(itemName)}s</span>
 					</div>
 				)}
 
-				<CollabsibleGroupItems items={ungroupedItems} groupId={null} showNoItemsMessage={false} />
+				<CollapsibleGroupContents items={ungroupedItems} groupId={null} showNoItemsMessage={false} nestingLevel={0} />
 
 				{items.length === 0 && (
 					<div>

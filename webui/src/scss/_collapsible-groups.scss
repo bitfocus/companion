@@ -3,7 +3,8 @@
 	border-collapse: collapse;
 	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
 
-	.collapsible-group-table-header {
+	.collapsible-group-table-header,
+	.grouping-table-ungrouped-header {
 		background-color: #f0f0f0;
 		padding: 6px 10px;
 		padding-left: 20px;
@@ -13,8 +14,33 @@
 		font-weight: 700;
 	}
 
-	.collapsible-group-table-row {
+	.grouping-table-row {
 		padding: 5px 10px;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		border-bottom: 1px solid #ddd;
+
+		.row-reorder-handle {
+			cursor: ns-resize;
+			padding-right: 0.5rem;
+		}
+
+		&.row-dragging {
+			opacity: 0.5;
+		}
+
+		&.row-selected {
+			background-color: rgba(200, 200, 200, 0.35);
+
+			&:hover {
+				background-color: rgba(200, 200, 200, 0.3) !important;
+			}
+		}
+
+		&.row-notdragging:hover {
+			background-color: rgba(200, 200, 200, 0.1);
+		}
 	}
 }
 
