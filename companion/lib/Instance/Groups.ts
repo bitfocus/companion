@@ -26,8 +26,6 @@ export class InstanceGroups {
 			data.children = data.children || []
 			data.children.sort((a, b) => a.sortOrder - b.sortOrder)
 		}
-
-		console.log('init', this.#data)
 	}
 
 	/**
@@ -201,8 +199,6 @@ export class InstanceGroups {
 			for (const row of this.#data) {
 				this.#dbTable.set(row.id, row)
 			}
-
-			console.log('updated', JSON.stringify(this.#data, null, 2))
 
 			// Inform the ui of the shuffle
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:update', this.#data)
