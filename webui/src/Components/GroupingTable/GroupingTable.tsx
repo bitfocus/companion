@@ -5,6 +5,7 @@ import type { GroupingTableGroup, GroupingTableItem } from './Types.js'
 import { useGroupListItemDrop } from './useItemDrop.js'
 import { GroupingTableContextProvider, GroupingTableContextType } from './GroupingTableContext.js'
 import { GroupingTableGroupContents } from './GroupingTableGroupContents.js'
+import { observer } from 'mobx-react-lite'
 
 interface GroupingTableProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem>
 	extends GroupingTableContextType<TItem> {
@@ -15,7 +16,10 @@ interface GroupingTableProps<TGroup extends GroupingTableGroup, TItem extends Gr
 	items: TItem[]
 }
 
-export function GroupingTable<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem>({
+export const GroupingTable = observer(function GroupingTable<
+	TGroup extends GroupingTableGroup,
+	TItem extends GroupingTableItem,
+>({
 	Heading,
 	NoContent,
 	ItemRow,
@@ -28,7 +32,7 @@ export function GroupingTable<TGroup extends GroupingTableGroup, TItem extends G
 }: GroupingTableProps<TGroup, TItem>) {
 	const { groupedItems, ungroupedItems } = getGroupedItems(items, new Set(groups.map((g) => g.id)))
 
-	const { isDragging } = useGroupListItemDrop(groupApi, dragId, null) // Assuming null for root level groups
+	const { isDragging } = useGroupListItemDrop(groupApi, dragId, null, null, 0) // Assuming null for root level groups
 
 	return (
 		<GroupingTableContextProvider ItemRow={ItemRow} itemName={itemName} groupApi={groupApi} dragId={dragId}>
@@ -55,7 +59,7 @@ export function GroupingTable<TGroup extends GroupingTableGroup, TItem extends G
 			</div>
 		</GroupingTableContextProvider>
 	)
-}
+})
 
 function getGroupedItems<TItem extends GroupingTableItem>(allItems: TItem[], validGroupIds: Set<string>) {
 	const groupedItems = new Map<string, TItem[]>()

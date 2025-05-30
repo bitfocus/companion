@@ -21,7 +21,7 @@ export const GroupingTableGroupContents = observer(function GroupingTableGroupCo
 >({ items, groupId, showNoItemsMessage, nestingLevel }: GroupingTableGroupContentsProps<TItem>) {
 	const { dragId, groupApi, itemName, ItemRow } = useGroupingTableContext<TItem>()
 
-	const { isDragging, drop } = useGroupListItemDrop(groupApi, dragId, groupId)
+	const { isDragging, drop } = useGroupListItemDrop(groupApi, dragId, groupId, null, 0)
 
 	let visibleCount = 0
 

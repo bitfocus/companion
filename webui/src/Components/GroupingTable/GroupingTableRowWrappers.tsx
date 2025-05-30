@@ -8,8 +8,9 @@ import { GroupingTableNestingRow } from './GroupingTableNestingRow.js'
 import type { GroupingTableGroup, GroupingTableItem } from './Types.js'
 import { useGroupListItemDrop, GroupingTableItemDragItem } from './useItemDrop.js'
 import { GroupingTableGroupDragItem, useGroupListGroupDrop } from './useGroupDrop.js'
+import { observer } from 'mobx-react-lite'
 
-export function GroupingTableItemRow<TItem extends GroupingTableItem>({
+export const GroupingTableItemRow = observer(function GroupingTableItemRow<TItem extends GroupingTableItem>({
 	item,
 	index,
 	nestingLevel,
@@ -21,7 +22,7 @@ export function GroupingTableItemRow<TItem extends GroupingTableItem>({
 }>) {
 	const { dragId, groupApi } = useGroupingTableContext<TItem>()
 
-	const { drop } = useGroupListItemDrop(groupApi, dragId, item.groupId, item.sortOrder)
+	const { drop } = useGroupListItemDrop(groupApi, dragId, item.groupId, item.id, index)
 	const [{ isDragging }, drag, preview] = useDrag<GroupingTableItemDragItem, unknown, { isDragging: boolean }>({
 		type: dragId,
 		item: {
@@ -50,9 +51,11 @@ export function GroupingTableItemRow<TItem extends GroupingTableItem>({
 			{children}
 		</GroupingTableRowBase>
 	)
-}
+})
 
-export function GroupingTableGroupRowWrapper<TGroup extends GroupingTableGroup>({
+export const GroupingTableGroupRowWrapper = observer(function GroupingTableGroupRowWrapper<
+	TGroup extends GroupingTableGroup,
+>({
 	group,
 	parentId,
 	index,
@@ -67,7 +70,7 @@ export function GroupingTableGroupRowWrapper<TGroup extends GroupingTableGroup>(
 	const { dragId, groupApi } = useGroupingTableContext<GroupingTableItem>()
 
 	const { drop } = useGroupListGroupDrop(groupApi, dragId, group.id)
-	const { drop: dropItemInto } = useGroupListItemDrop(groupApi, dragId, group.id, -1)
+	const { drop: dropItemInto } = useGroupListItemDrop(groupApi, dragId, group.id, null, -1)
 
 	const combinedDrop: ConnectDropTarget = (node) => drop(dropItemInto(node))
 
@@ -96,7 +99,7 @@ export function GroupingTableGroupRowWrapper<TGroup extends GroupingTableGroup>(
 			{children}
 		</GroupingTableRowBase>
 	)
-}
+})
 
 function GroupingTableRowBase({
 	className,

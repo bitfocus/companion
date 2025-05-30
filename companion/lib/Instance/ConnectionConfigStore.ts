@@ -185,7 +185,7 @@ export class ConnectionConfigStore {
 		const changedIds: string[] = []
 
 		// find all the other connections with the matching groupId
-		const sortedConnectionIds = Object.entries(this.#store)
+		const sortedConnectionIds = Array.from(this.#store)
 			.filter(
 				([id, config]) => config && ((!config.groupId && !groupId) || config.groupId === groupId) && id !== connectionId
 			)
@@ -230,7 +230,7 @@ export class ConnectionConfigStore {
 
 		// Figure out the first sort order
 		let nextSortOrder = 0
-		for (const config of Object.values(this.#store)) {
+		for (const config of this.#store.values()) {
 			if (config && !config?.groupId) {
 				nextSortOrder = Math.max(nextSortOrder, config.sortOrder + 1)
 			}
@@ -238,7 +238,7 @@ export class ConnectionConfigStore {
 
 		// Validate the group IDs, and do something sensible with the sort order
 		// Future: maybe this could try to preserve the order in some way?
-		for (const [id, config] of Object.entries(this.#store)) {
+		for (const [id, config] of this.#store) {
 			if (config && config.groupId && !validGroupIds.includes(config.groupId)) {
 				config.groupId = undefined
 				config.sortOrder = nextSortOrder++

@@ -1,6 +1,6 @@
 import { useDeferredValue } from 'react'
 import { useDrop } from 'react-dnd'
-import type { DragState } from '../../util.js'
+import { checkDragState, type DragState } from '../../util.js'
 import type { GroupApi } from './Types.js'
 
 export interface GroupingTableItemDragItem {
@@ -18,22 +18,24 @@ export function useGroupListItemDrop(
 	groupApi: GroupApi,
 	dragId: string,
 	groupId: string | null,
-	dropIndex: number = 0
+	hoverItemId: string | null,
+	hoverIndex: number
 ) {
 	const [isDragging, drop] = useDrop<GroupingTableItemDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},
-		hover(item, _monitor) {
-			// Can't move into itself
-			// if (ownerId && isEqual(item.connectionId, ownerId.parentId)) return
+		hover(item, monitor) {
+			if (hoverItemId === item.itemId) return // Don't allow dropping into the same item
+
+			if (!checkDragState(item, monitor, hoverItemId ?? `group-drop-${groupId}`)) return
 
 			// Time to actually perform the action
-			groupApi.moveItemToGroup(item.itemId, groupId, dropIndex)
+			groupApi.moveItemToGroup(item.itemId, groupId, hoverIndex)
 
 			// item.listId = listId
-			item.index = dropIndex
+			item.index = hoverIndex
 			item.groupId = groupId
 		},
 	})

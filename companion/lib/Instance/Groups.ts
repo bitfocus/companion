@@ -217,6 +217,8 @@ export class InstanceGroups {
 				this.#dbTable.set(row.id, row)
 			}
 
+			console.log('updated', JSON.stringify(this.#data, null, 2))
+
 			// Inform the ui of the shuffle
 			this.#io.emitToRoom(ConnectionGroupRoom, 'connection-groups:update', this.#data)
 

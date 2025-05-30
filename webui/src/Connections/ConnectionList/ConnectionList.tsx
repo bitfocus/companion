@@ -67,6 +67,8 @@ export const ConnectionsList = observer(function ConnectionsList({
 		return allConnections
 	}, [connections.connections, connectionStatuses])
 
+	console.log('conns', allConnections)
+
 	return (
 		<div>
 			<h4>Connections</h4>
