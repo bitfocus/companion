@@ -13,7 +13,7 @@ const GroupingTableContext = createContext<GroupingTableContextType<any> | null>
 
 export function useGroupingTableContext<TItem extends GroupingTableItem>() {
 	const ctx = useContext(GroupingTableContext)
-	if (!ctx) throw new Error('useGroupingTableContext must be used within a ConnectionListProvider')
+	if (!ctx) throw new Error('useGroupingTableContext must be used within a GroupingTableContextProvider')
 	return ctx as GroupingTableContextType<TItem>
 }
 

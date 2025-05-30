@@ -45,7 +45,7 @@ export class InstanceGroups {
 	 * Ensure that all groupIds in connections are valid groups
 	 */
 	removeUnknownGroupReferences(): void {
-		this.#configStore.cleanUnkownGroupIds(Object.keys(this.#data))
+		this.#configStore.cleanUnknownGroupIds(Object.keys(this.#data))
 	}
 
 	/**

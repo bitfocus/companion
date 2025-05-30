@@ -27,8 +27,6 @@ export function useGroupListGroupDrop(groupApi: GroupApi, dragId: string, groupI
 		hover(item, monitor) {
 			// If this is the root area (groupId is null), make the dropped group top-level
 
-			console.log('hover', groupId, item.groupId)
-
 			// Ensure the hover targets this element, and not a child element
 			if (!monitor.isOver({ shallow: true })) return
 

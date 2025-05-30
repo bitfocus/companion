@@ -225,7 +225,7 @@ export class ConnectionConfigStore {
 		return true
 	}
 
-	cleanUnkownGroupIds(validGroupIds: string[]): void {
+	cleanUnknownGroupIds(validGroupIds: string[]): void {
 		const changedIds: string[] = []
 
 		// Figure out the first sort order

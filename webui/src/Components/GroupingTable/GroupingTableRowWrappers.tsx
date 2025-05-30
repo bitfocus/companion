@@ -65,6 +65,7 @@ export const GroupingTableGroupRowWrapper = observer(function GroupingTableGroup
 }>) {
 	const { dragId, groupApi } = useGroupingTableContext<GroupingTableItem>()
 
+	// Allow dropping items onto the group, to add them to the group
 	const { drop } = useGroupListItemDrop(groupApi, dragId, group.id, null, -1)
 
 	const [{ isDragging }, drag, preview] = useDrag<GroupingTableGroupDragItem, unknown, { isDragging: boolean }>({
