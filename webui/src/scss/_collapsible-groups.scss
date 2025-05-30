@@ -1,9 +1,9 @@
-.collapsible-group-table {
+.grouping-table {
 	border: 1px solid #ddd;
 	border-collapse: collapse;
 	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
 
-	.collapsible-group-table-header,
+	.grouping-table-header,
 	.grouping-table-ungrouped-header {
 		background-color: #f0f0f0;
 		padding: 6px 10px;
@@ -16,9 +16,6 @@
 
 	.grouping-table-row {
 		padding: 5px 10px;
-		display: flex;
-		flex-direction: row;
-		align-items: center;
 		border-bottom: 1px solid #ddd;
 
 		.row-reorder-handle {
@@ -90,15 +87,15 @@
 }
 
 .collapsible-group-nesting {
-	margin-left: calc(var(--group-nesting-level) * 10px);
+	padding-left: calc(var(--group-nesting-level) * 10px) !important;
 	position: relative;
 
 	&:before {
 		content: '';
 		position: absolute;
-		left: calc(var(--group-nesting-level) * -10px);
+		left: 0px; //calc((var(--group-nesting-level) - 1) * 10px);
 		top: -20px;
-		height: calc(100% + 30px);
+		height: calc(100% + 25px);
 		width: 1px;
 		background-color: #ccc;
 		z-index: 1;
@@ -107,7 +104,7 @@
 	&:after {
 		content: '';
 		position: absolute;
-		left: calc(var(--group-nesting-level) * -10px);
+		left: 0px; // calc((var(--group-nesting-level) - 1) * 10px);
 		top: 50%;
 		width: calc(var(--group-nesting-level) * 10px - 5px);
 		height: 1px;

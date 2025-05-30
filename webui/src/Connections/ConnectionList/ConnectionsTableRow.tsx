@@ -28,7 +28,6 @@ interface ConnectionsTableRowProps {
 	configureConnection: (connectionId: string | null) => void
 	deleteModalRef: RefObject<GenericConfirmModalRef>
 	isSelected: boolean
-	nestingLevel?: number
 }
 export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	id,
@@ -38,7 +37,6 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	configureConnection,
 	deleteModalRef,
 	isSelected,
-	nestingLevel = 0,
 }: ConnectionsTableRowProps) {
 	const { socket, helpViewer, modules, variablesStore } = useContext(RootAppStoreContext)
 
@@ -89,13 +87,8 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		[helpViewer, connection.instance_type, moduleVersion]
 	)
 
-	// Calculate indentation style based on nesting level
-	const indentationStyle = {
-		paddingLeft: nestingLevel > 0 ? `${nestingLevel * 20}px` : undefined,
-	}
-
 	return (
-		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand" style={indentationStyle}>
+		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
 			<div className="flex flex-column grow">
 				<b>{connection.label}</b>
 				{moduleInfo ? (

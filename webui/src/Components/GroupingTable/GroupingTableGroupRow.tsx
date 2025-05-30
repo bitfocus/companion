@@ -11,17 +11,11 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { TextInputField } from '../TextInputField.js'
-import { ConnectDropTarget, useDrag, useDrop } from 'react-dnd'
-import { checkDragState } from '../../util.js'
+import { ConnectDropTarget, useDrag } from 'react-dnd'
 import classNames from 'classnames'
-import type { GroupingTableGroup, GroupApi } from './Types.js'
-
-export interface DragItem {
-	groupId: string
-	index: number
-	dragState: any
-	parentId?: string | null
-}
+import type { GroupingTableGroup, GroupApi, GroupingTableItem } from './Types.js'
+import { GroupingTableGroupDragItem, useGroupListGroupDragging } from './useGroupDragging.js'
+import { useGroupingTableContext } from './GroupingTableContext.js'
 
 export interface GroupingTableGroupRowProps {
 	group: GroupingTableGroup
@@ -29,7 +23,6 @@ export interface GroupingTableGroupRowProps {
 	toggleExpanded: () => void
 	groupApi: GroupApi
 	index: number
-	acceptDragType: string
 	colSpan?: number
 	dropInto?: ConnectDropTarget
 	className?: string
@@ -42,13 +35,14 @@ export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 	toggleExpanded,
 	groupApi,
 	index,
-	acceptDragType,
 	colSpan = 4,
 	dropInto,
 	className,
 	nestingLevel,
 	children,
 }: React.PropsWithChildren<GroupingTableGroupRowProps>) {
+	const { dragId } = useGroupingTableContext<GroupingTableItem>()
+
 	const [isEditing, setIsEditing] = useState(false)
 
 	const toggleExpanded2 = useCallback(() => {
@@ -86,55 +80,16 @@ export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 
 	// For group drag-and-drop
 	const ref = useRef(null)
-	const [{ isOver }, drop] = useDrop<DragItem, unknown, { isOver: boolean }>({
-		accept: acceptDragType,
-		collect: (monitor) => ({
-			isOver: monitor.isOver({ shallow: true }),
-		}),
-		hover(item, monitor) {
-			if (!ref.current) {
-				return
-			}
-
-			if (!checkDragState(item, monitor, group.id)) return
-
-			// Don't replace items with themselves
-			if (item.groupId === group.id) {
-				return
-			}
-
-			// Time to actually perform the action
-			groupApi.moveGroup(item.groupId, group.parentId || null, index)
-
-			// Note: we're mutating the monitor item here!
-			// Generally it's better to avoid mutations,
-			// but it's good here for the sake of performance
-			// to avoid expensive index searches.
-			item.index = index
-		},
-		drop(item, monitor) {
-			// If the drop happened on the group row itself (not on a child row)
-			// and we have a setGroupParent function, make this group the parent
-			if (monitor.isOver({ shallow: true }) && groupApi.setGroupParent && item.groupId !== group.id) {
-				// Avoid circular references by not allowing a parent to be dropped into its child
-				if (item.groupId !== group.id) {
-					groupApi.setGroupParent(item.groupId, group.id)
-					return { parentChanged: true }
-				}
-				return {} // Return an empty object for all other cases
-			}
-			return {} // Return an empty object for all other cases
-		},
-	})
+	const { isOver, drop } = useGroupListGroupDragging(groupApi, dragId, group.id)
 
 	// Set up drag handling if reordering is enabled
-	const [{ isDragging }, drag, preview] = useDrag<DragItem, unknown, { isDragging: boolean }>({
-		type: acceptDragType,
+	const [{ isDragging }, drag, preview] = useDrag<GroupingTableGroupDragItem, unknown, { isDragging: boolean }>({
+		type: `${dragId}-group`,
 		item: {
 			groupId: group.id,
 			index,
 			dragState: null,
-			parentId: group.parentId || null,
+			// parentId: group.id || null,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),

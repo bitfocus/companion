@@ -147,15 +147,7 @@ function ConnectionListNoConnections() {
 	)
 }
 
-function ConnectionListItem({
-	item: connection,
-	index,
-	nestingLevel,
-}: {
-	item: ClientConnectionConfigWithId
-	index: number
-	nestingLevel: number // TODO - should this be here?
-}) {
+function ConnectionListItem({ item: connection, index }: { item: ClientConnectionConfigWithId; index: number }) {
 	const { visibleConnections, showVariables, deleteModalRef, configureConnection, selectedConnectionId } =
 		useConnectionListContext()
 
@@ -182,7 +174,6 @@ function ConnectionListItem({
 			deleteModalRef={deleteModalRef}
 			configureConnection={configureConnection}
 			isSelected={connection.id === selectedConnectionId}
-			nestingLevel={nestingLevel}
 		/>
 	)
 }

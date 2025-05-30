@@ -1,10 +1,10 @@
 import React from 'react'
 import { capitalize } from 'lodash-es'
-import { GroupingTableGroupArray } from './GroupingTableStuff.js'
+import { GroupingTableGroupsList } from './GroupingTableGroupsList.js'
 import type { GroupingTableGroup, GroupingTableItem } from './Types.js'
 import { useGroupListItemDragging } from './useItemDragging.js'
 import { GroupingTableContextProvider, GroupingTableContextType } from './GroupingTableContext.js'
-import { CollapsibleGroupContents } from './CollapsibleGroupContents.js'
+import { GroupingTableGroupContents } from './GroupingTableGroupContents.js'
 
 interface GroupingTableProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem>
 	extends GroupingTableContextType<TItem> {
@@ -32,12 +32,12 @@ export function GroupingTable<TGroup extends GroupingTableGroup, TItem extends G
 
 	return (
 		<GroupingTableContextProvider ItemRow={ItemRow} itemName={itemName} groupApi={groupApi} dragId={dragId}>
-			<div className="collapsible-group-table">
-				<div className="collapsible-group-table-header">
+			<div className="grouping-table">
+				<div className="grouping-table-header">
 					<Heading />
 				</div>
 
-				<GroupingTableGroupArray groups={groups} groupedItems={groupedItems} nestingLevel={0} />
+				<GroupingTableGroupsList groups={groups} groupedItems={groupedItems} nestingLevel={0} />
 
 				{(isDragging || ungroupedItems.length > 0) && groups.length > 0 && (
 					<div className="grouping-table-ungrouped-header">
@@ -45,7 +45,7 @@ export function GroupingTable<TGroup extends GroupingTableGroup, TItem extends G
 					</div>
 				)}
 
-				<CollapsibleGroupContents items={ungroupedItems} groupId={null} showNoItemsMessage={false} nestingLevel={0} />
+				<GroupingTableGroupContents items={ungroupedItems} groupId={null} showNoItemsMessage={false} nestingLevel={0} />
 
 				{items.length === 0 && (
 					<div>
