@@ -51,39 +51,19 @@ export class InstanceGroups {
 	}
 
 	/**
-	 * Check if setting parentId would create a circular reference
-	 * @param groupId The group that would be moved
-	 * @param newParentId The proposed new parent ID
-	 * @returns true if a circular reference would be created, false otherwise
+	 * Check if a group contains another group
+	 * @param group The group to search
+	 * @param otherGroupId The group id to search for
+	 * @returns
 	 */
-	#wouldCreateCircularReference(groupId: string, newParentId: string | null): boolean {
-		if (newParentId === null) return false // Null parent can't create a circular ref
-		if (groupId === newParentId) return true // Direct self-reference
+	#doesGroupContainOtherGroup(group: ConnectionGroup, otherGroupId: string): boolean {
+		if (group.id === otherGroupId) return true // Direct match
 
-		// Check if any of newParentId's ancestors is the groupId
-		let currentId: string | null = newParentId
-		const visited = new Set<string>()
-
-		while (currentId !== null) {
-			if (visited.has(currentId)) {
-				// Found an existing circular reference in the ancestry
+		// Check if any of the children contain the other group
+		for (const child of group.children) {
+			if (this.#doesGroupContainOtherGroup(child, otherGroupId)) {
 				return true
 			}
-
-			visited.add(currentId)
-
-			if (currentId === groupId) {
-				// Found our original group in the ancestry - would create a cycle
-				return true
-			}
-
-			const group = this.#data.get(currentId)
-			if (!group) {
-				// Invalid parent reference, can't continue checking
-				return false
-			}
-
-			currentId = group.parentId
 		}
 
 		return false
@@ -191,6 +171,11 @@ export class InstanceGroups {
 			const newParentGroup = parentId ? this.#findGroupAndParent(parentId) : null
 			if (parentId && !newParentGroup) {
 				throw new Error(`Parent group ${parentId} not found`)
+			}
+
+			if (parentId && this.#doesGroupContainOtherGroup(matchedGroup.group, parentId)) {
+				// Can't move group into its own child
+				return
 			}
 
 			const currentParentArray = matchedGroup.parentGroup ? matchedGroup.parentGroup.children : this.#data
