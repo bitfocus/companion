@@ -27,6 +27,7 @@ import { NonIdealState } from '../Components/NonIdealState.js'
 import { Link } from '@tanstack/react-router'
 import classNames from 'classnames'
 import { VariableTypeIcon } from '../Components/VariableTypeIcon.js'
+import VariableInputGroup from '../Components/VariableInputGroup.js'
 
 const DRAG_ID = 'custom-variables'
 
@@ -452,7 +453,7 @@ function CustomVariableRow({
 									<>
 										<span
 											style={{
-												backgroundColor: 'rgba(0,0,200,1)',
+												backgroundColor: 'rgba(0,0,200,0.1)',
 												borderRadius: '6px 0 0 6px',
 												padding: '4px',
 												height: '24px',
@@ -465,7 +466,7 @@ function CustomVariableRow({
 												width={12}
 												height={12}
 												icon={iconPath}
-												fill="#ffffff"
+												fill="rgba(0,0,200,1)"
 												style={{ verticalAlign: '-1px' }}
 											/>
 										</span>
@@ -547,22 +548,24 @@ function CustomVariableRow({
 										Current value:
 									</CFormLabel>
 									<CCol sm={9}>
-										<TextInputField
-											value={value ?? ''}
-											setValue={(val) => setCurrentValue(name, val)}
-											style={{ marginBottom: '0.5rem' }}
-										/>
+										<VariableInputGroup value={value} name={name} setCurrentValue={setCurrentValue} />
 									</CCol>
 
 									<CFormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
 										Startup value:
 									</CFormLabel>
 									<CCol sm={9}>
-										<TextInputField
+										<VariableInputGroup
+											disabled={!!info.persistCurrentValue}
+											value={info.defaultValue}
+											name={name}
+											setCurrentValue={setStartupValue}
+										/>
+										{/* <TextInputField
 											disabled={!!info.persistCurrentValue}
 											value={info.defaultValue + ''}
 											setValue={(val) => setStartupValue(name, val)}
-										/>
+										/> */}
 									</CCol>
 								</CRow>
 							</CForm>
