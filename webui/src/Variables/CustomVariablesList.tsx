@@ -26,8 +26,8 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Link } from '@tanstack/react-router'
 import classNames from 'classnames'
-import { VariableTypeIcon } from '../Components/VariableTypeIcon.js'
 import VariableInputGroup from '../Components/VariableInputGroup.js'
+import { VariableValueDisplay } from '../Components/VariableValueDisplay.js'
 
 const DRAG_ID = 'custom-variables'
 
@@ -403,34 +403,6 @@ function CustomVariableRow({
 	})
 	preview(drop(ref))
 
-	const valueStr = typeof value !== 'string' ? (JSON.stringify(value, undefined, '\t') ?? '') : value
-	const compactValue = valueStr.length > 100 ? `${valueStr.substring(0, 100)}...` : valueStr
-
-	let typeDescription = 'unknown'
-	let iconPath = 'unknown'
-	if (typeof value === 'string') {
-		iconPath = 'string'
-		typeDescription = 'Text string'
-	} else if (value === undefined) {
-		iconPath = 'undefined'
-		typeDescription = 'Undefined'
-	} else if (value === null) {
-		iconPath = 'null'
-		typeDescription = 'Null'
-	} else if (typeof value === 'number' && isNaN(value)) {
-		iconPath = 'NaN'
-		typeDescription = 'Not a Number'
-	} else if (typeof value === 'number') {
-		iconPath = 'number'
-		typeDescription = 'Numeric value'
-	} else if (typeof value === 'boolean') {
-		iconPath = 'boolean'
-		typeDescription = 'Boolean value'
-	} else if (typeof value === 'object') {
-		iconPath = 'object'
-		typeDescription = 'JSON Object or Array'
-	}
-
 	return (
 		<tr ref={ref} className={isDragging ? 'variable-dragging' : ''}>
 			<td ref={drag} className="td-reorder">
@@ -449,59 +421,7 @@ function CustomVariableRow({
 						</div>
 						{isCollapsed && (
 							<div className="cell-header-item grow">
-								{compactValue.length > 0 && (
-									<div style={{ display: 'flex', alignItems: 'center' }}>
-										<div
-											style={{
-												backgroundColor: 'rgba(0,0,200,0.1)',
-												color: 'rgb(0, 0, 200)',
-												borderRadius: '6px',
-												padding: '4px 12px',
-												display: 'inline-table',
-												lineHeight: '14px',
-											}}
-										>
-											<span
-												style={{
-													padding: '4px',
-													paddingLeft: '6px',
-													display: 'table-cell',
-													verticalAlign: 'top',
-												}}
-												title={`Variable type: ${typeDescription}`}
-											>
-												<VariableTypeIcon
-													width={12}
-													height={12}
-													icon={iconPath}
-													fill="#0000c8"
-													style={{ verticalAlign: '-1px' }}
-												/>
-											</span>
-											<code
-												style={{
-													display: 'table-cell',
-													verticalAlign: 'top',
-													color: 'rgb(0, 0, 200)',
-													padding: '5.5px 6px 5.5px 4px',
-												}}
-												title={value}
-											>
-												{compactValue}
-											</code>
-										</div>
-										<CopyToClipboard text={value} onCopy={onCopied}>
-											<CButton size="sm" title="Copy variable value">
-												<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
-											</CButton>
-										</CopyToClipboard>
-									</div>
-								)}
-								{value?.length === 0 && (
-									<>
-										<span style={{ fontWeight: 'normal' }}>(empty)</span>
-									</>
-								)}
+								<VariableValueDisplay value={value} onCopied={onCopied} />
 							</div>
 						)}
 						<div className="cell-header-item">

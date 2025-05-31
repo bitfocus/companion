@@ -9,7 +9,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { VariableDefinitionExt } from '../Stores/VariablesStore.js'
 import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
-import { VariableTypeIcon } from './VariableTypeIcon.js'
+import { VariableValueDisplay } from './VariableValueDisplay.js'
 
 interface VariablesTableProps {
 	label: string
@@ -60,7 +60,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	}, [socket, label])
 
 	const onCopied = useCallback(() => {
-		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
+		notifier.current?.show(`Copied`, 'Copied to clipboard', 3000)
 	}, [notifier])
 
 	const [candidates, errorMsg] = useMemo(() => {
@@ -156,52 +156,11 @@ interface VariablesTableRowProps {
 
 const VariablesTableRow = observer(function VariablesTableRow({
 	variable,
-	value: valueRaw,
+	value,
 	label,
 	onCopied,
 	panelCollapseHelper,
 }: VariablesTableRowProps) {
-	const value = typeof valueRaw !== 'string' ? JSON.stringify(valueRaw, undefined, '\t') || '' : valueRaw
-	const compactValue = value.length > 100 ? `${value.substring(0, 100)}...` : value
-
-	console.log('value', value, compactValue)
-
-	// Split display value into the lines
-	const displayValue = panelCollapseHelper.isPanelCollapsed(variable.name) ? compactValue : value
-	const elms: Array<string | JSX.Element> = []
-	const lines = displayValue.split('\\n')
-	lines.forEach((l, i) => {
-		elms.push(l)
-		if (i <= lines.length - 2) {
-			elms.push(<br key={i} />)
-		}
-	})
-
-	let typeDescription = 'unknown'
-	let iconPath = 'unknown'
-	if (typeof valueRaw === 'string') {
-		iconPath = 'string'
-		typeDescription = 'Text string'
-	} else if (valueRaw === undefined) {
-		iconPath = 'undefined'
-		typeDescription = 'Undefined'
-	} else if (valueRaw === null) {
-		iconPath = 'null'
-		typeDescription = 'Null'
-	} else if (typeof valueRaw === 'number' && isNaN(valueRaw)) {
-		iconPath = 'NaN'
-		typeDescription = 'Not a Number'
-	} else if (typeof valueRaw === 'number') {
-		iconPath = 'number'
-		typeDescription = 'Numeric value'
-	} else if (typeof valueRaw === 'boolean') {
-		iconPath = 'boolean'
-		typeDescription = 'Boolean value'
-	} else if (typeof valueRaw === 'object') {
-		iconPath = 'object'
-		typeDescription = 'JSON Object or Array'
-	}
-
 	return (
 		<tr>
 			<td>
@@ -216,69 +175,12 @@ const VariablesTableRow = observer(function VariablesTableRow({
 			</td>
 			<td>{variable.label}</td>
 			<td>
-				{
-					/*elms === '' || elms === null || elms === undefined */ lines.length === 0 ? (
-						'(empty)'
-					) : (
-						<div style={{ display: 'flex', alignItems: 'center' }}>
-							<div
-								style={{
-									backgroundColor: 'rgba(0,0,200,0.1)',
-									color: 'rgb(0, 0, 200)',
-									borderRadius: '6px',
-									padding: '4px 12px',
-									display: 'inline-table',
-									lineHeight: '14px',
-								}}
-							>
-								<span
-									style={{
-										padding: '4px',
-										paddingLeft: '6px',
-										display: 'table-cell',
-										verticalAlign: 'top',
-									}}
-									title={`Variable type: ${typeDescription}`}
-								>
-									<VariableTypeIcon
-										width={12}
-										height={12}
-										icon={iconPath}
-										fill="#0000c8"
-										style={{ verticalAlign: '-1px' }}
-									/>
-								</span>
-								<code
-									style={{
-										display: 'table-cell',
-										verticalAlign: 'top',
-										color: 'rgb(0, 0, 200)',
-										padding: '5.5px 6px 5.5px 4px',
-									}}
-									title={value}
-								>
-									{elms}
-								</code>
-							</div>
-							<CopyToClipboard text={value} onCopy={onCopied}>
-								<CButton size="sm" title="Copy variable value">
-									<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
-								</CButton>
-							</CopyToClipboard>
-						</div>
-					)
-				}
-				{value == compactValue ? (
-					''
-				) : panelCollapseHelper.isPanelCollapsed(variable.name) ? (
-					<a href="#" onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, false)}>
-						More
-					</a>
-				) : (
-					<a href="#" onClick={() => panelCollapseHelper.setPanelCollapsed(variable.name, true)}>
-						Less
-					</a>
-				)}
+				<VariableValueDisplay
+					value={value}
+					collapsePanelId={variable.name}
+					panelCollapseHelper={panelCollapseHelper}
+					onCopied={onCopied}
+				/>
 			</td>
 		</tr>
 	)
