@@ -236,6 +236,7 @@ async function convertCanvasElementForDrawing(
 	return {
 		id: element.id,
 		type: 'canvas',
+		usage: element.usage,
 		// color,
 		decoration,
 	}
@@ -258,6 +259,7 @@ async function convertGroupElementForDrawing(
 	return {
 		id: element.id,
 		type: 'group',
+		usage: element.usage,
 		enabled,
 		opacity,
 		...bounds,
@@ -285,6 +287,7 @@ async function convertImageElementForDrawing(
 	return {
 		id: element.id,
 		type: 'image',
+		usage: element.usage,
 		enabled,
 		opacity,
 		...bounds,
@@ -320,6 +323,7 @@ async function convertTextElementForDrawing(
 	return {
 		id: element.id,
 		type: 'text',
+		usage: element.usage,
 		enabled,
 		opacity,
 		...bounds,
@@ -348,6 +352,7 @@ async function convertBoxElementForDrawing(
 	return {
 		id: element.id,
 		type: 'box',
+		usage: element.usage,
 		enabled,
 		opacity,
 		...bounds,

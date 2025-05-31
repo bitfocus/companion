@@ -20,6 +20,7 @@ export type SomeButtonGraphicsDrawElement =
 
 export interface ButtonGraphicsDrawBase {
 	readonly id: string
+	usage: ButtonGraphicsElementUsage
 	enabled: boolean
 	/* 0-100 */
 	opacity: number
@@ -59,7 +60,7 @@ export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDraw
 }
 export interface ButtonGraphicsCanvasElement
 	extends ButtonGraphicsElementBase,
-		MakeExpressionable<ButtonGraphicsCanvasDrawElement /*, 'previewColor'*/> {}
+		MakeExpressionable<Omit<ButtonGraphicsCanvasDrawElement, 'usage'>> {}
 
 export enum ButtonGraphicsDecorationType {
 	FollowDefault = 'default',
@@ -76,7 +77,7 @@ export interface ButtonGraphicsGroupDrawElement extends ButtonGraphicsDrawBase, 
 }
 export interface ButtonGraphicsGroupElement
 	extends ButtonGraphicsElementBase,
-		MakeExpressionable<Omit<ButtonGraphicsGroupDrawElement, 'children'>> {
+		MakeExpressionable<Omit<ButtonGraphicsGroupDrawElement, 'usage' | 'children'>> {
 	children: SomeButtonGraphicsElement[]
 }
 
@@ -102,7 +103,7 @@ export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, B
 }
 export interface ButtonGraphicsTextElement
 	extends ButtonGraphicsElementBase,
-		MakeExpressionable<ButtonGraphicsTextDrawElement> {}
+		MakeExpressionable<Omit<ButtonGraphicsTextDrawElement, 'usage'>> {}
 
 export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'image'
@@ -121,7 +122,7 @@ export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, 
 }
 export interface ButtonGraphicsImageElement
 	extends ButtonGraphicsElementBase,
-		MakeExpressionable<ButtonGraphicsImageDrawElement> {}
+		MakeExpressionable<Omit<ButtonGraphicsImageDrawElement, 'usage'>> {}
 
 export interface ButtonGraphicsBoxDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'box'
@@ -130,4 +131,4 @@ export interface ButtonGraphicsBoxDrawElement extends ButtonGraphicsDrawBase, Bu
 }
 export interface ButtonGraphicsBoxElement
 	extends ButtonGraphicsElementBase,
-		MakeExpressionable<ButtonGraphicsBoxDrawElement> {}
+		MakeExpressionable<Omit<ButtonGraphicsBoxDrawElement, 'usage'>> {}

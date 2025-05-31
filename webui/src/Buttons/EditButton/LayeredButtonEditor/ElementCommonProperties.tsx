@@ -35,7 +35,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 				<FieldElementNameInput controlId={controlId} elementProps={elementProps} />
 			</CCol>
 
-			{elementProps.type !== 'canvas' && (
+			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && (
 				<>
 					<CFormLabel htmlFor="inputUsage" className="col-sm-4 col-form-label col-form-label-sm">
 						<InlineHelp help="Some surfaces do not have full rgb displays and so require specific elements for providing feedback in alternate ways. You can override the automatic selection of layers for these purposes by selecting the appropriate usage for this element.">
@@ -45,7 +45,11 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 					<CCol sm={8}>
 						<FieldElementUsageInput controlId={controlId} elementProps={elementProps} />
 					</CCol>
+				</>
+			)}
 
+			{elementProps.type !== 'canvas' && (
+				<>
 					<FormPropertyField
 						controlId={controlId}
 						elementProps={elementProps}

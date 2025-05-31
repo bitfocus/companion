@@ -13,22 +13,13 @@ import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult, ImageResultProcessedStyle } from './ImageResult.js'
 import { DrawBounds, type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
-import type {
-	DrawStyleButtonModel,
-	DrawStyleLayeredButtonModel,
-	DrawStyleModel,
-} from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { TopbarRenderer } from '@companion-app/shared/Graphics/TopbarRenderer.js'
 import { isPromise } from 'util/types'
 import type { Complete } from '@companion-module/base/dist/util.js'
-import {
-	ButtonGraphicsBoxDrawElement,
-	ButtonGraphicsDrawBase,
-	ButtonGraphicsElementUsage,
-	ButtonGraphicsTextDrawElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -192,7 +183,7 @@ export class GraphicsRenderer {
 
 				await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
 			} else if (drawStyle.style === 'button-layered') {
-				processedStyle = this.GenerateLayeredButtonProcessedStyle(drawStyle)
+				processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 				await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
 					x: 0,
@@ -333,47 +324,5 @@ export class GraphicsRenderer {
 
 			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), { type: 'button' })
 		})
-	}
-
-	private static GenerateLayeredButtonProcessedStyle(
-		drawStyle: DrawStyleLayeredButtonModel
-	): ImageResultProcessedStyle {
-		const textLayer = this.SelectLayerForUsage<ButtonGraphicsTextDrawElement>(
-			drawStyle,
-			ButtonGraphicsElementUsage.Text,
-			'text'
-		)
-		const boxLayer = this.SelectLayerForUsage<ButtonGraphicsBoxDrawElement>(
-			drawStyle,
-			ButtonGraphicsElementUsage.Text,
-			'box'
-		)
-
-		const processedStyle: Complete<ImageResultProcessedStyle> = {
-			type: 'button',
-			color: boxLayer ? { color: boxLayer.color } : undefined,
-			text: textLayer
-				? {
-						text: textLayer.text,
-						color: textLayer.color,
-						size: Number(textLayer.fontsize) || 'auto', // TODO - scale value?
-					}
-				: undefined,
-			state: {
-				pushed: drawStyle.pushed,
-				cloud: drawStyle.cloud || false,
-			},
-		}
-
-		return processedStyle
-	}
-
-	private static SelectLayerForUsage<TElement extends ButtonGraphicsDrawBase & { type: string }>(
-		drawStyle: DrawStyleLayeredButtonModel,
-		usage: ButtonGraphicsElementUsage,
-		layerType: TElement['type']
-	): TElement | undefined {
-		// TODO
-		return undefined
 	}
 }
