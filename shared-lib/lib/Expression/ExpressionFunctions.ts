@@ -1,6 +1,6 @@
 import { pad } from '../Util.js'
 import { JSONPath } from 'jsonpath-plus'
-import { countGraphemes } from 'unicode-segmenter/grapheme';
+import { countGraphemes } from 'unicode-segmenter/grapheme'
 
 // Note: when adding new functions, make sure to update the docs!
 export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
