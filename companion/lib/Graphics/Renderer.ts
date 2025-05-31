@@ -236,7 +236,7 @@ export class GraphicsRenderer {
 					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
 					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
 
-				TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
+				if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
 				return
 			}
 		}
@@ -261,7 +261,7 @@ export class GraphicsRenderer {
 				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 
-			TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
+			if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
 			return
 		}
 
@@ -284,7 +284,7 @@ export class GraphicsRenderer {
 		}
 
 		// At last draw Topbar on top
-		TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
+		if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
 	}
 
 	/**
