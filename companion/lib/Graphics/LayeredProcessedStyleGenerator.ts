@@ -116,7 +116,7 @@ export class GraphicsLayeredProcessedStyleGenerator {
 					layerType
 				)
 				if (match) return match
-			} else if (element.type === layerType) {
+			} else if (element.type === layerType && element.usage === ButtonGraphicsElementUsage.Automatic) {
 				return element as unknown as TElement
 			}
 		}
