@@ -7,16 +7,22 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Make sure you're on the latest bleeding edge build**
-        *Before you report a bug, make sure you're not reporting something that have been fixed in the main branch by downloading a "latest" build from https://builds.bitfocus.io/companion/*
+        **This form is only for bugs related to the Companion software itself. If you are reporting a bug that you feel is limited to a specific Companion module, please make the bug report directly in that module's repository.**
+        The Repositories can be located within the Bitfocus Github account (https://github.com/bitfocus?type=source) with the following naming convention: companion-module-*manufacturer*-*product*
+  - type: checkboxes
+    attributes:
+      label: Make sure you're on the latest stable or beta build
+      description: Bugs are usually fixed in the beta builds before being put into a stable release. Make sure to test your bug in the latest stable or beta build, in case it has already been fixed.
+      options:
+        - label: I have tested this on the latest stable or beta release
+          required: true
 
-        **This form is only for bugs related to the Companion software itself. If you are reporting a bug that you feel is limited to a specific Companion module, please make the bug report directly in that module's repository.** Most Repositories can be located within the Bitfocus Github account (https://github.com/bitfocus?type=source) with the following naming convention: companion-module-*manufacturer*-*product*
   - type: checkboxes
     attributes:
       label: Is this a bug in companion itself or a module?
       description: If you wish to report a bug in a module, please do so against the correct repository found at https://github.com/bitfocus?type=source
       options:
-        - label: I believe this to be a bug in companion
+        - label: I believe this to be a bug in companion and not a specific module
           required: true
   - type: checkboxes
     attributes:

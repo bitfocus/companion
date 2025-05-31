@@ -1,6 +1,6 @@
 blank_issues_enabled: false
 contact_links:
-  - name: BUG IN A DEVICE MODULE?
+  - name: BUG OR FEATURE REQUEST FOR A DEVICE MODULE?
     url: https://github.com/bitfocus?type=source
     about: Report it against the module itself, to get the relevant people notified.
   - name: NEW DEVICE OR SOFTWARE SUPPORT
