@@ -99,6 +99,13 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleUpdateOptionIsExpression(id: string, key: string, value: boolean): boolean
 
 	/**
+	 * Update the style from legacy properties
+	 * @param diff The properties to update
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean
+
+	/**
 	 * Propagate variable changes
 	 * @param allChangedVariables - variables with changes
 	 */

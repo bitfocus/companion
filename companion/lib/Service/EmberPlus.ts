@@ -1,7 +1,7 @@
 import { EmberServer, Model as EmberModel } from 'emberplus-connection'
 import { getPath } from 'emberplus-connection/dist/Ember/Lib/util.js'
 import { ServiceBase } from './Base.js'
-import { formatLocation, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import { formatLocation, oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { pad } from '@companion-app/shared/Util.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import { LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
@@ -114,11 +114,8 @@ export class ServiceEmberPlus extends ServiceBase {
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
 			const children: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 			for (let bank = 1; bank <= LEGACY_MAX_BUTTONS; bank++) {
-				const controlId = this.#pageController.getControlIdAtOldBankIndex(pageNumber, bank)
-				const control = controlId ? this.#serviceApi.getControl(controlId) : undefined
-
-				let drawStyle = control?.getLastDrawStyle?.() || null
-				if (drawStyle?.style !== 'button') drawStyle = null
+				const xy = oldBankIndexToXY(bank)
+				const drawStyle = xy && this.#serviceApi.getCachedRender({ pageNumber, column: xy[0], row: xy[1] })?.style
 
 				children[bank] = new EmberModel.NumberedTreeNodeImpl(
 					bank,
@@ -142,7 +139,7 @@ export class ServiceEmberPlus extends ServiceBase {
 								EmberModel.ParameterType.String,
 								'Label',
 								undefined,
-								drawStyle?.text || '',
+								drawStyle?.text?.text || '',
 								undefined,
 								undefined,
 								EmberModel.ParameterAccess.ReadWrite
@@ -154,7 +151,7 @@ export class ServiceEmberPlus extends ServiceBase {
 								EmberModel.ParameterType.String,
 								'Text_Color',
 								undefined,
-								formatColorAsHex(drawStyle?.color || 0),
+								formatColorAsHex(drawStyle?.text?.color || 0),
 								undefined,
 								undefined,
 								EmberModel.ParameterAccess.ReadWrite
@@ -166,7 +163,7 @@ export class ServiceEmberPlus extends ServiceBase {
 								EmberModel.ParameterType.String,
 								'Background_Color',
 								undefined,
-								formatColorAsHex(drawStyle?.bgcolor || 0),
+								formatColorAsHex(drawStyle?.color?.color || 0),
 								undefined,
 								undefined,
 								EmberModel.ParameterAccess.ReadWrite
@@ -212,16 +209,13 @@ export class ServiceEmberPlus extends ServiceBase {
 				for (let colI = 0; colI < columnCount; colI++) {
 					const column = gridSize.minColumn + colI
 
-					const location = {
+					const location: ControlLocation = {
 						pageNumber,
 						row,
 						column,
 					}
-					const controlId = this.#pageController.getControlIdAt(location)
-					const control = controlId ? this.#serviceApi.getControl(controlId) : undefined
 
-					let drawStyle = control?.getLastDrawStyle?.() || null
-					if (drawStyle?.style !== 'button') drawStyle = null
+					const drawStyle = this.#serviceApi.getCachedRender(location)?.style
 
 					rowColumns[colI] = new EmberModel.NumberedTreeNodeImpl(
 						colI,
@@ -249,7 +243,7 @@ export class ServiceEmberPlus extends ServiceBase {
 									EmberModel.ParameterType.String,
 									'Label',
 									undefined,
-									drawStyle?.text || '',
+									drawStyle?.text?.text || '',
 									undefined,
 									undefined,
 									EmberModel.ParameterAccess.ReadWrite
@@ -261,7 +255,7 @@ export class ServiceEmberPlus extends ServiceBase {
 									EmberModel.ParameterType.String,
 									'Text_Color',
 									undefined,
-									formatColorAsHex(drawStyle?.color || 0),
+									formatColorAsHex(drawStyle?.text?.color || 0),
 									undefined,
 									undefined,
 									EmberModel.ParameterAccess.ReadWrite
@@ -273,7 +267,7 @@ export class ServiceEmberPlus extends ServiceBase {
 									EmberModel.ParameterType.String,
 									'Background_Color',
 									undefined,
-									formatColorAsHex(drawStyle?.bgcolor || 0),
+									formatColorAsHex(drawStyle?.color?.color || 0),
 									undefined,
 									undefined,
 									EmberModel.ParameterAccess.ReadWrite
@@ -398,7 +392,7 @@ export class ServiceEmberPlus extends ServiceBase {
 
 					const control = this.#serviceApi.getControl(controlId)
 					if (control && control.setStyleFields) {
-						control.setStyleFields({ text: value })
+						control.setStyleFields({ text: String(value) })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
 						this.#server?.update(parameter, { value })
@@ -463,7 +457,7 @@ export class ServiceEmberPlus extends ServiceBase {
 
 					const control = this.#serviceApi.getControl(controlId)
 					if (control && control.setStyleFields) {
-						control.setStyleFields({ text: value })
+						control.setStyleFields({ text: String(value) })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
 						this.#server?.update(parameter, { value })

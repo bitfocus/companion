@@ -9,7 +9,7 @@ import type {
 } from '../../IControlFragments.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
-import type { LayeredButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import type { LayeredButtonModel, LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import {
@@ -19,7 +19,7 @@ import {
 	ExpressionOrValue,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
 import { CompanionVariableValues } from '@companion-module/base'
@@ -42,7 +42,7 @@ import { CompanionVariableValues } from '@companion-module/base'
  * disclosing the source code of your own applications.
  */
 export class ControlButtonLayered
-	extends ButtonControlBase<LayeredButtonModel, NormalButtonOptions>
+	extends ButtonControlBase<LayeredButtonModel, LayeredButtonOptions>
 	implements
 		ControlWithoutStyle,
 		ControlWithLayeredStyle,
@@ -122,6 +122,7 @@ export class ControlButtonLayered
 			...cloneDeep(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
 			stepAutoProgress: true,
+			canModifyStyleInApis: false,
 		}
 
 		if (!storage) {
@@ -452,6 +453,13 @@ export class ControlButtonLayered
 		this.commitChange(true)
 
 		return true
+	}
+
+	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean {
+		if (!this.options.canModifyStyleInApis) return false
+
+		// TODO
+		return false
 	}
 
 	/**
