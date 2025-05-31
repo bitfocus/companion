@@ -2,6 +2,16 @@ There are various supported functions, and we are willing to add more. Let us kn
 
 The currently supported functions are:
 
+##### General operations
+
+**length(val)**
+
+Find the length of the item passed in.
+* For a strings it will return the number of unicode graphemes
+* For arrays, the number of elements
+* For JSON or other objects, it will return the number of properties
+* For numbers it will return the length of the string representation
+
 ##### Numeric operations
 
 **round(val)**
@@ -144,7 +154,6 @@ eg `encode("Companion","hex")` gives `"436f6d70616e696f6e"`
 
 Decode a string from the requested format ('hex','base64'). If `enc` is missing, `latin1` will be used.
 
-
 eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
 **parseVariables(string)**
@@ -212,7 +221,6 @@ Convert a timestamp of format 'HH:MM:SS' into the number of seconds it represent
 eg `00:10:15` gives 615
 
 You can do the reverse of this with `secondsToTimestamp(str)`
-
 
 **secondsToTimestamp(seconds, format)**
 
