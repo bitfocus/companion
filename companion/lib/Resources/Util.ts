@@ -396,3 +396,18 @@ export function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean
 
 	return childValues.reduce((acc, val) => acc && val, true) === !isInverted
 }
+
+/**
+ * Lazy compute a value
+ * @param fn Function to compute the value
+ * @returns Function that returns the computed value, only computed once
+ */
+export function lazy<T>(fn: () => T): () => T {
+	let value: T | undefined
+	return () => {
+		if (value === undefined) {
+			value = fn()
+		}
+		return value
+	}
+}

@@ -13,9 +13,13 @@ import type { LayeredButtonModel, LayeredButtonOptions } from '@companion-app/sh
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import {
+	ButtonGraphicsBoxElement,
 	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementBase,
 	ButtonGraphicsElementUsage,
 	ButtonGraphicsGroupElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsTextElement,
 	ExpressionOrValue,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -23,6 +27,8 @@ import { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-a
 import { CreateElementOfType } from './LayerDefaults.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
 import { CompanionVariableValues } from '@companion-module/base'
+import { lazy } from '../../../Resources/Util.js'
+import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -458,8 +464,95 @@ export class ControlButtonLayered
 	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean {
 		if (!this.options.canModifyStyleInApis) return false
 
-		// TODO
-		return false
+		const lazyTextElement = lazy(() =>
+			this.SelectLayerForUsage<ButtonGraphicsTextElement>(ButtonGraphicsElementUsage.Text, 'text')
+		)
+		const lazyBoxElement = lazy(() =>
+			this.SelectLayerForUsage<ButtonGraphicsBoxElement>(ButtonGraphicsElementUsage.Color, 'box')
+		)
+		const lazyImageElement = lazy(() =>
+			this.SelectLayerForUsage<ButtonGraphicsImageElement>(ButtonGraphicsElementUsage.Image, 'image')
+		)
+		const canvasElement = this.#drawElements.find((e) => e.type === 'canvas')
+
+		let changed = false
+
+		if (diff.text !== undefined) {
+			const textElement = lazyTextElement()
+			if (textElement) {
+				textElement.text = { isExpression: diff.textExpression === true, value: String(diff.text) }
+				changed = true
+			}
+		}
+
+		if (diff.size !== undefined) {
+			const textElement = lazyTextElement()
+			if (textElement) {
+				textElement.fontsize = { isExpression: false, value: Number(diff.size) || 'auto' }
+				changed = true
+			}
+		}
+
+		if (diff.color !== undefined) {
+			const textElement = lazyTextElement()
+			if (textElement) {
+				textElement.color = { isExpression: false, value: Number(diff.color) }
+				changed = true
+			}
+		}
+
+		if (diff.alignment !== undefined) {
+			const textElement = lazyTextElement()
+			if (textElement) {
+				const alignment = ParseAlignment(diff.alignment)
+				textElement.halign = { isExpression: false, value: alignment[0] }
+				textElement.valign = { isExpression: false, value: alignment[1] }
+				changed = true
+			}
+		}
+
+		if (diff.pngalignment !== undefined) {
+			const imageElement = lazyImageElement()
+			if (imageElement) {
+				const alignment = ParseAlignment(diff.pngalignment)
+				imageElement.halign = { isExpression: false, value: alignment[0] }
+				imageElement.valign = { isExpression: false, value: alignment[1] }
+				changed = true
+			}
+		}
+
+		if (diff.png64 !== undefined) {
+			const imageElement = lazyImageElement()
+			if (imageElement) {
+				imageElement.base64Image = { isExpression: false, value: diff.png64 ?? null }
+				changed = true
+			}
+		}
+
+		if (diff.bgcolor !== undefined) {
+			const boxElement = lazyBoxElement()
+			if (boxElement) {
+				boxElement.color = { isExpression: false, value: Number(diff.color) }
+				changed = true
+			}
+		}
+
+		if (diff.show_topbar !== undefined && canvasElement) {
+			if (diff.show_topbar === 'default') {
+				canvasElement.decoration = { isExpression: false, value: ButtonGraphicsDecorationType.FollowDefault }
+			} else if (diff.show_topbar === true) {
+				canvasElement.decoration = { isExpression: false, value: ButtonGraphicsDecorationType.TopBar }
+			} else if (diff.show_topbar === false) {
+				canvasElement.decoration = { isExpression: false, value: ButtonGraphicsDecorationType.Border }
+			}
+
+			changed = true
+		}
+
+		// Save changes and redraw
+		if (changed) this.commitChange(true)
+
+		return changed
 	}
 
 	/**
@@ -521,5 +614,48 @@ export class ControlButtonLayered
 		return {
 			current_step_id: this.entities.currentStepId,
 		}
+	}
+
+	private SelectLayerForUsage<TElement extends ButtonGraphicsElementBase & { type: string }>(
+		usage: ButtonGraphicsElementUsage,
+		layerType: TElement['type']
+	): TElement | undefined {
+		return (
+			ControlButtonLayered.SelectFirstLayerWithUsage<TElement>(this.#drawElements, usage, layerType) ||
+			ControlButtonLayered.SelectFirstLayerOfType<TElement>(this.#drawElements, layerType)
+		)
+	}
+
+	private static SelectFirstLayerWithUsage<TElement extends ButtonGraphicsElementBase & { type: string }>(
+		elements: SomeButtonGraphicsElement[],
+		usage: ButtonGraphicsElementUsage,
+		layerType: TElement['type']
+	): TElement | undefined {
+		for (const element of elements) {
+			if (element.type === 'group') {
+				const match = ControlButtonLayered.SelectFirstLayerWithUsage<TElement>(element.children, usage, layerType)
+				if (match) return match
+			} else if (element.type === layerType && element.usage === usage) {
+				return element as unknown as TElement
+			}
+		}
+
+		return undefined
+	}
+
+	private static SelectFirstLayerOfType<TElement extends ButtonGraphicsElementBase & { type: string }>(
+		elements: SomeButtonGraphicsElement[],
+		layerType: TElement['type']
+	): TElement | undefined {
+		for (const element of elements) {
+			if (element.type === 'group') {
+				const match = ControlButtonLayered.SelectFirstLayerOfType<TElement>(element.children, layerType)
+				if (match) return match
+			} else if (element.type === layerType && element.usage === ButtonGraphicsElementUsage.Automatic) {
+				return element as unknown as TElement
+			}
+		}
+
+		return undefined
 	}
 }

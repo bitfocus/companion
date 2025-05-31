@@ -100,6 +100,7 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 
 	/**
 	 * Update the style from legacy properties
+	 * Future: Once the old button style is removed, this should be reworked to utilise the new style system better
 	 * @param diff The properties to update
 	 * @returns true if any changes were made
 	 */
