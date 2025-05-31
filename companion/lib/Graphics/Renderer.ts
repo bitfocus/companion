@@ -44,6 +44,7 @@ export class GraphicsRenderer {
 		}
 
 		const img = pool.pop() || Image.create(width, height, oversampling)
+		img.clear()
 
 		const res = fcn(img)
 		if (isPromise(res)) {
