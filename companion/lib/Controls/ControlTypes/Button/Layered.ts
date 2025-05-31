@@ -14,6 +14,7 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import {
 	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
 	ButtonGraphicsGroupElement,
 	ExpressionOrValue,
 	SomeButtonGraphicsElement,
@@ -58,12 +59,14 @@ export class ControlButtonLayered
 		{
 			id: 'canvas',
 			name: 'Canvas',
+			usage: ButtonGraphicsElementUsage.Automatic,
 			type: 'canvas',
 			decoration: { value: ButtonGraphicsDecorationType.FollowDefault, isExpression: false },
 		},
 		{
 			id: 'box0',
 			name: 'Background',
+			usage: ButtonGraphicsElementUsage.Automatic,
 			type: 'box',
 			enabled: { value: true, isExpression: false },
 			opacity: { value: 100, isExpression: false },
@@ -76,6 +79,7 @@ export class ControlButtonLayered
 		{
 			id: 'text0',
 			name: 'Text',
+			usage: ButtonGraphicsElementUsage.Automatic,
 			type: 'text',
 			enabled: { value: true, isExpression: false },
 			opacity: { value: 100, isExpression: false },
@@ -287,6 +291,20 @@ export class ControlButtonLayered
 
 		// Save change without a redraw
 		this.commitChange(false)
+
+		return true
+	}
+
+	layeredStyleSetElementUsage(id: string, usage: ButtonGraphicsElementUsage): boolean {
+		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
+		if (!currentElementLocation) return false
+
+		const { element } = currentElementLocation
+
+		element.usage = usage
+
+		// Trigger a redraw, as this could affect listeners of the properties
+		this.commitChange(true)
 
 		return true
 	}

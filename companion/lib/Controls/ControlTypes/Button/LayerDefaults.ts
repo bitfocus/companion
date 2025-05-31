@@ -1,4 +1,4 @@
-import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ButtonGraphicsElementUsage, SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { nanoid } from 'nanoid'
 
@@ -10,6 +10,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 			return {
 				id: nanoid(),
 				name: 'Text',
+				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'text',
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
@@ -27,6 +28,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 			return {
 				id: nanoid(),
 				name: 'Image',
+				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'image',
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
@@ -43,6 +45,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 			return {
 				id: nanoid(),
 				name: 'Box',
+				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'box',
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
@@ -56,6 +59,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 			return {
 				id: nanoid(),
 				name: 'Group',
+				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'group',
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },

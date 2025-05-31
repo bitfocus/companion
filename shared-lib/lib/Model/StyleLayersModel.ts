@@ -28,6 +28,13 @@ export interface ButtonGraphicsDrawBase {
 export interface ButtonGraphicsElementBase {
 	readonly id: string
 	name: string
+	usage: ButtonGraphicsElementUsage
+}
+
+export enum ButtonGraphicsElementUsage {
+	Automatic = 'auto',
+	Text = 'text',
+	Color = 'color',
 }
 
 export interface ButtonGraphicsDrawBounds {
