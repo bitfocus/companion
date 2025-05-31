@@ -35,7 +35,6 @@ import type { PageController } from '../Page/Controller.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
-import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 
@@ -201,13 +200,16 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				feedbackStyle: undefined,
 				showInvert: false,
 				options: [
-					serializeIsVisibleFnSingle({
+					{
 						type: 'textinput',
 						label: 'Startup Value',
 						id: 'startup_value',
 						default: '1',
-						isVisible: (options) => !options.persist_value,
-					}),
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!$(options:persist_value)',
+						},
+					},
 					{
 						type: 'checkbox',
 						label: 'Persist value',

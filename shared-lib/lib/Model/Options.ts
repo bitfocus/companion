@@ -101,7 +101,7 @@ export type ExtendedConfigField = EncodeIsVisible2<CompanionInputFieldBonjourDev
 
 export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isVisible'>> = Omit<
 	T,
-	'isVisible' | 'isVisibleData'
+	'isVisible' | 'isVisibleData' | 'isVisibleExpression'
 > & {
 	isVisibleUi?: {
 		type: 'function' | 'expression'

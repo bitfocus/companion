@@ -2,7 +2,6 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
-import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -138,29 +137,35 @@ export const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
 			{ id: 'expression', label: 'From expression' },
 		],
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'textinput',
 		label: 'Location (text with variables)',
 		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
 		id: 'location_text',
 		default: '$(this:page)/$(this:row)/$(this:column)',
-		isVisible: (options) => options.location_target === 'text',
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) == "text"',
+		},
 		useVariables: {
 			local: true,
 		},
-	}),
-	serializeIsVisibleFnSingle({
+	},
+	{
 		type: 'textinput',
 		label: 'Location (expression)',
 		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
 		id: 'location_expression',
 		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
-		isVisible: (options) => options.location_target === 'expression',
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) == "expression"',
+		},
 		useVariables: {
 			local: true,
 		},
 		isExpression: true,
-	}),
+	},
 ]
 
 export class InternalModuleUtils {

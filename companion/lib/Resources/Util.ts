@@ -393,13 +393,6 @@ export function TrySplitVariableId(variableId: string): [string, string] | null 
 	return [label, variable]
 }
 
-export function serializeIsVisibleFnSingle<T extends CompanionInputFieldBase | CompanionInputFieldBaseExtended>(
-	field: T
-): EncodeIsVisible2<T> {
-	// @ts-ignore
-	return serializeIsVisibleFn([field])[0]
-}
-
 export function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean {
 	if (childValues.length === 0) return isInverted
 
