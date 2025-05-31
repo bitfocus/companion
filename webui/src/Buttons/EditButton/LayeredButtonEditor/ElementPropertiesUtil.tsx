@@ -1,6 +1,6 @@
 import { ExpressionOrValue, ButtonGraphicsElementBase } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CFormLabel, CCol, CButton } from '@coreui/react'
-import { faDollarSign, faFont } from '@fortawesome/free-solid-svg-icons'
+import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useCallback, useContext } from 'react'
@@ -88,7 +88,7 @@ export const FormPropertyField = observer(function FormPropertyField<
 						onClick={toggleExpression}
 						title={elementProp.isExpression ? 'Expression mode ' : 'Value mode'}
 					>
-						<FontAwesomeIcon icon={elementProp.isExpression ? faDollarSign : faFont} />
+						<FontAwesomeIcon icon={elementProp.isExpression ? faSquareRootVariable : faFilter} />
 					</CButton>
 				</div>
 			</CCol>
