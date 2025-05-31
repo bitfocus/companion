@@ -27,6 +27,7 @@
     "test": "vitest",
     "build:writefile": "tsx ./tools/build_writefile.mts",
     "build:module-openapi": "zx ./tools/generate_module_openapi.mjs",
+    "build:udev-rules": "tsx ./tools/generate_udev.mts",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
   "engines": {
@@ -47,6 +48,7 @@
     "prettier": "^3.5.3",
     "tsx": "^4.19.4",
     "typescript": "~5.8.3",
+    "udev-generator": "^1.0.1",
     "vitest": "^3.1.4",
     "vitest-mock-extended": "^3.1.0",
     "yaml": "^2.8.0",

@@ -1,6 +1,9 @@
 name: Unit tests
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -8,6 +11,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -25,3 +30,29 @@ jobs:
       - name: run tests
         run: |
           yarn test
+
+  verify-udev-generation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+      - name: yarn install
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: generate files
+        run: |
+          yarn build:udev-rules
+
+      - name: verify files are up to date
+        uses: infotroph/tree-is-clean@v1.0.6
+        with:
+          check_untracked: false
