@@ -4,7 +4,7 @@ import { cloneDeep } from 'lodash-es'
 import React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 
-export interface TableVisibilityHelper<T extends Record<string, boolean>> {
+export interface TableVisibilityHelper<T extends Record<string, any>> {
 	visibility: T
 	toggleVisibility: (key: keyof T, forceState?: boolean) => void
 }

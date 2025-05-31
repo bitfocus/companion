@@ -41,6 +41,7 @@ import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
 import { translateOptionsIsVisible } from './Wrapper.js'
+import { InstanceGroups } from './Groups.js'
 
 const InstancesRoom = 'instances'
 
@@ -61,6 +62,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #io: UIHandler
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
+	readonly #groupsController: InstanceGroups
 
 	readonly #configStore: ConnectionConfigStore
 
@@ -75,6 +77,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly userModulesManager: InstanceInstalledModulesManager
 
 	readonly connectionApiRouter = express.Router()
+
+	get groups(): InstanceGroups {
+		return this.#groupsController
+	}
 
 	constructor(
 		appInfo: AppInfo,
@@ -95,6 +101,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController = controls
 
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
+		this.#groupsController = new InstanceGroups(io, db, this.#configStore)
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
@@ -381,10 +388,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController.forgetConnection(id)
 	}
 
-	async deleteAllInstances(): Promise<void> {
-		const ps = []
+	async deleteAllInstances(deleteGroups: boolean): Promise<void> {
+		const ps: Promise<void>[] = []
 		for (const instanceId of this.#configStore.getAllInstanceIds()) {
 			ps.push(this.deleteInstance(instanceId))
+		}
+
+		if (deleteGroups) {
+			this.#groupsController.discardAllGroups()
 		}
 
 		await Promise.all(ps)
@@ -536,6 +547,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.modules.clientConnect(client)
 		this.modulesStore.clientConnect(client)
 		this.userModulesManager.clientConnect(client)
+		this.#groupsController.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)
@@ -676,10 +688,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return connectionInfo[0]
 		})
 
-		client.onPromise('connections:set-order', async (connectionIds) => {
-			if (!Array.isArray(connectionIds)) throw new Error('Expected array of ids')
-
-			this.#configStore.setOrder(connectionIds)
+		client.onPromise('connections:reorder', async (groupId, connectionId, dropIndex) => {
+			this.#configStore.moveConnection(groupId, connectionId, dropIndex)
 		})
 
 		client.onPromise('connection-debug:subscribe', (connectionId) => {

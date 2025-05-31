@@ -1,4 +1,3 @@
-import jsonPatch from 'fast-json-patch'
 import { isEqual } from 'lodash-es'
 // import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
@@ -15,7 +14,7 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 	 * The latest statuses object
 	 * levels: null = unknown, see updateInstanceStatus for possible values
 	 */
-	#instanceStatuses: Record<string, ConnectionStatusEntry> = {}
+	readonly #instanceStatuses: Record<string, ConnectionStatusEntry> = {}
 
 	// readonly #logger = LogController.createLogger('Instance/Status')
 
@@ -95,17 +94,24 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 				break
 		}
 
-		const newStatuses = { ...this.#instanceStatuses }
-		newStatuses[connectionId] = {
+		const oldStatusForConnection: ConnectionStatusEntry | undefined = this.#instanceStatuses[connectionId]
+		const newStatusForConnection: ConnectionStatusEntry = {
 			category: category,
 			level: level,
 			message: msg?.toString?.(),
 		}
+		this.#instanceStatuses[connectionId] = newStatusForConnection
 
-		if (!isEqual(newStatuses[connectionId], this.#instanceStatuses[connectionId])) {
-			this.#setStatuses(newStatuses)
+		if (!oldStatusForConnection || !isEqual(oldStatusForConnection, newStatusForConnection)) {
+			this.#io.emitToAll(`connections:update-statuses`, [
+				{
+					type: 'update',
+					connectionId: connectionId,
+					status: newStatusForConnection,
+				},
+			])
 
-			this.emit('status_change', newStatuses)
+			this.emit('status_change', this.#instanceStatuses)
 
 			this.#controls.checkAllStatus()
 		}
@@ -122,26 +128,17 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 	 * Forget the status of an instance
 	 */
 	forgetConnectionStatus(connectionId: string): void {
-		const newStatuses = { ...this.#instanceStatuses }
-		delete newStatuses[connectionId]
+		delete this.#instanceStatuses[connectionId]
 
-		this.#setStatuses(newStatuses)
+		this.#io.emitToAll(`connections:update-statuses`, [
+			{
+				type: 'remove',
+				connectionId: connectionId,
+			},
+		])
 
-		this.emit('status_change', newStatuses)
+		this.emit('status_change', this.#instanceStatuses)
 
 		this.#controls.checkAllStatus()
-	}
-
-	/**
-	 * Helper to update the statuses
-	 */
-	#setStatuses(newObj: Record<string, ConnectionStatusEntry>): void {
-		const patch = jsonPatch.compare(this.#instanceStatuses || {}, newObj || {})
-		if (patch.length > 0) {
-			// TODO - make this be a subscription with a dedicated room
-			this.#io.emitToAll(`connections:patch-statuses`, patch)
-		}
-
-		this.#instanceStatuses = newObj
 	}
 }
