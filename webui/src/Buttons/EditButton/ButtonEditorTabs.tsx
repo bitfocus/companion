@@ -117,7 +117,7 @@ export function ButtonEditorTabs({
 					)}
 
 					{stepKeys.length === 1 && (
-						<div className="nav-last">
+						<div className="nav-last align-self-center">
 							<CButton title="Add step" size="sm" onClick={service.appendStep}>
 								<FontAwesomeIcon icon={faPlus} />
 							</CButton>

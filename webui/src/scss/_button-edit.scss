@@ -1,5 +1,4 @@
 .edit-button-panel {
-	margin-right: -0.5rem;
 	height: 100%;
 
 	display: flex;
@@ -231,6 +230,7 @@ table.variables-table {
 		.button-layer-elementlist-table {
 			overflow-y: scroll;
 			max-height: 100%;
+			height: 100%;
 
 			.heading {
 				position: sticky;
