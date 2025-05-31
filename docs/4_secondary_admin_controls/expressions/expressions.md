@@ -1,4 +1,4 @@
-Many modules allow for using variables in input fields. A select few places support a new concept of expressions too. We hope to make these available in more places over time.
+Many modules allow for using variables in input fields. A select few places support a new concept of expressions too (including button text when in expression mode). We hope to make these available in more places over time.
 
 The key difference is that expressions are capable of a lot more, but are more complex to write.
 
@@ -11,7 +11,7 @@ You can also do more complex expressions with conditional logic, such as `($(cus
 
 There are various functions that you can use. These can be used in the usual ways to do various things. For example `round($(custom:a))`. There is a full list of available functions documented below.
 
-Strings can be formed using `` `${$(custom:a)}dB` ``. You can use anything instead of `$(custom:a)`, even other templates and conditional logic.
+Strings can be formed using `` `${$(custom:a)}dB` `` which is known as a template string. You can use anything inside of `${` and `}` instead of `$(custom:a)`; even other string templates and conditional logic. Just make sure you've got the backticks around it for it to be processed as such.
 
 You can split your expression over multiple lines or statements, and create intermediary values too
 

@@ -90,11 +90,11 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 				{modules.storeList.size > 0 ? (
 					<p>
 						Companion currently supports over {modules.storeList.size} different things, and the list grows every day.
-						If you can't find the device you're looking for, please{' '}
-						<a target="_blank" href="https://bfoc.us/5xcykgx03n">
-							add a request
+						If you can't find the device you're looking for, we have{' '}
+						<a target="_blank" href="/getting-started#6_modules.md">
+							some guidance
 						</a>{' '}
-						on GitHub
+						on ways to get support for your device.
 					</p>
 				) : (
 					<p>
@@ -177,7 +177,7 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 	)
 
 	return (
-		<div>
+		<div className="flex">
 			<CButton color="primary" onClick={addConnectionClick}>
 				Add
 			</CButton>
@@ -193,23 +193,26 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 					&nbsp;
 				</>
 			)}
-			{moduleInfo.name}
-			{/* // TODO: align in columns? */}
-			{!!moduleInfo.storeInfo && (
-				<WindowLinkOpen className="float_right" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
-					<FontAwesomeIcon icon={faExternalLink} />
-				</WindowLinkOpen>
-			)}
-			{!!moduleInfo.storeInfo?.githubUrl && (
-				<WindowLinkOpen className="float_right" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
-					<FontAwesomeIcon icon={faGithub} />
-				</WindowLinkOpen>
-			)}
-			{showHelpForVersion?.helpPath && (
-				<div className="float_right" onClick={showHelpClick}>
-					<FontAwesomeIcon icon={faQuestionCircle} />
-				</div>
-			)}
+			<div className="grow" style={{ alignContent: 'center' }}>
+				{moduleInfo.name}
+			</div>
+			<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+				{!!moduleInfo.storeInfo && (
+					<WindowLinkOpen className="m-0" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
+						<FontAwesomeIcon icon={faExternalLink} />
+					</WindowLinkOpen>
+				)}
+				{!!moduleInfo.storeInfo?.githubUrl && (
+					<WindowLinkOpen className="m-0" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
+						<FontAwesomeIcon icon={faGithub} />
+					</WindowLinkOpen>
+				)}
+				{showHelpForVersion?.helpPath && (
+					<div className="m-0" onClick={showHelpClick}>
+						<FontAwesomeIcon icon={faQuestionCircle} />
+					</div>
+				)}
+			</div>
 		</div>
 	)
 }

@@ -362,7 +362,7 @@ interface InternalTriggerDropdownProps {
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
-	includeSelf: boolean | undefined
+	includeSelf: boolean | 'abort' | undefined
 }
 
 const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
@@ -377,7 +377,13 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
 		if (!isLocatedInGrid && includeSelf) {
-			choices.push({ id: 'self', label: 'Current trigger' })
+			if (includeSelf === 'abort') {
+				choices.push({ id: 'self', label: 'Current trigger: except this run' })
+				choices.push({ id: 'self:only-this-run', label: 'Current trigger: only this run' })
+				choices.push({ id: 'self:all-runs', label: 'Current trigger: all runs' })
+			} else {
+				choices.push({ id: 'self', label: 'Current trigger' })
+			}
 		}
 
 		for (const [id, trigger] of triggersList.triggers.entries()) {

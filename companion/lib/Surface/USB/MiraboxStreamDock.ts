@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { EventEmitter } from 'events'
@@ -1253,7 +1247,7 @@ class StreamDock extends EventEmitter {
 	/**
 	 * Sends a command to the device async
 	 *
-	 * The command will be packetized in packeges of packetSize bytes. Smaller commands are zero-padded, larger commands are chunked. The packets might be written interrupted by other writes.
+	 * The command will be packetized in packages of packetSize bytes. Smaller commands are zero-padded, larger commands are chunked. The packets might be written interrupted by other writes.
 	 * @param data the data to be sent
 	 * @param prefix optional prefix. If not set, the default prefix will be used
 	 */
@@ -1269,7 +1263,7 @@ class StreamDock extends EventEmitter {
 		// if (writebuffer.byteLength != StreamDock.packetSize) {
 		if (writebuffer.byteLength != StreamDock.packetSize + 1) {
 			console.error(
-				`Data lenght problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
+				`Data length problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
 			)
 		}
 		await this.writeRaw(writebuffer).catch((e) => {
@@ -1287,7 +1281,7 @@ class StreamDock extends EventEmitter {
 	/**
 	 * Sends a command to the device sync
 	 *
-	 * The command will be packetized in packeges of packetSize bytes. Smaller commands are zero-padded, larger commands are chunked.
+	 * The command will be packetized in packages of packetSize bytes. Smaller commands are zero-padded, larger commands are chunked.
 	 * @param data the data to be sent
 	 * @param prefix optional prefix. If not set, the default prefix will be used
 	 */
@@ -1303,7 +1297,7 @@ class StreamDock extends EventEmitter {
 		// if (writebuffer.byteLength != StreamDock.packetSize) {
 		if (writebuffer.byteLength != StreamDock.packetSize + 1) {
 			console.error(
-				`Data lenght problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
+				`Data length problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
 			)
 		}
 		let writepr, sendpr

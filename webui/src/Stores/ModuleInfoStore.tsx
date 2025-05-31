@@ -76,7 +76,7 @@ export class ModuleInfoStore {
 		this.storeUpdateInfo.lastUpdateAttempt = storeInfo.lastUpdateAttempt
 		this.storeUpdateInfo.updateWarning = storeInfo.updateWarning
 
-		// TODO - is this too agressive?
+		// TODO - is this too aggressive?
 		this.storeList.replace(storeInfo.modules)
 	})
 

@@ -2,6 +2,9 @@ import React from 'react'
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useQuery } from '@tanstack/react-query'
+import { CButton } from '@coreui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faRefresh } from '@fortawesome/free-solid-svg-icons'
 
 interface DocsContentProps {
 	file: string
@@ -11,7 +14,7 @@ export function DocsContent({ file }: DocsContentProps) {
 	// strip filename
 	const baseUrl = `${file}`.replace(/\/[^/]+$/, '/')
 
-	const { isPending, error, data } = useQuery<string>({
+	const { isPending, error, data, refetch } = useQuery<string>({
 		queryKey: [`docs_${file}`],
 		queryFn: () => fetch(`/docs/${file}`).then((res) => res.text()),
 		retry: false,
@@ -22,18 +25,29 @@ export function DocsContent({ file }: DocsContentProps) {
 			{isPending && 'loading'}
 			{error && <div>Error: {error.message}</div>}
 			{data && (
-				<ReactMarkdown
-					urlTransform={(src, key, _node) => {
-						if (key === 'src') {
-							// img tag
-							return `/docs/${baseUrl}${defaultUrlTransform(src)}`
-						} else {
-							return defaultUrlTransform(src)
-						}
-					}}
-					children={data}
-					remarkPlugins={[remarkGfm]}
-				/>
+				<>
+					{process.env.NODE_ENV !== 'production' && (
+						<CButton
+							title="Dev Refresh"
+							onClick={() => refetch()}
+							style={{ float: 'right', position: 'absolute', top: -40, right: 0 }}
+						>
+							<FontAwesomeIcon icon={faRefresh} />
+						</CButton>
+					)}
+					<ReactMarkdown
+						urlTransform={(src, key, _node) => {
+							if (key === 'src') {
+								// img tag
+								return `/docs/${baseUrl}${defaultUrlTransform(src)}`
+							} else {
+								return defaultUrlTransform(src)
+							}
+						}}
+						children={data}
+						remarkPlugins={[remarkGfm]}
+					/>
+				</>
 			)}
 		</div>
 	)

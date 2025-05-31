@@ -150,14 +150,16 @@ export const AddConnectionModal = observer(
 									/>
 								</CCol>
 
-								<CFormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm">
-									Module Version&nbsp;
-									{moduleInfo && selectedVersionInfo && (
-										<div className="float_right" onClick={showHelpClick}>
-											<FontAwesomeIcon icon={faQuestionCircle} />
-										</div>
-									)}
-									{isModuleOnStore && <ModuleVersionsRefresh moduleId={moduleInfo.id} />}
+								<CFormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm pe-0">
+									<div className="flex">
+										<span className="grow">Module Version&nbsp;</span>
+										{moduleInfo && selectedVersionInfo && (
+											<div className="float_right" onClick={showHelpClick}>
+												<FontAwesomeIcon icon={faQuestionCircle} />
+											</div>
+										)}
+										{isModuleOnStore && <ModuleVersionsRefresh moduleId={moduleInfo.id} />}
+									</div>
 								</CFormLabel>
 								<CCol sm={8}>
 									<CFormSelect

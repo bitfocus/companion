@@ -27,6 +27,7 @@
     "test": "vitest",
     "build:writefile": "tsx ./tools/build_writefile.mts",
     "build:module-openapi": "zx ./tools/generate_module_openapi.mjs",
+    "build:udev-rules": "tsx ./tools/generate_udev.mts",
     "module:bulk": "zx ./tools/module_bulk.mjs"
   },
   "engines": {
@@ -35,21 +36,23 @@
     "node": ">=22.11 <23"
   },
   "devDependencies": {
-    "@types/node": "^22.15.2",
+    "@types/node": "^22.15.24",
     "@types/ps-tree": "^1.1.6",
-    "@vitest/coverage-v8": "^3.1.2",
-    "@vitest/ui": "^3.1.2",
+    "@vitest/coverage-v8": "^3.1.4",
+    "@vitest/ui": "^3.1.4",
     "chokidar": "^3.6.0",
     "concurrently": "^9.1.2",
     "dotenv": "^16.5.0",
-    "openapi-typescript": "^7.6.1",
+    "openapi-typescript": "^7.8.0",
+    "p-retry": "^6.2.1",
     "prettier": "^3.5.3",
-    "tsx": "^4.19.3",
+    "tsx": "^4.19.4",
     "typescript": "~5.8.3",
-    "vitest": "^3.1.2",
+    "udev-generator": "^1.0.1",
+    "vitest": "^3.1.4",
     "vitest-mock-extended": "^3.1.0",
-    "yaml": "^2.7.1",
-    "zx": "^8.5.3"
+    "yaml": "^2.8.0",
+    "zx": "^8.5.4"
   },
   "resolutions": {
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",

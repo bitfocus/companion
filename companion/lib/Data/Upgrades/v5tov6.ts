@@ -15,12 +15,12 @@ import type {
 /**
  * do the database upgrades to convert from the v4 to the v5 format
  */
-function convertDatabaseToV6(db: DataStoreBase, _logger: Logger) {
+function convertDatabaseToV6(db: DataStoreBase<any>, _logger: Logger) {
 	if (!db.store) return
 
-	const controls = db.getTable('controls')
+	const controlsTable = db.getTableView('controls')
 
-	for (const [controlId, control] of Object.entries(controls)) {
+	for (const [controlId, control] of Object.entries(controlsTable.all())) {
 		// Note - this doesn't need to consider 'children', as they are not used in the v5 format
 
 		const relativeDelay = control?.options?.relativeDelay
@@ -38,7 +38,7 @@ function convertDatabaseToV6(db: DataStoreBase, _logger: Logger) {
 			control.action_sets[setId] = convertActionsDelay(set, relativeDelay)
 		}
 
-		db.setTableKey('controls', controlId, control)
+		controlsTable.set(controlId, control)
 	}
 }
 

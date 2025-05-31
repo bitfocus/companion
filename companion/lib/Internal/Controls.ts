@@ -7,16 +7,9 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { cloneDeep } from 'lodash-es'
-import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import { oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
@@ -51,11 +44,11 @@ import { EventEmitter } from 'events'
 const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use variables for step',
+		label: 'Use expression for step',
 		id: 'step_from_expression',
 		default: false,
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'number',
 		label: 'Step',
 		tooltip: 'Which Step?',
@@ -63,19 +56,25 @@ const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 		default: 1,
 		min: 1,
 		max: Number.MAX_SAFE_INTEGER,
-		isVisible: (options) => !options.step_from_expression,
-	}),
-	serializeIsVisibleFnSingle({
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!$(options:step_from_expression)',
+		},
+	},
+	{
 		type: 'textinput',
 		label: 'Step (expression)',
 		id: 'step_expression',
 		default: '1',
-		isVisible: (options) => !!options.step_from_expression,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!!$(options:step_from_expression)',
+		},
 		useVariables: {
 			local: true,
 		},
 		isExpression: true,
-	}),
+	},
 ]
 
 const ButtonStylePropertiesExt = [
@@ -283,11 +282,24 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 
 			panic_bank: {
-				label: 'Actions: Abort delayed actions on a button',
+				label: 'Actions: Abort button runs',
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
+					{
+						type: 'dropdown',
+						label: 'Target',
+						id: 'location_target',
+						default: 'this',
+						choices: [
+							{ id: 'this', label: 'This button: except this run' },
+							{ id: 'this:only-this-run', label: 'This button: only this run' },
+							{ id: 'this:all-runs', label: 'This button: all runs' },
+							{ id: 'text', label: 'From text' },
+							{ id: 'expression', label: 'From expression' },
+						],
+					},
+					...CHOICES_DYNAMIC_LOCATION.slice(1),
 					{
 						type: 'checkbox',
 						label: 'Skip release actions?',
@@ -297,7 +309,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			panic_page: {
-				label: 'Actions: Abort all delayed actions on a page',
+				label: 'Actions: Abort all button runs on a page',
 				description: undefined,
 				options: [
 					{
@@ -306,51 +318,77 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						id: 'page_from_variable',
 						default: false,
 					},
-					serializeIsVisibleFnSingle({
+					{
 						type: 'internal:page',
 						label: 'Page',
 						id: 'page',
 						includeStartup: false,
 						includeDirection: false,
 						default: 0,
-						isVisible: (options) => !options.page_from_variable,
-					}),
-					serializeIsVisibleFnSingle({
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!$(options:page_from_variable)',
+						},
+					},
+					{
 						type: 'textinput',
 						label: 'Page (expression)',
 						id: 'page_variable',
 						default: '1',
-						isVisible: (options) => !!options.page_from_variable,
 						useVariables: {
 							local: true,
 						},
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!!$(options:page_from_variable)',
+						},
 						isExpression: true,
-					}),
+					},
 					{
 						type: 'checkbox',
-						label: 'Skip this button?',
+						label: 'Except this button',
+						tooltip: 'When checked, actions on the current button will not be aborted',
 						id: 'ignoreSelf',
 						default: false,
+					},
+					{
+						type: 'checkbox',
+						label: 'Ignore current run',
+						tooltip: 'When checked, the current run will not be aborted',
+						id: 'ignoreCurrent',
+						default: true,
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!$(options:ignoreSelf)',
+						},
 					},
 				],
 			},
 			panic_trigger: {
-				label: 'Actions: Abort delayed actions on a trigger',
+				label: 'Actions: Abort trigger runs',
 				description: undefined,
 				options: [
 					{
 						type: 'internal:trigger',
 						label: 'Trigger',
 						id: 'trigger_id',
-						includeSelf: true,
+						includeSelf: 'abort',
 						default: 'self',
 					},
 				],
 			},
 			panic: {
-				label: 'Actions: Abort all delayed actions on buttons and triggers',
+				label: 'Actions: Abort all button and trigger runs',
 				description: undefined,
-				options: [],
+				options: [
+					{
+						type: 'checkbox',
+						label: 'Ignore current run',
+						tooltip: 'When checked, the current run will not be aborted',
+						id: 'ignoreCurrent',
+						default: true,
+					},
+				],
 			},
 
 			bank_current_step: {
@@ -809,7 +847,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsActions) {
-				control.abortDelayedActions(action.rawOptions.unlatch, extras.abortDelayed)
+				const rawControlId = action.rawOptions.location_target
+				if (rawControlId === 'this') {
+					control.abortDelayedActions(action.rawOptions.unlatch, extras.abortDelayed)
+				} else if (rawControlId === 'this:only-this-run') {
+					control.abortDelayedActionsSingle(action.rawOptions.unlatch, extras.abortDelayed)
+				} else {
+					control.abortDelayedActions(action.rawOptions.unlatch, null)
+				}
 			}
 
 			return true
@@ -823,25 +868,32 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 				const control = this.#controlsController.getControl(controlId)
 				if (control && control.supportsActions) {
-					control.abortDelayedActions(false, extras.abortDelayed)
+					control.abortDelayedActions(false, action.rawOptions.ignoreCurrent ? extras.abortDelayed : null)
 				}
 			}
 
 			return true
 		} else if (action.definitionId === 'panic_trigger') {
-			let controlId = action.rawOptions.trigger_id
-			if (controlId === 'self') controlId = extras.controlId
+			const rawControlId = action.rawOptions.trigger_id
+			let controlId = rawControlId
+			if (controlId === 'self' || controlId?.startsWith('self:')) controlId = extras.controlId
 
 			if (controlId && ParseControlId(controlId)?.type === 'trigger') {
 				const control = this.#controlsController.getControl(controlId)
 				if (control && control.supportsActions) {
-					control.abortDelayedActions(false, extras.abortDelayed)
+					if (rawControlId === 'self') {
+						control.abortDelayedActions(false, extras.abortDelayed)
+					} else if (rawControlId === 'self:only-this-run') {
+						control.abortDelayedActionsSingle(false, extras.abortDelayed)
+					} else {
+						control.abortDelayedActions(false, null)
+					}
 				}
 			}
 
 			return true
 		} else if (action.definitionId === 'panic') {
-			this.#controlsController.abortAllDelayedActions(extras.abortDelayed)
+			this.#controlsController.abortAllDelayedActions(action.rawOptions.ignoreCurrent ? extras.abortDelayed : null)
 			return true
 		} else if (action.definitionId == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)

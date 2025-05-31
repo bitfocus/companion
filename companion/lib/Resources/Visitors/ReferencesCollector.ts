@@ -19,7 +19,7 @@ export class VisitorReferencesCollectorVisitor {
 	/**
 	 * Referenced connection labels
 	 */
-	readonly connecionLabels: Set<string>
+	readonly connectionLabels: Set<string>
 
 	/**
 	 * Referenced connection ids
@@ -27,7 +27,7 @@ export class VisitorReferencesCollectorVisitor {
 	readonly connectionIds: Set<string>
 
 	constructor(foundConnectionIds: Set<string> | undefined, foundConnectionLabels: Set<string> | undefined) {
-		this.connecionLabels = foundConnectionLabels || new Set()
+		this.connectionLabels = foundConnectionLabels || new Set()
 		this.connectionIds = foundConnectionIds || new Set()
 	}
 
@@ -58,7 +58,7 @@ export class VisitorReferencesCollectorVisitor {
 
 		const matches = rawStr.matchAll(reg)
 		for (const match of matches) {
-			this.connecionLabels.add(match[1])
+			this.connectionLabels.add(match[1])
 		}
 	}
 
@@ -67,6 +67,6 @@ export class VisitorReferencesCollectorVisitor {
 	 */
 	visitVariableName(obj: Record<string, any>, propName: string): void {
 		const label = TrySplitVariableId(obj[propName])
-		if (label) this.connecionLabels.add(label[0])
+		if (label) this.connectionLabels.add(label[0])
 	}
 }

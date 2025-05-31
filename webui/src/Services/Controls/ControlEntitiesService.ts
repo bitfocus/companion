@@ -83,7 +83,7 @@ export function useControlEntitiesEditorService(
 				socket
 					.emitPromise('controls:entity:move', [controlId, dragListId, dragEntityId, dropOwnerId, listId, dropIndex])
 					.catch((e) => {
-						console.error('Failed to reorder control entitys', e)
+						console.error('Failed to reorder control entities', e)
 					})
 			},
 

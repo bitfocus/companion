@@ -79,28 +79,13 @@ module.exports = {
 	plugins: [
 		sentryAuthToken
 			? sentryWebpackPlugin({
-					url: 'https://sentry.bitfocus.io/',
 					authToken: sentryAuthToken,
 
 					org: 'bitfocus',
 					project: 'companion',
 
-					// sourcemaps: {
-					// 	assets: [path.join(distPath, '**')],
-					// 	filesToDeleteAfterUpload: [path.join(distPath, '**/*.map')],
-					// },
-
-					// Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
-					// and needs the `project:releases` and `org:read` scopes
-
 					release: {
 						name: `companion@${buildFile}`,
-
-						// HACK: use the legacy method for now, as bitfocus sentry is too old to support the new way
-						uploadLegacySourcemaps: {
-							paths: [distPath],
-							urlPrefix: '~/',
-						},
 					},
 					errorHandler: (err) => {
 						console.warn('Sentry error', err)

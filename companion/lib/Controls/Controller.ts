@@ -22,17 +22,16 @@ import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
-import type { ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
+import type { ControlCommonEvents, ControlDependencies, SomeControlModel } from './ControlDependencies.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import LogController from '../Log/Controller.js'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
-
-type SomeControlModel = SomeButtonModel | TriggerModel
 
 /**
  * The class that manages the controls
@@ -48,11 +47,6 @@ type SomeControlModel = SomeButtonModel | TriggerModel
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export class ControlsController {
 	readonly #logger = LogController.createLogger('Controls/Controller')
@@ -88,9 +82,13 @@ export class ControlsController {
 	 */
 	readonly #activeLearnRequests = new Set<string>()
 
+	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
+
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
 		this.#registry = registry
 		this.#controlEvents = controlEvents
+
+		this.#dbTable = registry.db.getTableView('controls')
 
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
@@ -111,7 +109,7 @@ export class ControlsController {
 	#createControlDependencies(): ControlDependencies {
 		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
 		return {
-			db: this.#registry.db,
+			dbTable: this.#dbTable,
 			io: this.#registry.ui.io,
 			graphics: this.#registry.graphics,
 			surfaces: this.#registry.surfaces,
@@ -664,7 +662,7 @@ export class ControlsController {
 
 				this.#controls.delete(controlId)
 
-				this.#registry.db.deleteTableKey('controls', controlId)
+				this.#dbTable.delete(controlId)
 
 				return true
 			}
@@ -1035,7 +1033,7 @@ export class ControlsController {
 	 */
 	init(): void {
 		// Init all the control classes
-		const config: Record<string, SomeControlModel> = this.#registry.db.getTable('controls')
+		const config = this.#dbTable.all()
 		for (const [controlId, controlObj] of Object.entries(config)) {
 			if (controlObj && controlObj.type) {
 				const inst = this.#createClassForControl(controlId, 'all', controlObj, false)
@@ -1119,7 +1117,7 @@ export class ControlsController {
 			control.destroy()
 			this.#controls.delete(controlId)
 
-			this.#registry.db.deleteTableKey('controls', controlId)
+			this.#dbTable.delete(controlId)
 		}
 
 		const location = this.#registry.page.getLocationOfControlId(controlId)

@@ -103,7 +103,7 @@ export function ConnectionForceVersionButton({
 						>
 							<CCol sm={12}>
 								Companion will help ensure you are using the latest version of modules. But sometimes you may need to
-								force a connection to be using a different module manuall.
+								force a connection to be using a different module manually.
 								<CAlert color="danger" className="mt-2 mb-0">
 									This can break the connection and corrupt any existing actions and feedbacks. Only use this if you are
 									sure of what you are doing.

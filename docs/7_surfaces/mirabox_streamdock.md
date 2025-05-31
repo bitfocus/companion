@@ -19,6 +19,6 @@ The softkeys of the LCD strip and the rotary encoders do not offer individual pr
 
 To utilise the rotary encoders, enable the `Enable Rotary Actions` checkbox on the button which wants to support the encoder. This will provide additional action groups which will be used when rotating the encoder.
 
-The LCD strip also offers a swipe gesture. The events of the swipe gesture are mapped to rotary actions on the fith button in the third row.
+The LCD strip also offers a swipe gesture. The events of the swipe gesture are mapped to rotary actions on the fifth button in the third row.
 
-![Strem Dock N4 mapping](images/mirabox-streamdock.png?raw=true 'Strem Dock N4 mapping')
+![Stream Dock N4 mapping](images/mirabox-streamdock.png?raw=true 'Stream Dock N4 mapping')

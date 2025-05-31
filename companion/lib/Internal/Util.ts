@@ -87,7 +87,10 @@ export function ParseInternalControlReference(
 	let location: ControlLocation | null = null
 	let referencedVariables: ReadonlySet<string> = new Set<string>()
 
-	switch (options.location_target) {
+	let locationTarget = options.location_target
+	if (locationTarget?.startsWith('this:')) locationTarget = 'this'
+
+	switch (locationTarget) {
 		case 'this':
 			location = pressLocation
 				? {

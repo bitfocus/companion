@@ -373,7 +373,7 @@ export class InstanceInstalledModulesManager {
 
 		const bufferChecksum = crypto.createHash('sha256').update(fullTarBuffer).digest('hex')
 		if (bufferChecksum !== versionInfo.tarSha) {
-			this.#logger.error(`Downlod did not match checksum`)
+			this.#logger.error(`Download did not match checksum`)
 			return 'Download did not match checksum'
 		}
 

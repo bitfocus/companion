@@ -1,5 +1,42 @@
 # Bitfocus Companion
 
+## Companion v4.0.0 - Release Notes
+
+### BREAKING CHANGES
+
+- Modules are now installable plugins
+  They no longer ship with companion, you can either import an offline module bundle, or install them within companion from the store.
+  This allows them to be updated independently
+- Support for the legacy xkeys layouts has been removed.
+  The new layouts have been the default behaviour since 3.2, and accurately reflect the real layout instead of trying to squeeze the layout into multiple 32 button pages.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Modules are now installable plugins, allowing them to be updated independently
+- Add `Logic: if statement` action
+- Improved `internal: abort` actions, to give more granular control of what to abort
+- Restructure app navigation
+- Refinement of getting-started guide, to better handle scrolling
+- Remove support for legacy xkeys layouts
+- Allow custom variables descriptions to be edited
+- Handle body data in HTTP api setting custom variable
+- Support for Mirabox Stream Dock 293V3 and N4
+- Reimplement support for Contour Shuttle
+- Support Resolve Replay Editor
+- Support latest streamdeck models
+- Support granular permissions for modules (internal functionality, not exposed in the ui)
+- Extend satellite api, to allow clients to handle display of locked state
+
+### 🐞 BUG FIXES
+
+- Limit ui session lockout duration, to avoid browser crash
+- Support HTTP_PROXY environment variables for module store api calls
+-
+
+### 🧩 NEW & UPDATED MODULES
+
+Modules are now distributed independently, and are no longer reported here
+
 ## Companion v3.5.3 - Release Notes
 
 ### 🐞 BUG FIXES

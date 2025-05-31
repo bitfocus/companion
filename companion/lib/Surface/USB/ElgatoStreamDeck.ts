@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { EventEmitter } from 'events'
@@ -73,17 +67,17 @@ interface FirmwareVersionInfo {
  * The latest firmware versions for the SDS at the time this was last updated
  */
 const LATEST_FIRMWARE_VERSIONS: FirmwareVersionInfo[] = [
-	// Tool is not ready, so there are no versions to compare
-	// {
-	// 	// Studio
-	// 	productIds: [0x00aa],
-	// 	versions: {
-	// 		AP2: '1.05.009',
-	// 		ENCODER_AP2: '1.01.012',
-	// 		ENCODER_LD: '1.01.006',
-	// 	},
-	// },
+	{
+		// Studio
+		productIds: [0x00aa],
+		versions: {
+			AP2: '1.05.012',
+			ENCODER_AP2: '1.01.012',
+			ENCODER_LD: '1.01.006',
+		},
+	},
 ]
+
 const STREAMDECK_MODULES_SUPPORTING_UPDATES: ReadonlySet<DeviceModelId> = new Set([DeviceModelId.STUDIO])
 const STREAMDECK_UPDATE_DOWNLOAD_URL = 'https://api.bitfocus.io/v1/product/elgato-updater/download'
 const STREAMDECK_UPDATE_VERSIONS_URL = 'https://api.bitfocus.io/v1/product/elgato-updater/versions'

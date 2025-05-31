@@ -44,7 +44,7 @@ export interface InternalInputFieldCustomVariable extends CompanionInputFieldBas
 }
 export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtended {
 	type: 'internal:trigger'
-	includeSelf?: boolean
+	includeSelf?: boolean | 'abort'
 	default?: string
 }
 export interface InternalInputFieldConnectionId extends CompanionInputFieldBaseExtended {
@@ -99,8 +99,15 @@ export type ExtendedInputField =
 
 export type ExtendedConfigField = EncodeIsVisible2<CompanionInputFieldBonjourDevice>
 
-export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isVisible'>> = Omit<T, 'isVisible'> & {
-	isVisibleFn?: string
+export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isVisible'>> = Omit<
+	T,
+	'isVisible' | 'isVisibleData'
+> & {
+	isVisibleUi?: {
+		type: 'function' | 'expression'
+		fn: string
+		data?: any
+	}
 }
 
 export type InternalActionInputField = ExtendedInputField | InternalInputField

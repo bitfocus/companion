@@ -32,7 +32,7 @@ export const ExperimentsConfig = observer(function ExperimentsConfig(_props: Use
 				<td>&nbsp;</td>
 			</tr>
 			<tr>
-				<td>Companion Cloud Tab</td>
+				<td>Companion Cloud Tab (Deprecated)</td>
 				<td>
 					<CFormSwitch
 						className="float-right"

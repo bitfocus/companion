@@ -24,6 +24,7 @@ import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
+import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -50,6 +51,13 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
 	process.exit(1)
 }
 
+// Setup support for HTTP_PROXY before anything might use it
+if (process.env.NODE_USE_ENV_PROXY) {
+	// HACK: This is temporary and should be removed once https://github.com/nodejs/node/pull/57165 has been backported to node 22
+	const envHttpProxyAgent = new EnvHttpProxyAgent()
+	setGlobalDispatcher(envHttpProxyAgent)
+}
+
 /**
  * The core controller that sets up all the controllers needed
  * for the app.
@@ -65,11 +73,6 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export class Registry {
 	/**

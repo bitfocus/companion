@@ -1,4 +1,3 @@
-// @ts-check
 /*
  * This file is part of the Companion project
  * Copyright (c) 2018 Bitfocus AS
@@ -8,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { cloneDeep } from 'lodash-es'
@@ -21,9 +14,9 @@ import LogController, { type Logger } from '../Log/Controller.js'
 import type { SurfaceHandler } from './Handler.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfaceController } from './Controller.js'
-import type { DataDatabase } from '../Data/Database.js'
 import type { PageController } from '../Page/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 export class SurfaceGroup {
 	/**
@@ -75,9 +68,9 @@ export class SurfaceGroup {
 	 */
 	#surfaceController: SurfaceController
 	/**
-	 * The core database library
+	 * The surface group config database
 	 */
-	#db: DataDatabase
+	#dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>
 	/**
 	 * The core page controller
 	 */
@@ -89,7 +82,7 @@ export class SurfaceGroup {
 
 	constructor(
 		surfaceController: SurfaceController,
-		db: DataDatabase,
+		dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>,
 		pageController: PageController,
 		userconfig: DataUserConfig,
 		groupId: string,
@@ -99,7 +92,7 @@ export class SurfaceGroup {
 		this.#logger = LogController.createLogger(`Surface/Group/${groupId}`)
 
 		this.#surfaceController = surfaceController
-		this.#db = db
+		this.#dbTable = dbTable
 		this.#pageController = pageController
 		this.#userconfig = userconfig
 
@@ -113,7 +106,7 @@ export class SurfaceGroup {
 
 			this.#isAutoGroup = true
 		} else {
-			this.groupConfig = this.#db.getKey('surface_groups', {})[this.groupId] || {}
+			this.groupConfig = this.#dbTable.getOrDefault(this.groupId, SurfaceGroup.DefaultOptions)
 		}
 		// Apply missing defaults
 		this.groupConfig = {
@@ -166,9 +159,7 @@ export class SurfaceGroup {
 	 * Delete this group from the config
 	 */
 	forgetConfig(): void {
-		const groupsConfig = this.#db.getKey('surface_groups', {})
-		delete groupsConfig[this.groupId]
-		this.#db.setKey('surface_groups', groupsConfig)
+		this.#dbTable.delete(this.groupId)
 	}
 
 	/**
@@ -381,9 +372,7 @@ export class SurfaceGroup {
 			const surface = this.surfaceHandlers[0]
 			surface.saveGroupConfig(this.groupConfig)
 		} else {
-			const groupsConfig = this.#db.getKey('surface_groups', {})
-			groupsConfig[this.groupId] = this.groupConfig
-			this.#db.setKey('surface_groups', groupsConfig)
+			this.#dbTable.set(this.groupId, this.groupConfig)
 		}
 	}
 }

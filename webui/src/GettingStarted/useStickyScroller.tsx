@@ -15,7 +15,7 @@ export function useStickyScroller(initialHash: string | undefined) {
 	const scrollVisibleState = useRef<ScrollVisibleState>({
 		ready: false,
 		topElementHash: initialHash,
-		topElementOffset: 0,
+		topElementOffset: -50, // Offset for top bar
 	})
 
 	const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {

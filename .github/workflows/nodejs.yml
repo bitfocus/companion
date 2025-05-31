@@ -82,8 +82,9 @@ jobs:
           tar -cvzf companion-x64.tar.gz companion-x64
         env:
           CI: 1
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           USE_HARD_LINKS: false
 
       - name: Determine files to upload
@@ -159,7 +160,9 @@ jobs:
           tar -cvzf companion-arm64.tar.gz companion-arm64
         env:
           CI: 1
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           SKIP_LAUNCH_CHECK: true
           USE_HARD_LINKS: false
 
@@ -235,8 +238,11 @@ jobs:
           APPLE_ID: ${{ secrets.APPLEID }}
           APPLE_TEAM_ID: ${{ secrets.APPLETEAMID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           USE_HARD_LINKS: false
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Determine files to upload
         id: filenames
@@ -313,9 +319,12 @@ jobs:
           APPLE_ID: ${{ secrets.APPLEID }}
           APPLE_TEAM_ID: ${{ secrets.APPLETEAMID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           USE_HARD_LINKS: false
           SKIP_LAUNCH_CHECK: true
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Determine files to upload
         id: filenames
@@ -390,7 +399,9 @@ jobs:
           yarn tsx tools/build/complete.mts win32-x64
         env:
           CI: 1
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
 
       - name: build & package (signed)
         if: ${{ runner.environment == 'self-hosted' }}
@@ -398,7 +409,9 @@ jobs:
           yarn tsx tools/build/complete.mts win32-x64
         env:
           CI: 1
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
           BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
 

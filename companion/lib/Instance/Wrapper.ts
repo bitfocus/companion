@@ -27,11 +27,13 @@ import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
+	EncodeIsVisible,
 } from '@companion-module/base/dist/host-api/api.js'
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
 	assertNever,
+	SomeCompanionActionInputField,
 	type CompanionHTTPRequest,
 	type CompanionInputFieldBase,
 	type CompanionOptionValues,
@@ -56,6 +58,7 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { doesModuleExpectLabelUpdates } from './ApiVersions.js'
+import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 
 export interface InstanceModuleWrapperDependencies {
 	readonly controls: ControlsController
@@ -639,13 +642,14 @@ export class SocketEventsHandler {
 	async #handleSetActionDefinitions(msg: SetActionDefinitionsMessage): Promise<void> {
 		const actions: Record<string, ClientEntityDefinition> = {}
 
+		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
+
 		for (const rawAction of msg.actions || []) {
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				// @companion-module-base exposes these through a mapping that loses the differentiation between types
-				options: (rawAction.options || []) as any[],
+				options: translateOptionsIsVisible(rawAction.options || []),
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
 
@@ -667,6 +671,8 @@ export class SocketEventsHandler {
 	async #handleSetFeedbackDefinitions(msg: SetFeedbackDefinitionsMessage): Promise<void> {
 		const feedbacks: Record<string, ClientEntityDefinition> = {}
 
+		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
+
 		for (const rawFeedback of msg.feedbacks || []) {
 			if (!isValidFeedbackEntitySubType(rawFeedback.type)) continue
 
@@ -674,8 +680,7 @@ export class SocketEventsHandler {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				description: rawFeedback.description,
-				// @companion-module-base exposes these through a mapping that loses the differentiation between types
-				options: (rawFeedback.options || []) as any[],
+				options: translateOptionsIsVisible(rawFeedback.options || []),
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLearn: !!rawFeedback.hasLearn,
@@ -730,6 +735,8 @@ export class SocketEventsHandler {
 				}
 			}
 		}
+
+		this.#sendToModuleLog('debug', `Updating variable definitions (${newVariables.length} variables)`)
 
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
@@ -947,6 +954,36 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 
 	// Nothing looked to be a user defined invert field
 	return true
+}
+
+export function translateOptionsIsVisible(
+	options?: EncodeIsVisible<SomeCompanionActionInputField>[]
+): (InternalActionInputField | InternalFeedbackInputField)[] {
+	// @companion-module-base exposes these through a mapping that loses the differentiation between types
+	return (options || []).map((o) => {
+		let isVisibleUi: InternalFeedbackInputField['isVisibleUi'] | undefined = undefined
+		if (o.isVisibleFn && o.isVisibleFnType === 'expression') {
+			isVisibleUi = {
+				type: 'expression',
+				fn: o.isVisibleFn,
+				data: undefined,
+			}
+		} else if (o.isVisibleFn) {
+			// Either type: 'function' or undefined (backwards compat)
+			isVisibleUi = {
+				type: 'function',
+				fn: o.isVisibleFn,
+				data: o.isVisibleData,
+			}
+		}
+
+		return {
+			...(o as any),
+			isVisibleFn: undefined,
+			isVisibleData: undefined,
+			isVisibleUi,
+		}
+	})
 }
 
 export interface RunActionExtras {

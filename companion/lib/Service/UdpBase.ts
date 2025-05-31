@@ -15,11 +15,6 @@ import dgram from 'dgram'
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export abstract class ServiceUdpBase extends ServiceBase {
 	protected server: dgram.Socket | undefined

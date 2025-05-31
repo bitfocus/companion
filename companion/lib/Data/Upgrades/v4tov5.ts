@@ -6,29 +6,23 @@ import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 /**
  * do the database upgrades to convert from the v4 to the v5 format
  */
-function convertDatabaseToV5(db: DataStoreBase, _logger: Logger) {
+function convertDatabaseToV5(db: DataStoreBase<any>, _logger: Logger) {
 	if (db.store) {
-		try {
-			const controls = db.store.prepare(`CREATE TABLE IF NOT EXISTS controls (id STRING UNIQUE, value STRING);`)
-			controls.run()
-			const cloud = db.store.prepare(`CREATE TABLE IF NOT EXISTS cloud (id STRING UNIQUE, value STRING);`)
-			cloud.run()
-		} catch (e) {
-			_logger.warn(`Error creating tables`, e)
-		}
-
 		const batchInsert = function (table: string, heap: any) {
 			if (heap) {
+				const controlsTable = db.getTableView(table)
 				for (const [key, value] of Object.entries(heap)) {
-					db.setTableKey(table, key, value)
+					controlsTable.set(key, value)
 				}
 			}
 		}
 
+		const mainTable = db.defaultTableView
+
 		// Move controls to their new table
-		const controls = db.getKey('controls')
+		const controls = mainTable.get('controls')
 		batchInsert('controls', controls)
-		db.deleteKey('controls')
+		mainTable.delete('controls')
 
 		// Migrate the legacy cloud DB to its new table
 		try {
@@ -38,11 +32,11 @@ function convertDatabaseToV5(db: DataStoreBase, _logger: Logger) {
 		} catch (e: any) {}
 
 		// Move surface-groups to match others
-		const surfaces = db.getKey('surface-groups', {})
-		db.setKey('surface_groups', surfaces)
-		db.deleteKey('surface-groups')
+		const surfaces = mainTable.get('surface-groups') ?? {}
+		mainTable.set('surface_groups', surfaces)
+		mainTable.delete('surface-groups')
 
-		db.setKey('page_config_version', 5)
+		mainTable.set('page_config_version', 5)
 	}
 }
 

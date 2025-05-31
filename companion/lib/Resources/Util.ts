@@ -1,4 +1,3 @@
-import { serializeIsVisibleFn } from '@companion-module/base/dist/internal/base.js'
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import type { ImageResult } from '../Graphics/ImageResult.js'

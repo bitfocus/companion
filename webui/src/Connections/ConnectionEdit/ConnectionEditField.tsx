@@ -7,9 +7,9 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '../../Components/index.js'
-import sanitizeHtml from 'sanitize-html'
 import { BonjourDeviceInputField } from '../../Components/BonjourDeviceInputField.js'
 import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
+import { StaticTextFieldText } from '../../Controls/StaticTextField.js'
 
 interface ConnectionEditFieldProps {
 	label: React.ReactNode
@@ -34,17 +34,7 @@ export function ConnectionEditField({
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'static-text': {
-			let control: React.ReactNode = ''
-			if (definition.value && definition.value != definition.label) {
-				const descriptionHtml = {
-					__html: sanitizeHtml(definition.value ?? '', {
-						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-						disallowedTagsMode: 'escape',
-					}),
-				}
-
-				control = <p title={definition.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
-			}
+			const control = <StaticTextFieldText {...definition} allowImages />
 
 			if (!!label) {
 				return (

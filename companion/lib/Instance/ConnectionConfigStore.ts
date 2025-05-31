@@ -8,37 +8,45 @@ import { DataDatabase } from '../Data/Database.js'
 import { nanoid } from 'nanoid'
 import { cloneDeep } from 'lodash-es'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 export class ConnectionConfigStore {
 	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
 
-	readonly #db: DataDatabase
+	readonly #dbTable: DataStoreTableView<Record<string, ConnectionConfig>>
 	readonly #afterSave: (connectionIds: string[]) => void
 
-	#store: Record<string, ConnectionConfig | undefined>
+	#store: Map<string, ConnectionConfig>
 
 	constructor(db: DataDatabase, afterSave: (connectionIds: string[]) => void) {
-		this.#db = db
+		this.#dbTable = db.getTableView('connections')
 		this.#afterSave = afterSave
 
-		this.#store = this.#db.getKey('instance', {})
+		this.#store = new Map(Object.entries(this.#dbTable.all()))
 	}
 
 	/**
 	 * Write the changes to the database, and perform any post-save hooks
 	 */
 	commitChanges(connectionIds: string[]): void {
-		this.#db.setKey('instance', this.#store)
+		for (const connectionId of connectionIds) {
+			const entry = this.#store.get(connectionId)
+			if (entry) {
+				this.#dbTable.set(connectionId, entry)
+			} else {
+				this.#dbTable.delete(connectionId)
+			}
+		}
 
 		this.#afterSave(connectionIds)
 	}
 
 	getAllInstanceIds(): string[] {
-		return Object.keys(this.#store)
+		return Array.from(this.#store.keys())
 	}
 
 	getIdFromLabel(label: string): string | undefined {
-		for (const [id, conf] of Object.entries(this.#store)) {
+		for (const [id, conf] of this.#store) {
 			if (conf && conf.label === label) {
 				return id
 			}
@@ -47,7 +55,7 @@ export class ConnectionConfigStore {
 	}
 
 	getConfigForId(connectionId: string): ConnectionConfig | undefined {
-		return this.#store[connectionId]
+		return this.#store.get(connectionId)
 	}
 
 	/**
@@ -66,14 +74,14 @@ export class ConnectionConfigStore {
 		const highestRank =
 			Math.max(
 				0,
-				...Object.values(this.#store)
+				...Array.from(this.#store.values())
 					.map((c) => c?.sortOrder)
 					.filter((n) => typeof n === 'number')
 			) || 0
 
 		const id = nanoid()
 
-		this.#store[id] = {
+		const newConfig: ConnectionConfig = {
 			instance_type: moduleType,
 			moduleVersionId: moduleVersionId,
 			updatePolicy: updatePolicy,
@@ -87,24 +95,26 @@ export class ConnectionConfigStore {
 			enabled: !disabled,
 		}
 
-		return [id, this.#store[id]]
+		this.#store.set(id, newConfig)
+
+		return [id, newConfig]
 	}
 
 	forgetConnection(id: string): void {
-		delete this.#store[id]
+		this.#store.delete(id)
 
 		this.commitChanges([id])
 	}
 
 	exportAll(clone = true): Record<string, ConnectionConfig | undefined> {
-		const obj = this.#store
+		const obj = Object.fromEntries(this.#store.entries())
 		return clone ? cloneDeep(obj) : obj
 	}
 
 	getPartialClientJson(): Record<string, ClientConnectionConfig> {
 		const result: Record<string, ClientConnectionConfig> = {}
 
-		for (const [id, config] of Object.entries(this.#store)) {
+		for (const [id, config] of this.#store) {
 			if (!config) continue
 
 			result[id] = {
@@ -126,7 +136,7 @@ export class ConnectionConfigStore {
 	getModuleVersionsMetrics(): Record<string, Record<string, number>> {
 		const moduleVersionCounts: Record<string, Record<string, number>> = {}
 
-		for (const moduleConfig of Object.values(this.#store)) {
+		for (const moduleConfig of this.#store.values()) {
 			if (moduleConfig && moduleConfig.instance_type !== 'bitfocus-companion' && !!moduleConfig.enabled) {
 				const moduleId = moduleConfig.instance_type
 				const versionId = moduleConfig.moduleVersionId ?? ''
@@ -149,7 +159,7 @@ export class ConnectionConfigStore {
 	 */
 	makeLabelUnique(prefix: string, ignoreId?: string): string {
 		const knownLabels = new Set()
-		for (const [id, obj] of Object.entries(this.#store)) {
+		for (const [id, obj] of this.#store) {
 			if (id !== ignoreId && obj && obj.label) {
 				knownLabels.add(obj.label)
 			}
@@ -172,19 +182,18 @@ export class ConnectionConfigStore {
 
 		// Update the order based on the ids provided
 		connectionIds.forEach((id, index) => {
-			const entry = this.#store[id]
+			const entry = this.#store.get(id)
 			if (entry) entry.sortOrder = index
 		})
 
 		// Make sure all not provided are at the end in their original order
-		const allKnownIds = Object.entries(this.#store)
-			.filter((entry): entry is [string, ConnectionConfig] => entry[1] !== undefined)
+		const allKnownIds = Array.from(this.#store)
 			.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
 			.map(([id]) => id)
 		let nextIndex = connectionIds.length
 		for (const id of allKnownIds) {
 			if (!connectionIds.includes(id)) {
-				const entry = this.#store[id]
+				const entry = this.#store.get(id)
 				if (entry) entry.sortOrder = nextIndex++
 			}
 		}
@@ -196,7 +205,7 @@ export class ConnectionConfigStore {
 		const connectionIds: string[] = []
 		const labels: string[] = []
 
-		for (const [id, config] of Object.entries(this.#store)) {
+		for (const [id, config] of this.#store) {
 			if (config && config.instance_type === moduleId && config.enabled) {
 				connectionIds.push(id)
 				labels.push(config.label)
