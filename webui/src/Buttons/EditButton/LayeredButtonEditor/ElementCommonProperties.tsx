@@ -142,6 +142,7 @@ const elementUsageChoices: DropdownChoice[] = [
 	{ id: ButtonGraphicsElementUsage.Automatic, label: 'Automatic' },
 	{ id: ButtonGraphicsElementUsage.Text, label: 'Text' },
 	{ id: ButtonGraphicsElementUsage.Color, label: 'Color' },
+	{ id: ButtonGraphicsElementUsage.Image, label: 'Image' },
 ]
 
 const FieldEnabledInput = observer(function FieldEnabledInput({

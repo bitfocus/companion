@@ -539,16 +539,15 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const render = this.#graphicsController.getCachedRender(theLocation)
 			if (render?.style) {
 				const legacyStyle: CompanionButtonStyleProps = {
-					// TODO-layered this isn't a perfect representation of the old style, but it will do for now
 					text: render.style.text?.text || '',
 					color: render.style.text?.color || 0xffffff,
 					bgcolor: render.style.color?.color || 0x000000,
 					size: render.style.text?.size || 'auto',
-
-					// 		alignment?: CompanionAlignment;
-					// 		pngalignment?: CompanionAlignment;
-					// 		png64?: string;
-					// 		show_topbar?: boolean;
+					png64: render.style.png64?.dataUrl,
+					alignment: render.style.text ? `${render.style.text.halign}:${render.style.text.valign}` : undefined,
+					pngalignment: render.style.png64 ? `${render.style.png64.halign}:${render.style.png64.valign}` : undefined,
+					show_topbar: (render.style.state?.showTopBar as any) ?? false,
+					// TODO-layered image buffers for old buttons
 				}
 
 				if (!feedback.options.properties) {

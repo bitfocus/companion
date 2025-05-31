@@ -4,6 +4,7 @@ import {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsDrawBase,
 	SomeButtonGraphicsDrawElement,
+	ButtonGraphicsImageDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
@@ -11,6 +12,7 @@ import { ImageResultProcessedStyle } from './ImageResult.js'
 
 export class GraphicsLayeredProcessedStyleGenerator {
 	static Generate(drawStyle: DrawStyleLayeredButtonModel): ImageResultProcessedStyle {
+		const canvasLayer = drawStyle.elements.find((e) => e.type === 'canvas')
 		const textLayer = GraphicsLayeredProcessedStyleGenerator.SelectLayerForUsage<ButtonGraphicsTextDrawElement>(
 			drawStyle.elements,
 			ButtonGraphicsElementUsage.Text,
@@ -18,9 +20,29 @@ export class GraphicsLayeredProcessedStyleGenerator {
 		)
 		const boxLayer = GraphicsLayeredProcessedStyleGenerator.SelectLayerForUsage<ButtonGraphicsBoxDrawElement>(
 			drawStyle.elements,
-			ButtonGraphicsElementUsage.Text,
+			ButtonGraphicsElementUsage.Color,
 			'box'
 		)
+		const imageLayer = GraphicsLayeredProcessedStyleGenerator.SelectLayerForUsage<ButtonGraphicsImageDrawElement>(
+			drawStyle.elements,
+			ButtonGraphicsElementUsage.Image,
+			'image'
+		)
+
+		let showTopBar: boolean | 'default' = 'default'
+		if (canvasLayer) {
+			switch (canvasLayer.decoration) {
+				case 'topbar':
+					showTopBar = true
+					break
+				case 'border':
+					showTopBar = false
+					break
+				default:
+					showTopBar = 'default'
+					break
+			}
+		}
 
 		const processedStyle: Complete<ImageResultProcessedStyle> = {
 			type: 'button',
@@ -30,10 +52,20 @@ export class GraphicsLayeredProcessedStyleGenerator {
 						text: textLayer.text,
 						color: textLayer.color,
 						size: Number(textLayer.fontsize) || 'auto', // TODO - scale value?
+						halign: textLayer.halign,
+						valign: textLayer.valign,
+					}
+				: undefined,
+			png64: imageLayer?.base64Image
+				? {
+						dataUrl: imageLayer.base64Image,
+						halign: imageLayer.halign,
+						valign: imageLayer.valign,
 					}
 				: undefined,
 			state: {
 				pushed: drawStyle.pushed,
+				showTopBar: showTopBar,
 				cloud: drawStyle.cloud || false,
 			},
 		}

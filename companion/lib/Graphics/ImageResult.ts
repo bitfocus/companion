@@ -1,9 +1,23 @@
+import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+
 export interface ImageResultProcessedStyle {
 	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'
 	color?: { color: number }
-	text?: { text: string; color: number; size: number | 'auto' }
+	text?: {
+		text: string
+		color: number
+		size: number | 'auto'
+		halign: HorizontalAlignment
+		valign: VerticalAlignment
+	}
+	png64?: {
+		dataUrl: string
+		halign: HorizontalAlignment
+		valign: VerticalAlignment
+	}
 	state?: {
 		pushed: boolean
+		showTopBar: boolean | 'default'
 
 		/** @deprecated */
 		cloud: boolean

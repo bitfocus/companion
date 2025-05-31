@@ -36,6 +36,7 @@ export enum ButtonGraphicsElementUsage {
 	Automatic = 'auto',
 	Text = 'text',
 	Color = 'color',
+	Image = 'image',
 }
 
 export interface ButtonGraphicsDrawBounds {

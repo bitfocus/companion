@@ -165,6 +165,9 @@ export class GraphicsRenderer {
 					img.drawAlignedText(0, 0, 72, 72, pagename, colorWhite, 18, 'center', 'center')
 				}
 			} else if (drawStyle.style === 'button') {
+				const textAlign = ParseAlignment(drawStyle.alignment)
+				const pngAlign = ParseAlignment(drawStyle.pngalignment)
+
 				processedStyle = {
 					type: 'button',
 					color: {
@@ -174,9 +177,19 @@ export class GraphicsRenderer {
 						text: drawStyle.text,
 						color: drawStyle.color,
 						size: Number(drawStyle.size) || 'auto',
+						halign: textAlign[0],
+						valign: textAlign[1],
 					},
+					png64: drawStyle.png64
+						? {
+								dataUrl: drawStyle.png64,
+								halign: pngAlign[0],
+								valign: pngAlign[1],
+							}
+						: undefined,
 					state: {
 						pushed: drawStyle.pushed,
+						showTopBar: drawStyle.show_topbar ?? 'default',
 						cloud: drawStyle.cloud || false,
 					},
 				} satisfies Complete<ImageResultProcessedStyle>
