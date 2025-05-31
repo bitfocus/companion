@@ -126,7 +126,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		const filters: BonjourBrowserFilter[] = []
 
 		for (const query of bonjourQueries) {
-			const filter = {
+			const filter: BonjourBrowserFilter = {
 				type: query.type,
 				protocol: query.protocol,
 				port: query.port,
