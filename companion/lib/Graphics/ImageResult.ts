@@ -1,6 +1,14 @@
-import type { DrawStyleButtonModel, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+export interface ImageResultProcessedStyle {
+	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'
+	color?: { color: number }
+	text?: { text: string; color: number; size: number | 'auto' }
+	state?: {
+		pushed: boolean
 
-export type ImageResultStyle = DrawStyleButtonModel | DrawStyleLayeredButtonModel | 'pagenum' | 'pageup' | 'pagedown'
+		/** @deprecated */
+		cloud: boolean
+	}
+}
 
 export class ImageResult {
 	/**
@@ -26,14 +34,14 @@ export class ImageResult {
 	/**
 	 * Image draw style
 	 */
-	readonly style: ImageResultStyle | undefined
+	readonly style: ImageResultProcessedStyle
 
 	/**
 	 * Last updated time
 	 */
 	readonly updated: number
 
-	constructor(buffer: Buffer, width: number, height: number, dataUrl: string, style: ImageResultStyle | undefined) {
+	constructor(buffer: Buffer, width: number, height: number, dataUrl: string, style: ImageResultProcessedStyle) {
 		this.buffer = buffer
 		this.bufferWidth = width
 		this.bufferHeight = height
@@ -51,17 +59,6 @@ export class ImageResult {
 	}
 
 	get bgcolor(): number {
-		if (typeof this.style === 'object') {
-			if (this.style.style === 'button') {
-				return this.style.bgcolor ?? 0
-				// TODO-layered reimplement this
-				// } else if (this.style.style === 'button-layered') {
-				// 	return this.style.elements[0].type === 'canvas' ? this.style.elements[0].color : 0
-			} else {
-				return 0
-			}
-		} else {
-			return 0
-		}
+		return this.style.color?.color ?? 0
 	}
 }

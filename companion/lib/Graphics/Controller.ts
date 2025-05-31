@@ -13,7 +13,7 @@ import { LRUCache } from 'lru-cache'
 import { GlobalFonts } from '@napi-rs/canvas'
 import { GraphicsRenderer } from './Renderer.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import type { ImageResult } from './ImageResult.js'
+import type { ImageResult, ImageResultProcessedStyle } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
@@ -217,13 +217,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(key)
 
 						if (!render) {
-							const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+							const { buffer, width, height, dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
 								buttonStyle,
 								location,
 								pagename,
 								CRASHED_WORKER_RETRY_COUNT
 							)
-							render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
+							render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, processedStyle)
 						}
 					} else {
 						render = GraphicsRenderer.drawBlank(this.#drawOptions, location)
@@ -352,13 +352,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			size: buttonStyle.size === 'auto' ? 'auto' : Number(buttonStyle.size),
 		}
 
-		const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+		const { buffer, width, height, dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
 			drawStyle,
 			undefined,
 			undefined,
 			CRASHED_WORKER_RETRY_COUNT
 		)
-		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle)
+		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, processedStyle)
 	}
 
 	/**
@@ -498,7 +498,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		width: number
 		height: number
 		dataUrl: string
-		draw_style: DrawStyleModel['style'] | undefined
+		processedStyle: ImageResultProcessedStyle
 	}> {
 		if (DEBUG_DISABLE_RENDER_THREADING) {
 			return GraphicsRenderer.drawButtonImageUnwrapped(this.#drawOptions, drawStyle, location, pagename)

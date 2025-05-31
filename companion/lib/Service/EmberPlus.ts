@@ -546,20 +546,19 @@ export class ServiceEmberPlus extends ServiceBase {
 		if (!this.#server) return
 		//this.logger.info(`Updating ${page}.${bank} label ${this.banks[page][bank].text}`)
 
-		// TODO-layered: reimplement for layered buttons
-		const style = typeof render.style !== 'string' && render.style?.style === 'button' ? render.style : undefined
+		const style = render.style
 
 		// New 'location' path
 		const gridSize = this.userconfig.getKey('gridSize')
 		if (gridSize) {
-			this.#updateNodePath(buildPathForLocation(gridSize, location, LOCATION_NODE_TEXT), style?.text || '')
+			this.#updateNodePath(buildPathForLocation(gridSize, location, LOCATION_NODE_TEXT), style?.text?.text || '')
 			this.#updateNodePath(
 				buildPathForLocation(gridSize, location, LOCATION_NODE_TEXT_COLOR),
-				formatColorAsHex(style?.color || 0)
+				formatColorAsHex(style.text?.color || 0)
 			)
 			this.#updateNodePath(
 				buildPathForLocation(gridSize, location, LOCATION_NODE_BG_COLOR),
-				formatColorAsHex(style?.bgcolor || 0)
+				formatColorAsHex(style.color?.color || 0)
 			)
 		}
 
@@ -568,14 +567,14 @@ export class ServiceEmberPlus extends ServiceBase {
 		if (bank === null) return
 
 		// Update ember+ with internal state of button
-		this.#updateNodePath(buildPathForButton(location.pageNumber, bank, LEGACY_NODE_TEXT), style?.text || '')
+		this.#updateNodePath(buildPathForButton(location.pageNumber, bank, LEGACY_NODE_TEXT), style.text?.text || '')
 		this.#updateNodePath(
 			buildPathForButton(location.pageNumber, bank, LEGACY_NODE_TEXT_COLOR),
-			formatColorAsHex(style?.color || 0)
+			formatColorAsHex(style.text?.color || 0)
 		)
 		this.#updateNodePath(
 			buildPathForButton(location.pageNumber, bank, LEGACY_NODE_BG_COLOR),
-			formatColorAsHex(style?.bgcolor || 0)
+			formatColorAsHex(style.color?.color || 0)
 		)
 	}
 

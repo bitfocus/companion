@@ -50,7 +50,7 @@ export interface ButtonStyleProperties {
 	text: string
 	textExpression: boolean | undefined
 
-	size: CompanionTextSize | number | 'small' | 'large'
+	size: CompanionTextSize
 	alignment: CompanionAlignment
 	pngalignment: CompanionAlignment
 

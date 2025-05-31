@@ -40,8 +40,7 @@ export class ServiceTcp extends ServiceTcpBase {
 
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		// TODO-layered: reimplement for layered buttons
-		const bgcolor =
-			(typeof render.style !== 'string' && render.style?.style === 'button' ? render.style : {})?.bgcolor || 0
+		const bgcolor = render.style.color?.color || 0
 
 		const bank = xyToOldBankIndex(location.column, location.row)
 

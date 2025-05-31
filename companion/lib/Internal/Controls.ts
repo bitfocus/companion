@@ -40,6 +40,7 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { nanoid } from 'nanoid'
 import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
+import { CompanionButtonStyleProps } from '@companion-module/base'
 
 const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
@@ -536,11 +537,24 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			}
 
 			const render = this.#graphicsController.getCachedRender(theLocation)
-			if (render?.style && typeof render.style === 'object') {
+			if (render?.style) {
+				const legacyStyle: CompanionButtonStyleProps = {
+					// TODO-layered this isn't a perfect representation of the old style, but it will do for now
+					text: render.style.text?.text || '',
+					color: render.style.text?.color || 0xffffff,
+					bgcolor: render.style.color?.color || 0x000000,
+					size: render.style.text?.size || 'auto',
+
+					// 		alignment?: CompanionAlignment;
+					// 		pngalignment?: CompanionAlignment;
+					// 		png64?: string;
+					// 		show_topbar?: boolean;
+				}
+
 				if (!feedback.options.properties) {
 					// TODO populate these properties instead
 					return {
-						value: cloneDeep(render.style) as any,
+						value: cloneDeep(legacyStyle),
 						referencedVariables,
 					}
 				} else {
@@ -548,7 +562,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 					for (const prop of feedback.options.properties) {
 						// @ts-ignore
-						newStyle[prop] = render.style[prop]
+						newStyle[prop] = legacyStyle[prop]
 					}
 
 					// Return cloned resolved style
