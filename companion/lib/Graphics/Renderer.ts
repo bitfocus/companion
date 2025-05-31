@@ -11,13 +11,15 @@
 
 import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { ImageResult } from './ImageResult.js'
+import { ImageResult, ImageResultProcessedStyle } from './ImageResult.js'
 import { DrawBounds, type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { TopbarRenderer } from '@companion-app/shared/Graphics/TopbarRenderer.js'
 import { isPromise } from 'util/types'
+import type { Complete } from '@companion-module/base/dist/util.js'
+import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -74,7 +76,7 @@ export class GraphicsRenderer {
 				img.horizontalLine(13.5, { color: 'rgb(30, 30, 30)' })
 			}
 			// console.timeEnd('drawBlankImage')
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), { type: 'button' })
 		})
 	}
 
@@ -83,17 +85,9 @@ export class GraphicsRenderer {
 		width: number,
 		height: number,
 		dataUrl: string,
-		draw_style: DrawStyleModel['style'] | undefined,
-		drawStyle: DrawStyleModel
+		processedStyle: ImageResultProcessedStyle
 	): ImageResult {
-		const draw_style2 =
-			draw_style === 'button' || draw_style === 'button-layered'
-				? drawStyle.style === 'button' || drawStyle.style === 'button-layered'
-					? drawStyle
-					: undefined
-				: draw_style
-
-		return new ImageResult(buffer, width, height, dataUrl, draw_style2)
+		return new ImageResult(buffer, width, height, dataUrl, processedStyle)
 	}
 
 	/**
@@ -109,16 +103,16 @@ export class GraphicsRenderer {
 		width: number
 		height: number
 		dataUrl: string
-		draw_style: DrawStyleModel['style'] | undefined
+		processedStyle: ImageResultProcessedStyle
 	}> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
 		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
-			let draw_style: DrawStyleModel['style'] | undefined = undefined
+			let processedStyle: ImageResultProcessedStyle
 
 			// special button types
 			if (drawStyle.style == 'pageup') {
-				draw_style = 'pageup'
+				processedStyle = { type: 'pageup' }
 
 				img.fillColor(colorDarkGrey)
 
@@ -137,7 +131,7 @@ export class GraphicsRenderer {
 
 				img.drawTextLineAligned(36, 39, 'UP', colorButtonYellow, 10, 'center', 'top')
 			} else if (drawStyle.style == 'pagedown') {
-				draw_style = 'pagedown'
+				processedStyle = { type: 'pagedown' }
 
 				img.fillColor(colorDarkGrey)
 
@@ -156,7 +150,7 @@ export class GraphicsRenderer {
 
 				img.drawTextLineAligned(36, 23, 'DOWN', colorButtonYellow, 10, 'center', 'top')
 			} else if (drawStyle.style == 'pagenum') {
-				draw_style = 'pagenum'
+				processedStyle = { type: 'pagenum' }
 
 				img.fillColor(colorDarkGrey)
 
@@ -171,16 +165,47 @@ export class GraphicsRenderer {
 					img.drawAlignedText(0, 0, 72, 72, pagename, colorWhite, 18, 'center', 'center')
 				}
 			} else if (drawStyle.style === 'button') {
-				draw_style = 'button'
+				const textAlign = ParseAlignment(drawStyle.alignment)
+				const pngAlign = ParseAlignment(drawStyle.pngalignment)
+
+				processedStyle = {
+					type: 'button',
+					color: {
+						color: drawStyle.bgcolor,
+					},
+					text: {
+						text: drawStyle.text,
+						color: drawStyle.color,
+						size: Number(drawStyle.size) || 'auto',
+						halign: textAlign[0],
+						valign: textAlign[1],
+					},
+					png64: drawStyle.png64
+						? {
+								dataUrl: drawStyle.png64,
+								halign: pngAlign[0],
+								valign: pngAlign[1],
+							}
+						: undefined,
+					state: {
+						pushed: drawStyle.pushed,
+						showTopBar: drawStyle.show_topbar ?? 'default',
+						cloud: drawStyle.cloud || false,
+					},
+				} satisfies Complete<ImageResultProcessedStyle>
 
 				await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
 			} else if (drawStyle.style === 'button-layered') {
-				draw_style = 'button-layered'
+				processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 				await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
 					x: 0,
 					y: 0,
 				})
+			} else {
+				processedStyle = {
+					type: 'button', // Default to button style
+				}
 			}
 
 			// console.timeEnd('drawButtonImage')
@@ -189,7 +214,7 @@ export class GraphicsRenderer {
 				width: img.realwidth,
 				height: img.realheight,
 				dataUrl: img.toDataURLSync(),
-				draw_style,
+				processedStyle,
 			}
 		})
 	}
@@ -269,9 +294,9 @@ export class GraphicsRenderer {
 		const [halign, valign] = ParseAlignment(drawStyle.alignment)
 
 		let fontSize: 'auto' | number = 'auto'
-		if (drawStyle.size == 'small') {
+		if ((drawStyle.size as any) == 'small') {
 			fontSize = 7 // compatibility with v1 database
-		} else if (drawStyle.size == 'large') {
+		} else if ((drawStyle.size as any) == 'large') {
 			fontSize = 14 // compatibility with v1 database
 		} else {
 			fontSize = Number(drawStyle.size) || 'auto'
@@ -295,7 +320,7 @@ export class GraphicsRenderer {
 		return GraphicsRenderer.#getCachedImage(72, 72, 3, (img) => {
 			img.fillColor(colorDarkGrey)
 			img.drawTextLineAligned(36, 36, `${num}`, colorWhite, 44, 'center', 'center')
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), { type: 'button' })
 		})
 	}
 
@@ -310,7 +335,7 @@ export class GraphicsRenderer {
 				img.drawAlignedText(0, 15, 72, 72, code.replace(/[a-z0-9]/gi, '*'), colorWhite, 18, 'center', 'center')
 			}
 
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), { type: 'button' })
 		})
 	}
 }

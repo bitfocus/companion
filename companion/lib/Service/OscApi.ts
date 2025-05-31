@@ -91,7 +91,7 @@ export class ServiceOscApi {
 					const control = this.#serviceApi.getControl(controlId)
 					if (control && control.setStyleFields) {
 						this.#logger.info(`Got /style/bgcolor for ${controlId}`)
-						control.setStyleFields({ bgcolor: rgb(r, g, b) })
+						control.setStyleFields({ bgcolor: Number(rgb(r, g, b)) })
 					} else {
 						this.#logger.info(`Got /style/bgcolor for unknown control: ${controlId}`)
 					}
@@ -113,7 +113,7 @@ export class ServiceOscApi {
 					const control = this.#serviceApi.getControl(controlId)
 					if (control && control.setStyleFields) {
 						this.#logger.info(`Got /style/color for ${controlId}`)
-						control.setStyleFields({ color: rgb(r, g, b) })
+						control.setStyleFields({ color: Number(rgb(r, g, b)) })
 					} else {
 						this.#logger.info(`Got /style/color for unknown control: ${controlId}`)
 					}
@@ -294,7 +294,7 @@ export class ServiceOscApi {
 		const control = this.#serviceApi.getControl(controlId)
 		if (!control || !control.setStyleFields) return
 
-		control.setStyleFields({ text: text })
+		control.setStyleFields({ text: String(text) })
 	}
 
 	/**
