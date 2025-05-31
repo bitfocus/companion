@@ -25,6 +25,12 @@ export function CloudPage() {
 	return (
 		<div className="cloud-region-panel">
 			<h4>Companion Cloud</h4>
+
+			<CAlert color="danger">
+				This service is deprecated and will be removed in a future version of Companion. <br />
+				Before that happens, an equivalent system will be made available in <i>Bitfocus Buttons</i> <br />
+				As an alternative you can use the new <i>companion-satellite</i> module over a local network or vpn.
+			</CAlert>
 			<p>
 				Access your Companion buttons from your Bitfocus Cloud account, or create a sophisticated network of Companion
 				installations that work together over the internet for all your remote production needs.

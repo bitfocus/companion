@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
@@ -47,6 +41,7 @@ export interface SatelliteDeviceInfo {
 	streamText: boolean
 	streamTextStyle: boolean
 	transferVariables: SatelliteTransferableValue[]
+	supportsLockedState: boolean
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -208,7 +203,22 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			this.#triggerOutputVariable(name, outputVariable)
 		}
+
+		if (deviceInfo.supportsLockedState) {
+			this.setLocked = (locked: boolean, characterCount: number): void => {
+				this.#logger.silly(`locked: ${locked} - ${characterCount}`)
+				if (this.socket !== undefined) {
+					this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {
+						LOCKED: locked,
+						CHARACTER_COUNT: characterCount,
+					})
+				}
+			}
+		}
 	}
+
+	// Override the base type, it may be defined by the constructor
+	setLocked: SurfacePanel['setLocked']
 
 	quit(): void {}
 
@@ -307,6 +317,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 */
 	doButton(column: number, row: number, state: boolean): void {
 		this.emit('click', column, row, state)
+	}
+
+	doPincodeKey(pincodeKey: number): void {
+		this.emit('pincodeKey', pincodeKey)
 	}
 
 	/**

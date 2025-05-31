@@ -7,18 +7,17 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { EventEmitter } from 'events'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { colorToRgb } from './Util.js'
-import { BlackmagicController, openBlackmagicController } from '@blackmagic-controller/node'
+import {
+	BlackmagicController,
+	openBlackmagicController,
+	BlackmagicControllerSetButtonSomeValue,
+	BlackmagicControllerButtonControlDefinition,
+} from '@blackmagic-controller/node'
 import debounceFn from 'debounce-fn'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
@@ -32,12 +31,14 @@ import type {
 	SurfacePanelInfo,
 } from '../Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
-import type { BlackmagicControllerSetButtonColorValue } from '@blackmagic-controller/core'
+import { assertNever } from '@companion-app/shared/Util.js'
 
-const configFields: CompanionSurfaceConfigField[] = [
+const baseConfigFields: CompanionSurfaceConfigField[] = [
 	...OffsetConfigFields,
 	RotationConfigField,
 	...LockConfigFields,
+]
+const tbarConfigFields: CompanionSurfaceConfigField[] = [
 	{
 		id: 'tbarValueVariable',
 		type: 'custom-variable',
@@ -53,6 +54,14 @@ const configFields: CompanionSurfaceConfigField[] = [
 			'Set the pattern of LEDs on the T-bar. Use numbers -16 to 16, positive numbers light up from the bottom, negative from the top.',
 	},
 ]
+const jogConfigFields: CompanionSurfaceConfigField[] = [
+	{
+		id: 'jogValueVariable',
+		type: 'custom-variable',
+		label: 'Variable to store Jog value to',
+		tooltip: 'This produces a value between 0 and 1. You can use an expression to convert it into a different range.',
+	},
+]
 
 export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
@@ -64,6 +73,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	config: Record<string, any> = {}
 
 	#lastTbarValue: number = 0
+	#lastJogValue: number = 0
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
@@ -85,9 +95,13 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 
 		this.config = {}
 
-		this.#logger.debug(`Adding framework-macropad USB device: ${devicePath}`)
+		this.#logger.debug(`Adding blackmagic controller USB device: ${devicePath}`)
 
 		this.#device = blackmagicController
+
+		const configFields = [...baseConfigFields]
+		if (this.#device.CONTROLS.some((control) => control.type === 'tbar')) configFields.push(...tbarConfigFields)
+		if (this.#device.CONTROLS.some((control) => control.type === 'jog')) configFields.push(...jogConfigFields)
 
 		this.info = {
 			type: `Blackmagic ${this.#device.PRODUCT_NAME}`,
@@ -131,6 +145,13 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 			this.#emitTbarValue()
 		})
 
+		this.#device.on('jog', (_control, value) => {
+			this.#logger.silly(`Jog value has changed`, value)
+			this.#lastJogValue = value
+
+			this.#emitJogValue()
+		})
+
 		// Kick off the tbar value
 		this.#triggerRedrawTbar()
 	}
@@ -146,6 +167,13 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 		const tbarVariableName = this.config.tbarValueVariable
 		if (tbarVariableName) {
 			this.emit('setCustomVariable', tbarVariableName, this.#lastTbarValue)
+		}
+	}
+
+	#emitJogValue() {
+		const jogVariableName = this.config.jogValueVariable
+		if (jogVariableName) {
+			this.emit('setCustomVariable', jogVariableName, this.#lastJogValue)
 		}
 	}
 
@@ -186,6 +214,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	setConfig(config: Record<string, any>, _force = false) {
 		// This will be a no-op if the value hasn't changed
 		this.#emitTbarValue()
+		this.#emitJogValue()
 
 		// TODO - make more granular:
 		this.#triggerRedrawTbar()
@@ -288,24 +317,46 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	 */
 	#triggerRedraw = debounceFn(
 		() => {
-			const colors: BlackmagicControllerSetButtonColorValue[] = []
+			const colors: BlackmagicControllerSetButtonSomeValue[] = []
 
 			const threshold = 100 // Use a lower than 50% threshold, to make it more sensitive
 
-			for (const [id, image] of Object.entries(this.#pendingDraw)) {
+			for (const [id, { image, control }] of Object.entries(this.#pendingDraw)) {
 				const color = colorToRgb(image.bgcolor)
-				colors.push({
-					keyId: id,
-					red: color.r >= threshold,
-					green: color.g >= threshold,
-					blue: color.b >= threshold,
-				})
+				const red = color.r >= threshold
+				const green = color.g >= threshold
+				const blue = color.b >= threshold
+
+				switch (control.feedbackType) {
+					case 'rgb':
+						colors.push({
+							keyId: id,
+							type: 'rgb',
+							red: color.r >= threshold,
+							green: color.g >= threshold,
+							blue: color.b >= threshold,
+						})
+						break
+					case 'on-off':
+						colors.push({
+							keyId: id,
+							type: 'on-off',
+							on: red || green || blue,
+						})
+						break
+					case 'none':
+						// no-op
+						break
+					default:
+						assertNever(control.feedbackType)
+						break
+				}
 			}
 
 			if (colors.length === 0) return
 
 			this.#pendingDraw = {}
-			this.#device.setButtonColors(colors).catch((e) => {
+			this.#device.setButtonStates(colors).catch((e) => {
 				this.#logger.error(`write failed: ${e}`)
 			})
 		},
@@ -316,7 +367,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 			maxWait: 20,
 		}
 	)
-	#pendingDraw: Record<string, ImageResult> = {}
+	#pendingDraw: Record<string, { image: ImageResult; control: BlackmagicControllerButtonControlDefinition }> = {}
 
 	/**
 	 * Draw multiple buttons
@@ -324,11 +375,12 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	drawMany(renders: DrawButtonItem[]) {
 		for (const { x, y, image } of renders) {
 			const control = this.#device.CONTROLS.find(
-				(control) => control.type === 'button' && control.row === y && control.column === x
+				(control): control is BlackmagicControllerButtonControlDefinition =>
+					control.type === 'button' && control.row === y && control.column === x
 			)
 			if (!control) continue
 
-			this.#pendingDraw[control.id] = image
+			this.#pendingDraw[control.id] = { image, control }
 		}
 
 		this.#triggerRedraw()

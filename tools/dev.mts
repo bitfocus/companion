@@ -115,6 +115,9 @@ chokidar
 		// Something else changed
 		restart()
 	})
+	.on('error', (error) => {
+		console.warn(`Watcher error: ${error}`)
+	})
 
 if (devModulesPath) {
 	chokidar
@@ -149,6 +152,9 @@ if (devModulesPath) {
 			}
 
 			fn()
+		})
+		.on('error', (error) => {
+			console.warn(`Module watcher error: ${error}`)
 		})
 }
 

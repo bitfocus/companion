@@ -141,6 +141,10 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 			return null
 		}
 	},
+	arrayIncludes: (arr, val) => {
+		if (!Array.isArray(arr)) return false
+		return arr.includes(val)
+	},
 
 	// Time operations
 	unixNow: () => Date.now(),

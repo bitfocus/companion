@@ -118,13 +118,17 @@ eg `includes("Companion is great!", "great")` gives `true`
 
 Find the index of the first occurrence of a value within the provided string.
 
-Optionally provide an offset to start the search from.
+Optionally provide an offset to begin the search from, otherwise it starts from position 0 (the beginning).
+
+If the value isn't found, it will return -1, otherwise the index of the first occurence.
 
 **lastIndexOf(val, find, offset)**
 
-Find the index of the last occurrence of a value within the provided string.
+Find the index of the last occurrence of a value within the provided string, searching from the end.
 
-Optionally provide an offset to start the search from.
+Optionally provide an offset to begin the search from, searching from the end.
+
+If the value isn't found, it will return -1, otherwise the index of the last occurence. The beginning is position 0.
 
 **toUpperCase(val)**
 
@@ -154,9 +158,9 @@ eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
 **parseVariables(string)**
 
-In some scenarios it can be beneficial to have nested variables. This is not supported in the expression syntax.
+In some scenarios it can be beneficial to have nested variables (a bit like pointers). This is not supported in the expression syntax.
 
-Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax.
+Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax. It will also still handle template strings too.
 
 eg `parseVariables('$(custom:$(custom:b))')`
 
@@ -197,6 +201,12 @@ Convert an object into a json string.
 If this encounters invalid input, it will return null instead of throwing an error.
 
 eg: `jsonstringify({ a: 1 })` will be a string containing `{"a":1}`
+
+**arrayIncludes(arr, val)**
+
+Check if an array includes a value
+
+If this encounters invalid input, it will return false
 
 ##### Time operations
 

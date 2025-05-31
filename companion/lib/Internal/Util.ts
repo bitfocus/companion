@@ -1,8 +1,12 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { Logger } from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
-import type { VariablesCache } from '../Variables/Util.js'
+import type { ExecuteExpressionResult, ParseVariablesResult, VariablesCache } from '../Variables/Util.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { FeedbackEntityModelExt } from './Types.js'
 
 /**
  *
@@ -81,7 +85,10 @@ export function ParseInternalControlReference(
 	let location: ControlLocation | null = null
 	let referencedVariables: string[] = []
 
-	switch (options.location_target) {
+	let locationTarget = options.location_target
+	if (locationTarget?.startsWith('this:')) locationTarget = 'this'
+
+	switch (locationTarget) {
 		case 'this':
 			location = pressLocation
 				? {
@@ -120,4 +127,92 @@ export function ParseInternalControlReference(
 	}
 
 	return { location, referencedVariables }
+}
+
+export class InternalModuleUtils {
+	readonly #logger = LogController.createLogger('Internal/InternalModuleUtils')
+
+	readonly #variablesController: VariablesController
+
+	constructor(variablesController: VariablesController) {
+		this.#variablesController = variablesController
+	}
+
+	/**
+	 * Parse and execute an expression in a string
+	 * @param str - String containing the expression to parse
+	 * @param extras
+	 * @param requiredType - Fail if the result is not of specified type
+	 * @param injectedVariableValues - Inject some variable values
+	 * @returns result of the expression
+	 */
+	executeExpressionForInternalActionOrFeedback(
+		str: string,
+		extras: RunActionExtras | FeedbackEntityModelExt,
+		requiredType?: string,
+		injectedVariableValues?: CompanionVariableValues
+	): ExecuteExpressionResult {
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			...injectedVariableValues,
+		}
+		return this.#variablesController.values.executeExpression(
+			String(str),
+			extras.location,
+			requiredType,
+			injectedVariableValuesComplete
+		)
+	}
+
+	/**
+	 * Parse the variables in a string
+	 * @param str - String to parse variables in
+	 * @param extras
+	 * @param injectedVariableValues - Inject some variable values
+	 * @returns with variables replaced with values
+	 */
+	parseVariablesForInternalActionOrFeedback(
+		str: string,
+		extras: RunActionExtras | FeedbackEntityModelExt,
+		injectedVariableValues?: VariablesCache
+	): ParseVariablesResult {
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			...injectedVariableValues,
+		}
+		return this.#variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
+	}
+
+	/**
+	 *
+	 */
+	parseInternalControlReferenceForActionOrFeedback(
+		extras: RunActionExtras | FeedbackEntityModelExt,
+		options: Record<string, any>,
+		useVariableFields: boolean
+	): {
+		location: ControlLocation | null
+		referencedVariables: string[]
+	} {
+		const injectedVariableValues = 'id' in extras ? undefined : this.#getInjectedVariablesForLocation(extras)
+
+		return ParseInternalControlReference(
+			this.#logger,
+			this.#variablesController.values,
+			extras.location,
+			options,
+			useVariableFields,
+			injectedVariableValues
+		)
+	}
+
+	/**
+	 * Variables to inject based on an internal action
+	 */
+	#getInjectedVariablesForLocation(extras: RunActionExtras): CompanionVariableValues {
+		return {
+			// Doesn't need to be reactive, it's only for an action
+			'$(this:surface_id)': extras.surfaceId,
+		}
+	}
 }

@@ -1,4 +1,3 @@
-// @ts-check
 /*
  * This file is part of the Companion project
  * Copyright (c) 2018 Bitfocus AS
@@ -8,11 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  *
  */
 
@@ -25,7 +19,7 @@ import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
-import shuttleControlUSB from 'shuttle-control-usb'
+import { isAShuttleDevice } from 'shuttle-node'
 // @ts-ignore
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
@@ -43,6 +37,7 @@ import { SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
+import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
 import { SurfaceGroup } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
@@ -51,6 +46,7 @@ import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
 	SurfaceConfig,
+	SurfaceGroupConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
@@ -63,6 +59,7 @@ import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -73,6 +70,7 @@ const SurfacesRoom = 'surfaces'
 export interface SurfaceControllerEvents {
 	surface_name: [surfaceId: string, name: string]
 	surface_page: [surfaceId: string, pageId: string]
+	surface_locked: [surfaceId: string, locked: boolean]
 	'surface-add': [surfaceId: string]
 	'surface-delete': [surfaceId: string]
 
@@ -87,7 +85,8 @@ export interface SurfaceControllerEvents {
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
-	readonly #db: DataDatabase
+	readonly #dbTableSurfaces: DataStoreTableView<Record<string, SurfaceConfig>>
+	readonly #dbTableGroups: DataStoreTableView<Record<string, SurfaceGroupConfig>>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 	readonly #io: UIHandler
 
@@ -139,7 +138,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies, io: UIHandler) {
 		super()
 
-		this.#db = db
+		this.#dbTableSurfaces = db.getTableView('surfaces')
+		this.#dbTableGroups = db.getTableView('surface_groups')
 		this.#handlerDependencies = handlerDependencies
 		this.#io = io
 
@@ -150,11 +150,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		setImmediate(() => {
 			// Setup groups
-			const groupsConfigs = this.#db.getKey('surface_groups', {})
+			const groupsConfigs = this.#dbTableGroups.all()
 			for (const groupId of Object.keys(groupsConfigs)) {
 				const newGroup = new SurfaceGroup(
 					this,
-					this.#db,
+					this.#dbTableGroups,
 					this.#handlerDependencies.page,
 					this.#handlerDependencies.userconfig,
 					groupId,
@@ -165,7 +165,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 
 			// Setup defined emulators
-			const instances = this.#db.getKey('deviceconfig', {}) || {}
+			const instances = this.#dbTableSurfaces.all()
 			for (const id of Object.keys(instances)) {
 				// If the id starts with 'emulator:' then re-add it
 				if (id.startsWith('emulator:')) {
@@ -437,10 +437,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 
 			// Find a disconnected surface
-			const configs = this.#db.getKey('deviceconfig', {})
-			if (configs[id]) {
-				configs[id].name = name
-				this.#db.setKey('deviceconfig', configs)
+			const surfaceConfig = this.#dbTableSurfaces.get(id)
+			if (surfaceConfig) {
+				surfaceConfig.name = name
+				this.#dbTableSurfaces.set(id, surfaceConfig)
 				this.updateDevicesList()
 				return
 			}
@@ -514,7 +514,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			const newGroup = new SurfaceGroup(
 				this,
-				this.#db,
+				this.#dbTableGroups,
 				this.#handlerDependencies.page,
 				this.#handlerDependencies.userconfig,
 				groupId,
@@ -614,7 +614,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			const newGroup = new SurfaceGroup(
 				this,
-				this.#db,
+				this.#dbTableGroups,
 				this.#handlerDependencies.page,
 				this.#handlerDependencies.userconfig,
 				surfaceGroupId,
@@ -651,8 +651,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @returns Config object, or undefined
 	 */
 	getDeviceConfig(surfaceId: string): SurfaceConfig | undefined {
-		const config = this.#db.getKey('deviceconfig', {})
-		return config[surfaceId]
+		return this.#dbTableSurfaces.get(surfaceId)
 	}
 
 	/**
@@ -660,16 +659,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @returns Already had config
 	 */
 	setDeviceConfig(surfaceId: string, surfaceConfig: any | undefined): boolean {
-		const config = this.#db.getKey('deviceconfig', {})
-		const exists = !!config[surfaceId]
+		const exists = !!this.#dbTableSurfaces.get(surfaceId)
 
 		if (surfaceConfig) {
-			config[surfaceId] = surfaceConfig
+			this.#dbTableSurfaces.set(surfaceId, surfaceConfig)
 		} else {
-			delete config[surfaceId]
+			this.#dbTableSurfaces.delete(surfaceId)
 		}
 
-		this.#db.setKey('deviceconfig', config)
 		return exists
 	}
 
@@ -689,6 +686,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+				locked: false,
 				hasFirmwareUpdates: null,
 
 				size: config.gridSize || null,
@@ -702,6 +700,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
+				surfaceInfo.locked = surfaceHandler.isLocked
 				surfaceInfo.hasFirmwareUpdates = surfaceHandler.panel.info.hasFirmwareUpdates || null
 			}
 
@@ -756,7 +755,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 
 		// Add any automatic groups for offline surfaces
-		const config: Record<string, any> = this.#db.getKey('deviceconfig', {})
+		const config = this.#dbTableSurfaces.all()
 		for (const [surfaceId, surface] of Object.entries(config)) {
 			if (mappedSurfaceId.has(surfaceId)) continue
 
@@ -783,8 +782,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	async reset(): Promise<void> {
 		// Each active handler will re-add itself when doing the save as part of its own reset
-		this.#db.setKey('deviceconfig', {})
-		this.#db.setKey('surface_groups', {})
+		this.#dbTableGroups.clear()
+		this.#dbTableSurfaces.clear()
 		this.#outboundController.reset()
 
 		// Wait for the surfaces to disconnect before clearing their config
@@ -863,7 +862,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				// Make sure we don't try to take over stream deck devices when the stream deck application
 				// is running on windows.
 				if (!streamdeckDisabled && process.platform === 'win32') {
-					const list = await findProcess('name', 'Stream Deck')
+					const list = await findProcess('name', '\\StreamDeck.exe')
 					if (typeof list === 'object' && list.length > 0) {
 						streamDeckSoftwareRunning = true
 						this.#logger.silly('Elgato software detected, ignoring stream decks')
@@ -884,6 +883,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					HID.devicesAsync().then(async (deviceInfos) =>
 						Promise.allSettled(
 							deviceInfos.map(async (deviceInfo) => {
+								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
 									if (!ignoreStreamDeck) {
 										if (getStreamDeckDeviceInfo(deviceInfo)) {
@@ -909,12 +909,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'xkeys', SurfaceUSBXKeys)
 										}
-									} else if (
-										deviceInfo.vendorId === shuttleControlUSB.vids.CONTOUR &&
-										(deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEXPRESS ||
-											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V1 ||
-											deviceInfo.productId === shuttleControlUSB.pids.SHUTTLEPRO_V2)
-									) {
+									} else if (isAShuttleDevice(deviceInfo)) {
 										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
 										}
@@ -938,6 +933,17 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 									) {
 										if (this.#handlerDependencies.userconfig.getKey('mystrix_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
+										}
+									} else if (
+										(deviceInfo.vendorId === 0x6602 || deviceInfo.vendorId === 0x6603) && // Mirabox
+										(deviceInfo.productId === 0x1001 ||
+											deviceInfo.productId === 0x1007 ||
+											deviceInfo.productId === 0x1005 ||
+											deviceInfo.productId === 0x1006) && // Stream Dock N4 or 293V3
+										deviceInfo.interface === 0
+									) {
+										if (this.#handlerDependencies.userconfig.getKey('mirabox_streamdock_enable')) {
+											await this.#addDevice(deviceInfo.path, {}, 'mirabox-streamdock', SurfaceUSBMiraboxStreamDock)
 										}
 									}
 								}
@@ -1136,14 +1142,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	exportAll(clone = true): any {
-		const obj = this.#db.getKey('deviceconfig', {}) || {}
-		return clone ? cloneDeep(obj) : obj
+	exportAll(): any {
+		return this.#dbTableSurfaces.all()
 	}
 
-	exportAllGroups(clone = true): any {
-		const obj = this.#db.getKey('surface_groups', {}) || {}
-		return clone ? cloneDeep(obj) : obj
+	exportAllGroups(): any {
+		return this.#dbTableGroups.all()
 	}
 
 	/**
@@ -1156,7 +1160,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				// Group does not exist
 				group = new SurfaceGroup(
 					this,
-					this.#db,
+					this.#dbTableGroups,
 					this.#handlerDependencies.page,
 					this.#handlerDependencies.userconfig,
 					id,

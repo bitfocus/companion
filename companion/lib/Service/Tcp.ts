@@ -2,7 +2,10 @@ import { decimalToRgb } from '../Resources/Util.js'
 import { ApiMessageError, ServiceTcpUdpApi } from './TcpUdpApi.js'
 import { ServiceTcpBase, TcpClientInfo } from './TcpBase.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import type { Registry } from '../Registry.js'
+import type { ServiceApi } from './ServiceApi.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 
 /**
  * Class providing the TCP api.
@@ -18,11 +21,6 @@ import type { Registry } from '../Registry.js'
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export class ServiceTcp extends ServiceTcpBase {
 	/**
@@ -30,40 +28,40 @@ export class ServiceTcp extends ServiceTcpBase {
 	 */
 	readonly #api: ServiceTcpUdpApi
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/Tcp', 'tcp_enabled', 'tcp_listen_port')
+	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig) {
+		super(userconfig, 'Service/Tcp', 'tcp_enabled', 'tcp_listen_port')
 
 		this.port = 16759
 
-		this.#api = new ServiceTcpUdpApi(registry, 'tcp', 'tcp_legacy_api_enabled')
-
-		this.graphics.on('button_drawn', (location, render) => {
-			const bgcolor = (typeof render.style !== 'string' ? render.style : {})?.bgcolor || 0
-
-			const bank = xyToOldBankIndex(location.column, location.row)
-
-			/** TODO: remove legacy 'bank' from this response */
-			if (this.clients.size > 0 && bank !== null) {
-				const color = decimalToRgb(bgcolor)
-				const response = {
-					type: 'bank_bg_change',
-					page: location.pageNumber,
-					row: location.row,
-					column: location.column,
-					bank: bank,
-					red: color.red,
-					green: color.green,
-					blue: color.blue,
-				}
-
-				this.logger.silly(`bank_bg send to all open sockets ${JSON.stringify(response)}`)
-				this.clients.forEach((socket) => {
-					socket.write(JSON.stringify(response) + '\n')
-				})
-			}
-		})
+		this.#api = new ServiceTcpUdpApi(serviceApi, userconfig, 'tcp', 'tcp_legacy_api_enabled')
 
 		this.init()
+	}
+
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		const bgcolor = (typeof render.style !== 'string' ? render.style : {})?.bgcolor || 0
+
+		const bank = xyToOldBankIndex(location.column, location.row)
+
+		/** TODO: remove legacy 'bank' from this response */
+		if (this.clients.size > 0 && bank !== null) {
+			const color = decimalToRgb(bgcolor)
+			const response = {
+				type: 'bank_bg_change',
+				page: location.pageNumber,
+				row: location.row,
+				column: location.column,
+				bank: bank,
+				red: color.red,
+				green: color.green,
+				blue: color.blue,
+			}
+
+			this.logger.silly(`bank_bg send to all open sockets ${JSON.stringify(response)}`)
+			this.clients.forEach((socket) => {
+				socket.write(JSON.stringify(response) + '\n')
+			})
+		}
 	}
 
 	/**

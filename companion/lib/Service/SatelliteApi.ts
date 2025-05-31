@@ -1,4 +1,3 @@
-import { CoreBase } from '../Core/Base.js'
 import {
 	isFalsey,
 	isTruthy,
@@ -9,7 +8,8 @@ import {
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import { Logger } from '../Log/Controller.js'
 import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../Surface/IP/Satellite.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo } from '../Registry.js'
+import type { SurfaceController } from '../Surface/Controller.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -28,8 +28,9 @@ import type { Registry } from '../Registry.js'
  * 1.7.0 - Support for transferable values. This allows surfaces to emit and consume values that don't align with a control in the grid.
  *       - allow surface to opt out of brightness slider and messages
  * 1.7.1 - Respond with variable name in SET-VARIABLE-VALUE success message
+ * 1.8.0 - Add support for remote surface to handle display of locked state
  */
-const API_VERSION = '1.7.1'
+const API_VERSION = '1.8.0'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
@@ -86,20 +87,21 @@ export interface SatelliteInitSocketResult {
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
-export class ServiceSatelliteApi extends CoreBase {
+export class ServiceSatelliteApi {
+	// readonly #logger = LogController.createLogger('Service/SatelliteApi')
+
+	readonly #appInfo: AppInfo
+	readonly #surfaceController: SurfaceController
+
 	/**
 	 * The remote devices
 	 */
 	#devices = new Map<string, SatelliteDevice>()
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/SatelliteApi')
+	constructor(appInfo: AppInfo, surfaceController: SurfaceController) {
+		this.#appInfo = appInfo
+		this.#surfaceController = surfaceController
 	}
 
 	/**
@@ -155,6 +157,8 @@ export class ServiceSatelliteApi extends CoreBase {
 		const streamText = params.TEXT !== undefined && isTruthy(params.TEXT)
 		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
+		const supportsLockedState =
+			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
 
 		let transferVariables: SatelliteTransferableValue[]
 		try {
@@ -163,7 +167,7 @@ export class ServiceSatelliteApi extends CoreBase {
 			return this.#formatAndSendError(socket, messageName, id, 'Invalid VARIABLES')
 		}
 
-		const device = this.surfaces.addSatelliteDevice({
+		const device = this.#surfaceController.addSatelliteDevice({
 			path: id,
 			gridSize: {
 				columns: keysPerRow,
@@ -178,6 +182,7 @@ export class ServiceSatelliteApi extends CoreBase {
 			streamText,
 			streamTextStyle,
 			transferVariables,
+			supportsLockedState,
 		})
 
 		this.#devices.set(id, {
@@ -228,6 +233,9 @@ export class ServiceSatelliteApi extends CoreBase {
 			case 'SET-VARIABLE-VALUE':
 				this.#setVariableValue(socket, params)
 				break
+			case 'PINCODE-KEY':
+				this.#pincodeKey(socket, params)
+				break
 			case 'PING':
 				socket.sendMessage(`PONG ${body}`, null, null, {})
 				break
@@ -252,7 +260,7 @@ export class ServiceSatelliteApi extends CoreBase {
 		socketLogger.info(`new connection`)
 
 		socket.sendMessage('BEGIN', null, null, {
-			CompanionVersion: this.appInfo.appBuild,
+			CompanionVersion: this.#appInfo.appBuild,
 			ApiVersion: API_VERSION,
 		})
 
@@ -279,7 +287,7 @@ export class ServiceSatelliteApi extends CoreBase {
 				let count = 0
 				for (let [key, device] of this.#devices.entries()) {
 					if (device.socket === socket) {
-						this.surfaces.removeDevice(device.id)
+						this.#surfaceController.removeDevice(device.id)
 						this.#devices.delete(key)
 						count++
 					}
@@ -356,6 +364,30 @@ export class ServiceSatelliteApi extends CoreBase {
 	}
 
 	/**
+	 * Process a pincode key command
+	 */
+	#pincodeKey(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'PINCODE-KEY'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
+		const key = params.KEY
+		if (!key) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
+		}
+
+		const keyNumber = Number(key)
+		if (isNaN(keyNumber) || keyNumber < 0 || keyNumber > 9) {
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
+		}
+
+		device.device.doPincodeKey(keyNumber)
+
+		socket.sendMessage(messageName, 'OK', id, {})
+	}
+
+	/**
 	 * Process a key rotate command
 	 */
 	#keyRotate(socket: SatelliteSocketWrapper, params: ParsedParams): void {
@@ -414,7 +446,7 @@ export class ServiceSatelliteApi extends CoreBase {
 
 		socketLogger.info(`remove surface "${id}"`)
 
-		this.surfaces.removeDevice(id)
+		this.#surfaceController.removeDevice(id)
 		this.#devices.delete(id)
 		socket.sendMessage(messageName, 'OK', id, {})
 	}

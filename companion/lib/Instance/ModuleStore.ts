@@ -6,19 +6,19 @@ import type {
 	ModuleStoreModuleInfoStore,
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
-import type { DataCache } from '../Data/Cache.js'
+import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import createClient from 'openapi-fetch'
+import createClient, { Client } from 'openapi-fetch'
 import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import { Complete } from '@companion-module/base/dist/util.js'
 import EventEmitter from 'events'
+import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { AppInfo } from '../Registry.js'
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
 	: 'https://developer.bitfocus.io/api'
-
-const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({ baseUrl })
 
 const ModuleStoreListRoom = 'module-store:list'
 const ModuleStoreInfoRoom = (moduleId: string) => `module-store:info:${moduleId}`
@@ -36,9 +36,10 @@ export interface ModuleStoreServiceEvents {
 export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 	readonly #logger = LogController.createLogger('Instance/ModuleStoreService')
 
-	/**
-	 */
-	readonly #cacheStore: DataCache
+	readonly #cacheStore: DataStoreTableView<DataCacheDefaultTable>
+	readonly #cacheTable: DataStoreTableView<Record<string, ModuleStoreModuleInfoStore>>
+
+	readonly #openApiClient: Client<ModuleStoreOpenApiPaths>
 
 	/**
 	 * The core interface client
@@ -51,13 +52,14 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 	#infoStore = new Map<string, ModuleStoreModuleInfoStore>()
 
-	constructor(io: UIHandler, cacheStore: DataCache) {
+	constructor(appInfo: AppInfo, io: UIHandler, cacheStore: DataCache) {
 		super()
 
 		this.#io = io
-		this.#cacheStore = cacheStore
+		this.#cacheStore = cacheStore.defaultTableView
+		this.#cacheTable = cacheStore.getTableView(CacheStoreModuleTable)
 
-		this.#listStore = cacheStore.getKey(CacheStoreListKey, {
+		this.#listStore = this.#cacheStore.getOrDefault(CacheStoreListKey, {
 			lastUpdated: 0,
 			lastUpdateAttempt: 0,
 			updateWarning: null,
@@ -65,13 +67,17 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 			modules: {},
 		} satisfies ModuleStoreListCacheStore)
 
-		// HACK: ensure the table exists
-		const cloud = cacheStore.store.prepare(
-			`CREATE TABLE IF NOT EXISTS ${CacheStoreModuleTable} (id STRING UNIQUE, value STRING);`
-		)
-		cloud.run()
+		this.#infoStore = new Map(Object.entries(this.#cacheTable.all()))
 
-		this.#infoStore = new Map(Object.entries(cacheStore.getTable(CacheStoreModuleTable) ?? {}))
+		this.#openApiClient = createClient<ModuleStoreOpenApiPaths>({
+			baseUrl,
+			headers: {
+				'User-Agent': `Companion ${appInfo.appVersion}`,
+				'Companion-App-Build': appInfo.appBuild,
+				'Companion-App-Version': appInfo.appVersion,
+				'Companion-Machine-Id': appInfo.machineId,
+			},
+		})
 
 		// If this is the first time we're running, refresh the store data now
 		if (this.#listStore.lastUpdated === 0) {
@@ -180,7 +186,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 			.then(async () => {
 				this.#io.emitToAll('modules-store:list:progress', 0)
 
-				const { data, error } = await ModuleOpenApiClient.GET('/v1/companion/modules/{moduleType}', {
+				const { data, error } = await this.#openApiClient.GET('/v1/companion/modules/{moduleType}', {
 					params: {
 						path: {
 							moduleType: 'connection',
@@ -227,7 +233,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 				this.#listStore.updateWarning = 'Failed to update the module list from the store'
 			})
 			.finally(() => {
-				this.#cacheStore.setKey(CacheStoreListKey, this.#listStore)
+				this.#cacheStore.set(CacheStoreListKey, this.#listStore)
 
 				// Update clients
 				this.#io.emitToRoom(ModuleStoreListRoom, 'modules-store:list:data', this.#listStore)
@@ -259,41 +265,56 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		try {
 			this.#io.emitToAll('modules-store:info:progress', moduleId, 0)
 
-			const { data, error } = await ModuleOpenApiClient.GET('/v1/companion/modules/{moduleType}/{moduleName}', {
-				params: {
-					path: {
-						moduleType: 'connection',
-						moduleName: moduleId,
+			const { data, error, response } = await this.#openApiClient.GET(
+				'/v1/companion/modules/{moduleType}/{moduleName}',
+				{
+					params: {
+						path: {
+							moduleType: 'connection',
+							moduleName: moduleId,
+						},
 					},
-				},
-			})
+				}
+			)
 			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.5)
 
-			if (error) throw new Error(`Failed to fetch module info: ${error?.error ?? JSON.stringify(error)}`)
+			if (response.status === 404) {
+				// If the store returns 404, then don't throw an error, this is normal
+				moduleData = {
+					id: moduleId,
+					lastUpdated: Date.now(),
+					lastUpdateAttempt: Date.now(),
+					updateWarning: null,
 
-			moduleData = {
-				id: moduleId,
-				lastUpdated: Date.now(),
-				lastUpdateAttempt: Date.now(),
-				updateWarning: null,
+					versions: [],
+				}
+			} else {
+				if (error) throw new Error(`Failed to fetch module info: ${error?.error ?? JSON.stringify(error)}`)
 
-				versions: data.versions.map(
-					(data) =>
-						({
-							id: data.id.startsWith('v') ? data.id.slice(1) : data.id,
-							releaseChannel: data.isPrerelease ? 'beta' : 'stable',
-							releasedAt: data.releasedAt,
+				moduleData = {
+					id: moduleId,
+					lastUpdated: Date.now(),
+					lastUpdateAttempt: Date.now(),
+					updateWarning: null,
 
-							tarUrl: data.tarUrl ?? null,
-							tarSha: data.tarSha ?? null,
+					versions: data.versions.map(
+						(data) =>
+							({
+								id: data.id.startsWith('v') ? data.id.slice(1) : data.id,
+								releaseChannel: data.isPrerelease ? 'beta' : 'stable',
+								releasedAt: data.releasedAt,
 
-							deprecationReason: data.deprecationReason ?? null,
+								tarUrl: data.tarUrl ?? null,
+								tarSha: data.tarSha ?? null,
 
-							apiVersion: data.apiVersion,
+								deprecationReason: data.deprecationReason ?? null,
 
-							helpUrl: data.helpUrl ?? null,
-						}) satisfies Complete<ModuleStoreModuleInfoVersion>
-				),
+								apiVersion: data.apiVersion,
+
+								helpUrl: data.helpUrl ?? null,
+							}) satisfies Complete<ModuleStoreModuleInfoVersion>
+					),
+				}
 			}
 		} catch (e: any) {
 			// This could be on an always offline system
@@ -309,13 +330,15 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 				versions: [],
 			}
 
+			console.log('err', e)
+
 			moduleData.lastUpdateAttempt = Date.now()
 			moduleData.updateWarning = 'Failed to update the module version list from the store'
 		}
 
 		// Store value and update the cache on disk
 		this.#infoStore.set(moduleId, moduleData)
-		this.#cacheStore.setTableKey(CacheStoreModuleTable, moduleId, moduleData)
+		this.#cacheTable.set(moduleId, moduleData)
 
 		// Update clients
 		this.#io.emitToRoom(ModuleStoreInfoRoom(moduleId), 'modules-store:info:data', moduleId, moduleData)

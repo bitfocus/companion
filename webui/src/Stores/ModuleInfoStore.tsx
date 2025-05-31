@@ -1,4 +1,4 @@
-import { action, observable } from 'mobx'
+import { action, observable, runInAction } from 'mobx'
 import type {
 	ModuleInfoUpdate,
 	ClientModuleInfo,
@@ -76,7 +76,7 @@ export class ModuleInfoStore {
 		this.storeUpdateInfo.lastUpdateAttempt = storeInfo.lastUpdateAttempt
 		this.storeUpdateInfo.updateWarning = storeInfo.updateWarning
 
-		// TODO - is this too agressive?
+		// TODO - is this too aggressive?
 		this.storeList.replace(storeInfo.modules)
 	})
 
@@ -100,12 +100,16 @@ export class ModuleStoreVersionsStore {
 		socket.on('modules-store:info:data', (msgModuleId, data) => {
 			if (!this.#versionsSubscribers.has(msgModuleId)) return
 
-			this.#versionsState.set(msgModuleId, data)
+			runInAction(() => {
+				this.#versionsState.set(msgModuleId, data)
+			})
 		})
 		socket.on('modules-upgrade-to-other:data', (msgModuleId, data) => {
 			if (!this.#upgradeToVersionsSubscribers.has(msgModuleId)) return
 
-			this.#upgradeToVersionsState.set(msgModuleId, data)
+			runInAction(() => {
+				this.#upgradeToVersionsState.set(msgModuleId, data)
+			})
 		})
 	}
 
@@ -147,7 +151,9 @@ export class ModuleStoreVersionsStore {
 			.then((data) => {
 				if (!data || !this.#versionsSubscribers.has(moduleId)) return
 
-				this.#versionsState.set(moduleId, data)
+				runInAction(() => {
+					this.#versionsState.set(moduleId, data)
+				})
 			})
 			.catch((err) => {
 				console.error('Failed to subscribe to module store', err)
@@ -194,7 +200,9 @@ export class ModuleStoreVersionsStore {
 			.then((data) => {
 				if (!data || !this.#upgradeToVersionsSubscribers.has(moduleId)) return
 
-				this.#upgradeToVersionsState.set(moduleId, data)
+				runInAction(() => {
+					this.#upgradeToVersionsState.set(moduleId, data)
+				})
 			})
 			.catch((err) => {
 				console.error('Failed to subscribe to modules-upgrade-to-other', err)

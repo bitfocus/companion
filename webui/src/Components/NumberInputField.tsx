@@ -84,7 +84,7 @@ export function NumberInputField({
 			value={tmpValue ?? value ?? 0}
 			min={min}
 			max={max}
-			step={step}
+			step={step ?? 'any'}
 			style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
 			title={tooltip}
 			onChange={onChange}

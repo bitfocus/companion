@@ -7,17 +7,10 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { combineRgb, CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
-import { serializeIsVisibleFnSingle } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
 import type {
 	ActionForVisitor,
@@ -27,8 +20,8 @@ import type {
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
+	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { InternalController } from './Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
@@ -36,95 +29,115 @@ import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper
 import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use variables for surface',
+		label: 'Use expression for surface',
 		id: 'controller_from_variable',
 		default: false,
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'internal:surface_serial',
 		label: 'Surface / group',
 		id: 'controller',
 		default: 'self',
 		includeSelf: true,
-		isVisible: (options) => !options.controller_from_variable,
-	}),
-	serializeIsVisibleFnSingle({
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!$(options:controller_from_variable)',
+		},
+	},
+	{
 		type: 'textinput',
 		label: 'Surface / group',
 		id: 'controller_variable',
 		default: 'self',
-		isVisible: (options) => !!options.controller_from_variable,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!!$(options:controller_from_variable)',
+		},
 		useVariables: {
 			local: true,
 		},
-	}),
+	},
 ]
 
 const CHOICES_SURFACE_ID_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use variables for surface',
+		label: 'Use expression for surface',
 		id: 'controller_from_variable',
 		default: false,
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'internal:surface_serial',
 		label: 'Surface / group',
 		id: 'controller',
 		default: 'self',
 		includeSelf: true,
 		useRawSurfaces: true,
-		isVisible: (options) => !options.controller_from_variable,
-	}),
-	serializeIsVisibleFnSingle({
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!$(options:controller_from_variable)',
+		},
+	},
+	{
 		type: 'textinput',
 		label: 'Surface / group',
 		id: 'controller_variable',
 		default: 'self',
-		isVisible: (options) => !!options.controller_from_variable,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!!$(options:controller_from_variable)',
+		},
 		useVariables: {
 			local: true,
 		},
-	}),
+	},
 ]
 
 const CHOICES_PAGE_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use variables for page',
+		label: 'Use expression for page',
 		id: 'page_from_variable',
 		default: false,
 	},
-	serializeIsVisibleFnSingle({
+	{
 		type: 'internal:page',
 		label: 'Page',
 		id: 'page',
 		includeStartup: true,
 		includeDirection: true,
 		default: 0,
-		isVisible: (options) => !options.page_from_variable,
-	}),
-	serializeIsVisibleFnSingle({
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!$(options:page_from_variable)',
+		},
+	},
+	{
 		type: 'textinput',
 		label: 'Page (expression)',
 		id: 'page_variable',
 		default: '1',
-		isVisible: (options) => !!options.page_from_variable,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '!!$(options:page_from_variable)',
+		},
 		useVariables: {
 			local: true,
 		},
 		isExpression: true,
-	}),
+	},
 ]
 
-export class InternalSurface implements InternalModuleFragment {
+export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/Surface')
 
-	readonly #internalModule: InternalController
+	readonly #internalUtils: InternalModuleUtils
 	readonly #controlsController: ControlsController
 	readonly #surfaceController: SurfaceController
 	readonly #pageController: PageController
@@ -135,25 +148,27 @@ export class InternalSurface implements InternalModuleFragment {
 	readonly #pageHistory = new Map<string, { history: string[]; index: number }>()
 
 	constructor(
-		internalModule: InternalController,
+		internalUtils: InternalModuleUtils,
 		surfaceController: SurfaceController,
 		controlsController: ControlsController,
 		pageController: PageController
 	) {
-		this.#internalModule = internalModule
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#surfaceController = surfaceController
 		this.#controlsController = controlsController
 		this.#pageController = pageController
 
 		setImmediate(() => {
-			this.#internalModule.setVariables({
+			this.emit('setVariables', {
 				't-bar': 0,
 				jog: 0,
 				shuttle: 0,
 			})
 		})
 
-		const debounceUpdateVariableDefinitions = debounceFn(() => this.#internalModule.regenerateVariables(), {
+		const debounceUpdateVariableDefinitions = debounceFn(() => this.emit('regenerateVariables'), {
 			maxWait: 100,
 			wait: 20,
 			after: true,
@@ -166,9 +181,10 @@ export class InternalSurface implements InternalModuleFragment {
 
 		this.#surfaceController.on('surface_page', () => {
 			debounceUpdateVariables()
-			this.#internalModule.checkFeedbacks('surface_on_page')
+			this.emit('checkFeedbacks', 'surface_on_page')
 		})
 		this.#surfaceController.on('group_page', () => debounceUpdateVariables())
+		this.#surfaceController.on('surface_locked', () => debounceUpdateVariables())
 
 		this.#surfaceController.on('group-add', () => {
 			debounceUpdateVariableDefinitions()
@@ -199,7 +215,7 @@ export class InternalSurface implements InternalModuleFragment {
 		let surfaceId: string | undefined = options.controller + ''
 
 		if (useVariableFields && options.controller_from_variable) {
-			surfaceId = this.#internalModule.parseVariablesForInternalActionOrFeedback(options.controller_variable, info).text
+			surfaceId = this.#internalUtils.parseVariablesForInternalActionOrFeedback(options.controller_variable, info).text
 		}
 
 		surfaceId = surfaceId.trim()
@@ -218,7 +234,7 @@ export class InternalSurface implements InternalModuleFragment {
 		let thePageNumber: number | string | undefined = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			const expressionResult = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const expressionResult = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 				options.page_variable,
 				extras,
 				'number'
@@ -291,6 +307,10 @@ export class InternalSurface implements InternalModuleFragment {
 						name: `surface_${surfaceId}_name`,
 					},
 					{
+						label: `Surface locked: ${surface.displayName}`,
+						name: `surface_${surfaceId}_locked`,
+					},
+					{
 						label: `Surface location: ${surface.displayName}`,
 						name: `surface_${surfaceId}_location`,
 					},
@@ -305,6 +325,7 @@ export class InternalSurface implements InternalModuleFragment {
 		return variables
 	}
 
+	#lastUpdateVariableNames: ReadonlySet<string> = new Set()
 	updateVariables(): void {
 		const values: CompanionVariableValues = {}
 
@@ -319,6 +340,7 @@ export class InternalSurface implements InternalModuleFragment {
 
 				const surfaceId = surface.id.replaceAll(':', '_') // TODO - more chars
 				values[`surface_${surfaceId}_name`] = surface.name || surface.id
+				values[`surface_${surfaceId}_locked`] = surface.locked
 				values[`surface_${surfaceId}_location`] = surface.location ?? 'Local'
 
 				const surfacePageId = this.#surfaceController.devicePageGet(surface.id)
@@ -337,7 +359,22 @@ export class InternalSurface implements InternalModuleFragment {
 			}
 		}
 
-		this.#internalModule.setVariables(values)
+		const idsBeingSetThisRun = new Set(
+			Object.entries(values)
+				.filter(([_key, value]) => value !== undefined)
+				.map(([key]) => key)
+		)
+
+		// Clear any variables which were set last run, but not this time
+		for (const variableName of this.#lastUpdateVariableNames) {
+			if (!idsBeingSetThisRun.has(variableName)) {
+				values[variableName] = undefined
+			}
+		}
+
+		this.#lastUpdateVariableNames = idsBeingSetThisRun
+
+		this.emit('setVariables', values)
 	}
 
 	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
@@ -386,7 +423,7 @@ export class InternalSurface implements InternalModuleFragment {
 						id: 'controller_from_variable',
 						default: false,
 					},
-					serializeIsVisibleFnSingle({
+					{
 						type: 'number',
 						label: 'Surface / group index',
 						id: 'controller',
@@ -395,19 +432,25 @@ export class InternalSurface implements InternalModuleFragment {
 						max: 100,
 						default: 0,
 						range: false,
-						isVisible: (options) => !options.controller_from_variable,
-					}),
-					serializeIsVisibleFnSingle({
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!$(options:controller_from_variable)',
+						},
+					},
+					{
 						type: 'textinput',
 						label: 'Surface / group index',
 						id: 'controller_variable',
 						tooltip: 'Check the ID column in the surfaces tab',
 						default: '0',
-						isVisible: (options) => !!options.controller_from_variable,
+						isVisibleUi: {
+							type: 'expression',
+							fn: '!!$(options:controller_from_variable)',
+						},
 						useVariables: {
 							local: true,
 						},
-					}),
+					},
 
 					...CHOICES_PAGE_WITH_VARIABLES,
 				],
@@ -473,7 +516,7 @@ export class InternalSurface implements InternalModuleFragment {
 		} else if (action.definitionId === 'set_page_byindex') {
 			let surfaceIndex = action.rawOptions.controller
 			if (action.rawOptions.controller_from_variable) {
-				surfaceIndex = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+				surfaceIndex = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 					action.rawOptions.controller_variable,
 					extras
 				).text

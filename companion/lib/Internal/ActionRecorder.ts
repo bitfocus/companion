@@ -7,16 +7,9 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import LogController from '../Log/Controller.js'
-import type { InternalController } from './Controller.js'
 import type { ActionRecorder } from '../Controls/ActionRecorder.js'
 import type { PageController } from '../Page/Controller.js'
 import type {
@@ -27,35 +20,43 @@ import type {
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
+	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
-export class InternalActionRecorder implements InternalModuleFragment {
+export class InternalActionRecorder
+	extends EventEmitter<InternalModuleFragmentEvents>
+	implements InternalModuleFragment
+{
 	readonly #logger = LogController.createLogger('Internal/ActionRecorder')
 
-	readonly #internalModule: InternalController
+	readonly #internalUtils: InternalModuleUtils
 	readonly #actionRecorder: ActionRecorder
 	readonly #pageController: PageController
 
-	constructor(internalModule: InternalController, actionRecorder: ActionRecorder, pageController: PageController) {
-		this.#internalModule = internalModule
+	constructor(internalUtils: InternalModuleUtils, actionRecorder: ActionRecorder, pageController: PageController) {
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#actionRecorder = actionRecorder
 		this.#pageController = pageController
 
 		setImmediate(() => {
-			this.#internalModule.setVariables({
+			this.emit('setVariables', {
 				action_recorder_action_count: 0,
 			})
 		})
 
 		this.#actionRecorder.on('sessions_changed', () => {
-			this.#internalModule.checkFeedbacks('action_recorder_check_connections')
+			this.emit('checkFeedbacks', 'action_recorder_check_connections')
 
 			const session = this.#actionRecorder.getSession()
 			if (session) {
-				this.#internalModule.setVariables({
+				this.emit('setVariables', {
 					action_recorder_action_count: session.actions?.length ?? 0,
 				})
 			}
@@ -215,16 +216,10 @@ export class InternalActionRecorder implements InternalModuleFragment {
 
 			return true
 		} else if (action.definitionId === 'action_recorder_save_to_button') {
-			let stepId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.step, extras).text
-			let setId = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.set, extras).text
-			const pageRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.rawOptions.page,
-				extras
-			).text
-			const bankRaw = this.#internalModule.parseVariablesForInternalActionOrFeedback(
-				action.rawOptions.bank,
-				extras
-			).text
+			let stepId = this.#internalUtils.parseVariablesForInternalActionOrFeedback(action.rawOptions.step, extras).text
+			let setId = this.#internalUtils.parseVariablesForInternalActionOrFeedback(action.rawOptions.set, extras).text
+			const pageRaw = this.#internalUtils.parseVariablesForInternalActionOrFeedback(action.rawOptions.page, extras).text
+			const bankRaw = this.#internalUtils.parseVariablesForInternalActionOrFeedback(action.rawOptions.bank, extras).text
 
 			if (setId === 'press') setId = 'down'
 			else if (setId === 'release') setId = 'up'

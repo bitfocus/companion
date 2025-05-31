@@ -7,9 +7,11 @@ import { parseColorToNumber } from '../Resources/Util.js'
 import { LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { EmberValue } from 'emberplus-connection/dist/types/types.js'
-import type { Registry } from '../Registry.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ServiceApi } from './ServiceApi.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { PageController } from '../Page/Controller.js'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1
@@ -67,13 +69,11 @@ function parseHexColor(hex: string): number {
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export class ServiceEmberPlus extends ServiceBase {
+	readonly #serviceApi: ServiceApi
+	readonly #pageController: PageController
+
 	#server: EmberServer | undefined = undefined
 
 	/**
@@ -81,13 +81,15 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 	#pushedButtons = new Set<string>()
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/EmberPlus', 'emberplus_enabled', null)
+	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig, pageController: PageController) {
+		super(userconfig, 'Service/EmberPlus', 'emberplus_enabled', null)
+
+		this.#serviceApi = serviceApi
+		this.#pageController = pageController
 
 		this.port = 9092
 
-		this.graphics.on('button_drawn', this.#updateBankFromRender.bind(this))
-		this.page.on('pagecount', this.#pageCountChange.bind(this))
+		this.#pageController.on('pagecount', this.#pageCountChange.bind(this))
 
 		this.init()
 	}
@@ -107,15 +109,15 @@ export class ServiceEmberPlus extends ServiceBase {
 	#getPagesTree(): Record<number, EmberModel.NumberedTreeNodeImpl<any>> {
 		let output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 
-		const pageCount = this.page.getPageCount() // TODO - handle resize
+		const pageCount = this.#pageController.getPageCount() // TODO - handle resize
 
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
 			const children: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 			for (let bank = 1; bank <= LEGACY_MAX_BUTTONS; bank++) {
-				const controlId = this.page.getControlIdAtOldBankIndex(pageNumber, bank)
-				const control = controlId ? this.controls.getControl(controlId) : undefined
+				const controlId = this.#pageController.getControlIdAtOldBankIndex(pageNumber, bank)
+				const control = controlId ? this.#serviceApi.getControl(controlId) : undefined
 
-				let drawStyle = control?.getDrawStyle() || null
+				let drawStyle = control?.getDrawStyle?.() || null
 				if (drawStyle?.style !== 'button') drawStyle = null
 
 				children[bank] = new EmberModel.NumberedTreeNodeImpl(
@@ -174,7 +176,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				)
 			}
 
-			const pageName = this.page.getPageName(pageNumber)
+			const pageName = this.#pageController.getPageName(pageNumber)
 			output[pageNumber] = new EmberModel.NumberedTreeNodeImpl(
 				pageNumber,
 				new EmberModel.EmberNodeImpl(!pageName || pageName === 'PAGE' ? 'Page ' + pageNumber : pageName),
@@ -197,7 +199,7 @@ export class ServiceEmberPlus extends ServiceBase {
 
 		const output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 
-		const pageCount = this.page.getPageCount() // TODO - handle resize
+		const pageCount = this.#pageController.getPageCount() // TODO - handle resize
 
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
 			// TODO - the numbers won't be stable  when resizing the `min` grid values
@@ -215,10 +217,10 @@ export class ServiceEmberPlus extends ServiceBase {
 						row,
 						column,
 					}
-					const controlId = this.page.getControlIdAt(location)
-					const control = controlId ? this.controls.getControl(controlId) : undefined
+					const controlId = this.#pageController.getControlIdAt(location)
+					const control = controlId ? this.#serviceApi.getControl(controlId) : undefined
 
-					let drawStyle = control?.getDrawStyle() || null
+					let drawStyle = control?.getDrawStyle?.() || null
 					if (drawStyle?.style !== 'button') drawStyle = null
 
 					rowColumns[colI] = new EmberModel.NumberedTreeNodeImpl(
@@ -288,7 +290,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				)
 			}
 
-			const pageName = this.page.getPageName(pageNumber)
+			const pageName = this.#pageController.getPageName(pageNumber)
 			output[pageNumber] = new EmberModel.NumberedTreeNodeImpl(
 				pageNumber,
 				new EmberModel.EmberNodeImpl(!pageName || pageName === 'PAGE' ? 'Page ' + pageNumber : pageName),
@@ -326,12 +328,17 @@ export class ServiceEmberPlus extends ServiceBase {
 									EmberModel.ParameterType.String,
 									'version',
 									undefined,
-									this.appInfo.appVersion
+									this.#serviceApi.appInfo.appVersion
 								)
 							),
 							3: new EmberModel.NumberedTreeNodeImpl(
 								3,
-								new EmberModel.ParameterImpl(EmberModel.ParameterType.String, 'build', undefined, this.appInfo.appBuild)
+								new EmberModel.ParameterImpl(
+									EmberModel.ParameterType.String,
+									'build',
+									undefined,
+									this.#serviceApi.appInfo.appBuild
+								)
 							),
 						}),
 						1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
@@ -375,23 +382,23 @@ export class ServiceEmberPlus extends ServiceBase {
 
 			if (isNaN(page) || isNaN(bank) || isNaN(node)) return false
 
-			const controlId = this.page.getControlIdAtOldBankIndex(page, bank)
+			const controlId = this.#pageController.getControlIdAtOldBankIndex(page, bank)
 			if (!controlId) return false
 
 			switch (node) {
 				case LEGACY_NODE_STATE: {
 					this.logger.silly(`Change button ${controlId} pressed to ${value}`)
 
-					this.controls.pressControl(controlId, !!value, `emberplus`)
+					this.#serviceApi.pressControl(controlId, !!value, `emberplus`)
 					this.#server?.update(parameter, { value })
 					return true
 				}
 				case LEGACY_NODE_TEXT: {
 					this.logger.silly(`Change button ${controlId} text to ${value}`)
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						control.styleSetFields({ text: value })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						control.setStyleFields({ text: value })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
 						this.#server?.update(parameter, { value })
@@ -403,9 +410,9 @@ export class ServiceEmberPlus extends ServiceBase {
 					const color = parseHexColor(value + '')
 					this.logger.silly(`Change button ${controlId} text color to ${value} (${color})`)
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						control.styleSetFields({ color: color })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						control.setStyleFields({ color: color })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
 						this.#server?.update(parameter, { value })
@@ -417,9 +424,9 @@ export class ServiceEmberPlus extends ServiceBase {
 					const color = parseHexColor(value + '')
 					this.logger.silly(`Change bank ${controlId} background color to ${value} (${color})`)
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						control.styleSetFields({ bgcolor: color })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						control.setStyleFields({ bgcolor: color })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
 						this.#server?.update(parameter, { value })
@@ -436,7 +443,7 @@ export class ServiceEmberPlus extends ServiceBase {
 
 			if (isNaN(pageNumber) || isNaN(row) || isNaN(column) || isNaN(node)) return false
 
-			const controlId = this.page.getControlIdAt({
+			const controlId = this.#pageController.getControlIdAt({
 				pageNumber,
 				row,
 				column,
@@ -447,16 +454,16 @@ export class ServiceEmberPlus extends ServiceBase {
 				case LOCATION_NODE_PRESSED: {
 					this.logger.silly(`Change bank ${controlId} pressed to ${value}`)
 
-					this.controls.pressControl(controlId, !!value, `emberplus`)
+					this.#serviceApi.pressControl(controlId, !!value, `emberplus`)
 					this.#server?.update(parameter, { value })
 					return true
 				}
 				case LOCATION_NODE_TEXT: {
 					this.logger.silly(`Change bank ${controlId} text to ${value}`)
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						control.styleSetFields({ text: value })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						control.setStyleFields({ text: value })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
 						this.#server?.update(parameter, { value })
@@ -468,9 +475,9 @@ export class ServiceEmberPlus extends ServiceBase {
 					const color = parseHexColor(value + '')
 					this.logger.silly(`Change bank ${controlId} text color to ${value} (${color})`)
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						control.styleSetFields({ color: color })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						control.setStyleFields({ color: color })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
 						this.#server?.update(parameter, { value })
@@ -482,9 +489,9 @@ export class ServiceEmberPlus extends ServiceBase {
 					const color = parseHexColor(value + '')
 					this.logger.silly(`Change button ${controlId} background color to ${value} (${color})`)
 
-					const control = this.controls.getControl(controlId)
-					if (control && control.supportsStyle) {
-						control.styleSetFields({ bgcolor: color })
+					const control = this.#serviceApi.getControl(controlId)
+					if (control && control.setStyleFields) {
+						control.setStyleFields({ bgcolor: color })
 
 						// Note: this will be replaced shortly after with the value with feedbacks applied
 						this.#server?.update(parameter, { value })
@@ -535,7 +542,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	/**
 	 * Send the latest bank text to the page/bank indicated
 	 */
-	#updateBankFromRender(location: ControlLocation, render: ImageResult): void {
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		if (!this.#server) return
 		//this.logger.info(`Updating ${page}.${bank} label ${this.banks[page][bank].text}`)
 

@@ -3,9 +3,10 @@ import { ServiceBase } from './Base.js'
 import { Bonjour, Browser } from '@julusian/bonjour-service'
 import { nanoid } from 'nanoid'
 import { isIPv4 } from 'net'
-import type { Registry } from '../Registry.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { InstanceController } from '../Instance/Controller.js'
 
 /**
  * Generate socket.io room name
@@ -28,13 +29,11 @@ function BonjourRoom(id: string): string {
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export class ServiceBonjourDiscovery extends ServiceBase {
+	readonly #io: UIHandler
+	readonly #instanceController: InstanceController
+
 	/**
 	 * Active browsers running
 	 */
@@ -42,8 +41,11 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 	#server: Bonjour | undefined
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/BonjourDiscovery', null, null)
+	constructor(userconfig: DataUserConfig, io: UIHandler, instanceController: InstanceController) {
+		super(userconfig, 'Service/BonjourDiscovery', null, null)
+
+		this.#io = io
+		this.#instanceController = instanceController
 
 		this.init()
 	}
@@ -91,11 +93,11 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		client.on('bonjour:unsubscribe', (subIds) => this.#leaveSession(client, subIds))
 	}
 
-	#convertService(id: string, svc: any): ClientBonjourService | null {
+	#convertService(id: string, svc: any, filter: BonjourBrowserFilter): ClientBonjourService | null {
 		// Future: whether to include ipv4, ipv6 should be configurable, but this is fine for now
 		const addresses = svc.addresses.filter((addr: string) => isIPv4(addr))
 		if (addresses.length === 0) return null
-
+		if (filter.port && svc.port !== filter.port) return null
 		return {
 			subId: id,
 			fqdn: svc.fqdn,
@@ -115,7 +117,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 	#joinOrCreateSession(client: ClientSocket, connectionId: string, queryId: string): string[] {
 		if (!this.#server) throw new Error('Bonjour not running')
 
-		const manifest = this.instance.getManifestForInstance(connectionId)
+		const manifest = this.#instanceController.getManifestForInstance(connectionId)
 		let bonjourQueries = manifest?.bonjourQueries?.[queryId]
 		if (!bonjourQueries) throw new Error('Missing bonjour query')
 
@@ -124,9 +126,10 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		const filters: BonjourBrowserFilter[] = []
 
 		for (const query of bonjourQueries) {
-			const filter = {
+			const filter: BonjourBrowserFilter = {
 				type: query.type,
 				protocol: query.protocol,
+				port: query.port,
 				txt: query.txt,
 			}
 			if (typeof filter.type !== 'string' || !filter.type) throw new Error('Invalid type for bonjour query')
@@ -151,7 +154,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 					// After this message, send already known services to the client
 					setImmediate(() => {
 						for (const svc of session.browser.services) {
-							const uiSvc = this.#convertService(id, svc)
+							const uiSvc = this.#convertService(id, svc, filter)
 							if (uiSvc) client.emit(`bonjour:service:up`, uiSvc)
 						}
 					})
@@ -176,11 +179,11 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 				// Setup event handlers
 				browser.on('up', (svc) => {
-					const uiSvc = this.#convertService(id, svc)
-					if (uiSvc) this.io.emitToRoom(room, `bonjour:service:up`, uiSvc)
+					const uiSvc = this.#convertService(id, svc, filter)
+					if (uiSvc) this.#io.emitToRoom(room, `bonjour:service:up`, uiSvc)
 				})
 				browser.on('down', (svc) => {
-					this.io.emitToRoom(room, `bonjour:service:down`, id, svc.fqdn)
+					this.#io.emitToRoom(room, `bonjour:service:down`, id, svc.fqdn)
 				})
 
 				// Report to client
@@ -234,5 +237,6 @@ interface BonjourBrowserSession {
 interface BonjourBrowserFilter {
 	type: string
 	protocol: 'tcp' | 'udp'
+	port: number | undefined
 	txt: Record<string, string> | undefined
 }

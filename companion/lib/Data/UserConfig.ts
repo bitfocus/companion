@@ -1,10 +1,16 @@
 import selfsigned from 'selfsigned'
 import { cloneDeep } from 'lodash-es'
-import { CoreBase } from '../Core/Base.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { pki } from 'node-forge'
+import { EventEmitter } from 'events'
+import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
+import LogController from '../Log/Controller.js'
+import { DataStoreTableView } from './StoreBase.js'
+
+export interface DataUserConfigEvents {
+	keyChanged: [key: keyof UserConfigModel, value: any, checkControlsInBounds: boolean]
+}
 
 /**
  * The class that manages the applications's user configurable settings
@@ -20,13 +26,13 @@ import type { pki } from 'node-forge'
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
-export class DataUserConfig extends CoreBase {
+export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
+	readonly #logger = LogController.createLogger('Data/UserConfig')
+
+	readonly #db: DataDatabase
+	readonly #dbTable: DataStoreTableView<DataDatabaseDefaultTable>
+
 	/**
 	 * The defaults for the user config fields
 	 */
@@ -41,6 +47,7 @@ export class DataUserConfig extends CoreBase {
 		elgato_plugin_enable: false, // Also disables local streamdeck
 		usb_hotplug: true,
 		loupedeck_enable: false,
+		mirabox_streamdock_enable: true,
 		contour_shuttle_enable: false,
 		vec_footpedal_enable: false,
 		blackmagic_controller_enable: false,
@@ -114,10 +121,13 @@ export class DataUserConfig extends CoreBase {
 	 */
 	#data: UserConfigModel
 
-	constructor(registry: Registry) {
-		super(registry, 'Data/UserConfig')
+	constructor(db: DataDatabase) {
+		super()
 
-		this.#data = this.db.getKey('userconfig', cloneDeep(DataUserConfig.Defaults))
+		this.#db = db
+		this.#dbTable = db.defaultTableView
+
+		this.#data = this.#dbTable.getOrDefault('userconfig', cloneDeep(DataUserConfig.Defaults))
 
 		this.#populateMissingForExistingDb()
 
@@ -134,7 +144,7 @@ export class DataUserConfig extends CoreBase {
 
 		// make sure the db has an updated copy
 		if (save) {
-			this.db.setKey('userconfig', this.#data)
+			this.#dbTable.set('userconfig', this.#data)
 		}
 	}
 
@@ -156,7 +166,7 @@ export class DataUserConfig extends CoreBase {
 	 * For an existing DB we need to check if some new settings are present
 	 */
 	#populateMissingForExistingDb(): void {
-		if (!this.db.getIsFirstRun()) {
+		if (!this.#db.getIsFirstRun()) {
 			// This is an existing db, so setup the ports to match how it used to be
 			const legacy_config: Partial<UserConfigModel> = {
 				tcp_enabled: true,
@@ -187,7 +197,7 @@ export class DataUserConfig extends CoreBase {
 
 			// copy across the legacy values
 			if (!has_been_defined) {
-				this.logger.info('Running one-time userconfig v2 upgrade')
+				this.#logger.info('Running one-time userconfig v2 upgrade')
 				for (let k in legacy_config) {
 					// @ts-ignore
 					if (this.#data[k] === undefined) {
@@ -248,10 +258,10 @@ export class DataUserConfig extends CoreBase {
 
 				this.setKeys(cert)
 			} else {
-				this.logger.error(`Couldn't generate certificate: not all pems returned`)
+				this.#logger.error(`Couldn't generate certificate: not all pems returned`)
 			}
 		} catch (e) {
-			this.logger.error(`Couldn't generate certificate`, e)
+			this.#logger.error(`Couldn't generate certificate`, e)
 		}
 	}
 
@@ -310,10 +320,10 @@ export class DataUserConfig extends CoreBase {
 
 				this.setKeys(cert)
 			} else {
-				this.logger.error(`Couldn't renew certificate: not all pems returned`)
+				this.#logger.error(`Couldn't renew certificate: not all pems returned`)
 			}
 		} catch (e) {
-			this.logger.error(`Couldn't renew certificate`, e)
+			this.#logger.error(`Couldn't renew certificate`, e)
 		}
 	}
 
@@ -353,27 +363,12 @@ export class DataUserConfig extends CoreBase {
 		// @ts-ignore
 		this.#data[key] = value
 		if (save) {
-			this.db.setKey('userconfig', this.#data)
+			this.#dbTable.set('userconfig', this.#data)
 		}
 
-		this.logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
-		this.io.emitToAll('set_userconfig_key', key, value)
-		setImmediate(() => {
-			// give the change a chance to be pushed to the ui first
-			this.graphics.updateUserConfig(key, value)
-			this.services.updateUserConfig(key, value)
-			this.surfaces.updateUserConfig(key, value)
-		})
+		this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
 
-		if (checkControlsInBounds) {
-			const controlsToRemove = this.page.findAllOutOfBoundsControls()
-
-			for (const controlId of controlsToRemove) {
-				this.controls.deleteControl(controlId)
-			}
-
-			this.graphics.discardAllOutOfBoundsControls()
-		}
+		this.emit('keyChanged', key, value, checkControlsInBounds)
 	}
 
 	/**
@@ -387,7 +382,7 @@ export class DataUserConfig extends CoreBase {
 				this.setKey(key, objects[key], false)
 			}
 
-			this.db.setKey('userconfig', this.#data)
+			this.#dbTable.set('userconfig', this.#data)
 		}
 	}
 

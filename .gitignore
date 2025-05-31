@@ -15,6 +15,7 @@ NOTES
 TODO
 /run.sh
 /html
+/bundled-modules
 
 dist
 
@@ -98,3 +99,5 @@ typings/
 
 # ignore any previously compiled output of the legacy modules
 /module-legacy/*
+/offline-bundle
+/offline-bundle.tar.gz

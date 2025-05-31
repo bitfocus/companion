@@ -1,5 +1,11 @@
-import { DatabaseDefault, DataStoreBase } from './StoreBase.js'
+import { DataStoreBase } from './StoreBase.js'
 import { DataLegacyCache } from './Legacy/Cache.js'
+import type { ModuleStoreListCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
+
+export interface DataCacheDefaultTable {
+	cloud_servers: Record<string, unknown>
+	module_store_list: ModuleStoreListCacheStore
+}
 
 /**
  * The class that manages the applications's disk cache
@@ -15,22 +21,8 @@ import { DataLegacyCache } from './Legacy/Cache.js'
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
-export class DataCache extends DataStoreBase {
-	/**
-	 * The stored defaults for a new cache
-	 */
-	static Defaults: DatabaseDefault = {
-		main: {
-			cloud_servers: {},
-		},
-	}
-
+export class DataCache extends DataStoreBase<DataCacheDefaultTable> {
 	/**
 	 * @param configDir - the root config directory
 	 */
@@ -60,11 +52,7 @@ export class DataCache extends DataStoreBase {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		for (const [key, value] of Object.entries(DataCache.Defaults)) {
-			for (const [key2, value2] of Object.entries(value)) {
-				this.setTableKey(key, key2, value2)
-			}
-		}
+		this.defaultTableView.set('cloud_servers', {})
 
 		this.isFirstRun = true
 	}
@@ -80,7 +68,7 @@ export class DataCache extends DataStoreBase {
 		const data = legacyDB.getAll()
 
 		for (const [key, value] of Object.entries(data)) {
-			this.setKey(key, value)
+			this.defaultTableView.set(key as any, value)
 		}
 	}
 }

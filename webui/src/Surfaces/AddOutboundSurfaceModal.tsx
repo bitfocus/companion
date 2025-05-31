@@ -119,7 +119,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, Ad
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onShow={() => console.log('show')}>
 				<CModalHeader closeButton>
-					<h5>Add Stream Deck Studio</h5>
+					<h5>Add Stream Deck Studio or Network Dock</h5>
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={PreventDefaultHandler}>

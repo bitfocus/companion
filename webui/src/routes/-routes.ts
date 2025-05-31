@@ -5,7 +5,7 @@ export const routes = rootRoute('__root.tsx', [
 	physical('', 'self-contained'),
 	layout('_app.tsx', [physical('', 'app')]),
 
-	// Add in a few backwards compatability redirects
+	// Add in a few backwards compatibility redirects
 	route('/help.html', '-redirects/help-html.tsx'),
 	route('/emulator2', '-redirects/emulator2.tsx'),
 	route('/emulators', '-redirects/emulators.tsx'),

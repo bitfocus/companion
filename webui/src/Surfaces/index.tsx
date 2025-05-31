@@ -92,8 +92,8 @@ export function DiscoverSurfacesTab() {
 				<h4>Discover Surfaces</h4>
 
 				<p style={{ marginBottom: '0.5rem' }}>
-					Discovered remote surfaces, such as Companion Satellite and Stream Deck Studio will be listed here. You can
-					easily configure them to connect to Companion from here.
+					Discovered remote surfaces, such as Companion Satellite, Stream Deck Studio or Stream Deck Network Dock will
+					be listed here. You can easily configure them to connect to Companion from here.
 					<br />
 					This requires Companion Satellite version 1.9.0 and later.
 				</p>
@@ -111,8 +111,8 @@ export function OutboundSurfacesTab() {
 				<h4>Remote Surfaces</h4>
 
 				<p style={{ marginBottom: '0.5rem' }}>
-					The Stream Deck Studio supports network connection. You can set up the connection from Companion here, or use
-					the Discovered Surfaces tab.
+					The Stream Deck Studio and Network Dock support network connections. You can set up the connection from
+					Companion here, or use the Discovered Surfaces tab.
 					<br />
 					This is not suitable for all remote surfaces such as Satellite, as that opens the connection to Companion
 					itself.

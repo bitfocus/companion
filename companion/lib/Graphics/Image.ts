@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { Canvas, ImageData, Image as CanvasImage, loadImage, SKRSContext2D } from '@napi-rs/canvas'
@@ -487,6 +481,7 @@ export class Image {
 		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
 		if (!displayTextStr) return true
 
+		displayTextStr = displayTextStr.replaceAll('\r\n', '\n') // we only want \n as a linebreak
 		displayTextStr = displayTextStr.replaceAll('\\n', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
@@ -559,7 +554,7 @@ export class Image {
 		//if (fontsize < 9) fontfamily = '7x5'
 		const fontLineHeight = Math.floor(fontheight * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
 		this.context2d.font = `${fontheight}px/${fontLineHeight}px ${DEFAULT_FONTS}`
-		this.context2d.textWrap = false
+		// this.context2d.textWrap = false
 
 		// Measure the line height with a consistent string, to avoid issues with emoji being too tall
 		const lineHeightSample = this.context2d.measureText('A')

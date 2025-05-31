@@ -8,7 +8,7 @@ import path from 'node:path'
 import yaml from 'yaml'
 import { determinePlatformInfo } from './util.mts'
 
-$.verbose = true
+// $.verbose = true
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -126,6 +126,9 @@ for (const name of copyPrebuildsFromDependencies) {
 	await fs.mkdirp('dist/prebuilds')
 	await fs.copy(path.join('node_modules', name, 'prebuilds'), 'dist/prebuilds')
 }
+
+// Make sure the correct sqlite3 prebuild is installed, and copy it to the output
+await $`yarn --cwd node_modules/better-sqlite3 prebuild-install --arch=${platformInfo.nodeArch}`
 await fs.copy('node_modules/better-sqlite3/build/Release/better_sqlite3.node', 'dist/prebuilds/better_sqlite3.node')
 
 // Copy fonts

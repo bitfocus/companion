@@ -35,11 +35,15 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	const [filter, setFilter] = useState('')
 
-	const allProducts = useAllConnectionProducts(modules)
+	const allProducts = useAllConnectionProducts(modules, true)
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {
-			if (p.installedInfo.installedVersions.length > 0 && visibleModules.visibility.installed) isVisible = true
+			if (
+				(p.installedInfo.installedVersions.length > 0 || p.installedInfo.devVersion) &&
+				visibleModules.visibility.installed
+			)
+				isVisible = true
 		}
 		if (
 			p.storeInfo &&
@@ -112,21 +116,18 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				Here you can view and manage the modules you have installed.
 				<br />
 				If you have an active internet connection, you can search for and install modules to support additional devices.
-				If you can't find the device you're looking for, please{' '}
-				<a target="_blank" href="https://github.com/bitfocus/companion-module-requests">
-					add a request
+				If you can't find the device you're looking for, we have{' '}
+				<a target="_blank" href="/getting-started#6_modules.md">
+					some guidance
 				</a>{' '}
-				on GitHub
-			</p>
-
-			<CAlert color="info">
-				The module system is currently in development.
+				on ways to get support for your device.
 				<br />
-				You can get the latest offline module bundle from{' '}
-				<a href="https://codeload.github.com/bitfocus/companion-bundled-modules/tar.gz/refs/heads/main" target="_blank">
-					GitHub here
-				</a>
-			</CAlert>
+				If you are on an offline system, you can download the latest module bundle from the{' '}
+				<a href="https://user.bitfocus.io/download" target="_blank">
+					Bitfocus website
+				</a>{' '}
+				and import it here.
+			</p>
 
 			<ImportModules />
 

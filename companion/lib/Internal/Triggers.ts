@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
@@ -25,24 +19,26 @@ import type {
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
+	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { InternalController } from './Controller.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { EventEmitter } from 'events'
+import type { InternalModuleUtils } from './Util.js'
 
-export class InternalTriggers implements InternalModuleFragment {
+export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #controlsController: ControlsController
-	readonly #internalModule: InternalController
 
-	constructor(internalModule: InternalController, controlsController: ControlsController) {
-		this.#internalModule = internalModule
+	constructor(_internalUtils: InternalModuleUtils, controlsController: ControlsController) {
+		super()
+
 		this.#controlsController = controlsController
 
 		const debounceCheckFeedbacks = debounceFn(
 			() => {
-				this.#internalModule.checkFeedbacks('trigger_enabled')
+				this.emit('checkFeedbacks', 'trigger_enabled')
 			},
 			{
 				maxWait: 100,

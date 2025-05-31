@@ -3,7 +3,7 @@ import React, { memo, useCallback, useContext, useEffect, useState } from 'react
 import { MyErrorBoundary } from '../util.js'
 import { ConnectionsList } from './ConnectionList.js'
 import { AddConnectionsPanel } from './AddConnectionPanel.js'
-import { ConnectionEditPanel } from './ConnectionEditPanel.js'
+import { ConnectionEditPanel } from './ConnectionEdit/ConnectionEditPanel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'

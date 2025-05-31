@@ -1,12 +1,18 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VisitorReferencesCollector } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
-import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
+import type {
+	CompanionFeedbackButtonStyleResult,
+	CompanionOptionValues,
+	CompanionVariableValue,
+} from '@companion-module/base'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
+import type { EventEmitter } from 'events'
 
 export interface FeedbackEntityModelExt extends FeedbackEntityModel {
 	controlId: string
@@ -34,14 +40,25 @@ export interface ActionForVisitor {
 	options: CompanionOptionValues
 }
 
-export interface InternalModuleFragment {
+export interface InternalModuleFragmentEvents {
+	checkFeedbacks: [...feedbackType: string[]]
+	checkFeedbacksById: [...feedbackIds: string[]]
+	regenerateVariables: []
+	setVariables: [variables: Record<string, CompanionVariableValue | undefined>]
+}
+
+export interface InternalModuleFragment extends EventEmitter<InternalModuleFragmentEvents> {
 	getActionDefinitions?: () => Record<string, InternalActionDefinition>
 
 	/**
 	 * Run a single internal action
 	 * @returns Whether the action was handled
 	 */
-	executeAction?(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> | boolean
+	executeAction?(
+		action: ControlEntityInstance,
+		extras: RunActionExtras,
+		actionRunner: ActionRunner
+	): Promise<boolean> | boolean
 
 	/**
 	 * Perform an upgrade for an action

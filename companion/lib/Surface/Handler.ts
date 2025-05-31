@@ -8,11 +8,6 @@
  * Individual Contributor License Agreement for companion along with
  * this program.
  *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { cloneDeep } from 'lodash-es'
@@ -55,8 +50,6 @@ const PINCODE_NUMBER_POSITIONS: [number, number][] = [
 	[3, 0],
 ]
 
-const PINCODE_CODE_POSITION: [number, number] = [0, 1]
-
 const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL: [number, number][] = [
 	// 0
 	[5, 1],
@@ -72,6 +65,21 @@ const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL: [number, number][] = [
 	[2, 0],
 	[3, 0],
 	[4, 0],
+]
+
+const PINCODE_NUMBER_POSITIONS_SDS: [number, number][] = [
+	// 0 1 2 3 4
+	[2, 1],
+	[3, 1],
+	[4, 1],
+	[5, 1],
+	[6, 1],
+	// 5 6 7 8 9
+	[2, 0],
+	[3, 0],
+	[4, 0],
+	[5, 0],
+	[6, 0],
 ]
 
 /**
@@ -122,6 +130,13 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Config for this surface
 	 */
 	#surfaceConfig: SurfaceConfig
+
+	/**
+	 * Whether the surface is locked
+	 */
+	get isLocked(): boolean {
+		return this.#isSurfaceLocked
+	}
 
 	/**
 	 * Grid size of the panel
@@ -197,7 +212,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#recreateLogger()
 
 		this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS
-		this.#pincodeCodePosition = PINCODE_CODE_POSITION
+		this.#pincodeCodePosition = [0, 1]
 
 		// some surfaces need different positions for the pincode numbers
 		if (
@@ -208,10 +223,26 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		) {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [4, 2]
-		}
-		if (this.panel.info.type === 'Loupedeck CT') {
+		} else if (this.panel.info.type === 'Loupedeck CT') {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [3, 4]
+		} else if (this.panel.info.type === 'Stream Deck Studio' || this.panel.info.type === 'Elgato Stream Deck Studio') {
+			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SDS
+			this.#pincodeCodePosition = [1, 0]
+		} else if (this.panel.info.type === 'Mirabox Stream Dock N4') {
+			this.#pincodeNumberPositions = [
+				[4, 1],
+				[0, 0],
+				[1, 0],
+				[2, 0],
+				[3, 0],
+				[4, 0],
+				[0, 1],
+				[1, 1],
+				[2, 1],
+				[3, 1],
+			]
+			this.#pincodeCodePosition = [4, 2]
 		}
 
 		if (this.#surfaceConfig.config.never_lock) {
@@ -223,6 +254,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		this.panel.on('click', this.#onDeviceClick.bind(this))
 		this.panel.on('rotate', this.#onDeviceRotate.bind(this))
+		this.panel.on('pincodeKey', this.#onDevicePincodeKey.bind(this))
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
 		this.panel.on('setVariable', this.#onSetVariable.bind(this))
@@ -277,6 +309,11 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#drawPage() {
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
+				if (!!this.panel.setLocked) {
+					this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
+					return
+				}
+
 				const buffers = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
 				this.panel.clearDeck()
 
@@ -367,13 +404,21 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	setLocked(locked: boolean, skipDraw = false): void {
 		// skip if surface can't be locked
-		if (this.#surfaceConfig.config.never_lock) return
+		if (this.#surfaceConfig.config.never_lock && locked) return
 
 		// If it changed, redraw
 		if (this.#isSurfaceLocked != locked) {
 			this.#isSurfaceLocked = !!locked
 
+			this.#surfaces.emit('surface_locked', this.surfaceId, this.#isSurfaceLocked)
+
+			if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
+
 			if (!skipDraw) {
+				if (!this.#isSurfaceLocked && !!this.panel.setLocked) {
+					this.panel.setLocked(false, this.#currentPincodeEntry.length)
+				}
+
 				this.#drawPage()
 			}
 		}
@@ -482,33 +527,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					this.#controls.pressControl(controlId, pressed, this.surfaceId)
 				}
 				this.#logger.debug(`Button ${thisPage}/${coordinate} ${pressed ? 'pressed' : 'released'}`)
-			} else {
+			} else if (!this.panel.setLocked) {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
 					if (pressCode !== -1) {
-						this.#currentPincodeEntry += pressCode.toString()
+						this.#onDevicePincodeKey(pressCode)
 					}
-
-					if (this.#currentPincodeEntry == this.#userconfig.getKey('pin').toString()) {
-						this.#currentPincodeEntry = ''
-
-						this.emit('unlocked')
-					} else if (this.#currentPincodeEntry.length >= this.#userconfig.getKey('pin').toString().length) {
-						this.#currentPincodeEntry = ''
-					}
-				}
-
-				if (this.#isSurfaceLocked) {
-					// Update lockout button
-					const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
-
-					this.#drawButtons([
-						{
-							x: this.#pincodeCodePosition[0],
-							y: this.#pincodeCodePosition[1],
-							image: datap.code,
-						},
-					])
 				}
 			}
 		} catch (e) {
@@ -556,13 +580,44 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		}
 	}
 
+	#onDevicePincodeKey(pressCode: number): void {
+		if (!this.panel) return
+
+		pressCode = Number(pressCode)
+		if (isNaN(pressCode) || pressCode < 0 || pressCode > 9) throw new Error('Invalid key')
+
+		this.#currentPincodeEntry += pressCode.toString()
+
+		if (this.#currentPincodeEntry == this.#userconfig.getKey('pin').toString()) {
+			this.#currentPincodeEntry = ''
+
+			this.emit('unlocked')
+		} else if (this.#currentPincodeEntry.length >= this.#userconfig.getKey('pin').toString().length) {
+			this.#currentPincodeEntry = ''
+		}
+
+		if (!this.#isSurfaceLocked) return
+
+		if (!!this.panel.setLocked) {
+			this.panel.setLocked(true, this.#currentPincodeEntry.length)
+		} else {
+			const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
+
+			this.#drawButtons([
+				{
+					x: this.#pincodeCodePosition[0],
+					y: this.#pincodeCodePosition[1],
+					image: datap.code,
+				},
+			])
+		}
+	}
+
 	/**
 	 * Set the value of a variable
 	 */
 	#onSetVariable(name: string, value: CompanionVariableValue): void {
-		this.#variables.values.setVariableValues('internal', {
-			[name]: value,
-		})
+		this.#variables.values.setVariableValues('internal', [{ id: name, value: value }])
 	}
 
 	/**
@@ -631,7 +686,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (newconfig.rotation != this.#surfaceConfig.config.rotation) redraw = true
 
 		if (newconfig.never_lock && newconfig.never_lock != this.#surfaceConfig.config.never_lock) {
-			this.#isSurfaceLocked = false
+			this.setLocked(false, true)
 			redraw = true
 		}
 
@@ -699,7 +754,9 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		try {
 			this.panel.quit()
-		} catch (e) {}
+		} catch (e) {
+			this.#logger.silly('Error quitting panel', e)
+		}
 
 		// Fetch the surfaceId before destroying the panel
 		const surfaceId = this.surfaceId

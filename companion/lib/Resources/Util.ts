@@ -1,10 +1,8 @@
-import { serializeIsVisibleFn } from '@companion-module/base/dist/internal/base.js'
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { CompanionInputFieldBaseExtended, EncodeIsVisible2 } from '@companion-app/shared/Model/Options.js'
-import type { CompanionAlignment, CompanionInputFieldBase } from '@companion-module/base'
+import type { CompanionAlignment } from '@companion-module/base'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 
@@ -272,6 +270,42 @@ export function translateRotation(rotation: SurfaceRotation | null): imageRs.Rot
 }
 
 /**
+ * Offset a SurfaceRotation by a given amount in 90° steps
+ * @param rotation - the rotation to apply the offset to
+ * @param offset - the amount to offset by, will be rounded to full quarters
+ */
+export function offsetRotation(rotation: SurfaceRotation | null, offset: number): SurfaceRotation | null {
+	let orig: string | number | null = rotation
+	let surface = false
+	if (orig === null) return null
+	if (typeof orig === 'string' && orig.startsWith('surface')) {
+		orig = parseInt(orig.replace('surface', ''))
+		surface = true
+	}
+
+	const quarter = (Number(orig) / 90 + Math.round(offset / 90)) % 4
+
+	let newRotation: SurfaceRotation
+	if (quarter == 0) {
+		newRotation = 0
+	} else if (quarter == 1 || quarter == -3) {
+		newRotation = 90
+	} else if (quarter == 2 || quarter == -2) {
+		newRotation = 180
+	} else if (quarter == 3 || quarter == -1) {
+		newRotation = -90
+	} else {
+		return null
+	}
+
+	if (surface) {
+		return `surface${newRotation}`
+	} else {
+		return newRotation
+	}
+}
+
+/**
  * Transform a button image render to the format needed for a surface integration
  */
 export async function transformButtonImage(
@@ -295,9 +329,8 @@ export async function transformButtonImage(
 
 	// pad, in case a button is non-square
 	const dimensions = image.getCurrentDimensions()
-	const maxDimension = Math.max(dimensions.width, dimensions.height)
-	const xOffset = (targetWidth - maxDimension) / 2
-	const yOffset = (targetHeight - maxDimension) / 2
+	const xOffset = (targetWidth - dimensions.width) / 2
+	const yOffset = (targetHeight - dimensions.height) / 2
 	image = image.pad(Math.floor(xOffset), Math.ceil(xOffset), Math.floor(yOffset), Math.ceil(yOffset), {
 		red: 0,
 		green: 0,
@@ -427,11 +460,4 @@ export function ParseAlignment(
 	}
 
 	return [halign, valign, `${halign}:${valign}`]
-}
-
-export function serializeIsVisibleFnSingle<T extends CompanionInputFieldBase | CompanionInputFieldBaseExtended>(
-	field: T
-): EncodeIsVisible2<T> {
-	// @ts-ignore
-	return serializeIsVisibleFn([field])[0]
 }

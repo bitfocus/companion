@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import os from 'os'
@@ -27,12 +21,16 @@ import type {
 	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalModuleFragment,
+	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import type { Registry } from '../Registry.js'
-import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { promisify } from 'util'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
+
+const execAsync = promisify(exec)
 
 async function getHostnameVariables() {
 	const values: CompanionVariableValues = {}
@@ -88,21 +86,27 @@ async function getNetworkVariables() {
 	return { definitions, values }
 }
 
-export class InternalSystem implements InternalModuleFragment {
+export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/System')
 	readonly #customMessageLogger = LogController.createLogger('Custom')
 
-	readonly #registry: Registry
-	readonly #internalModule: InternalController
+	readonly #internalUtils: InternalModuleUtils
 	readonly #variableController: VariablesController
+	readonly #requestExit: (fromInternal: boolean, restart: boolean) => void
 
 	#interfacesDefinitions: VariableDefinitionTmp[] = []
 	#interfacesValues: CompanionVariableValues = {}
 
-	constructor(internalModule: InternalController, registry: Registry) {
-		this.#internalModule = internalModule
-		this.#registry = registry
-		this.#variableController = registry.variables
+	constructor(
+		internalUtils: InternalModuleUtils,
+		variableController: VariablesController,
+		requestExit: (fromInternal: boolean, restart: boolean) => void
+	) {
+		super()
+
+		this.#internalUtils = internalUtils
+		this.#variableController = variableController
+		this.#requestExit = requestExit
 
 		// Update interfaces on an interval, but also soon after launch
 		setInterval(() => this.#updateNetworkVariables(), 30000)
@@ -119,14 +123,14 @@ export class InternalSystem implements InternalModuleFragment {
 
 	async #updateHostnameVariablesAtStartup() {
 		let latestVariables = await getHostnameVariables()
-		this.#internalModule.setVariables(latestVariables)
+		this.emit('setVariables', latestVariables)
 
 		const updateVariables = () => {
 			getHostnameVariables()
 				.then((newVariables) => {
 					if (Object.keys(newVariables).length > 1 && !isEqual(newVariables, latestVariables)) {
 						latestVariables = newVariables
-						this.#internalModule.setVariables(newVariables)
+						this.emit('setVariables', newVariables)
 					}
 				})
 				.catch((e) => {
@@ -148,12 +152,12 @@ export class InternalSystem implements InternalModuleFragment {
 			.then((info) => {
 				if (!isEqual(info.definitions, this.#interfacesDefinitions)) {
 					this.#interfacesDefinitions = info.definitions
-					this.#internalModule.regenerateVariables()
+					this.emit('regenerateVariables')
 				}
 
 				if (!isEqual(info.values, this.#interfacesValues)) {
 					this.#interfacesValues = info.values
-					this.#internalModule.setVariables(info.values)
+					this.emit('setVariables', info.values)
 				}
 			})
 			.catch((e) => {
@@ -169,7 +173,7 @@ export class InternalSystem implements InternalModuleFragment {
 	 * @param bindIp The IP address being bound to
 	 */
 	updateBindIp(bindIp: string) {
-		this.#internalModule.setVariables({
+		this.emit('setVariables', {
 			bind_ip: bindIp,
 		})
 	}
@@ -265,33 +269,29 @@ export class InternalSystem implements InternalModuleFragment {
 	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> {
 		if (action.definitionId === 'exec') {
 			if (action.rawOptions.path) {
-				const path = this.#internalModule.parseVariablesForInternalActionOrFeedback(action.rawOptions.path, extras).text
+				const path = this.#internalUtils.parseVariablesForInternalActionOrFeedback(action.rawOptions.path, extras).text
 				this.#logger.silly(`Running path: '${path}'`)
 
-				exec(
-					path,
-					{
+				try {
+					const { stdout } = await execAsync(path, {
 						timeout: action.rawOptions.timeout ?? 5000,
-					},
-					(error, stdout, _stderr) => {
-						if (error) {
-							this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
-							this.#logger.silly(error)
-						}
+					})
 
-						// Trim EOL character(s) appended by the OS
-						if (typeof stdout === 'string' && stdout.endsWith(os.EOL))
-							stdout = stdout.substring(0, stdout.length - os.EOL.length)
+					// Trim EOL character(s) appended by the OS
+					let stdoutStr = stdout.toString()
+					if (stdoutStr.endsWith(os.EOL)) stdoutStr = stdoutStr.substring(0, stdoutStr.length - os.EOL.length)
 
-						if (action.rawOptions.targetVariable) {
-							this.#variableController.custom.setValue(action.rawOptions.targetVariable, stdout)
-						}
+					if (action.rawOptions.targetVariable) {
+						this.#variableController.custom.setValue(action.rawOptions.targetVariable, stdoutStr)
 					}
-				)
+				} catch (error) {
+					this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
+					this.#logger.silly(error)
+				}
 			}
 			return true
 		} else if (action.definitionId === 'custom_log') {
-			const message = this.#internalModule.parseVariablesForInternalActionOrFeedback(
+			const message = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
 				action.rawOptions.message,
 				extras
 			).text
@@ -299,10 +299,10 @@ export class InternalSystem implements InternalModuleFragment {
 
 			return true
 		} else if (action.definitionId === 'app_restart') {
-			this.#registry.exit(true, true)
+			this.#requestExit(true, true)
 			return true
 		} else if (action.definitionId === 'app_exit') {
-			this.#registry.exit(true, false)
+			this.#requestExit(true, false)
 			return true
 		} else {
 			return false

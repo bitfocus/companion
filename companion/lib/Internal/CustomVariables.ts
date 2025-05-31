@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { SplitVariableId } from '../Resources/Util.js'
@@ -23,21 +17,28 @@ import type {
 	InternalVisitor,
 	InternalActionDefinition,
 	ActionForVisitor,
+	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { InternalController } from './Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { InternalModuleUtils } from './Util.js'
+import { EventEmitter } from 'events'
 
-export class InternalCustomVariables implements InternalModuleFragment {
+export class InternalCustomVariables
+	extends EventEmitter<InternalModuleFragmentEvents>
+	implements InternalModuleFragment
+{
 	readonly #logger = LogController.createLogger('Internal/CustomVariables')
 
-	readonly #internalModule: InternalController
+	readonly #internalUtils: InternalModuleUtils
 	readonly #variableController: VariablesController
 
-	constructor(internalModule: InternalController, variableController: VariablesController) {
-		this.#internalModule = internalModule
+	constructor(internalUtils: InternalModuleUtils, variableController: VariablesController) {
+		super()
+
+		this.#internalUtils = internalUtils
 		this.#variableController = variableController
 	}
 
@@ -268,7 +269,7 @@ export class InternalCustomVariables implements InternalModuleFragment {
 			}
 			return true
 		} else if (action.definitionId === 'custom_variable_set_expression') {
-			const result = this.#internalModule.executeExpressionForInternalActionOrFeedback(
+			const result = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
 				action.rawOptions.expression,
 				extras
 			)

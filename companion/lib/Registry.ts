@@ -19,20 +19,12 @@ import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
-import { InternalActionRecorder } from './Internal/ActionRecorder.js'
-import { InternalControls } from './Internal/Controls.js'
-import { InternalCustomVariables } from './Internal/CustomVariables.js'
-import { InternalInstance } from './Internal/Instance.js'
-import { InternalPage } from './Internal/Page.js'
-import { InternalSurface } from './Internal/Surface.js'
-import { InternalSystem } from './Internal/System.js'
-import { InternalTime } from './Internal/Time.js'
-import { InternalTriggers } from './Internal/Triggers.js'
-import { InternalVariables } from './Internal/Variables.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
+import { ServiceApi } from './Service/ServiceApi.js'
+import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -59,6 +51,13 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
 	process.exit(1)
 }
 
+// Setup support for HTTP_PROXY before anything might use it
+if (process.env.NODE_USE_ENV_PROXY) {
+	// HACK: This is temporary and should be removed once https://github.com/nodejs/node/pull/57165 has been backported to node 22
+	const envHttpProxyAgent = new EnvHttpProxyAgent()
+	setGlobalDispatcher(envHttpProxyAgent)
+}
+
 /**
  * The core controller that sets up all the controllers needed
  * for the app.
@@ -74,11 +73,6 @@ if (process.env.COMPANION_IPC_PARENT && !process.send) {
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export class Registry {
 	/**
@@ -120,7 +114,7 @@ export class Registry {
 	/**
 	 * The core service controller
 	 */
-	services!: ServiceController
+	#services!: ServiceController
 	/**
 	 * The core device controller
 	 */
@@ -152,11 +146,13 @@ export class Registry {
 	/**
 	 * Express Router for /int api endpoints
 	 */
-	readonly internalApiRouter = express.Router()
+	readonly #internalApiRouter = express.Router()
 
 	variables!: VariablesController
 
-	readonly appInfo: AppInfo
+	readonly #appInfo: AppInfo
+
+	#isReady = false
 
 	/**
 	 * Create a new application <code>Registry</code>
@@ -173,7 +169,7 @@ export class Registry {
 		this.#logger.info(`Build ${buildNumber}`)
 		this.#logger.info(`configuration directory: ${configDir}`)
 
-		this.appInfo = {
+		this.#appInfo = {
 			configDir: configDir,
 			modulesDir: modulesDir,
 			machineId: machineId,
@@ -184,12 +180,12 @@ export class Registry {
 
 		this.#logger.debug('constructing core modules')
 
-		this.ui = new UIController(this.appInfo, this.internalApiRouter)
+		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		this.io = this.ui.io
-		LogController.init(this.appInfo, this.ui.io)
+		LogController.init(this.#appInfo, this.ui.io)
 
-		this.db = new DataDatabase(this.appInfo.configDir)
-		this.#data = new DataController(this)
+		this.db = new DataDatabase(this.#appInfo.configDir)
+		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 	}
 
@@ -202,156 +198,204 @@ export class Registry {
 	async ready(extraModulePath: string, bindIp: string, bindPort: number) {
 		this.#logger.debug('launching core modules')
 
-		const controlEvents = new EventEmitter<ControlCommonEvents>()
+		try {
+			const controlEvents = new EventEmitter<ControlCommonEvents>()
 
-		this.page = new PageController(this)
-		this.controls = new ControlsController(this, controlEvents)
-		this.variables = new VariablesController(this.db, this.io)
-		this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
-		this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
-		this.surfaces = new SurfaceController(
-			this.db,
-			{
-				controls: this.controls,
-				graphics: this.graphics,
-				page: this.page,
-				userconfig: this.userconfig,
-				variables: this.variables,
-			},
-			this.io
-		)
+			this.page = new PageController(this)
+			this.controls = new ControlsController(this, controlEvents)
+			this.variables = new VariablesController(this.db, this.io)
+			this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
+			this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
+			this.surfaces = new SurfaceController(
+				this.db,
+				{
+					controls: this.controls,
+					graphics: this.graphics,
+					page: this.page,
+					userconfig: this.userconfig,
+					variables: this.variables,
+				},
+				this.io
+			)
 
-		const oscSender = new ServiceOscSender(this)
-		this.instance = new InstanceController(
-			this.appInfo,
-			this.io,
-			this.db,
-			this.#data.cache,
-			this.internalApiRouter,
-			this.controls,
-			this.graphics,
-			this.page,
-			this.variables,
-			oscSender
-		)
-		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
+			const oscSender = new ServiceOscSender(this.userconfig)
+			this.instance = new InstanceController(
+				this.#appInfo,
+				this.io,
+				this.db,
+				this.#data.cache,
+				this.#internalApiRouter,
+				this.controls,
+				this.graphics,
+				this.page,
+				this.variables,
+				oscSender
+			)
+			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
-		this.internalModule = new InternalController(this.controls, this.page, this.instance.definitions, this.variables)
-		this.#importExport = new ImportExportController(
-			this.appInfo,
-			this.internalApiRouter,
-			this.io,
-			this.controls,
-			this.graphics,
-			this.instance,
-			this.internalModule,
-			this.page,
-			this.surfaces,
-			this.userconfig,
-			this.variables
-		)
+			this.internalModule = new InternalController(
+				this.controls,
+				this.page,
+				this.instance,
+				this.variables,
+				this.surfaces,
+				this.graphics,
+				this.exit.bind(this)
+			)
+			this.#importExport = new ImportExportController(
+				this.#appInfo,
+				this.#internalApiRouter,
+				this.io,
+				this.controls,
+				this.graphics,
+				this.instance,
+				this.internalModule,
+				this.page,
+				this.surfaces,
+				this.userconfig,
+				this.variables
+			)
 
-		this.internalModule.addFragments(
-			new InternalActionRecorder(this.internalModule, this.controls.actionRecorder, this.page),
-			new InternalInstance(this.internalModule, this.instance),
-			new InternalTime(this.internalModule),
-			new InternalControls(this.internalModule, this.graphics, this.controls, this.page),
-			new InternalCustomVariables(this.internalModule, this.variables),
-			new InternalPage(this.internalModule, this.page),
-			new InternalSurface(this.internalModule, this.surfaces, this.controls, this.page),
-			new InternalSystem(this.internalModule, this),
-			new InternalTriggers(this.internalModule, this.controls),
-			new InternalVariables(this.internalModule, this.variables.values)
-		)
-		this.internalModule.init()
+			const serviceApi = new ServiceApi(
+				this.#appInfo,
+				this.page,
+				this.controls,
+				this.surfaces,
+				this.variables,
+				this.graphics
+			)
 
-		this.#metrics = new DataMetrics(this.appInfo, this.surfaces, this.instance)
-		this.services = new ServiceController(this, oscSender, controlEvents)
-		this.#cloud = new CloudController(
-			this.appInfo,
-			this.db,
-			this.#data.cache,
-			this.controls,
-			this.graphics,
-			this.io,
-			this.page
-		)
+			this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
+			this.#services = new ServiceController(
+				serviceApi,
+				this.userconfig,
+				oscSender,
+				controlEvents,
+				this.surfaces,
+				this.page,
+				this.instance,
+				this.io,
+				this.ui.express
+			)
+			this.#cloud = new CloudController(
+				this.#appInfo,
+				this.db,
+				this.#data.cache,
+				this.controls,
+				this.graphics,
+				this.io,
+				this.page
+			)
 
-		this.ui.io.on('clientConnect', (client) => {
-			LogController.clientConnect(client)
-			this.ui.clientConnect(client)
-			this.#data.clientConnect(client)
-			this.page.clientConnect(client)
-			this.controls.clientConnect(client)
-			this.#preview.clientConnect(client)
-			this.surfaces.clientConnect(client)
-			this.instance.clientConnect(client)
-			this.#cloud.clientConnect(client)
-			this.services.clientConnect(client)
-			this.#importExport.clientConnect(client)
-		})
+			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
+				this.io.emitToAll('set_userconfig_key', key, value)
+				setImmediate(() => {
+					// give the change a chance to be pushed to the ui first
+					this.graphics.updateUserConfig(key, value)
+					this.#services.updateUserConfig(key, value)
+					this.surfaces.updateUserConfig(key, value)
+				})
 
-		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
-			this.internalModule.variablesChanged(all_changed_variables_set)
-			this.controls.onVariablesChanged(all_changed_variables_set)
-			this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-			this.#preview.onVariablesChanged(all_changed_variables_set)
-			this.surfaces.onVariablesChanged(all_changed_variables_set)
-		})
+				if (checkControlsInBounds) {
+					const controlsToRemove = this.page.findAllOutOfBoundsControls()
 
-		// old 'modules_loaded' events
-		this.#metrics.startCycle()
-		this.ui.update.startCycle()
-
-		this.controls.init()
-		this.controls.verifyConnectionIds()
-		this.variables.custom.init()
-		this.internalModule.firstUpdate()
-		this.graphics.regenerateAll(false)
-
-		// We are ready to start the instances/connections
-		await this.instance.initInstances(extraModulePath)
-
-		// Instances are loaded, start up http
-		this.rebindHttp(bindIp, bindPort)
-
-		// Startup has completed, run triggers
-		this.controls.triggers.emit('startup')
-
-		if (process.env.COMPANION_IPC_PARENT) {
-			process.on('message', (msg: any): void => {
-				try {
-					if (msg.messageType === 'http-rebind') {
-						this.rebindHttp(msg.ip, msg.port)
-					} else if (msg.messageType === 'exit') {
-						this.exit(false, false)
-					} else if (msg.messageType === 'scan-usb') {
-						this.surfaces.triggerRefreshDevices().catch(() => {
-							showErrorMessage('USB Scan Error', 'Failed to scan for USB devices.')
-						})
-					} else if (msg.messageType === 'power-status') {
-						this.instance.powerStatusChange(msg.status)
-					} else if (msg.messageType === 'lock-screen') {
-						this.controls.triggers.emit('locked', !!msg.status)
+					for (const controlId of controlsToRemove) {
+						this.controls.deleteControl(controlId)
 					}
-				} catch (e) {
-					this.#logger.debug(`Failed to handle IPC message: ${e}`)
+
+					this.graphics.discardAllOutOfBoundsControls()
 				}
 			})
-		}
 
-		if (process.env.COMPANION_IPC_PARENT || process.env.COMPANION_DEV_MODULES) {
-			process.on('message', (msg: any): void => {
-				try {
-					if (msg.messageType === 'reload-extra-module') {
-						this.instance.modules.reloadExtraModule(msg.fullpath).catch((e) => {
-							this.#logger.warn(`Failed to reload module: ${e}`)
-						})
-					}
-				} catch (e) {
-					this.#logger.debug(`Failed to handle IPC message: ${e}`)
-				}
+			this.ui.io.on('clientConnect', (client) => {
+				LogController.clientConnect(client)
+				this.ui.clientConnect(client)
+				this.#data.clientConnect(client)
+				this.page.clientConnect(client)
+				this.controls.clientConnect(client)
+				this.#preview.clientConnect(client)
+				this.surfaces.clientConnect(client)
+				this.instance.clientConnect(client)
+				this.#cloud.clientConnect(client)
+				this.#services.clientConnect(client)
+				this.#importExport.clientConnect(client)
 			})
+
+			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
+				this.internalModule.variablesChanged(all_changed_variables_set)
+				this.controls.onVariablesChanged(all_changed_variables_set)
+				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
+				this.#preview.onVariablesChanged(all_changed_variables_set)
+				this.surfaces.onVariablesChanged(all_changed_variables_set)
+			})
+
+			this.graphics.on('button_drawn', (location, render) => {
+				this.#services.onButtonDrawn(location, render)
+			})
+
+			// old 'modules_loaded' events
+			this.#metrics.startCycle()
+			this.ui.update.startCycle()
+
+			this.controls.init()
+			this.controls.verifyConnectionIds()
+			this.variables.custom.init()
+			this.internalModule.firstUpdate()
+			this.graphics.regenerateAll(false)
+
+			// We are ready to start the instances/connections
+			await this.instance.initInstances(extraModulePath)
+
+			// Instances are loaded, start up http
+			this.rebindHttp(bindIp, bindPort)
+
+			// Startup has completed, run triggers
+			this.controls.triggers.emit('startup')
+
+			if (process.env.COMPANION_IPC_PARENT) {
+				process.on('message', (msg: any): void => {
+					try {
+						if (msg.messageType === 'http-rebind') {
+							this.rebindHttp(msg.ip, msg.port)
+						} else if (msg.messageType === 'exit') {
+							this.exit(false, false)
+						} else if (msg.messageType === 'scan-usb') {
+							this.surfaces.triggerRefreshDevices().catch(() => {
+								showErrorMessage('USB Scan Error', 'Failed to scan for USB devices.')
+							})
+						} else if (msg.messageType === 'power-status') {
+							this.instance.powerStatusChange(msg.status)
+						} else if (msg.messageType === 'lock-screen') {
+							this.controls.triggers.emit('locked', !!msg.status)
+						}
+					} catch (e) {
+						this.#logger.debug(`Failed to handle IPC message: ${e}`)
+					}
+				})
+			}
+
+			if (process.env.COMPANION_IPC_PARENT || process.env.COMPANION_DEV_MODULES) {
+				process.on('message', (msg: any): void => {
+					try {
+						if (msg.messageType === 'reload-extra-module') {
+							this.instance.modules.reloadExtraModule(msg.fullpath).catch((e) => {
+								this.#logger.warn(`Failed to reload module: ${e}`)
+							})
+						}
+					} catch (e) {
+						this.#logger.debug(`Failed to handle IPC message: ${e}`)
+					}
+				})
+			}
+		} catch (e) {
+			// We aren't ready, but we need exit to work
+			this.#isReady = true
+
+			this.#logger.error(`Failed to start companion: ${e}`)
+			this.#logger.debug(e)
+			this.exit(true, false)
+		} finally {
+			this.#isReady = true
 		}
 	}
 
@@ -359,6 +403,11 @@ export class Registry {
 	 * Request application exit
 	 */
 	exit(fromInternal: boolean, restart: boolean) {
+		if (!this.#isReady) {
+			this.#logger.debug('exit called before ready')
+			return
+		}
+
 		Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
@@ -403,7 +452,7 @@ export class Registry {
 
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
-		this.services.https.updateBindIp(bindIp)
+		this.#services.https.updateBindIp(bindIp)
 		this.internalModule.updateBindIp(bindIp)
 	}
 }

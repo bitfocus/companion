@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash-es'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
-import type { DataStoreBase } from '../StoreBase.js'
+import type { DataStoreBase, DataStoreTableView } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 
@@ -12,9 +12,9 @@ function CreateBankControlIdOld(page: string | number, bank: number): string {
 	return `bank:${page}-${bank}`
 }
 
-function addControlIdsToPages(db: DataStoreBase): void {
-	const controls = db.getKey('controls', {})
-	const pages = db.getKey('page', {})
+function addControlIdsToPages(mainTable: DataStoreTableView<any>): void {
+	const controls = mainTable.get('controls') ?? {}
+	const pages = mainTable.get('page') ?? {}
 
 	const maxButtons = 32
 	const perRow = 8
@@ -35,25 +35,28 @@ function addControlIdsToPages(db: DataStoreBase): void {
 		}
 	}
 
-	db.setKey('controls', controls)
-	db.setKey('page', pages)
+	mainTable.set('controls', controls)
+	mainTable.set('page', pages)
 }
 
 /**
  * do the database upgrades to convert from the v3 to the v4 format
  */
-function convertDatabaseToV4(db: DataStoreBase, _logger: Logger) {
-	addControlIdsToPages(db)
+function convertDatabaseToV4(db: DataStoreBase<any>, _logger: Logger) {
+	const mainTable = db.defaultTableView
+
+	addControlIdsToPages(mainTable)
 
 	// If xkeys was previously enabled, then preserve the old layout
-	const userconfig = db.getKey('userconfig', {})
-	if (userconfig.xkeys_enable && userconfig.xkeys_legacy_layout === undefined) {
+	const userconfig = mainTable.get('userconfig')
+	if (userconfig && userconfig.xkeys_enable && userconfig.xkeys_legacy_layout === undefined) {
 		userconfig.xkeys_legacy_layout = true
+		mainTable.set('userconfig', userconfig)
 	}
 
-	db.setKey('surface-groups', {})
+	mainTable.set('surface-groups', {})
 
-	db.setKey('page_config_version', 4)
+	mainTable.set('page_config_version', 4)
 }
 
 /**

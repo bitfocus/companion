@@ -48,7 +48,14 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void
 	quit(): void
 	checkForFirmwareUpdates?: (latestVersions?: unknown) => Promise<void>
+
+	/**
+	 * If the surface will handle locking display of the locking state itself, this method should be implemented.
+	 * If defined, it will be called when the lock state changes.
+	 */
+	setLocked?: (locked: boolean, characterCount: number) => void
 }
+
 export interface DrawButtonItem {
 	x: number
 	y: number
@@ -61,6 +68,7 @@ export interface SurfacePanelEvents {
 
 	click: [x: number, y: number, pressed: boolean, pageOffset?: number]
 	rotate: [x: number, y: number, direction: boolean, pageOffset?: number]
+	pincodeKey: [key: number]
 
 	setVariable: [variableId: string, value: CompanionVariableValue]
 	setCustomVariable: [variableId: string, value: CompanionVariableValue]

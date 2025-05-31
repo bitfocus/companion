@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import { InstanceDefinitions } from './Definitions.js'
@@ -46,6 +40,7 @@ import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
+import { translateOptionsIsVisible } from './Wrapper.js'
 
 const InstancesRoom = 'instances'
 
@@ -123,7 +118,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.modules,
 			this.#configStore
 		)
-		this.modulesStore = new ModuleStoreService(io, cache)
+		this.modulesStore = new ModuleStoreService(appInfo, io, cache)
 		this.userModulesManager = new InstanceInstalledModulesManager(
 			appInfo,
 			db,
@@ -455,14 +450,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (!rawObj) return undefined
 
 		const obj = minimal
-			? {
+			? ({
 					instance_type: rawObj.instance_type,
 					label: rawObj.label,
 					lastUpgradeIndex: rawObj.lastUpgradeIndex,
-				}
-			: {
+				} satisfies ExportInstanceMinimalv6)
+			: ({
 					...rawObj,
-				}
+					moduleVersionId: rawObj.moduleVersionId ?? undefined,
+				} satisfies ExportInstanceFullv6)
 
 		return clone ? cloneDeep(obj) : obj
 	}
@@ -563,7 +559,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				const fields: any = await instance.requestConfigFields()
 
 				return {
-					fields,
+					fields: translateOptionsIsVisible(fields) as any[],
 					config: instanceConf.config,
 				}
 			} catch (e: any) {

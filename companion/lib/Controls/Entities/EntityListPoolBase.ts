@@ -323,7 +323,7 @@ export abstract class ControlEntityListPoolBase {
 
 	/**
 	 * Replace all the entities in a list
-	 * @param lsitId the list to update
+	 * @param listId the list to update
 	 * @param newEntities entities to populate
 	 */
 	entityReplaceAll(listId: SomeSocketEntityLocation, entities: SomeEntityModel[]): boolean {
@@ -472,15 +472,6 @@ export abstract class ControlEntityListPoolBase {
 		if (changed) {
 			this.commitChange(true)
 		}
-	}
-
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	async postProcessImport(): Promise<void> {
-		await Promise.all(this.getAllEntityLists().map((list) => list.postProcessImport())).catch((e) => {
-			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
-		})
 	}
 
 	/**

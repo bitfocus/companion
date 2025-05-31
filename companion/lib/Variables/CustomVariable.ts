@@ -7,18 +7,13 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import LogController from '../Log/Controller.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
-import type { VariablesValues } from './Values.js'
+import type { VariablesValues, VariableValueEntry } from './Values.js'
 import type {
+	CustomVariableDefinition,
 	CustomVariablesModel,
 	CustomVariableUpdate,
 	CustomVariableUpdateRemoveOp,
@@ -26,6 +21,7 @@ import type {
 import type { DataDatabase } from '../Data/Database.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 const CustomVariablesRoom = 'custom-variables'
 const CUSTOM_LABEL = 'custom'
@@ -39,15 +35,15 @@ export class VariablesCustomVariable {
 	 */
 	#custom_variables: CustomVariablesModel
 
-	readonly #db: DataDatabase
+	readonly #dbTable: DataStoreTableView<Record<string, CustomVariableDefinition>>
 	readonly #io: UIHandler
 
 	constructor(db: DataDatabase, io: UIHandler, variableValues: VariablesValues) {
-		this.#db = db
+		this.#dbTable = db.getTableView('custom_variables')
 		this.#io = io
 		this.#variableValues = variableValues
 
-		this.#custom_variables = this.#db.getKey('custom_variables', {})
+		this.#custom_variables = this.#dbTable.all()
 	}
 
 	/**
@@ -80,11 +76,7 @@ export class VariablesCustomVariable {
 	#emitUpdateOneVariable(name: string): void {
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-				{
-					type: 'update',
-					itemId: name,
-					info: this.#custom_variables[name],
-				},
+				{ type: 'update', itemId: name, info: this.#custom_variables[name] },
 			])
 		}
 	}
@@ -117,7 +109,7 @@ export class VariablesCustomVariable {
 			sortOrder: highestSortOrder + 1,
 		}
 
-		this.#doSave()
+		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
 
@@ -133,25 +125,13 @@ export class VariablesCustomVariable {
 	deleteVariable(name: string): void {
 		delete this.#custom_variables[name]
 
-		this.#doSave()
+		this.#dbTable.delete(name)
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-				{
-					type: 'remove',
-					itemId: name,
-				},
-			])
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [{ type: 'remove', itemId: name }])
 		}
 
 		this.#setValueInner(name, undefined)
-	}
-
-	/**
-	 * Save the current custom variables
-	 */
-	#doSave(): void {
-		this.#db.setKey('custom_variables', this.#custom_variables)
 	}
 
 	/**
@@ -174,9 +154,9 @@ export class VariablesCustomVariable {
 	init(): void {
 		// Load the startup values of custom variables
 		if (Object.keys(this.#custom_variables).length > 0) {
-			const newValues: Record<string, CompanionVariableValue> = {}
+			const newValues: VariableValueEntry[] = []
 			for (const [name, info] of Object.entries(this.#custom_variables)) {
-				newValues[name] = info.defaultValue || ''
+				newValues.push({ id: name, value: info.defaultValue })
 			}
 			this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 		}
@@ -186,51 +166,45 @@ export class VariablesCustomVariable {
 	 * Replace all of the current custom variables with new ones
 	 */
 	replaceDefinitions(custom_variables: CustomVariablesModel): void {
-		const newValues: Record<string, CompanionVariableValue | undefined> = {}
+		const newValues: VariableValueEntry[] = []
 		// Mark the current variables as to be deleted
 		for (const name of Object.keys(this.#custom_variables || {})) {
-			newValues[name] = undefined
+			newValues.push({ id: name, value: undefined })
 		}
 		// Determine the initial values of the variables
 		for (const [name, info] of Object.entries(custom_variables || {})) {
-			newValues[name] = info.defaultValue || ''
+			newValues.push({ id: name, value: info.defaultValue })
 		}
 
 		const namesBefore = Object.keys(this.#custom_variables)
 
 		this.#custom_variables = custom_variables || {}
-		this.#doSave()
+
+		const changes: CustomVariableUpdate[] = []
+
+		// Add inserts
+		for (const [id, info] of Object.entries(this.#custom_variables)) {
+			if (!info) continue
+
+			this.#dbTable.set(id, info)
+
+			changes.push({ type: 'update', itemId: id, info })
+		}
+
+		// Add deletes
+		for (const id of namesBefore) {
+			if (this.#custom_variables[id]) continue // Replaced
+
+			this.#dbTable.delete(id)
+
+			changes.push({ type: 'remove', itemId: id })
+		}
 
 		// apply the default values
 		this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const changes: CustomVariableUpdate[] = []
-
-			// Add inserts
-			for (const [id, info] of Object.entries(this.#custom_variables)) {
-				if (!info) continue
-
-				changes.push({
-					type: 'update',
-					itemId: id,
-					info,
-				})
-			}
-
-			// Add deletes
-			for (const id of namesBefore) {
-				if (this.#custom_variables[id]) continue // Replaced
-
-				changes.push({
-					type: 'remove',
-					itemId: id,
-				})
-			}
-
-			if (changes.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
-			}
+		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
 		}
 	}
 
@@ -241,7 +215,7 @@ export class VariablesCustomVariable {
 		const namesBefore = Object.keys(this.#custom_variables)
 
 		this.#custom_variables = {}
-		this.#doSave()
+		this.#dbTable.clear()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && namesBefore.length > 0) {
 			this.#io.emitToRoom(
@@ -268,10 +242,10 @@ export class VariablesCustomVariable {
 		if (this.#custom_variables[name].persistCurrentValue) {
 			const value = this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 
-			this.#custom_variables[name].defaultValue = value ?? ''
+			this.#custom_variables[name].defaultValue = value === undefined ? '' : value
 		}
 
-		this.#doSave()
+		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
 
@@ -288,10 +262,7 @@ export class VariablesCustomVariable {
 		// Update the order based on the ids provided
 		newNames.forEach((name, index) => {
 			if (this.#custom_variables[name]) {
-				this.#custom_variables[name] = {
-					...this.#custom_variables[name],
-					sortOrder: index,
-				}
+				this.#custom_variables[name] = { ...this.#custom_variables[name], sortOrder: index }
 			}
 		})
 
@@ -303,30 +274,23 @@ export class VariablesCustomVariable {
 		for (const name of allKnownNames) {
 			if (!newNames.includes(name)) {
 				if (this.#custom_variables[name]) {
-					this.#custom_variables[name] = {
-						...this.#custom_variables[name],
-						sortOrder: nextIndex++,
-					}
+					this.#custom_variables[name] = { ...this.#custom_variables[name], sortOrder: nextIndex++ }
 				}
 			}
 		}
 
-		this.#doSave()
+		const changes: CustomVariableUpdate[] = []
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const changes: CustomVariableUpdate[] = []
+		// Add inserts
+		for (const [id, info] of Object.entries(this.#custom_variables)) {
+			if (!info) continue
 
-			// Add inserts
-			for (const [id, info] of Object.entries(this.#custom_variables)) {
-				if (!info) continue
+			this.#dbTable.set(id, info)
 
-				changes.push({
-					type: 'update',
-					itemId: id,
-					info,
-				})
-			}
+			changes.push({ type: 'update', itemId: id, info })
+		}
 
+		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
 		}
 	}
@@ -358,9 +322,7 @@ export class VariablesCustomVariable {
 	 * Helper for setting the value of a custom variable
 	 */
 	#setValueInner(name: string, value: CompanionVariableValue | undefined): void {
-		this.#variableValues.setVariableValues(CUSTOM_LABEL, {
-			[name]: value,
-		})
+		this.#variableValues.setVariableValues(CUSTOM_LABEL, [{ id: name, value: value }])
 
 		this.#persistCustomVariableValue(name, value)
 	}
@@ -378,7 +340,7 @@ export class VariablesCustomVariable {
 
 		this.#custom_variables[name].description = description
 
-		this.#doSave()
+		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
 
@@ -403,9 +365,7 @@ export class VariablesCustomVariable {
 		if (this.#custom_variables[name]) {
 			const value = this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 			this.#logger.silly(`Set default value "${name}":${value}`)
-			this.#custom_variables[name].defaultValue = value ?? ''
-
-			this.#doSave()
+			this.#custom_variables[name].defaultValue = value === undefined ? '' : value
 
 			this.#emitUpdateOneVariable(name)
 		}
@@ -424,7 +384,7 @@ export class VariablesCustomVariable {
 
 		this.#custom_variables[name].defaultValue = value
 
-		this.#doSave()
+		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
 
@@ -436,9 +396,9 @@ export class VariablesCustomVariable {
 	 */
 	#persistCustomVariableValue(name: string, value: CompanionVariableValue | undefined): void {
 		if (this.#custom_variables[name] && this.#custom_variables[name].persistCurrentValue) {
-			this.#custom_variables[name].defaultValue = value ?? ''
+			this.#custom_variables[name].defaultValue = value === undefined ? '' : value
 
-			this.#doSave()
+			this.#dbTable.set(name, this.#custom_variables[name])
 
 			this.#emitUpdateOneVariable(name)
 		}

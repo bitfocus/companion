@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import classnames from 'classnames'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
@@ -23,27 +23,43 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 		right: !!props.right,
 	}
 
+	const preloadedImage = useImagePreloader(props.preview || null)
+
+	const hasPointerEvents = 'onpointerdown' in window
+
+	const doPress = useCallback(
+		(e: React.UIEvent) => {
+			e.preventDefault()
+			e.stopPropagation()
+
+			props.onClick?.(props.location, true)
+		},
+		[props.onClick, props.location]
+	)
+	const doRelease = useCallback(
+		(e: React.UIEvent) => {
+			e.preventDefault()
+			e.stopPropagation()
+
+			props.onClick?.(props.location, false)
+		},
+		[props.onClick, props.location]
+	)
+
 	return (
 		<div
 			ref={props.dropRef}
 			className={classnames(classes)}
 			style={props.style}
-			onMouseDown={() => props?.onClick?.(props.location, true)}
-			onMouseUp={() => props?.onClick?.(props.location, false)}
-			onTouchStart={(e) => {
-				e.preventDefault()
-				props?.onClick?.(props.location, true)
-			}}
-			onTouchEnd={(e) => {
-				e.preventDefault()
-				props?.onClick?.(props.location, false)
-			}}
-			onTouchCancel={(e) => {
-				e.preventDefault()
-				e.stopPropagation()
-
-				props?.onClick?.(props.location, false)
-			}}
+			// Prefer the newer pointer events
+			onPointerDown={hasPointerEvents ? doPress : undefined}
+			onPointerUp={hasPointerEvents ? doRelease : undefined}
+			// Setup the older mouse and touch events for compatibility
+			onMouseDown={!hasPointerEvents ? doPress : undefined}
+			onMouseUp={!hasPointerEvents ? doRelease : undefined}
+			onTouchStart={!hasPointerEvents ? doPress : undefined}
+			onTouchEnd={!hasPointerEvents ? doRelease : undefined}
+			onTouchCancel={!hasPointerEvents ? doRelease : undefined}
 			onContextMenu={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
@@ -54,11 +70,11 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 				className="button-border"
 				ref={props.dragRef}
 				style={{
-					backgroundImage: props.preview ? `url(${props.preview})` : undefined,
+					backgroundImage: preloadedImage ? `url(${preloadedImage})` : undefined,
 				}}
 				title={props.title}
 			>
-				{!props.preview && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
+				{!preloadedImage && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
 			</div>
 		</div>
 	)
@@ -91,6 +107,8 @@ export const ButtonPreviewBase = React.memo(function ButtonPreview(props: Button
 		right: !!props.right,
 	}
 
+	const preloadedImage = useImagePreloader(props.preview || null)
+
 	return (
 		<div
 			ref={props.dropRef}
@@ -122,12 +140,38 @@ export const ButtonPreviewBase = React.memo(function ButtonPreview(props: Button
 				className="button-border"
 				ref={props.dragRef}
 				style={{
-					backgroundImage: props.preview ? `url(${props.preview})` : undefined,
+					backgroundImage: preloadedImage ? `url(${preloadedImage})` : undefined,
 				}}
 				title={props.title}
 			>
-				{!props.preview && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
+				{!preloadedImage && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
 			</div>
 		</div>
 	)
 })
+
+function useImagePreloader(imageUrl: string | null) {
+	const [preloadedImage, setPreloadedImage] = useState<string | null>(imageUrl)
+	useEffect(() => {
+		let aborted = false
+
+		if (!imageUrl) {
+			setPreloadedImage(imageUrl ?? null)
+			return
+		}
+
+		const image = new Image()
+		image.onload = () => {
+			if (!aborted) {
+				setPreloadedImage(imageUrl)
+			}
+		}
+		image.src = imageUrl
+
+		return () => {
+			aborted = false
+		}
+	}, [imageUrl])
+
+	return preloadedImage
+}

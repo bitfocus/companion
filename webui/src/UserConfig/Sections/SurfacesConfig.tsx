@@ -16,7 +16,7 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 					<>
 						Watch for Discoverable Remote Surfaces
 						<br />
-						Such as Companion Satellite and Stream Deck Studio
+						Such as Companion Satellite, Stream Deck Studio and Stream Deck Network Dock
 					</>
 				}
 				field="discoveryEnabled"
@@ -44,6 +44,12 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 			/>
 			<UserConfigSwitchRow
 				userConfig={props}
+				label="Enable connected Mirabox Stream Dock devices"
+				requiresRestart
+				field="mirabox_streamdock_enable"
+			/>
+			<UserConfigSwitchRow
+				userConfig={props}
 				label="Enable connected Contour Shuttle"
 				requiresRestart
 				field="contour_shuttle_enable"
@@ -58,7 +64,7 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 				userConfig={props}
 				label={
 					<>
-						Enable connected Blackmagic Atem Micro Panel
+						Enable connected Blackmagic Atem Micro Panel and Resolve Replay Editor
 						<br />
 						<em>You must not run the Atem software at the same time</em>
 					</>

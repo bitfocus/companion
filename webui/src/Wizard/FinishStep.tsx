@@ -36,6 +36,8 @@ export function FinishStep({ oldConfig, newConfig }: FinishStepProps) {
 			{((newConfig.elgato_plugin_enable && oldConfig.elgato_plugin_enable !== newConfig.elgato_plugin_enable) ||
 				(!newConfig.xkeys_enable && oldConfig.xkeys_enable !== newConfig.xkeys_enable) ||
 				(!newConfig.loupedeck_enable && oldConfig.loupedeck_enable !== newConfig.loupedeck_enable) ||
+				(!newConfig.mirabox_streamdock_enable &&
+					oldConfig.mirabox_streamdock_enable !== newConfig.mirabox_streamdock_enable) ||
 				(!newConfig.contour_shuttle_enable && oldConfig.contour_shuttle_enable !== newConfig.contour_shuttle_enable) ||
 				(!newConfig.vec_footpedal_enable && oldConfig.vec_footpedal_enable !== newConfig.vec_footpedal_enable) ||
 				(!newConfig.mystrix_enable && oldConfig.mystrix_enable !== newConfig.mystrix_enable)) && (

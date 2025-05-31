@@ -148,7 +148,7 @@ export function ButtonStyleConfigFields({
 								<InputFeatureIcons {...textInputFeatures} />
 							</InlineHelp>
 						) : (
-							<InlineHelp help="The text you see on the button you're working with. You can use variables, but not expressions.">
+							<InlineHelp help="The text you see on the button you're working with. You can use variables, but not expressions unless you switch to expression mode.">
 								Button text string
 								<InputFeatureIcons {...textInputFeatures} />
 							</InlineHelp>

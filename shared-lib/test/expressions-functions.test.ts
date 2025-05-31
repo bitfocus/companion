@@ -231,6 +231,8 @@ describe('functions', () => {
 			expect(ExpressionFunctions.indexOf('something else', 'ng el')).toBe(7)
 			expect(ExpressionFunctions.indexOf('somethingelse', 'ng el')).toBe(-1)
 			expect(ExpressionFunctions.indexOf('1234512345', '34')).toBe(2)
+			expect(ExpressionFunctions.indexOf('1234512345', '34', 2)).toBe(2)
+			expect(ExpressionFunctions.indexOf('1234512345', '34', 3)).toBe(7)
 		})
 
 		it('lastIndexOf', () => {
@@ -242,6 +244,8 @@ describe('functions', () => {
 			expect(ExpressionFunctions.lastIndexOf('something else', 'ng el')).toBe(7)
 			expect(ExpressionFunctions.lastIndexOf('somethingelse', 'ng el')).toBe(-1)
 			expect(ExpressionFunctions.lastIndexOf('1234512345', '34')).toBe(7)
+			expect(ExpressionFunctions.lastIndexOf('1234512345', '34', 7)).toBe(7)
+			expect(ExpressionFunctions.lastIndexOf('1234512345', '34', 6)).toBe(2)
 		})
 
 		it('toUpperCase', () => {
@@ -300,7 +304,7 @@ describe('functions', () => {
 		})
 	})
 
-	describe('object', () => {
+	describe('object/array', () => {
 		it('jsonpath', () => {
 			const obj = {
 				a: 1,
@@ -342,7 +346,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.jsonparse('{"a": 1')).toEqual(null)
 		})
 
-		it('jsonparse', () => {
+		it('jsonstringify', () => {
 			expect(ExpressionFunctions.jsonstringify('')).toEqual('""')
 			expect(ExpressionFunctions.jsonstringify(1)).toEqual('1')
 			expect(ExpressionFunctions.jsonstringify({})).toEqual('{}')
@@ -351,6 +355,53 @@ describe('functions', () => {
 
 			expect(ExpressionFunctions.jsonstringify({ a: 1 })).toEqual('{"a":1}')
 			expect(ExpressionFunctions.jsonstringify([1, 2, 3])).toEqual('[1,2,3]')
+		})
+
+		it('arrayIncludes', () => {
+			// Test with valid arrays and values
+			expect(ExpressionFunctions.arrayIncludes([1, 2, 3], 2)).toBe(true)
+			expect(ExpressionFunctions.arrayIncludes([1, 2, 3], 4)).toBe(false)
+			expect(ExpressionFunctions.arrayIncludes(['a', 'b', 'c'], 'b')).toBe(true)
+			expect(ExpressionFunctions.arrayIncludes(['a', 'b', 'c'], 'd')).toBe(false)
+
+			// Test with mixed types
+			expect(ExpressionFunctions.arrayIncludes([1, 'hello', true, null], 'hello')).toBe(true)
+			expect(ExpressionFunctions.arrayIncludes([1, 'hello', true, null], true)).toBe(true)
+			expect(ExpressionFunctions.arrayIncludes([1, 'hello', true, null], null)).toBe(true)
+			expect(ExpressionFunctions.arrayIncludes([1, 'hello', true, null], false)).toBe(false)
+
+			// Test with empty array
+			expect(ExpressionFunctions.arrayIncludes([], 'anything')).toBe(false)
+			expect(ExpressionFunctions.arrayIncludes([], null)).toBe(false)
+			expect(ExpressionFunctions.arrayIncludes([], undefined)).toBe(false)
+
+			// Test with non-array inputs (should return false)
+			expect(ExpressionFunctions.arrayIncludes(null, 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayIncludes(undefined, 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayIncludes('not an array', 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayIncludes(123, 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayIncludes({}, 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayIncludes({ length: 3 }, 'test')).toBe(false) // Array-like object
+
+			// Test with nested arrays and objects
+			const nestedArray = [
+				[1, 2],
+				[3, 4],
+			]
+			expect(ExpressionFunctions.arrayIncludes(nestedArray, [1, 2])).toBe(false) // Reference equality
+			expect(ExpressionFunctions.arrayIncludes([{ a: 1 }, { b: 2 }], { a: 1 })).toBe(false) // Reference equality
+
+			// Test with undefined/null values in array
+			expect(ExpressionFunctions.arrayIncludes([undefined, null, 0, ''], undefined)).toBe(true)
+			expect(ExpressionFunctions.arrayIncludes([undefined, null, 0, ''], null)).toBe(true)
+			expect(ExpressionFunctions.arrayIncludes([undefined, null, 0, ''], 0)).toBe(true)
+			expect(ExpressionFunctions.arrayIncludes([undefined, null, 0, ''], '')).toBe(true)
+
+			// Test strict equality (no type coercion)
+			expect(ExpressionFunctions.arrayIncludes([1, 2, 3], '2')).toBe(false) // Number vs string
+			expect(ExpressionFunctions.arrayIncludes(['1', '2', '3'], 2)).toBe(false) // String vs number
+			expect(ExpressionFunctions.arrayIncludes([true, false], 1)).toBe(false) // Boolean vs number
+			expect(ExpressionFunctions.arrayIncludes([true, false], 'true')).toBe(false) // Boolean vs string
 		})
 	})
 

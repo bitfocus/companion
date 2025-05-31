@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import LogController from '../Log/Controller.js'
@@ -140,25 +134,22 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		})
 	}
 
-	setVariableValues(label: string, variables: Record<string, CompanionVariableValue | undefined>): void {
+	setVariableValues(label: string, variables: VariableValueEntry[]): void {
 		const moduleValues = this.#variableValues[label] ?? {}
 		this.#variableValues[label] = moduleValues
 
 		const all_changed_variables_set = new Set<string>()
-		for (const variable in variables) {
-			// Note: explicitly using for-in here, as Object.entries is slow
-			const value = variables[variable]
+		for (const variable of variables) {
+			if (moduleValues[variable.id] !== variable.value) {
+				moduleValues[variable.id] = variable.value
 
-			if (moduleValues[variable] !== value) {
-				moduleValues[variable] = value
-
-				all_changed_variables_set.add(`${label}:${variable}`)
+				all_changed_variables_set.add(`${label}:${variable.id}`)
 				// Also report the old custom variable names as having changed
-				if (label === 'custom') all_changed_variables_set.add(`internal:custom_${variable}`)
+				if (label === 'custom') all_changed_variables_set.add(`internal:custom_${variable.id}`)
 
 				// Skip debug if it's just internal:time_* spamming.
-				if (this.#logger.isSillyEnabled() && !(label === 'internal' && variable.startsWith('time_'))) {
-					this.#logger.silly('Variable $(' + label + ':' + variable + ') is "' + value + '"')
+				if (this.#logger.isSillyEnabled() && !(label === 'internal' && variable.id.startsWith('time_'))) {
+					this.#logger.silly('Variable $(' + label + ':' + variable.id + ') is "' + variable.value + '"')
 				}
 			}
 		}
@@ -191,4 +182,9 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				: VARIABLE_UNKNOWN_VALUE,
 		}
 	}
+}
+
+export interface VariableValueEntry {
+	id: string
+	value: CompanionVariableValue | undefined
 }

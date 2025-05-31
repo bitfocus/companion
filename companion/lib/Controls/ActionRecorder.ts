@@ -40,16 +40,11 @@ interface ActionRecorderEvents {
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	readonly #logger = LogController.createLogger('Control/ActionRecorder')
 
-	readonly #registry: Registry
+	readonly #registry: Pick<Registry, 'io' | 'instance' | 'controls'>
 
 	/**
 	 * The connection ids which are currently informed to be recording
@@ -305,7 +300,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	}
 
 	/**
-	 * An conncetion has just started/stopped, make sure it is aware if it should be recording
+	 * An connection has just started/stopped, make sure it is aware if it should be recording
 	 * @param connectionId
 	 * @param running Whether it is now running
 	 */

@@ -7,8 +7,11 @@ import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
 import { transformButtonImage } from '../Resources/Util.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import type { Registry } from '../Registry.js'
 import type { IncomingMessage } from 'http'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ServiceApi } from './ServiceApi.js'
 
 /**
  * Class providing the Elgato Plugin service.
@@ -24,41 +27,23 @@ import type { IncomingMessage } from 'http'
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export class ServiceElgatoPlugin extends ServiceBase {
+	readonly #serviceApi: ServiceApi
+	readonly #surfaceController: SurfaceController
+
 	#server: WebSocketServer | undefined
 	#client: ServiceElgatoPluginSocket | undefined
 
-	constructor(registry: Registry) {
-		super(registry, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
+	constructor(serviceApi: ServiceApi, surfaceController: SurfaceController, userconfig: DataUserConfig) {
+		super(userconfig, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
+
+		this.#serviceApi = serviceApi
+		this.#surfaceController = surfaceController
 
 		this.port = 28492
 
-		this.graphics.on('button_drawn', (location, render) => {
-			if (!this.#client) return
-
-			const currentPageNumber = this.page.getPageNumber(this.#client.currentPageId)
-
-			// Send dynamic page
-			if (location.pageNumber === currentPageNumber) {
-				this.#handleButtonDrawn(
-					{
-						...location,
-						pageNumber: null,
-					},
-					render
-				)
-			}
-
-			// Send specific page
-			this.#handleButtonDrawn(location, render)
-		})
-		this.surfaces.on('surface_page', (surfaceId, newPageId) => {
+		this.#surfaceController.on('surface_page', (surfaceId, newPageId) => {
 			if (this.#client && surfaceId === 'plugin') {
 				this.#client.currentPageId = newPageId
 
@@ -67,6 +52,26 @@ export class ServiceElgatoPlugin extends ServiceBase {
 		})
 
 		this.init()
+	}
+
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		if (!this.#client) return
+
+		const currentPageNumber = this.#serviceApi.getPageNumberForId(this.#client.currentPageId)
+
+		// Send dynamic page
+		if (location.pageNumber === currentPageNumber) {
+			this.#handleButtonDrawn(
+				{
+					...location,
+					pageNumber: null,
+				},
+				render
+			)
+		}
+
+		// Send specific page
+		this.#handleButtonDrawn(location, render)
 	}
 
 	/**
@@ -126,7 +131,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 	#redrawAllDynamicButtons(): void {
 		if (!this.#client || !this.#client.supportsCoordinates) return
 
-		const currentPageNumber = this.page.getPageNumber(this.#client.currentPageId)
+		const currentPageNumber = this.#serviceApi.getPageNumberForId(this.#client.currentPageId)
 
 		for (const listenerId of this.#client.buttonListeners) {
 			if (!listenerId.startsWith('null_')) continue
@@ -140,7 +145,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 					column: column,
 					row: row,
 				},
-				this.graphics.getCachedRenderOrGeneratePlaceholder({
+				this.#serviceApi.getCachedRenderOrGeneratePlaceholder({
 					pageNumber: currentPageNumber ?? 0,
 					column: column,
 					row: row,
@@ -169,9 +174,9 @@ export class ServiceElgatoPlugin extends ServiceBase {
 				socket.supportsPng = !!clientInfo.supportsPng
 				socket.supportsCoordinates = !!clientInfo.supportsCoordinates
 
-				this.surfaces.addElgatoPluginDevice(id, socket)
+				this.#surfaceController.addElgatoPluginDevice(id, socket)
 
-				socket.currentPageId = this.surfaces.devicePageGet('plugin') || this.page.getFirstPageId()
+				socket.currentPageId = this.#surfaceController.devicePageGet('plugin') || this.#serviceApi.getFirstPageId()
 
 				socket.apireply('new_device', {
 					result: true,
@@ -184,7 +189,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 				this.#client = socket
 
 				socket.on('close', () => {
-					this.surfaces.removeDevice(id)
+					this.#surfaceController.removeDevice(id)
 					socket.removeAllListeners('keyup')
 					socket.removeAllListeners('keydown')
 					this.#client = undefined
@@ -203,7 +208,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 
 				socket.apireply('request_button', { result: 'ok' })
 
-				const currentPageNumber = this.page.getPageNumber(socket.currentPageId)
+				const currentPageNumber = this.#serviceApi.getPageNumberForId(socket.currentPageId)
 
 				const fromLocation = {
 					pageNumber: args.page === null ? (currentPageNumber ?? 0) : Number(args.page),
@@ -216,7 +221,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 					row: Number(args.row),
 				}
 
-				this.#handleButtonDrawn(displayLocation, this.graphics.getCachedRenderOrGeneratePlaceholder(fromLocation))
+				this.#handleButtonDrawn(displayLocation, this.#serviceApi.getCachedRenderOrGeneratePlaceholder(fromLocation))
 			} else {
 				socket.buttonListeners.add(`${args.page}_${args.bank}`)
 
@@ -230,7 +235,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 						row: xy[1],
 					}
 
-					this.#handleButtonDrawn(location, this.graphics.getCachedRenderOrGeneratePlaceholder(location))
+					this.#handleButtonDrawn(location, this.#serviceApi.getCachedRenderOrGeneratePlaceholder(location))
 				}
 			}
 		})

@@ -6,7 +6,7 @@ import { InstanceModuleWrapperDependencies, SocketEventsHandler } from './Wrappe
 import fs from 'fs-extra'
 import ejson from 'ejson'
 import os from 'os'
-import { getNodeJsPath } from './NodePath.js'
+import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { InstanceModules } from './Modules.js'
@@ -16,6 +16,9 @@ import type { ModuleVersionInfo } from './Types.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionOptionValues } from '@companion-module/base'
 import { Serializable } from 'child_process'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
 
 /**
  * A backoff sleep strategy
@@ -374,10 +377,24 @@ export class ModuleHost {
 							return
 						}
 
-						if (moduleInfo.isPackaged && !isModuleApiVersionCompatible(moduleInfo.manifest.runtime.apiVersion)) {
-							this.#logger.error(
-								`Module Api version is too new/old: "${connectionId}" ${moduleInfo.manifest.runtime.apiVersion}`
-							)
+						// Determine the module api version
+						let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
+						if (!moduleInfo.isPackaged) {
+							// When not packaged, lookup the version from the library itself
+							try {
+								const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
+									paths: [moduleInfo.basePath],
+								})
+								const moduleLibPackage = require(moduleLibPackagePath)
+								moduleApiVersion = moduleLibPackage.version
+							} catch (e) {
+								this.#logger.error(`Failed to get module api version: "${connectionId}" ${e}`)
+								return
+							}
+						}
+
+						if (!isModuleApiVersionCompatible(moduleApiVersion)) {
+							this.#logger.error(`Module Api version is too new/old: "${connectionId}" ${moduleApiVersion}`)
 							return
 						}
 
@@ -390,8 +407,8 @@ export class ModuleHost {
 						child.authToken = nanoid()
 						child.skipApiVersionCheck = !moduleInfo.isPackaged
 
-						const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint)
-						const jsFullPath = path.join(moduleInfo.basePath, jsPath)
+						const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
+						const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
 						if (!(await fs.pathExists(jsFullPath))) {
 							this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
 							return
@@ -412,6 +429,7 @@ export class ModuleHost {
 
 						const cmd: string[] = [
 							nodePath,
+							...getNodeJsPermissionArguments(moduleInfo.manifest, moduleApiVersion, moduleInfo.basePath),
 							inspectPort !== undefined ? `--inspect=${inspectPort}` : undefined,
 							jsPath,
 						].filter((v): v is string => !!v)
@@ -423,11 +441,6 @@ export class ModuleHost {
 								CONNECTION_ID: connectionId,
 								VERIFICATION_TOKEN: child.authToken,
 								MODULE_MANIFEST: 'companion/manifest.json',
-
-								// Provide sentry details
-								// SENTRY_DSN:
-								// SENTRY_USERID:
-								// SENTRY_COMPANION_VERSION:
 							},
 							maxRestarts: -1,
 							kill: 5000,
@@ -448,7 +461,7 @@ export class ModuleHost {
 							child.isReady = false
 							child.handler?.cleanup()
 
-							this.#logger.debug(`Connection "${config.label}" started`)
+							this.#logger.info(`Connection "${config.label}" started process ${monitor.child?.pid}`)
 							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection started **')
 						})
 						monitor.on('stop', () => {

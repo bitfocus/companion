@@ -26,6 +26,8 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Link } from '@tanstack/react-router'
 import classNames from 'classnames'
+import VariableInputGroup from '../Components/VariableInputGroup.js'
+import { VariableValueDisplay } from '../Components/VariableValueDisplay.js'
 
 const DRAG_ID = 'custom-variables'
 
@@ -419,34 +421,7 @@ function CustomVariableRow({
 						</div>
 						{isCollapsed && (
 							<div className="cell-header-item grow">
-								{value?.length > 0 && (
-									<>
-										<code
-											style={{
-												backgroundColor: 'rgba(0,0,200,0.1)',
-												color: 'rgba(0,0,200,1)',
-												fontWeight: 'normal',
-												fontSize: 14,
-												padding: '4px',
-												lineHeight: '2em',
-												borderRadius: '6px',
-											}}
-											title={value}
-										>
-											{value?.length > 100 ? `${value.substring(0, 100)}...` : value}
-										</code>
-										<CopyToClipboard text={`${value?.length > 0 ? value : ' '}`} onCopy={onCopied}>
-											<CButton size="sm" title="Copy current variable value">
-												<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
-											</CButton>
-										</CopyToClipboard>
-									</>
-								)}
-								{value?.length === 0 && (
-									<>
-										<span style={{ fontWeight: 'normal' }}>(empty)</span>
-									</>
-								)}
+								<VariableValueDisplay value={value} onCopied={onCopied} />
 							</div>
 						)}
 						<div className="cell-header-item">
@@ -499,21 +474,18 @@ function CustomVariableRow({
 										Current value:
 									</CFormLabel>
 									<CCol sm={9}>
-										<TextInputField
-											value={value ?? ''}
-											setValue={(val) => setCurrentValue(name, val)}
-											style={{ marginBottom: '0.5rem' }}
-										/>
+										<VariableInputGroup value={value} name={name} setCurrentValue={setCurrentValue} />
 									</CCol>
 
 									<CFormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
 										Startup value:
 									</CFormLabel>
 									<CCol sm={9}>
-										<TextInputField
+										<VariableInputGroup
 											disabled={!!info.persistCurrentValue}
-											value={info.defaultValue + ''}
-											setValue={(val) => setStartupValue(name, val)}
+											value={info.defaultValue}
+											name={name}
+											setCurrentValue={setStartupValue}
 										/>
 									</CCol>
 								</CRow>

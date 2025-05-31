@@ -41,7 +41,17 @@
 		"children": [
 			{
 				"label": "Connections",
-				"file": "3_config/connections.md"
+				"file": "3_config/connections.md",
+				"children": [
+					{
+						"label": "Adding a connection",
+						"file": "3_config/connections/creating.md"
+					},
+					{
+						"label": "Configuring a connection",
+						"file": "3_config/connections/configuring.md"
+					}
+				]
 			},
 			{
 				"label": "Buttons",
@@ -183,8 +193,16 @@
 				"file": "4_secondary_admin_controls/dynamic_variables.md"
 			},
 			{
+				"label": "Internal variables",
+				"file": "4_secondary_admin_controls/internal_variables.md"
+			},
+			{
 				"label": "Custom variables",
 				"file": "4_secondary_admin_controls/custom_variables.md"
+			},
+			{
+				"label": "Local variables",
+				"file": "4_secondary_admin_controls/local_variables.md"
 			},
 			{
 				"label": "Expressions",
@@ -250,7 +268,17 @@
 	},
 	{
 		"label": "Modules",
-		"file": "6_modules.md"
+		"file": "6_modules.md",
+		"children": [
+			{
+				"label": "Module list",
+				"file": "6_modules/list.md"
+			},
+			{
+				"label": "Managing a module",
+				"file": "6_modules/manage.md"
+			}
+		]
 	},
 	{
 		"label": "Surfaces",
@@ -271,6 +299,10 @@
 			{
 				"label": "Loupedeck Live",
 				"file": "7_surfaces/loupedeck-live.md"
+			},
+			{
+				"label": "Mirabox Stream Dock",
+				"file": "7_surfaces/mirabox_streamdock.md"
 			},
 			{
 				"label": "Contour Shuttle",
@@ -295,6 +327,11 @@
 		"_NOTE": "Note: These pages do not handle having nested children, that will break the modal",
 		"_whatsnew": true,
 		"children": [
+			{
+				"_version": "4.0.0",
+				"label": "v4.0.0",
+				"file": "9_whatsnew/v4-0-0.md"
+			},
 			{
 				"_version": "3.5.0",
 				"label": "v3.5.0",

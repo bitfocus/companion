@@ -7,12 +7,6 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import crypto from 'crypto'
@@ -40,7 +34,14 @@ export class DataMetrics {
 	#cycle() {
 		this.#logger.silly('cycle')
 
-		const relevantDevices: string[] = []
+		const relevantSurfaceHashes: string[] = []
+		const relevantSurfaces: Record<
+			string,
+			{
+				type: string | undefined
+				description: string | undefined
+			}
+		> = {}
 
 		try {
 			const surfaceGroups = this.#surfacesController.getDevicesList()
@@ -51,9 +52,16 @@ export class DataMetrics {
 					if (surface.id && surface.isConnected && !surface.id.startsWith('emulator:')) {
 						// remove leading "satellite-" from satellite device serial numbers.
 						const serialNumber = surface.id.replace('satellite-', '')
-						// normalize serialnumber by md5 hashing it, we don't want/need the specific serialnumber anyways.
+
+						// Collect info about the type of the surface
+						relevantSurfaces[serialNumber] = {
+							type: surface.integrationType,
+							description: surface.type,
+						}
+
+						// normalize serialnumber by md5 hashing it
 						const deviceHash = crypto.createHash('md5').update(serialNumber).digest('hex')
-						if (deviceHash && deviceHash.length === 32) relevantDevices.push(deviceHash)
+						if (deviceHash && deviceHash.length === 32) relevantSurfaceHashes.push(deviceHash)
 					}
 				}
 			}
@@ -81,7 +89,8 @@ export class DataMetrics {
 				r: process.uptime(),
 				m: moduleCountsOld,
 				mv: moduleVersionCounts,
-				d: relevantDevices,
+				d: relevantSurfaceHashes,
+				s: relevantSurfaces,
 			}
 
 			// push metrics back home - if we can!

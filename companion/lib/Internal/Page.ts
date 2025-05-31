@@ -7,36 +7,37 @@
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
  */
 
 import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { InternalController } from './Controller.js'
 import type { PageController } from '../Page/Controller.js'
-import type { ActionForVisitor, FeedbackForVisitor, InternalModuleFragment, InternalVisitor } from './Types.js'
+import type {
+	ActionForVisitor,
+	FeedbackForVisitor,
+	InternalModuleFragment,
+	InternalModuleFragmentEvents,
+	InternalVisitor,
+} from './Types.js'
 import type { CompanionVariableValues } from '@companion-module/base'
+import { EventEmitter } from 'events'
+import type { InternalModuleUtils } from './Util.js'
 
-export class InternalPage implements InternalModuleFragment {
+export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	// #logger = LogController.createLogger('Internal/Page')
 
 	readonly #pageController: PageController
-	readonly #internalModule: InternalController
 
-	constructor(internalModule: InternalController, pageController: PageController) {
-		this.#internalModule = internalModule
+	constructor(_internalUtils: InternalModuleUtils, pageController: PageController) {
+		super()
+
 		this.#pageController = pageController
 
 		this.#pageController.on('name', this.#nameChange.bind(this))
-		this.#pageController.on('pagecount', () => this.#internalModule.regenerateVariables())
+		this.#pageController.on('pagecount', () => this.emit('regenerateVariables'))
 	}
 
 	#nameChange(page: number, name: string | undefined): void {
-		this.#internalModule.setVariables({
+		this.emit('setVariables', {
 			[`page_number_${page}_name`]: name,
 		})
 	}
@@ -57,7 +58,7 @@ export class InternalPage implements InternalModuleFragment {
 		for (let i = 1; i <= this.#pageController.getPageCount(); i++) {
 			variables[`page_number_${i}_name`] = this.#pageController.getPageName(i)
 		}
-		this.#internalModule.setVariables(variables)
+		this.emit('setVariables', variables)
 	}
 
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {

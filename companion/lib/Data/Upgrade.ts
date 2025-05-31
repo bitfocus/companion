@@ -9,6 +9,7 @@ import type { DataDatabase } from './Database.js'
 import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import v5tov6 from './Upgrades/v5tov6.js'
 import v6tov7 from './Upgrades/v6tov7.js'
+import v7tov8 from './Upgrades/v7tov8.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -19,6 +20,7 @@ const allUpgrades = [
 	v4tov5, // v3.5 - first round of sqlite rearranging
 	v5tov6, // v3.5 - replace action delay property https://github.com/bitfocus/companion/pull/3163
 	v6tov7, // v4.0 - rework 'entities' for better nesting https://github.com/bitfocus/companion/pull/3185
+	v7tov8, // v4.0 - break out into more tables
 ]
 const targetVersion = allUpgrades.length + 1
 
@@ -27,7 +29,7 @@ const targetVersion = allUpgrades.length + 1
  * This has the raw db object before anything else has gotten access, so no need to worry about other components getting confused
  */
 export function upgradeStartup(db: DataDatabase): void {
-	const currentVersion = db.getKey('page_config_version', 1)
+	const currentVersion = db.defaultTableView.getOrDefault('page_config_version', 1)
 
 	// Ensure that the db isnt too new
 	if (currentVersion > targetVersion) {
@@ -47,12 +49,12 @@ export function upgradeStartup(db: DataDatabase): void {
 			allUpgrades[i - 1].upgradeStartup(db, logger)
 
 			// Record that the upgrade has been done
-			db.setKey('page_config_version', i + 1)
+			db.defaultTableView.set('page_config_version', i + 1)
 		}
 	}
 
 	// Debug: uncomment to force the upgrade to run again
-	// db.setKey('page_config_version', targetVersion - 1)
+	db.defaultTableView.set('page_config_version', targetVersion - 1)
 }
 
 /**

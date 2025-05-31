@@ -101,7 +101,7 @@ function OutboundSurfaceRow({ surfaceInfo, updateName, removeSurface }: Outbound
 				<TextInputField value={surfaceInfo.displayName} setValue={updateName2} />
 			</td>
 			<td>
-				Stream Deck Studio
+				IP Stream Deck
 				{/* {surfaceInfo.type} TODO - do this dynamically once there are multiple to support */}
 			</td>
 			<td>

@@ -8,6 +8,7 @@ import v4tov5 from '../../lib/Data/Upgrades/v4tov5.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import fs from 'fs-extra'
 import { SuppressLogging } from '../Util.js'
+import { importTable } from './util.js'
 
 function CreateDataDatabase() {
 	const db = new DataDatabase()
@@ -15,12 +16,12 @@ function CreateDataDatabase() {
 	let data = fs.readFileSync('./companion/test/Upgrade/v1tov5/db.v1.json', 'utf8')
 	data = JSON.parse(data)
 
-	db.importTable('main', data)
+	importTable(db.defaultTableView, data)
 
 	return db
 }
 
-class DataDatabase extends DataStoreBase {
+class DataDatabase extends DataStoreBase<any> {
 	constructor() {
 		super(':memory:', '', 'main', 'Data/Database')
 		this.startSQLite()
@@ -43,9 +44,9 @@ describe('upgrade', () => {
 	let data = fs.readFileSync('./companion/test/Upgrade/v1tov5/db.v5.json', 'utf8')
 	data = JSON.parse(data)
 	it('main', () => {
-		expect(db.getTable('main')).toEqual(data['main'])
+		expect(db.getTableView('main').all()).toEqual(data['main'])
 	})
 	it('controls', () => {
-		expect(db.getTable('controls')).toEqual(data['controls'])
+		expect(db.getTableView('controls').all()).toEqual(data['controls'])
 	})
 })

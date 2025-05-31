@@ -22,11 +22,6 @@ import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleMode
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
 export abstract class ButtonControlBase<TJson, TOptions extends Record<string, any>>
 	extends ControlBase<TJson>
@@ -93,6 +88,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 		}
 
 		this.actionRunner.abortAll(exceptSignal)
+	}
+
+	abortDelayedActionsSingle(skip_up: boolean, exceptSignal: AbortSignal): void {
+		if (skip_up) {
+			this.setPushed(false)
+		}
+
+		this.actionRunner.abortSingle(exceptSignal)
 	}
 
 	/**
@@ -228,9 +231,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	protected postProcessImport(): void {
-		this.entities.postProcessImport().catch((e) => {
-			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
-		})
+		this.entities.resubscribeEntities()
 
 		this.commitChange()
 		this.sendRuntimePropsChange()
@@ -296,7 +297,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 				if (!pressed && pressedDuration) {
 					// find the correct set to execute on up
 
-					const setIds = Object.keys(step)
+					const setIds = Array.from(step.sets.keys())
 						.map((id) => Number(id))
 						.filter((id) => !isNaN(id) && id < pressedDuration)
 					if (setIds.length) {

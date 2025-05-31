@@ -312,13 +312,6 @@ export class ControlEntityList {
 		return changed
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	postProcessImport(): Promise<unknown>[] {
-		return this.#entities.flatMap((entity) => entity.postProcessImport())
-	}
-
 	clearCachedValueForConnectionId(connectionId: string): boolean {
 		let changed = false
 		for (const entity of this.#entities) {

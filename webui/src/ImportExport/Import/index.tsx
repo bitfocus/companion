@@ -41,27 +41,38 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps) {
 	)
 
 	return (
-		<div>
-			<h4>
-				Import Configuration
-				<CButton color="danger" size="sm" onClick={clearImport}>
-					Cancel
-				</CButton>
-			</h4>
-
+		<div className="import-wizard">
 			{snapshot.type === 'page' ? (
-				<ImportPageWizard
-					snapshot={snapshot}
-					connectionRemap={connectionRemap}
-					setConnectionRemap={setConnectionRemap}
-					doImport={doSinglePageImport}
-				/>
+				<>
+					<h4>
+						Import Single Page
+						<CButton color="danger" size="sm" onClick={clearImport}>
+							Cancel
+						</CButton>
+					</h4>
+
+					<ImportPageWizard
+						snapshot={snapshot}
+						connectionRemap={connectionRemap}
+						setConnectionRemap={setConnectionRemap}
+						doImport={doSinglePageImport}
+						className="import-single-page"
+					/>
+				</>
 			) : (
-				<ImportFullWizard
-					snapshot={snapshot}
-					connectionRemap={connectionRemap}
-					setConnectionRemap={setConnectionRemap}
-				/>
+				<>
+					<h4>
+						Import Configuration
+						<CButton color="danger" size="sm" onClick={clearImport}>
+							Cancel
+						</CButton>
+					</h4>
+					<ImportFullWizard
+						snapshot={snapshot}
+						connectionRemap={connectionRemap}
+						setConnectionRemap={setConnectionRemap}
+					/>
+				</>
 			)}
 		</div>
 	)

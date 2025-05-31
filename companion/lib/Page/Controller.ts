@@ -1,5 +1,4 @@
 import { cloneDeep } from 'lodash-es'
-import { CoreBase } from '../Core/Base.js'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
 import { default_nav_buttons_definitions } from './Defaults.js'
@@ -7,6 +6,9 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PageModel, PageModelChangesItem } from '@companion-app/shared/Model/PageModel.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
+import LogController from '../Log/Controller.js'
+import { EventEmitter } from 'events'
+import { DataStoreTableView } from '../Data/StoreBase.js'
 
 const PagesRoom = 'pages'
 
@@ -31,13 +33,13 @@ interface PageControllerEvents {
  * You should have received a copy of the MIT licence as well as the Bitfocus
  * Individual Contributor License Agreement for Companion along with
  * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
  */
-export class PageController extends CoreBase<PageControllerEvents> {
+export class PageController extends EventEmitter<PageControllerEvents> {
+	readonly #logger = LogController.createLogger('Page/Controller')
+
+	readonly #registry: Pick<Registry, 'io' | 'graphics' | 'controls' | 'userconfig'>
+	readonly #dbTable: DataStoreTableView<Record<string, PageModel>>
+
 	/**
 	 * Cache the location of each control
 	 */
@@ -54,11 +56,12 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	#pageIds: string[] = []
 
 	constructor(registry: Registry) {
-		super(registry, 'Page/Controller')
+		super()
 
-		const rawPageData = this.db.getKey('page', {}) ?? {}
+		this.#registry = registry
+		this.#dbTable = registry.db.getTableView('pages')
 
-		this.#setupPages(rawPageData)
+		this.#setupPages(this.#dbTable.all())
 	}
 
 	/**
@@ -66,17 +69,17 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	 */
 	clientConnect(client: ClientSocket) {
 		client.onPromise('pages:set-name', (pageNumber, name) => {
-			this.logger.silly(`socket: pages:set-name ${pageNumber}: ${name}`)
+			this.#logger.silly(`socket: pages:set-name ${pageNumber}: ${name}`)
 
 			const existingData = this.getPageInfo(pageNumber)
 			if (!existingData) throw new Error(`Page "${pageNumber}" does not exist`)
 
-			this.logger.silly('Set page name ' + pageNumber + ' to ', name)
+			this.#logger.silly('Set page name ' + pageNumber + ' to ', name)
 			existingData.name = name
 
 			this.#commitChanges([pageNumber], true)
 
-			this.io.emitToRoom(PagesRoom, 'pages:update', {
+			this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
 				updatedOrder: null,
 				added: [],
 				changes: [
@@ -90,7 +93,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		})
 
 		client.onPromise('pages:subscribe', () => {
-			this.logger.silly('socket: get_page_all')
+			this.#logger.silly('socket: get_page_all')
 
 			client.join(PagesRoom)
 
@@ -104,14 +107,14 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		})
 
 		client.onPromise('pages:delete-page', (pageNumber) => {
-			this.logger.silly(`Delete page ${pageNumber}`)
+			this.#logger.silly(`Delete page ${pageNumber}`)
 
 			if (this.getPageCount() === 1) return 'fail'
 
 			// Delete the controls, and allow them to redraw
 			const controlIds = this.getAllControlIdsOnPage(pageNumber)
 			for (const controlId of controlIds) {
-				this.controls.deleteControl(controlId)
+				this.#registry.controls.deleteControl(controlId)
 			}
 
 			// Delete the page
@@ -121,7 +124,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		})
 
 		client.onPromise('pages:insert-pages', (asPageNumber, pageNames) => {
-			this.logger.silly(`Insert new page ${asPageNumber}`)
+			this.#logger.silly(`Insert new page ${asPageNumber}`)
 
 			// Delete the page
 			const pageIds = this.insertPages(asPageNumber, pageNames)
@@ -136,12 +139,12 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		})
 
 		client.onPromise('pages:reset-page-clear', (pageNumber) => {
-			this.logger.silly(`Reset page ${pageNumber}`)
+			this.#logger.silly(`Reset page ${pageNumber}`)
 
 			// Delete the controls, and allow them to redraw
 			const controlIds = this.getAllControlIdsOnPage(pageNumber)
 			for (const controlId of controlIds) {
-				this.controls.deleteControl(controlId)
+				this.#registry.controls.deleteControl(controlId)
 			}
 
 			// Clear the references on the page
@@ -154,7 +157,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		})
 
 		client.onPromise('pages:move-page', (pageId, pageNumber) => {
-			this.logger.silly(`Move page ${pageId} to ${pageNumber}`)
+			this.#logger.silly(`Move page ${pageId} to ${pageNumber}`)
 
 			// Bounds checks
 			if (this.getPageCount() === 1) return 'fail'
@@ -176,7 +179,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 
 			// save and report changes
 			this.#commitChanges(changedPageNumbers, false)
-			this.io.emitToRoom(PagesRoom, 'pages:update', {
+			this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
 				updatedOrder: this.#pageIds,
 				added: [],
 				changes: [],
@@ -203,7 +206,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	 * @returns ControlIds referenced on the page
 	 */
 	deletePage(pageNumber: number): string[] {
-		this.logger.silly('Delete page ' + pageNumber)
+		this.#logger.silly('Delete page ' + pageNumber)
 
 		if (pageNumber === 1 && this.getPageCount() == 1) throw new Error(`Can't delete last page`)
 
@@ -223,11 +226,11 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		const missingPageNumber = this.#pageIds.length + 1
 		changedPageNumbers.push(missingPageNumber)
-		this.graphics.clearAllForPage(missingPageNumber)
+		this.#registry.graphics.clearAllForPage(missingPageNumber)
 		changedPageIds.add(pageInfo.id)
 
 		this.#commitChanges(changedPageNumbers, false)
-		this.io.emitToRoom(PagesRoom, 'pages:update', {
+		this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
 			updatedOrder: this.#pageIds,
 			added: [],
 			changes: [],
@@ -276,7 +279,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		this.#commitChanges(changedPageNumbers, false)
 
 		// inform clients
-		this.io.emitToRoom(PagesRoom, 'pages:update', {
+		this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
 			updatedOrder: this.#pageIds,
 			added: insertedPages,
 			changes: [],
@@ -445,7 +448,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 			}
 
 			this.#commitChanges([location.pageNumber], false)
-			this.io.emitToRoom(PagesRoom, 'pages:update', {
+			this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
 				updatedOrder: null,
 				added: [],
 				changes: [
@@ -553,7 +556,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	 * @returns ControlIds referenced on the page
 	 */
 	resetPage(pageNumber: number, redraw = true): string[] {
-		this.logger.silly('Reset page ' + pageNumber)
+		this.#logger.silly('Reset page ' + pageNumber)
 
 		const removedControls = this.getAllControlIdsOnPage(pageNumber)
 
@@ -581,7 +584,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		pageInfo.controls = {}
 
 		this.#commitChanges([pageNumber], redraw)
-		this.io.emitToRoom(PagesRoom, 'pages:update', {
+		this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
 			updatedOrder: null,
 			added: [],
 			changes: [
@@ -605,10 +608,10 @@ export class PageController extends CoreBase<PageControllerEvents> {
 				...location,
 				pageNumber,
 			}
-			const oldControlId = this.page.getControlIdAt(fullLocation)
-			if (oldControlId) this.controls.deleteControl(oldControlId)
+			const oldControlId = this.getControlIdAt(fullLocation)
+			if (oldControlId) this.#registry.controls.deleteControl(oldControlId)
 
-			this.controls.createButtonControl(fullLocation, type)
+			this.#registry.controls.createButtonControl(fullLocation, type)
 		}
 	}
 
@@ -618,7 +621,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	findAllOutOfBoundsControls(): string[] {
 		const foundControlIds: string[] = []
 
-		const { minColumn, maxColumn, minRow, maxRow } = this.userconfig.getKey('gridSize')
+		const { minColumn, maxColumn, minRow, maxRow } = this.#registry.userconfig.getKey('gridSize')
 
 		for (const page of Object.values(this.#pagesById)) {
 			for (const row of Object.keys(page.controls)) {
@@ -656,10 +659,10 @@ export class PageController extends CoreBase<PageControllerEvents> {
 
 		pageInfo.name = name
 
-		this.logger.silly('Set page ' + pageNumber + ' to ', name)
+		this.#logger.silly('Set page ' + pageNumber + ' to ', name)
 
 		this.#commitChanges([pageNumber], redraw)
-		this.io.emitToRoom(PagesRoom, 'pages:update', {
+		this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
 			updatedOrder: null,
 			added: [],
 			changes: [
@@ -676,15 +679,19 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	 * Commit changes to a page entry
 	 */
 	#commitChanges(pageNumbers: number[], redraw = true): void {
-		this.db.setKey('page', this.getAll(false))
-
 		for (const pageNumber of pageNumbers) {
 			const pageInfo = this.getPageInfo(pageNumber)
+
+			if (pageInfo) {
+				this.#dbTable.set(`${pageNumber}`, pageInfo)
+			} else {
+				this.#dbTable.delete(`${pageNumber}`)
+			}
 
 			this.emit('name', pageNumber, pageInfo ? (pageInfo.name ?? '') : undefined)
 
 			if (redraw && pageInfo) {
-				this.logger.silly('page controls invalidated for page', pageNumber)
+				this.#logger.silly('page controls invalidated for page', pageNumber)
 				this.#invalidatePageNumberControls(pageNumber, pageInfo)
 			}
 		}
@@ -697,9 +704,9 @@ export class PageController extends CoreBase<PageControllerEvents> {
 		if (pageInfo?.controls) {
 			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 				for (const [column, controlId] of Object.entries(rowObj)) {
-					const control = this.controls.getControl(controlId)
+					const control = this.#registry.controls.getControl(controlId)
 					if (control && control.type === 'pagenum') {
-						this.graphics.invalidateButton({
+						this.#registry.graphics.invalidateButton({
 							pageNumber: Number(pageNumber),
 							column: Number(column),
 							row: Number(row),
@@ -715,13 +722,13 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	 */
 	#invalidateAllControlsOnPageNumber(pageNumber: number, pageInfo: PageModel): void {
 		if (pageInfo?.controls) {
-			this.graphics.clearAllForPage(pageNumber)
+			this.#registry.graphics.clearAllForPage(pageNumber)
 
 			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 				for (const [column, controlId] of Object.entries(rowObj)) {
-					const control = this.controls.getControl(controlId)
+					const control = this.#registry.controls.getControl(controlId)
 					if (control) {
-						this.graphics.invalidateButton({
+						this.#registry.graphics.invalidateButton({
 							pageNumber: pageNumber,
 							column: Number(column),
 							row: Number(row),
@@ -757,7 +764,6 @@ export class PageController extends CoreBase<PageControllerEvents> {
 	 */
 	#setupPages(rawPageData: Record<string, PageModel>): void {
 		// Load existing data
-		let changedIds = false
 		for (let i = 1; true; i++) {
 			const pageInfo = rawPageData[i]
 			if (!pageInfo) break
@@ -765,15 +771,14 @@ export class PageController extends CoreBase<PageControllerEvents> {
 			// Ensure each page has an id defined
 			if (!pageInfo.id) {
 				pageInfo.id = nanoid()
-				changedIds = true
+
+				// Save the changes
+				this.#dbTable.set(`${i}`, pageInfo)
 			}
 
 			this.#pagesById[pageInfo.id] = pageInfo
 			this.#pageIds.push(pageInfo.id)
 		}
-
-		// If the id of any page was added, save the changes
-		if (changedIds) this.db.setKey('page', this.getAll(false))
 
 		// Default values
 		if (this.#pageIds.length === 0) {
@@ -787,7 +792,7 @@ export class PageController extends CoreBase<PageControllerEvents> {
 			this.#pagesById[newPageInfo.id] = newPageInfo
 			this.#pageIds = [newPageInfo.id]
 
-			this.db.setKey('page', { 1: newPageInfo })
+			this.#dbTable.set('1', newPageInfo)
 
 			setImmediate(() => {
 				this.createPageDefaultNavButtons(1)
