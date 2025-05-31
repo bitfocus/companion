@@ -70,6 +70,7 @@ const SurfacesRoom = 'surfaces'
 export interface SurfaceControllerEvents {
 	surface_name: [surfaceId: string, name: string]
 	surface_page: [surfaceId: string, pageId: string]
+	surface_locked: [surfaceId: string, locked: boolean]
 	'surface-add': [surfaceId: string]
 	'surface-delete': [surfaceId: string]
 
@@ -685,6 +686,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+				locked: false,
 				hasFirmwareUpdates: null,
 
 				size: config.gridSize || null,
@@ -698,6 +700,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
+				surfaceInfo.locked = surfaceHandler.isLocked
 				surfaceInfo.hasFirmwareUpdates = surfaceHandler.panel.info.hasFirmwareUpdates || null
 			}
 

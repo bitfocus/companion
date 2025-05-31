@@ -29,6 +29,7 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
+	locked: boolean
 
 	hasFirmwareUpdates: SurfaceFirmwareUpdateInfo | null
 
