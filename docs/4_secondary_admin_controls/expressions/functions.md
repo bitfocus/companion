@@ -208,10 +208,6 @@ Check if an array includes a value
 
 If this encounters invalid input, it will return false
 
-**arrlen(obj)**
-
-Find the length of the given array.
-
 ##### Time operations
 
 **unixNow()**

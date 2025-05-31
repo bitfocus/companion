@@ -145,9 +145,6 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		if (!Array.isArray(arr)) return false
 		return arr.includes(val)
 	},
-	arrlen: (arr = []) => {
-		return (Array.isArray(arr) ? arr : [arr]).length
-	},
 
 	// Time operations
 	unixNow: () => Date.now(),
