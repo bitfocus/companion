@@ -1286,6 +1286,7 @@ __metadata:
     html-entities: "npm:^2.6.0"
     intersection-observer: "npm:^0.12.2"
     jsdom: "npm:^26.1.0"
+    json5: "npm:^2.2.3"
     lodash-es: "npm:^4.17.21"
     marked: "npm:^15.0.12"
     marked-base-url: "npm:^1.1.6"
