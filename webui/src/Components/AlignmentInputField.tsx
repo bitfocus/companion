@@ -3,8 +3,14 @@ import classnames from 'classnames'
 import type { CompanionAlignment } from '@companion-module/base'
 import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAlignCenter, faAlignLeft, faAlignRight, IconDefinition } from '@fortawesome/free-solid-svg-icons'
+import {
+	AlignBottomIcon,
+	AlignCenterHorizontallyIcon,
+	AlignCenterVerticallyIcon,
+	AlignLeftIcon,
+	AlignRightIcon,
+	AlignTopIcon,
+} from '@radix-ui/react-icons'
 
 interface AlignmentInputFieldProps {
 	value: CompanionAlignment
@@ -33,9 +39,15 @@ interface AlignmentInputFieldProps2 {
 export function HorizontalAlignmentInputField({ value, setValue }: AlignmentInputFieldProps2) {
 	return (
 		<CButtonGroup>
-			<AlignmentButton icon={faAlignLeft} value={value} setValue={setValue} buttonValue={'left'} title="Left" />
-			<AlignmentButton icon={faAlignCenter} value={value} setValue={setValue} buttonValue={'center'} title="Center" />
-			<AlignmentButton icon={faAlignRight} value={value} setValue={setValue} buttonValue={'right'} title="Right" />
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'left'} title="Left">
+				<AlignLeftIcon />
+			</AlignmentButton>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center">
+				<AlignCenterHorizontallyIcon />
+			</AlignmentButton>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'right'} title="Right">
+				<AlignRightIcon />
+			</AlignmentButton>
 		</CButtonGroup>
 	)
 }
@@ -43,27 +55,38 @@ export function HorizontalAlignmentInputField({ value, setValue }: AlignmentInpu
 export function VerticalAlignmentInputField({ value, setValue }: AlignmentInputFieldProps2) {
 	return (
 		<CButtonGroup>
-			<AlignmentButton icon={faAlignLeft} value={value} setValue={setValue} buttonValue={'top'} title="Top" />
-			<AlignmentButton icon={faAlignCenter} value={value} setValue={setValue} buttonValue={'center'} title="Center" />
-			<AlignmentButton icon={faAlignRight} value={value} setValue={setValue} buttonValue={'bottom'} title="Bottom" />
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'top'} title="Top">
+				<AlignTopIcon />
+			</AlignmentButton>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center">
+				<AlignCenterVerticallyIcon />
+			</AlignmentButton>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'bottom'} title="Bottom">
+				<AlignBottomIcon />
+			</AlignmentButton>
 		</CButtonGroup>
 	)
 }
 
 interface AlignmentButtonProps extends AlignmentInputFieldProps2 {
-	icon: IconDefinition
 	buttonValue: string
 	title: string
 }
 
-function AlignmentButton({ icon, value, setValue, buttonValue, title }: AlignmentButtonProps) {
+function AlignmentButton({
+	value,
+	setValue,
+	buttonValue,
+	title,
+	children,
+}: React.PropsWithChildren<AlignmentButtonProps>) {
 	return (
 		<CButton
 			color={value === buttonValue ? 'primary' : 'secondary'}
 			onClick={() => setValue(buttonValue)}
 			title={title}
 		>
-			<FontAwesomeIcon icon={icon} />
+			{children}
 		</CButton>
 	)
 }
