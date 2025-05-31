@@ -253,7 +253,6 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 				params['TEXT'] = Buffer.from(text).toString('base64')
 			}
 			if (this.#streamTextStyle) {
-				// TODO-layered: reimplement for layered buttons
 				params['FONT_SIZE'] = style.text?.size ?? 'auto'
 			}
 
