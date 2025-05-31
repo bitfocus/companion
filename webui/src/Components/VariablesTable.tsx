@@ -220,45 +220,46 @@ const VariablesTableRow = observer(function VariablesTableRow({
 					/*elms === '' || elms === null || elms === undefined */ lines.length === 0 ? (
 						'(empty)'
 					) : (
-						<div
-							style={{
-								display: 'inline',
-							}}
-						>
-							<span
-								style={{
-									backgroundColor: 'rgba(0,0,200,1)',
-									borderRadius: '6px 0 0 6px',
-									padding: '4px',
-									height: '24px',
-									display: 'inline-block',
-									lineHeight: '14px',
-								}}
-								title={`Variable type: ${typeDescription}`}
-							>
-								<VariableTypeIcon
-									width={12}
-									height={12}
-									icon={iconPath}
-									fill="#ffffff"
-									style={{ verticalAlign: '-1px' }}
-								/>
-							</span>
-							<code
+						<div style={{ display: 'flex', alignItems: 'center' }}>
+							<div
 								style={{
 									backgroundColor: 'rgba(0,0,200,0.1)',
-									color: 'rgba(0,0,200,1)',
-									padding: '4px',
-									borderRadius: '0 6px 6px 0',
-									fontSize: 14,
-									fontWeight: 'normal',
-									lineHeight: '2em',
+									color: 'rgb(0, 0, 200)',
+									borderRadius: '6px',
+									padding: '4px 12px',
+									display: 'inline-table',
+									lineHeight: '14px',
 								}}
-								title={value}
 							>
-								{elms}
-							</code>
-
+								<span
+									style={{
+										padding: '4px',
+										paddingLeft: '6px',
+										display: 'table-cell',
+										verticalAlign: 'top',
+									}}
+									title={`Variable type: ${typeDescription}`}
+								>
+									<VariableTypeIcon
+										width={12}
+										height={12}
+										icon={iconPath}
+										fill="#0000c8"
+										style={{ verticalAlign: '-1px' }}
+									/>
+								</span>
+								<code
+									style={{
+										display: 'table-cell',
+										verticalAlign: 'top',
+										color: 'rgb(0, 0, 200)',
+										padding: '5.5px 6px 5.5px 4px',
+									}}
+									title={value}
+								>
+									{elms}
+								</code>
+							</div>
 							<CopyToClipboard text={value} onCopy={onCopied}>
 								<CButton size="sm" title="Copy variable value">
 									<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />

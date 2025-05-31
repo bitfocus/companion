@@ -450,46 +450,52 @@ function CustomVariableRow({
 						{isCollapsed && (
 							<div className="cell-header-item grow">
 								{compactValue.length > 0 && (
-									<>
-										<span
+									<div style={{ display: 'flex', alignItems: 'center' }}>
+										<div
 											style={{
 												backgroundColor: 'rgba(0,0,200,0.1)',
-												borderRadius: '6px 0 0 6px',
-												padding: '4px',
-												height: '24px',
-												display: 'inline-block',
+												color: 'rgb(0, 0, 200)',
+												borderRadius: '6px',
+												padding: '4px 12px',
+												display: 'inline-table',
 												lineHeight: '14px',
 											}}
-											title={`Variable type: ${typeDescription}`}
 										>
-											<VariableTypeIcon
-												width={12}
-												height={12}
-												icon={iconPath}
-												fill="rgba(0,0,200,1)"
-												style={{ verticalAlign: '-1px' }}
-											/>
-										</span>
-										<code
-											style={{
-												backgroundColor: 'rgba(0,0,200,0.1)',
-												color: 'rgba(0,0,200,1)',
-												fontWeight: 'normal',
-												fontSize: 14,
-												padding: '4px',
-												lineHeight: '2em',
-												borderRadius: '0 6px 6px 0',
-											}}
-											title={value}
-										>
-											{compactValue}
-										</code>
-										<CopyToClipboard text={valueStr} onCopy={onCopied}>
-											<CButton size="sm" title="Copy current variable value">
+											<span
+												style={{
+													padding: '4px',
+													paddingLeft: '6px',
+													display: 'table-cell',
+													verticalAlign: 'top',
+												}}
+												title={`Variable type: ${typeDescription}`}
+											>
+												<VariableTypeIcon
+													width={12}
+													height={12}
+													icon={iconPath}
+													fill="#0000c8"
+													style={{ verticalAlign: '-1px' }}
+												/>
+											</span>
+											<code
+												style={{
+													display: 'table-cell',
+													verticalAlign: 'top',
+													color: 'rgb(0, 0, 200)',
+													padding: '5.5px 6px 5.5px 4px',
+												}}
+												title={value}
+											>
+												{compactValue}
+											</code>
+										</div>
+										<CopyToClipboard text={value} onCopy={onCopied}>
+											<CButton size="sm" title="Copy variable value">
 												<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
 											</CButton>
 										</CopyToClipboard>
-									</>
+									</div>
 								)}
 								{value?.length === 0 && (
 									<>
@@ -561,11 +567,6 @@ function CustomVariableRow({
 											name={name}
 											setCurrentValue={setStartupValue}
 										/>
-										{/* <TextInputField
-											disabled={!!info.persistCurrentValue}
-											value={info.defaultValue + ''}
-											setValue={(val) => setStartupValue(name, val)}
-										/> */}
 									</CCol>
 								</CRow>
 							</CForm>
