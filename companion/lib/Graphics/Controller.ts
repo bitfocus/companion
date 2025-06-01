@@ -85,11 +85,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 	)
 
-	/**
-	 * Generated pincode bitmaps
-	 */
-	#pincodeBuffersCache: Omit<PincodeBitmaps, 'code'> | null = null
-
 	#pendingVariables: CompanionVariableValues | null = null
 	/**
 	 * Debounce updating the variables, as buttons are often drawn in floods
@@ -221,6 +216,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								buttonStyle,
 								location,
 								pagename,
+								undefined,
 								CRASHED_WORKER_RETRY_COUNT
 							)
 							render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
@@ -356,9 +352,37 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			drawStyle,
 			undefined,
 			undefined,
+			undefined,
 			CRASHED_WORKER_RETRY_COUNT
 		)
 		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle)
+	}
+
+	async drawNativeSizeButtonImage(
+		width0: number,
+		height0: number,
+		location: ControlLocation,
+		image: ImageResult
+	): Promise<ImageResult> {
+		const rawStyle = image.style
+		if (!rawStyle) {
+			// Weird, but whatever...
+			return GraphicsRenderer.drawBlank(this.#drawOptions, location)
+		}
+
+		let oversampling = 4
+		if (width0 > 100) oversampling = 2
+
+		const newStyle = typeof rawStyle === 'string' ? { style: rawStyle } : rawStyle
+
+		const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+			newStyle,
+			location,
+			undefined, // TODO - this should be something?
+			{ width: width0, height: height0, oversampling },
+			CRASHED_WORKER_RETRY_COUNT
+		)
+		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, newStyle)
 	}
 
 	/**
@@ -452,19 +476,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Generate pincode images
 	 */
-	getImagesForPincode(pincode: string): PincodeBitmaps {
-		if (!this.#pincodeBuffersCache) {
-			this.#pincodeBuffersCache = {}
+	getPincodeNumberImages(width: number, height: number): PincodeBitmaps {
+		const pincodeBuffersCache: PincodeBitmaps = {}
 
-			for (let i = 0; i < 10; i++) {
-				this.#pincodeBuffersCache[i] = GraphicsRenderer.drawPincodeNumber(i)
-			}
+		for (let i = 0; i <= 9; i++) {
+			pincodeBuffersCache[i] = GraphicsRenderer.drawPincodeNumber(width, height, i)
 		}
 
-		return {
-			...this.#pincodeBuffersCache,
-			code: GraphicsRenderer.drawPincodeEntry(pincode),
-		}
+		return pincodeBuffersCache
+	}
+
+	getPincodeCodeImage(width: number, height: number, pincode: string): ImageResult {
+		return GraphicsRenderer.drawPincodeEntry(width, height, pincode)
 	}
 
 	/**
@@ -492,6 +515,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		drawStyle: DrawStyleModel,
 		location: ControlLocation | undefined,
 		pagename: string | undefined,
+		resolution: { width: number; height: number; oversampling: number } | undefined,
 		remainingAttempts: number
 	): Promise<{
 		buffer: Buffer
@@ -501,15 +525,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
 		if (DEBUG_DISABLE_RENDER_THREADING) {
-			return GraphicsRenderer.drawButtonImageUnwrapped(this.#drawOptions, drawStyle, location, pagename)
+			return GraphicsRenderer.drawButtonImageUnwrapped(this.#drawOptions, drawStyle, location, pagename, resolution)
 		}
 
 		try {
-			return this.#pool.exec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename])
+			return this.#pool.exec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename, resolution])
 		} catch (e: any) {
 			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
 			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
-				return this.#executePoolDrawButtonImage(drawStyle, location, pagename, remainingAttempts - 1)
+				return this.#executePoolDrawButtonImage(drawStyle, location, pagename, resolution, remainingAttempts - 1)
 			} else {
 				throw e
 			}
@@ -517,7 +541,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}
 }
 
-type PincodeBitmaps = {
-	code: ImageResult
+export type PincodeBitmaps = {
 	[index: number]: ImageResult
 }

@@ -60,14 +60,14 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 export interface DrawButtonItem {
 	x: number
 	y: number
-	// image: ImageResult
 
-	type: 'button' | 'pageup' | 'pagedown' | 'pagenum' | undefined
+	type: 'button-layered' | 'button' | 'pageup' | 'pagedown' | 'pagenum' | undefined
 	/**
 	 * Image draw style
 	 */
 	style: DrawStyleButtonModel | undefined
 
+	/** @deprecated This should not be necessary */
 	defaultRender: ImageResult
 	imageFn: (width: number, height: number) => Promise<ImageResult>
 }
