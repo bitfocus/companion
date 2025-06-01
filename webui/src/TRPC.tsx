@@ -1,8 +1,9 @@
-import { createTRPCContext } from '@trpc/tanstack-react-query'
+import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query'
 import type { AppRouter } from '../../companion/lib/UI/TRPC.js' // Type only import the router
 import { createTRPCClient, createWSClient, loggerLink, wsLink } from '@trpc/client'
+import { QueryClient } from '@tanstack/react-query'
 
-export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRouter>()
+export const queryClient = new QueryClient()
 
 const wsClient = createWSClient({
 	url: `/trpc`,
@@ -24,4 +25,9 @@ export const trpcClient = createTRPCClient<AppRouter>({
 		// 	// },
 		// }),
 	],
+})
+
+export const trpc = createTRPCOptionsProxy<AppRouter>({
+	client: trpcClient,
+	queryClient,
 })

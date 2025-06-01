@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
-import { useTRPC } from '../TRPC.js'
+import { trpc } from '../TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useQuery } from '@tanstack/react-query'
 
@@ -28,7 +28,6 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 
 	const { showToggle, clickToggle } = useSidebarState()
 
-	const trpc = useTRPC()
 	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
 
 	return (
@@ -77,7 +76,6 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 })
 
 function HeaderVersion() {
-	const trpc = useTRPC()
 	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
 
 	const versionString = versionInfo.data
