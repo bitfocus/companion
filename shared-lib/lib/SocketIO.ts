@@ -235,7 +235,7 @@ export interface ClientToBackendEventsMap {
 	'surfaces:group-remove': (groupId: string) => string
 	'surfaces:group-config-set': (groupId: string, key: string, value: any) => SurfaceGroupConfig | string
 	'surfaces:emulator-remove': (surfaceId: string) => boolean
-	'surfaces:emulator-add': () => string
+	'surfaces:emulator-add': (baseId: string, name: string) => string
 	'surfaces:rescan': () => string | undefined
 	'surfaces:config-get': (surfaceId: string) => SurfacePanelConfig | null
 	'surfaces:config-set': (surfaceId: string, panelConfig: SurfacePanelConfig) => SurfacePanelConfig | string

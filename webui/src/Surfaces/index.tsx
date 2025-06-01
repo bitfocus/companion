@@ -7,11 +7,13 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
 import { KnownSurfacesTable } from './KnownSurfacesTable.js'
 import { OutboundSurfacesTable } from './OutboundSurfacesTable.js'
+import { AddEmulatorModal, AddEmulatorModalRef } from './AddEmulatorModal.js'
 
 export function ConfiguredSurfacesTab() {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
+	const addEmulatorModalRef = useRef<AddEmulatorModalRef>(null)
 
 	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState<string | null>(null)
@@ -34,13 +36,11 @@ export function ConfiguredSurfacesTab() {
 	}, [socket])
 
 	const addEmulator = useCallback(() => {
-		socket.emitPromise('surfaces:emulator-add', []).catch((err) => {
-			console.error('Emulator add failed', err)
-		})
-	}, [socket])
+		addEmulatorModalRef.current?.show()
+	}, [])
 	const addGroup = useCallback(() => {
 		addGroupModalRef.current?.show()
-	}, [socket])
+	}, [])
 
 	return (
 		<CRow>
@@ -70,6 +70,7 @@ export function ConfiguredSurfacesTab() {
 				</CButtonGroup>
 
 				<AddSurfaceGroupModal ref={addGroupModalRef} />
+				<AddEmulatorModal ref={addEmulatorModalRef} />
 
 				<KnownSurfacesTable />
 

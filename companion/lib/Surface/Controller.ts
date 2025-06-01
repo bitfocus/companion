@@ -169,7 +169,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			for (const id of Object.keys(instances)) {
 				// If the id starts with 'emulator:' then re-add it
 				if (id.startsWith('emulator:')) {
-					this.addEmulator(id.substring(9))
+					this.addEmulator(id.substring(9), '')
 				}
 			}
 
@@ -292,13 +292,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param id base id of the emulator
 	 * @param skipUpdate Skip emitting an update to the devices list
 	 */
-	addEmulator(id: string, skipUpdate = false): void {
+	addEmulator(id: string, name: string, skipUpdate = false): void {
 		const fullId = EmulatorRoom(id)
 		if (this.#surfaceHandlers.has(fullId)) {
 			throw new Error(`Emulator "${id}" already exists!`)
 		}
 
-		this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#io, id))
+		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#io, id))
+		handler.setPanelName(name)
 
 		if (!skipUpdate) this.updateDevicesList()
 	}
@@ -306,7 +307,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Create a `SurfaceHandler` for a `SurfacePanel`
 	 */
-	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): void {
+	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): SurfaceHandler {
 		const existingSurfaceConfig = this.getDeviceConfig(panel.info.deviceId)
 		if (!existingSurfaceConfig) {
 			this.#logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
@@ -348,6 +349,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		// Perform an update check in the background
 		this.#firmwareUpdates.triggerCheckSurfaceForUpdates(handler)
+
+		return handler
 	}
 
 	/**
@@ -470,12 +473,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			return 'device not found'
 		})
 
-		client.onPromise('surfaces:emulator-add', () => {
-			// TODO - should this do friendlier ids?
-			const id = nanoid()
-			this.addEmulator(id)
+		client.onPromise('surfaces:emulator-add', (baseId, name) => {
+			if (!baseId || typeof baseId !== 'string') throw new Error('Invalid id')
+			const fullId = `emulator:${baseId}`
 
-			return id
+			if (this.#surfaceHandlers.has(fullId)) throw new Error(`Emulator "${baseId}" already exists!`)
+
+			this.addEmulator(baseId, name || '')
+
+			return fullId
 		})
 
 		client.onPromise('surfaces:emulator-remove', (id) => {
@@ -1198,7 +1204,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				this.setDeviceConfig(surfaceId, surfaceConfig)
 
 				if (surfaceId.startsWith('emulator:')) {
-					this.addEmulator(surfaceId.substring(9))
+					this.addEmulator(surfaceId.substring(9), '')
 				}
 			}
 		}
