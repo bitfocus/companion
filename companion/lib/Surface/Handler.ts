@@ -299,7 +299,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		return getSurfaceName(this.#surfaceConfig, this.surfaceId)
 	}
 
-	#pincodeNumberImagesDefault: PincodeBitmaps | undefined
+	// Draw and cache the pincode numbers per-surface, to ensure we don't keep around native sizes longer than necessary
+	#pincodeNumberImagesCache: PincodeBitmaps | undefined
 
 	#drawPage() {
 		if (this.panel) {
@@ -309,8 +310,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					return
 				}
 
-				this.#pincodeNumberImagesDefault =
-					this.#pincodeNumberImagesDefault || this.#graphics.getPincodeNumberImages(72, 72)
+				this.#pincodeNumberImagesCache = this.#pincodeNumberImagesCache || this.#graphics.getPincodeNumberImages(72, 72)
 
 				const pincode = this.#currentPincodeEntry
 				this.panel.clearDeck()
@@ -326,11 +326,11 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				]
 
 				this.#pincodeNumberPositions.forEach(([x, y], i) => {
-					if (this.#pincodeNumberImagesDefault?.[i]) {
+					if (this.#pincodeNumberImagesCache?.[i]) {
 						rawEntries.push({
 							x,
 							y,
-							defaultRender: this.#pincodeNumberImagesDefault[i],
+							defaultRender: this.#pincodeNumberImagesCache[i],
 							style: undefined,
 							type: undefined,
 						})
