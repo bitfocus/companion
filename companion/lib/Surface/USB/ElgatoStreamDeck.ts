@@ -213,7 +213,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 				let newbuffer: Buffer
 				try {
 					// TODO-layered handle rotation
-					const render = await drawItem.imageFn(control.pixelSize.width, control.pixelSize.height)
+					const render = await drawItem.imageFn(targetSize, targetSize)
 
 					newbuffer = await transformButtonImage(
 						render,
