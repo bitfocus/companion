@@ -18,7 +18,7 @@ import fs from 'fs'
 import serveZip from 'express-serve-zip'
 import { fileURLToPath } from 'url'
 import * as trpcExpress from '@trpc/server/adapters/express'
-import { AppRouter, createTrpcContext } from './TRPC.js'
+import { AppRouter, createTrpcExpressContext } from './TRPC.js'
 
 /**
  * Create a zip serve app
@@ -155,7 +155,7 @@ export class UIExpress {
 		this.#trpcRouter.use(
 			trpcExpress.createExpressMiddleware({
 				router: trpcRouter,
-				createContext: createTrpcContext,
+				createContext: createTrpcExpressContext,
 			})
 		)
 

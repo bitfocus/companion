@@ -17,7 +17,7 @@ import type { Server as HttpsServer } from 'https'
 import { EventEmitter } from 'events'
 import { applyWSSHandler } from '@trpc/server/adapters/ws'
 import { WebSocketServer } from 'ws'
-import { AppRouter, createTrpcContext } from './TRPC.js'
+import { AppRouter, createTrpcWsContext } from './TRPC.js'
 
 type IOListenEvents = import('@companion-app/shared/SocketIO.js').ClientToBackendEventsListenMap
 type IOEmitEvents = import('@companion-app/shared/SocketIO.js').BackendToClientEventsMap
@@ -114,8 +114,6 @@ interface UIHandlerEvents {
 export class UIHandler extends EventEmitter<UIHandlerEvents> {
 	readonly #logger = LogController.createLogger('UI/Handler')
 
-	readonly #appInfo: AppInfo
-
 	/**
 	 * Socket.IO Server options
 	 */
@@ -132,10 +130,8 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 	})
 	#broadcastDisconnect?: () => void
 
-	constructor(appInfo: AppInfo, http: HttpServer) {
+	constructor(_appInfo: AppInfo, http: HttpServer) {
 		super()
-
-		this.#appInfo = appInfo
 
 		this.#socketIOOptions = {
 			allowEIO3: true,
@@ -226,9 +222,9 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 
 		// TODO - this shouldnt be here like this..
 		const handler = applyWSSHandler({
-			wss: this.#wss,
+			wss: this.#wss as any,
 			router: trpcRouter,
-			createTrpcContext,
+			createContext: createTrpcWsContext,
 			// Enable heartbeat messages to keep connection open (disabled by default)
 			keepAlive: {
 				enabled: true,

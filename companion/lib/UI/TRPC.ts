@@ -1,17 +1,25 @@
 import { initTRPC } from '@trpc/server'
 import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
+import type * as trpcWs from '@trpc/server/adapters/ws'
 import { EventEmitter, on } from 'events'
 
+export interface TrpcContext {
+	val: null
+}
 // created for each request
-export const createTrpcContext = ({} /* req, res */ : trpcExpress.CreateExpressContextOptions) => ({}) // no context
-type Context = Awaited<ReturnType<typeof createTrpcContext>>
+export const createTrpcExpressContext = ({} /* req, res */ : trpcExpress.CreateExpressContextOptions): TrpcContext => ({
+	val: null,
+}) // no context
+export const createTrpcWsContext = ({} /* req, res */ : trpcWs.CreateWSSContextFnOptions): TrpcContext => ({
+	val: null,
+}) // no context
 
 /**
  * Initialization of tRPC backend
  * Should be done only once per backend!
  */
-const t = initTRPC.context<Context>().create()
+const t = initTRPC.context<TrpcContext>().create()
 
 /**
  * Export reusable router and procedure helpers
