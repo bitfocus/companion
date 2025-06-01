@@ -31,6 +31,21 @@ export class GraphicsRenderer {
 
 	static #IMAGE_CACHE = new Map<string, Image[]>()
 
+	static calculateTransforms(resolution: { width: number; height: number }) {
+		// Calculate some constants for drawing without reinventing the numbers
+		const drawScale = Math.min(resolution.width, resolution.height) / 72
+		const xOffset = (resolution.width - 72 * drawScale) / 2
+		const yOffset = (resolution.height - 72 * drawScale) / 2
+		const transformX = (x: number): number => xOffset + x * drawScale
+		const transformY = (y: number): number => yOffset + y * drawScale
+
+		return {
+			drawScale,
+			transformX,
+			transformY,
+		}
+	}
+
 	/**
 	 * Get a cached Image instance.
 	 * Note: This assumes that the image is modified sync
@@ -62,17 +77,24 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for an empty button
 	 */
-	static drawBlank(options: GraphicsOptions, location: ControlLocation): ImageResult {
+	static drawBlank(
+		resolution: { width: number; height: number },
+		options: GraphicsOptions,
+		location: ControlLocation
+	): ImageResult {
 		// let now = performance.now()
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
-		return GraphicsRenderer.#getCachedImage(72, 72, 2, (img) => {
+		return GraphicsRenderer.#getCachedImage(resolution.width, resolution.height, 2, (img) => {
 			img.fillColor('black')
 
+			// Calculate some constants for drawing without reinventing the numbers
+			const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
+
 			if (!options.remove_topbar) {
-				img.drawTextLine(2, 3, formatLocation(location), 'rgb(50, 50, 50)', 8)
-				img.horizontalLine(13.5, { color: 'rgb(30, 30, 30)' })
+				img.drawTextLine(transformX(2), transformY(3), formatLocation(location), 'rgb(50, 50, 50)', 8 * drawScale)
+				img.horizontalLine(transformY(13.5), { color: 'rgb(30, 30, 30)' })
 			}
 			// console.timeEnd('drawBlankImage')
 			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined, undefined)
@@ -127,11 +149,7 @@ export class GraphicsRenderer {
 				let draw_style: DrawStyleModel['style'] | undefined = undefined
 
 				// Calculate some constants for drawing without reinventing the numbers
-				const drawScale = Math.min(resolution.width, resolution.height) / 72
-				const xOffset = (resolution.width - 72 * drawScale) / 2
-				const yOffset = (resolution.height - 72 * drawScale) / 2
-				const transformX = (x: number): number => xOffset + x * drawScale
-				const transformY = (y: number): number => yOffset + y * drawScale
+				const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
 
 				// special button types
 				if (drawStyle.style == 'pageup') {

@@ -230,7 +230,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank(this.#drawOptions, location)
+						render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
 					}
 
 					// Only cache the render, if it is within the valid bounds
@@ -292,7 +292,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank(this.#drawOptions, location)
+				const blankRender = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
 
 				this.#updateCacheWithRender(location, blankRender)
 				this.emit('button_drawn', location, blankRender)
@@ -374,8 +374,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	): Promise<ImageResult> {
 		const rawStyle = image.style
 		if (!rawStyle) {
-			// Weird, but whatever...
-			return GraphicsRenderer.drawBlank(this.#drawOptions, location)
+			// Should be a blank button
+			return GraphicsRenderer.drawBlank({ width: width0, height: height0 }, this.#drawOptions, location)
 		}
 
 		let oversampling = 4
@@ -512,7 +512,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank(this.#drawOptions, location)
+		return GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
 	}
 
 	/**
