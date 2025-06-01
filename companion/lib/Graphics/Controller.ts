@@ -219,7 +219,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								undefined,
 								CRASHED_WORKER_RETRY_COUNT
 							)
-							render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
+							render = GraphicsRenderer.wrapDrawButtonImage(
+								buffer,
+								width,
+								height,
+								dataUrl,
+								draw_style,
+								buttonStyle,
+								pagename
+							)
 						}
 					} else {
 						render = GraphicsRenderer.drawBlank(this.#drawOptions, location)
@@ -355,7 +363,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			undefined,
 			CRASHED_WORKER_RETRY_COUNT
 		)
-		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle)
+		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle, undefined)
 	}
 
 	async drawNativeSizeButtonImage(
@@ -378,11 +386,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
 			newStyle,
 			location,
-			undefined, // TODO - this should be something?
+			image.pagename,
 			{ width: width0, height: height0, oversampling },
 			CRASHED_WORKER_RETRY_COUNT
 		)
-		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, newStyle)
+		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, newStyle, image.pagename)
 	}
 
 	/**

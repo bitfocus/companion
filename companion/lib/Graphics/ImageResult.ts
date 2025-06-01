@@ -29,16 +29,30 @@ export class ImageResult {
 	readonly style: ImageResultStyle | undefined
 
 	/**
+	 * Page name for this image, if applicable
+	 * This is a bit of a hack...
+	 */
+	readonly pagename: string | undefined
+
+	/**
 	 * Last updated time
 	 */
 	readonly updated: number
 
-	constructor(buffer: Buffer, width: number, height: number, dataUrl: string, style: ImageResultStyle | undefined) {
+	constructor(
+		buffer: Buffer,
+		width: number,
+		height: number,
+		dataUrl: string,
+		style: ImageResultStyle | undefined,
+		pagename: string | undefined
+	) {
 		this.buffer = buffer
 		this.bufferWidth = width
 		this.bufferHeight = height
 		this.#dataUrl = dataUrl
 		this.style = style
+		this.pagename = pagename
 
 		this.updated = Date.now()
 	}

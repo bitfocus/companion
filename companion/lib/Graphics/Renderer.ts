@@ -75,7 +75,7 @@ export class GraphicsRenderer {
 				img.horizontalLine(13.5, { color: 'rgb(30, 30, 30)' })
 			}
 			// console.timeEnd('drawBlankImage')
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined, undefined)
 		})
 	}
 
@@ -85,7 +85,8 @@ export class GraphicsRenderer {
 		height: number,
 		dataUrl: string,
 		draw_style: DrawStyleModel['style'] | undefined,
-		drawStyle: DrawStyleModel
+		drawStyle: DrawStyleModel,
+		pagename: string | undefined
 	): ImageResult {
 		const draw_style2 =
 			draw_style === 'button' || draw_style === 'button-layered'
@@ -94,7 +95,7 @@ export class GraphicsRenderer {
 					: undefined
 				: draw_style
 
-		return new ImageResult(buffer, width, height, dataUrl, draw_style2)
+		return new ImageResult(buffer, width, height, dataUrl, draw_style2, pagename)
 	}
 
 	/**
@@ -114,7 +115,7 @@ export class GraphicsRenderer {
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
 		// Only use provided resolution if the drawStyle is button-layered
-		if (!resolution || drawStyle.style !== 'button-layered') resolution = { width: 72, height: 72, oversampling: 4 }
+		if (!resolution || drawStyle.style === 'button') resolution = { width: 72, height: 72, oversampling: 4 }
 
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
@@ -125,6 +126,13 @@ export class GraphicsRenderer {
 			async (img) => {
 				let draw_style: DrawStyleModel['style'] | undefined = undefined
 
+				// Calculate some constants for drawing without reinventing the numbers
+				const drawScale = Math.min(resolution.width, resolution.height) / 72
+				const xOffset = (resolution.width - 72 * drawScale) / 2
+				const yOffset = (resolution.height - 72 * drawScale) / 2
+				const transformX = (x: number): number => xOffset + x * drawScale
+				const transformY = (y: number): number => yOffset + y * drawScale
+
 				// special button types
 				if (drawStyle.style == 'pageup') {
 					draw_style = 'pageup'
@@ -132,38 +140,66 @@ export class GraphicsRenderer {
 					img.fillColor(colorDarkGrey)
 
 					if (options.page_plusminus) {
-						img.drawTextLine(31, 20, options.page_direction_flipped ? '–' : '+', colorWhite, 18)
+						img.drawTextLine(
+							transformX(31),
+							transformY(20),
+							options.page_direction_flipped ? '–' : '+',
+							colorWhite,
+							18 * drawScale
+						)
 					} else {
 						img.drawPath(
 							[
-								[46, 30],
-								[36, 20],
-								[26, 30],
+								[transformX(46), transformY(30)],
+								[transformX(36), transformY(20)],
+								[transformX(26), transformY(30)],
 							],
 							{ color: colorWhite, width: 2 }
 						) // Arrow up path
 					}
 
-					img.drawTextLineAligned(36, 39, 'UP', colorButtonYellow, 10, 'center', 'top')
+					img.drawTextLineAligned(
+						transformX(36),
+						transformY(39),
+						'UP',
+						colorButtonYellow,
+						10 * drawScale,
+						'center',
+						'top'
+					)
 				} else if (drawStyle.style == 'pagedown') {
 					draw_style = 'pagedown'
 
 					img.fillColor(colorDarkGrey)
 
 					if (options.page_plusminus) {
-						img.drawTextLine(31, 36, options.page_direction_flipped ? '+' : '–', colorWhite, 18)
+						img.drawTextLine(
+							transformX(31),
+							transformY(36),
+							options.page_direction_flipped ? '+' : '–',
+							colorWhite,
+							18 * drawScale
+						)
 					} else {
 						img.drawPath(
 							[
-								[46, 40],
-								[36, 50],
-								[26, 40],
+								[transformX(46), transformY(40)],
+								[transformX(36), transformY(50)],
+								[transformX(26), transformY(40)],
 							],
 							{ color: colorWhite, width: 2 }
 						) // Arrow down path
 					}
 
-					img.drawTextLineAligned(36, 23, 'DOWN', colorButtonYellow, 10, 'center', 'top')
+					img.drawTextLineAligned(
+						transformX(36),
+						transformY(23),
+						'DOWN',
+						colorButtonYellow,
+						10 * drawScale,
+						'center',
+						'top'
+					)
 				} else if (drawStyle.style == 'pagenum') {
 					draw_style = 'pagenum'
 
@@ -171,13 +207,39 @@ export class GraphicsRenderer {
 
 					if (location === undefined) {
 						// Preview (no location)
-						img.drawTextLineAligned(36, 18, 'PAGE', colorButtonYellow, 10, 'center', 'top')
-						img.drawTextLineAligned(36, 32, 'x', colorWhite, 18, 'center', 'top')
+						img.drawTextLineAligned(
+							transformX(36),
+							transformY(18),
+							'PAGE',
+							colorButtonYellow,
+							10 * drawScale,
+							'center',
+							'top'
+						)
+						img.drawTextLineAligned(transformX(36), transformY(32), 'x', colorWhite, 18 * drawScale, 'center', 'top')
 					} else if (!pagename || pagename.toLowerCase() == 'page') {
-						img.drawTextLine(23, 18, 'PAGE', colorButtonYellow, 10)
-						img.drawTextLineAligned(36, 32, '' + location.pageNumber, colorWhite, 18, 'center', 'top')
+						img.drawTextLine(transformX(23), transformY(18), 'PAGE', colorButtonYellow, 10 * drawScale)
+						img.drawTextLineAligned(
+							transformX(36),
+							transformY(32),
+							'' + location.pageNumber,
+							colorWhite,
+							18 * drawScale,
+							'center',
+							'top'
+						)
 					} else {
-						img.drawAlignedText(0, 0, 72, 72, pagename, colorWhite, 18, 'center', 'center')
+						img.drawAlignedText(
+							0,
+							0,
+							resolution.width,
+							resolution.height,
+							pagename,
+							colorWhite,
+							18 * drawScale,
+							'center',
+							'center'
+						)
 					}
 				} else if (drawStyle.style === 'button') {
 					draw_style = 'button'
@@ -304,7 +366,7 @@ export class GraphicsRenderer {
 	static drawPincodeNumber(width: number, height: number, num: number): ImageResult {
 		return GraphicsRenderer.#getCachedImage(width, height, 3, (img) => {
 			GraphicsLockingGenerator.generatePincodeChar(img, num)
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined, undefined)
 		})
 	}
 
@@ -314,7 +376,7 @@ export class GraphicsRenderer {
 	static drawPincodeEntry(width: number, height: number, code: string | undefined): ImageResult {
 		return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
 			GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
+			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined, undefined)
 		})
 	}
 }
