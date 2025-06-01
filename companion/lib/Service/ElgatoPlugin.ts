@@ -5,7 +5,6 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import { transformButtonImage } from '../Resources/Util.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { IncomingMessage } from 'http'
 import type { SurfaceController } from '../Surface/Controller.js'
@@ -362,10 +361,10 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 		this.socket = socket
 		this.remoteAddress = remoteAddress
 
-		this.#write_queue = new ImageWriteQueue(this.#logger, async (_id, partial, render) => {
+		this.#write_queue = new ImageWriteQueue(this.#logger, async (_id, partial, drawItem) => {
 			const targetSize = 72 // Compatibility
 			try {
-				const newbuffer = await transformButtonImage(render, null, targetSize, targetSize, imageRs.PixelFormat.Rgb)
+				const newbuffer = await drawItem.drawNative(targetSize, targetSize, null, imageRs.PixelFormat.Rgb)
 
 				this.apicommand('fillImage', { ...partial, data: newbuffer })
 			} catch (e: any) {
@@ -378,6 +377,11 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 
 	fillImage(id: string | number, partial: Record<string, number | null>, render: ImageResult): void {
 		if (this.supportsPng) {
+			if (render.buffer === undefined || render.buffer.length === 0) {
+				this.#logger.silly('buffer was not 15552, but ', render.buffer?.length)
+				return
+			}
+
 			this.apicommand('fillImage', {
 				...partial,
 				png: true,

@@ -1,6 +1,15 @@
 import type { DrawStyleButtonModel, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type imageRs from '@julusian/image-rs'
 
 export type ImageResultStyle = DrawStyleButtonModel | DrawStyleLayeredButtonModel | 'pagenum' | 'pageup' | 'pagedown'
+
+export type ImageResultNativeDrawFn = (
+	width: number,
+	height: number,
+	rotation: SurfaceRotation | null,
+	format: imageRs.PixelFormat
+) => Promise<Buffer>
 
 export class ImageResult {
 	/**
@@ -28,11 +37,8 @@ export class ImageResult {
 	 */
 	readonly style: ImageResultStyle | undefined
 
-	/**
-	 * Page name for this image, if applicable
-	 * This is a bit of a hack...
-	 */
-	readonly pagename: string | undefined
+	// TODO-layered calls to this should be cached, so that we don't keep re-drawing the same image
+	readonly drawNative: ImageResultNativeDrawFn
 
 	/**
 	 * Last updated time
@@ -45,14 +51,14 @@ export class ImageResult {
 		height: number,
 		dataUrl: string,
 		style: ImageResultStyle | undefined,
-		pagename: string | undefined
+		drawNative: ImageResultNativeDrawFn
 	) {
 		this.buffer = buffer
 		this.bufferWidth = width
 		this.bufferHeight = height
 		this.#dataUrl = dataUrl
 		this.style = style
-		this.pagename = pagename
+		this.drawNative = drawNative
 
 		this.updated = Date.now()
 	}

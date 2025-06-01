@@ -271,9 +271,10 @@ export function offsetRotation(rotation: SurfaceRotation | null, offset: number)
 
 /**
  * Transform a button image render to the format needed for a surface integration
+ * @deprecated TODO-layered this should be inlined, or adopted as part of the graphics rendering system..
  */
 export async function transformButtonImage(
-	render: ImageResult,
+	render: Pick<ImageResult, 'buffer' | 'bufferWidth' | 'bufferHeight'>,
 	rotation: SurfaceRotation | null,
 	targetWidth: number,
 	targetHeight: number,

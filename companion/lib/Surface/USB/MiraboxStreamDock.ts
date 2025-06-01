@@ -108,7 +108,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 
 				let newbuffer: Buffer
 				try {
-					newbuffer = await drawItem.imageFn(
+					newbuffer = await drawItem.defaultRender.drawNative(
 						output.resolutionx,
 						output.resolutiony,
 						offsetRotation(this.config.rotation, 180),

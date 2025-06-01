@@ -13,10 +13,10 @@ import { LRUCache } from 'lru-cache'
 import { GlobalFonts } from '@napi-rs/canvas'
 import { GraphicsRenderer } from './Renderer.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import type { ImageResult } from './ImageResult.js'
+import { ImageResult, ImageResultNativeDrawFn } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
-import { isPackaged } from '../Resources/Util.js'
+import { isPackaged, transformButtonImage } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import debounceFn from 'debounce-fn'
@@ -219,14 +219,34 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								undefined,
 								CRASHED_WORKER_RETRY_COUNT
 							)
-							render = GraphicsRenderer.wrapDrawButtonImage(
+							render = GraphicsController.#wrapDrawButtonImage(
 								buffer,
 								width,
 								height,
 								dataUrl,
 								draw_style,
 								buttonStyle,
-								pagename
+								async (width0, height0, rotation, format) => {
+									const { buffer, width, height } = await this.#executePoolDrawButtonImage(
+										buttonStyle,
+										location,
+										pagename,
+										{ width: width0, height: height0, oversampling: 4 }, // TODO - dynamic oversampling?
+										CRASHED_WORKER_RETRY_COUNT
+									)
+
+									return transformButtonImage(
+										{
+											buffer: buffer,
+											bufferWidth: width,
+											bufferHeight: height,
+										},
+										rotation,
+										width0,
+										height0,
+										format
+									)
+								}
 							)
 						}
 					} else {
@@ -363,34 +383,54 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			undefined,
 			CRASHED_WORKER_RETRY_COUNT
 		)
-		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle, undefined)
+		return GraphicsController.#wrapDrawButtonImage(
+			buffer,
+			width,
+			height,
+			dataUrl,
+			draw_style,
+			drawStyle,
+			async (width0, height0, rotation, format) => {
+				const { buffer, width, height } = await this.#executePoolDrawButtonImage(
+					drawStyle,
+					undefined,
+					undefined,
+					{ width: width0, height: height0, oversampling: 4 }, // TODO - dynamic oversampling?
+					CRASHED_WORKER_RETRY_COUNT
+				)
+
+				return transformButtonImage(
+					{
+						buffer: buffer,
+						bufferWidth: width,
+						bufferHeight: height,
+					},
+					rotation,
+					width0,
+					height0,
+					format
+				)
+			}
+		)
 	}
 
-	async drawNativeSizeButtonImage(
-		width0: number,
-		height0: number,
-		location: ControlLocation,
-		image: ImageResult
-	): Promise<ImageResult> {
-		const rawStyle = image.style
-		if (!rawStyle) {
-			// Should be a blank button
-			return GraphicsRenderer.drawBlank({ width: width0, height: height0 }, this.#drawOptions, location)
-		}
+	static #wrapDrawButtonImage(
+		buffer: Buffer,
+		width: number,
+		height: number,
+		dataUrl: string,
+		draw_style: DrawStyleModel['style'] | undefined,
+		drawStyle: DrawStyleModel,
+		drawNative: ImageResultNativeDrawFn
+	): ImageResult {
+		const draw_style2 =
+			draw_style === 'button' || draw_style === 'button-layered'
+				? drawStyle.style === 'button' || drawStyle.style === 'button-layered'
+					? drawStyle
+					: undefined
+				: draw_style
 
-		let oversampling = 4
-		if (width0 > 100) oversampling = 2
-
-		const newStyle = typeof rawStyle === 'string' ? { style: rawStyle } : rawStyle
-
-		const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
-			newStyle,
-			location,
-			image.pagename,
-			{ width: width0, height: height0, oversampling },
-			CRASHED_WORKER_RETRY_COUNT
-		)
-		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, newStyle, image.pagename)
+		return new ImageResult(buffer, width, height, dataUrl, draw_style2, drawNative)
 	}
 
 	/**

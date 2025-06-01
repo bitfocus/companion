@@ -161,7 +161,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 					let newbuffer: Buffer
 					try {
-						newbuffer = await drawItem.imageFn(
+						newbuffer = await drawItem.defaultRender.drawNative(
 							control.pixelSize.width,
 							control.pixelSize.height,
 							this.config.rotation,
@@ -207,7 +207,12 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 				let newbuffer: Buffer
 				try {
-					newbuffer = await drawItem.imageFn(targetSize, targetSize, this.config.rotation, imageRs.PixelFormat.Rgb)
+					newbuffer = await drawItem.defaultRender.drawNative(
+						targetSize,
+						targetSize,
+						this.config.rotation,
+						imageRs.PixelFormat.Rgb
+					)
 				} catch (e) {
 					this.#logger.debug(`scale image failed: ${e}`)
 					this.emit('remove')

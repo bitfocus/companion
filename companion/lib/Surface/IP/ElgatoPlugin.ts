@@ -173,15 +173,9 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 			return
 		}
 
-		const render = item.defaultRender
-		if (render.buffer === undefined || render.buffer.length === 0) {
-			this.#logger.silly('buffer was not 15552, but ', render.buffer?.length)
-			return
-		}
-
 		const key = xyToOldBankIndex(item.x, item.y)
 		if (key) {
-			this.socket.fillImage(key, { keyIndex: key - 1 }, render)
+			this.socket.fillImage(key, { keyIndex: key - 1 }, item.defaultRender)
 		}
 	}
 

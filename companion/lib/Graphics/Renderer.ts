@@ -19,6 +19,9 @@ import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/La
 import { TopbarRenderer } from '@companion-app/shared/Graphics/TopbarRenderer.js'
 import { isPromise } from 'util/types'
 import { GraphicsLockingGenerator } from './Locking.js'
+import { transformButtonImage } from '../Resources/Util.js'
+import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type imageRs from '@julusian/image-rs'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -86,38 +89,40 @@ export class GraphicsRenderer {
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
+
 		return GraphicsRenderer.#getCachedImage(resolution.width, resolution.height, 2, (img) => {
-			img.fillColor('black')
-
-			// Calculate some constants for drawing without reinventing the numbers
-			const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
-
-			if (!options.remove_topbar) {
-				img.drawTextLine(transformX(2), transformY(3), formatLocation(location), 'rgb(50, 50, 50)', 8 * drawScale)
-				img.horizontalLine(transformY(13.5), { color: 'rgb(30, 30, 30)' })
-			}
 			// console.timeEnd('drawBlankImage')
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined, undefined)
+
+			GraphicsRenderer.#drawBlankImage(img, options, location)
+
+			return new ImageResult(
+				img.buffer(),
+				img.realwidth,
+				img.realheight,
+				img.toDataURLSync(),
+				undefined,
+				async (width, height, rotation, format) => {
+					return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
+						GraphicsRenderer.#drawBlankImage(img, options, location)
+
+						// TODO-layered: will this handle non-square images?
+						return transformImage2(img, rotation, format)
+					})
+				}
+			)
 		})
 	}
 
-	static wrapDrawButtonImage(
-		buffer: Buffer,
-		width: number,
-		height: number,
-		dataUrl: string,
-		draw_style: DrawStyleModel['style'] | undefined,
-		drawStyle: DrawStyleModel,
-		pagename: string | undefined
-	): ImageResult {
-		const draw_style2 =
-			draw_style === 'button' || draw_style === 'button-layered'
-				? drawStyle.style === 'button' || drawStyle.style === 'button-layered'
-					? drawStyle
-					: undefined
-				: draw_style
+	static #drawBlankImage(img: Image, options: GraphicsOptions, location: ControlLocation) {
+		// Calculate some constants for drawing without reinventing the numbers
+		const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(img)
 
-		return new ImageResult(buffer, width, height, dataUrl, draw_style2, pagename)
+		img.fillColor('black')
+
+		if (!options.remove_topbar) {
+			img.drawTextLine(transformX(2), transformY(3), formatLocation(location), 'rgb(50, 50, 50)', 8 * drawScale)
+			img.horizontalLine(transformY(13.5), { color: 'rgb(30, 30, 30)' })
+		}
 	}
 
 	/**
@@ -384,7 +389,20 @@ export class GraphicsRenderer {
 	static drawPincodeNumber(width: number, height: number, num: number): ImageResult {
 		return GraphicsRenderer.#getCachedImage(width, height, 3, (img) => {
 			GraphicsLockingGenerator.generatePincodeChar(img, num)
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined, undefined)
+			return new ImageResult(
+				img.buffer(),
+				img.realwidth,
+				img.realheight,
+				img.toDataURLSync(),
+				undefined,
+				async (width, height, rotation, format) => {
+					return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
+						GraphicsLockingGenerator.generatePincodeChar(img, num)
+						// TODO-layered: will this handle non-square images?
+						return transformImage2(img, rotation, format)
+					})
+				}
+			)
 		})
 	}
 
@@ -394,7 +412,38 @@ export class GraphicsRenderer {
 	static drawPincodeEntry(width: number, height: number, code: string | undefined): ImageResult {
 		return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
 			GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined, undefined)
+			return new ImageResult(
+				img.buffer(),
+				img.realwidth,
+				img.realheight,
+				img.toDataURLSync(),
+				undefined,
+				async (width, height, rotation, format) => {
+					return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
+						GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
+						// TODO-layered: will this handle non-square images?
+						return transformImage2(img, rotation, format)
+					})
+				}
+			)
 		})
 	}
+}
+
+async function transformImage2(
+	img: Image,
+	rotation: SurfaceRotation | null,
+	format: imageRs.PixelFormat
+): Promise<Buffer> {
+	return transformButtonImage(
+		{
+			buffer: img.buffer(),
+			bufferWidth: img.realwidth,
+			bufferHeight: img.realheight,
+		},
+		rotation,
+		img.width,
+		img.height,
+		format
+	)
 }

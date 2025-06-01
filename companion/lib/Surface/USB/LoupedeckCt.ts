@@ -256,7 +256,12 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 
 			let newbuffer: Buffer
 			try {
-				newbuffer = await drawItem.imageFn(width, height, this.config.rotation, imageRs.PixelFormat.Rgb)
+				newbuffer = await drawItem.defaultRender.drawNative(
+					width,
+					height,
+					this.config.rotation,
+					imageRs.PixelFormat.Rgb
+				)
 			} catch (e) {
 				this.#logger.debug(`scale image failed: ${e}`)
 				this.emit('remove')

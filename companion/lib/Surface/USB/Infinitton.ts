@@ -110,7 +110,7 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 				const targetSize = 72
 
 				try {
-					const newbuffer = await drawItem.imageFn(
+					const newbuffer = await drawItem.defaultRender.drawNative(
 						targetSize,
 						targetSize,
 						this.config.rotation,

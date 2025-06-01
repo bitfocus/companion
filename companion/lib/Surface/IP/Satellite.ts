@@ -190,7 +190,12 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			if (!targetSize) return
 
 			try {
-				const newbuffer = await drawItem.imageFn(targetSize, targetSize, this.#config.rotation, imageRs.PixelFormat.Rgb)
+				const newbuffer = await drawItem.defaultRender.drawNative(
+					targetSize,
+					targetSize,
+					this.#config.rotation,
+					imageRs.PixelFormat.Rgb
+				)
 
 				this.#sendDraw(key, newbuffer, drawItem.style)
 			} catch (e: any) {

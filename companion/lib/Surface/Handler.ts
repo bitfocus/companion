@@ -21,7 +21,6 @@ import type {
 	GridSize,
 	SurfaceConfig,
 	SurfacePanelConfig,
-	SurfaceRotation,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController, PincodeBitmaps } from '../Graphics/Controller.js'
@@ -33,8 +32,6 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { PanelDefaults } from './Config.js'
-import { transformButtonImage } from '../Resources/Util.js'
-import type imageRs from '@julusian/image-rs'
 
 const PINCODE_NUMBER_POSITIONS: [number, number][] = [
 	// 0
@@ -303,16 +300,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	}
 
 	#pincodeNumberImagesDefault: PincodeBitmaps | undefined
-	// TODO - what if a surface needs mixed sizes?
-	#pincodeNumberImagesSize:
-		| {
-				width: number
-				height: number
-				rotation: SurfaceRotation | null
-				format: imageRs.PixelFormat
-				buffers: Promise<{ [index: number]: Buffer }>
-		  }
-		| undefined
 
 	#drawPage() {
 		if (this.panel) {
@@ -335,12 +322,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 						defaultRender: this.#graphics.getPincodeCodeImage(72, 72, pincode),
 						style: undefined,
 						type: undefined,
-						imageFn: async (width, height, rotation, format) => {
-							const rawImage = this.#graphics.getPincodeCodeImage(width, height, pincode)
-
-							// TODO-layered - this will generate wrong for non square
-							return transformButtonImage(rawImage, rotation, width, height, format)
-						},
 					},
 				]
 
@@ -352,36 +333,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 							defaultRender: this.#pincodeNumberImagesDefault[i],
 							style: undefined,
 							type: undefined,
-							imageFn: async (width, height, rotation, format) => {
-								if (
-									!this.#pincodeNumberImagesSize ||
-									this.#pincodeNumberImagesSize.width != width ||
-									this.#pincodeNumberImagesSize.height != height ||
-									this.#pincodeNumberImagesSize.rotation != rotation ||
-									this.#pincodeNumberImagesSize.format != format
-								) {
-									const rawBuffers = this.#graphics.getPincodeNumberImages(width, height)
-
-									const transformedBuffers = Promise.all(
-										Object.entries(rawBuffers).map(async ([index, buffer]) => {
-											// TODO-layered - this will generate wrong for non square
-
-											return [index, await transformButtonImage(buffer, rotation, width, height, format)]
-										})
-									).then((buffers) => Object.fromEntries(buffers))
-
-									this.#pincodeNumberImagesSize = {
-										width,
-										height,
-										rotation,
-										format,
-										buffers: transformedBuffers,
-									}
-								}
-
-								const allBuffers = await this.#pincodeNumberImagesSize.buffers
-								return allBuffers[i]
-							},
 						})
 					}
 				})
@@ -414,13 +365,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 									? image.style
 									: undefined,
 							type: typeof image.style === 'string' ? image.style : image.style?.style,
-
-							imageFn: async (width, height, rotation, format) => {
-								const rawImage = await this.#graphics.drawNativeSizeButtonImage(width, height, location, image)
-
-								// TODO-layered - this will generate wrong for non square
-								return transformButtonImage(rawImage, rotation, width, height, format)
-							},
 						})
 					}
 				}
@@ -513,13 +457,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 							? render.style
 							: undefined,
 					type: typeof render.style === 'string' ? render.style : render.style?.style,
-
-					imageFn: async (width, height, rotation, format) => {
-						const rawImage = await this.#graphics.drawNativeSizeButtonImage(width, height, location, render)
-
-						// TODO-layered - this will generate wrong for non square
-						return transformButtonImage(rawImage, rotation, width, height, format)
-					},
 				},
 			]
 			const transformedEntries = this.#transformButtonRenders(rawEntries)
@@ -683,21 +620,13 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (!!this.panel.setLocked) {
 			this.panel.setLocked(true, this.#currentPincodeEntry.length)
 		} else {
-			const pincode = this.#currentPincodeEntry
-
 			this.#drawButtons([
 				{
 					x: this.#pincodeCodePosition[0],
 					y: this.#pincodeCodePosition[1],
-					defaultRender: this.#graphics.getPincodeCodeImage(72, 72, pincode),
+					defaultRender: this.#graphics.getPincodeCodeImage(72, 72, this.#currentPincodeEntry),
 					style: undefined,
 					type: undefined,
-					imageFn: async (width, height, rotation, format) => {
-						const rawImage = this.#graphics.getPincodeCodeImage(width, height, pincode)
-
-						// TODO-layered - this will generate wrong for non square
-						return transformButtonImage(rawImage, rotation, width, height, format)
-					},
 				},
 			])
 		}
