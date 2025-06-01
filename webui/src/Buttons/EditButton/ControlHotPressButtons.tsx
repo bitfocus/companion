@@ -3,8 +3,8 @@ import { CButtonGroup, CButton } from '@coreui/react'
 import { faPlay, faUndo, faRedo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useContext, useCallback } from 'react'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
-import { MyErrorBoundary } from '../../util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { MyErrorBoundary } from '~/util.js'
 
 export function ControlHotPressButtons({
 	location,

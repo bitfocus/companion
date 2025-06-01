@@ -11,13 +11,13 @@ import {
 	CTabPane,
 } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import { CModalExt } from './Components/CModalExt.js'
-import { MyErrorBoundary } from './util.js'
+import { CModalExt } from '~/Components/CModalExt.js'
+import { MyErrorBoundary } from '~/util.js'
 import { DocsContent } from './GettingStarted/DocsContent.js'
 import { useLocalStorage } from 'usehooks-ts'
 import semver from 'semver'
 
-import docsStructure from '../../docs/structure.json'
+import docsStructure from '@docs/structure.json'
 import { DocsSection } from './GettingStarted/GettingStarted.js'
 
 interface WhatsNewPage extends DocsSection {

@@ -1,24 +1,24 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
-import { MyErrorBoundary, SocketContext } from '../../util.js'
-import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '../../Buttons/ButtonGridHeader.js'
-import { usePagePicker } from '../../Hooks/usePagePicker.js'
+import { MyErrorBoundary, SocketContext } from '~/util.js'
+import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '~/Buttons/ButtonGridHeader.js'
+import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import {
 	ButtonGridIcon,
 	ButtonGridIconBase,
 	ButtonInfiniteGrid,
 	ButtonInfiniteGridButtonProps,
 	ButtonInfiniteGridRef,
-} from '../../Buttons/ButtonInfiniteGrid.js'
+} from '~/Buttons/ButtonInfiniteGrid.js'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
+import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import type { ClientImportObject, ClientImportObjectInstance } from '@companion-app/shared/Model/ImportExport.js'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { ButtonGridZoomControl } from '../../Buttons/ButtonGridZoomControl.js'
-import { useGridZoom } from '../../Buttons/GridZoom.js'
+import { ButtonGridZoomControl } from '~/Buttons/ButtonGridZoomControl.js'
+import { useGridZoom } from '~/Buttons/GridZoom.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject

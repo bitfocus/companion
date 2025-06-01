@@ -4,13 +4,13 @@ import {
 	ClientDiscoveredSurfaceInfoStreamDeck,
 } from '@companion-app/shared/Model/Surfaces.js'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { assertNever, SocketContext } from '../util.js'
+import { assertNever, SocketContext } from '~/util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { faBan, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SetupSatelliteModalRef, SetupSatelliteModal } from './SetupSatelliteModal.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { NonIdealState } from '../Components/NonIdealState.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { observer } from 'mobx-react-lite'
 
 export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {

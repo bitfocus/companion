@@ -1,17 +1,17 @@
 import React, { useContext, useEffect } from 'react'
 import { CRow, CCol, CAlert } from '@coreui/react'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ModuleDisplayInfo, ModuleUpgradeToOtherVersion } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreListCacheEntry, ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
-import { WindowLinkOpen } from '../Helpers/Window.js'
+import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
-import { useComputed } from '../util.js'
+import { useComputed } from '~/util.js'
 
 interface ModuleManagePanelProps {
 	moduleId: string

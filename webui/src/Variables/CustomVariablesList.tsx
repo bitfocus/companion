@@ -1,6 +1,6 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CCol, CForm, CFormInput, CFormLabel, CInputGroup, CRow } from '@coreui/react'
-import { PreventDefaultHandler, useComputed } from '../util.js'
+import { PreventDefaultHandler, useComputed } from '~/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -13,21 +13,21 @@ import {
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
-import { TextInputField } from '../Components/TextInputField.js'
-import { CheckboxInputField } from '../Components/CheckboxInputField.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { NonIdealState } from '../Components/NonIdealState.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Link } from '@tanstack/react-router'
 import classNames from 'classnames'
-import VariableInputGroup from '../Components/VariableInputGroup.js'
-import { VariableValueDisplay } from '../Components/VariableValueDisplay.js'
+import VariableInputGroup from '~/Components/VariableInputGroup.js'
+import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
 
 const DRAG_ID = 'custom-variables'
 

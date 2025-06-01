@@ -9,11 +9,8 @@ import { CForm } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
-import {
-	IEntityEditorService,
-	useControlEntitiesEditorService,
-} from '../../Services/Controls/ControlEntitiesService.js'
-import { PreventDefaultHandler } from '../../util.js'
+import { IEntityEditorService, useControlEntitiesEditorService } from '~/Services/Controls/ControlEntitiesService.js'
+import { PreventDefaultHandler } from '~/util.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
 import { EditableEntityList } from './EntityList.js'

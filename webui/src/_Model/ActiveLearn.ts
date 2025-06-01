@@ -1,6 +1,6 @@
 import type { ObservableSet } from 'mobx'
 import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
+import { CompanionSocketWrapped } from '~/util.js'
 
 export function useActiveLearnRequests(socket: CompanionSocketWrapped, activeIds: ObservableSet<string>): boolean {
 	const [isReady, setIsReady] = useState<boolean>(false)

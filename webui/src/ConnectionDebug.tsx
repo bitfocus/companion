@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useContext, memo, useRef, useMemo } from 'react'
-import { SocketContext } from './util.js'
+import { SocketContext } from '~/util.js'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { VariableSizeList as List, ListOnScrollProps } from 'react-window'

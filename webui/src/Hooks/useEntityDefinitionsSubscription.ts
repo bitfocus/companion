@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
-import { EntityDefinitionsForTypeStore } from '../Stores/EntityDefinitionsStore.js'
+import { CompanionSocketWrapped } from '~/util.js'
+import { EntityDefinitionsForTypeStore } from '~/Stores/EntityDefinitionsStore.js'
 
 export function useEntityDefinitionsSubscription(
 	socket: CompanionSocketWrapped,

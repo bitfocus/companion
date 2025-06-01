@@ -3,7 +3,7 @@ import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useRef } from 'react'
 import { AddEntitiesModal, AddEntitiesModalRef } from './AddEntitiesModal.js'
-import { MyErrorBoundary } from '../../util.js'
+import { MyErrorBoundary } from '~/util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { AddEntityDropdown } from './AddEntityDropdown.js'
 

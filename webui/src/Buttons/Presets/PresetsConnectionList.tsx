@@ -1,10 +1,10 @@
 import React, { useContext } from 'react'
 import { CButton, CCallout } from '@coreui/react'
 import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { faLifeRing } from '@fortawesome/free-solid-svg-icons'
-import { NonIdealState } from '../../Components/NonIdealState.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 
 interface PresetsConnectionListProps {
 	presets: Record<string, Record<string, UIPresetDefinition> | undefined>

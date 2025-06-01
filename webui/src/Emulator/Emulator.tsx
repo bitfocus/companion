@@ -6,16 +6,16 @@ import {
 	SocketContext,
 	useMountEffect,
 	PreventDefaultHandler,
-} from '../util.js'
+} from '~/util.js'
 import { CButton, CCol, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
-import { ButtonPreview } from '../Components/ButtonPreview.js'
+import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { ControlLocation, EmulatorConfig, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
-import { UserConfigStore } from '../Stores/UserConfigStore.js'
-import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
+import { UserConfigStore } from '~/Stores/UserConfigStore.js'
+import { useUserConfigSubscription } from '~/Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
 import { useParams } from '@tanstack/react-router'
 

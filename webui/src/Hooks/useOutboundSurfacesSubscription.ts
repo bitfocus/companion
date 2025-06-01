@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
-import type { SurfacesStore } from '../Stores/SurfacesStore.js'
+import { CompanionSocketWrapped } from '~/util.js'
+import type { SurfacesStore } from '~/Stores/SurfacesStore.js'
 
 export function useOutboundSurfacesSubscription(
 	socket: CompanionSocketWrapped,

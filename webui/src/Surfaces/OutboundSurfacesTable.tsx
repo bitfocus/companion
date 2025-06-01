@@ -1,13 +1,13 @@
 import React, { useCallback, useContext, useRef } from 'react'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { NonIdealState } from '../Components/NonIdealState.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faAdd, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddOutboundSurfaceModal, AddOutboundSurfaceModalRef } from './AddOutboundSurfaceModal.js'
 import { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import { TextInputField } from '../Components/TextInputField.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 
 export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {

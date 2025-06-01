@@ -1,14 +1,14 @@
 import React, { useCallback, useContext, useState, useMemo, useEffect } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
-import { useComputed } from '../util.js'
+import { useComputed } from '~/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { VariableDefinitionExt } from '../Stores/VariablesStore.js'
-import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
+import { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
 
 interface VariablesTableProps {

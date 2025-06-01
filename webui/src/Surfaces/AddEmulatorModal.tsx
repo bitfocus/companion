@@ -11,13 +11,13 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import { CModalExt } from '../Components/CModalExt.js'
+import { CModalExt } from '~/Components/CModalExt.js'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
-import { InlineHelp } from '../Components/InlineHelp.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
 
 export interface AddEmulatorModalRef {

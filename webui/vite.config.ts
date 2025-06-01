@@ -5,6 +5,7 @@ import legacyPlugin from '@vitejs/plugin-legacy'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import fs from 'fs'
 import path from 'path'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
 
@@ -31,6 +32,7 @@ export default defineConfig({
 		},
 	},
 	plugins: [
+		tsconfigPaths(),
 		TanStackRouterVite({
 			virtualRouteConfig: './src/routes/-routes.ts',
 			addExtensions: true,
@@ -44,7 +46,7 @@ export default defineConfig({
 					org: 'bitfocus',
 					project: 'companion-ui',
 					url: 'https://sentry2.bitfocus.io/',
-					release: buildFile,
+					release: { name: buildFile },
 				})
 			: undefined,
 	],

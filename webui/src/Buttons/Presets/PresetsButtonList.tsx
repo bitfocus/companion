@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CButton, CButtonGroup, CCallout } from '@coreui/react'
-import { SocketContext } from '../../util.js'
+import { SocketContext } from '~/util.js'
 import { useDrag } from 'react-dnd'
-import { ButtonPreviewBase, RedImage } from '../../Components/ButtonPreview.js'
+import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview.js'
 import { nanoid } from 'nanoid'
 import type {
 	UIPresetDefinition,

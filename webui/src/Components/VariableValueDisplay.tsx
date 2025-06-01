@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 // import { CompanionVariableValues } from '@companion-module/base'
-import { VARIABLE_UNKNOWN_VALUE } from '../Constants.js'
+import { VARIABLE_UNKNOWN_VALUE } from '~/Constants.js'
 import { VariableTypeIcon } from './VariableTypeIcon.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
 import { CButton } from '@coreui/react'
-import { PanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 
 interface VariableValueDisplay {
 	/** Value to show */

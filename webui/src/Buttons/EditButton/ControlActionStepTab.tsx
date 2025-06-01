@@ -5,9 +5,9 @@ import { CButtonGroup, CButton } from '@coreui/react'
 import { faChevronLeft, faChevronRight, faPlus, faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
-import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
-import { IControlActionStepsAndSetsService } from '../../Services/Controls/ControlActionStepsAndSetsService.js'
-import { MyErrorBoundary } from '../../util.js'
+import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
+import { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
+import { MyErrorBoundary } from '~/util.js'
 import { EditActionsRelease } from './EditActionsRelease.js'
 
 export interface ControlActionStepTabProps {

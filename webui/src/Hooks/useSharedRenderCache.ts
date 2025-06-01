@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { SocketContext } from '../util.js'
+import { SocketContext } from '~/util.js'
 import { nanoid } from 'nanoid'
 import { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 
