@@ -512,11 +512,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			return 'device not found'
 		})
 
-		client.onPromise('surfaces:group-add', (name) => {
+		client.onPromise('surfaces:group-add', (baseId, name) => {
+			if (!baseId || typeof baseId !== 'string') throw new Error('Invalid id')
 			if (!name || typeof name !== 'string') throw new Error('Invalid name')
 
-			// TODO - should this do friendlier ids?
-			const groupId = `group:${nanoid()}`
+			const groupId = `group:${baseId}`
 
 			const newGroup = new SurfaceGroup(
 				this,

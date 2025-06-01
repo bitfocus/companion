@@ -231,7 +231,7 @@ export interface ClientToBackendEventsMap {
 	'surfaces:forget': (surfaceId: string) => string | boolean
 	'surfaces:set-name': (surfaceId: string, name: string) => void
 	'surfaces:add-to-group': (groupId: string | null, surfaceId: string) => void
-	'surfaces:group-add': (groupName: string) => string
+	'surfaces:group-add': (baseId: string, groupName: string) => string
 	'surfaces:group-remove': (groupId: string) => string
 	'surfaces:group-config-set': (groupId: string, key: string, value: any) => SurfaceGroupConfig | string
 	'surfaces:emulator-remove': (surfaceId: string) => boolean

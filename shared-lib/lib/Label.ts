@@ -34,3 +34,10 @@ export function isEmulatorIdValid(id: string): boolean {
 	const safeId = makeLabelSafe(id)
 	return safeId === id
 }
+
+export function isSurfaceGroupIdValid(id: string): boolean {
+	if (!id || typeof id !== 'string') return false
+
+	const safeId = makeLabelSafe(id)
+	return safeId === id
+}
