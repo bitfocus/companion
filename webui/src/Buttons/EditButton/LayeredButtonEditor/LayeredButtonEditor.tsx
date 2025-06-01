@@ -128,7 +128,6 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	return (
 		<div className="button-layer-style-editor h-100">
 			<div className="button-layer-preview">
-				{/* <ButtonPreviewBase fixedSize preview={previewImage} /> */}
 				<LayeredButtonPreviewRenderer controlId={controlId} location={location} styleStore={styleStore} />
 			</div>
 			<div className="button-layer-elementlist">
