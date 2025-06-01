@@ -308,11 +308,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			throw new Error(`Emulator "${id}" already exists!`)
 		}
 
-		const handler = this.#createSurfaceHandler(
-			fullId,
-			'emulator',
-			new SurfaceIPElgatoEmulator(this.#io, this.#updateEvents, id)
-		)
+		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#updateEvents, id))
 		if (name !== undefined) handler.setPanelName(name)
 
 		if (!skipUpdate) this.updateDevicesList()
@@ -372,28 +368,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 */
 	clientConnect(client: ClientSocket): void {
 		this.#outboundController.clientConnect(client)
-
-		client.onPromise('emulator:press', (id, x, y) => {
-			const fullId = EmulatorRoom(id)
-
-			const surface = this.#surfaceHandlers.get(fullId)
-			if (!surface) {
-				throw new Error(`Emulator "${id}" does not exist!`)
-			}
-
-			surface.panel.emit('click', x, y, true)
-		})
-
-		client.onPromise('emulator:release', (id, x, y) => {
-			const fullId = EmulatorRoom(id)
-
-			const surface = this.#surfaceHandlers.get(fullId)
-			if (!surface) {
-				throw new Error(`Emulator "${id}" does not exist!`)
-			}
-
-			surface.panel.emit('click', x, y, false)
-		})
 
 		client.onPromise('surfaces:subscribe', () => {
 			client.join(SurfacesRoom)
@@ -589,21 +563,55 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				signal,
 				input,
 			}) {
-				const fullId = EmulatorRoom(input.id)
-
-				const surface = self.#surfaceHandlers.get(fullId)
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
 				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
 					throw new Error(`Emulator "${input.id}" does not exist!`)
 				}
 
 				const changes = toIterable(self.#updateEvents, 'emulatorConfig', signal)
 
-				yield surface.panel.setupClient(undefined)
+				yield surface.panel.latestConfig()
 
 				for await (const [changeId, changeData] of changes) {
-					if (changeId === fullId) yield changeData
+					if (changeId === input.id) yield changeData
 				}
 			}),
+
+			emulatorImages: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
+				signal,
+				input,
+			}) {
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					throw new Error(`Emulator "${input.id}" does not exist!`)
+				}
+
+				const changes = toIterable(self.#updateEvents, 'emulatorImages', signal)
+
+				yield { images: surface.panel.latestImages(), clearCache: true }
+
+				for await (const [changeId, changeData, clearCache] of changes) {
+					if (changeId === input.id) yield { images: changeData, clearCache }
+				}
+			}),
+
+			emulatorPressed: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+						column: z.number(),
+						row: z.number(),
+						pressed: z.boolean(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const surface = this.#surfaceHandlers.get(EmulatorRoom(input.id))
+					if (!surface) {
+						throw new Error(`Emulator "${input.id}" does not exist!`)
+					}
+
+					surface.panel.emit('click', input.column, input.row, input.pressed)
+				}),
 		})
 	}
 

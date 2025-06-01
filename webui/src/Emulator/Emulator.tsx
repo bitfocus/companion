@@ -5,13 +5,19 @@ import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { ControlLocation, EmulatorConfig, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
+import { ControlLocation, EmulatorConfig } from '@companion-app/shared/Model/Common.js'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { useUserConfigSubscription } from '~/Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
 import { useParams } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/TRPC.js'
+import { useMutation } from '@tanstack/react-query'
+import { observable, ObservableMap, runInAction } from 'mobx'
+
+export function getCacheKey(x: number, y: number): string {
+	return `${x}/${y}`
+}
 
 export const Emulator = observer(function Emulator() {
 	const socket = useContext(SocketContext)
@@ -20,16 +26,40 @@ export const Emulator = observer(function Emulator() {
 
 	const config = useSubscription(trpc.surfaces.emulatorConfig.subscriptionOptions({ id: emulatorId }))
 
-	const [imageCache, setImageCache] = useState<EmulatorImageCache>({})
-	useEffect(() => {
-		// Clear the images on id change
-		setImageCache({})
-	}, [emulatorId])
+	const pressedMutation = useMutation(trpc.surfaces.emulatorPressed.mutationOptions())
+
+	const imageCache = useMemo(() => observable.map<string, string | false>(), []) //
+
+	// TODO - handle trpc connection state changes and subscription state changes?
 
 	const doRetryLoad = useCallback(() => config.reset(), [])
 
 	const userConfigStore = useMemo(() => new UserConfigStore(), [])
 	useUserConfigSubscription(socket, userConfigStore)
+
+	const imagesSub = useSubscription(
+		trpc.surfaces.emulatorImages.subscriptionOptions(
+			{ id: emulatorId },
+			{
+				onStarted: () => {
+					runInAction(() => {
+						// Clear the image cache when the subscription starts
+						imageCache.clear()
+					})
+				},
+				onData: (data) => {
+					runInAction(() => {
+						if (data.clearCache) imageCache.clear()
+
+						for (const change of data.images) {
+							const key = getCacheKey(change.x, change.y)
+							imageCache.set(key, change.buffer)
+						}
+					})
+				},
+			}
+		)
+	)
 
 	useEffect(() => {
 		document.title =
@@ -47,30 +77,6 @@ export const Emulator = observer(function Emulator() {
 	}, [config.data?.emulator_control_enable])
 
 	useEffect(() => {
-		const unsubImages = socket.on('emulator:images', (newImages) => {
-			console.log('new images', newImages)
-			setImageCache((old) => {
-				if (Array.isArray(newImages)) {
-					const res = { ...old }
-
-					for (const change of newImages) {
-						const row = (res[change.y] = { ...res[change.y] })
-						row[change.x] = change.buffer
-					}
-
-					return res
-				} else {
-					return newImages
-				}
-			})
-		})
-
-		return () => {
-			unsubImages()
-		}
-	}, [socket, imageCache])
-
-	useEffect(() => {
 		const unsub = socket.onConnect(() => {
 			doRetryLoad()
 		})
@@ -85,10 +91,13 @@ export const Emulator = observer(function Emulator() {
 
 			const xy = keymap[e.code] ?? keymap[e.keyCode]
 			if (xy) {
-				socket.emitPromise('emulator:press', [emulatorId, ...xy]).catch((e: any) => {
-					console.error('press failed', e)
-				})
 				console.log('emulator:press', emulatorId, xy)
+				pressedMutation.mutate({
+					id: emulatorId,
+					column: xy[0],
+					row: xy[1],
+					pressed: true,
+				})
 			}
 		}
 
@@ -97,10 +106,13 @@ export const Emulator = observer(function Emulator() {
 
 			const xy = keymap[e.code] ?? keymap[e.keyCode]
 			if (xy) {
-				socket.emitPromise('emulator:release', [emulatorId, ...xy]).catch((e: any) => {
-					console.error('release failed', e)
-				})
 				console.log('emulator:release', emulatorId, xy)
+				pressedMutation.mutate({
+					id: emulatorId,
+					column: xy[0],
+					row: xy[1],
+					pressed: false,
+				})
 			}
 		}
 
@@ -117,23 +129,29 @@ export const Emulator = observer(function Emulator() {
 		(location: ControlLocation, pressed: boolean) => {
 			if (!emulatorId) return
 			if (pressed) {
-				socket.emitPromise('emulator:press', [emulatorId, location.column, location.row]).catch((e: any) => {
-					console.error('press failed', e)
-				})
 				console.log('emulator:press', emulatorId, location)
-			} else {
-				socket.emitPromise('emulator:release', [emulatorId, location.column, location.row]).catch((e: any) => {
-					console.error('release failed', e)
+				pressedMutation.mutate({
+					id: emulatorId,
+					column: location.column,
+					row: location.row,
+					pressed: true,
 				})
+			} else {
 				console.log('emulator:release', emulatorId, location)
+				pressedMutation.mutate({
+					id: emulatorId,
+					column: location.column,
+					row: location.row,
+					pressed: false,
+				})
 			}
 		},
-		[socket, emulatorId]
+		[pressedMutation, emulatorId]
 	)
 
 	return (
 		<div className="page-tablet page-emulator">
-			{config.data ? (
+			{config.data && imagesSub.data ? (
 				<>
 					<ConfigurePanel config={config.data} />
 
@@ -146,7 +164,7 @@ export const Emulator = observer(function Emulator() {
 				</>
 			) : (
 				<CRow className={'loading'}>
-					<LoadingRetryOrError dataReady={false} error={config.error} doRetry={doRetryLoad} />
+					<LoadingRetryOrError dataReady={false} error={config.error || imagesSub.error} doRetry={doRetryLoad} />
 				</CRow>
 			)}
 		</div>
@@ -207,13 +225,18 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 }
 
 interface EmulatorButtonsProps {
-	imageCache: EmulatorImageCache
+	imageCache: ObservableMap<string, string | false>
 	buttonClick: (location: ControlLocation, pressed: boolean) => void
 	columns: number
 	rows: number
 }
 
-function EmulatorButtons({ imageCache, buttonClick, columns, rows }: EmulatorButtonsProps) {
+const EmulatorButtons = observer(function EmulatorButtons({
+	imageCache,
+	buttonClick,
+	columns,
+	rows,
+}: EmulatorButtonsProps) {
 	const gridStyle = useMemo(() => {
 		return {
 			gridTemplateColumns: 'minmax(0, 1fr) '.repeat(columns),
@@ -228,7 +251,13 @@ function EmulatorButtons({ imageCache, buttonClick, columns, rows }: EmulatorBut
 	for (let y = 0; y < rows; y++) {
 		for (let x = 0; x < columns; x++) {
 			buttonElms.push(
-				<ButtonPreview2 key={`${y}/${x}`} column={x} row={y} preview={imageCache[y]?.[x]} onClick={buttonClick} />
+				<ButtonPreview2
+					key={`${y}/${x}`}
+					column={x}
+					row={y}
+					preview={imageCache.get(getCacheKey(x, y))}
+					onClick={buttonClick}
+				/>
 			)
 		}
 	}
@@ -242,7 +271,7 @@ function EmulatorButtons({ imageCache, buttonClick, columns, rows }: EmulatorBut
 			</div>
 		</MyErrorBoundary>
 	)
-}
+})
 
 interface ButtonPreview2Props {
 	column: number
