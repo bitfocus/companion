@@ -39,10 +39,7 @@
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
-		"resolveJsonModule": true,
+		"resolveJsonModule": true
 	},
-	"references": [
-		{ "path": "../companion" },
-		{ "path": "../shared-lib" },
-	]
+	"references": [{ "path": "../companion" }, { "path": "../shared-lib" }]
 }
