@@ -1078,10 +1078,12 @@ describe('HttpApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				const res = await supertest(app)
-					.post(`/api/location/1/2/3/style?${queryStr}`)
-					.set('Content-Type', 'application/json')
-					.send(body)
+				const res = await (body !== null
+					? supertest(app)
+							.post(`/api/location/1/2/3/style?${queryStr}`)
+							.set('Content-Type', 'application/json')
+							.send(body)
+					: supertest(app).post(`/api/location/1/2/3/style?${queryStr}`).send())
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
 
@@ -1120,6 +1122,12 @@ describe('HttpApi', () => {
 						color: rgb(1, 2, 3),
 					}
 				)
+			})
+
+			test('set color properties query only', async () => {
+				await testSetStyle('bgcolor=%23abcdef', null, {
+					bgcolor: rgb('ab', 'cd', 'ef', 16),
+				})
 			})
 
 			test('set color properties bad', async () => {
