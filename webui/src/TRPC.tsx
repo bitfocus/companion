@@ -1,22 +1,14 @@
-// import { createTRPCClient, httpBatchLink } from '@trpc/client'
-import { createTRPCReact } from '@trpc/react-query'
+import { createTRPCContext } from '@trpc/tanstack-react-query'
 import type { AppRouter } from '../../companion/lib/UI/TRPC.js' // Type only import the router
-import { createWSClient, httpBatchLink, loggerLink, wsLink } from '@trpc/client'
-// const trpc = createTRPCClient<AppRouter>({
-// 	links: [
-// 		httpBatchLink({
-// 			url: '/trpc',
-// 		}),
-// 	],
-// })
+import { createTRPCClient, createWSClient, loggerLink, wsLink } from '@trpc/client'
 
-export const trpc = createTRPCReact<AppRouter>()
+export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRouter>()
 
 const wsClient = createWSClient({
 	url: `/trpc`,
 })
 
-export const trpcClient = trpc.createClient({
+export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		loggerLink(),
 		wsLink({
@@ -33,5 +25,3 @@ export const trpcClient = trpc.createClient({
 		// }),
 	],
 })
-
-// export { trpc }

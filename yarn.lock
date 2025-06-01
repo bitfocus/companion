@@ -1302,7 +1302,7 @@ __metadata:
     "@tanstack/router-plugin": "npm:^1.121.12"
     "@tanstack/virtual-file-routes": "npm:^1.120.17"
     "@trpc/client": "npm:^11.2.0"
-    "@trpc/react-query": "npm:^11.2.0"
+    "@trpc/tanstack-react-query": "npm:^11.2.0"
     "@types/crypto-js": "npm:^4.2.2"
     "@types/react": "npm:^18.3.23"
     "@types/react-copy-to-clipboard": "npm:^5.0.7"
@@ -4101,9 +4101,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@trpc/react-query@npm:^11.2.0":
+"@trpc/server@npm:^11.2.0":
   version: 11.2.0
-  resolution: "@trpc/react-query@npm:11.2.0"
+  resolution: "@trpc/server@npm:11.2.0"
+  peerDependencies:
+    typescript: ">=5.7.2"
+  checksum: 10c0/840c282d16dc022dde9fb46cf8d55277d92dbaef01769c33b89350f97bf193dc1a48368e24c784d45a255650073cef206c984ae3a3493f80acc92512710fa734
+  languageName: node
+  linkType: hard
+
+"@trpc/tanstack-react-query@npm:^11.2.0":
+  version: 11.2.0
+  resolution: "@trpc/tanstack-react-query@npm:11.2.0"
   peerDependencies:
     "@tanstack/react-query": ^5.67.1
     "@trpc/client": 11.2.0
@@ -4111,16 +4120,7 @@ __metadata:
     react: ">=18.2.0"
     react-dom: ">=18.2.0"
     typescript: ">=5.7.2"
-  checksum: 10c0/44c534b0df959471f939f4b13a2e6ad2afc07bab1f996dc126baacb45c595c4af451b34f0c30d4edd8a3aa9846d5a472ab182dd62d423c9e70756e9f767d9e32
-  languageName: node
-  linkType: hard
-
-"@trpc/server@npm:^11.2.0":
-  version: 11.2.0
-  resolution: "@trpc/server@npm:11.2.0"
-  peerDependencies:
-    typescript: ">=5.7.2"
-  checksum: 10c0/840c282d16dc022dde9fb46cf8d55277d92dbaef01769c33b89350f97bf193dc1a48368e24c784d45a255650073cef206c984ae3a3493f80acc92512710fa734
+  checksum: 10c0/a6a9f2e4cf0cf0b77bb8d314f6b0a87ce25118ef15c2055ea98fbf4d9b09ad4e33af52b255c82496f6679fa2b194399908ed4f2704e735e91967958ac0557ec6
   languageName: node
   linkType: hard
 
