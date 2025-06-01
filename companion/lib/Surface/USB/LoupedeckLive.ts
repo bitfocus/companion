@@ -30,8 +30,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import { ImageResult } from '../../Graphics/ImageResult.js'
+import { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 interface ModelInfo {
 	totalCols: number
@@ -158,7 +157,7 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 	 */
 	readonly #modelInfo: ModelInfo
 
-	readonly #writeQueue: ImageWriteQueue<number, [import('../../Graphics/ImageResult.js').ImageResult]>
+	readonly #writeQueue: ImageWriteQueue<number, [DrawButtonItem]>
 
 	config: Record<string, any>
 
@@ -252,12 +251,14 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 			this.emit('remove')
 		})
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, render) => {
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, drawItem) => {
 			const width = this.#loupedeck.lcdKeySize
 			const height = this.#loupedeck.lcdKeySize
 
 			let newbuffer
 			try {
+				// TODO-layered - handle rotation
+				const render = await drawItem.imageFn(width, height)
 				newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
 			} catch (e) {
 				this.#logger.debug(`scale image failed: ${e}`)
@@ -346,17 +347,17 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
-		const lcdX = x - this.#modelInfo.lcdXOffset
-		if (lcdX >= 0 && lcdX < this.#modelInfo.lcdCols && y >= 0 && y < this.#modelInfo.lcdRows) {
-			const button = lcdX + y * this.#modelInfo.lcdCols
+	draw(item: DrawButtonItem): void {
+		const lcdX = item.x - this.#modelInfo.lcdXOffset
+		if (lcdX >= 0 && lcdX < this.#modelInfo.lcdCols && item.y >= 0 && item.y < this.#modelInfo.lcdRows) {
+			const button = lcdX + item.y * this.#modelInfo.lcdCols
 
-			this.#writeQueue.queue(button, render)
+			this.#writeQueue.queue(button, item)
 		}
 
-		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == x && btn[1] == y)
+		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == item.x && btn[1] == item.y)
 		if (buttonIndex >= 0) {
-			const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+			const color = item.style ? colorToRgb(item.style.bgcolor) : { r: 0, g: 0, b: 0 }
 
 			this.#loupedeck
 				.setButtonColor({

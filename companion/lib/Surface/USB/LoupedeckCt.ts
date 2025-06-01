@@ -30,8 +30,7 @@ import {
 } from '../CommonConfigFields.js'
 import { colorToRgb } from './Util.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 interface DisplayInfo {
 	lcdCols: number
@@ -100,7 +99,7 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 	 */
 	readonly #modelInfo: ModelInfo
 
-	readonly #writeQueue: ImageWriteQueue<number, [ImageResult]>
+	readonly #writeQueue: ImageWriteQueue<number, [DrawButtonItem]>
 
 	config: Record<string, any>
 
@@ -245,7 +244,7 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 			this.emit('remove')
 		})
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, render) => {
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, drawItem) => {
 			let width = this.#loupedeck.lcdKeySize
 			let height = this.#loupedeck.lcdKeySize
 
@@ -258,6 +257,8 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 
 			let newbuffer: Buffer
 			try {
+				// TODO-layered - handle rotation
+				const render = await drawItem.imageFn(width, height)
 				newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
 			} catch (e) {
 				this.#logger.debug(`scale image failed: ${e}`)
@@ -399,23 +400,23 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
+	draw(item: DrawButtonItem): void {
 		let screen = this.#modelInfo.displays.center
-		const lcdX = x - screen.lcdXOffset
+		const lcdX = item.x - screen.lcdXOffset
 
-		if (x === 3 && y === 4) {
-			this.#writeQueue.queue(35, render)
-		} else if (lcdX >= 0 && lcdX < screen.lcdCols && y >= 0 && y < screen.lcdRows) {
-			const button = lcdX + y * screen.lcdCols
-			this.#writeQueue.queue(button, render)
+		if (item.x === 3 && item.y === 4) {
+			this.#writeQueue.queue(35, item)
+		} else if (lcdX >= 0 && lcdX < screen.lcdCols && item.y >= 0 && item.y < screen.lcdRows) {
+			const button = lcdX + item.y * screen.lcdCols
+			this.#writeQueue.queue(button, item)
 		}
 
-		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == x && btn[1] == y)
+		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == item.x && btn[1] == item.y)
 		if (buttonIndex >= 0) {
 			let color = { r: 0, g: 0, b: 0 }
-			if (render.style === 'pageup') color = { r: 255, g: 255, b: 255 }
-			else if (render.style === 'pagedown') color = { r: 0, g: 0, b: 255 }
-			else if (render.style) color = colorToRgb(render.bgcolor)
+			if (item.type === 'pageup') color = { r: 255, g: 255, b: 255 }
+			else if (item.type === 'pagedown') color = { r: 0, g: 0, b: 255 }
+			else if (item.style) color = colorToRgb(item.style.bgcolor)
 
 			this.#loupedeck
 				.setButtonColor({

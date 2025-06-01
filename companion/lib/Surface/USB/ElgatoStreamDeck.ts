@@ -24,9 +24,8 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { LcdPosition, StreamDeckLcdSegmentControlDefinition, StreamDeckTcp } from '@elgato-stream-deck/tcp'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { SemVer } from 'semver'
 
 const setTimeoutPromise = util.promisify(setTimeout)
@@ -89,7 +88,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 	readonly #streamDeck: StreamDeck | StreamDeckTcp
 
-	readonly #writeQueue: ImageWriteQueue<string, [number, number, ImageResult]>
+	readonly #writeQueue: ImageWriteQueue<string, [DrawButtonItem]>
 
 	/**
 	 * Whether to cleanup the deck on quit
@@ -138,13 +137,17 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			rows: Math.max(...allRowValues) + 1,
 		}
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, x, y, render) => {
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, drawItem) => {
 			const control = this.#streamDeck.CONTROLS.find((control) => {
-				if (control.row !== y) return false
+				if (control.row !== drawItem.y) return false
 
-				if (control.column === x) return true
+				if (control.column === drawItem.x) return true
 
-				if (control.type === 'lcd-segment' && x >= control.column && x < control.column + control.columnSpan)
+				if (
+					control.type === 'lcd-segment' &&
+					drawItem.x >= control.column &&
+					drawItem.x < control.column + control.columnSpan
+				)
 					return true
 
 				return false
@@ -153,23 +156,26 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 			if (control.type === 'button') {
 				if (control.feedbackType === 'lcd') {
-					let newbuffer = render.buffer
 					if (control.pixelSize.width === 0 || control.pixelSize.height === 0) {
 						return
-					} else {
-						try {
-							newbuffer = await transformButtonImage(
-								render,
-								this.config.rotation,
-								control.pixelSize.width,
-								control.pixelSize.height,
-								imageRs.PixelFormat.Rgb
-							)
-						} catch (e: any) {
-							this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
-							this.emit('remove')
-							return
-						}
+					}
+
+					let newbuffer: Buffer
+					try {
+						// TODO-layered handle rotation
+						const render = await drawItem.imageFn(control.pixelSize.width, control.pixelSize.height)
+
+						newbuffer = await transformButtonImage(
+							render,
+							this.config.rotation,
+							control.pixelSize.width,
+							control.pixelSize.height,
+							imageRs.PixelFormat.Rgb
+						)
+					} catch (e: any) {
+						this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+						this.emit('remove')
+						return
 					}
 
 					const maxAttempts = 3
@@ -187,13 +193,13 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 						}
 					}
 				} else if (control.feedbackType === 'rgb') {
-					const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+					const color = drawItem.style ? colorToRgb(drawItem.style.bgcolor) : { r: 0, g: 0, b: 0 }
 					this.#streamDeck.fillKeyColor(control.index, color.r, color.g, color.b).catch((e) => {
 						this.#logger.debug(`color failed: ${e}`)
 					})
 				}
 			} else if (control.type === 'lcd-segment' && control.drawRegions) {
-				const drawColumn = x - control.column
+				const drawColumn = drawItem.x - control.column
 
 				const columnWidth = control.pixelSize.width / control.columnSpan
 				let drawX = drawColumn * columnWidth
@@ -204,8 +210,11 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 				const targetSize = control.pixelSize.height
 
-				let newbuffer
+				let newbuffer: Buffer
 				try {
+					// TODO-layered handle rotation
+					const render = await drawItem.imageFn(control.pixelSize.width, control.pixelSize.height)
+
 					newbuffer = await transformButtonImage(
 						render,
 						this.config.rotation,
@@ -238,7 +247,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 					}
 				}
 			} else if (control.type === 'encoder' && control.hasLed) {
-				const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+				const color = drawItem.style ? colorToRgb(drawItem.style.bgcolor) : { r: 0, g: 0, b: 0 }
 				await this.#streamDeck.setEncoderColor(control.index, color.r, color.g, color.b)
 			}
 		})
@@ -439,8 +448,8 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
-		this.#writeQueue.queue(`${x}_${y}`, x, y, render)
+	draw(item: DrawButtonItem): void {
+		this.#writeQueue.queue(`${item.x}_${item.y}`, item)
 	}
 }
 

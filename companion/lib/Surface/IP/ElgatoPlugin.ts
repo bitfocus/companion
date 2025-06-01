@@ -14,11 +14,10 @@ import { EventEmitter } from 'events'
 import { oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { convertPanelIndexToXY } from '../Util.js'
 import { LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { PageController } from '../../Page/Controller.js'
 import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
@@ -168,18 +167,19 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
+	draw(item: DrawButtonItem): void {
 		if (this.socket.supportsCoordinates) {
 			// Uses manual subscriptions
 			return
 		}
 
+		const render = item.defaultRender
 		if (render.buffer === undefined || render.buffer.length === 0) {
 			this.#logger.silly('buffer was not 15552, but ', render.buffer?.length)
 			return
 		}
 
-		const key = xyToOldBankIndex(x, y)
+		const key = xyToOldBankIndex(item.x, item.y)
 		if (key) {
 			this.socket.fillImage(key, { keyIndex: key - 1 }, render)
 		}

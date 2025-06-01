@@ -26,8 +26,14 @@ import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfaceExecuteExpressionFn, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult, ImageResultStyle } from '../../Graphics/ImageResult.js'
+import type {
+	DrawButtonItem,
+	SurfaceExecuteExpressionFn,
+	SurfacePanel,
+	SurfacePanelEvents,
+	SurfacePanelInfo,
+} from '../Types.js'
+import type { ImageResultStyle } from '../../Graphics/ImageResult.js'
 import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
 
 export interface SatelliteDeviceInfo {
@@ -113,7 +119,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #logger = LogController.createLogger('Surface/IP/Satellite')
 
 	readonly #executeExpression: SurfaceExecuteExpressionFn
-	readonly #writeQueue: ImageWriteQueue<number, [import('../../Graphics/ImageResult.js').ImageResult]>
+	readonly #writeQueue: ImageWriteQueue<number, [DrawButtonItem]>
 
 	#config: Record<string, any>
 
@@ -179,11 +185,14 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			brightness: 100,
 		}
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, render) => {
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, drawItem) => {
 			const targetSize = this.#streamBitmapSize
 			if (!targetSize) return
 
 			try {
+				// TODO-layered handle rotation
+				const render = await drawItem.imageFn(targetSize, targetSize)
+
 				const newbuffer = await transformButtonImage(
 					render,
 					this.#config.rotation,
@@ -310,15 +319,15 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
-		const key = convertXYToIndexForPanel(x, y, this.gridSize)
+	draw(item: DrawButtonItem): void {
+		const key = convertXYToIndexForPanel(item.x, item.y, this.gridSize)
 		if (key === null) return
 
 		if (this.#streamBitmapSize) {
 			// Images need scaling
-			this.#writeQueue.queue(key, render)
+			this.#writeQueue.queue(key, item)
 		} else {
-			this.#sendDraw(key, undefined, render.style)
+			this.#sendDraw(key, undefined, item.style)
 		}
 	}
 

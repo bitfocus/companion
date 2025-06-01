@@ -19,8 +19,13 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { LocalUSBDeviceOptions, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type {
+	DrawButtonItem,
+	LocalUSBDeviceOptions,
+	SurfacePanel,
+	SurfacePanelEvents,
+	SurfacePanelInfo,
+} from '../Types.js'
 
 const configFields: CompanionSurfaceConfigField[] = [
 	...OffsetConfigFields,
@@ -244,12 +249,12 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
+	draw(item: DrawButtonItem): void {
 		const gridSize = this.gridSize
-		if (x < 0 || y < 0 || x >= gridSize.columns || y >= gridSize.rows) return
+		if (item.x < 0 || item.y < 0 || item.x >= gridSize.columns || item.y >= gridSize.rows) return
 
-		const buttonIndex = x * gridSize.rows + y + 1
-		const color = render.bgcolor
+		const buttonIndex = item.x * gridSize.rows + item.y + 1
+		const color = item.style?.bgcolor ?? 0
 		this.#drawColorAtIndex(buttonIndex, color)
 	}
 
