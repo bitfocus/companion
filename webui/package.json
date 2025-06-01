@@ -82,9 +82,7 @@
     "start": "vite",
     "dev": "run start",
     "build": "vite build",
-    "serve": "vite preview",
-    "check-types": "tsc --noEmit",
-    "watch-types": "tsc --noEmit --watch"
+    "serve": "vite preview"
   },
   "eslintConfig": {
     "extends": [

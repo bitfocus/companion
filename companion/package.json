@@ -9,10 +9,7 @@
     "dev": "run dev:inner --admin-address 127.0.0.1 --log-level debug",
     "dev:inner": "run -TB tsx ../tools/dev.mts --extra-module-path=../module-local-dev",
     "dev:debug": "run dev:inner --admin-address 127.0.0.1 --log-level silly",
-    "build:watch": "tsc --watch",
-    "build": "tsc && webpack",
-    "check-types": "tsc --noEmit",
-    "watch-types": "tsc --noEmit --watch"
+    "build": "tsc && webpack"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [

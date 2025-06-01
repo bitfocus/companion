@@ -79,14 +79,9 @@ console.log('Starting typescript watchers')
 
 concurrently([
 	{
-		command: `yarn dev --preserveWatchOutput`,
-		cwd: '../shared-lib',
-		name: 'shared-lib',
-	},
-	{
 		command: `yarn build:watch --preserveWatchOutput`,
-		cwd: '../companion',
-		name: 'companion',
+		cwd: '../',
+		name: 'tsc',
 	},
 ]).result.catch((e) => {
 	console.error(e)

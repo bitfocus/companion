@@ -28,7 +28,10 @@
     "build:writefile": "tsx ./tools/build_writefile.mts",
     "build:module-openapi": "zx ./tools/generate_module_openapi.mjs",
     "build:udev-rules": "tsx ./tools/generate_udev.mts",
-    "module:bulk": "zx ./tools/module_bulk.mjs"
+    "module:bulk": "zx ./tools/module_bulk.mjs",
+    "build:watch": "tsc --build --watch",
+    "check-types": "tsc --build",
+    "watch-types": "run build:watch"
   },
   "engines": {
     "npm": "please-use-yarn",
