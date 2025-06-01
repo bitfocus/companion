@@ -18,21 +18,6 @@ export class ImageResult {
 	readonly #dataUrl: string
 
 	/**
-	 * Image pixel buffer
-	 */
-	readonly buffer: Buffer
-
-	/**
-	 * Image pixel buffer width
-	 */
-	readonly bufferWidth: number
-
-	/**
-	 * Image pixel buffer height
-	 */
-	readonly bufferHeight: number
-
-	/**
 	 * Image draw style
 	 */
 	readonly style: ImageResultStyle | undefined
@@ -45,17 +30,7 @@ export class ImageResult {
 	 */
 	readonly updated: number
 
-	constructor(
-		buffer: Buffer,
-		width: number,
-		height: number,
-		dataUrl: string,
-		style: ImageResultStyle | undefined,
-		drawNative: ImageResultNativeDrawFn
-	) {
-		this.buffer = buffer
-		this.bufferWidth = width
-		this.bufferHeight = height
+	constructor(dataUrl: string, style: ImageResultStyle | undefined, drawNative: ImageResultNativeDrawFn) {
 		this.#dataUrl = dataUrl
 		this.style = style
 		this.#drawNative = drawNative

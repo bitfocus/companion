@@ -377,11 +377,6 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 
 	fillImage(id: string | number, partial: Record<string, number | null>, render: ImageResult): void {
 		if (this.supportsPng) {
-			if (render.buffer === undefined || render.buffer.length === 0) {
-				this.#logger.silly('buffer was not 15552, but ', render.buffer?.length)
-				return
-			}
-
 			this.apicommand('fillImage', {
 				...partial,
 				png: true,

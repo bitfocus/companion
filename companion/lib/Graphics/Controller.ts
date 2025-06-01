@@ -214,17 +214,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(key)
 
 						if (!render) {
-							const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+							const { dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
 								buttonStyle,
 								location,
 								pagename,
-								undefined,
 								CRASHED_WORKER_RETRY_COUNT
 							)
 							render = GraphicsController.#wrapDrawButtonImage(
-								buffer,
-								width,
-								height,
 								dataUrl,
 								draw_style,
 								buttonStyle,
@@ -367,17 +363,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			size: buttonStyle.size === 'auto' ? 'auto' : Number(buttonStyle.size),
 		}
 
-		const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+		const { dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
 			drawStyle,
-			undefined,
 			undefined,
 			undefined,
 			CRASHED_WORKER_RETRY_COUNT
 		)
 		return GraphicsController.#wrapDrawButtonImage(
-			buffer,
-			width,
-			height,
 			dataUrl,
 			draw_style,
 			drawStyle,
@@ -395,9 +387,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}
 
 	static #wrapDrawButtonImage(
-		buffer: Buffer,
-		width: number,
-		height: number,
 		dataUrl: string,
 		draw_style: DrawStyleModel['style'] | undefined,
 		drawStyle: DrawStyleModel,
@@ -410,7 +399,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					: undefined
 				: draw_style
 
-		return new ImageResult(buffer, width, height, dataUrl, draw_style2, drawNative)
+		return new ImageResult(dataUrl, draw_style2, drawNative)
 	}
 
 	/**
@@ -543,12 +532,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		drawStyle: DrawStyleModel,
 		location: ControlLocation | undefined,
 		pagename: string | undefined,
-		resolution: { width: number; height: number; oversampling: number } | undefined,
 		remainingAttempts: number
 	): Promise<{
-		buffer: Buffer
-		width: number
-		height: number
 		dataUrl: string
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
@@ -557,7 +542,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			drawStyle,
 			location,
 			pagename,
-			resolution,
 		]
 
 		if (DEBUG_DISABLE_RENDER_THREADING) {
@@ -569,7 +553,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		} catch (e: any) {
 			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
 			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
-				return this.#executePoolDrawButtonImage(drawStyle, location, pagename, resolution, remainingAttempts - 1)
+				return this.#executePoolDrawButtonImage(drawStyle, location, pagename, remainingAttempts - 1)
 			} else {
 				throw e
 			}

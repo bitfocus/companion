@@ -95,21 +95,14 @@ export class GraphicsRenderer {
 
 			GraphicsRenderer.#drawBlankImage(img, options, location)
 
-			return new ImageResult(
-				img.buffer(),
-				img.realwidth,
-				img.realheight,
-				img.toDataURLSync(),
-				undefined,
-				async (width, height, rotation, format) => {
-					const dimensions = rotateResolution(width, height, rotation)
-					return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
-						GraphicsRenderer.#drawBlankImage(img, options, location)
+			return new ImageResult(img.toDataURLSync(), undefined, async (width, height, rotation, format) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+					GraphicsRenderer.#drawBlankImage(img, options, location)
 
-						return this.#RotateAndConvertImage(img, width, height, rotation, format)
-					})
-				}
-			)
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				})
+			})
 		})
 	}
 
@@ -137,17 +130,25 @@ export class GraphicsRenderer {
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat
 	): Promise<Buffer> {
-		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
+		// Force old 'button' style to be drawn at 72px, and scaled at the end
+		const dimensions =
+			drawStyle.style === 'button' ? [72, 72] : rotateResolution(resolution.width, resolution.height, rotation)
 
-		const { buffer, width, height } = await GraphicsRenderer.drawButtonImageUnwrapped(
-			options,
-			drawStyle,
-			location,
-			pagename,
-			{
-				width: dimensions[0],
-				height: dimensions[1],
-				oversampling: resolution.oversampling,
+		const { buffer, width, height } = await GraphicsRenderer.#getCachedImage(
+			dimensions[0],
+			dimensions[1],
+			resolution.oversampling,
+			async (img) => {
+				await GraphicsRenderer.#drawButtonImageInternal(img, options, drawStyle, location, pagename, {
+					width: dimensions[0],
+					height: dimensions[1],
+				})
+
+				return {
+					buffer: img.buffer(),
+					width: img.realwidth,
+					height: img.realheight,
+				}
 			}
 		)
 
@@ -161,161 +162,149 @@ export class GraphicsRenderer {
 		options: GraphicsOptions,
 		drawStyle: DrawStyleModel,
 		location: ControlLocation | undefined,
-		pagename: string | undefined,
-		resolution: { width: number; height: number; oversampling: number } | undefined
+		pagename: string | undefined
 	): Promise<{
-		buffer: Buffer
-		width: number
-		height: number
 		dataUrl: string
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
-		// Only use provided resolution if the drawStyle is button-layered
-		if (!resolution || drawStyle.style === 'button') resolution = { width: 72, height: 72, oversampling: 4 }
+		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
+			const draw_style = await GraphicsRenderer.#drawButtonImageInternal(img, options, drawStyle, location, pagename, {
+				width: 72,
+				height: 72,
+			})
 
+			return {
+				dataUrl: img.toDataURLSync(),
+				draw_style,
+			}
+		})
+	}
+
+	/**
+	 * Draw the image for a btuton
+	 */
+	static async #drawButtonImageInternal(
+		img: Image,
+		options: GraphicsOptions,
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined,
+		resolution: { width: number; height: number }
+	): Promise<DrawStyleModel['style'] | undefined> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
-		return GraphicsRenderer.#getCachedImage(
-			resolution.width,
-			resolution.height,
-			resolution.oversampling,
-			async (img) => {
-				let draw_style: DrawStyleModel['style'] | undefined = undefined
 
-				// Calculate some constants for drawing without reinventing the numbers
-				const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
+		let draw_style: DrawStyleModel['style'] | undefined = undefined
 
-				// special button types
-				if (drawStyle.style == 'pageup') {
-					draw_style = 'pageup'
+		// Calculate some constants for drawing without reinventing the numbers
+		const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
 
-					img.fillColor(colorDarkGrey)
+		// special button types
+		if (drawStyle.style == 'pageup') {
+			draw_style = 'pageup'
 
-					if (options.page_plusminus) {
-						img.drawTextLine(
-							transformX(31),
-							transformY(20),
-							options.page_direction_flipped ? '–' : '+',
-							colorWhite,
-							18 * drawScale
-						)
-					} else {
-						img.drawPath(
-							[
-								[transformX(46), transformY(30)],
-								[transformX(36), transformY(20)],
-								[transformX(26), transformY(30)],
-							],
-							{ color: colorWhite, width: 2 }
-						) // Arrow up path
-					}
+			img.fillColor(colorDarkGrey)
 
-					img.drawTextLineAligned(
-						transformX(36),
-						transformY(39),
-						'UP',
-						colorButtonYellow,
-						10 * drawScale,
-						'center',
-						'top'
-					)
-				} else if (drawStyle.style == 'pagedown') {
-					draw_style = 'pagedown'
-
-					img.fillColor(colorDarkGrey)
-
-					if (options.page_plusminus) {
-						img.drawTextLine(
-							transformX(31),
-							transformY(36),
-							options.page_direction_flipped ? '+' : '–',
-							colorWhite,
-							18 * drawScale
-						)
-					} else {
-						img.drawPath(
-							[
-								[transformX(46), transformY(40)],
-								[transformX(36), transformY(50)],
-								[transformX(26), transformY(40)],
-							],
-							{ color: colorWhite, width: 2 }
-						) // Arrow down path
-					}
-
-					img.drawTextLineAligned(
-						transformX(36),
-						transformY(23),
-						'DOWN',
-						colorButtonYellow,
-						10 * drawScale,
-						'center',
-						'top'
-					)
-				} else if (drawStyle.style == 'pagenum') {
-					draw_style = 'pagenum'
-
-					img.fillColor(colorDarkGrey)
-
-					if (location === undefined) {
-						// Preview (no location)
-						img.drawTextLineAligned(
-							transformX(36),
-							transformY(18),
-							'PAGE',
-							colorButtonYellow,
-							10 * drawScale,
-							'center',
-							'top'
-						)
-						img.drawTextLineAligned(transformX(36), transformY(32), 'x', colorWhite, 18 * drawScale, 'center', 'top')
-					} else if (!pagename || pagename.toLowerCase() == 'page') {
-						img.drawTextLine(transformX(23), transformY(18), 'PAGE', colorButtonYellow, 10 * drawScale)
-						img.drawTextLineAligned(
-							transformX(36),
-							transformY(32),
-							'' + location.pageNumber,
-							colorWhite,
-							18 * drawScale,
-							'center',
-							'top'
-						)
-					} else {
-						img.drawAlignedText(
-							0,
-							0,
-							resolution.width,
-							resolution.height,
-							pagename,
-							colorWhite,
-							18 * drawScale,
-							'center',
-							'center'
-						)
-					}
-				} else if (drawStyle.style === 'button') {
-					draw_style = 'button'
-
-					await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
-				} else if (drawStyle.style === 'button-layered') {
-					draw_style = 'button-layered'
-
-					await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
-						x: 0,
-						y: 0,
-					})
-				}
-
-				// console.timeEnd('drawButtonImage')
-				return {
-					buffer: img.buffer(),
-					width: img.realwidth,
-					height: img.realheight,
-					dataUrl: img.toDataURLSync(),
-					draw_style,
-				}
+			if (options.page_plusminus) {
+				img.drawTextLine(
+					transformX(31),
+					transformY(20),
+					options.page_direction_flipped ? '–' : '+',
+					colorWhite,
+					18 * drawScale
+				)
+			} else {
+				img.drawPath(
+					[
+						[transformX(46), transformY(30)],
+						[transformX(36), transformY(20)],
+						[transformX(26), transformY(30)],
+					],
+					{ color: colorWhite, width: 2 }
+				) // Arrow up path
 			}
-		)
+
+			img.drawTextLineAligned(transformX(36), transformY(39), 'UP', colorButtonYellow, 10 * drawScale, 'center', 'top')
+		} else if (drawStyle.style == 'pagedown') {
+			draw_style = 'pagedown'
+
+			img.fillColor(colorDarkGrey)
+
+			if (options.page_plusminus) {
+				img.drawTextLine(
+					transformX(31),
+					transformY(36),
+					options.page_direction_flipped ? '+' : '–',
+					colorWhite,
+					18 * drawScale
+				)
+			} else {
+				img.drawPath(
+					[
+						[transformX(46), transformY(40)],
+						[transformX(36), transformY(50)],
+						[transformX(26), transformY(40)],
+					],
+					{ color: colorWhite, width: 2 }
+				) // Arrow down path
+			}
+
+			img.drawTextLineAligned(
+				transformX(36),
+				transformY(23),
+				'DOWN',
+				colorButtonYellow,
+				10 * drawScale,
+				'center',
+				'top'
+			)
+		} else if (drawStyle.style == 'pagenum') {
+			draw_style = 'pagenum'
+
+			img.fillColor(colorDarkGrey)
+
+			if (location === undefined) {
+				// Preview (no location)
+				img.drawTextLineAligned(
+					transformX(36),
+					transformY(18),
+					'PAGE',
+					colorButtonYellow,
+					10 * drawScale,
+					'center',
+					'top'
+				)
+				img.drawTextLineAligned(transformX(36), transformY(32), 'x', colorWhite, 18 * drawScale, 'center', 'top')
+			} else if (!pagename || pagename.toLowerCase() == 'page') {
+				img.drawTextLine(transformX(23), transformY(18), 'PAGE', colorButtonYellow, 10 * drawScale)
+				img.drawTextLineAligned(
+					transformX(36),
+					transformY(32),
+					'' + location.pageNumber,
+					colorWhite,
+					18 * drawScale,
+					'center',
+					'top'
+				)
+			} else {
+				img.drawAlignedText(0, 0, img.width, img.height, pagename, colorWhite, 18 * drawScale, 'center', 'center')
+			}
+		} else if (drawStyle.style === 'button') {
+			draw_style = 'button'
+
+			await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
+		} else if (drawStyle.style === 'button-layered') {
+			draw_style = 'button-layered'
+
+			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
+				x: 0,
+				y: 0,
+			})
+		}
+
+		// console.timeEnd('drawButtonImage')
+
+		return draw_style
 	}
 
 	/**
@@ -418,20 +407,13 @@ export class GraphicsRenderer {
 	static drawPincodeNumber(width: number, height: number, num: number): ImageResult {
 		return GraphicsRenderer.#getCachedImage(width, height, 3, (img) => {
 			GraphicsLockingGenerator.generatePincodeChar(img, num)
-			return new ImageResult(
-				img.buffer(),
-				img.realwidth,
-				img.realheight,
-				img.toDataURLSync(),
-				undefined,
-				async (width, height, rotation, format) => {
-					const dimensions = rotateResolution(width, height, rotation)
-					return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
-						GraphicsLockingGenerator.generatePincodeChar(img, num)
-						return this.#RotateAndConvertImage(img, width, height, rotation, format)
-					})
-				}
-			)
+			return new ImageResult(img.toDataURLSync(), undefined, async (width, height, rotation, format) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+					GraphicsLockingGenerator.generatePincodeChar(img, num)
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				})
+			})
 		})
 	}
 
@@ -441,20 +423,13 @@ export class GraphicsRenderer {
 	static drawPincodeEntry(width: number, height: number, code: string | undefined): ImageResult {
 		return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
 			GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
-			return new ImageResult(
-				img.buffer(),
-				img.realwidth,
-				img.realheight,
-				img.toDataURLSync(),
-				undefined,
-				async (width, height, rotation, format) => {
-					const dimensions = rotateResolution(width, height, rotation)
-					return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
-						GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
-						return this.#RotateAndConvertImage(img, width, height, rotation, format)
-					})
-				}
-			)
+			return new ImageResult(img.toDataURLSync(), undefined, async (width, height, rotation, format) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+					GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				})
+			})
 		})
 	}
 
