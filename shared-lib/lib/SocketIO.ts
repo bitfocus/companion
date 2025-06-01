@@ -254,6 +254,7 @@ export interface ClientToBackendEventsMap {
 	'surfaces:outbound:add': (type: string, address: string, port: number | undefined, name?: string) => string
 	'surfaces:outbound:remove': (id: string) => void
 	'surfaces:outbound:set-name': (surfaceId: string, name: string) => void
+	'surfaces:outbound:set-enabled': (surfaceId: string, enabled: boolean) => void
 
 	'emulator:startup': (emulatorId: string) => EmulatorConfig
 	'emulator:press': (emulatorId: string, column: number, row: number) => void
