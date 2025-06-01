@@ -110,7 +110,7 @@ export interface OutboundSurfaceInfo {
 	id: string
 	displayName: string
 	type: 'elgato'
-	enabled: boolean | undefined
+	enabled: boolean
 	address: string
 	port: number | undefined
 }
