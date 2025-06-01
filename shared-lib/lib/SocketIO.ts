@@ -2,7 +2,6 @@ import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { UserConfigModel } from './Model/UserConfigModel.js'
 import type { ClientLogLine } from './Model/LogLine.js'
 import type {
-	AppUpdateInfo,
 	ClientBonjourService,
 	ClientEditConnectionConfig,
 	ClientEventDefinition,

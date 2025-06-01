@@ -1301,8 +1301,8 @@ __metadata:
     "@tanstack/react-router-devtools": "npm:^1.121.12"
     "@tanstack/router-plugin": "npm:^1.121.12"
     "@tanstack/virtual-file-routes": "npm:^1.120.17"
-    "@trpc/client": "npm:^11.0.0-rc.730"
-    "@trpc/react-query": "npm:^11.0.0-rc.730"
+    "@trpc/client": "npm:^11.2.0"
+    "@trpc/react-query": "npm:^11.2.0"
     "@types/crypto-js": "npm:^4.2.2"
     "@types/react": "npm:^18.3.23"
     "@types/react-copy-to-clipboard": "npm:^5.0.7"
@@ -4091,36 +4091,36 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@trpc/client@npm:^11.0.0-rc.730":
-  version: 11.0.0-rc.730
-  resolution: "@trpc/client@npm:11.0.0-rc.730"
+"@trpc/client@npm:^11.2.0":
+  version: 11.2.0
+  resolution: "@trpc/client@npm:11.2.0"
   peerDependencies:
-    "@trpc/server": 11.0.0-rc.730+776d07336
+    "@trpc/server": 11.2.0
     typescript: ">=5.7.2"
-  checksum: 10c0/1700833d57d0413b972daa0704c54ba6f14cd11f31ddedd0f257f6cb26ffa7ab98a37bfbf666ecf4fae6fbb74f90d1aecc2d688ea829a5960c264eda5ad1261b
+  checksum: 10c0/4a0e8c76a1c446432b45a5f386de1ac283d86936b8a02d9187aa4a37d7fbd87559feec470b614a25ba660871dcb5bb35e4b8139a6018c0d2586e3ffd7453f5ce
   languageName: node
   linkType: hard
 
-"@trpc/react-query@npm:^11.0.0-rc.730":
-  version: 11.0.0-rc.730
-  resolution: "@trpc/react-query@npm:11.0.0-rc.730"
+"@trpc/react-query@npm:^11.2.0":
+  version: 11.2.0
+  resolution: "@trpc/react-query@npm:11.2.0"
   peerDependencies:
-    "@tanstack/react-query": ^5.62.8
-    "@trpc/client": 11.0.0-rc.730+776d07336
-    "@trpc/server": 11.0.0-rc.730+776d07336
+    "@tanstack/react-query": ^5.67.1
+    "@trpc/client": 11.2.0
+    "@trpc/server": 11.2.0
     react: ">=18.2.0"
     react-dom: ">=18.2.0"
     typescript: ">=5.7.2"
-  checksum: 10c0/f388383b64b6a49d82c7181d795c14902e4a8c981ef0dce42f895e94bbe404a886a53fb03f75c5ee16dea6815eea5c5a118fc3d1ec83bb115027598efb8525fc
+  checksum: 10c0/44c534b0df959471f939f4b13a2e6ad2afc07bab1f996dc126baacb45c595c4af451b34f0c30d4edd8a3aa9846d5a472ab182dd62d423c9e70756e9f767d9e32
   languageName: node
   linkType: hard
 
-"@trpc/server@npm:^11.0.0-rc.730":
-  version: 11.0.0-rc.730
-  resolution: "@trpc/server@npm:11.0.0-rc.730"
+"@trpc/server@npm:^11.2.0":
+  version: 11.2.0
+  resolution: "@trpc/server@npm:11.2.0"
   peerDependencies:
     typescript: ">=5.7.2"
-  checksum: 10c0/c730f73bb9db63f2fd388bc62032286f12a8abbe09c0c4ce711d429430d58859ff8ba0ec86535637c0c037f425ded68fefd19d6dcdea8c83baff1fc39de8787e
+  checksum: 10c0/840c282d16dc022dde9fb46cf8d55277d92dbaef01769c33b89350f97bf193dc1a48368e24c784d45a255650073cef206c984ae3a3493f80acc92512710fa734
   languageName: node
   linkType: hard
 
@@ -7021,7 +7021,7 @@ asn1@evs-broadcast/node-asn1:
     "@napi-rs/canvas": "npm:0.1.68"
     "@sentry/node": "npm:^9.29.0"
     "@sentry/webpack-plugin": "npm:^3.5.0"
-    "@trpc/server": "npm:^11.0.0-rc.730"
+    "@trpc/server": "npm:^11.2.0"
     "@types/archiver": "npm:^6.0.3"
     "@types/better-sqlite3": "npm:^7.6.13"
     "@types/cors": "npm:^2.8.19"
