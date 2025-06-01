@@ -16,7 +16,7 @@ import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { ImageResult, ImageResultNativeDrawFn } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
-import { isPackaged, transformButtonImage } from '../Resources/Util.js'
+import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import debounceFn from 'debounce-fn'
@@ -34,6 +34,8 @@ import { FONT_DEFINITIONS } from './Fonts.js'
 import type Express from 'express'
 import compressionMiddleware from 'compression'
 import fs from 'fs'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type imageRs from '@julusian/image-rs'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
@@ -226,27 +228,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								dataUrl,
 								draw_style,
 								buttonStyle,
-								async (width0, height0, rotation, format) => {
-									const { buffer, width, height } = await this.#executePoolDrawButtonImage(
+								async (width, height, rotation, format) =>
+									this.#executePoolDrawButtonBareImage(
 										buttonStyle,
 										location,
 										pagename,
-										{ width: width0, height: height0, oversampling: 4 }, // TODO - dynamic oversampling?
+										{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+										rotation,
+										format,
 										CRASHED_WORKER_RETRY_COUNT
 									)
-
-									return transformButtonImage(
-										{
-											buffer: buffer,
-											bufferWidth: width,
-											bufferHeight: height,
-										},
-										rotation,
-										width0,
-										height0,
-										format
-									)
-								}
 							)
 						}
 					} else {
@@ -390,27 +381,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			dataUrl,
 			draw_style,
 			drawStyle,
-			async (width0, height0, rotation, format) => {
-				const { buffer, width, height } = await this.#executePoolDrawButtonImage(
+			async (width, height, rotation, format) =>
+				this.#executePoolDrawButtonBareImage(
 					drawStyle,
 					undefined,
 					undefined,
-					{ width: width0, height: height0, oversampling: 4 }, // TODO - dynamic oversampling?
+					{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+					rotation,
+					format,
 					CRASHED_WORKER_RETRY_COUNT
 				)
-
-				return transformButtonImage(
-					{
-						buffer: buffer,
-						bufferWidth: width,
-						bufferHeight: height,
-					},
-					rotation,
-					width0,
-					height0,
-					format
-				)
-			}
 		)
 	}
 
@@ -572,16 +552,71 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		dataUrl: string
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
+		const args: Parameters<typeof GraphicsRenderer.drawButtonImageUnwrapped> = [
+			this.#drawOptions,
+			drawStyle,
+			location,
+			pagename,
+			resolution,
+		]
+
 		if (DEBUG_DISABLE_RENDER_THREADING) {
-			return GraphicsRenderer.drawButtonImageUnwrapped(this.#drawOptions, drawStyle, location, pagename, resolution)
+			return GraphicsRenderer.drawButtonImageUnwrapped(...args)
 		}
 
 		try {
-			return this.#pool.exec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename, resolution])
+			return this.#pool.exec('drawButtonImage', args)
 		} catch (e: any) {
 			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
 			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
 				return this.#executePoolDrawButtonImage(drawStyle, location, pagename, resolution, remainingAttempts - 1)
+			} else {
+				throw e
+			}
+		}
+	}
+
+	/**
+	 * Draw a button image in the worker pool
+	 * @returns Image render object
+	 */
+	async #executePoolDrawButtonBareImage(
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined,
+		resolution: { width: number; height: number; oversampling: number },
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat,
+		remainingAttempts: number
+	): Promise<Buffer> {
+		const args: Parameters<typeof GraphicsRenderer.drawButtonBareImageUnwrapped> = [
+			this.#drawOptions,
+			drawStyle,
+			location,
+			pagename,
+			resolution,
+			rotation,
+			format,
+		]
+
+		if (DEBUG_DISABLE_RENDER_THREADING) {
+			return GraphicsRenderer.drawButtonBareImageUnwrapped(...args)
+		}
+
+		try {
+			return this.#pool.exec('drawButtonBareImage', args)
+		} catch (e: any) {
+			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
+			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
+				return this.#executePoolDrawButtonBareImage(
+					drawStyle,
+					location,
+					pagename,
+					resolution,
+					rotation,
+					format,
+					remainingAttempts - 1
+				)
 			} else {
 				throw e
 			}

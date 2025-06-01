@@ -19,7 +19,7 @@ import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/La
 import { TopbarRenderer } from '@companion-app/shared/Graphics/TopbarRenderer.js'
 import { isPromise } from 'util/types'
 import { GraphicsLockingGenerator } from './Locking.js'
-import { transformButtonImage } from '../Resources/Util.js'
+import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type imageRs from '@julusian/image-rs'
 
@@ -102,11 +102,11 @@ export class GraphicsRenderer {
 				img.toDataURLSync(),
 				undefined,
 				async (width, height, rotation, format) => {
-					return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
+					const dimensions = rotateResolution(width, height, rotation)
+					return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
 						GraphicsRenderer.#drawBlankImage(img, options, location)
 
-						// TODO-layered: will this handle non-square images?
-						return transformImage2(img, rotation, format)
+						return this.#RotateAndConvertImage(img, width, height, rotation, format)
 					})
 				}
 			)
@@ -115,14 +115,43 @@ export class GraphicsRenderer {
 
 	static #drawBlankImage(img: Image, options: GraphicsOptions, location: ControlLocation) {
 		// Calculate some constants for drawing without reinventing the numbers
-		const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(img)
+		const { drawScale, transformX } = GraphicsRenderer.calculateTransforms(img)
 
 		img.fillColor('black')
 
 		if (!options.remove_topbar) {
-			img.drawTextLine(transformX(2), transformY(3), formatLocation(location), 'rgb(50, 50, 50)', 8 * drawScale)
-			img.horizontalLine(transformY(13.5), { color: 'rgb(30, 30, 30)' })
+			img.drawTextLine(transformX(2), 3 * drawScale, formatLocation(location), 'rgb(50, 50, 50)', 8 * drawScale)
+			img.horizontalLine(13.5 * drawScale, { color: 'rgb(30, 30, 30)' })
 		}
+	}
+
+	/**
+	 * Draw the image for a btuton
+	 */
+	static async drawButtonBareImageUnwrapped(
+		options: GraphicsOptions,
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined,
+		resolution: { width: number; height: number; oversampling: number },
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Buffer> {
+		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
+
+		const { buffer, width, height } = await GraphicsRenderer.drawButtonImageUnwrapped(
+			options,
+			drawStyle,
+			location,
+			pagename,
+			{
+				width: dimensions[0],
+				height: dimensions[1],
+				oversampling: resolution.oversampling,
+			}
+		)
+
+		return transformButtonImage(buffer, width, height, rotation, resolution.width, resolution.height, format)
 	}
 
 	/**
@@ -396,10 +425,10 @@ export class GraphicsRenderer {
 				img.toDataURLSync(),
 				undefined,
 				async (width, height, rotation, format) => {
-					return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
+					const dimensions = rotateResolution(width, height, rotation)
+					return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
 						GraphicsLockingGenerator.generatePincodeChar(img, num)
-						// TODO-layered: will this handle non-square images?
-						return transformImage2(img, rotation, format)
+						return this.#RotateAndConvertImage(img, width, height, rotation, format)
 					})
 				}
 			)
@@ -419,31 +448,25 @@ export class GraphicsRenderer {
 				img.toDataURLSync(),
 				undefined,
 				async (width, height, rotation, format) => {
-					return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
+					const dimensions = rotateResolution(width, height, rotation)
+					return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
 						GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
-						// TODO-layered: will this handle non-square images?
-						return transformImage2(img, rotation, format)
+						return this.#RotateAndConvertImage(img, width, height, rotation, format)
 					})
 				}
 			)
 		})
 	}
-}
 
-async function transformImage2(
-	img: Image,
-	rotation: SurfaceRotation | null,
-	format: imageRs.PixelFormat
-): Promise<Buffer> {
-	return transformButtonImage(
-		{
-			buffer: img.buffer(),
-			bufferWidth: img.realwidth,
-			bufferHeight: img.realheight,
-		},
-		rotation,
-		img.width,
-		img.height,
-		format
-	)
+	static #RotateAndConvertImage(
+		img: Image,
+		width: number,
+		height: number,
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Buffer> {
+		// Future: once we support rotation within Image, we can avoid this final transform
+
+		return transformButtonImage(img.buffer(), img.realwidth, img.realheight, rotation, width, height, format)
+	}
 }
