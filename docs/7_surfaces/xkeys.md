@@ -5,4 +5,3 @@ Since Companion v3.2, xkeys will by default run in their natural layout which is
 In this old layout mode, Companion will map the buttons through in order (working across in rows) to buttons in Companion, using as many pages as needed.
 
 There is some limited support for T-bars and shuttle/jog wheels, which write their values to some hardcoded internal variables.
-

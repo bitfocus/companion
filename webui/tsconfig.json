@@ -7,7 +7,7 @@
 		"paths": {
 			"*": ["./node_modules/*"],
 			"~/*": ["./src/*"],
-			"@docs/*": ["../docs/*"],
+			"@docs/*": ["../docs/*"]
 		},
 		"module": "Node16",
 		"moduleResolution": "Node16",

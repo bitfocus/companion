@@ -6,40 +6,40 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 
 - Press and release a button (run both down and up actions)  
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/press`  
+  Path: `/api/location/<page>/<row>/<column>/press`
 - Press the button (run down actions and hold)  
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/down`  
+  Path: `/api/location/<page>/<row>/<column>/down`
 - Release the button (run up actions)  
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/up`  
+  Path: `/api/location/<page>/<row>/<column>/up`
 - Trigger a left rotation of the button/encoder
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/rotate-left`  
+  Path: `/api/location/<page>/<row>/<column>/rotate-left`
 - Trigger a right rotation of the button/encoder
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/rotate-right`  
+  Path: `/api/location/<page>/<row>/<column>/rotate-right`
 - Set the current step of a button/encoder
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/step`  
+  Path: `/api/location/<page>/<row>/<column>/step`
 
 - Change background color of button
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/style?bgcolor=<bgcolor HEX>`   
+  Path: `/api/location/<page>/<row>/<column>/style?bgcolor=<bgcolor HEX>`
 - Change background color of button
   Method: POST  
   Path: `/api/location/<page>/<row>/<column>/style`  
   Body: `{ "bgcolor": "<bgcolor HEX>" }` OR `{ "bgcolor": "rgb(<red>,<green>,<blue>)" }`
 - Change text color of button
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/style?color=<color HEX>`   
+  Path: `/api/location/<page>/<row>/<column>/style?color=<color HEX>`
 - Change text color of button
   Method: POST  
   Path: `/api/location/<page>/<row>/<column>/style`  
   Body: `{ "color": "<color HEX>" }` OR `{ "color": "rgb(<red>,<green>,<blue>)" }`
 - Change text of button
   Method: POST  
-  Path: `/api/location/<page>/<row>/<column>/style?text=<text>`   
+  Path: `/api/location/<page>/<row>/<column>/style?text=<text>`
 - Change text color of button
   Method: POST  
   Path: `/api/location/<page>/<row>/<column>/style`  
@@ -47,20 +47,20 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 
 - Change custom variable value  
   Method: POST  
-  Path: `/api/custom-variable/<name>/value?value=<value>`  
+  Path: `/api/custom-variable/<name>/value?value=<value>`
 - Change custom variable value  
   Method: POST  
   Path: `/api/custom-variable/<name>/value`  
-  Body: `<value>`  
+  Body: `<value>`
 - Get custom variable value  
   Method: GET  
   Path: `/api/custom-variable/<name>/value`
 - Get Module variable value  
   Method: GET  
-  Path: `/api/variable/<Connection Label>/<name>/value`  
+  Path: `/api/variable/<Connection Label>/<name>/value`
 - Rescan for USB surfaces  
   Method: POST  
-  Path: `/api/surfaces/rescan`  
+  Path: `/api/surfaces/rescan`
 
 **Examples**  
 Press page 1 row 0 column 2:  
@@ -86,12 +86,11 @@ POST `/api/custom-variable/cue/value`
 Content-Type `application/json`  
 Body: `"Some text"` - Text needs to be enclosed in double quotes, quotes in the text need to be escaped with a backslash.
 
-Change custom variable "data" to a JSON object: 
+Change custom variable "data" to a JSON object:
 POST `/api/custom-variable/data/value`  
 Content-Type `application/json`  
 Body: `{"name":"Douglas", "answer":42}` - Body needs to be a valid JSON.  
-The object will be stored in the variable value and will not be converted to a string. You can also use the data types boolean, number, array or null. JSON does not support sending undefined as a value, but we interpret an empty body as undefined, properties of an object can of course be undefined.  
-
+The object will be stored in the variable value and will not be converted to a string. You can also use the data types boolean, number, array or null. JSON does not support sending undefined as a value, but we interpret an empty body as undefined, properties of an object can of course be undefined.
 
 **Deprecated Commands**
 
@@ -100,9 +99,9 @@ The following commands are deprecated and have replacements listed above. They w
 - `/press/bank/<page>/<bank>`  
   _Press and release a button (run both down and up actions)_
 - `/press/bank/<page>/<bank>/down`  
-   Press a button (run both down actions)_
+   Press a button (run both down actions)\_
 - `/press/bank/<page>/<bank>/up`  
-   Release a button (run up actions)_
+   Release a button (run up actions)\_
 - `/style/bank/<page>/<bank>?bgcolor=<bgcolor HEX>`  
   _Change background color of button_
 - `/style/bank/<page>/<bank>?color=<color HEX>`  

@@ -34,7 +34,6 @@ Remote triggering can be done by sending TCP (port `51234`) or UDP (port `51235`
 - `SURFACES RESCAN`
   _Make Companion rescan for USB surfaces_
 
-
 **Examples**  
 Set the emulator surface to page 23:  
 `SURFACE emulator PAGE-SET 23`
@@ -44,7 +43,6 @@ Press page 1 row 2 column 3:
 
 Change custom variable "cue" to value "intro":  
 `CUSTOM-VARIABLE cue SET-VALUE intro`
-
 
 **Deprecated Commands**
 
