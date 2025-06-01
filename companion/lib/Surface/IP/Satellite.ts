@@ -12,7 +12,7 @@ import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import { parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
+import { parseColorToNumber } from '../../Resources/Util.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
@@ -190,18 +190,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			if (!targetSize) return
 
 			try {
-				// TODO-layered handle rotation
-				const render = await drawItem.imageFn(targetSize, targetSize)
+				const newbuffer = await drawItem.imageFn(targetSize, targetSize, this.#config.rotation, imageRs.PixelFormat.Rgb)
 
-				const newbuffer = await transformButtonImage(
-					render,
-					this.#config.rotation,
-					targetSize,
-					targetSize,
-					imageRs.PixelFormat.Rgb
-				)
-
-				this.#sendDraw(key, newbuffer, render.style)
+				this.#sendDraw(key, newbuffer, drawItem.style)
 			} catch (e: any) {
 				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
 				this.emit('remove')

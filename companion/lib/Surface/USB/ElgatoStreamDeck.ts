@@ -15,7 +15,6 @@ import util from 'util'
 import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
 import {
 	OffsetConfigFields,
@@ -162,14 +161,10 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 					let newbuffer: Buffer
 					try {
-						// TODO-layered handle rotation
-						const render = await drawItem.imageFn(control.pixelSize.width, control.pixelSize.height)
-
-						newbuffer = await transformButtonImage(
-							render,
-							this.config.rotation,
+						newbuffer = await drawItem.imageFn(
 							control.pixelSize.width,
 							control.pixelSize.height,
+							this.config.rotation,
 							imageRs.PixelFormat.Rgb
 						)
 					} catch (e: any) {
@@ -212,16 +207,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 				let newbuffer: Buffer
 				try {
-					// TODO-layered handle rotation
-					const render = await drawItem.imageFn(targetSize, targetSize)
-
-					newbuffer = await transformButtonImage(
-						render,
-						this.config.rotation,
-						targetSize,
-						targetSize,
-						imageRs.PixelFormat.Rgb
-					)
+					newbuffer = await drawItem.imageFn(targetSize, targetSize, this.config.rotation, imageRs.PixelFormat.Rgb)
 				} catch (e) {
 					this.#logger.debug(`scale image failed: ${e}`)
 					this.emit('remove')

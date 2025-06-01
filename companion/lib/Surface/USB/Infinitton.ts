@@ -11,7 +11,6 @@
 
 import imageRs from '@julusian/image-rs'
 import Infinitton from 'infinitton-idisplay'
-import { translateRotation } from '../../Resources/Util.js'
 import { EventEmitter } from 'events'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
@@ -109,21 +108,15 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 
 			if (key >= 0 && !isNaN(key)) {
 				const targetSize = 72
-				const rotation = translateRotation(this.config.rotation)
 
 				try {
-					const render = await drawItem.imageFn(targetSize, targetSize)
+					const newbuffer = await drawItem.imageFn(
+						targetSize,
+						targetSize,
+						this.config.rotation,
+						imageRs.PixelFormat.Rgb
+					)
 
-					let image = imageRs.ImageTransformer.fromBuffer(
-						render.buffer,
-						render.bufferWidth,
-						render.bufferHeight,
-						imageRs.PixelFormat.Rgba
-					).scale(targetSize, targetSize)
-
-					if (rotation !== null) image = image.rotate(rotation)
-
-					const newbuffer = (await image.toBuffer(imageRs.PixelFormat.Rgb)).buffer
 					this.#infinitton.fillImage(key, newbuffer)
 				} catch (e: any) {
 					this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)

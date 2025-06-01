@@ -16,7 +16,7 @@ import imageRs from '@julusian/image-rs'
 import jpg from '@julusian/jpeg-turbo'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { offsetRotation, transformButtonImage } from '../../Resources/Util.js'
+import { offsetRotation } from '../../Resources/Util.js'
 import {
 	BrightnessConfigField,
 	LockConfigFields,
@@ -108,14 +108,10 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 
 				let newbuffer: Buffer
 				try {
-					// TODO-layered rotation
-					const render = await drawItem.imageFn(output.resolutionx, output.resolutiony)
-
-					newbuffer = await transformButtonImage(
-						render,
-						offsetRotation(this.config.rotation, 180),
+					newbuffer = await drawItem.imageFn(
 						output.resolutionx,
 						output.resolutiony,
+						offsetRotation(this.config.rotation, 180),
 						imageRs.PixelFormat.Rgb
 					)
 				} catch (e: any) {

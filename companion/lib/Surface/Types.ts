@@ -2,6 +2,7 @@ import type {
 	CompanionSurfaceConfigField,
 	GridSize,
 	SurfaceFirmwareUpdateInfo,
+	SurfaceRotation,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
@@ -13,6 +14,7 @@ import type { PageController } from '../Page/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type imageRs from '@julusian/image-rs'
 
 export type SurfacePanelFactory = {
 	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
@@ -69,7 +71,13 @@ export interface DrawButtonItem {
 
 	/** @deprecated This should not be necessary */
 	defaultRender: ImageResult
-	imageFn: (width: number, height: number) => Promise<ImageResult>
+
+	imageFn: (
+		width: number,
+		height: number,
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	) => Promise<Buffer>
 }
 
 export interface SurfacePanelEvents {
