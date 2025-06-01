@@ -7086,6 +7086,7 @@ asn1@evs-broadcast/node-asn1:
     ws: "npm:^8.18.2"
     xkeys: "npm:^3.3.0"
     yaml: "npm:^2.8.0"
+    zod: "npm:^3.25.46"
   languageName: unknown
   linkType: soft
 
@@ -17608,6 +17609,13 @@ asn1@evs-broadcast/node-asn1:
   version: 3.24.2
   resolution: "zod@npm:3.24.2"
   checksum: 10c0/c638c7220150847f13ad90635b3e7d0321b36cce36f3fc6050ed960689594c949c326dfe2c6fa87c14b126ee5d370ccdebd6efb304f41ef5557a4aaca2824565
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.25.46":
+  version: 3.25.46
+  resolution: "zod@npm:3.25.46"
+  checksum: 10c0/2cc754a49244f9d80ef50c0da8e01136e0202a9fa92229bcfef2b8285ca07f865bcdd17f0fb609219bd91a2de7965b9a27627cd456e151924144d7a06c6d6686
   languageName: node
   linkType: hard
 

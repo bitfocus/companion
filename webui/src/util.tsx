@@ -19,6 +19,7 @@ import type {
 import { computed } from 'mobx'
 import { DropTargetMonitor, XYCoord } from 'react-dnd'
 import type { ReadonlyDeep } from 'type-fest'
+import { TRPCClientErrorLike } from '@trpc/client'
 
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
@@ -281,7 +282,7 @@ export function LoadingBar(props: LoadingBarProps): React.JSX.Element {
 }
 
 interface LoadingRetryOrErrorProps {
-	error?: string | null
+	error?: string | TRPCClientErrorLike<any> | null
 	dataReady: boolean
 	doRetry?: () => void
 	autoRetryAfter?: number | null
@@ -323,7 +324,7 @@ export function LoadingRetryOrError({
 			{error && (
 				<CCol sm={12}>
 					<CAlert color="danger" role="alert">
-						<p>{error}</p>
+						<p>{typeof error === 'string' ? error : error.message}</p>
 						{!dataReady && (
 							<CButton color="primary" onClick={doRetry}>
 								Retry {countdown && '(' + countdown + ')'}

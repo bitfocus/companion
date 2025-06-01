@@ -16,7 +16,7 @@ import { compileUpdatePayload } from './UpdatePayload.js'
 import { publicProcedure, router, toIterable } from './TRPC.js'
 import { EventEmitter } from 'events'
 
-interface UpdateEvents {
+type UpdateEvents = {
 	info: [info: AppUpdateInfo]
 }
 

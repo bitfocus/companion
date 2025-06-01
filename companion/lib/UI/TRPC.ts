@@ -43,6 +43,8 @@ export function createTrpcRouter(registry: Registry) {
 		}),
 
 		appInfo: registry.ui.update.createTrpcRouter(),
+
+		surfaces: registry.surfaces.createTrpcRouter(),
 	})
 }
 

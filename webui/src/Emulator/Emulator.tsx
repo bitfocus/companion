@@ -1,14 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
-import {
-	LoadingRetryOrError,
-	applyPatchOrReplaceObject,
-	MyErrorBoundary,
-	SocketContext,
-	useMountEffect,
-	PreventDefaultHandler,
-} from '~/util.js'
+import { LoadingRetryOrError, MyErrorBoundary, SocketContext, useMountEffect, PreventDefaultHandler } from '~/util.js'
 import { CButton, CCol, CForm, CRow } from '@coreui/react'
-import { nanoid } from 'nanoid'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -18,14 +10,15 @@ import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { useUserConfigSubscription } from '~/Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
 import { useParams } from '@tanstack/react-router'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC.js'
 
 export const Emulator = observer(function Emulator() {
 	const socket = useContext(SocketContext)
 
-	const [config, setConfig] = useState<EmulatorConfig | null>(null)
-	const [loadError, setLoadError] = useState<string | null>(null)
-
 	const { emulatorId } = useParams({ from: '/emulator/$emulatorId' })
+
+	const config = useSubscription(trpc.surfaces.emulatorConfig.subscriptionOptions({ id: emulatorId }))
 
 	const [imageCache, setImageCache] = useState<EmulatorImageCache>({})
 	useEffect(() => {
@@ -33,32 +26,7 @@ export const Emulator = observer(function Emulator() {
 		setImageCache({})
 	}, [emulatorId])
 
-	const [retryToken, setRetryToken] = useState(nanoid())
-	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
-	useEffect(() => {
-		setConfig(null)
-		setLoadError(null)
-
-		if (!emulatorId) return
-
-		socket
-			.emitPromise('emulator:startup', [emulatorId])
-			.then((config) => {
-				setConfig(config)
-			})
-			.catch((e: any) => {
-				console.error('Emulator error', e)
-				setLoadError(`Failed: ${e}`)
-			})
-
-		const unsubConfig = socket.on('emulator:config', (patch) => {
-			setConfig((oldConfig) => oldConfig && applyPatchOrReplaceObject(oldConfig, patch))
-		})
-
-		return () => {
-			unsubConfig()
-		}
-	}, [retryToken, socket, emulatorId])
+	const doRetryLoad = useCallback(() => config.reset(), [])
 
 	const userConfigStore = useMemo(() => new UserConfigStore(), [])
 	useUserConfigSubscription(socket, userConfigStore)
@@ -71,12 +39,12 @@ export const Emulator = observer(function Emulator() {
 	}, [userConfigStore.properties?.installName])
 
 	const keymap = useMemo(() => {
-		if (config?.emulator_control_enable) {
+		if (config.data?.emulator_control_enable) {
 			return { ...keyboardKeymap, ...logitecKeymap, ...dsanMastercueKeymap }
 		} else {
 			return keyboardKeymap
 		}
-	}, [config?.emulator_control_enable])
+	}, [config.data?.emulator_control_enable])
 
 	useEffect(() => {
 		const unsubImages = socket.on('emulator:images', (newImages) => {
@@ -104,7 +72,7 @@ export const Emulator = observer(function Emulator() {
 
 	useEffect(() => {
 		const unsub = socket.onConnect(() => {
-			setRetryToken(nanoid())
+			doRetryLoad()
 		})
 
 		return unsub
@@ -165,20 +133,20 @@ export const Emulator = observer(function Emulator() {
 
 	return (
 		<div className="page-tablet page-emulator">
-			{config ? (
+			{config.data ? (
 				<>
-					<ConfigurePanel config={config} />
+					<ConfigurePanel config={config.data} />
 
 					<EmulatorButtons
 						imageCache={imageCache}
 						buttonClick={buttonClick}
-						columns={config.emulator_columns}
-						rows={config.emulator_rows}
+						columns={config.data.emulator_columns}
+						rows={config.data.emulator_rows}
 					/>
 				</>
 			) : (
 				<CRow className={'loading'}>
-					<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
+					<LoadingRetryOrError dataReady={false} error={config.error} doRetry={doRetryLoad} />
 				</CRow>
 			)}
 		</div>

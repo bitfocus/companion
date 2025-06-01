@@ -104,7 +104,8 @@
     "workerpool": "^9.3.2",
     "ws": "^8.18.2",
     "xkeys": "^3.3.0",
-    "yaml": "^2.8.0"
+    "yaml": "^2.8.0",
+    "zod": "^3.25.46"
   },
   "collective": {
     "type": "donorbox",

@@ -11,9 +11,8 @@
  */
 
 import { EventEmitter } from 'events'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es'
 import LogController from '../../Log/Controller.js'
-import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
 import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
@@ -71,12 +70,17 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
+export type EmulatorUpdateEvents = {
+	emulatorConfig: [id: string, diff: EmulatorConfig]
+}
+
 export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger = LogController.createLogger('Surface/IP/ElgatoEmulator')
 
 	readonly #emulatorId: string
 
 	readonly #io: UIHandler
+	readonly #events: EventEmitter<EmulatorUpdateEvents>
 
 	#lastSentConfigJson: EmulatorConfig = cloneDeep(DefaultConfig)
 
@@ -114,10 +118,11 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		}
 	)
 
-	constructor(io: UIHandler, emulatorId: string) {
+	constructor(io: UIHandler, events: EventEmitter<EmulatorUpdateEvents>, emulatorId: string) {
 		super()
 
 		this.#io = io
+		this.#events = events
 		this.#emulatorId = emulatorId
 
 		this.info = {
@@ -139,8 +144,10 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		}
 	}
 
-	setupClient(client: ClientSocket): EmulatorConfig {
-		client.emit('emulator:images', this.#imageCache)
+	setupClient(client: ClientSocket | undefined): EmulatorConfig {
+		if (client) {
+			client.emit('emulator:images', this.#imageCache)
+		}
 
 		return this.#lastSentConfigJson
 	}
@@ -160,9 +167,8 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		// Send config to clients
 		const roomName = EmulatorRoom(this.#emulatorId)
 		if (this.#io.countRoomMembers(roomName) > 0) {
-			const patch = jsonPatch.compare(this.#lastSentConfigJson || {}, config || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(roomName, `emulator:config`, config)
+			if (!isEqual(this.#lastSentConfigJson, config)) {
+				this.#events.emit('emulatorConfig', roomName, config)
 			}
 		}
 
