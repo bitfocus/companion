@@ -37,8 +37,8 @@ export class ImageResult {
 	 */
 	readonly style: ImageResultStyle | undefined
 
-	// TODO-layered calls to this should be cached, so that we don't keep re-drawing the same image
-	readonly drawNative: ImageResultNativeDrawFn
+	readonly #drawNativeCache = new Map<string, Promise<Buffer>>()
+	readonly #drawNative: ImageResultNativeDrawFn
 
 	/**
 	 * Last updated time
@@ -58,7 +58,7 @@ export class ImageResult {
 		this.bufferHeight = height
 		this.#dataUrl = dataUrl
 		this.style = style
-		this.drawNative = drawNative
+		this.#drawNative = drawNative
 
 		this.updated = Date.now()
 	}
@@ -83,5 +83,25 @@ export class ImageResult {
 		} else {
 			return 0
 		}
+	}
+
+	/**
+	 * Generate a native sized image buffer for this button render.
+	 * Typically this will redraw from the source data, but it may scale and letterbox the image
+	 * This caches the result for the same width, height, rotation and format.
+	 */
+	async drawNative(
+		width: number,
+		height: number,
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Buffer> {
+		const cacheKey = `${width}x${height}-${rotation ?? ''}-${format}`
+		const cached = this.#drawNativeCache.get(cacheKey)
+		if (cached) return cached
+
+		const newBuffer = this.#drawNative(width, height, rotation, format)
+		this.#drawNativeCache.set(cacheKey, newBuffer)
+		return newBuffer
 	}
 }
