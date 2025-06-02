@@ -715,12 +715,6 @@ export class Image {
 			lines.splice(lines.length - 1, 1)
 		}
 
-		// since we are forcing the lineheight to 1.1, we have to calculate a new, smaller ascent and descent
-		let correctedAscent = Math.round(fontheight * 1.02)
-		// let correctedDescent = lineheight - correctedAscent
-		correctedAscent = Math.round(lines[0].ascent)
-		// correctedDescent = lineheight - correctedAscent
-
 		let xAnchor = x
 		switch (halign) {
 			case 'left':
