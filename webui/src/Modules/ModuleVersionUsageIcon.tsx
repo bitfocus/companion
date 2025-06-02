@@ -2,7 +2,7 @@ import { faPlug, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useContext } from 'react'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface ModuleVersionUsageIconProps {
 	moduleId: string

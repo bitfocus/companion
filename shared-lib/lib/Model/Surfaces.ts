@@ -29,6 +29,7 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
+	locked: boolean
 
 	hasFirmwareUpdates: SurfaceFirmwareUpdateInfo | null
 
@@ -109,6 +110,7 @@ export interface OutboundSurfaceInfo {
 	id: string
 	displayName: string
 	type: 'elgato'
+	enabled: boolean
 	address: string
 	port: number | undefined
 }

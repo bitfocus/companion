@@ -7,7 +7,7 @@ import {
 	MultiDropdownInputField,
 	NumberInputField,
 	TextInputField,
-} from '../Components/index.js'
+} from '~/Components/index.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'

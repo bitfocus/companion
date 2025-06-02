@@ -6,7 +6,7 @@ import { observable, ObservableSet, runInAction } from 'mobx'
 import { getFilenameForSection, GettingStartedMenu } from './SideMenu.js'
 import { DocsContent } from './DocsContent.js'
 
-import docsStructure0 from '../../../docs/structure.json'
+import docsStructure0 from '@docs/structure.json'
 const docsStructure: DocsSection[] = docsStructure0
 
 export interface DocsSection {

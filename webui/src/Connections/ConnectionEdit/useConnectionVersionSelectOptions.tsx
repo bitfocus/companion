@@ -1,8 +1,8 @@
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
-import { DropdownChoiceInt } from '../../LocalVariableDefinitions.js'
-import { useModuleStoreInfo, useModuleUpgradeToVersions } from '../../Modules/ModuleManagePanel.js'
-import { useComputed } from '../../util.js'
+import { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
+import { useModuleStoreInfo, useModuleUpgradeToVersions } from '~/Modules/ModuleManagePanel.js'
+import { useComputed } from '~/util.js'
 import { getLatestVersion } from './VersionUtil.js'
 
 export function useConnectionVersionSelectOptions(

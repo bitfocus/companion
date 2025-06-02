@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
-import { SocketContext, type CompanionSocketWrapped } from '../util.js'
+import { SocketContext, type CompanionSocketWrapped } from '~/util.js'
 import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 import classNames from 'classnames'
 

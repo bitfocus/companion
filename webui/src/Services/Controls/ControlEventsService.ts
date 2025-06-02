@@ -1,7 +1,7 @@
 import { useContext, useMemo, useRef } from 'react'
-import { SocketContext } from '../../util.js'
+import { SocketContext } from '~/util.js'
 import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
+import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import type { DropdownChoiceId } from '@companion-module/base'
 
 export interface IEventEditorService {

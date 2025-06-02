@@ -2,6 +2,17 @@ There are various supported functions, and we are willing to add more. Let us kn
 
 The currently supported functions are:
 
+##### General operations
+
+**length(val)**
+
+Find the length of the item passed in.
+
+- For a strings it will return the number of unicode graphemes
+- For arrays, the number of elements
+- For JSON or other objects, it will return the number of properties
+- For numbers it will return the length of the string representation
+
 ##### Numeric operations
 
 **round(val)**
@@ -71,18 +82,18 @@ Trims any whitespace at the beginning and end of the string.
 
 **strlen(val)**
 
-Find the length of the given string.
+Find the length of the given string. For Unicode strings this will count the bytes not the graphemes.
 
 **substr(val, indexStart, indexEnd)**
 
-substr() extracts characters from indexStart up to but not including indexEnd.
+substr() extracts characters from indexStart up to but not including indexEnd. For Unicode strings, this will count based on the bytes not the graphemes.
 
-* If indexStart >= str.length, an empty string is returned.
-* If indexStart < 0, the index is counted from the end of the string. More formally, in this case, the substring starts at max(indexStart + str.length, 0).
-* If indexStart is omitted, undefined, or cannot be converted to a number, it's treated as 0.
-* If indexEnd is omitted, undefined, or cannot be converted to a number, or if indexEnd >= str.length, substr() extracts to the end of the string.
-* If indexEnd < 0, the index is counted from the end of the string.
-* If indexEnd <= indexStart after normalizing negative values, an empty string is returned.
+- If indexStart >= str.length, an empty string is returned.
+- If indexStart < 0, the index is counted from the end of the string. More formally, in this case, the substring starts at max(indexStart + str.length, 0).
+- If indexStart is omitted, undefined, or cannot be converted to a number, it's treated as 0.
+- If indexEnd is omitted, undefined, or cannot be converted to a number, or if indexEnd >= str.length, substr() extracts to the end of the string.
+- If indexEnd < 0, the index is counted from the end of the string.
+- If indexEnd <= indexStart after normalizing negative values, an empty string is returned.
 
 Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
 
@@ -106,7 +117,7 @@ eg `includes("Companion is great!", "great")` gives `true`
 
 **indexOf(val, find, offset)**
 
-Find the index of the first occurrence of a value within the provided string.
+Find the index of the first occurrence of a value within the provided string. For Unicode strings, this will count based on the bytes not the graphemes.
 
 Optionally provide an offset to begin the search from, otherwise it starts from position 0 (the beginning).
 
@@ -114,7 +125,7 @@ If the value isn't found, it will return -1, otherwise the index of the first oc
 
 **lastIndexOf(val, find, offset)**
 
-Find the index of the last occurrence of a value within the provided string, searching from the end.
+Find the index of the last occurrence of a value within the provided string, searching from the end. For Unicode strings, this will count based on the bytes not the graphemes.
 
 Optionally provide an offset to begin the search from, searching from the end.
 
@@ -144,7 +155,6 @@ eg `encode("Companion","hex")` gives `"436f6d70616e696f6e"`
 
 Decode a string from the requested format ('hex','base64'). If `enc` is missing, `latin1` will be used.
 
-
 eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
 **parseVariables(string)**
@@ -162,8 +172,9 @@ eg `parseVariables('$(custom:$(custom:b))')`
 Convert a value into a boolean.
 
 Any of the following will be interpreted as true:
-* any non-zero int
-* "true"
+
+- any non-zero int
+- "true"
 
 Everything else will be false.
 
@@ -213,7 +224,6 @@ eg `00:10:15` gives 615
 
 You can do the reverse of this with `secondsToTimestamp(str)`
 
-
 **secondsToTimestamp(seconds, format)**
 
 Convert a number of seconds into a timestamp of format 'HH:mm:ss'.
@@ -223,9 +233,10 @@ Note: If the value is less than 0, it will report 0. There is no limit to the nu
 By supplying the format parameter, you can choose which components will be included in the output string.
 
 The following components are allowed:
-* `HH` / `hh` - hours
-* `mm` - minutes
-* `ss` - seconds
+
+- `HH` / `hh` - hours
+- `mm` - minutes
+- `ss` - seconds
 
 **msToTimestamp(milliseconds, format)**
 
@@ -236,10 +247,11 @@ Note: If the value is less than 0, it will report 0. There is no limit to the nu
 By supplying the format parameter, you can choose which components will be included in the output string.
 
 The following components are allowed:
-* `HH` / `hh` - hours
-* `mm` - minutes
-* `ss` - seconds
-* `.S` / `.SS` / `.SSS` - milliseconds, in varying levels of accuracy. Must be at the end of the string
+
+- `HH` / `hh` - hours
+- `mm` - minutes
+- `ss` - seconds
+- `.S` / `.SS` / `.SSS` - milliseconds, in varying levels of accuracy. Must be at the end of the string
 
 **timeOffset(timestamp, offset, 12hour)**
 
@@ -247,7 +259,7 @@ Offset a provided timestamp (supporting `hours:minutes` or `hours:minutes:second
 
 eg `timeOffset($(internal:time_hms), -5)` will return the hours, minutes, and seconds, of 5 hours prior to the current time.
 
-The offset also supports a timestamp, so  `timeOffset($(internal:time_hms), "01:30:00", true)` will add 1 hour and 30 minutes to the current time, and return a 12 hour clock adjusted to that time.
+The offset also supports a timestamp, so `timeOffset($(internal:time_hms), "01:30:00", true)` will add 1 hour and 30 minutes to the current time, and return a 12 hour clock adjusted to that time.
 
 **timeDiff(fromTime, toTime)**
 

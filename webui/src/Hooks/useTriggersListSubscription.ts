@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
-import type { TriggersListStore } from '../Stores/TriggersListStore.js'
+import { CompanionSocketWrapped } from '~/util.js'
+import type { TriggersListStore } from '~/Stores/TriggersListStore.js'
 
 export function useTriggersListSubscription(socket: CompanionSocketWrapped, store: TriggersListStore): boolean {
 	const [ready, setReady] = useState(false)

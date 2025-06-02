@@ -2,15 +2,15 @@ In some cases, such as within a button, you can also use Local Variables. This i
 
 The current list of supported local variables is below, but by typing `$(this:` in the text field, you'll see all the variable suggestions.
 
-- Page number of the button   
-  Variable: `this:page`   
-- Column number of the button   
-  Variable: `this:column`   
-- Row number of the button   
-  Variable: `this:row`   
-- The current step of this button   
-  Variable: `this:step`   
-- Page name of the current page   
-  Variable: `this:page_name`   
-- The id of the surface triggering this action   
-  Variable: `this:surface_id`   
+- Page number of the button  
+  Variable: `this:page`
+- Column number of the button  
+  Variable: `this:column`
+- Row number of the button  
+  Variable: `this:row`
+- The current step of this button  
+  Variable: `this:step`
+- Page name of the current page  
+  Variable: `this:page_name`
+- The id of the surface triggering this action  
+  Variable: `this:surface_id`

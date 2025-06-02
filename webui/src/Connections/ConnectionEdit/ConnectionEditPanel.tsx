@@ -1,13 +1,13 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { LoadingRetryOrError } from '../../util.js'
+import { LoadingRetryOrError } from '~/util.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
-import { useOptionsAndIsVisibleFns } from '../../Hooks/useOptionsAndIsVisible.js'
+import { useOptionsAndIsVisibleFns } from '~/Hooks/useOptionsAndIsVisible.js'
 import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
@@ -18,7 +18,7 @@ import { useConnectionVersionSelectOptions } from './useConnectionVersionSelectO
 import { useConnectionCurrentConfig } from './useConnectionCurrentConfig.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 import { useForm } from '@tanstack/react-form'
-import { NonIdealState } from '../../Components/NonIdealState.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string

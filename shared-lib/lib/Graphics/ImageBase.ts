@@ -368,18 +368,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		}
 
 		// set default transformation values at 'fill'-type
-		const source = {
-			x: 0,
-			y: 0,
-			w: imageWidth,
-			h: imageHeight,
-		}
-		const destination = {
-			x: xStart,
-			y: yStart,
-			w: width,
-			h: height,
-		}
+		const source = { x: 0, y: 0, w: imageWidth, h: imageHeight }
+		const destination = { x: xStart, y: yStart, w: width, h: height }
 
 		if (scaledImageWidth > width) {
 			//image is broader than drawing pane
@@ -639,6 +629,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		// Measure the line height with a consistent string, to avoid issues with emoji being too tall
 		const lineHeightSample = this.context2d.measureText('A')
 		const measuredLineHeight = lineHeightSample.fontBoundingBoxAscent + lineHeightSample.fontBoundingBoxDescent
+		const measuredAscent = lineHeightSample.fontBoundingBoxAscent
 
 		const findLastChar = (textChars: string[]): { ascent: number; descent: number; maxCodepoints: number } => {
 			// skia-canvas built-in line break algorithm is poor
@@ -820,12 +811,6 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			lines.splice(lines.length - 1, 1)
 		}
 
-		// since we are forcing the lineheight to 1.1, we have to calculate a new, smaller ascent and descent
-		let correctedAscent = Math.round(fontheight * 1.02)
-		// let correctedDescent = lineheight - correctedAscent
-		correctedAscent = Math.round(lines[0].ascent)
-		// correctedDescent = lineheight - correctedAscent
-
 		let xAnchor = x
 		switch (halign) {
 			case 'left':
@@ -846,13 +831,13 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let yAnchor = 0
 		switch (valign) {
 			case 'top':
-				yAnchor = correctedAscent
+				yAnchor = measuredAscent
 				break
 			case 'center':
-				yAnchor = Math.round((h - linesTotalHeight) / 2 + correctedAscent)
+				yAnchor = Math.round((h - linesTotalHeight) / 2 + measuredAscent)
 				break
 			case 'bottom':
-				yAnchor = h - linesTotalHeight + correctedAscent
+				yAnchor = h - linesTotalHeight + measuredAscent
 				break
 		}
 		yAnchor += y
@@ -865,7 +850,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
 			//this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')
-			//this.horizontalLine(yAnchor - correctedAscent, ''''rgb(0,0,255)')
+			// this.horizontalLine(yAnchor + line.descent, 'rgb(0, 255, 0)')
+			// this.horizontalLine(yAnchor - correctedAscent, 'rgb(0,0,255)')
 			//this.horizontalLine(yAnchor, 'rgb(255, 0, 0)')
 			//console.log('Fontsize', fontsize, 'Lineheight', lineheight, 'asc', correctedAscent, 'des', correctedDescent, 'a+d', correctedAscent+correctedDescent);
 

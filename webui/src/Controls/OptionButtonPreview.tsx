@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
-import { SocketContext } from '../util.js'
+import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
+import { SocketContext } from '~/util.js'
 import { useDeepCompareEffect } from 'use-deep-compare'
 
 interface OptionButtonPreviewProps {

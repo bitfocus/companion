@@ -1,8 +1,34 @@
 import { pad } from '../Util.js'
 import { JSONPath } from 'jsonpath-plus'
+import { countGraphemes } from 'unicode-segmenter/grapheme'
 
 // Note: when adding new functions, make sure to update the docs!
 export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
+	// General operations
+	length: (v) => {
+		let len = 0
+		if (v === undefined || v === null) {
+			len = 0
+		} else if (Array.isArray(v)) {
+			len = v.length
+		} else if (typeof v === 'number') {
+			len = (v + '').length
+		} else if (typeof v === 'bigint') {
+			len = v.toString().length
+		} else if (typeof v === 'string') {
+			// So we handle UTF graphemes correctly
+			len = countGraphemes(v)
+		} else if (v instanceof RegExp) {
+			len = v.toString().length
+		} else if (typeof v === 'object') {
+			len = Object.keys(v).length
+		} else {
+			// If it's got to here, we don't know how to handle it
+			len = NaN
+		}
+		return len
+	},
+
 	// Number operations
 	// TODO: round to fractionals, without fp issues
 	round: (v) => Math.round(v),
@@ -74,7 +100,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	// Bool operations
 	bool: (v) => !!v && v !== 'false' && v !== '0',
 
-	// Object operations
+	// Object/array operations
 	jsonpath: (obj, path) => {
 		const shouldParseInput = typeof obj === 'string'
 		if (shouldParseInput) {

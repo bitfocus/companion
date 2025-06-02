@@ -1245,6 +1245,7 @@ __metadata:
     ps-tree: "npm:^1.2.0"
     semver: "npm:^7.7.2"
     typescript: "npm:~5.8.3"
+    unicode-segmenter: "npm:^0.11.3"
   languageName: unknown
   linkType: soft
 
@@ -1288,6 +1289,7 @@ __metadata:
     html-entities: "npm:^2.6.0"
     intersection-observer: "npm:^0.12.2"
     jsdom: "npm:^26.1.0"
+    json5: "npm:^2.2.3"
     lodash-es: "npm:^4.17.21"
     marked: "npm:^15.0.12"
     marked-base-url: "npm:^1.1.6"
@@ -1326,6 +1328,7 @@ __metadata:
     use-deep-compare: "npm:^1.3.0"
     usehooks-ts: "npm:^3.1.1"
     vite: "npm:^6.3.5"
+    vite-tsconfig-paths: "npm:^5.1.4"
   languageName: unknown
   linkType: soft
 
@@ -1353,9 +1356,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base@npm:^1.12.0":
-  version: 1.12.0
-  resolution: "@companion-module/base@npm:1.12.0"
+"@companion-module/base@npm:^1.12.1":
+  version: 1.12.1
+  resolution: "@companion-module/base@npm:1.12.1"
   dependencies:
     ajv: "npm:^8.17.1"
     colord: "npm:^2.9.3"
@@ -1366,7 +1369,7 @@ __metadata:
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/84aaaecf254b91453c1b7c485988cd7689d5a421d0a48b0383aa53f30788962b7a581b4d1dc1e4923e9b977af3952d305a059b6d085bebad52fe5ce06f49f2f6
+  checksum: 10c0/11e67f87ba7f1dff830247882638da7cbc07d70ae47c606f43876ed183657b81ac7264e771e79735486d93c9845b0f28cfc8283d5d24b1b9eeb13a8e5b82db9d
   languageName: node
   linkType: hard
 
@@ -6513,7 +6516,7 @@ asn1@evs-broadcast/node-asn1:
   dependencies:
     "@blackmagic-controller/node": "npm:^0.2.2"
     "@companion-app/shared": "npm:*"
-    "@companion-module/base": "npm:^1.12.0"
+    "@companion-module/base": "npm:^1.12.1"
     "@elgato-stream-deck/node": "npm:^7.3.1"
     "@elgato-stream-deck/tcp": "npm:^7.3.1"
     "@julusian/bonjour-service": "npm:^1.3.0-2"
@@ -8621,6 +8624,13 @@ asn1@evs-broadcast/node-asn1:
   dependencies:
     define-properties: "npm:^1.1.3"
   checksum: 10c0/0db6e9af102a5254630351557ac15e6909bc7459d3e3f6b001e59fe784c96d31108818f032d9095739355a88467459e6488ff16584ee6250cd8c27dec05af4b0
+  languageName: node
+  linkType: hard
+
+"globrex@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "globrex@npm:0.1.2"
+  checksum: 10c0/a54c029520cf58bda1d8884f72bd49b4cd74e977883268d931fd83bcbd1a9eb96d57c7dbd4ad80148fb9247467ebfb9b215630b2ed7563b2a8de02e1ff7f89d1
   languageName: node
   linkType: hard
 
@@ -14539,6 +14549,20 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
+"tsconfck@npm:^3.0.3":
+  version: 3.1.6
+  resolution: "tsconfck@npm:3.1.6"
+  peerDependencies:
+    typescript: ^5.0.0
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  bin:
+    tsconfck: bin/tsconfck.js
+  checksum: 10c0/269c3c513540be44844117bb9b9258fe6f8aeab026d32aeebf458d5299125f330711429dbb556dbf125a0bc25f4a81e6c24ac96de2740badd295c3fb400f66c4
+  languageName: node
+  linkType: hard
+
 "tslib@npm:^1.13.0":
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
@@ -14686,6 +14710,13 @@ asn1@evs-broadcast/node-asn1:
   version: 2.1.0
   resolution: "unicode-property-aliases-ecmascript@npm:2.1.0"
   checksum: 10c0/50ded3f8c963c7785e48c510a3b7c6bc4e08a579551489aa0349680a35b1ceceec122e33b2b6c1b579d0be2250f34bb163ac35f5f8695fe10bbc67fb757f0af8
+  languageName: node
+  linkType: hard
+
+"unicode-segmenter@npm:^0.11.3":
+  version: 0.11.3
+  resolution: "unicode-segmenter@npm:0.11.3"
+  checksum: 10c0/e5f6c16ebd2112eb6e447436ebaa525deb69705a609e6e19161c779ae738f1c2325b96cd986d5099c0f9b8c92538940d41d77237dd5a169230bb8405ec5f4835
   languageName: node
   linkType: hard
 
@@ -15066,6 +15097,22 @@ asn1@evs-broadcast/node-asn1:
   bin:
     vite-node: vite-node.mjs
   checksum: 10c0/2fc71ddadd308b19b0d0dc09f5b9a108ea9bb640ec5fbd6179267994da8fd6c9d6a4c92098af7de73a0fa817055b518b28972452a2f19a1be754e79947e289d2
+  languageName: node
+  linkType: hard
+
+"vite-tsconfig-paths@npm:^5.1.4":
+  version: 5.1.4
+  resolution: "vite-tsconfig-paths@npm:5.1.4"
+  dependencies:
+    debug: "npm:^4.1.1"
+    globrex: "npm:^0.1.2"
+    tsconfck: "npm:^3.0.3"
+  peerDependencies:
+    vite: "*"
+  peerDependenciesMeta:
+    vite:
+      optional: true
+  checksum: 10c0/6228f23155ea25d92b1e1702284cf8dc52ad3c683c5ca691edd5a4c82d2913e7326d00708cef1cbfde9bb226261df0e0a12e03ef1d43b6a92d8f02b483ef37e3
   languageName: node
   linkType: hard
 

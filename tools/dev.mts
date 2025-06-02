@@ -79,14 +79,9 @@ console.log('Starting typescript watchers')
 
 concurrently([
 	{
-		command: `yarn dev --preserveWatchOutput`,
-		cwd: '../shared-lib',
-		name: 'shared-lib',
-	},
-	{
 		command: `yarn build:watch --preserveWatchOutput`,
-		cwd: '../companion',
-		name: 'companion',
+		cwd: '../',
+		name: 'tsc',
 	},
 ]).result.catch((e) => {
 	console.error(e)
@@ -114,6 +109,9 @@ chokidar
 		}
 		// Something else changed
 		restart()
+	})
+	.on('error', (error) => {
+		console.warn(`Watcher error: ${error}`)
 	})
 
 if (devModulesPath) {
@@ -149,6 +147,9 @@ if (devModulesPath) {
 			}
 
 			fn()
+		})
+		.on('error', (error) => {
+			console.warn(`Module watcher error: ${error}`)
 		})
 }
 

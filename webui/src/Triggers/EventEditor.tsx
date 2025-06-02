@@ -9,23 +9,23 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FormEvent, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
-import { OptionsInputField } from '../Controls/OptionsInputField.js'
+import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '~/util.js'
+import { OptionsInputField } from '~/Controls/OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
-import { TextInputField } from '../Components/TextInputField.js'
+import { useOptionsAndIsVisible } from '~/Hooks/useOptionsAndIsVisible.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { AddEventDropdown } from './AddEventDropdown.js'
 import {
 	IEventEditorEventService,
 	IEventEditorService,
 	useControlEventService,
 	useControlEventsEditorService,
-} from '../Services/Controls/ControlEventsService.js'
+} from '~/Services/Controls/ControlEventsService.js'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface TriggerEventEditorProps {
 	controlId: string

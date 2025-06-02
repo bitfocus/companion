@@ -10,22 +10,22 @@ body:
         https://github.com/bitfocus/companion-module-requests/issues/new
   - type: checkboxes
     attributes:
-      label: Is this a feature relevant to companion itself, and not a module?
+      label: Is this a feature relevant to companion itself, and not a specific module?
       description: If you wish to request a feature in a module, please do so against the correct repository found at https://github.com/bitfocus?type=source
       options:
-        - label: I believe this to be a feature for companion, not a module
+        - label: I believe this to be a feature for companion, and is not specific to a module
           required: true
   - type: checkboxes
     attributes:
       label: Is there an existing issue for this?
       description: Please search to see if an issue already exists for the feature.
       options:
-        - label: I have searched the existing issues
+        - label: I have searched for similiar existing issues
           required: true
   - type: textarea
     attributes:
       label: Describe the feature
-      description: A clear and concise description of what the feature does. Mocked up screenshots (no matter how rough) are always helpful to understand.
+      description: A clear and concise description of what the feature does. Mocked up screenshots (no matter how rough) are always helpful in understanding.
     validations:
       required: false
   - type: textarea

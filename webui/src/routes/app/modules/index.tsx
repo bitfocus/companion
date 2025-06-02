@@ -2,8 +2,8 @@ import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
 import React from 'react'
-import { NonIdealState } from '../../../Components/NonIdealState.js'
-import { MyErrorBoundary } from '../../../util.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
+import { MyErrorBoundary } from '~/util.js'
 
 export const Route = createFileRoute('/_app/modules/')({
 	component: RouteComponent,

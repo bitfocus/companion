@@ -1,6 +1,6 @@
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { useCallback, useContext } from 'react'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { UserConfigProps } from './Components/Common.js'
 
 export function useUserConfigProps(): UserConfigProps | null {

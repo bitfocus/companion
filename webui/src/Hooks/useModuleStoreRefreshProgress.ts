@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
+import { CompanionSocketWrapped } from '~/util.js'
 import { ObservableMap, runInAction } from 'mobx'
 
 export function useModuleStoreRefreshProgressSubscription(

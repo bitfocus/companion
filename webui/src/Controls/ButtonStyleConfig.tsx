@@ -1,20 +1,20 @@
 import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
-import { SocketContext, PreventDefaultHandler } from '../util.js'
+import { SocketContext, PreventDefaultHandler } from '~/util.js'
 import {
 	AlignmentInputField,
 	ColorInputField,
 	DropdownInputField,
 	PNGInputField,
 	TextInputField,
-} from '../Components/index.js'
-import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '../Constants.js'
+} from '~/Components/index.js'
+import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '~/Constants.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 

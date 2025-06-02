@@ -3,10 +3,10 @@ import { faCog } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFileRoute } from '@tanstack/react-router'
 import React, { useContext } from 'react'
-import { ModuleManagePanel } from '../../../Modules/ModuleManagePanel.js'
-import { MyErrorBoundary, useComputed } from '../../../util.js'
+import { ModuleManagePanel } from '~/Modules/ModuleManagePanel.js'
+import { MyErrorBoundary, useComputed } from '~/util.js'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { modules } = useContext(RootAppStoreContext)

@@ -1,7 +1,7 @@
 import React from 'react'
 import type { ObservableMap, ObservableSet } from 'mobx'
-import type { NotificationsManagerRef } from '../Components/Notifications.js'
-import type { CompanionSocketWrapped } from '../util.js'
+import type { NotificationsManagerRef } from '~/Components/Notifications.js'
+import type { CompanionSocketWrapped } from '~/util.js'
 import type { PagesStore } from './PagesStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
@@ -11,9 +11,9 @@ import type { SurfacesStore } from './SurfacesStore.js'
 import type { UserConfigStore } from './UserConfigStore.js'
 import type { VariablesStore } from './VariablesStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
-import type { HelpModalRef } from '../Connections/HelpModal.js'
+import type { HelpModalRef } from '~/Connections/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
-import type { WhatsNewModalRef } from '../WhatsNewModal.js'
+import type { WhatsNewModalRef } from '~/WhatsNewModal.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 

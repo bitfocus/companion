@@ -3,7 +3,7 @@ import { CHeader, CHeaderBrand, CHeaderNav, CNavItem, CNavLink, CHeaderToggler, 
 import { faBars, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
 

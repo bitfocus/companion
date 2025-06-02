@@ -1,6 +1,6 @@
 import React, { RefObject, useCallback, useContext, useRef } from 'react'
 import { CAlert, CButton, CButtonGroup, CFormSwitch, CPopover, CSpinner } from '@coreui/react'
-import { useComputed } from '../util.js'
+import { useComputed } from '~/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faSort,
@@ -19,20 +19,20 @@ import {
 	faPowerOff,
 } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { windowLinkOpen } from '../Helpers/Window.js'
+import { windowLinkOpen } from '~/Helpers/Window.js'
 import classNames from 'classnames'
 import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { NonIdealState } from '../Components/NonIdealState.js'
-import { Tuck } from '../Components/Tuck.js'
-import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
+import { Tuck } from '~/Components/Tuck.js'
+import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { getModuleVersionInfoForConnection } from './Util.js'
 import { UpdateConnectionToLatestButton } from './UpdateConnectionToLatestButton.js'
-import { InlineHelp } from '../Components/InlineHelp.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean

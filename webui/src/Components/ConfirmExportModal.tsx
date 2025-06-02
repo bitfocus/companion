@@ -1,10 +1,10 @@
 import { CButton, CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState, useContext } from 'react'
-import { ExportFormatDefault, SelectExportFormat } from '../ImportExport/ExportFormat.js'
+import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
 import { MenuPortalContext } from './DropdownInputField.js'
-import { windowLinkOpen } from '../Helpers/Window.js'
+import { windowLinkOpen } from '~/Helpers/Window.js'
 import { TextInputField } from './TextInputField.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export interface ConfirmExportModalRef {
 	show(url: string): void

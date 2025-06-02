@@ -1,7 +1,7 @@
 import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { useContext, useMemo } from 'react'
-import type { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { SocketContext } from '../../util.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { SocketContext } from '~/util.js'
 
 export interface IControlActionStepsAndSetsService {
 	// readonly listId: SomeSocketEntityLocation
