@@ -7,10 +7,11 @@ The currently supported functions are:
 **length(val)**
 
 Find the length of the item passed in.
-* For a strings it will return the number of unicode graphemes
-* For arrays, the number of elements
-* For JSON or other objects, it will return the number of properties
-* For numbers it will return the length of the string representation
+
+- For a strings it will return the number of unicode graphemes
+- For arrays, the number of elements
+- For JSON or other objects, it will return the number of properties
+- For numbers it will return the length of the string representation
 
 ##### Numeric operations
 
