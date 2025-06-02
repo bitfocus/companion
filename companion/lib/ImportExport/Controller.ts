@@ -38,7 +38,12 @@ import type {
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	ButtonModelBase,
+	LayeredButtonModel,
+	NormalButtonModel,
+	SomeButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -288,7 +293,7 @@ export class ImportExportController {
 			const importObject = clientPendingImport?.object
 			if (!importObject) return null
 
-			let importPage
+			let importPage: ExportPageContentv6 | undefined
 			if (importObject.type === 'page') {
 				importPage = importObject.page
 			} else if (importObject.type === 'full') {
@@ -401,12 +406,29 @@ export class ImportExportController {
 			// Import the new page
 			this.#pagesController.setPageName(topage, pageInfo.name)
 
+			const connectionLabelRemap: Record<string, string> = {}
+			const connectionIdRemap: Record<string, string> = {}
+			for (const [oldId, info] of Object.entries(instanceIdMap)) {
+				if (info.oldLabel && info.label !== info.oldLabel) {
+					connectionLabelRemap[info.oldLabel] = info.label
+				}
+				if (info.id && info.id !== oldId) {
+					connectionIdRemap[oldId] = info.id
+				}
+			}
+			const referencesUpdater = new VisitorReferencesUpdater(
+				this.#internalModule,
+				connectionLabelRemap,
+				connectionIdRemap
+			)
+
 			// Import the controls
 			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 				for (const [column, control] of Object.entries(rowObj)) {
 					if (control) {
 						// Import the control
-						const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
+						const fixedControlObj = this.#fixupControl(cloneDeep(control), referencesUpdater, instanceIdMap)
+						if (!fixedControlObj) continue
 
 						const location: ControlLocation = {
 							pageNumber: Number(topage),
@@ -434,7 +456,7 @@ export class ImportExportController {
 					if (!oldPageInfo) throw new Error('Invalid target page')
 				}
 
-				let pageInfo
+				let pageInfo: ExportPageContentv6 | undefined
 
 				if (data.type === 'full' && data.pages) {
 					pageInfo = data.pages[frompage]
@@ -669,7 +691,11 @@ export class ImportExportController {
 		return result
 	}
 
-	#fixupControl(control: ExportControlv6, instanceIdMap: InstanceAppliedRemappings): SomeButtonModel {
+	#fixupControl(
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	): SomeButtonModel | null {
 		// Future: this does not feel durable
 
 		if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
@@ -678,18 +704,21 @@ export class ImportExportController {
 			}
 		}
 
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
-			}
+		if (control.type === 'button') {
+			return this.#fixupButtonControl(control, referencesUpdater, instanceIdMap)
+		} else if (control.type === 'button-layered') {
+			return this.#fixupLayeredButtonControl(control, referencesUpdater, instanceIdMap)
+		} else {
+			console.warn(`Unknown control type: ${control.type}`)
+			return null
 		}
+	}
 
-		// TODO-layered: reimplement for layered buttons
+	#fixupButtonControl(
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	): NormalButtonModel {
 		const result: NormalButtonModel = {
 			type: 'button',
 			options: cloneDeep(control.options),
@@ -699,6 +728,40 @@ export class ImportExportController {
 			localVariables: [],
 		}
 
+		this.#fixupButtonControlBase(result, control, referencesUpdater, instanceIdMap)
+
+		referencesUpdater.visitButtonDrawStlye(result.style)
+
+		return result
+	}
+
+	#fixupLayeredButtonControl(
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	): LayeredButtonModel {
+		const result: LayeredButtonModel = {
+			type: 'button-layered',
+			options: cloneDeep(control.options),
+			style: cloneDeep(control.style),
+			feedbacks: [],
+			steps: {},
+			localVariables: [],
+		}
+
+		this.#fixupButtonControlBase(result, control, referencesUpdater, instanceIdMap)
+
+		referencesUpdater.visitDrawElements(result.style.layers)
+
+		return result
+	}
+
+	#fixupButtonControlBase(
+		result: ButtonModelBase,
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	) {
 		if (control.feedbacks) {
 			result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
 		}
@@ -736,11 +799,7 @@ export class ImportExportController {
 			}
 		}
 
-		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
-			.visitButtonDrawStlye(result.style)
-			.visitEntities([], allEntities)
-
-		return result
+		referencesUpdater.visitEntities([], allEntities)
 	}
 }
 
