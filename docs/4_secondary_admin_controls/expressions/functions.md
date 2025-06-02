@@ -81,11 +81,11 @@ Trims any whitespace at the beginning and end of the string.
 
 **strlen(val)**
 
-Find the length of the given string.
+Find the length of the given string. For Unicode strings this will count the bytes not the graphemes.
 
 **substr(val, indexStart, indexEnd)**
 
-substr() extracts characters from indexStart up to but not including indexEnd.
+substr() extracts characters from indexStart up to but not including indexEnd. For Unicode strings, this will count based on the bytes not the graphemes.
 
 * If indexStart >= str.length, an empty string is returned.
 * If indexStart < 0, the index is counted from the end of the string. More formally, in this case, the substring starts at max(indexStart + str.length, 0).
@@ -116,7 +116,7 @@ eg `includes("Companion is great!", "great")` gives `true`
 
 **indexOf(val, find, offset)**
 
-Find the index of the first occurrence of a value within the provided string.
+Find the index of the first occurrence of a value within the provided string. For Unicode strings, this will count based on the bytes not the graphemes.
 
 Optionally provide an offset to begin the search from, otherwise it starts from position 0 (the beginning).
 
@@ -124,7 +124,7 @@ If the value isn't found, it will return -1, otherwise the index of the first oc
 
 **lastIndexOf(val, find, offset)**
 
-Find the index of the last occurrence of a value within the provided string, searching from the end.
+Find the index of the last occurrence of a value within the provided string, searching from the end. For Unicode strings, this will count based on the bytes not the graphemes.
 
 Optionally provide an offset to begin the search from, searching from the end.
 
