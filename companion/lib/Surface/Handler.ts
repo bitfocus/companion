@@ -32,6 +32,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { PanelDefaults } from './Config.js'
+import debounceFn from 'debounce-fn'
 
 const PINCODE_NUMBER_POSITIONS: [number, number][] = [
 	// 0
@@ -306,7 +307,16 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		return getSurfaceName(this.#surfaceConfig, this.surfaceId)
 	}
 
+	#drawPageDebounced = debounceFn(() => this.#drawPage(), {
+		after: true,
+		wait: 1,
+		maxWait: 5,
+	})
+
 	#drawPage() {
+		// Ensure the debounce is not queued
+		this.#drawPageDebounced.cancel()
+
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
 				if (!!this.panel.setLocked) {
@@ -419,7 +429,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					this.panel.setLocked(false, this.#currentPincodeEntry.length)
 				}
 
-				this.#drawPage()
+				this.#drawPageDebounced()
 			}
 		}
 	}
@@ -735,9 +745,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	triggerRedraw(defer = false): void {
 		if (defer) {
-			setImmediate(() => {
-				this.#drawPage()
-			})
+			this.#drawPageDebounced()
 		} else {
 			this.#drawPage()
 		}
