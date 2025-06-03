@@ -83,6 +83,7 @@
     "openapi-fetch": "^0.14.0",
     "osc": "2.4.5",
     "p-debounce": "^4.0.0",
+    "p-lazy": "^5.0.0",
     "p-queue": "^8.1.0",
     "path-to-regexp": "^8.2.0",
     "selfsigned": "^2.4.1",

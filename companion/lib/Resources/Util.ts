@@ -1,6 +1,5 @@
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
-import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -270,21 +269,29 @@ export function offsetRotation(rotation: SurfaceRotation | null, offset: number)
 }
 
 /**
+ * Rotate a resolution based on a SurfaceRotation
+ */
+export function rotateResolution(width: number, height: number, rotation: SurfaceRotation | null): [number, number] {
+	if (rotation === 90 || rotation === 'surface90' || rotation === -90 || rotation === 'surface-90') {
+		return [height, width]
+	} else {
+		return [width, height]
+	}
+}
+
+/**
  * Transform a button image render to the format needed for a surface integration
  */
 export async function transformButtonImage(
-	render: ImageResult,
+	buffer: Buffer,
+	bufferWidth: number,
+	bufferHeight: number,
 	rotation: SurfaceRotation | null,
 	targetWidth: number,
 	targetHeight: number,
 	targetFormat: imageRs.PixelFormat
 ): Promise<Buffer> {
-	let image = imageRs.ImageTransformer.fromBuffer(
-		render.buffer,
-		render.bufferWidth,
-		render.bufferHeight,
-		imageRs.PixelFormat.Rgba
-	)
+	let image = imageRs.ImageTransformer.fromBuffer(buffer, bufferWidth, bufferHeight, imageRs.PixelFormat.Rgba)
 
 	const imageRsRotation = translateRotation(rotation)
 	if (imageRsRotation !== null) image = image.rotate(imageRsRotation)

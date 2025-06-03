@@ -13,7 +13,7 @@ import { LRUCache } from 'lru-cache'
 import { GlobalFonts } from '@napi-rs/canvas'
 import { GraphicsRenderer } from './Renderer.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import type { ImageResult } from './ImageResult.js'
+import { ImageResult, ImageResultNativeDrawFn } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
@@ -34,6 +34,8 @@ import { FONT_DEFINITIONS } from './Fonts.js'
 import type Express from 'express'
 import compressionMiddleware from 'compression'
 import fs from 'fs'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type imageRs from '@julusian/image-rs'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
@@ -84,11 +86,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			},
 		}
 	)
-
-	/**
-	 * Generated pincode bitmaps
-	 */
-	#pincodeBuffersCache: Omit<PincodeBitmaps, 'code'> | null = null
 
 	#pendingVariables: CompanionVariableValues | null = null
 	/**
@@ -217,16 +214,30 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(key)
 
 						if (!render) {
-							const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+							const { dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
 								buttonStyle,
 								location,
 								pagename,
 								CRASHED_WORKER_RETRY_COUNT
 							)
-							render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
+							render = GraphicsController.#wrapDrawButtonImage(
+								dataUrl,
+								draw_style,
+								buttonStyle,
+								async (width, height, rotation, format) =>
+									this.#executePoolDrawButtonBareImage(
+										buttonStyle,
+										location,
+										pagename,
+										{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+										rotation,
+										format,
+										CRASHED_WORKER_RETRY_COUNT
+									)
+							)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank(this.#drawOptions, location)
+						render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
 					}
 
 					// Only cache the render, if it is within the valid bounds
@@ -288,7 +299,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank(this.#drawOptions, location)
+				const blankRender = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
 
 				this.#updateCacheWithRender(location, blankRender)
 				this.emit('button_drawn', location, blankRender)
@@ -352,13 +363,43 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			size: buttonStyle.size === 'auto' ? 'auto' : Number(buttonStyle.size),
 		}
 
-		const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+		const { dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
 			drawStyle,
 			undefined,
 			undefined,
 			CRASHED_WORKER_RETRY_COUNT
 		)
-		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle)
+		return GraphicsController.#wrapDrawButtonImage(
+			dataUrl,
+			draw_style,
+			drawStyle,
+			async (width, height, rotation, format) =>
+				this.#executePoolDrawButtonBareImage(
+					drawStyle,
+					undefined,
+					undefined,
+					{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+					rotation,
+					format,
+					CRASHED_WORKER_RETRY_COUNT
+				)
+		)
+	}
+
+	static #wrapDrawButtonImage(
+		dataUrl: string,
+		draw_style: DrawStyleModel['style'] | undefined,
+		drawStyle: DrawStyleModel,
+		drawNative: ImageResultNativeDrawFn
+	): ImageResult {
+		const draw_style2 =
+			draw_style === 'button' || draw_style === 'button-layered'
+				? drawStyle.style === 'button' || drawStyle.style === 'button-layered'
+					? drawStyle
+					: undefined
+				: draw_style
+
+		return new ImageResult(dataUrl, draw_style2, drawNative)
 	}
 
 	/**
@@ -452,19 +493,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Generate pincode images
 	 */
-	getImagesForPincode(pincode: string): PincodeBitmaps {
-		if (!this.#pincodeBuffersCache) {
-			this.#pincodeBuffersCache = {}
+	getPincodeNumberImages(width: number, height: number): PincodeBitmaps {
+		const pincodeBuffersCache: PincodeBitmaps = {}
 
-			for (let i = 0; i < 10; i++) {
-				this.#pincodeBuffersCache[i] = GraphicsRenderer.drawPincodeNumber(i)
-			}
+		for (let i = 0; i <= 9; i++) {
+			pincodeBuffersCache[i] = GraphicsRenderer.drawPincodeNumber(width, height, i)
 		}
 
-		return {
-			...this.#pincodeBuffersCache,
-			code: GraphicsRenderer.drawPincodeEntry(pincode),
-		}
+		return pincodeBuffersCache
+	}
+
+	getPincodeCodeImage(width: number, height: number, pincode: string): ImageResult {
+		return GraphicsRenderer.drawPincodeEntry(width, height, pincode)
 	}
 
 	/**
@@ -481,7 +521,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank(this.#drawOptions, location)
+		return GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
 	}
 
 	/**
@@ -494,18 +534,22 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		pagename: string | undefined,
 		remainingAttempts: number
 	): Promise<{
-		buffer: Buffer
-		width: number
-		height: number
 		dataUrl: string
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
+		const args: Parameters<typeof GraphicsRenderer.drawButtonImageUnwrapped> = [
+			this.#drawOptions,
+			drawStyle,
+			location,
+			pagename,
+		]
+
 		if (DEBUG_DISABLE_RENDER_THREADING) {
-			return GraphicsRenderer.drawButtonImageUnwrapped(this.#drawOptions, drawStyle, location, pagename)
+			return GraphicsRenderer.drawButtonImageUnwrapped(...args)
 		}
 
 		try {
-			return this.#pool.exec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename])
+			return this.#pool.exec('drawButtonImage', args)
 		} catch (e: any) {
 			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
 			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
@@ -515,9 +559,55 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			}
 		}
 	}
+
+	/**
+	 * Draw a button image in the worker pool
+	 * @returns Image render object
+	 */
+	async #executePoolDrawButtonBareImage(
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined,
+		resolution: { width: number; height: number; oversampling: number },
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat,
+		remainingAttempts: number
+	): Promise<Buffer> {
+		const args: Parameters<typeof GraphicsRenderer.drawButtonBareImageUnwrapped> = [
+			this.#drawOptions,
+			drawStyle,
+			location,
+			pagename,
+			resolution,
+			rotation,
+			format,
+		]
+
+		if (DEBUG_DISABLE_RENDER_THREADING) {
+			return GraphicsRenderer.drawButtonBareImageUnwrapped(...args)
+		}
+
+		try {
+			return this.#pool.exec('drawButtonBareImage', args)
+		} catch (e: any) {
+			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
+			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
+				return this.#executePoolDrawButtonBareImage(
+					drawStyle,
+					location,
+					pagename,
+					resolution,
+					rotation,
+					format,
+					remainingAttempts - 1
+				)
+			} else {
+				throw e
+			}
+		}
+	}
 }
 
-type PincodeBitmaps = {
-	code: ImageResult
+export type PincodeBitmaps = {
 	[index: number]: ImageResult
 }

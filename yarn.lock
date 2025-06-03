@@ -6567,6 +6567,7 @@ asn1@evs-broadcast/node-asn1:
     openapi-fetch: "npm:^0.14.0"
     osc: "npm:2.4.5"
     p-debounce: "npm:^4.0.0"
+    p-lazy: "npm:^5.0.0"
     p-queue: "npm:^8.1.0"
     path-to-regexp: "npm:^8.2.0"
     selfsigned: "npm:^2.4.1"
@@ -11388,6 +11389,13 @@ asn1@evs-broadcast/node-asn1:
   version: 1.0.0
   resolution: "p-finally@npm:1.0.0"
   checksum: 10c0/6b8552339a71fe7bd424d01d8451eea92d379a711fc62f6b2fe64cad8a472c7259a236c9a22b4733abca0b5666ad503cb497792a0478c5af31ded793d00937e7
+  languageName: node
+  linkType: hard
+
+"p-lazy@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "p-lazy@npm:5.0.0"
+  checksum: 10c0/8788687fc3da0812549c2eefa22aa2a232fffdf350d6aa05a5b35115fa7c52b6fd3a8ebbbbb7483a77716e87abe363d28ae08d56050e4f466a0c963aa5e146fb
   languageName: node
   linkType: hard
 

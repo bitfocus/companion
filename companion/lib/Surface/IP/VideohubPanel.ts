@@ -20,8 +20,7 @@ import {
 	RotationConfigField,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 export interface VideohubPanelDeviceInfo {
 	productName: string
@@ -101,7 +100,7 @@ export class SurfaceIPVideohubPanel extends EventEmitter<SurfacePanelEvents> imp
 	/**
 	 * Draw a button
 	 */
-	draw(_x: number, _y: number, _render: ImageResult): void {
+	draw(_item: DrawButtonItem): void {
 		// Not supported
 	}
 

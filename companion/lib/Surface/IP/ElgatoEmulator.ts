@@ -19,8 +19,7 @@ import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../Co
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { EmulatorConfig, EmulatorImage, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
 import type { UIHandler, ClientSocket } from '../../UI/Handler.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 export function EmulatorRoom(id: string): string {
 	return `emulator:${id}`
@@ -191,21 +190,21 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
+	draw(item: DrawButtonItem): void {
 		const size = this.gridSize
-		if (x < 0 || y < 0 || x >= size.columns || y >= size.rows) return
+		if (item.x < 0 || item.y < 0 || item.x >= size.columns || item.y >= size.rows) return
 
-		const dataUrl = render.asDataUrl
+		const dataUrl = item.defaultRender.asDataUrl
 		if (!dataUrl) {
 			this.#logger.verbose('draw call had no data-url')
 			return
 		}
 
-		let yCache = this.#imageCache[y]
-		if (!yCache) yCache = this.#imageCache[y] = {}
-		yCache[x] = dataUrl || undefined
+		let yCache = this.#imageCache[item.y]
+		if (!yCache) yCache = this.#imageCache[item.y] = {}
+		yCache[item.x] = dataUrl || undefined
 
-		this.#trackChanged(x, y)
+		this.#trackChanged(item.x, item.y)
 		this.#emitChanged()
 	}
 
