@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
-import type { VariablesStore } from '../Stores/VariablesStore.js'
+import { CompanionSocketWrapped } from '~/util.js'
+import type { VariablesStore } from '~/Stores/VariablesStore.js'
 
 export function useVariablesSubscription(
 	socket: CompanionSocketWrapped,

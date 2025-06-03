@@ -10,13 +10,13 @@ import {
 	CFormLabel,
 	CFormSwitch,
 } from '@coreui/react'
-import { LoadingRetryOrError, PreventDefaultHandler, useComputed } from '../util.js'
+import { LoadingRetryOrError, PreventDefaultHandler, useComputed } from '~/util.js'
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalPageIdDropdown } from '../Controls/InternalModuleField.js'
-import { InternalCustomVariableDropdown } from '../Controls/InternalModuleField.js'
-import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
+import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
+import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField.js'
+import { DropdownInputField, MenuPortalContext } from '~/Components/DropdownInputField.js'
 import {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
@@ -24,13 +24,13 @@ import {
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { CModalExt } from '../Components/CModalExt.js'
-import { NumberInputField } from '../Components/NumberInputField.js'
-import { TextInputField } from '../Components/TextInputField.js'
-import { InputFeatureIcons, InputFeatureIconsProps } from '../Controls/OptionsInputField.js'
-import { SurfaceLocalVariables } from '../LocalVariableDefinitions.js'
+import { CModalExt } from '~/Components/CModalExt.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { InputFeatureIcons, InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
+import { SurfaceLocalVariables } from '~/LocalVariableDefinitions.js'
 
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void

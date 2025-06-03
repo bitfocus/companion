@@ -59,7 +59,7 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 
 				// Check for an expressions in the property
 				const prop = element[key as keyof typeof element] as any as ExpressionOrValue<any>
-				if (typeof prop === 'object' && prop.isExpression) {
+				if (typeof prop === 'object' && (prop.isExpression || typeof prop.value === 'string')) {
 					this.visitor.visitString(prop, 'value')
 				}
 			}

@@ -277,6 +277,10 @@ if (!lock) {
 						ignored: ['**/node_modules/**'],
 					})
 
+					watcher.on('error', (error) => {
+						customLog(`Watcher error: ${error}`, 'Application')
+					})
+
 					watcher.on('all', (event, filename) => {
 						const moduleDirName = filename.split(path.sep)[0]
 

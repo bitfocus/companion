@@ -2,9 +2,9 @@ If you have not already installed a version of the module you need, you may need
 
 1.  Add a new device, by scrolling through the list or through a search.
 2.  Choose the specific device you want to add.
-2.  Fill out the dialog to choose the version of the module to use. In this, you can always choose any installed versions, and if you are able to access the store it will offer to install the latest version.  
+3.  Fill out the dialog to choose the version of the module to use. In this, you can always choose any installed versions, and if you are able to access the store it will offer to install the latest version.  
     ![Connection Add dialog](images/connection-add-dialog.png)
-3.  Enter the connection information for device. Save the changes.
+4.  Enter the connection information for device. Save the changes.
 
 Your new device should now show in the Connections tab along with all the other devices you want to control.
 Each device needs to be a separate connection. If you have two separate Barco E2, you need to add both of them as separate connections.

@@ -42,15 +42,15 @@ import {
 	faHatWizard,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { SurfacesTabNotifyIcon } from '../Surfaces/TabNotifyIcon.js'
+import { SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
 import { Link } from '@tanstack/react-router'
 import { Transition, TransitionStatus } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { useSortedConnectionsThatHaveVariables } from '../Stores/Util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
 
 export interface SidebarStateProps {
 	showToggle: boolean

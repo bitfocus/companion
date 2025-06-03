@@ -9,25 +9,16 @@
  * this program.
  */
 
-const FILE_VERSION = 7
-
-import os from 'os'
 import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
-import { getTimestamp, isFalsey } from '../Resources/Util.js'
-import { CreateTriggerControlId, ParseControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
-import archiver from 'archiver'
-import path from 'path'
-import fs from 'fs'
+import { CreateTriggerControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
 import yaml from 'yaml'
 import zlib from 'node:zlib'
-import { stringify as csvStringify } from 'csv-stringify/sync'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController from '../Log/Controller.js'
 import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import { nanoid } from 'nanoid'
 import type express from 'express'
-import type { ParsedQs } from 'qs'
 import type {
 	ExportControlv6,
 	ExportFullv6,
@@ -35,25 +26,24 @@ import type {
 	ExportPageContentv6,
 	ExportPageModelv6,
 	ExportTriggerContentv6,
-	ExportTriggersListv6,
-	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { AppInfo } from '../Registry.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type {
-	ClientExportSelection,
 	ClientImportObject,
 	ClientPageInfo,
 	ClientResetSelection,
 	ConnectionRemappings,
 } from '@companion-app/shared/Model/ImportExport.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
-import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
-import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	ButtonModelBase,
+	LayeredButtonModel,
+	NormalButtonModel,
+	SomeButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -63,100 +53,9 @@ import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
-import { compileUpdatePayload } from '../UI/UpdatePayload.js'
-import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-
-function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
-	if (raw === 'json-gz' || raw === 'json' || raw === 'yaml') return raw
-	return undefined
-}
-
-/**
- * Replacer that splits "png64" values into multiple lines.
- *
- * These are base64 encoded PNGs and can get very long. A length of 60 characters is used to allow
- * for indentation in the YAML.
- *
- * @param key - The key of the value being processed.
- * @param value - The value to be processed.
- * @returns The modified value or the original value if the conditions are not met.
- */
-function splitLongPng64Values(key: string, value: string): string {
-	if (key === 'png64' && typeof value === 'string' && value.length > 60) {
-		return btoa(atob(value)).replace(/(.{60})/g, '$1\n') + '\n'
-	}
-	return value
-}
-
-/**
- * Compute a Content-Disposition header specifying an attachment with the
- * given filename.
- */
-function attachmentWithFilename(filename: string): string {
-	function quotedAscii(s: string): string {
-		// Boil away combining characters and non-ASCII code points and escape
-		// quotes.  Modern browsers don't use this, so don't bother going all-out.
-		// Don't percent-encode anything, because browsers don't agree on whether
-		// quoted filenames should be percent-decoded (Firefox and Chrome yes,
-		// Safari no).
-		return (
-			'"' +
-			[...s.normalize('NFKD')]
-				.filter((c) => '\x20' <= c && c <= '\x7e')
-				.map((c) => (c === '"' || c === '\\' ? '\\' : '') + c)
-				.join('') +
-			'"'
-		)
-	}
-
-	// The filename parameter is used primarily by legacy browsers.  Strangely, it
-	// must be present for at least some versions of Safari to use the modern
-	// filename* parameter.
-	const quotedFallbackAsciiFilename = quotedAscii(filename)
-	const modernUnicodeFilename = encodeURIComponent(filename)
-	return `attachment; filename=${quotedFallbackAsciiFilename}; filename*=UTF-8''${modernUnicodeFilename}`
-}
-
-function downloadBlob(
-	logger: Logger,
-	res: express.Response,
-	next: express.NextFunction,
-	data: SomeExportv6,
-	filename: string,
-	format: ExportFormat | undefined
-): void {
-	if (!format || format === 'json-gz') {
-		zlib.gzip(JSON.stringify(data), (err, result) => {
-			if (err) {
-				logger.warn(`Failed to gzip data, retrying uncompressed: ${err}`)
-				downloadBlob(logger, res, next, data, filename, 'json')
-			} else {
-				res.status(200)
-				res.set({
-					'Content-Type': 'application/gzip',
-					'Content-Disposition': attachmentWithFilename(filename),
-				})
-				res.end(result)
-			}
-		})
-	} else if (format === 'json') {
-		res.status(200)
-		res.set({
-			'Content-Type': 'application/json',
-			'Content-Disposition': attachmentWithFilename(filename),
-		})
-		res.end(JSON.stringify(data, undefined, '\t'))
-	} else if (format === 'yaml') {
-		res.status(200)
-		res.set({
-			'Content-Type': 'application/yaml',
-			'Content-Disposition': attachmentWithFilename(filename),
-		})
-		res.end(yaml.stringify(data, splitLongPng64Values))
-	} else {
-		next(new Error(`Unknown format: ${format}`))
-	}
-}
+import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { ExportController } from './Export.js'
+import { FILE_VERSION } from './Constants.js'
 
 const find_smallest_grid_for_page = (pageInfo: ExportPageContentv6): UserConfigGridSize => {
 	const gridSize: UserConfigGridSize = {
@@ -193,7 +92,6 @@ const find_smallest_grid_for_page = (pageInfo: ExportPageContentv6): UserConfigG
 export class ImportExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
 
-	readonly #appInfo: AppInfo
 	readonly #io: UIHandler
 	readonly #controlsController: ControlsController
 	readonly #graphicsController: GraphicsController
@@ -203,6 +101,8 @@ export class ImportExportController {
 	readonly #surfacesController: SurfaceController
 	readonly #userConfigController: DataUserConfig
 	readonly #variablesController: VariablesController
+
+	readonly #exportController: ExportController
 
 	/**
 	 * If there is a current import task that clients should be aware of, this will be set
@@ -222,7 +122,6 @@ export class ImportExportController {
 		userconfig: DataUserConfig,
 		variablesController: VariablesController
 	) {
-		this.#appInfo = appInfo
 		this.#io = io
 		this.#controlsController = controls
 		this.#graphicsController = graphics
@@ -233,327 +132,16 @@ export class ImportExportController {
 		this.#userConfigController = userconfig
 		this.#variablesController = variablesController
 
-		const generate_export_for_referenced_instances = (
-			referencedConnectionIds: Set<string>,
-			referencedConnectionLabels: Set<string>,
-			minimalExport = false
-		): ExportInstancesv6 => {
-			const instancesExport: ExportInstancesv6 = {}
-
-			referencedConnectionIds.delete('internal') // Ignore the internal module
-			for (const connectionId of referencedConnectionIds) {
-				instancesExport[connectionId] = this.#instancesController.exportInstance(connectionId, minimalExport)
-			}
-
-			referencedConnectionLabels.delete('internal') // Ignore the internal module
-			for (const label of referencedConnectionLabels) {
-				const connectionId = this.#instancesController.getIdForLabel(label)
-				if (connectionId) {
-					instancesExport[connectionId] = this.#instancesController.exportInstance(connectionId, minimalExport)
-				}
-			}
-
-			return instancesExport
-		}
-
-		//Parse variables and generate filename based on export type
-		const generateFilename = (filename: string, exportType: string, fileExt: string): string => {
-			//If the user isn't using their default file name, don't append any extra info in file name since it was a manual choice
-			const useDefault = filename == this.#userConfigController.getKey('default_export_filename')
-			const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
-			const parsedName = parser.parseVariables(filename).text
-
-			return parsedName && parsedName !== 'undefined'
-				? `${parsedName}${exportType && useDefault ? '_' + exportType : ''}.${fileExt}`
-				: `${os.hostname()}_${getTimestamp()}_${exportType}.${fileExt}`
-		}
-
-		const generate_export_for_triggers = (triggerControls: ControlTrigger[]): ExportTriggersListv6 => {
-			const triggersExport: ExportTriggerContentv6 = {}
-			const referencedConnectionIds = new Set<string>()
-			const referencedConnectionLabels = new Set<string>()
-			for (const control of triggerControls) {
-				const parsedId = ParseControlId(control.controlId)
-				if (parsedId?.type === 'trigger') {
-					triggersExport[parsedId.trigger] = control.toJSON(false)
-
-					control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
-				}
-			}
-
-			const instancesExport = generate_export_for_referenced_instances(
-				referencedConnectionIds,
-				referencedConnectionLabels
-			)
-
-			return {
-				type: 'trigger_list',
-				version: FILE_VERSION,
-				triggers: triggersExport,
-				instances: instancesExport,
-			}
-		}
-
-		apiRouter.get('/export/triggers/all', (req, res, next) => {
-			const triggerControls = this.#controlsController.getAllTriggers()
-			const exp = generate_export_for_triggers(triggerControls)
-
-			const filename = generateFilename(String(req.query.filename), 'trigger_list', 'companionconfig')
-
-			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
-		})
-
-		apiRouter.get('/export/triggers/single/:id', (req, res, next) => {
-			const control = this.#controlsController.getTrigger(req.params.id)
-			if (control) {
-				const exp = generate_export_for_triggers([control])
-
-				const triggerName = control.options.name.toLowerCase().replace(/\W/, '')
-				const filename = generateFilename(String(req.query.filename), `trigger_${triggerName}`, 'companionconfig')
-
-				downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
-			} else {
-				next()
-			}
-		})
-
-		apiRouter.get('/export/page/:page', (req, res, next) => {
-			const page = Number(req.params.page)
-			if (isNaN(page)) {
-				next()
-			} else {
-				const pageInfo = this.#pagesController.getPageInfo(page, true)
-				if (!pageInfo) throw new Error(`Page "${page}" not found!`)
-
-				const referencedConnectionIds = new Set<string>()
-				const referencedConnectionLabels = new Set<string>()
-
-				const pageExport = generatePageExportInfo(pageInfo, referencedConnectionIds, referencedConnectionLabels)
-
-				const instancesExport = generate_export_for_referenced_instances(
-					referencedConnectionIds,
-					referencedConnectionLabels
-				)
-
-				// Export file protocol version
-				const exp: ExportPageModelv6 = {
-					version: FILE_VERSION,
-					type: 'page',
-					page: pageExport,
-					instances: instancesExport,
-					oldPageNumber: page,
-				}
-
-				const filename = generateFilename(String(req.query.filename), `page${page}`, 'companionconfig')
-
-				downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
-			}
-		})
-
-		const generatePageExportInfo = (
-			pageInfo: PageModel,
-			referencedConnectionIds: Set<string>,
-			referencedConnectionLabels: Set<string>
-		): ExportPageContentv6 => {
-			const pageExport: ExportPageContentv6 = {
-				name: pageInfo.name,
-				controls: {},
-				gridSize: this.#userConfigController.getKey('gridSize'),
-			}
-
-			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
-				for (const [column, controlId] of Object.entries(rowObj)) {
-					const control = this.#controlsController.getControl(controlId)
-					if (controlId && control && control.type !== 'trigger') {
-						if (!pageExport.controls[Number(row)]) pageExport.controls[Number(row)] = {}
-						pageExport.controls[Number(row)][Number(column)] = control.toJSON(false)
-
-						control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
-					}
-				}
-			}
-
-			return pageExport
-		}
-
-		const generateCustomExport = (config: ClientExportSelection | null): ExportFullv6 => {
-			// Export file protocol version
-			const exp: ExportFullv6 = {
-				version: FILE_VERSION,
-				type: 'full',
-			}
-
-			const rawControls = this.#controlsController.getAllControls()
-
-			const referencedConnectionIds = new Set<string>()
-			const referencedConnectionLabels = new Set<string>()
-
-			if (!config || !isFalsey(config.buttons)) {
-				exp.pages = {}
-
-				const pageInfos = this.#pagesController.getAll()
-				for (const [pageNumber, rawPageInfo] of Object.entries(pageInfos)) {
-					exp.pages[Number(pageNumber)] = generatePageExportInfo(
-						rawPageInfo,
-						referencedConnectionIds,
-						referencedConnectionLabels
-					)
-				}
-			}
-
-			if (!config || !isFalsey(config.triggers)) {
-				const triggersExport: ExportTriggerContentv6 = {}
-				for (const control of rawControls.values()) {
-					if (control.type === 'trigger') {
-						const parsedId = ParseControlId(control.controlId)
-						if (parsedId?.type === 'trigger') {
-							triggersExport[parsedId.trigger] = control.toJSON(false)
-
-							control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
-						}
-					}
-				}
-				exp.triggers = triggersExport
-			}
-
-			if (!config || !isFalsey(config.customVariables)) {
-				exp.custom_variables = this.#variablesController.custom.getDefinitions()
-			}
-
-			if (!config || !isFalsey(config.connections)) {
-				exp.instances = this.#instancesController.exportAll(false)
-			} else {
-				exp.instances = generate_export_for_referenced_instances(
-					referencedConnectionIds,
-					referencedConnectionLabels,
-					true
-				)
-			}
-
-			if (!config || !isFalsey(config.surfaces)) {
-				exp.surfaces = this.#surfacesController.exportAll()
-				exp.surfaceGroups = this.#surfacesController.exportAllGroups()
-			}
-
-			return exp
-		}
-
-		apiRouter.get('/export/custom', (req, res, next) => {
-			// @ts-expect-error
-			const exp = generateCustomExport(req.query)
-
-			const filename = generateFilename(String(req.query.filename), '', 'companionconfig')
-
-			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
-		})
-
-		apiRouter.get('/export/full', (req, res, next) => {
-			const exp = generateCustomExport(null)
-
-			const filename = generateFilename(
-				String(this.#userConfigController.getKey('default_export_filename')),
-				'full_config',
-				'companionconfig'
-			)
-
-			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
-		})
-
-		apiRouter.get('/export/log', (_req, res, _next) => {
-			const logs = LogController.getAllLines()
-
-			const filename = generateFilename(
-				String(this.#userConfigController.getKey('default_export_filename')),
-				'companion_log',
-				'csv'
-			)
-
-			res.status(200)
-			res.set({
-				'Content-Type': 'text/csv',
-				'Content-Disposition': attachmentWithFilename(filename),
-			})
-
-			const csvOut = csvStringify([
-				['Date', 'Module', 'Type', 'Log'],
-				...logs.map((line) => [new Date(line.time).toISOString(), line.source, line.level, line.message]),
-			])
-
-			res.end(csvOut)
-		})
-
-		apiRouter.get('/export/support', (_req, res, _next) => {
-			// Export support zip
-			const archive = archiver('zip', { zlib: { level: 9 } })
-
-			archive.on('error', (err) => {
-				console.log(err)
-			})
-
-			//on stream closed we can end the request
-			archive.on('end', () => {
-				this.#logger.debug(`Support export wrote ${+archive.pointer()} bytes`)
-			})
-
-			//set the archive name
-			const filename = generateFilename(
-				String(this.#userConfigController.getKey('default_export_filename')),
-				'companion-config',
-				'zip'
-			)
-			res.attachment(filename)
-
-			//this is the streaming magic
-			archive.pipe(res)
-
-			archive.glob(
-				'*',
-				{
-					cwd: this.#appInfo.configDir,
-					nodir: true,
-					ignore: [
-						'cloud', // Ignore companion-cloud credentials
-					],
-				},
-				{}
-			)
-
-			// Add the logs if found
-			const logsDir = path.join(this.#appInfo.configDir, '../logs')
-			if (fs.existsSync(logsDir)) {
-				archive.glob(
-					'*',
-					{
-						cwd: logsDir,
-						nodir: true,
-					},
-					{
-						prefix: 'logs',
-					}
-				)
-			}
-
-			{
-				const logs = LogController.getAllLines()
-
-				let out = `"Date","Module","Type","Log"\r\n`
-				for (const line of logs) {
-					out += `${new Date(line.time).toISOString()},"${line.source}","${line.level}","${line.message}"\r\n`
-				}
-
-				archive.append(out, { name: 'log.csv' })
-			}
-
-			try {
-				const payload = compileUpdatePayload(this.#appInfo)
-				let out = JSON.stringify(payload)
-				archive.append(out, { name: 'user.json' })
-			} catch (e) {
-				this.#logger.debug(`Support bundle append user: ${e}`)
-			}
-
-			archive.finalize()
-		})
+		this.#exportController = new ExportController(
+			appInfo,
+			apiRouter,
+			controls,
+			instance,
+			page,
+			surfaces,
+			userconfig,
+			variablesController
+		)
 	}
 
 	async #checkOrRunImportTask<T>(newTaskType: 'reset' | 'import', executeFn: () => Promise<T>): Promise<T> {
@@ -574,6 +162,8 @@ export class ImportExportController {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
+		this.#exportController.clientConnect(client)
+
 		if (this.#currentImportTask) {
 			// Inform about in progress task
 			client.emit('load-save:task', this.#currentImportTask)
@@ -703,7 +293,7 @@ export class ImportExportController {
 			const importObject = clientPendingImport?.object
 			if (!importObject) return null
 
-			let importPage
+			let importPage: ExportPageContentv6 | undefined
 			if (importObject.type === 'page') {
 				importPage = importObject.page
 			} else if (importObject.type === 'full') {
@@ -816,12 +406,29 @@ export class ImportExportController {
 			// Import the new page
 			this.#pagesController.setPageName(topage, pageInfo.name)
 
+			const connectionLabelRemap: Record<string, string> = {}
+			const connectionIdRemap: Record<string, string> = {}
+			for (const [oldId, info] of Object.entries(instanceIdMap)) {
+				if (info.oldLabel && info.label !== info.oldLabel) {
+					connectionLabelRemap[info.oldLabel] = info.label
+				}
+				if (info.id && info.id !== oldId) {
+					connectionIdRemap[oldId] = info.id
+				}
+			}
+			const referencesUpdater = new VisitorReferencesUpdater(
+				this.#internalModule,
+				connectionLabelRemap,
+				connectionIdRemap
+			)
+
 			// Import the controls
 			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 				for (const [column, control] of Object.entries(rowObj)) {
 					if (control) {
 						// Import the control
-						const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
+						const fixedControlObj = this.#fixupControl(cloneDeep(control), referencesUpdater, instanceIdMap)
+						if (!fixedControlObj) continue
 
 						const location: ControlLocation = {
 							pageNumber: Number(topage),
@@ -849,7 +456,7 @@ export class ImportExportController {
 					if (!oldPageInfo) throw new Error('Invalid target page')
 				}
 
-				let pageInfo
+				let pageInfo: ExportPageContentv6 | undefined
 
 				if (data.type === 'full' && data.pages) {
 					pageInfo = data.pages[frompage]
@@ -1084,7 +691,11 @@ export class ImportExportController {
 		return result
 	}
 
-	#fixupControl(control: ExportControlv6, instanceIdMap: InstanceAppliedRemappings): SomeButtonModel {
+	#fixupControl(
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	): SomeButtonModel | null {
 		// Future: this does not feel durable
 
 		if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
@@ -1093,18 +704,21 @@ export class ImportExportController {
 			}
 		}
 
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
-			}
+		if (control.type === 'button') {
+			return this.#fixupButtonControl(control, referencesUpdater, instanceIdMap)
+		} else if (control.type === 'button-layered') {
+			return this.#fixupLayeredButtonControl(control, referencesUpdater, instanceIdMap)
+		} else {
+			console.warn(`Unknown control type: ${control.type}`)
+			return null
 		}
+	}
 
-		// TODO-layered: reimplement for layered buttons
+	#fixupButtonControl(
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	): NormalButtonModel {
 		const result: NormalButtonModel = {
 			type: 'button',
 			options: cloneDeep(control.options),
@@ -1114,6 +728,40 @@ export class ImportExportController {
 			localVariables: [],
 		}
 
+		this.#fixupButtonControlBase(result, control, referencesUpdater, instanceIdMap)
+
+		referencesUpdater.visitButtonDrawStlye(result.style)
+
+		return result
+	}
+
+	#fixupLayeredButtonControl(
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	): LayeredButtonModel {
+		const result: LayeredButtonModel = {
+			type: 'button-layered',
+			options: cloneDeep(control.options),
+			style: cloneDeep(control.style),
+			feedbacks: [],
+			steps: {},
+			localVariables: [],
+		}
+
+		this.#fixupButtonControlBase(result, control, referencesUpdater, instanceIdMap)
+
+		referencesUpdater.visitDrawElements(result.style.layers)
+
+		return result
+	}
+
+	#fixupButtonControlBase(
+		result: ButtonModelBase,
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	) {
 		if (control.feedbacks) {
 			result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
 		}
@@ -1151,11 +799,7 @@ export class ImportExportController {
 			}
 		}
 
-		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
-			.visitButtonDrawStlye(result.style)
-			.visitEntities([], allEntities)
-
-		return result
+		referencesUpdater.visitEntities([], allEntities)
 	}
 }
 

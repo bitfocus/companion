@@ -34,7 +34,14 @@ export class DataMetrics {
 	#cycle() {
 		this.#logger.silly('cycle')
 
-		const relevantDevices: string[] = []
+		const relevantSurfaceHashes: string[] = []
+		const relevantSurfaces: Record<
+			string,
+			{
+				type: string | undefined
+				description: string | undefined
+			}
+		> = {}
 
 		try {
 			const surfaceGroups = this.#surfacesController.getDevicesList()
@@ -45,9 +52,16 @@ export class DataMetrics {
 					if (surface.id && surface.isConnected && !surface.id.startsWith('emulator:')) {
 						// remove leading "satellite-" from satellite device serial numbers.
 						const serialNumber = surface.id.replace('satellite-', '')
-						// normalize serialnumber by md5 hashing it, we don't want/need the specific serialnumber anyways.
+
+						// Collect info about the type of the surface
+						relevantSurfaces[serialNumber] = {
+							type: surface.integrationType,
+							description: surface.type,
+						}
+
+						// normalize serialnumber by md5 hashing it
 						const deviceHash = crypto.createHash('md5').update(serialNumber).digest('hex')
-						if (deviceHash && deviceHash.length === 32) relevantDevices.push(deviceHash)
+						if (deviceHash && deviceHash.length === 32) relevantSurfaceHashes.push(deviceHash)
 					}
 				}
 			}
@@ -75,7 +89,8 @@ export class DataMetrics {
 				r: process.uptime(),
 				m: moduleCountsOld,
 				mv: moduleVersionCounts,
-				d: relevantDevices,
+				d: relevantSurfaceHashes,
+				s: relevantSurfaces,
 			}
 
 			// push metrics back home - if we can!

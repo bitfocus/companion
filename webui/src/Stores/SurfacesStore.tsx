@@ -6,7 +6,7 @@ import type {
 	ClientSurfaceItem,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { action, observable } from 'mobx'
-import { assertNever } from '../util.js'
+import { assertNever } from '~/util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'

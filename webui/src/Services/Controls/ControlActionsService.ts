@@ -1,5 +1,5 @@
 import { useContext, useMemo } from 'react'
-import { SocketContext } from '../../util.js'
+import { SocketContext } from '~/util.js'
 import type { IEntityEditorService } from './ControlEntitiesService.js'
 import type { EntityOwner, SomeEntityModel, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 

@@ -8,7 +8,7 @@ import { PasswordStep } from './PasswordStep.js'
 import { ApplyStep } from './ApplyStep.js'
 import { FinishStep } from './FinishStep.js'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export const WIZARD_VERSION_2_2 = 22 // 2.2
 export const WIZARD_VERSION_3_0 = 30 // 3.0

@@ -1,12 +1,12 @@
 import React, { useContext } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { VariablesTable } from '../Components/VariablesTable.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { VariablesTable } from '~/Components/VariablesTable.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { Link, useParams } from '@tanstack/react-router'
-import { useSortedConnectionsThatHaveVariables } from '../Stores/Util.js'
+import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
 
 export const ConnectionVariablesPage = observer(function VariablesConnectionList() {
 	const { modules } = useContext(RootAppStoreContext)

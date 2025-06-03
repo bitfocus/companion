@@ -14,7 +14,7 @@ import {
 } from '@coreui/react'
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
-import { SocketContext, type CompanionSocketWrapped, LoadingRetryOrError } from '../util.js'
+import { SocketContext, type CompanionSocketWrapped, LoadingRetryOrError } from '~/util.js'
 import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 
 export function CloudPage() {

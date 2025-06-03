@@ -26,19 +26,8 @@ jobs:
 
           yarn build:ts
 
-      - name: Check types (shared-lib)
+      - name: Check types
         run: |
-          cd shared-lib
-          yarn check-types
-
-      - name: Check types (server)
-        run: |
-          cd companion
-          yarn check-types
-
-      - name: Check types (client)
-        run: |
-          cd webui
           yarn check-types
 
   linux-x64:

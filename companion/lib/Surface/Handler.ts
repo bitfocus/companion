@@ -132,6 +132,13 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#surfaceConfig: SurfaceConfig
 
 	/**
+	 * Whether the surface is locked
+	 */
+	get isLocked(): boolean {
+		return this.#isSurfaceLocked
+	}
+
+	/**
 	 * Grid size of the panel
 	 */
 	get panelGridSize(): GridSize {
@@ -425,6 +432,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		// If it changed, redraw
 		if (this.#isSurfaceLocked != locked) {
 			this.#isSurfaceLocked = !!locked
+
+			this.#surfaces.emit('surface_locked', this.surfaceId, this.#isSurfaceLocked)
 
 			if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
 

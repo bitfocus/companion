@@ -1,5 +1,5 @@
 import { observable, action } from 'mobx'
-import { assertNever } from '../util.js'
+import { assertNever } from '~/util.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 export class ConnectionsStore {

@@ -1,8 +1,8 @@
-import { useComputed } from '../util.js'
+import { useComputed } from '~/util.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
-import type { ModuleInfoStore } from '../Stores/ModuleInfoStore.js'
+import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 
 export function useAllConnectionProducts(modules: ModuleInfoStore, includeUnreleased?: boolean): FuzzyProduct[] {
 	return useComputed(() => {

@@ -66,15 +66,31 @@ export class SurfaceOutboundController {
 		this.#storage = this.#dbTable.all()
 
 		for (const surfaceInfo of Object.values(this.#storage)) {
+			if (surfaceInfo.enabled === undefined) surfaceInfo.enabled = true // Fixup old config
+
+			if (!surfaceInfo.enabled) {
+				this.#logger.info(`Skipping disabled remote surface at ${surfaceInfo.address}:${surfaceInfo.port}`)
+				continue
+			}
+
 			try {
-				if (surfaceInfo.type === 'elgato') {
-					this.#streamdeckTcpConnectionManager.connectTo(surfaceInfo.address, surfaceInfo.port)
-				} else {
-					throw new Error(`Remote surface type "${surfaceInfo.type}" is not supported`)
-				}
+				this.#startStopConnection(surfaceInfo)
 			} catch (e) {
 				this.#logger.error(`Unable to setup remote surface at ${surfaceInfo.address}:${surfaceInfo.port}: ${e}`)
 			}
+		}
+	}
+
+	#startStopConnection(surfaceInfo: OutboundSurfaceInfo): void {
+		if (surfaceInfo.type !== 'elgato') {
+			this.#logger.error(`Remote surface type "${surfaceInfo.type}" is not supported`)
+			return
+		}
+
+		if (surfaceInfo.enabled) {
+			this.#streamdeckTcpConnectionManager.connectTo(surfaceInfo.address, surfaceInfo.port)
+		} else {
+			this.#streamdeckTcpConnectionManager.disconnectFrom(surfaceInfo.address, surfaceInfo.port)
 		}
 	}
 
@@ -109,6 +125,7 @@ export class SurfaceOutboundController {
 				id,
 				type: 'elgato',
 				address,
+				enabled: true,
 				port,
 				displayName: name ?? '',
 			}
@@ -124,7 +141,7 @@ export class SurfaceOutboundController {
 				},
 			])
 
-			this.#streamdeckTcpConnectionManager.connectTo(address, port)
+			this.#startStopConnection(newInfo)
 
 			return id
 		})
@@ -143,7 +160,7 @@ export class SurfaceOutboundController {
 				},
 			])
 
-			this.#streamdeckTcpConnectionManager.disconnectFrom(surfaceInfo.address, surfaceInfo.port)
+			this.#startStopConnection({ ...surfaceInfo, enabled: false }) // Stop the connection
 		})
 
 		client.onPromise('surfaces:outbound:set-name', async (id, name) => {
@@ -152,6 +169,26 @@ export class SurfaceOutboundController {
 
 			surfaceInfo.displayName = name ?? ''
 			this.#dbTable.set(id, surfaceInfo)
+
+			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
+				{
+					type: 'add',
+					itemId: id,
+
+					info: surfaceInfo,
+				},
+			])
+		})
+
+		client.onPromise('surfaces:outbound:set-enabled', async (id, enabled) => {
+			const surfaceInfo = this.#storage[id]
+			if (!surfaceInfo) throw new Error('Surface not found')
+
+			surfaceInfo.enabled = !!enabled
+			this.#dbTable.set(id, surfaceInfo)
+
+			// Start/stop the connection
+			this.#startStopConnection(surfaceInfo)
 
 			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
 				{

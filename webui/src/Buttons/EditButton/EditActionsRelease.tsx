@@ -5,8 +5,8 @@ import { CButton } from '@coreui/react'
 import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useContext, useRef, useCallback } from 'react'
-import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
-import { SocketContext, MyErrorBoundary } from '../../util.js'
+import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
+import { SocketContext, MyErrorBoundary } from '~/util.js'
 import {
 	EditDurationGroupPropertiesModalRef,
 	EditDurationGroupPropertiesModal,

@@ -4,8 +4,8 @@ import sanitizeHtml from 'sanitize-html'
 import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { CModalExt } from '../Components/CModalExt.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { CModalExt } from '~/Components/CModalExt.js'
 import semver from 'semver'
 
 interface HelpModalProps {

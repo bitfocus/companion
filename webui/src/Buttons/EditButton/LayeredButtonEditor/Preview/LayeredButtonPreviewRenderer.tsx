@@ -8,6 +8,10 @@ import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleMo
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import FontLoader from './FontLoader.js'
+import { DropdownInputField } from '../../../../Components/DropdownInputField.js'
+import { DropdownChoice } from '@companion-module/base'
+import { isEqual } from 'lodash-es'
+import { useLocalStorage } from 'usehooks-ts'
 
 const PAD_X = 10
 const PAD_Y = 10
@@ -24,19 +28,57 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 }: LayeredButtonPreviewRendererProps) {
 	const drawStyle = useLayeredButtonDrawStyleParser(controlId, styleStore)
 
-	// Future: dynamic sizes
+	const [aspectRatio, setAspectRatio] = useLocalStorage('layered-button-preview-aspect-ratio', '1:1')
+
+	let width = 200
+	let height = 200
+
+	try {
+		const parsed = aspectRatio.split(':').map(Number)
+		if (parsed.length === 2 && parsed.every((n) => !isNaN(n) && n > 0)) {
+			if (parsed[0] > parsed[1]) {
+				height = width * (parsed[1] / parsed[0])
+			} else {
+				width = height * (parsed[0] / parsed[1])
+			}
+			console.log('calculated size', width, height, aspectRatio, parsed)
+		}
+	} catch (e) {
+		console.error('Failed to parse aspect ratio', e)
+		// Fallback to 1:1 if parsing fails
+		// setAspectRatio('1:1')
+	}
 
 	return (
-		<LayeredButtonCanvas
-			width={200}
-			height={200}
-			location={location}
-			drawStyle={drawStyle}
-			hiddenElements={styleStore.hiddenElements}
-			selectedElementId={styleStore.selectedElementId}
-		/>
+		<>
+			<div className="grow flex align-items-center justify-content-center">
+				<LayeredButtonCanvas
+					className="button-layer-canvas"
+					width={width}
+					height={height}
+					location={location}
+					drawStyle={drawStyle}
+					hiddenElements={styleStore.hiddenElements}
+					selectedElementId={styleStore.selectedElementId}
+				/>
+			</div>
+			<div>
+				<DropdownInputField
+					label="Preview Aspect Ratio"
+					allowCustom
+					choices={ASPECT_RATIO_OPTIONS}
+					value={aspectRatio}
+					setValue={setAspectRatio as any}
+				/>
+			</div>
+		</>
 	)
 })
+
+const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
+	{ id: '1:1', label: 'Square (1:1)' },
+	{ id: '9:7', label: 'Stream Deck Studio (9:7)' },
+]
 
 interface LayeredButtonCanvasProps {
 	width: number
@@ -45,6 +87,7 @@ interface LayeredButtonCanvasProps {
 	drawStyle: DrawStyleLayeredButtonModel | null
 	hiddenElements: ReadonlySet<string>
 	selectedElementId: string | null
+	className?: string
 }
 function LayeredButtonCanvas({
 	width,
@@ -53,6 +96,7 @@ function LayeredButtonCanvas({
 	drawStyle,
 	hiddenElements,
 	selectedElementId,
+	className,
 }: LayeredButtonCanvasProps) {
 	const drawContext = useRef<RendererDrawContext | null>(null)
 
@@ -60,8 +104,13 @@ function LayeredButtonCanvas({
 	useEffect(() => {
 		if (!canvas || !drawStyle) return
 
-		// Setup the context on the first run
-		if (!drawContext.current) drawContext.current = new RendererDrawContext(canvas, location)
+		// Setup the context on the first run, or when something changes
+		if (
+			!drawContext.current ||
+			drawContext.current.canvas !== canvas ||
+			!isEqual(drawContext.current.location, location)
+		)
+			drawContext.current = new RendererDrawContext(canvas, location)
 
 		// Update any cached properties
 		drawContext.current.setHiddenElements(hiddenElements)
@@ -91,6 +140,7 @@ function LayeredButtonCanvas({
 		<canvas
 			// Use the dimensions as a key to force a redraw when they change
 			key={`${width}x${height}`}
+			className={className}
 			ref={setCanvas}
 			width={width + PAD_X * 2}
 			height={height + PAD_Y * 2}
@@ -102,6 +152,7 @@ class RendererDrawContext {
 	readonly #image: GraphicsImage
 	readonly #debounce: PromiseDebounce
 	readonly location: ControlLocation
+	readonly canvas: HTMLCanvasElement
 
 	#hiddenElements: ReadonlySet<string> = new Set()
 	#selectedElementId: string | null = null
@@ -113,6 +164,7 @@ class RendererDrawContext {
 		this.#image = image
 		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
 		this.location = location
+		this.canvas = canvas
 	}
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null

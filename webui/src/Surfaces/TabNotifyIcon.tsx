@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import React, { useContext } from 'react'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export const SurfacesTabNotifyIcon = observer(function SurfacesTabNotifyIcon(): JSX.Element | null {
 	const { surfaces } = useContext(RootAppStoreContext)

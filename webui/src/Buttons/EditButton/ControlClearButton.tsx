@@ -4,8 +4,8 @@ import { CButton } from '@coreui/react'
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useContext, useCallback } from 'react'
-import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export function ControlClearButton({
 	location,

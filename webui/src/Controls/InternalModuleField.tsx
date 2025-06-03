@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useMemo } from 'react'
-import { DropdownInputField, MultiDropdownInputField } from '../Components/index.js'
-import { useComputed } from '../util.js'
+import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.js'
+import { useComputed } from '~/util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 
 export function InternalModuleField(

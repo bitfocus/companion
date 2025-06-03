@@ -76,6 +76,8 @@ if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x6
 const packageResolutions = {
 	// Force the same custom `node-gyp-build` version to allow better cross compiling
 	'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
+	// Use an empty package for node-gyp, to avoid installing it
+	'node-gyp': 'npm:empty-npm-package@1.0.0',
 }
 // Preserve some resolutions to the dist package.json
 for (const [name, version] of Object.entries(companionPkgJson.resolutions)) {

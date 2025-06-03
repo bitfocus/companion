@@ -328,6 +328,11 @@
 		"_whatsnew": true,
 		"children": [
 			{
+				"_version": "4.0.0",
+				"label": "v4.0.0",
+				"file": "9_whatsnew/v4-0-0.md"
+			},
+			{
 				"_version": "3.5.0",
 				"label": "v3.5.0",
 				"file": "9_whatsnew/v3-5-0.md"
