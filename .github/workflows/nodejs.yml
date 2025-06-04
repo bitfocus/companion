@@ -356,6 +356,10 @@ jobs:
     needs: check-types
     timeout-minutes: 45
 
+    env:
+      # the wincert machine has issues using the default cache location
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+
     steps:
       - uses: actions/checkout@v4
         with:
