@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { ParseExpression as parse } from '../lib/Expression/ExpressionParse'
-import { ResolveExpression as resolve } from '../lib/Expression/ExpressionResolve'
+import { ParseExpression as parse } from '../lib/Expression/ExpressionParse.js'
+import { ResolveExpression as resolve } from '../lib/Expression/ExpressionResolve.js'
 import jsep from 'jsep'
 import type { CompanionVariableValue } from '@companion-module/base'
 
-const defaultGetValue = (id: string): CompanionVariableValue | undefined => {
+const defaultGetValue = (_id: string): CompanionVariableValue | undefined => {
 	throw new Error('Not implemented')
 }
 

@@ -26,3 +26,7 @@ jobs:
       - name: check format
         run: |
           yarn prettier --check .
+
+      - name: run linter
+        run: |
+          yarn lint

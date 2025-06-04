@@ -57,6 +57,7 @@ export interface EventDefinition {
 	options: InternalActionInputField[]
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ClientEventDefinition extends EventDefinition {}
 
 export interface WrappedImage {
