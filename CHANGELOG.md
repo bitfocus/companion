@@ -1,5 +1,15 @@
 # Bitfocus Companion
 
+## Companion v3.5.5 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Support additional stream deck usb ids
+- UI crashing if admin lockout timeout set to over 24 hours
+- Log connection pid when starting
+- Button grid not handling all page changes correctly
+- HTTP api methods failing without body
+
 ## Companion v3.5.4 - Release Notes
 
 ### 🐞 BUG FIXES
