@@ -13,8 +13,7 @@ import { EventEmitter } from 'events'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { colorToRgb, RgbColor } from './Util.js'
 import HID from 'node-hid'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
@@ -163,10 +162,10 @@ export class SurfaceUSB203SystemsMystrix extends EventEmitter<SurfacePanelEvents
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
-		const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+	draw(item: DrawButtonItem): void {
+		const color = item.style ? colorToRgb(item.style.bgcolor) : { r: 0, g: 0, b: 0 }
 
-		this.#writeKeyColour(x, y, color)
+		this.#writeKeyColour(item.x, item.y, color)
 	}
 
 	#writeKeyColour(x: number, y: number, color: RgbColor, forced = false): void {

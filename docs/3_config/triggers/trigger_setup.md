@@ -4,7 +4,6 @@ When adding a new trigger, it starts off as disabled so that it doesn't get exec
 
 To begin with you should give it a name, and fill in the other fields.
 
-
 Triggers have 3 sections to configure
 
 - **Events**

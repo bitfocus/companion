@@ -1,5 +1,5 @@
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { ButtonPreview } from '../Components/ButtonPreview.js'
+import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import React, {
 	forwardRef,
 	memo,
@@ -12,11 +12,11 @@ import React, {
 	useState,
 } from 'react'
 import { useDrop } from 'react-dnd'
-import { SocketContext } from '../util.js'
+import { SocketContext } from '~/util.js'
 import classNames from 'classnames'
-import useScrollPosition from '../Hooks/useScrollPosition.js'
-import useElementInnerSize from '../Hooks/useElementInnerSize.js'
-import { useButtonRenderCache } from '../Hooks/useSharedRenderCache.js'
+import useScrollPosition from '~/Hooks/useScrollPosition.js'
+import useElementInnerSize from '~/Hooks/useElementInnerSize.js'
+import { useButtonRenderCache } from '~/Hooks/useSharedRenderCache.js'
 import { CButton, CFormInput } from '@coreui/react'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'

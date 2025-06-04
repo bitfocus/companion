@@ -16,6 +16,7 @@ TODO
 /run.sh
 /html
 /bundled-modules
+tsconfig.tsbuildinfo
 
 dist
 
@@ -101,3 +102,4 @@ typings/
 /module-legacy/*
 /offline-bundle
 /offline-bundle.tar.gz
+

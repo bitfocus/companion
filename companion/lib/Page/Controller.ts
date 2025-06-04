@@ -59,6 +59,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 	constructor(registry: Registry) {
 		super()
+		this.setMaxListeners(0)
 
 		this.#registry = registry
 		this.#dbTable = registry.db.getTableView('pages')

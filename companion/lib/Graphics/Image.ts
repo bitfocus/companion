@@ -51,7 +51,7 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	readonly realwidth: number
 	readonly realheight: number
 
-	protected get canvasImage(): Canvas {
+	get canvasImage(): Canvas {
 		return this.#canvas
 	}
 

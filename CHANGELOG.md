@@ -23,7 +23,7 @@
 - Support for Mirabox Stream Dock 293V3 and N4
 - Reimplement support for Contour Shuttle
 - Support Resolve Replay Editor
-- Support latest streamdeck models
+- Support latest streamdeck models & network dock
 - Support granular permissions for modules (internal functionality, not exposed in the ui)
 - Extend satellite api, to allow clients to handle display of locked state
 
@@ -31,7 +31,7 @@
 
 - Limit ui session lockout duration, to avoid browser crash
 - Support HTTP_PROXY environment variables for module store api calls
--
+- Emulator button presses on ios double triggering
 
 ### 🧩 NEW & UPDATED MODULES
 

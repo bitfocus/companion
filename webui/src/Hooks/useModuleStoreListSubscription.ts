@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { CompanionSocketWrapped } from '../util.js'
-import type { ModuleInfoStore } from '../Stores/ModuleInfoStore.js'
+import type { CompanionSocketWrapped } from '~/util.js'
+import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 
 export function useModuleStoreListSubscription(socket: CompanionSocketWrapped, store: ModuleInfoStore): boolean {
 	const [ready, setReady] = useState(false)

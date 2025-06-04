@@ -3,17 +3,19 @@
 	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
 	"compilerOptions": {
 		"outDir": "./dist",
+		"rootDir": "./lib",
 		"baseUrl": "./",
 		"paths": {
 			"*": ["./node_modules/*"]
 		},
 		"module": "Node16",
 		"moduleResolution": "Node16",
+		"composite": true,
 
 		"target": "es2022",
 		"noImplicitAny": true,
 		"sourceMap": true,
-		"declaration": false,
+		"declaration": true,
 		"importHelpers": false,
 		"listFiles": false,
 		"traceResolution": false,
@@ -30,5 +32,6 @@
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true
-	}
+	},
+	"references": [{ "path": "../shared-lib" }]
 }

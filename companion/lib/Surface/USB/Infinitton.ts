@@ -11,7 +11,6 @@
 
 import imageRs from '@julusian/image-rs'
 import Infinitton from 'infinitton-idisplay'
-import { translateRotation } from '../../Resources/Util.js'
 import { EventEmitter } from 'events'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
@@ -21,9 +20,9 @@ import {
 	RotationConfigField,
 	LockConfigFields,
 } from '../CommonConfigFields.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 
 const configFields: CompanionSurfaceConfigField[] = [
 	...OffsetConfigFields,
@@ -41,6 +40,8 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
+
+	readonly #writeQueue: ImageWriteQueue<string, [DrawButtonItem]>
 
 	constructor(devicePath: string) {
 		super()
@@ -98,6 +99,32 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 
 			throw e
 		}
+
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, drawItem) => {
+			let key = convertXYToIndexForPanel(drawItem.x, drawItem.y, this.gridSize)
+			if (key === null) return
+
+			key = this.#mapButton(key)
+
+			if (key >= 0 && !isNaN(key)) {
+				const targetSize = 72
+
+				try {
+					const newbuffer = await drawItem.defaultRender.drawNative(
+						targetSize,
+						targetSize,
+						this.config.rotation,
+						imageRs.PixelFormat.Rgb
+					)
+
+					this.#infinitton.fillImage(key, newbuffer)
+				} catch (e: any) {
+					this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+					this.emit('remove')
+					return
+				}
+			}
+		})
 	}
 
 	/**
@@ -154,34 +181,8 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
-		let key = convertXYToIndexForPanel(x, y, this.gridSize)
-		if (key === null) return
-
-		key = this.#mapButton(key)
-
-		if (key >= 0 && !isNaN(key)) {
-			const targetSize = 72
-			const rotation = translateRotation(this.config.rotation)
-
-			try {
-				let image = imageRs.ImageTransformer.fromBuffer(
-					render.buffer,
-					render.bufferWidth,
-					render.bufferHeight,
-					imageRs.PixelFormat.Rgba
-				).scale(targetSize, targetSize)
-
-				if (rotation !== null) image = image.rotate(rotation)
-
-				const newbuffer = image.toBufferSync(imageRs.PixelFormat.Rgb).buffer
-				this.#infinitton.fillImage(key, newbuffer)
-			} catch (e: any) {
-				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
-				this.emit('remove')
-				return
-			}
-		}
+	draw(item: DrawButtonItem): void {
+		this.#writeQueue.queue(`${item.x}_${item.y}`, item)
 	}
 
 	#mapButton(input: number): number {

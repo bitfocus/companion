@@ -10,9 +10,9 @@ import Select, {
 import { MenuPortalContext } from './DropdownInputField.js'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import type { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
+import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
 interface TextInputFieldProps {
 	label?: React.ReactNode

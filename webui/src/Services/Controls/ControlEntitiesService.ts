@@ -6,8 +6,8 @@ import {
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { useContext, useMemo, useRef } from 'react'
-import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { SocketContext } from '../../util.js'
+import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { SocketContext } from '~/util.js'
 
 export interface IEntityEditorService {
 	readonly listId: SomeSocketEntityLocation

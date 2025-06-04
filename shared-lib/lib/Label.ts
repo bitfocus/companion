@@ -27,3 +27,17 @@ export function isLabelValid(label: string): boolean {
 	const safeLabel = makeLabelSafe(label)
 	return safeLabel === label
 }
+
+export function isEmulatorIdValid(id: string): boolean {
+	if (!id || typeof id !== 'string') return false
+
+	const safeId = makeLabelSafe(id)
+	return safeId === id
+}
+
+export function isSurfaceGroupIdValid(id: string): boolean {
+	if (!id || typeof id !== 'string') return false
+
+	const safeId = makeLabelSafe(id)
+	return safeId === id
+}

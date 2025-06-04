@@ -269,11 +269,11 @@ export interface ClientToBackendEventsMap {
 	'surfaces:forget': (surfaceId: string) => string | boolean
 	'surfaces:set-name': (surfaceId: string, name: string) => void
 	'surfaces:add-to-group': (groupId: string | null, surfaceId: string) => void
-	'surfaces:group-add': (groupName: string) => string
+	'surfaces:group-add': (baseId: string, groupName: string) => string
 	'surfaces:group-remove': (groupId: string) => string
 	'surfaces:group-config-set': (groupId: string, key: string, value: any) => SurfaceGroupConfig | string
 	'surfaces:emulator-remove': (surfaceId: string) => boolean
-	'surfaces:emulator-add': () => string
+	'surfaces:emulator-add': (baseId: string, name: string) => string
 	'surfaces:rescan': () => string | undefined
 	'surfaces:config-get': (surfaceId: string) => SurfacePanelConfig | null
 	'surfaces:config-set': (surfaceId: string, panelConfig: SurfacePanelConfig) => SurfacePanelConfig | string
@@ -292,6 +292,7 @@ export interface ClientToBackendEventsMap {
 	'surfaces:outbound:add': (type: string, address: string, port: number | undefined, name?: string) => string
 	'surfaces:outbound:remove': (id: string) => void
 	'surfaces:outbound:set-name': (surfaceId: string, name: string) => void
+	'surfaces:outbound:set-enabled': (surfaceId: string, enabled: boolean) => void
 
 	'emulator:startup': (emulatorId: string) => EmulatorConfig
 	'emulator:press': (emulatorId: string, column: number, row: number) => void

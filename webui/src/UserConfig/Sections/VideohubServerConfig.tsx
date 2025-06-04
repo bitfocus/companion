@@ -4,7 +4,7 @@ import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import { UserConfigProps } from '../Components/Common.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
-import { InlineHelp } from '../../Components/InlineHelp.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 export const VideohubServerConfig = observer(function VideohubServerConfig(props: UserConfigProps) {
 	return (

@@ -23,7 +23,7 @@ import type {
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
+import type { GraphicsController, PincodeBitmaps } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -130,6 +130,13 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Config for this surface
 	 */
 	#surfaceConfig: SurfaceConfig
+
+	/**
+	 * Whether the surface is locked
+	 */
+	get isLocked(): boolean {
+		return this.#isSurfaceLocked
+	}
 
 	/**
 	 * Grid size of the panel
@@ -299,6 +306,9 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		return getSurfaceName(this.#surfaceConfig, this.surfaceId)
 	}
 
+	// Draw and cache the pincode numbers per-surface, to ensure we don't keep around native sizes longer than necessary
+	#pincodeNumberImagesCache: PincodeBitmaps | undefined
+
 	#drawPage() {
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
@@ -307,20 +317,30 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					return
 				}
 
-				const buffers = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
+				this.#pincodeNumberImagesCache = this.#pincodeNumberImagesCache || this.#graphics.getPincodeNumberImages(72, 72)
+
+				const pincode = this.#currentPincodeEntry
 				this.panel.clearDeck()
 
 				const rawEntries: DrawButtonItem[] = [
 					{
 						x: this.#pincodeCodePosition[0],
 						y: this.#pincodeCodePosition[1],
-						image: buffers.code,
+						defaultRender: this.#graphics.getPincodeCodeImage(72, 72, pincode),
+						style: undefined,
+						type: undefined,
 					},
 				]
 
 				this.#pincodeNumberPositions.forEach(([x, y], i) => {
-					if (buffers[i]) {
-						rawEntries.push({ x, y, image: buffers[i] })
+					if (this.#pincodeNumberImagesCache?.[i]) {
+						rawEntries.push({
+							x,
+							y,
+							defaultRender: this.#pincodeNumberImagesCache[i],
+							style: undefined,
+							type: undefined,
+						})
 					}
 				})
 
@@ -336,13 +356,23 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 				for (let y = 0; y < gridSize.rows; y++) {
 					for (let x = 0; x < gridSize.columns; x++) {
-						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder({
+						const location: ControlLocation = {
 							pageNumber: pageNumber ?? 0,
 							column: x + xOffset,
 							row: y + yOffset,
-						})
+						}
+						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder(location)
 
-						rawEntries.push({ x, y, image })
+						rawEntries.push({
+							x,
+							y,
+							defaultRender: image,
+							style:
+								image.style && typeof image.style === 'object' && image.style.style === 'button'
+									? image.style
+									: undefined,
+							type: typeof image.style === 'string' ? image.style : image.style?.style,
+						})
 					}
 				}
 
@@ -365,9 +395,9 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			)
 
 			return {
+				...entry,
 				x: transformedX,
 				y: transformedY,
-				image: entry.image,
 			}
 		})
 	}
@@ -380,7 +410,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			this.panel.drawMany(entries)
 		} else {
 			for (const entry of entries) {
-				this.panel.draw(entry.x, entry.y, entry.image)
+				this.panel.draw(entry)
 			}
 		}
 	}
@@ -402,6 +432,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		// If it changed, redraw
 		if (this.#isSurfaceLocked != locked) {
 			this.#isSurfaceLocked = !!locked
+
+			this.#surfaces.emit('surface_locked', this.surfaceId, this.#isSurfaceLocked)
 
 			if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
 
@@ -428,7 +460,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				{
 					x: location.column - xOffset,
 					y: location.row - yOffset,
-					image: render,
+					defaultRender: render,
+					style:
+						render.style && typeof render.style === 'object' && render.style.style === 'button'
+							? render.style
+							: undefined,
+					type: typeof render.style === 'string' ? render.style : render.style?.style,
 				},
 			]
 			const transformedEntries = this.#transformButtonRenders(rawEntries)
@@ -592,13 +629,13 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (!!this.panel.setLocked) {
 			this.panel.setLocked(true, this.#currentPincodeEntry.length)
 		} else {
-			const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
-
 			this.#drawButtons([
 				{
 					x: this.#pincodeCodePosition[0],
 					y: this.#pincodeCodePosition[1],
-					image: datap.code,
+					defaultRender: this.#graphics.getPincodeCodeImage(72, 72, this.#currentPincodeEntry),
+					style: undefined,
+					type: undefined,
 				},
 			])
 		}

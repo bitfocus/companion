@@ -2,8 +2,8 @@ import { CModalHeader, CFormInput, CModalBody, CModalFooter, CButton, CButtonGro
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { SocketContext } from '../util.js'
-import { CModalExt } from '../Components/CModalExt.js'
+import { SocketContext } from '~/util.js'
+import { CModalExt } from '~/Components/CModalExt.js'
 
 interface AddPagesModalProps {
 	// addAction: (actionType: string) => void

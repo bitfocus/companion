@@ -2,9 +2,9 @@ import React, { useCallback } from 'react'
 import { CButtonGroup, CButton, CFormSwitch } from '@coreui/react'
 import { faPencil, faExpandArrowsAlt, faCompressArrowsAlt, faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { IEntityEditorActionService } from '../../Services/Controls/ControlEntitiesService.js'
+import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { TextInputField } from '../../Components/TextInputField.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 
 interface EntityCellControlProps {

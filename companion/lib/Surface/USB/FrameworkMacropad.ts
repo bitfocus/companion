@@ -20,8 +20,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 const configFields: CompanionSurfaceConfigField[] = [
 	//
@@ -159,10 +158,10 @@ export class SurfaceUSBFrameworkMacropad extends EventEmitter<SurfacePanelEvents
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
-		const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
-		this.#lastColours[`${x},${y}`] = color
-		this.#writeKeyColour(x, y, color)
+	draw(item: DrawButtonItem): void {
+		const color = item.style ? colorToRgb(item.style.bgcolor) : { r: 0, g: 0, b: 0 }
+		this.#lastColours[`${item.x},${item.y}`] = color
+		this.#writeKeyColour(item.x, item.y, color)
 	}
 
 	#writeKeyColour(x: number, y: number, color: RgbColor): void {

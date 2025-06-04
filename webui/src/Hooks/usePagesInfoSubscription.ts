@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
-import { PagesStore } from '../Stores/PagesStore.js'
+import { CompanionSocketWrapped } from '~/util.js'
+import { PagesStore } from '~/Stores/PagesStore.js'
 
 export function usePagesInfoSubscription(
 	socket: CompanionSocketWrapped,

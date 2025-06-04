@@ -2,8 +2,8 @@ import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CDropdown, CButtonGroup, CButton, CDropdownToggle, CDropdownMenu, CDropdownItem } from '@coreui/react'
 import React, { useContext, useCallback } from 'react'
-import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export function SelectButtonTypeDropdown({
 	location,

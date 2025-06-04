@@ -1,9 +1,9 @@
 import React, { memo, useCallback, useContext, useMemo } from 'react'
-import { SocketContext } from '../util.js'
-import { ButtonPreview } from '../Components/ButtonPreview.js'
+import { SocketContext } from '~/util.js'
+import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useInView } from 'react-intersection-observer'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { useButtonRenderCache } from '../Hooks/useSharedRenderCache.js'
+import { useButtonRenderCache } from '~/Hooks/useSharedRenderCache.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 

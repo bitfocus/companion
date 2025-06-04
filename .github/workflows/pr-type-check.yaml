@@ -26,12 +26,6 @@ jobs:
 
           yarn build:ts
 
-      - name: Check types (server)
+      - name: Check types
         run: |
-          cd companion
-          yarn check-types
-
-      - name: Check types (client)
-        run: |
-          cd webui
           yarn check-types

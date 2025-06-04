@@ -1,4 +1,6 @@
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type imageRs from '@julusian/image-rs'
 
 export interface ImageResultProcessedStyle {
 	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'
@@ -24,6 +26,13 @@ export interface ImageResultProcessedStyle {
 	}
 }
 
+export type ImageResultNativeDrawFn = (
+	width: number,
+	height: number,
+	rotation: SurfaceRotation | null,
+	format: imageRs.PixelFormat
+) => Promise<Buffer>
+
 export class ImageResult {
 	/**
 	 * Image data-url for socket.io clients
@@ -31,36 +40,22 @@ export class ImageResult {
 	readonly #dataUrl: string
 
 	/**
-	 * Image pixel buffer
-	 */
-	readonly buffer: Buffer
-
-	/**
-	 * Image pixel buffer width
-	 */
-	readonly bufferWidth: number
-
-	/**
-	 * Image pixel buffer height
-	 */
-	readonly bufferHeight: number
-
-	/**
 	 * Image draw style
 	 */
 	readonly style: ImageResultProcessedStyle
+
+	readonly #drawNativeCache = new Map<string, Promise<Buffer>>()
+	readonly #drawNative: ImageResultNativeDrawFn
 
 	/**
 	 * Last updated time
 	 */
 	readonly updated: number
 
-	constructor(buffer: Buffer, width: number, height: number, dataUrl: string, style: ImageResultProcessedStyle) {
-		this.buffer = buffer
-		this.bufferWidth = width
-		this.bufferHeight = height
+	constructor(dataUrl: string, style: ImageResultProcessedStyle, drawNative: ImageResultNativeDrawFn) {
 		this.#dataUrl = dataUrl
 		this.style = style
+		this.#drawNative = drawNative
 
 		this.updated = Date.now()
 	}
@@ -74,5 +69,25 @@ export class ImageResult {
 
 	get bgcolor(): number {
 		return this.style.color?.color ?? 0
+	}
+
+	/**
+	 * Generate a native sized image buffer for this button render.
+	 * Typically this will redraw from the source data, but it may scale and letterbox the image
+	 * This caches the result for the same width, height, rotation and format.
+	 */
+	async drawNative(
+		width: number,
+		height: number,
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Buffer> {
+		const cacheKey = `${width}x${height}-${rotation ?? ''}-${format}`
+		const cached = this.#drawNativeCache.get(cacheKey)
+		if (cached) return cached
+
+		const newBuffer = this.#drawNative(width, height, rotation, format)
+		this.#drawNativeCache.set(cacheKey, newBuffer)
+		return newBuffer
 	}
 }

@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { ErrorFallback } from '../util.js'
+import { ErrorFallback } from '~/util.js'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient()

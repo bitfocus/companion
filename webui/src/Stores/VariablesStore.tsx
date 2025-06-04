@@ -1,6 +1,6 @@
 import { CustomVariableDefinition, CustomVariableUpdate } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ObservableMap, action, computed, observable } from 'mobx'
-import { assertNever } from '../util.js'
+import { assertNever } from '~/util.js'
 import {
 	AllVariableDefinitions,
 	VariableDefinition,

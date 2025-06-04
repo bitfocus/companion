@@ -1,6 +1,6 @@
 import { CCol, CRow, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { MyErrorBoundary } from '../util.js'
+import { MyErrorBoundary } from '~/util.js'
 import { ConnectionsList } from './ConnectionList.js'
 import { AddConnectionsPanel } from './AddConnectionPanel.js'
 import { ConnectionEditPanel } from './ConnectionEdit/ConnectionEditPanel.js'
@@ -10,7 +10,7 @@ import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 import jsonPatch from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import classNames from 'classnames'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {

@@ -20,6 +20,10 @@ import { TopbarRenderer } from '@companion-app/shared/Graphics/TopbarRenderer.js
 import { isPromise } from 'util/types'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
+import { GraphicsLockingGenerator } from './Locking.js'
+import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
+import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type imageRs from '@julusian/image-rs'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -31,6 +35,21 @@ export class GraphicsRenderer {
 	static TOPBAR_BOUNDS = new DrawBounds(0, 0, 72, TopbarRenderer.DEFAULT_HEIGHT)
 
 	static #IMAGE_CACHE = new Map<string, Image[]>()
+
+	static calculateTransforms(resolution: { width: number; height: number }) {
+		// Calculate some constants for drawing without reinventing the numbers
+		const drawScale = Math.min(resolution.width, resolution.height) / 72
+		const xOffset = (resolution.width - 72 * drawScale) / 2
+		const yOffset = (resolution.height - 72 * drawScale) / 2
+		const transformX = (x: number): number => xOffset + x * drawScale
+		const transformY = (y: number): number => yOffset + y * drawScale
+
+		return {
+			drawScale,
+			transformX,
+			transformY,
+		}
+	}
 
 	/**
 	 * Get a cached Image instance.
@@ -63,31 +82,78 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for an empty button
 	 */
-	static drawBlank(options: GraphicsOptions, location: ControlLocation): ImageResult {
+	static drawBlank(
+		resolution: { width: number; height: number },
+		options: GraphicsOptions,
+		location: ControlLocation
+	): ImageResult {
 		// let now = performance.now()
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
-		return GraphicsRenderer.#getCachedImage(72, 72, 2, (img) => {
-			img.fillColor('black')
 
-			if (!options.remove_topbar) {
-				img.drawTextLine(2, 3, formatLocation(location), 'rgb(50, 50, 50)', 8)
-				img.horizontalLine(13.5, { color: 'rgb(30, 30, 30)' })
-			}
+		return GraphicsRenderer.#getCachedImage(resolution.width, resolution.height, 2, (img) => {
 			// console.timeEnd('drawBlankImage')
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), { type: 'button' })
+			GraphicsRenderer.#drawBlankImage(img, options, location)
+
+			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+					GraphicsRenderer.#drawBlankImage(img, options, location)
+
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				})
+			})
 		})
 	}
 
-	static wrapDrawButtonImage(
-		buffer: Buffer,
-		width: number,
-		height: number,
-		dataUrl: string,
-		processedStyle: ImageResultProcessedStyle
-	): ImageResult {
-		return new ImageResult(buffer, width, height, dataUrl, processedStyle)
+	static #drawBlankImage(img: Image, options: GraphicsOptions, location: ControlLocation) {
+		// Calculate some constants for drawing without reinventing the numbers
+		const { drawScale, transformX } = GraphicsRenderer.calculateTransforms(img)
+
+		img.fillColor('black')
+
+		if (!options.remove_topbar) {
+			img.drawTextLine(transformX(2), 3 * drawScale, formatLocation(location), 'rgb(50, 50, 50)', 8 * drawScale)
+			img.horizontalLine(13.5 * drawScale, { color: 'rgb(30, 30, 30)' })
+		}
+	}
+
+	/**
+	 * Draw the image for a btuton
+	 */
+	static async drawButtonBareImageUnwrapped(
+		options: GraphicsOptions,
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined,
+		resolution: { width: number; height: number; oversampling: number },
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Buffer> {
+		// Force old 'button' style to be drawn at 72px, and scaled at the end
+		const dimensions =
+			drawStyle.style === 'button' ? [72, 72] : rotateResolution(resolution.width, resolution.height, rotation)
+
+		const { buffer, width, height } = await GraphicsRenderer.#getCachedImage(
+			dimensions[0],
+			dimensions[1],
+			resolution.oversampling,
+			async (img) => {
+				await GraphicsRenderer.#drawButtonImageInternal(img, options, drawStyle, location, pagename, {
+					width: dimensions[0],
+					height: dimensions[1],
+				})
+
+				return {
+					buffer: img.buffer(),
+					width: img.realwidth,
+					height: img.realheight,
+				}
+			}
+		)
+
+		return transformButtonImage(buffer, width, height, rotation, resolution.width, resolution.height, format)
 	}
 
 	/**
@@ -99,124 +165,185 @@ export class GraphicsRenderer {
 		location: ControlLocation | undefined,
 		pagename: string | undefined
 	): Promise<{
-		buffer: Buffer
-		width: number
-		height: number
 		dataUrl: string
 		processedStyle: ImageResultProcessedStyle
 	}> {
-		// console.log('starting drawButtonImage '+ performance.now())
-		// console.time('drawButtonImage')
 		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
-			let processedStyle: ImageResultProcessedStyle
-
-			// special button types
-			if (drawStyle.style == 'pageup') {
-				processedStyle = { type: 'pageup' }
-
-				img.fillColor(colorDarkGrey)
-
-				if (options.page_plusminus) {
-					img.drawTextLine(31, 20, options.page_direction_flipped ? '–' : '+', colorWhite, 18)
-				} else {
-					img.drawPath(
-						[
-							[46, 30],
-							[36, 20],
-							[26, 30],
-						],
-						{ color: colorWhite, width: 2 }
-					) // Arrow up path
+			const processedStyle = await GraphicsRenderer.#drawButtonImageInternal(
+				img,
+				options,
+				drawStyle,
+				location,
+				pagename,
+				{
+					width: 72,
+					height: 72,
 				}
+			)
 
-				img.drawTextLineAligned(36, 39, 'UP', colorButtonYellow, 10, 'center', 'top')
-			} else if (drawStyle.style == 'pagedown') {
-				processedStyle = { type: 'pagedown' }
-
-				img.fillColor(colorDarkGrey)
-
-				if (options.page_plusminus) {
-					img.drawTextLine(31, 36, options.page_direction_flipped ? '+' : '–', colorWhite, 18)
-				} else {
-					img.drawPath(
-						[
-							[46, 40],
-							[36, 50],
-							[26, 40],
-						],
-						{ color: colorWhite, width: 2 }
-					) // Arrow down path
-				}
-
-				img.drawTextLineAligned(36, 23, 'DOWN', colorButtonYellow, 10, 'center', 'top')
-			} else if (drawStyle.style == 'pagenum') {
-				processedStyle = { type: 'pagenum' }
-
-				img.fillColor(colorDarkGrey)
-
-				if (location === undefined) {
-					// Preview (no location)
-					img.drawTextLineAligned(36, 18, 'PAGE', colorButtonYellow, 10, 'center', 'top')
-					img.drawTextLineAligned(36, 32, 'x', colorWhite, 18, 'center', 'top')
-				} else if (!pagename || pagename.toLowerCase() == 'page') {
-					img.drawTextLine(23, 18, 'PAGE', colorButtonYellow, 10)
-					img.drawTextLineAligned(36, 32, '' + location.pageNumber, colorWhite, 18, 'center', 'top')
-				} else {
-					img.drawAlignedText(0, 0, 72, 72, pagename, colorWhite, 18, 'center', 'center')
-				}
-			} else if (drawStyle.style === 'button') {
-				const textAlign = ParseAlignment(drawStyle.alignment)
-				const pngAlign = ParseAlignment(drawStyle.pngalignment)
-
-				processedStyle = {
-					type: 'button',
-					color: {
-						color: drawStyle.bgcolor,
-					},
-					text: {
-						text: drawStyle.text,
-						color: drawStyle.color,
-						size: Number(drawStyle.size) || 'auto',
-						halign: textAlign[0],
-						valign: textAlign[1],
-					},
-					png64: drawStyle.png64
-						? {
-								dataUrl: drawStyle.png64,
-								halign: pngAlign[0],
-								valign: pngAlign[1],
-							}
-						: undefined,
-					state: {
-						pushed: drawStyle.pushed,
-						showTopBar: drawStyle.show_topbar ?? 'default',
-						cloud: drawStyle.cloud || false,
-					},
-				} satisfies Complete<ImageResultProcessedStyle>
-
-				await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
-			} else if (drawStyle.style === 'button-layered') {
-				processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
-
-				await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
-					x: 0,
-					y: 0,
-				})
-			} else {
-				processedStyle = {
-					type: 'button', // Default to button style
-				}
-			}
-
-			// console.timeEnd('drawButtonImage')
 			return {
-				buffer: img.buffer(),
-				width: img.realwidth,
-				height: img.realheight,
 				dataUrl: img.toDataURLSync(),
 				processedStyle,
 			}
 		})
+	}
+
+	/**
+	 * Draw the image for a btuton
+	 */
+	static async #drawButtonImageInternal(
+		img: Image,
+		options: GraphicsOptions,
+		drawStyle: DrawStyleModel,
+		location: ControlLocation | undefined,
+		pagename: string | undefined,
+		resolution: { width: number; height: number }
+	): Promise<ImageResultProcessedStyle> {
+		// console.log('starting drawButtonImage '+ performance.now())
+		// console.time('drawButtonImage')
+
+		let processedStyle: ImageResultProcessedStyle
+
+		// Calculate some constants for drawing without reinventing the numbers
+		const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
+
+		// special button types
+		if (drawStyle.style == 'pageup') {
+			processedStyle = { type: 'pageup' }
+
+			img.fillColor(colorDarkGrey)
+
+			if (options.page_plusminus) {
+				img.drawTextLine(
+					transformX(31),
+					transformY(20),
+					options.page_direction_flipped ? '–' : '+',
+					colorWhite,
+					18 * drawScale
+				)
+			} else {
+				img.drawPath(
+					[
+						[transformX(46), transformY(30)],
+						[transformX(36), transformY(20)],
+						[transformX(26), transformY(30)],
+					],
+					{ color: colorWhite, width: 2 }
+				) // Arrow up path
+			}
+
+			img.drawTextLineAligned(transformX(36), transformY(39), 'UP', colorButtonYellow, 10 * drawScale, 'center', 'top')
+		} else if (drawStyle.style == 'pagedown') {
+			processedStyle = { type: 'pagedown' }
+
+			img.fillColor(colorDarkGrey)
+
+			if (options.page_plusminus) {
+				img.drawTextLine(
+					transformX(31),
+					transformY(36),
+					options.page_direction_flipped ? '+' : '–',
+					colorWhite,
+					18 * drawScale
+				)
+			} else {
+				img.drawPath(
+					[
+						[transformX(46), transformY(40)],
+						[transformX(36), transformY(50)],
+						[transformX(26), transformY(40)],
+					],
+					{ color: colorWhite, width: 2 }
+				) // Arrow down path
+			}
+
+			img.drawTextLineAligned(
+				transformX(36),
+				transformY(23),
+				'DOWN',
+				colorButtonYellow,
+				10 * drawScale,
+				'center',
+				'top'
+			)
+		} else if (drawStyle.style == 'pagenum') {
+			processedStyle = { type: 'pagenum' }
+
+			img.fillColor(colorDarkGrey)
+
+			if (location === undefined) {
+				// Preview (no location)
+				img.drawTextLineAligned(
+					transformX(36),
+					transformY(18),
+					'PAGE',
+					colorButtonYellow,
+					10 * drawScale,
+					'center',
+					'top'
+				)
+				img.drawTextLineAligned(transformX(36), transformY(32), 'x', colorWhite, 18 * drawScale, 'center', 'top')
+			} else if (!pagename || pagename.toLowerCase() == 'page') {
+				img.drawTextLine(transformX(23), transformY(18), 'PAGE', colorButtonYellow, 10 * drawScale)
+				img.drawTextLineAligned(
+					transformX(36),
+					transformY(32),
+					'' + location.pageNumber,
+					colorWhite,
+					18 * drawScale,
+					'center',
+					'top'
+				)
+			} else {
+				img.drawAlignedText(0, 0, img.width, img.height, pagename, colorWhite, 18 * drawScale, 'center', 'center')
+			}
+		} else if (drawStyle.style === 'button') {
+			const textAlign = ParseAlignment(drawStyle.alignment)
+			const pngAlign = ParseAlignment(drawStyle.pngalignment)
+
+			processedStyle = {
+				type: 'button',
+				color: {
+					color: drawStyle.bgcolor,
+				},
+				text: {
+					text: drawStyle.text,
+					color: drawStyle.color,
+					size: Number(drawStyle.size) || 'auto',
+					halign: textAlign[0],
+					valign: textAlign[1],
+				},
+				png64: drawStyle.png64
+					? {
+							dataUrl: drawStyle.png64,
+							halign: pngAlign[0],
+							valign: pngAlign[1],
+						}
+					: undefined,
+				state: {
+					pushed: drawStyle.pushed,
+					showTopBar: drawStyle.show_topbar ?? 'default',
+					cloud: drawStyle.cloud || false,
+				},
+			} satisfies Complete<ImageResultProcessedStyle>
+
+			await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
+		} else if (drawStyle.style === 'button-layered') {
+			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
+
+			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
+				x: 0,
+				y: 0,
+			})
+		} else {
+			processedStyle = {
+				type: 'button', // Default to button style
+			}
+		}
+
+		// console.timeEnd('drawButtonImage')
+
+		return processedStyle
 	}
 
 	/**
@@ -316,26 +443,44 @@ export class GraphicsRenderer {
 	 * Draw pincode entry button for given number
 	 * @param num Display number
 	 */
-	static drawPincodeNumber(num: number): ImageResult {
-		return GraphicsRenderer.#getCachedImage(72, 72, 3, (img) => {
-			img.fillColor(colorDarkGrey)
-			img.drawTextLineAligned(36, 36, `${num}`, colorWhite, 44, 'center', 'center')
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), { type: 'button' })
+	static drawPincodeNumber(width: number, height: number, num: number): ImageResult {
+		return GraphicsRenderer.#getCachedImage(width, height, 3, (img) => {
+			GraphicsLockingGenerator.generatePincodeChar(img, num)
+			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+					GraphicsLockingGenerator.generatePincodeChar(img, num)
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				})
+			})
 		})
 	}
 
 	/**
 	 * Draw pincode entry button
 	 */
-	static drawPincodeEntry(code: string | undefined): ImageResult {
-		return GraphicsRenderer.#getCachedImage(72, 72, 4, (img) => {
-			img.fillColor(colorDarkGrey)
-			img.drawTextLineAligned(36, 30, 'Lockout', colorButtonYellow, 14, 'center', 'center')
-			if (code !== undefined) {
-				img.drawAlignedText(0, 15, 72, 72, code.replace(/[a-z0-9]/gi, '*'), colorWhite, 18, 'center', 'center')
-			}
-
-			return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), { type: 'button' })
+	static drawPincodeEntry(width: number, height: number, code: string | undefined): ImageResult {
+		return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
+			GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
+			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+					GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				})
+			})
 		})
+	}
+
+	static #RotateAndConvertImage(
+		img: Image,
+		width: number,
+		height: number,
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Buffer> {
+		// Future: once we support rotation within Image, we can avoid this final transform
+
+		return transformButtonImage(img.buffer(), img.realwidth, img.realheight, rotation, width, height, format)
 	}
 }

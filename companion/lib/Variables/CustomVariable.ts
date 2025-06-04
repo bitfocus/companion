@@ -76,11 +76,7 @@ export class VariablesCustomVariable {
 	#emitUpdateOneVariable(name: string): void {
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-				{
-					type: 'update',
-					itemId: name,
-					info: this.#custom_variables[name],
-				},
+				{ type: 'update', itemId: name, info: this.#custom_variables[name] },
 			])
 		}
 	}
@@ -132,12 +128,7 @@ export class VariablesCustomVariable {
 		this.#dbTable.delete(name)
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-				{
-					type: 'remove',
-					itemId: name,
-				},
-			])
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [{ type: 'remove', itemId: name }])
 		}
 
 		this.#setValueInner(name, undefined)
@@ -165,7 +156,7 @@ export class VariablesCustomVariable {
 		if (Object.keys(this.#custom_variables).length > 0) {
 			const newValues: VariableValueEntry[] = []
 			for (const [name, info] of Object.entries(this.#custom_variables)) {
-				newValues.push({ id: name, value: info.defaultValue || '' })
+				newValues.push({ id: name, value: info.defaultValue })
 			}
 			this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 		}
@@ -182,7 +173,7 @@ export class VariablesCustomVariable {
 		}
 		// Determine the initial values of the variables
 		for (const [name, info] of Object.entries(custom_variables || {})) {
-			newValues.push({ id: name, value: info.defaultValue || '' })
+			newValues.push({ id: name, value: info.defaultValue })
 		}
 
 		const namesBefore = Object.keys(this.#custom_variables)
@@ -197,11 +188,7 @@ export class VariablesCustomVariable {
 
 			this.#dbTable.set(id, info)
 
-			changes.push({
-				type: 'update',
-				itemId: id,
-				info,
-			})
+			changes.push({ type: 'update', itemId: id, info })
 		}
 
 		// Add deletes
@@ -210,10 +197,7 @@ export class VariablesCustomVariable {
 
 			this.#dbTable.delete(id)
 
-			changes.push({
-				type: 'remove',
-				itemId: id,
-			})
+			changes.push({ type: 'remove', itemId: id })
 		}
 
 		// apply the default values
@@ -258,7 +242,7 @@ export class VariablesCustomVariable {
 		if (this.#custom_variables[name].persistCurrentValue) {
 			const value = this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 
-			this.#custom_variables[name].defaultValue = value ?? ''
+			this.#custom_variables[name].defaultValue = value === undefined ? '' : value
 		}
 
 		this.#dbTable.set(name, this.#custom_variables[name])
@@ -278,10 +262,7 @@ export class VariablesCustomVariable {
 		// Update the order based on the ids provided
 		newNames.forEach((name, index) => {
 			if (this.#custom_variables[name]) {
-				this.#custom_variables[name] = {
-					...this.#custom_variables[name],
-					sortOrder: index,
-				}
+				this.#custom_variables[name] = { ...this.#custom_variables[name], sortOrder: index }
 			}
 		})
 
@@ -293,10 +274,7 @@ export class VariablesCustomVariable {
 		for (const name of allKnownNames) {
 			if (!newNames.includes(name)) {
 				if (this.#custom_variables[name]) {
-					this.#custom_variables[name] = {
-						...this.#custom_variables[name],
-						sortOrder: nextIndex++,
-					}
+					this.#custom_variables[name] = { ...this.#custom_variables[name], sortOrder: nextIndex++ }
 				}
 			}
 		}
@@ -309,11 +287,7 @@ export class VariablesCustomVariable {
 
 			this.#dbTable.set(id, info)
 
-			changes.push({
-				type: 'update',
-				itemId: id,
-				info,
-			})
+			changes.push({ type: 'update', itemId: id, info })
 		}
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
@@ -391,9 +365,7 @@ export class VariablesCustomVariable {
 		if (this.#custom_variables[name]) {
 			const value = this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 			this.#logger.silly(`Set default value "${name}":${value}`)
-			this.#custom_variables[name].defaultValue = value ?? ''
-
-			this.#dbTable.set(name, this.#custom_variables[name])
+			this.#custom_variables[name].defaultValue = value === undefined ? '' : value
 
 			this.#emitUpdateOneVariable(name)
 		}
@@ -424,7 +396,7 @@ export class VariablesCustomVariable {
 	 */
 	#persistCustomVariableValue(name: string, value: CompanionVariableValue | undefined): void {
 		if (this.#custom_variables[name] && this.#custom_variables[name].persistCurrentValue) {
-			this.#custom_variables[name].defaultValue = value ?? ''
+			this.#custom_variables[name].defaultValue = value === undefined ? '' : value
 
 			this.#dbTable.set(name, this.#custom_variables[name])
 

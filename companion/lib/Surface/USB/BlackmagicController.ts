@@ -21,7 +21,6 @@ import {
 import debounceFn from 'debounce-fn'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type {
 	DrawButtonItem,
 	LocalUSBDeviceOptions,
@@ -321,8 +320,8 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 
 			const threshold = 100 // Use a lower than 50% threshold, to make it more sensitive
 
-			for (const [id, { image, control }] of Object.entries(this.#pendingDraw)) {
-				const color = colorToRgb(image.bgcolor)
+			for (const [id, { bgcolor, control }] of Object.entries(this.#pendingDraw)) {
+				const color = colorToRgb(bgcolor)
 				const red = color.r >= threshold
 				const green = color.g >= threshold
 				const blue = color.b >= threshold
@@ -367,20 +366,20 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 			maxWait: 20,
 		}
 	)
-	#pendingDraw: Record<string, { image: ImageResult; control: BlackmagicControllerButtonControlDefinition }> = {}
+	#pendingDraw: Record<string, { bgcolor: number; control: BlackmagicControllerButtonControlDefinition }> = {}
 
 	/**
 	 * Draw multiple buttons
 	 */
 	drawMany(renders: DrawButtonItem[]) {
-		for (const { x, y, image } of renders) {
+		for (const { x, y, style } of renders) {
 			const control = this.#device.CONTROLS.find(
 				(control): control is BlackmagicControllerButtonControlDefinition =>
 					control.type === 'button' && control.row === y && control.column === x
 			)
 			if (!control) continue
 
-			this.#pendingDraw[control.id] = { image, control }
+			this.#pendingDraw[control.id] = { bgcolor: style?.bgcolor ?? 0, control }
 		}
 
 		this.#triggerRedraw()
@@ -389,8 +388,8 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, image: ImageResult): void {
+	draw(item: DrawButtonItem): void {
 		// Should never be called, implement just in case
-		return this.drawMany([{ x, y, image }])
+		return this.drawMany([item])
 	}
 }

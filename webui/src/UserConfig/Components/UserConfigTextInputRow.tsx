@@ -1,7 +1,7 @@
 import React from 'react'
 import { ResetButton, UserConfigProps } from './Common.js'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import { TextInputField } from '../../Components/TextInputField.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 
 interface UserConfigTextInputRowProps {

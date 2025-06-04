@@ -16,7 +16,7 @@ import imageRs from '@julusian/image-rs'
 import jpg from '@julusian/jpeg-turbo'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { offsetRotation, transformButtonImage } from '../../Resources/Util.js'
+import { offsetRotation } from '../../Resources/Util.js'
 import {
 	BrightnessConfigField,
 	LockConfigFields,
@@ -24,8 +24,7 @@ import {
 	RotationConfigField,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 const setTimeoutPromise = util.promisify(setTimeout)
 
@@ -36,7 +35,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 
 	readonly #streamDock: StreamDock
 
-	readonly #writeQueue: ImageWriteQueue<string, [number, number, ImageResult]>
+	readonly #writeQueue: ImageWriteQueue<string, [DrawButtonItem]>
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
@@ -94,32 +93,31 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 			rows: this.#streamDock.rows,
 		}
 
-		this.#writeQueue = new ImageWriteQueue(this.logger, async (_id, x, y, render) => {
+		this.#writeQueue = new ImageWriteQueue(this.logger, async (_id, drawItem) => {
 			const output = this.#streamDock.outputs.find((control) => {
-				if (control.row !== y) return false
-				if (control.column === x) return true
+				if (control.row !== drawItem.y) return false
+				if (control.column === drawItem.x) return true
 				return false
 			})
 			if (!output) return
 
 			if (output.type === 'lcd') {
-				let newbuffer = render.buffer
 				if (output.resolutionx < 1 || output.resolutiony < 1) {
 					return
-				} else {
-					try {
-						newbuffer = await transformButtonImage(
-							render,
-							offsetRotation(this.config.rotation, 180),
-							output.resolutionx,
-							output.resolutiony,
-							imageRs.PixelFormat.Rgb
-						)
-					} catch (e: any) {
-						this.logger.debug(`scale image failed: ${e}\n${e.stack}`)
-						this.emit('remove')
-						return
-					}
+				}
+
+				let newbuffer: Buffer
+				try {
+					newbuffer = await drawItem.defaultRender.drawNative(
+						output.resolutionx,
+						output.resolutiony,
+						offsetRotation(this.config.rotation, 180),
+						imageRs.PixelFormat.Rgb
+					)
+				} catch (e: any) {
+					this.logger.debug(`scale image failed: ${e}\n${e.stack}`)
+					this.emit('remove')
+					return
 				}
 
 				const maxAttempts = 3
@@ -252,8 +250,8 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
-		this.#writeQueue.queue(`${x}_${y}`, x, y, render)
+	draw(item: DrawButtonItem): void {
+		this.#writeQueue.queue(`${item.x}_${item.y}`, item)
 	}
 }
 

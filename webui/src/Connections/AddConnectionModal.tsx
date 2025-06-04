@@ -11,15 +11,15 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import { PreventDefaultHandler } from '../util.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { PreventDefaultHandler } from '~/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { CModalExt } from '../Components/CModalExt.js'
+import { CModalExt } from '~/Components/CModalExt.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { useConnectionVersionSelectOptions } from './ConnectionEdit/useConnectionVersionSelectOptions.js'
 import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
-import type { FuzzyProduct } from '../Hooks/useFilteredProducts.js'
+import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 

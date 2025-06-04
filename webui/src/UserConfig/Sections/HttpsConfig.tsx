@@ -1,6 +1,6 @@
 import React, { useCallback, useContext } from 'react'
 import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
-import { SocketContext } from '../../util.js'
+import { SocketContext } from '~/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'

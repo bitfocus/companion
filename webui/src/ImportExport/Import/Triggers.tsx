@@ -2,7 +2,7 @@ import { CButton, CButtonGroup, CFormCheck } from '@coreui/react'
 import React, { ChangeEvent, useCallback, useEffect, useState, useContext } from 'react'
 import { ImportRemap } from './Page.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject

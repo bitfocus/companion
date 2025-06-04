@@ -4,7 +4,7 @@ import type {
 	ClientModuleInfo,
 	ModuleUpgradeToOtherVersion,
 } from '@companion-app/shared/Model/ModuleInfo.js'
-import { assertNever, CompanionSocketWrapped } from '../util.js'
+import { assertNever, CompanionSocketWrapped } from '~/util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import {
