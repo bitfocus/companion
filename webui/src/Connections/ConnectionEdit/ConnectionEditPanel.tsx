@@ -6,7 +6,7 @@ import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
 import { useOptionsAndIsVisibleFns } from '~/Hooks/useOptionsAndIsVisible.js'
-import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
+import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
@@ -86,6 +86,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 			versionId: connectionInfo.moduleVersionId,
 			updatePolicy: connectionInfo.updatePolicy,
 			config: {} as Record<string, any>,
+			secrets: {} as Record<string, any>,
 		},
 		onSubmit: async ({ value }) => {
 			setSaveError(null)
@@ -128,6 +129,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						connectionId,
 						value.label,
 						value.config,
+						value.secrets,
 						value.updatePolicy,
 					])
 					.then((err) => {
@@ -159,6 +161,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const query = useConnectionCurrentConfig(connectionId)
 	useEffect(() => {
 		form.setFieldValue('config', query.data?.config ?? {})
+		form.setFieldValue('secrets', {}) // clear secrets, so that everything reloads
 
 		const validFields: Record<string, boolean> = {}
 		for (const field of query.data?.fields ?? []) {
@@ -177,7 +180,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	)
 	useEffect(() => form.setFieldValue('updatePolicy', connectionInfo.updatePolicy), [form, connectionInfo.updatePolicy])
 
-	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ExtendedInputField & { width: number }>(
+	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ConnectionInputField & { width: number }>(
 		query.data?.fields
 	)
 
@@ -332,7 +335,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 								{(isVisible) => (
 									<form.Field
 										key={fieldInfo.id}
-										name={`config.${fieldInfo.id}`}
+										name={`${fieldInfo.type === 'secret' ? 'secrets' : 'config'}.${fieldInfo.id}`}
 										children={(field) => (
 											<CCol
 												className={`fieldtype-${fieldInfo.type}`}

@@ -8,14 +8,14 @@ import {
 	TextInputField,
 } from '~/Components/index.js'
 import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
-import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
+import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 
 interface ConnectionEditFieldProps {
 	label: React.ReactNode
 	setValue: (value: any) => void
 	setValid: (key: string, valid: boolean) => void
-	definition: ExtendedInputField | ExtendedConfigField
+	definition: ConnectionInputField
 	value: any
 	connectionId: string
 }
@@ -140,6 +140,9 @@ export function ConnectionEditField({
 					queryId={definition.id}
 				/>
 			)
+		case 'secret':
+			// TODO
+			return <p>TEST</p>
 		default:
 			return <p>Unknown field "{fieldType}"</p>
 	}
