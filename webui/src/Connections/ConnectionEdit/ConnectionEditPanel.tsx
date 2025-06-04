@@ -335,7 +335,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 								{(isVisible) => (
 									<form.Field
 										key={fieldInfo.id}
-										name={`${fieldInfo.type === 'secret' ? 'secrets' : 'config'}.${fieldInfo.id}`}
+										name={`${fieldInfo.type.startsWith('secret') ? 'secrets' : 'config'}.${fieldInfo.id}`}
 										children={(field) => (
 											<CCol
 												className={`fieldtype-${fieldInfo.type}`}

@@ -140,7 +140,7 @@ export function ConnectionEditField({
 					queryId={definition.id}
 				/>
 			)
-		case 'secret':
+		case 'secret-text':
 			// TODO
 			return <p>TEST</p>
 		default:
