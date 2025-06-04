@@ -19,7 +19,8 @@
 - Refinement of getting-started guide, to better handle scrolling
 - Remove support for legacy xkeys layouts
 - Allow custom variables descriptions to be edited
-- Indicate type of each custom variable
+- Allow editing custom variable value as object
+- Indicate type of each variable
 - Handle body data in HTTP api setting custom variable
 - Support for Mirabox Stream Dock 293V3 and N4
 - Reimplement support for Contour Shuttle
