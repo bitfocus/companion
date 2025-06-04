@@ -163,7 +163,7 @@ export class SurfaceUSB203SystemsMystrix extends EventEmitter<SurfacePanelEvents
 	 * Draw a button
 	 */
 	draw(item: DrawButtonItem): void {
-		const color = item.style ? colorToRgb(item.style.bgcolor) : { r: 0, g: 0, b: 0 }
+		const color = colorToRgb(item.defaultRender.bgcolor)
 
 		this.#writeKeyColour(item.x, item.y, color)
 	}

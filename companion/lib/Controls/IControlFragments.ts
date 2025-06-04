@@ -3,6 +3,7 @@ import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithStyle | ControlWithoutStyle) &
@@ -64,12 +65,20 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean
 
 	/**
-	 * Update the type of an element in the layered style
+	 * Update the name of an element in the layered style
 	 * @param id Element id to update
-	 * @param type New type for the element
+	 * @param name New name for the element
 	 * @returns true if the element was updated
 	 */
 	layeredStyleSetElementName(id: string, name: string): boolean
+
+	/**
+	 * Update the usage of an element in the layered style
+	 * @param id Element id to update
+	 * @param usage New usage for the element
+	 * @returns true if the element was updated
+	 */
+	layeredStyleSetElementUsage(id: string, name: ButtonGraphicsElementUsage): boolean
 
 	/**
 	 * Update an option on an element from the layered style
@@ -88,6 +97,14 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * @returns true if any changes were made
 	 */
 	layeredStyleUpdateOptionIsExpression(id: string, key: string, value: boolean): boolean
+
+	/**
+	 * Update the style from legacy properties
+	 * Future: Once the old button style is removed, this should be reworked to utilise the new style system better
+	 * @param diff The properties to update
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean
 
 	/**
 	 * Propagate variable changes
