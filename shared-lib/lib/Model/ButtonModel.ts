@@ -55,7 +55,7 @@ export type NormalButtonSteps = Record<
 	}
 >
 
-export interface ButtonOptionsBase {}
+export type ButtonOptionsBase = object
 
 export interface NormalButtonOptions extends ButtonOptionsBase {
 	rotaryActions: boolean

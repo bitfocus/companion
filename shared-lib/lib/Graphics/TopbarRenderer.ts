@@ -39,7 +39,7 @@ export class TopbarRenderer {
 		drawStyle: DrawStyleButtonStateProps,
 		location: ControlLocation | undefined,
 		drawBounds: DrawBounds | null
-	) {
+	): void {
 		const showTopBar = !!drawBounds && drawBounds.isValid()
 		if (!showTopBar) {
 			if (drawStyle.pushed) {

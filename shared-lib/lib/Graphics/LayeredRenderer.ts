@@ -23,7 +23,7 @@ export class GraphicsLayeredButtonRenderer {
 		elementsToHide: ReadonlySet<string>,
 		selectedElementId: string | null,
 		paddingPx: { x: number; y: number }
-	) {
+	): Promise<void> {
 		const backgroundElement = drawStyle.elements[0].type === 'canvas' ? drawStyle.elements[0] : undefined
 
 		const drawWidth = img.width - paddingPx.x * 2
@@ -110,7 +110,7 @@ export class GraphicsLayeredButtonRenderer {
 					default:
 						assertNever(element)
 				}
-			} catch (e) {
+			} catch (_e) {
 				// TODO - log/report error where? Or should this abandon the render and do a placeholder?
 			}
 

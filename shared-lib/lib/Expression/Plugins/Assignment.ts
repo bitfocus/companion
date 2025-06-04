@@ -55,7 +55,7 @@ export const AssignmentPlugin: jsep.IPlugin = {
 				let identifier
 				try {
 					identifier = this.gobbleIdentifier()
-				} catch (e) {
+				} catch (_e) {
 					// Let it be handled elsewhere
 					this.index -= 2
 				}

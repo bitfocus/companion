@@ -120,7 +120,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		if (shouldParseInput && typeof value !== 'number' && typeof value !== 'string' && value) {
 			try {
 				return JSON.stringify(value)
-			} catch (e: any) {
+			} catch (_e) {
 				// Ignore
 			}
 		}
@@ -149,7 +149,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	// Time operations
 	unixNow: () => Date.now(),
 	timestampToSeconds: (str) => {
-		const match = (str + '').match(/^(\d+)\:(\d+)\:(\d+)$/i)
+		const match = (str + '').match(/^(\d+):(\d+):(\d+)$/i)
 		if (match) {
 			return Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3])
 		} else {
@@ -157,7 +157,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		}
 	},
 	secondsToTimestamp: (v, type) => {
-		let negative = v < 0
+		const negative = v < 0
 		v = Math.abs(v)
 
 		const seconds = pad(Math.floor(v) % 60, '0', 2)
@@ -212,7 +212,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 			let hours = 0
 			let minutes = 0
 			let seconds = 0
-			let negative = diff.startsWith('-')
+			const negative = diff.startsWith('-')
 
 			if (diff.startsWith('+') || diff.startsWith('-')) {
 				diff = diff.substr(1)

@@ -86,12 +86,6 @@
     "build": "vite build",
     "serve": "vite preview"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
   "devDependencies": {
     "jsdom": "^26.1.0"
   }

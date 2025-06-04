@@ -52,7 +52,7 @@ export abstract class ImagePoolBase<TImage extends ImageBase<any>> {
 	abstract createImage(): TImage
 
 	usingImage<T>(fcn: (img: TImage) => T): T {
-		let image = this.#pool.pop() || this.createImage()
+		const image = this.#pool.pop() || this.createImage()
 
 		try {
 			image.clear()
@@ -319,8 +319,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			return
 		}
 
-		let imageWidth = canvasImage.width
-		let imageHeight = canvasImage.height
+		const imageWidth = canvasImage.width
+		const imageHeight = canvasImage.height
 
 		let calculatedScale = 1
 		let scaledImageWidth = imageWidth
@@ -343,8 +343,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			scaledImageWidth = imageWidth * calculatedScale
 			scaledImageHeight = imageHeight * calculatedScale
 		} else if (scale === 'crop') {
-			let scaleMin = Math.min(width / imageWidth - 1, height / imageHeight - 1)
-			let scaleMax = Math.max(width / imageWidth - 1, height / imageHeight - 1)
+			const scaleMin = Math.min(width / imageWidth - 1, height / imageHeight - 1)
+			const scaleMax = Math.max(width / imageWidth - 1, height / imageHeight - 1)
 			calculatedScale = (scaleMax <= 1 ? scaleMax : scaleMin) + 1
 			scaledImageWidth = imageWidth * calculatedScale
 			scaledImageHeight = imageHeight * calculatedScale
@@ -575,7 +575,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 		// get needed fontsize
 		if (fontsize === 'auto') {
-			let len = displayTextStr.length
+			const len = displayTextStr.length
 			let checksize
 			// narrow the sizes to check by guessing how many chars will fit at a size
 			const area = (w * h) / 5000
@@ -618,7 +618,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		dummy: boolean
 	): boolean {
 		// breakup text in pieces
-		let lines: { textChars: string[]; ascent: number; descent: number }[] = []
+		const lines: { textChars: string[]; ascent: number; descent: number }[] = []
 		let breakPos: number | null = null
 
 		//if (fontsize < 9) fontfamily = '7x5'
@@ -633,11 +633,11 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 		const findLastChar = (textChars: string[]): { ascent: number; descent: number; maxCodepoints: number } => {
 			// skia-canvas built-in line break algorithm is poor
-			let length = textChars.length
+			const length = textChars.length
 			//console.log('\nstart linecheck for', text, 'in width', w, 'chars', length)
 
 			// let's check how far we off
-			let measure = this.context2d.measureText(textChars.join(''))
+			const measure = this.context2d.measureText(textChars.join(''))
 			let diff = w - measure.width
 
 			// if all fits we are done
@@ -650,7 +650,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			}
 
 			// ok, we are not done. let's start with an assumption of how big one char is in average
-			let nWidth = (w - diff) / length
+			const nWidth = (w - diff) / length
 			// how many chars fit probably in one line
 			let chars = Math.round(w / nWidth)
 
@@ -733,7 +733,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 			// check if remaining text fits in line
 			const maxCharsPerLine = w // Limit how many characters we attempt to draw per line
-			let { maxCodepoints, ascent, descent } = findLastChar(
+			const { maxCodepoints, ascent, descent } = findLastChar(
 				displayTextChars.slice(lastDrawnCharCount, lastDrawnCharCount + maxCharsPerLine)
 			)
 
@@ -751,7 +751,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				lines.push({ textChars: buf, ascent, descent })
 				lastDrawnCharCount = displayTextChars.length
 			} else {
-				let line = displayTextChars.slice(lastDrawnCharCount, lastDrawnCharCount + maxCodepoints)
+				const line = displayTextChars.slice(lastDrawnCharCount, lastDrawnCharCount + maxCodepoints)
 				if (line.length === 0) {
 					// line is somehow empty, try skipping a character
 					lastDrawnCharCount += 1
@@ -928,7 +928,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		} else if (buffer.length == rgbaByteCount && (!format || format === 'ARGB')) {
 			// ARGB: swap order from ARGB to RGBA
 			for (let i = 0; i < buffer.length; i += 4) {
-				let a = buffer[i]
+				const a = buffer[i]
 
 				buffer[i] = buffer[i + 1]
 				buffer[i + 1] = buffer[i + 2]

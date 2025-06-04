@@ -39,10 +39,11 @@ export function FindAllReferencedVariables(node: jsep.Expression): string[] {
 
 	visitElements(node, (node) => {
 		if (node.type === 'CompanionVariable') {
-			if (node.name === undefined) throw new Error('Missing variable identifier')
+			// @ts-expect-error node.name is not typed
+			const nodeName: string = node.name
+			if (nodeName === undefined) throw new Error('Missing variable identifier')
 
-			// @ts-ignore
-			referencedVariables.push(node.name)
+			referencedVariables.push(nodeName)
 		}
 	})
 
@@ -133,9 +134,9 @@ function visitElements(node: jsep.Expression, visitor: (node: jsep.Expression) =
 		default:
 			switch (node.type) {
 				case 'Property':
-					// @ts-ignore
+					// @ts-expect-error node.key is not typed
 					visitElements(node.key, visitor)
-					// @ts-ignore
+					// @ts-expect-error node.value is not typed
 					visitElements(node.value, visitor)
 
 					break
@@ -151,7 +152,7 @@ function fixReturnDetectedAsFunction(node: SomeExpressionNode): void {
 		const returnNode = node as any as ReturnExpression
 		returnNode.type = 'ReturnStatement'
 
-		// @ts-ignore
+		// @ts-expect-error returnNode.arguments is not typed
 		returnNode.argument = returnNode.arguments[0]
 
 		delete returnNode.arguments
@@ -183,6 +184,7 @@ function fixupExpression(rootNode: SomeExpressionNode): void {
 			for (const prop of node.properties) {
 				if (prop.key.type === 'Identifier') {
 					prop.key = {
+						// eslint-disable-next-line @typescript-eslint/no-base-to-string
 						raw: `'${prop.key.name}'`,
 						type: 'Literal',
 						value: prop.key.name,

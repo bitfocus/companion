@@ -1,6 +1,6 @@
 {
-	"include": ["lib/**/*.ts", "lib/**/*.cts"],
-	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
+	"include": ["lib/**/*.ts", "lib/**/*.cts", "test/**/*.ts"],
+	"exclude": ["node_modules/**"],
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./lib",
