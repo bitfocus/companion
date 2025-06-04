@@ -372,14 +372,14 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	 * Draw multiple buttons
 	 */
 	drawMany(renders: DrawButtonItem[]) {
-		for (const { x, y, style } of renders) {
+		for (const { x, y, defaultRender } of renders) {
 			const control = this.#device.CONTROLS.find(
 				(control): control is BlackmagicControllerButtonControlDefinition =>
 					control.type === 'button' && control.row === y && control.column === x
 			)
 			if (!control) continue
 
-			this.#pendingDraw[control.id] = { bgcolor: style?.bgcolor ?? 0, control }
+			this.#pendingDraw[control.id] = { bgcolor: defaultRender.bgcolor, control }
 		}
 
 		this.#triggerRedraw()

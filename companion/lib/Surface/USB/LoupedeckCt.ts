@@ -416,9 +416,9 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == item.x && btn[1] == item.y)
 		if (buttonIndex >= 0) {
 			let color = { r: 0, g: 0, b: 0 }
-			if (item.type === 'pageup') color = { r: 255, g: 255, b: 255 }
-			else if (item.type === 'pagedown') color = { r: 0, g: 0, b: 255 }
-			else if (item.style) color = colorToRgb(item.style.bgcolor)
+			if (item.defaultRender.style.type === 'pageup') color = { r: 255, g: 255, b: 255 }
+			else if (item.defaultRender.style.type === 'pagedown') color = { r: 0, g: 0, b: 255 }
+			else color = colorToRgb(item.defaultRender.bgcolor)
 
 			this.#loupedeck
 				.setButtonColor({

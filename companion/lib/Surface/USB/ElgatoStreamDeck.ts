@@ -188,7 +188,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 						}
 					}
 				} else if (control.feedbackType === 'rgb') {
-					const color = drawItem.style ? colorToRgb(drawItem.style.bgcolor) : { r: 0, g: 0, b: 0 }
+					const color = colorToRgb(drawItem.defaultRender.bgcolor)
 					this.#streamDeck.fillKeyColor(control.index, color.r, color.g, color.b).catch((e) => {
 						this.#logger.debug(`color failed: ${e}`)
 					})
@@ -238,7 +238,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 					}
 				}
 			} else if (control.type === 'encoder' && control.hasLed) {
-				const color = drawItem.style ? colorToRgb(drawItem.style.bgcolor) : { r: 0, g: 0, b: 0 }
+				const color = colorToRgb(drawItem.defaultRender.bgcolor)
 				await this.#streamDeck.setEncoderColor(control.index, color.r, color.g, color.b)
 			}
 		})

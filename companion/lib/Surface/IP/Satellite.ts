@@ -197,7 +197,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					imageRs.PixelFormat.Rgb
 				)
 
-				this.#sendDraw(key, newbuffer, drawItem.style)
+				this.#sendDraw(key, newbuffer, drawItem.defaultRender.style)
 			} catch (e: any) {
 				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
 				this.emit('remove')
@@ -311,7 +311,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			// Images need scaling
 			this.#writeQueue.queue(key, item)
 		} else {
-			this.#sendDraw(key, undefined, item.style)
+			this.#sendDraw(key, undefined, item.defaultRender.style)
 		}
 	}
 

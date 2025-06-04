@@ -12,7 +12,6 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 
 export type SurfacePanelFactory = {
 	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
@@ -60,17 +59,6 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 export interface DrawButtonItem {
 	x: number
 	y: number
-
-	/**
-	 * TODO-layered deduplicate this with the processedStyle in the other branch
-	 */
-	type: 'button-layered' | 'button' | 'pageup' | 'pagedown' | 'pagenum' | undefined
-
-	/**
-	 * Image draw style
-	 * TODO-layered deduplicate this with the processedStyle in the other branch
-	 */
-	style: DrawStyleButtonModel | undefined
 
 	defaultRender: ImageResult
 }
