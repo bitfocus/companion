@@ -354,10 +354,6 @@ jobs:
     needs: check-types
     timeout-minutes: 45
 
-    env:
-      # the wincert machine has issues using the default cache location
-      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -407,6 +403,9 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
           BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
+          # the wincert machine has issues using the default cache location
+          ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+          NODE_OPTIONS: --max_old_space_size=4096
 
       - name: Determine files to upload
         id: filenames
