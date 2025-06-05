@@ -23,7 +23,7 @@ import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleMode
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export abstract class ButtonControlBase<TJson, TOptions extends Record<string, any>>
+export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBase>
 	extends ControlBase<TJson>
 	implements ControlWithOptions, ControlWithPushed
 {
@@ -34,7 +34,10 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	/**
 	 * The defaults options for a button
 	 */
-	static DefaultOptions: ButtonOptionsBase = {}
+	static DefaultOptions: ButtonOptionsBase = {
+		stepProgression: 'auto',
+		stepExpression: '',
+	}
 
 	/**
 	 * Button hold state for each surface
@@ -73,6 +76,13 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				moduleHost: deps.instance.moduleHost,
+				executeExpressionInControl: (expression, requiredType, injectedVariableValues) =>
+					deps.variables.values.executeExpression(
+						expression,
+						deps.page.getLocationOfControlId(this.controlId),
+						requiredType,
+						injectedVariableValues
+					),
 			},
 			this.sendRuntimePropsChange.bind(this)
 		)
@@ -196,15 +206,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			cloud: false,
 			cloud_error: false,
 
-			step_cycle: undefined,
+			stepCurrent: this.entities.getActiveStepIndex() + 1,
+			stepCount: this.entities.getStepIds().length,
 
 			pushed: !!this.pushed,
 			action_running: this.actionRunner.hasRunningChains,
 			button_status: this.button_status,
-		}
-
-		if (this.entities.getStepIds().length > 1) {
-			result.step_cycle = this.entities.getActiveStepIndex() + 1
 		}
 
 		return result
@@ -244,7 +251,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
-		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNext()
+		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNextProgression()
 
 		let pressedDuration = 0
 		let pressedStep = thisStepId
@@ -279,7 +286,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends Record<string, a
 			if (
 				thisStepId !== null &&
 				nextStepId !== null &&
-				this.options.stepAutoProgress &&
+				this.options.stepProgression === 'auto' &&
 				!pressed &&
 				(pressedStep === undefined || thisStepId === pressedStep)
 			) {

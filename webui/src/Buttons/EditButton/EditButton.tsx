@@ -239,6 +239,7 @@ function NormalButtonEditor({
 						location={location}
 						controlId={controlId}
 						steps={config.steps || {}}
+						disabledSetStep={config?.options?.stepProgression === 'expression'}
 						runtimeProps={runtimeProps}
 						rotaryActions={config?.options?.rotaryActions}
 						extraTabs={NormalButtonExtraTabs}

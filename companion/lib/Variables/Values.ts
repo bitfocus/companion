@@ -180,6 +180,9 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			'$(this:step)': location
 				? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})`
 				: VARIABLE_UNKNOWN_VALUE,
+			'$(this:step_count)': location
+				? `$(internal:b_step_count_${location.pageNumber}_${location.row}_${location.column})`
+				: VARIABLE_UNKNOWN_VALUE,
 		}
 	}
 }

@@ -5,7 +5,7 @@ import type { CustomVariablesModel } from './CustomVariableModel.js'
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8
+	readonly version: 6 | 7 | 8 | 9
 	readonly type: Type
 }
 

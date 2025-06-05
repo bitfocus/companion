@@ -285,8 +285,8 @@ export class GraphicsRenderer {
 			img.box(0, 0, 72, 13.5, colorBlack)
 			img.horizontalLine(13.5, colorButtonYellow)
 
-			if (typeof drawStyle.step_cycle === 'number' && location) {
-				step = `.${drawStyle.step_cycle}`
+			if (drawStyle.stepCount > 1 && location) {
+				step = `.${drawStyle.stepCurrent}`
 			}
 
 			if (location === undefined) {
