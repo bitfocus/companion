@@ -15,6 +15,7 @@ export interface PanelCollapseHelper {
 	canExpandAll(parentId: string | null, panelIds: string[]): boolean
 	canCollapseAll(parentId: string | null, panelIds: string[]): boolean
 	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
+	togglePanelCollapsed: (parentId: string | null, panelId: string) => void
 	isPanelCollapsed: (parentId: string | null, panelId: string) => boolean
 }
 
@@ -104,6 +105,15 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 		})
 	}
 
+	togglePanelCollapsed = (parentId: string | null, panelId: string): void => {
+		runInAction(() => {
+			const currentState = this.isPanelCollapsed(parentId, panelId)
+			this.#ids.set(panelId, !currentState)
+
+			this.#writeState()
+		})
+	}
+
 	isPanelCollapsed = (parentId: string | null, panelId: string): boolean => {
 		return this.#ids.get(panelId) ?? this.#defaultExpandedAt.get(parentId) ?? this.#defaultCollapsed
 	}
@@ -137,7 +147,11 @@ export function usePanelCollapseHelperContextForPanel(ownerId: string | null, pa
 		// doExpand: useCallback(() => panelCollapseHelper.setPanelCollapsed(panelId, false), [panelCollapseHelper, panelId]),
 		setCollapsed: useCallback(
 			(collapsed: boolean) => panelCollapseHelper.setPanelCollapsed(panelId, collapsed),
-			[panelCollapseHelper]
+			[panelCollapseHelper, panelId]
+		),
+		toggleCollapsed: useCallback(
+			() => panelCollapseHelper.togglePanelCollapsed(ownerId, panelId),
+			[panelCollapseHelper, ownerId, panelId]
 		),
 		isCollapsed: panelCollapseHelper.isPanelCollapsed(ownerId, panelId),
 	}

@@ -1,12 +1,36 @@
 import { observable, action } from 'mobx'
 import { assertNever } from '~/util.js'
-import type { ClientConnectionsUpdate, ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type {
+	ClientConnectionsUpdate,
+	ClientConnectionConfig,
+	ConnectionGroup,
+} from '@companion-app/shared/Model/Connections.js'
 
 export class ConnectionsStore {
 	readonly connections = observable.map<string, ClientConnectionConfig>()
+	readonly groups = observable.map<string, ConnectionGroup>()
 
 	public get count() {
 		return this.connections.size
+	}
+
+	public get allGroupIds(): string[] {
+		const groupIds: string[] = []
+
+		const collectGroupIds = (groups: Iterable<ConnectionGroup>): void => {
+			for (const group of groups || []) {
+				groupIds.push(group.id)
+				collectGroupIds(group.children)
+			}
+		}
+
+		collectGroupIds(this.groups.values())
+
+		return groupIds
+	}
+
+	public rootGroups(): ConnectionGroup[] {
+		return Array.from(this.groups.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}
 
 	public getInfo(connectionId: string): ClientConnectionConfig | undefined {
@@ -21,7 +45,7 @@ export class ConnectionsStore {
 		return Array.from(this.connections.entries()).filter(([_id, info]) => info && info.instance_type === moduleType)
 	}
 
-	public reset = action((newData: Record<string, ClientConnectionConfig | undefined> | null) => {
+	public resetConnections = action((newData: Record<string, ClientConnectionConfig | undefined> | null) => {
 		this.connections.clear()
 
 		if (newData) {
@@ -33,28 +57,53 @@ export class ConnectionsStore {
 		}
 	})
 
-	public applyChange = action((changes: ClientConnectionsUpdate[]) => {
+	public applyConnectionsChange = action((changes: ClientConnectionsUpdate[]) => {
 		for (const change of changes) {
 			const changeType = change.type
 			switch (change.type) {
-				// case 'add':
-				// 	this.connections.set(change.id, change.info)
-				// 	break
 				case 'remove':
 					this.connections.delete(change.id)
 					break
 				case 'update': {
-					// const oldObj = this.connections.get(change.id)
-					// if (!oldObj) throw new Error(`Got update for unknown module: ${change.id}`)
-
 					this.connections.set(change.id, change.info)
 					break
 				}
 				default:
-					console.error(`Unknown action definitions change: ${changeType}`)
+					console.error(`Unknown connection change: ${changeType}`)
 					assertNever(change)
 					break
 			}
 		}
 	})
+
+	public resetGroups = action((newData: ConnectionGroup[] | null) => {
+		this.groups.clear()
+
+		if (newData) {
+			for (const group of newData) {
+				if (!group) continue
+
+				this.groups.set(group.id, group)
+			}
+		}
+	})
+
+	// public applyGroupsChange = action((changes: ConnectionGroupsUpdate[]) => {
+	// 	for (const change of changes) {
+	// 		const changeType = change.type
+	// 		switch (change.type) {
+	// 			case 'remove':
+	// 				this.groups.delete(change.id)
+	// 				break
+	// 			case 'update': {
+	// 				this.groups.set(change.id, change.info)
+	// 				break
+	// 			}
+	// 			default:
+	// 				console.error(`Unknown connection groups change: ${changeType}`)
+	// 				assertNever(change)
+	// 				break
+	// 		}
+	// 	}
+	// })
 }

@@ -8,6 +8,7 @@ import type {
 	ClientEditConnectionConfig,
 	ClientEventDefinition,
 	ConnectionStatusEntry,
+	ConnectionStatusUpdate,
 	ControlLocation,
 	EmulatorConfig,
 	EmulatorImage,
@@ -40,7 +41,12 @@ import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
-import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
+import type {
+	ClientConnectionsUpdate,
+	ClientConnectionConfig,
+	ConnectionUpdatePolicy,
+	ConnectionGroup,
+} from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
 import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
@@ -86,6 +92,8 @@ export interface ClientToBackendEventsMap {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
+	'connection-groups:subscribe': () => ConnectionGroup[]
+	'connection-groups:unsubscribe': () => void
 	'entity-definitions:subscribe': (
 		type: EntityModelType
 	) => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
@@ -316,9 +324,15 @@ export interface ClientToBackendEventsMap {
 		newModuleId: string,
 		versionId: string | null
 	) => string | null
-	'connections:set-order': (sortedIds: string[]) => void
+	'connections:reorder': (groupId: string | null, connectionId: string, dropIndex: number) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
+
+	'connection-groups:add': (groupName: string) => string
+	'connection-groups:remove': (groupId: string) => void
+	'connection-groups:set-name': (groupId: string, groupName: string) => void
+	'connection-groups:reorder': (groupId: string, parentId: string | null, dropIndex: number) => void
+
 	'modules:install-all-missing': () => void
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
@@ -380,6 +394,7 @@ export interface BackendToClientEventsMap {
 	[selectedSessionId: `action-recorder:session:update:${string}`]: (patch: JsonPatchOperation[]) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
+	'connection-groups:update': (patch: ConnectionGroup[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
@@ -388,7 +403,7 @@ export interface BackendToClientEventsMap {
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
-	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
+	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
 
 	'surfaces:discovery:update': (update: SurfacesDiscoveryUpdate) => void
 
