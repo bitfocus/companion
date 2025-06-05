@@ -213,7 +213,7 @@ export interface ClientToBackendEventsMap {
 	'triggers:create': () => string
 	'triggers:clone': (controlId: string) => string | false
 	'triggers:delete': (controlId: string) => boolean
-	'triggers:set-order': (controlIds: string[]) => boolean
+	'triggers:reorder': (groupId: string | null, controlId: string, dropIndex: number) => boolean
 	'triggers:test': (controlId: string) => boolean
 
 	'trigger-groups:add': (groupName: string) => string

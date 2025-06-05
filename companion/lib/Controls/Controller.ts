@@ -699,30 +699,75 @@ export class ControlsController {
 
 			return false
 		})
-		client.onPromise('triggers:set-order', (triggerIds) => {
-			if (!Array.isArray(triggerIds)) throw new Error('Expected array of ids')
+		client.onPromise('triggers:reorder', (groupId: string | null, controlId: string, dropIndex: number) => {
+			// if (!Array.isArray(triggerIds)) throw new Error('Expected array of ids')
 
-			triggerIds = triggerIds.filter((id) => this.#validateTriggerControlId(id))
+			// triggerIds = triggerIds.filter((id) => this.#validateTriggerControlId(id))
 
-			// This is a bit naive, but should be sufficient if the client behaves
+			// // This is a bit naive, but should be sufficient if the client behaves
 
-			// Update the order based on the ids provided
-			triggerIds.forEach((id, index) => {
-				const control = this.getControl(id)
-				if (control && control.supportsOptions) control.optionsSetField('sortOrder', index, true)
-			})
+			// // Update the order based on the ids provided
+			// triggerIds.forEach((id, index) => {
+			// 	const control = this.getControl(id)
+			// 	if (control && control.supportsOptions) control.optionsSetField('sortOrder', index, true)
+			// })
 
-			// Fill in for any which weren't specified
-			const updatedTriggerIds = new Set(triggerIds)
-			const triggerControls = this.getAllTriggers()
-			triggerControls.sort((a, b) => a.options.sortOrder - b.options.sortOrder)
+			// // Fill in for any which weren't specified
+			// const updatedTriggerIds = new Set(triggerIds)
+			// const triggerControls = this.getAllTriggers()
+			// triggerControls.sort((a, b) => a.options.sortOrder - b.options.sortOrder)
 
-			let nextIndex = triggerIds.length
-			for (const control of triggerControls) {
-				if (!updatedTriggerIds.has(control.controlId) && control.supportsOptions) {
-					control.optionsSetField('sortOrder', nextIndex++, true)
-				}
-			}
+			// let nextIndex = triggerIds.length
+			// for (const control of triggerControls) {
+			// 	if (!updatedTriggerIds.has(control.controlId) && control.supportsOptions) {
+			// 		control.optionsSetField('sortOrder', nextIndex++, true)
+			// 	}
+			// }
+
+			// return true
+
+			const thisConnection = this.#controls.get(controlId)
+			if (!thisConnection) return false
+
+			// const changedIds: string[] = []
+
+			// // find all the other connections with the matching groupId
+			// const sortedConnectionIds = Array.from(this.#store)
+			// 	.filter(
+			// 		([id, config]) => config && ((!config.groupId && !groupId) || config.groupId === groupId) && id !== connectionId
+			// 	)
+			// 	.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
+			// 	.map(([id]) => id)
+
+			// if (dropIndex < 0) {
+			// 	// Push the connection to the end of the array
+			// 	sortedConnectionIds.push(connectionId)
+			// } else {
+			// 	// Insert the connection at the drop index
+			// 	sortedConnectionIds.splice(dropIndex, 0, connectionId)
+			// }
+
+			// // update the sort order of the connections in the store, tracking which ones changed
+			// sortedConnectionIds.forEach((id, index) => {
+			// 	const entry = this.#store.get(id)
+			// 	if (entry && entry.sortOrder !== index) {
+			// 		entry.sortOrder = index
+			// 		changedIds.push(id)
+			// 	}
+			// })
+
+			// // Also update the group ID of the connection being moved if needed
+			// if (thisConnection.groupId !== groupId) {
+			// 	thisConnection.groupId = groupId ?? undefined
+			// 	if (!changedIds.includes(connectionId)) {
+			// 		changedIds.push(connectionId)
+			// 	}
+			// }
+
+			// // persist the changes
+			// if (changedIds.length > 0) {
+			// 	this.commitChanges(changedIds)
+			// }
 
 			return true
 		})

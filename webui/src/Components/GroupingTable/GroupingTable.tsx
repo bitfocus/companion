@@ -9,7 +9,7 @@ import { observer } from 'mobx-react-lite'
 
 interface GroupingTableProps<TGroup extends GroupingTableGroup, TItem extends GroupingTableItem>
 	extends GroupingTableContextType<TItem> {
-	Heading: React.ComponentType
+	Heading?: React.ComponentType
 	NoContent: React.ComponentType
 
 	groups: TGroup[]
@@ -44,9 +44,11 @@ export const GroupingTable = observer(function GroupingTable<
 			selectedItemId={selectedItemId}
 		>
 			<div className="grouping-table">
-				<div className="grouping-table-header">
-					<Heading />
-				</div>
+				{!!Heading && (
+					<div className="grouping-table-header">
+						<Heading />
+					</div>
+				)}
 
 				<GroupingTableGroupsList groups={groups} parentId={null} groupedItems={groupedItems} nestingLevel={0} />
 

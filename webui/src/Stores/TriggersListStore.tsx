@@ -2,12 +2,13 @@ import { action, observable } from 'mobx'
 import { assertNever } from '~/util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import type { ClientTriggerData, TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ClientTriggerData, TriggerGroup, TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 
 export class TriggersListStore {
 	readonly triggers = observable.map<string, ClientTriggerData>()
+	readonly groups = observable.map<string, TriggerGroup>()
 
-	public reset = action((newData: Record<string, ClientTriggerData | undefined> | null) => {
+	public resetTriggers = action((newData: Record<string, ClientTriggerData | undefined> | null) => {
 		this.triggers.clear()
 
 		if (newData) {
@@ -19,7 +20,7 @@ export class TriggersListStore {
 		}
 	})
 
-	public applyChange = action((change: TriggersUpdate) => {
+	public applyTriggersChange = action((change: TriggersUpdate) => {
 		const changeType = change.type
 		switch (change.type) {
 			case 'add':
@@ -39,6 +40,37 @@ export class TriggersListStore {
 				console.error(`Unknown trigger change change: ${changeType}`)
 				assertNever(change)
 				break
+		}
+	})
+
+	public get allGroupIds(): string[] {
+		const groupIds: string[] = []
+
+		const collectGroupIds = (groups: Iterable<TriggerGroup>): void => {
+			for (const group of groups || []) {
+				groupIds.push(group.id)
+				collectGroupIds(group.children)
+			}
+		}
+
+		collectGroupIds(this.groups.values())
+
+		return groupIds
+	}
+
+	public rootGroups(): TriggerGroup[] {
+		return Array.from(this.groups.values()).sort((a, b) => a.sortOrder - b.sortOrder)
+	}
+
+	public resetGroups = action((newData: TriggerGroup[] | null) => {
+		this.groups.clear()
+
+		if (newData) {
+			for (const group of newData) {
+				if (!group) continue
+
+				this.groups.set(group.id, group)
+			}
 		}
 	})
 }
