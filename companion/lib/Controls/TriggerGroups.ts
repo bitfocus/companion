@@ -1,5 +1,4 @@
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
-import type { ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { GroupsBaseController } from '../Resources/GroupsBase.js'
 import type { TriggerGroup } from '@companion-app/shared/Model/TriggerModel.js'

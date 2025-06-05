@@ -103,8 +103,8 @@ export const TriggersPage = observer(function Triggers() {
 						<CButton color="primary" onClick={doAddNew} size="sm">
 							<FontAwesomeIcon icon={faAdd} /> Add Trigger
 						</CButton>
-						<CButton color="info" size="sm" onClick={() => triggerGroupsApi.addNewGroup('New Group')}>
-							<FontAwesomeIcon icon={faLayerGroup} /> Add Group
+						<CButton color="info" size="sm" onClick={() => triggerGroupsApi.addNewGroup()}>
+							<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
 						</CButton>
 					</CButtonGroup>
 
@@ -129,6 +129,7 @@ export const TriggersPage = observer(function Triggers() {
 							groups={triggersList.rootGroups()}
 							items={allTriggers}
 							selectedItemId={selectedTriggerId}
+							useCollectionNaming
 						/>
 					</TriggersTableContextProvider>
 				</PanelCollapseHelperProvider>
@@ -155,8 +156,6 @@ function TriggerListNoContent() {
 }
 
 function TriggerItemRow(item: TriggerDataWithId) {
-	// return <p>TOTO</p>
-
 	return <TriggersTableRow item={item} />
 }
 

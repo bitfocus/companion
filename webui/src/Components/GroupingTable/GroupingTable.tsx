@@ -27,6 +27,7 @@ export const GroupingTable = observer(function GroupingTable<
 	dragId,
 	groupApi,
 	selectedItemId,
+	useCollectionNaming,
 
 	groups,
 	items,
@@ -42,6 +43,7 @@ export const GroupingTable = observer(function GroupingTable<
 			groupApi={groupApi}
 			dragId={dragId}
 			selectedItemId={selectedItemId}
+			useCollectionNaming={useCollectionNaming}
 		>
 			<div className="grouping-table">
 				{!!Heading && (

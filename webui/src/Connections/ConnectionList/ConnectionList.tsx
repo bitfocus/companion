@@ -87,8 +87,8 @@ export const ConnectionsList = observer(function ConnectionsList({
 			<ConnectionVariablesModal ref={variablesModalRef} />
 
 			<div className="connection-group-actions mb-2">
-				<CButton color="info" size="sm" onClick={() => connectionListApi.addNewGroup('New Group')}>
-					<FontAwesomeIcon icon={faLayerGroup} /> Add Group
+				<CButton color="info" size="sm" onClick={() => connectionListApi.addNewGroup()}>
+					<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
 				</CButton>
 			</div>
 			<PanelCollapseHelperProvider
@@ -112,6 +112,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 						groups={connections.rootGroups()}
 						items={allConnections}
 						selectedItemId={selectedConnectionId}
+						useCollectionNaming
 					/>
 				</ConnectionListContextProvider>
 			</PanelCollapseHelperProvider>

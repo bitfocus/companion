@@ -7,6 +7,7 @@ export interface GroupingTableContextType<TItem extends GroupingTableItem> {
 	dragId: string
 	groupApi: GroupApi
 	selectedItemId: string | null
+	useCollectionNaming: boolean
 }
 
 const GroupingTableContext = createContext<GroupingTableContextType<any> | null>(null)
@@ -27,6 +28,7 @@ export function GroupingTableContextProvider<TItem extends GroupingTableItem>({
 	dragId,
 	groupApi,
 	selectedItemId,
+	useCollectionNaming,
 	children,
 }: React.PropsWithChildren<GroupingTableContextProviderProps<TItem>>) {
 	const value = useMemo<GroupingTableContextType<TItem>>(() => {
@@ -36,8 +38,9 @@ export function GroupingTableContextProvider<TItem extends GroupingTableItem>({
 			dragId,
 			groupApi,
 			selectedItemId,
+			useCollectionNaming,
 		}
-	}, [ItemRow, itemName, dragId, groupApi, selectedItemId])
+	}, [ItemRow, itemName, dragId, groupApi, selectedItemId, useCollectionNaming])
 
 	return <GroupingTableContext.Provider value={value}>{children}</GroupingTableContext.Provider>
 }

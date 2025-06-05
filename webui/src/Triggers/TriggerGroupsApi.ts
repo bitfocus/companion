@@ -12,26 +12,26 @@ export function useTriggerGroupsApi(confirmModalRef: React.RefObject<GenericConf
 	return useMemo(
 		() =>
 			({
-				addNewGroup: (groupName = 'New Group') => {
+				addNewGroup: (groupName = 'New Collection') => {
 					socket.emitPromise('trigger-groups:add', [groupName]).catch((e) => {
-						console.error('Failed to add group', e)
+						console.error('Failed to add collection', e)
 					})
 				},
 
 				renameGroup: (groupId: string, newName: string) => {
 					socket.emitPromise('trigger-groups:set-name', [groupId, newName]).catch((e) => {
-						console.error('Failed to rename group', e)
+						console.error('Failed to rename collection', e)
 					})
 				},
 
 				deleteGroup: (groupId: string) => {
 					confirmModalRef.current?.show(
-						'Delete Group',
-						'Are you sure you want to delete this group? All triggers in this group will be moved to Ungrouped Triggers.',
+						'Delete Collection',
+						'Are you sure you want to delete this collection? All triggers in this collection will be moved to Ungrouped Triggers.',
 						'Delete',
 						() => {
 							socket.emitPromise('trigger-groups:remove', [groupId]).catch((e) => {
-								console.error('Failed to delete group', e)
+								console.error('Failed to delete collection', e)
 							})
 						}
 					)
@@ -39,7 +39,7 @@ export function useTriggerGroupsApi(confirmModalRef: React.RefObject<GenericConf
 
 				moveGroup: (groupId: string, parentId: string | null, dropIndex: number) => {
 					socket.emitPromise('trigger-groups:reorder', [groupId, parentId, dropIndex]).catch((e) => {
-						console.error('Failed to reorder group', e)
+						console.error('Failed to reorder collection', e)
 					})
 				},
 				moveItemToGroup: (itemId: string, groupId: string | null, dropIndex: number) => {

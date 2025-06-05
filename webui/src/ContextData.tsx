@@ -28,7 +28,7 @@ import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscr
 import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
 import { ViewControlStore } from '~/Stores/ViewControlStore.js'
 import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
-import { useConnectionGroupsConfigSubscription } from './Hooks/useConnectionGroupsConfigSubscription.js'
+import { useConnectionGroupsSubscription } from './Hooks/useConnectionGroupsSubscription.js'
 import { useTriggerGroupsSubscription } from './Hooks/useTriggerGroupsSubscription.js'
 
 interface ContextDataProps {
@@ -83,7 +83,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
-	const connectionGroupsReady = useConnectionGroupsConfigSubscription(socket, rootStore.connections)
+	const connectionGroupsReady = useConnectionGroupsSubscription(socket, rootStore.connections)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
 	const triggerGroupsReady = useTriggerGroupsSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)

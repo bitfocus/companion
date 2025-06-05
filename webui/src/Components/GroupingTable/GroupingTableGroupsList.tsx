@@ -46,7 +46,7 @@ const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 	TGroup extends GroupingTableGroup,
 	TItem extends GroupingTableItem,
 >({ group, parentId, groupedItems, nestingLevel }: GroupingTableGroupSingleProps<TGroup, TItem>) {
-	const { dragId, groupApi } = useGroupingTableContext<TItem>()
+	const { dragId, groupApi, useCollectionNaming } = useGroupingTableContext<TItem>()
 
 	const { canDrop, dragGroupId, drop } = useGroupListGroupDrop(groupApi, dragId, group.id)
 
@@ -76,7 +76,11 @@ const GroupingTableGroupSingle = observer(function GroupingTableGroupSingle<
 					/>
 
 					{canDrop && (!group.children || group.children.length === 0) ? (
-						<GroupingTableDropZone drop={drop} itemName="group" nestingLevel={nestingLevel + 1} />
+						<GroupingTableDropZone
+							drop={drop}
+							itemName={useCollectionNaming ? 'collection' : 'group'}
+							nestingLevel={nestingLevel + 1}
+						/>
 					) : null}
 
 					{/* Render connections in this group */}

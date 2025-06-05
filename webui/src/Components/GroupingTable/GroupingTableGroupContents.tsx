@@ -19,7 +19,7 @@ interface GroupingTableGroupContentsProps<TItem extends GroupingTableItem> {
 export const GroupingTableGroupContents = observer(function GroupingTableGroupContents<
 	TItem extends GroupingTableItem,
 >({ items, groupId, showNoItemsMessage, nestingLevel }: GroupingTableGroupContentsProps<TItem>) {
-	const { dragId, groupApi, itemName, ItemRow } = useGroupingTableContext<TItem>()
+	const { dragId, groupApi, itemName, ItemRow, useCollectionNaming } = useGroupingTableContext<TItem>()
 
 	const { isDragging, drop } = useGroupListItemDrop(groupApi, dragId, groupId, null, 0)
 
@@ -70,7 +70,7 @@ export const GroupingTableGroupContents = observer(function GroupingTableGroupCo
 				<div className="grouping-table-row-item">
 					<GroupingTableNestingRow nestingLevel={nestingLevel}>
 						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
-						<strong>This group is empty</strong>
+						<strong>This {useCollectionNaming ? 'collection' : 'group'} is empty</strong>
 					</GroupingTableNestingRow>
 				</div>
 			)}
