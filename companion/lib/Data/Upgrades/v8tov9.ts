@@ -12,9 +12,9 @@ import type {
 } from '@companion-app/shared/Model/ExportModel.js'
 
 /**
- * do the database upgrades to convert from the v7 to the v8 format
+ * do the database upgrades to convert from the v8 to the v9 format
  */
-function convertDatabaseToV8(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV9(db: DataStoreBase<any>, _logger: Logger) {
 	if (!db.store) return
 
 	const controls = db.getTableView('controls')
@@ -27,9 +27,9 @@ function convertDatabaseToV8(db: DataStoreBase<any>, _logger: Logger) {
 	}
 }
 
-function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
+function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'full') {
-		const newObj: ExportFullv6 = { ...cloneDeep(obj), version: 8 }
+		const newObj: ExportFullv6 = { ...cloneDeep(obj), version: 9 }
 		if (newObj.pages) {
 			for (const page of Object.values(newObj.pages)) {
 				convertPageControls(page)
@@ -37,11 +37,11 @@ function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
 		}
 		return newObj
 	} else if (obj.type == 'page') {
-		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 8 }
+		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 9 }
 		convertPageControls(newObj.page)
 		return newObj
 	} else if (obj.type == 'trigger_list') {
-		const newObj: ExportTriggersListv6 = { ...cloneDeep(obj), version: 8 }
+		const newObj: ExportTriggersListv6 = { ...cloneDeep(obj), version: 9 }
 		return newObj
 	} else {
 		// No change
@@ -74,6 +74,6 @@ function convertPageControls(page: ExportPageContentv6): ExportPageContentv6 {
 }
 
 export default {
-	upgradeStartup: convertDatabaseToV8,
-	upgradeImport: convertImportToV8,
+	upgradeStartup: convertDatabaseToV9,
+	upgradeImport: convertImportToV9,
 }
