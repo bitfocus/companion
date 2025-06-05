@@ -2,17 +2,12 @@ import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { UserConfigModel } from './Model/UserConfigModel.js'
 import type { ClientLogLine } from './Model/LogLine.js'
 import type {
-	AppUpdateInfo,
-	AppVersionInfo,
 	ClientBonjourService,
 	ClientEditConnectionConfig,
 	ClientEventDefinition,
 	ConnectionStatusEntry,
 	ConnectionStatusUpdate,
 	ControlLocation,
-	EmulatorConfig,
-	EmulatorImage,
-	EmulatorImageCache,
 	WrappedImage,
 } from './Model/Common.js'
 import type {
@@ -54,9 +49,6 @@ import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/M
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
-
-	'app-update-info': () => never
-	'app-version-info': () => AppVersionInfo
 
 	set_userconfig_key(key: keyof UserConfigModel, value: any): never
 	reset_userconfig_key(key: keyof UserConfigModel): never
@@ -271,10 +263,6 @@ export interface ClientToBackendEventsMap {
 	'surfaces:outbound:set-name': (surfaceId: string, name: string) => void
 	'surfaces:outbound:set-enabled': (surfaceId: string, enabled: boolean) => void
 
-	'emulator:startup': (emulatorId: string) => EmulatorConfig
-	'emulator:press': (emulatorId: string, column: number, row: number) => void
-	'emulator:release': (emulatorId: string, column: number, row: number) => void
-
 	'logs:subscribe': () => ClientLogLine[]
 	'logs:unsubscribe': () => void
 	'logs:clear': () => void
@@ -375,8 +363,6 @@ export interface ClientToBackendEventsMap {
 }
 
 export interface BackendToClientEventsMap {
-	'app-update-info': (info: AppUpdateInfo) => void
-
 	'logs:lines': (rawItems: ClientLogLine[]) => void
 	'logs:clear': () => void
 
@@ -421,9 +407,6 @@ export interface BackendToClientEventsMap {
 	'modules-store:info:progress': (moduleId: string, percent: number) => void
 	'modules-upgrade-to-other:data': (moduleId: string, data: ModuleUpgradeToOtherVersion[]) => void
 	'modules:bundle-import:progress': (sessionId: string, percent: number | null) => void
-
-	'emulator:images': (newImages: EmulatorImage[] | EmulatorImageCache) => void
-	'emulator:config': (patch: JsonPatchOperation[] | EmulatorConfig) => void
 
 	'bonjour:service:up': (svc: ClientBonjourService) => void
 	'bonjour:service:down': (subId: string, fqdn: string) => void

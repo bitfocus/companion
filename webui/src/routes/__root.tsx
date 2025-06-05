@@ -1,21 +1,22 @@
 import React, { Suspense } from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { ErrorFallback } from '~/util.js'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-
-const queryClient = new QueryClient()
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from '../TRPC.js'
 
 export const Route = createRootRoute({
-	component: () => (
-		<>
-			<QueryClientProvider client={queryClient}>
-				<Outlet />
-				<Suspense>
-					<TanStackRouterDevtools position="top-left" />
-				</Suspense>
-			</QueryClientProvider>
-		</>
-	),
+	component: () => {
+		return (
+			<>
+				<QueryClientProvider client={queryClient}>
+					<Outlet />
+					<Suspense>
+						<TanStackRouterDevtools position="top-left" />
+					</Suspense>
+				</QueryClientProvider>
+			</>
+		)
+	},
 	errorComponent: ({ error, reset }) => {
 		return <ErrorFallback error={error} resetErrorBoundary={reset} />
 	},
