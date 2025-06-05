@@ -225,7 +225,7 @@ export class ConnectionConfigStore {
 		return true
 	}
 
-	cleanUnknownGroupIds(validGroupIds: string[]): void {
+	cleanUnknownGroupIds(validGroupIds: Set<string>): void {
 		const changedIds: string[] = []
 
 		// Figure out the first sort order
@@ -239,7 +239,7 @@ export class ConnectionConfigStore {
 		// Validate the group IDs, and do something sensible with the sort order
 		// Future: maybe this could try to preserve the order in some way?
 		for (const [id, config] of this.#store) {
-			if (config && config.groupId && !validGroupIds.includes(config.groupId)) {
+			if (config && config.groupId && !validGroupIds.has(config.groupId)) {
 				config.groupId = undefined
 				config.sortOrder = nextSortOrder++
 				changedIds.push(id)
