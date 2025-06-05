@@ -10,7 +10,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
-import { ClientConnectionConfig, ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
+import { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { useConnectionCollectionsApi } from './ConnectionListApi.js'
 import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
@@ -92,7 +92,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 				</CButton>
 			</div>
 			<PanelCollapseHelperProvider
-				storageId="connection-groups"
+				storageId="connection-collections"
 				knownPanelIds={connections.allGroupIds}
 				defaultCollapsed
 			>
@@ -102,7 +102,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 					deleteModalRef={confirmModalRef}
 					configureConnection={doConfigureConnection}
 				>
-					<CollectionsNestingTable<ConnectionGroup, ClientConnectionConfigWithId>
+					<CollectionsNestingTable<ConnectionCollection, ClientConnectionConfigWithId>
 						Heading={ConnectionListTableHeading}
 						NoContent={ConnectionListNoConnections}
 						ItemRow={ConnectionsItemRow}

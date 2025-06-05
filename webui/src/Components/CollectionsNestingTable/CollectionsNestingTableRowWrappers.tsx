@@ -24,7 +24,7 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 }>) {
 	const { dragId, collectionsApi, selectedItemId } = useCollectionsNestingTableContext<TItem>()
 
-	const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, item.groupId, item.id, index)
+	const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, item.collectionId, item.id, index)
 	const [{ isDragging }, drag, preview] = useDrag<
 		CollectionsNestingTableItemDragItem,
 		unknown,
@@ -33,7 +33,7 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 		type: dragId,
 		item: {
 			itemId: item.id,
-			collectionId: item.groupId,
+			collectionId: item.collectionId,
 			index,
 			dragState: null,
 		},

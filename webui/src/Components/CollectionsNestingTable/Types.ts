@@ -6,7 +6,7 @@ export interface NestingCollectionsApi {
 	renameCollection: (collectionId: string, newName: string) => void
 	deleteCollection: (collectionId: string) => void
 	moveCollection: (collectionId: string, parentId: string | null, dropIndex: number) => void
-	moveItemToGroup: (itemId: string, collectionId: string | null, dropIndex: number) => void
+	moveItemToCollection: (itemId: string, collectionId: string | null, dropIndex: number) => void
 }
 
 export interface CollectionsNestingTableCollection {
@@ -18,6 +18,6 @@ export interface CollectionsNestingTableCollection {
 
 export interface CollectionsNestingTableItem {
 	id: string
-	groupId: string | null
+	collectionId: string | null
 	sortOrder: number
 }

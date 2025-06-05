@@ -124,7 +124,7 @@ export class ConnectionConfigStore {
 				label: config.label,
 				enabled: config.enabled,
 				sortOrder: config.sortOrder,
-				groupId: config.groupId ?? null,
+				collectionId: config.collectionId ?? null,
 
 				// Runtime properties
 				hasRecordActionsHandler: false, // Filled in later
@@ -178,16 +178,19 @@ export class ConnectionConfigStore {
 		return label
 	}
 
-	moveConnection(groupId: string | null, connectionId: string, dropIndex: number): boolean {
+	moveConnection(collectionId: string | null, connectionId: string, dropIndex: number): boolean {
 		const thisConnection = this.#store.get(connectionId)
 		if (!thisConnection) return false
 
 		const changedIds: string[] = []
 
-		// find all the other connections with the matching groupId
+		// find all the other connections with the matching collectionId
 		const sortedConnectionIds = Array.from(this.#store)
 			.filter(
-				([id, config]) => config && ((!config.groupId && !groupId) || config.groupId === groupId) && id !== connectionId
+				([id, config]) =>
+					config &&
+					((!config.collectionId && !collectionId) || config.collectionId === collectionId) &&
+					id !== connectionId
 			)
 			.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
 			.map(([id]) => id)
@@ -209,9 +212,9 @@ export class ConnectionConfigStore {
 			}
 		})
 
-		// Also update the group ID of the connection being moved if needed
-		if (thisConnection.groupId !== groupId) {
-			thisConnection.groupId = groupId ?? undefined
+		// Also update the collectionId of the connection being moved if needed
+		if (thisConnection.collectionId !== collectionId) {
+			thisConnection.collectionId = collectionId ?? undefined
 			if (!changedIds.includes(connectionId)) {
 				changedIds.push(connectionId)
 			}
@@ -225,22 +228,22 @@ export class ConnectionConfigStore {
 		return true
 	}
 
-	cleanUnknownGroupIds(validGroupIds: Set<string>): void {
+	cleanUnknownCollectionIds(validCollectionIds: Set<string>): void {
 		const changedIds: string[] = []
 
 		// Figure out the first sort order
 		let nextSortOrder = 0
 		for (const config of this.#store.values()) {
-			if (config && !config?.groupId) {
+			if (config && !config?.collectionId) {
 				nextSortOrder = Math.max(nextSortOrder, config.sortOrder + 1)
 			}
 		}
 
-		// Validate the group IDs, and do something sensible with the sort order
+		// Validate the collectionIds, and do something sensible with the sort order
 		// Future: maybe this could try to preserve the order in some way?
 		for (const [id, config] of this.#store) {
-			if (config && config.groupId && !validGroupIds.has(config.groupId)) {
-				config.groupId = undefined
+			if (config && config.collectionId && !validCollectionIds.has(config.collectionId)) {
+				config.collectionId = undefined
 				config.sortOrder = nextSortOrder++
 				changedIds.push(id)
 			}

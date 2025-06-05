@@ -32,7 +32,7 @@ export function useCollectionsListItemDrop(
 			if (!checkDragState(item, monitor, hoverItemId ?? `collection-drop-${collectionId}`)) return
 
 			// Time to actually perform the action
-			collectionsApi.moveItemToGroup(item.itemId, collectionId, hoverIndex)
+			collectionsApi.moveItemToCollection(item.itemId, collectionId, hoverIndex)
 
 			// item.listId = listId
 			item.index = hoverIndex

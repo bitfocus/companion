@@ -14,13 +14,13 @@ export function useConnectionCollectionsApi(
 		() =>
 			({
 				createCollection: (collectionName = 'New Collection') => {
-					socket.emitPromise('connection-groups:add', [collectionName]).catch((e) => {
+					socket.emitPromise('connection-collections:add', [collectionName]).catch((e) => {
 						console.error('Failed to add collection', e)
 					})
 				},
 
 				renameCollection: (collectionId: string, newName: string) => {
-					socket.emitPromise('connection-groups:set-name', [collectionId, newName]).catch((e) => {
+					socket.emitPromise('connection-collections:set-name', [collectionId, newName]).catch((e) => {
 						console.error('Failed to rename collection', e)
 					})
 				},
@@ -31,7 +31,7 @@ export function useConnectionCollectionsApi(
 						'Are you sure you want to delete this collection? All connections in this collection will be moved to Ungrouped Connections.',
 						'Delete',
 						() => {
-							socket.emitPromise('connection-groups:remove', [collectionId]).catch((e) => {
+							socket.emitPromise('connection-collections:remove', [collectionId]).catch((e) => {
 								console.error('Failed to delete collection', e)
 							})
 						}
@@ -39,11 +39,11 @@ export function useConnectionCollectionsApi(
 				},
 
 				moveCollection: (collectionId: string, parentId: string | null, dropIndex: number) => {
-					socket.emitPromise('connection-groups:reorder', [collectionId, parentId, dropIndex]).catch((e) => {
+					socket.emitPromise('connection-collections:reorder', [collectionId, parentId, dropIndex]).catch((e) => {
 						console.error('Failed to reorder collection', e)
 					})
 				},
-				moveItemToGroup: (itemId: string, collectionId: string | null, dropIndex: number) => {
+				moveItemToCollection: (itemId: string, collectionId: string | null, dropIndex: number) => {
 					socket.emitPromise('connections:reorder', [collectionId, itemId, dropIndex]).catch((e) => {
 						console.error('Reorder failed', e)
 					})

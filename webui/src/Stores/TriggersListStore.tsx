@@ -2,11 +2,11 @@ import { action, observable } from 'mobx'
 import { assertNever } from '~/util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import type { ClientTriggerData, TriggerGroup, TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 
 export class TriggersListStore {
 	readonly triggers = observable.map<string, ClientTriggerData>()
-	readonly groups = observable.map<string, TriggerGroup>()
+	readonly groups = observable.map<string, TriggerCollection>()
 
 	public resetTriggers = action((newData: Record<string, ClientTriggerData | undefined> | null) => {
 		this.triggers.clear()
@@ -46,7 +46,7 @@ export class TriggersListStore {
 	public get allGroupIds(): string[] {
 		const groupIds: string[] = []
 
-		const collectGroupIds = (groups: Iterable<TriggerGroup>): void => {
+		const collectGroupIds = (groups: Iterable<TriggerCollection>): void => {
 			for (const group of groups || []) {
 				groupIds.push(group.id)
 				collectGroupIds(group.children)
@@ -58,11 +58,11 @@ export class TriggersListStore {
 		return groupIds
 	}
 
-	public rootGroups(): TriggerGroup[] {
+	public rootGroups(): TriggerCollection[] {
 		return Array.from(this.groups.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}
 
-	public resetGroups = action((newData: TriggerGroup[] | null) => {
+	public resetGroups = action((newData: TriggerCollection[] | null) => {
 		this.groups.clear()
 
 		if (newData) {

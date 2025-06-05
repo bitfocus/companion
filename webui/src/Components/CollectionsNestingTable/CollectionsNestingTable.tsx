@@ -99,8 +99,8 @@ function getGroupedItems<TItem extends CollectionsNestingTableItem>(
 
 	// Assign connections to their groups
 	for (const item of allItems) {
-		if (item.groupId && validCollectionIds.has(item.groupId)) {
-			groupedItems.get(item.groupId)!.push(item)
+		if (item.collectionId && validCollectionIds.has(item.collectionId)) {
+			groupedItems.get(item.collectionId)!.push(item)
 		} else {
 			ungroupedItems.push(item)
 		}

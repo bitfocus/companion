@@ -16,7 +16,7 @@ import {
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ConfirmExportModal, ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
-import { ClientTriggerData, TriggerGroup } from '@companion-app/shared/Model/TriggerModel.js'
+import { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -61,7 +61,7 @@ export const TriggersPage = observer(function Triggers() {
 		for (const [triggerId, trigger] of triggersList.triggers) {
 			const parsedId = ParseControlId(triggerId)
 			if (!parsedId || parsedId.type !== 'trigger') continue
-			allTriggers.push({ ...trigger, id: parsedId.trigger, groupId: trigger.groupId || null })
+			allTriggers.push({ ...trigger, id: parsedId.trigger, collectionId: trigger.collectionId || null })
 		}
 
 		return allTriggers
@@ -119,7 +119,7 @@ export const TriggersPage = observer(function Triggers() {
 					defaultCollapsed
 				>
 					<TriggersTableContextProvider deleteModalRef={confirmModalRef} selectTrigger={selectTrigger}>
-						<CollectionsNestingTable<TriggerGroup, TriggerDataWithId>
+						<CollectionsNestingTable<TriggerCollection, TriggerDataWithId>
 							// Heading={TriggerListTableHeading}
 							NoContent={TriggerListNoContent}
 							ItemRow={TriggerItemRow}
@@ -143,9 +143,9 @@ export const TriggersPage = observer(function Triggers() {
 	)
 })
 
-export interface TriggerDataWithId extends Omit<ClientTriggerData, 'groupId'> {
+export interface TriggerDataWithId extends Omit<ClientTriggerData, 'collectionId'> {
 	id: string
-	groupId: string | null
+	collectionId: string | null
 }
 
 const tableDateFormat = 'MM/DD HH:mm:ss'

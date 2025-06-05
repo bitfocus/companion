@@ -3,12 +3,12 @@ import { assertNever } from '~/util.js'
 import type {
 	ClientConnectionsUpdate,
 	ClientConnectionConfig,
-	ConnectionGroup,
+	ConnectionCollection,
 } from '@companion-app/shared/Model/Connections.js'
 
 export class ConnectionsStore {
 	readonly connections = observable.map<string, ClientConnectionConfig>()
-	readonly groups = observable.map<string, ConnectionGroup>()
+	readonly groups = observable.map<string, ConnectionCollection>()
 
 	public get count() {
 		return this.connections.size
@@ -17,7 +17,7 @@ export class ConnectionsStore {
 	public get allGroupIds(): string[] {
 		const groupIds: string[] = []
 
-		const collectGroupIds = (groups: Iterable<ConnectionGroup>): void => {
+		const collectGroupIds = (groups: Iterable<ConnectionCollection>): void => {
 			for (const group of groups || []) {
 				groupIds.push(group.id)
 				collectGroupIds(group.children)
@@ -29,7 +29,7 @@ export class ConnectionsStore {
 		return groupIds
 	}
 
-	public rootGroups(): ConnectionGroup[] {
+	public rootGroups(): ConnectionCollection[] {
 		return Array.from(this.groups.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}
 
@@ -76,7 +76,7 @@ export class ConnectionsStore {
 		}
 	})
 
-	public resetGroups = action((newData: ConnectionGroup[] | null) => {
+	public resetGroups = action((newData: ConnectionCollection[] | null) => {
 		this.groups.clear()
 
 		if (newData) {

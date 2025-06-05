@@ -972,6 +972,7 @@ export class ImportExportController {
 					this.#controlsController.deleteControl(controlId)
 				}
 			}
+			this.#controlsController.discardTriggerCollections()
 		}
 
 		if (!config || config.customVariables) {
@@ -1044,7 +1045,7 @@ export class ImportExportController {
 		instanceIdMap['bitfocus-companion'] = { id: 'internal', label: 'internal' }
 
 		// Ensure any group references are valid
-		this.#instancesController.groups.removeUnknownGroupReferences()
+		this.#instancesController.collections.removeUnknownCollectionReferences()
 
 		return instanceIdMap
 	}

@@ -1,4 +1,4 @@
-import type { GroupBase } from './Groups.js'
+import type { CollectionBase } from './Collections.js'
 
 export interface ConnectionConfig {
 	label: string
@@ -10,7 +10,7 @@ export interface ConnectionConfig {
 	sortOrder: number
 	moduleVersionId: string | null
 	updatePolicy: ConnectionUpdatePolicy // TODO - upgrade script
-	groupId?: string
+	collectionId?: string
 }
 
 export interface ClientConnectionConfig {
@@ -21,10 +21,10 @@ export interface ClientConnectionConfig {
 	enabled: boolean
 	sortOrder: number
 	hasRecordActionsHandler: boolean
-	groupId: string | null
+	collectionId: string | null
 }
 
-export type ConnectionGroup = GroupBase<undefined>
+export type ConnectionCollection = CollectionBase<undefined>
 
 export enum ConnectionUpdatePolicy {
 	Manual = 'manual',

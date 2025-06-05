@@ -41,7 +41,7 @@ import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
 import { translateOptionsIsVisible } from './Wrapper.js'
-import { InstanceGroups } from './Groups.js'
+import { InstanceCollections } from './Collections.js'
 
 const InstancesRoom = 'instances'
 
@@ -62,7 +62,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #io: UIHandler
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
-	readonly #groupsController: InstanceGroups
+	readonly collectionsController: InstanceCollections
 
 	readonly #configStore: ConnectionConfigStore
 
@@ -78,8 +78,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly connectionApiRouter = express.Router()
 
-	get groups(): InstanceGroups {
-		return this.#groupsController
+	get collections(): InstanceCollections {
+		return this.collectionsController
 	}
 
 	constructor(
@@ -101,7 +101,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController = controls
 
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
-		this.#groupsController = new InstanceGroups(io, db, this.#configStore)
+		this.collectionsController = new InstanceCollections(io, db, this.#configStore)
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
@@ -388,14 +388,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController.forgetConnection(id)
 	}
 
-	async deleteAllInstances(deleteGroups: boolean): Promise<void> {
+	async deleteAllInstances(deleteCollections: boolean): Promise<void> {
 		const ps: Promise<void>[] = []
 		for (const instanceId of this.#configStore.getAllInstanceIds()) {
 			ps.push(this.deleteInstance(instanceId))
 		}
 
-		if (deleteGroups) {
-			this.#groupsController.discardAllGroups()
+		if (deleteCollections) {
+			this.collectionsController.discardAllCollections()
 		}
 
 		await Promise.all(ps)
@@ -547,7 +547,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.modules.clientConnect(client)
 		this.modulesStore.clientConnect(client)
 		this.userModulesManager.clientConnect(client)
-		this.#groupsController.clientConnect(client)
+		this.collectionsController.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)
@@ -688,8 +688,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return connectionInfo[0]
 		})
 
-		client.onPromise('connections:reorder', async (groupId, connectionId, dropIndex) => {
-			this.#configStore.moveConnection(groupId, connectionId, dropIndex)
+		client.onPromise('connections:reorder', async (collectionId, connectionId, dropIndex) => {
+			this.#configStore.moveConnection(collectionId, connectionId, dropIndex)
 		})
 
 		client.onPromise('connection-debug:subscribe', (connectionId) => {

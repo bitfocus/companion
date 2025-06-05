@@ -33,7 +33,7 @@ import type {
 	ConnectionRemappings,
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
-import type { ClientTriggerData, TriggerGroup, TriggersUpdate } from './Model/TriggerModel.js'
+import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from './Model/TriggerModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -45,7 +45,7 @@ import type {
 	ClientConnectionsUpdate,
 	ClientConnectionConfig,
 	ConnectionUpdatePolicy,
-	ConnectionGroup,
+	ConnectionCollection,
 } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
@@ -92,8 +92,8 @@ export interface ClientToBackendEventsMap {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'connection-groups:subscribe': () => ConnectionGroup[]
-	'connection-groups:unsubscribe': () => void
+	'connection-collections:subscribe': () => ConnectionCollection[]
+	'connection-collections:unsubscribe': () => void
 	'entity-definitions:subscribe': (
 		type: EntityModelType
 	) => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
@@ -102,8 +102,8 @@ export interface ClientToBackendEventsMap {
 	'variable-definitions:unsubscribe': () => void
 	'triggers:subscribe': () => Record<string, ClientTriggerData | undefined>
 	'triggers:unsubscribe': () => void
-	'trigger-groups:subscribe': () => TriggerGroup[]
-	'trigger-groups:unsubscribe': () => void
+	'trigger-collections:subscribe': () => TriggerCollection[]
+	'trigger-collections:unsubscribe': () => void
 
 	'controls:subscribe': (controlId: string) => { config: unknown; runtime: unknown } | undefined
 	'controls:unsubscribe': (controlId: string) => void
@@ -213,13 +213,13 @@ export interface ClientToBackendEventsMap {
 	'triggers:create': () => string
 	'triggers:clone': (controlId: string) => string | false
 	'triggers:delete': (controlId: string) => boolean
-	'triggers:reorder': (groupId: string | null, controlId: string, dropIndex: number) => boolean
+	'triggers:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
 	'triggers:test': (controlId: string) => boolean
 
-	'trigger-groups:add': (groupName: string) => string
-	'trigger-groups:remove': (groupId: string) => void
-	'trigger-groups:set-name': (groupId: string, groupName: string) => void
-	'trigger-groups:reorder': (groupId: string, parentId: string | null, dropIndex: number) => void
+	'trigger-collections:add': (collectionName: string) => string
+	'trigger-collections:remove': (collectionId: string) => void
+	'trigger-collections:set-name': (collectionId: string, collectionName: string) => void
+	'trigger-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
 	'action-recorder:subscribe': () => Record<string, RecordSessionListInfo | undefined>
 	'action-recorder:unsubscribe': () => void
@@ -335,10 +335,10 @@ export interface ClientToBackendEventsMap {
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'connection-groups:add': (groupName: string) => string
-	'connection-groups:remove': (groupId: string) => void
-	'connection-groups:set-name': (groupId: string, groupName: string) => void
-	'connection-groups:reorder': (groupId: string, parentId: string | null, dropIndex: number) => void
+	'connection-collections:add': (groupName: string) => string
+	'connection-collections:remove': (groupId: string) => void
+	'connection-collections:set-name': (groupId: string, groupName: string) => void
+	'connection-collections:reorder': (groupId: string, parentId: string | null, dropIndex: number) => void
 
 	'modules:install-all-missing': () => void
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
@@ -401,12 +401,12 @@ export interface BackendToClientEventsMap {
 	[selectedSessionId: `action-recorder:session:update:${string}`]: (patch: JsonPatchOperation[]) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
-	'connection-groups:update': (patch: ConnectionGroup[]) => void
+	'connection-collections:update': (patch: ConnectionCollection[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
 	'triggers:update': (change: TriggersUpdate) => void
-	'trigger-groups:update': (patch: TriggerGroup[]) => void
+	'trigger-collections:update': (patch: TriggerCollection[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void

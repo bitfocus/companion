@@ -10,7 +10,7 @@ export function useConnectionGroupsSubscription(socket: CompanionSocketWrapped, 
 		setReady(false)
 
 		socket
-			.emitPromise('connection-groups:subscribe', [])
+			.emitPromise('connection-collections:subscribe', [])
 			.then((groups) => {
 				store.resetGroups(groups)
 				setReady(true)
@@ -20,7 +20,7 @@ export function useConnectionGroupsSubscription(socket: CompanionSocketWrapped, 
 				console.error('Failed to load connection groups list', e)
 			})
 
-		const unsubUpdates = socket.on('connection-groups:update', (update) => {
+		const unsubUpdates = socket.on('connection-collections:update', (update) => {
 			store.resetGroups(update)
 		})
 
@@ -28,7 +28,7 @@ export function useConnectionGroupsSubscription(socket: CompanionSocketWrapped, 
 			store.resetGroups(null)
 			unsubUpdates()
 
-			socket.emitPromise('connection-groups:unsubscribe', []).catch((e) => {
+			socket.emitPromise('connection-collections:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe from connection groups list:', e)
 			})
 		}

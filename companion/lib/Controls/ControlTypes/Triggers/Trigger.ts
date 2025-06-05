@@ -193,10 +193,10 @@ export class ControlTrigger
 		this.#actionRunner.abortSingle(exceptSignal)
 	}
 
-	checkGroupIsValid(validGroupIds: Set<string>): boolean {
-		if (this.options.groupId && !validGroupIds.has(this.options.groupId)) {
-			// Group is not valid, remove it
-			this.options.groupId = undefined
+	checkCollectionIdIsValid(validCollectionIds: Set<string>): boolean {
+		if (this.options.collectionId && !validCollectionIds.has(this.options.collectionId)) {
+			// collectionId is not valid, remove it
+			this.options.collectionId = undefined
 
 			this.commitChange(false)
 
@@ -505,7 +505,7 @@ export class ControlTrigger
 	 * Update an option field of this control
 	 */
 	optionsSetField(key: string, value: any, forceSet?: boolean): boolean {
-		if (!forceSet && (key === 'sortOrder' || key === 'groupId'))
+		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
 		// @ts-ignore
