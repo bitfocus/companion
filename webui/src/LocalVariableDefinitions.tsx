@@ -23,6 +23,10 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		label: 'The current step of this button',
 	},
 	{
+		value: 'this:step_count',
+		label: 'The number of step on this button',
+	},
+	{
 		value: 'this:page_name',
 		label: 'This page name',
 	},

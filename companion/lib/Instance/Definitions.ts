@@ -303,7 +303,7 @@ export class InstanceDefinitions {
 			type: 'button',
 			options: {
 				rotaryActions: definition.options?.rotaryActions ?? false,
-				stepAutoProgress: definition.options?.stepAutoProgress ?? true,
+				stepProgression: (definition.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
 			},
 			style: {
 				textExpression: false,

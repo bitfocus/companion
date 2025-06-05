@@ -20,6 +20,7 @@ interface ButtonEditorTabsProps {
 	controlId: string
 	location: ControlLocation
 	steps: NormalButtonSteps
+	disabledSetStep: boolean
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
 	extraTabs?: ButtonEditorExtraTabs[]
@@ -29,6 +30,7 @@ export function ButtonEditorTabs({
 	controlId,
 	location,
 	steps,
+	disabledSetStep,
 	runtimeProps,
 	rotaryActions,
 	extraTabs,
@@ -119,6 +121,7 @@ export function ButtonEditorTabs({
 						selectedIndex={selectedIndex}
 						selectedKey={selectedKey}
 						selectedStepProps={selectedStepProps}
+						disabledSetStep={disabledSetStep}
 					/>
 				)}
 			</div>
