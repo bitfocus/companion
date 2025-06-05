@@ -103,7 +103,7 @@ export const TriggersPage = observer(function Triggers() {
 						<CButton color="primary" onClick={doAddNew} size="sm">
 							<FontAwesomeIcon icon={faAdd} /> Add Trigger
 						</CButton>
-						<CButton color="primary" size="sm" onClick={() => triggerGroupsApi.addNewGroup('New Group')}>
+						<CButton color="info" size="sm" onClick={() => triggerGroupsApi.addNewGroup('New Group')}>
 							<FontAwesomeIcon icon={faLayerGroup} /> Add Group
 						</CButton>
 					</CButtonGroup>

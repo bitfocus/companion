@@ -87,7 +87,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 			<ConnectionVariablesModal ref={variablesModalRef} />
 
 			<div className="connection-group-actions mb-2">
-				<CButton color="primary" size="sm" onClick={() => connectionListApi.addNewGroup('New Group')}>
+				<CButton color="info" size="sm" onClick={() => connectionListApi.addNewGroup('New Group')}>
 					<FontAwesomeIcon icon={faLayerGroup} /> Add Group
 				</CButton>
 			</div>

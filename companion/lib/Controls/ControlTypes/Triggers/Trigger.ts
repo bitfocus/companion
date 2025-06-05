@@ -504,7 +504,7 @@ export class ControlTrigger
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: number, forceSet?: boolean): boolean {
+	optionsSetField(key: string, value: any, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'groupId'))
 			throw new Error('sortOrder cannot be set by the client')
 

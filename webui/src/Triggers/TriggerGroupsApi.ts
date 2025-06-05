@@ -2,6 +2,7 @@ import { useContext, useMemo } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { GroupApi } from '~/Components/GroupingTable/Types.js'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 
 export interface TriggerGroupsApi extends GroupApi {}
 
@@ -42,7 +43,7 @@ export function useTriggerGroupsApi(confirmModalRef: React.RefObject<GenericConf
 					})
 				},
 				moveItemToGroup: (itemId: string, groupId: string | null, dropIndex: number) => {
-					socket.emitPromise('triggers:reorder', [groupId, itemId, dropIndex]).catch((e) => {
+					socket.emitPromise('triggers:reorder', [groupId, CreateTriggerControlId(itemId), dropIndex]).catch((e) => {
 						console.error('Reorder failed', e)
 					})
 				},

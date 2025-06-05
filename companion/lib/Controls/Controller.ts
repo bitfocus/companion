@@ -700,74 +700,38 @@ export class ControlsController {
 			return false
 		})
 		client.onPromise('triggers:reorder', (groupId: string | null, controlId: string, dropIndex: number) => {
-			// if (!Array.isArray(triggerIds)) throw new Error('Expected array of ids')
+			const thisTrigger = this.#controls.get(controlId)
+			if (!thisTrigger || !(thisTrigger instanceof ControlTrigger)) return false
 
-			// triggerIds = triggerIds.filter((id) => this.#validateTriggerControlId(id))
+			// update the group ID of the trigger being moved if needed
+			if (thisTrigger.options.groupId !== (groupId ?? undefined)) {
+				thisTrigger.optionsSetField('groupId', groupId ?? undefined, true)
+			}
 
-			// // This is a bit naive, but should be sufficient if the client behaves
+			// find all the other triggers with the matching groupId
+			const sortedTriggers = Array.from(this.#controls.values())
+				.filter(
+					(control): control is ControlTrigger =>
+						control.controlId !== controlId &&
+						control instanceof ControlTrigger &&
+						((!control.options.groupId && !groupId) || control.options.groupId === groupId)
+				)
+				.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
 
-			// // Update the order based on the ids provided
-			// triggerIds.forEach((id, index) => {
-			// 	const control = this.getControl(id)
-			// 	if (control && control.supportsOptions) control.optionsSetField('sortOrder', index, true)
-			// })
+			if (dropIndex < 0) {
+				// Push the trigger to the end of the array
+				sortedTriggers.push(thisTrigger)
+			} else {
+				// Insert the trigger at the drop index
+				sortedTriggers.splice(dropIndex, 0, thisTrigger)
+			}
 
-			// // Fill in for any which weren't specified
-			// const updatedTriggerIds = new Set(triggerIds)
-			// const triggerControls = this.getAllTriggers()
-			// triggerControls.sort((a, b) => a.options.sortOrder - b.options.sortOrder)
+			// update the sort order of the connections in the store, tracking which ones changed
+			sortedTriggers.forEach((trigger, index) => {
+				if (trigger.options.sortOrder === index) return // No change
 
-			// let nextIndex = triggerIds.length
-			// for (const control of triggerControls) {
-			// 	if (!updatedTriggerIds.has(control.controlId) && control.supportsOptions) {
-			// 		control.optionsSetField('sortOrder', nextIndex++, true)
-			// 	}
-			// }
-
-			// return true
-
-			const thisConnection = this.#controls.get(controlId)
-			if (!thisConnection) return false
-
-			// const changedIds: string[] = []
-
-			// // find all the other connections with the matching groupId
-			// const sortedConnectionIds = Array.from(this.#store)
-			// 	.filter(
-			// 		([id, config]) => config && ((!config.groupId && !groupId) || config.groupId === groupId) && id !== connectionId
-			// 	)
-			// 	.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
-			// 	.map(([id]) => id)
-
-			// if (dropIndex < 0) {
-			// 	// Push the connection to the end of the array
-			// 	sortedConnectionIds.push(connectionId)
-			// } else {
-			// 	// Insert the connection at the drop index
-			// 	sortedConnectionIds.splice(dropIndex, 0, connectionId)
-			// }
-
-			// // update the sort order of the connections in the store, tracking which ones changed
-			// sortedConnectionIds.forEach((id, index) => {
-			// 	const entry = this.#store.get(id)
-			// 	if (entry && entry.sortOrder !== index) {
-			// 		entry.sortOrder = index
-			// 		changedIds.push(id)
-			// 	}
-			// })
-
-			// // Also update the group ID of the connection being moved if needed
-			// if (thisConnection.groupId !== groupId) {
-			// 	thisConnection.groupId = groupId ?? undefined
-			// 	if (!changedIds.includes(connectionId)) {
-			// 		changedIds.push(connectionId)
-			// 	}
-			// }
-
-			// // persist the changes
-			// if (changedIds.length > 0) {
-			// 	this.commitChanges(changedIds)
-			// }
+				trigger.optionsSetField('sortOrder', index, true)
+			})
 
 			return true
 		})
