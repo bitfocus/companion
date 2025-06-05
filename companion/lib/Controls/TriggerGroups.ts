@@ -25,7 +25,7 @@ export class TriggerGroups extends GroupsBaseController<undefined> {
 		this.#cleanUnknownGroupIds(this.collectAllGroupIds())
 	}
 
-	override emitUpdate(rows: ConnectionGroup[]): void {
+	override emitUpdate(rows: TriggerGroup[]): void {
 		this.#io.emitToRoom(TriggerGroupRoom, 'trigger-groups:update', rows)
 	}
 
