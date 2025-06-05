@@ -1,3 +1,5 @@
+import type { GroupBase } from './Groups.js'
+
 export interface ConnectionConfig {
 	label: string
 	config: unknown
@@ -22,17 +24,7 @@ export interface ClientConnectionConfig {
 	groupId: string | null
 }
 
-export interface ConnectionGroup {
-	id: string
-	label: string
-	sortOrder: number
-	// parentId: string | null
-	children: ConnectionGroup[]
-}
-
-// export interface UiConnectionGroup extends ConnectionGroup {
-// 	children: UiConnectionGroup[]
-// }
+export type ConnectionGroup = GroupBase<undefined>
 
 export enum ConnectionUpdatePolicy {
 	Manual = 'manual',
