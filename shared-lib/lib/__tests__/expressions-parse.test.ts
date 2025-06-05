@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { ParseExpression, FindAllReferencedVariables } from '../lib/Expression/ExpressionParse'
+import { ParseExpression, FindAllReferencedVariables } from '../Expression/ExpressionParse.js'
 
-function ParseExpression2(str) {
+function ParseExpression2(str: string) {
 	const node = ParseExpression(str)
 	return {
 		expr: node,
@@ -302,7 +302,7 @@ describe('parser', () => {
 	describe('syntax errors', () => {
 		it('should detect invalid tokens', () => {
 			const fn = () => ParseExpression2('$(internal:a) @ $(internal:b)')
-			expect(fn).toThrow(/Unexpected \"@\" at/)
+			expect(fn).toThrow(/Unexpected "@" at/)
 		})
 
 		// it.only('should detect empty parenthesis', () => {

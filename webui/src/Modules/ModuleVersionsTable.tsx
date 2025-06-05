@@ -11,14 +11,14 @@ import {
 	faTrash,
 	faWarning,
 } from '@fortawesome/free-solid-svg-icons'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { ModuleStoreModuleInfoStore, ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import semver from 'semver'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
-import { useTableVisibilityHelper, VisibilityButton } from '../Components/TableVisibility.js'
+import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
 

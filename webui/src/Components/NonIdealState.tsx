@@ -7,14 +7,16 @@ export const NonIdealState = ({
 	text,
 	icon = faTrash,
 	children = <></>,
+	style = {},
 }: {
 	text?: string
 	icon: IconProp
 	children?: React.ReactNode
+	style?: React.CSSProperties
 }) => {
 	return (
 		<>
-			<div style={{ padding: '5vh', color: '#000', textAlign: 'center' }}>
+			<div style={{ padding: '5vh', color: '#000', textAlign: 'center', ...style }}>
 				<div style={{ opacity: 0.6 }}>
 					<FontAwesomeIcon icon={icon} size="3x" />
 				</div>

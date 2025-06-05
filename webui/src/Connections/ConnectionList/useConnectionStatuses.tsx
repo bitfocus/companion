@@ -1,8 +1,8 @@
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { ObservableMap, observable, runInAction } from 'mobx'
 import { useContext, useEffect, useMemo } from 'react'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
-import { assertNever } from '../../util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { assertNever } from '~/util.js'
 
 export function useConnectionStatuses(): ObservableMap<string, ConnectionStatusEntry> {
 	const { socket } = useContext(RootAppStoreContext)

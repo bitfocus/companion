@@ -1,6 +1,6 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CCol, CForm, CFormInput, CFormLabel, CInputGroup, CRow } from '@coreui/react'
-import { PreventDefaultHandler, useComputed } from '../util.js'
+import { PreventDefaultHandler, useComputed } from '~/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -13,19 +13,21 @@ import {
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
-import { TextInputField } from '../Components/TextInputField.js'
-import { CheckboxInputField } from '../Components/CheckboxInputField.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { NonIdealState } from '../Components/NonIdealState.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Link } from '@tanstack/react-router'
 import classNames from 'classnames'
+import VariableInputGroup from '~/Components/VariableInputGroup.js'
+import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
 
 const DRAG_ID = 'custom-variables'
 
@@ -401,9 +403,6 @@ function CustomVariableRow({
 	})
 	preview(drop(ref))
 
-	const valueStr = typeof value !== 'string' ? JSON.stringify(value, undefined, '\t') || '' : value
-	const compactValue = valueStr.length > 100 ? `${valueStr.substring(0, 100)}...` : valueStr
-
 	return (
 		<tr ref={ref} className={isDragging ? 'variable-dragging' : ''}>
 			<td ref={drag} className="td-reorder">
@@ -422,34 +421,7 @@ function CustomVariableRow({
 						</div>
 						{isCollapsed && (
 							<div className="cell-header-item grow">
-								{compactValue.length > 0 && (
-									<>
-										<code
-											style={{
-												backgroundColor: 'rgba(0,0,200,0.1)',
-												color: 'rgba(0,0,200,1)',
-												fontWeight: 'normal',
-												fontSize: 14,
-												padding: '4px',
-												lineHeight: '2em',
-												borderRadius: '6px',
-											}}
-											title={value}
-										>
-											{compactValue}
-										</code>
-										<CopyToClipboard text={valueStr} onCopy={onCopied}>
-											<CButton size="sm" title="Copy current variable value">
-												<FontAwesomeIcon icon={faCopy} color="rgba(0,0,200,1)" />
-											</CButton>
-										</CopyToClipboard>
-									</>
-								)}
-								{value?.length === 0 && (
-									<>
-										<span style={{ fontWeight: 'normal' }}>(empty)</span>
-									</>
-								)}
+								<VariableValueDisplay value={value} onCopied={onCopied} />
 							</div>
 						)}
 						<div className="cell-header-item">
@@ -502,21 +474,18 @@ function CustomVariableRow({
 										Current value:
 									</CFormLabel>
 									<CCol sm={9}>
-										<TextInputField
-											value={value ?? ''}
-											setValue={(val) => setCurrentValue(name, val)}
-											style={{ marginBottom: '0.5rem' }}
-										/>
+										<VariableInputGroup value={value} name={name} setCurrentValue={setCurrentValue} />
 									</CCol>
 
 									<CFormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
 										Startup value:
 									</CFormLabel>
 									<CCol sm={9}>
-										<TextInputField
+										<VariableInputGroup
 											disabled={!!info.persistCurrentValue}
-											value={info.defaultValue + ''}
-											setValue={(val) => setStartupValue(name, val)}
+											value={info.defaultValue}
+											name={name}
+											setCurrentValue={setStartupValue}
 										/>
 									</CCol>
 								</CRow>

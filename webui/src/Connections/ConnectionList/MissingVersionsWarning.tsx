@@ -3,8 +3,8 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useCallback } from 'react'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
-import { useComputed } from '../../util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useComputed } from '~/util.js'
 
 export const MissingVersionsWarning = observer(function MissingVersionsWarning() {
 	const { socket, connections, modules } = useContext(RootAppStoreContext)

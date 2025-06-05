@@ -1,7 +1,7 @@
 import { useContext, useMemo } from 'react'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
-import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { GroupApi } from '../../Components/GroupingTable/Types.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GroupApi } from '~/Components/GroupingTable/Types.js'
 
 export interface ConnectionListApi extends GroupApi {}
 

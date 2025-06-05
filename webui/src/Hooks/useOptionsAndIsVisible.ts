@@ -1,6 +1,6 @@
 import type { ExtendedInputField, InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { useEffect, useMemo, useState } from 'react'
-import { assertNever, deepFreeze, sandbox } from '../util.js'
+import { assertNever, deepFreeze, sandbox } from '~/util.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { cloneDeep } from 'lodash-es'
 import { toJS } from 'mobx'

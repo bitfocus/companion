@@ -498,7 +498,7 @@ export class ServiceHttpApi {
 
 		const newFields: Partial<ButtonStyleProperties> = {}
 
-		const bgcolor = req.query.bgcolor || req.body.bgcolor
+		const bgcolor = req.query.bgcolor || req.body?.bgcolor
 		if (bgcolor !== undefined) {
 			const newColor = parseColorToNumber(bgcolor)
 			if (newColor !== false) {
@@ -506,7 +506,7 @@ export class ServiceHttpApi {
 			}
 		}
 
-		const fgcolor = req.query.color || req.body.color
+		const fgcolor = req.query.color || req.body?.color
 		if (fgcolor !== undefined) {
 			const newColor = parseColorToNumber(fgcolor)
 			if (newColor !== false) {
@@ -514,7 +514,7 @@ export class ServiceHttpApi {
 			}
 		}
 
-		const size = req.query.size || req.body.size
+		const size = req.query.size || req.body?.size
 		if (size !== undefined) {
 			const value = size === 'auto' ? 'auto' : parseInt(size)
 
@@ -523,25 +523,25 @@ export class ServiceHttpApi {
 			}
 		}
 
-		const text = req.query.text ?? req.body.text
+		const text = req.query.text ?? req.body?.text
 		if (text !== undefined) {
 			newFields.text = text
 		}
 
-		const png64 = req.query.png64 ?? req.body.png64
+		const png64 = req.query.png64 ?? req.body?.png64
 		if (png64 === '') {
 			newFields.png64 = null
 		} else if (png64 && png64.match(/data:.*?image\/png/)) {
 			newFields.png64 = png64
 		}
 
-		const alignment = req.query.alignment || req.body.alignment
+		const alignment = req.query.alignment || req.body?.alignment
 		if (alignment) {
 			const [, , tmpAlignment] = ParseAlignment(alignment, false)
 			newFields.alignment = tmpAlignment
 		}
 
-		const pngalignment = req.query.pngalignment || req.body.pngalignment
+		const pngalignment = req.query.pngalignment || req.body?.pngalignment
 		if (pngalignment) {
 			const [, , tmpAlignment] = ParseAlignment(pngalignment, false)
 			newFields.pngalignment = tmpAlignment
@@ -583,7 +583,7 @@ export class ServiceHttpApi {
 			}
 			variableError = false
 		} else if (req.body && typeof req.body !== 'object') {
-			variableValue = req.body.toString().trim()
+			variableValue = req.body?.toString().trim()
 			variableError = false
 		}
 

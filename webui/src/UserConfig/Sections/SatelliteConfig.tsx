@@ -1,6 +1,6 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { InlineHelp } from '../../Components/InlineHelp.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigProps } from '../Components/Common.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'

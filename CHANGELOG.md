@@ -19,11 +19,15 @@
 - Refinement of getting-started guide, to better handle scrolling
 - Remove support for legacy xkeys layouts
 - Allow custom variables descriptions to be edited
+- Allow editing custom variable value as object
+- Indicate type of each variable
 - Handle body data in HTTP api setting custom variable
 - Support for Mirabox Stream Dock 293V3 and N4
 - Reimplement support for Contour Shuttle
 - Support Resolve Replay Editor
-- Support latest streamdeck models
+- Support latest streamdeck models & network dock
+- Allow remote surfaces to be disabled
+- Allow specifying id of new emulators and surface groups
 - Support granular permissions for modules (internal functionality, not exposed in the ui)
 - Extend satellite api, to allow clients to handle display of locked state
 
@@ -31,11 +35,46 @@
 
 - Limit ui session lockout duration, to avoid browser crash
 - Support HTTP_PROXY environment variables for module store api calls
--
+- Emulator button presses on ios double triggering
+- Adjust text vertical alignment on buttons
 
 ### 🧩 NEW & UPDATED MODULES
 
 Modules are now distributed independently, and are no longer reported here
+
+## Companion v3.5.5 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Support additional stream deck usb ids
+- UI crashing if admin lockout timeout set to over 24 hours
+- Log connection pid when starting
+- Button grid not handling all page changes correctly
+- HTTP api methods failing without body
+
+## Companion v3.5.4 - Release Notes
+
+### 🐞 BUG FIXES
+
+- dragging action group can disappear #3367
+- full import disappearning delays #3365
+- clear variables about surfaces when disconnected #3362
+- external links not always opening in new tabs
+- surface discovery not handling ipv6 correctly
+- emulator keymap for presenter controller incorrect #3359
+- feedbacks breaking when expressions fail to parse#3386
+- handle pasted variable names better in some input fields #3390
+- improve resilience of elgato software check on windows #3261
+
+### 🐞 MODULE FIXES
+
+- generic-swp08
+- haivision-connectdvr
+- roland-vr120hd
+- neutrik-dpro
+- ntp-technology-dot
+- smodetech-smodelive
+- vitec-avediaplayer9300-series
 
 ## Companion v3.5.3 - Release Notes
 

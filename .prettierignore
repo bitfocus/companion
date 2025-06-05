@@ -9,7 +9,6 @@ webui/build/
 webui/public/legacy
 webui/src/routeTree.gen.ts
 /LICENSE.md
-docs/*
 
 module-local-dev
 bundled-modules

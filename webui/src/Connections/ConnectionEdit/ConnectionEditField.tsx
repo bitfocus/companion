@@ -6,10 +6,10 @@ import {
 	MultiDropdownInputField,
 	NumberInputField,
 	TextInputField,
-} from '../../Components/index.js'
-import { BonjourDeviceInputField } from '../../Components/BonjourDeviceInputField.js'
+} from '~/Components/index.js'
+import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
 import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
-import { StaticTextFieldText } from '../../Controls/StaticTextField.js'
+import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 
 interface ConnectionEditFieldProps {
 	label: React.ReactNode

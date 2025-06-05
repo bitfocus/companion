@@ -7,13 +7,13 @@ import {
 	MultiDropdownInputField,
 	NumberInputField,
 	TextInputField,
-} from '../Components/index.js'
+} from '~/Components/index.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
-import { DropdownChoiceInt, ControlLocalVariables, InternalActionLocalVariables } from '../LocalVariableDefinitions.js'
+import { DropdownChoiceInt, ControlLocalVariables, InternalActionLocalVariables } from '~/LocalVariableDefinitions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 

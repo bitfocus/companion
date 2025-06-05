@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
-import type { UserConfigStore } from '../Stores/UserConfigStore.js'
+import { CompanionSocketWrapped } from '~/util.js'
+import type { UserConfigStore } from '~/Stores/UserConfigStore.js'
 
 export function useUserConfigSubscription(
 	socket: CompanionSocketWrapped,

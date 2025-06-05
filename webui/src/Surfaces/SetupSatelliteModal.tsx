@@ -3,10 +3,10 @@ import {
 	CompanionExternalAddresses,
 } from '@companion-app/shared/Model/Surfaces.js'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { SocketContext, LoadingBar } from '../util.js'
+import { SocketContext, LoadingBar } from '~/util.js'
 import { CButton, CForm, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { CModalExt } from '../Components/CModalExt.js'
-import { DropdownInputField, MenuPortalContext } from '../Components/DropdownInputField.js'
+import { CModalExt } from '~/Components/CModalExt.js'
+import { DropdownInputField, MenuPortalContext } from '~/Components/DropdownInputField.js'
 
 export interface SetupSatelliteModalRef {
 	show(surfaceInfo: ClientDiscoveredSurfaceInfoSatellite): void

@@ -21,3 +21,5 @@ export const SHOW_HIDE_TOP_BAR: DropdownChoice[] = [
 ]
 
 export const PRIMARY_COLOR: string = '#d50215'
+
+export const VARIABLE_UNKNOWN_VALUE = '$NA'

@@ -1,12 +1,12 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { MyErrorBoundary } from '../../util.js'
+import { MyErrorBoundary } from '~/util.js'
 import { CAlert, CButton, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
 import { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject

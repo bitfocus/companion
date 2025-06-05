@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import { UserConfigProps } from '../Components/Common.js'
-import { InlineHelp } from '../../Components/InlineHelp.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
 
 export const EmberPlusConfig = observer(function EmberPlusConfig(props: UserConfigProps) {

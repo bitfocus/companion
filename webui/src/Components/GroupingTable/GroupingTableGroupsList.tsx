@@ -1,6 +1,6 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { usePanelCollapseHelperContextForPanel } from '../../Helpers/CollapseHelper.js'
+import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { GroupingTableDropZone } from './GroupingTableDropZone.js'
 import type { GroupingTableGroup, GroupingTableItem } from './Types.js'
 import { useGroupListGroupDrop } from './useGroupDrop.js'

@@ -33,10 +33,10 @@ Remote triggering can be done by sending OSC commands to port `12321` (the port 
 
 **Examples**
 
-Press row 0, column 5  on page 1 down and hold  
+Press row 0, column 5 on page 1 down and hold  
 `/location/1/0/5/press`
 
-Change button background color of row 0, column 5  on page 1 to red  
+Change button background color of row 0, column 5 on page 1 to red  
 `/location/1/0/5/style/bgcolor 255 0 0`  
 `/location/1/0/5/style/bgcolor rgb(255,0,0)`  
 `/location/1/0/5/style/bgcolor #ff0000`

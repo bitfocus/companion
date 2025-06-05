@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
-import type { ConnectionsStore } from '../Stores/ConnectionsStore.js'
+import { CompanionSocketWrapped } from '~/util.js'
+import type { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
 
 export function useConnectionsConfigSubscription(socket: CompanionSocketWrapped, store: ConnectionsStore): boolean {
 	const [ready, setReady] = useState(false)

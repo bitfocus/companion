@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useContext } from 'react'
-import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export function useConnectionCurrentConfig(connectionId: string) {
 	const { socket } = useContext(RootAppStoreContext)

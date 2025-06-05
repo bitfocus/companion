@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState } from 'react'
-import { SocketContext, PreventDefaultHandler } from '../../util.js'
+import { SocketContext, PreventDefaultHandler } from '~/util.js'
 import {
 	CButton,
 	CCol,
@@ -17,7 +17,7 @@ import {
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
-import { MenuPortalContext } from '../../Components/DropdownInputField.js'
+import { MenuPortalContext } from '~/Components/DropdownInputField.js'
 import { ButtonPicker } from './ButtonPicker.js'
 import { TriggerPicker } from './TriggerPicker.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'

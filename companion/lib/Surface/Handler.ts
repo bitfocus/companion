@@ -32,6 +32,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { PanelDefaults } from './Config.js'
+import debounceFn from 'debounce-fn'
 
 const PINCODE_NUMBER_POSITIONS: [number, number][] = [
 	// 0
@@ -130,6 +131,13 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Config for this surface
 	 */
 	#surfaceConfig: SurfaceConfig
+
+	/**
+	 * Whether the surface is locked
+	 */
+	get isLocked(): boolean {
+		return this.#isSurfaceLocked
+	}
 
 	/**
 	 * Grid size of the panel
@@ -299,7 +307,16 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		return getSurfaceName(this.#surfaceConfig, this.surfaceId)
 	}
 
+	#drawPageDebounced = debounceFn(() => this.#drawPage(), {
+		after: true,
+		wait: 1,
+		maxWait: 5,
+	})
+
 	#drawPage() {
+		// Ensure the debounce is not queued
+		this.#drawPageDebounced.cancel()
+
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
 				if (!!this.panel.setLocked) {
@@ -403,6 +420,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (this.#isSurfaceLocked != locked) {
 			this.#isSurfaceLocked = !!locked
 
+			this.#surfaces.emit('surface_locked', this.surfaceId, this.#isSurfaceLocked)
+
 			if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
 
 			if (!skipDraw) {
@@ -410,7 +429,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					this.panel.setLocked(false, this.#currentPincodeEntry.length)
 				}
 
-				this.#drawPage()
+				this.#drawPageDebounced()
 			}
 		}
 	}
@@ -726,9 +745,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	triggerRedraw(defer = false): void {
 		if (defer) {
-			setImmediate(() => {
-				this.#drawPage()
-			})
+			this.#drawPageDebounced()
 		} else {
 			this.#drawPage()
 		}

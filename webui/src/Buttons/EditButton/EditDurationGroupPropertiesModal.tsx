@@ -10,7 +10,7 @@ import {
 	CButton,
 } from '@coreui/react'
 import React, { forwardRef, useState, useRef, useCallback, FormEvent, useImperativeHandle } from 'react'
-import { CModalExt } from '../../Components/CModalExt.js'
+import { CModalExt } from '~/Components/CModalExt.js'
 
 type EditDurationCompleteCallback = (duration: number, whileHeld: boolean) => void
 

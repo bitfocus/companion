@@ -2,14 +2,14 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTrash, faSort, faShareFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { AddPagesModal, AddPagesModalRef } from './PagesAddModal.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { PagesStoreModel } from '../Stores/PagesStore.js'
+import { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { TextInputField } from '../Components/TextInputField.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 
 interface PagesListProps {
 	setPageNumber: (page: number) => void

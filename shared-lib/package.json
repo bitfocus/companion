@@ -12,6 +12,9 @@
       "default": "./dist/*.cjs"
     }
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@jsep-plugin/comment": "^1.0.4",
     "@jsep-plugin/numbers": "^1.0.2",
@@ -20,13 +23,13 @@
     "jsep": "^1.4.0",
     "jsonpath-plus": "^10.3.0",
     "ps-tree": "^1.2.0",
-    "semver": "^7.7.2"
+    "semver": "^7.7.2",
+    "unicode-segmenter": "^0.11.3"
   },
   "scripts": {
     "build": "run build:ts",
     "build:ts": "tsc",
-    "dev": "tsc --watch",
-    "check-types": "tsc --noEmit"
+    "dev": "tsc --watch"
   },
   "devDependencies": {
     "@types/semver": "^7.7.0",

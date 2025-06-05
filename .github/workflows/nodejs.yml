@@ -10,6 +10,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -26,19 +27,8 @@ jobs:
 
           yarn build:ts
 
-      - name: Check types (shared-lib)
+      - name: Check types
         run: |
-          cd shared-lib
-          yarn check-types
-
-      - name: Check types (server)
-        run: |
-          cd companion
-          yarn check-types
-
-      - name: Check types (client)
-        run: |
-          cd webui
           yarn check-types
 
   linux-x64:
@@ -54,6 +44,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+          persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -132,6 +123,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+          persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -210,6 +202,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+          persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -288,6 +281,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+          persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -361,15 +355,16 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win32-x64:
-    runs-on: ${{ startsWith(github.ref, 'refs/tags/') && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-2019'}}
+    runs-on: ${{ (startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-latest'}}
     needs: check-types
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: true
+          persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -414,6 +409,9 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
           BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
+          # the wincert machine has issues using the default cache location
+          ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+          NODE_OPTIONS: --max_old_space_size=4096
 
       - name: Determine files to upload
         id: filenames
@@ -491,6 +489,8 @@ jobs:
 
       - uses: actions/checkout@v4
         if: ${{ steps.meta.outputs.tags }}
+        with:
+          persist-credentials: false
 
       - name: Build and push
         uses: docker/build-push-action@v6

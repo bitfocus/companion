@@ -22,7 +22,7 @@ import { createRoot } from 'react-dom/client'
 import io from 'socket.io-client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 
-import { SocketContext, wrapSocket } from './util.js'
+import { SocketContext, wrapSocket } from '~/util.js'
 
 // import i18n from 'i18next'
 // import Backend from 'i18next-http-backend'

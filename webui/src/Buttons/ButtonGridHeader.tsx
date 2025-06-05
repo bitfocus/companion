@@ -3,9 +3,9 @@ import React, { useCallback, useContext, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { useComputed } from '../util.js'
+import { useComputed } from '~/util.js'
 
 interface ButtonGridHeaderProps {
 	pageNumber: number

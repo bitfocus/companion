@@ -2,7 +2,7 @@ import { EntityOwner, SomeSocketEntityLocation } from '@companion-app/shared/Mod
 import { isEqual } from 'lodash-es'
 import React, { useDeferredValue } from 'react'
 import { useDrop } from 'react-dnd'
-import { DragState } from '../../util.js'
+import { DragState } from '~/util.js'
 
 export interface EntityListDragItem {
 	entityId: string

@@ -1,13 +1,13 @@
 import React, { useCallback, useContext, useRef } from 'react'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { NonIdealState } from '../Components/NonIdealState.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faAdd, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddOutboundSurfaceModal, AddOutboundSurfaceModalRef } from './AddOutboundSurfaceModal.js'
 import { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import { TextInputField } from '../Components/TextInputField.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 
 export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
@@ -42,6 +42,15 @@ export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 		[socket]
 	)
 
+	const updateEnabled = useCallback(
+		(surfaceId: string, enabled: boolean) => {
+			socket.emitPromise('surfaces:outbound:set-enabled', [surfaceId, enabled]).catch((err) => {
+				console.error('Update enabled failed', err)
+			})
+		},
+		[socket]
+	)
+
 	return (
 		<>
 			<AddOutboundSurfaceModal ref={addModalRef} />
@@ -68,6 +77,7 @@ export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 							key={surfaceInfo.id}
 							surfaceInfo={surfaceInfo}
 							updateName={updateName}
+							updateEnabled={updateEnabled}
 							removeSurface={removeSurface}
 						/>
 					))}
@@ -89,10 +99,15 @@ interface OutboundSurfaceRowProps {
 	surfaceInfo: OutboundSurfaceInfo
 
 	updateName: (surfaceId: string, name: string) => void
+	updateEnabled: (surfaceId: string, enabled: boolean) => void
 	removeSurface: (surfaceId: string) => void
 }
-function OutboundSurfaceRow({ surfaceInfo, updateName, removeSurface }: OutboundSurfaceRowProps) {
+function OutboundSurfaceRow({ surfaceInfo, updateName, updateEnabled, removeSurface }: OutboundSurfaceRowProps) {
 	const updateName2 = useCallback((val: string) => updateName(surfaceInfo.id, val), [updateName, surfaceInfo.id])
+	const updateEnabled2 = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => updateEnabled(surfaceInfo.id, e.target.checked),
+		[updateName, surfaceInfo.id]
+	)
 	const removeSurface2 = useCallback(() => removeSurface(surfaceInfo.id), [removeSurface, surfaceInfo.id])
 
 	return (
@@ -101,17 +116,27 @@ function OutboundSurfaceRow({ surfaceInfo, updateName, removeSurface }: Outbound
 				<TextInputField value={surfaceInfo.displayName} setValue={updateName2} />
 			</td>
 			<td>
-				Stream Deck Studio
+				IP Stream Deck
 				{/* {surfaceInfo.type} TODO - do this dynamically once there are multiple to support */}
 			</td>
 			<td>
 				{surfaceInfo.address}
 				{surfaceInfo.port != null ? `:${surfaceInfo.port}` : ''}
 			</td>
-			<td className="text-right">
-				<CButton onClick={removeSurface2}>
-					<FontAwesomeIcon icon={faTrash} /> Remove
-				</CButton>
+			<td className="text-right compact ">
+				<div className="flex flex-col align-items-center">
+					<CFormSwitch
+						color="success"
+						className="mb-0 mt-1"
+						checked={surfaceInfo.enabled}
+						title={surfaceInfo.enabled ? 'Disable connection' : 'Enable connection'}
+						onChange={updateEnabled2}
+					/>
+
+					<CButton onClick={removeSurface2} title="Remove">
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
+				</div>
 			</td>
 		</tr>
 	)

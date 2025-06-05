@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { PanelCollapseHelperProvider } from '../Helpers/CollapseHelper.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import {
@@ -10,7 +10,7 @@ import {
 	stringifySocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { findAllEntityIdsDeep } from './Util.js'
-import { useControlEntitiesEditorService } from '../Services/Controls/ControlEntitiesService.js'
+import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEntitiesService.js'
 import { EditableEntityList } from './Components/EntityList.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 

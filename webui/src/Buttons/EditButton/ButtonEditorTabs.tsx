@@ -6,9 +6,9 @@ import { CNav, CNavItem, CNavLink, CButton } from '@coreui/react'
 import { faPlus, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react'
-import { GenericConfirmModalRef, GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
-import { useControlActionStepsAndSetsService } from '../../Services/Controls/ControlActionStepsAndSetsService.js'
-import { SocketContext } from '../../util.js'
+import { GenericConfirmModalRef, GenericConfirmModal } from '~/Components/GenericConfirmModal.js'
+import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
+import { SocketContext } from '~/util.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
 
 export interface ButtonEditorExtraTabs {
@@ -20,6 +20,7 @@ interface ButtonEditorTabsProps {
 	controlId: string
 	location: ControlLocation
 	steps: NormalButtonSteps
+	disabledSetStep: boolean
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
 	extraTabs?: ButtonEditorExtraTabs[]
@@ -29,6 +30,7 @@ export function ButtonEditorTabs({
 	controlId,
 	location,
 	steps,
+	disabledSetStep,
 	runtimeProps,
 	rotaryActions,
 	extraTabs,
@@ -119,6 +121,7 @@ export function ButtonEditorTabs({
 						selectedIndex={selectedIndex}
 						selectedKey={selectedKey}
 						selectedStepProps={selectedStepProps}
+						disabledSetStep={disabledSetStep}
 					/>
 				)}
 			</div>

@@ -1,12 +1,12 @@
 import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
-import { SocketContext, applyPatchOrReplaceObject } from '../../util.js'
+import { SocketContext, applyPatchOrReplaceObject } from '~/util.js'
 import { CCallout, CCol, CRow } from '@coreui/react'
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
+import { GenericConfirmModal } from '~/Components/GenericConfirmModal.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { RecorderSessionFinishModal } from './RecorderSessionFinishModal.js'
 import { RecorderSessionHeading } from './RecorderSessionHeading.js'
 import { RecorderSession } from './RecorderSession.js'
-import { PanelCollapseHelperProvider } from '../../Helpers/CollapseHelper.js'
+import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)

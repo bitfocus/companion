@@ -8,8 +8,8 @@ import React, {
 	useState,
 } from 'react'
 import { CAlert, CButton, CForm, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { SocketContext, PreventDefaultHandler } from '../util.js'
-import { CModalExt } from '../Components/CModalExt.js'
+import { SocketContext, PreventDefaultHandler } from '~/util.js'
+import { CModalExt } from '~/Components/CModalExt.js'
 
 export interface AddOutboundSurfaceModalRef {
 	show(): void
@@ -119,7 +119,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, Ad
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onShow={() => console.log('show')}>
 				<CModalHeader closeButton>
-					<h5>Add Stream Deck Studio</h5>
+					<h5>Add Stream Deck Studio or Network Dock</h5>
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={PreventDefaultHandler}>

@@ -50,7 +50,7 @@ function kill(pid: number, sig?: string): void {
 		for (const pid of pids) {
 			try {
 				process.kill(pid, sig)
-			} catch (err) {
+			} catch (_err) {
 				// do nothing
 			}
 		}

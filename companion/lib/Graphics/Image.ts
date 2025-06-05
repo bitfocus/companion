@@ -288,18 +288,8 @@ export class Image {
 		}
 
 		// set default transformation values at 'fill'-type
-		const source = {
-			x: 0,
-			y: 0,
-			w: imageWidth,
-			h: imageHeight,
-		}
-		const destination = {
-			x: xStart,
-			y: yStart,
-			w: width,
-			h: height,
-		}
+		const source = { x: 0, y: 0, w: imageWidth, h: imageHeight }
+		const destination = { x: xStart, y: yStart, w: width, h: height }
 
 		if (scaledImageWidth > width) {
 			//image is broader than drawing pane
@@ -559,6 +549,7 @@ export class Image {
 		// Measure the line height with a consistent string, to avoid issues with emoji being too tall
 		const lineHeightSample = this.context2d.measureText('A')
 		const measuredLineHeight = lineHeightSample.fontBoundingBoxAscent + lineHeightSample.fontBoundingBoxDescent
+		const measuredAscent = lineHeightSample.fontBoundingBoxAscent
 
 		const findLastChar = (textChars: string[]): { ascent: number; descent: number; maxCodepoints: number } => {
 			// skia-canvas built-in line break algorithm is poor
@@ -571,11 +562,7 @@ export class Image {
 
 			// if all fits we are done
 			if (diff >= 0) {
-				return {
-					ascent: measure.fontBoundingBoxAscent,
-					descent: measure.fontBoundingBoxDescent,
-					maxCodepoints: length,
-				}
+				return { ascent: measure.fontBoundingBoxAscent, descent: measure.fontBoundingBoxDescent, maxCodepoints: length }
 			}
 
 			// ok, we are not done. let's start with an assumption of how big one char is in average
@@ -640,11 +627,7 @@ export class Image {
 			}
 
 			//console.log('line algo failed', chars);
-			return {
-				ascent: measure.fontBoundingBoxAscent,
-				descent: measure.fontBoundingBoxDescent,
-				maxCodepoints: length,
-			}
+			return { ascent: measure.fontBoundingBoxAscent, descent: measure.fontBoundingBoxDescent, maxCodepoints: length }
 		}
 
 		// const textArr = [...displayText]
@@ -690,11 +673,7 @@ export class Image {
 				//lets look for a newline
 				const newlinePos = line.indexOf(String.fromCharCode(10))
 				if (newlinePos >= 0) {
-					lines.push({
-						textChars: line.slice(0, newlinePos),
-						ascent,
-						descent,
-					})
+					lines.push({ textChars: line.slice(0, newlinePos), ascent, descent })
 					lastDrawnCharCount += newlinePos + 1
 					continue
 				}
@@ -716,11 +695,7 @@ export class Image {
 
 				// get rid of a breaking space at end
 				const lineText = line.slice(0, breakPos + (line[breakPos] === ' ' ? 0 : 1))
-				lines.push({
-					textChars: lineText,
-					ascent,
-					descent,
-				})
+				lines.push({ textChars: lineText, ascent, descent })
 
 				lastDrawnCharCount += breakPos + 1
 			}
@@ -739,12 +714,6 @@ export class Image {
 			// If the text is too tall, we need to drop the last line
 			lines.splice(lines.length - 1, 1)
 		}
-
-		// since we are forcing the lineheight to 1.1, we have to calculate a new, smaller ascent and descent
-		let correctedAscent = Math.round(fontheight * 1.02)
-		// let correctedDescent = lineheight - correctedAscent
-		correctedAscent = Math.round(lines[0].ascent)
-		// correctedDescent = lineheight - correctedAscent
 
 		let xAnchor = x
 		switch (halign) {
@@ -766,13 +735,13 @@ export class Image {
 		let yAnchor = 0
 		switch (valign) {
 			case 'top':
-				yAnchor = correctedAscent
+				yAnchor = measuredAscent
 				break
 			case 'center':
-				yAnchor = Math.round((h - linesTotalHeight) / 2 + correctedAscent)
+				yAnchor = Math.round((h - linesTotalHeight) / 2 + measuredAscent)
 				break
 			case 'bottom':
-				yAnchor = h - linesTotalHeight + correctedAscent
+				yAnchor = h - linesTotalHeight + measuredAscent
 				break
 		}
 		yAnchor += y
@@ -784,9 +753,10 @@ export class Image {
 			this.context2d.fillText(text, xAnchor, yAnchor)
 
 			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
-			//this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')
-			//this.horizontalLine(yAnchor - correctedAscent, ''''rgb(0,0,255)')
-			//this.horizontalLine(yAnchor, 'rgb(255, 0, 0)')
+			// this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')
+			// this.horizontalLine(yAnchor + line.descent, 'rgb(0, 255, 0)')
+			// this.horizontalLine(yAnchor - correctedAscent, 'rgb(0,0,255)')
+			// this.horizontalLine(yAnchor, 'rgb(255, 0, 0)')
 			//console.log('Fontsize', fontsize, 'Lineheight', lineheight, 'asc', correctedAscent, 'des', correctedDescent, 'a+d', correctedAscent+correctedDescent);
 
 			yAnchor += measuredLineHeight

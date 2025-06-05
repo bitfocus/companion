@@ -118,7 +118,7 @@ export class ServiceSatelliteApi {
 
 		const id = `${params.DEVICEID}`
 
-		if (id.startsWith('emulator')) {
+		if (id.startsWith('emulator:') || id.startsWith('group:')) {
 			// Some deviceId values are 'special' and cannot be used by satellite
 			return this.#formatAndSendError(socket, messageName, id, 'Reserved DEVICEID')
 		}

@@ -3,15 +3,17 @@ import { CAlert, CButton, CButtonGroup, CCallout, CCol, CRow } from '@coreui/rea
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faSync } from '@fortawesome/free-solid-svg-icons'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
 import { KnownSurfacesTable } from './KnownSurfacesTable.js'
 import { OutboundSurfacesTable } from './OutboundSurfacesTable.js'
+import { AddEmulatorModal, AddEmulatorModalRef } from './AddEmulatorModal.js'
 
 export function ConfiguredSurfacesTab() {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
+	const addEmulatorModalRef = useRef<AddEmulatorModalRef>(null)
 
 	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState<string | null>(null)
@@ -34,13 +36,11 @@ export function ConfiguredSurfacesTab() {
 	}, [socket])
 
 	const addEmulator = useCallback(() => {
-		socket.emitPromise('surfaces:emulator-add', []).catch((err) => {
-			console.error('Emulator add failed', err)
-		})
-	}, [socket])
+		addEmulatorModalRef.current?.show()
+	}, [])
 	const addGroup = useCallback(() => {
 		addGroupModalRef.current?.show()
-	}, [socket])
+	}, [])
 
 	return (
 		<CRow>
@@ -70,6 +70,7 @@ export function ConfiguredSurfacesTab() {
 				</CButtonGroup>
 
 				<AddSurfaceGroupModal ref={addGroupModalRef} />
+				<AddEmulatorModal ref={addEmulatorModalRef} />
 
 				<KnownSurfacesTable />
 
@@ -92,8 +93,8 @@ export function DiscoverSurfacesTab() {
 				<h4>Discover Surfaces</h4>
 
 				<p style={{ marginBottom: '0.5rem' }}>
-					Discovered remote surfaces, such as Companion Satellite and Stream Deck Studio will be listed here. You can
-					easily configure them to connect to Companion from here.
+					Discovered remote surfaces, such as Companion Satellite, Stream Deck Studio or Stream Deck Network Dock will
+					be listed here. You can easily configure them to connect to Companion from here.
 					<br />
 					This requires Companion Satellite version 1.9.0 and later.
 				</p>
@@ -111,8 +112,8 @@ export function OutboundSurfacesTab() {
 				<h4>Remote Surfaces</h4>
 
 				<p style={{ marginBottom: '0.5rem' }}>
-					The Stream Deck Studio supports network connection. You can set up the connection from Companion here, or use
-					the Discovered Surfaces tab.
+					The Stream Deck Studio and Network Dock support network connections. You can set up the connection from
+					Companion here, or use the Discovered Surfaces tab.
 					<br />
 					This is not suitable for all remote surfaces such as Satellite, as that opens the connection to Companion
 					itself.

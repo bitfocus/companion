@@ -14,7 +14,6 @@ import findProcess from 'find-process'
 import HID from 'node-hid'
 import jsonPatch from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import { nanoid } from 'nanoid'
 import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
@@ -70,6 +69,7 @@ const SurfacesRoom = 'surfaces'
 export interface SurfaceControllerEvents {
 	surface_name: [surfaceId: string, name: string]
 	surface_page: [surfaceId: string, pageId: string]
+	surface_locked: [surfaceId: string, locked: boolean]
 	'surface-add': [surfaceId: string]
 	'surface-delete': [surfaceId: string]
 
@@ -168,7 +168,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			for (const id of Object.keys(instances)) {
 				// If the id starts with 'emulator:' then re-add it
 				if (id.startsWith('emulator:')) {
-					this.addEmulator(id.substring(9))
+					this.addEmulator(id.substring(9), '')
 				}
 			}
 
@@ -291,13 +291,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param id base id of the emulator
 	 * @param skipUpdate Skip emitting an update to the devices list
 	 */
-	addEmulator(id: string, skipUpdate = false): void {
+	addEmulator(id: string, name: string, skipUpdate = false): void {
 		const fullId = EmulatorRoom(id)
 		if (this.#surfaceHandlers.has(fullId)) {
 			throw new Error(`Emulator "${id}" already exists!`)
 		}
 
-		this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#io, id))
+		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#io, id))
+		handler.setPanelName(name)
 
 		if (!skipUpdate) this.updateDevicesList()
 	}
@@ -305,7 +306,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Create a `SurfaceHandler` for a `SurfacePanel`
 	 */
-	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): void {
+	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): SurfaceHandler {
 		const existingSurfaceConfig = this.getDeviceConfig(panel.info.deviceId)
 		if (!existingSurfaceConfig) {
 			this.#logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
@@ -347,6 +348,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		// Perform an update check in the background
 		this.#firmwareUpdates.triggerCheckSurfaceForUpdates(handler)
+
+		return handler
 	}
 
 	/**
@@ -469,12 +472,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			return 'device not found'
 		})
 
-		client.onPromise('surfaces:emulator-add', () => {
-			// TODO - should this do friendlier ids?
-			const id = nanoid()
-			this.addEmulator(id)
+		client.onPromise('surfaces:emulator-add', (baseId, name) => {
+			if (!baseId || typeof baseId !== 'string') throw new Error('Invalid id')
+			const fullId = `emulator:${baseId}`
 
-			return id
+			if (this.#surfaceHandlers.has(fullId)) throw new Error(`Emulator "${baseId}" already exists!`)
+
+			this.addEmulator(baseId, name || '')
+
+			return fullId
 		})
 
 		client.onPromise('surfaces:emulator-remove', (id) => {
@@ -505,11 +511,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			return 'device not found'
 		})
 
-		client.onPromise('surfaces:group-add', (name) => {
+		client.onPromise('surfaces:group-add', (baseId, name) => {
+			if (!baseId || typeof baseId !== 'string') throw new Error('Invalid id')
 			if (!name || typeof name !== 'string') throw new Error('Invalid name')
 
-			// TODO - should this do friendlier ids?
-			const groupId = `group:${nanoid()}`
+			const groupId = `group:${baseId}`
 
 			const newGroup = new SurfaceGroup(
 				this,
@@ -685,6 +691,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+				locked: false,
 				hasFirmwareUpdates: null,
 
 				size: config.gridSize || null,
@@ -698,6 +705,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
+				surfaceInfo.locked = surfaceHandler.isLocked
 				surfaceInfo.hasFirmwareUpdates = surfaceHandler.panel.info.hasFirmwareUpdates || null
 			}
 
@@ -1195,7 +1203,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				this.setDeviceConfig(surfaceId, surfaceConfig)
 
 				if (surfaceId.startsWith('emulator:')) {
-					this.addEmulator(surfaceId.substring(9))
+					this.addEmulator(surfaceId.substring(9), '')
 				}
 			}
 		}
