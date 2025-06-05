@@ -81,7 +81,7 @@ export abstract class GroupsBaseController<TGroupMetadata> {
 
 		const newId = nanoid()
 		const newGroupFull: GroupBase<TGroupMetadata> = {
-			id: nanoid(),
+			id: newId,
 			label,
 			sortOrder: lastGroup ? lastGroup.sortOrder + 1 : 0,
 			children: [],
