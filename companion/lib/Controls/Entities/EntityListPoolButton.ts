@@ -396,7 +396,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		const latestValue = this.#executeExpressionInControl(this.#currentStep.expression, 'number')
 		if (latestValue.ok) {
-			let latestIndex = Math.max(Math.min(Number(latestValue.value) - 1, stepIds.length), 0)
+			let latestIndex = Math.max(Math.min(Number(latestValue.value) - 1, stepIds.length - 1), 0)
 			if (isNaN(latestIndex)) latestIndex = 0
 
 			const newStepId = stepIds[latestIndex]
