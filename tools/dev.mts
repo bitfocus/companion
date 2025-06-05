@@ -11,12 +11,23 @@ import dotenv from 'dotenv'
 import { fetchNodejs } from './fetch_nodejs.mts'
 import { determinePlatformInfo } from './build/util.mts'
 import { ChildProcess } from 'child_process'
+import semver from 'semver'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
 
 await $`tsx ../tools/build_writefile.mts`
+
+const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+const nodeJsValidRange = new semver.Range(packageJson.engines.node)
+if (!semver.satisfies(process.versions.node, nodeJsValidRange)) {
+	console.error(
+		`This project requires Node.js version ${nodeJsValidRange} but you are using version ${process.versions.node}.`
+	)
+	console.error('Please update your Node.js installation.')
+	process.exit(1)
+}
 
 dotenv.config({
 	path: path.resolve(process.cwd(), '..', '.env'),
