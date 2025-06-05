@@ -21,9 +21,9 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
-import { useTriggerGroupsApi } from './TriggerGroupsApi'
+import { useTriggerCollectionsApi } from './TriggerCollectionsApi'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
-import { GroupingTable } from '~/Components/GroupingTable/GroupingTable'
+import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
 
 export const TriggersPage = observer(function Triggers() {
@@ -53,7 +53,7 @@ export const TriggersPage = observer(function Triggers() {
 	}, [])
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
-	const triggerGroupsApi = useTriggerGroupsApi(confirmModalRef)
+	const triggerGroupsApi = useTriggerCollectionsApi(confirmModalRef)
 
 	const allTriggers = useComputed(() => {
 		const allTriggers: TriggerDataWithId[] = []
@@ -103,7 +103,7 @@ export const TriggersPage = observer(function Triggers() {
 						<CButton color="primary" onClick={doAddNew} size="sm">
 							<FontAwesomeIcon icon={faAdd} /> Add Trigger
 						</CButton>
-						<CButton color="info" size="sm" onClick={() => triggerGroupsApi.addNewGroup()}>
+						<CButton color="info" size="sm" onClick={() => triggerGroupsApi.createCollection()}>
 							<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
 						</CButton>
 					</CButtonGroup>
@@ -119,17 +119,16 @@ export const TriggersPage = observer(function Triggers() {
 					defaultCollapsed
 				>
 					<TriggersTableContextProvider deleteModalRef={confirmModalRef} selectTrigger={selectTrigger}>
-						<GroupingTable<TriggerGroup, TriggerDataWithId>
+						<CollectionsNestingTable<TriggerGroup, TriggerDataWithId>
 							// Heading={TriggerListTableHeading}
 							NoContent={TriggerListNoContent}
 							ItemRow={TriggerItemRow}
 							itemName="trigger"
 							dragId="trigger"
-							groupApi={triggerGroupsApi}
-							groups={triggersList.rootGroups()}
+							collectionsApi={triggerGroupsApi}
+							collections={triggersList.rootGroups()}
 							items={allTriggers}
 							selectedItemId={selectedTriggerId}
-							useCollectionNaming
 						/>
 					</TriggersTableContextProvider>
 				</PanelCollapseHelperProvider>

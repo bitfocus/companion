@@ -2,25 +2,26 @@ import { useContext, useMemo } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 
-export interface ConnectionCollectionsApi extends NestingCollectionsApi {}
+export interface TriggerCollectionsApi extends NestingCollectionsApi {}
 
-export function useConnectionCollectionsApi(
+export function useTriggerCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
-): ConnectionCollectionsApi {
+): TriggerCollectionsApi {
 	const { socket } = useContext(RootAppStoreContext)
 
 	return useMemo(
 		() =>
 			({
 				createCollection: (collectionName = 'New Collection') => {
-					socket.emitPromise('connection-groups:add', [collectionName]).catch((e) => {
+					socket.emitPromise('trigger-groups:add', [collectionName]).catch((e) => {
 						console.error('Failed to add collection', e)
 					})
 				},
 
 				renameCollection: (collectionId: string, newName: string) => {
-					socket.emitPromise('connection-groups:set-name', [collectionId, newName]).catch((e) => {
+					socket.emitPromise('trigger-groups:set-name', [collectionId, newName]).catch((e) => {
 						console.error('Failed to rename collection', e)
 					})
 				},
@@ -28,10 +29,10 @@ export function useConnectionCollectionsApi(
 				deleteCollection: (collectionId: string) => {
 					confirmModalRef.current?.show(
 						'Delete Collection',
-						'Are you sure you want to delete this collection? All connections in this collection will be moved to Ungrouped Connections.',
+						'Are you sure you want to delete this collection? All triggers in this collection will be moved to Ungrouped Triggers.',
 						'Delete',
 						() => {
-							socket.emitPromise('connection-groups:remove', [collectionId]).catch((e) => {
+							socket.emitPromise('trigger-groups:remove', [collectionId]).catch((e) => {
 								console.error('Failed to delete collection', e)
 							})
 						}
@@ -39,16 +40,18 @@ export function useConnectionCollectionsApi(
 				},
 
 				moveCollection: (collectionId: string, parentId: string | null, dropIndex: number) => {
-					socket.emitPromise('connection-groups:reorder', [collectionId, parentId, dropIndex]).catch((e) => {
+					socket.emitPromise('trigger-groups:reorder', [collectionId, parentId, dropIndex]).catch((e) => {
 						console.error('Failed to reorder collection', e)
 					})
 				},
 				moveItemToGroup: (itemId: string, collectionId: string | null, dropIndex: number) => {
-					socket.emitPromise('connections:reorder', [collectionId, itemId, dropIndex]).catch((e) => {
-						console.error('Reorder failed', e)
-					})
+					socket
+						.emitPromise('triggers:reorder', [collectionId, CreateTriggerControlId(itemId), dropIndex])
+						.catch((e) => {
+							console.error('Reorder failed', e)
+						})
 				},
-			}) satisfies ConnectionCollectionsApi,
+			}) satisfies TriggerCollectionsApi,
 		[socket, confirmModalRef]
 	)
 }

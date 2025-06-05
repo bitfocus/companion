@@ -1,15 +1,18 @@
 import classNames from 'classnames'
 import React from 'react'
 
-export function GroupingTableNestingRow({ nestingLevel, children }: React.PropsWithChildren<{ nestingLevel: number }>) {
+export function CollectionsNestingTableNestingRow({
+	nestingLevel,
+	children,
+}: React.PropsWithChildren<{ nestingLevel: number }>) {
 	return (
 		<div
 			style={{
 				// @ts-expect-error variables are not typed
-				'--group-nesting-level': nestingLevel,
+				'--collection-nesting-level': nestingLevel,
 			}}
 			className={classNames('flex flex-row align-items-center', {
-				'grouping-table-nesting': nestingLevel > 0,
+				'collections-nesting-table-nesting': nestingLevel > 0,
 			})}
 		>
 			{children}

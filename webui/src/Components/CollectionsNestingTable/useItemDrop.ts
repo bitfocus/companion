@@ -1,27 +1,27 @@
 import { useDeferredValue } from 'react'
 import { useDrop } from 'react-dnd'
 import { checkDragState, type DragState } from '../../util.js'
-import type { GroupApi } from './Types.js'
+import type { NestingCollectionsApi } from './Types.js'
 
-export interface GroupingTableItemDragItem {
+export interface CollectionsNestingTableItemDragItem {
 	itemId: string
-	groupId: string | null
+	collectionId: string | null
 	index: number
 
 	dragState: DragState | null
 }
-export interface GroupingTableItemDragStatus {
+export interface CollectionsNestingTableItemDragStatus {
 	isDragging: boolean
 }
 
-export function useGroupListItemDrop(
-	groupApi: GroupApi,
+export function useCollectionsListItemDrop(
+	collectionsApi: NestingCollectionsApi,
 	dragId: string,
-	groupId: string | null,
+	collectionId: string | null,
 	hoverItemId: string | null,
 	hoverIndex: number
 ) {
-	const [isDragging, drop] = useDrop<GroupingTableItemDragItem, unknown, boolean>({
+	const [isDragging, drop] = useDrop<CollectionsNestingTableItemDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
@@ -29,14 +29,14 @@ export function useGroupListItemDrop(
 		hover(item, monitor) {
 			if (hoverItemId === item.itemId) return // Don't allow dropping into the same item
 
-			if (!checkDragState(item, monitor, hoverItemId ?? `group-drop-${groupId}`)) return
+			if (!checkDragState(item, monitor, hoverItemId ?? `collection-drop-${collectionId}`)) return
 
 			// Time to actually perform the action
-			groupApi.moveItemToGroup(item.itemId, groupId, hoverIndex)
+			collectionsApi.moveItemToGroup(item.itemId, collectionId, hoverIndex)
 
 			// item.listId = listId
 			item.index = hoverIndex
-			item.groupId = groupId
+			item.collectionId = collectionId
 		},
 	})
 

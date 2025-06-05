@@ -4,27 +4,27 @@ import { faCaretRight, faCaretDown, faCheckCircle, faTrash, faPencilAlt } from '
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { TextInputField } from '../TextInputField.js'
-import type { GroupingTableGroup, GroupApi } from './Types.js'
-import { GroupingTableGroupRowWrapper } from './GroupingTableRowWrappers.js'
+import type { CollectionsNestingTableCollection, NestingCollectionsApi } from './Types.js'
+import { CollectionsNestingTableCollectionRowWrapper } from './CollectionsNestingTableRowWrappers.js'
 
-export interface GroupingTableGroupRowProps {
-	group: GroupingTableGroup
+export interface CollectionsNestingTableCollectionRowProps {
+	collection: CollectionsNestingTableCollection
 	parentId: string | null
 	isCollapsed: boolean
 	toggleExpanded: () => void
-	groupApi: GroupApi
+	collectionsApi: NestingCollectionsApi
 	nestingLevel: number
 }
 
-export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
-	group,
+export const CollectionsNestingTableCollectionRow = observer(function CollectionsNestingTableCollectionRow({
+	collection,
 	parentId,
 	isCollapsed,
 	toggleExpanded,
-	groupApi,
+	collectionsApi,
 	nestingLevel,
 	children,
-}: React.PropsWithChildren<GroupingTableGroupRowProps>) {
+}: React.PropsWithChildren<CollectionsNestingTableCollectionRowProps>) {
 	const [isEditing, setIsEditing] = useState(false)
 
 	const toggleExpanded2 = useCallback(() => {
@@ -32,7 +32,10 @@ export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 		toggleExpanded()
 	}, [toggleExpanded, isEditing])
 
-	const handleSetName = useCallback((name: string) => groupApi.renameGroup(group.id, name), [groupApi, group.id])
+	const handleSetName = useCallback(
+		(name: string) => collectionsApi.renameCollection(collection.id, name),
+		[collectionsApi, collection.id]
+	)
 
 	const handleNameFieldBlur = useCallback(
 		() =>
@@ -50,24 +53,28 @@ export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 		setIsEditing(true)
 	}, [])
 
-	const clickDeleteGroup = useCallback(
+	const clickDeleteCollection = useCallback(
 		(e: React.MouseEvent) => {
 			e.preventDefault()
 			e.stopPropagation()
 
-			groupApi.deleteGroup(group.id)
+			collectionsApi.deleteCollection(collection.id)
 		},
-		[groupApi, group.id]
+		[collectionsApi, collection.id]
 	)
 
 	return (
-		<GroupingTableGroupRowWrapper group={group} parentId={parentId} nestingLevel={nestingLevel}>
+		<CollectionsNestingTableCollectionRowWrapper
+			collection={collection}
+			parentId={parentId}
+			nestingLevel={nestingLevel}
+		>
 			<div className="d-flex align-items-center justify-content-between" onClick={toggleExpanded2}>
 				<div className="d-flex align-items-center flex-grow-1">
 					{isEditing ? (
 						<TextInputField
-							value={group.label ?? ''}
-							placeholder={`Give this group a name`}
+							value={collection.label ?? ''}
+							placeholder={`Give this collection a name`}
 							setValue={handleSetName}
 							onBlur={handleNameFieldBlur}
 							autoFocus
@@ -79,7 +86,7 @@ export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 								style={{ marginRight: '0.5em' }}
 								className="caret-icon"
 							/>
-							<span className="group-name">{group.label}</span>
+							<span className="collection-name">{collection.label}</span>
 						</>
 					)}
 				</div>
@@ -96,11 +103,11 @@ export const GroupingTableGroupRow = observer(function GroupingTableGroupRow({
 						</CButton>
 					)}
 
-					<CButton color="link" onClick={clickDeleteGroup}>
+					<CButton color="link" onClick={clickDeleteCollection}>
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 				</div>
 			</div>
-		</GroupingTableGroupRowWrapper>
+		</CollectionsNestingTableCollectionRowWrapper>
 	)
 })

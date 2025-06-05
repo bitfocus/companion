@@ -11,10 +11,10 @@ import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVi
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from './MissingVersionsWarning.js'
 import { ClientConnectionConfig, ConnectionGroup } from '@companion-app/shared/Model/Connections.js'
-import { useConnectionListApi } from './ConnectionListApi.js'
+import { useConnectionCollectionsApi } from './ConnectionListApi.js'
 import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { GroupingTable } from '~/Components/GroupingTable/GroupingTable.js'
+import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
 import { useComputed } from '~/util.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
@@ -54,7 +54,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 		error: true,
 	})
 
-	const connectionListApi = useConnectionListApi(confirmModalRef)
+	const connectionListApi = useConnectionCollectionsApi(confirmModalRef)
 
 	const allConnections = useComputed(() => {
 		const allConnections: ClientConnectionConfigWithId[] = []
@@ -87,7 +87,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 			<ConnectionVariablesModal ref={variablesModalRef} />
 
 			<div className="connection-group-actions mb-2">
-				<CButton color="info" size="sm" onClick={() => connectionListApi.addNewGroup()}>
+				<CButton color="info" size="sm" onClick={() => connectionListApi.createCollection()}>
 					<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
 				</CButton>
 			</div>
@@ -102,17 +102,16 @@ export const ConnectionsList = observer(function ConnectionsList({
 					deleteModalRef={confirmModalRef}
 					configureConnection={doConfigureConnection}
 				>
-					<GroupingTable<ConnectionGroup, ClientConnectionConfigWithId>
+					<CollectionsNestingTable<ConnectionGroup, ClientConnectionConfigWithId>
 						Heading={ConnectionListTableHeading}
 						NoContent={ConnectionListNoConnections}
 						ItemRow={ConnectionsItemRow}
 						itemName="connection"
 						dragId="connection"
-						groupApi={connectionListApi}
-						groups={connections.rootGroups()}
+						collectionsApi={connectionListApi}
+						collections={connections.rootGroups()}
 						items={allConnections}
 						selectedItemId={selectedConnectionId}
-						useCollectionNaming
 					/>
 				</ConnectionListContextProvider>
 			</PanelCollapseHelperProvider>
