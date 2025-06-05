@@ -29,5 +29,5 @@ jobs:
 
       - name: run linter
         run: |
-          yarn build
+          yarn build:ts
           yarn lint
