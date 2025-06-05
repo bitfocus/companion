@@ -1,6 +1,7 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { EventInstance } from './EventModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
+import type { GroupBase } from './Groups.js'
 
 export interface TriggerModel {
 	readonly type: 'trigger'
@@ -15,6 +16,7 @@ export interface TriggerOptions {
 	name: string
 	enabled: boolean
 	sortOrder: number
+	groupId?: string
 }
 
 export interface ClientTriggerData extends TriggerOptions {
@@ -41,3 +43,5 @@ export interface TriggersUpdateUpdateOp {
 
 	patch: JsonPatchOperation[]
 }
+
+export type TriggerGroup = GroupBase<undefined>

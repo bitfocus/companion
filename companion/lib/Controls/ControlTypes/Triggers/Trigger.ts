@@ -193,6 +193,19 @@ export class ControlTrigger
 		this.#actionRunner.abortSingle(exceptSignal)
 	}
 
+	checkGroupIsValid(validGroupIds: Set<string>): boolean {
+		if (this.options.groupId && !validGroupIds.has(this.options.groupId)) {
+			// Group is not valid, remove it
+			this.options.groupId = undefined
+
+			this.commitChange(false)
+
+			return true
+		}
+
+		return false
+	}
+
 	/**
 	 * Remove any tracked state for a connection
 	 */
@@ -492,7 +505,8 @@ export class ControlTrigger
 	 * Update an option field of this control
 	 */
 	optionsSetField(key: string, value: number, forceSet?: boolean): boolean {
-		if (!forceSet && key === 'sortOrder') throw new Error('sortOrder cannot be set by the client')
+		if (!forceSet && (key === 'sortOrder' || key === 'groupId'))
+			throw new Error('sortOrder cannot be set by the client')
 
 		// @ts-ignore
 		this.options[key] = value

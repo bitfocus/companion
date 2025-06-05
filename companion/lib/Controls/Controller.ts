@@ -26,6 +26,7 @@ import type { ControlCommonEvents, ControlDependencies, SomeControlModel } from 
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
+import { TriggerGroups } from './TriggerGroups.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -81,15 +82,29 @@ export class ControlsController {
 
 	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
+	readonly #triggerGroups: TriggerGroups
+
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
 		this.#registry = registry
 		this.#controlEvents = controlEvents
 
 		this.#dbTable = registry.db.getTableView('controls')
 
+		this.#triggerGroups = new TriggerGroups(registry.io, registry.db, (groupIds) =>
+			this.#cleanUnknownTriggerGroupIds(groupIds)
+		)
+
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
 		this.triggers = new TriggerEvents()
+	}
+
+	#cleanUnknownTriggerGroupIds(validGroupIds: Set<string>): void {
+		for (const control of Object.values(this.#controls)) {
+			if (control instanceof ControlTrigger) {
+				control.checkGroupIsValid(validGroupIds)
+			}
+		}
 	}
 
 	/**
@@ -155,6 +170,7 @@ export class ControlsController {
 	 */
 	clientConnect(client: ClientSocket): void {
 		this.actionRecorder.clientConnect(client)
+		this.#triggerGroups.clientConnect(client)
 
 		this.triggers.emit('client_connect')
 
