@@ -112,7 +112,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
 				setConnectionConfig: (connectionId, config) => {
-					this.setInstanceLabelAndConfig(connectionId, null, config, true)
+					this.setInstanceLabelAndConfig(connectionId, null, config, null, true)
 				},
 			},
 			this.modules,
@@ -215,6 +215,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		id: string,
 		newLabel: string | null,
 		config: unknown | null,
+		updatePolicy: ConnectionUpdatePolicy | null,
 		skip_notify_instance = false
 	): void {
 		const connectionConfig = this.#configStore.getConfigForId(id)
@@ -239,6 +240,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#variablesController.definitions.connectionLabelRename(oldLabel, newLabel)
 			this.#controlsController.renameVariables(oldLabel, newLabel)
 			this.definitions.updateVariablePrefixesForLabel(id, newLabel)
+		}
+
+		if (updatePolicy !== null) {
+			connectionConfig.updatePolicy = updatePolicy
 		}
 
 		this.emit('connection_updated', id)
@@ -505,7 +510,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
 		const safeLabel = makeLabelSafe(config.label)
 		if (!is_being_created && safeLabel !== config.label) {
-			this.setInstanceLabelAndConfig(id, safeLabel, null, true)
+			this.setInstanceLabelAndConfig(id, safeLabel, null, null, true)
 		}
 
 		// TODO this could check if anything above changed, or is_being_created
@@ -568,7 +573,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			}
 		})
 
-		client.onPromise('connections:set-label-and-config', (id, label, config) => {
+		client.onPromise('connections:set-label-and-config', (id, label, config, updatePolicy) => {
 			const idUsingLabel = this.getIdForLabel(label)
 			if (idUsingLabel && idUsingLabel !== id) {
 				return 'duplicate label'
@@ -578,7 +583,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				return 'invalid label'
 			}
 
-			this.setInstanceLabelAndConfig(id, label, config)
+			this.setInstanceLabelAndConfig(id, label, config, updatePolicy)
 
 			return null
 		})
@@ -596,7 +601,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// TODO - refactor/optimise/tidy this
 
-			this.setInstanceLabelAndConfig(id, label, null)
+			this.setInstanceLabelAndConfig(id, label, null, null)
 
 			const config = this.#configStore.getConfigForId(id)
 			if (!config) return 'no connection'

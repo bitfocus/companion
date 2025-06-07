@@ -1022,7 +1022,7 @@ export class ImportExportController {
 						true
 					)
 					if (newId && newConfig) {
-						this.#instancesController.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null)
+						this.#instancesController.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null, null)
 
 						if (!('enabled' in obj) || obj.enabled !== false) {
 							this.#instancesController.enableDisableInstance(newId, true)

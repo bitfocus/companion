@@ -303,7 +303,8 @@ export interface ClientToBackendEventsMap {
 	'connections:set-label-and-config': (
 		connectionId: string,
 		newLabel: string,
-		config: Record<string, any>
+		config: Record<string, any>,
+		updatePolicy: ConnectionUpdatePolicy
 	) => string | null
 	'connections:set-label-and-version': (
 		connectionId: string,
