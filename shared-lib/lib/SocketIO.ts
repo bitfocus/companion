@@ -323,9 +323,9 @@ export interface ClientToBackendEventsMap {
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
-	'modules:bundle-import:start': (name: string, size: number, checksum: string) => string | null
+	'modules:bundle-import:start': (name: string, size: number) => string | null
 	'modules:bundle-import:chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
-	'modules:bundle-import:complete': (sessionId: string) => boolean
+	'modules:bundle-import:complete': (sessionId: string, checksum: string) => boolean
 	'modules:bundle-import:cancel': (sessionId: string) => void
 
 	'modules-store:list:subscribe': () => ModuleStoreListCacheStore

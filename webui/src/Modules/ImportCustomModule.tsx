@@ -3,7 +3,7 @@ import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CAlert } from '@coreui/react'
-import { generateSha1Hash } from '~/util.js'
+import CryptoJS from 'crypto-js'
 
 const NOTIFICATION_ID_IMPORT = 'import_module_bundle'
 
@@ -99,52 +99,59 @@ export function ImportModules() {
 				return
 			}
 
-			var fr = new FileReader()
-			fr.onload = () => {
-				if (!fr.result) {
-					setImportError('Failed to load file contents')
-					return
-				}
+			setImportError(null)
+			notifier.current?.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
+			console.log(`start import of ${newFile.size} bytes`)
 
-				if (typeof fr.result === 'string') {
-					setImportError('Failed to load file contents in correct format')
-					return
-				}
+			let hasher = CryptoJS.algo.SHA1.create()
 
-				setImportError(null)
-				const buffer = new Uint8Array(fr.result)
-				console.log('start import...', buffer)
+			Promise.resolve()
+				.then(async () => {
+					const sessionId = await socket.emitPromise('modules:bundle-import:start', [newFile.name, newFile.size])
+					if (!sessionId) throw new Error('Failed to start upload')
 
-				Promise.resolve()
-					.then(async () => {
-						notifier.current?.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
+					let offset = 0
+					await newFile
+						.stream()
+						.pipeTo(
+							new WritableStream(
+								{
+									async write(chunk) {
+										const chunkOffset = offset
+										offset += chunk.length
 
-						const hashText = await generateSha1Hash(buffer)
+										const success = await socket.emitPromise('modules:bundle-import:chunk', [
+											sessionId,
+											chunkOffset,
+											chunk,
+										])
+										if (!success) throw new Error(`Failed to upload chunk ${chunkOffset}`)
 
-						console.log('starting upload', hashText)
+										hasher.update(CryptoJS.lib.WordArray.create(chunk))
+									},
+									async close() {
+										console.log('uploading complete, starting load')
+										const hashText = hasher.finalize().toString(CryptoJS.enc.Hex)
 
-						const sessionId = await socket.emitPromise('modules:bundle-import:start', ['test', buffer.length, hashText])
-						if (!sessionId) throw new Error('Failed to start upload')
+										const success = await socket.emitPromise('modules:bundle-import:complete', [sessionId, hashText])
+										if (!success) throw new Error(`Failed to import`)
+									},
+								},
+								{
+									size: () => 1024 * 1024 * 1, // 1MB chunks
+								}
+							)
+						)
+						.catch((e) => {
+							socket.emitPromise('modules:bundle-import:cancel', [sessionId])
+							throw e
+						})
+				})
+				.catch((e) => {
+					console.error('failed', e)
 
-						const bytesPerChunk = 1024 * 1024 * 1 // 1MB
-						for (let offset = 0; offset < buffer.length; offset += bytesPerChunk) {
-							console.log('uploading chunk', offset)
-							const chunk = buffer.slice(offset, offset + bytesPerChunk)
-							const success = await socket.emitPromise('modules:bundle-import:chunk', [sessionId, offset, chunk])
-							if (!success) throw new Error(`Failed to upload chunk ${offset}`)
-						}
-
-						console.log('uploading complete, starting load')
-						const success = await socket.emitPromise('modules:bundle-import:complete', [sessionId])
-						if (!success) throw new Error(`Failed to import`)
-					})
-					.catch((e) => {
-						console.error('failed', e)
-
-						notifier.current?.show('Importing module bundle...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
-					})
-			}
-			fr.readAsArrayBuffer(newFile)
+					notifier.current?.show('Importing module bundle...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
+				})
 		},
 		[socket, notifier]
 	)
