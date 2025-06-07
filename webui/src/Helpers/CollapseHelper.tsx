@@ -37,10 +37,18 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 					const parsedState: CollapsedState = JSON.parse(oldState)
 					if (typeof parsedState.defaultCollapsed === 'boolean') {
 						this.#defaultExpandedAt.set(null, !parsedState.defaultCollapsed)
+						delete parsedState.defaultCollapsed
 					} else {
 						for (const [key, value] of Object.entries(parsedState.defaultExpandedAt || {})) {
 							if (typeof value === 'boolean') this.#defaultExpandedAt.set(key, value)
 						}
+					}
+
+					// Fixup a serialization issue
+					const stringifiedNull = this.#defaultExpandedAt.get('null')
+					if (stringifiedNull !== undefined) {
+						this.#defaultExpandedAt.set(null, stringifiedNull)
+						this.#defaultExpandedAt.delete('null')
 					}
 
 					for (const [key, value] of Object.entries(parsedState.ids)) {
@@ -54,6 +62,14 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 	}
 
 	#writeState() {
+		console.log(
+			'Writing panel collapse state',
+			this.#storageId,
+			JSON.stringify({
+				defaultExpandedAt: Object.fromEntries(this.#defaultExpandedAt.toJSON()),
+				ids: Object.fromEntries(this.#ids.toJSON()),
+			} satisfies CollapsedState)
+		)
 		window.localStorage.setItem(
 			this.#storageId,
 			JSON.stringify({
