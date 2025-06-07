@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { assertNever, LoadingRetryOrError } from '~/util.js'
+import { LoadingRetryOrError } from '~/util.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -20,8 +20,8 @@ import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 import { useForm } from '@tanstack/react-form'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ConnectionSecretField } from './ConnectionSecretField.js'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { CompanionOptionValues } from '@companion-module/base'
+import { validateInputValue } from '~/Helpers/validateInputValue.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -369,7 +369,6 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 																isDirty={field.state.meta.isDirty}
 																setValue={(value) => field.handleChange((v) => ({ hasSavedValue: false, ...v, value }))}
 																clearValue={() => form.resetField(`secrets.${fieldInfo.id}`)}
-																checkValid={(value) => validateInputValue(fieldInfo, value) === undefined}
 															/>
 														</CCol>
 													)}
@@ -446,106 +445,4 @@ function ConnectionFieldLabel({ fieldInfo }: { fieldInfo: ConnectionInputField }
 			)}
 		</>
 	)
-}
-
-function compileRegex(regex: string | undefined): RegExp | null {
-	if (regex) {
-		// Compile the regex string
-		const match = /^\/(.*)\/(.*)$/.exec(regex)
-		if (match) {
-			return new RegExp(match[1], match[2])
-		}
-	}
-	return null
-}
-
-export function validateInputValue(definition: ConnectionInputField, value: any): string | undefined {
-	switch (definition.type) {
-		case 'static-text':
-			// Not editable
-			return undefined
-
-		case 'textinput': {
-			if (definition.required && !value) {
-				return 'A value must be provided'
-			}
-
-			if (definition.isExpression) {
-				try {
-					ParseExpression(value)
-					return 'Expression is not valid'
-				} catch (e) {}
-			}
-
-			const compiledRegex = compileRegex(definition.regex)
-			if (compiledRegex) {
-				if (typeof value !== 'string') {
-					return 'Value must be a string'
-				}
-
-				if (!compiledRegex.exec(value)) {
-					return `Value does not match regex: ${definition.regex}`
-				}
-			}
-
-			return undefined
-		}
-
-		case 'secret-text': {
-			if (definition.required && !value) {
-				return 'A value must be provided'
-			}
-
-			return undefined
-		}
-
-		case 'number': {
-			if (definition.required && (value === undefined || value === '')) {
-				return 'A value must be provided'
-			}
-
-			if (value !== undefined && value !== '' && isNaN(value)) {
-				return 'Value must be a number'
-			}
-
-			// Verify the value range
-			if (definition.min !== undefined && value < definition.min) {
-				return `Value must be greater than or equal to ${definition.min}`
-			}
-			if (definition.max !== undefined && value > definition.max) {
-				return `Value must be less than or equal to ${definition.max}`
-			}
-
-			return undefined
-		}
-
-		case 'checkbox':
-		case 'colorpicker':
-		case 'bonjour-device':
-		case 'custom-variable':
-		case 'dropdown':
-			// Nothing to check
-			return undefined
-
-		case 'multidropdown':
-			return undefined
-		// 	return (
-		// 		<MultiDropdownInputField
-		// 			label={label}
-		// 			choices={definition.choices}
-		// 			allowCustom={definition.allowCustom}
-		// 			minSelection={definition.minSelection}
-		// 			minChoicesForSearch={definition.minChoicesForSearch}
-		// 			maxSelection={definition.maxSelection}
-		// 			regex={definition.regex}
-		// 			value={value}
-		// 			setValue={setValue}
-		// 			// setValid={setValid2}
-		// 		/>
-		// 	)
-
-		default:
-			assertNever(definition)
-			return undefined
-	}
 }

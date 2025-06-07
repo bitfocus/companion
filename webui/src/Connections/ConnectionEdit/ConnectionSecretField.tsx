@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
 import { SecretTextInputField } from '~/Components/SecretTextInputField'
+import { validateInputValue } from '~/Helpers/validateInputValue'
 
 interface ConnectionSecretFieldProps {
 	label: React.ReactNode
@@ -10,7 +11,6 @@ interface ConnectionSecretFieldProps {
 	hasSavedValue: boolean
 	editValue: any
 	isDirty: boolean
-	checkValid: (value: string) => boolean
 }
 
 export function ConnectionSecretField({
@@ -21,8 +21,9 @@ export function ConnectionSecretField({
 	hasSavedValue,
 	editValue,
 	isDirty,
-	checkValid,
 }: ConnectionSecretFieldProps) {
+	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
+
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'secret-text':

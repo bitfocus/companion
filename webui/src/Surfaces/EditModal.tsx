@@ -31,6 +31,7 @@ import { NumberInputField } from '~/Components/NumberInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { SurfaceLocalVariables } from '~/LocalVariableDefinitions.js'
+import { validateInputValue } from '~/Helpers/validateInputValue'
 
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
@@ -344,6 +345,7 @@ interface ConfigFieldProps {
 
 function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 	const id = definition.id
+	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
 	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
 
 	let control: JSX.Element | string | undefined = undefined
@@ -362,12 +364,12 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 			control = (
 				<TextInputField
 					value={value}
-					regex={definition.regex}
 					placeholder={definition.placeholder}
 					useVariables={features.variables}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					isExpression={definition.isExpression}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 
@@ -375,13 +377,13 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 		case 'number':
 			control = (
 				<NumberInputField
-					required={definition.required}
 					min={definition.min}
 					max={definition.max}
 					step={definition.step}
 					range={definition.range}
 					value={value}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
@@ -410,6 +412,7 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 					regex={definition.regex}
 					value={value}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
