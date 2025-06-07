@@ -93,7 +93,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 			</div>
 			<PanelCollapseHelperProvider
 				storageId="connection-collections"
-				knownPanelIds={connections.allGroupIds}
+				knownPanelIds={connections.allCollectionIds}
 				defaultCollapsed
 			>
 				<ConnectionListContextProvider
@@ -109,7 +109,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 						itemName="connection"
 						dragId="connection"
 						collectionsApi={connectionListApi}
-						collections={connections.rootGroups()}
+						collections={connections.rootCollections()}
 						items={allConnections}
 						selectedItemId={selectedConnectionId}
 					/>

@@ -45,7 +45,6 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	onCopied = () => {},
 	...props
 }) => {
-	console.log('collhelper', panelCollapseHelper)
 	// Use the collapseHelper if we have all neccessary information, otherwise use loal state
 	let collapser: { isPanelCollapsed: () => boolean; setPanelCollapsed: (b: boolean) => void }
 	let collapsed: boolean = true,

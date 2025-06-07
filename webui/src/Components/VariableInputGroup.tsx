@@ -128,7 +128,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 				<CFormInput
 					value={localValue}
 					onChange={(e) => handleInputChange(e.target.value)}
-					style={{ width: '100%', outline: 'none', boxShadow: 'none' }}
+					style={{ outline: 'none', boxShadow: 'none' }}
 					onFocus={handleFocus}
 					onBlur={() => {}} // Prevent input blur from ending editing (handled by group)
 					disabled={disabled}

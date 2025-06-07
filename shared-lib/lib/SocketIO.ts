@@ -34,7 +34,11 @@ import type {
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from './Model/TriggerModel.js'
-import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
+import type {
+	CustomVariableCollection,
+	CustomVariableUpdate,
+	CustomVariablesModel,
+} from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
@@ -83,7 +87,7 @@ export interface ClientToBackendEventsMap {
 	'custom-variables:set-description': (name: string, description: string) => string | null
 	'custom-variables:set-persistence': (name: string, value: boolean) => string | null
 	'custom-variables:delete': (name: string) => void
-	'custom-variables:set-order': (newNames: string[]) => void
+	'custom-variables:reorder': (collectionId: string | null, name: string, dropIndex: number) => void
 
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'custom-variables:subscribe': () => CustomVariablesModel
@@ -94,6 +98,8 @@ export interface ClientToBackendEventsMap {
 	'connections:unsubscribe': () => void
 	'connection-collections:subscribe': () => ConnectionCollection[]
 	'connection-collections:unsubscribe': () => void
+	'custom-variable-collections:subscribe': () => CustomVariableCollection[]
+	'custom-variable-collections:unsubscribe': () => void
 	'entity-definitions:subscribe': (
 		type: EntityModelType
 	) => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
@@ -333,14 +339,19 @@ export interface ClientToBackendEventsMap {
 		newModuleId: string,
 		versionId: string | null
 	) => string | null
-	'connections:reorder': (groupId: string | null, connectionId: string, dropIndex: number) => void
+	'connections:reorder': (collectionId: string | null, connectionId: string, dropIndex: number) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'connection-collections:add': (groupName: string) => string
-	'connection-collections:remove': (groupId: string) => void
-	'connection-collections:set-name': (groupId: string, groupName: string) => void
-	'connection-collections:reorder': (groupId: string, parentId: string | null, dropIndex: number) => void
+	'connection-collections:add': (collectionName: string) => string
+	'connection-collections:remove': (collectionId: string) => void
+	'connection-collections:set-name': (collectionId: string, collectionName: string) => void
+	'connection-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
+
+	'custom-variable-collections:add': (collectionName: string) => string
+	'custom-variable-collections:remove': (collectionId: string) => void
+	'custom-variable-collections:set-name': (collectionId: string, collectionName: string) => void
+	'custom-variable-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
 	'modules:install-all-missing': () => void
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
@@ -411,6 +422,7 @@ export interface BackendToClientEventsMap {
 	'trigger-collections:update': (patch: TriggerCollection[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
+	'custom-variable-collections:update': (patch: CustomVariableCollection[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { CompanionSocketWrapped } from '../util.js'
 import type { TriggersListStore } from '~/Stores/TriggersListStore.js'
 
-export function useTriggerGroupsSubscription(socket: CompanionSocketWrapped, store: TriggersListStore): boolean {
+export function useTriggerCollectionsSubscription(socket: CompanionSocketWrapped, store: TriggersListStore): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
@@ -11,13 +11,13 @@ export function useTriggerGroupsSubscription(socket: CompanionSocketWrapped, sto
 
 		socket
 			.emitPromise('trigger-collections:subscribe', [])
-			.then((groups) => {
-				store.resetCollection(groups)
+			.then((collections) => {
+				store.resetCollection(collections)
 				setReady(true)
 			})
 			.catch((e) => {
 				store.resetCollection(null)
-				console.error('Failed to load trigger groups list', e)
+				console.error('Failed to load trigger collections list', e)
 			})
 
 		const unsubUpdates = socket.on('trigger-collections:update', (update) => {
@@ -29,7 +29,7 @@ export function useTriggerGroupsSubscription(socket: CompanionSocketWrapped, sto
 			unsubUpdates()
 
 			socket.emitPromise('trigger-collections:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe from trigger groups list:', e)
+				console.error('Failed to unsubscribe from trigger collections list:', e)
 			})
 		}
 	}, [socket, store])

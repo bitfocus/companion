@@ -22,6 +22,7 @@ import type { DataDatabase } from '../Data/Database.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { DataStoreTableView } from '../Data/StoreBase.js'
+import { CustomVariableCollections } from './CustomVariableCollections.js'
 
 const CustomVariablesRoom = 'custom-variables'
 const CUSTOM_LABEL = 'custom'
@@ -29,6 +30,7 @@ const CUSTOM_LABEL = 'custom'
 export class VariablesCustomVariable {
 	readonly #logger = LogController.createLogger('Variables/CustomVariable')
 	readonly #variableValues: VariablesValues
+	readonly #collections: CustomVariableCollections
 
 	/**
 	 * Custom variable definitions
@@ -42,14 +44,38 @@ export class VariablesCustomVariable {
 		this.#dbTable = db.getTableView('custom_variables')
 		this.#io = io
 		this.#variableValues = variableValues
+		this.#collections = new CustomVariableCollections(io, db, (validCollectionIds) =>
+			this.#cleanUnknownCollectionIds(validCollectionIds)
+		)
 
 		this.#custom_variables = this.#dbTable.all()
+	}
+
+	#cleanUnknownCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		const changes: CustomVariableUpdate[] = []
+
+		for (const [id, info] of Object.entries(this.#custom_variables)) {
+			if (!info || !info.collectionId) continue
+
+			if (validCollectionIds.has(info.collectionId)) continue
+
+			info.collectionId = undefined
+			this.#dbTable.set(id, info)
+
+			changes.push({ type: 'update', itemId: id, info })
+		}
+
+		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
+		}
 	}
 
 	/**
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket) {
+		this.#collections.clientConnect(client)
+
 		client.onPromise('custom-variables:subscribe', () => {
 			client.join(CustomVariablesRoom)
 
@@ -66,7 +92,7 @@ export class VariablesCustomVariable {
 		client.onPromise('custom-variables:set-current', this.setValue.bind(this))
 		client.onPromise('custom-variables:set-description', this.setVariableDescription.bind(this))
 		client.onPromise('custom-variables:set-persistence', this.setPersistence.bind(this))
-		client.onPromise('custom-variables:set-order', this.setOrder.bind(this))
+		client.onPromise('custom-variables:reorder', this.setOrder.bind(this))
 	}
 
 	/**
@@ -160,6 +186,8 @@ export class VariablesCustomVariable {
 			}
 			this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 		}
+
+		this.#cleanUnknownCollectionIds(this.#collections.collectAllCollectionIds())
 	}
 
 	/**
@@ -224,6 +252,8 @@ export class VariablesCustomVariable {
 				namesBefore.map((name): CustomVariableUpdateRemoveOp => ({ type: 'remove', itemId: name }))
 			)
 		}
+
+		this.#collections.discardAllCollections()
 	}
 
 	/**
@@ -256,39 +286,44 @@ export class VariablesCustomVariable {
 	 * Set the order of the custom variable
 	 * @param newNames Sorted variable names
 	 */
-	setOrder(newNames: string[]): void {
-		if (!Array.isArray(newNames)) throw new Error('Expected array of names')
+	setOrder(collectionId: string | null, name: string, dropIndex: number): void {
+		const thisVariable = this.#custom_variables[name]
+		if (!thisVariable) return
 
-		// Update the order based on the ids provided
-		newNames.forEach((name, index) => {
-			if (this.#custom_variables[name]) {
-				this.#custom_variables[name] = { ...this.#custom_variables[name], sortOrder: index }
-			}
-		})
+		if (!this.#collections.doesCollectionIdExist(collectionId)) return
 
-		// Make sure all not provided are at the end in their original order
-		const allKnownNames = Object.entries(this.#custom_variables)
-			.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-			.map(([name]) => name)
-		let nextIndex = newNames.length
-		for (const name of allKnownNames) {
-			if (!newNames.includes(name)) {
-				if (this.#custom_variables[name]) {
-					this.#custom_variables[name] = { ...this.#custom_variables[name], sortOrder: nextIndex++ }
-				}
-			}
+		// update the collectionId of the variable being moved if needed
+		if (thisVariable.collectionId !== (collectionId ?? undefined)) {
+			thisVariable.collectionId = collectionId ?? undefined
+		}
+
+		// find all the other variables with the matching collectionId
+		const sortedVariables = Array.from(Object.entries(this.#custom_variables))
+			.filter(
+				([varName, variable]) =>
+					name !== varName && ((!variable.collectionId && !collectionId) || variable.collectionId === collectionId)
+			)
+			.sort(([, a], [, b]) => (a.sortOrder || 0) - (b.sortOrder || 0))
+
+		if (dropIndex < 0) {
+			// Push the variable to the end of the array
+			sortedVariables.push([name, thisVariable])
+		} else {
+			// Insert the variable at the drop index
+			sortedVariables.splice(dropIndex, 0, [name, thisVariable])
 		}
 
 		const changes: CustomVariableUpdate[] = []
 
-		// Add inserts
-		for (const [id, info] of Object.entries(this.#custom_variables)) {
-			if (!info) continue
+		// update the sort order of the variables in the store, tracking which ones changed
+		sortedVariables.forEach(([id, variable], index) => {
+			if (variable.sortOrder === index && id !== name) return // No change
 
-			this.#dbTable.set(id, info)
+			variable.sortOrder = index // Update the sort order
+			this.#dbTable.set(id, variable)
 
-			changes.push({ type: 'update', itemId: id, info })
-		}
+			changes.push({ type: 'update', itemId: id, info: variable })
+		})
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
 			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)

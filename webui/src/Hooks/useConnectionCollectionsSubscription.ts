@@ -2,34 +2,34 @@ import { useEffect, useState } from 'react'
 import { CompanionSocketWrapped } from '../util.js'
 import type { ConnectionsStore } from '../Stores/ConnectionsStore.js'
 
-export function useConnectionGroupsSubscription(socket: CompanionSocketWrapped, store: ConnectionsStore): boolean {
+export function useConnectionCollectionsSubscription(socket: CompanionSocketWrapped, store: ConnectionsStore): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
-		store.resetGroups(null)
+		store.resetCollections(null)
 		setReady(false)
 
 		socket
 			.emitPromise('connection-collections:subscribe', [])
-			.then((groups) => {
-				store.resetGroups(groups)
+			.then((collections) => {
+				store.resetCollections(collections)
 				setReady(true)
 			})
 			.catch((e) => {
-				store.resetGroups(null)
-				console.error('Failed to load connection groups list', e)
+				store.resetCollections(null)
+				console.error('Failed to load connection collections list', e)
 			})
 
 		const unsubUpdates = socket.on('connection-collections:update', (update) => {
-			store.resetGroups(update)
+			store.resetCollections(update)
 		})
 
 		return () => {
-			store.resetGroups(null)
+			store.resetCollections(null)
 			unsubUpdates()
 
 			socket.emitPromise('connection-collections:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe from connection groups list:', e)
+				console.error('Failed to unsubscribe from connection collections list:', e)
 			})
 		}
 	}, [socket, store])
