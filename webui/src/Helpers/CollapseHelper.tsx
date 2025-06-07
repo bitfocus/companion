@@ -63,14 +63,6 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 	}
 
 	#writeState() {
-		console.log(
-			'Writing panel collapse state',
-			this.#storageId,
-			JSON.stringify({
-				defaultExpandedAt: Object.fromEntries(this.#defaultExpandedAt.toJSON()),
-				ids: Object.fromEntries(this.#ids.toJSON()),
-			} satisfies CollapsedState)
-		)
 		window.localStorage.setItem(
 			this.#storageId,
 			JSON.stringify({

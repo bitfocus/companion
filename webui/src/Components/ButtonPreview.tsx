@@ -29,7 +29,7 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 
 	const doPress = useCallback(
 		(e: React.UIEvent) => {
-			e.preventDefault()
+			if (e.type !== 'pointerdown' && e.type !== 'mousedown') e.preventDefault()
 			e.stopPropagation()
 
 			props.onClick?.(props.location, true)
