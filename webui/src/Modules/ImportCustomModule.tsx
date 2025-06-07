@@ -3,6 +3,7 @@ import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CAlert } from '@coreui/react'
+import { generateSha1Hash } from '~/util.js'
 
 const NOTIFICATION_ID_IMPORT = 'import_module_bundle'
 
@@ -118,10 +119,7 @@ export function ImportModules() {
 					.then(async () => {
 						notifier.current?.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 
-						const hashBuffer = await window.crypto.subtle.digest('sha-1', buffer)
-						const hashText = Array.from(new Uint8Array(hashBuffer))
-							.map((byte) => byte.toString(16).padStart(2, '0'))
-							.join('')
+						const hashText = await generateSha1Hash(buffer)
 
 						console.log('starting upload', hashText)
 
