@@ -140,9 +140,6 @@ export function ConnectionEditField({
 					queryId={definition.id}
 				/>
 			)
-		case 'secret-text':
-			// TODO
-			return <p>TEST</p>
 		default:
 			return <p>Unknown field "{fieldType}"</p>
 	}

@@ -614,9 +614,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				// TODO: making types match is messy
 				const fields: any = await instance.requestConfigFields()
 
+				const instanceSecrets: any = instanceConf.secrets || {}
+
+				const hasSecrets: Record<string, boolean> = {}
+				for (const field of fields) {
+					if (field.type.startsWith('secret')) {
+						hasSecrets[field.id] = !!instanceSecrets[field.id]
+					}
+				}
+
 				return {
 					fields: translateOptionsIsVisible(fields) as any[],
 					config: instanceConf.config,
+					hasSecrets,
 				}
 			} catch (e: any) {
 				this.#logger.silly(`Failed to load instance config_fields: ${e.message}`)
