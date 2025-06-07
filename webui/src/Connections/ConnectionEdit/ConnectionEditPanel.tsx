@@ -135,12 +135,19 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						setSaveError(`Failed to save connection config: ${e}`)
 					})
 			} else if (query.isSuccess) {
+				const saveSecrets: Record<string, any> = {}
+				for (const [id, obj] of Object.entries(value.secrets)) {
+					if (obj?.value !== undefined) {
+						saveSecrets[id] = obj.value
+					}
+				}
+
 				await socket
 					.emitPromise('connections:set-label-and-config', [
 						connectionId,
 						value.label,
 						value.config,
-						value.secrets,
+						saveSecrets,
 						value.updatePolicy,
 					])
 					.then((err) => {
