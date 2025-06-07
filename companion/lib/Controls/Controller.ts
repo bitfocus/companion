@@ -90,8 +90,11 @@ export class ControlsController {
 
 		this.#dbTable = registry.db.getTableView('controls')
 
-		this.#triggerCollections = new TriggerCollections(registry.io, registry.db, (collectionIds) =>
-			this.#cleanUnknownTriggerCollectionIds(collectionIds)
+		this.#triggerCollections = new TriggerCollections(
+			registry.io,
+			registry.db,
+			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
+			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
 
 		this.actionRunner = new ActionRunner(registry)
@@ -100,9 +103,19 @@ export class ControlsController {
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: Set<string>): void {
-		for (const control of Object.values(this.#controls)) {
+		for (const control of this.#controls.values()) {
 			if (control instanceof ControlTrigger) {
 				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	#checkTriggerCollectionsEnabled(enabledCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlTrigger) {
+				control.setCollectionEnabled(
+					!control.options.collectionId || enabledCollectionIds.has(control.options.collectionId)
+				)
 			}
 		}
 	}
@@ -643,6 +656,9 @@ export class ControlsController {
 			// Ensure it is stored to the db
 			newControl.commitChange()
 
+			// No collectionId yet so mark as enabled
+			newControl.setCollectionEnabled(true)
+
 			return controlId
 		})
 		client.onPromise('triggers:delete', (controlId) => {
@@ -703,9 +719,12 @@ export class ControlsController {
 			const thisTrigger = this.#controls.get(controlId)
 			if (!thisTrigger || !(thisTrigger instanceof ControlTrigger)) return false
 
+			if (!this.#triggerCollections.doesCollectionIdExist(collectionId)) return false
+
 			// update the collectionId of the trigger being moved if needed
 			if (thisTrigger.options.collectionId !== (collectionId ?? undefined)) {
 				thisTrigger.optionsSetField('collectionId', collectionId ?? undefined, true)
+				thisTrigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(collectionId))
 			}
 
 			// find all the other triggers with the matching collectionId
@@ -857,7 +876,18 @@ export class ControlsController {
 
 		if (category === 'all' || category === 'trigger') {
 			if (controlObj2?.type === 'trigger' || (controlType === 'trigger' && !controlObj2)) {
-				return new ControlTrigger(this.#createControlDependencies(), this.triggers, controlId, controlObj2, isImport)
+				const trigger = new ControlTrigger(
+					this.#createControlDependencies(),
+					this.triggers,
+					controlId,
+					controlObj2,
+					isImport
+				)
+				setImmediate(() => {
+					// Ensure the trigger is enabled, on a slight debounce
+					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
+				})
+				return trigger
 			}
 		}
 
@@ -984,6 +1014,9 @@ export class ControlsController {
 				if (inst) this.#controls.set(controlId, inst)
 			}
 		}
+
+		// Ensure all trigger collections are valid
+		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
 	}
 
 	/**

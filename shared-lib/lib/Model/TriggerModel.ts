@@ -44,4 +44,8 @@ export interface TriggersUpdateUpdateOp {
 	patch: JsonPatchOperation[]
 }
 
-export type TriggerCollection = CollectionBase<undefined>
+export interface TriggerCollectionData {
+	enabled: boolean
+}
+
+export type TriggerCollection = CollectionBase<TriggerCollectionData>

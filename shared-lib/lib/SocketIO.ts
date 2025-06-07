@@ -219,6 +219,7 @@ export interface ClientToBackendEventsMap {
 	'trigger-collections:add': (collectionName: string) => string
 	'trigger-collections:remove': (collectionId: string) => void
 	'trigger-collections:set-name': (collectionId: string, collectionName: string) => void
+	'trigger-collections:set-enabled': (collectionId: string, enabled: boolean) => void
 	'trigger-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
 	'action-recorder:subscribe': () => Record<string, RecordSessionListInfo | undefined>

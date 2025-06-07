@@ -62,7 +62,7 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 	groupedItems,
 	nestingLevel,
 }: CollectionsNestingTableCollectionSingleProps<TCollection, TItem>) {
-	const { dragId, collectionsApi } = useCollectionsNestingTableContext<TItem>()
+	const { dragId, collectionsApi, GroupHeaderContent } = useCollectionsNestingTableContext<TCollection, TItem>()
 
 	const { canDrop, dragCollectionId, drop } = useCollectionListCollectionDrop(collectionsApi, dragId, collection.id)
 
@@ -80,7 +80,9 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 				toggleExpanded={collapseHelper.toggleCollapsed}
 				isCollapsed={isCollapsed}
 				nestingLevel={nestingLevel}
-			/>
+			>
+				{!!GroupHeaderContent && <GroupHeaderContent collection={collection} />}
+			</CollectionsNestingTableCollectionRow>
 
 			{!isCollapsed && (
 				<>

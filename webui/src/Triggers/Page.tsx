@@ -123,6 +123,7 @@ export const TriggersPage = observer(function Triggers() {
 							// Heading={TriggerListTableHeading}
 							NoContent={TriggerListNoContent}
 							ItemRow={TriggerItemRow}
+							GroupHeaderContent={TriggerGroupHeaderContent}
 							itemName="trigger"
 							dragId="trigger"
 							collectionsApi={triggerGroupsApi}
@@ -156,6 +157,32 @@ function TriggerListNoContent() {
 
 function TriggerItemRow(item: TriggerDataWithId) {
 	return <TriggersTableRow item={item} />
+}
+
+function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollection }) {
+	const socket = useContext(SocketContext)
+
+	const setEnabled = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const enabled = e.target.checked
+
+			socket.emitPromise('trigger-collections:set-enabled', [collection.id, enabled]).catch((e) => {
+				console.error('Failed to reorder collection', e)
+			})
+		},
+		[collection.id]
+	)
+
+	return (
+		<CFormSwitch
+			className="ms-1"
+			color="success"
+			checked={collection.metaData.enabled}
+			onChange={setEnabled}
+			title={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}
+			size="xl"
+		/>
+	)
 }
 
 interface TriggersTableRowProps {
@@ -222,16 +249,6 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 			<div className="action-buttons w-auto">
 				<CButtonGroup>
-					<CButton color="white" onClick={doClone} title="Clone">
-						<FontAwesomeIcon icon={faClone} />
-					</CButton>
-					<CButton color="gray" onClick={doDelete} title="Delete">
-						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-					<CButton color="white" href={`/int/export/triggers/single/${item.id}`} target="_blank" title="Export">
-						<FontAwesomeIcon icon={faDownload} />
-					</CButton>
-
 					<CFormSwitch
 						className="ms-1"
 						color="success"
@@ -240,6 +257,16 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
 						size="xl"
 					/>
+
+					<CButton color="white" href={`/int/export/triggers/single/${item.id}`} target="_blank" title="Export">
+						<FontAwesomeIcon icon={faDownload} />
+					</CButton>
+					<CButton color="white" onClick={doClone} title="Clone">
+						<FontAwesomeIcon icon={faClone} />
+					</CButton>
+					<CButton color="gray" onClick={doDelete} title="Delete">
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
 				</CButtonGroup>
 			</div>
 		</div>
