@@ -103,3 +103,5 @@ typings/
 /offline-bundle
 /offline-bundle.tar.gz
 
+#ignore copilot files
+.github/copilot-instructions.md
