@@ -444,3 +444,21 @@ export function checkDragState<TItem extends { dragState: DragState | null }>(
 
 	return true
 }
+
+export async function generateSha1Hash(data: Uint8Array): Promise<string> {
+	if (window.crypto && window.crypto.subtle && typeof window.crypto.subtle.digest === 'function') {
+		try {
+			const hashBuffer = await window.crypto.subtle.digest('sha-1', data)
+			return Array.from(new Uint8Array(hashBuffer))
+				.map((byte) => byte.toString(16).padStart(2, '0'))
+				.join('')
+		} catch (error) {
+			console.warn('Web Crypto API failed, falling back to crypto-js:', error)
+		}
+	}
+
+	// Use crypto-js as fallback for browser compatibility
+	const CryptoJS = (await import('crypto-js')).default
+	const wordArray = CryptoJS.lib.WordArray.create(data)
+	return CryptoJS.SHA1(wordArray).toString(CryptoJS.enc.Hex)
+}
