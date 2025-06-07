@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { LoadingRetryOrError } from '~/util.js'
+import { assertNever, LoadingRetryOrError } from '~/util.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -20,6 +20,8 @@ import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 import { useForm } from '@tanstack/react-form'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ConnectionSecretField } from './ConnectionSecretField.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import type { CompanionOptionValues } from '@companion-module/base'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -81,22 +83,29 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	const [saveError, setSaveError] = useState<string | null>(null)
 
+	// Update the form with the connection config
+	const query = useConnectionCurrentConfig(connectionId)
+
+	const secretValues: Record<string, { value: any; hasSavedValue: boolean } | undefined> = {}
+	for (const fieldInfo of query.data?.fields ?? []) {
+		if (fieldInfo.type.startsWith('secret')) {
+			secretValues[fieldInfo.id] = {
+				value: undefined, // clear secrets, so that everything reloads
+				hasSavedValue: !!query.data?.hasSecrets?.[fieldInfo.id],
+			}
+		}
+	}
+
 	const form = useForm({
 		defaultValues: {
 			label: connectionInfo.label,
 			versionId: connectionInfo.moduleVersionId,
 			updatePolicy: connectionInfo.updatePolicy,
-			config: {} as Record<string, any>,
-			secrets: {} as Record<string, any>,
-			hasSecrets: {} as Record<string, boolean>,
+			config: (query.data?.config ?? {}) as CompanionOptionValues,
+			secrets: secretValues,
 		},
 		onSubmit: async ({ value }) => {
 			setSaveError(null)
-
-			if (hasInvalidFields) {
-				setSaveError('Please correct any invalid fields before saving')
-				return
-			}
 
 			if (!connectionShouldBeRunning) {
 				await socket
@@ -157,23 +166,21 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		},
 	})
 
-	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
-
 	// Update the form with the connection config
-	const query = useConnectionCurrentConfig(connectionId)
-	useEffect(() => {
-		form.setFieldValue('config', query.data?.config ?? {})
-		form.setFieldValue('hasSecrets', query.data?.hasSecrets ?? {})
-		form.setFieldValue('secrets', {}) // clear secrets, so that everything reloads
+	// useEffect(() => {
+	// 	form.setFieldValue('config', query.data?.config ?? {})
 
-		const validFields: Record<string, boolean> = {}
-		for (const field of query.data?.fields ?? []) {
-			// Real validation status gets generated when the editor components first mount
-			validFields[field.id] = true
-		}
-
-		setValidFields(validFields)
-	}, [form, query.data, query.isLoading])
+	// 	const secretValues: typeof form.state.values.secrets = {}
+	// 	for (const fieldInfo of query.data?.fields ?? []) {
+	// 		if (fieldInfo.type.startsWith('secret')) {
+	// 			secretValues[fieldInfo.id] = {
+	// 				value: undefined, // clear secrets, so that everything reloads
+	// 				hasSavedValue: !!query.data?.hasSecrets?.[fieldInfo.id],
+	// 			}
+	// 		}
+	// 	}
+	// 	form.setFieldValue('secrets', secretValues)
+	// }, [form, query.data, query.isLoading])
 
 	// Update some form values when changed elsewhere
 	useEffect(() => form.setFieldValue('label', connectionInfo.label), [form, connectionInfo.label])
@@ -186,20 +193,6 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ConnectionInputField & { width: number }>(
 		query.data?.fields
 	)
-
-	// Future: This checking validity flow is horrible, and should be reworked to be more tanstack-form native
-	const setValid = useCallback(
-		(key: string, isValid: boolean) => {
-			console.log('set valid', key, isValid)
-
-			setValidFields((oldValid) => ({
-				...oldValid,
-				[key]: isValid,
-			}))
-		},
-		[setValidFields]
-	)
-	const hasInvalidFields = Object.values(validFields ?? {}).some((v) => v === false)
 
 	return (
 		<div>
@@ -327,77 +320,93 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 				{connectionShouldBeRunning && query.isSuccess && (
 					<>
-						{configOptions.map((fieldInfo) => (
-							<form.Subscribe
-								selector={(state) => {
-									const fn = isVisibleFns[fieldInfo.id]
-									const isVisible = !fn || !!fn(state.values.config)
+						{configOptions.map((fieldInfo) => {
+							const isSecret = fieldInfo.type.startsWith('secret')
 
-									const hasSecretValue = !!state.values.hasSecrets[fieldInfo.id]
+							return (
+								<form.Subscribe
+									selector={(state) => {
+										const fn = isVisibleFns[fieldInfo.id]
+										const isVisible = !fn || !!fn(state.values.config)
 
-									return { isVisible, hasSecretValue }
-								}}
-							>
-								{({ isVisible, hasSecretValue }) => {
-									const isSecret = fieldInfo.type.startsWith('secret')
-									return (
-										<form.Field
-											key={fieldInfo.id}
-											name={`${isSecret ? 'secrets' : 'config'}.${fieldInfo.id}`}
-											children={(field) => {
-												const label = (
-													<>
-														{fieldInfo.label}
-														{fieldInfo.tooltip && (
-															<FontAwesomeIcon
-																style={{ marginLeft: '5px' }}
-																icon={faQuestionCircle}
-																title={fieldInfo.tooltip}
-															/>
-														)}
-													</>
-												)
-
-												return (
-													<CCol
-														className={`fieldtype-${fieldInfo.type}`}
-														sm={fieldInfo.width}
-														style={{ display: !isVisible ? 'none' : undefined }}
-													>
-														{isSecret ? (
+										return { isVisible }
+									}}
+								>
+									{({ isVisible }) => {
+										if (isSecret) {
+											return (
+												<form.Field
+													key={`fieldInfo.id`}
+													name={`secrets.${fieldInfo.id}`}
+													validators={{
+														onChange: ({ value, fieldApi }) => {
+															if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
+																// An existing secret value is always valid
+																return undefined
+															}
+															return validateInputValue(fieldInfo, value?.value)
+														},
+														onMount: ({ value, fieldApi }) => {
+															if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
+																// An existing secret value is always valid
+																return undefined
+															}
+															return validateInputValue(fieldInfo, value?.value)
+														},
+													}}
+												>
+													{(field) => (
+														<CCol
+															className={`fieldtype-${fieldInfo.type}`}
+															sm={fieldInfo.width}
+															style={{ display: !isVisible ? 'none' : undefined }}
+														>
 															<ConnectionSecretField
-																label={label}
+																label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
 																definition={fieldInfo}
-																hasSavedValue={hasSecretValue}
-																editValue={field.state.value}
-																// valid={validFields[field.id] ?? false}
+																hasSavedValue={!!field.state.value?.hasSavedValue}
+																editValue={field.state.value?.value}
 																isDirty={field.state.meta.isDirty}
-																setValue={field.handleChange}
-																clearValue={() => {
-																	field.setValue(undefined)
-																	field.setMeta((me) => ({ ...me, isDirty: false }))
-																}}
-																setValid={setValid}
+																setValue={(value) => field.handleChange((v) => ({ hasSavedValue: false, ...v, value }))}
+																clearValue={() => form.resetField(`secrets.${fieldInfo.id}`)}
+																checkValid={(value) => validateInputValue(fieldInfo, value) === undefined}
 															/>
-														) : (
+														</CCol>
+													)}
+												</form.Field>
+											)
+										} else {
+											return (
+												<form.Field
+													key={`${fieldInfo.id}-${false}`}
+													name={`config.${fieldInfo.id}`}
+													validators={{
+														onChange: ({ value }) => validateInputValue(fieldInfo, value),
+														onMount: ({ value }) => validateInputValue(fieldInfo, value),
+													}}
+												>
+													{(field) => (
+														<CCol
+															className={`fieldtype-${fieldInfo.type}`}
+															sm={fieldInfo.width}
+															style={{ display: !isVisible ? 'none' : undefined }}
+														>
 															<ConnectionEditField
-																label={label}
+																label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
 																definition={fieldInfo}
 																value={field.state.value}
-																// valid={validFields[field.id] ?? false}
 																setValue={field.handleChange}
-																setValid={setValid}
 																connectionId={connectionId}
 															/>
-														)}
-													</CCol>
-												)
-											}}
-										/>
-									)
-								}}
-							</form.Subscribe>
-						))}
+														</CCol>
+													)}
+												</form.Field>
+											)
+										}
+									}}
+								</form.Subscribe>
+							)
+						})}
 					</>
 				)}
 
@@ -413,12 +422,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					selector={(state) => [state.canSubmit, state.isSubmitting]}
 					children={([canSubmit, isSubmitting]) => (
 						<CCol sm={12}>
-							<CButton
-								color="success"
-								className="me-md-1"
-								disabled={!canSubmit || isSubmitting || hasInvalidFields}
-								type="submit"
-							>
+							<CButton color="success" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
 								Save {isSubmitting ? '...' : ''}
 							</CButton>
 
@@ -432,3 +436,116 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		</div>
 	)
 })
+
+function ConnectionFieldLabel({ fieldInfo }: { fieldInfo: ConnectionInputField }) {
+	return (
+		<>
+			{fieldInfo.label}
+			{fieldInfo.tooltip && (
+				<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={fieldInfo.tooltip} />
+			)}
+		</>
+	)
+}
+
+function compileRegex(regex: string | undefined): RegExp | null {
+	if (regex) {
+		// Compile the regex string
+		const match = /^\/(.*)\/(.*)$/.exec(regex)
+		if (match) {
+			return new RegExp(match[1], match[2])
+		}
+	}
+	return null
+}
+
+export function validateInputValue(definition: ConnectionInputField, value: any): string | undefined {
+	switch (definition.type) {
+		case 'static-text':
+			// Not editable
+			return undefined
+
+		case 'textinput': {
+			if (definition.required && !value) {
+				return 'A value must be provided'
+			}
+
+			if (definition.isExpression) {
+				try {
+					ParseExpression(value)
+					return 'Expression is not valid'
+				} catch (e) {}
+			}
+
+			const compiledRegex = compileRegex(definition.regex)
+			if (compiledRegex) {
+				if (typeof value !== 'string') {
+					return 'Value must be a string'
+				}
+
+				if (!compiledRegex.exec(value)) {
+					return `Value does not match regex: ${definition.regex}`
+				}
+			}
+
+			return undefined
+		}
+
+		case 'secret-text': {
+			if (definition.required && !value) {
+				return 'A value must be provided'
+			}
+
+			return undefined
+		}
+
+		case 'number': {
+			if (definition.required && (value === undefined || value === '')) {
+				return 'A value must be provided'
+			}
+
+			if (value !== undefined && value !== '' && isNaN(value)) {
+				return 'Value must be a number'
+			}
+
+			// Verify the value range
+			if (definition.min !== undefined && value < definition.min) {
+				return `Value must be greater than or equal to ${definition.min}`
+			}
+			if (definition.max !== undefined && value > definition.max) {
+				return `Value must be less than or equal to ${definition.max}`
+			}
+
+			return undefined
+		}
+
+		case 'checkbox':
+		case 'colorpicker':
+		case 'bonjour-device':
+		case 'custom-variable':
+		case 'dropdown':
+			// Nothing to check
+			return undefined
+
+		case 'multidropdown':
+			return undefined
+		// 	return (
+		// 		<MultiDropdownInputField
+		// 			label={label}
+		// 			choices={definition.choices}
+		// 			allowCustom={definition.allowCustom}
+		// 			minSelection={definition.minSelection}
+		// 			minChoicesForSearch={definition.minChoicesForSearch}
+		// 			maxSelection={definition.maxSelection}
+		// 			regex={definition.regex}
+		// 			value={value}
+		// 			setValue={setValue}
+		// 			// setValid={setValid2}
+		// 		/>
+		// 	)
+
+		default:
+			assertNever(definition)
+			return undefined
+	}
+}

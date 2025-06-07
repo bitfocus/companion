@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import { CFormSwitch, CFormLabel } from '@coreui/react'
 import {
 	ColorInputField,
@@ -14,23 +14,12 @@ import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 interface ConnectionEditFieldProps {
 	label: React.ReactNode
 	setValue: (value: any) => void
-	setValid: (key: string, valid: boolean) => void
 	definition: ConnectionInputField
 	value: any
 	connectionId: string
 }
 
-export function ConnectionEditField({
-	label,
-	setValue,
-	setValid,
-	definition,
-	value,
-	connectionId,
-}: ConnectionEditFieldProps) {
-	const id = definition.id
-	const setValid2 = useCallback((valid: boolean) => setValid(id, valid), [setValid, id])
-
+export function ConnectionEditField({ label, setValue, definition, value, connectionId }: ConnectionEditFieldProps) {
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'static-text': {
@@ -55,7 +44,7 @@ export function ConnectionEditField({
 					regex={definition.regex}
 					required={definition.required}
 					setValue={setValue}
-					setValid={setValid2}
+					// setValid={setValid2}
 				/>
 			)
 		case 'number':
@@ -69,7 +58,7 @@ export function ConnectionEditField({
 					range={definition.range}
 					value={value}
 					setValue={setValue}
-					setValid={setValid2}
+					// setValid={setValid2}
 				/>
 			)
 		case 'checkbox':
@@ -98,7 +87,7 @@ export function ConnectionEditField({
 					regex={definition.regex}
 					value={value}
 					setValue={setValue}
-					setValid={setValid2}
+					// setValid={setValid2}
 				/>
 			)
 		case 'multidropdown':
@@ -113,7 +102,7 @@ export function ConnectionEditField({
 					regex={definition.regex}
 					value={value}
 					setValue={setValue}
-					setValid={setValid2}
+					// setValid={setValid2}
 				/>
 			)
 		case 'colorpicker': {
@@ -122,7 +111,7 @@ export function ConnectionEditField({
 					label={label}
 					value={value}
 					setValue={setValue}
-					setValid={setValid2}
+					// setValid={setValid2}
 					enableAlpha={definition.enableAlpha ?? false}
 					returnType={definition.returnType ?? 'number'}
 					presetColors={definition.presetColors}
