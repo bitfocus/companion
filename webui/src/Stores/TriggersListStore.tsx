@@ -6,7 +6,7 @@ import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from '@comp
 
 export class TriggersListStore {
 	readonly triggers = observable.map<string, ClientTriggerData>()
-	readonly groups = observable.map<string, TriggerCollection>()
+	readonly collections = observable.map<string, TriggerCollection>()
 
 	public resetTriggers = action((newData: Record<string, ClientTriggerData | undefined> | null) => {
 		this.triggers.clear()
@@ -43,33 +43,33 @@ export class TriggersListStore {
 		}
 	})
 
-	public get allGroupIds(): string[] {
-		const groupIds: string[] = []
+	public get allCollectionIds(): string[] {
+		const collectionIds: string[] = []
 
-		const collectGroupIds = (groups: Iterable<TriggerCollection>): void => {
-			for (const group of groups || []) {
-				groupIds.push(group.id)
-				collectGroupIds(group.children)
+		const collectCollectionIds = (collections: Iterable<TriggerCollection>): void => {
+			for (const collection of collections || []) {
+				collectionIds.push(collection.id)
+				collectCollectionIds(collection.children)
 			}
 		}
 
-		collectGroupIds(this.groups.values())
+		collectCollectionIds(this.collections.values())
 
-		return groupIds
+		return collectionIds
 	}
 
-	public rootGroups(): TriggerCollection[] {
-		return Array.from(this.groups.values()).sort((a, b) => a.sortOrder - b.sortOrder)
+	public rootCollections(): TriggerCollection[] {
+		return Array.from(this.collections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}
 
-	public resetGroups = action((newData: TriggerCollection[] | null) => {
-		this.groups.clear()
+	public resetCollection = action((newData: TriggerCollection[] | null) => {
+		this.collections.clear()
 
 		if (newData) {
-			for (const group of newData) {
-				if (!group) continue
+			for (const collection of newData) {
+				if (!collection) continue
 
-				this.groups.set(group.id, group)
+				this.collections.set(collection.id, collection)
 			}
 		}
 	})

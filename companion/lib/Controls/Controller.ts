@@ -90,16 +90,17 @@ export class ControlsController {
 
 		this.#dbTable = registry.db.getTableView('controls')
 
+		this.triggers = new TriggerEvents()
 		this.#triggerCollections = new TriggerCollections(
 			registry.io,
 			registry.db,
+			this.triggers,
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
 			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
 
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
-		this.triggers = new TriggerEvents()
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: Set<string>): void {
@@ -1148,6 +1149,13 @@ export class ControlsController {
 			this.#activeLearnRequests.delete(id)
 			this.#registry.io.emitToRoom(ActiveLearnRoom, 'learn:remove', id)
 		}
+	}
+
+	setTriggerCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {
+		this.#triggerCollections.setCollectionEnabled(collectionId, enabled)
+	}
+	isTriggerCollectionEnabled(collectionId: string, onlyDirect: boolean): boolean {
+		return this.#triggerCollections.isCollectionEnabled(collectionId, onlyDirect)
 	}
 
 	/**

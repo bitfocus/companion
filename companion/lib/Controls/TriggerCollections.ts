@@ -2,11 +2,13 @@ import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
 import type { TriggerCollection, TriggerCollectionData } from '@companion-app/shared/Model/TriggerModel.js'
+import type { TriggerEvents } from './TriggerEvents.js'
 
 const TriggerCollectionsRoom = 'trigger-collections'
 
 export class TriggerCollections extends CollectionsBaseController<TriggerCollectionData> {
 	readonly #io: UIHandler
+	readonly #events: TriggerEvents
 
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void
 	readonly #recheckTriggersEnabled: (enabledCollectionIds: ReadonlySet<string>) => void
@@ -16,12 +18,14 @@ export class TriggerCollections extends CollectionsBaseController<TriggerCollect
 	constructor(
 		io: UIHandler,
 		db: DataDatabase,
+		events: TriggerEvents,
 		cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void,
 		recheckTriggersEnabled: (enabledCollectionIds: ReadonlySet<string>) => void
 	) {
 		super(db.getTableView<Record<string, TriggerCollection>>('trigger_collections'))
 
 		this.#io = io
+		this.#events = events
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds
 		this.#recheckTriggersEnabled = recheckTriggersEnabled
 
@@ -40,8 +44,25 @@ export class TriggerCollections extends CollectionsBaseController<TriggerCollect
 		this.#rebuildEnabledCollectionIds()
 	}
 
-	isCollectionEnabled(collectionId: string | null | undefined): boolean {
-		return !collectionId || this.#enabledCollectionIds.has(collectionId)
+	isCollectionEnabled(collectionId: string | null | undefined, onlyDirect = false): boolean {
+		if (!collectionId) return true
+
+		if (onlyDirect) {
+			const info = this.findCollectionAndParent(collectionId)
+			return !!info?.collection.metaData.enabled
+		}
+
+		return this.#enabledCollectionIds.has(collectionId)
+	}
+
+	setCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {
+		this.collectionModifyMetaData(collectionId, (collection) => {
+			if (enabled === 'toggle') {
+				collection.metaData.enabled = !collection.metaData.enabled
+			} else {
+				collection.metaData.enabled = enabled
+			}
+		})
 	}
 
 	#rebuildEnabledCollectionIds(): void {
@@ -72,7 +93,7 @@ export class TriggerCollections extends CollectionsBaseController<TriggerCollect
 
 		// Intercept this changed event, to rebuild the enabledCollectionIds set and apply it to the triggers
 		this.#rebuildEnabledCollectionIds()
-
+		this.#events.emit('trigger_collections_enabled')
 		this.#recheckTriggersEnabled(this.#enabledCollectionIds)
 	}
 

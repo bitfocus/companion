@@ -46,8 +46,19 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 				after: true,
 			}
 		)
-
 		this.#controlsController.triggers.on('trigger_enabled', () => debounceCheckFeedbacks())
+
+		const debounceCheckFeedbackCollections = debounceFn(
+			() => {
+				this.emit('checkFeedbacks', 'trigger_collection_enabled')
+			},
+			{
+				maxWait: 100,
+				wait: 20,
+				after: true,
+			}
+		)
+		this.#controlsController.triggers.on('trigger_collections_enabled', () => debounceCheckFeedbackCollections())
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
@@ -65,7 +76,29 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'dropdown',
 						label: 'Enable',
 						id: 'enable',
-						default: 'true',
+						default: 'toggle',
+						choices: [
+							{ id: 'toggle', label: 'Toggle' },
+							{ id: 'true', label: 'Yes' },
+							{ id: 'false', label: 'No' },
+						],
+					},
+				],
+			},
+			trigger_collection_enabled: {
+				label: 'Trigger: Enable or disable trigger collection',
+				description: undefined,
+				options: [
+					{
+						type: 'internal:trigger_collection',
+						label: 'Collection',
+						id: 'collection_id',
+					},
+					{
+						type: 'dropdown',
+						label: 'Enable',
+						id: 'enable',
+						default: 'toggle',
 						choices: [
 							{ id: 'toggle', label: 'Toggle' },
 							{ id: 'true', label: 'Yes' },
@@ -94,6 +127,13 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 			if (action.rawOptions.enable == 'toggle') newState = !control.options.enabled
 
 			control.optionsSetField('enabled', newState)
+
+			return true
+		} else if (action.definitionId === 'trigger_collection_enabled') {
+			let newState: boolean | 'toggle' = action.rawOptions.enable == 'true'
+			if (action.rawOptions.enable == 'toggle') newState = 'toggle'
+
+			this.#controlsController.setTriggerCollectionEnabled(action.rawOptions.collection_id, newState)
 
 			return true
 		} else {
@@ -130,6 +170,33 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 					},
 				],
 			},
+			trigger_collection_enabled: {
+				feedbackType: 'boolean',
+				label: 'Trigger: When collection enabled or disabled',
+				description: undefined,
+				feedbackStyle: {
+					color: 0xffffff,
+					bgcolor: 0xff0000,
+				},
+				showInvert: true,
+				options: [
+					{
+						type: 'internal:trigger_collection',
+						label: 'Collection',
+						id: 'collection_id',
+					},
+					{
+						type: 'dropdown',
+						label: 'Enable',
+						id: 'enable',
+						default: 'true',
+						choices: [
+							{ id: 'true', label: 'Yes' },
+							{ id: 'false', label: 'No' },
+						],
+					},
+				],
+			},
 		}
 	}
 
@@ -139,6 +206,11 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 			if (!control || control.type !== 'trigger' || !control.supportsOptions) return false
 
 			const state = control.options.enabled
+			const target = feedback.options.enable == 'true'
+			return state == target
+		} else if (feedback.definitionId === 'trigger_collection_enabled') {
+			const state = this.#controlsController.isTriggerCollectionEnabled(feedback.options.collection_id, true)
+			console.log('check', feedback.options, state)
 			const target = feedback.options.enable == 'true'
 			return state == target
 		}

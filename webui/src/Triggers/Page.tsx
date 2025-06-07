@@ -115,7 +115,7 @@ export const TriggersPage = observer(function Triggers() {
 
 				<PanelCollapseHelperProvider
 					storageId="trigger-groups"
-					knownPanelIds={triggersList.allGroupIds}
+					knownPanelIds={triggersList.allCollectionIds}
 					defaultCollapsed
 				>
 					<TriggersTableContextProvider deleteModalRef={confirmModalRef} selectTrigger={selectTrigger}>
@@ -127,7 +127,7 @@ export const TriggersPage = observer(function Triggers() {
 							itemName="trigger"
 							dragId="trigger"
 							collectionsApi={triggerGroupsApi}
-							collections={triggersList.rootGroups()}
+							collections={triggersList.rootCollections()}
 							items={allTriggers}
 							selectedItemId={selectedTriggerId}
 						/>

@@ -6,26 +6,26 @@ export function useTriggerGroupsSubscription(socket: CompanionSocketWrapped, sto
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
-		store.resetGroups(null)
+		store.resetCollection(null)
 		setReady(false)
 
 		socket
 			.emitPromise('trigger-collections:subscribe', [])
 			.then((groups) => {
-				store.resetGroups(groups)
+				store.resetCollection(groups)
 				setReady(true)
 			})
 			.catch((e) => {
-				store.resetGroups(null)
+				store.resetCollection(null)
 				console.error('Failed to load trigger groups list', e)
 			})
 
 		const unsubUpdates = socket.on('trigger-collections:update', (update) => {
-			store.resetGroups(update)
+			store.resetCollection(update)
 		})
 
 		return () => {
-			store.resetGroups(null)
+			store.resetCollection(null)
 			unsubUpdates()
 
 			socket.emitPromise('trigger-collections:unsubscribe', []).catch((e) => {

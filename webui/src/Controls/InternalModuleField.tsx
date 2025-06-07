@@ -7,6 +7,7 @@ import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 
 export function InternalModuleField(
 	option: InternalInputField,
@@ -70,6 +71,8 @@ export function InternalModuleField(
 					includeSelf={option.includeSelf}
 				/>
 			)
+		case 'internal:trigger_collection':
+			return <InternalTriggerCollectionDropdown disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:time':
 			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:date':
@@ -394,6 +397,38 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 		}
 		return choices
 	}, [triggersList, isLocatedInGrid, includeSelf])
+
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+})
+
+interface InternalTriggerCollectionDropdownProps {
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+}
+
+const InternalTriggerCollectionDropdown = observer(function InternalTriggerCollectionDropdown({
+	value,
+	setValue,
+	disabled,
+}: InternalTriggerCollectionDropdownProps) {
+	const { triggersList } = useContext(RootAppStoreContext)
+
+	const choices = useComputed(() => {
+		const choices: DropdownChoice[] = []
+
+		const processCollections = (collections: TriggerCollection[]) => {
+			for (const collection of collections) {
+				choices.push({
+					id: collection.id,
+					label: collection.label || `Collection #${collection.id}`,
+				})
+			}
+		}
+		processCollections(triggersList.rootCollections())
+
+		return choices
+	}, [triggersList])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
