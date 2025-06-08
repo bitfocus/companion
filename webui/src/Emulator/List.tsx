@@ -47,9 +47,8 @@ export const EmulatorList = observer(function EmulatorList() {
 						</CCol>
 
 						{emulators.map((surface) => (
-							<CCol sm={4}>
+							<CCol sm={4} key={surface.id}>
 								<CButton
-									key={surface.id}
 									color="light"
 									onClick={() => void navigate({ to: `/emulator/${surface.id.substring(9)}` })}
 									className="mb-4"

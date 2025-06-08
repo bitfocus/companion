@@ -7,14 +7,13 @@ import { queryClient } from '../TRPC.js'
 export const Route = createRootRoute({
 	component: () => {
 		return (
-			<>
-				<QueryClientProvider client={queryClient}>
-					<Outlet />
-					<Suspense>
-						<TanStackRouterDevtools position="top-left" />
-					</Suspense>
-				</QueryClientProvider>
-			</>
+			<QueryClientProvider client={queryClient}>
+				<Outlet />
+				<Suspense>
+					<TanStackRouterDevtools position="top-left" />
+					<TanStackQueryDevtools />
+				</Suspense>
+			</QueryClientProvider>
 		)
 	},
 	errorComponent: ({ error, reset }) => {
@@ -29,6 +28,18 @@ const TanStackRouterDevtools =
 				// Lazy load in development
 				import('@tanstack/react-router-devtools').then((res) => ({
 					default: res.TanStackRouterDevtools,
+					// For Embedded Mode
+					// default: res.TanStackRouterDevtoolsPanel
+				}))
+			)
+
+const TanStackQueryDevtools =
+	process.env.NODE_ENV === 'production'
+		? () => null // Render nothing in production
+		: React.lazy(async () =>
+				// Lazy load in development
+				import('@tanstack/react-query-devtools').then((res) => ({
+					default: res.ReactQueryDevtools,
 					// For Embedded Mode
 					// default: res.TanStackRouterDevtoolsPanel
 				}))

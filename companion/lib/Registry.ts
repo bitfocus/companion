@@ -348,7 +348,6 @@ export class Registry {
 
 			// Instances are loaded, start up http
 			const router = createTrpcRouter(this)
-			this.ui.express.bindTrpcRouter(router)
 			this.ui.io.bindTrpcRouter(router)
 			this.rebindHttp(bindIp, bindPort)
 

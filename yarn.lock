@@ -1297,6 +1297,7 @@ __metadata:
     "@sentry/vite-plugin": "npm:^3.5.0"
     "@tanstack/react-form": "npm:^1.12.3"
     "@tanstack/react-query": "npm:^5.80.7"
+    "@tanstack/react-query-devtools": "npm:^5.80.6"
     "@tanstack/react-router": "npm:^1.121.12"
     "@tanstack/react-router-devtools": "npm:^1.121.12"
     "@tanstack/router-plugin": "npm:^1.121.12"
@@ -3896,6 +3897,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/query-devtools@npm:5.80.0":
+  version: 5.80.0
+  resolution: "@tanstack/query-devtools@npm:5.80.0"
+  checksum: 10c0/2210bd390a769f1cfaf0343e66c7ec9c0a8fca982fa7853428c3c7f7da438c3380b841e8e065603f4e8449d52237a80d4877fc5299995e76e18bd44d5143acfc
+  languageName: node
+  linkType: hard
+
 "@tanstack/react-form@npm:^1.12.3":
   version: 1.12.3
   resolution: "@tanstack/react-form@npm:1.12.3"
@@ -3914,6 +3922,18 @@ __metadata:
     vinxi:
       optional: true
   checksum: 10c0/97fd2849eeb7ed4afcb35acb9802d2bf91156d4bc0675968430e68548f5d42983ce710688a883fdfeb15bb6391d330c7353925acd01573d59d02a55e59465431
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query-devtools@npm:^5.80.6":
+  version: 5.80.6
+  resolution: "@tanstack/react-query-devtools@npm:5.80.6"
+  dependencies:
+    "@tanstack/query-devtools": "npm:5.80.0"
+  peerDependencies:
+    "@tanstack/react-query": ^5.80.6
+    react: ^18 || ^19
+  checksum: 10c0/7f504f7f251b159dc4c8ba1d03c8ba16c6794467372c44100a0d3d40e67b65e31917163b139b09a948a177fa75b03e6d04b2acc2d99958a61feba7ce2f3a0d97
   languageName: node
   linkType: hard
 
