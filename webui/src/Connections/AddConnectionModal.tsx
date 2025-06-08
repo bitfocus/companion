@@ -218,7 +218,7 @@ export const AddConnectionModal = observer(
 	})
 )
 
-// nocommit TODO: this is a copy of the function from companion/lib/Instance/ConnectionConfigStore.ts
+// TODO: this is a copy of the function from companion/lib/Instance/ConnectionConfigStore.ts
 function findNextConnectionLabel(
 	connections: ReadonlyMap<string, ClientConnectionConfig>,
 	shortname: string,

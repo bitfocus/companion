@@ -80,7 +80,6 @@ export function ConnectionEditField({
 						color="success"
 						checked={value}
 						size="xl"
-						title={definition.tooltip} // nocommit: this needs fixing
 						onChange={() => {
 							setValue(!value)
 							//setValid2(true)

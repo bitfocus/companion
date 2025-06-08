@@ -390,7 +390,6 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 						color="success"
 						checked={value}
 						size="xl"
-						title={definition.tooltip} // nocommit: this needs fixing
 						onChange={() => {
 							setValue2(!value)
 							//setValid2(true)

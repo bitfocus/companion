@@ -66,6 +66,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 		type: 'checkbox',
 		label: 'Prompt to enter fullscreem',
 		default: true,
+		tooltip: 'testfingsdg ',
 	},
 	...LockConfigFields,
 ]
