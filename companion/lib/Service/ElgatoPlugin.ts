@@ -33,7 +33,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 	readonly #surfaceController: SurfaceController
 
 	#server: WebSocketServer | undefined
-	#client: ServiceElgatoPluginSocket | undefined
+	#clients: ServiceElgatoPluginSocket[] = []
 
 	constructor(serviceApi: ServiceApi, surfaceController: SurfaceController, userconfig: DataUserConfig) {
 		super(userconfig, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
@@ -44,10 +44,12 @@ export class ServiceElgatoPlugin extends ServiceBase {
 		this.port = 28492
 
 		this.#surfaceController.on('surface_page', (surfaceId, newPageId) => {
-			if (this.#client && surfaceId === 'plugin') {
-				this.#client.currentPageId = newPageId
+			for (const client of this.#clients) {
+				if (surfaceId === client.id) {
+					client.currentPageId = newPageId
 
-				this.#redrawAllDynamicButtons()
+					this.#redrawAllDynamicButtons()
+				}
 			}
 		})
 
@@ -55,23 +57,23 @@ export class ServiceElgatoPlugin extends ServiceBase {
 	}
 
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
-		if (!this.#client) return
+		for (const client of this.#clients) {
+			const currentPageNumber = this.#serviceApi.getPageNumberForId(client.currentPageId)
 
-		const currentPageNumber = this.#serviceApi.getPageNumberForId(this.#client.currentPageId)
+			// Send dynamic page
+			if (location.pageNumber === currentPageNumber) {
+				this.#handleButtonDrawn(
+					{
+						...location,
+						pageNumber: null,
+					},
+					render
+				)
+			}
 
-		// Send dynamic page
-		if (location.pageNumber === currentPageNumber) {
-			this.#handleButtonDrawn(
-				{
-					...location,
-					pageNumber: null,
-				},
-				render
-			)
+			// Send specific page
+			this.#handleButtonDrawn(location, render)
 		}
-
-		// Send specific page
-		this.#handleButtonDrawn(location, render)
 	}
 
 	/**
@@ -93,10 +95,12 @@ export class ServiceElgatoPlugin extends ServiceBase {
 	#handleButtonDrawn(location: { pageNumber: number | null; row: number; column: number }, render: ImageResult): void {
 		if (location.pageNumber !== null) location.pageNumber = Number(location.pageNumber)
 
-		if (this.#client && this.#client.buttonListeners) {
+		for (const client of this.#clients) {
+			if (!client.buttonListeners) continue
+
 			const id = `${location.pageNumber}_${location.column}_${location.row}`
-			if (this.#client.buttonListeners.has(id)) {
-				this.#client.fillImage(
+			if (client.buttonListeners.has(id)) {
+				client.fillImage(
 					id,
 					{
 						page: location.pageNumber,
@@ -113,8 +117,8 @@ export class ServiceElgatoPlugin extends ServiceBase {
 			if (location.column >= 0 && location.row >= 0 && location.column < cols && location.row < rows) {
 				const bank = location.column + location.row * cols
 				const id = `${location.pageNumber}_${bank}`
-				if (this.#client.buttonListeners.has(id)) {
-					this.#client.fillImage(
+				if (client.buttonListeners.has(id)) {
+					client.fillImage(
 						id,
 						{
 							page: location.pageNumber,
@@ -129,28 +133,30 @@ export class ServiceElgatoPlugin extends ServiceBase {
 	}
 
 	#redrawAllDynamicButtons(): void {
-		if (!this.#client || !this.#client.supportsCoordinates) return
+		for (const client of this.#clients) {
+			if (!client.supportsCoordinates) continue
 
-		const currentPageNumber = this.#serviceApi.getPageNumberForId(this.#client.currentPageId)
+			const currentPageNumber = this.#serviceApi.getPageNumberForId(client.currentPageId)
 
-		for (const listenerId of this.#client.buttonListeners) {
-			if (!listenerId.startsWith('null_')) continue
+			for (const listenerId of client.buttonListeners) {
+				if (!listenerId.startsWith('null_')) continue
 
-			const [_page, column, row] = listenerId.split('_').map((i) => Number(i))
-			if (isNaN(column) || isNaN(row)) continue
+				const [_page, column, row] = listenerId.split('_').map((i) => Number(i))
+				if (isNaN(column) || isNaN(row)) continue
 
-			this.#handleButtonDrawn(
-				{
-					pageNumber: null,
-					column: column,
-					row: row,
-				},
-				this.#serviceApi.getCachedRenderOrGeneratePlaceholder({
-					pageNumber: currentPageNumber ?? 0,
-					column: column,
-					row: row,
-				})
-			)
+				this.#handleButtonDrawn(
+					{
+						pageNumber: null,
+						column: column,
+						row: row,
+					},
+					this.#serviceApi.getCachedRenderOrGeneratePlaceholder({
+						pageNumber: currentPageNumber ?? 0,
+						column: column,
+						row: row,
+					})
+				)
+			}
 		}
 	}
 
@@ -167,16 +173,22 @@ export class ServiceElgatoPlugin extends ServiceBase {
 
 				this.logger.silly('add device: ' + socket.remoteAddress, remoteId)
 
+				let suffix = ''
+				if (socket.remoteAddress !== '::1' && !socket.remoteAddress.endsWith('127.0.0.1')) {
+					suffix = socket.remoteAddress.replace(/[^a-z0-9]/gi, '-').toLowerCase()
+				}
+
 				// Use ip right now, since the pluginUUID is new on each boot and makes Companion
 				// forget all settings for the device. (page and orientation)
-				const id = 'elgato_plugin-' + socket.remoteAddress
+				const id = suffix ? `plugin-${suffix}`.replaceAll(/-+/g, '-') : 'plugin'
+				socket.id = id
 
 				socket.supportsPng = !!clientInfo.supportsPng
 				socket.supportsCoordinates = !!clientInfo.supportsCoordinates
 
 				this.#surfaceController.addElgatoPluginDevice(id, socket)
 
-				socket.currentPageId = this.#surfaceController.devicePageGet('plugin') || this.#serviceApi.getFirstPageId()
+				socket.currentPageId = this.#surfaceController.devicePageGet(id) || this.#serviceApi.getFirstPageId()
 
 				socket.apireply('new_device', {
 					result: true,
@@ -186,13 +198,15 @@ export class ServiceElgatoPlugin extends ServiceBase {
 					supportsCoordinates: socket.supportsCoordinates,
 				})
 
-				this.#client = socket
+				this.#clients.push(socket)
 
 				socket.on('close', () => {
 					this.#surfaceController.removeDevice(id)
 					socket.removeAllListeners('keyup')
 					socket.removeAllListeners('keydown')
-					this.#client = undefined
+
+					const index = this.#clients.indexOf(socket)
+					if (index >= 0) this.#clients.splice(index, 1)
 				})
 			} catch (e: any) {
 				this.logger.error(`Elgato plugin add failed: ${e?.message ?? e}`)
@@ -334,6 +348,7 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 	readonly #logger = LogController.createLogger('Surface/ElgatoPlugin/Socket')
 
 	readonly socket: WebSocket
+	id: string | undefined
 	readonly remoteAddress: string
 
 	readonly buttonListeners = new Set<string>()
