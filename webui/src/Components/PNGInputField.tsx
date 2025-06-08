@@ -2,6 +2,7 @@ import React, { useCallback, useRef } from 'react'
 import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
+import { blobToDataURL } from '~/util'
 
 interface MinMaxDimension {
 	width: number
@@ -65,33 +66,32 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 					return
 				}
 
-				const fr = new FileReader()
-				fr.onload = () => {
-					// file is loaded
-					const img = new Image()
+				Promise.resolve()
+					.then(async () => {
+						const imageSourceStr = await blobToDataURL(newFiles[0])
 
-					img.onload = () => {
-						if (!fr.result) return
+						// file is loaded
+						const img = new Image()
 
-						// image is loaded; sizes are available
-						if (max && (img.height > max.height || img.width > max.width)) {
-							onError(null)
-							onSelect(imageResize(img, max.width, max.height), newFiles[0].name)
-						} else if (min && (img.width < min.width || img.height < min.height)) {
-							onError(`Image dimensions must be at least ${min.width}x${min.height}`)
-						} else if (max && (img.width > max.width || img.height > max.height)) {
-							onError(`Image dimensions must be at most ${max.width}x${max.height}`)
-						} else {
-							onError(null)
-							onSelect(fr.result.toString(), newFiles[0].name)
+						img.onload = () => {
+							// image is loaded; sizes are available
+							if (max && (img.height > max.height || img.width > max.width)) {
+								onError(null)
+								onSelect(imageResize(img, max.width, max.height), newFiles[0].name)
+							} else if (min && (img.width < min.width || img.height < min.height)) {
+								onError(`Image dimensions must be at least ${min.width}x${min.height}`)
+							} else {
+								onError(null)
+								onSelect(imageSourceStr, newFiles[0].name)
+							}
 						}
-					}
 
-					if (fr.result) {
-						img.src = fr.result.toString() // is the data URL because called with readAsDataURL
-					}
-				}
-				fr.readAsDataURL(newFiles[0])
+						img.src = imageSourceStr
+					})
+					.catch((err) => {
+						onError(`Error reading file: ${err}`)
+						console.error('Error reading file:', err)
+					})
 			} else {
 				onError('Companion requires a newer browser')
 			}

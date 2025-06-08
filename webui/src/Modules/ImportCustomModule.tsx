@@ -48,22 +48,12 @@ export function ImportModules(): React.JSX.Element {
 				return
 			}
 
-			const fr = new FileReader()
-			fr.onload = () => {
-				if (!fr.result) {
-					setImportError('Failed to load file')
-					return
-				}
+			Promise.resolve()
+				.then(async () => {
+					const buffer = await newFile.bytes()
 
-				if (typeof fr.result === 'string') {
-					setImportError('Failed to load file contents in correct format')
-					return
-				}
-
-				setImportError(null)
-				socket
-					.emitPromise('modules:install-module-tar', [new Uint8Array(fr.result)], 20000)
-					.then((failureReason) => {
+					setImportError(null)
+					await socket.emitPromise('modules:install-module-tar', [buffer], 20000).then((failureReason) => {
 						if (failureReason) {
 							console.error('Failed to install module', failureReason)
 
@@ -79,12 +69,11 @@ export function ImportModules(): React.JSX.Element {
 						// 	// setImportInfo([config, initialRemap])
 						// }
 					})
-					.catch((e) => {
-						setImportError('Failed to load module package to import')
-						console.error('Failed to load module package to import:', e)
-					})
-			}
-			fr.readAsArrayBuffer(newFile)
+				})
+				.catch((e) => {
+					setImportError('Failed to load module package to import')
+					console.error('Failed to load module package to import:', e)
+				})
 		},
 		[socket, notifier]
 	)
