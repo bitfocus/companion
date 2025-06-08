@@ -9,7 +9,7 @@ interface CloudRegionPanelProps {
 	hideDisabled: boolean
 }
 
-export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelProps) {
+export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelProps): React.JSX.Element | null {
 	const socket = useContext(SocketContext)
 
 	const cloudSetStateEnabled = useCallback(
