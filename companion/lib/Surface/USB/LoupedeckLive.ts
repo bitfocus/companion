@@ -14,6 +14,7 @@ import {
 	LoupedeckBufferFormat,
 	LoupedeckControlInfo,
 	LoupedeckDevice,
+	LoupedeckDisplayId,
 	LoupedeckModelId,
 	openLoupedeck,
 } from '@loupedeck/node'
@@ -157,6 +158,7 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 	readonly #modelInfo: ModelInfo
 
 	readonly #writeQueue: ImageWriteQueue<number, [DrawButtonItem]>
+	readonly #stripWriteQueue: ImageWriteQueue<number, [DrawButtonItem]>
 
 	config: Record<string, any>
 
@@ -232,6 +234,13 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 				if (touch.target.key !== undefined) {
 					const keyIndex = translateTouchKeyIndex(this.#modelInfo, touch.target.key)
 					this.#emitClick(keyIndex, true)
+				} else if (
+					this.#loupedeck.displayLeftStrip &&
+					(touch.target.screen === LoupedeckDisplayId.Left || touch.target.screen === LoupedeckDisplayId.Right)
+				) {
+					const x = touch.target.screen === LoupedeckDisplayId.Left ? 1 : 6
+					const y = Math.floor((touch.y / this.#loupedeck.displayLeftStrip.height) * 3)
+					this.#emitClick(x + y * modelInfo.totalCols, true)
 				}
 			}
 		})
@@ -240,6 +249,13 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 				if (touch.target.key !== undefined) {
 					const keyIndex = translateTouchKeyIndex(this.#modelInfo, touch.target.key)
 					this.#emitClick(keyIndex, false)
+				} else if (
+					this.#loupedeck.displayLeftStrip &&
+					(touch.target.screen === LoupedeckDisplayId.Left || touch.target.screen === LoupedeckDisplayId.Right)
+				) {
+					const x = touch.target.screen === LoupedeckDisplayId.Left ? 1 : 6
+					const y = Math.floor((touch.y / this.#loupedeck.displayLeftStrip.height) * 3)
+					this.#emitClick(x + y * modelInfo.totalCols, false)
 				}
 			}
 		})
@@ -268,10 +284,46 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 				return
 			}
 
-			console.log('draw', newbuffer)
-
 			try {
 				await this.#loupedeck.drawKeyBuffer(key, Buffer.from(newbuffer), LoupedeckBufferFormat.RGB)
+			} catch (e) {
+				this.#logger.debug(`fillImage failed: ${e}`)
+				this.emit('remove')
+			}
+		})
+		this.#stripWriteQueue = new ImageWriteQueue(this.#logger, async (key, drawItem) => {
+			if (!this.#loupedeck.displayLeftStrip) return
+
+			// This isn't good math, but it is simpler and good enough for the existing models
+			const width = this.#loupedeck.displayLeftStrip.width
+			const height = this.#loupedeck.displayLeftStrip.height / 3
+
+			let newbuffer: Uint8Array
+			try {
+				newbuffer = await drawItem.defaultRender.drawNative(
+					width,
+					height,
+					this.config.rotation,
+					imageRs.PixelFormat.Rgb
+				)
+			} catch (e) {
+				this.#logger.debug(`scale image failed: ${e}`)
+				this.emit('remove')
+				return
+			}
+
+			const displayId = key < 5 ? LoupedeckDisplayId.Left : LoupedeckDisplayId.Right
+
+			try {
+				await this.#loupedeck.drawBuffer(
+					displayId,
+					Buffer.from(newbuffer),
+					LoupedeckBufferFormat.RGB,
+					width,
+					height,
+					0,
+					drawItem.y * height
+				)
 			} catch (e) {
 				this.#logger.debug(`fillImage failed: ${e}`)
 				this.emit('remove')
@@ -357,6 +409,10 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 			const button = lcdX + item.y * this.#modelInfo.lcdCols
 
 			this.#writeQueue.queue(button, item)
+		}
+		if (this.#loupedeck.modelId === LoupedeckModelId.LoupedeckLive && (item.x === 1 || item.x === 6) && item.y < 3) {
+			// Draw the vertical strips on the Loupedeck Live
+			this.#stripWriteQueue.queue(item.x + item.y, item)
 		}
 
 		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == item.x && btn[1] == item.y)
