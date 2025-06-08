@@ -1,43 +1,30 @@
-import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
-import { LoadingRetryOrError, MyErrorBoundary, SocketContext, useMountEffect, PreventDefaultHandler } from '~/util.js'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { LoadingRetryOrError, MyErrorBoundary, useMountEffect, PreventDefaultHandler } from '~/util.js'
 import { CButton, CCol, CForm, CRow } from '@coreui/react'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { ControlLocation, EmulatorConfig } from '@companion-app/shared/Model/Common.js'
-import { UserConfigStore } from '~/Stores/UserConfigStore.js'
-import { useUserConfigSubscription } from '~/Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
 import { useParams } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/TRPC.js'
 import { useMutation } from '@tanstack/react-query'
 import { observable, ObservableMap, runInAction } from 'mobx'
-import { useDocumentTitle } from 'usehooks-ts'
-import { useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus.js'
 
 function getCacheKey(x: number, y: number): string {
 	return `${x}/${y}`
 }
 
 export const Emulator = observer(function Emulator() {
-	const socket = useContext(SocketContext)
-
 	const { emulatorId } = useParams({ from: '/emulator/$emulatorId' })
 
 	const config = useSubscription(trpc.surfaces.emulatorConfig.subscriptionOptions({ id: emulatorId }))
 
-	useTRPCConnectionStatus()
-
 	const pressedMutation = useMutation(trpc.surfaces.emulatorPressed.mutationOptions())
 
-	// TODO - handle trpc connection state changes and subscription state changes?
-
 	const doRetryLoad = useCallback(() => config.reset(), [config])
-
-	const userConfigStore = useMemo(() => new UserConfigStore(), [])
-	useUserConfigSubscription(socket, userConfigStore)
 
 	const imageCache = useMemo(() => observable.map<string, string | false>(), [])
 	const imagesSub = useSubscription(
@@ -64,12 +51,6 @@ export const Emulator = observer(function Emulator() {
 		)
 	)
 
-	useDocumentTitle(
-		userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
-			? `${userConfigStore.properties?.installName} - Emulator (Bitfocus Companion)`
-			: 'Bitfocus Companion - Emulator'
-	)
-
 	const keymap = useMemo(() => {
 		if (config.data?.emulator_control_enable) {
 			return { ...keyboardKeymap, ...logitecKeymap, ...dsanMastercueKeymap }
@@ -77,14 +58,6 @@ export const Emulator = observer(function Emulator() {
 			return keyboardKeymap
 		}
 	}, [config.data?.emulator_control_enable])
-
-	useEffect(() => {
-		const unsub = socket.onConnect(() => {
-			doRetryLoad()
-		})
-
-		return unsub
-	}, [socket, doRetryLoad])
 
 	// Register key handlers
 	useEffect(() => {

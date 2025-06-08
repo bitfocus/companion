@@ -83,7 +83,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 
 	readonly #emulatorId: string
 
-	readonly #events: EventEmitter<EmulatorUpdateEvents>
+	readonly #events: Pick<EventEmitter<EmulatorUpdateEvents>, 'emit' | 'listenerCount'>
 
 	#lastSentConfigJson: EmulatorConfig = cloneDeep(DefaultConfig)
 
@@ -120,7 +120,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		}
 	)
 
-	constructor(events: EventEmitter<EmulatorUpdateEvents>, emulatorId: string) {
+	constructor(events: Pick<EventEmitter<EmulatorUpdateEvents>, 'emit' | 'listenerCount'>, emulatorId: string) {
 		super()
 
 		this.#events = events
