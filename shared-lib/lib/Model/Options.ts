@@ -7,6 +7,7 @@ import type {
 	CompanionInputFieldDropdown,
 	CompanionInputFieldMultiDropdown,
 	CompanionInputFieldNumber,
+	CompanionInputFieldSecret,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
 } from '@companion-module/base'
@@ -103,7 +104,9 @@ export type ExtendedInputField =
 	| EncodeIsVisible2<CompanionInputFieldCheckbox>
 	| EncodeIsVisible2<CompanionInputFieldCustomVariable>
 
-export type ExtendedConfigField = EncodeIsVisible2<CompanionInputFieldBonjourDevice>
+export type ExtendedConfigField =
+	| EncodeIsVisible2<CompanionInputFieldBonjourDevice>
+	| EncodeIsVisible2<CompanionInputFieldSecret>
 
 export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isVisible'>> = Omit<
 	T,
@@ -116,5 +119,6 @@ export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isV
 	}
 }
 
+export type ConnectionInputField = ExtendedInputField | ExtendedConfigField
 export type InternalActionInputField = ExtendedInputField | InternalInputField
 export type InternalFeedbackInputField = ExtendedInputField | InternalInputField

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { CFormCheck, CFormLabel } from '@coreui/react'
 import { InlineHelp } from './InlineHelp.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -9,7 +9,6 @@ interface CheckboxInputFieldProps {
 	label?: React.ReactNode
 	value: boolean
 	setValue: (value: boolean) => void
-	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	helpText?: string
 	inline?: boolean
@@ -20,22 +19,15 @@ export function CheckboxInputField({
 	label,
 	value,
 	setValue,
-	setValid,
 	disabled,
 	helpText,
 	inline,
 }: CheckboxInputFieldProps) {
-	// If the value is undefined, populate with the default. Also inform the parent about the validity
-	useEffect(() => {
-		setValid?.(true)
-	}, [setValid])
-
 	const onChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			setValue(!!e.currentTarget.checked)
-			setValid?.(true)
 		},
-		[setValue, setValid]
+		[setValue]
 	)
 
 	return (

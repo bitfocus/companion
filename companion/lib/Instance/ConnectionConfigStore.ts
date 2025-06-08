@@ -6,7 +6,6 @@ import {
 import { DataDatabase } from '../Data/Database.js'
 // import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
-import { cloneDeep } from 'lodash-es'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 
@@ -91,6 +90,7 @@ export class ConnectionConfigStore {
 			config: {
 				product: product,
 			},
+			secrets: {},
 			lastUpgradeIndex: -1,
 			enabled: !disabled,
 		}
@@ -106,9 +106,15 @@ export class ConnectionConfigStore {
 		this.commitChanges([id])
 	}
 
-	exportAll(clone = true): Record<string, ConnectionConfig | undefined> {
+	exportAll(includeSecrets: boolean): Record<string, ConnectionConfig | undefined> {
 		const obj = Object.fromEntries(this.#store.entries())
-		return clone ? cloneDeep(obj) : obj
+		if (includeSecrets) return obj
+
+		const newObj = { ...obj }
+		for (const config of Object.values(newObj)) {
+			delete config.secrets
+		}
+		return newObj
 	}
 
 	getPartialClientJson(): Record<string, ClientConnectionConfig> {

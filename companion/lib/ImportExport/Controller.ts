@@ -420,6 +420,7 @@ export class ImportExportController {
 			}
 
 			if (!config || !isFalsey(config.connections)) {
+				// TODO: whether to include secrets should be configurable. Perhaps these should be encrypted too?
 				exp.instances = this.#instancesController.exportAll(false)
 			} else {
 				exp.instances = generate_export_for_referenced_instances(
@@ -1001,15 +1002,15 @@ export class ImportExportController {
 				if (!obj) continue
 
 				const remapId = instanceRemapping[oldId]
-				const remapConfig = remapId ? this.#instancesController.getInstanceConfig(remapId) : undefined
+				const remapLabel = remapId ? this.#instancesController.getLabelForInstance(remapId) : undefined
 				if (remapId === '_ignore') {
 					// Ignore
 					instanceIdMap[oldId] = { id: '_ignore', label: 'Ignore' }
-				} else if (remapId && remapConfig?.label) {
+				} else if (remapId && remapLabel) {
 					// Reuse an existing instance
 					instanceIdMap[oldId] = {
 						id: remapId,
-						label: remapConfig.label,
+						label: remapLabel,
 						lastUpgradeIndex: obj.lastUpgradeIndex,
 						oldLabel: obj.label,
 					}
@@ -1023,7 +1024,12 @@ export class ImportExportController {
 						true
 					)
 					if (newId && newConfig) {
-						this.#instancesController.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null, null)
+						this.#instancesController.setInstanceLabelAndConfig(newId, {
+							label: null,
+							config: 'config' in obj ? obj.config : null,
+							secrets: 'secrets' in obj ? obj.secrets : null,
+							updatePolicy: null,
+						})
 
 						if (!('enabled' in obj) || obj.enabled !== false) {
 							this.#instancesController.enableDisableInstance(newId, true)
