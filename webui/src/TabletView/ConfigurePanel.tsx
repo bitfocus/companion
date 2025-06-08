@@ -120,6 +120,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 								console.error('Error attempting to enable full-screen mode:', err)
 							})
 						}}
+						disabled={!document.documentElement.requestFullscreen}
 						title="Fullscreen"
 					>
 						<FontAwesomeIcon icon={faExpand} />

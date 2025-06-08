@@ -220,7 +220,11 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 				<CForm onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol xs={12}>
-							<CButton onClick={doRequestFullscreen} title="Fullscreen">
+							<CButton
+								onClick={doRequestFullscreen}
+								title="Fullscreen"
+								disabled={!document.documentElement.requestFullscreen}
+							>
 								<FontAwesomeIcon icon={faExpand} /> Fullscreen
 							</CButton>
 							<CButton onClick={doDismiss} title="Dismiss">
