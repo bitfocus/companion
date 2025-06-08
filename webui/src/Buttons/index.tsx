@@ -31,7 +31,7 @@ function useUrlPageNumber(): number | null {
 }
 
 function navigateToButtonsPage(navigate: UseNavigateResult<'/buttons'>, pageNumber: number): void {
-	navigate({ to: `/buttons/${pageNumber}` })
+	void navigate({ to: `/buttons/${pageNumber}` })
 	window.sessionStorage.setItem(SESSION_STORAGE_LAST_BUTTONS_PAGE, pageNumber.toString())
 }
 
@@ -238,7 +238,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				}
 			}
 		},
-		[socket, selectedButton, copyFromButton, gridSize, setPageNumber]
+		[socket, selectedButton, copyFromButton, gridSize, setPageNumber, gridZoomController, pages.data.length]
 	)
 
 	if (pageNumber === null) {

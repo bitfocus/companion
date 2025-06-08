@@ -16,7 +16,8 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField.js'
-import { DropdownInputField, MenuPortalContext } from '~/Components/DropdownInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import {
 	ClientDevicesListItem,
 	ClientSurfaceItem,

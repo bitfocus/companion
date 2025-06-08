@@ -3,6 +3,7 @@ import classnames from 'classnames'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 // Single pixel of red
+// eslint-disable-next-line react-refresh/only-export-components
 export const RedImage: string =
 	'data:image/bmp;base64,Qk2OAAAAAAAAAIoAAAB8AAAAAQAAAP////8BACAAAwAAAAQAAAAnAAAAJwAAAAAAAAAAAAAA/wAAAAD/AAAAAP8AAAAA/0JHUnMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAA=='
 
@@ -27,23 +28,26 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 
 	const hasPointerEvents = 'onpointerdown' in window
 
+	const rawOnClick = props.onClick
+	const rawLocation = props.location
+
 	const doPress = useCallback(
 		(e: React.UIEvent) => {
 			if (e.type !== 'pointerdown' && e.type !== 'mousedown') e.preventDefault()
 			e.stopPropagation()
 
-			props.onClick?.(props.location, true)
+			rawOnClick?.(rawLocation, true)
 		},
-		[props.onClick, props.location]
+		[rawOnClick, rawLocation]
 	)
 	const doRelease = useCallback(
 		(e: React.UIEvent) => {
 			e.preventDefault()
 			e.stopPropagation()
 
-			props.onClick?.(props.location, false)
+			rawOnClick?.(rawLocation, false)
 		},
-		[props.onClick, props.location]
+		[rawOnClick, rawLocation]
 	)
 
 	return (

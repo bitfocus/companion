@@ -34,7 +34,7 @@ export function ControlActionStepTab({
 	selectedKey,
 	selectedStepProps,
 	disabledSetStep,
-}: ControlActionStepTabProps) {
+}: ControlActionStepTabProps): React.JSX.Element {
 	return (
 		<>
 			<CButtonGroup hidden={stepKeys.length === 1}>

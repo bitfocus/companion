@@ -14,7 +14,11 @@ interface FeedbackManageStylesProps {
 	setSelectedStyleProps: (keys: string[]) => void
 }
 
-export function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }: FeedbackManageStylesProps) {
+export function FeedbackManageStyles({
+	feedbackSpec,
+	feedback,
+	setSelectedStyleProps,
+}: FeedbackManageStylesProps): React.JSX.Element | null {
 	if (feedbackSpec?.feedbackType === 'boolean') {
 		const choicesSet = new Set(ButtonStyleProperties.map((c) => c.id))
 		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))
@@ -48,7 +52,11 @@ interface FeedbackStylesProps {
 	setStylePropsValue: (key: string, value: any) => void
 }
 
-export function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: FeedbackStylesProps) {
+export function FeedbackStyles({
+	feedbackSpec,
+	feedback,
+	setStylePropsValue,
+}: FeedbackStylesProps): React.JSX.Element | null {
 	const [pngError, setPngError] = useState<string | null>(null)
 	const clearPngError = useCallback(() => setPngError(null), [])
 	const setPng = useCallback(

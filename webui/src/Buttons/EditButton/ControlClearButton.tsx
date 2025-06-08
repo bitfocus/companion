@@ -13,7 +13,7 @@ export function ControlClearButton({
 }: {
 	location: ControlLocation
 	resetModalRef: React.MutableRefObject<GenericConfirmModalRef | null>
-}) {
+}): React.JSX.Element {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const clearButton = useCallback(() => {
@@ -27,7 +27,7 @@ export function ControlClearButton({
 				})
 			}
 		)
-	}, [socket, location])
+	}, [socket, location, resetModalRef])
 
 	return (
 		<CButton color="danger" onClick={clearButton} title="Clear Button">

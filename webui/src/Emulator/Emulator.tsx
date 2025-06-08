@@ -160,7 +160,7 @@ export const Emulator = observer(function Emulator() {
 				console.log('emulator:release', emulatorId, location)
 			}
 		},
-		[socket]
+		[socket, emulatorId]
 	)
 
 	return (
@@ -206,7 +206,9 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 	})
 
 	const doRequestFullscreen = useCallback(() => {
-		document.documentElement.requestFullscreen()
+		document.documentElement.requestFullscreen().catch((err) => {
+			console.error('Error attempting to enable fullscreen mode:', err)
+		})
 	}, [])
 	const doDismiss = useCallback(() => {
 		setShow(false)

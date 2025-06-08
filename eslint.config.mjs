@@ -46,7 +46,7 @@ export default [
 			'no-warning-comments': ['error', { terms: ['nocommit', '@nocommit', '@no-commit'] }],
 			// 'jest/no-mocks-import': 'off',
 		},
-		files: ['**/*.ts', '**/*.cts', '**/*.mts'],
+		files: ['**/*.ts', '**/*.cts', '**/*.mts', '**/*.tsx'],
 	},
 	...tseslint.configs.recommendedTypeChecked,
 	{
@@ -111,6 +111,7 @@ export default [
 			'**/node_modules/*',
 			'**/electron-output/*',
 			'webui/vite.config.ts',
+			'webui/vitest.config.ts',
 			'vitest.config.ts',
 			'vitest.workspace.ts',
 			'html/**/*',
@@ -120,7 +121,7 @@ export default [
 			'launcher/dev.cjs',
 			// TMP
 			'companion/**/*',
-			'webui/**/*',
+			'webui/test/**/*',
 		],
 	},
 	{
@@ -141,6 +142,18 @@ export default [
 		rules: {
 			...hookseslint.configs.recommended.rules,
 			'react-refresh/only-export-components': 'warn',
+			'@typescript-eslint/only-throw-error': [
+				'error',
+				{
+					allow: [
+						{
+							from: 'package',
+							package: '@tanstack/router-core',
+							name: 'Redirect',
+						},
+					],
+				},
+			],
 		},
 	},
 	{

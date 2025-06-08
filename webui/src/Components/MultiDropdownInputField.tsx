@@ -6,7 +6,7 @@ import Select, { createFilter } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
-import { MenuPortalContext } from './DropdownInputField.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -69,9 +69,8 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 
 	const currentValue = useMemo(() => {
 		const selectedValue = Array.isArray(value) ? value : [value]
-		let res: DropdownChoiceInt[] = []
+		const res: DropdownChoiceInt[] = []
 		for (const val of selectedValue) {
-			// eslint-disable-next-line eqeqeq
 			const entry = options.find((o) => o.value == val) // Intentionally loose for compatibility
 			if (entry) {
 				res.push(entry)

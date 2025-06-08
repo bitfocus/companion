@@ -15,7 +15,7 @@ interface PNGInputFieldProps {
 	onError: (err: string | null) => void
 }
 
-export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProps) {
+export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProps): React.JSX.Element {
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)

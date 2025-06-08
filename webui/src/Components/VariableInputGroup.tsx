@@ -29,7 +29,6 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 			setIsString(newIsString)
 			setLocalValue(newIsString ? (value ?? '') : JSON.stringify(value))
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [value, isEditing])
 
 	// Focus/blur handling for the group
