@@ -1268,7 +1268,7 @@ __metadata:
     "@tanstack/react-form": "npm:^1.12.0"
     "@tanstack/react-query": "npm:^5.79.0"
     "@tanstack/react-router": "npm:^1.120.11"
-    "@tanstack/router-devtools": "npm:^1.120.11"
+    "@tanstack/react-router-devtools": "npm:^1.120.11"
     "@tanstack/router-plugin": "npm:^1.120.11"
     "@tanstack/virtual-file-routes": "npm:^1.115.0"
     "@types/crypto-js": "npm:^4.2.2"
@@ -3966,25 +3966,6 @@ __metadata:
     csstype:
       optional: true
   checksum: 10c0/6d587e225b4eaaa3c337ce5e89f2c68af0861a7d1ba72b0cfaf9cd34d36c271d82b148163f90b0075b998f0a6b167e851549167705c26c7b512f9f824a45541a
-  languageName: node
-  linkType: hard
-
-"@tanstack/router-devtools@npm:^1.120.11":
-  version: 1.120.11
-  resolution: "@tanstack/router-devtools@npm:1.120.11"
-  dependencies:
-    "@tanstack/react-router-devtools": "npm:^1.120.11"
-    clsx: "npm:^2.1.1"
-    goober: "npm:^2.1.16"
-  peerDependencies:
-    "@tanstack/react-router": ^1.120.11
-    csstype: ^3.0.10
-    react: ">=18.0.0 || >=19.0.0"
-    react-dom: ">=18.0.0 || >=19.0.0"
-  peerDependenciesMeta:
-    csstype:
-      optional: true
-  checksum: 10c0/eff312e14915c6d220cc23d5f76002dcdaa38e8cc6caaee82f035422724744b88ba45feead9e7b0fa1435b3d0d5e1cb0c6651cd5e6be8bdbe11a4adc7f4bd066
   languageName: node
   linkType: hard
 
