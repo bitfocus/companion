@@ -84,8 +84,6 @@ export function useControlEventService(
 	serviceFactory: IEventEditorService,
 	event: EventInstance
 ): IEventEditorEventService {
-	const socket = useContext(SocketContext)
-
 	const eventRef = useRef<EventInstance>()
 	eventRef.current = event
 
@@ -101,6 +99,6 @@ export function useControlEventService(
 				? (headline: string) => serviceFactory.setHeadline?.(eventId, headline)
 				: undefined,
 		}),
-		[socket, serviceFactory, eventId]
+		[serviceFactory, eventId]
 	)
 }

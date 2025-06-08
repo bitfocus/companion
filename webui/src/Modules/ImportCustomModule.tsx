@@ -7,7 +7,7 @@ import CryptoJS from 'crypto-js'
 
 const NOTIFICATION_ID_IMPORT = 'import_module_bundle'
 
-export function ImportModules() {
+export function ImportModules(): React.JSX.Element {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	// const [importBundleProgress, setImportBundleProgress] = useState<number | null>(null)
@@ -48,7 +48,7 @@ export function ImportModules() {
 				return
 			}
 
-			var fr = new FileReader()
+			const fr = new FileReader()
 			fr.onload = () => {
 				if (!fr.result) {
 					setImportError('Failed to load file')
@@ -86,7 +86,7 @@ export function ImportModules() {
 			}
 			fr.readAsArrayBuffer(newFile)
 		},
-		[socket]
+		[socket, notifier]
 	)
 
 	const loadModuleBundle = useCallback(
@@ -103,7 +103,7 @@ export function ImportModules() {
 			notifier.current?.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 			console.log(`start import of ${newFile.size} bytes`)
 
-			let hasher = CryptoJS.algo.SHA1.create()
+			const hasher = CryptoJS.algo.SHA1.create()
 
 			Promise.resolve()
 				.then(async () => {
@@ -143,7 +143,9 @@ export function ImportModules() {
 							)
 						)
 						.catch((e) => {
-							socket.emitPromise('modules:bundle-import:cancel', [sessionId])
+							socket.emitPromise('modules:bundle-import:cancel', [sessionId]).catch((cancelErr) => {
+								console.error('Failed to cancel import session', cancelErr)
+							})
 							throw e
 						})
 				})

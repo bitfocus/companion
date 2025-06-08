@@ -35,11 +35,8 @@ import { SurfaceLocalVariables } from '~/LocalVariableDefinitions.js'
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
 }
-interface SurfaceEditModalProps {
-	// Nothing
-}
 
-export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModalRef>(
+export const SurfaceEditModal = observer<object, SurfaceEditModalRef>(
 	function SurfaceEditModal(_props, ref) {
 		const { surfaces, socket } = useContext(RootAppStoreContext)
 

@@ -10,7 +10,11 @@ interface ImportTriggersTabProps {
 	setConnectionRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 }
 
-export function ImportTriggersTab({ snapshot, connectionRemap, setConnectionRemap }: ImportTriggersTabProps) {
+export function ImportTriggersTab({
+	snapshot,
+	connectionRemap,
+	setConnectionRemap,
+}: ImportTriggersTabProps): React.JSX.Element {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const [selectedTriggers, setSelectedTriggers] = useState<string[]>([])

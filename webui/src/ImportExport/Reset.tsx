@@ -6,180 +6,177 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import type { ClientResetSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
-interface ResetWizardModalProps {}
 export interface ResetWizardModalRef {
 	show(): void
 }
 
-export const ResetWizardModal = forwardRef<ResetWizardModalRef, ResetWizardModalProps>(
-	function WizardModal(_props, ref) {
-		const { socket, notifier } = useContext(RootAppStoreContext)
+export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardModal(_props, ref) {
+	const { socket, notifier } = useContext(RootAppStoreContext)
 
-		const [currentStep, setCurrentStep] = useState(1)
-		const maxSteps = 3
-		const applyStep = 3
-		const [clear, setClear] = useState(true)
-		const [show, setShow] = useState(false)
-		const [config, setConfig] = useState<ClientResetSelection>({
-			connections: true,
-			buttons: true,
-			surfaces: true,
-			triggers: true,
-			customVariables: true,
-			userconfig: true,
-		})
+	const [currentStep, setCurrentStep] = useState(1)
+	const maxSteps = 3
+	const applyStep = 3
+	const [clear, setClear] = useState(true)
+	const [show, setShow] = useState(false)
+	const [config, setConfig] = useState<ClientResetSelection>({
+		connections: true,
+		buttons: true,
+		surfaces: true,
+		triggers: true,
+		customVariables: true,
+		userconfig: true,
+	})
 
-		const doClose = useCallback(() => {
-			setShow(false)
-			setClear(true)
-		}, [])
+	const doClose = useCallback(() => {
+		setShow(false)
+		setClear(true)
+	}, [])
 
-		const doNextStep = useCallback(() => {
-			let newStep = currentStep
-			// Make sure step is set to something reasonable
-			if (newStep >= maxSteps - 1) {
-				newStep = maxSteps
-			} else {
-				newStep = newStep + 1
-			}
-
-			setCurrentStep(newStep)
-		}, [currentStep, maxSteps])
-
-		const doPrevStep = useCallback(() => {
-			let newStep = currentStep
-			if (newStep <= 1) {
-				newStep = 1
-			} else {
-				newStep = newStep - 1
-			}
-
-			setCurrentStep(newStep)
-		}, [currentStep])
-
-		const doSave = useCallback(
-			(e: FormEvent) => {
-				e.preventDefault()
-
-				socket
-					.emitPromise('loadsave:reset', [config], 30000)
-					.then((status) => {
-						if (status !== 'ok') {
-							notifier.current?.show(
-								`Reset failed`,
-								`An unspecified error occurred during the reset.  Please try again.`,
-								10000
-							)
-						}
-
-						doClose()
-					})
-					.catch((e) => {
-						notifier.current?.show(`Reset failed`, 'An error occurred:' + e, 10000)
-						doNextStep()
-					})
-
-				doNextStep()
-			},
-			[socket, notifier, config, doNextStep, doClose]
-		)
-
-		const setValue = (key: keyof ClientResetSelection, value: boolean) => {
-			setConfig((oldState) => ({
-				...oldState,
-				[key]: value,
-			}))
+	const doNextStep = useCallback(() => {
+		let newStep = currentStep
+		// Make sure step is set to something reasonable
+		if (newStep >= maxSteps - 1) {
+			newStep = maxSteps
+		} else {
+			newStep = newStep + 1
 		}
 
-		useImperativeHandle(
-			ref,
-			() => ({
-				show() {
-					if (clear) {
-						setConfig({
-							connections: true,
-							buttons: true,
-							surfaces: true,
-							triggers: true,
-							customVariables: true,
-							userconfig: true,
-						})
+		setCurrentStep(newStep)
+	}, [currentStep, maxSteps])
 
-						setCurrentStep(1)
+	const doPrevStep = useCallback(() => {
+		let newStep = currentStep
+		if (newStep <= 1) {
+			newStep = 1
+		} else {
+			newStep = newStep - 1
+		}
+
+		setCurrentStep(newStep)
+	}, [currentStep])
+
+	const doSave = useCallback(
+		(e: FormEvent) => {
+			e.preventDefault()
+
+			socket
+				.emitPromise('loadsave:reset', [config], 30000)
+				.then((status) => {
+					if (status !== 'ok') {
+						notifier.current?.show(
+							`Reset failed`,
+							`An unspecified error occurred during the reset.  Please try again.`,
+							10000
+						)
 					}
-					setShow(true)
-					setClear(false)
-				},
-			}),
-			[clear]
-		)
 
-		let nextButton
-		switch (currentStep) {
-			case applyStep:
-				nextButton = (
-					<CButton color="primary" onClick={doSave}>
-						Apply
-					</CButton>
-				)
-				break
-			case maxSteps:
-				nextButton = (
-					<CButton color="primary" onClick={doClose}>
-						Finish
-					</CButton>
-				)
-				break
-			default:
-				nextButton = (
-					<CButton color="primary" onClick={doNextStep}>
-						Next
-					</CButton>
-				)
-		}
+					doClose()
+				})
+				.catch((e) => {
+					notifier.current?.show(`Reset failed`, 'An error occurred:' + e, 10000)
+					doNextStep()
+				})
 
-		let modalBody
-		switch (currentStep) {
-			case 1:
-				modalBody = <ResetBeginStep />
-				break
-			case 2:
-				modalBody = <ResetOptionsStep config={config} setValue={setValue} />
-				break
-			case 3:
-				modalBody = <ResetApplyStep config={config} />
-				break
-			default:
-		}
+			doNextStep()
+		},
+		[socket, notifier, config, doNextStep, doClose]
+	)
 
-		return (
-			<CModal visible={show} onClose={doClose} className={'wizard'} backdrop="static">
-				<CForm onSubmit={PreventDefaultHandler}>
-					<CModalHeader>
-						<h2>
-							<img src="/img/icons/48x48.png" height="30" alt="logo" />
-							Reset Configuration
-						</h2>
-					</CModalHeader>
-					<CModalBody>{modalBody}</CModalBody>
-					<CModalFooter>
-						{currentStep <= applyStep && (
-							<>
-								<CButton color="secondary" onClick={doClose}>
-									Cancel
-								</CButton>
-								<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
-									Back
-								</CButton>
-							</>
-						)}
-						{nextButton}
-					</CModalFooter>
-				</CForm>
-			</CModal>
-		)
+	const setValue = (key: keyof ClientResetSelection, value: boolean) => {
+		setConfig((oldState) => ({
+			...oldState,
+			[key]: value,
+		}))
 	}
-)
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			show() {
+				if (clear) {
+					setConfig({
+						connections: true,
+						buttons: true,
+						surfaces: true,
+						triggers: true,
+						customVariables: true,
+						userconfig: true,
+					})
+
+					setCurrentStep(1)
+				}
+				setShow(true)
+				setClear(false)
+			},
+		}),
+		[clear]
+	)
+
+	let nextButton
+	switch (currentStep) {
+		case applyStep:
+			nextButton = (
+				<CButton color="primary" onClick={doSave}>
+					Apply
+				</CButton>
+			)
+			break
+		case maxSteps:
+			nextButton = (
+				<CButton color="primary" onClick={doClose}>
+					Finish
+				</CButton>
+			)
+			break
+		default:
+			nextButton = (
+				<CButton color="primary" onClick={doNextStep}>
+					Next
+				</CButton>
+			)
+	}
+
+	let modalBody
+	switch (currentStep) {
+		case 1:
+			modalBody = <ResetBeginStep />
+			break
+		case 2:
+			modalBody = <ResetOptionsStep config={config} setValue={setValue} />
+			break
+		case 3:
+			modalBody = <ResetApplyStep config={config} />
+			break
+		default:
+	}
+
+	return (
+		<CModal visible={show} onClose={doClose} className={'wizard'} backdrop="static">
+			<CForm onSubmit={PreventDefaultHandler}>
+				<CModalHeader>
+					<h2>
+						<img src="/img/icons/48x48.png" height="30" alt="logo" />
+						Reset Configuration
+					</h2>
+				</CModalHeader>
+				<CModalBody>{modalBody}</CModalBody>
+				<CModalFooter>
+					{currentStep <= applyStep && (
+						<>
+							<CButton color="secondary" onClick={doClose}>
+								Cancel
+							</CButton>
+							<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+								Back
+							</CButton>
+						</>
+					)}
+					{nextButton}
+				</CModalFooter>
+			</CForm>
+		</CModal>
+	)
+})
 
 function ResetBeginStep() {
 	return (

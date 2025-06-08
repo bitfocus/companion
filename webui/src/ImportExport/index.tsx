@@ -40,7 +40,7 @@ export const ImportExportPage = observer(function ImportExport() {
 				return
 			}
 
-			var fr = new FileReader()
+			const fr = new FileReader()
 			fr.onload = () => {
 				if (!fr.result) {
 					setLoadError('Failed to load file contents')

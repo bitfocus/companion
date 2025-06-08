@@ -10,7 +10,7 @@ interface ImportWizardProps {
 	clearImport: () => void
 }
 
-export function ImportWizard({ importInfo, clearImport }: ImportWizardProps) {
+export function ImportWizard({ importInfo, clearImport }: ImportWizardProps): React.JSX.Element {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const [snapshot, connectionRemap0] = importInfo

@@ -18,7 +18,7 @@ const RouteComponent = observer(function RouteComponent() {
 	// Ensure the selected trigger is valid
 	useComputed(() => {
 		if (moduleId && !modules.modules.get(moduleId) && !modules.storeList.has(moduleId)) {
-			navigate({ to: `/modules` })
+			void navigate({ to: `/modules` })
 		}
 	}, [navigate, modules, moduleId])
 
@@ -26,7 +26,7 @@ const RouteComponent = observer(function RouteComponent() {
 		<>
 			<CNav variant="tabs">
 				<CNavItem>
-					<CNavLink onClick={() => navigate({ to: '/modules' })}>Select a module</CNavLink>
+					<CNavLink onClick={() => void navigate({ to: '/modules' })}>Select a module</CNavLink>
 				</CNavItem>
 				<CNavItem>
 					<CNavLink active>

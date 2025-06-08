@@ -4,7 +4,7 @@ import relativeTime from 'dayjs/plugin/relativeTime.js'
 
 dayjs.extend(relativeTime)
 
-export function LastUpdatedTimestamp({ timestamp }: { timestamp: number | undefined }) {
+export function LastUpdatedTimestamp({ timestamp }: { timestamp: number | undefined }): React.JSX.Element {
 	let timeStr = 'Unknown'
 	let titleStr: string | undefined = undefined
 	if (timestamp === 0) {

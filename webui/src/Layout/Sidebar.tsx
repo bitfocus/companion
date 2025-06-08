@@ -47,7 +47,7 @@ import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
 import { Link } from '@tanstack/react-router'
-import { Transition, TransitionStatus } from 'react-transition-group'
+import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
@@ -59,6 +59,7 @@ export interface SidebarStateProps {
 }
 const SidebarStateContext = createContext<SidebarStateProps | null>(null)
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSidebarState(): SidebarStateProps {
 	const props = useContext(SidebarStateContext)
 	if (!props) throw new Error('Not inside a SidebarStateContext!')
@@ -153,7 +154,7 @@ export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
 
-	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [])
+	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
 	return (
 		<CSidebar unfoldable={unfoldable}>
@@ -272,20 +273,22 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 	}, [sidebarState.toggleEvent, setVisibleMobile])
 
 	useEffect(() => {
-		sidebarState.showToggle && setVisibleMobile(false)
+		if (sidebarState.showToggle) setVisibleMobile(false)
 	}, [sidebarState.showToggle])
 
 	useEffect(() => {
 		window.addEventListener('mouseup', handleClickOutside)
 		window.addEventListener('keyup', handleKeyup)
 
-		sidebarRef.current?.addEventListener('mouseup', handleOnClick)
+		const sideBarElement = sidebarRef.current
+
+		sideBarElement?.addEventListener('mouseup', handleOnClick)
 
 		return () => {
 			window.removeEventListener('mouseup', handleClickOutside)
 			window.removeEventListener('keyup', handleKeyup)
 
-			sidebarRef.current?.removeEventListener('mouseup', handleOnClick)
+			sideBarElement?.removeEventListener('mouseup', handleOnClick)
 		}
 	})
 
@@ -302,11 +305,14 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 
 	const handleOnClick = (event: Event) => {
 		const target = event.target as HTMLAnchorElement
-		target &&
+		if (
+			target &&
 			target.classList.contains('nav-link') &&
 			!target.classList.contains('nav-group-toggle') &&
-			sidebarState.showToggle &&
+			sidebarState.showToggle
+		) {
 			setVisibleMobile(false)
+		}
 	}
 
 	return (
@@ -371,8 +377,7 @@ function CNavGroup({
 	...rest
 }: React.PropsWithChildren<CNavGroupProps>) {
 	const [height, setHeight] = useState<number | string>()
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const navItemsRef = useRef<any>(null)
+	const navItemsRef = useRef<HTMLUListElement>(null)
 
 	const [_visible, setVisible] = useState(Boolean(visible))
 
@@ -386,7 +391,7 @@ function CNavGroup({
 	}
 
 	const onEntering = () => {
-		navItemsRef.current && setHeight(navItemsRef.current.scrollHeight)
+		if (navItemsRef.current) setHeight(navItemsRef.current.scrollHeight)
 	}
 
 	const onEntered = () => {
@@ -394,7 +399,7 @@ function CNavGroup({
 	}
 
 	const onExit = () => {
-		navItemsRef.current && setHeight(navItemsRef.current.scrollHeight)
+		if (navItemsRef.current) setHeight(navItemsRef.current.scrollHeight)
 	}
 
 	const onExiting = () => {
@@ -457,7 +462,7 @@ function CNavGroup({
 						})}
 						style={{
 							...style,
-							...transitionStyles[state as TransitionStatus],
+							...transitionStyles[state],
 						}}
 						ref={navItemsRef}
 					>
