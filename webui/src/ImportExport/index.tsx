@@ -8,9 +8,12 @@ import { ExportWizardModal, ExportWizardModalRef } from './Export.js'
 import { ImportWizard } from './Import/index.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { observer } from 'mobx-react-lite'
+import CryptoJS from 'crypto-js'
+
+const NOTIFICATION_ID_IMPORT = 'import_config_file'
 
 export const ImportExportPage = observer(function ImportExport() {
-	const { socket, connections } = useContext(RootAppStoreContext)
+	const { socket, notifier, connections } = useContext(RootAppStoreContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -40,59 +43,99 @@ export const ImportExportPage = observer(function ImportExport() {
 				return
 			}
 
-			const fr = new FileReader()
-			fr.onload = () => {
-				if (!fr.result) {
-					setLoadError('Failed to load file contents')
-					return
-				}
+			setLoadError(null)
+			notifier.current?.show('Importing config...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
+			console.log(`start import of ${newFile.size} bytes`)
 
-				setLoadError(null)
-				socket
-					.emitPromise('loadsave:prepare-import', [fr.result], 20000)
-					.then(([err, config]) => {
-						if (err || !config) {
-							setLoadError(err || 'Failed to prepare')
-						} else {
-							const initialRemap: Record<string, string | undefined> = {}
+			const hasher = CryptoJS.algo.SHA1.create()
 
-							// Figure out some initial mappings. Look for matching type and hopefully label
-							for (const [id, obj] of Object.entries(config.instances ?? {})) {
-								if (!obj) continue
+			Promise.resolve()
+				.then(async () => {
+					const sessionId = await socket.emitPromise('loadsave:prepare-import:start', [newFile.name, newFile.size])
+					if (!sessionId) throw new Error('Failed to start upload')
 
-								const candidateIds = []
-								let matchingLabelId = ''
+					let offset = 0
+					await newFile
+						.stream()
+						.pipeTo(
+							new WritableStream(
+								{
+									async write(chunk) {
+										const chunkOffset = offset
+										offset += chunk.length
 
-								for (const [otherId, otherObj] of connections.connections.entries()) {
-									if (otherObj.instance_type === obj.instance_type) {
-										candidateIds.push(otherId)
-										if (otherObj.label === obj.label) {
-											matchingLabelId = otherId
+										const success = await socket.emitPromise('loadsave:prepare-import:chunk', [
+											sessionId,
+											chunkOffset,
+											chunk,
+										])
+										if (!success) throw new Error(`Failed to upload chunk ${chunkOffset}`)
+
+										hasher.update(CryptoJS.lib.WordArray.create(chunk))
+									},
+									async close() {
+										console.log('uploading complete, starting load')
+										const hashText = hasher.finalize().toString(CryptoJS.enc.Hex)
+
+										const [err, config] = await socket.emitPromise('loadsave:prepare-import:complete', [
+											sessionId,
+											hashText,
+										])
+
+										if (err || !config) {
+											setLoadError(err || 'Failed to prepare')
+										} else {
+											const initialRemap: Record<string, string | undefined> = {}
+
+											// Figure out some initial mappings. Look for matching type and hopefully label
+											for (const [id, obj] of Object.entries(config.instances ?? {})) {
+												if (!obj) continue
+
+												const candidateIds = []
+												let matchingLabelId = ''
+
+												for (const [otherId, otherObj] of connections.connections.entries()) {
+													if (otherObj.instance_type === obj.instance_type) {
+														candidateIds.push(otherId)
+														if (otherObj.label === obj.label) {
+															matchingLabelId = otherId
+														}
+													}
+												}
+
+												if (matchingLabelId) {
+													initialRemap[id] = matchingLabelId
+												} else {
+													initialRemap[id] = candidateIds[0] || ''
+												}
+											}
+
+											setLoadError(null)
+											// const mode = config.type === 'page' ? 'import_page' : 'import_full'
+											// modalRef.current.show(mode, config, initialRemap)
+											setImportInfo([config, initialRemap])
 										}
-									}
+									},
+								},
+								{
+									size: () => 1024 * 1024 * 1, // 1MB chunks
 								}
+							)
+						)
+						.catch((e) => {
+							socket.emitPromise('loadsave:prepare-import:cancel', [sessionId]).catch((cancelErr) => {
+								console.error('Failed to cancel import session', cancelErr)
+							})
+							throw e
+						})
+				})
+				.catch((e) => {
+					console.error('failed', e)
 
-								if (matchingLabelId) {
-									initialRemap[id] = matchingLabelId
-								} else {
-									initialRemap[id] = candidateIds[0] || ''
-								}
-							}
-
-							setLoadError(null)
-							// const mode = config.type === 'page' ? 'import_page' : 'import_full'
-							// modalRef.current.show(mode, config, initialRemap)
-							setImportInfo([config, initialRemap])
-						}
-					})
-					.catch((e) => {
-						setLoadError('Failed to load config to import')
-						console.error('Failed to load config to import:', e)
-					})
-			}
-			fr.readAsArrayBuffer(newFile)
+					notifier.current?.show('Importing config...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
+				})
 		},
-		[socket, connections]
+		[socket, notifier, connections]
 	)
 
 	if (importInfo) {

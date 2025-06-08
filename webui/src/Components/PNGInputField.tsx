@@ -2,7 +2,7 @@ import React, { useCallback, useRef } from 'react'
 import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
-import { blobToDataURL } from '~/util'
+import { blobToDataURL } from '~/Helpers/FileUpload.js'
 
 interface MinMaxDimension {
 	width: number
