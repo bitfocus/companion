@@ -254,7 +254,7 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 			const width = this.#loupedeck.lcdKeySize
 			const height = this.#loupedeck.lcdKeySize
 
-			let newbuffer
+			let newbuffer: Uint8Array
 			try {
 				newbuffer = await drawItem.defaultRender.drawNative(
 					width,
@@ -268,8 +268,10 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 				return
 			}
 
+			console.log('draw', newbuffer)
+
 			try {
-				await this.#loupedeck.drawKeyBuffer(key, newbuffer, LoupedeckBufferFormat.RGB)
+				await this.#loupedeck.drawKeyBuffer(key, Buffer.from(newbuffer), LoupedeckBufferFormat.RGB)
 			} catch (e) {
 				this.#logger.debug(`fillImage failed: ${e}`)
 				this.emit('remove')

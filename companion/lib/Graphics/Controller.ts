@@ -572,7 +572,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		const args: Parameters<typeof GraphicsRenderer.drawButtonBareImageUnwrapped> = [
 			this.#drawOptions,
 			drawStyle,

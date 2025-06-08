@@ -106,7 +106,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 					return
 				}
 
-				let newbuffer: Buffer
+				let newbuffer: Uint8Array
 				try {
 					newbuffer = await drawItem.defaultRender.drawNative(
 						output.resolutionx,
@@ -123,7 +123,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 				const maxAttempts = 3
 				for (let attempts = 1; attempts <= maxAttempts; attempts++) {
 					try {
-						await this.#streamDock.setKeyImage(output.column, output.row, newbuffer)
+						await this.#streamDock.setKeyImage(output.column, output.row, Buffer.from(newbuffer))
 						return
 					} catch (e) {
 						if (attempts == maxAttempts) {
