@@ -5,7 +5,7 @@ import { QueryClient } from '@tanstack/react-query'
 
 export const queryClient = new QueryClient()
 
-const wsClient = createWSClient({
+export const trpcWsClient = createWSClient({
 	url: `/trpc`,
 })
 
@@ -13,7 +13,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		loggerLink(),
 		wsLink({
-			client: wsClient,
+			client: trpcWsClient,
 		}),
 		// httpBatchLink({
 		// 	url: '/trpc',

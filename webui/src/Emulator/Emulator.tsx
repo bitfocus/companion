@@ -14,8 +14,10 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/TRPC.js'
 import { useMutation } from '@tanstack/react-query'
 import { observable, ObservableMap, runInAction } from 'mobx'
+import { useDocumentTitle } from 'usehooks-ts'
+import { useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus.js'
 
-export function getCacheKey(x: number, y: number): string {
+function getCacheKey(x: number, y: number): string {
 	return `${x}/${y}`
 }
 
@@ -26,17 +28,18 @@ export const Emulator = observer(function Emulator() {
 
 	const config = useSubscription(trpc.surfaces.emulatorConfig.subscriptionOptions({ id: emulatorId }))
 
-	const pressedMutation = useMutation(trpc.surfaces.emulatorPressed.mutationOptions())
+	useTRPCConnectionStatus()
 
-	const imageCache = useMemo(() => observable.map<string, string | false>(), []) //
+	const pressedMutation = useMutation(trpc.surfaces.emulatorPressed.mutationOptions())
 
 	// TODO - handle trpc connection state changes and subscription state changes?
 
-	const doRetryLoad = useCallback(() => config.reset(), [])
+	const doRetryLoad = useCallback(() => config.reset(), [config])
 
 	const userConfigStore = useMemo(() => new UserConfigStore(), [])
 	useUserConfigSubscription(socket, userConfigStore)
 
+	const imageCache = useMemo(() => observable.map<string, string | false>(), [])
 	const imagesSub = useSubscription(
 		trpc.surfaces.emulatorImages.subscriptionOptions(
 			{ id: emulatorId },
@@ -61,12 +64,11 @@ export const Emulator = observer(function Emulator() {
 		)
 	)
 
-	useEffect(() => {
-		document.title =
-			userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
-				? `${userConfigStore.properties?.installName} - Emulator (Bitfocus Companion)`
-				: 'Bitfocus Companion - Emulator'
-	}, [userConfigStore.properties?.installName])
+	useDocumentTitle(
+		userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
+			? `${userConfigStore.properties?.installName} - Emulator (Bitfocus Companion)`
+			: 'Bitfocus Companion - Emulator'
+	)
 
 	const keymap = useMemo(() => {
 		if (config.data?.emulator_control_enable) {
@@ -82,7 +84,7 @@ export const Emulator = observer(function Emulator() {
 		})
 
 		return unsub
-	}, [socket])
+	}, [socket, doRetryLoad])
 
 	// Register key handlers
 	useEffect(() => {
@@ -123,7 +125,7 @@ export const Emulator = observer(function Emulator() {
 			document.removeEventListener('keydown', onKeyDown)
 			document.removeEventListener('keyup', onKeyUp)
 		}
-	}, [socket, keymap, emulatorId])
+	}, [pressedMutation, keymap, emulatorId])
 
 	const buttonClick = useCallback(
 		(location: ControlLocation, pressed: boolean) => {

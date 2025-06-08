@@ -19,6 +19,7 @@ import { Route as RedirectsHelpHtmlRouteImport } from './routes/-redirects/help-
 import { Route as RedirectsEmulatorsRouteImport } from './routes/-redirects/emulators.tsx'
 import { Route as RedirectsEmulator2RouteImport } from './routes/-redirects/emulator2.tsx'
 import { Route as RedirectsEmulatorHtmlRouteImport } from './routes/-redirects/emulator-html.tsx'
+import { Route as EmulatorRouteImport } from './routes/self-contained/emulator.tsx'
 import { Route as appRouteImport } from './routes/_app.tsx'
 import { Route as EmulatorIndexRouteImport } from './routes/self-contained/emulator/index.tsx'
 import { Route as IndexRouteImport } from './routes/app/index.tsx'
@@ -112,14 +113,19 @@ const RedirectsEmulatorHtmlRoute = RedirectsEmulatorHtmlRouteImport.update({
   path: '/emulator.html',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmulatorRoute = EmulatorRouteImport.update({
+  id: '/emulator',
+  path: '/emulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const appRoute = appRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmulatorIndexRoute = EmulatorIndexRouteImport.update({
-  id: '/emulator/',
-  path: '/emulator/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => EmulatorRoute,
 } as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -128,9 +134,9 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const EmulatorEmulatorIdDotlazyRoute =
   EmulatorEmulatorIdDotlazyRouteImport.update({
-    id: '/emulator/$emulatorId',
-    path: '/emulator/$emulatorId',
-    getParentRoute: () => rootRouteImport,
+    id: '/$emulatorId',
+    path: '/$emulatorId',
+    getParentRoute: () => EmulatorRoute,
   } as any).lazy(() =>
     import('./routes/self-contained/emulator/$emulatorId.lazy.tsx').then(
       (d) => d.Route,
@@ -274,6 +280,7 @@ const ButtonsPageRoute = ButtonsPageRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/emulator': typeof EmulatorRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
@@ -295,7 +302,7 @@ export interface FileRoutesByFullPath {
   '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdDotlazyRoute
   '/': typeof IndexRoute
-  '/emulator': typeof EmulatorIndexRoute
+  '/emulator/': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof appRouteWithChildren
+  '/emulator': typeof EmulatorRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
@@ -402,6 +410,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/emulator'
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
@@ -423,7 +432,7 @@ export interface FileRouteTypes {
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/'
-    | '/emulator'
+    | '/emulator/'
     | '/buttons/$page'
     | '/modules/$moduleId'
     | '/settings/advanced'
@@ -485,6 +494,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/emulator'
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
@@ -529,6 +539,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   appRoute: typeof appRouteWithChildren
+  EmulatorRoute: typeof EmulatorRouteWithChildren
   RedirectsEmulatorHtmlRoute: typeof RedirectsEmulatorHtmlRoute
   RedirectsEmulator2Route: typeof RedirectsEmulator2Route
   RedirectsEmulatorsRoute: typeof RedirectsEmulatorsRoute
@@ -540,8 +551,6 @@ export interface RootRouteChildren {
   GettingStartedDotlazyRoute: typeof GettingStartedDotlazyRoute
   TabletDotlazyRoute: typeof TabletDotlazyRoute
   ConnectionDebugDotconnectionIdRoute: typeof ConnectionDebugDotconnectionIdRoute
-  EmulatorEmulatorIdDotlazyRoute: typeof EmulatorEmulatorIdDotlazyRoute
-  EmulatorIndexRoute: typeof EmulatorIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -616,6 +625,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedirectsEmulatorHtmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/emulator': {
+      id: '/emulator'
+      path: '/emulator'
+      fullPath: '/emulator'
+      preLoaderRoute: typeof EmulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -625,10 +641,10 @@ declare module '@tanstack/react-router' {
     }
     '/emulator/': {
       id: '/emulator/'
-      path: '/emulator'
-      fullPath: '/emulator'
+      path: '/'
+      fullPath: '/emulator/'
       preLoaderRoute: typeof EmulatorIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EmulatorRoute
     }
     '/_app/': {
       id: '/_app/'
@@ -639,10 +655,10 @@ declare module '@tanstack/react-router' {
     }
     '/emulator/$emulatorId': {
       id: '/emulator/$emulatorId'
-      path: '/emulator/$emulatorId'
+      path: '/$emulatorId'
       fullPath: '/emulator/$emulatorId'
       preLoaderRoute: typeof EmulatorEmulatorIdDotlazyRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EmulatorRoute
     }
     '/connection-debug/$connectionId': {
       id: '/connection-debug/$connectionId'
@@ -926,8 +942,23 @@ const appRouteChildren: appRouteChildren = {
 
 const appRouteWithChildren = appRoute._addFileChildren(appRouteChildren)
 
+interface EmulatorRouteChildren {
+  EmulatorEmulatorIdDotlazyRoute: typeof EmulatorEmulatorIdDotlazyRoute
+  EmulatorIndexRoute: typeof EmulatorIndexRoute
+}
+
+const EmulatorRouteChildren: EmulatorRouteChildren = {
+  EmulatorEmulatorIdDotlazyRoute: EmulatorEmulatorIdDotlazyRoute,
+  EmulatorIndexRoute: EmulatorIndexRoute,
+}
+
+const EmulatorRouteWithChildren = EmulatorRoute._addFileChildren(
+  EmulatorRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   appRoute: appRouteWithChildren,
+  EmulatorRoute: EmulatorRouteWithChildren,
   RedirectsEmulatorHtmlRoute: RedirectsEmulatorHtmlRoute,
   RedirectsEmulator2Route: RedirectsEmulator2Route,
   RedirectsEmulatorsRoute: RedirectsEmulatorsRoute,
@@ -939,8 +970,6 @@ const rootRouteChildren: RootRouteChildren = {
   GettingStartedDotlazyRoute: GettingStartedDotlazyRoute,
   TabletDotlazyRoute: TabletDotlazyRoute,
   ConnectionDebugDotconnectionIdRoute: ConnectionDebugDotconnectionIdRoute,
-  EmulatorEmulatorIdDotlazyRoute: EmulatorEmulatorIdDotlazyRoute,
-  EmulatorIndexRoute: EmulatorIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
