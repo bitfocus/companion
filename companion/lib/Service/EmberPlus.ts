@@ -345,11 +345,7 @@ export class ServiceEmberPlus extends ServiceBase {
 						),
 					}),
 					1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
-					2: new EmberModel.NumberedTreeNodeImpl(
-						2,
-						new EmberModel.EmberNodeImpl('location'),
-						this.#getLocationTree()
-					),
+					2: new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('location'), this.#getLocationTree()),
 				}),
 			}
 
