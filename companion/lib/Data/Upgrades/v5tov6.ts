@@ -58,13 +58,18 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 
 		return newObj
 	} else if (obj.type == 'page') {
-		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 6 }
+		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 6, connectionCollections: undefined }
 
 		convertPageActionsDelays(newObj.page)
 
 		return newObj
 	} else if (obj.type == 'trigger_list') {
-		const newObj: ExportTriggersListv6 = { ...cloneDeep(obj), version: 6 }
+		const newObj: ExportTriggersListv6 = {
+			...cloneDeep(obj),
+			version: 6,
+			connectionCollections: undefined,
+			triggerCollections: undefined,
+		}
 
 		newObj.triggers = convertTriggersDelays(newObj.triggers)
 

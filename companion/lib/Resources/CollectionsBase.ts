@@ -31,6 +31,9 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		this.removeUnknownCollectionReferences()
 	}
 
+	/**
+	 * Some of the collections have been modified in some way, emit an update to interested parties (eg the UI)
+	 */
 	protected abstract emitUpdate(rows: CollectionBase<TCollectionMetadata>[]): void
 
 	/**
@@ -88,8 +91,11 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		return !!this.findCollectionAndParent(collectionId)
 	}
 
-	protected get collectionData(): CollectionBase<TCollectionMetadata>[] {
-		return this.data
+	/**
+	 * Get a reference to the collections data
+	 */
+	get collectionData(): CollectionBase<TCollectionMetadata>[] {
+		return [...this.data] // Return a shallow copy of the data
 	}
 
 	protected collectionCreate = (label: string, metaData: TCollectionMetadata) => {

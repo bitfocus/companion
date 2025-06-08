@@ -45,6 +45,7 @@ import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
 import type { ClientSocket } from '../UI/Handler.js'
+import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
@@ -94,7 +95,7 @@ export class ExportController {
 
 	#exportTriggerListHandler: RequestHandler = (req, res, next) => {
 		const triggerControls = this.#controlsController.getAllTriggers()
-		const exp = this.#generateTriggersExport(triggerControls)
+		const exp = this.#generateTriggersExport(triggerControls, true)
 
 		const filename = this.#generateFilename(String(req.query.filename), 'trigger_list', 'companionconfig')
 
@@ -104,7 +105,7 @@ export class ExportController {
 	#exportTriggerSingleHandler: RequestHandler = (req, res, next) => {
 		const control = this.#controlsController.getTrigger(req.params.id)
 		if (control) {
-			const exp = this.#generateTriggersExport([control])
+			const exp = this.#generateTriggersExport([control], false)
 
 			const triggerName = control.options.name.toLowerCase().replace(/\W/, '')
 			const filename = this.#generateFilename(String(req.query.filename), `trigger_${triggerName}`, 'companionconfig')
@@ -139,6 +140,7 @@ export class ExportController {
 				type: 'page',
 				page: pageExport,
 				instances: instancesExport,
+				connectionCollections: this.#instancesController.collections.collectionData,
 				oldPageNumber: page,
 			}
 
@@ -149,8 +151,7 @@ export class ExportController {
 	}
 
 	#exportCustomHandler: RequestHandler = (req, res, next) => {
-		// @ts-expect-error
-		const exp = generateCustomExport(req.query)
+		const exp = this.#generateCustomExport(req.query as any)
 
 		const filename = this.#generateFilename(String(req.query.filename), '', 'companionconfig')
 
@@ -276,7 +277,7 @@ export class ExportController {
 			: `${os.hostname()}_${getTimestamp()}_${exportType}.${fileExt}`
 	}
 
-	#generateTriggersExport(triggerControls: ControlTrigger[]): ExportTriggersListv6 {
+	#generateTriggersExport(triggerControls: ControlTrigger[], includeCollections: boolean): ExportTriggersListv6 {
 		const triggersExport: ExportTriggerContentv6 = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
@@ -289,6 +290,10 @@ export class ExportController {
 			}
 		}
 
+		const triggerCollections: TriggerCollection[] = includeCollections
+			? this.#controlsController.exportTriggerCollections()
+			: []
+
 		const instancesExport = this.#generateReferencedConnectionConfigs(
 			referencedConnectionIds,
 			referencedConnectionLabels
@@ -298,7 +303,9 @@ export class ExportController {
 			type: 'trigger_list',
 			version: FILE_VERSION,
 			triggers: triggersExport,
+			triggerCollections: triggerCollections,
 			instances: instancesExport,
+			connectionCollections: this.#instancesController.collections.collectionData,
 		}
 	}
 
@@ -389,20 +396,25 @@ export class ExportController {
 				}
 			}
 			exp.triggers = triggersExport
+
+			exp.triggerCollections = this.#controlsController.exportTriggerCollections()
 		}
 
 		if (!config || !isFalsey(config.customVariables)) {
 			exp.custom_variables = this.#variablesController.custom.getDefinitions()
+			exp.customVariablesCollections = this.#variablesController.custom.exportCollections()
 		}
 
 		if (!config || !isFalsey(config.connections)) {
 			exp.instances = this.#instancesController.exportAll(false)
+			exp.connectionCollections = this.#instancesController.collections.collectionData
 		} else {
 			exp.instances = this.#generateReferencedConnectionConfigs(
 				referencedConnectionIds,
 				referencedConnectionLabels,
 				true
 			)
+			exp.connectionCollections = this.#instancesController.collections.collectionData
 		}
 
 		if (!config || !isFalsey(config.surfaces)) {

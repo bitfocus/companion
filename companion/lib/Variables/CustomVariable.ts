@@ -13,6 +13,7 @@ import LogController from '../Log/Controller.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import type { VariablesValues, VariableValueEntry } from './Values.js'
 import type {
+	CustomVariableCollection,
 	CustomVariableDefinition,
 	CustomVariablesModel,
 	CustomVariableUpdate,
@@ -105,6 +106,10 @@ export class VariablesCustomVariable {
 				{ type: 'update', itemId: name, info: this.#custom_variables[name] },
 			])
 		}
+	}
+
+	exportCollections(): CustomVariableCollection[] {
+		return this.#collections.collectionData
 	}
 
 	/**
