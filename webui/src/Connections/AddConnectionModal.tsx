@@ -119,7 +119,7 @@ export const AddConnectionModal = observer(
 		const selectedVersionIsLegacy = selectedVersionInfo?.isLegacy ?? false
 
 		const showHelpClick = useCallback(() => {
-			if (!moduleInfo || !selectedVersionInfo) return
+			if (!moduleInfo?.id || !selectedVersionInfo) return
 			helpViewer.current?.showFromUrl(moduleInfo.id, selectedVersionInfo.versionId, selectedVersionInfo.helpPath)
 		}, [helpViewer, moduleInfo?.id, selectedVersionInfo])
 

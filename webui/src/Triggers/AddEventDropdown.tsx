@@ -6,7 +6,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useComputed } from '~/util.js'
 
-const noOptionsMessage = ({}) => {
+const noOptionsMessage = () => {
 	return 'No events found'
 }
 interface AddEventDropdownProps {

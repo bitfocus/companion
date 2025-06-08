@@ -27,7 +27,7 @@ export function ConnectionEditField({
 	definition,
 	value,
 	connectionId,
-}: ConnectionEditFieldProps) {
+}: ConnectionEditFieldProps): React.JSX.Element {
 	const id = definition.id
 	const setValid2 = useCallback((valid: boolean) => setValid(id, valid), [setValid, id])
 
@@ -36,7 +36,7 @@ export function ConnectionEditField({
 		case 'static-text': {
 			const control = <StaticTextFieldText {...definition} allowImages />
 
-			if (!!label) {
+			if (label) {
 				return (
 					<>
 						<CFormLabel>{label}</CFormLabel>

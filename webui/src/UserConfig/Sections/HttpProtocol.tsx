@@ -1,6 +1,6 @@
 import React from 'react'
 
-export function HttpProtocol() {
+export function HttpProtocol(): React.JSX.Element {
 	return (
 		<>
 			<p>Remote triggering can be done by sending HTTP Requests to the same IP and port Companion is running on.</p>

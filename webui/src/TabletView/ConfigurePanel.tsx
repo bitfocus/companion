@@ -11,7 +11,7 @@ interface ConfigurePanelProps {
 	gridSize: UserConfigGridSize
 }
 
-export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePanelProps) {
+export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePanelProps): React.JSX.Element {
 	const [show, setShow] = useState(false)
 	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
 
@@ -114,7 +114,14 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 		<CRow className="header">
 			<CCol xs={12}>
 				{(!fullscreen || !query['noconfigure']) && !query['nofullscreen'] && (
-					<CButton onClick={() => document.documentElement.requestFullscreen()} title="Fullscreen">
+					<CButton
+						onClick={() => {
+							document.documentElement.requestFullscreen().catch((err) => {
+								console.error('Error attempting to enable full-screen mode:', err)
+							})
+						}}
+						title="Fullscreen"
+					>
 						<FontAwesomeIcon icon={faExpand} />
 					</CButton>
 				)}

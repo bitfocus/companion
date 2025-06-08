@@ -28,7 +28,7 @@ const LogsOnDiskInfoLine: DebugLogLine = {
 
 // const route = getRouteApi('/connection-debug/$connectionId')
 
-export function ConnectionDebug() {
+export function ConnectionDebug(): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const { connectionId } = useParams({ from: '/connection-debug/$connectionId' })
@@ -256,7 +256,6 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 			// scroll to bottom
 			listRef.current.scrollToItem(messages.length - 1, 'end')
 		}
-		// eslint-disable-next-line
 	}, [messages, follow])
 
 	const hasMountedRef = useRef(false)
@@ -371,7 +370,7 @@ function loadConfig(connectionId: string): DebugConfig {
 		const config = JSON.parse(rawConfig)
 		if (!config) throw new Error()
 		return config
-	} catch (e) {
+	} catch (_e) {
 		// setup defaults
 		const config: DebugConfig = {
 			debug: true,

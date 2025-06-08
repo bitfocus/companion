@@ -59,7 +59,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({ conne
 
 	const connectionVariables = variablesStore.variables.get(connection.label)
 
-	const doEdit = useCallback(() => configureConnection(id), [id])
+	const doEdit = useCallback(() => configureConnection(id), [configureConnection, id])
 
 	const openBugUrl = useCallback(() => {
 		const url = moduleInfo?.display?.bugUrl

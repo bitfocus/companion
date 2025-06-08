@@ -7,7 +7,7 @@ interface PasswordStepProps {
 	setValue: (key: keyof UserConfigModel, value: any) => void
 }
 
-export function PasswordStep({ config, setValue }: PasswordStepProps) {
+export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX.Element {
 	return (
 		<div>
 			<h5>Admin GUI Password</h5>

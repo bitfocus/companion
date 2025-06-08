@@ -42,7 +42,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 	)
 })
 
-export function VariablesListPage() {
+export function VariablesListPage(): React.JSX.Element {
 	const { label } = useParams({ from: '/_app/variables/$label' })
 
 	// Future: if label is not found, redirect to /variables

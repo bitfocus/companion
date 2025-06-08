@@ -3,7 +3,7 @@ import { CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 
-export function ArtnetProtocol() {
+export function ArtnetProtocol(): React.JSX.Element {
 	return (
 		<>
 			<p>

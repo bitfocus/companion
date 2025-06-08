@@ -36,7 +36,7 @@ interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
 }
 
-export function ContextData({ children }: Readonly<ContextDataProps>) {
+export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const notifierRef = useRef<NotificationsManagerRef>(null)

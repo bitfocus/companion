@@ -21,7 +21,7 @@ export const UserConfigTextInputRow = observer(function UserConfigTextInputRow({
 			<td>{label}</td>
 			<td>
 				<TextInputField
-					value={String(userConfig.config[field])}
+					value={String(userConfig.config[field] as any)}
 					setValue={(value) => userConfig.setValue(field, value)}
 					useVariables={useVariables}
 				/>

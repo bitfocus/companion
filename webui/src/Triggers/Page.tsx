@@ -34,13 +34,13 @@ export const TriggersPage = observer(function Triggers() {
 	const doAddNew = useCallback(() => {
 		socket
 			.emitPromise('triggers:create', [])
-			.then((controlId) => {
+			.then(async (controlId) => {
 				console.log('created trigger', controlId)
 
 				const parsedId = ParseControlId(controlId)
 				if (parsedId?.type !== 'trigger') return
 
-				navigate({ to: `/triggers/${parsedId.trigger}` })
+				await navigate({ to: `/triggers/${parsedId.trigger}` })
 			})
 			.catch((e) => {
 				console.error('failed to create trigger', e)
@@ -74,9 +74,9 @@ export const TriggersPage = observer(function Triggers() {
 	const selectTrigger = useCallback(
 		(triggerId: string | null) => {
 			if (triggerId === null) {
-				navigate({ to: '/triggers' })
+				void navigate({ to: '/triggers' })
 			} else {
-				navigate({
+				void navigate({
 					to: `/triggers/$controlId`,
 					params: {
 						controlId: triggerId,
@@ -170,7 +170,7 @@ function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollecti
 				console.error('Failed to reorder collection', e)
 			})
 		},
-		[collection.id]
+		[socket, collection.id]
 	)
 
 	return (
@@ -215,7 +215,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	}, [socket, tableContext.deleteModalRef, item.id])
 	const doEdit = useCallback(() => {
 		tableContext.selectTrigger(item.id)
-	}, [tableContext.selectTrigger, item.id])
+	}, [tableContext, item.id])
 	const doClone = useCallback(() => {
 		socket
 			.emitPromise('triggers:clone', [CreateTriggerControlId(item.id)])

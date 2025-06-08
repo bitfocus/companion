@@ -1,5 +1,3 @@
-/* eslint-disable import/first */
-
 import './Sentry.js'
 
 import '@fontsource/roboto'
