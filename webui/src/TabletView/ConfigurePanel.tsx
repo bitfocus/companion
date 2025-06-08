@@ -114,7 +114,15 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 		<CRow className="header">
 			<CCol xs={12}>
 				{(!fullscreen || !query['noconfigure']) && !query['nofullscreen'] && (
-					<CButton onClick={() => document.documentElement.requestFullscreen()} title="Fullscreen">
+					<CButton
+						onClick={() => {
+							document.documentElement.requestFullscreen().catch((err) => {
+								console.error('Error attempting to enable full-screen mode:', err)
+							})
+						}}
+						disabled={!document.documentElement.requestFullscreen}
+						title="Fullscreen"
+					>
 						<FontAwesomeIcon icon={faExpand} />
 					</CButton>
 				)}
