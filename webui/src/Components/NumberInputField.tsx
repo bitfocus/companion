@@ -27,7 +27,7 @@ export function NumberInputField({
 	setValue,
 	setValid,
 	disabled,
-}: NumberInputFieldProps) {
+}: NumberInputFieldProps): React.JSX.Element {
 	const [tmpValue, setTmpValue] = useState<string | number | null>(null)
 
 	// Check if the value is valid

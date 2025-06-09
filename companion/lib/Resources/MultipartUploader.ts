@@ -14,7 +14,7 @@ export class MultipartUploader {
 		this.#sessionTimeoutCallback = sessionTimeoutCallback
 	}
 
-	initSession(name: string, size: number, checksum: string): string | null {
+	initSession(name: string, size: number): string | null {
 		if (this.#session) return null
 
 		const sessionId = nanoid()
@@ -22,7 +22,6 @@ export class MultipartUploader {
 			id: sessionId,
 			name,
 			size,
-			checksum,
 			data: new Uint8Array(size),
 
 			filledBytes: 0,
@@ -58,7 +57,7 @@ export class MultipartUploader {
 		return Math.min(1, this.#session.filledBytes / this.#session.size)
 	}
 
-	completeSession(sessionId: string): Uint8Array | null {
+	completeSession(sessionId: string, expectedChecksum: string): Uint8Array | null {
 		if (!this.#session || this.#session.id !== sessionId) return null
 
 		const session = this.#session
@@ -69,8 +68,8 @@ export class MultipartUploader {
 			this.#inactiveTimeout = null
 		}
 
-		const checksum = crypto.createHash('sha-1').update(session.data).digest('hex')
-		if (checksum !== session.checksum) throw new Error('Checksum mismatch')
+		const computedChecksum = crypto.createHash('sha-1').update(session.data).digest('hex')
+		if (computedChecksum !== expectedChecksum) throw new Error('Checksum mismatch')
 
 		return session.data
 	}
@@ -87,7 +86,6 @@ interface MultipartUploaderSession {
 	readonly id: string
 	readonly name: string
 	readonly size: number
-	readonly checksum: string
 	readonly data: Uint8Array
 
 	filledBytes: number

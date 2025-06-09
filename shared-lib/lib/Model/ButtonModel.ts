@@ -55,11 +55,13 @@ export type NormalButtonSteps = Record<
 	}
 >
 
-export type ButtonOptionsBase = object
+export interface ButtonOptionsBase {
+	stepProgression: 'auto' | 'manual' | 'expression'
+	stepExpression?: string
+}
 
 export interface NormalButtonOptions extends ButtonOptionsBase {
 	rotaryActions: boolean
-	stepAutoProgress: boolean
 }
 
 export type ButtonStatus = 'good' | 'warning' | 'error'

@@ -32,7 +32,7 @@ export function ButtonStyleConfig({
 	configRef,
 	localVariablesStore,
 	mainDialog = false,
-}: ButtonStyleConfigProps) {
+}: ButtonStyleConfigProps): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const [pngError, setPngError] = useState<string | null>(null)
@@ -122,7 +122,7 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 	mainDialog,
 	showField,
 	localVariablesStore,
-}: ButtonStyleConfigFieldsProps) {
+}: ButtonStyleConfigFieldsProps): React.JSX.Element {
 	const setTextValue = useCallback((val: any) => setValueInner('text', val), [setValueInner])
 	const setSizeValue = useCallback((val: any) => setValueInner('size', val), [setValueInner])
 	const setAlignmentValue = useCallback((val: any) => setValueInner('alignment', val), [setValueInner])

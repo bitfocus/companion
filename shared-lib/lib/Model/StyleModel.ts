@@ -10,8 +10,10 @@ export type DrawStyleModel =
 
 export interface DrawStyleButtonStateProps {
 	pushed: boolean
-	step_cycle: number | undefined
-	step_count: number
+
+	stepCurrent: number
+	stepCount: number
+
 	cloud: boolean | undefined
 	cloud_error: boolean | undefined
 	button_status: 'error' | 'warning' | 'good' | undefined

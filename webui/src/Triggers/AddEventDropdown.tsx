@@ -1,12 +1,12 @@
 import React, { useCallback, useContext } from 'react'
 import Select from 'react-select'
-import { MenuPortalContext } from '~/Components/DropdownInputField.js'
+import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useComputed } from '~/util.js'
 
-const noOptionsMessage = ({}) => {
+const noOptionsMessage = () => {
 	return 'No events found'
 }
 interface AddEventDropdownProps {

@@ -23,7 +23,7 @@ export function ButtonGridZoomControl({
 	useCompactButtons,
 	gridZoomValue,
 	gridZoomController,
-}: ButtonGridZoomControlProps) {
+}: ButtonGridZoomControlProps): React.JSX.Element {
 	return (
 		<CDropdown className="dropdown-zoom btn-right" autoClose="outside" title="View Scale">
 			<CDropdownToggle caret={!useCompactButtons} color="light">

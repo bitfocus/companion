@@ -172,12 +172,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							// Update step
 							values[`b_step_${location.pageNumber}_${location.row}_${location.column}`] =
 								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
-									? (buttonStyle.step_cycle ?? 1)
+									? buttonStyle.stepCurrent
 									: undefined
-
 							values[`b_step_count_${location.pageNumber}_${location.row}_${location.column}`] =
 								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
-									? (buttonStyle.step_count ?? 1)
+									? buttonStyle.stepCount
 									: undefined
 
 							values[`b_actions_running_${location.pageNumber}_${location.row}_${location.column}`] =
@@ -189,7 +188,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
 									? (buttonStyle.button_status ?? 'good')
 									: undefined
-
 							// Submit the updated values
 							if (this.#pendingVariables) {
 								Object.assign(this.#pendingVariables, values)
@@ -352,9 +350,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			cloud: false,
 			cloud_error: false,
 			button_status: undefined,
-			step_cycle: undefined,
-			step_count: 1,
 			action_running: false,
+
+			stepCurrent: 1,
+			stepCount: 1,
 
 			show_topbar: buttonStyle.show_topbar,
 			alignment: buttonStyle.alignment ?? 'center:center',

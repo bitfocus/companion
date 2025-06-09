@@ -17,7 +17,7 @@ import {
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
-import { MenuPortalContext } from '~/Components/DropdownInputField.js'
+import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { ButtonPicker } from './ButtonPicker.js'
 import { TriggerPicker } from './TriggerPicker.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
@@ -26,7 +26,7 @@ interface RecorderSessionFinishModalProps {
 	doClose: () => void
 	sessionId: string
 }
-export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessionFinishModalProps) {
+export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessionFinishModalProps): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const doSave = useCallback(

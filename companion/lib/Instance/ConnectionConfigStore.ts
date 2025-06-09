@@ -124,6 +124,7 @@ export class ConnectionConfigStore {
 				label: config.label,
 				enabled: config.enabled,
 				sortOrder: config.sortOrder,
+				collectionId: config.collectionId ?? null,
 
 				// Runtime properties
 				hasRecordActionsHandler: false, // Filled in later
@@ -177,28 +178,78 @@ export class ConnectionConfigStore {
 		return label
 	}
 
-	setOrder(connectionIds: string[]): void {
-		// This is a bit naive, but should be sufficient if the client behaves
+	moveConnection(collectionId: string | null, connectionId: string, dropIndex: number): boolean {
+		const thisConnection = this.#store.get(connectionId)
+		if (!thisConnection) return false
 
-		// Update the order based on the ids provided
-		connectionIds.forEach((id, index) => {
+		const changedIds: string[] = []
+
+		// find all the other connections with the matching collectionId
+		const sortedConnectionIds = Array.from(this.#store)
+			.filter(
+				([id, config]) =>
+					config &&
+					((!config.collectionId && !collectionId) || config.collectionId === collectionId) &&
+					id !== connectionId
+			)
+			.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
+			.map(([id]) => id)
+
+		if (dropIndex < 0) {
+			// Push the connection to the end of the array
+			sortedConnectionIds.push(connectionId)
+		} else {
+			// Insert the connection at the drop index
+			sortedConnectionIds.splice(dropIndex, 0, connectionId)
+		}
+
+		// update the sort order of the connections in the store, tracking which ones changed
+		sortedConnectionIds.forEach((id, index) => {
 			const entry = this.#store.get(id)
-			if (entry) entry.sortOrder = index
+			if (entry && entry.sortOrder !== index) {
+				entry.sortOrder = index
+				changedIds.push(id)
+			}
 		})
 
-		// Make sure all not provided are at the end in their original order
-		const allKnownIds = Array.from(this.#store)
-			.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-			.map(([id]) => id)
-		let nextIndex = connectionIds.length
-		for (const id of allKnownIds) {
-			if (!connectionIds.includes(id)) {
-				const entry = this.#store.get(id)
-				if (entry) entry.sortOrder = nextIndex++
+		// Also update the collectionId of the connection being moved if needed
+		if (thisConnection.collectionId !== collectionId) {
+			thisConnection.collectionId = collectionId ?? undefined
+			if (!changedIds.includes(connectionId)) {
+				changedIds.push(connectionId)
 			}
 		}
 
-		this.commitChanges(connectionIds)
+		// persist the changes
+		if (changedIds.length > 0) {
+			this.commitChanges(changedIds)
+		}
+
+		return true
+	}
+
+	cleanUnknownCollectionIds(validCollectionIds: Set<string>): void {
+		const changedIds: string[] = []
+
+		// Figure out the first sort order
+		let nextSortOrder = 0
+		for (const config of this.#store.values()) {
+			if (config && !config?.collectionId) {
+				nextSortOrder = Math.max(nextSortOrder, config.sortOrder + 1)
+			}
+		}
+
+		// Validate the collectionIds, and do something sensible with the sort order
+		// Future: maybe this could try to preserve the order in some way?
+		for (const [id, config] of this.#store) {
+			if (config && config.collectionId && !validCollectionIds.has(config.collectionId)) {
+				config.collectionId = undefined
+				config.sortOrder = nextSortOrder++
+				changedIds.push(id)
+			}
+		}
+
+		this.commitChanges(changedIds)
 	}
 
 	findActiveUsagesOfModule(moduleId: string): { connectionIds: string[]; labels: string[] } {

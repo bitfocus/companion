@@ -52,8 +52,8 @@ export class TopbarRenderer {
 				color: colorButtonYellow,
 			})
 
-			if (typeof drawStyle.step_cycle === 'number' && location) {
-				step = `.${drawStyle.step_cycle}`
+			if (drawStyle.stepCount > 1 && location) {
+				step = `.${drawStyle.stepCurrent}`
 			}
 
 			const locationDrawX = Math.round(drawBounds.width * 0.05) + drawBounds.x

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { isModuleApiVersionCompatible } from '../lib/ModuleApiVersionCheck.js'
+import { isModuleApiVersionCompatible } from '../ModuleApiVersionCheck.js'
 import { createRequire } from 'module'
 import semver from 'semver'
 

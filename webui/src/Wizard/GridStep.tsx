@@ -8,34 +8,40 @@ interface GridStepProps {
 	setValue: (key: keyof UserConfigModel, value: any) => void
 }
 
-export function GridStep({ rows, columns, setValue }: GridStepProps) {
+export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.Element {
 	const [totalRows, setTotalRows] = useState(rows)
 	const [totalColumns, setTotalColumns] = useState(columns)
 
-	const setMaxColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = Number(e.currentTarget.value)
-		const grid: UserConfigGridSize = {
-			minRow: 0,
-			maxRow: totalRows - 1,
-			minColumn: 0,
-			maxColumn: newValue - 1,
-		}
+	const setMaxColumn = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const newValue = Number(e.currentTarget.value)
+			const grid: UserConfigGridSize = {
+				minRow: 0,
+				maxRow: totalRows - 1,
+				minColumn: 0,
+				maxColumn: newValue - 1,
+			}
 
-		setTotalColumns(newValue)
-		setValue('gridSize', grid)
-	}, [])
-	const setMaxRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = Number(e.currentTarget.value)
-		const grid: UserConfigGridSize = {
-			minRow: 0,
-			maxRow: newValue - 1,
-			minColumn: 0,
-			maxColumn: totalColumns - 1,
-		}
+			setTotalColumns(newValue)
+			setValue('gridSize', grid)
+		},
+		[setValue, totalRows]
+	)
+	const setMaxRow = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const newValue = Number(e.currentTarget.value)
+			const grid: UserConfigGridSize = {
+				minRow: 0,
+				maxRow: newValue - 1,
+				minColumn: 0,
+				maxColumn: totalColumns - 1,
+			}
 
-		setTotalRows(newValue)
-		setValue('gridSize', grid)
-	}, [])
+			setTotalRows(newValue)
+			setValue('gridSize', grid)
+		},
+		[setValue, totalColumns]
+	)
 
 	return (
 		<CRow>

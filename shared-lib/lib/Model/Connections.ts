@@ -1,3 +1,5 @@
+import type { CollectionBase } from './Collections.js'
+
 export interface ConnectionConfig {
 	label: string
 	config: unknown
@@ -8,6 +10,7 @@ export interface ConnectionConfig {
 	sortOrder: number
 	moduleVersionId: string | null
 	updatePolicy: ConnectionUpdatePolicy // TODO - upgrade script
+	collectionId?: string
 }
 
 export interface ClientConnectionConfig {
@@ -18,7 +21,10 @@ export interface ClientConnectionConfig {
 	enabled: boolean
 	sortOrder: number
 	hasRecordActionsHandler: boolean
+	collectionId: string | null
 }
+
+export type ConnectionCollection = CollectionBase<undefined>
 
 export enum ConnectionUpdatePolicy {
 	Manual = 'manual',
@@ -45,3 +51,17 @@ export interface ClientConnectionsUpdateUpdateOp {
 	// patch: JsonPatchOperation[]
 	info: ClientConnectionConfig
 }
+
+// export type ConnectionGroupsUpdate = ConnectionGroupsUpdateUpdateOp | ConnectionGroupsUpdateRemoveOp
+
+// export interface ConnectionGroupsUpdateRemoveOp {
+// 	type: 'remove'
+// 	id: string
+// }
+
+// export interface ConnectionGroupsUpdateUpdateOp {
+// 	type: 'update'
+// 	id: string
+
+// 	info: ConnectionGroup
+// }

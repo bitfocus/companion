@@ -100,6 +100,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	protected close(): void {
 		if (this.#server) {
 			this.#server.discard()
+			this.#server = undefined
 		}
 	}
 
@@ -308,59 +309,56 @@ export class ServiceEmberPlus extends ServiceBase {
 		if (this.portConfig) {
 			this.port = this.userconfig.getKey(this.portConfig)
 		}
+		if (this.#server !== undefined) {
+			this.close()
+		}
 
-		if (this.#server === undefined) {
-			try {
-				const root = {
-					0: new EmberModel.NumberedTreeNodeImpl(0, new EmberModel.EmberNodeImpl('Companion Tree'), {
-						0: new EmberModel.NumberedTreeNodeImpl(0, new EmberModel.EmberNodeImpl('identity'), {
-							0: new EmberModel.NumberedTreeNodeImpl(
-								0,
-								new EmberModel.ParameterImpl(EmberModel.ParameterType.String, 'product', undefined, 'Companion')
-							),
-							1: new EmberModel.NumberedTreeNodeImpl(
-								1,
-								new EmberModel.ParameterImpl(EmberModel.ParameterType.String, 'company', undefined, 'Bitfocus AS')
-							),
-							2: new EmberModel.NumberedTreeNodeImpl(
-								2,
-								new EmberModel.ParameterImpl(
-									EmberModel.ParameterType.String,
-									'version',
-									undefined,
-									this.#serviceApi.appInfo.appVersion
-								)
-							),
-							3: new EmberModel.NumberedTreeNodeImpl(
-								3,
-								new EmberModel.ParameterImpl(
-									EmberModel.ParameterType.String,
-									'build',
-									undefined,
-									this.#serviceApi.appInfo.appBuild
-								)
-							),
-						}),
-						1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
+		try {
+			const root = {
+				0: new EmberModel.NumberedTreeNodeImpl(0, new EmberModel.EmberNodeImpl('Companion Tree'), {
+					0: new EmberModel.NumberedTreeNodeImpl(0, new EmberModel.EmberNodeImpl('identity'), {
+						0: new EmberModel.NumberedTreeNodeImpl(
+							0,
+							new EmberModel.ParameterImpl(EmberModel.ParameterType.String, 'product', undefined, 'Companion')
+						),
+						1: new EmberModel.NumberedTreeNodeImpl(
+							1,
+							new EmberModel.ParameterImpl(EmberModel.ParameterType.String, 'company', undefined, 'Bitfocus AS')
+						),
 						2: new EmberModel.NumberedTreeNodeImpl(
 							2,
-							new EmberModel.EmberNodeImpl('location'),
-							this.#getLocationTree()
+							new EmberModel.ParameterImpl(
+								EmberModel.ParameterType.String,
+								'version',
+								undefined,
+								this.#serviceApi.appInfo.appVersion
+							)
+						),
+						3: new EmberModel.NumberedTreeNodeImpl(
+							3,
+							new EmberModel.ParameterImpl(
+								EmberModel.ParameterType.String,
+								'build',
+								undefined,
+								this.#serviceApi.appInfo.appBuild
+							)
 						),
 					}),
-				}
-
-				this.#server = new EmberServer(this.port)
-				this.#server.on('error', this.handleSocketError.bind(this))
-				this.#server.onSetValue = this.setValue.bind(this)
-				this.#server.init(root)
-
-				this.currentState = true
-				this.logger.info('Listening on port ' + this.port)
-				this.logger.silly('Listening on port ' + this.port)
-			} catch (e: any) {
-				this.logger.error(`Could not launch: ${e.message}`)
+					1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
+					2: new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('location'), this.#getLocationTree()),
+				}),
 			}
+
+			this.#server = new EmberServer(this.port)
+			this.#server.on('error', this.handleSocketError.bind(this))
+			this.#server.onSetValue = this.setValue.bind(this)
+			this.#server.init(root)
+
+			this.currentState = true
+			this.logger.info('Listening on port ' + this.port)
+			this.logger.silly('Listening on port ' + this.port)
+		} catch (e: any) {
+			this.logger.error(`Could not launch: ${e.message}`)
 		}
 	}
 

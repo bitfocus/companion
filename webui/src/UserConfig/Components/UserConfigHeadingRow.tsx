@@ -3,7 +3,7 @@ import React from 'react'
 interface UserConfigHeadingRowProps {
 	label: string
 }
-export function UserConfigHeadingRow({ label }: UserConfigHeadingRowProps) {
+export function UserConfigHeadingRow({ label }: UserConfigHeadingRowProps): React.JSX.Element {
 	return (
 		<>
 			<tr className="settings-category-spacer"></tr>

@@ -6,7 +6,14 @@ interface ScrollVisibleState {
 	topElementOffset: number
 }
 
-export function useStickyScroller(initialHash: string | undefined) {
+interface StickyScrollerHelper {
+	scrollerContentRef: React.RefObject<HTMLDivElement>
+	scrollerElementRef: React.RefObject<HTMLDivElement>
+	handleScroll: (e: React.UIEvent<HTMLDivElement>) => void
+	restoreScroll: () => void
+}
+
+export function useStickyScroller(initialHash: string | undefined): StickyScrollerHelper {
 	const scrollerElementRef = useRef<HTMLDivElement>(null)
 	const scrollerContentRef = useRef<HTMLDivElement>(null)
 
@@ -59,9 +66,7 @@ export function useStickyScroller(initialHash: string | undefined) {
 
 		if (scrollerElementRef.current && scrollState.topElementHash) {
 			// Find the target
-			const targetElement = document.querySelector(
-				`[data-anchor="${scrollState.topElementHash}"]`
-			) as HTMLElement | null
+			const targetElement = document.querySelector<HTMLElement>(`[data-anchor="${scrollState.topElementHash}"]`)
 			if (!targetElement) return
 
 			// Scroll to the target

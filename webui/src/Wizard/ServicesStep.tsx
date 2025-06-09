@@ -7,7 +7,7 @@ interface ServicesStepProps {
 	setValue: (key: keyof UserConfigModel, value: any) => void
 }
 
-export function ServicesStep({ config, setValue }: ServicesStepProps) {
+export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX.Element {
 	return (
 		<div>
 			<h5>Remote Control Services</h5>

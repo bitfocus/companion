@@ -1270,9 +1270,10 @@ __metadata:
     "@tanstack/react-form": "npm:^1.12.0"
     "@tanstack/react-query": "npm:^5.79.0"
     "@tanstack/react-router": "npm:^1.120.11"
-    "@tanstack/router-devtools": "npm:^1.120.11"
+    "@tanstack/react-router-devtools": "npm:^1.120.11"
     "@tanstack/router-plugin": "npm:^1.120.11"
     "@tanstack/virtual-file-routes": "npm:^1.115.0"
+    "@types/crypto-js": "npm:^4.2.2"
     "@types/react": "npm:^18.3.23"
     "@types/react-copy-to-clipboard": "npm:^5.0.7"
     "@types/react-dom": "npm:^18.3.7"
@@ -1282,6 +1283,7 @@ __metadata:
     "@vitejs/plugin-react": "npm:^4.5.0"
     buffer: "npm:^6.0.3"
     classnames: "npm:^2.5.1"
+    crypto-js: "npm:^4.2.0"
     csv-stringify: "npm:^6.5.2"
     dayjs: "npm:^1.11.13"
     fast-json-patch: "patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch"
@@ -3986,25 +3988,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/router-devtools@npm:^1.120.11":
-  version: 1.120.11
-  resolution: "@tanstack/router-devtools@npm:1.120.11"
-  dependencies:
-    "@tanstack/react-router-devtools": "npm:^1.120.11"
-    clsx: "npm:^2.1.1"
-    goober: "npm:^2.1.16"
-  peerDependencies:
-    "@tanstack/react-router": ^1.120.11
-    csstype: ^3.0.10
-    react: ">=18.0.0 || >=19.0.0"
-    react-dom: ">=18.0.0 || >=19.0.0"
-  peerDependenciesMeta:
-    csstype:
-      optional: true
-  checksum: 10c0/eff312e14915c6d220cc23d5f76002dcdaa38e8cc6caaee82f035422724744b88ba45feead9e7b0fa1435b3d0d5e1cb0c6651cd5e6be8bdbe11a4adc7f4bd066
-  languageName: node
-  linkType: hard
-
 "@tanstack/router-generator@npm:^1.120.11":
   version: 1.120.11
   resolution: "@tanstack/router-generator@npm:1.120.11"
@@ -4276,6 +4259,13 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/9dd1075de0e3a40c304826668960c797e67e597a734fb8e8ab404561f31ef2bd553ef5500eb86da7e91a344bee038a59931d2fbf182fbce09f13816f51fdd80e
+  languageName: node
+  linkType: hard
+
+"@types/crypto-js@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "@types/crypto-js@npm:4.2.2"
+  checksum: 10c0/760a2078f36f2a3a1089ef367b0d13229876adcf4bcd6e8824d00d9e9bfad8118dc7e6a3cc66322b083535e12be3a29044ccdc9603bfb12519ff61551a3322c6
   languageName: node
   linkType: hard
 
@@ -7312,6 +7302,13 @@ asn1@evs-broadcast/node-asn1:
     shebang-command: "npm:^2.0.0"
     which: "npm:^2.0.1"
   checksum: 10c0/053ea8b2135caff68a9e81470e845613e374e7309a47731e81639de3eaeb90c3d01af0e0b44d2ab9d50b43467223b88567dfeb3262db942dc063b9976718ffc1
+  languageName: node
+  linkType: hard
+
+"crypto-js@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "crypto-js@npm:4.2.0"
+  checksum: 10c0/8fbdf9d56f47aea0794ab87b0eb9833baf80b01a7c5c1b0edc7faf25f662fb69ab18dc2199e2afcac54670ff0cd9607a9045a3f7a80336cccd18d77a55b9fdf0
   languageName: node
   linkType: hard
 

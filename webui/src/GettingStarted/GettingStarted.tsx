@@ -77,7 +77,7 @@ const style = {
 	} satisfies React.CSSProperties,
 }
 
-export function GettingStarted() {
+export function GettingStarted(): React.JSX.Element {
 	const [hash] = useHash()
 
 	const { scrollerElementRef, scrollerContentRef, handleScroll, restoreScroll } = useStickyScroller(hash)
@@ -85,7 +85,7 @@ export function GettingStarted() {
 	useEffect(() => restoreScroll(), [restoreScroll, hash])
 	// Restore the scroll position when the scroller resizes
 	useResizeObserver({
-		ref: scrollerContentRef as React.RefObject<HTMLDivElement>,
+		ref: scrollerContentRef,
 		onResize: restoreScroll,
 	})
 
@@ -175,6 +175,7 @@ function RenderSubsection({ subsect, visibleFiles, triggerScroll }: RenderSubsec
 	)
 
 	// When the height changes, check the scroll position
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => triggerScroll(), [height])
 
 	return (

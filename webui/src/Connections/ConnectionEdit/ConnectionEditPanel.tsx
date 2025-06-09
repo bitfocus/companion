@@ -124,7 +124,12 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					})
 			} else if (query.isSuccess) {
 				await socket
-					.emitPromise('connections:set-label-and-config', [connectionId, value.label, value.config])
+					.emitPromise('connections:set-label-and-config', [
+						connectionId,
+						value.label,
+						value.config,
+						value.updatePolicy,
+					])
 					.then((err) => {
 						if (err) {
 							if (err === 'invalid label') {
@@ -199,7 +204,9 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
-					form.handleSubmit()
+					form.handleSubmit().catch((err) => {
+						console.error('Error submitting form', err)
+					})
 				}}
 			>
 				{saveError && (
@@ -366,7 +373,11 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					<LoadingRetryOrError
 						error={!query.isRefetching ? query.error?.message : undefined}
 						dataReady={false}
-						doRetry={query.refetch}
+						doRetry={() => {
+							query.refetch().catch((err) => {
+								console.error('Error refetching', err)
+							})
+						}}
 					/>
 				)}
 

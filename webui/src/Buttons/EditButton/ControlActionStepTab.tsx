@@ -22,6 +22,7 @@ export interface ControlActionStepTabProps {
 	selectedKey: string
 	selectedStepProps: NormalButtonSteps[0]
 	localVariablesStore: LocalVariablesStore
+	disabledSetStep: boolean
 }
 
 export function ControlActionStepTab({
@@ -35,7 +36,8 @@ export function ControlActionStepTab({
 	selectedKey,
 	selectedStepProps,
 	localVariablesStore,
-}: ControlActionStepTabProps) {
+	disabledSetStep,
+}: ControlActionStepTabProps): React.JSX.Element {
 	return (
 		<>
 			<CButtonGroup hidden={stepKeys.length === 1}>
@@ -58,8 +60,11 @@ export function ControlActionStepTab({
 
 				<CButton
 					color="success"
-					style={{ fontWeight: 'bold', opacity: runtimeProps.current_step_id === selectedKey ? 0.3 : 1 }}
-					disabled={runtimeProps.current_step_id === selectedKey}
+					style={{
+						fontWeight: 'bold',
+						opacity: runtimeProps.current_step_id === selectedKey || disabledSetStep ? 0.3 : 1,
+					}}
+					disabled={runtimeProps.current_step_id === selectedKey || disabledSetStep}
 					onClick={() => service.setCurrentStep(selectedKey)}
 					title="Make this step the current step, without executing any actions."
 				>

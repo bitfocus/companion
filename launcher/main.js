@@ -130,7 +130,7 @@ if (!lock) {
 	}
 
 	const thisDbFolderName = ConfigReleaseDirs[ConfigReleaseDirs.length - 1]
-	const thisDbPath = path.join(configDir, thisDbFolderName, 'db')
+	const thisDbPath = path.join(configDir, thisDbFolderName, 'db.sqlite')
 
 	const uiConfig = new Store({
 		cwd: configDir,
@@ -638,7 +638,7 @@ if (!lock) {
 			let mostRecentDir = null
 			for (const dirname of dirs) {
 				try {
-					const dbStat = fs.statSync(path.join(configDir, dirname, 'db'))
+					const dbStat = fs.statSync(path.join(configDir, dirname, 'db.sqlite'))
 					if (dirname.match('^v(.*)') && dbStat && dbStat.isFile()) {
 						if (!mostRecentDir || mostRecentDir[0] < dbStat.mtimeMs) {
 							mostRecentDir = [dbStat.mtimeMs, dirname]
@@ -669,7 +669,11 @@ if (!lock) {
 						let importFrom = null
 						for (let i = ConfigReleaseDirs.length - 2; i--; i > 0) {
 							const dirname = ConfigReleaseDirs[i]
-							if (dirname && fs.existsSync(path.join(configDir, dirname, 'db'))) {
+							if (
+								dirname &&
+								(fs.existsSync(path.join(configDir, dirname, 'db')) ||
+									fs.existsSync(path.join(configDir, dirname, 'db.sqlite')))
+							) {
 								importFrom = dirname
 								break
 							}

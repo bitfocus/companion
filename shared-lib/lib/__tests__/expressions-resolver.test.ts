@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { ParseExpression as parse } from '../lib/Expression/ExpressionParse.js'
-import { ResolveExpression as resolve } from '../lib/Expression/ExpressionResolve.js'
+import { ParseExpression as parse } from '../Expression/ExpressionParse.js'
+import { ResolveExpression as resolve } from '../Expression/ExpressionResolve.js'
 import jsep from 'jsep'
 import type { CompanionVariableValue } from '@companion-module/base'
 
@@ -101,6 +101,7 @@ describe('resolver', function () {
 					case 'internal:a':
 						return 2
 				}
+				return undefined
 			}
 			expect(resolve(postfix, getVariable)).toBe(3)
 		})
@@ -114,6 +115,7 @@ describe('resolver', function () {
 					case 'test:c':
 						return '1'
 				}
+				return undefined
 			}
 			expect(resolve(postfix, getVariable)).toBe(4)
 		})
@@ -129,6 +131,7 @@ describe('resolver', function () {
 					case 'test:c':
 						return 1
 				}
+				return undefined
 			}
 			expect(resolve(postfix, getVariable)).toBe(4)
 		})
@@ -140,6 +143,7 @@ describe('resolver', function () {
 					case 'internal:a':
 						return 10
 				}
+				return undefined
 			}
 			expect(resolve(postfix, getVariable)).toBe(1)
 		})
@@ -213,6 +217,7 @@ describe('resolver', function () {
 					case 'another:var':
 						return 99
 				}
+				return undefined
 			}
 			const result = resolve(parse('`val: ${1 + 2}dB or ${$(some:var)} and ${$(another:var)}`'), getVariable)
 			expect(result).toBe('val: 3dB or var1 and 99')
@@ -258,6 +263,7 @@ describe('resolver', function () {
 					case 'my:var':
 						return 'val'
 				}
+				return undefined
 			}
 
 			const result = resolve(parse("{a: 1, 'v': {a: $(my:var), c: null}}"), getVariable)
@@ -275,11 +281,12 @@ describe('resolver', function () {
 		})
 
 		it('array get beyond end - inline access', () => {
-			const getVariable = (id) => {
+			const getVariable = (id: string) => {
 				switch (id) {
 					case 'my:var':
-						return [1, 2, 3]
+						return [1, 2, 3] as any
 				}
+				return undefined
 			}
 
 			const result = resolve(parse('$(my:var)[42] === undefined'), getVariable)
@@ -287,11 +294,12 @@ describe('resolver', function () {
 		})
 
 		it('array get beyond end - intermediate var', () => {
-			const getVariable = (id) => {
+			const getVariable = (id: string) => {
 				switch (id) {
 					case 'my:var':
-						return [1, 2, 3]
+						return [1, 2, 3] as any
 				}
+				return undefined
 			}
 
 			const result = resolve(parse('let a = $(my:var);a[42] === undefined'), getVariable)
@@ -321,6 +329,7 @@ describe('resolver', function () {
 					case 'some:var':
 						return 'var1'
 				}
+				return undefined
 			}
 
 			const result = resolve(parse('return $(some:var)'), getVariable)

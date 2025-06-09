@@ -1,5 +1,5 @@
 {
-	"include": ["lib/**/*.ts", "lib/**/*.cts", "test/**/*.ts"],
+	"include": ["lib/**/*.ts", "lib/**/*.cts"],
 	"exclude": ["node_modules/**"],
 	"compilerOptions": {
 		"outDir": "./dist",

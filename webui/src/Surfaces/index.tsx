@@ -9,7 +9,7 @@ import { KnownSurfacesTable } from './KnownSurfacesTable.js'
 import { OutboundSurfacesTable } from './OutboundSurfacesTable.js'
 import { AddEmulatorModal, AddEmulatorModalRef } from './AddEmulatorModal.js'
 
-export function ConfiguredSurfacesTab() {
+export function ConfiguredSurfacesTab(): React.JSX.Element {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
@@ -86,7 +86,7 @@ export function ConfiguredSurfacesTab() {
 	)
 }
 
-export function DiscoverSurfacesTab() {
+export function DiscoverSurfacesTab(): React.JSX.Element {
 	return (
 		<CRow>
 			<CCol xs={12}>
@@ -105,7 +105,7 @@ export function DiscoverSurfacesTab() {
 	)
 }
 
-export function OutboundSurfacesTab() {
+export function OutboundSurfacesTab(): React.JSX.Element {
 	return (
 		<CRow>
 			<CCol xs={12}>

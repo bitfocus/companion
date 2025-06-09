@@ -66,7 +66,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 			type: 'Elgato Streamdeck Plugin',
 			devicePath: devicePath,
 			configFields: [],
-			deviceId: 'plugin', // Note: this is also defined elsewhere
+			deviceId: devicePath,
 		}
 
 		const triggerKeyPress = (data: Record<string, any>, pressed: boolean) => {

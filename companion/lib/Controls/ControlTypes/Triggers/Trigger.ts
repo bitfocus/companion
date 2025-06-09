@@ -130,6 +130,12 @@ export class ControlTrigger
 	readonly entities: ControlEntityListPoolTrigger // TODO - should this be private?
 
 	/**
+	 * Whether this trigger and its parent collection is enabled or not
+	 */
+	#enabled: boolean = false
+	#collectionEnabled: boolean = false
+
+	/**
 	 * @param registry - the application core
 	 * @param eventBus - the main trigger event bus
 	 * @param controlId - id of the control
@@ -155,6 +161,8 @@ export class ControlTrigger
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			moduleHost: deps.instance.moduleHost,
+			executeExpressionInControl: (expression, requiredType, injectedVariableValues) =>
+				deps.variables.values.executeExpression(expression, null, requiredType, injectedVariableValues),
 		})
 
 		this.#eventBus = eventBus
@@ -194,6 +202,22 @@ export class ControlTrigger
 
 	abortDelayedActionsSingle(_skip_up: boolean, exceptSignal: AbortSignal): void {
 		this.#actionRunner.abortSingle(exceptSignal)
+	}
+
+	checkCollectionIdIsValid(validCollectionIds: Set<string>): boolean {
+		if (this.options.collectionId && !validCollectionIds.has(this.options.collectionId)) {
+			// collectionId is not valid, remove it
+			this.options.collectionId = undefined
+
+			// The parent collection is now enabled
+			this.setCollectionEnabled(true)
+
+			this.commitChange(false)
+
+			return true
+		}
+
+		return false
 	}
 
 	/**
@@ -352,15 +376,17 @@ export class ControlTrigger
 	/**
 	 * Start or stop the trigger from running
 	 */
-	#setupEvents(): void {
-		this.#timerEvents.setEnabled(this.options.enabled)
-		this.#miscEvents.setEnabled(this.options.enabled)
-		this.#variablesEvents.setEnabled(this.options.enabled)
-		this.#eventBus.emit('trigger_enabled', this.controlId, this.options.enabled)
+	#setupEvents(restartEvents = true): void {
+		this.#timerEvents.setEnabled(this.#enabled)
+		this.#miscEvents.setEnabled(this.#enabled)
+		this.#variablesEvents.setEnabled(this.#enabled)
+		this.#eventBus.emit('trigger_enabled', this.controlId, this.#enabled)
 
-		// Event runner cleanup
-		for (const event of this.events) {
-			this.#restartEvent(event)
+		if (restartEvents) {
+			// Event runner cleanup
+			for (const event of this.events) {
+				this.#restartEvent(event)
+			}
 		}
 	}
 
@@ -483,17 +509,16 @@ export class ControlTrigger
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: number, forceSet?: boolean): boolean {
-		if (!forceSet && key === 'sortOrder') throw new Error('sortOrder cannot be set by the client')
+	optionsSetField(key: string, value: any, forceSet?: boolean): boolean {
+		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
+			throw new Error('sortOrder cannot be set by the client')
 
 		// @ts-ignore
 		this.options[key] = value
 
 		if (key === 'enabled') {
-			this.#timerEvents.setEnabled(this.options.enabled)
-			this.#miscEvents.setEnabled(this.options.enabled)
-			this.#variablesEvents.setEnabled(this.options.enabled)
-			this.#eventBus.emit('trigger_enabled', this.controlId, this.options.enabled)
+			// Pretend the collection changed, to re-trigger the events
+			this.setCollectionEnabled(this.#collectionEnabled)
 		}
 
 		this.commitChange()
@@ -539,6 +564,18 @@ export class ControlTrigger
 		}
 
 		this.#lastSentTriggerJson = newJson
+	}
+
+	setCollectionEnabled(enabled: boolean): void {
+		this.#collectionEnabled = !!enabled
+		const newEnabled = this.#collectionEnabled && this.options.enabled
+		if (this.#enabled !== newEnabled) {
+			this.#enabled = newEnabled
+			this.#setupEvents(false)
+		} else {
+			// Report the change, for internal feedbacks
+			this.#eventBus.emit('trigger_enabled', this.controlId, this.#enabled)
+		}
 	}
 
 	commitChange(redraw = true): void {

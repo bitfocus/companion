@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 // import { CompanionVariableValues } from '@companion-module/base'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Constants.js'
-import { VariableTypeIcon } from './VariableTypeIcon.js'
+import { VariableTypeIcon, VariableTypeIconType } from './VariableTypeIcon.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
@@ -45,12 +45,9 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	onCopied = () => {},
 	...props
 }) => {
-	console.log('collhelper', panelCollapseHelper)
 	// Use the collapseHelper if we have all neccessary information, otherwise use loal state
 	let collapser: { isPanelCollapsed: () => boolean; setPanelCollapsed: (b: boolean) => void }
-	let collapsed: boolean = true,
-		setCollapsed: React.Dispatch<React.SetStateAction<boolean>>
-	;[collapsed, setCollapsed] = useState(true)
+	const [collapsed, setCollapsed] = useState(true)
 	let useCollapseHelper: boolean
 	if (panelCollapseHelper && collapsePanelId) {
 		collapser = {
@@ -80,7 +77,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 
 	const compactValue = valueStr.length > TRUNCATE_LENGHT ? `${valueStr.substring(0, TRUNCATE_LENGHT)}...` : valueStr
 
-	let displayValue =
+	const displayValue =
 		(useCollapseHelper && collapser.isPanelCollapsed()) || (!useCollapseHelper && collapsed) ? compactValue : valueStr
 
 	const elms: Array<string | JSX.Element> = []
@@ -106,7 +103,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	}
 
 	let typeDescription = 'unknown'
-	let iconPath = 'unknown'
+	let iconPath: VariableTypeIconType = 'unknown'
 	if (icon === 'string' || typeof value === 'string') {
 		iconPath = 'string'
 		typeDescription = 'Text string'

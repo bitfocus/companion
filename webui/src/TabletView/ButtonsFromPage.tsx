@@ -20,7 +20,12 @@ interface SectionOfButtonsProps {
 	buttonSize: number
 }
 
-export function SectionOfButtons({ pageNumber, displayColumns, gridSize, buttonSize }: SectionOfButtonsProps) {
+export function SectionOfButtons({
+	pageNumber,
+	displayColumns,
+	gridSize,
+	buttonSize,
+}: SectionOfButtonsProps): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const buttonClick = useCallback(
@@ -91,7 +96,7 @@ export function ButtonsBlock({
 	firstRowIndex,
 	buttonSize,
 	children,
-}: React.PropsWithChildren<ButtonsBlockProps>) {
+}: React.PropsWithChildren<ButtonsBlockProps>): React.JSX.Element {
 	const { ref: inViewRef, inView } = useInView({
 		rootMargin: '200%',
 		/* Optional options */

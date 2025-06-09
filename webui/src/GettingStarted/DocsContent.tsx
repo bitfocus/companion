@@ -10,13 +10,13 @@ interface DocsContentProps {
 	file: string
 }
 
-export function DocsContent({ file }: DocsContentProps) {
+export function DocsContent({ file }: DocsContentProps): React.JSX.Element {
 	// strip filename
 	const baseUrl = `${file}`.replace(/\/[^/]+$/, '/')
 
 	const { isPending, error, data, refetch } = useQuery<string>({
 		queryKey: [`docs_${file}`],
-		queryFn: () => fetch(`/docs/${file}`).then((res) => res.text()),
+		queryFn: async () => fetch(`/docs/${file}`).then(async (res) => res.text()),
 		retry: false,
 	})
 
@@ -29,7 +29,7 @@ export function DocsContent({ file }: DocsContentProps) {
 					{process.env.NODE_ENV !== 'production' && (
 						<CButton
 							title="Dev Refresh"
-							onClick={() => refetch()}
+							onClick={() => void refetch()}
 							style={{ float: 'right', position: 'absolute', top: -40, right: 0 }}
 						>
 							<FontAwesomeIcon icon={faRefresh} />

@@ -32,7 +32,7 @@ function convertDatabaseToV7(db: DataStoreBase<any>, _logger: Logger) {
 
 function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'full') {
-		const newObj: ExportFullv6 = { ...cloneDeep(obj), version: 6 }
+		const newObj: ExportFullv6 = { ...cloneDeep(obj), version: 7 }
 		if (newObj.pages) {
 			for (const page of Object.values(newObj.pages)) {
 				convertPageControls(page)
@@ -45,11 +45,16 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 		}
 		return newObj
 	} else if (obj.type == 'page') {
-		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 6 }
+		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 7, connectionCollections: undefined }
 		convertPageControls(newObj.page)
 		return newObj
 	} else if (obj.type == 'trigger_list') {
-		const newObj: ExportTriggersListv6 = { ...cloneDeep(obj), version: 6 }
+		const newObj: ExportTriggersListv6 = {
+			...cloneDeep(obj),
+			version: 7,
+			triggerCollections: undefined,
+			connectionCollections: undefined,
+		}
 		for (const trigger of Object.values<any>(newObj.triggers)) {
 			fixupControlEntities(trigger)
 		}

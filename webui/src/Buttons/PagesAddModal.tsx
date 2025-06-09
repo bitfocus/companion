@@ -5,9 +5,6 @@ import React, { forwardRef, useCallback, useContext, useImperativeHandle, useSta
 import { SocketContext } from '~/util.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 
-interface AddPagesModalProps {
-	// addAction: (actionType: string) => void
-}
 export interface AddPagesModalRef {
 	show(beforePageNumber: number): void
 }
@@ -26,7 +23,7 @@ const defaultState: ModalState = {
 	names: [''],
 }
 
-export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(function AddPagesModal({}, ref) {
+export const AddPagesModal = forwardRef<AddPagesModalRef>(function AddPagesModal(_props, ref) {
 	const socket = useContext(SocketContext)
 
 	const [state, setState] = useState<ModalState>(defaultState)

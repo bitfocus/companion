@@ -6,18 +6,18 @@ export function useTriggersListSubscription(socket: CompanionSocketWrapped, stor
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
-		store.reset(null)
+		store.resetTriggers(null)
 		setReady(false)
 
 		socket
 			.emitPromise('triggers:subscribe', [])
 			.then((triggers) => {
-				store.reset(triggers)
+				store.resetTriggers(triggers)
 				setReady(true)
 			})
 			.catch((e) => {
 				console.error('Failed to load triggers list:', e)
-				store.reset(null)
+				store.resetTriggers(null)
 			})
 
 		// const updateFeedbackDefinitions = (change: FeedbackDefinitionUpdate) => {
@@ -25,11 +25,11 @@ export function useTriggersListSubscription(socket: CompanionSocketWrapped, stor
 		// }
 
 		const unsubUpdates = socket.on('triggers:update', (change) => {
-			store.applyChange(change)
+			store.applyTriggersChange(change)
 		})
 
 		return () => {
-			store.reset(null)
+			store.resetTriggers(null)
 
 			unsubUpdates()
 

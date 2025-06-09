@@ -1,6 +1,7 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { EventInstance } from './EventModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
+import type { CollectionBase } from './Collections.js'
 
 export interface TriggerModel {
 	readonly type: 'trigger'
@@ -15,6 +16,7 @@ export interface TriggerOptions {
 	name: string
 	enabled: boolean
 	sortOrder: number
+	collectionId?: string
 }
 
 export interface ClientTriggerData extends TriggerOptions {
@@ -41,3 +43,9 @@ export interface TriggersUpdateUpdateOp {
 
 	patch: JsonPatchOperation[]
 }
+
+export interface TriggerCollectionData {
+	enabled: boolean
+}
+
+export type TriggerCollection = CollectionBase<TriggerCollectionData>

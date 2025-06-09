@@ -14,7 +14,7 @@ interface OptionButtonPreviewProps {
  * @param {string} param.location where this preview is located (if any)
  * @returns
  */
-export function OptionButtonPreview({ controlId, options }: OptionButtonPreviewProps) {
+export function OptionButtonPreview({ controlId, options }: OptionButtonPreviewProps): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const [image, setImage] = useState<string | null>(null)
