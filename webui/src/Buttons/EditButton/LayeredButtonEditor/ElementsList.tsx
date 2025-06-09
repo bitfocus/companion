@@ -170,7 +170,7 @@ const ElementListItem = observer(function ElementListItem({
 				</div>
 
 				<div className="element-buttons">
-					<ToggleVisibilityButton styleStore={styleStore} controlId={controlId} elementId={element.id} />
+					<ToggleVisibilityButton styleStore={styleStore} elementId={element.id} />
 					<RemoveElementButton controlId={controlId} elementId={element.id} confirmModalRef={confirmModalRef} />
 				</div>
 			</div>

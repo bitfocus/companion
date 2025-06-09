@@ -20,11 +20,11 @@ export class LocalVariablesStore {
 		})
 	}
 
-	setEntities(localVariables: SomeEntityModel[]) {
+	setEntities(localVariables: SomeEntityModel[]): void {
 		this.#variables.replace(localVariables.map((v) => [v.id, v]))
 	}
 
-	setValues(values: CompanionVariableValues) {
+	setValues(values: CompanionVariableValues): void {
 		this.#values.replace(Object.entries(values))
 	}
 
@@ -59,7 +59,10 @@ export class LocalVariablesStore {
 	)
 }
 
-export function useLocalVariablesStore(controlId: string, localVariables: SomeEntityModel[] | null) {
+export function useLocalVariablesStore(
+	controlId: string,
+	localVariables: SomeEntityModel[] | null
+): LocalVariablesStore {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const store = useMemo(() => new LocalVariablesStore(controlId), [controlId])

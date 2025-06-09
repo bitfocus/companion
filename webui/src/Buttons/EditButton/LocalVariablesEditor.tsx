@@ -16,7 +16,7 @@ export function LocalVariablesEditor({
 	location,
 	variables,
 	localVariablesStore,
-}: LocalVariablesEditorProps) {
+}: LocalVariablesEditorProps): React.JSX.Element {
 	return (
 		<>
 			<CAlert color="info" className="mb-2">

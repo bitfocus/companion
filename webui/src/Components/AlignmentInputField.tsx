@@ -36,7 +36,7 @@ interface AlignmentInputFieldProps2 {
 	setValue: (value: string) => void
 }
 
-export function HorizontalAlignmentInputField({ value, setValue }: AlignmentInputFieldProps2) {
+export function HorizontalAlignmentInputField({ value, setValue }: AlignmentInputFieldProps2): React.JSX.Element {
 	return (
 		<CButtonGroup>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'left'} title="Left">
@@ -52,7 +52,7 @@ export function HorizontalAlignmentInputField({ value, setValue }: AlignmentInpu
 	)
 }
 
-export function VerticalAlignmentInputField({ value, setValue }: AlignmentInputFieldProps2) {
+export function VerticalAlignmentInputField({ value, setValue }: AlignmentInputFieldProps2): React.JSX.Element {
 	return (
 		<CButtonGroup>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'top'} title="Top">

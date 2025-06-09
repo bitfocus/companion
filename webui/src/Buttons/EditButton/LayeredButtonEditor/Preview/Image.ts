@@ -107,7 +107,7 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 		return null
 	}
 
-	public drawComplete() {
+	public drawComplete(): void {
 		this.#parseCache.disposeUnused()
 	}
 }
