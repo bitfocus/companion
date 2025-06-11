@@ -129,6 +129,14 @@ export class ServiceEmberPlus extends ServiceBase {
 						this.#server.update(node, { value: count })
 					}
 				}
+				node = this.#server.getElementByPath('0.0.4')
+				if (node) {
+					const uptime = this.#serviceApi.getConnectionVariableValue('internal', 'uptime')
+					// @ts-ignore
+					if (node.contents.value !== uptime) {
+						this.#server.update(node, { value: uptime })
+					}
+				}
 			}
 			
 		}, SYSTEM_VAR_UPDATE_INTERVAL)
@@ -373,6 +381,18 @@ export class ServiceEmberPlus extends ServiceBase {
 								this.#serviceApi.appInfo.appBuild
 							)
 						),
+						4: new EmberModel.NumberedTreeNodeImpl(
+							4,
+							new EmberModel.ParameterImpl(
+								EmberModel.ParameterType.Integer,
+								'uptime',
+								'Companion Uptime',
+								this.#serviceApi.getConnectionVariableValue('internal', 'uptime'),
+								undefined,
+								0,
+								EmberModel.ParameterAccess.Read
+							)
+						),
 					}),
 					1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
 					2: new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('location'), this.#getLocationTree()),
@@ -387,7 +407,7 @@ export class ServiceEmberPlus extends ServiceBase {
 								this.#serviceApi.actionRecorderGetSession().isRunning,
 								undefined,
 								undefined,
-								EmberModel.ParameterAccess.Write
+								EmberModel.ParameterAccess.ReadWrite
 							)
 						),
 						1: new EmberModel.NumberedTreeNodeImpl(
