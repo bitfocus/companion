@@ -24,6 +24,8 @@ const LEGACY_NODE_TEXT = 1
 const LEGACY_NODE_TEXT_COLOR = 2
 const LEGACY_NODE_BG_COLOR = 3
 
+const SYSTEM_VAR_UPDATE_INTERVAL = 500
+
 /**
  * Generate ember+ path
  */
@@ -73,7 +75,7 @@ function parseHexColor(hex: string): number {
 export class ServiceEmberPlus extends ServiceBase {
 	readonly #serviceApi: ServiceApi
 	readonly #pageController: PageController
-
+	#pollTimer: NodeJS.Timeout | undefined
 	#server: EmberServer | undefined = undefined
 
 	/**
@@ -102,6 +104,34 @@ export class ServiceEmberPlus extends ServiceBase {
 			this.#server.discard()
 			this.#server = undefined
 		}
+		if (this.#pollTimer) {
+			clearInterval(this.#pollTimer)
+			this.#pollTimer = undefined
+		}
+	}
+
+	private startPolling(): void {
+		this.#pollTimer = setInterval(() => {
+			if (this.#server) {
+				//check action recorder status
+				let node = this.#server.getElementByPath('0.4.0')
+				if (node){
+					// @ts-ignore
+					if (node.contents.value !== this.#serviceApi.actionRecorderGetSession().isRunning) {
+						this.#server.update(node, { value: this.#serviceApi.actionRecorderGetSession().isRunning })
+					}
+				}
+				node = this.#server.getElementByPath('0.4.2')
+				if (node) {
+					const count = this.#serviceApi.getConnectionVariableValue('internal', 'action_recorder_action_count')
+					// @ts-ignore
+					if (node.contents.value !== count) {
+						this.#server.update(node, { value: count })
+					}
+				}
+			}
+			
+		}, SYSTEM_VAR_UPDATE_INTERVAL)
 	}
 
 	/**
@@ -346,6 +376,45 @@ export class ServiceEmberPlus extends ServiceBase {
 					}),
 					1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
 					2: new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('location'), this.#getLocationTree()),
+					//3: new EmberModel.NumberedTreeNodeImpl(3, new EmberModel.EmberNodeImpl('variables'), this.#getVariableTree()),
+					4: new EmberModel.NumberedTreeNodeImpl(4, new EmberModel.EmberNodeImpl('action recorder'), {
+						0: new EmberModel.NumberedTreeNodeImpl(
+							0,
+							new EmberModel.ParameterImpl(
+								EmberModel.ParameterType.Boolean,
+								'Enable',
+								'Start / Stop Action Recorder',
+								this.#serviceApi.actionRecorderGetSession().isRunning,
+								undefined,
+								undefined,
+								EmberModel.ParameterAccess.Write
+							)
+						),
+						1: new EmberModel.NumberedTreeNodeImpl(
+							1,
+							new EmberModel.ParameterImpl(
+								EmberModel.ParameterType.Boolean,
+								'Discard',
+								'Discard Recorded Actions',
+								false,
+								undefined,
+								undefined,
+								EmberModel.ParameterAccess.Write
+							)
+						),
+						2: new EmberModel.NumberedTreeNodeImpl(
+							2,
+							new EmberModel.ParameterImpl(
+								EmberModel.ParameterType.Integer,
+								'Action Count',
+								'Number of Recorded Actions',
+								this.#serviceApi.getConnectionVariableValue('internal', 'action_recorder_action_count'),
+								undefined,
+								0,
+								EmberModel.ParameterAccess.Read
+							)
+						),
+					}),
 				}),
 			}
 
@@ -357,6 +426,7 @@ export class ServiceEmberPlus extends ServiceBase {
 			this.currentState = true
 			this.logger.info('Listening on port ' + this.port)
 			this.logger.silly('Listening on port ' + this.port)
+			this.startPolling()
 		} catch (e: any) {
 			this.logger.error(`Could not launch: ${e.message}`)
 		}
@@ -369,6 +439,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	 * @returns <code>true</code> if the command was successfully parsed
 	 */
 	async setValue(parameter: EmberModel.NumberedTreeNodeImpl<any>, value: EmberValue): Promise<boolean> {
+		if (this.#server === undefined) return false
 		const path = getPath(parameter)
 
 		const pathInfo = path.split('.')
@@ -498,6 +569,19 @@ export class ServiceEmberPlus extends ServiceBase {
 					return false
 				}
 			}
+		} else if (pathInfo[0] === '0' && pathInfo[1] === '4') {
+			switch (pathInfo[2]) {
+				case '0':
+					this.#serviceApi.actionRecorderSetRecording(Boolean(value))
+					this.#server.update(parameter, { value: this.#serviceApi.actionRecorderGetSession().isRunning })
+					break
+				case '1':
+					if (value) {
+						this.#serviceApi.actionRecorderDiscardActions()
+						this.#server.update(parameter, { value: false })
+					}
+					break
+			}
 		}
 
 		return false
@@ -593,6 +677,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 	updateUserConfig(key: string, value: boolean | number | string): void {
 		super.updateUserConfig(key, value)
+		this.logger.debug(`EmberPlusApi updateUserConfig Key: ${key} Value: ${value}`)
 
 		if (key == 'gridSize') {
 			this.restartModule()

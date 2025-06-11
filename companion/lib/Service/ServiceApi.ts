@@ -8,6 +8,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -150,6 +151,19 @@ export class ServiceApi {
 	getCachedRenderOrGeneratePlaceholder(location: ControlLocation): ImageResult {
 		return this.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
 	}
+
+	actionRecorderDiscardActions(): void {
+		this.#controlController.actionRecorder.discardActions()
+	}
+
+	actionRecorderSetRecording(isRunning: boolean): void {
+		this.#controlController.actionRecorder.setRecording(isRunning)
+	}
+
+	actionRecorderGetSession(): RecordSessionInfo {
+		return this.#controlController.actionRecorder.getSession()
+	}
+
 }
 
 export interface ServiceApiControl {
