@@ -6,4 +6,4 @@ Enable support for it in the Companion settings, and rescan for usb devices.
 The layout pretty closely matches what you should expect based on the device, but the tall touch strips are not mapped across yet.
 ![Loupedeck Live template](images/loupedeck-live.png?raw=true 'Loupedeck Live template')
 
-[Loupedeck Live template](/loupedeck-live-template.companionconfig)
+[Loupedeck Live template](assets/loupedeck-live-template.companionconfig)

@@ -6,4 +6,4 @@ The layout pretty closely matches what you would expect based on the device.
 
 ![Contour Shuttle template](images/contour-shuttle.png?raw=true 'Contour Shuttle template')
 
-[Contour Shuttle template](/contour-shuttle-template.companionconfig)
+[Contour Shuttle template](assets/contour-shuttle-template.companionconfig)
