@@ -1,5 +1,16 @@
 # Bitfocus Companion
 
+## Companion v4.0.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Fix button grid keyboard hotkeys broken #3466
+- Fix persist connection updatepolicy when editing connection config #3464
+- Fix panel default collapsed state not being persisted #3460
+- Fix launch db checks not looking for sqlite files #3462
+- Fix streaming upload of offline bundle #3463
+- Fix import offline bundle failing for remote companion
+
 ## Companion v4.0.0 - Release Notes
 
 ### BREAKING CHANGES
