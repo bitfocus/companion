@@ -139,8 +139,8 @@ export class ServiceEmberPlus extends ServiceBase {
 						this.#server.update(node, { value: uptime })
 					}
 				}
-				/* 	for (let i = 0; i < this.#internalVars.length; i++) {
-					node = this.#server.getElementByPath(`0.3.1.${i}`)
+				for (let i = 0; i < this.#internalVars.length; i++) {
+					node = this.#server.getElementByPath(`0.3.1.${i}.1`)
 					if (node) {
 						const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
 						if (value === undefined) continue
@@ -154,9 +154,9 @@ export class ServiceEmberPlus extends ServiceBase {
 						}
 					}
 					
-				} */
+				} 
 				for (let i = 0; i < this.#customVars.length; i++) {
-					node = this.#server.getElementByPath(`0.3.2.${i}`)
+					node = this.#server.getElementByPath(`0.3.2.${i}.1`)
 					if (node) {
 						const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])?.toString()
 						if (value === undefined) continue
@@ -385,37 +385,45 @@ export class ServiceEmberPlus extends ServiceBase {
 				typeof value == 'number' ? EmberModel.ParameterType.Integer : EmberModel.ParameterType.String
 			internalVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
 				i,
-				new EmberModel.ParameterImpl(
-					type,
-					this.#internalVars[i],
-					'Internal variable',
-					value,
-					undefined,
-					undefined,
-					EmberModel.ParameterAccess.Read
-				)
+				new EmberModel.EmberNodeImpl(this.#internalVars[i]),
+				{
+					0: new EmberModel.NumberedTreeNodeImpl(
+						1,
+						new EmberModel.ParameterImpl(
+							type,
+							'value',
+							`Internal variable: ${this.#internalVars[i]}`,
+							value,
+							undefined,
+							undefined,
+							EmberModel.ParameterAccess.Read
+						)
+					),
+				}
 			)
 		}
 		for (let i = 0; i < this.#customVars.length; i++) {
 			let value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])
-			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
-				i,
-				new EmberModel.ParameterImpl(
-					EmberModel.ParameterType.String,
-					this.#customVars[i],
-					'Custom variable',
-					value?.toString() ?? '',
-					undefined,
-					undefined,
-					EmberModel.ParameterAccess.ReadWrite
-				)
-			)
+			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(i, new EmberModel.EmberNodeImpl(this.#customVars[i]), {
+				0: new EmberModel.NumberedTreeNodeImpl(
+					1,
+					new EmberModel.ParameterImpl(
+						EmberModel.ParameterType.String,
+						'value',
+						`Custom variable: ${this.#customVars[i]}`,
+						value?.toString() ?? '',
+						undefined,
+						undefined,
+						EmberModel.ParameterAccess.ReadWrite
+					)
+				),
+			})
 		}
 
 		output[0] = new EmberModel.NumberedTreeNodeImpl(
 			1,
 			new EmberModel.EmberNodeImpl('internal variables'),
-			undefined // internalVarNodes
+			internalVarNodes
 		)
 		output[1] = new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('custom variables'), customVarNodes)
 		return output
@@ -670,7 +678,7 @@ export class ServiceEmberPlus extends ServiceBase {
 					return false
 				}
 			}
-		} else if (pathInfo[0] === '0' && pathInfo[1] === '3' && pathInfo[2] === '2') {
+		} else if (pathInfo[0] === '0' && pathInfo[1] === '3' && pathInfo[2] === '2' && pathInfo[4] === '1') {
 			const customVar = this.#customVars[parseInt(pathInfo[3])]
 			if (value !== undefined && value !== null) {
 				this.#serviceApi.setCustomVariableValue(customVar, value.toString())
