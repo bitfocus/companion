@@ -82,6 +82,23 @@ export class ServiceApi {
 		return this.#variablesController.values.getVariableValue(connectionLabel, variableName)
 	}
 
+	/**
+	 * Get the a connections defined variable names
+	 * @param connectionLabel
+	 * @returns Array of defined variable names
+	 */
+	getConnectionVariableDefinitions(connectionLabel: string): string[] | undefined {
+		return this.#variablesController.values.getVariableDefinitions(connectionLabel)
+	}
+
+	/**
+	 * Get the a defined custom variable names
+	 * @returns Array of defined variable names
+	 */
+	getCustomVariableDefinitions(): string[] | undefined {
+		return this.#variablesController.values.getVariableDefinitions('custom')
+	}
+
 	async triggerRescanForSurfaces(): Promise<void> {
 		await this.#surfaceController.triggerRefreshDevices()
 	}
@@ -163,7 +180,6 @@ export class ServiceApi {
 	actionRecorderGetSession(): RecordSessionInfo {
 		return this.#controlController.actionRecorder.getSession()
 	}
-
 }
 
 export interface ServiceApiControl {
