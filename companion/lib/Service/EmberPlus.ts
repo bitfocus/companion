@@ -24,7 +24,7 @@ const LEGACY_NODE_TEXT = 1
 const LEGACY_NODE_TEXT_COLOR = 2
 const LEGACY_NODE_BG_COLOR = 3
 
-const SYSTEM_VAR_UPDATE_INTERVAL = 500
+const SYSTEM_VAR_UPDATE_INTERVAL = 1000
 
 /**
  * Generate ember+ path
@@ -77,6 +77,8 @@ export class ServiceEmberPlus extends ServiceBase {
 	readonly #pageController: PageController
 	#pollTimer: NodeJS.Timeout | undefined
 	#server: EmberServer | undefined = undefined
+	#customVars: string[] = []
+	#internalVars: string[] = []
 
 	/**
 	 * Bank state array
@@ -115,7 +117,7 @@ export class ServiceEmberPlus extends ServiceBase {
 			if (this.#server) {
 				//check action recorder status
 				let node = this.#server.getElementByPath('0.4.0')
-				if (node){
+				if (node) {
 					// @ts-ignore
 					if (node.contents.value !== this.#serviceApi.actionRecorderGetSession().isRunning) {
 						this.#server.update(node, { value: this.#serviceApi.actionRecorderGetSession().isRunning })
@@ -137,8 +139,34 @@ export class ServiceEmberPlus extends ServiceBase {
 						this.#server.update(node, { value: uptime })
 					}
 				}
+				/* 	for (let i = 0; i < this.#internalVars.length; i++) {
+					node = this.#server.getElementByPath(`0.3.1.${i}`)
+					if (node) {
+						const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
+						if (value === undefined) continue
+						this.logger.debug(
+							// @ts-ignore
+							`Internal Variable: ${this.#internalVars[i]} Value: ${value} Ember Node Value: ${node.contents.value}`
+						)
+						// @ts-ignore
+						if (node.contents.value !== value) {
+							this.#server.update(node, { value: value })
+						}
+					}
+					
+				} */
+				for (let i = 0; i < this.#customVars.length; i++) {
+					node = this.#server.getElementByPath(`0.3.2.${i}`)
+					if (node) {
+						const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])?.toString()
+						if (value === undefined) continue
+						// @ts-ignore
+						if (node.contents.value !== value) {
+							this.#server.update(node, { value: value })
+						}
+					}
+				}
 			}
-			
 		}, SYSTEM_VAR_UPDATE_INTERVAL)
 	}
 
@@ -341,6 +369,59 @@ export class ServiceEmberPlus extends ServiceBase {
 	}
 
 	/**
+	 * Get variable structure in EmberModel form
+	 */
+	#getVariableTree(): Record<number, EmberModel.NumberedTreeNodeImpl<any>> {
+		this.#customVars = this.#serviceApi.getCustomVariableDefinitions() ?? []
+		this.#internalVars = this.#serviceApi.getConnectionVariableDefinitions('internal') ?? []
+		const customVarNodes: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
+		const internalVarNodes: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
+		const output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
+		this.logger.debug(`Internal Variable Count: ${this.#internalVars.length}\n${this.#internalVars}`)
+		this.logger.debug(`Custom Variable Count: ${this.#customVars.length}\n${this.#customVars}`)
+		for (let i = 0; i < this.#internalVars.length; i++) {
+			let value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
+			const type: EmberModel.ParameterType =
+				typeof value == 'number' ? EmberModel.ParameterType.Integer : EmberModel.ParameterType.String
+			internalVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
+				i,
+				new EmberModel.ParameterImpl(
+					type,
+					this.#internalVars[i],
+					'Internal variable',
+					value,
+					undefined,
+					undefined,
+					EmberModel.ParameterAccess.Read
+				)
+			)
+		}
+		for (let i = 0; i < this.#customVars.length; i++) {
+			let value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])
+			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
+				i,
+				new EmberModel.ParameterImpl(
+					EmberModel.ParameterType.String,
+					this.#customVars[i],
+					'Custom variable',
+					value?.toString() ?? '',
+					undefined,
+					undefined,
+					EmberModel.ParameterAccess.ReadWrite
+				)
+			)
+		}
+
+		output[0] = new EmberModel.NumberedTreeNodeImpl(
+			1,
+			new EmberModel.EmberNodeImpl('internal variables'),
+			undefined // internalVarNodes
+		)
+		output[1] = new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('custom variables'), customVarNodes)
+		return output
+	}
+
+	/**
 	 * Start the service if it is not already running
 	 */
 	protected listen(): void {
@@ -396,7 +477,7 @@ export class ServiceEmberPlus extends ServiceBase {
 					}),
 					1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
 					2: new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('location'), this.#getLocationTree()),
-					//3: new EmberModel.NumberedTreeNodeImpl(3, new EmberModel.EmberNodeImpl('variables'), this.#getVariableTree()),
+					3: new EmberModel.NumberedTreeNodeImpl(3, new EmberModel.EmberNodeImpl('variables'), this.#getVariableTree()),
 					4: new EmberModel.NumberedTreeNodeImpl(4, new EmberModel.EmberNodeImpl('action recorder'), {
 						0: new EmberModel.NumberedTreeNodeImpl(
 							0,
@@ -589,6 +670,11 @@ export class ServiceEmberPlus extends ServiceBase {
 					return false
 				}
 			}
+		} else if (pathInfo[0] === '0' && pathInfo[1] === '3' && pathInfo[2] === '2') {
+			const customVar = this.#customVars[parseInt(pathInfo[3])]
+			if (value !== undefined && value !== null) {
+				this.#serviceApi.setCustomVariableValue(customVar, value.toString())
+			}
 		} else if (pathInfo[0] === '0' && pathInfo[1] === '4') {
 			switch (pathInfo[2]) {
 				case '0':
@@ -697,8 +783,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 	updateUserConfig(key: string, value: boolean | number | string): void {
 		super.updateUserConfig(key, value)
-		this.logger.debug(`EmberPlusApi updateUserConfig Key: ${key} Value: ${value}`)
-
+		this.logger.debug(`Ember Plus API: updateUserConfig called for Key: ${key}, Value: ${value}`)
 		if (key == 'gridSize') {
 			this.restartModule()
 		}
