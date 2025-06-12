@@ -144,10 +144,6 @@ export class ServiceEmberPlus extends ServiceBase {
 					if (node) {
 						const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
 						if (value === undefined) continue
-						this.logger.debug(
-							// @ts-ignore
-							`Internal Variable: ${this.#internalVars[i]} Value: ${value} Ember Node Value: ${node.contents.value}`
-						)
 						// @ts-ignore
 						if (node.contents.value !== value) {
 							this.#server.update(node, { value: value })
