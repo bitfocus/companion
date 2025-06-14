@@ -81,6 +81,14 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 				/>
 			</div>
 
+			<div className="indent3">
+				<CFormCheck
+					label="Logitech MX Console Devices"
+					checked={config.logitech_mx_console_enable}
+					onChange={(e) => setValue('logitech_mx_console_enable', e.currentTarget.checked)}
+				/>
+			</div>
+
 			<br />
 			<h5>IP Surface Listeners</h5>
 			<div className="indent3">

@@ -2427,6 +2427,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@logitech-mx-creative-console/core@npm:0.2.3":
+  version: 0.2.3
+  resolution: "@logitech-mx-creative-console/core@npm:0.2.3"
+  dependencies:
+    eventemitter3: "npm:^5.0.1"
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/ab7de16058eb2fed8612ec6c7a3630418bb1575ce92b90343f1fa39dd2d89c2c6d7a77a60d7a1ecc42b2c3ff1bbe293e50434fd73e84ea4a486f340df123c196
+  languageName: node
+  linkType: hard
+
+"@logitech-mx-creative-console/node@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@logitech-mx-creative-console/node@npm:0.2.3"
+  dependencies:
+    "@logitech-mx-creative-console/core": "npm:0.2.3"
+    eventemitter3: "npm:^5.0.1"
+    jpeg-js: "npm:^0.4.4"
+    node-hid: "npm:^3.2.0"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    "@julusian/jpeg-turbo": ^1.1.2 || ^2.0.0
+  checksum: 10c0/55803a83ea3c7f0eb48bad728ef63aa28cdc3c535b48e459505f030be38f0e5f0e348c7b40589f36537a43ce2ae1da68106ac72170ea02a0973843bda013da7d
+  languageName: node
+  linkType: hard
+
 "@loupedeck/core@npm:1.2.0":
   version: 1.2.0
   resolution: "@loupedeck/core@npm:1.2.0"
@@ -6956,6 +6981,7 @@ asn1@evs-broadcast/node-asn1:
     "@julusian/image-rs": "npm:^1.1.1"
     "@julusian/jpeg-turbo": "npm:^2.2.0"
     "@julusian/segfault-raub": "npm:^2.3.1"
+    "@logitech-mx-creative-console/node": "npm:^0.2.3"
     "@loupedeck/node": "npm:^1.2.0"
     "@napi-rs/canvas": "npm:0.1.68"
     "@sentry/node": "npm:^9.29.0"
@@ -12389,16 +12415,16 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"node-hid@npm:^3.0.0, node-hid@npm:^3.1.0, node-hid@npm:^3.1.2":
-  version: 3.1.2
-  resolution: "node-hid@npm:3.1.2"
+"node-hid@npm:^3.0.0, node-hid@npm:^3.1.0, node-hid@npm:^3.1.2, node-hid@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "node-hid@npm:3.2.0"
   dependencies:
     node-addon-api: "npm:^3.2.1"
     node-gyp: "npm:latest"
     pkg-prebuilds: "npm:^1.0.0"
   bin:
     hid-showdevices: src/show-devices.js
-  checksum: 10c0/c16ea215020e2e695c8afd56a43e2f0e06cc05129b059866767e64de76957a2f352ebffca98b8c9abfc43d67fbb89363067a87c726cf2e764a66126294f94464
+  checksum: 10c0/6b61c023f8bc80cec0297bd43252715740cec16411139211d5b2de4b661036c75e05a74d5eaf727df47e6da8a62c07bb922a3b6b5c866381cecea00e3eb53471
   languageName: node
   linkType: hard
 

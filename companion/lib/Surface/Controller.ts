@@ -59,6 +59,8 @@ import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
+import { getMXCreativeConsoleDeviceInfo } from '@logitech-mx-creative-console/node'
+import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -891,14 +893,16 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							deviceInfos.map(async (deviceInfo) => {
 								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
-									if (!ignoreStreamDeck) {
-										if (getStreamDeckDeviceInfo(deviceInfo)) {
-											await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
-											return
-										}
-									}
-
-									if (
+									if (!ignoreStreamDeck && getStreamDeckDeviceInfo(deviceInfo)) {
+										await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
+										return
+									} else if (
+										getMXCreativeConsoleDeviceInfo(deviceInfo) &&
+										this.#handlerDependencies.userconfig.getKey('logitech_mx_console_enable')
+									) {
+										await this.#addDevice(deviceInfo.path, {}, 'logi-mx-console', SurfaceUSBLogiMXConsole)
+										return
+									} else if (
 										deviceInfo.vendorId === 0xffff &&
 										(deviceInfo.productId === 0x1f40 || deviceInfo.productId === 0x1f41)
 									) {

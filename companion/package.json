@@ -53,6 +53,7 @@
     "@julusian/image-rs": "^1.1.1",
     "@julusian/jpeg-turbo": "^2.2.0",
     "@julusian/segfault-raub": "^2.3.1",
+    "@logitech-mx-creative-console/node": "^0.2.3",
     "@loupedeck/node": "^1.2.0",
     "@napi-rs/canvas": "0.1.68",
     "@sentry/node": "^9.29.0",
