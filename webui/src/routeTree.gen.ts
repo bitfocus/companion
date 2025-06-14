@@ -21,6 +21,7 @@ import { Route as RedirectsHelpHtmlImport } from './routes/-redirects/help-html.
 import { Route as RedirectsEmulatorsImport } from './routes/-redirects/emulators.tsx'
 import { Route as RedirectsEmulator2Import } from './routes/-redirects/emulator2.tsx'
 import { Route as RedirectsEmulatorHtmlImport } from './routes/-redirects/emulator-html.tsx'
+import { Route as EmulatorImport } from './routes/self-contained/emulator.tsx'
 import { Route as appImport } from './routes/_app.tsx'
 import { Route as EmulatorIndexImport } from './routes/self-contained/emulator/index.tsx'
 import { Route as IndexImport } from './routes/app/index.tsx'
@@ -126,15 +127,21 @@ const RedirectsEmulatorHtmlRoute = RedirectsEmulatorHtmlImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const EmulatorRoute = EmulatorImport.update({
+  id: '/emulator',
+  path: '/emulator',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const appRoute = appImport.update({
   id: '/_app',
   getParentRoute: () => rootRoute,
 } as any)
 
 const EmulatorIndexRoute = EmulatorIndexImport.update({
-  id: '/emulator/',
-  path: '/emulator/',
-  getParentRoute: () => rootRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => EmulatorRoute,
 } as any)
 
 const IndexRoute = IndexImport.update({
@@ -144,9 +151,9 @@ const IndexRoute = IndexImport.update({
 } as any)
 
 const EmulatorEmulatorIdlazyRoute = EmulatorEmulatorIdlazyImport.update({
-  id: '/emulator/$emulatorId',
-  path: '/emulator/$emulatorId',
-  getParentRoute: () => rootRoute,
+  id: '/$emulatorId',
+  path: '/$emulatorId',
+  getParentRoute: () => EmulatorRoute,
 } as any).lazy(() =>
   import('./routes/self-contained/emulator/$emulatorId.lazy.tsx').then(
     (d) => d.Route,
@@ -327,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appImport
       parentRoute: typeof rootRoute
     }
+    '/emulator': {
+      id: '/emulator'
+      path: '/emulator'
+      fullPath: '/emulator'
+      preLoaderRoute: typeof EmulatorImport
+      parentRoute: typeof rootRoute
+    }
     '/emulator.html': {
       id: '/emulator.html'
       path: '/emulator.html'
@@ -462,10 +476,10 @@ declare module '@tanstack/react-router' {
     }
     '/emulator/$emulatorId': {
       id: '/emulator/$emulatorId'
-      path: '/emulator/$emulatorId'
+      path: '/$emulatorId'
       fullPath: '/emulator/$emulatorId'
       preLoaderRoute: typeof EmulatorEmulatorIdlazyImport
-      parentRoute: typeof rootRoute
+      parentRoute: typeof EmulatorImport
     }
     '/_app/': {
       id: '/_app/'
@@ -476,10 +490,10 @@ declare module '@tanstack/react-router' {
     }
     '/emulator/': {
       id: '/emulator/'
-      path: '/emulator'
-      fullPath: '/emulator'
+      path: '/'
+      fullPath: '/emulator/'
       preLoaderRoute: typeof EmulatorIndexImport
-      parentRoute: typeof rootRoute
+      parentRoute: typeof EmulatorImport
     }
     '/_app/buttons/$page': {
       id: '/_app/buttons/$page'
@@ -702,8 +716,23 @@ const appRouteChildren: appRouteChildren = {
 
 const appRouteWithChildren = appRoute._addFileChildren(appRouteChildren)
 
+interface EmulatorRouteChildren {
+  EmulatorEmulatorIdlazyRoute: typeof EmulatorEmulatorIdlazyRoute
+  EmulatorIndexRoute: typeof EmulatorIndexRoute
+}
+
+const EmulatorRouteChildren: EmulatorRouteChildren = {
+  EmulatorEmulatorIdlazyRoute: EmulatorEmulatorIdlazyRoute,
+  EmulatorIndexRoute: EmulatorIndexRoute,
+}
+
+const EmulatorRouteWithChildren = EmulatorRoute._addFileChildren(
+  EmulatorRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '': typeof appRouteWithChildren
+  '/emulator': typeof EmulatorRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
@@ -725,7 +754,7 @@ export interface FileRoutesByFullPath {
   '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
   '/': typeof IndexRoute
-  '/emulator': typeof EmulatorIndexRoute
+  '/emulator/': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
@@ -790,6 +819,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/_app': typeof appRouteWithChildren
+  '/emulator': typeof EmulatorRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
@@ -836,6 +866,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | ''
+    | '/emulator'
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
@@ -857,7 +888,7 @@ export interface FileRouteTypes {
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/'
-    | '/emulator'
+    | '/emulator/'
     | '/buttons/$page'
     | '/modules/$moduleId'
     | '/settings/advanced'
@@ -919,6 +950,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/emulator'
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
@@ -964,6 +996,7 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   appRoute: typeof appRouteWithChildren
+  EmulatorRoute: typeof EmulatorRouteWithChildren
   RedirectsEmulatorHtmlRoute: typeof RedirectsEmulatorHtmlRoute
   RedirectsEmulator2Route: typeof RedirectsEmulator2Route
   RedirectsEmulatorsRoute: typeof RedirectsEmulatorsRoute
@@ -975,12 +1008,11 @@ export interface RootRouteChildren {
   GettingStartedlazyRoute: typeof GettingStartedlazyRoute
   TabletlazyRoute: typeof TabletlazyRoute
   ConnectionDebugconnectionIdRoute: typeof ConnectionDebugconnectionIdRoute
-  EmulatorEmulatorIdlazyRoute: typeof EmulatorEmulatorIdlazyRoute
-  EmulatorIndexRoute: typeof EmulatorIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   appRoute: appRouteWithChildren,
+  EmulatorRoute: EmulatorRouteWithChildren,
   RedirectsEmulatorHtmlRoute: RedirectsEmulatorHtmlRoute,
   RedirectsEmulator2Route: RedirectsEmulator2Route,
   RedirectsEmulatorsRoute: RedirectsEmulatorsRoute,
@@ -992,8 +1024,6 @@ const rootRouteChildren: RootRouteChildren = {
   GettingStartedlazyRoute: GettingStartedlazyRoute,
   TabletlazyRoute: TabletlazyRoute,
   ConnectionDebugconnectionIdRoute: ConnectionDebugconnectionIdRoute,
-  EmulatorEmulatorIdlazyRoute: EmulatorEmulatorIdlazyRoute,
-  EmulatorIndexRoute: EmulatorIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -1007,6 +1037,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/_app",
+        "/emulator",
         "/emulator.html",
         "/emulator2",
         "/emulators",
@@ -1017,9 +1048,7 @@ export const routeTree = rootRoute
         "/tablet3",
         "/getting-started",
         "/tablet",
-        "/connection-debug/$connectionId",
-        "/emulator/$emulatorId",
-        "/emulator/"
+        "/connection-debug/$connectionId"
       ]
     },
     "/_app": {
@@ -1047,6 +1076,13 @@ export const routeTree = rootRoute
         "/_app/variables/custom",
         "/_app/settings/",
         "/_app/variables/"
+      ]
+    },
+    "/emulator": {
+      "filePath": "self-contained/emulator.tsx",
+      "children": [
+        "/emulator/$emulatorId",
+        "/emulator/"
       ]
     },
     "/emulator.html": {
@@ -1126,14 +1162,16 @@ export const routeTree = rootRoute
       "filePath": "self-contained/connection-debug.$connectionId.tsx"
     },
     "/emulator/$emulatorId": {
-      "filePath": "self-contained/emulator/$emulatorId.lazy.tsx"
+      "filePath": "self-contained/emulator/$emulatorId.lazy.tsx",
+      "parent": "/emulator"
     },
     "/_app/": {
       "filePath": "app/index.tsx",
       "parent": "/_app"
     },
     "/emulator/": {
-      "filePath": "self-contained/emulator/index.tsx"
+      "filePath": "self-contained/emulator/index.tsx",
+      "parent": "/emulator"
     },
     "/_app/buttons/$page": {
       "filePath": "app/buttons/$page.tsx",
