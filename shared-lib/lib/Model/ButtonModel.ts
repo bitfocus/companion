@@ -40,7 +40,7 @@ export interface NormalButtonModel extends ButtonModelBase {
 export interface LayeredButtonModel extends ButtonModelBase {
 	readonly type: 'button-layered'
 
-	options: NormalButtonOptions
+	options: LayeredButtonOptions
 
 	style: {
 		layers: SomeButtonGraphicsElement[]
@@ -62,6 +62,9 @@ export interface ButtonOptionsBase {
 
 export interface NormalButtonOptions extends ButtonOptionsBase {
 	rotaryActions: boolean
+}
+export interface LayeredButtonOptions extends NormalButtonOptions {
+	canModifyStyleInApis: boolean
 }
 
 export type ButtonStatus = 'good' | 'warning' | 'error'

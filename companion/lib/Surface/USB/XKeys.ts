@@ -254,7 +254,7 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		if (item.x < 0 || item.y < 0 || item.x >= gridSize.columns || item.y >= gridSize.rows) return
 
 		const buttonIndex = item.x * gridSize.rows + item.y + 1
-		const color = item.style?.bgcolor ?? 0
+		const color = item.defaultRender.bgcolor
 		this.#drawColorAtIndex(buttonIndex, color)
 	}
 

@@ -5,9 +5,9 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -116,8 +116,11 @@ export class ServiceApi {
 
 			setCurrentStep: control.supportsActionSets ? (step) => control.actionSets.stepMakeCurrent(step) : undefined,
 
-			getLastDrawStyle: control.supportsStyle ? () => control.getLastDrawStyle() : undefined,
-			setStyleFields: control.supportsStyle ? (diff) => control.styleSetFields(diff) : undefined,
+			setStyleFields: control.supportsLayeredStyle
+				? (diff) => control.layeredStyleUpdateFromLegacyProperties(diff)
+				: control.supportsStyle
+					? (diff) => control.styleSetFields(diff)
+					: undefined,
 		}
 	}
 
@@ -150,6 +153,10 @@ export class ServiceApi {
 	getCachedRenderOrGeneratePlaceholder(location: ControlLocation): ImageResult {
 		return this.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
 	}
+
+	getCachedRender(location: ControlLocation): ImageResult | undefined {
+		return this.#graphicsController.getCachedRender(location)
+	}
 }
 
 export interface ServiceApiControl {
@@ -157,6 +164,5 @@ export interface ServiceApiControl {
 
 	setCurrentStep: ((step: number) => boolean) | undefined
 
-	getLastDrawStyle: (() => DrawStyleModel | null) | undefined
-	setStyleFields: ((diff: Record<string, any>) => void) | undefined
+	setStyleFields: ((diff: Partial<ButtonStyleProperties>) => void) | undefined
 }
