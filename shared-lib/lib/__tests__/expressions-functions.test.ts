@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ExpressionFunctions } from '../lib/Expression/ExpressionFunctions.js'
+import { ExpressionFunctions } from '../Expression/ExpressionFunctions.js'
 
 describe('functions', () => {
 	describe('general', () => {
@@ -26,6 +26,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.length([9, 'a'])).toBe(2)
 			expect(ExpressionFunctions.length(['a', 'c'])).toBe(2)
 			expect(ExpressionFunctions.length(['ab', ''])).toBe(2)
+			// eslint-disable-next-line no-sparse-arrays
 			expect(ExpressionFunctions.length([1, , 3])).toBe(3)
 			expect(ExpressionFunctions.length(['a', 'b', 'c'])).toBe(3)
 			expect(ExpressionFunctions.length(['a', ['b', 'b'], 'c'])).toBe(3)

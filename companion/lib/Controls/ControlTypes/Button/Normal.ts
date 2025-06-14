@@ -88,7 +88,7 @@ export class ControlButtonNormal
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
-			stepAutoProgress: true,
+			stepProgression: 'auto',
 		}
 
 		if (!storage) {
@@ -104,6 +104,7 @@ export class ControlButtonNormal
 			this.options = Object.assign(this.options, storage.options || {})
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
 			this.entities.loadStorage(storage, true, isImport)
+			this.entities.stepExpressionUpdate(this.options)
 
 			// Ensure control is stored before setup
 			if (isImport) setImmediate(() => this.postProcessImport())
@@ -217,7 +218,8 @@ export class ControlButtonNormal
 	 * @param allChangedVariables - variables with changes
 	 */
 	onVariablesChanged(allChangedVariables: Set<string>): void {
-		// console.log('change', allChangedVariables)
+		this.entities.stepCheckExpressionOnVariablesChanged(allChangedVariables)
+
 		if (this.#last_draw_variables) {
 			for (const variable of allChangedVariables.values()) {
 				if (this.#last_draw_variables.has(variable)) {
@@ -228,6 +230,19 @@ export class ControlButtonNormal
 				}
 			}
 		}
+	}
+
+	/**
+	 * Update an option field of this control
+	 */
+	optionsSetField(key: string, value: any): boolean {
+		const changed = super.optionsSetField(key, value)
+
+		if (key === 'stepProgression' || key === 'stepExpression') {
+			this.entities.stepExpressionUpdate(this.options)
+		}
+
+		return changed
 	}
 
 	/**

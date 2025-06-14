@@ -1,19 +1,23 @@
 import type { UserConfigGridSize } from './UserConfigModel.js'
-import type { ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
-import type { CustomVariablesModel } from './CustomVariableModel.js'
+import type { ConnectionCollection, ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
+import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
+import type { TriggerCollection } from './TriggerModel.js'
 
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8
+	readonly version: 6 | 7 | 8 | 9
 	readonly type: Type
 }
 
 export interface ExportFullv6 extends ExportBase<'full'> {
 	pages?: Record<number, ExportPageContentv6>
 	triggers?: Record<string, ExportTriggerContentv6>
+	triggerCollections?: TriggerCollection[] // Added in v4.1
 	custom_variables?: CustomVariablesModel
+	customVariablesCollections?: CustomVariableCollection[] // Added in v4.1
 	instances?: ExportInstancesv6
+	connectionCollections?: ConnectionCollection[] // Added in v4.1
 	surfaces?: unknown
 	surfaceGroups?: unknown
 }
@@ -21,12 +25,15 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 export interface ExportPageModelv6 extends ExportBase<'page'> {
 	page: ExportPageContentv6
 	instances: ExportInstancesv6
+	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
 	oldPageNumber: number
 }
 
 export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
 	triggers: Record<string, ExportTriggerContentv6>
+	triggerCollections: TriggerCollection[] | undefined // Added in v4.1
 	instances: ExportInstancesv6
+	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
 }
 
 export type ExportTriggerContentv6 = Record<string, any> // TODO

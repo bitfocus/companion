@@ -9,14 +9,9 @@ import { ApplyStep } from './ApplyStep.js'
 import { FinishStep } from './FinishStep.js'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { WIZARD_CURRENT_VERSION } from './Constants.js'
 
-export const WIZARD_VERSION_2_2 = 22 // 2.2
-export const WIZARD_VERSION_3_0 = 30 // 3.0
-export const WIZARD_VERSION_3_4 = 34 // 3.0
-
-export const WIZARD_CURRENT_VERSION = WIZARD_VERSION_3_4
-
-export function WizardModal() {
+export function WizardModal(): React.JSX.Element {
 	const { socket, showWizardEvent } = useContext(RootAppStoreContext)
 
 	const [currentStep, setCurrentStep] = useState(1)
@@ -88,7 +83,7 @@ export function WizardModal() {
 
 			if (!oldConfig || !newConfig) return
 
-			let saveConfig: Partial<UserConfigModel> = {}
+			const saveConfig: Partial<UserConfigModel> = {}
 
 			for (const id0 in oldConfig) {
 				const id = id0 as keyof UserConfigModel
@@ -130,7 +125,7 @@ export function WizardModal() {
 		return () => {
 			showWizardEvent.removeEventListener('show', show)
 		}
-	}, [showWizardEvent])
+	}, [showWizardEvent, clear, getConfig])
 
 	let nextButton
 	switch (currentStep) {

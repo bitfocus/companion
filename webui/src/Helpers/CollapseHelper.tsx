@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { observable, runInAction } from 'mobx'
 import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import { useDeepCompareEffect } from 'use-deep-compare'
@@ -15,6 +16,7 @@ export interface PanelCollapseHelper {
 	canExpandAll(parentId: string | null, panelIds: string[]): boolean
 	canCollapseAll(parentId: string | null, panelIds: string[]): boolean
 	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
+	togglePanelCollapsed: (parentId: string | null, panelId: string) => void
 	isPanelCollapsed: (parentId: string | null, panelId: string) => boolean
 }
 
@@ -37,17 +39,25 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 					const parsedState: CollapsedState = JSON.parse(oldState)
 					if (typeof parsedState.defaultCollapsed === 'boolean') {
 						this.#defaultExpandedAt.set(null, !parsedState.defaultCollapsed)
+						delete parsedState.defaultCollapsed
 					} else {
 						for (const [key, value] of Object.entries(parsedState.defaultExpandedAt || {})) {
 							if (typeof value === 'boolean') this.#defaultExpandedAt.set(key, value)
 						}
 					}
 
+					// Fixup a serialization issue
+					const stringifiedNull = this.#defaultExpandedAt.get('null')
+					if (stringifiedNull !== undefined) {
+						this.#defaultExpandedAt.set(null, stringifiedNull)
+						this.#defaultExpandedAt.delete('null')
+					}
+
 					for (const [key, value] of Object.entries(parsedState.ids)) {
 						if (typeof value === 'boolean') this.#ids.set(key, value)
 					}
 				}
-			} catch (e) {
+			} catch (_e) {
 				// Ignore
 			}
 		})
@@ -104,6 +114,15 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 		})
 	}
 
+	togglePanelCollapsed = (parentId: string | null, panelId: string): void => {
+		runInAction(() => {
+			const currentState = this.isPanelCollapsed(parentId, panelId)
+			this.#ids.set(panelId, !currentState)
+
+			this.#writeState()
+		})
+	}
+
 	isPanelCollapsed = (parentId: string | null, panelId: string): boolean => {
 		return this.#ids.get(panelId) ?? this.#defaultExpandedAt.get(parentId) ?? this.#defaultCollapsed
 	}
@@ -129,7 +148,19 @@ export function usePanelCollapseHelperContext(): PanelCollapseHelper {
 	if (!context) throw new Error('PanelCollapseHelperContext not found')
 	return context
 }
-export function usePanelCollapseHelperContextForPanel(ownerId: string | null, panelId: string) {
+
+export interface PanelCollapseHelperForPanel {
+	// doCollapse: () => void
+	// doExpand: () => void
+	setCollapsed: (collapsed: boolean) => void
+	toggleCollapsed: () => void
+	isCollapsed: boolean
+}
+
+export function usePanelCollapseHelperContextForPanel(
+	ownerId: string | null,
+	panelId: string
+): PanelCollapseHelperForPanel {
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
 	return {
@@ -137,7 +168,11 @@ export function usePanelCollapseHelperContextForPanel(ownerId: string | null, pa
 		// doExpand: useCallback(() => panelCollapseHelper.setPanelCollapsed(panelId, false), [panelCollapseHelper, panelId]),
 		setCollapsed: useCallback(
 			(collapsed: boolean) => panelCollapseHelper.setPanelCollapsed(panelId, collapsed),
-			[panelCollapseHelper]
+			[panelCollapseHelper, panelId]
+		),
+		toggleCollapsed: useCallback(
+			() => panelCollapseHelper.togglePanelCollapsed(ownerId, panelId),
+			[panelCollapseHelper, ownerId, panelId]
 		),
 		isCollapsed: panelCollapseHelper.isPanelCollapsed(ownerId, panelId),
 	}

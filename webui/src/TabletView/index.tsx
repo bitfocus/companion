@@ -97,7 +97,7 @@ export const TabletView = observer(function TabletView() {
 				delete newQuery['rows']
 
 				const newStr = queryString.stringify(newQuery).replaceAll('%2C', ',') // replace commas to make it readable
-				navigate({ to: `?${newStr}` })
+				void navigate({ to: `?${newStr}` })
 				return newStr
 			})
 		},
@@ -106,7 +106,7 @@ export const TabletView = observer(function TabletView() {
 
 	// Compile the list of pages we will be showing
 	const totalPageCount = pagesStore.data.length
-	let validPages = orderedPages.filter((p) => p >= 1 && p <= totalPageCount)
+	const validPages = orderedPages.filter((p) => p >= 1 && p <= totalPageCount)
 	if (validPages.length === 0) {
 		for (let i = 1; i <= totalPageCount; i++) {
 			validPages.push(i)

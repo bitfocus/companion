@@ -31,7 +31,7 @@ export type ImageResultNativeDrawFn = (
 	height: number,
 	rotation: SurfaceRotation | null,
 	format: imageRs.PixelFormat
-) => Promise<Buffer>
+) => Promise<Uint8Array>
 
 export class ImageResult {
 	/**
@@ -44,7 +44,7 @@ export class ImageResult {
 	 */
 	readonly style: ImageResultProcessedStyle
 
-	readonly #drawNativeCache = new Map<string, Promise<Buffer>>()
+	readonly #drawNativeCache = new Map<string, Promise<Uint8Array>>()
 	readonly #drawNative: ImageResultNativeDrawFn
 
 	/**
@@ -81,7 +81,7 @@ export class ImageResult {
 		height: number,
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		const cacheKey = `${width}x${height}-${rotation ?? ''}-${format}`
 		const cached = this.#drawNativeCache.get(cacheKey)
 		if (cached) return cached

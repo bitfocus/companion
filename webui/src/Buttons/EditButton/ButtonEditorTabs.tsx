@@ -22,6 +22,7 @@ interface ButtonEditorTabsProps {
 	controlId: string
 	location: ControlLocation
 	steps: NormalButtonSteps
+	disabledSetStep: boolean
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
 	localVariablesStore: LocalVariablesStore
@@ -32,12 +33,13 @@ export function ButtonEditorTabs({
 	controlId,
 	location,
 	steps,
+	disabledSetStep,
 	runtimeProps,
 	rotaryActions,
 	localVariablesStore,
 	extraTabs,
 	children,
-}: ButtonEditorTabsProps) {
+}: ButtonEditorTabsProps): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const stepKeys = useMemo(() => GetStepIds(steps), [steps])
@@ -144,6 +146,7 @@ export function ButtonEditorTabs({
 						selectedKey={selectedKey}
 						selectedStepProps={selectedStepProps}
 						localVariablesStore={localVariablesStore}
+						disabledSetStep={disabledSetStep}
 					/>
 				)}
 			</div>

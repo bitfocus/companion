@@ -130,7 +130,7 @@ export class GraphicsRenderer {
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		// Force old 'button' style to be drawn at 72px, and scaled at the end
 		const dimensions =
 			drawStyle.style === 'button' ? [72, 72] : rotateResolution(resolution.width, resolution.height, rotation)

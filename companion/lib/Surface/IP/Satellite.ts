@@ -231,7 +231,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Draw a button
 	 */
-	#sendDraw(key: number, buffer: Buffer | undefined, style: ImageResultProcessedStyle): void {
+	#sendDraw(key: number, buffer: Uint8Array | undefined, style: ImageResultProcessedStyle): void {
 		if (this.socket !== undefined) {
 			const params: SatelliteMessageArgs = {}
 			if (this.#streamColors) {
@@ -250,7 +250,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 				if (buffer === undefined || buffer.length == 0) {
 					this.#logger.warn('buffer has invalid size')
 				} else {
-					params['BITMAP'] = buffer.toString('base64')
+					params['BITMAP'] = Buffer.from(buffer).toString('base64')
 				}
 			}
 			if (this.#streamText) {

@@ -48,7 +48,7 @@ export function EntityCommonCells({
 	controlId,
 	readonly,
 	localVariablesStore,
-}: EntityCommonCellsProps) {
+}: EntityCommonCellsProps): React.JSX.Element {
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
 	const [optionFields, optionVisibility] = useOptionsAndIsVisible(entityDefinition?.options, entity?.options)

@@ -227,12 +227,12 @@ export class InstanceInstalledModulesManager {
 			return this.#uninstallModule(moduleId, versionId)
 		})
 
-		client.onPromise('modules:bundle-import:start', async (name, size, checksum) => {
+		client.onPromise('modules:bundle-import:start', async (name, size) => {
 			this.#logger.info(`Starting upload of module bundle ${name} (${size} bytes)`)
 
 			if (size > MAX_MODULE_BUNDLE_TAR_SIZE) throw new Error('Module bundle too large to upload')
 
-			const sessionId = this.#multipartUploader.initSession(name, size, checksum)
+			const sessionId = this.#multipartUploader.initSession(name, size)
 			if (sessionId === null) return null
 
 			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0)
@@ -254,10 +254,10 @@ export class InstanceInstalledModulesManager {
 
 			this.#multipartUploader.cancelSession(sessionId)
 		})
-		client.onPromise('modules:bundle-import:complete', async (sessionId) => {
+		client.onPromise('modules:bundle-import:complete', async (sessionId, checksum) => {
 			this.#logger.silly(`Attempt module bundle complete ${sessionId}`)
 
-			const data = this.#multipartUploader.completeSession(sessionId)
+			const data = this.#multipartUploader.completeSession(sessionId, checksum)
 			if (data === null) return false
 
 			this.#logger.info(`Importing module bundle ${sessionId} (${data.length} bytes)`)

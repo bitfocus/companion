@@ -254,7 +254,7 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 
 			// const rotation = translateRotation(this.config.rotation)
 
-			let newbuffer: Buffer
+			let newbuffer: Uint8Array
 			try {
 				newbuffer = await drawItem.defaultRender.drawNative(
 					width,
@@ -270,11 +270,11 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 
 			try {
 				if (key !== 35) {
-					await this.#loupedeck.drawKeyBuffer(key, newbuffer, LoupedeckBufferFormat.RGB)
+					await this.#loupedeck.drawKeyBuffer(key, Buffer.from(newbuffer), LoupedeckBufferFormat.RGB)
 				} else {
 					await this.#loupedeck.drawBuffer(
 						LoupedeckDisplayId.Wheel,
-						newbuffer,
+						Buffer.from(newbuffer),
 						LoupedeckBufferFormat.RGB,
 						240,
 						240,

@@ -7,7 +7,7 @@ interface SurfacesStepProps {
 	setValue: (key: keyof UserConfigModel, value: any) => void
 }
 
-export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
+export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX.Element {
 	return (
 		<div>
 			<h5>USB Surface Detection Configuration</h5>

@@ -90,9 +90,8 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable() {
 				<thead>
 					<tr>
 						<th>NO</th>
-						<th>ID</th>
+						<th>Info</th>
 						<th>Name</th>
-						<th>Type</th>
 						<th>Location</th>
 						<th>&nbsp;</th>
 					</tr>
@@ -167,20 +166,23 @@ function ManualGroupRow({
 		<>
 			<tr>
 				<td>#{group.index}</td>
-				<td>{group.id}</td>
+				<td>
+					<b>Surface Group</b>
+					<br />
+					{group.id}
+				</td>
 				<td>
 					<TextInputField value={group.displayName} setValue={updateName2} />
 				</td>
-				<td>Group</td>
 				<td>-</td>
-				<td className="text-right">
+				<td className="text-right action-buttons">
 					<CButtonGroup>
 						<CButton onClick={configureGroup2} title="Configure">
-							<FontAwesomeIcon icon={faCog} /> Settings
+							<FontAwesomeIcon icon={faCog} />
 						</CButton>
 
 						<CButton onClick={deleteGroup2} title="Delete group">
-							<FontAwesomeIcon icon={faTrash} /> Delete
+							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
 					</CButtonGroup>
 				</td>
@@ -232,12 +234,8 @@ const SurfaceRow = observer(function SurfaceRow({
 			})}
 		>
 			<td>{index !== undefined ? `#${index}` : ''}</td>
-			<td>{surface.id}</td>
 			<td>
-				<TextInputField value={surface.name} setValue={updateName2} />
-			</td>
-			<td>
-				{surface.type}
+				<b>{surface.type}</b>
 				{!!surface.hasFirmwareUpdates && (
 					<>
 						{' '}
@@ -246,13 +244,18 @@ const SurfaceRow = observer(function SurfaceRow({
 						</WindowLinkOpen>
 					</>
 				)}
+				<br />
+				{surface.id}
+			</td>
+			<td>
+				<TextInputField value={surface.name} setValue={updateName2} />
 			</td>
 			<td>{surface.isConnected ? surface.location || 'Local' : 'Offline'}</td>
-			<td className="text-right">
+			<td className="text-right action-buttons">
 				{surface.isConnected ? (
 					<CButtonGroup className="no-break">
 						<CButton onClick={configureSurface2} title="Configure">
-							<FontAwesomeIcon icon={faCog} /> Settings
+							<FontAwesomeIcon icon={faCog} />
 						</CButton>
 
 						{surface.integrationType === 'emulator' && (
@@ -267,8 +270,8 @@ const SurfaceRow = observer(function SurfaceRow({
 						)}
 					</CButtonGroup>
 				) : (
-					<CButton onClick={forgetSurface2}>
-						<FontAwesomeIcon icon={faTrash} /> Forget
+					<CButton onClick={forgetSurface2} title="Forget">
+						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 				)}
 			</td>

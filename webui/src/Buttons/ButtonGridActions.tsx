@@ -169,7 +169,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 				}
 			},
 		}),
-		[socket, activeFunction, activeFunctionButton, pageNumber, stopFunction]
+		[socket, activeFunction, activeFunctionButton, stopFunction]
 	)
 
 	return (

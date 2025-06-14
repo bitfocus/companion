@@ -29,16 +29,12 @@ const whatsNewPages: WhatsNewPage[] =
 	(docsStructure.find((section) => section._whatsnew)?.children as WhatsNewPage[]).filter((f) => !!f._version) ?? []
 const latestPage: WhatsNewPage | undefined = whatsNewPages[0]
 
-interface WhatsNewModalProps {
-	// Nothing
-}
-
 export interface WhatsNewModalRef {
 	show(): void
 }
 
 export const WhatsNewModal = observer(
-	forwardRef<WhatsNewModalRef, WhatsNewModalProps>(function HelpModal(_props, ref) {
+	forwardRef<WhatsNewModalRef>(function HelpModal(_props, ref) {
 		const [show, setShow] = useState(false)
 
 		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined)
@@ -56,7 +52,7 @@ export const WhatsNewModal = observer(
 		const selectedPage = selectedVersion && whatsNewPages?.find((page) => page.file === selectedVersion)
 
 		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setStoredLatest(latestPage._version), [])
+		const onClosed = useCallback(() => setStoredLatest(latestPage._version), [setStoredLatest])
 
 		useImperativeHandle(
 			ref,

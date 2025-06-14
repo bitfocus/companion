@@ -18,7 +18,7 @@ export function PresetsCategoryList({
 	connectionInfo,
 	selectedConnectionId,
 	setConnectionAndCategory,
-}: Readonly<PresetsCategoryListProps>) {
+}: Readonly<PresetsCategoryListProps>): React.JSX.Element {
 	const categories = new Set<string>()
 	for (const preset of Object.values(presets)) {
 		categories.add(preset.category)

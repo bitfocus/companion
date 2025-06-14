@@ -56,7 +56,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 	visibility,
 	readonly,
 	localVariablesStore,
-}: Readonly<OptionsInputFieldProps>) {
+}: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
 
 	if (!option) {
@@ -158,7 +158,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 		case 'static-text': {
 			control = <StaticTextFieldText {...option} />
 
-			if (!!option.label) {
+			if (option.label) {
 				control = (
 					<>
 						<CFormLabel>

@@ -198,7 +198,7 @@ async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
 	elements: SomeButtonGraphicsElement[]
 ): Promise<SomeButtonGraphicsDrawElement[]> {
 	const newElements = await Promise.all(
-		elements.map((element) => {
+		elements.map(async (element) => {
 			switch (element.type) {
 				case 'canvas':
 					return convertCanvasElementForDrawing(helper, element)

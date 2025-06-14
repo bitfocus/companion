@@ -8,6 +8,7 @@ import type {
 	ClientEditConnectionConfig,
 	ClientEventDefinition,
 	ConnectionStatusEntry,
+	ConnectionStatusUpdate,
 	ControlLocation,
 	EmulatorConfig,
 	EmulatorImage,
@@ -32,15 +33,24 @@ import type {
 	ConnectionRemappings,
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
-import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
-import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
+import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from './Model/TriggerModel.js'
+import type {
+	CustomVariableCollection,
+	CustomVariableUpdate,
+	CustomVariablesModel,
+} from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
-import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
+import type {
+	ClientConnectionsUpdate,
+	ClientConnectionConfig,
+	ConnectionUpdatePolicy,
+	ConnectionCollection,
+} from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
 import type { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
@@ -48,7 +58,7 @@ import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Mo
 import type { ExpressionStreamResult, ExpressionStreamResultWithSubId } from './Expression/ExpressionResult.js'
 import type { ButtonGraphicsElementUsage } from './Model/StyleLayersModel.js'
 
-export interface ClientToBackendEventsMap {
+export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	disconnect: () => never // Hack because type is missing
 
 	'app-update-info': () => never
@@ -79,7 +89,7 @@ export interface ClientToBackendEventsMap {
 	'custom-variables:set-description': (name: string, description: string) => string | null
 	'custom-variables:set-persistence': (name: string, value: boolean) => string | null
 	'custom-variables:delete': (name: string) => void
-	'custom-variables:set-order': (newNames: string[]) => void
+	'custom-variables:reorder': (collectionId: string | null, name: string, dropIndex: number) => void
 
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'custom-variables:subscribe': () => CustomVariablesModel
@@ -88,6 +98,10 @@ export interface ClientToBackendEventsMap {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
+	'connection-collections:subscribe': () => ConnectionCollection[]
+	'connection-collections:unsubscribe': () => void
+	'custom-variable-collections:subscribe': () => CustomVariableCollection[]
+	'custom-variable-collections:unsubscribe': () => void
 	'entity-definitions:subscribe': (
 		type: EntityModelType
 	) => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
@@ -96,6 +110,8 @@ export interface ClientToBackendEventsMap {
 	'variable-definitions:unsubscribe': () => void
 	'triggers:subscribe': () => Record<string, ClientTriggerData | undefined>
 	'triggers:unsubscribe': () => void
+	'trigger-collections:subscribe': () => TriggerCollection[]
+	'trigger-collections:unsubscribe': () => void
 
 	'controls:subscribe': (controlId: string) => { config: unknown; runtime: unknown } | undefined
 	'controls:unsubscribe': (controlId: string) => void
@@ -241,8 +257,14 @@ export interface ClientToBackendEventsMap {
 	'triggers:create': () => string
 	'triggers:clone': (controlId: string) => string | false
 	'triggers:delete': (controlId: string) => boolean
-	'triggers:set-order': (controlIds: string[]) => boolean
+	'triggers:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
 	'triggers:test': (controlId: string) => boolean
+
+	'trigger-collections:add': (collectionName: string) => string
+	'trigger-collections:remove': (collectionId: string) => void
+	'trigger-collections:set-name': (collectionId: string, collectionName: string) => void
+	'trigger-collections:set-enabled': (collectionId: string, enabled: boolean) => void
+	'trigger-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
 	'action-recorder:subscribe': () => Record<string, RecordSessionListInfo | undefined>
 	'action-recorder:unsubscribe': () => void
@@ -302,7 +324,6 @@ export interface ClientToBackendEventsMap {
 	'logs:unsubscribe': () => void
 	'logs:clear': () => void
 
-	'loadsave:prepare-import': (rawFile: string | ArrayBuffer) => [err: null, config: ClientImportObject] | [err: string]
 	'loadsave:abort': () => boolean
 	'loadsave:reset': (config: ClientResetSelection) => 'ok'
 	'loadsave:import-page': (
@@ -341,7 +362,8 @@ export interface ClientToBackendEventsMap {
 	'connections:set-label-and-config': (
 		connectionId: string,
 		newLabel: string,
-		config: Record<string, any>
+		config: Record<string, any>,
+		updatePolicy: ConnectionUpdatePolicy
 	) => string | null
 	'connections:set-label-and-version': (
 		connectionId: string,
@@ -354,17 +376,24 @@ export interface ClientToBackendEventsMap {
 		newModuleId: string,
 		versionId: string | null
 	) => string | null
-	'connections:set-order': (sortedIds: string[]) => void
+	'connections:reorder': (collectionId: string | null, connectionId: string, dropIndex: number) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
+
+	'connection-collections:add': (collectionName: string) => string
+	'connection-collections:remove': (collectionId: string) => void
+	'connection-collections:set-name': (collectionId: string, collectionName: string) => void
+	'connection-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
+
+	'custom-variable-collections:add': (collectionName: string) => string
+	'custom-variable-collections:remove': (collectionId: string) => void
+	'custom-variable-collections:set-name': (collectionId: string, collectionName: string) => void
+	'custom-variable-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
+
 	'modules:install-all-missing': () => void
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
-	'modules:bundle-import:start': (name: string, size: number, checksum: string) => string | null
-	'modules:bundle-import:chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
-	'modules:bundle-import:complete': (sessionId: string) => boolean
-	'modules:bundle-import:cancel': (sessionId: string) => void
 
 	'modules-store:list:subscribe': () => ModuleStoreListCacheStore
 	'modules-store:list:unsubscribe': () => void
@@ -398,6 +427,19 @@ export interface ClientToBackendEventsMap {
 	cloud_region_state_set: (id: string, newState: Partial<CloudRegionState>) => never
 }
 
+type AllMultipartUploaderMethods = MultipartUploaderMethods<'modules:bundle-import', boolean> &
+	MultipartUploaderMethods<'loadsave:prepare-import', [err: null, config: ClientImportObject] | [err: string]>
+
+interface MultipartUploaderMethodsBase<TComplete> {
+	start: (name: string, size: number) => string | null
+	chunk: (sessionId: string, offset: number, data: Uint8Array) => boolean
+	complete: (sessionId: string, checksum: string) => TComplete
+	cancel: (sessionId: string) => void
+}
+export type MultipartUploaderMethods<Prefix extends string, TComplete> = {
+	[K in keyof MultipartUploaderMethodsBase<TComplete> as `${Prefix}:${string & K}`]: MultipartUploaderMethodsBase<TComplete>[K]
+}
+
 export interface BackendToClientEventsMap {
 	'app-update-info': (info: AppUpdateInfo) => void
 
@@ -411,6 +453,7 @@ export interface BackendToClientEventsMap {
 	'pages:update': (changes: PageModelChanges) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void
+	'loadsave:prepare-import:progress': (sessionId: string, percent: number | null) => void
 
 	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void
 
@@ -425,15 +468,18 @@ export interface BackendToClientEventsMap {
 	[selectedSessionId: `action-recorder:session:update:${string}`]: (patch: JsonPatchOperation[]) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
+	'connection-collections:update': (patch: ConnectionCollection[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
 	'triggers:update': (change: TriggersUpdate) => void
+	'trigger-collections:update': (patch: TriggerCollection[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
+	'custom-variable-collections:update': (patch: CustomVariableCollection[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
-	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
+	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
 
 	'surfaces:discovery:update': (update: SurfacesDiscoveryUpdate) => void
 

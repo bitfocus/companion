@@ -14,9 +14,6 @@ import { CModalExt } from '~/Components/CModalExt.js'
 export interface AddOutboundSurfaceModalRef {
 	show(): void
 }
-interface AddOutboundSurfaceModalProps {
-	// Nothing
-}
 
 interface FormInfo {
 	name: string
@@ -24,7 +21,7 @@ interface FormInfo {
 	port: number | undefined
 }
 
-export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, AddOutboundSurfaceModalProps>(
+export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, object>(
 	function SurfaceEditModal(_props, ref) {
 		const socket = useContext(SocketContext)
 
@@ -64,7 +61,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, Ad
 						setSaveError(err?.message ?? err)
 					})
 			},
-			[info]
+			[socket, info]
 		)
 
 		useImperativeHandle(

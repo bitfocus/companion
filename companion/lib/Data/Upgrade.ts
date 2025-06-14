@@ -10,6 +10,7 @@ import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import v5tov6 from './Upgrades/v5tov6.js'
 import v6tov7 from './Upgrades/v6tov7.js'
 import v7tov8 from './Upgrades/v7tov8.js'
+import v8tov9 from './Upgrades/v8tov9.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -21,6 +22,7 @@ const allUpgrades = [
 	v5tov6, // v3.5 - replace action delay property https://github.com/bitfocus/companion/pull/3163
 	v6tov7, // v4.0 - rework 'entities' for better nesting https://github.com/bitfocus/companion/pull/3185
 	v7tov8, // v4.0 - break out into more tables
+	v8tov9, // v4.1 - convert button stepAutoProgress to stepProgression
 ]
 const targetVersion = allUpgrades.length + 1
 

@@ -41,6 +41,7 @@ import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
 import { translateOptionsIsVisible } from './Wrapper.js'
+import { InstanceCollections } from './Collections.js'
 
 const InstancesRoom = 'instances'
 
@@ -61,6 +62,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #io: UIHandler
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
+	readonly #collectionsController: InstanceCollections
 
 	readonly #configStore: ConnectionConfigStore
 
@@ -75,6 +77,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly userModulesManager: InstanceInstalledModulesManager
 
 	readonly connectionApiRouter = express.Router()
+
+	get collections(): InstanceCollections {
+		return this.#collectionsController
+	}
 
 	constructor(
 		appInfo: AppInfo,
@@ -95,6 +101,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController = controls
 
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
+		this.#collectionsController = new InstanceCollections(io, db, this.#configStore)
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
@@ -112,7 +119,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
 				setConnectionConfig: (connectionId, config) => {
-					this.setInstanceLabelAndConfig(connectionId, null, config, true)
+					this.setInstanceLabelAndConfig(connectionId, null, config, null, true)
 				},
 			},
 			this.modules,
@@ -215,6 +222,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		id: string,
 		newLabel: string | null,
 		config: unknown | null,
+		updatePolicy: ConnectionUpdatePolicy | null,
 		skip_notify_instance = false
 	): void {
 		const connectionConfig = this.#configStore.getConfigForId(id)
@@ -239,6 +247,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#variablesController.definitions.connectionLabelRename(oldLabel, newLabel)
 			this.#controlsController.renameVariables(oldLabel, newLabel)
 			this.definitions.updateVariablePrefixesForLabel(id, newLabel)
+		}
+
+		if (updatePolicy !== null) {
+			connectionConfig.updatePolicy = updatePolicy
 		}
 
 		this.emit('connection_updated', id)
@@ -381,10 +393,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController.forgetConnection(id)
 	}
 
-	async deleteAllInstances(): Promise<void> {
-		const ps = []
+	async deleteAllInstances(deleteCollections: boolean): Promise<void> {
+		const ps: Promise<void>[] = []
 		for (const instanceId of this.#configStore.getAllInstanceIds()) {
 			ps.push(this.deleteInstance(instanceId))
+		}
+
+		if (deleteCollections) {
+			this.#collectionsController.discardAllCollections()
 		}
 
 		await Promise.all(ps)
@@ -505,7 +521,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
 		const safeLabel = makeLabelSafe(config.label)
 		if (!is_being_created && safeLabel !== config.label) {
-			this.setInstanceLabelAndConfig(id, safeLabel, null, true)
+			this.setInstanceLabelAndConfig(id, safeLabel, null, null, true)
 		}
 
 		// TODO this could check if anything above changed, or is_being_created
@@ -536,6 +552,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.modules.clientConnect(client)
 		this.modulesStore.clientConnect(client)
 		this.userModulesManager.clientConnect(client)
+		this.#collectionsController.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)
@@ -568,7 +585,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			}
 		})
 
-		client.onPromise('connections:set-label-and-config', (id, label, config) => {
+		client.onPromise('connections:set-label-and-config', (id, label, config, updatePolicy) => {
 			const idUsingLabel = this.getIdForLabel(label)
 			if (idUsingLabel && idUsingLabel !== id) {
 				return 'duplicate label'
@@ -578,7 +595,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				return 'invalid label'
 			}
 
-			this.setInstanceLabelAndConfig(id, label, config)
+			this.setInstanceLabelAndConfig(id, label, config, updatePolicy)
 
 			return null
 		})
@@ -596,7 +613,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// TODO - refactor/optimise/tidy this
 
-			this.setInstanceLabelAndConfig(id, label, null)
+			this.setInstanceLabelAndConfig(id, label, null, null)
 
 			const config = this.#configStore.getConfigForId(id)
 			if (!config) return 'no connection'
@@ -676,10 +693,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return connectionInfo[0]
 		})
 
-		client.onPromise('connections:set-order', async (connectionIds) => {
-			if (!Array.isArray(connectionIds)) throw new Error('Expected array of ids')
-
-			this.#configStore.setOrder(connectionIds)
+		client.onPromise('connections:reorder', async (collectionId, connectionId, dropIndex) => {
+			this.#configStore.moveConnection(collectionId, connectionId, dropIndex)
 		})
 
 		client.onPromise('connection-debug:subscribe', (connectionId) => {

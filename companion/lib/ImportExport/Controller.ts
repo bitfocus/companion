@@ -56,6 +56,9 @@ import type { InternalController } from '../Internal/Controller.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ExportController } from './Export.js'
 import { FILE_VERSION } from './Constants.js'
+import { MultipartUploader } from '../Resources/MultipartUploader.js'
+
+const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
 const find_smallest_grid_for_page = (pageInfo: ExportPageContentv6): UserConfigGridSize => {
 	const gridSize: UserConfigGridSize = {
@@ -103,6 +106,11 @@ export class ImportExportController {
 	readonly #variablesController: VariablesController
 
 	readonly #exportController: ExportController
+
+	readonly #multipartUploader = new MultipartUploader((sessionId) => {
+		this.#logger.info(`Config import session "${sessionId}" timed out`)
+		// this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, null)
+	})
 
 	/**
 	 * If there is a current import task that clients should be aware of, this will be set
@@ -179,18 +187,55 @@ export class ImportExportController {
 
 			return true
 		})
-		client.onPromise('loadsave:prepare-import', async (dataStr0) => {
+
+		client.onPromise('loadsave:prepare-import:start', async (name, size) => {
+			this.#logger.info(`Starting upload of import file ${name} (${size} bytes)`)
+
+			if (size > MAX_IMPORT_FILE_SIZE) throw new Error('Import too large to upload')
+
+			const sessionId = this.#multipartUploader.initSession(name, size)
+			if (sessionId === null) return null
+
+			this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, 0)
+
+			return sessionId
+		})
+		client.onPromise('loadsave:prepare-import:chunk', async (sessionId, offset, data) => {
+			this.#logger.silly(`Upload import file chunk ${sessionId} (@${offset} = ${data.length} bytes)`)
+
+			const progress = this.#multipartUploader.addChunk(sessionId, offset, data)
+			if (progress === null) return false
+
+			this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, progress / 2)
+
+			return true
+		})
+		client.onPromise('loadsave:prepare-import:cancel', async (sessionId) => {
+			this.#logger.silly(`Canel import file upload ${sessionId}`)
+
+			this.#multipartUploader.cancelSession(sessionId)
+		})
+		client.onPromise('loadsave:prepare-import:complete', async (sessionId, checksum) => {
+			this.#logger.silly(`Attempt import file complete ${sessionId}`)
+
+			const dataBytes = this.#multipartUploader.completeSession(sessionId, checksum)
+			if (dataBytes === null) return ['File is corrupted or unknown format']
+
+			this.#logger.info(`Importing config ${sessionId} (${dataBytes.length} bytes)`)
+
+			this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, 0.5)
+
 			let dataStr: string
 			try {
 				dataStr = await new Promise((resolve, reject) => {
-					zlib.gunzip(dataStr0, (err, data) => {
+					zlib.gunzip(dataBytes, (err, data) => {
 						if (err) reject(err)
 						else resolve(data?.toString() || dataStr)
 					})
 				})
 			} catch (e) {
 				// Ignore, it is probably not compressed
-				dataStr = dataStr0.toString()
+				dataStr = dataBytes.toString()
 			}
 
 			let rawObject
@@ -567,7 +612,7 @@ export class ImportExportController {
 		}
 
 		if (!config || config.connections) {
-			await this.#instancesController.deleteAllInstances()
+			await this.#instancesController.deleteAllInstances(true)
 		}
 
 		if (!config || config.surfaces) {
@@ -580,6 +625,7 @@ export class ImportExportController {
 					this.#controlsController.deleteControl(controlId)
 				}
 			}
+			this.#controlsController.discardTriggerCollections()
 		}
 
 		if (!config || config.customVariables) {
@@ -630,7 +676,7 @@ export class ImportExportController {
 						true
 					)
 					if (newId && newConfig) {
-						this.#instancesController.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null)
+						this.#instancesController.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null, null)
 
 						if (!('enabled' in obj) || obj.enabled !== false) {
 							this.#instancesController.enableDisableInstance(newId, true)
@@ -650,6 +696,9 @@ export class ImportExportController {
 		// Force the internal module mapping
 		instanceIdMap['internal'] = { id: 'internal', label: 'internal' }
 		instanceIdMap['bitfocus-companion'] = { id: 'internal', label: 'internal' }
+
+		// Ensure any group references are valid
+		this.#instancesController.collections.removeUnknownCollectionReferences()
 
 		return instanceIdMap
 	}

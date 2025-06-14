@@ -1,4 +1,4 @@
-import { ButtonModelBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
+import type { NormalButtonOptions, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -14,6 +14,21 @@ import type { ControlActionSetAndStepsManager } from './ControlActionSetAndSteps
 import { cloneDeep } from 'lodash-es'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+
+interface CurrentStepFromExpression {
+	type: 'expression'
+
+	expression: string
+
+	lastStepId: string
+	lastVariables: Set<string>
+}
+interface CurrentStepFromId {
+	type: 'id'
+
+	id: string
+}
 
 export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
 	/**
@@ -28,22 +43,32 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	readonly #steps = new Map<string, ControlEntityListActionStep>()
 
+	readonly #executeExpressionInControl: ControlEntityListPoolProps['executeExpressionInControl']
 	readonly #sendRuntimePropsChange: () => void
 
 	/**
-	 * The id of the currently selected (next to be executed) step
+	 * The current step
 	 */
-	#current_step_id: string = '0'
+	#currentStep: CurrentStepFromExpression | CurrentStepFromId = { type: 'id', id: '0' }
 
 	#hasRotaryActions = false
 
 	get currentStepId(): string {
-		return this.#current_step_id
+		switch (this.#currentStep.type) {
+			case 'id':
+				return this.#currentStep.id
+			case 'expression':
+				return this.#currentStep.lastStepId
+			default:
+				assertNever(this.#currentStep)
+				throw new Error('Unsupported step mode')
+		}
 	}
 
 	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void) {
 		super(props)
 
+		this.#executeExpressionInControl = props.executeExpressionInControl
 		this.#sendRuntimePropsChange = sendRuntimePropsChange
 
 		this.#feedbacks = this.createEntityList({ type: EntityModelType.Feedback })
@@ -52,7 +77,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			feedbackListType: FeedbackEntitySubType.Value,
 		})
 
-		this.#current_step_id = '0'
+		this.#currentStep = { type: 'id', id: '0' }
 
 		this.#steps.set('0', this.#getNewStepValue(null, null))
 	}
@@ -68,7 +93,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			this.#steps.set(id, this.#getNewStepValue(stepObj.action_sets, stepObj.options))
 		}
 
-		this.#current_step_id = this.getStepIds()[0]
+		this.#currentStep = { type: 'id', id: this.getStepIds()[0] } // TODO - other modes?
 	}
 
 	/**
@@ -339,8 +364,94 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @returns The index of current step
 	 */
 	getActiveStepIndex(): number {
-		const out = this.getStepIds().indexOf(this.#current_step_id)
+		const out = this.getStepIds().indexOf(this.currentStepId)
 		return out !== -1 ? out : 0
+	}
+
+	/**
+	 * Propogate variable changes, and update the current step if the variables affect it
+	 */
+	stepCheckExpressionOnVariablesChanged(changedVariables: Set<string>): void {
+		if (this.#currentStep.type !== 'expression') return
+
+		for (const variableName of this.#currentStep.lastVariables) {
+			if (changedVariables.has(variableName)) {
+				if (this.#stepCheckExpression(true)) {
+					// Something changed, so redraw
+					this.triggerRedraw()
+				}
+				return
+			}
+		}
+	}
+
+	/**
+	 * Re-execute the expression, and update the current step if it has changed
+	 * @param updateClient Whether to inform the client if the step changed
+	 * @returns Whether a change was made
+	 */
+	#stepCheckExpression(updateClient: boolean): boolean {
+		if (this.#currentStep.type !== 'expression') return false
+
+		let changed = false
+
+		const stepIds = this.getStepIds()
+
+		const latestValue = this.#executeExpressionInControl(this.#currentStep.expression, 'number')
+		if (latestValue.ok) {
+			let latestIndex = Math.max(Math.min(Number(latestValue.value) - 1, stepIds.length - 1), 0)
+			if (isNaN(latestIndex)) latestIndex = 0
+
+			const newStepId = stepIds[latestIndex]
+
+			// Check if this will change the expected state
+			changed = this.#currentStep.lastStepId !== newStepId
+
+			// Update the state
+			this.#currentStep.lastStepId = newStepId
+			this.#currentStep.lastVariables = latestValue.variableIds
+		} else {
+			// Lets always go to the first step, to ensure we have a sane and predictable value
+
+			this.logger.warn(`Step expression failed to evaluate: ${latestValue.error}`)
+
+			const firstStepId = stepIds[0]
+
+			// Check if this will change the expected state
+			changed = this.#currentStep.lastStepId !== firstStepId
+
+			// Update the state
+			this.#currentStep.lastStepId = firstStepId
+			this.#currentStep.lastVariables = latestValue.variableIds
+		}
+
+		// Inform clients of the change
+		if (changed && updateClient) this.#sendRuntimePropsChange()
+
+		return changed
+	}
+
+	/**
+	 * Update the step operation mode or expression upon button options change
+	 * @param options
+	 */
+	stepExpressionUpdate(options: NormalButtonOptions): void {
+		if (options.stepProgression === 'expression') {
+			// It may have changed, assume it has and purge the existing state
+			this.#currentStep = {
+				type: 'expression',
+				expression: options.stepExpression || '',
+				lastStepId: this.getStepIds()[0],
+				lastVariables: new Set(),
+			}
+
+			this.#stepCheckExpression(true)
+		} else {
+			if (this.#currentStep.type === 'expression') {
+				// Stick to whatever is currently selected
+				this.#currentStep = { type: 'id', id: this.currentStepId }
+			}
+		}
 	}
 
 	/**
@@ -351,24 +462,17 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const existingKeys = this.getStepIds()
 			.map((k) => Number(k))
 			.filter((k) => !isNaN(k))
-		if (existingKeys.length === 0) {
-			// add the default '0' set
-			this.#steps.set('0', this.#getNewStepValue(null, null))
 
-			this.commitChange(true)
+		const stepId = existingKeys.length === 0 ? '0' : `${Math.max(...existingKeys) + 1}`
 
-			return '0'
-		} else {
-			// add one after the last
-			const max = Math.max(...existingKeys)
+		this.#steps.set(stepId, this.#getNewStepValue(null, null))
 
-			const stepId = `${max + 1}`
-			this.#steps.set(stepId, this.#getNewStepValue(null, null))
+		// Ensure current step is valid
+		this.#stepCheckExpression(true)
 
-			this.commitChange(true)
+		this.commitChange(true)
 
-			return stepId
-		}
+		return stepId
 	}
 
 	/**
@@ -376,10 +480,13 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param amount Number of steps to progress
 	 */
 	stepAdvanceDelta(amount: number): boolean {
+		// If using an expression, don't allow manual progression
+		if (this.#currentStep.type !== 'id') return false
+
 		if (amount && typeof amount === 'number') {
 			const all_steps = this.getStepIds()
 			if (all_steps.length > 0) {
-				const current = all_steps.indexOf(this.#current_step_id)
+				const current = all_steps.indexOf(this.#currentStep.id)
 
 				let newIndex = (current === -1 ? 0 : current) + amount
 				while (newIndex < 0) newIndex += all_steps.length
@@ -416,6 +523,9 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const newStepId = `${max + 1}`
 		this.#steps.set(newStepId, newStep)
 
+		// Ensure current step is valid
+		this.#stepCheckExpression(false)
+
 		// Ensure the ui knows which step is current
 		this.#sendRuntimePropsChange()
 
@@ -430,6 +540,9 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param index The step index to make the next
 	 */
 	stepMakeCurrent(index: number): boolean {
+		// If using an expression, don't allow manual progression
+		if (this.#currentStep.type !== 'id') return false
+
 		if (typeof index === 'number') {
 			const stepId = this.getStepIds()[index - 1]
 			if (stepId !== undefined) {
@@ -459,15 +572,20 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#steps.delete(stepId)
 
 		// Update the current step
-		const oldIndex = oldKeys.indexOf(stepId)
-		let newIndex = oldIndex + 1
-		if (newIndex >= oldKeys.length) {
-			newIndex = 0
-		}
-		if (newIndex !== oldIndex) {
-			this.#current_step_id = oldKeys[newIndex]
+		if (this.#currentStep.type === 'id') {
+			const oldIndex = oldKeys.indexOf(stepId)
+			let newIndex = oldIndex + 1
+			if (newIndex >= oldKeys.length) {
+				newIndex = 0
+			}
+			if (newIndex !== oldIndex) {
+				this.#currentStep.id = oldKeys[newIndex]
 
-			this.#sendRuntimePropsChange()
+				this.#sendRuntimePropsChange()
+			}
+		} else {
+			// Ensure current step is valid
+			this.#stepCheckExpression(true)
 		}
 
 		// Save the change, and perform a draw
@@ -481,13 +599,16 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param stepId The step id to make the next
 	 */
 	stepSelectCurrent(stepId: string): boolean {
+		// If using an expression, don't allow manual progression
+		if (this.#currentStep.type !== 'id') return false
+
 		const step = this.#steps.get(stepId)
 		if (!step) return false
 
 		// Ensure it isn't currently pressed
 		// this.setPushed(false)
 
-		this.#current_step_id = stepId
+		this.#currentStep.id = stepId
 
 		this.#sendRuntimePropsChange()
 
@@ -510,6 +631,9 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#steps.set(stepId1, step2)
 		this.#steps.set(stepId2, step1)
 
+		// Ensure current step is valid
+		this.#stepCheckExpression(true)
+
 		this.commitChange(false)
 
 		return true
@@ -531,9 +655,22 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return true
 	}
 
-	validateCurrentStepIdAndGetNext(): [null, null] | [string, string] {
-		const this_step_raw = this.#current_step_id
+	validateCurrentStepIdAndGetNextProgression(): [string | null, string | null] {
+		if (this.#currentStep.type === 'expression') {
+			// When in the expression mode, the next step is unknown, but we can produce a sane current step id
+
+			if (this.#stepCheckExpression(true)) {
+				// Something changed, so redraw
+				this.triggerRedraw()
+			}
+
+			return [this.#currentStep.lastStepId, null]
+		}
+
 		const stepIds = this.getStepIds()
+
+		// For the automatic/manual progression
+		const this_step_raw = this.#currentStep.id
 		if (stepIds.length > 0) {
 			// verify 'this_step_raw' is valid
 			const this_step_index = stepIds.findIndex((s) => s == this_step_raw) || 0
@@ -550,7 +687,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	getActionsToExecuteForSet(setId: ActionSetId): ControlEntityInstance[] {
-		const [this_step_id] = this.validateCurrentStepIdAndGetNext()
+		const [this_step_id] = this.validateCurrentStepIdAndGetNextProgression()
 		if (!this_step_id) return []
 
 		const step = this.#steps.get(this_step_id)

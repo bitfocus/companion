@@ -17,7 +17,7 @@ import { CloudUserPass } from './UserPass.js'
 import { SocketContext, type CompanionSocketWrapped, LoadingRetryOrError } from '~/util.js'
 import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 
-export function CloudPage() {
+export function CloudPage(): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const cloudState = useCloudState(socket)
@@ -28,7 +28,7 @@ export function CloudPage() {
 
 			<CAlert color="danger">
 				This service is deprecated and will be removed in a future version of Companion. <br />
-				Before that happens, an equivalent system will be made available in <i>Bitfocus Buttons</i> <br />
+				We hope that before it is removed, an equivalent system will be made available in <i>Bitfocus Buttons</i> <br />
 				As an alternative you can use the new <i>companion-satellite</i> module over a local network or vpn.
 			</CAlert>
 			<p>

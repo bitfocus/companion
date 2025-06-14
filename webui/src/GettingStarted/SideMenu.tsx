@@ -17,7 +17,7 @@ interface GettingStartedMenuProps {
 	structure: DocsSection[]
 }
 
-export function GettingStartedMenu({ visibleFiles, structure }: GettingStartedMenuProps) {
+export function GettingStartedMenu({ visibleFiles, structure }: GettingStartedMenuProps): React.JSX.Element {
 	return (
 		<>
 			{structure.map((subsect) => (
@@ -58,6 +58,7 @@ const GettingStartedLink = observer(function GettingStartedLink({
 	)
 })
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function getFilenameForSection(section: DocsSection): string {
 	return section.file || `${section.children?.[0]?.file || ''}_parent`
 }

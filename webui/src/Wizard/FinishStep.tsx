@@ -7,7 +7,7 @@ interface FinishStepProps {
 	newConfig: UserConfigModel
 }
 
-export function FinishStep({ oldConfig, newConfig }: FinishStepProps) {
+export function FinishStep({ oldConfig, newConfig }: FinishStepProps): React.JSX.Element {
 	return (
 		<div>
 			<h4>Congratulations!</h4>

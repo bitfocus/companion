@@ -13,7 +13,7 @@ export function SelectButtonTypeDropdown({
 	location: ControlLocation
 	resetModalRef: React.MutableRefObject<GenericConfirmModalRef | null>
 	configRef: React.MutableRefObject<SomeButtonModel | undefined> | undefined
-}) {
+}): React.JSX.Element {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const setButtonType = useCallback(
@@ -51,7 +51,7 @@ export function SelectButtonTypeDropdown({
 				doChange()
 			}
 		},
-		[socket, location, configRef]
+		[socket, location, configRef, resetModalRef]
 	)
 
 	return (

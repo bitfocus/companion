@@ -1,6 +1,13 @@
 import { useCallback, useState } from 'react'
 
-export function usePagePicker(pageCount: number, initialPage: number) {
+export function usePagePicker(
+	pageCount: number,
+	initialPage: number
+): {
+	pageNumber: number
+	setPageNumber: (pageNumber: number) => void
+	changePage: (delta: number) => void
+} {
 	const [pageNumber, setPageNumber] = useState(Number(initialPage))
 
 	const changePage = useCallback(

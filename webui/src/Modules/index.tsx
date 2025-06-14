@@ -9,13 +9,16 @@ export const ModulesPage = memo(function ConnectionsPage() {
 
 	const navigate = useNavigate({ from: '/modules' })
 
-	const doManageModule = useCallback((moduleId: string | null) => {
-		if (moduleId) {
-			navigate({ to: `/modules/${moduleId}` })
-		} else {
-			navigate({ to: '/modules' })
-		}
-	}, [])
+	const doManageModule = useCallback(
+		(moduleId: string | null) => {
+			if (moduleId) {
+				void navigate({ to: `/modules/${moduleId}` })
+			} else {
+				void navigate({ to: '/modules' })
+			}
+		},
+		[navigate]
+	)
 
 	return (
 		<CRow className="connections-page split-panels">

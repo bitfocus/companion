@@ -25,7 +25,7 @@ export function ResolveExpression(
 			case 'Literal':
 				return node.value
 
-			case 'UnaryExpression':
+			case 'UnaryExpression': {
 				if (!node.prefix) throw new Error('Unexpected Unary non-prefix')
 
 				const arg = resolve(node.argument)
@@ -42,6 +42,7 @@ export function ResolveExpression(
 					default:
 						throw new Error(`Unsupported unary operator "${node.operator}"`)
 				}
+			}
 
 			case 'BinaryExpression': {
 				const left = resolve(node.left)
@@ -98,8 +99,10 @@ export function ResolveExpression(
 			}
 			case 'CallExpression': {
 				// @ts-expect-error name is not typed
-				const fn = functions[node.callee.name]
-				if (!fn || typeof fn !== 'function') throw new Error(`Unsupported function "${node.callee.name}"`)
+				const nodeName: string = node.callee.name
+
+				const fn = functions[nodeName]
+				if (!fn || typeof fn !== 'function') throw new Error(`Unsupported function "${nodeName}"`)
 				const args = node.arguments.map((arg) => resolve(arg))
 				return fn(...args)
 			}

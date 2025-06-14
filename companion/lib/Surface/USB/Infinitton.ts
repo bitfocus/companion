@@ -117,7 +117,7 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 						imageRs.PixelFormat.Rgb
 					)
 
-					this.#infinitton.fillImage(key, newbuffer)
+					this.#infinitton.fillImage(key, Buffer.from(newbuffer))
 				} catch (e: any) {
 					this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
 					this.emit('remove')

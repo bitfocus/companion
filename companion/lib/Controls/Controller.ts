@@ -16,7 +16,7 @@ import { nanoid } from 'nanoid'
 import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ClientTriggerData, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ClientTriggerData, TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
@@ -29,6 +29,7 @@ import { CompanionVariableValues } from '@companion-module/base'
 import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
+import { TriggerCollections } from './TriggerCollections.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -84,15 +85,43 @@ export class ControlsController {
 
 	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
+	readonly #triggerCollections: TriggerCollections
+
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
 		this.#registry = registry
 		this.#controlEvents = controlEvents
 
 		this.#dbTable = registry.db.getTableView('controls')
 
+		this.triggers = new TriggerEvents()
+		this.#triggerCollections = new TriggerCollections(
+			registry.io,
+			registry.db,
+			this.triggers,
+			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
+			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
+		)
+
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
-		this.triggers = new TriggerEvents()
+	}
+
+	#cleanUnknownTriggerCollectionIds(validCollectionIds: Set<string>): void {
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlTrigger) {
+				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	#checkTriggerCollectionsEnabled(enabledCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlTrigger) {
+				control.setCollectionEnabled(
+					!control.options.collectionId || enabledCollectionIds.has(control.options.collectionId)
+				)
+			}
+		}
 	}
 
 	/**
@@ -158,6 +187,7 @@ export class ControlsController {
 	 */
 	clientConnect(client: ClientSocket): void {
 		this.actionRecorder.clientConnect(client)
+		this.#triggerCollections.clientConnect(client)
 
 		this.triggers.emit('client_connect')
 
@@ -648,6 +678,9 @@ export class ControlsController {
 			// Ensure it is stored to the db
 			newControl.commitChange()
 
+			// No collectionId yet so mark as enabled
+			newControl.setCollectionEnabled(true)
+
 			return controlId
 		})
 		client.onPromise('triggers:delete', (controlId) => {
@@ -704,30 +737,42 @@ export class ControlsController {
 
 			return false
 		})
-		client.onPromise('triggers:set-order', (triggerIds) => {
-			if (!Array.isArray(triggerIds)) throw new Error('Expected array of ids')
+		client.onPromise('triggers:reorder', (collectionId: string | null, controlId: string, dropIndex: number) => {
+			const thisTrigger = this.#controls.get(controlId)
+			if (!thisTrigger || !(thisTrigger instanceof ControlTrigger)) return false
 
-			triggerIds = triggerIds.filter((id) => this.#validateTriggerControlId(id))
+			if (!this.#triggerCollections.doesCollectionIdExist(collectionId)) return false
 
-			// This is a bit naive, but should be sufficient if the client behaves
-
-			// Update the order based on the ids provided
-			triggerIds.forEach((id, index) => {
-				const control = this.getControl(id)
-				if (control && control.supportsOptions) control.optionsSetField('sortOrder', index, true)
-			})
-
-			// Fill in for any which weren't specified
-			const updatedTriggerIds = new Set(triggerIds)
-			const triggerControls = this.getAllTriggers()
-			triggerControls.sort((a, b) => a.options.sortOrder - b.options.sortOrder)
-
-			let nextIndex = triggerIds.length
-			for (const control of triggerControls) {
-				if (!updatedTriggerIds.has(control.controlId) && control.supportsOptions) {
-					control.optionsSetField('sortOrder', nextIndex++, true)
-				}
+			// update the collectionId of the trigger being moved if needed
+			if (thisTrigger.options.collectionId !== (collectionId ?? undefined)) {
+				thisTrigger.optionsSetField('collectionId', collectionId ?? undefined, true)
+				thisTrigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(collectionId))
 			}
+
+			// find all the other triggers with the matching collectionId
+			const sortedTriggers = Array.from(this.#controls.values())
+				.filter(
+					(control): control is ControlTrigger =>
+						control.controlId !== controlId &&
+						control instanceof ControlTrigger &&
+						((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
+				)
+				.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
+
+			if (dropIndex < 0) {
+				// Push the trigger to the end of the array
+				sortedTriggers.push(thisTrigger)
+			} else {
+				// Insert the trigger at the drop index
+				sortedTriggers.splice(dropIndex, 0, thisTrigger)
+			}
+
+			// update the sort order of the connections in the store, tracking which ones changed
+			sortedTriggers.forEach((trigger, index) => {
+				if (trigger.options.sortOrder === index) return // No change
+
+				trigger.optionsSetField('sortOrder', index, true)
+			})
 
 			return true
 		})
@@ -921,7 +966,18 @@ export class ControlsController {
 
 		if (category === 'all' || category === 'trigger') {
 			if (controlObj2?.type === 'trigger' || (controlType === 'trigger' && !controlObj2)) {
-				return new ControlTrigger(this.#createControlDependencies(), this.triggers, controlId, controlObj2, isImport)
+				const trigger = new ControlTrigger(
+					this.#createControlDependencies(),
+					this.triggers,
+					controlId,
+					controlObj2,
+					isImport
+				)
+				setImmediate(() => {
+					// Ensure the trigger is enabled, on a slight debounce
+					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
+				})
+				return trigger
 			}
 		}
 
@@ -1048,6 +1104,9 @@ export class ControlsController {
 				if (inst) this.#controls.set(controlId, inst)
 			}
 		}
+
+		// Ensure all trigger collections are valid
+		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
 	}
 
 	/**
@@ -1140,6 +1199,14 @@ export class ControlsController {
 		}
 	}
 
+	discardTriggerCollections(): void {
+		this.#triggerCollections.discardAllCollections()
+	}
+
+	exportTriggerCollections(): TriggerCollection[] {
+		return this.#triggerCollections.collectionData
+	}
+
 	/**
 	 * Create a control
 	 * Danger: This will not delete an existing control from the specified location
@@ -1178,6 +1245,13 @@ export class ControlsController {
 			this.#activeLearnRequests.delete(id)
 			this.#registry.io.emitToRoom(ActiveLearnRoom, 'learn:remove', id)
 		}
+	}
+
+	setTriggerCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {
+		this.#triggerCollections.setCollectionEnabled(collectionId, enabled)
+	}
+	isTriggerCollectionEnabled(collectionId: string, onlyDirect: boolean): boolean {
+		return this.#triggerCollections.isCollectionEnabled(collectionId, onlyDirect)
 	}
 
 	/**

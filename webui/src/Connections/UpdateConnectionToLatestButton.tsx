@@ -1,9 +1,10 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { useModuleStoreInfo, useModuleUpgradeToVersions } from '~/Modules/ModuleManagePanel.js'
+import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
+import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { getLatestVersion } from './ConnectionEdit/VersionUtil.js'
 import semver from 'semver'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ConnectionUpdatePolicy, type ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { faCircleUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
@@ -17,7 +18,7 @@ export const UpdateConnectionToLatestButton = observer(function UpdateConnection
 	// Don't show for dev versions
 	if (connection.moduleVersionId === 'dev') return null
 	// Return early if manual updates are enabled
-	if (connection.updatePolicy === 'manual') return null
+	if (connection.updatePolicy === ConnectionUpdatePolicy.Manual) return null
 
 	return <UpdateConnectionToLatestButtonInner connection={connection} />
 })
@@ -30,7 +31,7 @@ const UpdateConnectionToLatestButtonInner = observer(function ModuleVersionInfoI
 
 	let message: string | undefined
 
-	if (upgradeToVersions.length > 0 && connection.updatePolicy !== 'manual') {
+	if (upgradeToVersions.length > 0 && connection.updatePolicy !== ConnectionUpdatePolicy.Manual) {
 		message = 'A replacement for this module is available'
 	} else {
 		const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
@@ -45,7 +46,7 @@ const UpdateConnectionToLatestButtonInner = observer(function ModuleVersionInfoI
 
 		// If update policy allows beta versions, and there is a newer beta version, use that
 		if (
-			connection.updatePolicy === 'beta' &&
+			connection.updatePolicy === ConnectionUpdatePolicy.Beta &&
 			latestBetaVersion &&
 			(!latestVersion || semver.gt(latestBetaVersion.id, latestVersion))
 		) {

@@ -159,7 +159,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 						return
 					}
 
-					let newbuffer: Buffer
+					let newbuffer: Uint8Array
 					try {
 						newbuffer = await drawItem.defaultRender.drawNative(
 							control.pixelSize.width,
@@ -205,7 +205,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 				const targetSize = control.pixelSize.height
 
-				let newbuffer: Buffer
+				let newbuffer: Uint8Array
 				try {
 					newbuffer = await drawItem.defaultRender.drawNative(
 						targetSize,

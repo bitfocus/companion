@@ -76,7 +76,7 @@ export function useOptionsAndIsVisibleFns<
 										} else if (name.startsWith('options:')) {
 											return options[name.slice(8)] as any
 										} else if (name.startsWith('data:')) {
-											return userData[name.slice(5)] as any
+											return userData[name.slice(5)]
 										} else {
 											return undefined
 										}

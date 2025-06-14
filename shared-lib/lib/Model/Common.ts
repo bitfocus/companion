@@ -43,6 +43,19 @@ export interface ConnectionStatusEntry {
 	message: string | undefined
 }
 
+export type ConnectionStatusUpdate = ConnectionStatusUpdateRemoveOp | ConnectionStatusUpdateUpdateOp
+
+export interface ConnectionStatusUpdateRemoveOp {
+	type: 'remove'
+	connectionId: string
+}
+export interface ConnectionStatusUpdateUpdateOp {
+	type: 'update'
+	connectionId: string
+
+	status: ConnectionStatusEntry
+}
+
 export interface ClientBonjourService {
 	subId: string
 	fqdn: string
@@ -57,6 +70,7 @@ export interface EventDefinition {
 	options: InternalActionInputField[]
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ClientEventDefinition extends EventDefinition {}
 
 export interface WrappedImage {

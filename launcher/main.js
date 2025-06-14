@@ -17,7 +17,9 @@ import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
 	try {
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const plist = require('plist')
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const semver = require('semver')
 
 		const minimumVersion = '11.0'
@@ -34,7 +36,7 @@ if (process.platform === 'darwin') {
 			)
 			app.quit()
 		}
-	} catch (e) {
+	} catch (_e) {
 		// We can't figure out if its compatible, so assume it is
 	}
 }
@@ -59,7 +61,7 @@ if (!lock) {
 		if (fs.existsSync(oldLogFile)) {
 			fs.removeSync(oldLogFile)
 		}
-	} catch (e) {
+	} catch (_e) {
 		// Ignore
 	}
 
@@ -123,12 +125,12 @@ if (!lock) {
 			}
 			fs.unlinkSync(oldConfigPath)
 		}
-	} catch (e) {
+	} catch (_e) {
 		// Ignore the failure, its not worth trying to handle
 	}
 
 	const thisDbFolderName = ConfigReleaseDirs[ConfigReleaseDirs.length - 1]
-	const thisDbPath = path.join(configDir, thisDbFolderName, 'db')
+	const thisDbPath = path.join(configDir, thisDbFolderName, 'db.sqlite')
 
 	const uiConfig = new Store({
 		cwd: configDir,
@@ -142,7 +144,7 @@ if (!lock) {
 			.readFileSync(new URL('/SENTRY', import.meta.url))
 			.toString()
 			.trim()
-	} catch (e) {
+	} catch (_e) {
 		console.log('Sentry DSN not located')
 	}
 
@@ -340,7 +342,7 @@ if (!lock) {
 		// 	mode:'detach'
 		// })
 
-		app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+		app.on('second-instance', (_event, _commandLine, _workingDirectory, _additionalData) => {
 			// Someone tried to run a second instance, we should focus our window.
 			if (window) {
 				showWindow()
@@ -435,7 +437,7 @@ if (!lock) {
 			})
 		})
 
-		ipcMain.on('toggle-developer-settings', (e, msg) => {
+		ipcMain.on('toggle-developer-settings', (_e, _msg) => {
 			console.log('toggle developer settings')
 			uiConfig.set('enable_developer', !uiConfig.get('enable_developer'))
 
@@ -563,7 +565,7 @@ if (!lock) {
 
 	function launchUI() {
 		if (appInfo.appLaunch && appInfo.appLaunch.match(/http/)) {
-			electron.shell.openExternal(appInfo.appLaunch).catch((e) => {
+			electron.shell.openExternal(appInfo.appLaunch).catch((_e) => {
 				// Ignore
 			})
 		}
@@ -607,7 +609,7 @@ if (!lock) {
 	function showConfigFolder() {
 		try {
 			electron.shell.showItemInFolder(thisDbPath)
-		} catch (e) {
+		} catch (_e) {
 			electron.dialog.showErrorBox('File Error', 'Could not open config directory.')
 		}
 	}
@@ -636,13 +638,13 @@ if (!lock) {
 			let mostRecentDir = null
 			for (const dirname of dirs) {
 				try {
-					const dbStat = fs.statSync(path.join(configDir, dirname, 'db'))
+					const dbStat = fs.statSync(path.join(configDir, dirname, 'db.sqlite'))
 					if (dirname.match('^v(.*)') && dbStat && dbStat.isFile()) {
 						if (!mostRecentDir || mostRecentDir[0] < dbStat.mtimeMs) {
 							mostRecentDir = [dbStat.mtimeMs, dirname]
 						}
 					}
-				} catch (e) {
+				} catch (_e) {
 					// Not worth considering
 				}
 			}
@@ -667,7 +669,11 @@ if (!lock) {
 						let importFrom = null
 						for (let i = ConfigReleaseDirs.length - 2; i--; i > 0) {
 							const dirname = ConfigReleaseDirs[i]
-							if (dirname && fs.existsSync(path.join(configDir, dirname, 'db'))) {
+							if (
+								dirname &&
+								(fs.existsSync(path.join(configDir, dirname, 'db')) ||
+									fs.existsSync(path.join(configDir, dirname, 'db.sqlite')))
+							) {
 								importFrom = dirname
 								break
 							}
@@ -790,14 +796,14 @@ if (!lock) {
 			let disableAdminPassword = false
 			const args = process.argv
 
-			args.forEach((value, index) => {
+			args.forEach((value) => {
 				if (value == '--disable-admin-password') {
 					disableAdminPassword = true
 				}
 			})
 
 			child = new RespawnMonitor(
-				// @ts-ignore
+				// @ts-expect-error - This isn't loosing nullable types
 				() =>
 					[
 						// Build a new command string for each start

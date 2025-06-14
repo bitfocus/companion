@@ -28,12 +28,15 @@ import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscr
 import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
 import { ViewControlStore } from '~/Stores/ViewControlStore.js'
 import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
+import { useConnectionCollectionsSubscription } from './Hooks/useConnectionCollectionsSubscription.js'
+import { useTriggerCollectionsSubscription } from './Hooks/useTriggerCollectionsSubscription.js'
+import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
 }
 
-export function ContextData({ children }: Readonly<ContextDataProps>) {
+export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const notifierRef = useRef<NotificationsManagerRef>(null)
@@ -81,13 +84,16 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
+	const connectionGroupsReady = useConnectionCollectionsSubscription(socket, rootStore.connections)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
+	const triggerGroupsReady = useTriggerCollectionsSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfigReady = useUserConfigSubscription(socket, rootStore.userConfig)
 	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(socket, rootStore.surfaces)
 	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
+	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(socket, rootStore.variablesStore)
 	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(
 		socket,
 		rootStore.moduleStoreRefreshProgress
@@ -114,15 +120,18 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		moduleInfoReady,
 		moduleStoreReady,
 		connectionsReady,
+		connectionGroupsReady,
 		variablesReady,
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
 		customVariablesReady,
+		customVariableCollectionsReady,
 		userConfigReady,
 		surfacesReady,
 		outboundSurfacesReady,
 		pagesReady,
 		triggersListReady,
+		triggerGroupsReady,
 		activeLearnRequestsReady,
 		moduleStoreProgressReady,
 	]

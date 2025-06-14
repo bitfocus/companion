@@ -24,7 +24,7 @@ export function CheckboxInputField({
 	disabled,
 	helpText,
 	inline,
-}: CheckboxInputFieldProps) {
+}: CheckboxInputFieldProps): React.JSX.Element {
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
 		setValid?.(true)

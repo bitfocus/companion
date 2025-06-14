@@ -4,11 +4,12 @@ import { cloneDeep } from 'lodash-es'
 import React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 
-export interface TableVisibilityHelper<T extends Record<string, boolean>> {
+export interface TableVisibilityHelper<T extends Record<string, any>> {
 	visibility: T
 	toggleVisibility: (key: keyof T, forceState?: boolean) => void
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTableVisibilityHelper<T extends Record<string, any>>(
 	localStorageKey: string,
 	defaultValue: T
@@ -64,7 +65,7 @@ export function VisibilityButton<T extends Record<string, any>>({
 	title,
 	visibility,
 	toggleVisibility,
-}: VisibilityButtonProps<T>) {
+}: VisibilityButtonProps<T>): React.JSX.Element {
 	const doToggle = useCallback(() => toggleVisibility(keyId), [keyId, toggleVisibility])
 
 	return (

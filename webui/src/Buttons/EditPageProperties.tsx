@@ -51,7 +51,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 					console.error('Failed to set name', e)
 				})
 			},
-			[pageNumber, pageName]
+			[socket, pageNumber, pageName]
 		)
 
 		useImperativeHandle(

@@ -18,7 +18,7 @@ interface EditTriggerPanelProps {
 	controlId: string
 }
 
-export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
+export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const resetModalRef = useRef<GenericConfirmModalRef>(null)

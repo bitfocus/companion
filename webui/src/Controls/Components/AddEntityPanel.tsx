@@ -21,7 +21,7 @@ export function AddEntityPanel({
 	feedbackListType,
 	entityTypeLabel,
 	readonly,
-}: AddEntityPanelProps) {
+}: AddEntityPanelProps): React.JSX.Element {
 	const addEntitiesRef = useRef<AddEntitiesModalRef>(null)
 	const showAddModal = useCallback(() => addEntitiesRef.current?.show(), [])
 

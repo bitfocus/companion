@@ -12,6 +12,9 @@
       "default": "./dist/*.cjs"
     }
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@jsep-plugin/comment": "^1.0.4",
     "@jsep-plugin/numbers": "^1.0.2",

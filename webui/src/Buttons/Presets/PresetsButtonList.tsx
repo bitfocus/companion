@@ -26,7 +26,7 @@ interface PresetButtonGroup {
 	presets: UIPresetDefinitionButton[]
 }
 
-export function groupPresetsForCategory(
+function groupPresetsForCategory(
 	presets: Record<string, UIPresetDefinition>,
 	category: string
 ): (PresetButtonGroup | UIPresetDefinitionText)[] {
@@ -65,7 +65,7 @@ export function PresetsButtonList({
 	selectedConnectionLabel,
 	selectedCategory,
 	setConnectionAndCategory,
-}: Readonly<PresetsButtonListProps>) {
+}: Readonly<PresetsButtonListProps>): React.JSX.Element {
 	const doBack = useCallback(
 		() => setConnectionAndCategory([selectedConnectionId, null]),
 		[setConnectionAndCategory, selectedConnectionId]
