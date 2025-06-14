@@ -180,7 +180,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 
 				// Use ip right now, since the pluginUUID is new on each boot and makes Companion
 				// forget all settings for the device. (page and orientation)
-				const id = suffix ? `plugin-${suffix}`.replaceAll(/-+/g, '-') : 'plugin'
+				const id = suffix ? `plugin:${suffix}`.replaceAll(/-+/g, '-') : 'plugin'
 				socket.id = id
 
 				socket.supportsPng = !!clientInfo.supportsPng
