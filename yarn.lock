@@ -5069,6 +5069,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xkeys-lib/core@patch:@xkeys-lib/core@npm%3A3.3.0#~/.yarn/patches/@xkeys-lib-core-npm-3.3.0-1a65b6423b.patch":
+  version: 3.3.0
+  resolution: "@xkeys-lib/core@patch:@xkeys-lib/core@npm%3A3.3.0#~/.yarn/patches/@xkeys-lib-core-npm-3.3.0-1a65b6423b.patch::version=3.3.0&hash=05ca77"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  checksum: 10c0/b6ec5dd3938f9a89650ae192f5a240b79bf335f70397925e3a2e8133229a572ec1f20abf9a16c4ab194c2b0ff6005e99803bcf4b7840e88e106c90ed4d8609cc
+  languageName: node
+  linkType: hard
+
 "@xmldom/xmldom@npm:^0.8.8":
   version: 0.8.10
   resolution: "@xmldom/xmldom@npm:0.8.10"
