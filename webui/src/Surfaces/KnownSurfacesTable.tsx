@@ -164,7 +164,7 @@ function ManualGroupRow({
 
 	return (
 		<>
-			<tr>
+			<tr className="noBorder">
 				<td>#{group.index}</td>
 				<td>
 					<b>Surface Group</b>
@@ -187,7 +187,7 @@ function ManualGroupRow({
 					</CButtonGroup>
 				</td>
 			</tr>
-			{(group.surfaces || []).map((surface) => (
+			{(group.surfaces || []).map((surface, i, arr) => (
 				<SurfaceRow
 					key={surface.id}
 					surface={surface}
@@ -196,7 +196,7 @@ function ManualGroupRow({
 					configureSurface={configureSurface}
 					deleteEmulator={deleteEmulator}
 					forgetSurface={forgetSurface}
-					noBorder
+					noBorder={i !== arr.length - 1} // No border on the last item
 				/>
 			))}
 		</>
