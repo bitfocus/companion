@@ -168,7 +168,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			for (const id of Object.keys(instances)) {
 				// If the id starts with 'emulator:' then re-add it
 				if (id.startsWith('emulator:')) {
-					this.addEmulator(id.substring(9), '')
+					this.addEmulator(id.substring(9), undefined, true)
 				}
 			}
 
@@ -289,16 +289,17 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Add an emulator
 	 * @param id base id of the emulator
+	 * @param name Name of the emulator, or undefined to use the default
 	 * @param skipUpdate Skip emitting an update to the devices list
 	 */
-	addEmulator(id: string, name: string, skipUpdate = false): void {
+	addEmulator(id: string, name: string | undefined, skipUpdate = false): void {
 		const fullId = EmulatorRoom(id)
 		if (this.#surfaceHandlers.has(fullId)) {
 			throw new Error(`Emulator "${id}" already exists!`)
 		}
 
 		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#io, id))
-		handler.setPanelName(name)
+		if (name !== undefined) handler.setPanelName(name)
 
 		if (!skipUpdate) this.updateDevicesList()
 	}
@@ -1203,7 +1204,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				this.setDeviceConfig(surfaceId, surfaceConfig)
 
 				if (surfaceId.startsWith('emulator:')) {
-					this.addEmulator(surfaceId.substring(9), '')
+					this.addEmulator(surfaceId.substring(9), undefined, true)
 				}
 			}
 		}
