@@ -169,7 +169,7 @@ function useImagePreloader(imageUrl: string | null) {
 		image.src = imageUrl
 
 		return () => {
-			aborted = false
+			aborted = true
 		}
 	}, [imageUrl])
 
