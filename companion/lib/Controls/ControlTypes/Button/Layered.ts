@@ -532,7 +532,7 @@ export class ControlButtonLayered
 		if (diff.bgcolor !== undefined) {
 			const boxElement = lazyBoxElement()
 			if (boxElement) {
-				boxElement.color = { isExpression: false, value: Number(diff.color) }
+				boxElement.color = { isExpression: false, value: Number(diff.bgcolor) }
 				changed = true
 			}
 		}
