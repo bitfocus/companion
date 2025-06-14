@@ -7,6 +7,7 @@ Supported operators include:
   - Subtraction: `a - b`
   - Multiplication: `a * b`
   - Division: `a / b`
+  - Exponentiation ("Raise to a Power"): `a ** b`
   - Modulus: `a % b`
   - Equality (loose): `a == b`
   - Equality (strict): `a === b`
