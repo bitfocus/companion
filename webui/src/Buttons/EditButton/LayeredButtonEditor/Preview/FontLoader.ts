@@ -50,13 +50,17 @@ class PreviewCanvasFontLoader {
 				// Add the font to the document
 				document.fonts.add(fontface)
 			})
-		).then(() => {
-			console.log('FONTS: Fonts loaded')
+		)
+			.then(() => {
+				console.log('FONTS: Fonts loaded')
 
-			this.#state = 'loaded'
-			this.#callbacks.forEach((cb) => cb())
-			this.#callbacks.clear()
-		})
+				this.#state = 'loaded'
+				this.#callbacks.forEach((cb) => cb())
+				this.#callbacks.clear()
+			})
+			.catch((e) => {
+				console.error('FONTS: Failed to load fonts', e)
+			})
 	}
 }
 

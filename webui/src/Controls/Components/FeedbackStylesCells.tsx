@@ -19,7 +19,7 @@ export function FeedbackManageStyles({
 	feedbackSpec,
 	feedback,
 	setSelectedStyleProps,
-}: FeedbackManageStylesProps): React.JSX.Element {
+}: FeedbackManageStylesProps): React.JSX.Element | null {
 	if (feedbackSpec?.feedbackType === FeedbackEntitySubType.Boolean) {
 		const choicesSet = new Set(ButtonStyleProperties.map((c) => c.id))
 		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))

@@ -171,7 +171,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			trigger_collection_enabled: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Trigger: When collection enabled or disabled',
 				description: undefined,
 				feedbackStyle: {
