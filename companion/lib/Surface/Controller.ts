@@ -247,15 +247,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				if (this.#handlerDependencies.userconfig.getKey('link_lockouts')) {
 					if (this.#surfacesAllLocked) return
 
-					let doLockout = false
+					let latestTime = 0
 					for (const surfaceGroup of this.#surfaceGroups.values()) {
-						if (this.#isSurfaceGroupTimedOut(surfaceGroup.groupId, timeout)) {
-							doLockout = true
-							this.#surfacesLastInteraction.delete(surfaceGroup.groupId)
+						const lastInteraction = this.#surfacesLastInteraction.get(surfaceGroup.groupId) || 0
+						if (lastInteraction > latestTime) {
+							latestTime = lastInteraction
 						}
 					}
 
-					if (doLockout) {
+					if (latestTime + timeout < Date.now()) {
 						this.setAllLocked(true)
 					}
 				} else {
