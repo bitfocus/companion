@@ -7,7 +7,7 @@ import { NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { ControlLocalVariables } from '~/LocalVariableDefinitions.js'
+import { ControlLocalVariables } from './LocalVariablesStore'
 
 interface ControlOptionsEditorProps {
 	controlId: string

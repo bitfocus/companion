@@ -4,6 +4,10 @@ import { PreventDefaultHandler, SocketContext } from '../../../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
 import { InlineHelp } from '../../../Components/InlineHelp.js'
 import { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { DropdownChoice } from '@companion-module/base'
+import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string
@@ -27,10 +31,8 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 		[socket, controlId, configRef]
 	)
 
-	const setStepAutoProgressValue = useCallback(
-		(val: boolean) => setValueInner('stepAutoProgress', val),
-		[setValueInner]
-	)
+	const setStepProgressionValue = useCallback((val: any) => setValueInner('stepProgression', val), [setValueInner])
+	const setStepExpressionValue = useCallback((val: string) => setValueInner('stepExpression', val), [setValueInner])
 	const setRotaryActions = useCallback(
 		(val: boolean) => {
 			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {
@@ -57,19 +59,16 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 			<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
-				<CFormLabel htmlFor="colFormProgress" className="col-sm-4 col-form-label col-form-label-sm">
+				<CFormLabel>
 					<InlineHelp help="When this button has multiple steps, progress to the next step when the button is released">
-						Step Progress
+						Step Progression
 					</InlineHelp>
 				</CFormLabel>
 				<CCol sm={8}>
-					<CFormSwitch
-						size="xl"
-						color="success"
-						checked={options.stepAutoProgress}
-						onChange={() => {
-							setStepAutoProgressValue(!options.stepAutoProgress)
-						}}
+					<DropdownInputField
+						choices={STEP_PROGRESSION_CHOICES}
+						setValue={setStepProgressionValue}
+						value={options.stepProgression}
 					/>
 				</CCol>
 
@@ -102,7 +101,30 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 						}}
 					/>
 				</CCol>
+        
+				{options.stepProgression === 'expression' && (
+					<div className="flex w-full gap-2rem flex-form">
+						<div style={{ width: '100%' }}>
+							<TextInputField
+								label={'Step Progression Expression'}
+								tooltip={'Current step of button'}
+								setValue={setStepExpressionValue}
+								value={options.stepExpression ?? ''}
+								useVariables
+								localVariables={ControlLocalVariables}
+								isExpression
+								style={{ fontWeight: 'bold', fontSize: 18 }}
+							/>
+						</div>
+					</div>
+				)}
 			</CForm>
 		</>
 	)
 }
+
+const STEP_PROGRESSION_CHOICES: DropdownChoice[] = [
+	{ id: 'auto', label: 'Auto' },
+	{ id: 'manual', label: 'Manual' },
+	{ id: 'expression', label: 'Expression' },
+]

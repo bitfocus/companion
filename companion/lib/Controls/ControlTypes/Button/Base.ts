@@ -78,15 +78,16 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				moduleHost: deps.instance.moduleHost,
-				executeExpressionInControl: (expression, requiredType, injectedVariableValues) =>
-					deps.variables.values.executeExpression(
-						expression,
-						deps.page.getLocationOfControlId(this.controlId),
-						requiredType,
-						injectedVariableValues
-					),
 			},
-			this.sendRuntimePropsChange.bind(this)
+			this.sendRuntimePropsChange.bind(this),
+			(expression, requiredType, injectedVariableValues) =>
+				deps.variables.values
+					.createVariablesAndExpressionParser(
+						deps.page.getLocationOfControlId(this.controlId),
+						null, // This doesn't support local variables
+						injectedVariableValues ?? null
+					)
+					.executeExpression(expression, requiredType)
 		)
 	}
 

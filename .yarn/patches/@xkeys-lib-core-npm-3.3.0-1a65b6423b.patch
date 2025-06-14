@@ -1,0 +1,22 @@
+diff --git a/dist/xkeys.js b/dist/xkeys.js
+index 1526d5280df113e3521998be908295501a19fa47..4b191fdfaa950bac53bf97bb2fe7021a8cc38ccd 100644
+--- a/dist/xkeys.js
++++ b/dist/xkeys.js
+@@ -432,7 +432,7 @@ class XKeys extends events_1.EventEmitter {
+             const ledIndexBlue = keyIndex - 1; // 0 based linear numbering sort of...
+             const ledIndexRed = ledIndexBlue + this.product.backLight2offset;
+             this._write([0, 181, ledIndexBlue, color.b > 0 ? (flashing ? 2 : 1) : 0, 0]);
+-            this._write([0, 181, ledIndexRed, color.r > 0 || color.g > 0 ? (flashing ? 2 : 1) : 0, 0]);
++            this._write([0, 181, ledIndexRed, color.r > 0 ? (flashing ? 2 : 1) : 0, 0]);
+         }
+         else if (this.product.backLightType === products_1.BackLightType.LEGACY) {
+             const ledIndexBlue = (location.col - 1) * 8 + location.row - 1;
+@@ -440,7 +440,7 @@ class XKeys extends events_1.EventEmitter {
+             // Blue LED:
+             this._write([0, 181, ledIndexBlue, color.b > 0 ? (flashing ? 2 : 1) : 0, 1]);
+             // Red LED:
+-            this._write([0, 181, ledIndexRed, color.r > 0 || color.g > 0 ? (flashing ? 2 : 1) : 0, 1]);
++            this._write([0, 181, ledIndexRed, color.r > 0 ? (flashing ? 2 : 1) : 0, 1]);
+         }
+         else if (this.product.backLightType === products_1.BackLightType.NONE) {
+             // No backlight, do nothing

@@ -153,8 +153,8 @@ class LayeredButtonDrawStyleParser {
 				elements,
 
 				pushed: thisPushed.ok ? Boolean(thisPushed.value) : false,
-				step_count: thisStepCount.ok ? Number(thisStepCount.value) : 1,
-				step_cycle: thisStep.ok && thisStep.value ? Number(thisStep.value) : undefined,
+				stepCount: thisStepCount.ok ? Number(thisStepCount.value) : 1,
+				stepCurrent: thisStep.ok && thisStep.value ? Number(thisStep.value) : 1,
 
 				cloud: undefined,
 				cloud_error: undefined,
@@ -171,7 +171,7 @@ class LayeredButtonDrawStyleParser {
 
 	#unsubscribeExpression(stream: ExpressionStreamResultWithSubId | Promise<ExpressionStreamResultWithSubId>): void {
 		Promise.resolve(stream)
-			.then((stream) => {
+			.then(async (stream) => {
 				return this.#socket.emitPromise('variables:stream-expression:unsubscribe', [stream.subId])
 			})
 			.catch((e) => {
@@ -278,12 +278,12 @@ export class LastUsedCache<T> {
 		return entry.data
 	}
 
-	set(key: string, data: T, dispose?: () => void) {
+	set(key: string, data: T, dispose?: () => void): void {
 		this.#usedSinceReset.add(key)
 		this.#cache.set(key, { data, dispose })
 	}
 
-	disposeUnused() {
+	disposeUnused(): void {
 		for (const [key, entry] of this.#cache) {
 			if (!this.#usedSinceReset.has(key)) {
 				this.#cache.delete(key)

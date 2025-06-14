@@ -18,7 +18,7 @@ export function RemoveElementButton({
 	controlId: string
 	elementId: string
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
-}) {
+}): React.JSX.Element {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const removeElement = useCallback(() => {
@@ -32,7 +32,7 @@ export function RemoveElementButton({
 					console.error('Failed to remove element', e)
 				})
 		})
-	}, [socket, controlId, elementId])
+	}, [socket, confirmModalRef, controlId, elementId])
 
 	return (
 		<CButton color="white" size="sm" onClick={removeElement} title="Remove">
@@ -43,17 +43,12 @@ export function RemoveElementButton({
 
 export const ToggleVisibilityButton = observer(function ToggleVisibilityButton({
 	styleStore,
-	controlId,
 	elementId,
 }: {
 	styleStore: LayeredStyleStore
-	controlId: string
 	elementId: string
 }) {
-	const toggleVisibility = useCallback(
-		() => styleStore.setElementVisibility(elementId),
-		[styleStore, controlId, elementId]
-	)
+	const toggleVisibility = useCallback(() => styleStore.setElementVisibility(elementId), [styleStore, elementId])
 
 	const isVisible = styleStore.isElementVisible(elementId)
 
@@ -75,7 +70,7 @@ export function AddElementDropdownButton({
 }: {
 	styleStore: LayeredStyleStore
 	controlId: string
-}) {
+}): React.JSX.Element {
 	return (
 		<CPopover
 			content={<AddElementDropdownPopoverContent styleStore={styleStore} controlId={controlId} />}

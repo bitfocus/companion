@@ -41,7 +41,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	useEffect(() => {
 		console.log('update data')
 		styleStore.updateData(config.style?.layers || [])
-	}, [config.style?.layers])
+	}, [styleStore, config.style?.layers])
 
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
 
@@ -57,6 +57,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 						rotaryActions={config?.options?.rotaryActions}
 						extraTabs={LayeredButtonExtraTabs}
 						localVariablesStore={localVariablesStore}
+						disabledSetStep={config?.options?.stepProgression === 'expression'}
 					>
 						{(currentTab) => {
 							if (currentTab === 'style') {

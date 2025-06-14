@@ -96,7 +96,7 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 				resolve(image)
 			}
 			image.onerror = (e) => {
-				reject(e)
+				reject(new Error(typeof e === 'string' ? e : 'Failed to load image'))
 			}
 
 			image.src = base64Image
@@ -107,7 +107,7 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 		return null
 	}
 
-	public drawComplete() {
+	public drawComplete(): void {
 		this.#parseCache.disposeUnused()
 	}
 }

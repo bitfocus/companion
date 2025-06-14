@@ -127,7 +127,6 @@ export class ControlButtonLayered
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
-			stepAutoProgress: true,
 			canModifyStyleInApis: false,
 		}
 

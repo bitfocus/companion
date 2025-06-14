@@ -39,13 +39,13 @@ export class LayeredStyleStore {
 		return undefined
 	}
 
-	public updateData(elements: SomeButtonGraphicsElement[]) {
+	public updateData(elements: SomeButtonGraphicsElement[]): void {
 		console.log('update data')
 
 		this.elements.replace(elements)
 	}
 
-	public setSelectedElementId(id: string | null) {
+	public setSelectedElementId(id: string | null): void {
 		this.#selectedElementId.set(id)
 	}
 
@@ -55,7 +55,7 @@ export class LayeredStyleStore {
 			: undefined
 	}
 
-	public setElementVisibility(layer: string, visible?: boolean) {
+	public setElementVisibility(layer: string, visible?: boolean): void {
 		if (visible === undefined) {
 			// Toggle visibility
 			if (!this.#hiddenElements.delete(layer)) {
