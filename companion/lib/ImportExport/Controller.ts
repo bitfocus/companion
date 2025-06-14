@@ -629,7 +629,7 @@ export class ImportExportController {
 				.sort(compareExportedInstances)
 
 			for (const [oldId, obj] of instanceEntries) {
-				if (!obj) continue
+				if (!obj || !obj.label) continue
 
 				const remapId = instanceRemapping[oldId]
 				const remapConfig = remapId ? this.#instancesController.getInstanceConfig(remapId) : undefined
