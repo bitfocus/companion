@@ -164,7 +164,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				}
 			})
 		})
-		this.#serviceApi.on('definition_changed', (id, info) => {
+		this.#serviceApi.on('custom_variable_definition_changed', (id, info) => {
 			if (this.#server) {
 				if (!this.#customVars.includes(id) || info == null) {
 					this.debounceRestart()
@@ -181,7 +181,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				}
 			}
 		})
-		this.#serviceApi.on('is_running', (is_running) => {
+		this.#serviceApi.on('action_recorder_is_running', (is_running) => {
 			if (this.#server) {
 				//check action recorder status
 				const node = this.#server.getElementByPath('0.4.0')
@@ -452,11 +452,7 @@ export class ServiceEmberPlus extends ServiceBase {
 			})
 		}
 
-		output[0] = new EmberModel.NumberedTreeNodeImpl(
-			1,
-			new EmberModel.EmberNodeImpl('internal'),
-			internalVarNodes
-		)
+		output[0] = new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('internal'), internalVarNodes)
 		output[1] = new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('custom'), customVarNodes)
 		return output
 	}

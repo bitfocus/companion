@@ -200,8 +200,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	listenForActionRecorderEvents(): void {
-		this.#controlController.actionRecorder.on('is_running', (is_running: boolean) => {
-			this.emit('is_running', is_running)
+		this.#controlController.actionRecorder.on('action_recorder_is_running', (is_running: boolean) => {
+			this.emit('action_recorder_is_running', is_running)
 		})
 	}
 
@@ -212,8 +212,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 				this.emit('variables_changed', variables, connection_labels)
 			}
 		)
-		this.#variablesController.custom.on('definition_changed', (id, info) => {
-			this.emit('definition_changed', id, info)
+		this.#variablesController.custom.on('custom_variable_definition_changed', (id, info) => {
+			this.emit('custom_variable_definition_changed', id, info)
 		})
 	}
 }

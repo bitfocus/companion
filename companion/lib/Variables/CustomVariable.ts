@@ -29,7 +29,7 @@ const CustomVariablesRoom = 'custom-variables'
 const CUSTOM_LABEL = 'custom'
 
 export interface VariablesCustomVariableEvents {
-	definition_changed: [id: string, info: CustomVariableDefinition | null]
+	custom_variable_definition_changed: [id: string, info: CustomVariableDefinition | null]
 }
 
 export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariableEvents> {
@@ -471,7 +471,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 
 	#emitVariableDefinitionChange(name: string, info: CustomVariableDefinition | null): void {
 		try {
-			this.emit('definition_changed', name, info)
+			this.emit('custom_variable_definition_changed', name, info)
 		} catch (e) {
 			this.#logger.error(`Failed to emit changed custom variable definition: ${e}`)
 		}
