@@ -44,7 +44,7 @@ export interface DrawImageBuffer {
 	pixelFormat: 'RGB' | 'RGBA' | 'ARGB' | undefined
 }
 
-export interface UnparsedButtonStyle extends ButtonStyleProperties {
+export interface UnparsedButtonStyle extends Partial<ButtonStyleProperties> {
 	imageBuffers: DrawImageBuffer[]
 }
 

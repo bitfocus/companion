@@ -29,6 +29,7 @@ import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/share
 import { CompanionVariableValues } from '@companion-module/base'
 import { lazy } from '../../../Resources/Util.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
+import { GraphicsLayeredElementUsageMatcher } from '@companion-app/shared/Graphics/LayeredElementUsageMatcher.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -231,7 +232,64 @@ export class ControlButtonLayered
 			},
 			true
 		)
-		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
+		let usedVariablesComplete = usedVariables
+
+		// Inject the styles from the old feedbacks onto the elements
+		if (this.entities.hasFeedbacks) {
+			const selectedElements = GraphicsLayeredElementUsageMatcher.SelectBasicLayers(elements)
+
+			const feedbackStyle = this.entities.getUnparsedFeedbackStyle({})
+
+			if (selectedElements.canvas) {
+				if (feedbackStyle.show_topbar === true) {
+					selectedElements.canvas.decoration = ButtonGraphicsDecorationType.TopBar
+				} else if (feedbackStyle.show_topbar === false) {
+					selectedElements.canvas.decoration = ButtonGraphicsDecorationType.Border
+				} else {
+					selectedElements.canvas.decoration = ButtonGraphicsDecorationType.FollowDefault
+				}
+			}
+			if (selectedElements.text) {
+				if (feedbackStyle.text !== undefined) {
+					const parseResult = this.parseButtonTextString(feedbackStyle.text, feedbackStyle.textExpression ?? false)
+
+					selectedElements.text.text = parseResult.text
+					usedVariablesComplete = usedVariablesComplete.union(parseResult.variableIds)
+				}
+				if (feedbackStyle.color !== undefined) {
+					selectedElements.text.color = feedbackStyle.color
+				}
+				if (feedbackStyle.size !== undefined) {
+					selectedElements.text.fontsize = Number(feedbackStyle.size) || 'auto'
+				}
+				if (feedbackStyle.alignment !== undefined) {
+					const alignment = ParseAlignment(feedbackStyle.alignment)
+					selectedElements.text.halign = alignment[0]
+					selectedElements.text.valign = alignment[1]
+				}
+			}
+			if (selectedElements.box) {
+				if (feedbackStyle.bgcolor !== undefined) {
+					selectedElements.box.color = feedbackStyle.bgcolor
+				}
+			}
+
+			if (selectedElements.image) {
+				if (feedbackStyle.png64 !== undefined) {
+					selectedElements.image.base64Image = feedbackStyle.png64 ?? null
+				}
+				if (feedbackStyle.pngalignment !== undefined) {
+					const alignment = ParseAlignment(feedbackStyle.pngalignment)
+					selectedElements.image.halign = alignment[0]
+					selectedElements.image.valign = alignment[1]
+				}
+			}
+
+			// TODO-layered - handle imageBuffers?
+			// imageBuffers: DrawImageBuffer[]
+		}
+
+		this.#last_draw_variables = usedVariablesComplete.size > 0 ? usedVariablesComplete : null
 
 		const result: DrawStyleLayeredButtonModel = {
 			...this.getDrawStyleButtonStateProps(),

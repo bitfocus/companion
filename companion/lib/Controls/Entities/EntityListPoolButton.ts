@@ -178,11 +178,15 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return entityLists
 	}
 
+	get hasFeedbacks(): boolean {
+		return this.#feedbacks.getDirectEntities().length > 0
+	}
+
 	/**
 	 * Get the unparsed style for the feedbacks
 	 * Note: Does not clone the style
 	 */
-	getUnparsedFeedbackStyle(baseStyle: ButtonStyleProperties): UnparsedButtonStyle {
+	getUnparsedFeedbackStyle(baseStyle: Partial<ButtonStyleProperties>): UnparsedButtonStyle {
 		const styleBuilder = new FeedbackStyleBuilder(baseStyle)
 		this.#feedbacks.buildFeedbackStyle(styleBuilder)
 		return styleBuilder.style

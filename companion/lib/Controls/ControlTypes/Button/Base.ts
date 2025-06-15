@@ -8,6 +8,8 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 import debounceFn from 'debounce-fn'
+import { CompanionVariableValues } from '@companion-module/base'
+import type { ParseVariablesResult } from '../../../Variables/Util.js'
 
 /**
  * Abstract class for a editable button control.
@@ -432,6 +434,42 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	 */
 	triggerLocationHasChanged(): void {
 		this.entities.resubscribeEntities(EntityModelType.Feedback, 'internal')
+	}
+
+	protected parseButtonTextString(text: string, textExpression: boolean): ParseVariablesResult {
+		// Block out the button text
+		const overrideVariableValues: CompanionVariableValues = {}
+
+		const location = this.deps.page.getLocationOfControlId(this.controlId)
+		if (location) {
+			// Ensure we don't enter into an infinite loop
+			overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
+		}
+
+		// Setup the parser
+		const parser = this.deps.variables.values.createVariablesAndExpressionParser(
+			location,
+			this.entities.getLocalVariableEntities(),
+			overrideVariableValues
+		)
+
+		if (textExpression) {
+			const parseResult = parser.executeExpression(text, undefined)
+			if (parseResult.ok) {
+				return {
+					text: parseResult.value + '',
+					variableIds: parseResult.variableIds,
+				}
+			} else {
+				this.logger.error(`Expression parse error: ${parseResult.error}`)
+				return {
+					text: 'ERR',
+					variableIds: parseResult.variableIds,
+				}
+			}
+		} else {
+			return parser.parseVariables(text)
+		}
 	}
 }
 

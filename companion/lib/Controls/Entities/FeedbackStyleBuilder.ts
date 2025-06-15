@@ -10,7 +10,7 @@ export class FeedbackStyleBuilder {
 		return this.#combinedStyle
 	}
 
-	constructor(baseStyle: ButtonStyleProperties) {
+	constructor(baseStyle: Partial<ButtonStyleProperties>) {
 		this.#combinedStyle = {
 			...baseStyle,
 			imageBuffers: [],
