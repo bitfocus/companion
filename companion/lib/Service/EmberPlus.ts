@@ -12,6 +12,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { PageController } from '../Page/Controller.js'
+import debounceFn from 'debounce-fn'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1
@@ -24,7 +25,7 @@ const LEGACY_NODE_TEXT = 1
 const LEGACY_NODE_TEXT_COLOR = 2
 const LEGACY_NODE_BG_COLOR = 3
 
-const SYSTEM_VAR_UPDATE_INTERVAL = 1000
+const DEBOUNCE_REINIT_DELAY = 2500
 
 /**
  * Generate ember+ path
@@ -75,7 +76,6 @@ function parseHexColor(hex: string): number {
 export class ServiceEmberPlus extends ServiceBase {
 	readonly #serviceApi: ServiceApi
 	readonly #pageController: PageController
-	#pollTimer: NodeJS.Timeout | undefined
 	#server: EmberServer | undefined = undefined
 	#customVars: string[] = []
 	#internalVars: string[] = []
@@ -94,8 +94,8 @@ export class ServiceEmberPlus extends ServiceBase {
 		this.port = 9092
 
 		this.#pageController.on('pagecount', this.#pageCountChange.bind(this))
-
 		this.init()
+		this.startListening()
 	}
 
 	/**
@@ -106,64 +106,86 @@ export class ServiceEmberPlus extends ServiceBase {
 			this.#server.discard()
 			this.#server = undefined
 		}
-		if (this.#pollTimer) {
-			clearInterval(this.#pollTimer)
-			this.#pollTimer = undefined
-		}
 	}
 
-	private startPolling(): void {
-		this.#pollTimer = setInterval(() => {
+	private startListening(): void {
+		this.#serviceApi.on('variables_changed', (variables, connection_labels) => {
+			if ((!connection_labels.has('internal') && !connection_labels.has('custom')) || this.#server == undefined) return // We don't care about any other variables
+			variables.forEach((changedVariable) => {
+				if (this.#server == undefined) return
+				let label = changedVariable.split(':')[0]
+				let name = changedVariable.split(':')[1]
+				if (label == 'internal' && name.startsWith('custom')) {
+					label = 'custom'
+					name = name.substring(7)
+				}
+				if (label === 'custom') {
+					const i = this.#customVars.indexOf(name)
+					if (i == -1) {
+						this.logger.debug(`New custom variable: ${name} restarting server`)
+						this.debounceRestart()
+					} else {
+						const node = this.#server.getElementByPath(`0.3.2.${i}.1`)
+						if (node) {
+							const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])?.toString()
+							if (value === undefined) return
+							// @ts-ignore
+							if (node.contents.value !== value) {
+								this.#server.update(node, { value: value })
+							}
+						}
+					}
+				} else if (label === 'internal') {
+					const i = this.#internalVars.indexOf(name)
+					if (i == -1) {
+						this.logger.debug(`New internal variable: ${name} restarting server`)
+						this.debounceRestart()
+					} else {
+						const node = this.#server.getElementByPath(`0.3.1.${i}.1`)
+						if (node) {
+							const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
+							if (value === undefined) return
+							// @ts-ignore
+							if (node.contents.value !== value) {
+								this.#server.update(node, { value: value })
+							}
+						}
+						if (name == 'action_recorder_action_count') {
+							const node = this.#server.getElementByPath('0.4.2')
+							if (node) {
+								const count = this.#serviceApi.getConnectionVariableValue('internal', 'action_recorder_action_count')
+								// @ts-ignore
+								if (node.contents.value !== count) {
+									this.#server.update(node, { value: count })
+								}
+							}
+						}
+					}
+				}
+			})
+		})
+		this.#serviceApi.on('definition_changed', (id, info) => {
+			if (this.#server) {
+				if (!this.#customVars.includes(id) || info == null) {
+					this.debounceRestart()
+					this.logger.debug(`Custom variable definiation changed for ${id} restarting server`)
+				}
+			}
+		})
+		this.#serviceApi.on('is_running', (is_running) => {
 			if (this.#server) {
 				//check action recorder status
-				let node = this.#server.getElementByPath('0.4.0')
+				const node = this.#server.getElementByPath('0.4.0')
 				if (node) {
 					// @ts-ignore
-					if (node.contents.value !== this.#serviceApi.actionRecorderGetSession().isRunning) {
-						this.#server.update(node, { value: this.#serviceApi.actionRecorderGetSession().isRunning })
-					}
-				}
-				node = this.#server.getElementByPath('0.4.2')
-				if (node) {
-					const count = this.#serviceApi.getConnectionVariableValue('internal', 'action_recorder_action_count')
-					// @ts-ignore
-					if (node.contents.value !== count) {
-						this.#server.update(node, { value: count })
-					}
-				}
-				node = this.#server.getElementByPath('0.0.4')
-				if (node) {
-					const uptime = this.#serviceApi.getConnectionVariableValue('internal', 'uptime')
-					// @ts-ignore
-					if (node.contents.value !== uptime) {
-						this.#server.update(node, { value: uptime })
-					}
-				}
-				for (let i = 0; i < this.#internalVars.length; i++) {
-					node = this.#server.getElementByPath(`0.3.1.${i}.1`)
-					if (node) {
-						const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
-						if (value === undefined) continue
-						// @ts-ignore
-						if (node.contents.value !== value) {
-							this.#server.update(node, { value: value })
-						}
-					}
-					
-				} 
-				for (let i = 0; i < this.#customVars.length; i++) {
-					node = this.#server.getElementByPath(`0.3.2.${i}.1`)
-					if (node) {
-						const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])?.toString()
-						if (value === undefined) continue
-						// @ts-ignore
-						if (node.contents.value !== value) {
-							this.#server.update(node, { value: value })
-						}
+					if (node.contents.value !== is_running) {
+						this.#server.update(node, { value: is_running })
 					}
 				}
 			}
-		}, SYSTEM_VAR_UPDATE_INTERVAL)
+		})
+		this.#serviceApi.listenForActionRecorderEvents()
+		this.#serviceApi.listenForChangedVariables()
 	}
 
 	/**
@@ -378,7 +400,12 @@ export class ServiceEmberPlus extends ServiceBase {
 		for (let i = 0; i < this.#internalVars.length; i++) {
 			let value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
 			const type: EmberModel.ParameterType =
-				typeof value == 'number' ? EmberModel.ParameterType.Integer : EmberModel.ParameterType.String
+				typeof value == 'number'
+					? EmberModel.ParameterType.Integer
+					: typeof value == 'boolean'
+						? EmberModel.ParameterType.Boolean
+						: EmberModel.ParameterType.String
+			const id: string = typeof value == 'number' ? 'integer' : typeof value == 'boolean' ? 'boolean' : 'string'
 			internalVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
 				i,
 				new EmberModel.EmberNodeImpl(this.#internalVars[i]),
@@ -387,7 +414,7 @@ export class ServiceEmberPlus extends ServiceBase {
 						1,
 						new EmberModel.ParameterImpl(
 							type,
-							'value',
+							id,
 							`Internal variable: ${this.#internalVars[i]}`,
 							value,
 							undefined,
@@ -405,7 +432,7 @@ export class ServiceEmberPlus extends ServiceBase {
 					1,
 					new EmberModel.ParameterImpl(
 						EmberModel.ParameterType.String,
-						'value',
+						'string',
 						`Custom variable: ${this.#customVars[i]}`,
 						value?.toString() ?? '',
 						undefined,
@@ -466,18 +493,6 @@ export class ServiceEmberPlus extends ServiceBase {
 								this.#serviceApi.appInfo.appBuild
 							)
 						),
-						4: new EmberModel.NumberedTreeNodeImpl(
-							4,
-							new EmberModel.ParameterImpl(
-								EmberModel.ParameterType.Integer,
-								'uptime',
-								'Companion Uptime',
-								this.#serviceApi.getConnectionVariableValue('internal', 'uptime'),
-								undefined,
-								0,
-								EmberModel.ParameterAccess.Read
-							)
-						),
 					}),
 					1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
 					2: new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('location'), this.#getLocationTree()),
@@ -531,7 +546,6 @@ export class ServiceEmberPlus extends ServiceBase {
 			this.currentState = true
 			this.logger.info('Listening on port ' + this.port)
 			this.logger.silly('Listening on port ' + this.port)
-			this.startPolling()
 		} catch (e: any) {
 			this.logger.error(`Could not launch: ${e.message}`)
 		}
@@ -702,7 +716,8 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 	#pageCountChange(_pageCount: number): void {
 		// TODO: This is excessive, but further research is needed to figure out how to edit the ember tree structure
-		this.restartModule()
+		this.logger.debug(`Page count change restarting server`)
+		this.debounceRestart()
 	}
 
 	/**
@@ -787,9 +802,16 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 	updateUserConfig(key: string, value: boolean | number | string): void {
 		super.updateUserConfig(key, value)
-		this.logger.debug(`Ember Plus API: updateUserConfig called for Key: ${key}, Value: ${value}`)
 		if (key == 'gridSize') {
-			this.restartModule()
+			this.logger.debug(`Grid Size change restarting server`)
+			this.debounceRestart()
 		}
 	}
+
+	debounceRestart = debounceFn(
+		() => {
+			this.restartModule()
+		},
+		{ wait: DEBOUNCE_REINIT_DELAY, maxWait: 4 * DEBOUNCE_REINIT_DELAY }
+	)
 }
