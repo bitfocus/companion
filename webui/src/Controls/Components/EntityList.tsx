@@ -14,6 +14,7 @@ import { LocalVariablesStore } from '../LocalVariablesStore.js'
 interface EditableEntityListProps {
 	controlId: string
 	heading: JSX.Element | string | null
+	headingSummary?: JSX.Element
 	headingActions?: JSX.Element[]
 	entities: SomeEntityModel[] | undefined
 	location: ControlLocation | undefined
@@ -29,6 +30,7 @@ interface EditableEntityListProps {
 export const EditableEntityList = observer(function EditableEntityList({
 	controlId,
 	heading,
+	headingSummary,
 	headingActions,
 	entities,
 	location,
@@ -50,6 +52,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 		<>
 			<EntityEditorHeading
 				heading={heading}
+				headingSummary={headingSummary ?? null}
 				ownerId={ownerId}
 				childEntityIds={entities?.map((f) => f.id) ?? []}
 				headingActions={headingActions}

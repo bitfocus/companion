@@ -18,22 +18,22 @@ export function LocalVariablesEditor({
 	localVariablesStore,
 }: LocalVariablesEditorProps): React.JSX.Element {
 	return (
-		<>
-			<CAlert color="info" className="mb-2">
-				This is a work in progress. Local variables are not supported in actions or feedbacks yet.
-			</CAlert>
-			<ControlEntitiesEditor
-				heading="Local Variables"
-				controlId={controlId}
-				entities={variables}
-				location={location}
-				listId="local-variables"
-				entityType={EntityModelType.Feedback}
-				entityTypeLabel="variable"
-				feedbackListType={FeedbackEntitySubType.Value}
-				localVariablesStore={localVariablesStore}
-				isLocalVariablesList={true}
-			/>
-		</>
+		<ControlEntitiesEditor
+			heading="Local Variables"
+			headingSummary={
+				<CAlert color="info" className="mb-2">
+					This is a work in progress. Local variables are not supported in actions or feedbacks yet.
+				</CAlert>
+			}
+			controlId={controlId}
+			entities={variables}
+			location={location}
+			listId="local-variables"
+			entityType={EntityModelType.Feedback}
+			entityTypeLabel="variable"
+			feedbackListType={FeedbackEntitySubType.Value}
+			localVariablesStore={localVariablesStore}
+			isLocalVariablesList={true}
+		/>
 	)
 }
