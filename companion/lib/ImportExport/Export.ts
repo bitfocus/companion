@@ -406,6 +406,7 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.connections)) {
+			// TODO: whether to include secrets should be configurable. Perhaps these should be encrypted too?
 			exp.instances = this.#instancesController.exportAll(false)
 			exp.connectionCollections = this.#instancesController.collections.collectionData
 		} else {
