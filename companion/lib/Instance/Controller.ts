@@ -118,8 +118,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceDefinitions: this.definitions,
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
-				setConnectionConfig: (connectionId, config) => {
-					this.setInstanceLabelAndConfig(connectionId, null, config, null, true)
+				setConnectionConfig: (connectionId, config, newUpgradeIndex) => {
+					this.setInstanceLabelAndConfig(connectionId, null, config, null, newUpgradeIndex, true)
 				},
 			},
 			this.modules,
@@ -223,6 +223,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		newLabel: string | null,
 		config: unknown | null,
 		updatePolicy: ConnectionUpdatePolicy | null,
+		newUpgradeIndex: number | null,
 		skip_notify_instance = false
 	): void {
 		const connectionConfig = this.#configStore.getConfigForId(id)
@@ -251,6 +252,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		if (updatePolicy !== null) {
 			connectionConfig.updatePolicy = updatePolicy
+		}
+
+		if (newUpgradeIndex !== null) {
+			connectionConfig.lastUpgradeIndex = newUpgradeIndex
 		}
 
 		this.emit('connection_updated', id)
@@ -521,7 +526,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
 		const safeLabel = makeLabelSafe(config.label)
 		if (!is_being_created && safeLabel !== config.label) {
-			this.setInstanceLabelAndConfig(id, safeLabel, null, null, true)
+			this.setInstanceLabelAndConfig(id, safeLabel, null, null, null, true)
 		}
 
 		// TODO this could check if anything above changed, or is_being_created
@@ -595,7 +600,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				return 'invalid label'
 			}
 
-			this.setInstanceLabelAndConfig(id, label, config, updatePolicy)
+			this.setInstanceLabelAndConfig(id, label, config, updatePolicy, null)
 
 			return null
 		})
@@ -613,7 +618,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// TODO - refactor/optimise/tidy this
 
-			this.setInstanceLabelAndConfig(id, label, null, null)
+			this.setInstanceLabelAndConfig(id, label, null, null, null)
 
 			const config = this.#configStore.getConfigForId(id)
 			if (!config) return 'no connection'

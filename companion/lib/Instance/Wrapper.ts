@@ -70,7 +70,7 @@ export interface InstanceModuleWrapperDependencies {
 	readonly instanceStatus: InstanceStatus
 	readonly sharedUdpManager: InstanceSharedUdpManager
 
-	readonly setConnectionConfig: (connectionId: string, config: unknown) => void
+	readonly setConnectionConfig: (connectionId: string, config: unknown, newUpgradeIndex: number | null) => void
 }
 
 export class SocketEventsHandler {
@@ -188,7 +188,7 @@ export class SocketEventsHandler {
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
 		config.lastUpgradeIndex = msg.newUpgradeIndex
-		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig)
+		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.newUpgradeIndex)
 	}
 
 	/**
@@ -773,7 +773,7 @@ export class SocketEventsHandler {
 	 */
 	async #handleSaveConfig(msg: SaveConfigMessage): Promise<void> {
 		// Save config, but do not automatically call this module's updateConfig again
-		this.#deps.setConnectionConfig(this.connectionId, msg.config)
+		this.#deps.setConnectionConfig(this.connectionId, msg.config, null)
 	}
 
 	/**
