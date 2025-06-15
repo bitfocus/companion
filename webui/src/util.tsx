@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { DependencyList, FormEvent, useEffect, useMemo, useState } from 'react'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
@@ -98,7 +99,7 @@ export function wrapSocket(socket: CompanionSocketType): CompanionSocketWrapped 
 			socket.emit(key, ...args)
 		},
 
-		emitPromise: (name, args, timeout, timeoutMessage) => {
+		emitPromise: async (name, args, timeout, timeoutMessage) => {
 			const p = new Promise<ReturnType<SocketEmitPromiseEvents[typeof name]>>((resolve, reject) => {
 				console.log('send', name, ...args)
 
@@ -131,7 +132,7 @@ const freezePrototypes = () => {
 	Object.freeze(console)
 	Object.freeze(Array.prototype)
 	Object.freeze(Function.prototype)
-	// @ts-ignore
+	// @ts-expect-error Suppress error
 	Object.freeze(Math.prototype)
 	Object.freeze(Number.prototype)
 	Object.freeze(Object.prototype)
@@ -140,15 +141,15 @@ const freezePrototypes = () => {
 	Object.freeze(Symbol.prototype)
 
 	// prevent constructors of async/generator functions to bypass sandbox
-	// @ts-ignore
+	// @ts-expect-error Suppress error
 	Object.freeze(async function () {}.__proto__)
-	// @ts-ignore
+	// @ts-expect-error Suppress error
 	Object.freeze(async function* () {}.__proto__)
-	// @ts-ignore
+	// @ts-expect-error Suppress error
 	Object.freeze(function* () {}.__proto__)
-	// @ts-ignore
+	// @ts-expect-error Suppress error
 	Object.freeze(function* () {}.__proto__.prototype)
-	// @ts-ignore
+	// @ts-expect-error Suppress error
 	Object.freeze(async function* () {}.__proto__.prototype)
 }
 
@@ -188,7 +189,7 @@ export function sandbox(serializedFn: string): (...args: any[]) => any {
 	freezePrototypes()
 
 	try {
-		// eslint-disable-next-line no-new-func
+		// eslint-disable-next-line @typescript-eslint/no-implied-eval
 		const scopedFn = new Function('catchAllProxy', src)
 
 		return (arg0, arg1) => {
@@ -237,7 +238,7 @@ interface ErrorFallbackProps {
 	error: Error | undefined
 	resetErrorBoundary: () => void
 }
-export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
+export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps): React.JSX.Element {
 	return (
 		<CAlert color="danger">
 			<p>Something went wrong:</p>
@@ -249,12 +250,12 @@ export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps)
 	)
 }
 
-export function MyErrorBoundary({ children }: React.PropsWithChildren<{}>) {
+export function MyErrorBoundary({ children }: React.PropsWithChildren): React.JSX.Element {
 	return <ErrorBoundary FallbackComponent={ErrorFallback}>{children}</ErrorBoundary>
 }
 
 type KeyReceiverProps = React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>
-export function KeyReceiver({ children, ...props }: KeyReceiverProps) {
+export function KeyReceiver({ children, ...props }: KeyReceiverProps): React.JSX.Element {
 	return (
 		<div {...props} style={{ ...props.style, outline: 'none' }}>
 			{children}
@@ -263,10 +264,10 @@ export function KeyReceiver({ children, ...props }: KeyReceiverProps) {
 }
 
 // eslint-disable-next-line react-hooks/exhaustive-deps
-export const useMountEffect = (fun: React.EffectCallback) => useEffect(fun, [])
+export const useMountEffect = (fun: React.EffectCallback): void => useEffect(fun, [])
 
 type LoadingBarProps = LoaderHeightWidthProps
-export function LoadingBar(props: LoadingBarProps) {
+export function LoadingBar(props: LoadingBarProps): React.JSX.Element {
 	return (
 		<BarLoader
 			loading={true}
@@ -285,7 +286,12 @@ interface LoadingRetryOrErrorProps {
 	doRetry?: () => void
 	autoRetryAfter?: number | null
 }
-export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter = null }: LoadingRetryOrErrorProps) {
+export function LoadingRetryOrError({
+	error,
+	dataReady,
+	doRetry,
+	autoRetryAfter = null,
+}: LoadingRetryOrErrorProps): React.JSX.Element {
 	const [countdown, setCountdown] = useState(autoRetryAfter)
 
 	useEffect(() => {
@@ -340,7 +346,7 @@ export function applyPatchOrReplaceSubObject<T extends object | undefined>(
 	key: string,
 	patch: JsonPatchOperation[] | T | null,
 	defVal: T | null
-) {
+): Record<string, T> {
 	if (oldDefinitions) {
 		const oldEntry = oldDefinitions[key] ?? defVal
 		if (!oldEntry) return oldDefinitions
@@ -380,7 +386,7 @@ export function useOnClickOutsideExt(
 	refs: React.RefObject<HTMLElement>[],
 	handler: (e: MouseEvent) => void,
 	mouseEvent: 'mousedown' | 'mouseup' = 'mousedown'
-) {
+): void {
 	useEventListener(mouseEvent, (event) => {
 		for (const ref of refs) {
 			const el = ref?.current
@@ -400,7 +406,8 @@ export const PreventDefaultHandler = (e: FormEvent): void => {
 }
 
 export function useComputed<TRes>(cb: () => TRes, deps: DependencyList): TRes {
-	return useMemo(() => computed(cb), deps).get()
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	return useMemo(() => computed(cb), [cb, ...deps]).get()
 }
 
 /** Type assert that a value is never */

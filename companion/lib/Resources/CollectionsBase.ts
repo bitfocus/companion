@@ -31,6 +31,9 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		this.removeUnknownCollectionReferences()
 	}
 
+	/**
+	 * Some of the collections have been modified in some way, emit an update to interested parties (eg the UI)
+	 */
 	protected abstract emitUpdate(rows: CollectionBase<TCollectionMetadata>[]): void
 
 	/**
@@ -38,7 +41,10 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	 */
 	abstract removeUnknownCollectionReferences(): void
 
-	protected collectAllCollectionIds(): Set<string> {
+	/**
+	 * Get a set of all the known collection ids
+	 */
+	public collectAllCollectionIds(): Set<string> {
 		const collectionIds = new Set<string>()
 
 		const collectCollectionIds = (collections: CollectionBase<TCollectionMetadata>[]) => {
@@ -75,8 +81,21 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		return false
 	}
 
-	protected get collectionData(): CollectionBase<TCollectionMetadata>[] {
-		return this.data
+	/**
+	 * Check if a collection id exists in the hierarchy
+	 * @param collectionId The collection id to check
+	 * @returns true if the collection id exists, false otherwise
+	 */
+	public doesCollectionIdExist(collectionId: string | null | undefined): boolean {
+		if (!collectionId) return true
+		return !!this.findCollectionAndParent(collectionId)
+	}
+
+	/**
+	 * Get a reference to the collections data
+	 */
+	get collectionData(): CollectionBase<TCollectionMetadata>[] {
+		return [...this.data] // Return a shallow copy of the data
 	}
 
 	protected collectionCreate = (label: string, metaData: TCollectionMetadata) => {
@@ -100,7 +119,7 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	}
 
 	protected collectionRemove = (collectionId: string) => {
-		const matchedCollection = this.#findCollectionAndParent(collectionId)
+		const matchedCollection = this.findCollectionAndParent(collectionId)
 		if (!matchedCollection) return
 
 		if (!matchedCollection.parentCollection) {
@@ -146,10 +165,24 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	}
 
 	protected collectionSetName = (collectionId: string, collectionName: string) => {
-		const matchedCollection = this.#findCollectionAndParent(collectionId)
+		const matchedCollection = this.findCollectionAndParent(collectionId)
 		if (!matchedCollection) throw new Error(`Collection ${collectionId} not found`)
 
 		matchedCollection.collection.label = collectionName
+		this.#dbTable.set(matchedCollection.rootCollection.id, matchedCollection.rootCollection)
+
+		// Inform the ui of the patch
+		this.emitUpdate(this.data)
+	}
+
+	protected collectionModifyMetaData = (
+		collectionId: string,
+		modifier: (collection: CollectionBase<TCollectionMetadata>) => void
+	) => {
+		const matchedCollection = this.findCollectionAndParent(collectionId)
+		if (!matchedCollection) throw new Error(`Collection ${collectionId} not found`)
+
+		modifier(matchedCollection.collection)
 		this.#dbTable.set(matchedCollection.rootCollection.id, matchedCollection.rootCollection)
 
 		// Inform the ui of the patch
@@ -162,10 +195,10 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 			return
 		}
 
-		const matchedCollcetion = this.#findCollectionAndParent(collectionId)
+		const matchedCollcetion = this.findCollectionAndParent(collectionId)
 		if (!matchedCollcetion) throw new Error(`Collection ${collectionId} not found`)
 
-		const newParentCollection = parentId ? this.#findCollectionAndParent(parentId) : null
+		const newParentCollection = parentId ? this.findCollectionAndParent(parentId) : null
 		if (parentId && !newParentCollection) {
 			throw new Error(`Parent collection ${parentId} not found`)
 		}
@@ -209,7 +242,7 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		// Future: perform side effects like updating enabled statuses
 	}
 
-	#findCollectionAndParent(collectionId: string): {
+	protected findCollectionAndParent(collectionId: string): {
 		// The root level collection, that contains the collection (could be the same as parentCollection or collection)
 		rootCollection: CollectionBase<TCollectionMetadata>
 		// The direct parent collection of the collection we are looking for, or null if collection is at the root

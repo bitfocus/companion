@@ -10,7 +10,7 @@ export function CollectionsNestingTableDropZone({
 	drop: ConnectDropTarget | undefined
 	itemName: string
 	nestingLevel: number
-}) {
+}): React.JSX.Element {
 	return (
 		<div ref={drop} className="collections-nesting-table-dropzone">
 			<CollectionsNestingTableNestingRow nestingLevel={nestingLevel}>

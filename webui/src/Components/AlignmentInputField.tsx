@@ -19,7 +19,7 @@ interface AlignmentInputFieldProps {
 	setValue: (value: CompanionAlignment) => void
 }
 
-export function AlignmentInputField({ value, setValue }: AlignmentInputFieldProps) {
+export function AlignmentInputField({ value, setValue }: AlignmentInputFieldProps): React.JSX.Element {
 	return (
 		<div className="alignmentinput">
 			{ALIGNMENT_OPTIONS.map((align) => {

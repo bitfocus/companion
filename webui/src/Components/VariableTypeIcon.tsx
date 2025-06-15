@@ -15,11 +15,26 @@ const paths = {
 	$: `m 49.81,91.08 q -5.37,0 -10.18,-1.27 Q 34.87,88.48 30.67,85.94 26.52,83.34 22.87,79.46 v 0 l 7.58,-9.18 v 0 q 3.98,4.81 8.79,7.25 4.87,2.38 10.56,2.38 7.85,0 11.73,-3.1 3.87,-3.1 3.87,-9.29 v -0.06 q 0,-4.31 -2.1,-6.64 -2.05,-2.32 -5.48,-3.43 -3.37,-1.16 -7.41,-1.88 -4.15,-0.77 -8.46,-1.77 -4.26,-1.05 -7.85,-3.21 -3.6,-2.16 -5.81,-6.25 -2.16,-4.15 -2.16,-11.12 v -0.06 q 0,-12.06 6.58,-18.09 6.58,-6.03 19.75,-6.03 5.81,0 11.39,1.83 5.64,1.83 11.12,5.48 v 0 l -6.8,9.35 v 0 q -4.04,-2.77 -7.96,-4.09 -3.93,-1.38 -7.74,-1.38 -7.36,0 -11.01,3.04 -3.6,2.99 -3.6,9.02 v 0.06 q 0,4.54 2.38,6.91 2.43,2.32 6.31,3.48 3.93,1.11 8.35,2.1 3.98,0.88 7.91,2.16 3.93,1.22 7.19,3.6 3.26,2.38 5.2,6.47 1.94,4.09 1.94,10.67 v 0.11 q 0,11.67 -6.8,17.48 -6.8,5.81 -20.52,5.81 z m -4.59,8.96 V 86.71 h 11.28 v 13.33 z m 0,-87.39 V 0.04 H 56.5 V 12.65 Z`,
 }
 
-export const VariableTypeIcon = ({ icon = 'unknown', width = 100, height = 100, fill = '#ffffff', ...props }) => {
+export type VariableTypeIconType = keyof typeof paths
+
+interface VariableTypeIconProps extends React.SVGProps<SVGSVGElement> {
+	icon?: VariableTypeIconType
+	width?: number
+	height?: number
+	fill?: string
+}
+
+export const VariableTypeIcon = ({
+	icon = 'unknown',
+	width = 100,
+	height = 100,
+	fill = '#ffffff',
+	...props
+}: VariableTypeIconProps): React.JSX.Element => {
 	if (!Object.keys(paths).includes(icon)) icon = 'unknown'
 	return (
 		<svg width={width} height={height} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" {...props}>
-			<path d={paths[icon as keyof typeof paths]} fill={fill} />
+			<path d={paths[icon]} fill={fill} />
 		</svg>
 	)
 }

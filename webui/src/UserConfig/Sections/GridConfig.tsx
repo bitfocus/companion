@@ -54,14 +54,11 @@ export const GridConfig = observer(function GridConfig(props: UserConfigProps) {
 	)
 })
 
-interface GridSizeModalProps {
-	// Nothing
-}
 interface GridSizeModalRef {
 	show(): void
 }
 
-const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
+const GridSizeModal = observer<object, GridSizeModalRef>(
 	function GridSizeModal(_props, ref) {
 		const { userConfig, socket } = useContext(RootAppStoreContext)
 

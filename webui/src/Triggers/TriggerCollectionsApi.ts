@@ -4,7 +4,7 @@ import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 
-export interface TriggerCollectionsApi extends NestingCollectionsApi {}
+export type TriggerCollectionsApi = NestingCollectionsApi
 
 export function useTriggerCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>

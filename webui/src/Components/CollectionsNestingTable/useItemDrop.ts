@@ -1,5 +1,5 @@
 import { useDeferredValue } from 'react'
-import { useDrop } from 'react-dnd'
+import { ConnectDropTarget, useDrop } from 'react-dnd'
 import { checkDragState, type DragState } from '../../util.js'
 import type { NestingCollectionsApi } from './Types.js'
 
@@ -20,7 +20,10 @@ export function useCollectionsListItemDrop(
 	collectionId: string | null,
 	hoverItemId: string | null,
 	hoverIndex: number
-) {
+): {
+	isDragging: boolean
+	drop: ConnectDropTarget
+} {
 	const [isDragging, drop] = useDrop<CollectionsNestingTableItemDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {

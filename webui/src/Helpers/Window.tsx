@@ -1,6 +1,7 @@
 import React from 'react'
 
-export const windowLinkOpen = ({ href, sameWindow }: { href: string; sameWindow?: boolean; title?: string }) => {
+// eslint-disable-next-line react-refresh/only-export-components
+export const windowLinkOpen = ({ href, sameWindow }: { href: string; sameWindow?: boolean; title?: string }): void => {
 	window.open(href, !sameWindow ? '_blank' : '', 'noreferrer')
 }
 
@@ -17,7 +18,7 @@ export function WindowLinkOpen({
 	sameWindow = false,
 	title,
 	className,
-}: React.PropsWithChildren<WindowLinkOpenProps>) {
+}: React.PropsWithChildren<WindowLinkOpenProps>): React.JSX.Element {
 	return (
 		<div
 			onClick={() => windowLinkOpen({ href, sameWindow })}

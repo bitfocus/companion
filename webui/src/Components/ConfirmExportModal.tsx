@@ -1,10 +1,11 @@
 import { CButton, CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState, useContext } from 'react'
 import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
-import { MenuPortalContext } from './DropdownInputField.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { TextInputField } from './TextInputField.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 export interface ConfirmExportModalRef {
 	show(url: string): void
@@ -14,8 +15,8 @@ interface ConfirmExportModalProps {
 	title?: string
 }
 
-export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExportModalProps>(
-	function ConfirmExportModal(props, ref) {
+export const ConfirmExportModal = observer(
+	forwardRef<ConfirmExportModalRef, ConfirmExportModalProps>(function ConfirmExportModal(props, ref) {
 		const { userConfig } = useContext(RootAppStoreContext)
 
 		const [data, setData] = useState<string | null>(null)
@@ -54,6 +55,7 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 			}
 		}, [data, format, filename])
 
+		const defaultExportFilename = userConfig.properties?.default_export_filename ?? ''
 		useImperativeHandle(
 			ref,
 			() => ({
@@ -62,13 +64,13 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 					setShow(true)
 
 					// Reset to default filename each time modal is opened
-					setFilename(String(userConfig.properties?.default_export_filename))
+					setFilename(String(defaultExportFilename))
 
 					// Focus the button asap. It also gets focused once the open is complete
 					setTimeout(buttonFocus, 50)
 				},
 			}),
-			[]
+			[defaultExportFilename]
 		)
 
 		const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
@@ -106,5 +108,5 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 				</MenuPortalContext.Provider>
 			</CModal>
 		)
-	}
+	})
 )

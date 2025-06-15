@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
 import { CollectionsNestingTableItemRow } from './CollectionsNestingTableRowWrappers.js'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
-import { CollectionsNestingTableItem } from './Types.js'
+import { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionsListItemDrop } from './useItemDrop.js'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 
@@ -17,9 +17,10 @@ interface CollectionsNestingTableCollectionContentsProps<TItem extends Collectio
 }
 
 export const CollectionsNestingTableCollectionContents = observer(function CollectionsNestingTableCollectionContents<
+	TCollection extends CollectionsNestingTableCollection,
 	TItem extends CollectionsNestingTableItem,
 >({ items, collectionId, showNoItemsMessage, nestingLevel }: CollectionsNestingTableCollectionContentsProps<TItem>) {
-	const { dragId, collectionsApi, itemName, ItemRow } = useCollectionsNestingTableContext<TItem>()
+	const { dragId, collectionsApi, itemName, ItemRow } = useCollectionsNestingTableContext<TCollection, TItem>()
 
 	const { isDragging, drop } = useCollectionsListItemDrop(collectionsApi, dragId, collectionId, null, 0)
 
@@ -37,7 +38,12 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 			visibleCount++
 
 			return (
-				<CollectionsNestingTableItemRow<TItem> key={item.id} item={item} index={index} nestingLevel={nestingLevel}>
+				<CollectionsNestingTableItemRow<TCollection, TItem>
+					key={item.id}
+					item={item}
+					index={index}
+					nestingLevel={nestingLevel}
+				>
 					{childNode}
 				</CollectionsNestingTableItemRow>
 			)

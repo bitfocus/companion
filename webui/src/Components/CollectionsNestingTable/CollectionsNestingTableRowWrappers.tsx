@@ -11,6 +11,7 @@ import { CollectionsNestingTableCollectionDragItem } from './useCollectionDrop.j
 import { observer } from 'mobx-react-lite'
 
 export const CollectionsNestingTableItemRow = observer(function CollectionsNestingTableItemRow<
+	TCollection extends CollectionsNestingTableCollection,
 	TItem extends CollectionsNestingTableItem,
 >({
 	item,
@@ -22,7 +23,7 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 	index: number
 	nestingLevel: number
 }>) {
-	const { dragId, collectionsApi, selectedItemId } = useCollectionsNestingTableContext<TItem>()
+	const { dragId, collectionsApi, selectedItemId } = useCollectionsNestingTableContext<TCollection, TItem>()
 
 	const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, item.collectionId, item.id, index)
 	const [{ isDragging }, drag, preview] = useDrag<
@@ -68,7 +69,7 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 		parentId: string | null
 		nestingLevel: number
 	}>) {
-		const { dragId, collectionsApi } = useCollectionsNestingTableContext<CollectionsNestingTableItem>()
+		const { dragId, collectionsApi } = useCollectionsNestingTableContext<TCollection, CollectionsNestingTableItem>()
 
 		// Allow dropping items onto the collection, to add them to the collection
 		const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, collection.id, null, -1)

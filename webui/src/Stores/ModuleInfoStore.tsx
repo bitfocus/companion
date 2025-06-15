@@ -31,7 +31,7 @@ export class ModuleInfoStore {
 		this.storeVersions = new ModuleStoreVersionsStore(socket)
 	}
 
-	public get count() {
+	public get count(): number {
 		return this.modules.size
 	}
 
@@ -81,7 +81,7 @@ export class ModuleInfoStore {
 	})
 
 	getModuleFriendlyName(moduleId: string): string | undefined {
-		return this.modules.get(moduleId)?.display.name?.replace(/\;.*/, '...')
+		return this.modules.get(moduleId)?.display.name?.replace(/;.*/, '...')
 	}
 }
 

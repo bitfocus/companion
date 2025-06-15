@@ -8,7 +8,7 @@ import { RecorderSessionHeading } from './RecorderSessionHeading.js'
 import { RecorderSession } from './RecorderSession.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 
-export function ActionRecorder() {
+export function ActionRecorder(): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef(null)

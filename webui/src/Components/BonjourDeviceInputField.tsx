@@ -18,7 +18,7 @@ export function BonjourDeviceInputField({
 	setValue,
 	connectionId,
 	queryId,
-}: BonjourDeviceInputFieldProps) {
+}: BonjourDeviceInputFieldProps): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const [_subIds, setSubIds] = useState<string[] | null>(null)
@@ -54,7 +54,7 @@ export function BonjourDeviceInputField({
 			unsubUp()
 			unsubDown()
 		}
-	}, [])
+	}, [socket])
 
 	// Start/Stop the subscription
 	useEffect(() => {

@@ -10,700 +10,270 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root.tsx'
+import { Route as RedirectsTablet3RouteImport } from './routes/-redirects/tablet3.tsx'
+import { Route as RedirectsTablet2HtmlRouteImport } from './routes/-redirects/tablet2-html.tsx'
+import { Route as RedirectsTabletHtmlRouteImport } from './routes/-redirects/tablet-html.tsx'
+import { Route as RedirectsIpadHtmlRouteImport } from './routes/-redirects/ipad-html.tsx'
+import { Route as RedirectsHelpHtmlRouteImport } from './routes/-redirects/help-html.tsx'
+import { Route as RedirectsEmulatorsRouteImport } from './routes/-redirects/emulators.tsx'
+import { Route as RedirectsEmulator2RouteImport } from './routes/-redirects/emulator2.tsx'
+import { Route as RedirectsEmulatorHtmlRouteImport } from './routes/-redirects/emulator-html.tsx'
+import { Route as appRouteImport } from './routes/_app.tsx'
+import { Route as EmulatorIndexRouteImport } from './routes/self-contained/emulator/index.tsx'
+import { Route as IndexRouteImport } from './routes/app/index.tsx'
+import { Route as ConnectionDebugDotconnectionIdRouteImport } from './routes/self-contained/connection-debug.$connectionId.tsx'
+import { Route as TriggersRouteImport } from './routes/app/triggers.tsx'
+import { Route as ModulesRouteImport } from './routes/app/modules.tsx'
+import { Route as LogRouteImport } from './routes/app/log.tsx'
+import { Route as ImportExportRouteImport } from './routes/app/import-export.tsx'
+import { Route as ConnectionsRouteImport } from './routes/app/connections.tsx'
+import { Route as CloudRouteImport } from './routes/app/cloud.tsx'
+import { Route as ButtonsRouteImport } from './routes/app/buttons.tsx'
+import { Route as SplatRouteImport } from './routes/app/$.tsx'
+import { Route as VariablesIndexRouteImport } from './routes/app/variables/index.tsx'
+import { Route as TriggersIndexRouteImport } from './routes/app/triggers/index.tsx'
+import { Route as SettingsIndexRouteImport } from './routes/app/settings/index.tsx'
+import { Route as ModulesIndexRouteImport } from './routes/app/modules/index.tsx'
+import { Route as VariablesCustomRouteImport } from './routes/app/variables/custom.tsx'
+import { Route as VariablesLabelRouteImport } from './routes/app/variables/$label.tsx'
+import { Route as TriggersControlIdRouteImport } from './routes/app/triggers/$controlId.tsx'
+import { Route as SurfacesOutboundRouteImport } from './routes/app/surfaces/outbound.tsx'
+import { Route as SurfacesDiscoverRouteImport } from './routes/app/surfaces/discover.tsx'
+import { Route as SurfacesConfiguredRouteImport } from './routes/app/surfaces/configured.tsx'
+import { Route as SurfacesSplatRouteImport } from './routes/app/surfaces/$.tsx'
+import { Route as SettingsSurfacesRouteImport } from './routes/app/settings/surfaces.tsx'
+import { Route as SettingsProtocolsRouteImport } from './routes/app/settings/protocols.tsx'
+import { Route as SettingsGeneralRouteImport } from './routes/app/settings/general.tsx'
+import { Route as SettingsButtonsRouteImport } from './routes/app/settings/buttons.tsx'
+import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/advanced.tsx'
+import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
+import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
 
-import { Route as rootRoute } from './routes/__root.tsx'
-import { Route as RedirectsTablet3Import } from './routes/-redirects/tablet3.tsx'
-import { Route as RedirectsTablet2HtmlImport } from './routes/-redirects/tablet2-html.tsx'
-import { Route as RedirectsTabletHtmlImport } from './routes/-redirects/tablet-html.tsx'
-import { Route as RedirectsIpadHtmlImport } from './routes/-redirects/ipad-html.tsx'
-import { Route as RedirectsHelpHtmlImport } from './routes/-redirects/help-html.tsx'
-import { Route as RedirectsEmulatorsImport } from './routes/-redirects/emulators.tsx'
-import { Route as RedirectsEmulator2Import } from './routes/-redirects/emulator2.tsx'
-import { Route as RedirectsEmulatorHtmlImport } from './routes/-redirects/emulator-html.tsx'
-import { Route as appImport } from './routes/_app.tsx'
-import { Route as EmulatorIndexImport } from './routes/self-contained/emulator/index.tsx'
-import { Route as IndexImport } from './routes/app/index.tsx'
-import { Route as ConnectionDebugconnectionIdImport } from './routes/self-contained/connection-debug.$connectionId.tsx'
-import { Route as TriggersImport } from './routes/app/triggers.tsx'
-import { Route as ModulesImport } from './routes/app/modules.tsx'
-import { Route as LogImport } from './routes/app/log.tsx'
-import { Route as ImportExportImport } from './routes/app/import-export.tsx'
-import { Route as ConnectionsImport } from './routes/app/connections.tsx'
-import { Route as CloudImport } from './routes/app/cloud.tsx'
-import { Route as ButtonsImport } from './routes/app/buttons.tsx'
-import { Route as SplatImport } from './routes/app/$.tsx'
-import { Route as VariablesIndexImport } from './routes/app/variables/index.tsx'
-import { Route as TriggersIndexImport } from './routes/app/triggers/index.tsx'
-import { Route as SettingsIndexImport } from './routes/app/settings/index.tsx'
-import { Route as ModulesIndexImport } from './routes/app/modules/index.tsx'
-import { Route as VariablesCustomImport } from './routes/app/variables/custom.tsx'
-import { Route as VariablesLabelImport } from './routes/app/variables/$label.tsx'
-import { Route as TriggersControlIdImport } from './routes/app/triggers/$controlId.tsx'
-import { Route as SurfacesOutboundImport } from './routes/app/surfaces/outbound.tsx'
-import { Route as SurfacesDiscoverImport } from './routes/app/surfaces/discover.tsx'
-import { Route as SurfacesConfiguredImport } from './routes/app/surfaces/configured.tsx'
-import { Route as SurfacesSplatImport } from './routes/app/surfaces/$.tsx'
-import { Route as SettingsSurfacesImport } from './routes/app/settings/surfaces.tsx'
-import { Route as SettingsProtocolsImport } from './routes/app/settings/protocols.tsx'
-import { Route as SettingsGeneralImport } from './routes/app/settings/general.tsx'
-import { Route as SettingsButtonsImport } from './routes/app/settings/buttons.tsx'
-import { Route as SettingsAdvancedImport } from './routes/app/settings/advanced.tsx'
-import { Route as ModulesModuleIdImport } from './routes/app/modules/$moduleId.tsx'
-import { Route as ButtonsPageImport } from './routes/app/buttons/$page.tsx'
+const TabletDotlazyRouteImport = createFileRoute('/tablet')()
+const GettingStartedDotlazyRouteImport = createFileRoute('/getting-started')()
+const EmulatorEmulatorIdDotlazyRouteImport = createFileRoute(
+  '/emulator/$emulatorId',
+)()
 
-// Create Virtual Routes
-
-const TabletlazyImport = createFileRoute('/tablet')()
-const GettingStartedlazyImport = createFileRoute('/getting-started')()
-const EmulatorEmulatorIdlazyImport = createFileRoute('/emulator/$emulatorId')()
-
-// Create/Update Routes
-
-const TabletlazyRoute = TabletlazyImport.update({
+const TabletDotlazyRoute = TabletDotlazyRouteImport.update({
   id: '/tablet',
   path: '/tablet',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() =>
   import('./routes/self-contained/tablet.lazy.tsx').then((d) => d.Route),
 )
-
-const GettingStartedlazyRoute = GettingStartedlazyImport.update({
+const GettingStartedDotlazyRoute = GettingStartedDotlazyRouteImport.update({
   id: '/getting-started',
   path: '/getting-started',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() =>
   import('./routes/self-contained/getting-started.lazy.tsx').then(
     (d) => d.Route,
   ),
 )
-
-const RedirectsTablet3Route = RedirectsTablet3Import.update({
+const RedirectsTablet3Route = RedirectsTablet3RouteImport.update({
   id: '/tablet3',
   path: '/tablet3',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const RedirectsTablet2HtmlRoute = RedirectsTablet2HtmlImport.update({
+const RedirectsTablet2HtmlRoute = RedirectsTablet2HtmlRouteImport.update({
   id: '/tablet2.html',
   path: '/tablet2.html',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const RedirectsTabletHtmlRoute = RedirectsTabletHtmlImport.update({
+const RedirectsTabletHtmlRoute = RedirectsTabletHtmlRouteImport.update({
   id: '/tablet.html',
   path: '/tablet.html',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const RedirectsIpadHtmlRoute = RedirectsIpadHtmlImport.update({
+const RedirectsIpadHtmlRoute = RedirectsIpadHtmlRouteImport.update({
   id: '/ipad.html',
   path: '/ipad.html',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const RedirectsHelpHtmlRoute = RedirectsHelpHtmlImport.update({
+const RedirectsHelpHtmlRoute = RedirectsHelpHtmlRouteImport.update({
   id: '/help.html',
   path: '/help.html',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const RedirectsEmulatorsRoute = RedirectsEmulatorsImport.update({
+const RedirectsEmulatorsRoute = RedirectsEmulatorsRouteImport.update({
   id: '/emulators',
   path: '/emulators',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const RedirectsEmulator2Route = RedirectsEmulator2Import.update({
+const RedirectsEmulator2Route = RedirectsEmulator2RouteImport.update({
   id: '/emulator2',
   path: '/emulator2',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const RedirectsEmulatorHtmlRoute = RedirectsEmulatorHtmlImport.update({
+const RedirectsEmulatorHtmlRoute = RedirectsEmulatorHtmlRouteImport.update({
   id: '/emulator.html',
   path: '/emulator.html',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const appRoute = appImport.update({
+const appRoute = appRouteImport.update({
   id: '/_app',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const EmulatorIndexRoute = EmulatorIndexImport.update({
+const EmulatorIndexRoute = EmulatorIndexRouteImport.update({
   id: '/emulator/',
   path: '/emulator/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => appRoute,
 } as any)
-
-const EmulatorEmulatorIdlazyRoute = EmulatorEmulatorIdlazyImport.update({
-  id: '/emulator/$emulatorId',
-  path: '/emulator/$emulatorId',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-  import('./routes/self-contained/emulator/$emulatorId.lazy.tsx').then(
-    (d) => d.Route,
-  ),
-)
-
-const ConnectionDebugconnectionIdRoute =
-  ConnectionDebugconnectionIdImport.update({
+const EmulatorEmulatorIdDotlazyRoute =
+  EmulatorEmulatorIdDotlazyRouteImport.update({
+    id: '/emulator/$emulatorId',
+    path: '/emulator/$emulatorId',
+    getParentRoute: () => rootRouteImport,
+  } as any).lazy(() =>
+    import('./routes/self-contained/emulator/$emulatorId.lazy.tsx').then(
+      (d) => d.Route,
+    ),
+  )
+const ConnectionDebugDotconnectionIdRoute =
+  ConnectionDebugDotconnectionIdRouteImport.update({
     id: '/connection-debug/$connectionId',
     path: '/connection-debug/$connectionId',
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => rootRouteImport,
   } as any)
-
-const TriggersRoute = TriggersImport.update({
+const TriggersRoute = TriggersRouteImport.update({
   id: '/triggers',
   path: '/triggers',
   getParentRoute: () => appRoute,
 } as any)
-
-const ModulesRoute = ModulesImport.update({
+const ModulesRoute = ModulesRouteImport.update({
   id: '/modules',
   path: '/modules',
   getParentRoute: () => appRoute,
 } as any)
-
-const LogRoute = LogImport.update({
+const LogRoute = LogRouteImport.update({
   id: '/log',
   path: '/log',
   getParentRoute: () => appRoute,
 } as any)
-
-const ImportExportRoute = ImportExportImport.update({
+const ImportExportRoute = ImportExportRouteImport.update({
   id: '/import-export',
   path: '/import-export',
   getParentRoute: () => appRoute,
 } as any)
-
-const ConnectionsRoute = ConnectionsImport.update({
+const ConnectionsRoute = ConnectionsRouteImport.update({
   id: '/connections',
   path: '/connections',
   getParentRoute: () => appRoute,
 } as any)
-
-const CloudRoute = CloudImport.update({
+const CloudRoute = CloudRouteImport.update({
   id: '/cloud',
   path: '/cloud',
   getParentRoute: () => appRoute,
 } as any)
-
-const ButtonsRoute = ButtonsImport.update({
+const ButtonsRoute = ButtonsRouteImport.update({
   id: '/buttons',
   path: '/buttons',
   getParentRoute: () => appRoute,
 } as any)
-
-const SplatRoute = SplatImport.update({
+const SplatRoute = SplatRouteImport.update({
   id: '/$',
   path: '/$',
   getParentRoute: () => appRoute,
 } as any)
-
-const VariablesIndexRoute = VariablesIndexImport.update({
+const VariablesIndexRoute = VariablesIndexRouteImport.update({
   id: '/variables/',
   path: '/variables/',
   getParentRoute: () => appRoute,
 } as any)
-
-const TriggersIndexRoute = TriggersIndexImport.update({
+const TriggersIndexRoute = TriggersIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => TriggersRoute,
 } as any)
-
-const SettingsIndexRoute = SettingsIndexImport.update({
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
   getParentRoute: () => appRoute,
 } as any)
-
-const ModulesIndexRoute = ModulesIndexImport.update({
+const ModulesIndexRoute = ModulesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ModulesRoute,
 } as any)
-
-const VariablesCustomRoute = VariablesCustomImport.update({
+const VariablesCustomRoute = VariablesCustomRouteImport.update({
   id: '/variables/custom',
   path: '/variables/custom',
   getParentRoute: () => appRoute,
 } as any)
-
-const VariablesLabelRoute = VariablesLabelImport.update({
+const VariablesLabelRoute = VariablesLabelRouteImport.update({
   id: '/variables/$label',
   path: '/variables/$label',
   getParentRoute: () => appRoute,
 } as any)
-
-const TriggersControlIdRoute = TriggersControlIdImport.update({
+const TriggersControlIdRoute = TriggersControlIdRouteImport.update({
   id: '/$controlId',
   path: '/$controlId',
   getParentRoute: () => TriggersRoute,
 } as any)
-
-const SurfacesOutboundRoute = SurfacesOutboundImport.update({
+const SurfacesOutboundRoute = SurfacesOutboundRouteImport.update({
   id: '/surfaces/outbound',
   path: '/surfaces/outbound',
   getParentRoute: () => appRoute,
 } as any)
-
-const SurfacesDiscoverRoute = SurfacesDiscoverImport.update({
+const SurfacesDiscoverRoute = SurfacesDiscoverRouteImport.update({
   id: '/surfaces/discover',
   path: '/surfaces/discover',
   getParentRoute: () => appRoute,
 } as any)
-
-const SurfacesConfiguredRoute = SurfacesConfiguredImport.update({
+const SurfacesConfiguredRoute = SurfacesConfiguredRouteImport.update({
   id: '/surfaces/configured',
   path: '/surfaces/configured',
   getParentRoute: () => appRoute,
 } as any)
-
-const SurfacesSplatRoute = SurfacesSplatImport.update({
+const SurfacesSplatRoute = SurfacesSplatRouteImport.update({
   id: '/surfaces/$',
   path: '/surfaces/$',
   getParentRoute: () => appRoute,
 } as any)
-
-const SettingsSurfacesRoute = SettingsSurfacesImport.update({
+const SettingsSurfacesRoute = SettingsSurfacesRouteImport.update({
   id: '/settings/surfaces',
   path: '/settings/surfaces',
   getParentRoute: () => appRoute,
 } as any)
-
-const SettingsProtocolsRoute = SettingsProtocolsImport.update({
+const SettingsProtocolsRoute = SettingsProtocolsRouteImport.update({
   id: '/settings/protocols',
   path: '/settings/protocols',
   getParentRoute: () => appRoute,
 } as any)
-
-const SettingsGeneralRoute = SettingsGeneralImport.update({
+const SettingsGeneralRoute = SettingsGeneralRouteImport.update({
   id: '/settings/general',
   path: '/settings/general',
   getParentRoute: () => appRoute,
 } as any)
-
-const SettingsButtonsRoute = SettingsButtonsImport.update({
+const SettingsButtonsRoute = SettingsButtonsRouteImport.update({
   id: '/settings/buttons',
   path: '/settings/buttons',
   getParentRoute: () => appRoute,
 } as any)
-
-const SettingsAdvancedRoute = SettingsAdvancedImport.update({
+const SettingsAdvancedRoute = SettingsAdvancedRouteImport.update({
   id: '/settings/advanced',
   path: '/settings/advanced',
   getParentRoute: () => appRoute,
 } as any)
-
-const ModulesModuleIdRoute = ModulesModuleIdImport.update({
+const ModulesModuleIdRoute = ModulesModuleIdRouteImport.update({
   id: '/$moduleId',
   path: '/$moduleId',
   getParentRoute: () => ModulesRoute,
 } as any)
-
-const ButtonsPageRoute = ButtonsPageImport.update({
+const ButtonsPageRoute = ButtonsPageRouteImport.update({
   id: '/$page',
   path: '/$page',
   getParentRoute: () => ButtonsRoute,
 } as any)
 
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/_app': {
-      id: '/_app'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof appImport
-      parentRoute: typeof rootRoute
-    }
-    '/emulator.html': {
-      id: '/emulator.html'
-      path: '/emulator.html'
-      fullPath: '/emulator.html'
-      preLoaderRoute: typeof RedirectsEmulatorHtmlImport
-      parentRoute: typeof rootRoute
-    }
-    '/emulator2': {
-      id: '/emulator2'
-      path: '/emulator2'
-      fullPath: '/emulator2'
-      preLoaderRoute: typeof RedirectsEmulator2Import
-      parentRoute: typeof rootRoute
-    }
-    '/emulators': {
-      id: '/emulators'
-      path: '/emulators'
-      fullPath: '/emulators'
-      preLoaderRoute: typeof RedirectsEmulatorsImport
-      parentRoute: typeof rootRoute
-    }
-    '/help.html': {
-      id: '/help.html'
-      path: '/help.html'
-      fullPath: '/help.html'
-      preLoaderRoute: typeof RedirectsHelpHtmlImport
-      parentRoute: typeof rootRoute
-    }
-    '/ipad.html': {
-      id: '/ipad.html'
-      path: '/ipad.html'
-      fullPath: '/ipad.html'
-      preLoaderRoute: typeof RedirectsIpadHtmlImport
-      parentRoute: typeof rootRoute
-    }
-    '/tablet.html': {
-      id: '/tablet.html'
-      path: '/tablet.html'
-      fullPath: '/tablet.html'
-      preLoaderRoute: typeof RedirectsTabletHtmlImport
-      parentRoute: typeof rootRoute
-    }
-    '/tablet2.html': {
-      id: '/tablet2.html'
-      path: '/tablet2.html'
-      fullPath: '/tablet2.html'
-      preLoaderRoute: typeof RedirectsTablet2HtmlImport
-      parentRoute: typeof rootRoute
-    }
-    '/tablet3': {
-      id: '/tablet3'
-      path: '/tablet3'
-      fullPath: '/tablet3'
-      preLoaderRoute: typeof RedirectsTablet3Import
-      parentRoute: typeof rootRoute
-    }
-    '/getting-started': {
-      id: '/getting-started'
-      path: '/getting-started'
-      fullPath: '/getting-started'
-      preLoaderRoute: typeof GettingStartedlazyImport
-      parentRoute: typeof rootRoute
-    }
-    '/tablet': {
-      id: '/tablet'
-      path: '/tablet'
-      fullPath: '/tablet'
-      preLoaderRoute: typeof TabletlazyImport
-      parentRoute: typeof rootRoute
-    }
-    '/_app/$': {
-      id: '/_app/$'
-      path: '/$'
-      fullPath: '/$'
-      preLoaderRoute: typeof SplatImport
-      parentRoute: typeof appImport
-    }
-    '/_app/buttons': {
-      id: '/_app/buttons'
-      path: '/buttons'
-      fullPath: '/buttons'
-      preLoaderRoute: typeof ButtonsImport
-      parentRoute: typeof appImport
-    }
-    '/_app/cloud': {
-      id: '/_app/cloud'
-      path: '/cloud'
-      fullPath: '/cloud'
-      preLoaderRoute: typeof CloudImport
-      parentRoute: typeof appImport
-    }
-    '/_app/connections': {
-      id: '/_app/connections'
-      path: '/connections'
-      fullPath: '/connections'
-      preLoaderRoute: typeof ConnectionsImport
-      parentRoute: typeof appImport
-    }
-    '/_app/import-export': {
-      id: '/_app/import-export'
-      path: '/import-export'
-      fullPath: '/import-export'
-      preLoaderRoute: typeof ImportExportImport
-      parentRoute: typeof appImport
-    }
-    '/_app/log': {
-      id: '/_app/log'
-      path: '/log'
-      fullPath: '/log'
-      preLoaderRoute: typeof LogImport
-      parentRoute: typeof appImport
-    }
-    '/_app/modules': {
-      id: '/_app/modules'
-      path: '/modules'
-      fullPath: '/modules'
-      preLoaderRoute: typeof ModulesImport
-      parentRoute: typeof appImport
-    }
-    '/_app/triggers': {
-      id: '/_app/triggers'
-      path: '/triggers'
-      fullPath: '/triggers'
-      preLoaderRoute: typeof TriggersImport
-      parentRoute: typeof appImport
-    }
-    '/connection-debug/$connectionId': {
-      id: '/connection-debug/$connectionId'
-      path: '/connection-debug/$connectionId'
-      fullPath: '/connection-debug/$connectionId'
-      preLoaderRoute: typeof ConnectionDebugconnectionIdImport
-      parentRoute: typeof rootRoute
-    }
-    '/emulator/$emulatorId': {
-      id: '/emulator/$emulatorId'
-      path: '/emulator/$emulatorId'
-      fullPath: '/emulator/$emulatorId'
-      preLoaderRoute: typeof EmulatorEmulatorIdlazyImport
-      parentRoute: typeof rootRoute
-    }
-    '/_app/': {
-      id: '/_app/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof appImport
-    }
-    '/emulator/': {
-      id: '/emulator/'
-      path: '/emulator'
-      fullPath: '/emulator'
-      preLoaderRoute: typeof EmulatorIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/_app/buttons/$page': {
-      id: '/_app/buttons/$page'
-      path: '/$page'
-      fullPath: '/buttons/$page'
-      preLoaderRoute: typeof ButtonsPageImport
-      parentRoute: typeof ButtonsImport
-    }
-    '/_app/modules/$moduleId': {
-      id: '/_app/modules/$moduleId'
-      path: '/$moduleId'
-      fullPath: '/modules/$moduleId'
-      preLoaderRoute: typeof ModulesModuleIdImport
-      parentRoute: typeof ModulesImport
-    }
-    '/_app/settings/advanced': {
-      id: '/_app/settings/advanced'
-      path: '/settings/advanced'
-      fullPath: '/settings/advanced'
-      preLoaderRoute: typeof SettingsAdvancedImport
-      parentRoute: typeof appImport
-    }
-    '/_app/settings/buttons': {
-      id: '/_app/settings/buttons'
-      path: '/settings/buttons'
-      fullPath: '/settings/buttons'
-      preLoaderRoute: typeof SettingsButtonsImport
-      parentRoute: typeof appImport
-    }
-    '/_app/settings/general': {
-      id: '/_app/settings/general'
-      path: '/settings/general'
-      fullPath: '/settings/general'
-      preLoaderRoute: typeof SettingsGeneralImport
-      parentRoute: typeof appImport
-    }
-    '/_app/settings/protocols': {
-      id: '/_app/settings/protocols'
-      path: '/settings/protocols'
-      fullPath: '/settings/protocols'
-      preLoaderRoute: typeof SettingsProtocolsImport
-      parentRoute: typeof appImport
-    }
-    '/_app/settings/surfaces': {
-      id: '/_app/settings/surfaces'
-      path: '/settings/surfaces'
-      fullPath: '/settings/surfaces'
-      preLoaderRoute: typeof SettingsSurfacesImport
-      parentRoute: typeof appImport
-    }
-    '/_app/surfaces/$': {
-      id: '/_app/surfaces/$'
-      path: '/surfaces/$'
-      fullPath: '/surfaces/$'
-      preLoaderRoute: typeof SurfacesSplatImport
-      parentRoute: typeof appImport
-    }
-    '/_app/surfaces/configured': {
-      id: '/_app/surfaces/configured'
-      path: '/surfaces/configured'
-      fullPath: '/surfaces/configured'
-      preLoaderRoute: typeof SurfacesConfiguredImport
-      parentRoute: typeof appImport
-    }
-    '/_app/surfaces/discover': {
-      id: '/_app/surfaces/discover'
-      path: '/surfaces/discover'
-      fullPath: '/surfaces/discover'
-      preLoaderRoute: typeof SurfacesDiscoverImport
-      parentRoute: typeof appImport
-    }
-    '/_app/surfaces/outbound': {
-      id: '/_app/surfaces/outbound'
-      path: '/surfaces/outbound'
-      fullPath: '/surfaces/outbound'
-      preLoaderRoute: typeof SurfacesOutboundImport
-      parentRoute: typeof appImport
-    }
-    '/_app/triggers/$controlId': {
-      id: '/_app/triggers/$controlId'
-      path: '/$controlId'
-      fullPath: '/triggers/$controlId'
-      preLoaderRoute: typeof TriggersControlIdImport
-      parentRoute: typeof TriggersImport
-    }
-    '/_app/variables/$label': {
-      id: '/_app/variables/$label'
-      path: '/variables/$label'
-      fullPath: '/variables/$label'
-      preLoaderRoute: typeof VariablesLabelImport
-      parentRoute: typeof appImport
-    }
-    '/_app/variables/custom': {
-      id: '/_app/variables/custom'
-      path: '/variables/custom'
-      fullPath: '/variables/custom'
-      preLoaderRoute: typeof VariablesCustomImport
-      parentRoute: typeof appImport
-    }
-    '/_app/modules/': {
-      id: '/_app/modules/'
-      path: '/'
-      fullPath: '/modules/'
-      preLoaderRoute: typeof ModulesIndexImport
-      parentRoute: typeof ModulesImport
-    }
-    '/_app/settings/': {
-      id: '/_app/settings/'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsIndexImport
-      parentRoute: typeof appImport
-    }
-    '/_app/triggers/': {
-      id: '/_app/triggers/'
-      path: '/'
-      fullPath: '/triggers/'
-      preLoaderRoute: typeof TriggersIndexImport
-      parentRoute: typeof TriggersImport
-    }
-    '/_app/variables/': {
-      id: '/_app/variables/'
-      path: '/variables'
-      fullPath: '/variables'
-      preLoaderRoute: typeof VariablesIndexImport
-      parentRoute: typeof appImport
-    }
-  }
-}
-
-// Create and export the route tree
-
-interface ButtonsRouteChildren {
-  ButtonsPageRoute: typeof ButtonsPageRoute
-}
-
-const ButtonsRouteChildren: ButtonsRouteChildren = {
-  ButtonsPageRoute: ButtonsPageRoute,
-}
-
-const ButtonsRouteWithChildren =
-  ButtonsRoute._addFileChildren(ButtonsRouteChildren)
-
-interface ModulesRouteChildren {
-  ModulesModuleIdRoute: typeof ModulesModuleIdRoute
-  ModulesIndexRoute: typeof ModulesIndexRoute
-}
-
-const ModulesRouteChildren: ModulesRouteChildren = {
-  ModulesModuleIdRoute: ModulesModuleIdRoute,
-  ModulesIndexRoute: ModulesIndexRoute,
-}
-
-const ModulesRouteWithChildren =
-  ModulesRoute._addFileChildren(ModulesRouteChildren)
-
-interface TriggersRouteChildren {
-  TriggersControlIdRoute: typeof TriggersControlIdRoute
-  TriggersIndexRoute: typeof TriggersIndexRoute
-}
-
-const TriggersRouteChildren: TriggersRouteChildren = {
-  TriggersControlIdRoute: TriggersControlIdRoute,
-  TriggersIndexRoute: TriggersIndexRoute,
-}
-
-const TriggersRouteWithChildren = TriggersRoute._addFileChildren(
-  TriggersRouteChildren,
-)
-
-interface appRouteChildren {
-  SplatRoute: typeof SplatRoute
-  ButtonsRoute: typeof ButtonsRouteWithChildren
-  CloudRoute: typeof CloudRoute
-  ConnectionsRoute: typeof ConnectionsRoute
-  ImportExportRoute: typeof ImportExportRoute
-  LogRoute: typeof LogRoute
-  ModulesRoute: typeof ModulesRouteWithChildren
-  TriggersRoute: typeof TriggersRouteWithChildren
-  IndexRoute: typeof IndexRoute
-  SettingsAdvancedRoute: typeof SettingsAdvancedRoute
-  SettingsButtonsRoute: typeof SettingsButtonsRoute
-  SettingsGeneralRoute: typeof SettingsGeneralRoute
-  SettingsProtocolsRoute: typeof SettingsProtocolsRoute
-  SettingsSurfacesRoute: typeof SettingsSurfacesRoute
-  SurfacesSplatRoute: typeof SurfacesSplatRoute
-  SurfacesConfiguredRoute: typeof SurfacesConfiguredRoute
-  SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
-  SurfacesOutboundRoute: typeof SurfacesOutboundRoute
-  VariablesLabelRoute: typeof VariablesLabelRoute
-  VariablesCustomRoute: typeof VariablesCustomRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
-  VariablesIndexRoute: typeof VariablesIndexRoute
-}
-
-const appRouteChildren: appRouteChildren = {
-  SplatRoute: SplatRoute,
-  ButtonsRoute: ButtonsRouteWithChildren,
-  CloudRoute: CloudRoute,
-  ConnectionsRoute: ConnectionsRoute,
-  ImportExportRoute: ImportExportRoute,
-  LogRoute: LogRoute,
-  ModulesRoute: ModulesRouteWithChildren,
-  TriggersRoute: TriggersRouteWithChildren,
-  IndexRoute: IndexRoute,
-  SettingsAdvancedRoute: SettingsAdvancedRoute,
-  SettingsButtonsRoute: SettingsButtonsRoute,
-  SettingsGeneralRoute: SettingsGeneralRoute,
-  SettingsProtocolsRoute: SettingsProtocolsRoute,
-  SettingsSurfacesRoute: SettingsSurfacesRoute,
-  SurfacesSplatRoute: SurfacesSplatRoute,
-  SurfacesConfiguredRoute: SurfacesConfiguredRoute,
-  SurfacesDiscoverRoute: SurfacesDiscoverRoute,
-  SurfacesOutboundRoute: SurfacesOutboundRoute,
-  VariablesLabelRoute: VariablesLabelRoute,
-  VariablesCustomRoute: VariablesCustomRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
-  VariablesIndexRoute: VariablesIndexRoute,
-}
-
-const appRouteWithChildren = appRoute._addFileChildren(appRouteChildren)
-
 export interface FileRoutesByFullPath {
-  '': typeof appRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
@@ -712,8 +282,8 @@ export interface FileRoutesByFullPath {
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedlazyRoute
-  '/tablet': typeof TabletlazyRoute
+  '/getting-started': typeof GettingStartedDotlazyRoute
+  '/tablet': typeof TabletDotlazyRoute
   '/$': typeof SplatRoute
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
@@ -722,8 +292,8 @@ export interface FileRoutesByFullPath {
   '/log': typeof LogRoute
   '/modules': typeof ModulesRouteWithChildren
   '/triggers': typeof TriggersRouteWithChildren
-  '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
-  '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
+  '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
+  '/emulator/$emulatorId': typeof EmulatorEmulatorIdDotlazyRoute
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
@@ -745,7 +315,6 @@ export interface FileRoutesByFullPath {
   '/triggers/': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
 }
-
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
@@ -755,16 +324,16 @@ export interface FileRoutesByTo {
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedlazyRoute
-  '/tablet': typeof TabletlazyRoute
+  '/getting-started': typeof GettingStartedDotlazyRoute
+  '/tablet': typeof TabletDotlazyRoute
   '/$': typeof SplatRoute
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
   '/connections': typeof ConnectionsRoute
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
-  '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
-  '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
+  '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
+  '/emulator/$emulatorId': typeof EmulatorEmulatorIdDotlazyRoute
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
@@ -786,9 +355,8 @@ export interface FileRoutesByTo {
   '/triggers': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/_app': typeof appRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
@@ -798,8 +366,8 @@ export interface FileRoutesById {
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedlazyRoute
-  '/tablet': typeof TabletlazyRoute
+  '/getting-started': typeof GettingStartedDotlazyRoute
+  '/tablet': typeof TabletDotlazyRoute
   '/_app/$': typeof SplatRoute
   '/_app/buttons': typeof ButtonsRouteWithChildren
   '/_app/cloud': typeof CloudRoute
@@ -808,8 +376,8 @@ export interface FileRoutesById {
   '/_app/log': typeof LogRoute
   '/_app/modules': typeof ModulesRouteWithChildren
   '/_app/triggers': typeof TriggersRouteWithChildren
-  '/connection-debug/$connectionId': typeof ConnectionDebugconnectionIdRoute
-  '/emulator/$emulatorId': typeof EmulatorEmulatorIdlazyRoute
+  '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
+  '/emulator/$emulatorId': typeof EmulatorEmulatorIdDotlazyRoute
   '/_app/': typeof IndexRoute
   '/emulator/': typeof EmulatorIndexRoute
   '/_app/buttons/$page': typeof ButtonsPageRoute
@@ -831,11 +399,9 @@ export interface FileRoutesById {
   '/_app/triggers/': typeof TriggersIndexRoute
   '/_app/variables/': typeof VariablesIndexRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | ''
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
@@ -961,7 +527,6 @@ export interface FileRouteTypes {
     | '/_app/variables/'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   appRoute: typeof appRouteWithChildren
   RedirectsEmulatorHtmlRoute: typeof RedirectsEmulatorHtmlRoute
@@ -972,12 +537,394 @@ export interface RootRouteChildren {
   RedirectsTabletHtmlRoute: typeof RedirectsTabletHtmlRoute
   RedirectsTablet2HtmlRoute: typeof RedirectsTablet2HtmlRoute
   RedirectsTablet3Route: typeof RedirectsTablet3Route
-  GettingStartedlazyRoute: typeof GettingStartedlazyRoute
-  TabletlazyRoute: typeof TabletlazyRoute
-  ConnectionDebugconnectionIdRoute: typeof ConnectionDebugconnectionIdRoute
-  EmulatorEmulatorIdlazyRoute: typeof EmulatorEmulatorIdlazyRoute
+  GettingStartedDotlazyRoute: typeof GettingStartedDotlazyRoute
+  TabletDotlazyRoute: typeof TabletDotlazyRoute
+  ConnectionDebugDotconnectionIdRoute: typeof ConnectionDebugDotconnectionIdRoute
+  EmulatorEmulatorIdDotlazyRoute: typeof EmulatorEmulatorIdDotlazyRoute
   EmulatorIndexRoute: typeof EmulatorIndexRoute
 }
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/tablet': {
+      id: '/tablet'
+      path: '/tablet'
+      fullPath: '/tablet'
+      preLoaderRoute: typeof TabletDotlazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/getting-started': {
+      id: '/getting-started'
+      path: '/getting-started'
+      fullPath: '/getting-started'
+      preLoaderRoute: typeof GettingStartedDotlazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tablet3': {
+      id: '/tablet3'
+      path: '/tablet3'
+      fullPath: '/tablet3'
+      preLoaderRoute: typeof RedirectsTablet3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tablet2.html': {
+      id: '/tablet2.html'
+      path: '/tablet2.html'
+      fullPath: '/tablet2.html'
+      preLoaderRoute: typeof RedirectsTablet2HtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tablet.html': {
+      id: '/tablet.html'
+      path: '/tablet.html'
+      fullPath: '/tablet.html'
+      preLoaderRoute: typeof RedirectsTabletHtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ipad.html': {
+      id: '/ipad.html'
+      path: '/ipad.html'
+      fullPath: '/ipad.html'
+      preLoaderRoute: typeof RedirectsIpadHtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help.html': {
+      id: '/help.html'
+      path: '/help.html'
+      fullPath: '/help.html'
+      preLoaderRoute: typeof RedirectsHelpHtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emulators': {
+      id: '/emulators'
+      path: '/emulators'
+      fullPath: '/emulators'
+      preLoaderRoute: typeof RedirectsEmulatorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emulator2': {
+      id: '/emulator2'
+      path: '/emulator2'
+      fullPath: '/emulator2'
+      preLoaderRoute: typeof RedirectsEmulator2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emulator.html': {
+      id: '/emulator.html'
+      path: '/emulator.html'
+      fullPath: '/emulator.html'
+      preLoaderRoute: typeof RedirectsEmulatorHtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof appRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emulator/': {
+      id: '/emulator/'
+      path: '/emulator'
+      fullPath: '/emulator'
+      preLoaderRoute: typeof EmulatorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/emulator/$emulatorId': {
+      id: '/emulator/$emulatorId'
+      path: '/emulator/$emulatorId'
+      fullPath: '/emulator/$emulatorId'
+      preLoaderRoute: typeof EmulatorEmulatorIdDotlazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connection-debug/$connectionId': {
+      id: '/connection-debug/$connectionId'
+      path: '/connection-debug/$connectionId'
+      fullPath: '/connection-debug/$connectionId'
+      preLoaderRoute: typeof ConnectionDebugDotconnectionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/triggers': {
+      id: '/_app/triggers'
+      path: '/triggers'
+      fullPath: '/triggers'
+      preLoaderRoute: typeof TriggersRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/modules': {
+      id: '/_app/modules'
+      path: '/modules'
+      fullPath: '/modules'
+      preLoaderRoute: typeof ModulesRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/log': {
+      id: '/_app/log'
+      path: '/log'
+      fullPath: '/log'
+      preLoaderRoute: typeof LogRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/import-export': {
+      id: '/_app/import-export'
+      path: '/import-export'
+      fullPath: '/import-export'
+      preLoaderRoute: typeof ImportExportRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/connections': {
+      id: '/_app/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof ConnectionsRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/cloud': {
+      id: '/_app/cloud'
+      path: '/cloud'
+      fullPath: '/cloud'
+      preLoaderRoute: typeof CloudRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/buttons': {
+      id: '/_app/buttons'
+      path: '/buttons'
+      fullPath: '/buttons'
+      preLoaderRoute: typeof ButtonsRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/$': {
+      id: '/_app/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/variables/': {
+      id: '/_app/variables/'
+      path: '/variables'
+      fullPath: '/variables'
+      preLoaderRoute: typeof VariablesIndexRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/triggers/': {
+      id: '/_app/triggers/'
+      path: '/'
+      fullPath: '/triggers/'
+      preLoaderRoute: typeof TriggersIndexRouteImport
+      parentRoute: typeof TriggersRoute
+    }
+    '/_app/settings/': {
+      id: '/_app/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/modules/': {
+      id: '/_app/modules/'
+      path: '/'
+      fullPath: '/modules/'
+      preLoaderRoute: typeof ModulesIndexRouteImport
+      parentRoute: typeof ModulesRoute
+    }
+    '/_app/variables/custom': {
+      id: '/_app/variables/custom'
+      path: '/variables/custom'
+      fullPath: '/variables/custom'
+      preLoaderRoute: typeof VariablesCustomRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/variables/$label': {
+      id: '/_app/variables/$label'
+      path: '/variables/$label'
+      fullPath: '/variables/$label'
+      preLoaderRoute: typeof VariablesLabelRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/triggers/$controlId': {
+      id: '/_app/triggers/$controlId'
+      path: '/$controlId'
+      fullPath: '/triggers/$controlId'
+      preLoaderRoute: typeof TriggersControlIdRouteImport
+      parentRoute: typeof TriggersRoute
+    }
+    '/_app/surfaces/outbound': {
+      id: '/_app/surfaces/outbound'
+      path: '/surfaces/outbound'
+      fullPath: '/surfaces/outbound'
+      preLoaderRoute: typeof SurfacesOutboundRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/surfaces/discover': {
+      id: '/_app/surfaces/discover'
+      path: '/surfaces/discover'
+      fullPath: '/surfaces/discover'
+      preLoaderRoute: typeof SurfacesDiscoverRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/surfaces/configured': {
+      id: '/_app/surfaces/configured'
+      path: '/surfaces/configured'
+      fullPath: '/surfaces/configured'
+      preLoaderRoute: typeof SurfacesConfiguredRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/surfaces/$': {
+      id: '/_app/surfaces/$'
+      path: '/surfaces/$'
+      fullPath: '/surfaces/$'
+      preLoaderRoute: typeof SurfacesSplatRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/settings/surfaces': {
+      id: '/_app/settings/surfaces'
+      path: '/settings/surfaces'
+      fullPath: '/settings/surfaces'
+      preLoaderRoute: typeof SettingsSurfacesRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/settings/protocols': {
+      id: '/_app/settings/protocols'
+      path: '/settings/protocols'
+      fullPath: '/settings/protocols'
+      preLoaderRoute: typeof SettingsProtocolsRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/settings/general': {
+      id: '/_app/settings/general'
+      path: '/settings/general'
+      fullPath: '/settings/general'
+      preLoaderRoute: typeof SettingsGeneralRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/settings/buttons': {
+      id: '/_app/settings/buttons'
+      path: '/settings/buttons'
+      fullPath: '/settings/buttons'
+      preLoaderRoute: typeof SettingsButtonsRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/settings/advanced': {
+      id: '/_app/settings/advanced'
+      path: '/settings/advanced'
+      fullPath: '/settings/advanced'
+      preLoaderRoute: typeof SettingsAdvancedRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/modules/$moduleId': {
+      id: '/_app/modules/$moduleId'
+      path: '/$moduleId'
+      fullPath: '/modules/$moduleId'
+      preLoaderRoute: typeof ModulesModuleIdRouteImport
+      parentRoute: typeof ModulesRoute
+    }
+    '/_app/buttons/$page': {
+      id: '/_app/buttons/$page'
+      path: '/$page'
+      fullPath: '/buttons/$page'
+      preLoaderRoute: typeof ButtonsPageRouteImport
+      parentRoute: typeof ButtonsRoute
+    }
+  }
+}
+
+interface ButtonsRouteChildren {
+  ButtonsPageRoute: typeof ButtonsPageRoute
+}
+
+const ButtonsRouteChildren: ButtonsRouteChildren = {
+  ButtonsPageRoute: ButtonsPageRoute,
+}
+
+const ButtonsRouteWithChildren =
+  ButtonsRoute._addFileChildren(ButtonsRouteChildren)
+
+interface ModulesRouteChildren {
+  ModulesModuleIdRoute: typeof ModulesModuleIdRoute
+  ModulesIndexRoute: typeof ModulesIndexRoute
+}
+
+const ModulesRouteChildren: ModulesRouteChildren = {
+  ModulesModuleIdRoute: ModulesModuleIdRoute,
+  ModulesIndexRoute: ModulesIndexRoute,
+}
+
+const ModulesRouteWithChildren =
+  ModulesRoute._addFileChildren(ModulesRouteChildren)
+
+interface TriggersRouteChildren {
+  TriggersControlIdRoute: typeof TriggersControlIdRoute
+  TriggersIndexRoute: typeof TriggersIndexRoute
+}
+
+const TriggersRouteChildren: TriggersRouteChildren = {
+  TriggersControlIdRoute: TriggersControlIdRoute,
+  TriggersIndexRoute: TriggersIndexRoute,
+}
+
+const TriggersRouteWithChildren = TriggersRoute._addFileChildren(
+  TriggersRouteChildren,
+)
+
+interface appRouteChildren {
+  SplatRoute: typeof SplatRoute
+  ButtonsRoute: typeof ButtonsRouteWithChildren
+  CloudRoute: typeof CloudRoute
+  ConnectionsRoute: typeof ConnectionsRoute
+  ImportExportRoute: typeof ImportExportRoute
+  LogRoute: typeof LogRoute
+  ModulesRoute: typeof ModulesRouteWithChildren
+  TriggersRoute: typeof TriggersRouteWithChildren
+  IndexRoute: typeof IndexRoute
+  SettingsAdvancedRoute: typeof SettingsAdvancedRoute
+  SettingsButtonsRoute: typeof SettingsButtonsRoute
+  SettingsGeneralRoute: typeof SettingsGeneralRoute
+  SettingsProtocolsRoute: typeof SettingsProtocolsRoute
+  SettingsSurfacesRoute: typeof SettingsSurfacesRoute
+  SurfacesSplatRoute: typeof SurfacesSplatRoute
+  SurfacesConfiguredRoute: typeof SurfacesConfiguredRoute
+  SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
+  SurfacesOutboundRoute: typeof SurfacesOutboundRoute
+  VariablesLabelRoute: typeof VariablesLabelRoute
+  VariablesCustomRoute: typeof VariablesCustomRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
+  VariablesIndexRoute: typeof VariablesIndexRoute
+}
+
+const appRouteChildren: appRouteChildren = {
+  SplatRoute: SplatRoute,
+  ButtonsRoute: ButtonsRouteWithChildren,
+  CloudRoute: CloudRoute,
+  ConnectionsRoute: ConnectionsRoute,
+  ImportExportRoute: ImportExportRoute,
+  LogRoute: LogRoute,
+  ModulesRoute: ModulesRouteWithChildren,
+  TriggersRoute: TriggersRouteWithChildren,
+  IndexRoute: IndexRoute,
+  SettingsAdvancedRoute: SettingsAdvancedRoute,
+  SettingsButtonsRoute: SettingsButtonsRoute,
+  SettingsGeneralRoute: SettingsGeneralRoute,
+  SettingsProtocolsRoute: SettingsProtocolsRoute,
+  SettingsSurfacesRoute: SettingsSurfacesRoute,
+  SurfacesSplatRoute: SurfacesSplatRoute,
+  SurfacesConfiguredRoute: SurfacesConfiguredRoute,
+  SurfacesDiscoverRoute: SurfacesDiscoverRoute,
+  SurfacesOutboundRoute: SurfacesOutboundRoute,
+  VariablesLabelRoute: VariablesLabelRoute,
+  VariablesCustomRoute: VariablesCustomRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+  VariablesIndexRoute: VariablesIndexRoute,
+}
+
+const appRouteWithChildren = appRoute._addFileChildren(appRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   appRoute: appRouteWithChildren,
@@ -989,224 +936,12 @@ const rootRouteChildren: RootRouteChildren = {
   RedirectsTabletHtmlRoute: RedirectsTabletHtmlRoute,
   RedirectsTablet2HtmlRoute: RedirectsTablet2HtmlRoute,
   RedirectsTablet3Route: RedirectsTablet3Route,
-  GettingStartedlazyRoute: GettingStartedlazyRoute,
-  TabletlazyRoute: TabletlazyRoute,
-  ConnectionDebugconnectionIdRoute: ConnectionDebugconnectionIdRoute,
-  EmulatorEmulatorIdlazyRoute: EmulatorEmulatorIdlazyRoute,
+  GettingStartedDotlazyRoute: GettingStartedDotlazyRoute,
+  TabletDotlazyRoute: TabletDotlazyRoute,
+  ConnectionDebugDotconnectionIdRoute: ConnectionDebugDotconnectionIdRoute,
+  EmulatorEmulatorIdDotlazyRoute: EmulatorEmulatorIdDotlazyRoute,
   EmulatorIndexRoute: EmulatorIndexRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/_app",
-        "/emulator.html",
-        "/emulator2",
-        "/emulators",
-        "/help.html",
-        "/ipad.html",
-        "/tablet.html",
-        "/tablet2.html",
-        "/tablet3",
-        "/getting-started",
-        "/tablet",
-        "/connection-debug/$connectionId",
-        "/emulator/$emulatorId",
-        "/emulator/"
-      ]
-    },
-    "/_app": {
-      "filePath": "_app.tsx",
-      "children": [
-        "/_app/$",
-        "/_app/buttons",
-        "/_app/cloud",
-        "/_app/connections",
-        "/_app/import-export",
-        "/_app/log",
-        "/_app/modules",
-        "/_app/triggers",
-        "/_app/",
-        "/_app/settings/advanced",
-        "/_app/settings/buttons",
-        "/_app/settings/general",
-        "/_app/settings/protocols",
-        "/_app/settings/surfaces",
-        "/_app/surfaces/$",
-        "/_app/surfaces/configured",
-        "/_app/surfaces/discover",
-        "/_app/surfaces/outbound",
-        "/_app/variables/$label",
-        "/_app/variables/custom",
-        "/_app/settings/",
-        "/_app/variables/"
-      ]
-    },
-    "/emulator.html": {
-      "filePath": "-redirects/emulator-html.tsx"
-    },
-    "/emulator2": {
-      "filePath": "-redirects/emulator2.tsx"
-    },
-    "/emulators": {
-      "filePath": "-redirects/emulators.tsx"
-    },
-    "/help.html": {
-      "filePath": "-redirects/help-html.tsx"
-    },
-    "/ipad.html": {
-      "filePath": "-redirects/ipad-html.tsx"
-    },
-    "/tablet.html": {
-      "filePath": "-redirects/tablet-html.tsx"
-    },
-    "/tablet2.html": {
-      "filePath": "-redirects/tablet2-html.tsx"
-    },
-    "/tablet3": {
-      "filePath": "-redirects/tablet3.tsx"
-    },
-    "/getting-started": {
-      "filePath": "self-contained/getting-started.lazy.tsx"
-    },
-    "/tablet": {
-      "filePath": "self-contained/tablet.lazy.tsx"
-    },
-    "/_app/$": {
-      "filePath": "app/$.tsx",
-      "parent": "/_app"
-    },
-    "/_app/buttons": {
-      "filePath": "app/buttons.tsx",
-      "parent": "/_app",
-      "children": [
-        "/_app/buttons/$page"
-      ]
-    },
-    "/_app/cloud": {
-      "filePath": "app/cloud.tsx",
-      "parent": "/_app"
-    },
-    "/_app/connections": {
-      "filePath": "app/connections.tsx",
-      "parent": "/_app"
-    },
-    "/_app/import-export": {
-      "filePath": "app/import-export.tsx",
-      "parent": "/_app"
-    },
-    "/_app/log": {
-      "filePath": "app/log.tsx",
-      "parent": "/_app"
-    },
-    "/_app/modules": {
-      "filePath": "app/modules.tsx",
-      "parent": "/_app",
-      "children": [
-        "/_app/modules/$moduleId",
-        "/_app/modules/"
-      ]
-    },
-    "/_app/triggers": {
-      "filePath": "app/triggers.tsx",
-      "parent": "/_app",
-      "children": [
-        "/_app/triggers/$controlId",
-        "/_app/triggers/"
-      ]
-    },
-    "/connection-debug/$connectionId": {
-      "filePath": "self-contained/connection-debug.$connectionId.tsx"
-    },
-    "/emulator/$emulatorId": {
-      "filePath": "self-contained/emulator/$emulatorId.lazy.tsx"
-    },
-    "/_app/": {
-      "filePath": "app/index.tsx",
-      "parent": "/_app"
-    },
-    "/emulator/": {
-      "filePath": "self-contained/emulator/index.tsx"
-    },
-    "/_app/buttons/$page": {
-      "filePath": "app/buttons/$page.tsx",
-      "parent": "/_app/buttons"
-    },
-    "/_app/modules/$moduleId": {
-      "filePath": "app/modules/$moduleId.tsx",
-      "parent": "/_app/modules"
-    },
-    "/_app/settings/advanced": {
-      "filePath": "app/settings/advanced.tsx",
-      "parent": "/_app"
-    },
-    "/_app/settings/buttons": {
-      "filePath": "app/settings/buttons.tsx",
-      "parent": "/_app"
-    },
-    "/_app/settings/general": {
-      "filePath": "app/settings/general.tsx",
-      "parent": "/_app"
-    },
-    "/_app/settings/protocols": {
-      "filePath": "app/settings/protocols.tsx",
-      "parent": "/_app"
-    },
-    "/_app/settings/surfaces": {
-      "filePath": "app/settings/surfaces.tsx",
-      "parent": "/_app"
-    },
-    "/_app/surfaces/$": {
-      "filePath": "app/surfaces/$.tsx",
-      "parent": "/_app"
-    },
-    "/_app/surfaces/configured": {
-      "filePath": "app/surfaces/configured.tsx",
-      "parent": "/_app"
-    },
-    "/_app/surfaces/discover": {
-      "filePath": "app/surfaces/discover.tsx",
-      "parent": "/_app"
-    },
-    "/_app/surfaces/outbound": {
-      "filePath": "app/surfaces/outbound.tsx",
-      "parent": "/_app"
-    },
-    "/_app/triggers/$controlId": {
-      "filePath": "app/triggers/$controlId.tsx",
-      "parent": "/_app/triggers"
-    },
-    "/_app/variables/$label": {
-      "filePath": "app/variables/$label.tsx",
-      "parent": "/_app"
-    },
-    "/_app/variables/custom": {
-      "filePath": "app/variables/custom.tsx",
-      "parent": "/_app"
-    },
-    "/_app/modules/": {
-      "filePath": "app/modules/index.tsx",
-      "parent": "/_app/modules"
-    },
-    "/_app/settings/": {
-      "filePath": "app/settings/index.tsx",
-      "parent": "/_app"
-    },
-    "/_app/triggers/": {
-      "filePath": "app/triggers/index.tsx",
-      "parent": "/_app/triggers"
-    },
-    "/_app/variables/": {
-      "filePath": "app/variables/index.tsx",
-      "parent": "/_app"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

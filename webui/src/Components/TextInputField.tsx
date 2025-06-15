@@ -7,7 +7,7 @@ import Select, {
 	ValueContainerProps,
 	createFilter,
 } from 'react-select'
-import { MenuPortalContext } from './DropdownInputField.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -64,7 +64,7 @@ export const TextInputField = observer(function TextInputField({
 	const blurClearValue = useCallback(() => {
 		setTmpValue(null)
 		onBlur?.()
-	}, [])
+	}, [onBlur])
 
 	const showValue = (tmpValue ?? value ?? '').toString()
 
@@ -199,29 +199,32 @@ const VariablesSelect = observer(function VariablesSelect({
 
 	const inputRef = useRef<HTMLInputElement | null>(null)
 
-	const onVariableSelect = useCallback((variable: DropdownChoiceInt | null) => {
-		const oldValue = valueRef.current
-		if (!variable || !oldValue) return
+	const onVariableSelect = useCallback(
+		(variable: DropdownChoiceInt | null) => {
+			const oldValue = valueRef.current
+			if (!variable || !oldValue) return
 
-		if (cursorPositionRef.current == null) return // Nothing selected
+			if (cursorPositionRef.current == null) return // Nothing selected
 
-		const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPositionRef.current)
-		if (openIndex === -1) return
+			const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPositionRef.current)
+			if (openIndex === -1) return
 
-		// Propagate the new value
-		storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPositionRef.current))
+			// Propagate the new value
+			storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPositionRef.current))
 
-		// This doesn't work properly, it causes the cursor to get a bit confused on where it is but avoids the glitch of setSelectionRange
-		// if (inputRef.current)
-		// 	inputRef.current.setRangeText(`$(${variable.value})`, openIndex, cursorPositionRef.current, 'end')
+			// This doesn't work properly, it causes the cursor to get a bit confused on where it is but avoids the glitch of setSelectionRange
+			// if (inputRef.current)
+			// 	inputRef.current.setRangeText(`$(${variable.value})`, openIndex, cursorPositionRef.current, 'end')
 
-		// Update the selection after mutating the value. This needs to be deferred, although this causes a 'glitch' in the drawing
-		// It needs to be delayed, so that react can re-render first
-		const newSelection = openIndex + String(variable.value).length + 3
-		setTimeout(() => {
-			if (inputRef.current) inputRef.current.setSelectionRange(newSelection, newSelection)
-		}, 0)
-	}, [])
+			// Update the selection after mutating the value. This needs to be deferred, although this causes a 'glitch' in the drawing
+			// It needs to be delayed, so that react can re-render first
+			const newSelection = openIndex + String(variable.value).length + 3
+			setTimeout(() => {
+				if (inputRef.current) inputRef.current.setSelectionRange(newSelection, newSelection)
+			}, 0)
+		},
+		[storeValue]
+	)
 
 	const selectContext = useMemo(
 		() => ({
@@ -330,7 +333,7 @@ function useValueContainerCallbacks() {
 				context.setCursorPosition(target.selectionStart)
 			}
 		},
-		[context.setCursorPosition]
+		[context]
 	)
 
 	const onFocus = useCallback(
@@ -339,7 +342,7 @@ function useValueContainerCallbacks() {
 
 			checkCursor(e)
 		},
-		[context.focusStoreValue, checkCursor]
+		[context, checkCursor]
 	)
 	const onBlur = useCallback(
 		(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -348,7 +351,7 @@ function useValueContainerCallbacks() {
 			checkCursor(e)
 			context.forceHideSuggestions(false)
 		},
-		[context.blurClearValue, context.forceHideSuggestions, checkCursor]
+		[context, checkCursor]
 	)
 	const onKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -367,7 +370,7 @@ function useValueContainerCallbacks() {
 				| React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
 				| React.FormEvent<HTMLInputElement | HTMLTextAreaElement>
 		) => context.setValue(e.currentTarget.value),
-		[context.setValue]
+		[context]
 	)
 
 	return {

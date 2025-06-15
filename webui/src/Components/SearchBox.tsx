@@ -5,10 +5,10 @@ import React, { useCallback } from 'react'
 
 export interface SearchBoxProps {
 	filter: string
-	setFilter(filter: string): void
+	setFilter: (filter: string) => void
 }
 
-export function SearchBox({ filter, setFilter }: SearchBoxProps) {
+export function SearchBox({ filter, setFilter }: SearchBoxProps): React.JSX.Element {
 	const updateFilter = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value),
 		[setFilter]

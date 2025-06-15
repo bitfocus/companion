@@ -5,7 +5,7 @@ import { faCog, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 
-export function SettingsSelectPage() {
+export function SettingsSelectPage(): React.JSX.Element {
 	return (
 		<CRow className="split-panels">
 			<CCol xl={6} className="primary-panel">

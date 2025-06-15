@@ -19,7 +19,7 @@ export const RefreshModuleInfo = observer(function RefreshModuleInfo({ moduleId 
 		socket.emitPromise('modules-store:info:refresh', [moduleId]).catch((err) => {
 			console.error('Failed to refresh module info', err)
 		})
-	}, [socket])
+	}, [socket, moduleId])
 
 	if (refreshProgress === 1) {
 		return (

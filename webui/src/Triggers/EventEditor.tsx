@@ -200,7 +200,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 
 	const innerSetEnabled = useCallback(
 		(e: FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
-		[service.setEnabled]
+		[service]
 	)
 
 	const name = eventSpec ? eventSpec.name : `${event.type} (undefined)`

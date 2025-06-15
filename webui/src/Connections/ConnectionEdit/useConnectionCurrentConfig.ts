@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { ClientEditConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import { useQuery, UseQueryResult } from '@tanstack/react-query'
 import { useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
-export function useConnectionCurrentConfig(connectionId: string) {
+export function useConnectionCurrentConfig(connectionId: string): UseQueryResult<ClientEditConnectionConfig> {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const query = useQuery({

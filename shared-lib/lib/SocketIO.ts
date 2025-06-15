@@ -34,7 +34,11 @@ import type {
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from './Model/TriggerModel.js'
-import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
+import type {
+	CustomVariableCollection,
+	CustomVariableUpdate,
+	CustomVariablesModel,
+} from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
@@ -52,7 +56,7 @@ import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './M
 import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
 import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
-export interface ClientToBackendEventsMap {
+export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	disconnect: () => never // Hack because type is missing
 
 	'app-update-info': () => never
@@ -83,7 +87,7 @@ export interface ClientToBackendEventsMap {
 	'custom-variables:set-description': (name: string, description: string) => string | null
 	'custom-variables:set-persistence': (name: string, value: boolean) => string | null
 	'custom-variables:delete': (name: string) => void
-	'custom-variables:set-order': (newNames: string[]) => void
+	'custom-variables:reorder': (collectionId: string | null, name: string, dropIndex: number) => void
 
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'custom-variables:subscribe': () => CustomVariablesModel
@@ -94,6 +98,8 @@ export interface ClientToBackendEventsMap {
 	'connections:unsubscribe': () => void
 	'connection-collections:subscribe': () => ConnectionCollection[]
 	'connection-collections:unsubscribe': () => void
+	'custom-variable-collections:subscribe': () => CustomVariableCollection[]
+	'custom-variable-collections:unsubscribe': () => void
 	'entity-definitions:subscribe': (
 		type: EntityModelType
 	) => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
@@ -219,6 +225,7 @@ export interface ClientToBackendEventsMap {
 	'trigger-collections:add': (collectionName: string) => string
 	'trigger-collections:remove': (collectionId: string) => void
 	'trigger-collections:set-name': (collectionId: string, collectionName: string) => void
+	'trigger-collections:set-enabled': (collectionId: string, enabled: boolean) => void
 	'trigger-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
 	'action-recorder:subscribe': () => Record<string, RecordSessionListInfo | undefined>
@@ -279,7 +286,6 @@ export interface ClientToBackendEventsMap {
 	'logs:unsubscribe': () => void
 	'logs:clear': () => void
 
-	'loadsave:prepare-import': (rawFile: string | ArrayBuffer) => [err: null, config: ClientImportObject] | [err: string]
 	'loadsave:abort': () => boolean
 	'loadsave:reset': (config: ClientResetSelection) => 'ok'
 	'loadsave:import-page': (
@@ -333,23 +339,24 @@ export interface ClientToBackendEventsMap {
 		newModuleId: string,
 		versionId: string | null
 	) => string | null
-	'connections:reorder': (groupId: string | null, connectionId: string, dropIndex: number) => void
+	'connections:reorder': (collectionId: string | null, connectionId: string, dropIndex: number) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'connection-collections:add': (groupName: string) => string
-	'connection-collections:remove': (groupId: string) => void
-	'connection-collections:set-name': (groupId: string, groupName: string) => void
-	'connection-collections:reorder': (groupId: string, parentId: string | null, dropIndex: number) => void
+	'connection-collections:add': (collectionName: string) => string
+	'connection-collections:remove': (collectionId: string) => void
+	'connection-collections:set-name': (collectionId: string, collectionName: string) => void
+	'connection-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
+
+	'custom-variable-collections:add': (collectionName: string) => string
+	'custom-variable-collections:remove': (collectionId: string) => void
+	'custom-variable-collections:set-name': (collectionId: string, collectionName: string) => void
+	'custom-variable-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
 	'modules:install-all-missing': () => void
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
-	'modules:bundle-import:start': (name: string, size: number) => string | null
-	'modules:bundle-import:chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
-	'modules:bundle-import:complete': (sessionId: string, checksum: string) => boolean
-	'modules:bundle-import:cancel': (sessionId: string) => void
 
 	'modules-store:list:subscribe': () => ModuleStoreListCacheStore
 	'modules-store:list:unsubscribe': () => void
@@ -376,6 +383,19 @@ export interface ClientToBackendEventsMap {
 	cloud_region_state_set: (id: string, newState: Partial<CloudRegionState>) => never
 }
 
+type AllMultipartUploaderMethods = MultipartUploaderMethods<'modules:bundle-import', boolean> &
+	MultipartUploaderMethods<'loadsave:prepare-import', [err: null, config: ClientImportObject] | [err: string]>
+
+interface MultipartUploaderMethodsBase<TComplete> {
+	start: (name: string, size: number) => string | null
+	chunk: (sessionId: string, offset: number, data: Uint8Array) => boolean
+	complete: (sessionId: string, checksum: string) => TComplete
+	cancel: (sessionId: string) => void
+}
+export type MultipartUploaderMethods<Prefix extends string, TComplete> = {
+	[K in keyof MultipartUploaderMethodsBase<TComplete> as `${Prefix}:${string & K}`]: MultipartUploaderMethodsBase<TComplete>[K]
+}
+
 export interface BackendToClientEventsMap {
 	'app-update-info': (info: AppUpdateInfo) => void
 
@@ -389,6 +409,7 @@ export interface BackendToClientEventsMap {
 	'pages:update': (changes: PageModelChanges) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void
+	'loadsave:prepare-import:progress': (sessionId: string, percent: number | null) => void
 
 	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void
 
@@ -411,6 +432,7 @@ export interface BackendToClientEventsMap {
 	'trigger-collections:update': (patch: TriggerCollection[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
+	'custom-variable-collections:update': (patch: CustomVariableCollection[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void

@@ -3,7 +3,7 @@ import { ColorResult, SketchPicker } from '@hello-pangea/color-picker'
 import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '~/util.js'
 import { usePopper } from 'react-popper'
-import { MenuPortalContext } from './DropdownInputField.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 import { colord } from 'colord'
 import { CompanionColorPresetValue } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
@@ -29,7 +29,7 @@ function splitColor(color: number | string) {
 			}
 		}
 	} else if (typeof color === 'string' && colord(color).isValid()) {
-		let rgb = colord(color).toRgb()
+		const rgb = colord(color).toRgb()
 		return {
 			r: rgb.r,
 			g: rgb.g,
@@ -83,7 +83,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	returnType,
 	presetColors,
 	helpText,
-}: ColorInputFieldProps<T>) {
+}: ColorInputFieldProps<T>): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const [currentColor, setCurrentColor] = useState<AsType<T> | null>(null)
@@ -105,7 +105,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 			setValue(newValue)
 			setCurrentColor(newValue)
 		},
-		[setValue]
+		[setValue, returnType]
 	)
 
 	const onChangeComplete = useCallback(
@@ -114,7 +114,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 			setValue(newValue)
 			setCurrentColor(null)
 		},
-		[setValue]
+		[setValue, returnType]
 	)
 
 	const color = splitColor(currentColor ?? value ?? 0)

@@ -1,5 +1,5 @@
 import React from 'react'
-import { WIZARD_VERSION_3_0 } from './index.js'
+import { WIZARD_VERSION_3_0 } from './Constants.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface ApplyStepProps {
@@ -7,8 +7,8 @@ interface ApplyStepProps {
 	newConfig: UserConfigModel
 }
 
-export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
-	let changes = []
+export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.Element {
+	const changes: React.ReactNode[] = []
 
 	if (oldConfig.setup_wizard < WIZARD_VERSION_3_0 || oldConfig.usb_hotplug !== newConfig.usb_hotplug) {
 		changes.push(
@@ -104,6 +104,18 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 			) : (
 				<li>
 					203 Systems Mystrix hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be detected by Companion.
+				</li>
+			)
+		)
+	}
+
+	if (oldConfig.setup_wizard === 0 || oldConfig.logitech_mx_console_enable !== newConfig.logitech_mx_console_enable) {
+		changes.push(
+			newConfig.logitech_mx_console_enable ? (
+				<li>Logitech MX Console hardware will be detected by Companion.</li>
+			) : (
+				<li>
+					Logitech MX Console hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be detected by Companion.
 				</li>
 			)
 		)
@@ -292,14 +304,16 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 		(oldConfig.setup_wizard === 0 && newConfig.admin_lockout) ||
 		(newConfig.admin_lockout && oldConfig.admin_password !== newConfig.admin_password)
 	) {
-		oldConfig.setup_wizard > 0
-			? changes.push(
-					<li>
-						Change admin password from {oldConfig.admin_password === '' ? '(none)' : `'${oldConfig.admin_password}'`} to{' '}
-						'{newConfig.admin_password}'.
-					</li>
-				)
-			: changes.push(<li>Set admin password to '{newConfig.admin_password}'.</li>)
+		changes.push(
+			oldConfig.setup_wizard > 0 ? (
+				<li>
+					Change admin password from {oldConfig.admin_password === '' ? '(none)' : `'${oldConfig.admin_password}'`} to '
+					{newConfig.admin_password}'.
+				</li>
+			) : (
+				<li>Set admin password to '{newConfig.admin_password}'.</li>
+			)
+		)
 	}
 	if (
 		(oldConfig.setup_wizard === 0 && newConfig.admin_lockout) ||
@@ -307,16 +321,16 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 	) {
 		const oldAdminTimeoutStr = oldConfig.admin_timeout + ''
 		const newAdminTimeoutStr = newConfig.admin_timeout + ''
-		oldConfig.setup_wizard > 0
-			? changes.push(
-					<li>
-						Change admin GUI timeout from {oldAdminTimeoutStr === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'}{' '}
-						to {newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.
-					</li>
-				)
-			: changes.push(
-					<li>Set admin GUI timeout to {newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.</li>
-				)
+		changes.push(
+			oldConfig.setup_wizard > 0 ? (
+				<li>
+					Change admin GUI timeout from {oldAdminTimeoutStr === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'} to{' '}
+					{newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.
+				</li>
+			) : (
+				<li>Set admin GUI timeout to {newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.</li>
+			)
+		)
 	}
 
 	if (changes.length === 0) {

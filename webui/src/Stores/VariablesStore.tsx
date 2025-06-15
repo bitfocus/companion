@@ -1,7 +1,11 @@
-import { CustomVariableDefinition, CustomVariableUpdate } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type {
+	CustomVariableCollection,
+	CustomVariableDefinition,
+	CustomVariableUpdate,
+} from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ObservableMap, action, computed, observable } from 'mobx'
 import { assertNever } from '~/util.js'
-import {
+import type {
 	AllVariableDefinitions,
 	VariableDefinition,
 	VariableDefinitionUpdate,
@@ -12,6 +16,7 @@ import { cloneDeep } from 'lodash-es'
 export class VariablesStore {
 	readonly customVariables = observable.map<string, CustomVariableDefinition>()
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
+	readonly customVariableCollections = observable.map<string, CustomVariableCollection>()
 
 	public resetCustomVariables = action((newData: Record<string, CustomVariableDefinition | undefined> | null): void => {
 		this.customVariables.clear()
@@ -139,6 +144,37 @@ export class VariablesStore {
 
 		return definitions
 	}
+
+	public get allCustomVariableCollectionIds(): string[] {
+		const collectionIds: string[] = []
+
+		const collectCollectionIds = (collections: Iterable<CustomVariableCollection>): void => {
+			for (const collection of collections || []) {
+				collectionIds.push(collection.id)
+				collectCollectionIds(collection.children)
+			}
+		}
+
+		collectCollectionIds(this.customVariableCollections.values())
+
+		return collectionIds
+	}
+
+	public rootCustomVariableCollections(): CustomVariableCollection[] {
+		return Array.from(this.customVariableCollections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
+	}
+
+	public resetCustomVariableCollections = action((newData: CustomVariableCollection[] | null) => {
+		this.customVariableCollections.clear()
+
+		if (newData) {
+			for (const collection of newData) {
+				if (!collection) continue
+
+				this.customVariableCollections.set(collection.id, collection)
+			}
+		}
+	})
 }
 
 export interface VariableDefinitionExt extends VariableDefinition {

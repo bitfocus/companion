@@ -239,7 +239,7 @@ function ModuleUninstallButton({ moduleId, versionId }: ModuleUninstallButtonPro
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [socket, moduleId, versionId])
+	}, [socket, notifier, moduleId, versionId])
 
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall} onClick={doRemove}>
@@ -281,7 +281,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [socket, moduleId, versionId])
+	}, [socket, notifier, moduleId, versionId])
 
 	if (!hasTarUrl) {
 		return (

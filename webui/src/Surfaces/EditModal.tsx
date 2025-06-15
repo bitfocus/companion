@@ -16,7 +16,8 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField.js'
-import { DropdownInputField, MenuPortalContext } from '~/Components/DropdownInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
@@ -36,11 +37,8 @@ import { validateInputValue } from '~/Helpers/validateInputValue'
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
 }
-interface SurfaceEditModalProps {
-	// Nothing
-}
 
-export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModalRef>(
+export const SurfaceEditModal = observer<object, SurfaceEditModalRef>(
 	function SurfaceEditModal(_props, ref) {
 		const { surfaces, socket } = useContext(RootAppStoreContext)
 
@@ -394,7 +392,6 @@ function ConfigField({ setValue, definition, value }: ConfigFieldProps) {
 						color="success"
 						checked={value}
 						size="xl"
-						title={definition.tooltip} // nocommit: this needs fixing
 						onChange={() => {
 							setValue2(!value)
 							//setValid2(true)

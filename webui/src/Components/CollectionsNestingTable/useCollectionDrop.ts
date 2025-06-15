@@ -1,4 +1,4 @@
-import { useDrop } from 'react-dnd'
+import { ConnectDropTarget, useDrop } from 'react-dnd'
 import { checkDragState, DragState } from '../../util.js'
 import { NestingCollectionsApi } from './Types.js'
 
@@ -16,7 +16,12 @@ export function useCollectionListCollectionDrop(
 	collectionApi: NestingCollectionsApi,
 	dragId: string,
 	collectionId: string | null
-) {
+): {
+	isOver: boolean
+	canDrop: boolean
+	dragCollectionId: string | undefined
+	drop: ConnectDropTarget
+} {
 	const [{ isOver, canDrop, dragCollectionId }, drop] = useDrop<
 		CollectionsNestingTableCollectionDragItem,
 		unknown,

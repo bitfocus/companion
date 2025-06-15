@@ -7,7 +7,8 @@ import { TouchBackend } from 'react-dnd-touch-backend'
 import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
 import { MyHeader } from './Layout/Header.js'
 import { ContextData } from './ContextData.js'
-import { WizardModal, WIZARD_CURRENT_VERSION } from './Wizard/index.js'
+import { WizardModal } from './Wizard/index.js'
+import { WIZARD_CURRENT_VERSION } from './Wizard/Constants.js'
 import { useIdleTimer } from 'react-idle-timer'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -15,7 +16,7 @@ import { Outlet } from '@tanstack/react-router'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
-export default function App() {
+export default function App(): React.JSX.Element {
 	const socket = useContext(SocketContext)
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
@@ -342,18 +343,24 @@ const AppContent = observer(function AppContent() {
 
 	const handleWindowBlur = useCallback(() => {
 		viewControl.setButtonGridHotPress(false)
-	}, [])
+	}, [viewControl])
 
-	const handleKeyDown = useCallback((e: KeyboardEvent) => {
-		if (e.key === 'Shift') {
-			viewControl.setButtonGridHotPress(true)
-		}
-	}, [])
-	const handleKeyUp = useCallback((e: KeyboardEvent) => {
-		if (e.key === 'Shift') {
-			viewControl.setButtonGridHotPress(false)
-		}
-	}, [])
+	const handleKeyDown = useCallback(
+		(e: KeyboardEvent) => {
+			if (e.key === 'Shift') {
+				viewControl.setButtonGridHotPress(true)
+			}
+		},
+		[viewControl]
+	)
+	const handleKeyUp = useCallback(
+		(e: KeyboardEvent) => {
+			if (e.key === 'Shift') {
+				viewControl.setButtonGridHotPress(false)
+			}
+		},
+		[viewControl]
+	)
 
 	useMountEffect(() => {
 		document.addEventListener('keydown', handleKeyDown)

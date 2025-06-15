@@ -8,29 +8,29 @@ import type {
 
 export class ConnectionsStore {
 	readonly connections = observable.map<string, ClientConnectionConfig>()
-	readonly groups = observable.map<string, ConnectionCollection>()
+	readonly collections = observable.map<string, ConnectionCollection>()
 
-	public get count() {
+	public get count(): number {
 		return this.connections.size
 	}
 
-	public get allGroupIds(): string[] {
-		const groupIds: string[] = []
+	public get allCollectionIds(): string[] {
+		const collectionIds: string[] = []
 
-		const collectGroupIds = (groups: Iterable<ConnectionCollection>): void => {
-			for (const group of groups || []) {
-				groupIds.push(group.id)
-				collectGroupIds(group.children)
+		const collectCollectionIDs = (collections: Iterable<ConnectionCollection>): void => {
+			for (const collection of collections || []) {
+				collectionIds.push(collection.id)
+				collectCollectionIDs(collection.children)
 			}
 		}
 
-		collectGroupIds(this.groups.values())
+		collectCollectionIDs(this.collections.values())
 
-		return groupIds
+		return collectionIds
 	}
 
-	public rootGroups(): ConnectionCollection[] {
-		return Array.from(this.groups.values()).sort((a, b) => a.sortOrder - b.sortOrder)
+	public rootCollections(): ConnectionCollection[] {
+		return Array.from(this.collections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}
 
 	public getInfo(connectionId: string): ClientConnectionConfig | undefined {
@@ -76,14 +76,14 @@ export class ConnectionsStore {
 		}
 	})
 
-	public resetGroups = action((newData: ConnectionCollection[] | null) => {
-		this.groups.clear()
+	public resetCollections = action((newData: ConnectionCollection[] | null) => {
+		this.collections.clear()
 
 		if (newData) {
-			for (const group of newData) {
-				if (!group) continue
+			for (const collection of newData) {
+				if (!collection) continue
 
-				this.groups.set(group.id, group)
+				this.collections.set(collection.id, collection)
 			}
 		}
 	})

@@ -1,13 +1,12 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
-import React, { createContext, useContext, useMemo, useCallback, memo, useState } from 'react'
+import React, { useContext, useMemo, useCallback, memo, useState } from 'react'
 import Select, { createFilter, InputActionMeta, components } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
-
-export const MenuPortalContext = createContext<HTMLElement | null>(null)
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -50,7 +49,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 	onBlur,
 	onPasteIntercept,
 	checkValid,
-}: DropdownInputFieldProps) {
+}: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const options = useMemo(() => {
@@ -67,7 +66,6 @@ export const DropdownInputField = memo(function DropdownInputField({
 	}, [choices])
 
 	const currentValue = useMemo(() => {
-		// eslint-disable-next-line eqeqeq
 		const entry = options.find((o) => o.value == value) // Intentionally loose for compatibility
 		if (entry) {
 			return entry
@@ -112,6 +110,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 
 			// Set the value of the input, using the native setter
 			const target = e.currentTarget as HTMLInputElement
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
 			nativeInputValueSetter.call(target, newValue)
 
@@ -205,7 +204,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 			setCustomInputValue(inputValue)
 			onChange({ value: inputValue, label: inputValue })
 		},
-		[value, onChange]
+		[onChange]
 	)
 
 	if (allowCustom && customInputValue === value) {

@@ -28,7 +28,7 @@ export function EditActionsRelease({
 	stepOptions,
 	stepId,
 	removeSet,
-}: EditActionsReleaseProps) {
+}: EditActionsReleaseProps): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const editRef = useRef<EditDurationGroupPropertiesModalRef>(null)

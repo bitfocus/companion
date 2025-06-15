@@ -13,7 +13,7 @@ export const NonIdealState = ({
 	icon: IconProp
 	children?: React.ReactNode
 	style?: React.CSSProperties
-}) => {
+}): React.JSX.Element => {
 	return (
 		<>
 			<div style={{ padding: '5vh', color: '#000', textAlign: 'center', ...style }}>

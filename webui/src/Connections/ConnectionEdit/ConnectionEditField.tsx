@@ -20,7 +20,13 @@ interface ConnectionEditFieldProps {
 	connectionId: string
 }
 
-export function ConnectionEditField({ label, setValue, definition, value, connectionId }: ConnectionEditFieldProps) {
+export function ConnectionEditField({
+	label,
+	setValue,
+	definition,
+	value,
+	connectionId,
+}: ConnectionEditFieldProps): React.JSX.Element {
 	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
 
 	const fieldType = definition.type
@@ -28,7 +34,7 @@ export function ConnectionEditField({ label, setValue, definition, value, connec
 		case 'static-text': {
 			const control = <StaticTextFieldText {...definition} allowImages />
 
-			if (!!label) {
+			if (label) {
 				return (
 					<>
 						<CFormLabel>{label}</CFormLabel>
@@ -62,7 +68,6 @@ export function ConnectionEditField({ label, setValue, definition, value, connec
 						color="success"
 						checked={value}
 						size="xl"
-						title={definition.tooltip} // nocommit: this needs fixing
 						onChange={() => {
 							setValue(!value)
 						}}

@@ -13,7 +13,7 @@ import { observer } from 'mobx-react-lite'
 interface CollectionsNestingTableProps<
 	TCollection extends CollectionsNestingTableCollection,
 	TItem extends CollectionsNestingTableItem,
-> extends CollectionsNestingTableContextType<TItem> {
+> extends CollectionsNestingTableContextType<TCollection, TItem> {
 	Heading?: React.ComponentType
 	NoContent: React.ComponentType
 
@@ -28,6 +28,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 	Heading,
 	NoContent,
 	ItemRow,
+	GroupHeaderContent,
 	itemName,
 	dragId,
 	collectionsApi,
@@ -43,6 +44,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 	return (
 		<CollectionsNestingTableContextProvider
 			ItemRow={ItemRow}
+			GroupHeaderContent={GroupHeaderContent}
 			itemName={itemName}
 			collectionsApi={collectionsApi}
 			dragId={dragId}

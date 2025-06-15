@@ -62,7 +62,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #io: UIHandler
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
-	readonly collectionsController: InstanceCollections
+	readonly #collectionsController: InstanceCollections
 
 	readonly #configStore: ConnectionConfigStore
 
@@ -79,7 +79,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly connectionApiRouter = express.Router()
 
 	get collections(): InstanceCollections {
-		return this.collectionsController
+		return this.#collectionsController
 	}
 
 	constructor(
@@ -101,7 +101,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController = controls
 
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
-		this.collectionsController = new InstanceCollections(io, db, this.#configStore)
+		this.#collectionsController = new InstanceCollections(io, db, this.#configStore)
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
@@ -118,7 +118,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceDefinitions: this.definitions,
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
-				setConnectionConfig: (connectionId, config, secrets) => {
+				setConnectionConfig: (connectionId, config, secrets, upgradeIndex) => {
 					this.setInstanceLabelAndConfig(
 						connectionId,
 						{
@@ -126,6 +126,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 							config,
 							secrets,
 							updatePolicy: null,
+							upgradeIndex,
 						},
 						{
 							skipNotifyConnection: true,
@@ -236,6 +237,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			config: unknown | null
 			secrets: unknown | null
 			updatePolicy: ConnectionUpdatePolicy | null
+			upgradeIndex: number | null
 		},
 		options?: {
 			skipNotifyConnection?: boolean
@@ -281,6 +283,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		if (values.updatePolicy !== null) {
 			connectionConfig.updatePolicy = values.updatePolicy
+		}
+
+		if (values.upgradeIndex !== null) {
+			connectionConfig.lastUpgradeIndex = values.upgradeIndex
 		}
 
 		this.emit('connection_updated', id)
@@ -430,7 +436,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		if (deleteCollections) {
-			this.collectionsController.discardAllCollections()
+			this.#collectionsController.discardAllCollections()
 		}
 
 		await Promise.all(ps)
@@ -558,6 +564,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					config: null,
 					secrets: null,
 					updatePolicy: null,
+					upgradeIndex: null,
 				},
 				{ skipNotifyConnection: true }
 			)
@@ -591,7 +598,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.modules.clientConnect(client)
 		this.modulesStore.clientConnect(client)
 		this.userModulesManager.clientConnect(client)
-		this.collectionsController.clientConnect(client)
+		this.#collectionsController.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)
@@ -651,6 +658,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					config,
 					secrets,
 					updatePolicy,
+					upgradeIndex: null,
 				},
 				{
 					patchSecrets: true,
@@ -673,7 +681,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// TODO - refactor/optimise/tidy this
 
-			this.setInstanceLabelAndConfig(id, { label, config: null, secrets: null, updatePolicy: null })
+			this.setInstanceLabelAndConfig(id, { label, config: null, secrets: null, updatePolicy: null, upgradeIndex: null })
 
 			const config = this.#configStore.getConfigForId(id)
 			if (!config) return 'no connection'

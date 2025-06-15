@@ -106,7 +106,7 @@ function OutboundSurfaceRow({ surfaceInfo, updateName, updateEnabled, removeSurf
 	const updateName2 = useCallback((val: string) => updateName(surfaceInfo.id, val), [updateName, surfaceInfo.id])
 	const updateEnabled2 = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => updateEnabled(surfaceInfo.id, e.target.checked),
-		[updateName, surfaceInfo.id]
+		[updateEnabled, surfaceInfo.id]
 	)
 	const removeSurface2 = useCallback(() => removeSurface(surfaceInfo.id), [removeSurface, surfaceInfo.id])
 

@@ -16,7 +16,7 @@ import { nanoid } from 'nanoid'
 import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ClientTriggerData, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ClientTriggerData, TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
@@ -90,19 +90,33 @@ export class ControlsController {
 
 		this.#dbTable = registry.db.getTableView('controls')
 
-		this.#triggerCollections = new TriggerCollections(registry.io, registry.db, (collectionIds) =>
-			this.#cleanUnknownTriggerCollectionIds(collectionIds)
+		this.triggers = new TriggerEvents()
+		this.#triggerCollections = new TriggerCollections(
+			registry.io,
+			registry.db,
+			this.triggers,
+			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
+			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
 
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
-		this.triggers = new TriggerEvents()
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: Set<string>): void {
-		for (const control of Object.values(this.#controls)) {
+		for (const control of this.#controls.values()) {
 			if (control instanceof ControlTrigger) {
 				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	#checkTriggerCollectionsEnabled(enabledCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlTrigger) {
+				control.setCollectionEnabled(
+					!control.options.collectionId || enabledCollectionIds.has(control.options.collectionId)
+				)
 			}
 		}
 	}
@@ -643,6 +657,9 @@ export class ControlsController {
 			// Ensure it is stored to the db
 			newControl.commitChange()
 
+			// No collectionId yet so mark as enabled
+			newControl.setCollectionEnabled(true)
+
 			return controlId
 		})
 		client.onPromise('triggers:delete', (controlId) => {
@@ -703,9 +720,12 @@ export class ControlsController {
 			const thisTrigger = this.#controls.get(controlId)
 			if (!thisTrigger || !(thisTrigger instanceof ControlTrigger)) return false
 
+			if (!this.#triggerCollections.doesCollectionIdExist(collectionId)) return false
+
 			// update the collectionId of the trigger being moved if needed
 			if (thisTrigger.options.collectionId !== (collectionId ?? undefined)) {
 				thisTrigger.optionsSetField('collectionId', collectionId ?? undefined, true)
+				thisTrigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(collectionId))
 			}
 
 			// find all the other triggers with the matching collectionId
@@ -857,7 +877,18 @@ export class ControlsController {
 
 		if (category === 'all' || category === 'trigger') {
 			if (controlObj2?.type === 'trigger' || (controlType === 'trigger' && !controlObj2)) {
-				return new ControlTrigger(this.#createControlDependencies(), this.triggers, controlId, controlObj2, isImport)
+				const trigger = new ControlTrigger(
+					this.#createControlDependencies(),
+					this.triggers,
+					controlId,
+					controlObj2,
+					isImport
+				)
+				setImmediate(() => {
+					// Ensure the trigger is enabled, on a slight debounce
+					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
+				})
+				return trigger
 			}
 		}
 
@@ -984,6 +1015,9 @@ export class ControlsController {
 				if (inst) this.#controls.set(controlId, inst)
 			}
 		}
+
+		// Ensure all trigger collections are valid
+		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
 	}
 
 	/**
@@ -1077,6 +1111,10 @@ export class ControlsController {
 		this.#triggerCollections.discardAllCollections()
 	}
 
+	exportTriggerCollections(): TriggerCollection[] {
+		return this.#triggerCollections.collectionData
+	}
+
 	/**
 	 * Create a control
 	 * Danger: This will not delete an existing control from the specified location
@@ -1115,6 +1153,13 @@ export class ControlsController {
 			this.#activeLearnRequests.delete(id)
 			this.#registry.io.emitToRoom(ActiveLearnRoom, 'learn:remove', id)
 		}
+	}
+
+	setTriggerCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {
+		this.#triggerCollections.setCollectionEnabled(collectionId, enabled)
+	}
+	isTriggerCollectionEnabled(collectionId: string, onlyDirect: boolean): boolean {
+		return this.#triggerCollections.isCollectionEnabled(collectionId, onlyDirect)
 	}
 
 	/**

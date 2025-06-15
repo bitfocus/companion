@@ -22,7 +22,7 @@ export function CheckboxInputField({
 	disabled,
 	helpText,
 	inline,
-}: CheckboxInputFieldProps) {
+}: CheckboxInputFieldProps): React.JSX.Element {
 	const onChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			setValue(!!e.currentTarget.checked)
