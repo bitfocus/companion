@@ -4,6 +4,8 @@ import { colord } from 'colord'
 export type HorizontalAlignment = 'left' | 'right' | 'center'
 export type VerticalAlignment = 'top' | 'bottom' | 'center'
 
+export type LineOrientation = 'inside' | 'center' | 'outside'
+
 export interface GraphicsOptions {
 	page_direction_flipped: boolean
 	page_plusminus: boolean

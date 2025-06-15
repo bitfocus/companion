@@ -18,10 +18,8 @@
 /// <reference lib="dom" />
 
 import type { MinimalLogger } from '../Logger.js'
-import type { HorizontalAlignment, VerticalAlignment } from './Util.js'
+import type { HorizontalAlignment, LineOrientation, VerticalAlignment } from './Util.js'
 import { DEFAULT_FONTS_STR } from './Fonts.js'
-
-export type LineOrientation = 'inside' | 'center' | 'outside'
 
 export type PointXY = [x: number, y: number]
 
@@ -237,7 +235,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			didDraw = true
 		}
 		if (lineStyle) {
-			didDraw = didDraw || this.boxLine(x1, y1, x2, y2, lineStyle, lineOrientation)
+			didDraw = this.boxLine(x1, y1, x2, y2, lineStyle, lineOrientation) || didDraw
 		}
 
 		return didDraw

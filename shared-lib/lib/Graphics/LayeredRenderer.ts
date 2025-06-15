@@ -264,7 +264,18 @@ export class GraphicsLayeredButtonRenderer {
 		if (skipDraw) return drawBounds
 
 		await img.usingAlpha(element.opacity / 100, async () => {
-			img.box(parentBounds.x, parentBounds.y, parentBounds.maxX, parentBounds.maxY, parseColor(element.color))
+			img.box(
+				drawBounds.x,
+				drawBounds.y,
+				drawBounds.maxX,
+				drawBounds.maxY,
+				parseColor(element.color),
+				{
+					color: parseColor(element.borderColor),
+					width: element.borderWidth,
+				},
+				element.borderPosition
+			)
 		})
 
 		return drawBounds

@@ -343,10 +343,13 @@ async function convertBoxElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [opacity, bounds, color] = await Promise.all([
+	const [opacity, bounds, color, borderWidth, borderColor, borderPosition] = await Promise.all([
 		helper.getNumber(element.opacity, 100),
 		convertDrawBounds(helper, element),
 		helper.getNumber(element.color, 0),
+		helper.getNumber(element.borderWidth, 0),
+		helper.getNumber(element.borderColor, 0),
+		helper.getEnum(element.borderPosition, ['inside', 'center', 'outside'], 'inside'),
 	])
 
 	return {
@@ -357,6 +360,9 @@ async function convertBoxElementForDrawing(
 		opacity,
 		...bounds,
 		color,
+		borderWidth,
+		borderColor,
+		borderPosition,
 	}
 }
 

@@ -54,6 +54,9 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				width: { value: 1, isExpression: false },
 				height: { value: 1, isExpression: false },
 				color: { value: 0xff0000, isExpression: false },
+				borderWidth: { value: 0, isExpression: false },
+				borderColor: { value: 0, isExpression: false },
+				borderPosition: { value: 'inside', isExpression: false },
 			}
 		case 'group':
 			return {

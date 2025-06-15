@@ -85,6 +85,8 @@ export interface ButtonGraphicsGroupElement
 export type HorizontalAlignment = 'left' | 'center' | 'right'
 export type VerticalAlignment = 'top' | 'center' | 'bottom'
 
+export type LineOrientation = 'inside' | 'center' | 'outside'
+
 export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
@@ -98,7 +100,6 @@ export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, B
 	valign: VerticalAlignment
 
 	// Future ideas:
-	// minX, maxX, minY, maxY: number
 	// rotation: number
 	// outlineColor: number
 }
@@ -117,7 +118,6 @@ export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, 
 	fillMode: 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
 
 	// Future ideas:
-	// width, height: number
 	// rotation: number
 	// crop: { x, y, width, height }
 }
@@ -129,6 +129,10 @@ export interface ButtonGraphicsBoxDrawElement extends ButtonGraphicsDrawBase, Bu
 	type: 'box'
 
 	color: number
+
+	borderWidth: number // 0 to disable
+	borderColor: number
+	borderPosition: LineOrientation
 }
 export interface ButtonGraphicsBoxElement
 	extends ButtonGraphicsElementBase,
