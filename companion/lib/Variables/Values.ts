@@ -101,8 +101,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				for (let variable in valuesForLabel) {
 					valuesForLabel[variable] = undefined
 					removed_variables.add(`${label}:${variable}`)
-					removed_variable_connection.add(label)
 				}
+				removed_variable_connection.add(label)
 				this.#emitVariablesChanged(removed_variables, removed_variable_connection)
 			}
 
@@ -126,10 +126,10 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 				all_changed_variables_set.add(`${labelFrom}:${variable}`)
 				all_changed_variables_set.add(`${labelTo}:${variable}`)
-				connection_labels.add(labelFrom)
-				connection_labels.add(labelTo)
+				
 			}
-
+			connection_labels.add(labelFrom)
+			connection_labels.add(labelTo)
 			delete this.#variableValues[labelFrom]
 			this.#emitVariablesChanged(all_changed_variables_set, connection_labels)
 		}
@@ -155,7 +155,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				moduleValues[variable.id] = variable.value
 
 				all_changed_variables_set.add(`${label}:${variable.id}`)
-				connection_labels.add(label)
+				
 				// Also report the old custom variable names as having changed
 				if (label === 'custom') {
 					all_changed_variables_set.add(`internal:custom_${variable.id}`)
@@ -167,6 +167,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				}
 			}
 		}
+		connection_labels.add(label)
 
 		this.#emitVariablesChanged(all_changed_variables_set, connection_labels)
 	}
