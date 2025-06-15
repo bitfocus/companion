@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback, useContext, useRef } from 'react'
+import React, { useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import Select, {
 	ControlProps,
@@ -11,19 +11,16 @@ import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
 interface TextInputFieldProps {
 	label?: React.ReactNode
-	regex?: string
-	required?: boolean
 	tooltip?: string
 	placeholder?: string
 	value: string
 	style?: React.CSSProperties
 	setValue: (value: string) => void
-	setValid?: (valid: boolean) => void
+	checkValid?: (valid: string) => boolean
 	disabled?: boolean
 	useVariables?: boolean
 	localVariables?: DropdownChoiceInt[]
@@ -34,14 +31,12 @@ interface TextInputFieldProps {
 
 export const TextInputField = observer(function TextInputField({
 	label,
-	regex,
-	required,
 	tooltip,
 	placeholder,
 	value,
 	style,
 	setValue,
-	setValid,
+	checkValid,
 	disabled,
 	useVariables,
 	localVariables,
@@ -51,65 +46,12 @@ export const TextInputField = observer(function TextInputField({
 }: TextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
-	// Compile the regex (and cache)
-	const compiledRegex = useMemo(() => {
-		if (regex) {
-			// Compile the regex string
-			const match = /^\/(.*)\/(.*)$/.exec(regex)
-			if (match) {
-				return new RegExp(match[1], match[2])
-			}
-		}
-		return null
-	}, [regex])
-
-	// Check if the value is valid
-	const isValueValid = useCallback(
-		(val: string) => {
-			if (isExpression) {
-				// Try and parse the expression to see if it is valid
-				try {
-					ParseExpression(val)
-					return true
-				} catch (_e) {
-					return false
-				}
-			} else {
-				// We need a string here, but sometimes get a number...
-				if (typeof val === 'number') {
-					val = `${val}`
-				}
-
-				// Must match the regex, if required or has a value
-				if (required || val !== '') {
-					if (compiledRegex && (typeof val !== 'string' || !compiledRegex.exec(val))) {
-						return false
-					}
-				}
-
-				// if required, must not be empty
-				if (required && val === '') {
-					return false
-				}
-
-				return true
-			}
-		},
-		[compiledRegex, required, isExpression]
-	)
-
-	// If the value is undefined, populate with the default. Also inform the parent about the validity
-	useEffect(() => {
-		setValid?.(isValueValid(value))
-	}, [isValueValid, value, setValid])
-
 	const storeValue = useCallback(
 		(value: string) => {
 			setTmpValue(value)
 			setValue(value)
-			setValid?.(isValueValid(value))
 		},
-		[setValue, setValid, isValueValid]
+		[setValue]
 	)
 	const doOnChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => storeValue(e.currentTarget.value),
@@ -127,8 +69,8 @@ export const TextInputField = observer(function TextInputField({
 	const showValue = (tmpValue ?? value ?? '').toString()
 
 	const extraStyle = useMemo(
-		() => ({ color: !isValueValid(showValue) ? 'red' : undefined, ...style }),
-		[isValueValid, showValue, style]
+		() => ({ color: !!checkValid && !checkValid(showValue) ? 'red' : undefined, ...style }),
+		[checkValid, showValue, style]
 	)
 
 	// Render the input

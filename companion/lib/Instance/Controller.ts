@@ -118,8 +118,20 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceDefinitions: this.definitions,
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
-				setConnectionConfig: (connectionId, config, newUpgradeIndex) => {
-					this.setInstanceLabelAndConfig(connectionId, null, config, null, newUpgradeIndex, true)
+				setConnectionConfig: (connectionId, config, secrets, upgradeIndex) => {
+					this.setInstanceLabelAndConfig(
+						connectionId,
+						{
+							label: null,
+							config,
+							secrets,
+							updatePolicy: null,
+							upgradeIndex,
+						},
+						{
+							skipNotifyConnection: true,
+						}
+					)
 				},
 			},
 			this.modules,
@@ -220,11 +232,17 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 */
 	setInstanceLabelAndConfig(
 		id: string,
-		newLabel: string | null,
-		config: unknown | null,
-		updatePolicy: ConnectionUpdatePolicy | null,
-		newUpgradeIndex: number | null,
-		skip_notify_instance = false
+		values: {
+			label: string | null
+			config: unknown | null
+			secrets: unknown | null
+			updatePolicy: ConnectionUpdatePolicy | null
+			upgradeIndex: number | null
+		},
+		options?: {
+			skipNotifyConnection?: boolean
+			patchSecrets?: boolean // If true, only secrets defined in the object are updated
+		}
 	): void {
 		const connectionConfig = this.#configStore.getConfigForId(id)
 		if (!connectionConfig) {
@@ -232,30 +250,43 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			return
 		}
 
-		if (config) {
+		if (values.config) {
 			// Mark as definitely been initialised
 			connectionConfig.isFirstInit = false
 
 			// Update the config blob
-			connectionConfig.config = config
+			connectionConfig.config = values.config
+		}
+
+		if (values.secrets) {
+			// Update the secrets blob
+			if (options?.patchSecrets) {
+				// Patch the secrets, only updating those that are defined
+				connectionConfig.secrets = {
+					...(connectionConfig.secrets as any),
+					...values.secrets,
+				}
+			} else {
+				connectionConfig.secrets = values.secrets
+			}
 		}
 
 		// Rename variables
-		if (newLabel && connectionConfig.label != newLabel) {
+		if (values.label && connectionConfig.label != values.label) {
 			const oldLabel = connectionConfig.label
-			connectionConfig.label = newLabel
-			this.#variablesController.values.connectionLabelRename(oldLabel, newLabel)
-			this.#variablesController.definitions.connectionLabelRename(oldLabel, newLabel)
-			this.#controlsController.renameVariables(oldLabel, newLabel)
-			this.definitions.updateVariablePrefixesForLabel(id, newLabel)
+			connectionConfig.label = values.label
+			this.#variablesController.values.connectionLabelRename(oldLabel, values.label)
+			this.#variablesController.definitions.connectionLabelRename(oldLabel, values.label)
+			this.#controlsController.renameVariables(oldLabel, values.label)
+			this.definitions.updateVariablePrefixesForLabel(id, values.label)
 		}
 
-		if (updatePolicy !== null) {
-			connectionConfig.updatePolicy = updatePolicy
+		if (values.updatePolicy !== null) {
+			connectionConfig.updatePolicy = values.updatePolicy
 		}
 
-		if (newUpgradeIndex !== null) {
-			connectionConfig.lastUpgradeIndex = newUpgradeIndex
+		if (values.upgradeIndex !== null) {
+			connectionConfig.lastUpgradeIndex = values.upgradeIndex
 		}
 
 		this.emit('connection_updated', id)
@@ -263,13 +294,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#configStore.commitChanges([id])
 
 		const instance = this.moduleHost.getChild(id, true)
-		if (newLabel) {
-			this.moduleHost.updateChildLabel(id, newLabel)
+		if (values.label) {
+			this.moduleHost.updateChildLabel(id, values.label)
 		}
 
-		const updateInstance = !!newLabel || (config && !skip_notify_instance)
+		const updateInstance = !!values.label || ((values.config || values.secrets) && !options?.skipNotifyConnection)
 		if (updateInstance && instance) {
-			instance.updateConfigAndLabel(connectionConfig.config, connectionConfig.label).catch((e: any) => {
+			instance.updateConfigAndLabel(connectionConfig).catch((e: any) => {
 				instance.logger.warn('Error updating instance configuration: ' + e.message)
 			})
 		}
@@ -484,8 +515,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return clone ? cloneDeep(obj) : obj
 	}
 
-	exportAll(clone = true): Record<string, ConnectionConfig | undefined> {
-		return this.#configStore.exportAll(clone)
+	exportAll(includeSecrets: boolean): Record<string, ConnectionConfig | undefined> {
+		return this.#configStore.exportAll(includeSecrets)
 	}
 
 	/**
@@ -526,7 +557,17 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
 		const safeLabel = makeLabelSafe(config.label)
 		if (!is_being_created && safeLabel !== config.label) {
-			this.setInstanceLabelAndConfig(id, safeLabel, null, null, null, true)
+			this.setInstanceLabelAndConfig(
+				id,
+				{
+					label: safeLabel,
+					config: null,
+					secrets: null,
+					updatePolicy: null,
+					upgradeIndex: null,
+				},
+				{ skipNotifyConnection: true }
+			)
 		}
 
 		// TODO this could check if anything above changed, or is_being_created
@@ -580,9 +621,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				// TODO: making types match is messy
 				const fields: any = await instance.requestConfigFields()
 
+				const instanceSecrets: any = instanceConf.secrets || {}
+
+				const hasSecrets: Record<string, boolean> = {}
+				for (const field of fields) {
+					if (field.type.startsWith('secret')) {
+						hasSecrets[field.id] = !!instanceSecrets[field.id]
+					}
+				}
+
 				return {
 					fields: translateOptionsIsVisible(fields) as any[],
 					config: instanceConf.config,
+					hasSecrets,
 				}
 			} catch (e: any) {
 				this.#logger.silly(`Failed to load instance config_fields: ${e.message}`)
@@ -590,7 +641,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			}
 		})
 
-		client.onPromise('connections:set-label-and-config', (id, label, config, updatePolicy) => {
+		client.onPromise('connections:set-label-and-config', (id, label, config, secrets, updatePolicy) => {
 			const idUsingLabel = this.getIdForLabel(label)
 			if (idUsingLabel && idUsingLabel !== id) {
 				return 'duplicate label'
@@ -600,7 +651,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				return 'invalid label'
 			}
 
-			this.setInstanceLabelAndConfig(id, label, config, updatePolicy, null)
+			this.setInstanceLabelAndConfig(
+				id,
+				{
+					label,
+					config,
+					secrets,
+					updatePolicy,
+					upgradeIndex: null,
+				},
+				{
+					patchSecrets: true,
+				}
+			)
 
 			return null
 		})
@@ -618,7 +681,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// TODO - refactor/optimise/tidy this
 
-			this.setInstanceLabelAndConfig(id, label, null, null, null)
+			this.setInstanceLabelAndConfig(id, { label, config: null, secrets: null, updatePolicy: null, upgradeIndex: null })
 
 			const config = this.#configStore.getConfigForId(id)
 			if (!config) return 'no connection'

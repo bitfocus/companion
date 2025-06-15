@@ -325,6 +325,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 		connectionId: string,
 		newLabel: string,
 		config: Record<string, any>,
+		secrets: Record<string, any>,
 		updatePolicy: ConnectionUpdatePolicy
 	) => string | null
 	'connections:set-label-and-version': (
