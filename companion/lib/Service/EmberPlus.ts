@@ -445,10 +445,10 @@ export class ServiceEmberPlus extends ServiceBase {
 
 		output[0] = new EmberModel.NumberedTreeNodeImpl(
 			1,
-			new EmberModel.EmberNodeImpl('internal variables'),
+			new EmberModel.EmberNodeImpl('internal'),
 			internalVarNodes
 		)
-		output[1] = new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('custom variables'), customVarNodes)
+		output[1] = new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('custom'), customVarNodes)
 		return output
 	}
 
