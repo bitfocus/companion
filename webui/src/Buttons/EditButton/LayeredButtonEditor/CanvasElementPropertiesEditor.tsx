@@ -68,4 +68,5 @@ const DecorationChoices: DropdownChoice[] = [
 	{ id: ButtonGraphicsDecorationType.FollowDefault, label: 'Follow default' },
 	{ id: ButtonGraphicsDecorationType.TopBar, label: 'Top bar' },
 	{ id: ButtonGraphicsDecorationType.Border, label: 'Border when pressed' },
+	{ id: ButtonGraphicsDecorationType.None, label: 'None' },
 ]

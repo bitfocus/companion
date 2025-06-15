@@ -12,7 +12,7 @@ import {
 	type ButtonGraphicsTextDrawElement,
 } from '../Model/StyleLayersModel.js'
 import { DrawBounds, parseColor, type GraphicsOptions } from './Util.js'
-import { TopbarRenderer } from './TopbarRenderer.js'
+import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
 
 export class GraphicsLayeredButtonRenderer {
 	static async draw(
@@ -29,16 +29,19 @@ export class GraphicsLayeredButtonRenderer {
 		const drawWidth = img.width - paddingPx.x * 2
 		const drawHeight = img.height - paddingPx.y * 2
 
-		const showTopBar = this.#shouldDrawTopBar(options, backgroundElement)
-		const topBarBounds = showTopBar
-			? new DrawBounds(
-					paddingPx.x,
-					paddingPx.y,
-					drawWidth,
-					Math.max(TopbarRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * img.height))
-				)
-			: null
-		const topBarHeight = topBarBounds?.height ?? 0
+		let decoration = backgroundElement?.decoration
+		if (decoration === ButtonGraphicsDecorationType.FollowDefault || decoration === undefined) {
+			decoration = options.remove_topbar ? ButtonGraphicsDecorationType.Border : ButtonGraphicsDecorationType.TopBar
+		}
+		const showTopBar = decoration === ButtonGraphicsDecorationType.TopBar
+
+		const topBarBounds = new DrawBounds(
+			paddingPx.x,
+			paddingPx.y,
+			drawWidth,
+			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * img.height))
+		)
+		const topBarHeight = showTopBar ? topBarBounds.height : 0
 		const drawBounds = new DrawBounds(paddingPx.x, paddingPx.y + topBarHeight, drawWidth, drawHeight - topBarHeight)
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
@@ -53,12 +56,32 @@ export class GraphicsLayeredButtonRenderer {
 			false
 		)
 
-		TopbarRenderer.draw(img, drawStyle, location, topBarBounds, drawBounds)
+		switch (decoration) {
+			case ButtonGraphicsDecorationType.None:
+				// Do nothing
+				break
+			case ButtonGraphicsDecorationType.Border:
+				ButtonDecorationRenderer.drawBorderWhenPushed(img, drawStyle, drawBounds)
+				break
+			case ButtonGraphicsDecorationType.TopBar:
+				ButtonDecorationRenderer.drawStatusBar(img, drawStyle, location, topBarBounds)
+				break
+			default:
+				assertNever(decoration)
+				break
+		}
+
+		// Draw top status icons
+		ButtonDecorationRenderer.drawIcons(img, drawStyle, location, topBarBounds, showTopBar)
 
 		// Draw a border around the selected element, do this last so it's on top
 		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)
 	}
 
+	/**
+	 * Draw the elements to the image
+	 * Returns the selected element bounds, or null if no element was selected or the selected element was not found
+	 */
 	static async #drawElements(
 		img: ImageBase<any>,
 		elements: SomeButtonGraphicsDrawElement[],
@@ -77,13 +100,12 @@ export class GraphicsLayeredButtonRenderer {
 
 			let elementBounds: DrawBounds | null = null
 			try {
-				// const tmpImage =
 				switch (element.type) {
 					case 'group': {
 						await img.usingTemporaryLayer(element.opacity / 100, async (img) => {
 							elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
 
-							// Propogte the selected
+							// Propogate the selected
 							const childElementBounds = await this.#drawElements(
 								img,
 								element.children,
@@ -189,7 +211,6 @@ export class GraphicsLayeredButtonRenderer {
 			})
 		}
 
-		// if (isSelected) this.#drawBoundsLines(img, newBounds)
 		return drawBounds
 	}
 
@@ -230,7 +251,6 @@ export class GraphicsLayeredButtonRenderer {
 			)
 		})
 
-		// if (isSelected) this.#drawBoundsLines(img, newBounds)
 		return drawBounds
 	}
 
@@ -248,22 +268,6 @@ export class GraphicsLayeredButtonRenderer {
 		})
 
 		return drawBounds
-	}
-
-	static #shouldDrawTopBar(options: GraphicsOptions, backgroundElement: ButtonGraphicsCanvasDrawElement | undefined) {
-		const decoration = backgroundElement?.decoration
-		switch (decoration) {
-			case ButtonGraphicsDecorationType.Border:
-				return false
-			case ButtonGraphicsDecorationType.TopBar:
-				return true
-			case ButtonGraphicsDecorationType.FollowDefault:
-			case undefined:
-				return !options.remove_topbar
-			default:
-				assertNever(decoration)
-				return !options.remove_topbar
-		}
 	}
 
 	static #drawBoundsLines(img: ImageBase<any>, bounds: DrawBounds) {

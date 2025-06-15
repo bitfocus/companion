@@ -68,7 +68,7 @@ export enum ButtonGraphicsDecorationType {
 	TopBar = 'topbar',
 	// BottomBar = 'bottombar', // Future
 	Border = 'border',
-	// None = 'none', // Future
+	None = 'none',
 }
 
 export interface ButtonGraphicsGroupDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {

@@ -16,7 +16,7 @@ import { DrawBounds, type GraphicsOptions, ParseAlignment, parseColor } from '@c
 import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
-import { TopbarRenderer } from '@companion-app/shared/Graphics/TopbarRenderer.js'
+import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import { isPromise } from 'util/types'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
@@ -32,7 +32,7 @@ const colorDarkGrey = 'rgba(15, 15, 15, 1)'
 const emptySet: ReadonlySet<string> = new Set()
 
 export class GraphicsRenderer {
-	static TOPBAR_BOUNDS = new DrawBounds(0, 0, 72, TopbarRenderer.DEFAULT_HEIGHT)
+	static TOPBAR_BOUNDS = new DrawBounds(0, 0, 72, ButtonDecorationRenderer.DEFAULT_HEIGHT)
 
 	static #IMAGE_CACHE = new Map<string, Image[]>()
 
@@ -390,7 +390,8 @@ export class GraphicsRenderer {
 					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
 					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
 
-				if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
+				if (showTopbar)
+					ButtonDecorationRenderer.drawLegacy(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
 				return
 			}
 		}
@@ -415,7 +416,8 @@ export class GraphicsRenderer {
 				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 
-			if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
+			if (showTopbar)
+				ButtonDecorationRenderer.drawLegacy(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
 			return
 		}
 
@@ -438,7 +440,8 @@ export class GraphicsRenderer {
 		}
 
 		// At last draw Topbar on top
-		if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
+		if (showTopbar)
+			ButtonDecorationRenderer.drawLegacy(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
 	}
 
 	/**

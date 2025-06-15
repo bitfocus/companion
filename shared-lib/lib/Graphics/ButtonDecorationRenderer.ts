@@ -28,83 +28,101 @@ const internalIcons = {
 		'9O7u//Nzc3/zMzM/8zMzOHMzMwwysrK',
 }
 
-export class TopbarRenderer {
+export class ButtonDecorationRenderer {
 	static readonly DEFAULT_HEIGHT = 14
 
 	/**
 	 * Draw the topbar onto an image for a button
 	 */
-	static draw(
+	static drawLegacy(
 		img: ImageBase<any>,
 		drawStyle: DrawStyleButtonStateProps,
 		location: ControlLocation | undefined,
-		topBarBounds: DrawBounds | null,
+		topBarBounds: DrawBounds,
 		outerBounds: DrawBounds
 	): void {
 		const showTopBar = !!topBarBounds && topBarBounds.isValid()
 		if (!showTopBar) {
-			if (drawStyle.pushed) {
-				img.boxLine(
-					outerBounds.x,
-					outerBounds.y,
-					outerBounds.maxX,
-					outerBounds.maxY,
-					{ color: colorButtonYellow, width: 3 },
-					'inside'
-				)
-			}
+			ButtonDecorationRenderer.drawBorderWhenPushed(img, drawStyle, outerBounds)
 		} else {
-			let step = ''
-			img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY - 0.5, colorBlack)
-			img.line(topBarBounds.x, topBarBounds.maxY - 0.5, topBarBounds.maxX, topBarBounds.maxY - 0.5, {
-				color: colorButtonYellow,
-			})
-
-			if (drawStyle.stepCount > 1 && location) {
-				step = `.${drawStyle.stepCurrent}`
-			}
-
-			const locationDrawX = Math.round(topBarBounds.width * 0.05) + topBarBounds.x
-			const locationDrawY = Math.round(topBarBounds.height * 0.15) + topBarBounds.y
-			const locationDrawSize = Math.round(topBarBounds.height * 0.65)
-
-			if (location === undefined) {
-				// Preview (no location)
-				img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, colorButtonYellow, locationDrawSize)
-			} else if (drawStyle.pushed) {
-				img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY, colorButtonYellow)
-				img.drawTextLine(
-					locationDrawX,
-					locationDrawY,
-					`${formatLocation(location)}${step}`,
-					colorBlack,
-					locationDrawSize
-				)
-			} else {
-				img.drawTextLine(
-					locationDrawX,
-					locationDrawY,
-					`${formatLocation(location)}${step}`,
-					colorButtonYellow,
-					locationDrawSize
-				)
-			}
+			ButtonDecorationRenderer.drawStatusBar(img, drawStyle, location, topBarBounds)
 		}
 
 		// Draw status icons from right to left
 
-		// TODO-layered fix this
-		if (!topBarBounds) return
+		ButtonDecorationRenderer.drawIcons(img, drawStyle, location, topBarBounds, showTopBar)
+	}
 
+	static drawStatusBar(
+		img: ImageBase<any>,
+		drawStyle: DrawStyleButtonStateProps,
+		location: ControlLocation | undefined,
+		topBarBounds: DrawBounds
+	): void {
+		let step = ''
+		img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY - 0.5, colorBlack)
+		img.line(topBarBounds.x, topBarBounds.maxY - 0.5, topBarBounds.maxX, topBarBounds.maxY - 0.5, {
+			color: colorButtonYellow,
+		})
+
+		if (drawStyle.stepCount > 1 && location) {
+			step = `.${drawStyle.stepCurrent}`
+		}
+
+		const locationDrawX = Math.round(topBarBounds.width * 0.05) + topBarBounds.x
+		const locationDrawY = Math.round(topBarBounds.height * 0.15) + topBarBounds.y
+		const locationDrawSize = Math.round(topBarBounds.height * 0.65)
+
+		if (location === undefined) {
+			// Preview (no location)
+			img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, colorButtonYellow, locationDrawSize)
+		} else if (drawStyle.pushed) {
+			img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY, colorButtonYellow)
+			img.drawTextLine(locationDrawX, locationDrawY, `${formatLocation(location)}${step}`, colorBlack, locationDrawSize)
+		} else {
+			img.drawTextLine(
+				locationDrawX,
+				locationDrawY,
+				`${formatLocation(location)}${step}`,
+				colorButtonYellow,
+				locationDrawSize
+			)
+		}
+	}
+
+	static drawBorderWhenPushed(
+		img: ImageBase<any>,
+		drawStyle: DrawStyleButtonStateProps,
+		outerBounds: DrawBounds
+	): void {
+		if (drawStyle.pushed) {
+			img.boxLine(
+				outerBounds.x,
+				outerBounds.y,
+				outerBounds.maxX,
+				outerBounds.maxY,
+				{ color: colorButtonYellow, width: 3 },
+				'inside'
+			)
+		}
+	}
+
+	static drawIcons(
+		img: ImageBase<any>,
+		drawStyle: DrawStyleButtonStateProps,
+		location: ControlLocation | undefined,
+		topBarBounds: DrawBounds,
+		showCloudIcons: boolean
+	): void {
 		// const iconHeight
 		let rightMax = topBarBounds.x + topBarBounds.width
 
 		// first the cloud icon if present
 		// TODO-layered fix this
-		if (drawStyle.cloud_error && showTopBar) {
+		if (drawStyle.cloud_error && showCloudIcons) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloudError)
 			rightMax -= 17
-		} else if (drawStyle.cloud && showTopBar) {
+		} else if (drawStyle.cloud && showCloudIcons) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloud)
 			rightMax -= 17
 		}
