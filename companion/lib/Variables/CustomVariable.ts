@@ -23,11 +23,16 @@ import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { CustomVariableCollections } from './CustomVariableCollections.js'
+import EventEmitter from 'events'
 
 const CustomVariablesRoom = 'custom-variables'
 const CUSTOM_LABEL = 'custom'
 
-export class VariablesCustomVariable {
+export interface VariablesCustomVariableEvents {
+	definition_changed: [id: string, info: CustomVariableDefinition | null]
+}
+
+export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariableEvents> {
 	readonly #logger = LogController.createLogger('Variables/CustomVariable')
 	readonly #variableValues: VariablesValues
 	readonly #collections: CustomVariableCollections
@@ -41,6 +46,7 @@ export class VariablesCustomVariable {
 	readonly #io: UIHandler
 
 	constructor(db: DataDatabase, io: UIHandler, variableValues: VariablesValues) {
+		super()
 		this.#dbTable = db.getTableView('custom_variables')
 		this.#io = io
 		this.#variableValues = variableValues
@@ -183,6 +189,7 @@ export class VariablesCustomVariable {
 			const newValues: VariableValueEntry[] = []
 			for (const [name, info] of Object.entries(this.#custom_variables)) {
 				newValues.push({ id: name, value: info.defaultValue })
+				this.#emitVariableDefinitionChange(name, info)
 			}
 			this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 		}
@@ -217,6 +224,8 @@ export class VariablesCustomVariable {
 			this.#dbTable.set(id, info)
 
 			changes.push({ type: 'update', itemId: id, info })
+
+			this.#emitVariableDefinitionChange(id, info)
 		}
 
 		// Add deletes
@@ -226,6 +235,8 @@ export class VariablesCustomVariable {
 			this.#dbTable.delete(id)
 
 			changes.push({ type: 'remove', itemId: id })
+
+			this.#emitVariableDefinitionChange(id, null)
 		}
 
 		// apply the default values
@@ -254,6 +265,9 @@ export class VariablesCustomVariable {
 		}
 
 		this.#collections.discardAllCollections()
+		namesBefore.forEach((name) => {
+			this.#emitVariableDefinitionChange(name, null)
+		})
 	}
 
 	/**
@@ -278,6 +292,7 @@ export class VariablesCustomVariable {
 		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
+		this.#emitVariableDefinitionChange(name, this.#custom_variables[name])
 
 		return null
 	}
@@ -378,6 +393,7 @@ export class VariablesCustomVariable {
 		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
+		this.#emitVariableDefinitionChange(name, this.#custom_variables[name])
 
 		return null
 	}
@@ -422,6 +438,7 @@ export class VariablesCustomVariable {
 		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
+		this.#emitVariableDefinitionChange(name, this.#custom_variables[name])
 
 		return null
 	}
@@ -436,6 +453,14 @@ export class VariablesCustomVariable {
 			this.#dbTable.set(name, this.#custom_variables[name])
 
 			this.#emitUpdateOneVariable(name)
+		}
+	}
+
+	#emitVariableDefinitionChange(name: string, info: CustomVariableDefinition | null): void {
+		try {
+			this.emit('definition_changed', name, info)
+		} catch (e) {
+			this.#logger.error(`Failed to emit changed custom variable definition: ${e}`)
 		}
 	}
 }
