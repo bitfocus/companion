@@ -8,6 +8,7 @@ import { assertNever } from '~/util.js'
 
 export function validateInputValue(
 	definition: ExtendedInputField | InternalInputField | ExtendedConfigField,
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	value: any
 ): string | undefined {
 	switch (definition.type) {
@@ -23,8 +24,9 @@ export function validateInputValue(
 			if (definition.isExpression) {
 				try {
 					ParseExpression(value)
+				} catch (_e) {
 					return 'Expression is not valid'
-				} catch (e) {}
+				}
 			}
 
 			const compiledRegex = compileRegex(definition.regex)
@@ -112,6 +114,7 @@ export function validateInputValue(
 		case 'internal:time':
 		case 'internal:variable':
 		case 'internal:trigger':
+		case 'internal:trigger_collection':
 			// Not supported
 			return undefined
 

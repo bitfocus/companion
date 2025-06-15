@@ -21,7 +21,7 @@ export function ConnectionSecretField({
 	hasSavedValue,
 	editValue,
 	isDirty,
-}: ConnectionSecretFieldProps) {
+}: ConnectionSecretFieldProps): React.JSX.Element {
 	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
 
 	const fieldType = definition.type
