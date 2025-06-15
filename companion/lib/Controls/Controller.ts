@@ -503,10 +503,15 @@ export class ControlsController {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (!control.supportsEntities || !control.supportsStyle)
+			if (!control.supportsEntities || (!control.supportsStyle && !control.supportsLayeredStyle))
 				throw new Error(`Control "${controlId}" does not support entities or styles`)
 
-			return control.entities.entitySetStyleSelection(entityLocation, control.baseStyle, id, selected)
+			return control.entities.entitySetStyleSelection(
+				entityLocation,
+				control.supportsStyle ? control.baseStyle : ControlButtonNormal.DefaultStyle,
+				id,
+				selected
+			)
 		})
 		client.onPromise('controls:entity:set-style-value', (controlId, entityLocation, id, key, value) => {
 			const control = this.getControl(controlId)

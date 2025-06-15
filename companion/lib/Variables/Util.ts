@@ -29,7 +29,7 @@ export type VariableValueData = Record<string, Record<string, CompanionVariableV
 export type VariablesCache = Map<string, CompanionVariableValue | undefined>
 export interface ParseVariablesResult {
 	text: string
-	variableIds: Set<string>
+	variableIds: ReadonlySet<string>
 }
 
 export function parseVariablesInString(

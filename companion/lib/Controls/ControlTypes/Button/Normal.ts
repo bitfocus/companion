@@ -15,7 +15,6 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
-import { CompanionVariableValues } from '@companion-module/base'
 
 /**
  * Class for the stepped button control.
@@ -133,42 +132,17 @@ export class ControlButtonNormal
 		let style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
 
 		if (style.text) {
-			// Block out the button text
-			const overrideVariableValues: CompanionVariableValues = {}
+			const parseResult = this.parseButtonTextString(style.text, style.textExpression ?? false)
 
-			const location = this.deps.page.getLocationOfControlId(this.controlId)
-			if (location) {
-				// Ensure we don't enter into an infinite loop
-				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
-			}
-
-			// Setup the parser
-			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
-				location,
-				this.entities.getLocalVariableEntities(),
-				overrideVariableValues
-			)
-
-			if (style.textExpression) {
-				const parseResult = parser.executeExpression(style.text, undefined)
-				if (parseResult.ok) {
-					style.text = parseResult.value + ''
-				} else {
-					this.logger.error(`Expression parse error: ${parseResult.error}`)
-					style.text = 'ERR'
-				}
-				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-			} else {
-				const parseResult = parser.parseVariables(style.text)
-				style.text = parseResult.text
-				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-			}
+			style.text = parseResult.text
+			this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 		}
 
 		return {
 			cloud: false,
 			cloud_error: false,
 
+			...this.#baseStyle,
 			...cloneDeep(style),
 
 			...omit(this.getDrawStyleButtonStateProps(), ['cloud', 'cloud_error']),
