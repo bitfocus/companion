@@ -3,12 +3,14 @@ import type { PageController } from '../Page/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import type { VariablesValuesEvents } from '../Variables/Values.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
+import EventEmitter from 'events'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -25,7 +27,7 @@ import { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderMod
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ServiceApi {
+export class ServiceApi extends EventEmitter<VariablesValuesEvents> {
 	readonly #appInfo: AppInfo
 	readonly #pageController: PageController
 	readonly #controlController: ControlsController
@@ -45,6 +47,7 @@ export class ServiceApi {
 		variablesController: VariablesController,
 		graphicsController: GraphicsController
 	) {
+		super()
 		this.#appInfo = appInfo
 		this.#pageController = pageController
 		this.#controlController = controlController
@@ -179,6 +182,11 @@ export class ServiceApi {
 
 	actionRecorderGetSession(): RecordSessionInfo {
 		return this.#controlController.actionRecorder.getSession()
+	}
+	listenForChangedVariables(): void {
+		this.#variablesController.values.on('variables_changed', (variables: Set<string>, connection_labels: string[]) => {
+			this.emit('variables_changed', variables, connection_labels)
+		})
 	}
 }
 
