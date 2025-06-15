@@ -4,6 +4,7 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { VariablesValuesEvents } from '../Variables/Values.js'
+import { VariablesCustomVariableEvents } from '../Variables/CustomVariable.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
@@ -29,7 +30,7 @@ import EventEmitter from 'events'
  * this program.
  */
 
-type ServiceApiEvents = VariablesValuesEvents | ActionRecorderEvents
+type ServiceApiEvents = VariablesValuesEvents | ActionRecorderEvents | VariablesCustomVariableEvents
 
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
@@ -195,8 +196,14 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	listenForChangedVariables(): void {
-		this.#variablesController.values.on('variables_changed', (variables: Set<string>, connection_labels: string[]) => {
-			this.emit('variables_changed', variables, connection_labels)
+		this.#variablesController.values.on(
+			'variables_changed',
+			(variables: Set<string>, connection_labels: Set<string>) => {
+				this.emit('variables_changed', variables, connection_labels)
+			}
+		)
+		this.#variablesController.custom.on('definition_changed', (id, info) => {
+			this.emit('definition_changed', id, info)
 		})
 	}
 }
