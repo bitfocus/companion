@@ -345,7 +345,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 										if (isSecret) {
 											return (
 												<form.Field
-													key={`fieldInfo.id`}
+													key={fieldInfo.id}
 													name={`secrets.${fieldInfo.id}`}
 													validators={{
 														onChange: ({ value, fieldApi }) => {
@@ -386,7 +386,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 										} else {
 											return (
 												<form.Field
-													key={`${fieldInfo.id}-${false}`}
+													key={fieldInfo.id}
 													name={`config.${fieldInfo.id}`}
 													validators={{
 														onChange: ({ value }) => validateInputValue(fieldInfo, value),
