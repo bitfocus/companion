@@ -15,7 +15,6 @@ import util from 'util'
 import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { transformButtonImage } from '../../Resources/Util.js'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,
@@ -23,8 +22,7 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 const setTimeoutPromise = util.promisify(setTimeout)
 
@@ -46,7 +44,7 @@ export class SurfaceUSBLogiMXConsole extends EventEmitter<SurfacePanelEvents> im
 
 	readonly #surface: MXCreativeConsole
 
-	readonly #writeQueue: ImageWriteQueue<string, [number, number, ImageResult]>
+	readonly #writeQueue: ImageWriteQueue<string, [DrawButtonItem]>
 
 	/**
 	 * Whether to cleanup the deck on quit
@@ -87,11 +85,11 @@ export class SurfaceUSBLogiMXConsole extends EventEmitter<SurfacePanelEvents> im
 			rows: Math.max(...allRowValues) + 1,
 		}
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, x, y, render) => {
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, item) => {
 			const control = this.#surface.CONTROLS.find((control) => {
-				if (control.row !== y) return false
+				if (control.row !== item.y) return false
 
-				if (control.column === x) return true
+				if (control.column === item.x) return true
 
 				return false
 			})
@@ -99,23 +97,22 @@ export class SurfaceUSBLogiMXConsole extends EventEmitter<SurfacePanelEvents> im
 
 			if (control.type === 'button') {
 				if (control.feedbackType === 'lcd') {
-					let newbuffer = render.buffer
 					if (control.pixelSize.width === 0 || control.pixelSize.height === 0) {
 						return
-					} else {
-						try {
-							newbuffer = await transformButtonImage(
-								render,
-								this.config.rotation,
-								control.pixelSize.width,
-								control.pixelSize.height,
-								imageRs.PixelFormat.Rgb
-							)
-						} catch (e: any) {
-							this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
-							this.emit('remove')
-							return
-						}
+					}
+
+					let newbuffer: Uint8Array
+					try {
+						newbuffer = await item.defaultRender.drawNative(
+							control.pixelSize.width,
+							control.pixelSize.height,
+							this.config.rotation,
+							imageRs.PixelFormat.Rgb
+						)
+					} catch (e: any) {
+						this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+						this.emit('remove')
+						return
 					}
 
 					const maxAttempts = 3
@@ -245,7 +242,7 @@ export class SurfaceUSBLogiMXConsole extends EventEmitter<SurfacePanelEvents> im
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
-		this.#writeQueue.queue(`${x}_${y}`, x, y, render)
+	draw(item: DrawButtonItem): void {
+		this.#writeQueue.queue(`${item.x}_${item.y}`, item)
 	}
 }
