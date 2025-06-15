@@ -59,8 +59,8 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 			<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
-				<CFormLabel>
-					<InlineHelp help="When this button has multiple steps, progress to the next step when the button is released">
+				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+					<InlineHelp help="When this button has multiple steps, control how the next step changes">
 						Step Progression
 					</InlineHelp>
 				</CFormLabel>
@@ -71,6 +71,23 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 						value={options.stepProgression}
 					/>
 				</CCol>
+
+				{options.stepProgression === 'expression' && (
+					<>
+						<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Step Progression Expression</CFormLabel>
+						<CCol sm={8}>
+							<TextInputField
+								tooltip={'Current step of button'}
+								setValue={setStepExpressionValue}
+								value={options.stepExpression ?? ''}
+								useVariables
+								localVariables={ControlLocalVariables}
+								isExpression
+								style={{ fontWeight: 'bold', fontSize: 18 }}
+							/>
+						</CCol>
+					</>
+				)}
 
 				<CFormLabel htmlFor="colFormRotary" className="col-sm-4 col-form-label col-form-label-sm">
 					<InlineHelp help="Make this button compatible with rotation events">Rotary Actions</InlineHelp>
@@ -101,30 +118,13 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 						}}
 					/>
 				</CCol>
-        
-				{options.stepProgression === 'expression' && (
-					<div className="flex w-full gap-2rem flex-form">
-						<div style={{ width: '100%' }}>
-							<TextInputField
-								label={'Step Progression Expression'}
-								tooltip={'Current step of button'}
-								setValue={setStepExpressionValue}
-								value={options.stepExpression ?? ''}
-								useVariables
-								localVariables={ControlLocalVariables}
-								isExpression
-								style={{ fontWeight: 'bold', fontSize: 18 }}
-							/>
-						</div>
-					</div>
-				)}
 			</CForm>
 		</>
 	)
 }
 
 const STEP_PROGRESSION_CHOICES: DropdownChoice[] = [
-	{ id: 'auto', label: 'Auto' },
+	{ id: 'auto', label: 'On button release' },
 	{ id: 'manual', label: 'Manual' },
 	{ id: 'expression', label: 'Expression' },
 ]
