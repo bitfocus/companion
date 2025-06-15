@@ -25,7 +25,7 @@ import type { CompanionVariableValue, CompanionVariableValues } from '@companion
 import type { ClientSocket } from '../UI/Handler.js'
 
 export interface VariablesValuesEvents {
-	variables_changed: [changed: Set<string>, connectionLabels: string[]]
+	variables_changed: [changed: Set<string>, connection_labels: Set<string>]
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
@@ -97,11 +97,11 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			const valuesForLabel = this.#variableValues[label]
 			if (valuesForLabel !== undefined) {
 				const removed_variables = new Set<string>()
-				const removed_variable_connection: string[] = []
+				const removed_variable_connection = new Set<string>()
 				for (let variable in valuesForLabel) {
 					valuesForLabel[variable] = undefined
 					removed_variables.add(`${label}:${variable}`)
-					removed_variable_connection.push(label)
+					removed_variable_connection.add(label)
 				}
 				this.#emitVariablesChanged(removed_variables, removed_variable_connection)
 			}
@@ -118,7 +118,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		const valuesFrom = this.#variableValues[labelFrom]
 		if (valuesFrom !== undefined) {
 			const all_changed_variables_set = new Set<string>()
-			const connection_labels: string[] = []
+			const connection_labels = new Set<string>()
 
 			for (let variable in valuesFrom) {
 				valuesTo[variable] = valuesFrom[variable]
@@ -126,8 +126,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 				all_changed_variables_set.add(`${labelFrom}:${variable}`)
 				all_changed_variables_set.add(`${labelTo}:${variable}`)
-				connection_labels.push(labelFrom)
-				connection_labels.push(labelTo)
+				connection_labels.add(labelFrom)
+				connection_labels.add(labelTo)
 			}
 
 			delete this.#variableValues[labelFrom]
@@ -149,17 +149,16 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		this.#variableValues[label] = moduleValues
 
 		const all_changed_variables_set = new Set<string>()
-		const connection_labels: string[] = []
+		const connection_labels = new Set<string>()
 		for (const variable of variables) {
 			if (moduleValues[variable.id] !== variable.value) {
 				moduleValues[variable.id] = variable.value
 
 				all_changed_variables_set.add(`${label}:${variable.id}`)
-				connection_labels.push(label)
+				connection_labels.add(label)
 				// Also report the old custom variable names as having changed
 				if (label === 'custom') {
 					all_changed_variables_set.add(`internal:custom_${variable.id}`)
-					connection_labels.push(label)
 				}
 
 				// Skip debug if it's just internal:time_* spamming.
@@ -172,7 +171,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		this.#emitVariablesChanged(all_changed_variables_set, connection_labels)
 	}
 
-	#emitVariablesChanged(all_changed_variables_set: Set<string>, connection_labels: string[]) {
+	#emitVariablesChanged(all_changed_variables_set: Set<string>, connection_labels: Set<string>) {
 		try {
 			if (all_changed_variables_set.size > 0) {
 				this.emit('variables_changed', all_changed_variables_set, connection_labels)
