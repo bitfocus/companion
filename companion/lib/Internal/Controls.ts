@@ -10,7 +10,7 @@
  */
 
 import { cloneDeep } from 'lodash-es'
-import { oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { formatLocation, oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
 import type {
@@ -90,6 +90,11 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 	readonly #controlsController: ControlsController
 	readonly #pagesController: PageController
 
+	/**
+	 * The dependencies of locations that should retrigger each feedback
+	 */
+	#buttonDrawnSubscriptions = new Map<string, string>()
+
 	constructor(
 		internalUtils: InternalModuleUtils,
 		graphicsController: GraphicsController,
@@ -103,10 +108,23 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		this.#controlsController = controlsController
 		this.#pagesController = pagesController
 
+		const pendingLocationInvalidations = new Set<string>()
 		const debounceCheckFeedbacks = debounceFn(
 			() => {
-				// TODO - can we make this more specific? This could invalidate a lot of stuff unnecessarily..
-				this.emit('checkFeedbacks', 'bank_style', 'bank_pushed', 'bank_current_step')
+				// Find all feedbacks that are affected by the pending location invalidations
+				const affectedIds: string[] = []
+				for (const [id, locationStr] of this.#buttonDrawnSubscriptions.entries()) {
+					if (pendingLocationInvalidations.has(locationStr)) {
+						affectedIds.push(id)
+					}
+				}
+
+				// Remove the pending invalidations
+				pendingLocationInvalidations.clear()
+
+				if (affectedIds.length > 0) {
+					this.emit('checkFeedbacksById', ...affectedIds)
+				}
 			},
 			{
 				maxWait: 100,
@@ -116,7 +134,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		)
 
 		setImmediate(() => {
-			this.#graphicsController.on('button_drawn', () => debounceCheckFeedbacks())
+			this.#graphicsController.on('button_drawn', (location) => {
+				pendingLocationInvalidations.add(formatLocation(location))
+				debounceCheckFeedbacks()
+			})
 		})
 	}
 
@@ -529,12 +550,15 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					theLocation.column === feedback.location.column &&
 					theLocation.row === feedback.location.row)
 			) {
+				this.#buttonDrawnSubscriptions.delete(feedback.id)
 				// Don't recurse on self
 				return {
 					referencedVariables,
 					value: {},
 				}
 			}
+
+			this.#buttonDrawnSubscriptions.set(feedback.id, formatLocation(theLocation))
 
 			const render = this.#graphicsController.getCachedRender(theLocation)
 			if (render?.style) {
@@ -577,7 +601,17 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				}
 			}
 		} else if (feedback.definitionId === 'bank_pushed') {
-			const { theControlId, referencedVariables } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
+			const { theControlId, theLocation, referencedVariables } = this.#fetchLocationAndControlId(
+				feedback.options,
+				feedback,
+				true
+			)
+
+			if (theLocation) {
+				this.#buttonDrawnSubscriptions.set(feedback.id, formatLocation(theLocation))
+			} else {
+				this.#buttonDrawnSubscriptions.delete(feedback.id)
+			}
 
 			const control = theControlId && this.#controlsController.getControl(theControlId)
 			if (control && control.supportsPushed) {
@@ -599,7 +633,13 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				}
 			}
 		} else if (feedback.definitionId == 'bank_current_step') {
-			const { theControlId } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
+			const { theControlId, theLocation } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
+
+			if (theLocation) {
+				this.#buttonDrawnSubscriptions.set(feedback.id, formatLocation(theLocation))
+			} else {
+				this.#buttonDrawnSubscriptions.delete(feedback.id)
+			}
 
 			const theStep = feedback.options.step
 
@@ -616,6 +656,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				}
 			}
 		}
+	}
+
+	forgetFeedback(feedback: FeedbackEntityModel): void {
+		this.#buttonDrawnSubscriptions.delete(feedback.id)
 	}
 
 	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {

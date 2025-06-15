@@ -17,6 +17,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 import { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
+import { validateInputValue } from '~/Helpers/validateInputValue.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -57,6 +58,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 	readonly,
 	localVariablesStore,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
+	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
 	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
 
 	if (!option) {
@@ -81,14 +83,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 			control = (
 				<TextInputField
 					value={value}
-					regex={option.regex}
-					required={option.required}
 					placeholder={option.placeholder}
 					useVariables={features.variables}
 					localVariables={localVariables}
 					isExpression={option.isExpression}
 					disabled={readonly}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
@@ -103,6 +104,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 					regex={option.regex}
 					disabled={readonly}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
@@ -119,6 +121,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 					regex={option.regex}
 					disabled={readonly}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
@@ -144,13 +147,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 			control = (
 				<NumberInputField
 					value={value}
-					required={option.required}
 					min={option.min}
 					max={option.max}
 					step={option.step}
 					range={option.range}
 					disabled={readonly}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break

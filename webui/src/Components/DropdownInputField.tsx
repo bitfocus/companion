@@ -1,7 +1,7 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
-import React, { useContext, useMemo, useEffect, useCallback, memo, useState } from 'react'
+import React, { useContext, useMemo, useCallback, memo, useState } from 'react'
 import Select, { createFilter, InputActionMeta, components } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
@@ -20,11 +20,11 @@ interface DropdownInputFieldProps {
 	regex?: string
 	value: DropdownChoiceId
 	setValue: (value: DropdownChoiceId) => void
-	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	helpText?: string
 	onBlur?: () => void
 	onPasteIntercept?: (value: string) => string
+	checkValid?: (value: DropdownChoiceId) => boolean
 }
 
 interface DropdownChoiceInt {
@@ -44,11 +44,11 @@ export const DropdownInputField = memo(function DropdownInputField({
 	regex,
 	value,
 	setValue,
-	setValid,
 	disabled,
 	helpText,
 	onBlur,
 	onPasteIntercept,
+	checkValid,
 }: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -86,38 +86,13 @@ export const DropdownInputField = memo(function DropdownInputField({
 		return null
 	}, [regex])
 
-	const isValueValid = useCallback(
-		(newValue: DropdownChoiceId | DropdownChoiceId[]) => {
-			// Require the selected choice to be valid
-			if (
-				allowCustom &&
-				compiledRegex &&
-				!options.find((c) => c.value === newValue) &&
-				!compiledRegex.exec(String(newValue))
-			) {
-				return false
-			}
-
-			return true
-		},
-		[allowCustom, compiledRegex, options]
-	)
-
-	// If the value is undefined, populate with the default. Also inform the parent about the validity
-	useEffect(() => {
-		setValid?.(isValueValid(value))
-	}, [value, setValid, isValueValid])
-
 	const onChange = useCallback(
 		(e: DropdownChoiceInt) => {
 			const newValue = e?.value
 
-			const isValid = isValueValid(newValue)
-
 			setValue(newValue)
-			setValid?.(isValid)
 		},
-		[setValue, setValid, isValueValid]
+		[setValue]
 	)
 
 	const inputComponent = useMemo(() => {
@@ -242,7 +217,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 			className={classNames(
 				{
 					'select-tooltip': true,
-					'select-invalid': !isValueValid(currentValue?.value),
+					'select-invalid': !!checkValid && !checkValid(currentValue?.value),
 				},
 				className
 			)}

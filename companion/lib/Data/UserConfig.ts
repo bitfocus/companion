@@ -52,6 +52,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		vec_footpedal_enable: false,
 		blackmagic_controller_enable: false,
 		mystrix_enable: false,
+		logitech_mx_console_enable: false,
 
 		pin_enable: false,
 		link_lockouts: false,
