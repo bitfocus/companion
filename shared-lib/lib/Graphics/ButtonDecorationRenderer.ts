@@ -63,6 +63,7 @@ export class ButtonDecorationRenderer {
 		img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY - 0.5, colorBlack)
 		img.line(topBarBounds.x, topBarBounds.maxY - 0.5, topBarBounds.maxX, topBarBounds.maxY - 0.5, {
 			color: colorButtonYellow,
+			width: 1,
 		})
 
 		if (drawStyle.stepCount > 1 && location) {

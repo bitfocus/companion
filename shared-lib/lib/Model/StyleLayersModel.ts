@@ -103,9 +103,10 @@ export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, B
 	halign: HorizontalAlignment
 	valign: VerticalAlignment
 
+	outlineColor: number
+
 	// Future ideas:
 	// rotation: number
-	// outlineColor: number
 }
 export interface ButtonGraphicsTextElement
 	extends ButtonGraphicsElementBase,

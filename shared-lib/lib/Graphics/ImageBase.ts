@@ -29,9 +29,9 @@ export interface LineStyle {
 	 */
 	color: string
 	/**
-	 * Line width in pixels (defaults to 1)
+	 * Line width in pixels
 	 */
-	width?: number
+	width: number
 }
 
 /** Take a limited view of CompanionImageContext2D, based on what skia canvas supports */
@@ -544,7 +544,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		color: string,
 		fontsize: number | 'auto' = 'auto',
 		halign: HorizontalAlignment = 'center',
-		valign: VerticalAlignment = 'center'
+		valign: VerticalAlignment = 'center',
+		outlineStyle?: LineStyle
 	): boolean {
 		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
 		if (!displayTextStr) return true
@@ -592,11 +593,35 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			fontheight =
 				checksize.find(
 					(size) =>
-						this.#drawAlignedTextCharsAtSize(x, y, w, h, displayTextChars, color, size, halign, valign, true) === true
+						this.#drawAlignedTextCharsAtSize(
+							x,
+							y,
+							w,
+							h,
+							displayTextChars,
+							color,
+							size,
+							halign,
+							valign,
+							outlineStyle,
+							true
+						) === true
 				) ?? 6
 		}
 
-		return this.#drawAlignedTextCharsAtSize(x, y, w, h, displayTextChars, color, fontheight, halign, valign, false)
+		return this.#drawAlignedTextCharsAtSize(
+			x,
+			y,
+			w,
+			h,
+			displayTextChars,
+			color,
+			fontheight,
+			halign,
+			valign,
+			outlineStyle,
+			false
+		)
 	}
 
 	/**
@@ -613,6 +638,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		fontheight: number,
 		halign: HorizontalAlignment,
 		valign: VerticalAlignment,
+		outlineStyle: LineStyle | undefined,
 		dummy: boolean
 	): boolean {
 		// breakup text in pieces
@@ -841,9 +867,18 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		yAnchor += y
 
 		this.context2d.fillStyle = color
+		if (outlineStyle && outlineStyle.width > 0) {
+			this.context2d.strokeStyle = outlineStyle.color
+			this.context2d.lineWidth = outlineStyle.width
+		}
 
 		for (const line of lines) {
 			const text = line.textChars.join('')
+
+			if (outlineStyle && outlineStyle.width > 0) {
+				this.context2d.strokeText(text, xAnchor, yAnchor)
+			}
+
 			this.context2d.fillText(text, xAnchor, yAnchor)
 
 			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')

@@ -306,7 +306,7 @@ async function convertTextElementForDrawing(
 	const enabled = await helper.getBoolean(element.enabled, true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [opacity, bounds, fontsizeRaw, text, color, halign, valign] = await Promise.all([
+	const [opacity, bounds, fontsizeRaw, text, color, halign, valign, outlineColor] = await Promise.all([
 		helper.getNumber(element.opacity, 1, 0.01),
 		convertDrawBounds(helper, element),
 		helper.getUnknown(element.fontsize, 'auto'),
@@ -316,6 +316,7 @@ async function convertTextElementForDrawing(
 		helper.getNumber(element.color, 0),
 		helper.getHorizontalAlignment(element.halign),
 		helper.getVerticalAlignment(element.valign),
+		helper.getNumber(element.outlineColor, 0),
 	])
 
 	const fontsize = Number(fontsizeRaw) || fontsizeRaw
@@ -332,6 +333,7 @@ async function convertTextElementForDrawing(
 		color,
 		halign,
 		valign,
+		outlineColor,
 	}
 }
 

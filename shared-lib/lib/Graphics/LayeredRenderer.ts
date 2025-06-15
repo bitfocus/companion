@@ -11,7 +11,7 @@ import {
 	type ButtonGraphicsImageDrawElement,
 	type ButtonGraphicsTextDrawElement,
 } from '../Model/StyleLayersModel.js'
-import { DrawBounds, parseColor, type GraphicsOptions } from './Util.js'
+import { DrawBounds, parseColor, rgbRev, type GraphicsOptions } from './Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
 
 export class GraphicsLayeredButtonRenderer {
@@ -247,7 +247,13 @@ export class GraphicsLayeredButtonRenderer {
 				parseColor(element.color),
 				fontSize,
 				element.halign,
-				element.valign
+				element.valign,
+				rgbRev(element.outlineColor, true).a > 0
+					? {
+							width: 2, // Fixed width for now, maybe should be dynamic
+							color: parseColor(element.outlineColor),
+						}
+					: undefined
 			)
 		})
 

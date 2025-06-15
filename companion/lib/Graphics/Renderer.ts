@@ -115,7 +115,7 @@ export class GraphicsRenderer {
 
 		if (!options.remove_topbar) {
 			img.drawTextLine(transformX(2), 3 * drawScale, formatLocation(location), 'rgb(50, 50, 50)', 8 * drawScale)
-			img.horizontalLine(13.5 * drawScale, { color: 'rgb(30, 30, 30)' })
+			img.horizontalLine(13.5 * drawScale, { color: 'rgb(30, 30, 30)', width: 1 })
 		}
 	}
 

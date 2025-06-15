@@ -65,6 +65,16 @@ export const TextElementPropertiesEditor = observer(function TextElementProperti
 				controlId={controlId}
 				elementProps={elementProps}
 				localVariablesStore={localVariablesStore}
+				property="outlineColor"
+				label="Outline Color"
+			>
+				{(elementProp, setValue) => <FieldTextOutlineColorInput elementProp={elementProp} setValue={setValue} />}
+			</FormPropertyField>
+
+			<FormPropertyField
+				controlId={controlId}
+				elementProps={elementProps}
+				localVariablesStore={localVariablesStore}
 				property="halign"
 				label="Horizontal Alignment"
 			>
@@ -163,6 +173,21 @@ const FieldTextColorInput = observer(function FieldTextColorInput({
 			value={elementProp.value}
 			returnType="number"
 			helpText="Font color"
+		/>
+	)
+})
+
+const FieldTextOutlineColorInput = observer(function FieldTextOutlineColorInput({
+	elementProp,
+	setValue,
+}: InputFieldCommonProps<ButtonGraphicsTextElement, 'outlineColor'>) {
+	return (
+		<ColorInputField
+			setValue={setValue as (color: number | string) => void}
+			value={elementProp.value}
+			returnType="number"
+			helpText="Outline color"
+			enableAlpha
 		/>
 	)
 })

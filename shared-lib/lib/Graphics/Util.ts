@@ -76,10 +76,10 @@ export function ParseAlignment(
 /**
  * Convert a 24bit/32bit number into rgb components
  */
-export const rgbRev = (dec: number): { a: number; r: number; g: number; b: number } => {
+export const rgbRev = (dec: number, alwaysIncludesAlpha = false): { a: number; r: number; g: number; b: number } => {
 	dec = Math.floor(dec)
 	return {
-		a: dec > 0xffffff ? (255 - ((dec & 0xff000000) >>> 24)) / 255 : 1,
+		a: dec > 0xffffff || alwaysIncludesAlpha ? (255 - ((dec & 0xff000000) >>> 24)) / 255 : 1,
 		r: (dec & 0xff0000) >>> 16,
 		g: (dec & 0x00ff00) >>> 8,
 		b: dec & 0x0000ff,
