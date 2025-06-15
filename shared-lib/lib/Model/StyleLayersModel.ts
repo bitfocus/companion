@@ -40,9 +40,13 @@ export enum ButtonGraphicsElementUsage {
 }
 
 export interface ButtonGraphicsDrawBounds {
+	/* 0-100 */
 	x: number
+	/* 0-100 */
 	y: number
+	/* 0-100 */
 	width: number
+	/* 0-100 */
 	height: number
 }
 

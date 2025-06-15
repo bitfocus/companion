@@ -70,26 +70,26 @@ const FieldX = observer(function FieldX({
 	elementProp,
 	setValue,
 }: InputFieldCommonProps<ButtonGraphicsDrawBoundsExt, 'x'>) {
-	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} step={0.01} />
+	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} step={1} />
 })
 
 const FieldY = observer(function FieldX({
 	elementProp,
 	setValue,
 }: InputFieldCommonProps<ButtonGraphicsDrawBoundsExt, 'y'>) {
-	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} step={0.01} />
+	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} step={1} />
 })
 
 const FieldWidth = observer(function FieldX({
 	elementProp,
 	setValue,
 }: InputFieldCommonProps<ButtonGraphicsDrawBoundsExt, 'width'>) {
-	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} step={0.01} />
+	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} step={1} />
 })
 
 const FieldHeight = observer(function FieldX({
 	elementProp,
 	setValue,
 }: InputFieldCommonProps<ButtonGraphicsDrawBoundsExt, 'height'>) {
-	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} step={0.01} />
+	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} step={1} />
 })

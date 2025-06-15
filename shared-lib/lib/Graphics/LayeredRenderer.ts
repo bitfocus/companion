@@ -102,7 +102,7 @@ export class GraphicsLayeredButtonRenderer {
 			try {
 				switch (element.type) {
 					case 'group': {
-						await img.usingTemporaryLayer(element.opacity / 100, async (img) => {
+						await img.usingTemporaryLayer(element.opacity, async (img) => {
 							elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
 
 							// Propogate the selected
@@ -177,7 +177,7 @@ export class GraphicsLayeredButtonRenderer {
 		try {
 			const imageData = element.base64Image
 
-			await img.usingAlpha(element.opacity / 100, async () => {
+			await img.usingAlpha(element.opacity, async () => {
 				await img.drawBase64Image(
 					imageData,
 					drawBounds.x,
@@ -192,7 +192,7 @@ export class GraphicsLayeredButtonRenderer {
 		} catch (e) {
 			console.error('error drawing image:', e)
 
-			await img.usingTemporaryLayer(element.opacity / 100, async (img) => {
+			await img.usingTemporaryLayer(element.opacity, async (img) => {
 				// Draw a thick red cross
 				img.drawPath(
 					[
@@ -237,7 +237,7 @@ export class GraphicsLayeredButtonRenderer {
 			fontSize *= rootBounds.height / 100 / 1.2
 		}
 
-		await img.usingAlpha(element.opacity / 100, async () => {
+		await img.usingAlpha(element.opacity, async () => {
 			img.drawAlignedText(
 				drawBounds.x + marginX,
 				drawBounds.y + marginY,
@@ -263,7 +263,10 @@ export class GraphicsLayeredButtonRenderer {
 		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
 		if (skipDraw) return drawBounds
 
-		await img.usingAlpha(element.opacity / 100, async () => {
+		// Calculate a pixel width, relative to the parent bounds
+		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
+
+		await img.usingAlpha(element.opacity, async () => {
 			img.box(
 				drawBounds.x,
 				drawBounds.y,
@@ -272,7 +275,7 @@ export class GraphicsLayeredButtonRenderer {
 				parseColor(element.color),
 				{
 					color: parseColor(element.borderColor),
-					width: element.borderWidth,
+					width: borderWidth,
 				},
 				element.borderPosition
 			)

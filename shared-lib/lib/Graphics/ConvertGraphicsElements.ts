@@ -79,15 +79,15 @@ class ExpressionHelper {
 		return result.value
 	}
 
-	async getNumber(value: ExpressionOrValue<number>, defaultValue: number): Promise<number> {
-		if (!value.isExpression) return value.value
+	async getNumber(value: ExpressionOrValue<number>, defaultValue: number, scale = 1): Promise<number> {
+		if (!value.isExpression) return value.value * scale
 
 		const result = await this.#executeExpressionAndTrackVariables(value.value, 'number')
 		if (!result.ok) {
 			return defaultValue
 		}
 
-		return result.value as number
+		return (result.value as number) * scale
 	}
 
 	async getString<T extends string | null | undefined>(value: ExpressionOrValue<T>, defaultValue: T): Promise<T> {
@@ -251,7 +251,7 @@ async function convertGroupElementForDrawing(
 	if (!enabled && helper.onlyEnabled) return null
 
 	const [opacity, bounds, children] = await Promise.all([
-		helper.getNumber(element.opacity, 100),
+		helper.getNumber(element.opacity, 1, 0.01),
 		convertDrawBounds(helper, element),
 		ConvertSomeButtonGraphicsElementForDrawingWithHelper(helper, element.children),
 	])
@@ -276,7 +276,7 @@ async function convertImageElementForDrawing(
 	if (!enabled && helper.onlyEnabled) return null
 
 	const [opacity, bounds, base64Image, halign, valign, fillMode] = await Promise.all([
-		helper.getNumber(element.opacity, 100),
+		helper.getNumber(element.opacity, 1, 0.01),
 		convertDrawBounds(helper, element),
 		helper.getString<string | null>(element.base64Image, null),
 		helper.getHorizontalAlignment(element.halign),
@@ -307,7 +307,7 @@ async function convertTextElementForDrawing(
 	if (!enabled && helper.onlyEnabled) return null
 
 	const [opacity, bounds, fontsizeRaw, text, color, halign, valign] = await Promise.all([
-		helper.getNumber(element.opacity, 100),
+		helper.getNumber(element.opacity, 1, 0.01),
 		convertDrawBounds(helper, element),
 		helper.getUnknown(element.fontsize, 'auto'),
 		element.text.isExpression
@@ -344,10 +344,10 @@ async function convertBoxElementForDrawing(
 	if (!enabled && helper.onlyEnabled) return null
 
 	const [opacity, bounds, color, borderWidth, borderColor, borderPosition] = await Promise.all([
-		helper.getNumber(element.opacity, 100),
+		helper.getNumber(element.opacity, 1, 0.01),
 		convertDrawBounds(helper, element),
 		helper.getNumber(element.color, 0),
-		helper.getNumber(element.borderWidth, 0),
+		helper.getNumber(element.borderWidth, 0, 0.01),
 		helper.getNumber(element.borderColor, 0),
 		helper.getEnum(element.borderPosition, ['inside', 'center', 'outside'], 'inside'),
 	])
@@ -371,10 +371,10 @@ async function convertDrawBounds(
 	element: MakeExpressionable<ButtonGraphicsDrawBounds & { type: string }>
 ): Promise<ButtonGraphicsDrawBounds> {
 	const [x, y, width, height] = await Promise.all([
-		helper.getNumber(element.x, 0),
-		helper.getNumber(element.y, 0),
-		helper.getNumber(element.width, 1),
-		helper.getNumber(element.height, 1),
+		helper.getNumber(element.x, 0, 0.01),
+		helper.getNumber(element.y, 0, 0.01),
+		helper.getNumber(element.width, 1, 0.01),
+		helper.getNumber(element.height, 1, 0.01),
 	])
 
 	return { x, y, width, height }
