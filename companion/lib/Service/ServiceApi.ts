@@ -3,12 +3,13 @@ import type { PageController } from '../Page/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { VariablesValuesEvents } from '../Variables/Values.js'
+import { VariablesValuesEvents } from '../Variables/Values.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
 import { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import EventEmitter from 'events'
 
@@ -27,7 +28,10 @@ import EventEmitter from 'events'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ServiceApi extends EventEmitter<VariablesValuesEvents> {
+
+type ServiceApiEvents = VariablesValuesEvents | ActionRecorderEvents
+
+export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
 	readonly #pageController: PageController
 	readonly #controlController: ControlsController
@@ -183,6 +187,13 @@ export class ServiceApi extends EventEmitter<VariablesValuesEvents> {
 	actionRecorderGetSession(): RecordSessionInfo {
 		return this.#controlController.actionRecorder.getSession()
 	}
+
+	listenForActionRecorderEvents(): void {
+		this.#controlController.actionRecorder.on('is_running', (is_running: boolean) => {
+			this.emit('is_running', is_running)
+		})
+	}
+
 	listenForChangedVariables(): void {
 		this.#variablesController.values.on('variables_changed', (variables: Set<string>, connection_labels: string[]) => {
 			this.emit('variables_changed', variables, connection_labels)
