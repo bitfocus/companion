@@ -13,10 +13,12 @@ import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
 import { LocalVariablesEditor } from '../LocalVariablesEditor.js'
 import { LocalVariablesStore, useLocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { OldFeedbacksEditor } from '../OldFeedbacksEditor.js'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },
 	{ id: 'variables', name: 'Local Variables', position: 'end' },
+	{ id: 'old-feedbacks', name: 'Old Feedbacks', position: 'end' },
 	{ id: 'options', name: 'Options', position: 'end' },
 ]
 
@@ -84,6 +86,21 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 												controlId={controlId}
 												location={location}
 												variables={config.localVariables}
+												localVariablesStore={localVariablesStore}
+											/>
+										</MyErrorBoundary>
+									</div>
+								)
+							}
+
+							if (currentTab === 'old-feedbacks') {
+								return (
+									<div className="mt-10">
+										<MyErrorBoundary>
+											<OldFeedbacksEditor
+												controlId={controlId}
+												location={location}
+												feedbacks={config.feedbacks}
 												localVariablesStore={localVariablesStore}
 											/>
 										</MyErrorBoundary>
