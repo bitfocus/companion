@@ -965,17 +965,6 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	}
 
 	/**
-	 * Draws a border around the button
-	 * @param depth width of the border
-	 * @param color CSS color of the border
-	 * @returns true if there is a visible border
-	 */
-	drawBorder(depth = 1, color = 'red'): boolean {
-		if (depth <= 0) return false
-		return this.boxLine(0, 0, this.width, this.height, { color, width: depth }, 'inside')
-	}
-
-	/**
 	 * Draws a triangle in a corner
 	 * @param depth
 	 * @param color CSS color string

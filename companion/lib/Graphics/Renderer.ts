@@ -360,6 +360,8 @@ export class GraphicsRenderer {
 			showTopbar = !options.remove_topbar
 		}
 
+		const outerBounds = new DrawBounds(0, 0, 72, 72)
+
 		// handle upgrade from pre alignment-support configuration
 		if (drawStyle.alignment === undefined) {
 			drawStyle.alignment = 'center:center'
@@ -388,7 +390,7 @@ export class GraphicsRenderer {
 					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
 					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
 
-				if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
+				if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
 				return
 			}
 		}
@@ -413,7 +415,7 @@ export class GraphicsRenderer {
 				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 
-			if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
+			if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
 			return
 		}
 
@@ -436,7 +438,7 @@ export class GraphicsRenderer {
 		}
 
 		// At last draw Topbar on top
-		if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS)
+		if (showTopbar) TopbarRenderer.draw(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
 	}
 
 	/**

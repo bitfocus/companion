@@ -38,17 +38,25 @@ export class TopbarRenderer {
 		img: ImageBase<any>,
 		drawStyle: DrawStyleButtonStateProps,
 		location: ControlLocation | undefined,
-		drawBounds: DrawBounds | null
+		topBarBounds: DrawBounds | null,
+		outerBounds: DrawBounds
 	): void {
-		const showTopBar = !!drawBounds && drawBounds.isValid()
+		const showTopBar = !!topBarBounds && topBarBounds.isValid()
 		if (!showTopBar) {
 			if (drawStyle.pushed) {
-				img.drawBorder(3, colorButtonYellow)
+				img.boxLine(
+					outerBounds.x,
+					outerBounds.y,
+					outerBounds.maxX,
+					outerBounds.maxY,
+					{ color: colorButtonYellow, width: 3 },
+					'inside'
+				)
 			}
 		} else {
 			let step = ''
-			img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY - 0.5, colorBlack)
-			img.line(drawBounds.x, drawBounds.maxY - 0.5, drawBounds.maxX, drawBounds.maxY - 0.5, {
+			img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY - 0.5, colorBlack)
+			img.line(topBarBounds.x, topBarBounds.maxY - 0.5, topBarBounds.maxX, topBarBounds.maxY - 0.5, {
 				color: colorButtonYellow,
 			})
 
@@ -56,15 +64,15 @@ export class TopbarRenderer {
 				step = `.${drawStyle.stepCurrent}`
 			}
 
-			const locationDrawX = Math.round(drawBounds.width * 0.05) + drawBounds.x
-			const locationDrawY = Math.round(drawBounds.height * 0.15) + drawBounds.y
-			const locationDrawSize = Math.round(drawBounds.height * 0.65)
+			const locationDrawX = Math.round(topBarBounds.width * 0.05) + topBarBounds.x
+			const locationDrawY = Math.round(topBarBounds.height * 0.15) + topBarBounds.y
+			const locationDrawSize = Math.round(topBarBounds.height * 0.65)
 
 			if (location === undefined) {
 				// Preview (no location)
 				img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, colorButtonYellow, locationDrawSize)
 			} else if (drawStyle.pushed) {
-				img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, colorButtonYellow)
+				img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY, colorButtonYellow)
 				img.drawTextLine(
 					locationDrawX,
 					locationDrawY,
@@ -86,10 +94,10 @@ export class TopbarRenderer {
 		// Draw status icons from right to left
 
 		// TODO-layered fix this
-		if (!drawBounds) return
+		if (!topBarBounds) return
 
 		// const iconHeight
-		let rightMax = drawBounds.x + drawBounds.width
+		let rightMax = topBarBounds.x + topBarBounds.width
 
 		// first the cloud icon if present
 		// TODO-layered fix this
@@ -102,16 +110,16 @@ export class TopbarRenderer {
 		}
 
 		// next error or warning icon
-		const iconSize = Math.floor(drawBounds.height * 0.65)
-		const iconPadding = Math.floor(drawBounds.height * 0.175)
+		const iconSize = Math.floor(topBarBounds.height * 0.65)
+		const iconPadding = Math.floor(topBarBounds.height * 0.175)
 		if (location) {
 			switch (drawStyle.button_status) {
 				case 'error':
 					img.box(
 						rightMax - iconSize - iconPadding,
-						drawBounds.y + iconPadding,
+						topBarBounds.y + iconPadding,
 						rightMax - iconPadding,
-						drawBounds.y + iconPadding + iconSize,
+						topBarBounds.y + iconPadding + iconSize,
 						'red'
 					)
 					rightMax -= iconSize + iconPadding
@@ -119,7 +127,7 @@ export class TopbarRenderer {
 				case 'warning':
 					img.drawTextLineAligned(
 						rightMax - iconSize + iconPadding,
-						drawBounds.y + iconPadding + iconSize,
+						topBarBounds.y + iconPadding + iconSize,
 						'⚠️',
 						colorBlack,
 						Math.floor(iconSize * 0.8),
@@ -137,9 +145,9 @@ export class TopbarRenderer {
 				if (drawStyle.pushed) iconcolor = colorBlack
 				img.drawFilledPath(
 					[
-						[rightMax - iconSize, drawBounds.y + iconPadding],
-						[rightMax - iconPadding, drawBounds.y + iconPadding + iconSize / 2],
-						[rightMax - iconSize, drawBounds.y + iconPadding + iconSize],
+						[rightMax - iconSize, topBarBounds.y + iconPadding],
+						[rightMax - iconPadding, topBarBounds.y + iconPadding + iconSize / 2],
+						[rightMax - iconSize, topBarBounds.y + iconPadding + iconSize],
 					],
 					iconcolor
 				)

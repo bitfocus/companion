@@ -53,7 +53,7 @@ export class GraphicsLayeredButtonRenderer {
 			false
 		)
 
-		TopbarRenderer.draw(img, drawStyle, location, topBarBounds)
+		TopbarRenderer.draw(img, drawStyle, location, topBarBounds, drawBounds)
 
 		// Draw a border around the selected element, do this last so it's on top
 		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)
