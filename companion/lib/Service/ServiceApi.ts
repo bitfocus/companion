@@ -81,6 +81,16 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	/**
+	 * Get the description of a custom variable
+	 * @param name
+	 * @returns The description of the variable
+	 */
+
+	getCustomVariableDescription(name: string): string {
+		return this.#variablesController.custom.getVariableDescription(name)
+	}
+
+	/**
 	 * Get the value of a connection variable
 	 * @param connectionLabel
 	 * @param variableName

@@ -399,6 +399,19 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	}
 
 	/**
+	 * Get the description of a custom variable
+	 * @param name
+	 * @returns Description or Unknown Name
+	 */
+
+	getVariableDescription(name: string): string {
+		if (!this.#custom_variables[name]) {
+			return 'Unknown name'
+		}
+		return this.#custom_variables[name].description
+	}
+
+	/**
 	 * Reset a custom variable to the default value
 	 */
 	resetValueToDefault(name: string): void {

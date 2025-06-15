@@ -169,6 +169,15 @@ export class ServiceEmberPlus extends ServiceBase {
 				if (!this.#customVars.includes(id) || info == null) {
 					this.debounceRestart()
 					this.logger.debug(`Custom variable definiation changed for ${id} restarting server`)
+				} else {
+					const node = this.#server.getElementByPath(`0.3.2.${this.#customVars.indexOf(id)}.1`)
+					if (node) {
+						const description = this.#serviceApi.getCustomVariableDescription(id)
+						// @ts-ignore
+						if (node.contents.description !== description) {
+							this.#server.update(node, { description: description })
+						}
+					}
 				}
 			}
 		})
@@ -433,7 +442,7 @@ export class ServiceEmberPlus extends ServiceBase {
 					new EmberModel.ParameterImpl(
 						EmberModel.ParameterType.String,
 						'string',
-						`Custom variable: ${this.#customVars[i]}`,
+						this.#serviceApi.getCustomVariableDescription(this.#customVars[i]),
 						value?.toString() ?? '',
 						undefined,
 						undefined,
