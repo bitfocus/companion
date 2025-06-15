@@ -230,7 +230,7 @@ export class ImportExportController {
 				})
 			} catch (e) {
 				// Ignore, it is probably not compressed
-				dataStr = dataBytes.toString()
+				dataStr = dataBytes.toString('utf-8')
 			}
 
 			let rawObject

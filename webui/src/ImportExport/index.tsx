@@ -111,6 +111,7 @@ export const ImportExportPage = observer(function ImportExport() {
 											}
 
 											setLoadError(null)
+											notifier.current?.close(NOTIFICATION_ID_IMPORT)
 											// const mode = config.type === 'page' ? 'import_page' : 'import_full'
 											// modalRef.current.show(mode, config, initialRemap)
 											setImportInfo([config, initialRemap])
