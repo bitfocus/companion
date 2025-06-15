@@ -11,13 +11,15 @@
 
 import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { ImageResult } from './ImageResult.js'
+import { ImageResult, ImageResultProcessedStyle } from './ImageResult.js'
 import { DrawBounds, type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { TopbarRenderer } from '@companion-app/shared/Graphics/TopbarRenderer.js'
 import { isPromise } from 'util/types'
+import type { Complete } from '@companion-module/base/dist/util.js'
+import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { GraphicsLockingGenerator } from './Locking.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
@@ -92,10 +94,9 @@ export class GraphicsRenderer {
 
 		return GraphicsRenderer.#getCachedImage(resolution.width, resolution.height, 2, (img) => {
 			// console.timeEnd('drawBlankImage')
-
 			GraphicsRenderer.#drawBlankImage(img, options, location)
 
-			return new ImageResult(img.toDataURLSync(), undefined, async (width, height, rotation, format) => {
+			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
 				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
 					GraphicsRenderer.#drawBlankImage(img, options, location)
@@ -165,17 +166,24 @@ export class GraphicsRenderer {
 		pagename: string | undefined
 	): Promise<{
 		dataUrl: string
-		draw_style: DrawStyleModel['style'] | undefined
+		processedStyle: ImageResultProcessedStyle
 	}> {
 		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
-			const draw_style = await GraphicsRenderer.#drawButtonImageInternal(img, options, drawStyle, location, pagename, {
-				width: 72,
-				height: 72,
-			})
+			const processedStyle = await GraphicsRenderer.#drawButtonImageInternal(
+				img,
+				options,
+				drawStyle,
+				location,
+				pagename,
+				{
+					width: 72,
+					height: 72,
+				}
+			)
 
 			return {
 				dataUrl: img.toDataURLSync(),
-				draw_style,
+				processedStyle,
 			}
 		})
 	}
@@ -190,18 +198,18 @@ export class GraphicsRenderer {
 		location: ControlLocation | undefined,
 		pagename: string | undefined,
 		resolution: { width: number; height: number }
-	): Promise<DrawStyleModel['style'] | undefined> {
+	): Promise<ImageResultProcessedStyle> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
 
-		let draw_style: DrawStyleModel['style'] | undefined = undefined
+		let processedStyle: ImageResultProcessedStyle
 
 		// Calculate some constants for drawing without reinventing the numbers
 		const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
 
 		// special button types
 		if (drawStyle.style == 'pageup') {
-			draw_style = 'pageup'
+			processedStyle = { type: 'pageup' }
 
 			img.fillColor(colorDarkGrey)
 
@@ -226,7 +234,7 @@ export class GraphicsRenderer {
 
 			img.drawTextLineAligned(transformX(36), transformY(39), 'UP', colorButtonYellow, 10 * drawScale, 'center', 'top')
 		} else if (drawStyle.style == 'pagedown') {
-			draw_style = 'pagedown'
+			processedStyle = { type: 'pagedown' }
 
 			img.fillColor(colorDarkGrey)
 
@@ -259,7 +267,7 @@ export class GraphicsRenderer {
 				'top'
 			)
 		} else if (drawStyle.style == 'pagenum') {
-			draw_style = 'pagenum'
+			processedStyle = { type: 'pagenum' }
 
 			img.fillColor(colorDarkGrey)
 
@@ -290,21 +298,52 @@ export class GraphicsRenderer {
 				img.drawAlignedText(0, 0, img.width, img.height, pagename, colorWhite, 18 * drawScale, 'center', 'center')
 			}
 		} else if (drawStyle.style === 'button') {
-			draw_style = 'button'
+			const textAlign = ParseAlignment(drawStyle.alignment)
+			const pngAlign = ParseAlignment(drawStyle.pngalignment)
+
+			processedStyle = {
+				type: 'button',
+				color: {
+					color: drawStyle.bgcolor,
+				},
+				text: {
+					text: drawStyle.text,
+					color: drawStyle.color,
+					size: Number(drawStyle.size) || 'auto',
+					halign: textAlign[0],
+					valign: textAlign[1],
+				},
+				png64: drawStyle.png64
+					? {
+							dataUrl: drawStyle.png64,
+							halign: pngAlign[0],
+							valign: pngAlign[1],
+						}
+					: undefined,
+				state: {
+					pushed: drawStyle.pushed,
+					showTopBar: drawStyle.show_topbar ?? 'default',
+					cloud: drawStyle.cloud || false,
+				},
+			} satisfies Complete<ImageResultProcessedStyle>
 
 			await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
 		} else if (drawStyle.style === 'button-layered') {
-			draw_style = 'button-layered'
+			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
 				x: 0,
 				y: 0,
 			})
+		} else {
+			processedStyle = {
+				type: 'button', // Default to button style
+			}
 		}
 
 		// console.timeEnd('drawButtonImage')
 
-		return draw_style
+		return processedStyle
 	}
 
 	/**
@@ -382,9 +421,9 @@ export class GraphicsRenderer {
 		const [halign, valign] = ParseAlignment(drawStyle.alignment)
 
 		let fontSize: 'auto' | number = 'auto'
-		if (drawStyle.size == 'small') {
+		if ((drawStyle.size as any) == 'small') {
 			fontSize = 7 // compatibility with v1 database
-		} else if (drawStyle.size == 'large') {
+		} else if ((drawStyle.size as any) == 'large') {
 			fontSize = 14 // compatibility with v1 database
 		} else {
 			fontSize = Number(drawStyle.size) || 'auto'
@@ -407,7 +446,7 @@ export class GraphicsRenderer {
 	static drawPincodeNumber(width: number, height: number, num: number): ImageResult {
 		return GraphicsRenderer.#getCachedImage(width, height, 3, (img) => {
 			GraphicsLockingGenerator.generatePincodeChar(img, num)
-			return new ImageResult(img.toDataURLSync(), undefined, async (width, height, rotation, format) => {
+			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
 				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
 					GraphicsLockingGenerator.generatePincodeChar(img, num)
@@ -423,7 +462,7 @@ export class GraphicsRenderer {
 	static drawPincodeEntry(width: number, height: number, code: string | undefined): ImageResult {
 		return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
 			GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
-			return new ImageResult(img.toDataURLSync(), undefined, async (width, height, rotation, format) => {
+			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
 				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
 					GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)

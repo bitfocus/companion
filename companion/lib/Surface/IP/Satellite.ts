@@ -33,7 +33,7 @@ import type {
 	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from '../Types.js'
-import type { ImageResultStyle } from '../../Graphics/ImageResult.js'
+import type { ImageResultProcessedStyle } from '../../Graphics/ImageResult.js'
 import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
 
 export interface SatelliteDeviceInfo {
@@ -197,7 +197,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					imageRs.PixelFormat.Rgb
 				)
 
-				this.#sendDraw(key, newbuffer, drawItem.style)
+				this.#sendDraw(key, newbuffer, drawItem.defaultRender.style)
 			} catch (e: any) {
 				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
 				this.emit('remove')
@@ -231,23 +231,13 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Draw a button
 	 */
-	#sendDraw(key: number, buffer: Uint8Array | undefined, style: ImageResultStyle | undefined): void {
+	#sendDraw(key: number, buffer: Uint8Array | undefined, style: ImageResultProcessedStyle): void {
 		if (this.socket !== undefined) {
 			const params: SatelliteMessageArgs = {}
 			if (this.#streamColors) {
-				let bgcolor = 'rgb(0,0,0)'
-				let fgcolor = 'rgb(0,0,0)'
-				// TODO-layered: reimplement for layered buttons
-				if (
-					style &&
-					typeof style !== 'string' &&
-					style.style === 'button' &&
-					style.color !== undefined &&
-					style.bgcolor !== undefined
-				) {
-					bgcolor = parseColor(style.bgcolor).replaceAll(' ', '')
-					fgcolor = parseColor(style.color).replaceAll(' ', '')
-				}
+				let bgcolor = style.color ? parseColor(style.color.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+				let fgcolor = style.text ? parseColor(style.text.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+
 				if (this.#streamColors !== 'rgb') {
 					bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
 					fgcolor = '#' + parseColorToNumber(fgcolor).toString(16).padStart(6, '0')
@@ -264,25 +254,23 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 				}
 			}
 			if (this.#streamText) {
-				// TODO-layered: reimplement for layered buttons
-				const text = (typeof style !== 'string' && style?.style === 'button' && style?.text) || ''
+				const text = style.text?.text || ''
 				params['TEXT'] = Buffer.from(text).toString('base64')
 			}
 			if (this.#streamTextStyle) {
-				// TODO-layered: reimplement for layered buttons
-				params['FONT_SIZE'] = style && typeof style !== 'string' && style?.style === 'button' ? style.size : 'auto'
+				params['FONT_SIZE'] = style.text?.size ?? 'auto'
 			}
 
 			let type = 'BUTTON'
-			if (style === 'pageup') {
+			if (style.type === 'pageup') {
 				type = 'PAGEUP'
-			} else if (style === 'pagedown') {
+			} else if (style.type === 'pagedown') {
 				type = 'PAGEDOWN'
-			} else if (style === 'pagenum') {
+			} else if (style.type === 'pagenum') {
 				type = 'PAGENUM'
 			}
 
-			params['PRESSED'] = typeof style !== 'string' && !!style?.pushed
+			params['PRESSED'] = typeof style !== 'string' && !!style.state?.pushed
 			params['KEY'] = key
 			params['TYPE'] = type
 
@@ -323,7 +311,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			// Images need scaling
 			this.#writeQueue.queue(key, item)
 		} else {
-			this.#sendDraw(key, undefined, item.style)
+			this.#sendDraw(key, undefined, item.defaultRender.style)
 		}
 	}
 

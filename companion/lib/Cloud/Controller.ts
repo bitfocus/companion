@@ -704,7 +704,7 @@ export class CloudController {
 	 */
 	#updateBank(location: ControlLocation, render: ImageResult): void {
 		const bank = xyToOldBankIndex(location.column, location.row)
-		if (typeof render.style === 'object' && !render.style.cloud && bank) {
+		if (render.style.state && !render.style.state?.cloud && bank) {
 			const updateId = v4()
 			for (let region in this.#regionInstances) {
 				if (!!this.#regionInstances[region]?.socketTransmit) {

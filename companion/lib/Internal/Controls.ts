@@ -40,6 +40,7 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { nanoid } from 'nanoid'
 import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
+import { CompanionButtonStyleProps } from '@companion-module/base'
 
 const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
@@ -536,11 +537,23 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			}
 
 			const render = this.#graphicsController.getCachedRender(theLocation)
-			if (render?.style && typeof render.style === 'object') {
+			if (render?.style) {
+				const legacyStyle: CompanionButtonStyleProps = {
+					text: render.style.text?.text || '',
+					color: render.style.text?.color || 0xffffff,
+					bgcolor: render.style.color?.color || 0x000000,
+					size: render.style.text?.size || 'auto',
+					png64: render.style.png64?.dataUrl,
+					alignment: render.style.text ? `${render.style.text.halign}:${render.style.text.valign}` : undefined,
+					pngalignment: render.style.png64 ? `${render.style.png64.halign}:${render.style.png64.valign}` : undefined,
+					show_topbar: (render.style.state?.showTopBar as any) ?? false,
+					// TODO-layered image buffers for old buttons
+				}
+
 				if (!feedback.options.properties) {
 					// TODO populate these properties instead
 					return {
-						value: cloneDeep(render.style) as any,
+						value: cloneDeep(legacyStyle),
 						referencedVariables,
 					}
 				} else {
@@ -548,7 +561,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 					for (const prop of feedback.options.properties) {
 						// @ts-ignore
-						newStyle[prop] = render.style[prop]
+						newStyle[prop] = legacyStyle[prop]
 					}
 
 					// Return cloned resolved style
@@ -820,6 +833,8 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsStyle) {
 				control.styleSetFields({ bgcolor: action.rawOptions.color })
+			} else if (control && control.supportsLayeredStyle) {
+				control.layeredStyleUpdateFromLegacyProperties({ bgcolor: action.rawOptions.color })
 			}
 			return true
 		} else if (action.definitionId === 'textcolor') {
@@ -829,6 +844,8 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsStyle) {
 				control.styleSetFields({ color: action.rawOptions.color })
+			} else if (control && control.supportsLayeredStyle) {
+				control.layeredStyleUpdateFromLegacyProperties({ color: action.rawOptions.color })
 			}
 			return true
 		} else if (action.definitionId === 'button_text') {
@@ -838,6 +855,8 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const control = this.#controlsController.getControl(theControlId)
 			if (control && control.supportsStyle) {
 				control.styleSetFields({ text: action.rawOptions.label })
+			} else if (control && control.supportsLayeredStyle) {
+				control.layeredStyleUpdateFromLegacyProperties({ text: action.rawOptions.label })
 			}
 
 			return true

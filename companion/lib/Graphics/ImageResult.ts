@@ -1,8 +1,30 @@
-import type { DrawStyleButtonModel, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type imageRs from '@julusian/image-rs'
 
-export type ImageResultStyle = DrawStyleButtonModel | DrawStyleLayeredButtonModel | 'pagenum' | 'pageup' | 'pagedown'
+export interface ImageResultProcessedStyle {
+	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'
+	color?: { color: number }
+	text?: {
+		text: string
+		color: number
+		size: number | 'auto'
+		halign: HorizontalAlignment
+		valign: VerticalAlignment
+	}
+	png64?: {
+		dataUrl: string
+		halign: HorizontalAlignment
+		valign: VerticalAlignment
+	}
+	state?: {
+		pushed: boolean
+		showTopBar: boolean | 'default'
+
+		/** @deprecated */
+		cloud: boolean
+	}
+}
 
 export type ImageResultNativeDrawFn = (
 	width: number,
@@ -20,7 +42,7 @@ export class ImageResult {
 	/**
 	 * Image draw style
 	 */
-	readonly style: ImageResultStyle | undefined
+	readonly style: ImageResultProcessedStyle
 
 	readonly #drawNativeCache = new Map<string, Promise<Uint8Array>>()
 	readonly #drawNative: ImageResultNativeDrawFn
@@ -30,7 +52,7 @@ export class ImageResult {
 	 */
 	readonly updated: number
 
-	constructor(dataUrl: string, style: ImageResultStyle | undefined, drawNative: ImageResultNativeDrawFn) {
+	constructor(dataUrl: string, style: ImageResultProcessedStyle, drawNative: ImageResultNativeDrawFn) {
 		this.#dataUrl = dataUrl
 		this.style = style
 		this.#drawNative = drawNative
@@ -46,18 +68,7 @@ export class ImageResult {
 	}
 
 	get bgcolor(): number {
-		if (typeof this.style === 'object') {
-			if (this.style.style === 'button') {
-				return this.style.bgcolor ?? 0
-				// TODO-layered reimplement this
-				// } else if (this.style.style === 'button-layered') {
-				// 	return this.style.elements[0].type === 'canvas' ? this.style.elements[0].color : 0
-			} else {
-				return 0
-			}
-		} else {
-			return 0
-		}
+		return this.style.color?.color ?? 0
 	}
 
 	/**

@@ -417,7 +417,7 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 
 		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == item.x && btn[1] == item.y)
 		if (buttonIndex >= 0) {
-			const color = item.style ? colorToRgb(item.style.bgcolor) : { r: 0, g: 0, b: 0 }
+			const color = colorToRgb(item.defaultRender.bgcolor)
 
 			this.#loupedeck
 				.setButtonColor({

@@ -900,6 +900,14 @@ export class ControlsController {
 
 			return control.layeredStyleSetElementName(elementId, name)
 		})
+		client.onPromise('controls:style:set-element-usage', async (controlId, elementId, usage) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layer styles`)
+
+			return control.layeredStyleSetElementUsage(elementId, usage)
+		})
 		client.onPromise('controls:style:update-option-value', async (controlId, elementId, key, value) => {
 			const control = this.getControl(controlId)
 			if (!control) return false

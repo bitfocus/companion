@@ -56,6 +56,7 @@ import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './M
 import type { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
 import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 import type { ExpressionStreamResult, ExpressionStreamResultWithSubId } from './Expression/ExpressionResult.js'
+import type { ButtonGraphicsElementUsage } from './Model/StyleLayersModel.js'
 
 export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	disconnect: () => never // Hack because type is missing
@@ -238,6 +239,11 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 		newIndex: number
 	) => boolean
 	'controls:style:set-element-name': (controlId: string, elementId: string, name: string) => boolean
+	'controls:style:set-element-usage': (
+		controlId: string,
+		elementId: string,
+		usage: ButtonGraphicsElementUsage
+	) => boolean
 	'controls:style:update-option-value': (controlId: string, elementId: string, key: string, value: any) => boolean
 	'controls:style:update-option-is-expression': (
 		controlId: string,

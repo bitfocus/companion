@@ -337,8 +337,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 						x: this.#pincodeCodePosition[0],
 						y: this.#pincodeCodePosition[1],
 						defaultRender: this.#graphics.getPincodeCodeImage(72, 72, pincode),
-						style: undefined,
-						type: undefined,
 					},
 				]
 
@@ -348,8 +346,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 							x,
 							y,
 							defaultRender: this.#pincodeNumberImagesCache[i],
-							style: undefined,
-							type: undefined,
 						})
 					}
 				})
@@ -377,11 +373,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 							x,
 							y,
 							defaultRender: image,
-							style:
-								image.style && typeof image.style === 'object' && image.style.style === 'button'
-									? image.style
-									: undefined,
-							type: typeof image.style === 'string' ? image.style : image.style?.style,
 						})
 					}
 				}
@@ -471,11 +462,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					x: location.column - xOffset,
 					y: location.row - yOffset,
 					defaultRender: render,
-					style:
-						render.style && typeof render.style === 'object' && render.style.style === 'button'
-							? render.style
-							: undefined,
-					type: typeof render.style === 'string' ? render.style : render.style?.style,
 				},
 			]
 			const transformedEntries = this.#transformButtonRenders(rawEntries)
@@ -644,8 +630,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					x: this.#pincodeCodePosition[0],
 					y: this.#pincodeCodePosition[1],
 					defaultRender: this.#graphics.getPincodeCodeImage(72, 72, this.#currentPincodeEntry),
-					style: undefined,
-					type: undefined,
 				},
 			])
 		}

@@ -3,7 +3,7 @@ import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
 import { PreventDefaultHandler, SocketContext } from '../../../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
 import { InlineHelp } from '../../../Components/InlineHelp.js'
-import { NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
 import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
@@ -11,7 +11,7 @@ import { TextInputField } from '~/Components/TextInputField.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string
-	options: NormalButtonOptions
+	options: LayeredButtonOptions
 	configRef: MutableRefObject<any> // TODO
 }
 
@@ -50,13 +50,17 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 		},
 		[setValueInner, configRef]
 	)
+	const setCanModifyStyleInApis = useCallback(
+		(val: boolean) => setValueInner('canModifyStyleInApis', val),
+		[setValueInner]
+	)
 
 	return (
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 			<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
-				<CFormLabel>
-					<InlineHelp help="When this button has multiple steps, progress to the next step when the button is released">
+				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+					<InlineHelp help="When this button has multiple steps, control how the next step changes">
 						Step Progression
 					</InlineHelp>
 				</CFormLabel>
@@ -68,7 +72,24 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					/>
 				</CCol>
 
-				<CFormLabel htmlFor="colFormProgress" className="col-sm-4 col-form-label col-form-label-sm">
+				{options.stepProgression === 'expression' && (
+					<>
+						<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Step Progression Expression</CFormLabel>
+						<CCol sm={8}>
+							<TextInputField
+								tooltip={'Current step of button'}
+								setValue={setStepExpressionValue}
+								value={options.stepExpression ?? ''}
+								useVariables
+								localVariables={ControlLocalVariables}
+								isExpression
+								style={{ fontWeight: 'bold', fontSize: 18 }}
+							/>
+						</CCol>
+					</>
+				)}
+
+				<CFormLabel htmlFor="colFormRotary" className="col-sm-4 col-form-label col-form-label-sm">
 					<InlineHelp help="Make this button compatible with rotation events">Rotary Actions</InlineHelp>
 				</CFormLabel>
 				<CCol sm={8}>
@@ -82,29 +103,28 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					/>
 				</CCol>
 
-				{options.stepProgression === 'expression' && (
-					<div className="flex w-full gap-2rem flex-form">
-						<div style={{ width: '100%' }}>
-							<TextInputField
-								label={'Step Progression Expression'}
-								tooltip={'Current step of button'}
-								setValue={setStepExpressionValue}
-								value={options.stepExpression ?? ''}
-								useVariables
-								localVariables={ControlLocalVariables}
-								isExpression
-								style={{ fontWeight: 'bold', fontSize: 18 }}
-							/>
-						</div>
-					</div>
-				)}
+				<CFormLabel htmlFor="colFormProgress" className="col-sm-4 col-form-label col-form-label-sm">
+					<InlineHelp help="Allow the external APIs and internal actions to modify the style of this button">
+						Allow style changes
+					</InlineHelp>
+				</CFormLabel>
+				<CCol sm={8}>
+					<CFormSwitch
+						size="xl"
+						color="success"
+						checked={options.canModifyStyleInApis}
+						onChange={() => {
+							setCanModifyStyleInApis(!options.canModifyStyleInApis)
+						}}
+					/>
+				</CCol>
 			</CForm>
 		</>
 	)
 }
 
 const STEP_PROGRESSION_CHOICES: DropdownChoice[] = [
-	{ id: 'auto', label: 'Auto' },
+	{ id: 'auto', label: 'On button release' },
 	{ id: 'manual', label: 'Manual' },
 	{ id: 'expression', label: 'Expression' },
 ]

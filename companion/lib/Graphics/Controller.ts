@@ -13,7 +13,7 @@ import { LRUCache } from 'lru-cache'
 import { GlobalFonts } from '@napi-rs/canvas'
 import { GraphicsRenderer } from './Renderer.js'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import { ImageResult, ImageResultNativeDrawFn } from './ImageResult.js'
+import { ImageResult, ImageResultProcessedStyle } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
@@ -212,26 +212,22 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(key)
 
 						if (!render) {
-							const { dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+							const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
 								buttonStyle,
 								location,
 								pagename,
 								CRASHED_WORKER_RETRY_COUNT
 							)
-							render = GraphicsController.#wrapDrawButtonImage(
-								dataUrl,
-								draw_style,
-								buttonStyle,
-								async (width, height, rotation, format) =>
-									this.#executePoolDrawButtonBareImage(
-										buttonStyle,
-										location,
-										pagename,
-										{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
-										rotation,
-										format,
-										CRASHED_WORKER_RETRY_COUNT
-									)
+							render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
+								this.#executePoolDrawButtonBareImage(
+									buttonStyle,
+									location,
+									pagename,
+									{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+									rotation,
+									format,
+									CRASHED_WORKER_RETRY_COUNT
+								)
 							)
 						}
 					} else {
@@ -362,43 +358,23 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			size: buttonStyle.size === 'auto' ? 'auto' : Number(buttonStyle.size),
 		}
 
-		const { dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+		const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
 			drawStyle,
 			undefined,
 			undefined,
 			CRASHED_WORKER_RETRY_COUNT
 		)
-		return GraphicsController.#wrapDrawButtonImage(
-			dataUrl,
-			draw_style,
-			drawStyle,
-			async (width, height, rotation, format) =>
-				this.#executePoolDrawButtonBareImage(
-					drawStyle,
-					undefined,
-					undefined,
-					{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
-					rotation,
-					format,
-					CRASHED_WORKER_RETRY_COUNT
-				)
+		return new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
+			this.#executePoolDrawButtonBareImage(
+				drawStyle,
+				undefined,
+				undefined,
+				{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+				rotation,
+				format,
+				CRASHED_WORKER_RETRY_COUNT
+			)
 		)
-	}
-
-	static #wrapDrawButtonImage(
-		dataUrl: string,
-		draw_style: DrawStyleModel['style'] | undefined,
-		drawStyle: DrawStyleModel,
-		drawNative: ImageResultNativeDrawFn
-	): ImageResult {
-		const draw_style2 =
-			draw_style === 'button' || draw_style === 'button-layered'
-				? drawStyle.style === 'button' || drawStyle.style === 'button-layered'
-					? drawStyle
-					: undefined
-				: draw_style
-
-		return new ImageResult(dataUrl, draw_style2, drawNative)
 	}
 
 	/**
@@ -534,7 +510,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		remainingAttempts: number
 	): Promise<{
 		dataUrl: string
-		draw_style: DrawStyleModel['style'] | undefined
+		processedStyle: ImageResultProcessedStyle
 	}> {
 		const args: Parameters<typeof GraphicsRenderer.drawButtonImageUnwrapped> = [
 			this.#drawOptions,
