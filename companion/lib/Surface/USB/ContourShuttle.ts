@@ -202,13 +202,13 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 				return
 			}
 
-			this.emit('rotate', ...xy, delta == 1)
-
 			console.log(`Jog position has changed`, delta)
 			this.emit('setVariable', 'jog', delta)
 			setTimeout(() => {
 				this.emit('setVariable', 'jog', 0)
 			}, 20)
+
+			this.emit('rotate', ...xy, delta == 1)
 		})
 
 		let lastShuttle = 0
@@ -218,10 +218,10 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 				return
 			}
 
+			this.emit('setVariable', 'shuttle', shuttle)
+
 			this.emit('rotate', ...xy, lastShuttle < shuttle)
 			lastShuttle = shuttle
-
-			this.emit('setVariable', 'shuttle', shuttle)
 		})
 
 		this.contourShuttle.on('disconnected', () => {
