@@ -52,7 +52,6 @@ const contourShuttleProV1Info: ShuttleModelInfo = {
 	totalCols: 5,
 	totalRows: 4,
 
-	// TODO(Someone with hardware): This mapping is guesswork and hasn't been tested
 	jog: [1, 2],
 	shuttle: [2, 2],
 	buttons: [
