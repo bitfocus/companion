@@ -33,6 +33,7 @@ export class FeedbackStyleBuilder {
 			const prunedValue = { ...rawValue }
 			delete prunedValue.imageBuffer
 			delete prunedValue.imageBufferPosition
+			delete prunedValue.imageBuffers
 
 			// Ensure `textExpression` is set at the same times as `text`
 			delete prunedValue.textExpression

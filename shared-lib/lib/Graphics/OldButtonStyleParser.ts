@@ -14,7 +14,7 @@ export function overlayAdvancedFeedbackValues(
 			selectedElements.canvas.decoration = ButtonGraphicsDecorationType.TopBar
 		} else if (feedbackStyle.show_topbar === false) {
 			selectedElements.canvas.decoration = ButtonGraphicsDecorationType.Border
-		} else {
+		} else if (feedbackStyle.show_topbar === 'default') {
 			selectedElements.canvas.decoration = ButtonGraphicsDecorationType.FollowDefault
 		}
 	}
