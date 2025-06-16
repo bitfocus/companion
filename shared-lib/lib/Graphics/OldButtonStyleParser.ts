@@ -1,11 +1,11 @@
-import type { UnparsedButtonStyle } from '../Model/StyleModel.js'
+import type { SimplifiedButtonStyle } from '../Model/StyleModel.js'
 import { ButtonGraphicsDecorationType, type SomeButtonGraphicsDrawElement } from '../Model/StyleLayersModel.js'
 import { GraphicsLayeredElementUsageMatcher } from './LayeredElementUsageMatcher.js'
 import { ParseAlignment } from './Util.js'
 
 export function overlayAdvancedFeedbackValues(
 	elements: SomeButtonGraphicsDrawElement[],
-	feedbackStyle: UnparsedButtonStyle
+	feedbackStyle: SimplifiedButtonStyle
 ): void {
 	const selectedElements = GraphicsLayeredElementUsageMatcher.SelectBasicLayers(elements)
 
@@ -51,6 +51,7 @@ export function overlayAdvancedFeedbackValues(
 		}
 	}
 
-	// TODO-layered - handle imageBuffers?
-	// imageBuffers: DrawImageBuffer[]
+	if (selectedElements.imageBuffers) {
+		selectedElements.imageBuffers.base64Image = feedbackStyle.imageBuffersPng ?? null
+	}
 }

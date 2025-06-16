@@ -21,7 +21,7 @@ import { fileURLToPath } from 'url'
 import path from 'path'
 import debounceFn from 'debounce-fn'
 import type { CompanionButtonStyleProps, CompanionVariableValues } from '@companion-module/base'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawImageBuffer, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
@@ -36,6 +36,7 @@ import compressionMiddleware from 'compression'
 import fs from 'fs'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type imageRs from '@julusian/image-rs'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
@@ -497,6 +498,30 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		if (render) return render
 
 		return GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
+	}
+
+	async renderPixelBuffers(
+		imageBuffers: DrawImageBuffer[],
+		decoration: ButtonGraphicsDecorationType
+	): Promise<string | undefined> {
+		if (imageBuffers.length === 0) return undefined
+
+		const showTopbar =
+			(!this.#drawOptions.remove_topbar && decoration === ButtonGraphicsDecorationType.FollowDefault) ||
+			decoration === ButtonGraphicsDecorationType.TopBar
+
+		const args: Parameters<typeof GraphicsRenderer.drawImageBuffers> = [showTopbar, imageBuffers]
+
+		if (DEBUG_DISABLE_RENDER_THREADING) {
+			return GraphicsRenderer.drawImageBuffers(...args)
+		}
+
+		try {
+			return this.#pool.exec('drawImageBuffers', args)
+		} catch (e: any) {
+			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
+			throw e
+		}
 	}
 
 	/**

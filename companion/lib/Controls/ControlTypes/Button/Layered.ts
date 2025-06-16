@@ -23,7 +23,11 @@ import {
 	ExpressionOrValue,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonStyleProperties,
+	DrawStyleLayeredButtonModel,
+	SimplifiedButtonStyle,
+} from '@companion-app/shared/Model/StyleModel.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
 import { CompanionVariableValues } from '@companion-module/base'
@@ -235,16 +239,37 @@ export class ControlButtonLayered
 		let usedVariablesComplete = usedVariables
 
 		// Inject the styles from the old feedbacks onto the elements
-		const oldFeedbacksStyle = this.entities.hasFeedbacks ? this.entities.getUnparsedFeedbackStyle({}) : undefined
-		if (oldFeedbacksStyle) {
-			if (oldFeedbacksStyle.text) {
+		let oldFeedbacksStyle: SimplifiedButtonStyle | undefined
+		if (this.entities.hasFeedbacks) {
+			const rawFeedbacksStyle = this.entities.getUnparsedFeedbackStyle({})
+
+			oldFeedbacksStyle = { ...rawFeedbacksStyle }
+			delete (oldFeedbacksStyle as any).textExpression
+			delete (oldFeedbacksStyle as any).imageBuffers
+
+			if (rawFeedbacksStyle.text) {
 				const parseResult = this.parseButtonTextString(
-					oldFeedbacksStyle.text,
-					oldFeedbacksStyle.textExpression ?? false
+					rawFeedbacksStyle.text,
+					rawFeedbacksStyle.textExpression ?? false
 				)
 				oldFeedbacksStyle.text = parseResult.text
 				usedVariablesComplete = usedVariablesComplete.union(parseResult.variableIds)
 			}
+
+			let decoration = elements.find((e) => e.type === 'canvas')?.decoration
+			if (oldFeedbacksStyle.show_topbar === true) {
+				decoration = ButtonGraphicsDecorationType.TopBar
+			} else if (oldFeedbacksStyle.show_topbar === false) {
+				decoration = ButtonGraphicsDecorationType.Border
+			} else if (oldFeedbacksStyle.show_topbar === 'default') {
+				decoration = ButtonGraphicsDecorationType.FollowDefault
+			}
+
+			// Flatten imageBuffers into a single png
+			oldFeedbacksStyle.imageBuffersPng = await this.deps.graphics.renderPixelBuffers(
+				rawFeedbacksStyle.imageBuffers,
+				decoration || ButtonGraphicsDecorationType.FollowDefault
+			)
 
 			overlayAdvancedFeedbackValues(elements, oldFeedbacksStyle)
 		}

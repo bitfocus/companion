@@ -27,7 +27,7 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 
 	elements: SomeButtonGraphicsDrawElement[]
 
-	oldFeedbacksStyle: UnparsedButtonStyle | undefined
+	oldFeedbacksStyle: SimplifiedButtonStyle | undefined
 }
 
 export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleButtonStateProps {
@@ -44,6 +44,10 @@ export interface DrawImageBuffer {
 	height: number | undefined
 	drawScale: number | undefined
 	pixelFormat: 'RGB' | 'RGBA' | 'ARGB' | undefined
+}
+
+export interface SimplifiedButtonStyle extends Partial<Omit<ButtonStyleProperties, 'textExpression'>> {
+	imageBuffersPng?: string // Base64 encoded PNG
 }
 
 export interface UnparsedButtonStyle extends Partial<ButtonStyleProperties> {
