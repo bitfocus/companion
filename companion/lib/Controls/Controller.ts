@@ -1326,12 +1326,15 @@ export class ControlsController {
 		const control = controlId && this.getControl(controlId)
 
 		const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
+		const lastDrawStyle = control ? control.getLastDrawStyle() : undefined
 
-		return this.#registry.variables.values.createVariablesAndExpressionParser(
-			controlLocation,
-			variableEntities,
-			overrideVariableValues
-		)
+		return this.#registry.variables.values.createVariablesAndExpressionParser(controlLocation, variableEntities, {
+			...overrideVariableValues,
+
+			// This is a temporary and internal value to propogate the old feedbacks to the ui for generating the preview
+			'$(this:old_feedbacks_style)':
+				lastDrawStyle && 'oldFeedbacksStyle' in lastDrawStyle ? (lastDrawStyle.oldFeedbacksStyle as any) : undefined,
+		})
 	}
 }
 

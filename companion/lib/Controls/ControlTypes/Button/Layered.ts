@@ -1,5 +1,5 @@
 import { ButtonControlBase } from './Base.js'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
@@ -29,7 +29,7 @@ import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/share
 import { CompanionVariableValues } from '@companion-module/base'
 import { lazy } from '../../../Resources/Util.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
-import { GraphicsLayeredElementUsageMatcher } from '@companion-app/shared/Graphics/LayeredElementUsageMatcher.js'
+import { overlayAdvancedFeedbackValues } from '@companion-app/shared/Graphics/OldButtonStyleParser.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -235,58 +235,23 @@ export class ControlButtonLayered
 		let usedVariablesComplete = usedVariables
 
 		// Inject the styles from the old feedbacks onto the elements
-		if (this.entities.hasFeedbacks) {
-			const selectedElements = GraphicsLayeredElementUsageMatcher.SelectBasicLayers(elements)
-
-			const feedbackStyle = this.entities.getUnparsedFeedbackStyle({})
-
-			if (selectedElements.canvas) {
-				if (feedbackStyle.show_topbar === true) {
-					selectedElements.canvas.decoration = ButtonGraphicsDecorationType.TopBar
-				} else if (feedbackStyle.show_topbar === false) {
-					selectedElements.canvas.decoration = ButtonGraphicsDecorationType.Border
-				} else {
-					selectedElements.canvas.decoration = ButtonGraphicsDecorationType.FollowDefault
-				}
-			}
-			if (selectedElements.text) {
-				if (feedbackStyle.text !== undefined) {
-					const parseResult = this.parseButtonTextString(feedbackStyle.text, feedbackStyle.textExpression ?? false)
-
-					selectedElements.text.text = parseResult.text
-					usedVariablesComplete = usedVariablesComplete.union(parseResult.variableIds)
-				}
-				if (feedbackStyle.color !== undefined) {
-					selectedElements.text.color = feedbackStyle.color
-				}
-				if (feedbackStyle.size !== undefined) {
-					selectedElements.text.fontsize = Number(feedbackStyle.size) || 'auto'
-				}
-				if (feedbackStyle.alignment !== undefined) {
-					const alignment = ParseAlignment(feedbackStyle.alignment)
-					selectedElements.text.halign = alignment[0]
-					selectedElements.text.valign = alignment[1]
-				}
-			}
-			if (selectedElements.box) {
-				if (feedbackStyle.bgcolor !== undefined) {
-					selectedElements.box.color = feedbackStyle.bgcolor
-				}
+		const oldFeedbacksStyle = this.entities.hasFeedbacks ? this.entities.getUnparsedFeedbackStyle({}) : undefined
+		if (oldFeedbacksStyle) {
+			if (oldFeedbacksStyle.text) {
+				const parseResult = this.parseButtonTextString(
+					oldFeedbacksStyle.text,
+					oldFeedbacksStyle.textExpression ?? false
+				)
+				oldFeedbacksStyle.text = parseResult.text
+				usedVariablesComplete = usedVariablesComplete.union(parseResult.variableIds)
 			}
 
-			if (selectedElements.image) {
-				if (feedbackStyle.png64 !== undefined) {
-					selectedElements.image.base64Image = feedbackStyle.png64 ?? null
-				}
-				if (feedbackStyle.pngalignment !== undefined) {
-					const alignment = ParseAlignment(feedbackStyle.pngalignment)
-					selectedElements.image.halign = alignment[0]
-					selectedElements.image.valign = alignment[1]
-				}
-			}
+			overlayAdvancedFeedbackValues(elements, oldFeedbacksStyle)
+		}
 
-			// TODO-layered - handle imageBuffers?
-			// imageBuffers: DrawImageBuffer[]
+		// TODO - make this more efficient?
+		if (!isEqual(oldFeedbacksStyle, this.#lastDrawStyle?.oldFeedbacksStyle)) {
+			this.onLocalVariablesChanged(new Set(['this:old_feedbacks_style']))
 		}
 
 		this.#last_draw_variables = usedVariablesComplete.size > 0 ? usedVariablesComplete : null
@@ -295,6 +260,8 @@ export class ControlButtonLayered
 			...this.getDrawStyleButtonStateProps(),
 
 			elements,
+
+			oldFeedbacksStyle,
 
 			style: 'button-layered',
 		}

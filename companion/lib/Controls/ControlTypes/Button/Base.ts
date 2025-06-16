@@ -76,7 +76,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				controlId,
 				commitChange: this.commitChange.bind(this),
 				invalidateControl: this.triggerRedraw.bind(this),
-				localVariablesChanged: this.#onLocalVariablesChanged.bind(this),
+				localVariablesChanged: this.onLocalVariablesChanged.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				moduleHost: deps.instance.moduleHost,
@@ -235,7 +235,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 			maxWait: 10,
 		}
 	)
-	#onLocalVariablesChanged(allChangedVariables: Set<string>): void {
+	protected onLocalVariablesChanged(allChangedVariables: Set<string>): void {
 		for (const variable of allChangedVariables) {
 			this.#pendingChangedVariables.add(variable)
 		}

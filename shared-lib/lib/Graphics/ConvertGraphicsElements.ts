@@ -20,8 +20,8 @@ import {
 import { assertNever } from '../Util.js'
 import { HorizontalAlignment, VerticalAlignment } from './Util.js'
 
-type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
-type ParseVariablesFn = (str: string) => Promise<ExecuteExpressionResult>
+export type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
+export type ParseVariablesFn = (str: string) => Promise<ExecuteExpressionResult>
 
 class ExpressionHelper {
 	readonly #executeExpression: ExecuteExpressionFn

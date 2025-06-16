@@ -26,6 +26,8 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 	// imageBuffers: DrawImageBuffer[]
 
 	elements: SomeButtonGraphicsDrawElement[]
+
+	oldFeedbacksStyle: UnparsedButtonStyle | undefined
 }
 
 export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleButtonStateProps {
