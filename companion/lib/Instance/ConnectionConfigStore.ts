@@ -9,6 +9,14 @@ import { nanoid } from 'nanoid'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 
+export interface AddConnectionProps {
+	versionId: string | null
+	updatePolicy: ConnectionUpdatePolicy
+	disabled: boolean
+	collectionId?: string
+	sortOrder?: number
+}
+
 export class ConnectionConfigStore {
 	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
 
@@ -65,9 +73,7 @@ export class ConnectionConfigStore {
 		moduleType: string,
 		label: string,
 		product: string | undefined,
-		moduleVersionId: string | null,
-		updatePolicy: ConnectionUpdatePolicy,
-		disabled: boolean
+		props: AddConnectionProps
 	): [id: string, config: ConnectionConfig] {
 		// Find the highest rank given to an instance
 		const highestRank =
@@ -80,11 +86,14 @@ export class ConnectionConfigStore {
 
 		const id = nanoid()
 
+		// const collectionIdIsValid = this.#store
+
 		const newConfig: ConnectionConfig = {
 			instance_type: moduleType,
-			moduleVersionId: moduleVersionId,
-			updatePolicy: updatePolicy,
-			sortOrder: highestRank + 1,
+			moduleVersionId: props.versionId,
+			updatePolicy: props.updatePolicy,
+			sortOrder: props.sortOrder ?? highestRank + 1,
+			collectionId: props.collectionId ?? undefined,
 			label: label,
 			isFirstInit: true,
 			config: {
@@ -92,7 +101,7 @@ export class ConnectionConfigStore {
 			},
 			secrets: {},
 			lastUpgradeIndex: -1,
-			enabled: !disabled,
+			enabled: !props.disabled,
 		}
 
 		this.#store.set(id, newConfig)

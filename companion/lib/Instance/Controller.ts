@@ -27,7 +27,7 @@ import {
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
-import { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import { AddConnectionProps, ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './SharedUdpManager.js'
@@ -314,20 +314,18 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	addInstanceWithLabel(
 		data: CreateConnectionData,
 		labelBase: string,
-		versionId: string | null,
-		updatePolicy: ConnectionUpdatePolicy,
-		disabled: boolean
+		props: AddConnectionProps
 	): [id: string, config: ConnectionConfig] {
 		let moduleId = data.type
 		let product = data.product
 
-		if (versionId === null) {
+		if (props.versionId === null) {
 			// Get the latest installed version
-			versionId = this.modules.getLatestVersionOfModule(moduleId, false)
+			props.versionId = this.modules.getLatestVersionOfModule(moduleId, false)
 		}
 
 		// Ensure the requested module and version is installed
-		this.userModulesManager.ensureModuleIsInstalled(moduleId, versionId)
+		this.userModulesManager.ensureModuleIsInstalled(moduleId, props.versionId)
 
 		const label = this.#configStore.makeLabelUnique(labelBase)
 
@@ -335,7 +333,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.#logger.info('Adding connection ' + moduleId + ' ' + product)
 
-		const [id, config] = this.#configStore.addConnection(moduleId, label, product, versionId, updatePolicy, disabled)
+		const [id, config] = this.#configStore.addConnection(moduleId, label, product, props)
 
 		this.#activate_module(id, true)
 
@@ -757,7 +755,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		client.onPromise('connections:add', (module, label, version) => {
-			const connectionInfo = this.addInstanceWithLabel(module, label, version, ConnectionUpdatePolicy.Stable, false)
+			const connectionInfo = this.addInstanceWithLabel(module, label, {
+				versionId: version,
+				updatePolicy: ConnectionUpdatePolicy.Stable,
+				disabled: false,
+			})
 			return connectionInfo[0]
 		})
 

@@ -45,15 +45,15 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 		}
 		return newObj
 	} else if (obj.type == 'page') {
-		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 7, connectionCollections: undefined }
+		const newObj: ExportPageModelv6 = { connectionCollections: undefined, ...cloneDeep(obj), version: 7 }
 		convertPageControls(newObj.page)
 		return newObj
 	} else if (obj.type == 'trigger_list') {
 		const newObj: ExportTriggersListv6 = {
-			...cloneDeep(obj),
-			version: 7,
 			triggerCollections: undefined,
 			connectionCollections: undefined,
+			...cloneDeep(obj),
+			version: 7,
 		}
 		for (const trigger of Object.values<any>(newObj.triggers)) {
 			fixupControlEntities(trigger)
