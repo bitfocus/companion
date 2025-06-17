@@ -1,11 +1,12 @@
 import { CAlert, CButton, CFormInput, CSpinner } from '@coreui/react'
 import { faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
-import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 
 interface ImageLibraryEditorProps {
 	selectedImageId: string | null
@@ -17,44 +18,23 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	onDeleteImage,
 }: ImageLibraryEditorProps) {
 	const socket = useContext(SocketContext)
-	const [imageInfo, setImageInfo] = useState<ImageLibraryInfo | null>(null)
-	const [imageUrl, setImageUrl] = useState<string | null>(null)
-	const [loading, setLoading] = useState(false)
+	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [saving, setSaving] = useState(false)
 	const [uploading, setUploading] = useState(false)
 	const [imageName, setImageName] = useState('')
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
-	// Load image data when selection changes
-	useEffect(() => {
-		if (!selectedImageId) {
-			setImageInfo(null)
-			setImageUrl(null)
+	// Get image info from the store
+	const imageInfo = selectedImageId ? imageLibrary.getImage(selectedImageId) : null
+
+	// Update imageName when imageInfo changes
+	React.useEffect(() => {
+		if (imageInfo) {
+			setImageName(imageInfo.name)
+		} else {
 			setImageName('')
-			return
 		}
-
-		setLoading(true)
-
-		Promise.all([
-			socket.emitPromise('image-library:get-info', [selectedImageId]),
-			socket.emitPromise('image-library:get-data', [selectedImageId, 'original']),
-		])
-			.then(([info, dataUrl]) => {
-				setImageInfo(info)
-				setImageUrl(dataUrl)
-				setImageName(info?.name || '')
-			})
-			.catch((err) => {
-				console.error('Failed to load image data:', err)
-				setImageInfo(null)
-				setImageUrl(null)
-				setImageName('')
-			})
-			.finally(() => {
-				setLoading(false)
-			})
-	}, [socket, selectedImageId])
+	}, [imageInfo])
 
 	const handleSaveName = useCallback(() => {
 		if (!selectedImageId || !imageName.trim()) return
@@ -63,10 +43,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		socket
 			.emitPromise('image-library:set-name', [selectedImageId, imageName.trim()])
 			.then(() => {
-				// Update local state
-				if (imageInfo) {
-					setImageInfo({ ...imageInfo, name: imageName.trim() })
-				}
+				// The store will be updated automatically via the subscription
 			})
 			.catch((err) => {
 				console.error('Failed to save image name:', err)
@@ -74,7 +51,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			.finally(() => {
 				setSaving(false)
 			})
-	}, [socket, selectedImageId, imageName, imageInfo])
+	}, [socket, selectedImageId, imageName])
 
 	const handleDelete = useCallback(() => {
 		if (!selectedImageId) return
@@ -92,57 +69,68 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	}, [socket, selectedImageId, onDeleteImage])
 
 	const handleDownload = useCallback(() => {
-		if (!imageUrl || !imageInfo) return
+		if (!selectedImageId || !imageInfo) return
 
-		// Create download link
-		const link = document.createElement('a')
-		link.href = imageUrl
-		link.download = `${imageInfo.name}.${imageInfo.mimeType.split('/')[1] || 'jpg'}`
-		document.body.appendChild(link)
-		link.click()
-		document.body.removeChild(link)
-	}, [imageUrl, imageInfo])
+		// Get image data and download
+		socket
+			.emitPromise('image-library:get-data', [selectedImageId, 'original'])
+			.then((response) => {
+				const imageData = response as { image: string; checksum: string } | null
+				if (imageData?.image) {
+					// Create download link
+					const link = document.createElement('a')
+					link.href = imageData.image
+					link.download = `${imageInfo.name}.${imageInfo.mimeType.split('/')[1] || 'jpg'}`
+					document.body.appendChild(link)
+					link.click()
+					document.body.removeChild(link)
+				}
+			})
+			.catch((err) => {
+				console.error('Failed to download image:', err)
+			})
+	}, [socket, selectedImageId, imageInfo])
 
-	const handleReplaceImage = useCallback(async () => {
-		if (!fileInputRef.current?.files?.[0] || !selectedImageId) return
+	const handleReplaceImage = useCallback(
+		(event: React.ChangeEvent<HTMLInputElement>) => {
+			if (!event.target.files?.[0] || !selectedImageId) return
 
-		const file = fileInputRef.current.files[0]
-		setUploading(true)
+			const file = event.target.files[0]
+			setUploading(true)
 
-		try {
-			// Convert file to data URL and upload
-			const dataUrl = await blobToDataURL(file)
+			const uploadFile = async () => {
+				try {
+					// Convert file to data URL and upload
+					const dataUrl = await blobToDataURL(file)
 
-			// Start upload
-			const sessionId = await socket.emitPromise('image-library:upload-start', [file.name, file.size])
+					// Start upload
+					const sessionId = await socket.emitPromise('image-library:upload-start', [file.name, file.size])
 
-			// Upload the file as a single chunk (for simplicity)
-			const response = await fetch(dataUrl)
-			const buffer = await response.arrayBuffer()
-			const data = new Uint8Array(buffer)
+					// Upload the file as a single chunk (for simplicity)
+					const response = await fetch(dataUrl)
+					const buffer = await response.arrayBuffer()
+					const data = new Uint8Array(buffer)
 
-			await socket.emitPromise('image-library:upload-chunk', [sessionId, 0, data])
+					await socket.emitPromise('image-library:upload-chunk', [sessionId, 0, data])
 
-			// Complete upload
-			await socket.emitPromise('image-library:upload-complete', [sessionId, selectedImageId, 'dummy-checksum'])
+					// Complete upload
+					await socket.emitPromise('image-library:upload-complete', [sessionId, selectedImageId, 'dummy-checksum'])
 
-			// Reload the image
-			const [info, newDataUrl] = await Promise.all([
-				socket.emitPromise('image-library:get-info', [selectedImageId]),
-				socket.emitPromise('image-library:get-data', [selectedImageId, 'original']),
-			])
-
-			setImageInfo(info)
-			setImageUrl(newDataUrl)
-		} catch (err) {
-			console.error('Failed to replace image:', err)
-		} finally {
-			setUploading(false)
-			if (fileInputRef.current) {
-				fileInputRef.current.value = ''
+					// The store will be updated automatically via subscription
+				} catch (err) {
+					console.error('Failed to replace image:', err)
+				} finally {
+					setUploading(false)
+					if (event.target) {
+						event.target.value = ''
+					}
+				}
 			}
-		}
-	}, [socket, selectedImageId])
+
+			void uploadFile()
+		},
+		[socket, selectedImageId]
+	)
 
 	const formatFileSize = (bytes: number) => {
 		if (bytes === 0) return '0 B'
@@ -165,17 +153,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		)
 	}
 
-	if (loading) {
-		return (
-			<div className="image-library-editor">
-				<h5>Image Editor</h5>
-				<div className="text-center p-4">
-					<CSpinner />
-				</div>
-			</div>
-		)
-	}
-
 	if (!imageInfo) {
 		return (
 			<div className="image-library-editor">
@@ -190,13 +167,12 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			<h5>Image Editor</h5>
 
 			<div className="image-preview-full">
-				{imageUrl ? (
-					<img src={imageUrl} alt={imageInfo.name} />
-				) : (
-					<div className="image-placeholder">
-						<span>No image data</span>
-					</div>
-				)}
+				<ImageLibraryImagePreview
+					imageId={selectedImageId}
+					type="original"
+					checksum={imageInfo.checksum}
+					alt={imageInfo.name}
+				/>
 			</div>
 
 			<div className="image-properties">

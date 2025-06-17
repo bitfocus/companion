@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { SocketContext } from '~/util.js'
+import React from 'react'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import classNames from 'classnames'
+import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 
 interface ImageThumbnailProps {
 	image: ImageLibraryInfo
@@ -9,21 +9,7 @@ interface ImageThumbnailProps {
 	onClick: () => void
 }
 
-export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps) {
-	const socket = useContext(SocketContext)
-	const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-
-	useEffect(() => {
-		socket
-			.emitPromise('image-library:get-data', [image.id, 'preview'])
-			.then((dataUrl) => {
-				setPreviewUrl(dataUrl)
-			})
-			.catch((err) => {
-				console.error('Failed to load image preview:', err)
-			})
-	}, [socket, image.id])
-
+export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps): JSX.Element {
 	const formatFileSize = (bytes: number) => {
 		if (bytes === 0) return '0 B'
 		const k = 1024
@@ -39,13 +25,7 @@ export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps
 	return (
 		<div className={classNames('image-thumbnail', { selected })} onClick={onClick}>
 			<div className="image-preview">
-				{previewUrl ? (
-					<img src={previewUrl} alt={image.name} />
-				) : (
-					<div className="image-placeholder">
-						<span>Loading...</span>
-					</div>
-				)}
+				<ImageLibraryImagePreview imageId={image.id} type="preview" checksum={image.checksum} alt={image.name} />
 			</div>
 			<div className="image-info">
 				<div className="image-name" title={image.name}>

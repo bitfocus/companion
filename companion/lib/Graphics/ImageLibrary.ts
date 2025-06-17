@@ -157,12 +157,16 @@ export class ImageLibrary {
 	/**
 	 * Get image data as base64 data URL
 	 */
-	getImageDataUrl(imageId: string, type: 'original' | 'preview'): string | null {
+	getImageDataUrl(imageId: string, type: 'original' | 'preview'): { image: string; checksum: string } | null {
 		const data = this.#dbTable.get(imageId)
 		if (!data) return null
 
 		const imageData = type === 'original' ? data.originalImage : data.previewImage
-		return imageData || null // Return null if empty string
+		if (!imageData) return null // Return null if empty string
+		return {
+			image: imageData,
+			checksum: data.info.checksum,
+		}
 	}
 
 	/**
