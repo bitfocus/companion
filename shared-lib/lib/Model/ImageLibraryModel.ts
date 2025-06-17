@@ -1,11 +1,10 @@
 export interface ImageLibraryInfo {
 	id: string
-	filename: string
+	name: string
 	originalSize: number
 	previewSize: number
-	uploadedAt: number
+	createdAt: number
+	modifiedAt: number
 	checksum: string
 	mimeType: string
-	width?: number
-	height?: number
 }

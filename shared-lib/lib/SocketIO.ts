@@ -435,9 +435,11 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'image-library:get-info': (imageId: string) => ImageLibraryInfo | null
 	'image-library:get-data': (imageId: string, type: 'original' | 'preview') => string | null
 	'image-library:delete': (imageId: string) => boolean
+	'image-library:create': (imageId: string, name: string) => string
+	'image-library:set-name': (imageId: string, name: string) => boolean
 	'image-library:upload-start': (filename: string, size: number) => string
 	'image-library:upload-chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
-	'image-library:upload-complete': (sessionId: string, checksum: string) => string
+	'image-library:upload-complete': (sessionId: string, imageId: string, checksum: string) => string
 	'image-library:upload-cancel': (sessionId: string) => void
 }
 
@@ -523,6 +525,7 @@ export interface BackendToClientEventsMap {
 	'image-library:upload-error': (sessionId: string, error: string) => void
 	'image-library:added': (imageId: string, info: ImageLibraryInfo) => void
 	'image-library:removed': (imageId: string) => void
+	'image-library:updated': (imageId: string, info: ImageLibraryInfo) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void
