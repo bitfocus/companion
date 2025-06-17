@@ -21,11 +21,13 @@ The following controls are available via emberplus:
 - Action Recorder<br>
   Path: `/Companion Tree/action recorder/<parameter name>`<br>
   Permissions: Read/Write<br>
-  Parameters: `Enable`, `Discard`<br> 
+  Parameters: `Enable`, `Discard`<br>
   Parameter Types: `boolean`<br>
 
 ## Server Restarts
+
 The Ember Plus server will automatically restart to rebuild the ember tree under the following condictions, as such they should not be performed during production useage:
+
 - Page count change
 - Button matrix size change
 - Adding new connections
@@ -33,4 +35,5 @@ The Ember Plus server will automatically restart to rebuild the ember tree under
 - Adding new custom variables
 
 ## Node path stability
-The Ember Plus server can not guarantee the stability of the numerical paths to variables between Companion restarts, as this is contingent upon initialisation order. Whenever possible one should preference use of texutal paths such as `Companion Tree/variables/internal/instance_warns` rather than `0.3.1.3` as these are stable. 
+
+The Ember Plus server can not guarantee the stability of the numerical paths to variables between Companion restarts, as this is contingent upon initialisation order. Whenever possible one should preference use of texutal paths such as `Companion Tree/variables/internal/instance_warns` rather than `0.3.1.3` as these are stable.

@@ -126,7 +126,6 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 				all_changed_variables_set.add(`${labelFrom}:${variable}`)
 				all_changed_variables_set.add(`${labelTo}:${variable}`)
-				
 			}
 			connection_labels.add(labelFrom)
 			connection_labels.add(labelTo)
@@ -155,7 +154,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				moduleValues[variable.id] = variable.value
 
 				all_changed_variables_set.add(`${label}:${variable.id}`)
-				
+
 				// Also report the old custom variable names as having changed
 				if (label === 'custom') {
 					all_changed_variables_set.add(`internal:custom_${variable.id}`)
