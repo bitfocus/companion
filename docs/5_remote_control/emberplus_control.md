@@ -36,4 +36,4 @@ The Ember Plus server will automatically restart to rebuild the ember tree under
 
 ## Node path stability
 
-The Ember Plus server can not guarantee the stability of the numerical paths to variables between Companion restarts, as this is contingent upon initialisation order. Whenever possible one should preference use of texutal paths such as `Companion Tree/variables/internal/instance_warns` rather than `0.3.1.3` as these are stable.
+The Ember Plus server can not guarantee the stability of the numerical paths to variables between Companion restarts, as this is contingent upon initialisation order. Whenever possible one should preference use of texutal paths such as `Companion Tree/variables/internal/instance_warns` rather than `0.3.1.3` as these are stable. After significant changes, which will have triggered a restart of the ember plus server, a full Companion restart can help stabilise the numeric ember paths.
