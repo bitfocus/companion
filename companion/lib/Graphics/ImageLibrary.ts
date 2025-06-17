@@ -161,10 +161,8 @@ export class ImageLibrary {
 		const data = this.#dbTable.get(imageId)
 		if (!data) return null
 
-		const imageData = type === 'original' ? data.originalImage : data.previewImage
-		if (!imageData) return null // Return null if empty string
 		return {
-			image: imageData,
+			image: type === 'original' ? data.originalImage : data.previewImage,
 			checksum: data.info.checksum,
 		}
 	}

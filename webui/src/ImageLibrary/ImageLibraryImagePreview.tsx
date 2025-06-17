@@ -1,6 +1,9 @@
 import React, { useContext, useEffect, useState, useRef } from 'react'
-import { SocketContext } from '~/util.js'
+import { LoadingBar, SocketContext } from '~/util.js'
 import classNames from 'classnames'
+import { CircleLoader, ClipLoader, MoonLoader, RingLoader } from 'react-spinners'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faImage } from '@fortawesome/free-solid-svg-icons'
 
 interface ImageLibraryImagePreviewProps {
 	imageId: string
@@ -41,9 +44,14 @@ export function ImageLibraryImagePreview({
 		checksum: string
 	} | null>(null)
 
+	// Use a ref to store the last loaded combination to avoid re-triggering loads
+	const lastLoadedRef = useRef<string>('')
+
 	useEffect(() => {
-		// If checksum hasn't changed and we already have the image, don't reload
-		if (loadState.loadedChecksum === checksum && loadState.imageUrl && !loadState.error) {
+		const loadKey = `${imageId}-${type}-${checksum}`
+
+		// If we've already loaded this exact combination, don't reload
+		if (lastLoadedRef.current === loadKey) {
 			return
 		}
 
@@ -51,11 +59,12 @@ export function ImageLibraryImagePreview({
 		const requestKey = { imageId, type, checksum }
 		currentRequestRef.current = requestKey
 
-		setLoadState((prev) => ({
-			...prev,
+		setLoadState({
 			loading: true,
+			imageUrl: null,
 			error: null,
-		}))
+			loadedChecksum: null,
+		})
 
 		socket
 			.emitPromise('image-library:get-data', [imageId, type])
@@ -77,6 +86,7 @@ export function ImageLibraryImagePreview({
 								error: null,
 								loadedChecksum: checksum,
 							})
+							lastLoadedRef.current = loadKey
 						} else {
 							// Checksum mismatch - image was updated while we were loading
 							const errorMsg = 'Image was updated while loading'
@@ -88,7 +98,7 @@ export function ImageLibraryImagePreview({
 							})
 						}
 					} else {
-						const errorMsg = 'Image not found or has no data'
+						const errorMsg = 'Image not found'
 						setLoadState({
 							loading: false,
 							imageUrl: null,
@@ -127,12 +137,12 @@ export function ImageLibraryImagePreview({
 				currentRequestRef.current = null
 			}
 		}
-	}, [socket, imageId, type, checksum, loadState.loadedChecksum, loadState.imageUrl, loadState.error])
+	}, [socket, imageId, type, checksum])
 
 	if (loadState.loading) {
 		return (
 			<div className={classNames('image-library-preview-loading', className)}>
-				<span>Loading...</span>
+				<MoonLoader />
 			</div>
 		)
 	}
@@ -148,7 +158,7 @@ export function ImageLibraryImagePreview({
 	if (!loadState.imageUrl) {
 		return (
 			<div className={classNames('image-library-preview-empty', className)}>
-				<span>No image data</span>
+				<FontAwesomeIcon icon={faImage} title="No image data" size="2xl" />
 			</div>
 		)
 	}

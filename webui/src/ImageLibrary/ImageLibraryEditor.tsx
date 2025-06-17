@@ -1,4 +1,4 @@
-import { CAlert, CButton, CFormInput, CSpinner } from '@coreui/react'
+import { CAlert, CButton } from '@coreui/react'
 import { faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useRef, useState } from 'react'
@@ -7,6 +7,7 @@ import { observer } from 'mobx-react-lite'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
+import { ImageNameEditor } from './ImageNameEditor.js'
 import CryptoJS from 'crypto-js'
 
 interface ImageLibraryEditorProps {
@@ -20,39 +21,11 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 }: ImageLibraryEditorProps) {
 	const socket = useContext(SocketContext)
 	const { imageLibrary } = useContext(RootAppStoreContext)
-	const [saving, setSaving] = useState(false)
 	const [uploading, setUploading] = useState(false)
-	const [imageName, setImageName] = useState('')
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	// Get image info from the store
 	const imageInfo = selectedImageId ? imageLibrary.getImage(selectedImageId) : null
-
-	// Update imageName when imageInfo changes
-	React.useEffect(() => {
-		if (imageInfo) {
-			setImageName(imageInfo.name)
-		} else {
-			setImageName('')
-		}
-	}, [imageInfo])
-
-	const handleSaveName = useCallback(() => {
-		if (!selectedImageId || !imageName.trim()) return
-
-		setSaving(true)
-		socket
-			.emitPromise('image-library:set-name', [selectedImageId, imageName.trim()])
-			.then(() => {
-				// The store will be updated automatically via the subscription
-			})
-			.catch((err) => {
-				console.error('Failed to save image name:', err)
-			})
-			.finally(() => {
-				setSaving(false)
-			})
-	}, [socket, selectedImageId, imageName])
 
 	const handleDelete = useCallback(() => {
 		if (!selectedImageId) return
@@ -181,21 +154,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			<div className="image-properties">
 				<div className="form-group mb-3">
 					<label className="form-label">Name</label>
-					<div className="d-flex gap-2">
-						<CFormInput
-							type="text"
-							value={imageName}
-							onChange={(e) => setImageName(e.target.value)}
-							disabled={saving}
-						/>
-						<CButton
-							color="primary"
-							onClick={handleSaveName}
-							disabled={saving || !imageName.trim() || imageName.trim() === imageInfo.name}
-						>
-							{saving ? <CSpinner size="sm" /> : 'Save'}
-						</CButton>
-					</div>
+					<ImageNameEditor imageId={selectedImageId} currentName={imageInfo.name} />
 				</div>
 
 				<div className="image-metadata">
