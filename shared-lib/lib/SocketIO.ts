@@ -57,6 +57,7 @@ import type { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/Ent
 import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 import type { ExpressionStreamResult, ExpressionStreamResultWithSubId } from './Expression/ExpressionResult.js'
 import type { ButtonGraphicsElementUsage } from './Model/StyleLayersModel.js'
+import type { ImageLibraryInfo } from './Model/ImageLibraryModel.js'
 
 export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	disconnect: () => never // Hack because type is missing
@@ -426,6 +427,18 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	cloud_regenerate_uuid: () => never
 	cloud_region_state_get: (id: string) => never
 	cloud_region_state_set: (id: string, newState: Partial<CloudRegionState>) => never
+
+	// Image library events
+	'image-library:subscribe': () => ImageLibraryInfo[]
+	'image-library:unsubscribe': () => void
+	'image-library:list': () => ImageLibraryInfo[]
+	'image-library:get-info': (imageId: string) => ImageLibraryInfo | null
+	'image-library:get-data': (imageId: string, type: 'original' | 'preview') => string | null
+	'image-library:delete': (imageId: string) => boolean
+	'image-library:upload-start': (filename: string, size: number) => string
+	'image-library:upload-chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
+	'image-library:upload-complete': (sessionId: string, checksum: string) => string
+	'image-library:upload-cancel': (sessionId: string) => void
 }
 
 type AllMultipartUploaderMethods = MultipartUploaderMethods<'modules:bundle-import', boolean> &
@@ -502,6 +515,14 @@ export interface BackendToClientEventsMap {
 		result: ExpressionStreamResult,
 		isVariableString: boolean
 	) => void
+
+	// Image library events
+	'image-library:upload-progress': (sessionId: string, percent: number) => void
+	'image-library:upload-complete': (sessionId: string, imageId: string) => void
+	'image-library:upload-cancelled': (sessionId: string) => void
+	'image-library:upload-error': (sessionId: string, error: string) => void
+	'image-library:added': (imageId: string, info: ImageLibraryInfo) => void
+	'image-library:removed': (imageId: string) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void
