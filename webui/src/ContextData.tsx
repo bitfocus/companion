@@ -31,6 +31,8 @@ import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
 import { useConnectionCollectionsSubscription } from './Hooks/useConnectionCollectionsSubscription.js'
 import { useTriggerCollectionsSubscription } from './Hooks/useTriggerCollectionsSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
+import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
+import { useImageLibrarySubscription } from './Hooks/useImageLibrarySubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -63,10 +65,11 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
 			variablesStore: new VariablesStore(),
-
 			triggersList: new TriggersListStore(),
 
 			userConfig: new UserConfigStore(),
+
+			imageLibrary: new ImageLibraryStore(),
 
 			moduleStoreRefreshProgress: observable.map(),
 
@@ -98,6 +101,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		socket,
 		rootStore.moduleStoreRefreshProgress
 	)
+	const imageLibraryReady = useImageLibrarySubscription(socket, rootStore.imageLibrary)
 
 	useEffect(() => {
 		if (socket) {
@@ -134,6 +138,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		triggerGroupsReady,
 		activeLearnRequestsReady,
 		moduleStoreProgressReady,
+		imageLibraryReady,
 	]
 	const completedSteps = steps.filter((s) => !!s)
 

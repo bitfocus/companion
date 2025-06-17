@@ -27,6 +27,7 @@ import { Route as TriggersRouteImport } from './routes/app/triggers.tsx'
 import { Route as ModulesRouteImport } from './routes/app/modules.tsx'
 import { Route as LogRouteImport } from './routes/app/log.tsx'
 import { Route as ImportExportRouteImport } from './routes/app/import-export.tsx'
+import { Route as ImageLibraryRouteImport } from './routes/app/image-library.tsx'
 import { Route as ConnectionsRouteImport } from './routes/app/connections.tsx'
 import { Route as CloudRouteImport } from './routes/app/cloud.tsx'
 import { Route as ButtonsRouteImport } from './routes/app/buttons.tsx'
@@ -162,6 +163,11 @@ const ImportExportRoute = ImportExportRouteImport.update({
   path: '/import-export',
   getParentRoute: () => appRoute,
 } as any)
+const ImageLibraryRoute = ImageLibraryRouteImport.update({
+  id: '/image-library',
+  path: '/image-library',
+  getParentRoute: () => appRoute,
+} as any)
 const ConnectionsRoute = ConnectionsRouteImport.update({
   id: '/connections',
   path: '/connections',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
   '/connections': typeof ConnectionsRoute
+  '/image-library': typeof ImageLibraryRoute
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
   '/modules': typeof ModulesRouteWithChildren
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
   '/connections': typeof ConnectionsRoute
+  '/image-library': typeof ImageLibraryRoute
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
   '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   '/_app/buttons': typeof ButtonsRouteWithChildren
   '/_app/cloud': typeof CloudRoute
   '/_app/connections': typeof ConnectionsRoute
+  '/_app/image-library': typeof ImageLibraryRoute
   '/_app/import-export': typeof ImportExportRoute
   '/_app/log': typeof LogRoute
   '/_app/modules': typeof ModulesRouteWithChildren
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/buttons'
     | '/cloud'
     | '/connections'
+    | '/image-library'
     | '/import-export'
     | '/log'
     | '/modules'
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/buttons'
     | '/cloud'
     | '/connections'
+    | '/image-library'
     | '/import-export'
     | '/log'
     | '/connection-debug/$connectionId'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/_app/buttons'
     | '/_app/cloud'
     | '/_app/connections'
+    | '/_app/image-library'
     | '/_app/import-export'
     | '/_app/log'
     | '/_app/modules'
@@ -677,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/import-export'
       fullPath: '/import-export'
       preLoaderRoute: typeof ImportExportRouteImport
+      parentRoute: typeof appRoute
+    }
+    '/_app/image-library': {
+      id: '/_app/image-library'
+      path: '/image-library'
+      fullPath: '/image-library'
+      preLoaderRoute: typeof ImageLibraryRouteImport
       parentRoute: typeof appRoute
     }
     '/_app/connections': {
@@ -879,6 +898,7 @@ interface appRouteChildren {
   ButtonsRoute: typeof ButtonsRouteWithChildren
   CloudRoute: typeof CloudRoute
   ConnectionsRoute: typeof ConnectionsRoute
+  ImageLibraryRoute: typeof ImageLibraryRoute
   ImportExportRoute: typeof ImportExportRoute
   LogRoute: typeof LogRoute
   ModulesRoute: typeof ModulesRouteWithChildren
@@ -904,6 +924,7 @@ const appRouteChildren: appRouteChildren = {
   ButtonsRoute: ButtonsRouteWithChildren,
   CloudRoute: CloudRoute,
   ConnectionsRoute: ConnectionsRoute,
+  ImageLibraryRoute: ImageLibraryRoute,
   ImportExportRoute: ImportExportRoute,
   LogRoute: LogRoute,
   ModulesRoute: ModulesRouteWithChildren,

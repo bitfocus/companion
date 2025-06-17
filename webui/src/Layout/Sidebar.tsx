@@ -40,6 +40,7 @@ import {
 	faInfo,
 	faStar,
 	faHatWizard,
+	faImages,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
@@ -173,6 +174,7 @@ export const MySidebar = memo(function MySidebar() {
 			<CSidebarNav>
 				<SidebarMenuItem name="Connections" icon={faPlug} path="/connections" />
 				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
+				<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
 				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
 					<SidebarMenuItem name="Configured" icon={null} path="/surfaces/configured" />
 					<SidebarMenuItem name="Discover" icon={null} path="/surfaces/discover" />
