@@ -150,16 +150,6 @@ export class ServiceEmberPlus extends ServiceBase {
 								this.#server.update(node, { value: value })
 							}
 						}
-						if (name == 'action_recorder_action_count') {
-							const node = this.#server.getElementByPath('0.4.2')
-							if (node) {
-								const count = this.#serviceApi.getConnectionVariableValue('internal', 'action_recorder_action_count')
-								// @ts-ignore
-								if (node.contents.value !== count) {
-									this.#server.update(node, { value: count })
-								}
-							}
-						}
 					}
 				}
 			})
@@ -525,18 +515,6 @@ export class ServiceEmberPlus extends ServiceBase {
 								undefined,
 								undefined,
 								EmberModel.ParameterAccess.Write
-							)
-						),
-						2: new EmberModel.NumberedTreeNodeImpl(
-							2,
-							new EmberModel.ParameterImpl(
-								EmberModel.ParameterType.Integer,
-								'Action Count',
-								'Number of Recorded Actions',
-								this.#serviceApi.getConnectionVariableValue('internal', 'action_recorder_action_count'),
-								undefined,
-								0,
-								EmberModel.ParameterAccess.Read
 							)
 						),
 					}),
