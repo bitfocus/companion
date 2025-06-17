@@ -3,10 +3,11 @@ The following controls are available via emberplus:
 - Companion Product Infomation<br>
   Path: `/Companion Tree/identity/<parameter name>`<br>
   Permissions: Read Only<br>
+  Parameters: `product`, `company`, `version`, `build`<br>
   Parameter Types: `string`<br>
 - Button Manipulation<br>
   Path: `/Companion Tree/pages/<page name>/<button number>/<parameter name>`<br>
-  Path: `/Companion Tree/location/<row number>/<coloumn number>/<parameter name>`<br>
+  Path: `/Companion Tree/location/<page number>/<row number>/<column number>/<parameter name>`<br>
   Permissions: Read/Write<br>
   Parameters: `State`, `Label`, `Text_Color`, `Background_Color`<br>
   Parameter Types: `boolean`, `string`<br>
