@@ -7,6 +7,7 @@ import { observer } from 'mobx-react-lite'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
+import CryptoJS from 'crypto-js'
 
 interface ImageLibraryEditorProps {
 	selectedImageId: string | null
@@ -102,19 +103,21 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				try {
 					// Convert file to data URL and upload
 					const dataUrl = await blobToDataURL(file)
+					const data = Uint8Array.from(dataUrl)
+
+					const hasher = CryptoJS.algo.SHA1.create()
+					hasher.update(CryptoJS.lib.WordArray.create(data))
+					const checksum = hasher.finalize().toString(CryptoJS.enc.Hex)
 
 					// Start upload
-					const sessionId = await socket.emitPromise('image-library:upload-start', [file.name, file.size])
+					const sessionId = await socket.emitPromise('image-library:upload-start', [file.name, data.length])
 
 					// Upload the file as a single chunk (for simplicity)
-					const response = await fetch(dataUrl)
-					const buffer = await response.arrayBuffer()
-					const data = new Uint8Array(buffer)
 
 					await socket.emitPromise('image-library:upload-chunk', [sessionId, 0, data])
 
 					// Complete upload
-					await socket.emitPromise('image-library:upload-complete', [sessionId, selectedImageId, 'dummy-checksum'])
+					await socket.emitPromise('image-library:upload-complete', [sessionId, selectedImageId, checksum])
 
 					// The store will be updated automatically via subscription
 				} catch (err) {

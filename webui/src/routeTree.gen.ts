@@ -36,6 +36,7 @@ import { Route as VariablesIndexRouteImport } from './routes/app/variables/index
 import { Route as TriggersIndexRouteImport } from './routes/app/triggers/index.tsx'
 import { Route as SettingsIndexRouteImport } from './routes/app/settings/index.tsx'
 import { Route as ModulesIndexRouteImport } from './routes/app/modules/index.tsx'
+import { Route as ImageLibraryIndexRouteImport } from './routes/app/image-library/index.tsx'
 import { Route as VariablesCustomRouteImport } from './routes/app/variables/custom.tsx'
 import { Route as VariablesLabelRouteImport } from './routes/app/variables/$label.tsx'
 import { Route as TriggersControlIdRouteImport } from './routes/app/triggers/$controlId.tsx'
@@ -49,6 +50,7 @@ import { Route as SettingsGeneralRouteImport } from './routes/app/settings/gener
 import { Route as SettingsButtonsRouteImport } from './routes/app/settings/buttons.tsx'
 import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/advanced.tsx'
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
+import { Route as ImageLibraryImageIdRouteImport } from './routes/app/image-library/$imageId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
@@ -208,6 +210,11 @@ const ModulesIndexRoute = ModulesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ModulesRoute,
 } as any)
+const ImageLibraryIndexRoute = ImageLibraryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ImageLibraryRoute,
+} as any)
 const VariablesCustomRoute = VariablesCustomRouteImport.update({
   id: '/variables/custom',
   path: '/variables/custom',
@@ -273,6 +280,11 @@ const ModulesModuleIdRoute = ModulesModuleIdRouteImport.update({
   path: '/$moduleId',
   getParentRoute: () => ModulesRoute,
 } as any)
+const ImageLibraryImageIdRoute = ImageLibraryImageIdRouteImport.update({
+  id: '/$imageId',
+  path: '/$imageId',
+  getParentRoute: () => ImageLibraryRoute,
+} as any)
 const ButtonsPageRoute = ButtonsPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -294,7 +306,7 @@ export interface FileRoutesByFullPath {
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
   '/connections': typeof ConnectionsRoute
-  '/image-library': typeof ImageLibraryRoute
+  '/image-library': typeof ImageLibraryRouteWithChildren
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
   '/modules': typeof ModulesRouteWithChildren
@@ -304,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
+  '/image-library/$imageId': typeof ImageLibraryImageIdRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
   '/settings/buttons': typeof SettingsButtonsRoute
@@ -317,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
+  '/image-library/': typeof ImageLibraryIndexRoute
   '/modules/': typeof ModulesIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/triggers/': typeof TriggersIndexRoute
@@ -337,7 +351,6 @@ export interface FileRoutesByTo {
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
   '/connections': typeof ConnectionsRoute
-  '/image-library': typeof ImageLibraryRoute
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
   '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
@@ -345,6 +358,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
+  '/image-library/$imageId': typeof ImageLibraryImageIdRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
   '/settings/buttons': typeof SettingsButtonsRoute
@@ -358,6 +372,7 @@ export interface FileRoutesByTo {
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
+  '/image-library': typeof ImageLibraryIndexRoute
   '/modules': typeof ModulesIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/triggers': typeof TriggersIndexRoute
@@ -380,7 +395,7 @@ export interface FileRoutesById {
   '/_app/buttons': typeof ButtonsRouteWithChildren
   '/_app/cloud': typeof CloudRoute
   '/_app/connections': typeof ConnectionsRoute
-  '/_app/image-library': typeof ImageLibraryRoute
+  '/_app/image-library': typeof ImageLibraryRouteWithChildren
   '/_app/import-export': typeof ImportExportRoute
   '/_app/log': typeof LogRoute
   '/_app/modules': typeof ModulesRouteWithChildren
@@ -390,6 +405,7 @@ export interface FileRoutesById {
   '/_app/': typeof IndexRoute
   '/emulator/': typeof EmulatorIndexRoute
   '/_app/buttons/$page': typeof ButtonsPageRoute
+  '/_app/image-library/$imageId': typeof ImageLibraryImageIdRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
   '/_app/settings/advanced': typeof SettingsAdvancedRoute
   '/_app/settings/buttons': typeof SettingsButtonsRoute
@@ -403,6 +419,7 @@ export interface FileRoutesById {
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
   '/_app/variables/$label': typeof VariablesLabelRoute
   '/_app/variables/custom': typeof VariablesCustomRoute
+  '/_app/image-library/': typeof ImageLibraryIndexRoute
   '/_app/modules/': typeof ModulesIndexRoute
   '/_app/settings/': typeof SettingsIndexRoute
   '/_app/triggers/': typeof TriggersIndexRoute
@@ -435,6 +452,7 @@ export interface FileRouteTypes {
     | '/'
     | '/emulator'
     | '/buttons/$page'
+    | '/image-library/$imageId'
     | '/modules/$moduleId'
     | '/settings/advanced'
     | '/settings/buttons'
@@ -448,6 +466,7 @@ export interface FileRouteTypes {
     | '/triggers/$controlId'
     | '/variables/$label'
     | '/variables/custom'
+    | '/image-library/'
     | '/modules/'
     | '/settings'
     | '/triggers/'
@@ -468,7 +487,6 @@ export interface FileRouteTypes {
     | '/buttons'
     | '/cloud'
     | '/connections'
-    | '/image-library'
     | '/import-export'
     | '/log'
     | '/connection-debug/$connectionId'
@@ -476,6 +494,7 @@ export interface FileRouteTypes {
     | '/'
     | '/emulator'
     | '/buttons/$page'
+    | '/image-library/$imageId'
     | '/modules/$moduleId'
     | '/settings/advanced'
     | '/settings/buttons'
@@ -489,6 +508,7 @@ export interface FileRouteTypes {
     | '/triggers/$controlId'
     | '/variables/$label'
     | '/variables/custom'
+    | '/image-library'
     | '/modules'
     | '/settings'
     | '/triggers'
@@ -520,6 +540,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/emulator/'
     | '/_app/buttons/$page'
+    | '/_app/image-library/$imageId'
     | '/_app/modules/$moduleId'
     | '/_app/settings/advanced'
     | '/_app/settings/buttons'
@@ -533,6 +554,7 @@ export interface FileRouteTypes {
     | '/_app/triggers/$controlId'
     | '/_app/variables/$label'
     | '/_app/variables/custom'
+    | '/_app/image-library/'
     | '/_app/modules/'
     | '/_app/settings/'
     | '/_app/triggers/'
@@ -754,6 +776,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModulesIndexRouteImport
       parentRoute: typeof ModulesRoute
     }
+    '/_app/image-library/': {
+      id: '/_app/image-library/'
+      path: '/'
+      fullPath: '/image-library/'
+      preLoaderRoute: typeof ImageLibraryIndexRouteImport
+      parentRoute: typeof ImageLibraryRoute
+    }
     '/_app/variables/custom': {
       id: '/_app/variables/custom'
       path: '/variables/custom'
@@ -845,6 +874,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModulesModuleIdRouteImport
       parentRoute: typeof ModulesRoute
     }
+    '/_app/image-library/$imageId': {
+      id: '/_app/image-library/$imageId'
+      path: '/$imageId'
+      fullPath: '/image-library/$imageId'
+      preLoaderRoute: typeof ImageLibraryImageIdRouteImport
+      parentRoute: typeof ImageLibraryRoute
+    }
     '/_app/buttons/$page': {
       id: '/_app/buttons/$page'
       path: '/$page'
@@ -865,6 +901,20 @@ const ButtonsRouteChildren: ButtonsRouteChildren = {
 
 const ButtonsRouteWithChildren =
   ButtonsRoute._addFileChildren(ButtonsRouteChildren)
+
+interface ImageLibraryRouteChildren {
+  ImageLibraryImageIdRoute: typeof ImageLibraryImageIdRoute
+  ImageLibraryIndexRoute: typeof ImageLibraryIndexRoute
+}
+
+const ImageLibraryRouteChildren: ImageLibraryRouteChildren = {
+  ImageLibraryImageIdRoute: ImageLibraryImageIdRoute,
+  ImageLibraryIndexRoute: ImageLibraryIndexRoute,
+}
+
+const ImageLibraryRouteWithChildren = ImageLibraryRoute._addFileChildren(
+  ImageLibraryRouteChildren,
+)
 
 interface ModulesRouteChildren {
   ModulesModuleIdRoute: typeof ModulesModuleIdRoute
@@ -898,7 +948,7 @@ interface appRouteChildren {
   ButtonsRoute: typeof ButtonsRouteWithChildren
   CloudRoute: typeof CloudRoute
   ConnectionsRoute: typeof ConnectionsRoute
-  ImageLibraryRoute: typeof ImageLibraryRoute
+  ImageLibraryRoute: typeof ImageLibraryRouteWithChildren
   ImportExportRoute: typeof ImportExportRoute
   LogRoute: typeof LogRoute
   ModulesRoute: typeof ModulesRouteWithChildren
@@ -924,7 +974,7 @@ const appRouteChildren: appRouteChildren = {
   ButtonsRoute: ButtonsRouteWithChildren,
   CloudRoute: CloudRoute,
   ConnectionsRoute: ConnectionsRoute,
-  ImageLibraryRoute: ImageLibraryRoute,
+  ImageLibraryRoute: ImageLibraryRouteWithChildren,
   ImportExportRoute: ImportExportRoute,
   LogRoute: LogRoute,
   ModulesRoute: ModulesRouteWithChildren,

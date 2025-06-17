@@ -1,24 +1,32 @@
 import { CCol, CRow } from '@coreui/react'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
 import { ImageLibraryGrid } from './ImageLibraryGrid'
-import { ImageLibraryEditor } from './ImageLibraryEditor'
 import { observer } from 'mobx-react-lite'
 import { MyErrorBoundary } from '~/util.js'
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 
 export const ImageLibraryPage = observer(function ImageLibraryPage() {
-	const [selectedImageId, setSelectedImageId] = useState<string | null>(null)
+	const matchRoute = useMatchRoute()
+	const routeMatch = matchRoute({ to: '/image-library/$imageId' })
 
-	const handleSelectImage = useCallback((imageId: string | null) => {
-		setSelectedImageId(imageId)
-	}, [])
+	const navigate = useNavigate({ from: '/image-library' })
 
-	const handleDeleteImage = useCallback(
-		(imageId: string) => {
-			if (selectedImageId === imageId) {
-				setSelectedImageId(null)
+	const selectedImageId = routeMatch ? routeMatch.imageId : null
+
+	const handleSelectImage = useCallback(
+		(imageId: string | null) => {
+			if (imageId === null) {
+				void navigate({ to: '/image-library' })
+			} else {
+				void navigate({
+					to: `/image-library/$imageId`,
+					params: {
+						imageId: imageId,
+					},
+				})
 			}
 		},
-		[selectedImageId]
+		[navigate]
 	)
 
 	return (
@@ -32,7 +40,7 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
 					<MyErrorBoundary>
-						<ImageLibraryEditor selectedImageId={selectedImageId} onDeleteImage={handleDeleteImage} />
+						<Outlet />
 					</MyErrorBoundary>
 				</div>
 			</CCol>
