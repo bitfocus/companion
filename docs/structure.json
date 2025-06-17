@@ -261,6 +261,10 @@
 				"file": "5_remote_control/rosstalk_control.md"
 			},
 			{
+				"label": "EmberPlus Control",
+				"file": "5_remote_control/emberplus_control.md"
+			},
+			{
 				"label": "Satellite Protocol",
 				"file": "5_remote_control/satellite.md"
 			}
