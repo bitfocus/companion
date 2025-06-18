@@ -1,5 +1,5 @@
 import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
-import { faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faTrashAlt, faUpload, faEdit } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import { SocketContext } from '~/util.js'
@@ -8,22 +8,25 @@ import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 import { ImageNameEditor } from './ImageNameEditor.js'
-import { ImageIdEditor } from './ImageIdEditor.js'
+import { ImageIdEditModal } from './ImageIdEditModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import CryptoJS from 'crypto-js'
 
 interface ImageLibraryEditorProps {
 	selectedImageId: string | null
 	onDeleteImage: (imageId: string) => void
+	onImageIdChanged?: (oldId: string, newId: string) => void
 }
 
 export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	selectedImageId,
 	onDeleteImage,
+	onImageIdChanged,
 }: ImageLibraryEditorProps) {
 	const socket = useContext(SocketContext)
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
+	const [showIdEditModal, setShowIdEditModal] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
@@ -116,6 +119,16 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		[socket, selectedImageId]
 	)
 
+	const handleImageIdChanged = useCallback(
+		(oldId: string, newId: string) => {
+			setShowIdEditModal(false)
+			if (onImageIdChanged) {
+				onImageIdChanged(oldId, newId)
+			}
+		},
+		[onImageIdChanged]
+	)
+
 	const formatDate = (timestamp: number) => {
 		return new Date(timestamp).toLocaleString()
 	}
@@ -141,6 +154,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	return (
 		<div className="image-library-editor">
 			<GenericConfirmModal ref={confirmModalRef} />
+
+			<ImageIdEditModal
+				visible={showIdEditModal}
+				onClose={() => setShowIdEditModal(false)}
+				imageId={selectedImageId}
+				currentId={imageInfo.id}
+				onIdChanged={handleImageIdChanged}
+			/>
 
 			<div className="mb-3">
 				<div className="d-flex flex-wrap gap-2">
@@ -171,8 +192,11 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				<CFormLabel htmlFor="inputId" className="col-sm-4 col-form-label col-form-label-sm">
 					Id
 				</CFormLabel>
-				<CCol sm={8}>
-					<ImageIdEditor imageId={selectedImageId} currentId={imageInfo.id} />
+				<CCol sm={8} className="d-flex align-items-center justify-content-between">
+					<span className="font-monospace">{imageInfo.id}</span>
+					<CButton color="secondary" size="sm" onClick={() => setShowIdEditModal(true)} title="Edit Image ID">
+						<FontAwesomeIcon icon={faEdit} />
+					</CButton>
 				</CCol>
 			</CForm>
 			<CForm className="row mb-3">

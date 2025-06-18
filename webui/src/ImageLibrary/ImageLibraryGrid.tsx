@@ -68,7 +68,10 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 			<div className="image-library-grid">
 				<div className="image-library-header">
 					<h4>Image Library</h4>
-					<p>Manage your image library. Click on an image to edit its properties.</p>
+					<p>
+						Here you can store images to be reused in your buttons. They get exposed as variables, so that they can be
+						used in buttons.
+					</p>
 
 					<div className="image-library-controls">
 						<CFormInput

@@ -27,6 +27,12 @@ const RouteComponent = observer(function RouteComponent() {
 		}
 	}
 
+	const handleImageIdChanged = (oldId: string, newId: string) => {
+		if (oldId === imageId) {
+			void navigate({ to: `/image-library/${newId}` })
+		}
+	}
+
 	return (
 		<>
 			<CNav variant="tabs" role="tablist">
@@ -39,7 +45,12 @@ const RouteComponent = observer(function RouteComponent() {
 			<CTabContent>
 				<CTabPane data-tab="edit" visible>
 					<MyErrorBoundary>
-						<ImageLibraryEditor key={imageId} selectedImageId={imageId} onDeleteImage={handleDeleteImage} />
+						<ImageLibraryEditor
+							key={imageId}
+							selectedImageId={imageId}
+							onDeleteImage={handleDeleteImage}
+							onImageIdChanged={handleImageIdChanged}
+						/>
 					</MyErrorBoundary>
 				</CTabPane>
 			</CTabContent>
