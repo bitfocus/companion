@@ -59,13 +59,12 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		// Get image data and download
 		socket
 			.emitPromise('image-library:get-data', [selectedImageId, 'original'])
-			.then((response) => {
-				const imageData = response as { image: string; checksum: string } | null
+			.then((imageData) => {
 				if (imageData?.image) {
 					// Create download link
 					const link = document.createElement('a')
 					link.href = imageData.image
-					link.download = `${imageInfo.name}.${imageInfo.mimeType.split('/')[1] || 'jpg'}`
+					link.download = `${imageInfo.name}.${imageInfo.mimeType.split('/')[1] || 'png'}`
 					document.body.appendChild(link)
 					link.click()
 					document.body.removeChild(link)
@@ -78,9 +77,11 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 	const handleReplaceImage = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
-			if (!event.target.files?.[0] || !selectedImageId) return
+			const file = event.currentTarget.files?.[0]
+			event.currentTarget.value = null as any
 
-			const file = event.target.files[0]
+			if (!file || !selectedImageId) return
+
 			setUploading(true)
 
 			const uploadFile = async () => {
@@ -96,9 +97,17 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					// Start upload
 					const sessionId = await socket.emitPromise('image-library:upload-start', [file.name, data.length])
 
-					// Upload the file as a single chunk (for simplicity)
+					// Upload the file in 1MB chunks
+					const CHUNK_SIZE = 1024 * 1024 // 1MB
+					const totalChunks = Math.ceil(data.length / CHUNK_SIZE)
 
-					await socket.emitPromise('image-library:upload-chunk', [sessionId, 0, data])
+					for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+						const start = chunkIndex * CHUNK_SIZE
+						const end = Math.min(start + CHUNK_SIZE, data.length)
+						const chunk = data.slice(start, end)
+
+						await socket.emitPromise('image-library:upload-chunk', [sessionId, chunkIndex, chunk])
+					}
 
 					// Complete upload
 					await socket.emitPromise('image-library:upload-complete', [sessionId, selectedImageId, checksum])
@@ -108,9 +117,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					console.error('Failed to replace image:', err)
 				} finally {
 					setUploading(false)
-					if (event.target) {
-						event.target.value = ''
-					}
 				}
 			}
 
