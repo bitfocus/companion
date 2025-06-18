@@ -52,7 +52,6 @@ const contourShuttleProV1Info: ShuttleModelInfo = {
 	totalCols: 5,
 	totalRows: 4,
 
-	// TODO(Someone with hardware): This mapping is guesswork and hasn't been tested
 	jog: [1, 2],
 	shuttle: [2, 2],
 	buttons: [
@@ -202,13 +201,13 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 				return
 			}
 
-			this.emit('rotate', ...xy, delta == 1)
-
 			console.log(`Jog position has changed`, delta)
 			this.emit('setVariable', 'jog', delta)
 			setTimeout(() => {
 				this.emit('setVariable', 'jog', 0)
 			}, 20)
+
+			this.emit('rotate', ...xy, delta == 1)
 		})
 
 		let lastShuttle = 0
@@ -218,10 +217,10 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 				return
 			}
 
+			this.emit('setVariable', 'shuttle', shuttle)
+
 			this.emit('rotate', ...xy, lastShuttle < shuttle)
 			lastShuttle = shuttle
-
-			this.emit('setVariable', 'shuttle', shuttle)
 		})
 
 		this.contourShuttle.on('disconnected', () => {

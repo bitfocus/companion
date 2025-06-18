@@ -33,7 +33,7 @@ export function EntityDropPlaceholderZone({
 	entityCount,
 	entityTypeLabel,
 	moveCard,
-}: EntityDropPlaceholderZoneProps) {
+}: EntityDropPlaceholderZoneProps): React.JSX.Element | null {
 	const [isDragging, drop] = useDrop<EntityListDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {

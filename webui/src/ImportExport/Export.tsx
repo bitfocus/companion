@@ -2,18 +2,18 @@ import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useStat
 import { CButton, CForm, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { PreventDefaultHandler } from '~/util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
-import { MenuPortalContext } from '~/Components/DropdownInputField.js'
+import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { TextInputField } from '~/Components/TextInputField.js'
+import { observer } from 'mobx-react-lite'
 
-interface ExportWizardModalProps {}
 export interface ExportWizardModalRef {
 	show(): void
 }
 
-export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardModalProps>(
-	function ExportWizardModal(_props, ref) {
+export const ExportWizardModal = observer(
+	forwardRef<ExportWizardModalRef>(function ExportWizardModal(_props, ref) {
 		const { userConfig } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
@@ -64,6 +64,8 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 			}))
 		}
 
+		const defaultExportFilename = userConfig.properties?.default_export_filename ?? ''
+
 		useImperativeHandle(
 			ref,
 			() => ({
@@ -76,13 +78,13 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 						customVariables: true,
 						// userconfig: true,
 						format: ExportFormatDefault,
-						filename: userConfig.properties?.default_export_filename,
+						filename: defaultExportFilename,
 					})
 
 					setShow(true)
 				},
 			}),
-			[]
+			[defaultExportFilename]
 		)
 
 		const canExport = Object.values(config).find((v) => !!v)
@@ -114,7 +116,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 				</MenuPortalContext.Provider>
 			</CModal>
 		)
-	}
+	})
 )
 
 interface ExportOptionsStepProps {

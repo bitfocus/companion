@@ -37,11 +37,20 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 		}
 		return newObj
 	} else if (obj.type == 'page') {
-		const newObj: ExportPageModelv6 = { ...cloneDeep(obj), version: 9 }
+		const newObj: ExportPageModelv6 = {
+			connectionCollections: undefined,
+			...cloneDeep(obj),
+			version: 9,
+		}
 		convertPageControls(newObj.page)
 		return newObj
 	} else if (obj.type == 'trigger_list') {
-		const newObj: ExportTriggersListv6 = { ...cloneDeep(obj), version: 9 }
+		const newObj: ExportTriggersListv6 = {
+			triggerCollections: undefined,
+			connectionCollections: undefined,
+			...cloneDeep(obj),
+			version: 9,
+		}
 		return newObj
 	} else {
 		// No change

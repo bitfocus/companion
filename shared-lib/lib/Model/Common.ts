@@ -1,4 +1,4 @@
-import type { ExtendedInputField, InternalActionInputField } from './Options.js'
+import type { ConnectionInputField, InternalActionInputField } from './Options.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 export interface ObjectsDiff<T> {
@@ -79,6 +79,7 @@ export interface WrappedImage {
 }
 
 export interface ClientEditConnectionConfig {
-	fields: Array<ExtendedInputField & { width: number }>
+	fields: Array<ConnectionInputField & { width: number }>
 	config: unknown
+	hasSecrets: Record<string, boolean>
 }

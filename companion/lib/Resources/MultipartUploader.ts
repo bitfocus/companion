@@ -22,7 +22,7 @@ export class MultipartUploader {
 			id: sessionId,
 			name,
 			size,
-			data: new Uint8Array(size),
+			data: Buffer.alloc(size),
 
 			filledBytes: 0,
 			lastChunkTime: Date.now(),
@@ -57,7 +57,7 @@ export class MultipartUploader {
 		return Math.min(1, this.#session.filledBytes / this.#session.size)
 	}
 
-	completeSession(sessionId: string, expectedChecksum: string): Uint8Array | null {
+	completeSession(sessionId: string, expectedChecksum: string): Buffer | null {
 		if (!this.#session || this.#session.id !== sessionId) return null
 
 		const session = this.#session
@@ -86,7 +86,7 @@ interface MultipartUploaderSession {
 	readonly id: string
 	readonly name: string
 	readonly size: number
-	readonly data: Uint8Array
+	readonly data: Buffer
 
 	filledBytes: number
 	lastChunkTime: number

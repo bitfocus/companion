@@ -6,7 +6,7 @@ import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
 import { useOptionsAndIsVisibleFns } from '~/Hooks/useOptionsAndIsVisible.js'
-import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
+import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
@@ -19,6 +19,9 @@ import { useConnectionCurrentConfig } from './useConnectionCurrentConfig.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 import { useForm } from '@tanstack/react-form'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { ConnectionSecretField } from './ConnectionSecretField.js'
+import type { CompanionOptionValues } from '@companion-module/base'
+import { validateInputValue } from '~/Helpers/validateInputValue.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -80,20 +83,29 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 	const [saveError, setSaveError] = useState<string | null>(null)
 
+	// Update the form with the connection config
+	const query = useConnectionCurrentConfig(connectionId)
+
+	const secretValues: Record<string, { value: any; hasSavedValue: boolean } | undefined> = {}
+	for (const fieldInfo of query.data?.fields ?? []) {
+		if (fieldInfo.type.startsWith('secret')) {
+			secretValues[fieldInfo.id] = {
+				value: undefined, // clear secrets, so that everything reloads
+				hasSavedValue: !!query.data?.hasSecrets?.[fieldInfo.id],
+			}
+		}
+	}
+
 	const form = useForm({
 		defaultValues: {
 			label: connectionInfo.label,
 			versionId: connectionInfo.moduleVersionId,
 			updatePolicy: connectionInfo.updatePolicy,
-			config: {} as Record<string, any>,
+			config: (query.data?.config ?? {}) as CompanionOptionValues,
+			secrets: secretValues,
 		},
 		onSubmit: async ({ value }) => {
 			setSaveError(null)
-
-			if (hasInvalidFields) {
-				setSaveError('Please correct any invalid fields before saving')
-				return
-			}
 
 			if (!connectionShouldBeRunning) {
 				await socket
@@ -123,11 +135,19 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						setSaveError(`Failed to save connection config: ${e}`)
 					})
 			} else if (query.isSuccess) {
+				const saveSecrets: Record<string, any> = {}
+				for (const [id, obj] of Object.entries(value.secrets)) {
+					if (obj?.value !== undefined) {
+						saveSecrets[id] = obj.value
+					}
+				}
+
 				await socket
 					.emitPromise('connections:set-label-and-config', [
 						connectionId,
 						value.label,
 						value.config,
+						saveSecrets,
 						value.updatePolicy,
 					])
 					.then((err) => {
@@ -153,21 +173,21 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		},
 	})
 
-	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
-
 	// Update the form with the connection config
-	const query = useConnectionCurrentConfig(connectionId)
-	useEffect(() => {
-		form.setFieldValue('config', query.data?.config ?? {})
+	// useEffect(() => {
+	// 	form.setFieldValue('config', query.data?.config ?? {})
 
-		const validFields: Record<string, boolean> = {}
-		for (const field of query.data?.fields ?? []) {
-			// Real validation status gets generated when the editor components first mount
-			validFields[field.id] = true
-		}
-
-		setValidFields(validFields)
-	}, [form, query.data, query.isLoading])
+	// 	const secretValues: typeof form.state.values.secrets = {}
+	// 	for (const fieldInfo of query.data?.fields ?? []) {
+	// 		if (fieldInfo.type.startsWith('secret')) {
+	// 			secretValues[fieldInfo.id] = {
+	// 				value: undefined, // clear secrets, so that everything reloads
+	// 				hasSavedValue: !!query.data?.hasSecrets?.[fieldInfo.id],
+	// 			}
+	// 		}
+	// 	}
+	// 	form.setFieldValue('secrets', secretValues)
+	// }, [form, query.data, query.isLoading])
 
 	// Update some form values when changed elsewhere
 	useEffect(() => form.setFieldValue('label', connectionInfo.label), [form, connectionInfo.label])
@@ -177,23 +197,9 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	)
 	useEffect(() => form.setFieldValue('updatePolicy', connectionInfo.updatePolicy), [form, connectionInfo.updatePolicy])
 
-	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ExtendedInputField & { width: number }>(
+	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ConnectionInputField & { width: number }>(
 		query.data?.fields
 	)
-
-	// Future: This checking validity flow is horrible, and should be reworked to be more tanstack-form native
-	const setValid = useCallback(
-		(key: string, isValid: boolean) => {
-			console.log('set valid', key, isValid)
-
-			setValidFields((oldValid) => ({
-				...oldValid,
-				[key]: isValid,
-			}))
-		},
-		[setValidFields]
-	)
-	const hasInvalidFields = Object.values(validFields ?? {}).some((v) => v === false)
 
 	return (
 		<div>
@@ -204,7 +210,9 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
-					form.handleSubmit()
+					form.handleSubmit().catch((err) => {
+						console.error('Error submitting form', err)
+					})
 				}}
 			>
 				{saveError && (
@@ -321,57 +329,104 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 				{connectionShouldBeRunning && query.isSuccess && (
 					<>
-						{configOptions.map((fieldInfo) => (
-							<form.Subscribe
-								selector={(state) => {
-									const fn = isVisibleFns[fieldInfo.id]
-									if (!fn) return true
-									return !!fn(state.values.config)
-								}}
-							>
-								{(isVisible) => (
-									<form.Field
-										key={fieldInfo.id}
-										name={`config.${fieldInfo.id}`}
-										children={(field) => (
-											<CCol
-												className={`fieldtype-${fieldInfo.type}`}
-												sm={fieldInfo.width}
-												style={{ display: !isVisible ? 'none' : undefined }}
-											>
-												<ConnectionEditField
-													label={
-														<>
-															{fieldInfo.label}
-															{fieldInfo.tooltip && (
-																<FontAwesomeIcon
-																	style={{ marginLeft: '5px' }}
-																	icon={faQuestionCircle}
-																	title={fieldInfo.tooltip}
-																/>
-															)}
-														</>
-													}
-													definition={fieldInfo}
-													value={field.state.value}
-													// valid={validFields[field.id] ?? false}
-													setValue={field.handleChange}
-													setValid={setValid}
-													connectionId={connectionId}
-												/>
-											</CCol>
-										)}
-									/>
-								)}
-							</form.Subscribe>
-						))}
+						{configOptions.map((fieldInfo) => {
+							const isSecret = fieldInfo.type.startsWith('secret')
+
+							return (
+								<form.Subscribe
+									selector={(state) => {
+										const fn = isVisibleFns[fieldInfo.id]
+										const isVisible = !fn || !!fn(state.values.config)
+
+										return { isVisible }
+									}}
+								>
+									{({ isVisible }) => {
+										if (isSecret) {
+											return (
+												<form.Field
+													key={fieldInfo.id}
+													name={`secrets.${fieldInfo.id}`}
+													validators={{
+														onChange: ({ value, fieldApi }) => {
+															if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
+																// An existing secret value is always valid
+																return undefined
+															}
+															return validateInputValue(fieldInfo, value?.value)
+														},
+														onMount: ({ value, fieldApi }) => {
+															if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
+																// An existing secret value is always valid
+																return undefined
+															}
+															return validateInputValue(fieldInfo, value?.value)
+														},
+													}}
+												>
+													{(field) => (
+														<CCol
+															className={`fieldtype-${fieldInfo.type}`}
+															sm={fieldInfo.width}
+															style={{ display: !isVisible ? 'none' : undefined }}
+														>
+															<ConnectionSecretField
+																label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
+																definition={fieldInfo}
+																hasSavedValue={!!field.state.value?.hasSavedValue}
+																editValue={field.state.value?.value}
+																isDirty={field.state.meta.isDirty}
+																setValue={(value) => field.handleChange((v) => ({ hasSavedValue: false, ...v, value }))}
+																clearValue={() => form.resetField(`secrets.${fieldInfo.id}`)}
+															/>
+														</CCol>
+													)}
+												</form.Field>
+											)
+										} else {
+											return (
+												<form.Field
+													key={fieldInfo.id}
+													name={`config.${fieldInfo.id}`}
+													validators={{
+														onChange: ({ value }) => validateInputValue(fieldInfo, value),
+														onMount: ({ value }) => validateInputValue(fieldInfo, value),
+													}}
+												>
+													{(field) => (
+														<CCol
+															className={`fieldtype-${fieldInfo.type}`}
+															sm={fieldInfo.width}
+															style={{ display: !isVisible ? 'none' : undefined }}
+														>
+															<ConnectionEditField
+																label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
+																definition={fieldInfo}
+																value={field.state.value}
+																setValue={field.handleChange}
+																connectionId={connectionId}
+															/>
+														</CCol>
+													)}
+												</form.Field>
+											)
+										}
+									}}
+								</form.Subscribe>
+							)
+						})}
 					</>
 				)}
+
 				{connectionShouldBeRunning && !query.isSuccess && (
 					<LoadingRetryOrError
 						error={!query.isRefetching ? query.error?.message : undefined}
 						dataReady={false}
-						doRetry={query.refetch}
+						doRetry={() => {
+							query.refetch().catch((err) => {
+								console.error('Error refetching', err)
+							})
+						}}
 					/>
 				)}
 
@@ -379,12 +434,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					selector={(state) => [state.canSubmit, state.isSubmitting]}
 					children={([canSubmit, isSubmitting]) => (
 						<CCol sm={12}>
-							<CButton
-								color="success"
-								className="me-md-1"
-								disabled={!canSubmit || isSubmitting || hasInvalidFields}
-								type="submit"
-							>
+							<CButton color="success" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
 								Save {isSubmitting ? '...' : ''}
 							</CButton>
 
@@ -398,3 +448,14 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		</div>
 	)
 })
+
+function ConnectionFieldLabel({ fieldInfo }: { fieldInfo: ConnectionInputField }) {
+	return (
+		<>
+			{fieldInfo.label}
+			{fieldInfo.tooltip && (
+				<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={fieldInfo.tooltip} />
+			)}
+		</>
+	)
+}

@@ -12,9 +12,22 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 
 		// Note: Storing in the database like this is not optimal, but it is much simpler
 		this.data = Object.values(this.#dbTable.all()).sort((a, b) => a.sortOrder - b.sortOrder)
+
 		for (const data of this.data) {
-			data.children = data.children || []
-			data.children.sort((a, b) => a.sortOrder - b.sortOrder)
+			this.#sortCollectionRecursively(data)
+		}
+	}
+
+	/**
+	 * Recursively ensure children arrays exist and are sorted at all levels
+	 */
+	#sortCollectionRecursively(collection: CollectionBase<TCollectionMetadata>): void {
+		collection.children = collection.children || []
+		collection.children.sort((a, b) => a.sortOrder - b.sortOrder)
+
+		// Recursively sort children's children
+		for (const child of collection.children) {
+			this.#sortCollectionRecursively(child)
 		}
 	}
 
@@ -31,6 +44,32 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		this.removeUnknownCollectionReferences()
 	}
 
+	/**
+	 * Replace all collections with imported collections
+	 */
+	replaceCollections(collections: CollectionBase<TCollectionMetadata>[]): void {
+		// Clear existing collections
+		this.#dbTable.clear()
+		this.data = []
+
+		// Import new collections
+		for (const collection of collections) {
+			this.#sortCollectionRecursively(collection)
+			this.data.push(collection)
+			this.#dbTable.set(collection.id, collection)
+		}
+
+		// Sort root level collections
+		this.data.sort((a, b) => a.sortOrder - b.sortOrder)
+
+		this.emitUpdate(this.data)
+
+		this.removeUnknownCollectionReferences()
+	}
+
+	/**
+	 * Some of the collections have been modified in some way, emit an update to interested parties (eg the UI)
+	 */
 	protected abstract emitUpdate(rows: CollectionBase<TCollectionMetadata>[]): void
 
 	/**
@@ -88,8 +127,11 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		return !!this.findCollectionAndParent(collectionId)
 	}
 
-	protected get collectionData(): CollectionBase<TCollectionMetadata>[] {
-		return this.data
+	/**
+	 * Get a reference to the collections data
+	 */
+	get collectionData(): CollectionBase<TCollectionMetadata>[] {
+		return [...this.data] // Return a shallow copy of the data
 	}
 
 	protected collectionCreate = (label: string, metaData: TCollectionMetadata) => {

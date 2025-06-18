@@ -108,6 +108,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		)
 
 		// Reset the position when the element changes
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 		useEffect(() => resetScrollPosition(), [scrollerRef])
 
 		// Expose reload to the parent
@@ -286,7 +287,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 	return <ButtonGridIcon {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
 })
 
-interface ButtonGridIconProps extends ButtonGridIconBaseProps {}
+type ButtonGridIconProps = ButtonGridIconBaseProps
 
 export const ButtonGridIcon = memo(function ButtonGridIcon({ ...props }: ButtonGridIconProps) {
 	const { image, isUsed } = useButtonRenderCache({

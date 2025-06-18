@@ -41,7 +41,7 @@ export function usePagesInfoSubscription(
 				console.error('Failed to cleanup web-buttons:', e)
 			})
 		}
-	}, [retryToken, socket, store])
+	}, [retryToken, socket, store, setLoadError])
 
 	return ready
 }

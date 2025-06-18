@@ -16,7 +16,7 @@ import { nanoid } from 'nanoid'
 import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ClientTriggerData, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ClientTriggerData, TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
@@ -1109,6 +1109,14 @@ export class ControlsController {
 
 	discardTriggerCollections(): void {
 		this.#triggerCollections.discardAllCollections()
+	}
+
+	exportTriggerCollections(): TriggerCollection[] {
+		return this.#triggerCollections.collectionData
+	}
+
+	replaceTriggerCollections(collections: TriggerCollection[]): void {
+		this.#triggerCollections.replaceCollections(collections)
 	}
 
 	/**

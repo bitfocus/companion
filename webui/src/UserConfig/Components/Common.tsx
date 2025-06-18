@@ -16,7 +16,7 @@ interface ResetButtonProps {
 	field: keyof UserConfigModel
 }
 
-export function ResetButton({ userConfig, field }: ResetButtonProps) {
+export function ResetButton({ userConfig, field }: ResetButtonProps): React.JSX.Element {
 	return (
 		<CButton onClick={() => userConfig.resetValue(field)} title="Reset to default">
 			<FontAwesomeIcon icon={faUndo} />

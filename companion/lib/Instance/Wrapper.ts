@@ -70,7 +70,12 @@ export interface InstanceModuleWrapperDependencies {
 	readonly instanceStatus: InstanceStatus
 	readonly sharedUdpManager: InstanceSharedUdpManager
 
-	readonly setConnectionConfig: (connectionId: string, config: unknown) => void
+	readonly setConnectionConfig: (
+		connectionId: string,
+		config: unknown | null,
+		secrets: unknown | null,
+		newUpgradeIndex: number | null
+	) => void
 }
 
 export class SocketEventsHandler {
@@ -173,6 +178,7 @@ export class SocketEventsHandler {
 				label: config.label,
 				isFirstInit: config.isFirstInit,
 				config: config.config,
+				secrets: config.secrets,
 
 				lastUpgradeIndex: config.lastUpgradeIndex,
 
@@ -188,23 +194,24 @@ export class SocketEventsHandler {
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
 		config.lastUpgradeIndex = msg.newUpgradeIndex
-		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig)
+		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 	}
 
 	/**
 	 * Forward an updated config object to the instance class
 	 */
-	async updateConfigAndLabel(config: unknown, label: string): Promise<void> {
-		this.logger = LogController.createLogger(`Instance/Wrapper/${label}`)
-		this.#label = label
+	async updateConfigAndLabel(config: ConnectionConfig): Promise<void> {
+		this.logger = LogController.createLogger(`Instance/Wrapper/${config.label}`)
+		this.#label = config.label
 
 		if (this.#expectsLabelUpdates) {
 			await this.#ipcWrapper.sendWithCb('updateConfigAndLabel', {
-				config,
-				label,
+				config: config.config,
+				secrets: config.secrets,
+				label: config.label,
 			})
 		} else {
-			await this.#ipcWrapper.sendWithCb('updateConfig', config)
+			await this.#ipcWrapper.sendWithCb('updateConfig', config.config)
 		}
 	}
 
@@ -769,11 +776,11 @@ export class SocketEventsHandler {
 	}
 
 	/**
-	 * Handle saving an updated config object from the child process
+	 * Handle saving an updated config and/or secrets object from the child process
 	 */
 	async #handleSaveConfig(msg: SaveConfigMessage): Promise<void> {
-		// Save config, but do not automatically call this module's updateConfig again
-		this.#deps.setConnectionConfig(this.connectionId, msg.config)
+		// Save config and secrets, but do not automatically call this module's updateConfig again
+		this.#deps.setConnectionConfig(this.connectionId, msg.config || null, msg.secrets || null, null)
 	}
 
 	/**

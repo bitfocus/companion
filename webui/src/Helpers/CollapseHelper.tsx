@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { observable, runInAction } from 'mobx'
 import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import { useDeepCompareEffect } from 'use-deep-compare'
@@ -56,7 +57,7 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 						if (typeof value === 'boolean') this.#ids.set(key, value)
 					}
 				}
-			} catch (e) {
+			} catch (_e) {
 				// Ignore
 			}
 		})
@@ -147,7 +148,19 @@ export function usePanelCollapseHelperContext(): PanelCollapseHelper {
 	if (!context) throw new Error('PanelCollapseHelperContext not found')
 	return context
 }
-export function usePanelCollapseHelperContextForPanel(ownerId: string | null, panelId: string) {
+
+export interface PanelCollapseHelperForPanel {
+	// doCollapse: () => void
+	// doExpand: () => void
+	setCollapsed: (collapsed: boolean) => void
+	toggleCollapsed: () => void
+	isCollapsed: boolean
+}
+
+export function usePanelCollapseHelperContextForPanel(
+	ownerId: string | null,
+	panelId: string
+): PanelCollapseHelperForPanel {
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
 	return {

@@ -35,7 +35,7 @@ export function ButtonEditorTabs({
 	rotaryActions,
 	extraTabs,
 	children,
-}: ButtonEditorTabsProps) {
+}: ButtonEditorTabsProps): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const stepKeys = useMemo(() => GetStepIds(steps), [steps])

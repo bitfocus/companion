@@ -56,7 +56,7 @@ import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './M
 import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
 import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
-export interface ClientToBackendEventsMap {
+export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	disconnect: () => never // Hack because type is missing
 
 	'app-update-info': () => never
@@ -286,7 +286,6 @@ export interface ClientToBackendEventsMap {
 	'logs:unsubscribe': () => void
 	'logs:clear': () => void
 
-	'loadsave:prepare-import': (rawFile: string | ArrayBuffer) => [err: null, config: ClientImportObject] | [err: string]
 	'loadsave:abort': () => boolean
 	'loadsave:reset': (config: ClientResetSelection) => 'ok'
 	'loadsave:import-page': (
@@ -326,6 +325,7 @@ export interface ClientToBackendEventsMap {
 		connectionId: string,
 		newLabel: string,
 		config: Record<string, any>,
+		secrets: Record<string, any>,
 		updatePolicy: ConnectionUpdatePolicy
 	) => string | null
 	'connections:set-label-and-version': (
@@ -357,10 +357,6 @@ export interface ClientToBackendEventsMap {
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
 	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
-	'modules:bundle-import:start': (name: string, size: number) => string | null
-	'modules:bundle-import:chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
-	'modules:bundle-import:complete': (sessionId: string, checksum: string) => boolean
-	'modules:bundle-import:cancel': (sessionId: string) => void
 
 	'modules-store:list:subscribe': () => ModuleStoreListCacheStore
 	'modules-store:list:unsubscribe': () => void
@@ -387,6 +383,19 @@ export interface ClientToBackendEventsMap {
 	cloud_region_state_set: (id: string, newState: Partial<CloudRegionState>) => never
 }
 
+type AllMultipartUploaderMethods = MultipartUploaderMethods<'modules:bundle-import', boolean> &
+	MultipartUploaderMethods<'loadsave:prepare-import', [err: null, config: ClientImportObject] | [err: string]>
+
+interface MultipartUploaderMethodsBase<TComplete> {
+	start: (name: string, size: number) => string | null
+	chunk: (sessionId: string, offset: number, data: Uint8Array) => boolean
+	complete: (sessionId: string, checksum: string) => TComplete
+	cancel: (sessionId: string) => void
+}
+export type MultipartUploaderMethods<Prefix extends string, TComplete> = {
+	[K in keyof MultipartUploaderMethodsBase<TComplete> as `${Prefix}:${string & K}`]: MultipartUploaderMethodsBase<TComplete>[K]
+}
+
 export interface BackendToClientEventsMap {
 	'app-update-info': (info: AppUpdateInfo) => void
 
@@ -400,6 +409,7 @@ export interface BackendToClientEventsMap {
 	'pages:update': (changes: PageModelChanges) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void
+	'loadsave:prepare-import:progress': (sessionId: string, percent: number | null) => void
 
 	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void
 

@@ -1,9 +1,9 @@
-import { observable, runInAction } from 'mobx'
+import { observable, ObservableMap, runInAction } from 'mobx'
 import { useContext, useEffect, useMemo } from 'react'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
-export function useCustomVariablesValues() {
+export function useCustomVariablesValues(): ObservableMap<string, CompanionVariableValue | undefined> {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const valuesStore = useMemo(() => observable.map<string, CompanionVariableValue | undefined>(), [])
@@ -35,7 +35,7 @@ export function useCustomVariablesValues() {
 
 			clearInterval(interval)
 		}
-	}, [socket])
+	}, [socket, valuesStore])
 
 	return valuesStore
 }

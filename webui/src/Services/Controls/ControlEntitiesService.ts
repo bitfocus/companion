@@ -147,7 +147,8 @@ export function useControlEntitiesEditorService(
 				})
 			},
 		}),
-		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId), entityTypeLabel]
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId), entityTypeLabel, entityModelType]
 	)
 }
 
@@ -155,8 +156,6 @@ export function useControlEntityService(
 	serviceFactory: IEntityEditorService,
 	entity: SomeEntityModel
 ): IEntityEditorActionService {
-	const socket = useContext(SocketContext)
-
 	const entityRef = useRef<SomeEntityModel>()
 	entityRef.current = entity
 
@@ -179,6 +178,6 @@ export function useControlEntityService(
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
 			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 		}),
-		[socket, serviceFactory, entityId]
+		[serviceFactory, entityId]
 	)
 }

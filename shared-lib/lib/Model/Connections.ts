@@ -3,6 +3,7 @@ import type { CollectionBase } from './Collections.js'
 export interface ConnectionConfig {
 	label: string
 	config: unknown
+	secrets: unknown | undefined
 	isFirstInit: boolean
 	lastUpgradeIndex: number
 	instance_type: string

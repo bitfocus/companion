@@ -24,7 +24,12 @@ interface ButtonStyleConfigProps {
 	mainDialog?: boolean
 }
 
-export function ButtonStyleConfig({ controlId, style, configRef, mainDialog = false }: ButtonStyleConfigProps) {
+export function ButtonStyleConfig({
+	controlId,
+	style,
+	configRef,
+	mainDialog = false,
+}: ButtonStyleConfigProps): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const [pngError, setPngError] = useState<string | null>(null)
@@ -111,7 +116,7 @@ export function ButtonStyleConfigFields({
 	clearPng,
 	mainDialog,
 	showField,
-}: ButtonStyleConfigFieldsProps) {
+}: ButtonStyleConfigFieldsProps): React.JSX.Element {
 	const setTextValue = useCallback((val: any) => setValueInner('text', val), [setValueInner])
 	const setSizeValue = useCallback((val: any) => setValueInner('size', val), [setValueInner])
 	const setAlignmentValue = useCallback((val: any) => setValueInner('alignment', val), [setValueInner])

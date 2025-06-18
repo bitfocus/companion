@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react'
+import React, { useState, useCallback, useContext } from 'react'
 import { ColorResult, SketchPicker } from '@hello-pangea/color-picker'
 import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '~/util.js'
 import { usePopper } from 'react-popper'
-import { MenuPortalContext } from './DropdownInputField.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 import { colord } from 'colord'
 import { CompanionColorPresetValue } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
@@ -29,7 +29,7 @@ function splitColor(color: number | string) {
 			}
 		}
 	} else if (typeof color === 'string' && colord(color).isValid()) {
-		let rgb = colord(color).toRgb()
+		const rgb = colord(color).toRgb()
 		return {
 			r: rgb.r,
 			g: rgb.g,
@@ -67,7 +67,6 @@ interface ColorInputFieldProps<T extends 'string' | 'number'> {
 	label?: React.ReactNode
 	value: AsType<T>
 	setValue: (value: AsType<T>) => void
-	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	enableAlpha?: boolean
 	returnType: 'string' | 'number'
@@ -79,22 +78,16 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	label,
 	value,
 	setValue,
-	setValid,
 	// disabled,
 	enableAlpha,
 	returnType,
 	presetColors,
 	helpText,
-}: ColorInputFieldProps<T>) {
+}: ColorInputFieldProps<T>): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const [currentColor, setCurrentColor] = useState<AsType<T> | null>(null)
 	const [displayPicker, setDisplayPicker] = useState(false)
-
-	// If the value is undefined, populate with the default. Also inform the parent about the validity
-	useEffect(() => {
-		setValid?.(true)
-	}, [setValid])
 
 	const handleClick = useCallback(() => setDisplayPicker((d) => !d), [])
 	const setHide = useCallback((e: MouseEvent) => {
@@ -109,23 +102,19 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	const onChange = useCallback(
 		(c: ColorResult) => {
 			const newValue = toReturnType<T>(c, returnType)
-			console.log('change', newValue)
 			setValue(newValue)
-			setValid?.(true)
 			setCurrentColor(newValue)
 		},
-		[setValue, setValid]
+		[setValue, returnType]
 	)
 
 	const onChangeComplete = useCallback(
 		(c: ColorResult) => {
 			const newValue = toReturnType<T>(c, returnType)
-			console.log('complete', newValue)
 			setValue(newValue)
-			setValid?.(true)
 			setCurrentColor(null)
 		},
-		[setValue, setValid]
+		[setValue, returnType]
 	)
 
 	const color = splitColor(currentColor ?? value ?? 0)

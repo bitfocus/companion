@@ -63,7 +63,7 @@ export const EmulatorList = observer(function EmulatorList() {
 								<CButton
 									key={surface.id}
 									color="light"
-									onClick={() => navigate({ to: `/emulator/${surface.id.substring(9)}` })}
+									onClick={() => void navigate({ to: `/emulator/${surface.id.substring(9)}` })}
 									className="mb-4"
 								>
 									{surface.name || 'Emulator'}

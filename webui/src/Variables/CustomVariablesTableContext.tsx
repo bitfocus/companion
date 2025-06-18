@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useMemo } from 'react'
 import type { CustomVariablesApi } from './CustomVariablesApi'
 import { ObservableMap } from 'mobx'
@@ -10,19 +11,19 @@ export interface CustomVariablesTableContextType {
 
 const CustomVariablesTableContext = createContext<CustomVariablesTableContextType | null>(null)
 
-export function useCustomVariablesTableContext() {
+export function useCustomVariablesTableContext(): CustomVariablesTableContextType {
 	const ctx = useContext(CustomVariablesTableContext)
 	if (!ctx) throw new Error('useCustomVariablesTableContext must be used within a CustomVariablesTableProvider')
 	return ctx
 }
 
-interface CustomVariablesTableContextProviderProps extends CustomVariablesTableContextType {}
+type CustomVariablesTableContextProviderProps = CustomVariablesTableContextType
 
 export function CustomVariablesTableContextProvider({
 	customVariablesApi,
 	customVariableValues,
 	children,
-}: React.PropsWithChildren<CustomVariablesTableContextProviderProps>) {
+}: React.PropsWithChildren<CustomVariablesTableContextProviderProps>): React.JSX.Element {
 	const value = useMemo<CustomVariablesTableContextType>(() => {
 		return {
 			customVariablesApi,

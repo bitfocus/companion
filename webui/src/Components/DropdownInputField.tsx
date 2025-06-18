@@ -1,13 +1,12 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
-import React, { createContext, useContext, useMemo, useEffect, useCallback, memo, useState } from 'react'
+import React, { useContext, useMemo, useCallback, memo, useState } from 'react'
 import Select, { createFilter, InputActionMeta, components } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
-
-export const MenuPortalContext = createContext<HTMLElement | null>(null)
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -21,11 +20,11 @@ interface DropdownInputFieldProps {
 	regex?: string
 	value: DropdownChoiceId
 	setValue: (value: DropdownChoiceId) => void
-	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	helpText?: string
 	onBlur?: () => void
 	onPasteIntercept?: (value: string) => string
+	checkValid?: (value: DropdownChoiceId) => boolean
 }
 
 interface DropdownChoiceInt {
@@ -45,12 +44,12 @@ export const DropdownInputField = memo(function DropdownInputField({
 	regex,
 	value,
 	setValue,
-	setValid,
 	disabled,
 	helpText,
 	onBlur,
 	onPasteIntercept,
-}: DropdownInputFieldProps) {
+	checkValid,
+}: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const options = useMemo(() => {
@@ -67,7 +66,6 @@ export const DropdownInputField = memo(function DropdownInputField({
 	}, [choices])
 
 	const currentValue = useMemo(() => {
-		// eslint-disable-next-line eqeqeq
 		const entry = options.find((o) => o.value == value) // Intentionally loose for compatibility
 		if (entry) {
 			return entry
@@ -88,38 +86,13 @@ export const DropdownInputField = memo(function DropdownInputField({
 		return null
 	}, [regex])
 
-	const isValueValid = useCallback(
-		(newValue: DropdownChoiceId | DropdownChoiceId[]) => {
-			// Require the selected choice to be valid
-			if (
-				allowCustom &&
-				compiledRegex &&
-				!options.find((c) => c.value === newValue) &&
-				!compiledRegex.exec(String(newValue))
-			) {
-				return false
-			}
-
-			return true
-		},
-		[allowCustom, compiledRegex, options]
-	)
-
-	// If the value is undefined, populate with the default. Also inform the parent about the validity
-	useEffect(() => {
-		setValid?.(isValueValid(value))
-	}, [value, setValid, isValueValid])
-
 	const onChange = useCallback(
 		(e: DropdownChoiceInt) => {
 			const newValue = e?.value
 
-			const isValid = isValueValid(newValue)
-
 			setValue(newValue)
-			setValid?.(isValid)
 		},
-		[setValue, setValid, isValueValid]
+		[setValue]
 	)
 
 	const inputComponent = useMemo(() => {
@@ -137,6 +110,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 
 			// Set the value of the input, using the native setter
 			const target = e.currentTarget as HTMLInputElement
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
 			nativeInputValueSetter.call(target, newValue)
 
@@ -230,7 +204,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 			setCustomInputValue(inputValue)
 			onChange({ value: inputValue, label: inputValue })
 		},
-		[value, onChange]
+		[onChange]
 	)
 
 	if (allowCustom && customInputValue === value) {
@@ -243,7 +217,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 			className={classNames(
 				{
 					'select-tooltip': true,
-					'select-invalid': !isValueValid(currentValue?.value),
+					'select-invalid': !!checkValid && !checkValid(currentValue?.value),
 				},
 				className
 			)}

@@ -16,6 +16,7 @@ import classNames from 'classnames'
 import { DropdownChoiceInt, ControlLocalVariables, InternalActionLocalVariables } from '~/LocalVariableDefinitions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
+import { validateInputValue } from '~/Helpers/validateInputValue.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -53,7 +54,8 @@ export function OptionsInputField({
 	setValue,
 	visibility,
 	readonly,
-}: Readonly<OptionsInputFieldProps>) {
+}: Readonly<OptionsInputFieldProps>): React.JSX.Element {
+	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
 	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
 
 	if (!option) {
@@ -84,14 +86,13 @@ export function OptionsInputField({
 			control = (
 				<TextInputField
 					value={value}
-					regex={option.regex}
-					required={option.required}
 					placeholder={option.placeholder}
 					useVariables={features.variables}
 					localVariables={localVariables}
 					isExpression={option.isExpression}
 					disabled={readonly}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
@@ -106,6 +107,7 @@ export function OptionsInputField({
 					regex={option.regex}
 					disabled={readonly}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
@@ -122,6 +124,7 @@ export function OptionsInputField({
 					regex={option.regex}
 					disabled={readonly}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
@@ -147,13 +150,13 @@ export function OptionsInputField({
 			control = (
 				<NumberInputField
 					value={value}
-					required={option.required}
 					min={option.min}
 					max={option.max}
 					step={option.step}
 					range={option.range}
 					disabled={readonly}
 					setValue={setValue2}
+					checkValid={checkValid}
 				/>
 			)
 			break
@@ -161,7 +164,7 @@ export function OptionsInputField({
 		case 'static-text': {
 			control = <StaticTextFieldText {...option} />
 
-			if (!!option.label) {
+			if (option.label) {
 				control = (
 					<>
 						<CFormLabel>

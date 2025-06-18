@@ -119,7 +119,7 @@ export const AddConnectionModal = observer(
 		const selectedVersionIsLegacy = selectedVersionInfo?.isLegacy ?? false
 
 		const showHelpClick = useCallback(() => {
-			if (!moduleInfo || !selectedVersionInfo) return
+			if (!moduleInfo?.id || !selectedVersionInfo) return
 			helpViewer.current?.showFromUrl(moduleInfo.id, selectedVersionInfo.versionId, selectedVersionInfo.helpPath)
 		}, [helpViewer, moduleInfo?.id, selectedVersionInfo])
 
@@ -218,7 +218,7 @@ export const AddConnectionModal = observer(
 	})
 )
 
-// nocommit TODO: this is a copy of the function from companion/lib/Instance/ConnectionConfigStore.ts
+// TODO: this is a copy of the function from companion/lib/Instance/ConnectionConfigStore.ts
 function findNextConnectionLabel(
 	connections: ReadonlyMap<string, ClientConnectionConfig>,
 	shortname: string,

@@ -10,7 +10,7 @@ export class ConnectionsStore {
 	readonly connections = observable.map<string, ClientConnectionConfig>()
 	readonly collections = observable.map<string, ConnectionCollection>()
 
-	public get count() {
+	public get count(): number {
 		return this.connections.size
 	}
 

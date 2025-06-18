@@ -1,5 +1,33 @@
 # Bitfocus Companion
 
+## Companion v4.0.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Improve performance of bank_style, bank_pushed and bank_current_step feedbacks #3453
+- Fix Emulator Names Disappearing #3474
+- Fix connection upgradeIndex being lost during imports #3481
+- Fix button image preview sometimes showing stale image #3476
+- Fix ensure connection looks valid before importing #3472
+- Fix linked surface lockout incorrectly calculating last press time #3471
+- Fix wizard grid size not always being respected #3489
+- Fix contour shuttle event order #3485
+- Fix emberplus api close/init (#3469)
+- Fix xkeys not handling green backlight #3473
+- Fix action execute failed logging
+- Fisable fullscreen buttons if fullscreen api is not available
+
+## Companion v4.0.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Fix button grid keyboard hotkeys broken #3466
+- Fix persist connection updatepolicy when editing connection config #3464
+- Fix panel default collapsed state not being persisted #3460
+- Fix launch db checks not looking for sqlite files #3462
+- Fix streaming upload of offline bundle #3463
+- Fix import offline bundle failing for remote companion
+
 ## Companion v4.0.0 - Release Notes
 
 ### BREAKING CHANGES

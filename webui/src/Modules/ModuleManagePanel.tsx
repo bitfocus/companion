@@ -1,9 +1,9 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext } from 'react'
 import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { ModuleDisplayInfo, ModuleUpgradeToOtherVersion } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ModuleStoreListCacheEntry, ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
+import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
@@ -11,7 +11,7 @@ import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
-import { useComputed } from '~/util.js'
+import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 
 interface ModuleManagePanelProps {
 	moduleId: string
@@ -77,31 +77,3 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 		</div>
 	)
 })
-
-export function useModuleStoreInfo(moduleId: string | undefined): ModuleStoreModuleInfoStore | null {
-	const { modules } = useContext(RootAppStoreContext)
-
-	useEffect(() => {
-		if (!moduleId) return
-
-		return modules.storeVersions.subscribeToModuleStoreVersions(moduleId)
-	}, [modules.storeVersions, moduleId])
-
-	if (moduleId) {
-		return modules.storeVersions.getModuleStoreVersions(moduleId)
-	} else {
-		return null
-	}
-}
-
-export function useModuleUpgradeToVersions(moduleId: string | undefined): ModuleUpgradeToOtherVersion[] {
-	const { modules } = useContext(RootAppStoreContext)
-
-	useEffect(() => {
-		if (!moduleId) return
-
-		return modules.storeVersions.subscribeToModuleUpgradeToVersions(moduleId)
-	}, [modules.storeVersions])
-
-	return useComputed(() => (moduleId ? modules.storeVersions.getModuleUpgradeToVersions(moduleId) : []), [moduleId])
-}

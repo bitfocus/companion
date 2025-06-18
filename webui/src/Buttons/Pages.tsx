@@ -48,26 +48,29 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 		}
 	}, [])
 
-	const doDeletePage = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-		const pageNumber = Number(e.currentTarget.getAttribute('data-page'))
-		const pageName = e.currentTarget.getAttribute('data-name') ?? ''
+	const doDeletePage = useCallback(
+		(e: React.MouseEvent<HTMLButtonElement>) => {
+			const pageNumber = Number(e.currentTarget.getAttribute('data-page'))
+			const pageName = e.currentTarget.getAttribute('data-name') ?? ''
 
-		if (isNaN(pageNumber)) return
+			if (isNaN(pageNumber)) return
 
-		deleteRef.current?.show(
-			'Delete page?',
-			[
-				`Are you sure you want to delete Page ${pageNumber}${pageName && pageName !== 'PAGE' ? ', "' + pageName + '"' : ''}?`,
-				'This will delete all controls on the page, and will adjust the page numbers of all following pages',
-			],
-			'Delete',
-			() => {
-				socket.emitPromise('pages:delete-page', [pageNumber]).catch((e) => {
-					console.error('Page delete failed', e)
-				})
-			}
-		)
-	}, [])
+			deleteRef.current?.show(
+				'Delete page?',
+				[
+					`Are you sure you want to delete Page ${pageNumber}${pageName && pageName !== 'PAGE' ? ', "' + pageName + '"' : ''}?`,
+					'This will delete all controls on the page, and will adjust the page numbers of all following pages',
+				],
+				'Delete',
+				() => {
+					socket.emitPromise('pages:delete-page', [pageNumber]).catch((e) => {
+						console.error('Page delete failed', e)
+					})
+				}
+			)
+		},
+		[socket]
+	)
 
 	return (
 		<div>

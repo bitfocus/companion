@@ -14,7 +14,11 @@ interface ImportFullWizardProps {
 	setConnectionRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 }
 
-export function ImportFullWizard({ snapshot, connectionRemap, setConnectionRemap }: ImportFullWizardProps) {
+export function ImportFullWizard({
+	snapshot,
+	connectionRemap,
+	setConnectionRemap,
+}: ImportFullWizardProps): React.JSX.Element {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const doSinglePageImport = useCallback(

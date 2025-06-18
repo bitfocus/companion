@@ -20,7 +20,7 @@ const RouteComponent = observer(function RouteComponent() {
 	// Ensure the selected trigger is valid
 	useComputed(() => {
 		if (fullControlId && !triggersList.triggers.get(fullControlId)) {
-			navigate({ to: `/triggers` })
+			void navigate({ to: `/triggers` })
 		}
 	}, [navigate, triggersList, fullControlId])
 
