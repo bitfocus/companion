@@ -1,14 +1,14 @@
 import { CButton, CFormInput } from '@coreui/react'
 import { faPlus, faImage, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useState, useEffect, useMemo } from 'react'
+import React, { useCallback, useContext, useState, useEffect, useMemo, useRef } from 'react'
 import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { ImageThumbnail } from './ImageThumbnail'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ImageCacheProvider, ImageUrlCache } from './ImageCache'
-import { ImageAddModal } from './ImageAddModal'
+import { ImageAddModal, type ImageAddModalRef } from './ImageAddModal'
 
 interface ImageLibraryGridProps {
 	selectedImageId: string | null
@@ -22,23 +22,13 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	const socket = useContext(SocketContext)
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [searchQuery, setSearchQuery] = useState('')
-	const [showAddModal, setShowAddModal] = useState(false)
+	const addModalRef = useRef<ImageAddModalRef>(null)
 
 	const imageCache = useMemo(() => new ImageUrlCache(), [])
 
+	const handleCreateNew = useCallback(() => addModalRef.current?.show(), [])
+
 	const images = imageLibrary.getAllImages()
-
-	const handleCreateNew = useCallback(() => {
-		setShowAddModal(true)
-	}, [])
-
-	const handleImageCreated = useCallback(
-		(imageId: string) => {
-			setShowAddModal(false)
-			onSelectImage(imageId)
-		},
-		[onSelectImage]
-	)
 
 	const filteredImages = images.filter((image) => image.name.toLowerCase().includes(searchQuery.toLowerCase()))
 	const hiddenCount = images.length - filteredImages.length
@@ -65,11 +55,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	return (
 		<ImageCacheProvider cache={imageCache}>
 			<div className="image-library-grid">
-				<ImageAddModal
-					visible={showAddModal}
-					onClose={() => setShowAddModal(false)}
-					onImageCreated={handleImageCreated}
-				/>
+				<ImageAddModal ref={addModalRef} onImageCreated={onSelectImage} />
 
 				<div className="image-library-header">
 					<h4>Image Library</h4>

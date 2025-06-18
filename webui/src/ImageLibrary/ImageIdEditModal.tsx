@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useContext, useEffect } from 'react'
-import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton, CAlert, CFormLabel } from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton } from '@coreui/react'
 import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { ImageIdInput } from './ImageIdInput'
 
 interface ImageIdEditModalProps {
 	visible: boolean
@@ -86,12 +86,14 @@ export const ImageIdEditModal = observer(function ImageIdEditModal({
 		setErrorMessage(null)
 	}, [])
 
-	// Generate tooltip based on validation state
-	const tooltip = !isLabelValid(localValue)
-		? 'Invalid ID: Use only letters, numbers, hyphens, and underscores'
-		: undefined
-
 	const canSave = isLabelValid(localValue) && localValue !== currentId
+
+	const warningText = (
+		<>
+			<strong>Warning:</strong> Changing the image ID will break any existing references to this image in button
+			configurations, actions, or other places where this ID is currently used.
+		</>
+	)
 
 	return (
 		<CModal visible={visible} onClose={handleCancel} backdrop="static">
@@ -99,37 +101,14 @@ export const ImageIdEditModal = observer(function ImageIdEditModal({
 				<CModalTitle>Edit Image ID</CModalTitle>
 			</CModalHeader>
 			<CModalBody>
-				{errorMessage && (
-					<CAlert color="danger" className="mb-3">
-						{errorMessage}
-					</CAlert>
-				)}
-
-				<CAlert color="warning" className="mb-3">
-					<strong>Warning:</strong> Changing the image ID will break any existing references to this image in button
-					configurations, actions, or other places where this ID is currently used.
-				</CAlert>
-
-				<div className="mb-3 row">
-					<CFormLabel htmlFor="imageIdInput" className="col-sm-3 col-form-label">
-						Image ID
-					</CFormLabel>
-					<div className="col-sm-9">
-						<TextInputField
-							value={localValue}
-							setValue={handleValueChange}
-							placeholder="Enter image ID..."
-							tooltip={tooltip}
-							checkValid={isLabelValid}
-							disabled={isSaving}
-						/>
-					</div>
-				</div>
-				<div className="text-muted small">
-					The image ID is used to reference this image in button configurations and other places.
-					<br />
-					It must contain only letters, numbers, hyphens, and underscores.
-				</div>
+				<ImageIdInput
+					value={localValue}
+					onChange={handleValueChange}
+					disabled={isSaving}
+					errorMessage={errorMessage}
+					showWarning={true}
+					warningText={warningText}
+				/>
 			</CModalBody>
 			<CModalFooter>
 				<CButton color="secondary" onClick={handleCancel} disabled={isSaving}>
