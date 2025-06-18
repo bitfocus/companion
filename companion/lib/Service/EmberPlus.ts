@@ -95,7 +95,7 @@ export class ServiceEmberPlus extends ServiceBase {
 
 		this.#pageController.on('pagecount', this.#pageCountChange.bind(this))
 		this.init()
-		this.startListening()
+		this.startEventListeners()
 	}
 
 	/**
@@ -108,7 +108,7 @@ export class ServiceEmberPlus extends ServiceBase {
 		}
 	}
 
-	private startListening(): void {
+	private startEventListeners(): void {
 		this.#serviceApi.on('variables_changed', (variables, connection_labels) => {
 			if ((!connection_labels.has('internal') && !connection_labels.has('custom')) || this.#server == undefined) return // We don't care about any other variables
 			variables.forEach((changedVariable) => {
@@ -183,8 +183,6 @@ export class ServiceEmberPlus extends ServiceBase {
 				}
 			}
 		})
-		this.#serviceApi.listenForActionRecorderEvents()
-		this.#serviceApi.listenForChangedVariables()
 	}
 
 	/**
