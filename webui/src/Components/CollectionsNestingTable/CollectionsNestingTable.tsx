@@ -33,6 +33,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 	dragId,
 	collectionsApi,
 	selectedItemId,
+	gridLayout,
 
 	collections,
 	items,
@@ -49,6 +50,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 			collectionsApi={collectionsApi}
 			dragId={dragId}
 			selectedItemId={selectedItemId}
+			gridLayout={gridLayout}
 		>
 			<div className="collections-nesting-table">
 				{!!Heading && (

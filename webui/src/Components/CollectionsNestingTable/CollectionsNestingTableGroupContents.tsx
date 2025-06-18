@@ -20,7 +20,10 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 	TCollection extends CollectionsNestingTableCollection,
 	TItem extends CollectionsNestingTableItem,
 >({ items, collectionId, showNoItemsMessage, nestingLevel }: CollectionsNestingTableCollectionContentsProps<TItem>) {
-	const { dragId, collectionsApi, itemName, ItemRow } = useCollectionsNestingTableContext<TCollection, TItem>()
+	const { dragId, collectionsApi, itemName, ItemRow, gridLayout } = useCollectionsNestingTableContext<
+		TCollection,
+		TItem
+	>()
 
 	const { isDragging, drop } = useCollectionsListItemDrop(collectionsApi, dragId, collectionId, null, 0)
 
@@ -55,7 +58,7 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 
 	return (
 		<>
-			{itemRows}
+			{gridLayout ? <div className="collections-nesting-table-grid-container">{itemRows}</div> : itemRows}
 
 			{isDragging && items.length === 0 && (
 				<CollectionsNestingTableDropZone drop={drop} itemName={itemName} nestingLevel={nestingLevel} />

@@ -8,6 +8,7 @@ import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNest
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionsListItemDrop, CollectionsNestingTableItemDragItem } from './useItemDrop.js'
 import { CollectionsNestingTableCollectionDragItem } from './useCollectionDrop.js'
+import { CollectionsNestingTableGridTile } from './CollectionsNestingTableGridTile.js'
 import { observer } from 'mobx-react-lite'
 
 export const CollectionsNestingTableItemRow = observer(function CollectionsNestingTableItemRow<
@@ -23,7 +24,7 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 	index: number
 	nestingLevel: number
 }>) {
-	const { dragId, collectionsApi, selectedItemId } = useCollectionsNestingTableContext<TCollection, TItem>()
+	const { dragId, collectionsApi, selectedItemId, gridLayout } = useCollectionsNestingTableContext<TCollection, TItem>()
 
 	const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, item.collectionId, item.id, index)
 	const [{ isDragging }, drag, preview] = useDrag<
@@ -42,6 +43,21 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 			isDragging: monitor.isDragging(),
 		}),
 	})
+
+	if (gridLayout) {
+		return (
+			<CollectionsNestingTableGridTile
+				drag={drag}
+				drop={drop}
+				preview={preview}
+				isDragging={isDragging}
+				isSelected={item.id === selectedItemId}
+				className="collections-nesting-table-tile-item"
+			>
+				{children}
+			</CollectionsNestingTableGridTile>
+		)
+	}
 
 	return (
 		<CollectionsNestingTableRowBase
