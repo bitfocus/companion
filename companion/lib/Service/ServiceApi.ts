@@ -30,7 +30,10 @@ import EventEmitter from 'events'
  * this program.
  */
 
-type ServiceApiEvents = VariablesValuesEvents | ActionRecorderEvents | VariablesCustomVariableEvents
+type ServiceApiEvents =
+	| Pick<VariablesValuesEvents, 'variables_changed'>
+	| Pick<ActionRecorderEvents, 'action_recorder_is_running'>
+	| Pick<VariablesCustomVariableEvents, 'custom_variable_definition_changed'>
 
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
@@ -59,6 +62,17 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		this.#surfaceController = surfaceController
 		this.#variablesController = variablesController
 		this.#graphicsController = graphicsController
+
+		this.#controlController.actionRecorder.on('action_recorder_is_running', (...args) => {
+			this.emit('action_recorder_is_running', ...args)
+		})
+
+		this.#variablesController.values.on('variables_changed', (...args) => {
+			this.emit('variables_changed', ...args)
+		})
+		this.#variablesController.custom.on('custom_variable_definition_changed', (...args) => {
+			this.emit('custom_variable_definition_changed', ...args)
+		})
 	}
 
 	/**
@@ -197,24 +211,6 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 
 	actionRecorderGetSession(): RecordSessionInfo {
 		return this.#controlController.actionRecorder.getSession()
-	}
-
-	listenForActionRecorderEvents(): void {
-		this.#controlController.actionRecorder.on('action_recorder_is_running', (is_running: boolean) => {
-			this.emit('action_recorder_is_running', is_running)
-		})
-	}
-
-	listenForChangedVariables(): void {
-		this.#variablesController.values.on(
-			'variables_changed',
-			(variables: Set<string>, connection_labels: Set<string>) => {
-				this.emit('variables_changed', variables, connection_labels)
-			}
-		)
-		this.#variablesController.custom.on('custom_variable_definition_changed', (id, info) => {
-			this.emit('custom_variable_definition_changed', id, info)
-		})
 	}
 }
 
