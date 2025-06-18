@@ -33,6 +33,7 @@ import { useTriggerCollectionsSubscription } from './Hooks/useTriggerCollections
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
 import { useImageLibrarySubscription } from './Hooks/useImageLibrarySubscription.js'
+import { useImageLibraryCollectionsSubscription } from './Hooks/useImageLibraryCollectionsSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -102,6 +103,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		rootStore.moduleStoreRefreshProgress
 	)
 	const imageLibraryReady = useImageLibrarySubscription(socket, rootStore.imageLibrary)
+	const imageLibraryCollectionsReady = useImageLibraryCollectionsSubscription(socket, rootStore.imageLibrary)
 
 	useEffect(() => {
 		if (socket) {
@@ -139,6 +141,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		activeLearnRequestsReady,
 		moduleStoreProgressReady,
 		imageLibraryReady,
+		imageLibraryCollectionsReady,
 	]
 	const completedSteps = steps.filter((s) => !!s)
 

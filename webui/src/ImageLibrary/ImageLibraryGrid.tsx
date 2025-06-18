@@ -1,8 +1,8 @@
 import { CButton, CFormInput } from '@coreui/react'
-import { faPlus, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faImage, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useState, useEffect, useMemo, useRef } from 'react'
-import { SocketContext } from '~/util.js'
+import { SocketContext, useComputed } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { ImageThumbnail } from './ImageThumbnail'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -11,17 +11,18 @@ import { ImageCacheProvider, ImageUrlCache } from './ImageCache'
 import { ImageAddModal, type ImageAddModalRef } from './ImageAddModal'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import type {
-	NestingCollectionsApi,
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types.js'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 
 // Adapters for CollectionsNestingTable
 interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'children'> {
-	id: string
-	label?: string
-	sortOrder?: number
+	label: string
+	sortOrder: number
 	children: ImageCollection[]
 }
 
@@ -46,6 +47,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [searchQuery, setSearchQuery] = useState('')
 	const addModalRef = useRef<ImageAddModalRef>(null)
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
 	const imageCache = useMemo(() => new ImageUrlCache(), [])
 
@@ -54,44 +56,23 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	const images = imageLibrary.getAllImages()
 
 	// Convert images to items format for CollectionsNestingTable
-	const imageItems: ImageItem[] = useMemo(() => {
-		return images.map((image, index) => ({
-			id: image.id,
-			collectionId: null, // No collections for now
-			sortOrder: index,
-			imageInfo: image,
-		}))
-	}, [images])
-
-	// Empty collections array for now
-	const collections: ImageCollection[] = []
-
-	// Placeholder collections API
-	const collectionsApi: NestingCollectionsApi = useMemo(
-		() => ({
-			createCollection: () => {
-				// TODO: Implement collection creation
-				console.log('Create collection - not implemented')
-			},
-			renameCollection: () => {
-				// TODO: Implement collection renaming
-				console.log('Rename collection - not implemented')
-			},
-			deleteCollection: () => {
-				// TODO: Implement collection deletion
-				console.log('Delete collection - not implemented')
-			},
-			moveCollection: () => {
-				// TODO: Implement collection moving
-				console.log('Move collection - not implemented')
-			},
-			moveItemToCollection: () => {
-				// TODO: Implement item moving to collection
-				console.log('Move item to collection - not implemented')
-			},
-		}),
-		[]
+	const imageItems: ImageItem[] = useComputed(
+		() =>
+			images.map((image) => ({
+				id: image.id,
+				collectionId: image.collectionId ?? null,
+				sortOrder: image.sortOrder,
+				imageInfo: image,
+			})),
+		[images]
 	)
+
+	const collections: ImageCollection[] = imageLibrary.rootImageCollections()
+
+	const collectionsApi = useImageLibraryCollectionsApi(confirmModalRef)
+
+	// Get all collection IDs for the collapse helper
+	const allCollectionIds = useMemo(() => collections.map((collection) => collection.id), [collections])
 
 	// ItemRow component for rendering individual images
 	const ItemRow = useCallback(
@@ -108,9 +89,6 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 		},
 		[selectedImageId, onSelectImage, searchQuery]
 	)
-
-	// NoContent component
-	const NoContent = useCallback(() => <NonIdealState icon={faImage} text="No images in library" />, [])
 
 	// Listen for image library events to clear cache when images are updated or deleted
 	useEffect(() => {
@@ -134,6 +112,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	return (
 		<ImageCacheProvider cache={imageCache}>
 			<div className="image-library-grid">
+				<GenericConfirmModal ref={confirmModalRef} />
 				<ImageAddModal ref={addModalRef} onImageCreated={onSelectImage} />
 
 				<div className="image-library-header">
@@ -156,24 +135,33 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 							<CButton color="primary" size="sm" onClick={handleCreateNew}>
 								<FontAwesomeIcon icon={faPlus} /> Add Image
 							</CButton>
+							<CButton color="info" size="sm" onClick={() => collectionsApi.createCollection()}>
+								<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+							</CButton>
 						</div>
 					</div>
 				</div>
 
 				<div className="image-library-grid-content">
-					<CollectionsNestingTable
-						ItemRow={ItemRow}
-						itemName="image"
-						dragId="image-library"
-						collectionsApi={collectionsApi}
-						selectedItemId={selectedImageId}
-						gridLayout={true}
-						collections={collections}
-						items={imageItems}
-						NoContent={NoContent}
-					/>
+					<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={allCollectionIds}>
+						<CollectionsNestingTable
+							ItemRow={ItemRow}
+							itemName="image"
+							dragId="image-library"
+							collectionsApi={collectionsApi}
+							selectedItemId={selectedImageId}
+							gridLayout={true}
+							collections={collections}
+							items={imageItems}
+							NoContent={NoContent}
+						/>
+					</PanelCollapseHelperProvider>
 				</div>
 			</div>
 		</ImageCacheProvider>
 	)
 })
+
+function NoContent() {
+	return <NonIdealState icon={faImage} text="No images in library" />
+}

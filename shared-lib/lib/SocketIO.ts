@@ -57,7 +57,7 @@ import type { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/Ent
 import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 import type { ExpressionStreamResult, ExpressionStreamResultWithSubId } from './Expression/ExpressionResult.js'
 import type { ButtonGraphicsElementUsage } from './Model/StyleLayersModel.js'
-import type { ImageLibraryInfo } from './Model/ImageLibraryModel.js'
+import type { ImageLibraryInfo, ImageLibraryCollection } from './Model/ImageLibraryModel.js'
 
 export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	disconnect: () => never // Hack because type is missing
@@ -441,10 +441,19 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'image-library:create': (imageId: string, name: string) => string
 	'image-library:set-name': (imageId: string, name: string) => boolean
 	'image-library:set-id': (currentId: string, newId: string) => string
+	'image-library:reorder': (collectionId: string | null, imageId: string, dropIndex: number) => void
 	'image-library:upload-start': (filename: string, size: number) => string
 	'image-library:upload-chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
 	'image-library:upload-complete': (sessionId: string, imageId: string, checksum: string) => string
 	'image-library:upload-cancel': (sessionId: string) => void
+
+	// Image library collections events
+	'image-library-collections:subscribe': () => ImageLibraryCollection[]
+	'image-library-collections:unsubscribe': () => void
+	'image-library-collections:add': (collectionName: string) => string
+	'image-library-collections:remove': (collectionId: string) => void
+	'image-library-collections:set-name': (collectionId: string, collectionName: string) => void
+	'image-library-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 }
 
 type AllMultipartUploaderMethods = MultipartUploaderMethods<'modules:bundle-import', boolean> &
@@ -529,6 +538,7 @@ export interface BackendToClientEventsMap {
 	'image-library:upload-error': (sessionId: string, error: string) => void
 	'image-library:removed': (imageId: string) => void
 	'image-library:updated': (imageId: string, info: ImageLibraryInfo) => void
+	'image-library-collections:update': (patch: ImageLibraryCollection[]) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void

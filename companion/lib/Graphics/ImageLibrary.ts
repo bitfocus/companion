@@ -4,9 +4,15 @@ import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import LogController from '../Log/Controller.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { UIHandler } from '../UI/Handler.js'
-import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import type {
+	ImageLibraryInfo,
+	ImageLibraryUpdate,
+	ImageLibraryCollection,
+} from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { GraphicsController } from './Controller.js'
+import { ImageLibraryCollections } from './ImageLibraryCollections.js'
+import type { DataDatabase } from '../Data/Database.js'
 
 export interface ImageLibraryData {
 	originalImage: string // base64 data URL (empty string if not uploaded yet)
@@ -21,25 +27,52 @@ export class ImageLibrary {
 	readonly #io: UIHandler
 	readonly #sessionToImageId = new Map<string, string>()
 	readonly #graphicsController: GraphicsController
+	readonly #collections: ImageLibraryCollections
 
-	constructor(
-		dbTable: DataStoreTableView<Record<string, ImageLibraryData>>,
-		io: UIHandler,
-		graphicsController: GraphicsController
-	) {
-		this.#dbTable = dbTable
+	constructor(db: DataDatabase, io: UIHandler, graphicsController: GraphicsController) {
+		this.#dbTable = db.getTableView('image_library')
 		this.#io = io
 		this.#graphicsController = graphicsController
+		this.#collections = new ImageLibraryCollections(io, db, (validCollectionIds) =>
+			this.#cleanUnknownCollectionIds(validCollectionIds)
+		)
 		this.#multipartUploader = new MultipartUploader((sessionId) => {
 			this.#sessionToImageId.delete(sessionId)
 			this.#io.emitToAll('image-library:upload-cancelled', sessionId)
 		})
+
+		this.#cleanUnknownCollectionIds(this.#collections.collectAllCollectionIds())
+	}
+
+	#cleanUnknownCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		const changes: ImageLibraryUpdate[] = []
+
+		for (const [id, data] of Object.entries(this.#dbTable.all())) {
+			if (!data.info.collectionId) continue
+
+			if (validCollectionIds.has(data.info.collectionId)) continue
+
+			data.info.collectionId = undefined
+			this.#dbTable.set(id, data)
+
+			changes.push({ type: 'update', itemId: id, info: data.info })
+		}
+
+		if (this.#io.countRoomMembers('image-library') > 0 && changes.length > 0) {
+			for (const change of changes) {
+				if (change.type === 'update') {
+					this.#io.emitToRoom('image-library', 'image-library:updated', change.itemId, change.info)
+				}
+			}
+		}
 	}
 
 	/**
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
+		this.#collections.clientConnect(client)
+
 		// Subscribe to image library updates
 		client.onPromise('image-library:subscribe', () => {
 			client.join('image-library')
@@ -83,6 +116,11 @@ export class ImageLibrary {
 		// Delete image
 		client.onPromise('image-library:delete', (imageId: string) => {
 			return this.deleteImage(imageId)
+		})
+
+		// TODO: Add reorder functionality when socket type is available
+		client.onPromise('image-library:reorder', (collectionId: string | null, imageId: string, dropIndex: number) => {
+			return this.setImageOrder(collectionId, imageId, dropIndex)
 		})
 
 		// Upload handling - simplified upload workflow
@@ -221,6 +259,7 @@ export class ImageLibrary {
 			modifiedAt: now,
 			checksum: '',
 			mimeType: '',
+			sortOrder: 0, // Will be updated when moved to collections
 		}
 
 		const imageData: ImageLibraryData = {
@@ -319,6 +358,65 @@ export class ImageLibrary {
 		this.#io.emitToRoom('image-library', 'image-library:updated', safeNewId, data.info)
 
 		return safeNewId
+	}
+
+	/**
+	 * Set the order of an image within a collection
+	 */
+	setImageOrder(collectionId: string | null, imageId: string, dropIndex: number): void {
+		const imageData = this.#dbTable.get(imageId)
+		if (!imageData) return
+
+		if (!this.#collections.doesCollectionIdExist(collectionId)) return
+
+		// update the collectionId of the image being moved if needed
+		if (imageData.info.collectionId !== (collectionId ?? undefined)) {
+			imageData.info.collectionId = collectionId ?? undefined
+		}
+
+		// find all the other images with the matching collectionId
+		const sortedImages = Array.from(Object.entries(this.#dbTable.all()))
+			.filter(
+				([imgId, data]) =>
+					imgId !== imageId && ((!data.info.collectionId && !collectionId) || data.info.collectionId === collectionId)
+			)
+			.sort(([, a], [, b]) => (a.info.sortOrder || 0) - (b.info.sortOrder || 0))
+
+		if (dropIndex < 0) {
+			// Push the image to the end of the array
+			sortedImages.push([imageId, imageData])
+		} else {
+			// Insert the image at the drop index
+			sortedImages.splice(dropIndex, 0, [imageId, imageData])
+		}
+
+		const changes: ImageLibraryUpdate[] = []
+
+		// update the sort order of the images in the store, tracking which ones changed
+		sortedImages.forEach(([id, data], index) => {
+			if (data.info.sortOrder === index && id !== imageId) return // No change
+
+			data.info.sortOrder = index // Update the sort order
+			data.info.modifiedAt = Date.now()
+			this.#dbTable.set(id, data)
+
+			changes.push({ type: 'update', itemId: id, info: data.info })
+		})
+
+		if (this.#io.countRoomMembers('image-library') > 0 && changes.length > 0) {
+			for (const change of changes) {
+				if (change.type === 'update') {
+					this.#io.emitToRoom('image-library', 'image-library:updated', change.itemId, change.info)
+				}
+			}
+		}
+	}
+
+	/**
+	 * Export collections data
+	 */
+	exportCollections(): ImageLibraryCollection[] {
+		return this.#collections.collectionData
 	}
 
 	/**

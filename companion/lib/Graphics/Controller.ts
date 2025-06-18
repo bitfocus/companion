@@ -269,7 +269,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#logger.info('Fonts loaded')
 
 		// Initialize the image library
-		this.imageLibrary = new ImageLibrary(db.getTableView('image_library'), io, this)
+		this.imageLibrary = new ImageLibrary(db, io, this)
 
 		// Serve font files to clients
 		internalApiRouter.get('/graphics/font/:font', compressionMiddleware(), (req, res) => {
