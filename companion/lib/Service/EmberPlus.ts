@@ -108,6 +108,10 @@ export class ServiceEmberPlus extends ServiceBase {
 		}
 	}
 
+	/**
+	 * Handle events relayed via #serviceApi
+	 */
+
 	private startEventListeners(): void {
 		this.#serviceApi.on('variables_changed', (variables, connection_labels) => {
 			if ((!connection_labels.has('internal') && !connection_labels.has('custom')) || this.#server == undefined) return // We don't care about any other variables
@@ -125,15 +129,9 @@ export class ServiceEmberPlus extends ServiceBase {
 						this.logger.debug(`New custom variable: ${name} restarting server`)
 						this.debounceRestart()
 					} else {
-						const node = this.#server.getElementByPath(`0.3.2.${i}.1`)
-						if (node) {
-							const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])?.toString()
-							if (value === undefined) return
-							// @ts-ignore
-							if (node.contents.value !== value) {
-								this.#server.update(node, { value: value })
-							}
-						}
+						const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])?.toString()
+						if (value === undefined) return
+						this.#updateNodePath(`0.3.2.${i}.1`, value)
 					}
 				} else if (label === 'internal') {
 					const i = this.#internalVars.indexOf(name)
@@ -141,15 +139,9 @@ export class ServiceEmberPlus extends ServiceBase {
 						this.logger.debug(`New internal variable: ${name} restarting server`)
 						this.debounceRestart()
 					} else {
-						const node = this.#server.getElementByPath(`0.3.1.${i}.1`)
-						if (node) {
-							const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
-							if (value === undefined) return
-							// @ts-ignore
-							if (node.contents.value !== value) {
-								this.#server.update(node, { value: value })
-							}
-						}
+						const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
+						if (value === undefined) return
+						this.#updateNodePath(`0.3.1.${i}.1`, value)
 					}
 				}
 			})
@@ -158,7 +150,7 @@ export class ServiceEmberPlus extends ServiceBase {
 			if (this.#server) {
 				if (!this.#customVars.includes(id)) {
 					this.debounceRestart()
-					this.logger.debug(`Custom variable definiation changed for ${id} restarting server`)
+					this.logger.debug(`New Custom variable definition: ${id} restarting server`)
 				} else {
 					const node = this.#server.getElementByPath(`0.3.2.${this.#customVars.indexOf(id)}.1`)
 					if (node) {
@@ -174,13 +166,7 @@ export class ServiceEmberPlus extends ServiceBase {
 		this.#serviceApi.on('action_recorder_is_running', (is_running) => {
 			if (this.#server) {
 				//check action recorder status
-				const node = this.#server.getElementByPath('0.4.0')
-				if (node) {
-					// @ts-ignore
-					if (node.contents.value !== is_running) {
-						this.#server.update(node, { value: is_running })
-					}
-				}
+				this.#updateNodePath('0.4.0', is_running)
 			}
 		})
 	}
@@ -678,12 +664,12 @@ export class ServiceEmberPlus extends ServiceBase {
 			switch (pathInfo[2]) {
 				case '0':
 					this.#serviceApi.actionRecorderSetRecording(Boolean(value))
-					this.#server.update(parameter, { value: this.#serviceApi.actionRecorderGetSession().isRunning })
+					this.#updateNodePath(path, this.#serviceApi.actionRecorderGetSession().isRunning)
 					break
 				case '1':
 					if (value) {
 						this.#serviceApi.actionRecorderDiscardActions()
-						this.#server.update(parameter, { value: false })
+						this.#updateNodePath(path, false)
 					}
 					break
 			}
