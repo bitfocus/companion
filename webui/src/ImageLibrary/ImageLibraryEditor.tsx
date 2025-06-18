@@ -1,4 +1,4 @@
-import { CAlert, CButton } from '@coreui/react'
+import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useRef, useState } from 'react'
@@ -76,7 +76,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				try {
 					// Convert file to data URL and upload
 					const dataUrl = await blobToDataURL(file)
-					const data = Uint8Array.from(dataUrl)
+					const data = new TextEncoder().encode(dataUrl)
+					console.log('ikm', data, dataUrl)
 
 					const hasher = CryptoJS.algo.SHA1.create()
 					hasher.update(CryptoJS.lib.WordArray.create(data))
@@ -108,14 +109,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		[socket, selectedImageId]
 	)
 
-	const formatFileSize = (bytes: number) => {
-		if (bytes === 0) return '0 B'
-		const k = 1024
-		const sizes = ['B', 'KB', 'MB']
-		const i = Math.floor(Math.log(bytes) / Math.log(k))
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
-	}
-
 	const formatDate = (timestamp: number) => {
 		return new Date(timestamp).toLocaleString()
 	}
@@ -142,6 +135,48 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		<div className="image-library-editor">
 			<h5>Image Editor</h5>
 
+			<div className="mb-3">
+				<div className="d-flex flex-wrap gap-2">
+					<CButton color="secondary" onClick={handleDownload}>
+						<FontAwesomeIcon icon={faDownload} /> Download
+					</CButton>
+
+					<CButton color="warning" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+						<FontAwesomeIcon icon={faUpload} />
+						{uploading ? ' Replacing...' : ' Replace'}
+					</CButton>
+
+					<CButton color="danger" onClick={handleDelete}>
+						<FontAwesomeIcon icon={faTrash} /> Delete
+					</CButton>
+				</div>
+
+				<input
+					ref={fileInputRef}
+					type="file"
+					accept="image/*"
+					onChange={handleReplaceImage}
+					style={{ display: 'none' }}
+				/>
+			</div>
+
+			<CForm className="row mb-3">
+				<CFormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
+					Id
+				</CFormLabel>
+				<CCol sm={8}>
+					<span>{imageInfo.id}</span>
+				</CCol>
+			</CForm>
+			<CForm className="row mb-3">
+				<CFormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
+					Name
+				</CFormLabel>
+				<CCol sm={8}>
+					<ImageNameEditor imageId={selectedImageId} currentName={imageInfo.name} />
+				</CCol>
+			</CForm>
+
 			<div className="image-preview-full">
 				<ImageLibraryImagePreview
 					imageId={selectedImageId}
@@ -152,57 +187,15 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			</div>
 
 			<div className="image-properties">
-				<div className="form-group mb-3">
-					<label className="form-label">Name</label>
-					<ImageNameEditor imageId={selectedImageId} currentName={imageInfo.name} />
-				</div>
-
 				<div className="image-metadata">
-					<div className="metadata-row">
-						<span className="metadata-label">File Size:</span>
-						<span>{formatFileSize(imageInfo.originalSize)}</span>
-					</div>
 					<div className="metadata-row">
 						<span className="metadata-label">Type:</span>
 						<span>{imageInfo.mimeType}</span>
 					</div>
 					<div className="metadata-row">
-						<span className="metadata-label">Created:</span>
-						<span>{formatDate(imageInfo.createdAt)}</span>
-					</div>
-					<div className="metadata-row">
 						<span className="metadata-label">Modified:</span>
 						<span>{formatDate(imageInfo.modifiedAt)}</span>
 					</div>
-					<div className="metadata-row">
-						<span className="metadata-label">Checksum:</span>
-						<span className="text-muted small">{imageInfo.checksum}</span>
-					</div>
-				</div>
-
-				<div className="image-actions mt-4">
-					<div className="d-flex flex-wrap gap-2">
-						<CButton color="secondary" onClick={handleDownload}>
-							<FontAwesomeIcon icon={faDownload} /> Download
-						</CButton>
-
-						<CButton color="warning" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-							<FontAwesomeIcon icon={faUpload} />
-							{uploading ? ' Replacing...' : ' Replace'}
-						</CButton>
-
-						<CButton color="danger" onClick={handleDelete}>
-							<FontAwesomeIcon icon={faTrash} /> Delete
-						</CButton>
-					</div>
-
-					<input
-						ref={fileInputRef}
-						type="file"
-						accept="image/*"
-						onChange={handleReplaceImage}
-						style={{ display: 'none' }}
-					/>
 				</div>
 			</div>
 		</div>

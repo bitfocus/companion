@@ -222,7 +222,7 @@ export class ImageLibrary {
 		this.#logger.info(`Created empty image ${safeId} (${name})`)
 
 		// Notify clients
-		this.#io.emitToRoom('image-library', 'image-library:added', safeId, info)
+		this.#io.emitToRoom('image-library', 'image-library:updated', safeId, info)
 
 		return safeId
 	}
@@ -364,7 +364,7 @@ export class ImageLibrary {
 			ctx.drawImage(originalImage, 0, 0, previewWidth, previewHeight)
 
 			// Convert to JPEG buffer
-			const previewData = canvas.toBuffer('image/jpeg', 0.8)
+			const previewData = canvas.toBuffer('image/webp', 75)
 
 			return {
 				width: originalWidth,

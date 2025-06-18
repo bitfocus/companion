@@ -54,9 +54,9 @@ export const ImageLibraryGrid = observer(function ImageLibraryGrid({
 						className="mb-3"
 					/>
 
-					<div className="d-flex gap-2 mb-3">
-						<CButton color="primary" onClick={handleCreateNew}>
-							<FontAwesomeIcon icon={faPlus} /> New Image
+					<div className="d-flex gap-2">
+						<CButton color="primary" size="sm" onClick={handleCreateNew}>
+							<FontAwesomeIcon icon={faPlus} /> Add Image
 						</CButton>
 					</div>
 				</div>

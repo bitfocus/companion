@@ -526,7 +526,6 @@ export interface BackendToClientEventsMap {
 	'image-library:upload-complete': (sessionId: string, imageId: string) => void
 	'image-library:upload-cancelled': (sessionId: string) => void
 	'image-library:upload-error': (sessionId: string, error: string) => void
-	'image-library:added': (imageId: string, info: ImageLibraryInfo) => void
 	'image-library:removed': (imageId: string) => void
 	'image-library:updated': (imageId: string, info: ImageLibraryInfo) => void
 
