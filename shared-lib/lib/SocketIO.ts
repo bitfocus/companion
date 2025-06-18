@@ -440,6 +440,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'image-library:delete': (imageId: string) => boolean
 	'image-library:create': (imageId: string, name: string) => string
 	'image-library:set-name': (imageId: string, name: string) => boolean
+	'image-library:set-id': (currentId: string, newId: string) => string
 	'image-library:upload-start': (filename: string, size: number) => string
 	'image-library:upload-chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
 	'image-library:upload-complete': (sessionId: string, imageId: string, checksum: string) => string

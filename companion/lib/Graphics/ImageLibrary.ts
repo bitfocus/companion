@@ -75,6 +75,11 @@ export class ImageLibrary {
 			return this.setImageName(imageId, name)
 		})
 
+		// Set image ID
+		client.onPromise('image-library:set-id', (imageId: string, newId: string) => {
+			return this.setImageId(imageId, newId)
+		})
+
 		// Delete image
 		client.onPromise('image-library:delete', (imageId: string) => {
 			return this.deleteImage(imageId)
@@ -274,6 +279,46 @@ export class ImageLibrary {
 		this.#io.emitToRoom('image-library', 'image-library:updated', imageId, data.info)
 
 		return true
+	}
+
+	/**
+	 * Set the ID of an existing image
+	 */
+	setImageId(currentId: string, newId: string): string {
+		const data = this.#dbTable.get(currentId)
+		if (!data) {
+			throw new Error(`Image with ID "${currentId}" not found`)
+		}
+
+		// Validate and sanitize the new ID
+		const safeNewId = makeLabelSafe(newId)
+		if (!safeNewId) {
+			throw new Error('Invalid image ID')
+		}
+
+		// Check if new ID already exists and is different from current
+		if (safeNewId !== currentId && this.#dbTable.get(safeNewId)) {
+			throw new Error(`Image with ID "${safeNewId}" already exists`)
+		}
+
+		// If the ID is the same, no change needed
+		if (safeNewId === currentId) return safeNewId
+
+		// Update the ID in the info
+		data.info.id = safeNewId
+		data.info.modifiedAt = Date.now()
+
+		// Move the data to the new key and delete the old one
+		this.#dbTable.set(safeNewId, data)
+		this.#dbTable.delete(currentId)
+
+		this.#logger.info(`Updated image ID from "${currentId}" to "${safeNewId}"`)
+
+		// Notify clients of the removal of the old ID and addition of the new one
+		this.#io.emitToRoom('image-library', 'image-library:removed', currentId)
+		this.#io.emitToRoom('image-library', 'image-library:updated', safeNewId, data.info)
+
+		return safeNewId
 	}
 
 	/**

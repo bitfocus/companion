@@ -479,7 +479,7 @@ export class GraphicsRenderer {
 	}
 
 	/**
-	 * Create a 200px preview JPEG from the original image
+	 * Create a 200px preview WebP from the original image
 	 */
 	static async createImagePreview(
 		originalDataUrl: string
@@ -492,17 +492,27 @@ export class GraphicsRenderer {
 			const originalWidth = originalImage.width
 			const originalHeight = originalImage.height
 
-			// Calculate preview dimensions (max 200px on longest side)
+			// Calculate preview dimensions (max 200px on longest side, but don't upsize small images)
 			const maxSize = 200
 			let previewWidth: number
 			let previewHeight: number
 
-			if (originalWidth > originalHeight) {
-				previewWidth = Math.min(maxSize, originalWidth)
-				previewHeight = Math.round((originalHeight * previewWidth) / originalWidth)
+			// Check if the image is smaller than the target preview size
+			const largestDimension = Math.max(originalWidth, originalHeight)
+
+			if (largestDimension <= maxSize) {
+				// Image is smaller than target size - don't upsize, just use original dimensions
+				previewWidth = originalWidth
+				previewHeight = originalHeight
 			} else {
-				previewHeight = Math.min(maxSize, originalHeight)
-				previewWidth = Math.round((originalWidth * previewHeight) / originalHeight)
+				// Image is larger than target size - downsize to fit within maxSize
+				if (originalWidth > originalHeight) {
+					previewWidth = maxSize
+					previewHeight = Math.round((originalHeight * previewWidth) / originalWidth)
+				} else {
+					previewHeight = maxSize
+					previewWidth = Math.round((originalWidth * previewHeight) / originalHeight)
+				}
 			}
 
 			// Create preview canvas

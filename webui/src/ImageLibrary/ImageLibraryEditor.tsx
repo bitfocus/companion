@@ -8,6 +8,7 @@ import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 import { ImageNameEditor } from './ImageNameEditor.js'
+import { ImageIdEditor } from './ImageIdEditor.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import CryptoJS from 'crypto-js'
 
@@ -84,7 +85,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					// Convert file to data URL and upload
 					const dataUrl = await blobToDataURL(file)
 					const data = new TextEncoder().encode(dataUrl)
-					console.log('ikm', data, dataUrl)
 
 					const hasher = CryptoJS.algo.SHA1.create()
 					hasher.update(CryptoJS.lib.WordArray.create(data))
@@ -168,11 +168,11 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			</div>
 
 			<CForm className="row mb-3">
-				<CFormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
+				<CFormLabel htmlFor="inputId" className="col-sm-4 col-form-label col-form-label-sm">
 					Id
 				</CFormLabel>
 				<CCol sm={8}>
-					<span>{imageInfo.id}</span>
+					<ImageIdEditor imageId={selectedImageId} currentId={imageInfo.id} />
 				</CCol>
 			</CForm>
 			<CForm className="row mb-3">

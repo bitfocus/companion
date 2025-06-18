@@ -19,6 +19,9 @@ export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps
 				<div className="image-name" title={image.name}>
 					{image.name}
 				</div>
+				<div className="image-id" title={image.id}>
+					{image.id}
+				</div>
 			</div>
 		</div>
 	)
