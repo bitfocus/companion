@@ -24,9 +24,11 @@ export const EmberPlusProtocol = observer(function EmberPlusProtocol() {
 				<li>
 					Button Manipulation
 					<br />
-					Path: <code>/Companion Tree/pages/</code>&lt;page name&gt;<code>/</code>&lt;button number&gt;<code>/</code>&lt;parameter name&gt;
+					Path: <code>/Companion Tree/pages/</code>&lt;page name&gt;<code>/</code>&lt;button number&gt;<code>/</code>
+					&lt;parameter name&gt;
 					<br />
-					Path: <code>/Companion Tree/location/</code>&lt;page number&gt;<code>/</code>&lt;row number&gt;<code>/</code>&lt;column number&gt;<code>/</code>&lt;parameter name&gt;
+					Path: <code>/Companion Tree/location/</code>&lt;page number&gt;<code>/</code>&lt;row number&gt;<code>/</code>
+					&lt;column number&gt;<code>/</code>&lt;parameter name&gt;
 					<br />
 					Permissions: <code>Read/Write</code>
 					<br />
@@ -35,7 +37,8 @@ export const EmberPlusProtocol = observer(function EmberPlusProtocol() {
 				<li>
 					Internal Variables
 					<br />
-					Path: <code>/Companion Tree/variables/internal/</code>&lt;parameter name&gt;<code>/</code>&lt;parameter type&gt;
+					Path: <code>/Companion Tree/variables/internal/</code>&lt;parameter name&gt;<code>/</code>&lt;parameter
+					type&gt;
 					<br />
 					Permissions: <code>Read Only</code>
 					<br />
@@ -66,24 +69,27 @@ export const EmberPlusProtocol = observer(function EmberPlusProtocol() {
 			</p>
 
 			<p>
-			The Ember Plus provider will automatically restart to rebuild the ember tree under the following conditions:
-			<br />
-			<ul>
-				<li>Page count change</li>
-				<li>Button matrix size change</li>
-				<li>Adding new connections</li>
-				<li>Changing the label of a connection</li>
-				<li>Adding new custom variables</li>
-			</ul>
-			This will disconnect clients and should be avoided during production use.
+				The Ember Plus provider will automatically restart to rebuild the ember tree under the following conditions:
+				<br />
+				<ul>
+					<li>Page count change</li>
+					<li>Button matrix size change</li>
+					<li>Adding new connections</li>
+					<li>Changing the label of a connection</li>
+					<li>Adding new custom variables</li>
+				</ul>
+				This will disconnect clients and should be avoided during production use.
 			</p>
 
 			<p>
 				<strong>Node Stability</strong>
 			</p>
 			<p>
-			The Ember Plus provider cannot guarantee the stability of the numerical paths to variables between Companion restarts, as this is contingent upon initialization order. 
-			Whenever possible one should preference use of textual paths such as <code>Companion Tree/variables/internal/instance_warns</code> rather than <code>0.3.1.3</code> as these are stable. After significant changes, a full Companion restart can help stabilize the numeric paths.
+				The Ember Plus provider cannot guarantee the stability of the numerical paths to variables between Companion
+				restarts, as this is contingent upon initialization order. Whenever possible one should preference use of
+				textual paths such as <code>Companion Tree/variables/internal/instance_warns</code> rather than{' '}
+				<code>0.3.1.3</code> as these are stable. After significant changes, a full Companion restart can help stabilize
+				the numeric paths.
 			</p>
 		</>
 	)

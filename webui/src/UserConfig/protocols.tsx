@@ -68,7 +68,9 @@ const UserConfigTable = observer(function UserConfigTable() {
 })
 
 const RemoteControlInfo = memo(function RemoteControlInfo() {
-	const [activeTab, setActiveTab] = useState<'tcp-udp' | 'http' | 'osc' | 'artnet' | 'rosstalk' | 'emberplus'>('tcp-udp')
+	const [activeTab, setActiveTab] = useState<'tcp-udp' | 'http' | 'osc' | 'artnet' | 'rosstalk' | 'emberplus'>(
+		'tcp-udp'
+	)
 
 	return (
 		<>
