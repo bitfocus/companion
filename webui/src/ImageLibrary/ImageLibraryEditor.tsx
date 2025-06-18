@@ -1,5 +1,5 @@
 import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
-import { faDownload, faTrashAlt, faUpload, faEdit } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faTrashAlt, faUpload, faEdit, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import { SocketContext } from '~/util.js'
@@ -11,6 +11,7 @@ import { ImageNameEditor } from './ImageNameEditor.js'
 import { ImageIdEditModal } from './ImageIdEditModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import CryptoJS from 'crypto-js'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 
 interface ImageLibraryEditorProps {
 	selectedImageId: string | null
@@ -24,7 +25,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	onImageIdChanged,
 }: ImageLibraryEditorProps) {
 	const socket = useContext(SocketContext)
-	const { imageLibrary } = useContext(RootAppStoreContext)
+	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
 	const [showIdEditModal, setShowIdEditModal] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
@@ -135,6 +136,12 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		[onImageIdChanged]
 	)
 
+	const handleCopyVariableValue = useCallback(() => {
+		if (notifier.current && selectedImageId) {
+			notifier.current.show('Copied', 'Copied to clipboard', 5000)
+		}
+	}, [notifier, selectedImageId])
+
 	const formatDate = (timestamp: number) => {
 		return new Date(timestamp).toLocaleString()
 	}
@@ -199,7 +206,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					Id
 				</CFormLabel>
 				<CCol sm={8} className="d-flex align-items-center justify-content-between">
-					<span className="font-monospace">{imageInfo.id}</span>
+					<div className="d-flex align-items-center">
+						<span className="font-monospace">{imageInfo.id}</span>
+						<CopyToClipboard text={`$(image:${imageInfo.id})`} onCopy={handleCopyVariableValue}>
+							<CButton size="sm" title="Copy variable name">
+								<FontAwesomeIcon icon={faCopy} />
+							</CButton>
+						</CopyToClipboard>
+					</div>
 					<CButton color="secondary" size="sm" onClick={() => setShowIdEditModal(true)} title="Edit Image ID">
 						<FontAwesomeIcon icon={faEdit} />
 					</CButton>
