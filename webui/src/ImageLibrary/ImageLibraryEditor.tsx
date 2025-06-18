@@ -149,7 +149,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	if (!selectedImageId) {
 		return (
 			<div className="image-library-editor">
-				<h5>Image Editor</h5>
 				<CAlert color="info">Select an image from the library to view and edit its properties.</CAlert>
 			</div>
 		)
@@ -158,7 +157,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	if (!imageInfo) {
 		return (
 			<div className="image-library-editor">
-				<h5>Image Editor</h5>
 				<CAlert color="danger">Failed to load image data.</CAlert>
 			</div>
 		)

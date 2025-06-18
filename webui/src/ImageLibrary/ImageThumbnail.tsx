@@ -15,7 +15,7 @@ export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps
 			<div className="image-preview">
 				<ImageLibraryImagePreview imageId={image.id} type="preview" checksum={image.checksum} alt={image.name} />
 			</div>
-			<div className="image-info">
+			<div className="p-2">
 				<div className="image-name" title={image.name}>
 					{image.name}
 				</div>
