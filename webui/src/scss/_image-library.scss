@@ -67,6 +67,7 @@
 	justify-content: center;
 	overflow: hidden;
 	border-bottom: 1px solid #dee2e6;
+	position: relative;
 
 	img {
 		width: 100%;
@@ -98,15 +99,45 @@
 	text-align: center;
 	padding: 1rem;
 	min-height: 100px;
+	width: 100%;
 
 	span {
 		font-size: 0.875rem;
 	}
 }
 
-.image-library-preview-loading,
 .image-library-preview-empty {
-	width: 100%;
+	color: #a8b2b8;
+
+	svg {
+		max-width: none !important;
+		max-height: none !important;
+		font-size: inherit !important;
+	}
+}
+
+.image-preview .image-library-preview-empty {
+	padding: 0;
+	min-height: auto;
+	background: transparent;
+
+	svg {
+		width: 50% !important;
+		height: 50% !important;
+	}
+}
+
+.image-preview-full .image-library-preview-empty {
+	svg,
+	.fa,
+	.fas,
+	.far,
+	.fal,
+	.fab {
+		width: 150px !important;
+		height: 150px !important;
+		font-size: 150px !important;
+	}
 }
 
 .image-library-preview-error {

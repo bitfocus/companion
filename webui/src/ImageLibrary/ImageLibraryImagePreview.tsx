@@ -179,7 +179,7 @@ export function ImageLibraryImagePreview({
 	if (!loadState.imageUrl) {
 		return (
 			<div className={classNames('image-library-preview-empty', className)}>
-				<FontAwesomeIcon icon={faImage} title="No image data" size="2xl" />
+				<FontAwesomeIcon icon={faImage} title="No image data" />
 			</div>
 		)
 	}
