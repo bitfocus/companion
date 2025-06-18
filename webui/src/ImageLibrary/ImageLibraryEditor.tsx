@@ -1,5 +1,5 @@
 import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
-import { faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import { SocketContext } from '~/util.js'
@@ -8,6 +8,7 @@ import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 import { ImageNameEditor } from './ImageNameEditor.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import CryptoJS from 'crypto-js'
 
 interface ImageLibraryEditorProps {
@@ -23,6 +24,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
 	// Get image info from the store
 	const imageInfo = selectedImageId ? imageLibrary.getImage(selectedImageId) : null
@@ -30,16 +32,21 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	const handleDelete = useCallback(() => {
 		if (!selectedImageId) return
 
-		if (confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
-			socket
-				.emitPromise('image-library:delete', [selectedImageId])
-				.then(() => {
-					onDeleteImage(selectedImageId)
-				})
-				.catch((err) => {
-					console.error('Failed to delete image:', err)
-				})
-		}
+		confirmModalRef.current?.show(
+			'Delete Image',
+			'Are you sure you want to delete this image? This action cannot be undone.',
+			'Delete',
+			() => {
+				socket
+					.emitPromise('image-library:delete', [selectedImageId])
+					.then(() => {
+						onDeleteImage(selectedImageId)
+					})
+					.catch((err) => {
+						console.error('Failed to delete image:', err)
+					})
+			}
+		)
 	}, [socket, selectedImageId, onDeleteImage])
 
 	const handleDownload = useCallback(() => {
@@ -133,10 +140,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 	return (
 		<div className="image-library-editor">
-			<h5>Image Editor</h5>
+			<GenericConfirmModal ref={confirmModalRef} />
 
 			<div className="mb-3">
 				<div className="d-flex flex-wrap gap-2">
+					<CButton color="danger" onClick={handleDelete} title="Delete Image">
+						<FontAwesomeIcon icon={faTrashAlt} />
+					</CButton>
+
 					<CButton color="secondary" onClick={handleDownload}>
 						<FontAwesomeIcon icon={faDownload} /> Download
 					</CButton>
@@ -144,10 +155,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					<CButton color="warning" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
 						<FontAwesomeIcon icon={faUpload} />
 						{uploading ? ' Replacing...' : ' Replace'}
-					</CButton>
-
-					<CButton color="danger" onClick={handleDelete}>
-						<FontAwesomeIcon icon={faTrash} /> Delete
 					</CButton>
 				</div>
 

@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useState, useRef } from 'react'
-import { LoadingBar, SocketContext } from '~/util.js'
+import { SocketContext } from '~/util.js'
 import classNames from 'classnames'
-import { CircleLoader, ClipLoader, MoonLoader, RingLoader } from 'react-spinners'
+import { MoonLoader } from 'react-spinners'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faImage } from '@fortawesome/free-solid-svg-icons'
+import { useImageCache } from './ImageCache.js'
 
 interface ImageLibraryImagePreviewProps {
 	imageId: string
@@ -30,6 +31,7 @@ export function ImageLibraryImagePreview({
 	alt,
 }: ImageLibraryImagePreviewProps): JSX.Element {
 	const socket = useContext(SocketContext)
+	const imageCache = useImageCache()
 	const [loadState, setLoadState] = useState<LoadState>({
 		loading: false,
 		imageUrl: null,
@@ -52,6 +54,22 @@ export function ImageLibraryImagePreview({
 
 		// If we've already loaded this exact combination, don't reload
 		if (lastLoadedRef.current === loadKey) {
+			return
+		}
+
+		// Check if we have a cached image URL first
+		const cacheKey = imageCache?.generateKey(imageId, type, checksum)
+		const cachedUrl = cacheKey && imageCache?.get(cacheKey)
+
+		if (typeof cachedUrl === 'string') {
+			// Use cached URL immediately
+			setLoadState({
+				loading: false,
+				imageUrl: cachedUrl,
+				error: null,
+				loadedChecksum: checksum,
+			})
+			lastLoadedRef.current = loadKey
 			return
 		}
 
@@ -80,6 +98,9 @@ export function ImageLibraryImagePreview({
 					if (imageData) {
 						// Verify the checksum matches what we expected
 						if (imageData.checksum === checksum) {
+							// Cache the image URL for future use
+							if (cacheKey) imageCache?.set(cacheKey, imageData.image)
+
 							setLoadState({
 								loading: false,
 								imageUrl: imageData.image,
@@ -137,7 +158,7 @@ export function ImageLibraryImagePreview({
 				currentRequestRef.current = null
 			}
 		}
-	}, [socket, imageId, type, checksum])
+	}, [socket, imageId, type, checksum, imageCache])
 
 	if (loadState.loading) {
 		return (
