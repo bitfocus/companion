@@ -5,10 +5,10 @@ import React, { useCallback, useContext, useState, useEffect, useMemo } from 're
 import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { ImageThumbnail } from './ImageThumbnail'
-import { nanoid } from 'nanoid'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ImageCacheProvider, ImageUrlCache } from './ImageCache'
+import { ImageAddModal } from './ImageAddModal'
 
 interface ImageLibraryGridProps {
 	selectedImageId: string | null
@@ -22,24 +22,23 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	const socket = useContext(SocketContext)
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [searchQuery, setSearchQuery] = useState('')
+	const [showAddModal, setShowAddModal] = useState(false)
 
 	const imageCache = useMemo(() => new ImageUrlCache(), [])
 
 	const images = imageLibrary.getAllImages()
 
 	const handleCreateNew = useCallback(() => {
-		const id = nanoid()
-		const name = 'New Image'
+		setShowAddModal(true)
+	}, [])
 
-		socket
-			.emitPromise('image-library:create', [id, name])
-			.then(() => {
-				onSelectImage(id)
-			})
-			.catch((err) => {
-				console.error('Failed to create new image:', err)
-			})
-	}, [socket, onSelectImage])
+	const handleImageCreated = useCallback(
+		(imageId: string) => {
+			setShowAddModal(false)
+			onSelectImage(imageId)
+		},
+		[onSelectImage]
+	)
 
 	const filteredImages = images.filter((image) => image.name.toLowerCase().includes(searchQuery.toLowerCase()))
 	const hiddenCount = images.length - filteredImages.length
@@ -66,6 +65,12 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	return (
 		<ImageCacheProvider cache={imageCache}>
 			<div className="image-library-grid">
+				<ImageAddModal
+					visible={showAddModal}
+					onClose={() => setShowAddModal(false)}
+					onImageCreated={handleImageCreated}
+				/>
+
 				<div className="image-library-header">
 					<h4>Image Library</h4>
 					<p>
