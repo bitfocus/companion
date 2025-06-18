@@ -15,6 +15,7 @@ import { ArtnetProtocol } from './Sections/ArtnetProtocol.js'
 import { HttpProtocol } from './Sections/HttpProtocol.js'
 import { OscProtocol } from './Sections/OscProtocol.js'
 import { RosstalkProtocol } from './Sections/RosstalkProtocol.js'
+import { EmberPlusProtocol } from './Sections/EmberPlusProtocol.js'
 import { TcpUdpProtocol } from './Sections/TcpUdpProtocol.js'
 import { useUserConfigProps } from './Context.js'
 
@@ -67,7 +68,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 })
 
 const RemoteControlInfo = memo(function RemoteControlInfo() {
-	const [activeTab, setActiveTab] = useState<'tcp-udp' | 'http' | 'osc' | 'artnet' | 'rosstalk'>('tcp-udp')
+	const [activeTab, setActiveTab] = useState<'tcp-udp' | 'http' | 'osc' | 'artnet' | 'rosstalk' | 'emberplus'>('tcp-udp')
 
 	return (
 		<>
@@ -97,6 +98,11 @@ const RemoteControlInfo = memo(function RemoteControlInfo() {
 						Rosstalk
 					</CNavLink>
 				</CNavItem>
+				<CNavItem>
+					<CNavLink active={activeTab === 'emberplus'} onClick={() => setActiveTab('emberplus')}>
+						Ember+
+					</CNavLink>
+				</CNavItem>
 			</CNav>
 			<CTabContent>
 				<CTabPane role="tabpanel" aria-labelledby="tcp-udp-tab" visible={activeTab === 'tcp-udp'}>
@@ -122,6 +128,11 @@ const RemoteControlInfo = memo(function RemoteControlInfo() {
 				<CTabPane role="tabpanel" aria-labelledby="rosstalk-tab" visible={activeTab === 'rosstalk'}>
 					<MyErrorBoundary>
 						<RosstalkProtocol />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane role="tabpanel" aria-labelledby="emberplus-tab" visible={activeTab === 'emberplus'}>
+					<MyErrorBoundary>
+						<EmberPlusProtocol />
 					</MyErrorBoundary>
 				</CTabPane>
 			</CTabContent>
