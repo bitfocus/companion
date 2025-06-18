@@ -1,5 +1,5 @@
 import { CButton, CFormInput } from '@coreui/react'
-import { faPlus, faImage, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faImage } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useState, useEffect, useMemo, useRef } from 'react'
 import { SocketContext } from '~/util.js'
@@ -9,6 +9,29 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ImageCacheProvider, ImageUrlCache } from './ImageCache'
 import { ImageAddModal, type ImageAddModalRef } from './ImageAddModal'
+import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
+import type {
+	NestingCollectionsApi,
+	CollectionsNestingTableCollection,
+	CollectionsNestingTableItem,
+} from '~/Components/CollectionsNestingTable/Types.js'
+import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+
+// Adapters for CollectionsNestingTable
+interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'children'> {
+	id: string
+	label?: string
+	sortOrder?: number
+	children: ImageCollection[]
+}
+
+interface ImageItem extends CollectionsNestingTableItem {
+	id: string
+	collectionId: string | null
+	sortOrder: number
+	// Additional image info
+	imageInfo: ImageLibraryInfo
+}
 
 interface ImageLibraryGridProps {
 	selectedImageId: string | null
@@ -30,8 +53,64 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 
 	const images = imageLibrary.getAllImages()
 
-	const filteredImages = images.filter((image) => image.name.toLowerCase().includes(searchQuery.toLowerCase()))
-	const hiddenCount = images.length - filteredImages.length
+	// Convert images to items format for CollectionsNestingTable
+	const imageItems: ImageItem[] = useMemo(() => {
+		return images.map((image, index) => ({
+			id: image.id,
+			collectionId: null, // No collections for now
+			sortOrder: index,
+			imageInfo: image,
+		}))
+	}, [images])
+
+	// Empty collections array for now
+	const collections: ImageCollection[] = []
+
+	// Placeholder collections API
+	const collectionsApi: NestingCollectionsApi = useMemo(
+		() => ({
+			createCollection: () => {
+				// TODO: Implement collection creation
+				console.log('Create collection - not implemented')
+			},
+			renameCollection: () => {
+				// TODO: Implement collection renaming
+				console.log('Rename collection - not implemented')
+			},
+			deleteCollection: () => {
+				// TODO: Implement collection deletion
+				console.log('Delete collection - not implemented')
+			},
+			moveCollection: () => {
+				// TODO: Implement collection moving
+				console.log('Move collection - not implemented')
+			},
+			moveItemToCollection: () => {
+				// TODO: Implement item moving to collection
+				console.log('Move item to collection - not implemented')
+			},
+		}),
+		[]
+	)
+
+	// ItemRow component for rendering individual images
+	const ItemRow = useCallback(
+		(item: ImageItem) => {
+			if (!item.imageInfo.name.toLowerCase().includes(searchQuery.toLowerCase())) return null
+
+			return (
+				<ImageThumbnail
+					image={item.imageInfo}
+					selected={selectedImageId === item.id}
+					onClick={() => onSelectImage(item.id)}
+				/>
+			)
+		},
+		[selectedImageId, onSelectImage, searchQuery]
+	)
+
+	// NoContent component
+	const NoContent = useCallback(() => <NonIdealState icon={faImage} text="No images in library" />, [])
 
 	// Listen for image library events to clear cache when images are updated or deleted
 	useEffect(() => {
@@ -82,30 +161,17 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 				</div>
 
 				<div className="image-library-grid-content">
-					{images.length === 0 ? (
-						<NonIdealState icon={faImage} text="No images in library" />
-					) : filteredImages.length === 0 ? (
-						<NonIdealState icon={faSearch} text="No images match your search" />
-					) : (
-						<div className="image-thumbnails-grid">
-							{filteredImages.map((image) => (
-								<ImageThumbnail
-									key={image.id}
-									image={image}
-									selected={selectedImageId === image.id}
-									onClick={() => onSelectImage(image.id)}
-								/>
-							))}
-						</div>
-					)}
-
-					{searchQuery && hiddenCount > 0 && filteredImages.length > 0 && (
-						<div className="mt-3 text-muted text-center">
-							<small>
-								{hiddenCount} image{hiddenCount !== 1 ? 's' : ''} hidden by search filter
-							</small>
-						</div>
-					)}
+					<CollectionsNestingTable
+						ItemRow={ItemRow}
+						itemName="image"
+						dragId="image-library"
+						collectionsApi={collectionsApi}
+						selectedItemId={selectedImageId}
+						gridLayout={true}
+						collections={collections}
+						items={imageItems}
+						NoContent={NoContent}
+					/>
 				</div>
 			</div>
 		</ImageCacheProvider>

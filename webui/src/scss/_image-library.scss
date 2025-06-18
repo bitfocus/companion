@@ -22,6 +22,11 @@
 		padding: 1rem;
 	}
 
+	// Override CollectionsNestingTable grid dimensions for image thumbnails
+	.collections-nesting-table-grid-container {
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	}
+
 	.image-thumbnails-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -29,22 +34,8 @@
 	}
 
 	.image-thumbnail {
-		border: 2px solid #dee2e6;
-		border-radius: 8px;
 		overflow: hidden;
 		cursor: pointer;
-		transition: all 0.2s ease;
-		background: #fff;
-
-		&:hover {
-			border-color: #007bff;
-			box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
-		}
-
-		&.selected {
-			border-color: #007bff;
-			box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-		}
 	}
 
 	.image-preview {
