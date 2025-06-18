@@ -24,6 +24,7 @@ import { GraphicsLockingGenerator } from './Locking.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type imageRs from '@julusian/image-rs'
+import { Canvas, loadImage } from '@napi-rs/canvas'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -475,6 +476,53 @@ export class GraphicsRenderer {
 				})
 			})
 		})
+	}
+
+	/**
+	 * Create a 200px preview JPEG from the original image
+	 */
+	static async createImagePreview(
+		originalDataUrl: string
+	): Promise<{ width: number; height: number; previewDataUrl: string }> {
+		try {
+			// Load the original image data directly from data URL
+			const originalImage = await loadImage(originalDataUrl)
+
+			// Get original dimensions
+			const originalWidth = originalImage.width
+			const originalHeight = originalImage.height
+
+			// Calculate preview dimensions (max 200px on longest side)
+			const maxSize = 200
+			let previewWidth: number
+			let previewHeight: number
+
+			if (originalWidth > originalHeight) {
+				previewWidth = Math.min(maxSize, originalWidth)
+				previewHeight = Math.round((originalHeight * previewWidth) / originalWidth)
+			} else {
+				previewHeight = Math.min(maxSize, originalHeight)
+				previewWidth = Math.round((originalWidth * previewHeight) / originalHeight)
+			}
+
+			// Create preview canvas
+			const canvas = new Canvas(previewWidth, previewHeight)
+			const ctx = canvas.getContext('2d')
+
+			// Draw resized image
+			ctx.drawImage(originalImage, 0, 0, previewWidth, previewHeight)
+
+			// Convert to data URL (WebP format with 75% quality)
+			const previewDataUrl = canvas.toDataURL('image/webp', 0.75)
+
+			return {
+				width: originalWidth,
+				height: originalHeight,
+				previewDataUrl,
+			}
+		} catch (error) {
+			throw new Error('Failed to process image')
+		}
 	}
 
 	static #RotateAndConvertImage(

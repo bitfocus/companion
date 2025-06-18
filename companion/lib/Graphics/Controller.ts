@@ -269,7 +269,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#logger.info('Fonts loaded')
 
 		// Initialize the image library
-		this.imageLibrary = new ImageLibrary(db.getTableView('image_library'), io)
+		this.imageLibrary = new ImageLibrary(db.getTableView('image_library'), io, this)
 
 		// Serve font files to clients
 		internalApiRouter.get('/graphics/font/:font', compressionMiddleware(), (req, res) => {
@@ -590,6 +590,31 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					format,
 					remainingAttempts - 1
 				)
+			} else {
+				throw e
+			}
+		}
+	}
+
+	/**
+	 * Create a preview image in the worker pool
+	 */
+	async executeCreatePreview(
+		originalDataUrl: string,
+		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
+	): Promise<{ width: number; height: number; previewDataUrl: string }> {
+		const args: Parameters<typeof GraphicsRenderer.createImagePreview> = [originalDataUrl]
+
+		if (DEBUG_DISABLE_RENDER_THREADING) {
+			return GraphicsRenderer.createImagePreview(...args)
+		}
+
+		try {
+			return this.#pool.exec('createImagePreview', args)
+		} catch (e: any) {
+			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
+			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
+				return this.executeCreatePreview(originalDataUrl, remainingAttempts - 1)
 			} else {
 				throw e
 			}

@@ -15,4 +15,5 @@ import workerPool from 'workerpool'
 workerPool.worker({
 	drawButtonImage: GraphicsRenderer.drawButtonImageUnwrapped,
 	drawButtonBareImage: GraphicsRenderer.drawButtonBareImageUnwrapped,
+	createImagePreview: GraphicsRenderer.createImagePreview,
 })

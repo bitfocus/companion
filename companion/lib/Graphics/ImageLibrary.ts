@@ -6,6 +6,7 @@ import type { ClientSocket } from '../UI/Handler.js'
 import type { UIHandler } from '../UI/Handler.js'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
+import type { GraphicsController } from './Controller.js'
 
 export interface ImageLibraryData {
 	originalImage: string // base64 data URL (empty string if not uploaded yet)
@@ -19,10 +20,16 @@ export class ImageLibrary {
 	readonly #multipartUploader: MultipartUploader
 	readonly #io: UIHandler
 	readonly #sessionToImageId = new Map<string, string>()
+	readonly #graphicsController: GraphicsController
 
-	constructor(dbTable: DataStoreTableView<Record<string, ImageLibraryData>>, io: UIHandler) {
+	constructor(
+		dbTable: DataStoreTableView<Record<string, ImageLibraryData>>,
+		io: UIHandler,
+		graphicsController: GraphicsController
+	) {
 		this.#dbTable = dbTable
 		this.#io = io
+		this.#graphicsController = graphicsController
 		this.#multipartUploader = new MultipartUploader((sessionId) => {
 			this.#sessionToImageId.delete(sessionId)
 			this.#io.emitToAll('image-library:upload-cancelled', sessionId)
@@ -280,100 +287,35 @@ export class ImageLibrary {
 
 		// Parse the data URL from the uploaded buffer
 		const dataUrlString = data.toString('utf-8')
-		const dataUrlMatch = dataUrlString.match(/^data:([^;]+);base64,(.+)$/)
 
+		const dataUrlMatch = dataUrlString.match(/^data:(image\/\w+);base64,(.+)$/)
 		if (!dataUrlMatch) {
-			throw new Error('Invalid data URL format')
+			throw new Error('Invalid data URL format or unsupported image format')
 		}
 
 		const mimeType = dataUrlMatch[1]
-		const base64Data = dataUrlMatch[2]
-
-		// Validate MIME type
-		if (!mimeType.startsWith('image/')) {
-			throw new Error('Unsupported image format')
-		}
-
-		// Convert base64 to buffer for processing
-		const imageBuffer = Buffer.from(base64Data, 'base64')
-
-		// The original data URL is already properly formatted
-		const originalImage = dataUrlString
 
 		// Get image dimensions and create preview
-		const { width, height, previewData } = await this.#createPreview(imageBuffer)
-
-		// Create preview data URL
-		const previewImage = `data:image/jpeg;base64,${previewData.toString('base64')}`
+		const { width, height, previewDataUrl } = await this.#graphicsController.executeCreatePreview(dataUrlString)
 
 		// Update the existing image info
-		existingData.info.originalSize = imageBuffer.length
-		existingData.info.previewSize = previewData.length
+		existingData.info.originalSize = dataUrlString.length
+		existingData.info.previewSize = previewDataUrl.length
 		existingData.info.modifiedAt = Date.now()
-		existingData.info.checksum = crypto.createHash('sha-1').update(imageBuffer).digest('hex')
+		existingData.info.checksum = crypto.createHash('sha-1').update(dataUrlString).digest('hex')
 		existingData.info.mimeType = mimeType
 
 		// Update the image data
-		existingData.originalImage = originalImage
-		existingData.previewImage = previewImage
+		existingData.originalImage = dataUrlString
+		existingData.previewImage = previewDataUrl
 
 		// Store in database
 		this.#dbTable.set(imageId, existingData)
 
 		this.#logger.info(
-			`Updated image ${imageId} (${existingData.info.name}) - ${width}x${height}, ${imageBuffer.length} bytes`
+			`Updated image ${imageId} (${existingData.info.name}) - ${width}x${height}, ${dataUrlString.length} bytes`
 		)
 
 		return existingData
-	}
-
-	/**
-	 * Create a 200px preview JPEG from the original image
-	 */
-	async #createPreview(originalData: Buffer): Promise<{ width: number; height: number; previewData: Buffer }> {
-		try {
-			// Use the @napi-rs/canvas library for image processing
-			const { loadImage } = await import('@napi-rs/canvas')
-
-			// Load the original image data
-			const originalImage = await loadImage(originalData)
-
-			// Get original dimensions
-			const originalWidth = originalImage.width
-			const originalHeight = originalImage.height
-
-			// Calculate preview dimensions (max 200px on longest side)
-			const maxSize = 200
-			let previewWidth: number
-			let previewHeight: number
-
-			if (originalWidth > originalHeight) {
-				previewWidth = Math.min(maxSize, originalWidth)
-				previewHeight = Math.round((originalHeight * previewWidth) / originalWidth)
-			} else {
-				previewHeight = Math.min(maxSize, originalHeight)
-				previewWidth = Math.round((originalWidth * previewHeight) / originalHeight)
-			}
-
-			// Create preview canvas
-			const { Canvas } = await import('@napi-rs/canvas')
-			const canvas = new Canvas(previewWidth, previewHeight)
-			const ctx = canvas.getContext('2d')
-
-			// Draw resized image
-			ctx.drawImage(originalImage, 0, 0, previewWidth, previewHeight)
-
-			// Convert to JPEG buffer
-			const previewData = canvas.toBuffer('image/webp', 75)
-
-			return {
-				width: originalWidth,
-				height: originalHeight,
-				previewData,
-			}
-		} catch (error) {
-			this.#logger.error(`Failed to create preview: ${error}`)
-			throw new Error('Failed to process image')
-		}
 	}
 }
