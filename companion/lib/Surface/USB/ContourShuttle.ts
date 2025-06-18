@@ -211,6 +211,8 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 		})
 
 		let lastShuttle = 0
+		let currentInterval: NodeJS.Timeout | undefined
+
 		this.contourShuttle.on('shuttle', (shuttle) => {
 			const xy = this.modelInfo.shuttle
 			if (xy === undefined) {
@@ -219,8 +221,24 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 
 			this.emit('setVariable', 'shuttle', shuttle)
 
+			// 1.send rotation events
 			this.emit('rotate', ...xy, lastShuttle < shuttle)
 			lastShuttle = shuttle
+
+			// 2. send press/release events
+			// OPTIONAL TODO: Condition click events on the absence of rotational actions.
+			if (currentInterval != undefined) {
+				clearInterval(currentInterval)
+				currentInterval = undefined
+			}
+			if (shuttle === 0) {
+				this.emit('click', ...xy, false) // maybe no longer needed?
+			} else {
+				currentInterval = setInterval(() => {
+					this.emit('click', ...xy, true)
+					this.emit('click', ...xy, false) // needed to enable the next click (is this how force press works?)
+				}, 200)
+			}
 		})
 
 		this.contourShuttle.on('disconnected', () => {
