@@ -9,7 +9,7 @@ import { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Commo
  * @param disable Disable loading of this page
  * @returns
  */
-export function useButtonRenderCache(location: ControlLocation, disable = false) {
+export function useButtonRenderCache(location: ControlLocation, disable = false): WrappedImage {
 	const socket = useContext(SocketContext)
 
 	// TODO - should these be managed a bit more centrally, and batched? It is likely that lots of subscribe/unsubscribe calls will happen at once (changing page/scrolling)
@@ -58,6 +58,7 @@ export function useButtonRenderCache(location: ControlLocation, disable = false)
 
 			unsubChange()
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [socket, location.pageNumber, location.row, location.column, disable])
 
 	return imageState

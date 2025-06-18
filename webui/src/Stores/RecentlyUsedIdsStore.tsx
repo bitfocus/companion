@@ -15,7 +15,7 @@ export class RecentlyUsedIdsStore {
 			// Try to load from storage, ignoring any errors
 			const loadedValue = JSON.parse(window.localStorage.getItem('recent_actions') || '[]')
 			if (Array.isArray(loadedValue)) initialValue = loadedValue
-		} catch (e) {
+		} catch (_e) {
 			// Ignore
 		}
 

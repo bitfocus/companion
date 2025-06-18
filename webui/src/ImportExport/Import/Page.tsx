@@ -197,7 +197,7 @@ interface ImportRemapProps {
 	setConnectionRemap: (fromId: string, toId: string) => void
 }
 
-export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: ImportRemapProps) {
+export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: ImportRemapProps): React.JSX.Element {
 	const sortedConnections = useMemo(() => {
 		if (!snapshot.instances) return []
 
@@ -263,7 +263,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 
 	const onChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => setConnectionRemap(id, e.currentTarget.value),
-		[setConnectionRemap]
+		[setConnectionRemap, id]
 	)
 
 	return (

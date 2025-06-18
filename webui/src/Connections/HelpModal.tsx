@@ -8,10 +8,6 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import semver from 'semver'
 
-interface HelpModalProps {
-	// Nothing
-}
-
 export interface HelpModalRef {
 	showFromUrl(moduleId: string, versionDisplayName: string, url: string): void
 }
@@ -24,7 +20,7 @@ interface HelpDisplayInfo {
 }
 
 export const HelpModal = observer(
-	forwardRef<HelpModalRef, HelpModalProps>(function HelpModal(_props, ref) {
+	forwardRef<HelpModalRef>(function HelpModal(_props, ref) {
 		const { modules } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)

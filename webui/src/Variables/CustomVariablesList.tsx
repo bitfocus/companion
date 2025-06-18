@@ -73,23 +73,20 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const clearFilter = useCallback(() => setFilter(''), [])
 	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
 
-	// const [candidates, errorMsg] = useMemo(() => {
-	// 	let candidates: CustomVariableDefinitionExt[] = []
-	// 	try {
-	// 		if (!filter) {
-	// 			candidates = variableDefinitions
-	// 		} else {
-	// 			const regexp = new RegExp(filter, 'i')
+	let filterRegexp: RegExp | null = null
+	if (filter) {
+		try {
+			filterRegexp = new RegExp(filter, 'i')
+		} catch (e) {
+			console.error('Failed to compile filter regexp:', e)
+		}
+	}
 
-	// 			candidates = variableDefinitions.filter((variable) => variable.id.match(regexp))
-	// 		}
-	// 		return [candidates, null]
-	// 	} catch (e) {
-	// 		console.error('Failed to compile candidates list:', e)
+	const CustomVariableItemRow = (item: CustomVariableDefinitionExt) => {
+		if (filterRegexp && !item.id.match(filterRegexp)) return null
 
-	// 		return [null, e?.toString() || 'Unknown error']
-	// 	}
-	// }, [variableDefinitions, filter])
+		return <CustomVariableRow info={item} />
+	}
 
 	const allCustomVariables: CustomVariableDefinitionExt[] = useComputed(() => {
 		const defs: CustomVariableDefinitionExt[] = []
@@ -192,10 +189,6 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 
 function CustomVariableListNoContent() {
 	return <NonIdealState icon={faSquareRootVariable} text="No custom variables are defined" />
-}
-
-function CustomVariableItemRow(item: CustomVariableDefinitionExt) {
-	return <CustomVariableRow info={item} />
 }
 
 const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {

@@ -22,7 +22,7 @@ export const CModalExt = forwardRef<HTMLDivElement, CModalExtProps>(function CMo
 		if (onOpened) setTimeout(onOpened, fadeInDuration)
 
 		onShow?.()
-	}, [onShow])
+	}, [onShow, onOpened])
 
 	const onCloseExt = useCallback(() => {
 		if (clearTimeoutRef) clearTimeout(clearTimeoutRef.current)
@@ -30,7 +30,7 @@ export const CModalExt = forwardRef<HTMLDivElement, CModalExtProps>(function CMo
 		if (onClosed) clearTimeoutRef.current = setTimeout(onClosed, fadeOutDuration)
 
 		onClose?.()
-	}, [onClose])
+	}, [onClose, onClosed])
 
 	return <CModal ref={ref} {...props} onShow={onShowExt} onClose={onCloseExt} />
 })

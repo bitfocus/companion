@@ -1,12 +1,12 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
-import React, { useContext, useMemo, useEffect, useCallback, memo } from 'react'
+import React, { useContext, useMemo, useCallback, memo } from 'react'
 import Select, { createFilter } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
-import { MenuPortalContext } from './DropdownInputField.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -21,7 +21,7 @@ interface MultiDropdownInputFieldProps {
 	regex?: string
 	value: DropdownChoiceId[]
 	setValue: (value: DropdownChoiceId[]) => void
-	setValid?: (valid: boolean) => void
+	checkValid?: (value: DropdownChoiceId[]) => boolean
 	disabled?: boolean
 	helpText?: string
 	onBlur?: () => void
@@ -45,7 +45,7 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 	regex,
 	value,
 	setValue,
-	setValid,
+	checkValid,
 	disabled,
 	helpText,
 	onBlur,
@@ -69,9 +69,8 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 
 	const currentValue = useMemo(() => {
 		const selectedValue = Array.isArray(value) ? value : [value]
-		let res: DropdownChoiceInt[] = []
+		const res: DropdownChoiceInt[] = []
 		for (const val of selectedValue) {
-			// eslint-disable-next-line eqeqeq
 			const entry = options.find((o) => o.value == val) // Intentionally loose for compatibility
 			if (entry) {
 				res.push(entry)
@@ -94,31 +93,9 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 		return null
 	}, [regex])
 
-	const isValueValid = useCallback(
-		(newValue: DropdownChoiceId | DropdownChoiceId[]) => {
-			const newValueArr = Array.isArray(newValue) ? newValue : [newValue]
-			for (const val of newValueArr) {
-				// Require the selected choices to be valid
-				if (allowCustom && compiledRegex && !options.find((c) => c.value === val) && !compiledRegex.exec(String(val))) {
-					return false
-				}
-			}
-
-			return true
-		},
-		[allowCustom, compiledRegex, options]
-	)
-
-	// If the value is undefined, populate with the default. Also inform the parent about the validity
-	useEffect(() => {
-		setValid?.(isValueValid(value))
-	}, [value, setValid, isValueValid])
-
 	const onChange = useCallback(
 		(e: DropdownChoiceInt[]) => {
 			const newValue = e?.map((v) => v.value) ?? []
-
-			const isValid = isValueValid(newValue)
 
 			const valueArr = value as DropdownChoiceId[] | undefined
 			if (
@@ -140,9 +117,8 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 			}
 
 			setValue(newValue)
-			setValid?.(isValid)
 		},
-		[setValue, setValid, value, minSelection, maxSelection, isValueValid]
+		[setValue, value, minSelection, maxSelection]
 	)
 
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
@@ -190,7 +166,7 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 			className={classNames(
 				{
 					'select-tooltip': true,
-					'select-invalid': !isValueValid(currentValue.map((v) => v.value) ?? []),
+					'select-invalid': !!checkValid && !checkValid(currentValue.map((v) => v.value) ?? []),
 				},
 				className
 			)}

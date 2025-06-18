@@ -78,6 +78,12 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 				requiresRestart
 				field="mystrix_enable"
 			/>
+			<UserConfigSwitchRow
+				userConfig={props}
+				label="Enable connected Logitech MX Creative Console"
+				requiresRestart
+				field="logitech_mx_console_enable"
+			/>
 		</>
 	)
 })

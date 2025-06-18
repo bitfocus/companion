@@ -8,14 +8,14 @@ import {
 	TextInputField,
 } from '~/Components/index.js'
 import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
-import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
+import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
+import { validateInputValue } from '~/Helpers/validateInputValue'
 
 interface ConnectionEditFieldProps {
 	label: React.ReactNode
 	setValue: (value: any) => void
-	setValid: (key: string, valid: boolean) => void
-	definition: ExtendedInputField | ExtendedConfigField
+	definition: ConnectionInputField
 	value: any
 	connectionId: string
 }
@@ -23,20 +23,18 @@ interface ConnectionEditFieldProps {
 export function ConnectionEditField({
 	label,
 	setValue,
-	setValid,
 	definition,
 	value,
 	connectionId,
-}: ConnectionEditFieldProps) {
-	const id = definition.id
-	const setValid2 = useCallback((valid: boolean) => setValid(id, valid), [setValid, id])
+}: ConnectionEditFieldProps): React.JSX.Element {
+	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
 
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'static-text': {
 			const control = <StaticTextFieldText {...definition} allowImages />
 
-			if (!!label) {
+			if (label) {
 				return (
 					<>
 						<CFormLabel>{label}</CFormLabel>
@@ -48,28 +46,18 @@ export function ConnectionEditField({
 			return control
 		}
 		case 'textinput':
-			return (
-				<TextInputField
-					label={label}
-					value={value}
-					regex={definition.regex}
-					required={definition.required}
-					setValue={setValue}
-					setValid={setValid2}
-				/>
-			)
+			return <TextInputField label={label} value={value} setValue={setValue} checkValid={checkValid} />
 		case 'number':
 			return (
 				<NumberInputField
 					label={label}
-					required={definition.required}
 					min={definition.min}
 					max={definition.max}
 					step={definition.step}
 					range={definition.range}
 					value={value}
 					setValue={setValue}
-					setValid={setValid2}
+					checkValid={checkValid}
 				/>
 			)
 		case 'checkbox':
@@ -80,10 +68,8 @@ export function ConnectionEditField({
 						color="success"
 						checked={value}
 						size="xl"
-						title={definition.tooltip} // nocommit: this needs fixing
 						onChange={() => {
 							setValue(!value)
-							//setValid2(true)
 						}}
 					/>
 				</div>
@@ -98,7 +84,7 @@ export function ConnectionEditField({
 					regex={definition.regex}
 					value={value}
 					setValue={setValue}
-					setValid={setValid2}
+					checkValid={checkValid}
 				/>
 			)
 		case 'multidropdown':
@@ -113,7 +99,7 @@ export function ConnectionEditField({
 					regex={definition.regex}
 					value={value}
 					setValue={setValue}
-					setValid={setValid2}
+					checkValid={checkValid}
 				/>
 			)
 		case 'colorpicker': {
@@ -122,7 +108,6 @@ export function ConnectionEditField({
 					label={label}
 					value={value}
 					setValue={setValue}
-					setValid={setValid2}
 					enableAlpha={definition.enableAlpha ?? false}
 					returnType={definition.returnType ?? 'number'}
 					presetColors={definition.presetColors}

@@ -6,7 +6,8 @@ import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef
 import { SocketContext, LoadingBar } from '~/util.js'
 import { CButton, CForm, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { DropdownInputField, MenuPortalContext } from '~/Components/DropdownInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { MenuPortalContext } from '~/Components/MenuPortalContext'
 
 export interface SetupSatelliteModalRef {
 	show(surfaceInfo: ClientDiscoveredSurfaceInfoSatellite): void

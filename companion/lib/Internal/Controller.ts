@@ -388,7 +388,7 @@ export class InternalController {
 					}
 				} catch (e: any) {
 					this.#logger.warn(
-						`Action execute failed: ${JSON.stringify(action)}(${JSON.stringify(extras)}) - ${e?.message ?? e} ${
+						`Action execute failed: ${JSON.stringify(action.asEntityModel(false))}(${JSON.stringify(extras)}) - ${e?.message ?? e} ${
 							e?.stack
 						}`
 					)

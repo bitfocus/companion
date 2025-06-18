@@ -155,7 +155,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 interface AddConnectionEntryProps {
 	moduleInfo: FuzzyProduct
-	addConnection(module: FuzzyProduct): void
+	addConnection: (module: FuzzyProduct) => void
 }
 
 function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryProps) {
@@ -173,7 +173,7 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 		() =>
 			showHelpForVersion?.helpPath &&
 			helpViewer.current?.showFromUrl(moduleInfo.id, showHelpForVersion.versionId, showHelpForVersion.helpPath),
-		[helpViewer, moduleInfo.id, showHelpForVersion]
+		[helpViewer, moduleInfo.id, showHelpForVersion?.helpPath, showHelpForVersion?.versionId]
 	)
 
 	return (

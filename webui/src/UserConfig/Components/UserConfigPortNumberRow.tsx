@@ -8,6 +8,6 @@ interface UserConfigPortNumberRowProps {
 	label: string | React.ReactNode
 	field: keyof UserConfigModel
 }
-export function UserConfigPortNumberRow(props: UserConfigPortNumberRowProps) {
+export function UserConfigPortNumberRow(props: UserConfigPortNumberRowProps): React.JSX.Element {
 	return <UserConfigNumberInputRow {...props} min={1024} max={65535} step={1} />
 }

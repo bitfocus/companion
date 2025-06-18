@@ -4,7 +4,7 @@ import React from 'react'
 export function CollectionsNestingTableNestingRow({
 	nestingLevel,
 	children,
-}: React.PropsWithChildren<{ nestingLevel: number }>) {
+}: React.PropsWithChildren<{ nestingLevel: number }>): React.JSX.Element {
 	return (
 		<div
 			style={{

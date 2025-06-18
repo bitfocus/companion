@@ -17,7 +17,7 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ m
 		socket.emitPromise('modules-store:info:refresh', [moduleId]).catch((err) => {
 			console.error('Failed to refresh module versions', err)
 		})
-	}, [moduleId])
+	}, [socket, moduleId])
 
 	if (refreshProgress === 1) {
 		return (

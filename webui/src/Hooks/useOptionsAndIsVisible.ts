@@ -1,4 +1,8 @@
-import type { ExtendedInputField, InternalInputField } from '@companion-app/shared/Model/Options.js'
+import type {
+	ExtendedConfigField,
+	ExtendedInputField,
+	InternalInputField,
+} from '@companion-app/shared/Model/Options.js'
 import { useEffect, useMemo, useState } from 'react'
 import { assertNever, deepFreeze, sandbox } from '~/util.js'
 import type { CompanionOptionValues } from '@companion-module/base'
@@ -44,7 +48,7 @@ export function useOptionsAndIsVisible<
 }
 
 export function useOptionsAndIsVisibleFns<
-	T extends ExtendedInputField | InternalInputField = ExtendedInputField | InternalInputField,
+	T extends ExtendedInputField | InternalInputField | ExtendedConfigField = ExtendedInputField | InternalInputField,
 >(
 	itemOptions: Array<T> | undefined | null
 ): [options: Array<T>, isVisibleFns: Record<string, ((options: CompanionOptionValues) => boolean) | undefined>] {
@@ -76,7 +80,7 @@ export function useOptionsAndIsVisibleFns<
 										} else if (name.startsWith('options:')) {
 											return options[name.slice(8)] as any
 										} else if (name.startsWith('data:')) {
-											return userData[name.slice(5)] as any
+											return userData[name.slice(5)]
 										} else {
 											return undefined
 										}

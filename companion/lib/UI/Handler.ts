@@ -128,7 +128,7 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 
 		this.#socketIOOptions = {
 			allowEIO3: true,
-			maxHttpBufferSize: 500 * 1000 * 1000, // bytes. socket.io v2 used 100mb. while not entirely safe, it is needed by some for their large image heavy setups #3033
+			maxHttpBufferSize: 5 * 1024 * 1024, // bytes. The multipart uploader is typically set to use 1MB chunks, give it some space for overhead
 			cors: {
 				// Allow everything
 				// @ts-ignore

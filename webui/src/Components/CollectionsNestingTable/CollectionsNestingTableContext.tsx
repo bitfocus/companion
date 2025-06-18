@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useMemo } from 'react'
 import type { NestingCollectionsApi, CollectionsNestingTableItem, CollectionsNestingTableCollection } from './Types.js'
 
@@ -18,19 +19,17 @@ const CollectionsNestingTableContext = createContext<CollectionsNestingTableCont
 export function useCollectionsNestingTableContext<
 	TCollection extends CollectionsNestingTableCollection,
 	TItem extends CollectionsNestingTableItem,
->() {
+>(): CollectionsNestingTableContextType<TCollection, TItem> {
 	const ctx = useContext(CollectionsNestingTableContext)
 	if (!ctx)
 		throw new Error('useCollectionsNestingTableContext must be used within a CollectionsNestingTableContextProvider')
 	return ctx as CollectionsNestingTableContextType<TCollection, TItem>
 }
 
-interface CollectionsNestingTableContextProviderProps<
+type CollectionsNestingTableContextProviderProps<
 	TCollection extends CollectionsNestingTableCollection,
 	TItem extends CollectionsNestingTableItem,
-> extends CollectionsNestingTableContextType<TCollection, TItem> {
-	// visibleConnections: TableVisibilityHelper<VisibleConnectionsState>
-}
+> = CollectionsNestingTableContextType<TCollection, TItem>
 
 export function CollectionsNestingTableContextProvider<
 	TCollection extends CollectionsNestingTableCollection,
@@ -43,7 +42,7 @@ export function CollectionsNestingTableContextProvider<
 	collectionsApi,
 	selectedItemId,
 	children,
-}: React.PropsWithChildren<CollectionsNestingTableContextProviderProps<TCollection, TItem>>) {
+}: React.PropsWithChildren<CollectionsNestingTableContextProviderProps<TCollection, TItem>>): React.JSX.Element {
 	const value = useMemo<CollectionsNestingTableContextType<TCollection, TItem>>(() => {
 		return {
 			ItemRow,

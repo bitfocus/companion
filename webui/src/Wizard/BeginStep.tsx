@@ -4,7 +4,7 @@ interface BeginStepProps {
 	allowGrid: number
 }
 
-export function BeginStep({ allowGrid }: BeginStepProps) {
+export function BeginStep({ allowGrid }: BeginStepProps): React.JSX.Element {
 	return (
 		<div>
 			<p style={{ marginTop: 0 }}>

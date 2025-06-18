@@ -12,7 +12,7 @@ export function ControlHotPressButtons({
 }: {
 	location: ControlLocation
 	showRotaries: boolean
-}) {
+}): React.JSX.Element {
 	const { socket } = useContext(RootAppStoreContext)
 
 	const hotPressDown = useCallback(() => {

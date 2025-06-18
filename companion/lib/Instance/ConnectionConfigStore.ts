@@ -6,9 +6,16 @@ import {
 import { DataDatabase } from '../Data/Database.js'
 // import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
-import { cloneDeep } from 'lodash-es'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
+
+export interface AddConnectionProps {
+	versionId: string | null
+	updatePolicy: ConnectionUpdatePolicy
+	disabled: boolean
+	collectionId?: string
+	sortOrder?: number
+}
 
 export class ConnectionConfigStore {
 	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
@@ -66,9 +73,7 @@ export class ConnectionConfigStore {
 		moduleType: string,
 		label: string,
 		product: string | undefined,
-		moduleVersionId: string | null,
-		updatePolicy: ConnectionUpdatePolicy,
-		disabled: boolean
+		props: AddConnectionProps
 	): [id: string, config: ConnectionConfig] {
 		// Find the highest rank given to an instance
 		const highestRank =
@@ -81,18 +86,22 @@ export class ConnectionConfigStore {
 
 		const id = nanoid()
 
+		// const collectionIdIsValid = this.#store
+
 		const newConfig: ConnectionConfig = {
 			instance_type: moduleType,
-			moduleVersionId: moduleVersionId,
-			updatePolicy: updatePolicy,
-			sortOrder: highestRank + 1,
+			moduleVersionId: props.versionId,
+			updatePolicy: props.updatePolicy,
+			sortOrder: props.sortOrder ?? highestRank + 1,
+			collectionId: props.collectionId ?? undefined,
 			label: label,
 			isFirstInit: true,
 			config: {
 				product: product,
 			},
+			secrets: {},
 			lastUpgradeIndex: -1,
-			enabled: !disabled,
+			enabled: !props.disabled,
 		}
 
 		this.#store.set(id, newConfig)
@@ -106,9 +115,15 @@ export class ConnectionConfigStore {
 		this.commitChanges([id])
 	}
 
-	exportAll(clone = true): Record<string, ConnectionConfig | undefined> {
+	exportAll(includeSecrets: boolean): Record<string, ConnectionConfig | undefined> {
 		const obj = Object.fromEntries(this.#store.entries())
-		return clone ? cloneDeep(obj) : obj
+		if (includeSecrets) return obj
+
+		const newObj = { ...obj }
+		for (const config of Object.values(newObj)) {
+			delete config.secrets
+		}
+		return newObj
 	}
 
 	getPartialClientJson(): Record<string, ClientConnectionConfig> {

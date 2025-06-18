@@ -3,7 +3,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
 
-export interface CustomVariablesCollectionsApi extends NestingCollectionsApi {}
+export type CustomVariablesCollectionsApi = NestingCollectionsApi
 
 export function useCustomVariablesCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>

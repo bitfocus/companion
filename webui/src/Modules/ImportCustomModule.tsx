@@ -7,7 +7,7 @@ import CryptoJS from 'crypto-js'
 
 const NOTIFICATION_ID_IMPORT = 'import_module_bundle'
 
-export function ImportModules() {
+export function ImportModules(): React.JSX.Element {
 	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	// const [importBundleProgress, setImportBundleProgress] = useState<number | null>(null)
@@ -48,22 +48,12 @@ export function ImportModules() {
 				return
 			}
 
-			var fr = new FileReader()
-			fr.onload = () => {
-				if (!fr.result) {
-					setImportError('Failed to load file')
-					return
-				}
+			Promise.resolve()
+				.then(async () => {
+					const buffer = await newFile.bytes()
 
-				if (typeof fr.result === 'string') {
-					setImportError('Failed to load file contents in correct format')
-					return
-				}
-
-				setImportError(null)
-				socket
-					.emitPromise('modules:install-module-tar', [new Uint8Array(fr.result)], 20000)
-					.then((failureReason) => {
+					setImportError(null)
+					await socket.emitPromise('modules:install-module-tar', [buffer], 20000).then((failureReason) => {
 						if (failureReason) {
 							console.error('Failed to install module', failureReason)
 
@@ -79,14 +69,13 @@ export function ImportModules() {
 						// 	// setImportInfo([config, initialRemap])
 						// }
 					})
-					.catch((e) => {
-						setImportError('Failed to load module package to import')
-						console.error('Failed to load module package to import:', e)
-					})
-			}
-			fr.readAsArrayBuffer(newFile)
+				})
+				.catch((e) => {
+					setImportError('Failed to load module package to import')
+					console.error('Failed to load module package to import:', e)
+				})
 		},
-		[socket]
+		[socket, notifier]
 	)
 
 	const loadModuleBundle = useCallback(
@@ -103,7 +92,7 @@ export function ImportModules() {
 			notifier.current?.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 			console.log(`start import of ${newFile.size} bytes`)
 
-			let hasher = CryptoJS.algo.SHA1.create()
+			const hasher = CryptoJS.algo.SHA1.create()
 
 			Promise.resolve()
 				.then(async () => {
@@ -143,7 +132,9 @@ export function ImportModules() {
 							)
 						)
 						.catch((e) => {
-							socket.emitPromise('modules:bundle-import:cancel', [sessionId])
+							socket.emitPromise('modules:bundle-import:cancel', [sessionId]).catch((cancelErr) => {
+								console.error('Failed to cancel import session', cancelErr)
+							})
 							throw e
 						})
 				})

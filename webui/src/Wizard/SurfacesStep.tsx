@@ -7,7 +7,7 @@ interface SurfacesStepProps {
 	setValue: (key: keyof UserConfigModel, value: any) => void
 }
 
-export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
+export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX.Element {
 	return (
 		<div>
 			<h5>USB Surface Detection Configuration</h5>
@@ -78,6 +78,14 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 					label="203 Systems Mystrix USB Devices"
 					checked={config.mystrix_enable}
 					onChange={(e) => setValue('mystrix_enable', e.currentTarget.checked)}
+				/>
+			</div>
+
+			<div className="indent3">
+				<CFormCheck
+					label="Logitech MX Console Devices"
+					checked={config.logitech_mx_console_enable}
+					onChange={(e) => setValue('logitech_mx_console_enable', e.currentTarget.checked)}
 				/>
 			</div>
 

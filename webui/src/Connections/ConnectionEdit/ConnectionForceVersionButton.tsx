@@ -35,7 +35,7 @@ export function ConnectionForceVersionButton({
 	disabled,
 	currentModuleId,
 	currentVersionId,
-}: ConnectionForceVersionButtonProps) {
+}: ConnectionForceVersionButtonProps): React.JSX.Element {
 	const { socket, modules } = useContext(RootAppStoreContext)
 
 	const [show, setShow] = useState(false)
@@ -44,17 +44,6 @@ export function ConnectionForceVersionButton({
 	const buttonFocus = () => {
 		buttonRef.current?.focus()
 	}
-
-	const doShow = useCallback(() => {
-		form.reset()
-		setSaveError(null)
-		setShow(true)
-	}, [setShow])
-	const doClose = useCallback(() => setShow(false), [setShow])
-	const onClosed = useCallback(() => {
-		form.reset()
-		setSaveError(null)
-	}, [])
 
 	const [saveError, setSaveError] = useState<string | null>(null)
 	const form = useForm({
@@ -77,6 +66,17 @@ export function ConnectionForceVersionButton({
 		},
 	})
 
+	const doShow = useCallback(() => {
+		form.reset()
+		setSaveError(null)
+		setShow(true)
+	}, [form])
+	const doClose = useCallback(() => setShow(false), [setShow])
+	const onClosed = useCallback(() => {
+		form.reset()
+		setSaveError(null)
+	}, [form])
+
 	return (
 		<>
 			<CButton
@@ -98,7 +98,9 @@ export function ConnectionForceVersionButton({
 							onSubmit={(e) => {
 								e.preventDefault()
 								e.stopPropagation()
-								form.handleSubmit()
+								form.handleSubmit().catch((err) => {
+									console.error('Error submitting form', err)
+								})
 							}}
 						>
 							<CCol sm={12}>
@@ -175,7 +177,11 @@ export function ConnectionForceVersionButton({
 										color="primary"
 										type="submit"
 										disabled={!canSubmit}
-										onClick={form.handleSubmit}
+										onClick={() => {
+											form.handleSubmit().catch((err) => {
+												console.error('Error submitting form', err)
+											})
+										}}
 									>
 										Save {isSubmitting ? '...' : ''}
 									</CButton>

@@ -85,6 +85,6 @@ export function useControlActionStepsAndSetsService(
 				})
 			},
 		}),
-		[controlId, confirmModal, setSelectedStep]
+		[socket, controlId, confirmModal, setSelectedStep]
 	)
 }

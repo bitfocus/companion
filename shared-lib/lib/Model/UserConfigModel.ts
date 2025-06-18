@@ -14,6 +14,7 @@ export interface UserConfigModel {
 	vec_footpedal_enable: boolean
 	blackmagic_controller_enable: boolean
 	mystrix_enable: boolean
+	logitech_mx_console_enable: boolean
 
 	pin_enable: boolean
 	link_lockouts: boolean

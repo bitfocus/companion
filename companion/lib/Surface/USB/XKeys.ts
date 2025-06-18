@@ -262,13 +262,13 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		if (buttonIndex === undefined) return
 
 		// Feedback
-		const color2 = {
+		const rawColor = {
 			r: (color >> 16) & 0xff,
-			g: 0, // (color >> 8) & 0xff,
+			g: (color >> 8) & 0xff,
 			b: color & 0xff,
 		}
 
-		const tmpColor = { ...color2 }
+		const tmpColor = { ...rawColor }
 		if (this.#pressed.has(buttonIndex) && this.config.illuminate_pressed) tmpColor.r = 255
 
 		try {
@@ -277,7 +277,7 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 			this.#logger.debug(`Failed to set backlight: ${e}`)
 		}
 
-		this.#lastColors[buttonIndex] = color2
+		this.#lastColors[buttonIndex] = rawColor
 	}
 
 	clearDeck(): void {

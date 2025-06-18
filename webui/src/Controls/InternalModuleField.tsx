@@ -13,6 +13,7 @@ export function InternalModuleField(
 	option: InternalInputField,
 	isLocatedInGrid: boolean,
 	readonly: boolean,
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	value: any,
 	setValue: (value: any) => void
 ): JSX.Element | null {

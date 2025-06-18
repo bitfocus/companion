@@ -34,7 +34,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 }: EntityCellControlProps) {
 	const innerSetEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled?.(e.target.checked),
-		[service.setEnabled]
+		[service]
 	)
 
 	const doCollapse = useCallback(() => setPanelCollapsed(true), [setPanelCollapsed])

@@ -17,7 +17,7 @@ import { CloudUserPass } from './UserPass.js'
 import { SocketContext, type CompanionSocketWrapped, LoadingRetryOrError } from '~/util.js'
 import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 
-export function CloudPage() {
+export function CloudPage(): React.JSX.Element {
 	const socket = useContext(SocketContext)
 
 	const cloudState = useCloudState(socket)

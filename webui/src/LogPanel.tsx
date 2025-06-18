@@ -201,7 +201,6 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 			// scroll to bottom
 			listRef.current.scrollToItem(messages.length - 1, 'end')
 		}
-		// eslint-disable-next-line
 	}, [messages, follow])
 
 	const hasMountedRef = useRef(false)
@@ -311,7 +310,7 @@ function loadConfig(): LogConfig {
 		const config = JSON.parse(rawConfig)
 		if (!config) throw new Error()
 		return config
-	} catch (e) {
+	} catch (_e) {
 		// setup defaults
 		const config: LogConfig = {
 			debug: false,
