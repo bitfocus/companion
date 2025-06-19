@@ -48,6 +48,7 @@ import { Route as SettingsGeneralRouteImport } from './routes/app/settings/gener
 import { Route as SettingsButtonsRouteImport } from './routes/app/settings/buttons.tsx'
 import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/advanced.tsx'
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
+import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
@@ -267,6 +268,11 @@ const ModulesModuleIdRoute = ModulesModuleIdRouteImport.update({
   path: '/$moduleId',
   getParentRoute: () => ModulesRoute,
 } as any)
+const ConnectionsConnectionIdRoute = ConnectionsConnectionIdRouteImport.update({
+  id: '/$connectionId',
+  path: '/$connectionId',
+  getParentRoute: () => ConnectionsRoute,
+} as any)
 const ButtonsPageRoute = ButtonsPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -287,7 +293,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
-  '/connections': typeof ConnectionsRoute
+  '/connections': typeof ConnectionsRouteWithChildren
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
   '/modules': typeof ModulesRouteWithChildren
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
+  '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
   '/settings/buttons': typeof SettingsButtonsRoute
@@ -329,7 +336,7 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
-  '/connections': typeof ConnectionsRoute
+  '/connections': typeof ConnectionsRouteWithChildren
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
   '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
@@ -337,6 +344,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
+  '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
   '/settings/buttons': typeof SettingsButtonsRoute
@@ -371,7 +379,7 @@ export interface FileRoutesById {
   '/_app/$': typeof SplatRoute
   '/_app/buttons': typeof ButtonsRouteWithChildren
   '/_app/cloud': typeof CloudRoute
-  '/_app/connections': typeof ConnectionsRoute
+  '/_app/connections': typeof ConnectionsRouteWithChildren
   '/_app/import-export': typeof ImportExportRoute
   '/_app/log': typeof LogRoute
   '/_app/modules': typeof ModulesRouteWithChildren
@@ -381,6 +389,7 @@ export interface FileRoutesById {
   '/_app/': typeof IndexRoute
   '/emulator/': typeof EmulatorIndexRoute
   '/_app/buttons/$page': typeof ButtonsPageRoute
+  '/_app/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
   '/_app/settings/advanced': typeof SettingsAdvancedRoute
   '/_app/settings/buttons': typeof SettingsButtonsRoute
@@ -425,6 +434,7 @@ export interface FileRouteTypes {
     | '/'
     | '/emulator'
     | '/buttons/$page'
+    | '/connections/$connectionId'
     | '/modules/$moduleId'
     | '/settings/advanced'
     | '/settings/buttons'
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/'
     | '/emulator'
     | '/buttons/$page'
+    | '/connections/$connectionId'
     | '/modules/$moduleId'
     | '/settings/advanced'
     | '/settings/buttons'
@@ -508,6 +519,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/emulator/'
     | '/_app/buttons/$page'
+    | '/_app/connections/$connectionId'
     | '/_app/modules/$moduleId'
     | '/_app/settings/advanced'
     | '/_app/settings/buttons'
@@ -826,6 +838,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModulesModuleIdRouteImport
       parentRoute: typeof ModulesRoute
     }
+    '/_app/connections/$connectionId': {
+      id: '/_app/connections/$connectionId'
+      path: '/$connectionId'
+      fullPath: '/connections/$connectionId'
+      preLoaderRoute: typeof ConnectionsConnectionIdRouteImport
+      parentRoute: typeof ConnectionsRoute
+    }
     '/_app/buttons/$page': {
       id: '/_app/buttons/$page'
       path: '/$page'
@@ -846,6 +865,18 @@ const ButtonsRouteChildren: ButtonsRouteChildren = {
 
 const ButtonsRouteWithChildren =
   ButtonsRoute._addFileChildren(ButtonsRouteChildren)
+
+interface ConnectionsRouteChildren {
+  ConnectionsConnectionIdRoute: typeof ConnectionsConnectionIdRoute
+}
+
+const ConnectionsRouteChildren: ConnectionsRouteChildren = {
+  ConnectionsConnectionIdRoute: ConnectionsConnectionIdRoute,
+}
+
+const ConnectionsRouteWithChildren = ConnectionsRoute._addFileChildren(
+  ConnectionsRouteChildren,
+)
 
 interface ModulesRouteChildren {
   ModulesModuleIdRoute: typeof ModulesModuleIdRoute
@@ -878,7 +909,7 @@ interface appRouteChildren {
   SplatRoute: typeof SplatRoute
   ButtonsRoute: typeof ButtonsRouteWithChildren
   CloudRoute: typeof CloudRoute
-  ConnectionsRoute: typeof ConnectionsRoute
+  ConnectionsRoute: typeof ConnectionsRouteWithChildren
   ImportExportRoute: typeof ImportExportRoute
   LogRoute: typeof LogRoute
   ModulesRoute: typeof ModulesRouteWithChildren
@@ -903,7 +934,7 @@ const appRouteChildren: appRouteChildren = {
   SplatRoute: SplatRoute,
   ButtonsRoute: ButtonsRouteWithChildren,
   CloudRoute: CloudRoute,
-  ConnectionsRoute: ConnectionsRoute,
+  ConnectionsRoute: ConnectionsRouteWithChildren,
   ImportExportRoute: ImportExportRoute,
   LogRoute: LogRoute,
   ModulesRoute: ModulesRouteWithChildren,
