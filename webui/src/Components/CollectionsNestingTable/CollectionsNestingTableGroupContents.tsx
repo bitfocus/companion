@@ -1,5 +1,6 @@
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
@@ -68,7 +69,9 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 	if (gridLayout) {
 		return (
 			<>
-				{itemRows.length > 0 && <CollectionsNestingTableCollectionGridContents itemRows={itemRows} drop={drop} />}
+				{itemRows.length > 0 && (
+					<CollectionsNestingTableCollectionGridContents itemRows={itemRows} drop={drop} nestingLevel={nestingLevel} />
+				)}
 
 				{isDragging && items.length === 0 && (
 					<CollectionsNestingTableDropZone drop={drop} itemName={itemName} nestingLevel={nestingLevel} />
@@ -127,9 +130,11 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 function CollectionsNestingTableCollectionGridContents({
 	itemRows,
 	drop,
+	nestingLevel,
 }: {
 	itemRows: React.ReactNode[]
 	drop: ConnectDropTarget
+	nestingLevel: number
 }) {
 	const [elmRef, elmSize, elm] = useElementclientSize()
 
@@ -153,7 +158,16 @@ function CollectionsNestingTableCollectionGridContents({
 	const spacerSpan = displayColumns > 0 ? displayColumns - (itemRows.length % displayColumns) : 0
 
 	return (
-		<div className="collections-nesting-table-grid-container" ref={elmRef}>
+		<div
+			className={classNames('collections-nesting-table-grid-container', {
+				'collections-nesting-table-grid-nested': nestingLevel > 0,
+			})}
+			style={{
+				// @ts-expect-error variables are not typed
+				'--collection-nesting-level': nestingLevel,
+			}}
+			ref={elmRef}
+		>
 			{itemRows}
 
 			<div

@@ -141,6 +141,7 @@ function CollectionsNestingTableRowBase({
 	nestingLevel: number
 }>) {
 	const ref = useRef<HTMLDivElement>(null)
+	const { gridLayout } = useCollectionsNestingTableContext()
 	preview(drop(ref))
 
 	return (
@@ -152,7 +153,7 @@ function CollectionsNestingTableRowBase({
 			})}
 			ref={ref}
 		>
-			<CollectionsNestingTableNestingRow nestingLevel={nestingLevel}>
+			<CollectionsNestingTableNestingRow nestingLevel={gridLayout ? 0 : nestingLevel}>
 				<div ref={drag} className="row-reorder-handle">
 					<FontAwesomeIcon icon={faSort} />
 				</div>

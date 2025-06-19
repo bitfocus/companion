@@ -145,6 +145,23 @@
 		gap: 1rem;
 		padding: 1rem;
 
+		// Add left offset for nested groups based on nesting level
+		&.collections-nesting-table-grid-nested {
+			margin-left: calc(var(--collection-nesting-level) * 20px);
+			position: relative;
+
+			// Add border that spans full width (ignoring left margin)
+			&::after {
+				content: '';
+				position: absolute;
+				bottom: 0;
+				left: calc(var(--collection-nesting-level) * -20px);
+				right: 0;
+				height: 1px;
+				background-color: #ddd;
+			}
+		}
+
 		.collections-nesting-table-grid-end-spacer {
 			// This is set by the component to auto-size the spacer
 			--collection-nesting-table-grid-end-spacer-span: 0;
