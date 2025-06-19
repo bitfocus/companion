@@ -27,7 +27,14 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 		TItem
 	>()
 
-	const { isDragging, drop } = useCollectionsListItemDrop(collectionsApi, dragId, collectionId, null, items.length)
+	const { isDragging, drop } = useCollectionsListItemDrop(
+		collectionsApi,
+		dragId,
+		collectionId,
+		null,
+		items.length,
+		gridLayout ?? false
+	)
 
 	let visibleCount = 0
 
