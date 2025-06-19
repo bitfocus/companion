@@ -80,6 +80,8 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 		this.#context2d.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
 	}
 	protected async loadBase64Image(base64Image: string): Promise<HTMLImageElement> {
+		base64Image = base64Image.trim()
+
 		// Ensure the base64 image is a data URL, from older companion it may not be
 		if (!base64Image.startsWith('data:image')) {
 			base64Image = 'data:image/png;base64,' + base64Image

@@ -95,8 +95,15 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	}
 
 	protected async loadBase64Image(base64Image: string): Promise<CanvasImage> {
-		const png64 = base64Image.startsWith('data:image/png;base64,') ? base64Image.slice(22) : base64Image
-		return loadImage(Buffer.from(png64, 'base64'))
+		const trimmedImage = base64Image.trim()
+		if (trimmedImage.startsWith('data:image')) {
+			return loadImage(trimmedImage)
+		} else if (isBase64(trimmedImage)) {
+			// Ideally we could avoid this check for a valid base64 image, but that can result in the canvas segfaulting
+			return loadImage(Buffer.from(trimmedImage, 'base64'))
+		} else {
+			throw new Error('Invalid base64 image format')
+		}
 	}
 
 	protected loadPixelBuffer(data: Uint8Array, width: number, height: number): CanvasImage | Canvas | null {
@@ -139,4 +146,9 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	toDataURLSync(): string {
 		return this.#canvas.toDataURL('image/png')
 	}
+}
+function isBase64(trimmedImage: string): boolean {
+	// Basic check: valid base64 string (no data URL prefix, only base64 chars, length multiple of 4)
+	const base64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
+	return trimmedImage.length > 0 && base64Regex.test(trimmedImage)
 }
