@@ -26,7 +26,14 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 }>) {
 	const { dragId, collectionsApi, selectedItemId, gridLayout } = useCollectionsNestingTableContext<TCollection, TItem>()
 
-	const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, item.collectionId, item.id, index)
+	const { drop } = useCollectionsListItemDrop(
+		collectionsApi,
+		dragId,
+		item.collectionId,
+		item.id,
+		index,
+		gridLayout ?? false
+	)
 	const [{ isDragging }, drag, preview] = useDrag<
 		CollectionsNestingTableItemDragItem,
 		unknown,
@@ -85,10 +92,13 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 		parentId: string | null
 		nestingLevel: number
 	}>) {
-		const { dragId, collectionsApi } = useCollectionsNestingTableContext<TCollection, CollectionsNestingTableItem>()
+		const { dragId, collectionsApi, gridLayout } = useCollectionsNestingTableContext<
+			TCollection,
+			CollectionsNestingTableItem
+		>()
 
 		// Allow dropping items onto the collection, to add them to the collection
-		const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, collection.id, null, -1)
+		const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, collection.id, null, -1, gridLayout ?? false)
 
 		const [{ isDragging }, drag, preview] = useDrag<
 			CollectionsNestingTableCollectionDragItem,
