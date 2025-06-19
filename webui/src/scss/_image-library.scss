@@ -24,13 +24,7 @@
 
 	// Override CollectionsNestingTable grid dimensions for image thumbnails
 	.collections-nesting-table-grid-container {
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-	}
-
-	.image-thumbnails-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-		gap: 1rem;
+		--collection-nesting-table-grid-tile-min-width: 150px;
 	}
 
 	.image-thumbnail {

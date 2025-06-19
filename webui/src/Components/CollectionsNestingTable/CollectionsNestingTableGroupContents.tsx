@@ -8,6 +8,8 @@ import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNest
 import { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionsListItemDrop } from './useItemDrop.js'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
+import { ConnectDropTarget } from 'react-dnd'
+import useElementclientSize from '~/Hooks/useElementInnerSize.js'
 
 interface CollectionsNestingTableCollectionContentsProps<TItem extends CollectionsNestingTableItem> {
 	items: TItem[]
@@ -25,7 +27,7 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 		TItem
 	>()
 
-	const { isDragging, drop } = useCollectionsListItemDrop(collectionsApi, dragId, collectionId, null, 0)
+	const { isDragging, drop } = useCollectionsListItemDrop(collectionsApi, dragId, collectionId, null, items.length)
 
 	let visibleCount = 0
 
@@ -59,7 +61,7 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 	if (gridLayout) {
 		return (
 			<>
-				{itemRows.length > 0 && <div className="collections-nesting-table-grid-container">{itemRows}</div>}
+				{itemRows.length > 0 && <CollectionsNestingTableCollectionGridContents itemRows={itemRows} drop={drop} />}
 
 				{isDragging && items.length === 0 && (
 					<CollectionsNestingTableDropZone drop={drop} itemName={itemName} nestingLevel={nestingLevel} />
@@ -114,3 +116,47 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 		</>
 	)
 })
+
+function CollectionsNestingTableCollectionGridContents({
+	itemRows,
+	drop,
+}: {
+	itemRows: React.ReactNode[]
+	drop: ConnectDropTarget
+}) {
+	const [elmRef, elmSize, elm] = useElementclientSize()
+
+	// Calculate visible columns accounting for padding and gaps
+	let displayColumns = 0
+	if (elmSize && elm) {
+		const elmComputedStyle = window.getComputedStyle(elm)
+
+		// assume px
+		const tileTargetMinWidth = parseFloat(
+			elmComputedStyle.getPropertyValue('--collection-nesting-table-grid-tile-min-width')
+		)
+
+		const containerPadding = parseFloat(elmComputedStyle.paddingLeft) * 2
+		const gap = parseFloat(elmComputedStyle.gap)
+		const availableWidth = elmSize.width - containerPadding
+
+		displayColumns = Math.floor((availableWidth + gap) / (tileTargetMinWidth + gap))
+	}
+
+	const spacerSpan = displayColumns > 0 ? displayColumns - (itemRows.length % displayColumns) : 0
+
+	return (
+		<div className="collections-nesting-table-grid-container" ref={elmRef}>
+			{itemRows}
+
+			<div
+				className="collections-nesting-table-grid-end-spacer"
+				ref={drop}
+				style={{
+					// @ts-expect-error TypeScript doesn't recognize CSS custom properties
+					'--collection-nesting-table-grid-end-spacer-span': spacerSpan,
+				}}
+			/>
+		</div>
+	)
+}

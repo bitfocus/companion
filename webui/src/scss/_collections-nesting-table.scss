@@ -137,10 +137,21 @@
 
 	// Grid layout styles
 	.collections-nesting-table-grid-container {
+		// This can be overriden by usages of the table, to change the minimum width of grid tiles
+		--collection-nesting-table-grid-tile-min-width: 200px;
+
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(var(--collection-nesting-table-grid-tile-min-width), 1fr));
 		gap: 1rem;
 		padding: 1rem;
+
+		.collections-nesting-table-grid-end-spacer {
+			// This is set by the component to auto-size the spacer
+			--collection-nesting-table-grid-end-spacer-span: 0;
+
+			grid-column: span var(--collection-nesting-table-grid-end-spacer-span);
+			grid-column-end: -1;
+		}
 	}
 
 	.collections-nesting-table-grid-message {
