@@ -73,7 +73,6 @@ export class ImageLibrary {
 	clientConnect(client: ClientSocket): void {
 		this.#collections.clientConnect(client)
 
-		// Subscribe to image library updates
 		client.onPromise('image-library:subscribe', () => {
 			client.join('image-library')
 			return this.listImages()
@@ -83,27 +82,18 @@ export class ImageLibrary {
 			client.leave('image-library')
 		})
 
-		// List all images
 		client.onPromise('image-library:list', () => {
 			return this.listImages()
 		})
 
-		// Get image info
-		client.onPromise('image-library:get-info', (imageId: string) => {
-			return this.getImageInfo(imageId)
-		})
-
-		// Get image data (original or preview)
 		client.onPromise('image-library:get-data', (imageId: string, type: 'original' | 'preview') => {
 			return this.getImageDataUrl(imageId, type)
 		})
 
-		// Create new empty image
 		client.onPromise('image-library:create', (id: string, name: string) => {
 			return this.createEmptyImage(id, name)
 		})
 
-		// Set image name
 		client.onPromise('image-library:set-name', (imageId: string, name: string) => {
 			return this.setImageName(imageId, name)
 		})
@@ -113,23 +103,20 @@ export class ImageLibrary {
 			return this.setImageId(imageId, newId)
 		})
 
-		// Delete image
 		client.onPromise('image-library:delete', (imageId: string) => {
 			return this.deleteImage(imageId)
 		})
 
-		// TODO: Add reorder functionality when socket type is available
 		client.onPromise('image-library:reorder', (collectionId: string | null, imageId: string, dropIndex: number) => {
 			return this.setImageOrder(collectionId, imageId, dropIndex)
 		})
 
-		// Upload handling - simplified upload workflow
 		client.onPromise('image-library:upload-start', (filename: string, size: number) => {
 			this.#logger.debug(`Starting image upload: ${filename} (${size} bytes)`)
 
-			if (size > 50 * 1024 * 1024) {
-				// 50MB limit
-				throw new Error('File too large (max 50MB)')
+			if (size > 10 * 1024 * 1024) {
+				// 10MB limit, just in case
+				throw new Error('File too large (max 10MB)')
 			}
 
 			const sessionId = this.#multipartUploader.initSession(filename, size)
@@ -436,8 +423,6 @@ export class ImageLibrary {
 			throw new Error('Invalid data URL format or unsupported image format')
 		}
 
-		const mimeType = dataUrlMatch[1]
-
 		// Get image dimensions and create preview
 		const { width, height, previewDataUrl } = await this.#graphicsController.executeCreatePreview(dataUrlString)
 
@@ -446,7 +431,7 @@ export class ImageLibrary {
 		existingData.info.previewSize = previewDataUrl.length
 		existingData.info.modifiedAt = Date.now()
 		existingData.info.checksum = crypto.createHash('sha-1').update(dataUrlString).digest('hex')
-		existingData.info.mimeType = mimeType
+		existingData.info.mimeType = dataUrlMatch[1]
 
 		// Update the image data
 		existingData.originalImage = dataUrlString

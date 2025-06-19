@@ -432,7 +432,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'image-library:subscribe': () => ImageLibraryInfo[]
 	'image-library:unsubscribe': () => void
 	'image-library:list': () => ImageLibraryInfo[]
-	'image-library:get-info': (imageId: string) => ImageLibraryInfo | null
 	'image-library:get-data': (
 		imageId: string,
 		type: 'original' | 'preview'
