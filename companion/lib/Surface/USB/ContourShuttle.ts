@@ -232,11 +232,10 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 				currentInterval = undefined
 			}
 			if (shuttle === 0) {
-				this.emit('click', ...xy, false) // maybe no longer needed?
+				this.emit('click', ...xy, false)
 			} else {
 				currentInterval = setInterval(() => {
-					this.emit('click', ...xy, true)
-					this.emit('click', ...xy, false) // needed to enable the next click (is this how force press works?)
+					this.emit('click', ...xy, true, 0, true) // "force" click even though already pressed
 				}, 200)
 			}
 		})

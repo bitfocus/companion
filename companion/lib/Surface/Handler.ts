@@ -493,7 +493,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#drawPage()
 	}
 
-	#onDeviceClick(x: number, y: number, pressed: boolean, pageOffset?: number): void {
+	#onDeviceClick(x: number, y: number, pressed: boolean, pageOffset?: number, force = false): void {
 		if (!this.panel) return
 
 		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
@@ -534,7 +534,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					row: y2 + yOffset,
 				})
 				if (controlId) {
-					this.#controls.pressControl(controlId, pressed, this.surfaceId)
+					this.#controls.pressControl(controlId, pressed, this.surfaceId, force)
 				}
 				this.#logger.debug(`Button ${thisPage}/${coordinate} ${pressed ? 'pressed' : 'released'}`)
 			} else if (!this.panel.setLocked) {
