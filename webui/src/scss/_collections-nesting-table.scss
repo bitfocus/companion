@@ -143,6 +143,20 @@
 		padding: 1rem;
 	}
 
+	.collections-nesting-table-grid-message {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem 1rem;
+		color: #6c757d;
+		font-style: italic;
+		text-align: center;
+
+		strong {
+			font-weight: 500;
+		}
+	}
+
 	.collections-nesting-table-grid-tile {
 		border: 2px solid #dee2e6;
 		border-radius: 8px;

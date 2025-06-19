@@ -56,9 +56,37 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 	// Calculate number of hidden items
 	const hiddenCount = items.length - visibleCount
 
+	if (gridLayout) {
+		return (
+			<>
+				{itemRows.length > 0 && <div className="collections-nesting-table-grid-container">{itemRows}</div>}
+
+				{isDragging && items.length === 0 && (
+					<CollectionsNestingTableDropZone drop={drop} itemName={itemName} nestingLevel={nestingLevel} />
+				)}
+
+				{hiddenCount > 0 && (
+					<div className="collections-nesting-table-grid-message">
+						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+						<strong>
+							{hiddenCount} {itemName}s are hidden
+						</strong>
+					</div>
+				)}
+
+				{showNoItemsMessage && items.length === 0 && !isDragging && (
+					<div className="collections-nesting-table-grid-message">
+						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+						<strong>This collection is empty</strong>
+					</div>
+				)}
+			</>
+		)
+	}
+
 	return (
 		<>
-			{gridLayout ? <div className="collections-nesting-table-grid-container">{itemRows}</div> : itemRows}
+			{itemRows}
 
 			{isDragging && items.length === 0 && (
 				<CollectionsNestingTableDropZone drop={drop} itemName={itemName} nestingLevel={nestingLevel} />
