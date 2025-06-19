@@ -1,4 +1,4 @@
-import { CButton, CFormInput } from '@coreui/react'
+import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
 import { faPlus, faImage, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useState, useEffect, useMemo, useRef } from 'react'
@@ -123,22 +123,23 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 					</p>
 
 					<div className="image-library-controls">
+						<div className="d-flex gap-2 mb-3">
+							<CButtonGroup>
+								<CButton color="primary" size="sm" onClick={handleCreateNew}>
+									<FontAwesomeIcon icon={faPlus} /> Add Image
+								</CButton>
+								<CButton color="info" size="sm" onClick={() => collectionsApi.createCollection()}>
+									<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+								</CButton>
+							</CButtonGroup>
+						</div>
+
 						<CFormInput
 							type="text"
 							placeholder="Search images..."
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="mb-3"
 						/>
-
-						<div className="d-flex gap-2">
-							<CButton color="primary" size="sm" onClick={handleCreateNew}>
-								<FontAwesomeIcon icon={faPlus} /> Add Image
-							</CButton>
-							<CButton color="info" size="sm" onClick={() => collectionsApi.createCollection()}>
-								<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-							</CButton>
-						</div>
 					</div>
 				</div>
 
