@@ -28,6 +28,7 @@ import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import type { GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
@@ -125,7 +126,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		controlsController: ControlsController,
 		pagesController: PageController,
 		userConfigController: DataUserConfig,
-		variableValuesController: VariablesValues,
+		variablesController: VariablesController,
 		db: DataDatabase,
 		io: UIHandler,
 		internalApiRouter: Express.Router
@@ -135,7 +136,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#controlsController = controlsController
 		this.#pagesController = pagesController
 		this.#userConfigController = userConfigController
-		this.#variableValuesController = variableValuesController
+		this.#variableValuesController = variablesController.values
 
 		this.setMaxListeners(0)
 
@@ -269,7 +270,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#logger.info('Fonts loaded')
 
 		// Initialize the image library
-		this.imageLibrary = new ImageLibrary(db, io, this)
+		this.imageLibrary = new ImageLibrary(db, io, this, variablesController)
 
 		// Serve font files to clients
 		internalApiRouter.get('/graphics/font/:font', compressionMiddleware(), (req, res) => {

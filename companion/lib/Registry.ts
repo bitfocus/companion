@@ -208,7 +208,7 @@ export class Registry {
 				this.controls,
 				this.page,
 				this.userconfig,
-				this.variables.values,
+				this.variables,
 				this.db,
 				this.io,
 				this.#internalApiRouter

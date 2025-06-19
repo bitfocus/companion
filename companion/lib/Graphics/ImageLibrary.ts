@@ -13,6 +13,9 @@ import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { GraphicsController } from './Controller.js'
 import { ImageLibraryCollections } from './ImageLibraryCollections.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { VariableValueEntry } from '../Variables/Values.js'
+import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
 
 export interface ImageLibraryData {
 	originalImage: string // base64 data URL (empty string if not uploaded yet)
@@ -27,12 +30,19 @@ export class ImageLibrary {
 	readonly #io: UIHandler
 	readonly #sessionToImageId = new Map<string, string>()
 	readonly #graphicsController: GraphicsController
+	readonly #variablesController: VariablesController
 	readonly #collections: ImageLibraryCollections
 
-	constructor(db: DataDatabase, io: UIHandler, graphicsController: GraphicsController) {
+	constructor(
+		db: DataDatabase,
+		io: UIHandler,
+		graphicsController: GraphicsController,
+		variablesController: VariablesController
+	) {
 		this.#dbTable = db.getTableView('image_library')
 		this.#io = io
 		this.#graphicsController = graphicsController
+		this.#variablesController = variablesController
 		this.#collections = new ImageLibraryCollections(io, db, (validCollectionIds) =>
 			this.#cleanUnknownCollectionIds(validCollectionIds)
 		)
@@ -42,6 +52,9 @@ export class ImageLibrary {
 		})
 
 		this.#cleanUnknownCollectionIds(this.#collections.collectAllCollectionIds())
+
+		// Initialize variables for existing images
+		this.#updateAllImageVariables()
 	}
 
 	#cleanUnknownCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -217,6 +230,9 @@ export class ImageLibrary {
 
 		this.#io.emitToRoom('image-library', 'image-library:removed', imageId)
 
+		// Remove variable for the deleted image
+		this.#removeImageVariable(imageId)
+
 		return true
 	}
 
@@ -256,6 +272,12 @@ export class ImageLibrary {
 		}
 
 		this.#dbTable.set(safeId, imageData)
+
+		// Create variable for the new image
+		this.#updateImageVariable(safeId, imageData.originalImage)
+
+		// Update variable definitions
+		this.#updateImageVariableDefinitions()
 
 		this.#logger.info(`Created empty image ${safeId} (${name})`)
 
@@ -299,6 +321,9 @@ export class ImageLibrary {
 
 		this.#dbTable.set(imageId, data)
 
+		// Update variable definitions since the name is used as the label
+		this.#updateImageVariableDefinitions()
+
 		this.#logger.info(`Updated image ${imageId} name to "${name}"`)
 
 		// Notify clients
@@ -337,6 +362,13 @@ export class ImageLibrary {
 		// Move the data to the new key and delete the old one
 		this.#dbTable.set(safeNewId, data)
 		this.#dbTable.delete(currentId)
+
+		// Update variables: remove old and add new
+		this.#removeImageVariable(currentId)
+		this.#updateImageVariable(safeNewId, data.originalImage)
+
+		// Update variable definitions
+		this.#updateImageVariableDefinitions()
 
 		this.#logger.info(`Updated image ID from "${currentId}" to "${safeNewId}"`)
 
@@ -444,6 +476,84 @@ export class ImageLibrary {
 			`Updated image ${imageId} (${existingData.info.name}) - ${width}x${height}, ${dataUrlString.length} bytes`
 		)
 
+		// Update the variable for the image
+		this.#updateImageVariable(imageId, dataUrlString)
+
 		return existingData
+	}
+
+	/**
+	 * Update variables for all images in the library
+	 */
+	#updateAllImageVariables(): void {
+		const variables: VariableValueEntry[] = []
+
+		for (const [imageId, data] of Object.entries(this.#dbTable.all())) {
+			variables.push({
+				id: imageId,
+				value: data.originalImage || '',
+			})
+		}
+
+		this.#variablesController.values.setVariableValues('image', variables)
+		this.#updateImageVariableDefinitions()
+	}
+
+	/**
+	 * Update variable for a specific image
+	 */
+	#updateImageVariable(imageId: string, originalImage: string): void {
+		this.#variablesController.values.setVariableValues('image', [
+			{
+				id: imageId,
+				value: originalImage || '',
+			},
+		])
+	}
+
+	/**
+	 * Update variable definitions for all images
+	 */
+	#updateImageVariableDefinitions(): void {
+		const definitions: VariableDefinitionTmp[] = []
+
+		for (const [imageId, data] of Object.entries(this.#dbTable.all())) {
+			definitions.push({
+				name: imageId,
+				label: data.info.name || imageId,
+			})
+		}
+
+		this.#variablesController.definitions.setVariableDefinitions('image', definitions)
+	}
+
+	/**
+	 * Get variable definitions for all images
+	 */
+	getVariableDefinitions(): VariableDefinitionTmp[] {
+		const definitions: VariableDefinitionTmp[] = []
+
+		for (const [imageId, data] of Object.entries(this.#dbTable.all())) {
+			definitions.push({
+				name: imageId,
+				label: data.info.name || imageId,
+			})
+		}
+
+		return definitions
+	}
+
+	/**
+	 * Remove variable for a specific image
+	 */
+	#removeImageVariable(imageId: string): void {
+		this.#variablesController.values.setVariableValues('image', [
+			{
+				id: imageId,
+				value: undefined,
+			},
+		])
+		// Update definitions to remove the deleted image
+		this.#updateImageVariableDefinitions()
 	}
 }
