@@ -152,12 +152,16 @@ export class ControlButtonLayered
 			// HACK: temporary fill in new properties
 			for (const element of this.#drawElements) {
 				if (element.type !== 'canvas') {
-					const defaults = CreateElementOfType(element.type)
-					for (const key of Object.keys(defaults)) {
-						if (key === 'id' || key === 'type' || key === 'name') continue
-						if (!(key in element)) {
-							;(element as any)[key] = (defaults as any)[key]
+					try {
+						const defaults = CreateElementOfType(element.type)
+						for (const key of Object.keys(defaults)) {
+							if (key === 'id' || key === 'type' || key === 'name') continue
+							if (!(key in element)) {
+								;(element as any)[key] = (defaults as any)[key]
+							}
 						}
+					} catch (e) {
+						// Ignore
 					}
 				}
 				// switch (element.type) {
