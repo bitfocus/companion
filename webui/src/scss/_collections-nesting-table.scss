@@ -134,4 +134,113 @@
 			z-index: 1;
 		}
 	}
+
+	// Grid layout styles
+	.collections-nesting-table-grid-container {
+		// This can be overriden by usages of the table, to change the minimum width of grid tiles
+		--collection-nesting-table-grid-tile-min-width: 200px;
+
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(var(--collection-nesting-table-grid-tile-min-width), 1fr));
+		gap: 1rem;
+		padding: 1rem;
+
+		// Add left offset for nested groups based on nesting level
+		&.collections-nesting-table-grid-nested {
+			margin-left: calc(var(--collection-nesting-level) * 20px);
+			position: relative;
+
+			// Add border that spans full width (ignoring left margin)
+			&::after {
+				content: '';
+				position: absolute;
+				bottom: 0;
+				left: calc(var(--collection-nesting-level) * -20px);
+				right: 0;
+				height: 1px;
+				background-color: #ddd;
+			}
+		}
+
+		.collections-nesting-table-grid-end-spacer {
+			// This is set by the component to auto-size the spacer
+			--collection-nesting-table-grid-end-spacer-span: 0;
+
+			grid-column: span var(--collection-nesting-table-grid-end-spacer-span);
+			grid-column-end: -1;
+		}
+	}
+
+	.collections-nesting-table-grid-message {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem 1rem;
+		color: #6c757d;
+		font-style: italic;
+		text-align: center;
+
+		strong {
+			font-weight: 500;
+		}
+	}
+
+	.collections-nesting-table-grid-tile {
+		border: 2px solid #dee2e6;
+		border-radius: 8px;
+		overflow: hidden;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		background: #fff;
+		display: flex;
+		flex-direction: column;
+
+		&:hover {
+			border-color: #007bff;
+			box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+
+			.tile-drag-handle {
+				background: #d0d0d0;
+			}
+		}
+
+		&.tile-selected {
+			border-color: #007bff;
+			box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+		}
+
+		&.tile-dragging {
+			opacity: 0.5;
+		}
+
+		.tile-drag-handle {
+			flex-shrink: 0;
+			height: 15px;
+			cursor: grab;
+			background: #e9ecef;
+			transition: background-color 0.2s ease;
+			border-top-left-radius: 6px;
+			border-top-right-radius: 6px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 8px;
+			color: #6c757d;
+
+			&:hover {
+				background: #d0d0d0;
+			}
+
+			&:active {
+				cursor: grabbing;
+				background: #adb5bd;
+			}
+		}
+
+		.tile-content {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+		}
+	}
 }

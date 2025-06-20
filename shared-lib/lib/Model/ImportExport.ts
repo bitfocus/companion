@@ -8,6 +8,7 @@ export interface ClientResetSelection {
 	triggers: boolean
 	customVariables: boolean
 	userconfig: boolean
+	imageLibrary: boolean
 }
 
 export interface ClientExportSelection {
@@ -16,6 +17,7 @@ export interface ClientExportSelection {
 	customVariables: boolean
 	connections: boolean
 	surfaces: boolean
+	imageLibrary: boolean
 	format: ExportFormat
 	filename?: string
 }
@@ -25,6 +27,7 @@ export interface ClientImportSelection {
 	customVariables: boolean
 	surfaces: boolean
 	triggers: boolean
+	imageLibrary: boolean
 }
 
 export interface ClientPageInfo {
@@ -44,6 +47,7 @@ export interface ClientImportObject {
 	customVariables: boolean
 	surfaces: boolean
 	triggers: boolean | Record<string, { name: string }>
+	imageLibrary: boolean
 	oldPageNumber?: number
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>

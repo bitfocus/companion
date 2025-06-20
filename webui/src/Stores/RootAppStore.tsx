@@ -14,6 +14,7 @@ import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { HelpModalRef } from '~/Connections/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
 import type { WhatsNewModalRef } from '~/WhatsNewModal.js'
+import type { ImageLibraryStore } from './ImageLibraryStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -39,6 +40,8 @@ export interface RootAppStore {
 	readonly triggersList: TriggersListStore
 
 	readonly userConfig: UserConfigStore
+
+	readonly imageLibrary: ImageLibraryStore
 
 	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
 

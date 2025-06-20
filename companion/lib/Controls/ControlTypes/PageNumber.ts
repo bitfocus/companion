@@ -84,11 +84,16 @@ export class ControlButtonPageNumber
 	}
 
 	/**
-	 * Collect the connection ids and labels referenced by this control
+	 * Collect the connection ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - connection ids being referenced
 	 * @param foundConnectionLabels - connection labels being referenced
+	 * @param foundVariables - variables being referenced
 	 */
-	collectReferencedConnections(_foundConnectionIds: Set<string>, _foundConnectionLabels: Set<string>) {
+	collectReferencedConnectionsAndVariables(
+		_foundConnectionIds: Set<string>,
+		_foundConnectionLabels: Set<string>,
+		_foundVariables: Set<string>
+	) {
 		// Nothing being referenced
 	}
 

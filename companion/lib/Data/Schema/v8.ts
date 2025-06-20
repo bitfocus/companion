@@ -14,6 +14,7 @@ export function createTables(store: SQLiteDB | undefined, defaultTable: string, 
 			store.prepare(`CREATE TABLE IF NOT EXISTS surfaces (id STRING UNIQUE, value STRING);`).run()
 			store.prepare(`CREATE TABLE IF NOT EXISTS surface_groups (id STRING UNIQUE, value STRING);`).run()
 			store.prepare(`CREATE TABLE IF NOT EXISTS surfaces_remote (id STRING UNIQUE, value STRING);`).run()
+			store.prepare(`CREATE TABLE IF NOT EXISTS image_library (id STRING UNIQUE, value STRING);`).run()
 		} catch (e) {
 			logger.warn(`Error creating tables`, e)
 		}
