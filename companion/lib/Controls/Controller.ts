@@ -1207,6 +1207,10 @@ export class ControlsController {
 		return this.#triggerCollections.collectionData
 	}
 
+	replaceTriggerCollections(collections: TriggerCollection[]): void {
+		this.#triggerCollections.replaceCollections(collections)
+	}
+
 	/**
 	 * Create a control
 	 * Danger: This will not delete an existing control from the specified location

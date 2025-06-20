@@ -570,7 +570,7 @@ export class ImageLibrary {
 	 * Import image library data
 	 */
 	importImageLibrary(collections: ImageLibraryCollection[], images: ImageLibraryExportData[]): void {
-		this.#collections.importCollections(collections)
+		this.#collections.replaceCollections(collections)
 
 		// Clear existing images first
 		const allImages = this.listImages()
@@ -614,6 +614,6 @@ export class ImageLibrary {
 		}
 
 		// Clear all collections
-		this.#collections.importCollections([])
+		this.#collections.discardAllCollections()
 	}
 }

@@ -10,6 +10,7 @@ import {
 	type ButtonGraphicsCanvasDrawElement,
 	type ButtonGraphicsImageDrawElement,
 	type ButtonGraphicsTextDrawElement,
+	ButtonGraphicsLineDrawElement,
 } from '../Model/StyleLayersModel.js'
 import { DrawBounds, parseColor, rgbRev, type GraphicsOptions } from './Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
@@ -128,6 +129,9 @@ export class GraphicsLayeredButtonRenderer {
 						break
 					case 'box':
 						elementBounds = await this.#drawBoxElement(img, drawBounds, element, skipDraw)
+						break
+					case 'line':
+						elementBounds = await this.#drawLineElement(img, drawBounds, element, skipDraw)
 						break
 					default:
 						assertNever(element)
@@ -285,6 +289,40 @@ export class GraphicsLayeredButtonRenderer {
 				},
 				element.borderPosition
 			)
+		})
+
+		return drawBounds
+	}
+
+	static async #drawLineElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsLineDrawElement,
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		// Convert from percentage coordinates to pixel coordinates within parent bounds
+		const fromX = parentBounds.x + (element.fromX / 100) * parentBounds.width
+		const fromY = parentBounds.y + (element.fromY / 100) * parentBounds.height
+		const toX = parentBounds.x + (element.toX / 100) * parentBounds.width
+		const toY = parentBounds.y + (element.toY / 100) * parentBounds.height
+
+		// Calculate bounds for selection (use the bounding box of the line)
+		const minX = Math.min(fromX, toX)
+		const minY = Math.min(fromY, toY)
+		const maxX = Math.max(fromX, toX)
+		const maxY = Math.max(fromY, toY)
+		const drawBounds = new DrawBounds(minX, minY, maxX - minX, maxY - minY)
+
+		if (skipDraw) return drawBounds
+
+		// Calculate a pixel width, relative to the parent bounds
+		const borderWidth = Math.max(1, Math.max(parentBounds.width, parentBounds.height) * element.borderWidth)
+
+		await img.usingAlpha(element.opacity, async () => {
+			img.line(fromX, fromY, toX, toY, {
+				color: parseColor(element.borderColor),
+				width: borderWidth,
+			})
 		})
 
 		return drawBounds

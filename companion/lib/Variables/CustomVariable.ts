@@ -112,6 +112,10 @@ export class VariablesCustomVariable {
 		return this.#collections.collectionData
 	}
 
+	replaceCollections(collections: CustomVariableCollection[]): void {
+		this.#collections.replaceCollections(collections)
+	}
+
 	/**
 	 * Create a new custom variable
 	 * @param name

@@ -73,6 +73,22 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				height: { value: 100, isExpression: false },
 				children: [],
 			}
+		case 'line':
+			return {
+				id: nanoid(),
+				name: 'Line',
+				usage: ButtonGraphicsElementUsage.Automatic,
+				type: 'line',
+				enabled: { value: true, isExpression: false },
+				opacity: { value: 100, isExpression: false },
+				fromX: { value: 0, isExpression: false },
+				fromY: { value: 0, isExpression: false },
+				toX: { value: 100, isExpression: false },
+				toY: { value: 100, isExpression: false },
+				borderWidth: { value: 2, isExpression: false },
+				borderColor: { value: 0xffffff, isExpression: false },
+				borderPosition: { value: 'center', isExpression: false },
+			}
 		default:
 			assertNever(type)
 			throw new Error(`Unknown element type: ${type}`)

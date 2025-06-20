@@ -7,6 +7,7 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
 	| ButtonGraphicsBoxElement
+	| ButtonGraphicsLineElement
 
 /**
  * The type of a button graphics element as used by the renderer, with any dynamic values resolved
@@ -17,6 +18,7 @@ export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsTextDrawElement
 	| ButtonGraphicsImageDrawElement
 	| ButtonGraphicsBoxDrawElement
+	| ButtonGraphicsLineDrawElement
 
 export interface ButtonGraphicsDrawBase {
 	readonly id: string
@@ -130,15 +132,36 @@ export interface ButtonGraphicsImageElement
 	extends ButtonGraphicsElementBase,
 		MakeExpressionable<Omit<ButtonGraphicsImageDrawElement, 'usage'>> {}
 
-export interface ButtonGraphicsBoxDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
-	type: 'box'
-
-	color: number
-
+export interface ButtonGraphicsBorderProperties {
 	borderWidth: number // 0 to disable
 	borderColor: number
 	borderPosition: LineOrientation
 }
+
+export interface ButtonGraphicsBoxDrawElement
+	extends ButtonGraphicsDrawBase,
+		ButtonGraphicsDrawBounds,
+		ButtonGraphicsBorderProperties {
+	type: 'box'
+
+	color: number
+}
 export interface ButtonGraphicsBoxElement
 	extends ButtonGraphicsElementBase,
 		MakeExpressionable<Omit<ButtonGraphicsBoxDrawElement, 'usage'>> {}
+
+export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsBorderProperties {
+	type: 'line'
+
+	/* 0-100 */
+	fromX: number
+	/* 0-100 */
+	fromY: number
+	/* 0-100 */
+	toX: number
+	/* 0-100 */
+	toY: number
+}
+export interface ButtonGraphicsLineElement
+	extends ButtonGraphicsElementBase,
+		MakeExpressionable<Omit<ButtonGraphicsLineDrawElement, 'usage'>> {}

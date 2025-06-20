@@ -35,16 +35,16 @@ function convertRowToTable(db: DataStoreBase<any>, tableName: string, oldKey: st
 function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'page') {
 		return {
+			connectionCollections: undefined,
 			...obj,
 			version: 8,
-			connectionCollections: undefined,
 		}
 	} else {
 		return {
-			...obj,
-			version: 8,
 			triggerCollections: undefined,
 			connectionCollections: undefined,
+			...obj,
+			version: 8,
 		}
 	}
 }

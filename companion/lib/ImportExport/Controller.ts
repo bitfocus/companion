@@ -14,7 +14,6 @@ import { cloneDeep } from 'lodash-es'
 import { CreateTriggerControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
 import yaml from 'yaml'
 import zlib from 'node:zlib'
-import { compareExportedInstances } from '@companion-app/shared/Import.js'
 import LogController from '../Log/Controller.js'
 import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import { nanoid } from 'nanoid'
@@ -271,7 +270,9 @@ export class ImportExportController {
 					type: 'full',
 					version: FILE_VERSION,
 					triggers: object.triggers,
+					triggerCollections: object.triggerCollections,
 					instances: object.instances,
+					connectionCollections: object.connectionCollections,
 				} satisfies ExportFullv6
 			}
 
@@ -378,7 +379,16 @@ export class ImportExportController {
 
 				// import custom variables
 				if (!config || config.customVariables) {
+					if (data.customVariablesCollections) {
+						this.#variablesController.custom.replaceCollections(data.customVariablesCollections)
+					}
+
 					this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
+				}
+
+				// Import connection collections if provided
+				if (data.connectionCollections) {
+					this.#instancesController.collections.replaceCollections(data.connectionCollections)
 				}
 
 				// Always Import instances
@@ -413,6 +423,11 @@ export class ImportExportController {
 				}
 
 				if (!config || config.triggers) {
+					// Import trigger collections if provided
+					if (data.triggerCollections) {
+						this.#controlsController.replaceTriggerCollections(data.triggerCollections)
+					}
+
 					for (const [id, trigger] of Object.entries(data.triggers || {})) {
 						const controlId = CreateTriggerControlId(id)
 						const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
@@ -661,9 +676,7 @@ export class ImportExportController {
 		const instanceIdMap: InstanceAppliedRemappings = {}
 
 		if (instances) {
-			const instanceEntries = Object.entries(instances)
-				.filter((ent) => !!ent[1])
-				.sort(compareExportedInstances)
+			const instanceEntries = Object.entries(instances).filter((ent) => !!ent[1])
 
 			for (const [oldId, obj] of instanceEntries) {
 				if (!obj || !obj.label) continue
@@ -686,9 +699,13 @@ export class ImportExportController {
 					const [newId, newConfig] = this.#instancesController.addInstanceWithLabel(
 						{ type: obj.instance_type },
 						obj.label,
-						obj.moduleVersionId ?? null,
-						obj.updatePolicy,
-						true
+						{
+							versionId: obj.moduleVersionId ?? null,
+							updatePolicy: obj.updatePolicy,
+							disabled: true,
+							collectionId: obj.collectionId,
+							sortOrder: obj.sortOrder ?? 0,
+						}
 					)
 					if (newId && newConfig) {
 						this.#instancesController.setInstanceLabelAndConfig(newId, {

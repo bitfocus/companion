@@ -12,9 +12,22 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 
 		// Note: Storing in the database like this is not optimal, but it is much simpler
 		this.data = Object.values(this.#dbTable.all()).sort((a, b) => a.sortOrder - b.sortOrder)
+
 		for (const data of this.data) {
-			data.children = data.children || []
-			data.children.sort((a, b) => a.sortOrder - b.sortOrder)
+			this.#sortCollectionRecursively(data)
+		}
+	}
+
+	/**
+	 * Recursively ensure children arrays exist and are sorted at all levels
+	 */
+	#sortCollectionRecursively(collection: CollectionBase<TCollectionMetadata>): void {
+		collection.children = collection.children || []
+		collection.children.sort((a, b) => a.sortOrder - b.sortOrder)
+
+		// Recursively sort children's children
+		for (const child of collection.children) {
+			this.#sortCollectionRecursively(child)
 		}
 	}
 
@@ -32,17 +45,22 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	}
 
 	/**
-	 * Import collections data, replacing all existing collections
+	 * Replace all collections with imported collections
 	 */
-	importCollections(collections: CollectionBase<TCollectionMetadata>[]): void {
+	replaceCollections(collections: CollectionBase<TCollectionMetadata>[]): void {
+		// Clear existing collections
 		this.#dbTable.clear()
+		this.data = []
 
-		this.data = collections.sort((a, b) => a.sortOrder - b.sortOrder)
-
-		// Update the database with the new collections
-		for (const collection of this.data) {
+		// Import new collections
+		for (const collection of collections) {
+			this.#sortCollectionRecursively(collection)
+			this.data.push(collection)
 			this.#dbTable.set(collection.id, collection)
 		}
+
+		// Sort root level collections
+		this.data.sort((a, b) => a.sortOrder - b.sortOrder)
 
 		this.emitUpdate(this.data)
 
