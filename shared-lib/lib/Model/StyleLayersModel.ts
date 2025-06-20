@@ -130,14 +130,19 @@ export interface ButtonGraphicsImageElement
 	extends ButtonGraphicsElementBase,
 		MakeExpressionable<Omit<ButtonGraphicsImageDrawElement, 'usage'>> {}
 
-export interface ButtonGraphicsBoxDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
-	type: 'box'
-
-	color: number
-
+export interface ButtonGraphicsBorderProperties {
 	borderWidth: number // 0 to disable
 	borderColor: number
 	borderPosition: LineOrientation
+}
+
+export interface ButtonGraphicsBoxDrawElement
+	extends ButtonGraphicsDrawBase,
+		ButtonGraphicsDrawBounds,
+		ButtonGraphicsBorderProperties {
+	type: 'box'
+
+	color: number
 }
 export interface ButtonGraphicsBoxElement
 	extends ButtonGraphicsElementBase,
