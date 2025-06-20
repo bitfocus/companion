@@ -48,6 +48,7 @@ import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
+import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
@@ -140,13 +141,26 @@ export class ExportController {
 				referencedVariables
 			)
 
+			// Collect referenced connections and  collections
 			const instancesExport = this.#generateReferencedConnectionConfigs(
 				referencedConnectionIds,
 				referencedConnectionLabels
 			)
+			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(instancesExport))
+			const filteredConnectionCollections = this.#filterReferencedCollections(
+				this.#instancesController.collections.collectionData,
+				referencedConnectionCollectionIds
+			)
 
-			// Collect referenced images from variables
+			// Collect referenced image library items and collections
 			const referencedImages = this.#collectReferencedImages(referencedVariables)
+			const referencedImageLibraryCollectionIds = this.#collectReferencedCollectionIds(
+				referencedImages.map((img) => img.info)
+			)
+			const filteredImageLibraryCollections = this.#filterReferencedCollections(
+				this.#graphicsController.imageLibrary.exportCollections(),
+				referencedImageLibraryCollectionIds
+			)
 
 			// Export file protocol version
 			const exp: ExportPageModelv6 = {
@@ -154,10 +168,10 @@ export class ExportController {
 				type: 'page',
 				page: pageExport,
 				instances: instancesExport,
-				connectionCollections: this.#instancesController.collections.collectionData,
+				connectionCollections: filteredConnectionCollections,
 				oldPageNumber: page,
 				imageLibrary: referencedImages,
-				imageLibraryCollections: this.#graphicsController.imageLibrary.exportCollections(),
+				imageLibraryCollections: filteredImageLibraryCollections,
 			}
 
 			const filename = this.#generateFilename(String(req.query.filename), `page${page}`, 'companionconfig')
@@ -299,6 +313,7 @@ export class ExportController {
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
+		const referencedCollectionIds = new Set<string>()
 
 		for (const control of triggerControls) {
 			const parsedId = ParseControlId(control.controlId)
@@ -310,20 +325,40 @@ export class ExportController {
 					referencedConnectionLabels,
 					referencedVariables
 				)
+
+				// Collect referenced collection IDs
+				if (control.options.collectionId) {
+					referencedCollectionIds.add(control.options.collectionId)
+				}
 			}
 		}
 
+		// Filter collections to only include those explicitly referenced or their parents
+		const allTriggerCollections = includeCollections ? this.#controlsController.exportTriggerCollections() : []
 		const triggerCollections: TriggerCollection[] = includeCollections
-			? this.#controlsController.exportTriggerCollections()
+			? this.#filterReferencedCollections(allTriggerCollections, referencedCollectionIds)
 			: []
 
+		// Collect referenced connection and collections
 		const instancesExport = this.#generateReferencedConnectionConfigs(
 			referencedConnectionIds,
 			referencedConnectionLabels
 		)
+		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(instancesExport))
+		const filteredConnectionCollections = this.#filterReferencedCollections(
+			this.#instancesController.collections.collectionData,
+			referencedConnectionCollectionIds
+		)
 
-		// Collect referenced images from variables
+		// Collect referenced image library items and collections
 		const referencedImages = this.#collectReferencedImages(referencedVariables)
+		const referencedImageLibraryCollectionIds = this.#collectReferencedCollectionIds(
+			referencedImages.map((img) => img.info)
+		)
+		const filteredImageLibraryCollections = this.#filterReferencedCollections(
+			this.#graphicsController.imageLibrary.exportCollections(),
+			referencedImageLibraryCollectionIds
+		)
 
 		const result: ExportTriggersListv6 = {
 			type: 'trigger_list',
@@ -331,12 +366,51 @@ export class ExportController {
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
 			instances: instancesExport,
-			connectionCollections: this.#instancesController.collections.collectionData,
+			connectionCollections: filteredConnectionCollections,
 			imageLibrary: referencedImages,
-			imageLibraryCollections: this.#graphicsController.imageLibrary.exportCollections(),
+			imageLibraryCollections: filteredImageLibraryCollections,
 		}
 
 		return result
+	}
+
+	/**
+	 * Filter collections to only include those explicitly referenced by items,
+	 * or any parent collections of those which are referenced.
+	 * This ensures we don't export unnecessary collections but maintain the collection hierarchy.
+	 *
+	 * @param allCollections - All available collections
+	 * @param referencedCollectionIds - Set of collection IDs that are actually referenced by items
+	 * @returns Filtered collections array with shallow cloning to avoid mutation
+	 */
+	#filterReferencedCollections<T>(
+		allCollections: CollectionBase<T>[],
+		referencedCollectionIds: Set<string>
+	): CollectionBase<T>[] {
+		if (referencedCollectionIds.size === 0) {
+			return []
+		}
+
+		const filterCollections = (collections: CollectionBase<T>[]): CollectionBase<T>[] => {
+			return collections
+				.map((collection) => {
+					const shouldIncludeSelf = referencedCollectionIds.has(collection.id)
+
+					const childCollections = filterCollections(collection.children)
+
+					if (shouldIncludeSelf || childCollections.length > 0) {
+						return {
+							...collection,
+							children: childCollections,
+						}
+					} else {
+						return null
+					}
+				})
+				.filter((collection) => !!collection)
+		}
+
+		return filterCollections(allCollections)
 	}
 
 	#generateReferencedConnectionConfigs(
@@ -456,7 +530,12 @@ export class ExportController {
 				referencedConnectionLabels,
 				true
 			)
-			exp.connectionCollections = this.#instancesController.collections.collectionData
+
+			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(exp.instances))
+			exp.connectionCollections = this.#filterReferencedCollections(
+				this.#instancesController.collections.collectionData,
+				referencedConnectionCollectionIds
+			)
 		}
 
 		if (!config || !isFalsey(config.surfaces)) {
@@ -500,6 +579,16 @@ export class ExportController {
 		}
 
 		return referencedImages
+	}
+
+	#collectReferencedCollectionIds<TItem extends { collectionId?: string }>(items: TItem[]): Set<string> {
+		const referencedCollectionIds = new Set<string>()
+		for (const item of items) {
+			if (item.collectionId) {
+				referencedCollectionIds.add(item.collectionId)
+			}
+		}
+		return referencedCollectionIds
 	}
 }
 
