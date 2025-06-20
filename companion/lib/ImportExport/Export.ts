@@ -42,6 +42,7 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
 import type { ClientSocket } from '../UI/Handler.js'
@@ -52,6 +53,7 @@ export class ExportController {
 
 	readonly #appInfo: AppInfo
 	readonly #controlsController: ControlsController
+	readonly #graphicsController: GraphicsController
 	readonly #instancesController: InstanceController
 	readonly #pagesController: PageController
 	readonly #surfacesController: SurfaceController
@@ -62,6 +64,7 @@ export class ExportController {
 		appInfo: AppInfo,
 		apiRouter: express.Router,
 		controls: ControlsController,
+		graphics: GraphicsController,
 		instance: InstanceController,
 		page: PageController,
 		surfaces: SurfaceController,
@@ -70,6 +73,7 @@ export class ExportController {
 	) {
 		this.#appInfo = appInfo
 		this.#controlsController = controls
+		this.#graphicsController = graphics
 		this.#instancesController = instance
 		this.#pagesController = page
 		this.#surfacesController = surfaces
@@ -422,6 +426,11 @@ export class ExportController {
 		if (!config || !isFalsey(config.surfaces)) {
 			exp.surfaces = this.#surfacesController.exportAll()
 			exp.surfaceGroups = this.#surfacesController.exportAllGroups()
+		}
+
+		if (!config || !isFalsey(config.imageLibrary)) {
+			exp.imageLibrary = this.#graphicsController.imageLibrary.exportImageLibraryData()
+			exp.imageLibraryCollections = this.#graphicsController.imageLibrary.exportCollections()
 		}
 
 		return exp

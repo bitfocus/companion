@@ -8,6 +8,7 @@ import type {
 	ImageLibraryInfo,
 	ImageLibraryUpdate,
 	ImageLibraryCollection,
+	ImageLibraryExportData,
 } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { GraphicsController } from './Controller.js'
@@ -439,6 +440,14 @@ export class ImageLibrary {
 	}
 
 	/**
+	 * Export full image library data including base64 image content
+	 */
+	exportImageLibraryData(): ImageLibraryExportData[] {
+		const allData = this.#dbTable.all()
+		return Object.values(allData)
+	}
+
+	/**
 	 * Update an existing image with uploaded data
 	 */
 	async #updateImageWithData(imageId: string, data: Buffer): Promise<ImageLibraryData> {
@@ -555,5 +564,56 @@ export class ImageLibrary {
 		])
 		// Update definitions to remove the deleted image
 		this.#updateImageVariableDefinitions()
+	}
+
+	/**
+	 * Import image library data
+	 */
+	importImageLibrary(collections: ImageLibraryCollection[], images: ImageLibraryExportData[]): void {
+		this.#collections.importCollections(collections)
+
+		// Clear existing images first
+		const allImages = this.listImages()
+		for (const image of allImages) {
+			this.deleteImage(image.id)
+		}
+
+		// Import new images with full image data
+		for (const imageData of images) {
+			const fullImageData: ImageLibraryData = {
+				originalImage: imageData.originalImage,
+				previewImage: imageData.previewImage,
+				info: { ...imageData.info },
+			}
+
+			this.#dbTable.set(imageData.info.id, fullImageData)
+			this.#logger.info(`Imported image ${imageData.info.id} (${imageData.info.name}) with image data`)
+		}
+
+		// Update variables for imported images
+		this.#updateAllImageVariables()
+
+		// Notify clients
+		if (this.#io.countRoomMembers('image-library') > 0) {
+			for (const imageData of images) {
+				this.#io.emitToRoom('image-library', 'image-library:updated', imageData.info.id, imageData.info)
+			}
+		}
+
+		this.#cleanUnknownCollectionIds(this.#collections.collectAllCollectionIds())
+	}
+
+	/**
+	 * Reset the entire image library (clear all images and collections)
+	 */
+	resetImageLibrary(): void {
+		// Clear all images
+		const allImages = this.listImages()
+		for (const image of allImages) {
+			this.deleteImage(image.id)
+		}
+
+		// Clear all collections
+		this.#collections.importCollections([])
 	}
 }

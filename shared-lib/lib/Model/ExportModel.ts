@@ -2,6 +2,7 @@ import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { ConnectionCollection, ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
 import type { TriggerCollection } from './TriggerModel.js'
+import type { ImageLibraryExportData, ImageLibraryCollection } from './ImageLibraryModel.js'
 
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
@@ -20,6 +21,8 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	connectionCollections?: ConnectionCollection[] // Added in v4.1
 	surfaces?: unknown
 	surfaceGroups?: unknown
+	imageLibrary?: ImageLibraryExportData[]
+	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
 export interface ExportPageModelv6 extends ExportBase<'page'> {

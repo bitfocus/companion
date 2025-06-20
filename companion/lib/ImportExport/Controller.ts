@@ -144,6 +144,7 @@ export class ImportExportController {
 			appInfo,
 			apiRouter,
 			controls,
+			graphics,
 			instance,
 			page,
 			surfaces,
@@ -288,6 +289,7 @@ export class ImportExportController {
 				customVariables: 'custom_variables' in object,
 				surfaces: 'surfaces' in object,
 				triggers: 'triggers' in object,
+				imageLibrary: 'imageLibrary' in object,
 			}
 
 			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
@@ -422,6 +424,14 @@ export class ImportExportController {
 				setImmediate(() => {
 					this.#controlsController.triggers.emit('startup')
 				})
+
+				// Import image library data if present
+				if (!config || config.imageLibrary) {
+					this.#graphicsController.imageLibrary.importImageLibrary(
+						data.imageLibraryCollections || [],
+						data.imageLibrary || []
+					)
+				}
 			})
 		})
 
@@ -634,6 +644,11 @@ export class ImportExportController {
 
 		if (!config || config.userconfig) {
 			this.#userConfigController.reset()
+		}
+
+		if (!config || config.imageLibrary) {
+			// Reset image library
+			this.#graphicsController.imageLibrary.resetImageLibrary()
 		}
 
 		return 'ok'

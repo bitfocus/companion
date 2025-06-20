@@ -32,6 +32,24 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	}
 
 	/**
+	 * Import collections data, replacing all existing collections
+	 */
+	importCollections(collections: CollectionBase<TCollectionMetadata>[]): void {
+		this.#dbTable.clear()
+
+		this.data = collections.sort((a, b) => a.sortOrder - b.sortOrder)
+
+		// Update the database with the new collections
+		for (const collection of this.data) {
+			this.#dbTable.set(collection.id, collection)
+		}
+
+		this.emitUpdate(this.data)
+
+		this.removeUnknownCollectionReferences()
+	}
+
+	/**
 	 * Some of the collections have been modified in some way, emit an update to interested parties (eg the UI)
 	 */
 	protected abstract emitUpdate(rows: CollectionBase<TCollectionMetadata>[]): void

@@ -13,6 +13,12 @@ export interface ImageLibraryInfo {
 	sortOrder: number
 }
 
+export interface ImageLibraryExportData {
+	info: ImageLibraryInfo
+	originalImage: string // base64 data URL
+	previewImage: string // base64 data URL
+}
+
 export type ImageLibraryCollection = CollectionBase<undefined>
 
 export type ImageLibraryUpdate = ImageLibraryUpdateRemoveOp | ImageLibraryUpdateUpdateOp
