@@ -132,7 +132,9 @@ export class VariablesExpressionStream {
 
 					this.#logger.debug(`Re-evaluating expression: ${expressionId} for ${session.clients.size} clients`)
 
-					const newValue = this.#executeExpression(session.expression, session.controlId, session.requiredType)
+					const newValue = session.isVariableString
+						? this.#parseVariables(session.expression, session.controlId)
+						: this.#executeExpression(session.expression, session.controlId, session.requiredType)
 					session.latestResult = newValue
 
 					const notifiedClients = new Set<string>()

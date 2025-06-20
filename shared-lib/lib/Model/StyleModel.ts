@@ -26,6 +26,8 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 	// imageBuffers: DrawImageBuffer[]
 
 	elements: SomeButtonGraphicsDrawElement[]
+
+	oldFeedbacksStyle: UnparsedButtonStyle | undefined
 }
 
 export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleButtonStateProps {
@@ -44,7 +46,7 @@ export interface DrawImageBuffer {
 	pixelFormat: 'RGB' | 'RGBA' | 'ARGB' | undefined
 }
 
-export interface UnparsedButtonStyle extends ButtonStyleProperties {
+export interface UnparsedButtonStyle extends Partial<ButtonStyleProperties> {
 	imageBuffers: DrawImageBuffer[]
 }
 

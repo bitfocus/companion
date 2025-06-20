@@ -960,12 +960,15 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			// Buffer is packed ok
 		} else if (buffer.length == rgbaByteCount && (!format || format === 'ARGB')) {
 			// ARGB: swap order from ARGB to RGBA
-			for (let i = 0; i < buffer.length; i += 4) {
-				const a = buffer[i]
+			const original = buffer
+			buffer = Buffer.alloc(buffer.length)
 
-				buffer[i] = buffer[i + 1]
-				buffer[i + 1] = buffer[i + 2]
-				buffer[i + 2] = buffer[i + 3]
+			for (let i = 0; i < buffer.length; i += 4) {
+				const a = original[i]
+
+				buffer[i] = original[i + 1]
+				buffer[i + 1] = original[i + 2]
+				buffer[i + 2] = original[i + 3]
 				buffer[i + 3] = a
 			}
 		} else if (buffer.length == rgbByteCount) {

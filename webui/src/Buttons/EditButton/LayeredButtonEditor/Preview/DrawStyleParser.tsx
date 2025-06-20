@@ -14,6 +14,7 @@ import { useObserver } from 'mobx-react-lite'
 import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
 import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import { overlayAdvancedFeedbackValues } from '@companion-app/shared/Graphics/OldButtonStyleParser.js'
 
 const DRAW_DEBOUNCE = 50
 const DRAW_DEBOUNCE_MAX = 100
@@ -128,15 +129,23 @@ class LayeredButtonDrawStyleParser {
 				return convertExpressionResult(await newValuePromise)
 			}
 
-			const [{ elements }, thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] =
-				await Promise.all([
-					ConvertSomeButtonGraphicsElementForDrawing(this.#rawElements, parseExpression, parseVariablesInString, false),
-					parseExpression('$(this:pushed)', 'boolean'),
-					parseExpression('$(this:step_count)', 'number'),
-					parseExpression('$(this:step_count) > 1 ? $(this:step) : 0', 'number'),
-					parseExpression('$(this:button_status)', 'string'),
-					parseExpression('$(this:actions_running)', 'boolean'),
-				])
+			const [
+				{ elements },
+				thisPushed,
+				thisStepCount,
+				thisStep,
+				thisButtonStatus,
+				thisActionsRunning,
+				oldFeedbacksStyle,
+			] = await Promise.all([
+				ConvertSomeButtonGraphicsElementForDrawing(this.#rawElements, parseExpression, parseVariablesInString, false),
+				parseExpression('$(this:pushed)', 'boolean'),
+				parseExpression('$(this:step_count)', 'number'),
+				parseExpression('$(this:step_count) > 1 ? $(this:step) : 0', 'number'),
+				parseExpression('$(this:button_status)', 'string'),
+				parseExpression('$(this:actions_running)', 'boolean'),
+				parseExpression('$(this:old_feedbacks_style)'), // This is inefficient, but hopefully works well enough
+			])
 
 			// Unsubscribe from any streams that are no longer used
 			for (const [expression, sub] of this.#latestValues) {
@@ -146,11 +155,18 @@ class LayeredButtonDrawStyleParser {
 				}
 			}
 
+			// Inject the old feedbacks style into the elements
+			if (oldFeedbacksStyle.ok && oldFeedbacksStyle.value) {
+				overlayAdvancedFeedbackValues(elements, oldFeedbacksStyle.value as any)
+			}
+
 			// Emit the new elements
 			this.#changed({
 				style: 'button-layered',
 
 				elements,
+
+				oldFeedbacksStyle: oldFeedbacksStyle.ok ? (oldFeedbacksStyle.value as any) : undefined,
 
 				pushed: thisPushed.ok ? Boolean(thisPushed.value) : false,
 				stepCount: thisStepCount.ok ? Number(thisStepCount.value) : 1,

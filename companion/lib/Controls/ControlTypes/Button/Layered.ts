@@ -1,5 +1,5 @@
 import { ButtonControlBase } from './Base.js'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
@@ -29,6 +29,7 @@ import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/share
 import { CompanionVariableValues } from '@companion-module/base'
 import { lazy } from '../../../Resources/Util.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
+import { overlayAdvancedFeedbackValues } from '@companion-app/shared/Graphics/OldButtonStyleParser.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -235,12 +236,36 @@ export class ControlButtonLayered
 			},
 			true
 		)
-		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
+		let usedVariablesComplete = usedVariables
+
+		// Inject the styles from the old feedbacks onto the elements
+		const oldFeedbacksStyle = this.entities.hasFeedbacks ? this.entities.getUnparsedFeedbackStyle({}) : undefined
+		if (oldFeedbacksStyle) {
+			if (oldFeedbacksStyle.text) {
+				const parseResult = this.parseButtonTextString(
+					oldFeedbacksStyle.text,
+					oldFeedbacksStyle.textExpression ?? false
+				)
+				oldFeedbacksStyle.text = parseResult.text
+				usedVariablesComplete = usedVariablesComplete.union(parseResult.variableIds)
+			}
+
+			overlayAdvancedFeedbackValues(elements, oldFeedbacksStyle)
+		}
+
+		// TODO - make this more efficient?
+		if (!isEqual(oldFeedbacksStyle, this.#lastDrawStyle?.oldFeedbacksStyle)) {
+			this.onLocalVariablesChanged(new Set(['this:old_feedbacks_style']))
+		}
+
+		this.#last_draw_variables = usedVariablesComplete.size > 0 ? usedVariablesComplete : null
 
 		const result: DrawStyleLayeredButtonModel = {
 			...this.getDrawStyleButtonStateProps(),
 
 			elements,
+
+			oldFeedbacksStyle,
 
 			style: 'button-layered',
 		}

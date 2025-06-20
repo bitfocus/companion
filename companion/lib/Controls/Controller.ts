@@ -503,10 +503,15 @@ export class ControlsController {
 			const control = this.getControl(controlId)
 			if (!control) return false
 
-			if (!control.supportsEntities || !control.supportsStyle)
+			if (!control.supportsEntities || (!control.supportsStyle && !control.supportsLayeredStyle))
 				throw new Error(`Control "${controlId}" does not support entities or styles`)
 
-			return control.entities.entitySetStyleSelection(entityLocation, control.baseStyle, id, selected)
+			return control.entities.entitySetStyleSelection(
+				entityLocation,
+				control.supportsStyle ? control.baseStyle : ControlButtonNormal.DefaultStyle,
+				id,
+				selected
+			)
 		})
 		client.onPromise('controls:entity:set-style-value', (controlId, entityLocation, id, key, value) => {
 			const control = this.getControl(controlId)
@@ -1325,12 +1330,15 @@ export class ControlsController {
 		const control = controlId && this.getControl(controlId)
 
 		const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
+		const lastDrawStyle = control ? control.getLastDrawStyle() : undefined
 
-		return this.#registry.variables.values.createVariablesAndExpressionParser(
-			controlLocation,
-			variableEntities,
-			overrideVariableValues
-		)
+		return this.#registry.variables.values.createVariablesAndExpressionParser(controlLocation, variableEntities, {
+			...overrideVariableValues,
+
+			// This is a temporary and internal value to propogate the old feedbacks to the ui for generating the preview
+			'$(this:old_feedbacks_style)':
+				lastDrawStyle && 'oldFeedbacksStyle' in lastDrawStyle ? (lastDrawStyle.oldFeedbacksStyle as any) : undefined,
+		})
 	}
 }
 
