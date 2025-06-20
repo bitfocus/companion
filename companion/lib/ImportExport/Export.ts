@@ -30,6 +30,7 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ImageLibraryExportData } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import type { AppInfo } from '../Registry.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
@@ -130,13 +131,22 @@ export class ExportController {
 
 			const referencedConnectionIds = new Set<string>()
 			const referencedConnectionLabels = new Set<string>()
+			const referencedVariables = new Set<string>()
 
-			const pageExport = this.#generatePageExportInfo(pageInfo, referencedConnectionIds, referencedConnectionLabels)
+			const pageExport = this.#generatePageExportInfo(
+				pageInfo,
+				referencedConnectionIds,
+				referencedConnectionLabels,
+				referencedVariables
+			)
 
 			const instancesExport = this.#generateReferencedConnectionConfigs(
 				referencedConnectionIds,
 				referencedConnectionLabels
 			)
+
+			// Collect referenced images from variables
+			const referencedImages = this.#collectReferencedImages(referencedVariables)
 
 			// Export file protocol version
 			const exp: ExportPageModelv6 = {
@@ -146,6 +156,8 @@ export class ExportController {
 				instances: instancesExport,
 				connectionCollections: this.#instancesController.collections.collectionData,
 				oldPageNumber: page,
+				imageLibrary: referencedImages,
+				imageLibraryCollections: this.#graphicsController.imageLibrary.exportCollections(),
 			}
 
 			const filename = this.#generateFilename(String(req.query.filename), `page${page}`, 'companionconfig')
@@ -286,12 +298,18 @@ export class ExportController {
 		const triggersExport: ExportTriggerContentv6 = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
+		const referencedVariables = new Set<string>()
+
 		for (const control of triggerControls) {
 			const parsedId = ParseControlId(control.controlId)
 			if (parsedId?.type === 'trigger') {
 				triggersExport[parsedId.trigger] = control.toJSON(false)
 
-				control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+				control.collectReferencedConnectionsAndVariables(
+					referencedConnectionIds,
+					referencedConnectionLabels,
+					referencedVariables
+				)
 			}
 		}
 
@@ -304,14 +322,21 @@ export class ExportController {
 			referencedConnectionLabels
 		)
 
-		return {
+		// Collect referenced images from variables
+		const referencedImages = this.#collectReferencedImages(referencedVariables)
+
+		const result: ExportTriggersListv6 = {
 			type: 'trigger_list',
 			version: FILE_VERSION,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
 			instances: instancesExport,
 			connectionCollections: this.#instancesController.collections.collectionData,
+			imageLibrary: referencedImages,
+			imageLibraryCollections: this.#graphicsController.imageLibrary.exportCollections(),
 		}
+
+		return result
 	}
 
 	#generateReferencedConnectionConfigs(
@@ -340,7 +365,8 @@ export class ExportController {
 	#generatePageExportInfo(
 		pageInfo: PageModel,
 		referencedConnectionIds: Set<string>,
-		referencedConnectionLabels: Set<string>
+		referencedConnectionLabels: Set<string>,
+		referencedVariables: Set<string>
 	): ExportPageContentv6 {
 		const pageExport: ExportPageContentv6 = {
 			name: pageInfo.name,
@@ -355,7 +381,11 @@ export class ExportController {
 					if (!pageExport.controls[Number(row)]) pageExport.controls[Number(row)] = {}
 					pageExport.controls[Number(row)][Number(column)] = control.toJSON(false)
 
-					control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
 				}
 			}
 		}
@@ -374,6 +404,7 @@ export class ExportController {
 
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
+		const referencedVariables = new Set<string>()
 
 		if (!config || !isFalsey(config.buttons)) {
 			exp.pages = {}
@@ -383,7 +414,8 @@ export class ExportController {
 				exp.pages[Number(pageNumber)] = this.#generatePageExportInfo(
 					rawPageInfo,
 					referencedConnectionIds,
-					referencedConnectionLabels
+					referencedConnectionLabels,
+					referencedVariables
 				)
 			}
 		}
@@ -396,7 +428,11 @@ export class ExportController {
 					if (parsedId?.type === 'trigger') {
 						triggersExport[parsedId.trigger] = control.toJSON(false)
 
-						control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+						control.collectReferencedConnectionsAndVariables(
+							referencedConnectionIds,
+							referencedConnectionLabels,
+							referencedVariables
+						)
 					}
 				}
 			}
@@ -428,12 +464,42 @@ export class ExportController {
 			exp.surfaceGroups = this.#surfacesController.exportAllGroups()
 		}
 
+		// Handle image library export
 		if (!config || !isFalsey(config.imageLibrary)) {
 			exp.imageLibrary = this.#graphicsController.imageLibrary.exportImageLibraryData()
 			exp.imageLibraryCollections = this.#graphicsController.imageLibrary.exportCollections()
 		}
 
 		return exp
+	}
+
+	/**
+	 * Collect referenced images from variable references
+	 */
+	#collectReferencedImages(referencedVariables: Set<string>): ImageLibraryExportData[] {
+		const referencedImages: ImageLibraryExportData[] = []
+
+		// Get all images and create a map for efficient lookup
+		const allImages = this.#graphicsController.imageLibrary.exportImageLibraryData()
+		const imageMap = new Map<string, ImageLibraryExportData>()
+		for (const imageData of allImages) {
+			imageMap.set(imageData.info.id, imageData)
+		}
+
+		// Look for image variables in the format "image:imageId"
+		for (const variable of referencedVariables) {
+			// Variable names that start with 'image:' are image references
+			if (variable.startsWith('image:')) {
+				const imageId = variable.substring(6) // Remove 'image:' prefix
+
+				const imageData = imageMap.get(imageId)
+				if (imageData) {
+					referencedImages.push(imageData)
+				}
+			}
+		}
+
+		return referencedImages
 	}
 }
 

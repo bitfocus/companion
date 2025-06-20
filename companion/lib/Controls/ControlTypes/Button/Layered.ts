@@ -246,18 +246,23 @@ export class ControlButtonLayered
 	}
 
 	/**
-	 * Collect the instance ids and labels referenced by this control
+	 * Collect the instance ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
+	 * @param foundVariables - variables being referenced
 	 */
-	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
+	collectReferencedConnectionsAndVariables(
+		foundConnectionIds: Set<string>,
+		foundConnectionLabels: Set<string>,
+		foundVariables: Set<string>
+	): void {
 		const allEntities = this.entities.getAllEntities()
 
 		for (const entity of allEntities) {
 			foundConnectionIds.add(entity.connectionId)
 		}
 
-		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels)
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
 			.visitEntities(allEntities, [])
 			.visitDrawElements(this.#drawElements)
 	}

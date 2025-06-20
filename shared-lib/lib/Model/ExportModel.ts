@@ -30,6 +30,8 @@ export interface ExportPageModelv6 extends ExportBase<'page'> {
 	instances: ExportInstancesv6
 	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
 	oldPageNumber: number
+	imageLibrary?: ImageLibraryExportData[]
+	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
 export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
@@ -37,6 +39,8 @@ export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
 	triggerCollections: TriggerCollection[] | undefined // Added in v4.1
 	instances: ExportInstancesv6
 	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
+	imageLibrary?: ImageLibraryExportData[]
+	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
 export type ExportTriggerContentv6 = Record<string, any> // TODO
