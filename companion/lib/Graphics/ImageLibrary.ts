@@ -455,7 +455,8 @@ export class ImageLibrary {
 		// Parse the data URL from the uploaded buffer
 		const dataUrlString = data.toString('utf-8')
 
-		const dataUrlMatch = dataUrlString.match(/^data:(image\/\w+);base64,(.+)$/)
+		console.log('dataUrlString', dataUrlString.slice(0, 100))
+		const dataUrlMatch = dataUrlString.match(/^data:(image\/[\w\+]+);base64,(.+)$/)
 		if (!dataUrlMatch) {
 			throw new Error('Invalid data URL format or unsupported image format')
 		}
