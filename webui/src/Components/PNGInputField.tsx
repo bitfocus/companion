@@ -5,7 +5,7 @@ import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
 
 const allowedImageTypesPng = ['image/png']
-const allowedImageTypesExtended = [...allowedImageTypesPng, 'image/jpeg', 'image/gif', 'image/webp']
+const allowedImageTypesExtended = [...allowedImageTypesPng, 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
 
 interface MinMaxDimension {
 	width: number
