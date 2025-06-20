@@ -19,13 +19,17 @@ interface BorderPropertiesEditorProps {
 	controlId: string
 	elementProps: Readonly<ElementWithBorderProps>
 	localVariablesStore: LocalVariablesStore
+	borderName?: string // Optional name for the border, if needed
 }
 
 export const BorderPropertiesEditor = observer(function BorderPropertiesEditor({
 	controlId,
 	elementProps,
 	localVariablesStore,
+	borderName,
 }: BorderPropertiesEditorProps) {
+	if (!borderName) borderName = 'Border'
+
 	return (
 		<>
 			<FormPropertyField
@@ -33,7 +37,7 @@ export const BorderPropertiesEditor = observer(function BorderPropertiesEditor({
 				elementProps={elementProps}
 				localVariablesStore={localVariablesStore}
 				property="borderWidth"
-				label="Border Width"
+				label={`${borderName} Width`}
 			>
 				{(elementProp, setValue) => <FieldBorderWidthInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
@@ -43,7 +47,7 @@ export const BorderPropertiesEditor = observer(function BorderPropertiesEditor({
 				elementProps={elementProps}
 				localVariablesStore={localVariablesStore}
 				property="borderColor"
-				label="Border Color"
+				label={`${borderName} Color`}
 			>
 				{(elementProp, setValue) => <FieldBorderColorInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
@@ -53,7 +57,7 @@ export const BorderPropertiesEditor = observer(function BorderPropertiesEditor({
 				elementProps={elementProps}
 				localVariablesStore={localVariablesStore}
 				property="borderPosition"
-				label="Border Position"
+				label={`${borderName} Position`}
 			>
 				{(elementProp, setValue) => <FieldBorderPositionInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>

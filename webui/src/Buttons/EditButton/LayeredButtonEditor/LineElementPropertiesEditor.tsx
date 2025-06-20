@@ -61,6 +61,7 @@ export const LineElementPropertiesEditor = observer(function LineElementProperti
 				controlId={controlId}
 				elementProps={elementProps}
 				localVariablesStore={localVariablesStore}
+				borderName="Line"
 			/>
 		</>
 	)
