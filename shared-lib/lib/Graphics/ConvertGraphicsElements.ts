@@ -17,6 +17,8 @@ import {
 	ButtonGraphicsGroupElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsBorderProperties,
+	ButtonGraphicsLineElement,
+	ButtonGraphicsLineDrawElement,
 } from '../Model/StyleLayersModel.js'
 import { assertNever } from '../Util.js'
 import { HorizontalAlignment, VerticalAlignment } from './Util.js'
@@ -211,6 +213,8 @@ async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
 					return convertTextElementForDrawing(helper, element)
 				case 'box':
 					return convertBoxElementForDrawing(helper, element)
+				case 'line':
+					return convertLineElementForDrawing(helper, element)
 				default:
 					assertNever(element)
 					return null
@@ -361,6 +365,37 @@ async function convertBoxElementForDrawing(
 		opacity,
 		...bounds,
 		color,
+		...borderProps,
+	}
+}
+
+async function convertLineElementForDrawing(
+	helper: ExpressionHelper,
+	element: ButtonGraphicsLineElement
+): Promise<ButtonGraphicsLineDrawElement | null> {
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = await helper.getBoolean(element.enabled, true)
+	if (!enabled && helper.onlyEnabled) return null
+
+	const [opacity, fromX, fromY, toX, toY, borderProps] = await Promise.all([
+		helper.getNumber(element.opacity, 1, 0.01),
+		helper.getNumber(element.fromX, 0),
+		helper.getNumber(element.fromY, 0),
+		helper.getNumber(element.toX, 100),
+		helper.getNumber(element.toY, 100),
+		convertBorderProperties(helper, element),
+	])
+
+	return {
+		id: element.id,
+		type: 'line',
+		usage: element.usage,
+		enabled,
+		opacity,
+		fromX,
+		fromY,
+		toX,
+		toY,
 		...borderProps,
 	}
 }

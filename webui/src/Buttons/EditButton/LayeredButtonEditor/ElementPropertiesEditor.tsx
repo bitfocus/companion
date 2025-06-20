@@ -10,6 +10,7 @@ import { ElementCommonProperties } from './ElementCommonProperties.js'
 import { BoxElementPropertiesEditor } from './BoxElementPropertiesEditor.js'
 import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
 import { GroupElementPropertiesEditor } from './GroupElementPropertiesEditor.js'
+import { LineElementPropertiesEditor } from './LineElementPropertiesEditor.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
@@ -79,6 +80,14 @@ const ElementPropertiesEditorInner = observer(function ElementPropertiesEditorIn
 		case 'box':
 			return (
 				<BoxElementPropertiesEditor
+					controlId={controlId}
+					elementProps={elementProps}
+					localVariablesStore={localVariablesStore}
+				/>
+			)
+		case 'line':
+			return (
+				<LineElementPropertiesEditor
 					controlId={controlId}
 					elementProps={elementProps}
 					localVariablesStore={localVariablesStore}
