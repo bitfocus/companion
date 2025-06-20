@@ -73,11 +73,7 @@ export class ImageLibrary {
 		}
 
 		if (this.#io.countRoomMembers('image-library') > 0 && changes.length > 0) {
-			for (const change of changes) {
-				if (change.type === 'update') {
-					this.#io.emitToRoom('image-library', 'image-library:updated', change.itemId, change.info)
-				}
-			}
+			this.#io.emitToRoom('image-library', 'image-library:update', changes)
 		}
 	}
 
@@ -166,7 +162,9 @@ export class ImageLibrary {
 
 				this.#io.emitToAll('image-library:upload-complete', sessionId, imageId)
 
-				this.#io.emitToRoom('image-library', 'image-library:updated', imageId, imageInfo.info)
+				this.#io.emitToRoom('image-library', 'image-library:update', [
+					{ type: 'update', itemId: imageId, info: imageInfo.info },
+				])
 
 				return imageId
 			} catch (error) {
@@ -229,7 +227,7 @@ export class ImageLibrary {
 
 		this.#logger.info(`Deleted image ${imageId} (${data.info.name})`)
 
-		this.#io.emitToRoom('image-library', 'image-library:removed', imageId)
+		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'remove', itemId: imageId }])
 
 		// Remove variable for the deleted image
 		this.#removeImageVariable(imageId)
@@ -283,7 +281,7 @@ export class ImageLibrary {
 		this.#logger.info(`Created empty image ${safeId} (${name})`)
 
 		// Notify clients
-		this.#io.emitToRoom('image-library', 'image-library:updated', safeId, info)
+		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'update', itemId: safeId, info }])
 
 		return safeId
 	}
@@ -328,7 +326,7 @@ export class ImageLibrary {
 		this.#logger.info(`Updated image ${imageId} name to "${name}"`)
 
 		// Notify clients
-		this.#io.emitToRoom('image-library', 'image-library:updated', imageId, data.info)
+		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'update', itemId: imageId, info: data.info }])
 
 		return true
 	}
@@ -374,8 +372,10 @@ export class ImageLibrary {
 		this.#logger.info(`Updated image ID from "${currentId}" to "${safeNewId}"`)
 
 		// Notify clients of the removal of the old ID and addition of the new one
-		this.#io.emitToRoom('image-library', 'image-library:removed', currentId)
-		this.#io.emitToRoom('image-library', 'image-library:updated', safeNewId, data.info)
+		this.#io.emitToRoom('image-library', 'image-library:update', [
+			{ type: 'remove', itemId: currentId },
+			{ type: 'update', itemId: safeNewId, info: data.info },
+		])
 
 		return safeNewId
 	}
@@ -424,11 +424,7 @@ export class ImageLibrary {
 		})
 
 		if (this.#io.countRoomMembers('image-library') > 0 && changes.length > 0) {
-			for (const change of changes) {
-				if (change.type === 'update') {
-					this.#io.emitToRoom('image-library', 'image-library:updated', change.itemId, change.info)
-				}
-			}
+			this.#io.emitToRoom('image-library', 'image-library:update', changes)
 		}
 	}
 
@@ -570,13 +566,9 @@ export class ImageLibrary {
 	 * Import image library data
 	 */
 	importImageLibrary(collections: ImageLibraryCollection[], images: ImageLibraryExportData[]): void {
-		this.#collections.replaceCollections(collections)
+		this.resetImageLibrary()
 
-		// Clear existing images first
-		const allImages = this.listImages()
-		for (const image of allImages) {
-			this.deleteImage(image.id)
-		}
+		this.#collections.replaceCollections(collections)
 
 		// Import new images with full image data
 		for (const imageData of images) {
@@ -594,10 +586,13 @@ export class ImageLibrary {
 		this.#updateAllImageVariables()
 
 		// Notify clients
-		if (this.#io.countRoomMembers('image-library') > 0) {
-			for (const imageData of images) {
-				this.#io.emitToRoom('image-library', 'image-library:updated', imageData.info.id, imageData.info)
-			}
+		if (this.#io.countRoomMembers('image-library') > 0 && images.length > 0) {
+			const changes: ImageLibraryUpdate[] = images.map((imageData) => ({
+				type: 'update',
+				itemId: imageData.info.id,
+				info: imageData.info,
+			}))
+			this.#io.emitToRoom('image-library', 'image-library:update', changes)
 		}
 
 		this.#cleanUnknownCollectionIds(this.#collections.collectAllCollectionIds())
@@ -607,10 +602,29 @@ export class ImageLibrary {
 	 * Reset the entire image library (clear all images and collections)
 	 */
 	resetImageLibrary(): void {
-		// Clear all images
-		const allImages = this.listImages()
-		for (const image of allImages) {
-			this.deleteImage(image.id)
+		// Get all images before clearing
+		const allImages = Object.keys(this.#dbTable.all())
+
+		if (allImages.length > 0) {
+			// Clear all images from database
+			const changes: ImageLibraryUpdate[] = []
+			const variables: VariableValueEntry[] = []
+
+			for (const imageId of allImages) {
+				this.#dbTable.delete(imageId)
+				changes.push({ type: 'remove', itemId: imageId })
+				variables.push({ id: imageId, value: undefined })
+
+				this.#logger.info(`Deleted image ${imageId}`)
+			}
+
+			this.#variablesController.values.setVariableValues('image', variables)
+
+			// Update variable definitions once
+			this.#updateImageVariableDefinitions()
+
+			// Notify clients with batched changes
+			this.#io.emitToRoom('image-library', 'image-library:update', changes)
 		}
 
 		// Clear all collections

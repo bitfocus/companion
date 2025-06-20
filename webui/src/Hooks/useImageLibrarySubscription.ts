@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CompanionSocketWrapped } from '~/util.js'
 import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
-import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import type { ImageLibraryInfo, ImageLibraryUpdate } from '@companion-app/shared/Model/ImageLibraryModel.js'
 
 export function useImageLibrarySubscription(socket: CompanionSocketWrapped, store: ImageLibraryStore): boolean {
 	const [ready, setReady] = useState(false)
@@ -25,21 +25,15 @@ export function useImageLibrarySubscription(socket: CompanionSocketWrapped, stor
 				console.error('Failed to load image library', e)
 			})
 
-		const unsubUpdated = socket.on('image-library:updated', (imageId: string, imageInfo: ImageLibraryInfo) => {
+		const unsubUpdate = socket.on('image-library:update', (changes: ImageLibraryUpdate[]) => {
 			if (disposed) return
-			store.updateImage(imageId, imageInfo)
-		})
-
-		const unsubRemoved = socket.on('image-library:removed', (imageId: string) => {
-			if (disposed) return
-			store.removeImage(imageId)
+			store.processUpdates(changes)
 		})
 
 		return () => {
 			disposed = true
 			store.reset(null)
-			unsubUpdated()
-			unsubRemoved()
+			unsubUpdate()
 
 			socket.emitPromise('image-library:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe from image library', e)

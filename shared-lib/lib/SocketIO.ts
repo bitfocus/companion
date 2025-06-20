@@ -57,7 +57,7 @@ import type { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/Ent
 import type { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 import type { ExpressionStreamResult, ExpressionStreamResultWithSubId } from './Expression/ExpressionResult.js'
 import type { ButtonGraphicsElementUsage } from './Model/StyleLayersModel.js'
-import type { ImageLibraryInfo, ImageLibraryCollection } from './Model/ImageLibraryModel.js'
+import type { ImageLibraryInfo, ImageLibraryCollection, ImageLibraryUpdate } from './Model/ImageLibraryModel.js'
 
 export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	disconnect: () => never // Hack because type is missing
@@ -535,8 +535,7 @@ export interface BackendToClientEventsMap {
 	'image-library:upload-complete': (sessionId: string, imageId: string) => void
 	'image-library:upload-cancelled': (sessionId: string) => void
 	'image-library:upload-error': (sessionId: string, error: string) => void
-	'image-library:removed': (imageId: string) => void
-	'image-library:updated': (imageId: string, info: ImageLibraryInfo) => void
+	'image-library:update': (changes: ImageLibraryUpdate[]) => void
 	'image-library-collections:update': (patch: ImageLibraryCollection[]) => void
 
 	cloud_state: (newState: CloudControllerState) => void

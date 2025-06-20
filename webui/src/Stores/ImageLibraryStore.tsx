@@ -1,5 +1,9 @@
 import { action, observable } from 'mobx'
-import type { ImageLibraryInfo, ImageLibraryCollection } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import type {
+	ImageLibraryInfo,
+	ImageLibraryCollection,
+	ImageLibraryUpdate,
+} from '@companion-app/shared/Model/ImageLibraryModel.js'
 
 export class ImageLibraryStore {
 	readonly store = observable.map<string, ImageLibraryInfo>()
@@ -25,12 +29,14 @@ export class ImageLibraryStore {
 		}
 	})
 
-	public updateImage = action((imageId: string, imageInfo: ImageLibraryInfo): void => {
-		this.store.set(imageId, imageInfo)
-	})
-
-	public removeImage = action((imageId: string): void => {
-		this.store.delete(imageId)
+	public processUpdates = action((changes: ImageLibraryUpdate[]): void => {
+		for (const change of changes) {
+			if (change.type === 'update') {
+				this.store.set(change.itemId, change.info)
+			} else if (change.type === 'remove') {
+				this.store.delete(change.itemId)
+			}
+		}
 	})
 
 	public getImage(imageId: string): ImageLibraryInfo | undefined {

@@ -14,7 +14,7 @@ import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types.js'
-import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import type { ImageLibraryInfo, ImageLibraryUpdate } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
@@ -92,20 +92,16 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 
 	// Listen for image library events to clear cache when images are updated or deleted
 	useEffect(() => {
-		const handleImageUpdated = (imageId: string) => {
-			imageCache.clearImageId(imageId)
+		const handleImageUpdate = (changes: ImageLibraryUpdate[]) => {
+			for (const change of changes) {
+				imageCache.clearImageId(change.itemId)
+			}
 		}
 
-		const handleImageRemoved = (imageId: string) => {
-			imageCache.clearImageId(imageId)
-		}
-
-		const unsubUpdated = socket.on('image-library:updated', handleImageUpdated)
-		const unsubRemoved = socket.on('image-library:removed', handleImageRemoved)
+		const unsubUpdate = socket.on('image-library:update', handleImageUpdate)
 
 		return () => {
-			unsubUpdated()
-			unsubRemoved()
+			unsubUpdate()
 		}
 	}, [socket, imageCache])
 
