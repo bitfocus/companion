@@ -414,7 +414,8 @@ export class ServiceEmberPlus extends ServiceBase {
 						new EmberModel.ParameterImpl(
 							type,
 							id,
-							`Internal variable: ${this.#internalVars[i]}`,
+							this.#serviceApi.getConnectionVariableDescription('internal', this.#internalVars[i]) ??
+								`Internal variable: ${this.#internalVars[i]}`,
 							value,
 							undefined,
 							undefined,

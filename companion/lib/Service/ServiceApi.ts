@@ -115,6 +115,17 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	/**
+	 * Get the description of a connection variable
+	 * @param connectionLabel
+	 * @param variableName
+	 * @returns The description of the variable
+	 */
+
+	getConnectionVariableDescription(connectionLabel: string, variableName: string): string | undefined {
+		return this.#variablesController.definitions.getVariableLabel(connectionLabel, variableName)
+	}
+
+	/**
 	 * Get the a connections defined variable names
 	 * @param connectionLabel
 	 * @returns Array of defined variable names
