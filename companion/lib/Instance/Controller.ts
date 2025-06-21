@@ -572,19 +572,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// TODO this could check if anything above changed, or is_being_created
 		this.#configStore.commitChanges([id])
 
-		const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
-		if (!moduleInfo) {
-			this.#logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
-			if (this.modules.hasModule(config.instance_type)) {
-				this.status.updateInstanceStatus(id, 'system', 'Unknown module version')
-			} else {
-				this.status.updateInstanceStatus(id, 'system', 'Unknown module')
-			}
-		} else {
-			this.moduleHost.queueRestartConnection(id, config, moduleInfo).catch((e) => {
-				this.#logger.error('Configured instance ' + config.instance_type + ' failed to start: ', e)
+		this.moduleHost
+			.queueRestartConnection(id, {
+				label: config.label,
+				moduleId: config.instance_type,
+				moduleVersionId: config.moduleVersionId,
 			})
-		}
+			.catch((e) => {
+				this.#logger.error(`Configured instance "${config.instance_type}" failed to start: `, e)
+			})
 	}
 
 	/**

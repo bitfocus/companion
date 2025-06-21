@@ -81,7 +81,10 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		this.#instanceController.on('connection_added', this.#debounceRegenerateVariables.bind(this))
 		this.#instanceController.on('connection_updated', this.#debounceRegenerateVariables.bind(this))
 		this.#instanceController.on('connection_deleted', this.#debounceRegenerateVariables.bind(this))
-		this.#instanceController.on('connection_collections_enabled', this.#debounceCheckConnectionCollectionFeedbacks.bind(this))
+		this.#instanceController.on(
+			'connection_collections_enabled',
+			this.#debounceCheckConnectionCollectionFeedbacks.bind(this)
+		)
 	}
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {
